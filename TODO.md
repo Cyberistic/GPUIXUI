@@ -148,7 +148,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` **Prove the scroll affordance in the frame, and measure the runtime's
       gutter** per plan `801`: three records disagreed about the scrollbar and
       no scenario read one. `scroll-affordance` / `live-scroll-affordance`
-      (**90 checks each**, focused green in 29.2 s and 29.3 s) prove: the gutter
+      (**93 checks each**, focused green — headless 77.0 s under load, live 34.8/37.5/56.4 s) prove: the gutter
       is **0 px** in both axes, **no** thumb paints at rest or while scrolling
       (the trailing strip is the child's own fill at five heights, identical to
       its interior, in both hosts), a click 3 px inside the edge reaches the
@@ -170,8 +170,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       got 0`; `auto` → `scroll`; a thumb rendered on fitting content;
       `MIN_THUMB` 20). Focused ids run: `scroll-affordance`,
       `live-scroll-affordance` (plus M1–M7). End-of-task full headless
-      **120/120** (**4449** checks, 65 capabilities, 522.96 s, exit `0`;
-      exactly `4359 + 90`); live registry **108 → 109**; no full live gate
+      **120/120** (**4452** checks, 65 capabilities, 525.80 s, exit `0`;
+      exactly `4359 + 93`); live registry **108 → 109**; no full live gate
       (merge gate). **Corrected records:** `COMPONENTS.md`'s Scrollable
       containers row and the plan-`173` `tab-overflow` comment (this
       workstream); `ScrollArea`'s "platform-themed thumb" comment is the

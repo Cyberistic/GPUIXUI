@@ -806,7 +806,7 @@ after the window moves away.
 Three records disagreed about the scrollbar and no scenario read one:
 `COMPONENTS.md` and `ScrollArea` said the thumb is "platform-themed and cannot
 be tinted", and `tab-overflow` said an `overflow: scroll` strip "always reserves
-a platform scrollbar". `scroll-affordance` / `live-scroll-affordance` (90 checks
+a platform scrollbar". `scroll-affordance` / `live-scroll-affordance` (93 checks
 each) measure the strip itself and the recipe a component needs instead.
 
 | Question | Measured (both hosts) |
@@ -1731,7 +1731,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-qr` | the QR matrix in a window: the 226-node absolute grid paints at the headless offsets (quiet zone `+24`, module `6`, finders `+60`/`(42, 42)`), a light module has no bounds, a real click reports `hit=r3c3`, the SVG mask and the SVG data-URL image each paint one `174 × 174` node, the v4 scale is exact (`164`, `+16`, `4`), and both the module grid and the image route reconstruct the authored matrix from the decoded frame — 52 checks (plans `599`, `708`) |
 | `live-scroll-into-view` | the element scroll route in a window: `End` focuses row 199 and the list paints it, `Home` returns to `y = 0`, `scrollToItem(120)` and `scrollIntoView(row 10)` both move the window and paint their target while leaving focus alone, three `Down`s paint and focus row 13, and a second `scrollIntoView` paints row 199 without moving focus — 39 checks (plan `601`). **Measured limit:** the element route only reveals a row the list has laid out; from the anchor at 120, row 20 moved the list while rows 50 and 100 did nothing — use `scrollToItem` for a far jump |
 | `live-field-ink` | the shipped `Input`'s three observable inks in a window: the typed text paints `inputForeground`, the placeholder paints the runtime's fixed `#8F8F8F` (the `placeholder` token paints 0 px), and a `cmd-a` selection paints the fixed `#3C4271` wash (the `selection` token paints 0 px) — 19 checks (plan `797`). The caret is not asserted: the automation window is never *active*, so `caret_shown` is false in both hosts |
-| `live-scroll-affordance` | the scroll affordance in a window: no gutter is reserved in either axis, no thumb paints at rest or while scrolling, the trailing strip takes the edge click, a real `-100` wheel scrolls the owned viewport and the component's mirror matches the runtime, the `-400` control and a press at the track's midpoint moves the derived thumb and its `mutedForeground` paint follows, and `overflow: "auto"` reports no offset while its child still paints below the box — 90 checks (plan `801`) |
+| `live-scroll-affordance` | the scroll affordance in a window: no gutter is reserved in either axis, no thumb paints at rest or while scrolling, the trailing strip takes the edge click, a real `-100` wheel scrolls the owned viewport and the component's mirror matches the runtime, the `-400` control and a press at the track's midpoint moves the derived thumb and its `mutedForeground` paint follows, and `overflow: "auto"` reports no offset while its child still paints below the box — 93 checks (plan `801`) |
 
 ### Search and replace in a real window (plan `587`)
 
@@ -2686,8 +2686,8 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **120/120 green** here (`exit 0`, 4449 checks, 65 capabilities,
-2026-10-20 after plan `801`; **522.96 s**; **119/119** · 4359 after plan
+The suite is **120/120 green** here (`exit 0`, 4452 checks, 65 capabilities,
+2026-10-20 after plan `801`; **525.80 s**; **119/119** · 4359 after plan
 `797`; **118/118** · 4340 · 302.0 s before it, after plan
 `791`; **302.4 s** at plan `784`, which
 read 117/117 · 4278; **275.0 s** after plan `778`, which
@@ -2695,7 +2695,7 @@ read 116/116 · 4228; **432.8 s** at the plan `777` gate,
 which read 115/115 · 4206; **484.1 s** at plan `773`, which read
 114/114 · 4188; **237.6 s** at plan `771`, which read
 113/113 · 4165; **246.8 s** at the plan `768` gate, which
-read 112/112 · 4152; plan `801` added the 90-check
+read 112/112 · 4152; plan `801` added the 93-check
 `scroll-affordance`, plan `797` added the 19-check
 `field-ink-pixels`, plan `791` the 62-check
 `dialog-scrim-pixels`, plan `784` added the 50-check

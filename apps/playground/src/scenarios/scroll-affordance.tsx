@@ -45,6 +45,7 @@ import {
   type FrameReader,
 } from "./frames.js";
 import {
+  EDGE_INSET,
   THUMB_WIDTH,
   edgePairs,
   firstMismatch,
@@ -668,6 +669,20 @@ const steps = <E,>(
       v,
       "x",
       "no thumb paints on a vertical scroller at rest",
+    );
+    // Uniform alone could be a strip painted the wrong colour: name the fill.
+    yield* expectColour(
+      ctx,
+      "the vertical strip is the child's card, not a gutter",
+      yield* pixelAtPoint(
+        ctx,
+        frame,
+        window,
+        v.x + v.width - EDGE_INSET,
+        v.y + v.height / 2,
+        "the vertical strip",
+      ),
+      yield* parseColour("the card token parses", palettes.dark.colors.card),
     );
     yield* expectUniformStrip(
       ctx,

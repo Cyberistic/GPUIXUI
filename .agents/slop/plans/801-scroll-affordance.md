@@ -186,7 +186,7 @@ the scroll progress onto `track - length`. `offsetForTrackPress` inverts it:
 
 `capability: "scroll"` (already live-covered, so no coverage-guard change).
 
-Checks, in order (labels are the failure text). **Measured: 90 checks per
+Checks, in order (labels are the failure text). **Measured: 93 checks per
 host**, not the 38 assertions listed here — every `paintedBox`, `pixelAtPoint`
 and `expectThumb` call records its own check, the same convention as every
 other pixel scenario; the assertions below are the 38 *claims*.
@@ -226,7 +226,8 @@ other pixel scenario; the assertions below are the 38 *claims*.
 17. every right-edge pair of `scroll-v` agrees at rest.
 18. every right-edge pair of `scroll-v` agrees after the wheel.
 19. every bottom-edge pair of `scroll-h` agrees at rest.
-20. the right-edge strip of `scroll-v` paints `card` at five heights.
+20. the right-edge strip of `scroll-v` paints `card` at five heights (M9 paints
+    it `background`: a uniform-but-wrong strip must fail by name).
 
 **The component-owned recipe**
 
@@ -295,10 +296,10 @@ content-origin box (plan `529` §6.5), so the same ± 1 tolerances apply.
    `ready`/screenshot, list entry). Run
    `nub run --filter playground build` then
    `nub apps/playground/dist/smoke/run.js --only scroll-affordance`.
-   Expect **1/1** and **90 checks**, exit `0`. A failing check is a measured fact:
+   Expect **1/1** and **93 checks**, exit `0`. A failing check is a measured fact:
    fix the assertion to the measurement, never the other way round.
 5. Run `nub apps/playground/dist/live/run.js --only live-scroll-affordance`
-   three times. Expect **1/1**, **90 checks**, exit `0`, one PNG artifact.
+   three times. Expect **1/1**, **93 checks**, exit `0`, one PNG artifact.
 6. Mutation proofs (§9), each run focused and reverted by name.
 7. Run the end-of-task full headless suite: `nub apps/playground/dist/smoke/run.js`
    (bare = whole registry). Expect `120/120`, exit `0`, and the check total to be
@@ -313,9 +314,9 @@ content-origin box (plan `529` §6.5), so the same ± 1 tolerances apply.
 | `nub .agents/slop/scratch/plan-801/scroll-probe.mjs` | printed bounds/colours; one PNG in the scratch dir |
 | `nub run --filter playground test` | playground tests green, `+ N` model cases |
 | `nub run --filter playground build` | `dist/` rebuilt |
-| `nub apps/playground/dist/smoke/run.js --only scroll-affordance` | 1/1, 90 checks, exit `0` |
-| `nub apps/playground/dist/live/run.js --only live-scroll-affordance` | 1/1, 90 checks, exit `0` (×3) |
-| `nub apps/playground/dist/smoke/run.js` | 120/120, exit `0`, total `+ 90` |
+| `nub apps/playground/dist/smoke/run.js --only scroll-affordance` | 1/1, 93 checks, exit `0` |
+| `nub apps/playground/dist/live/run.js --only live-scroll-affordance` | 1/1, 93 checks, exit `0` (×3) |
+| `nub apps/playground/dist/smoke/run.js` | 120/120, exit `0`, total `+ 93` |
 | `nub run check` | green (includes `check:tests`) |
 | `nub run lint` | green |
 | `nub run test` | green (playground `+ N`, testing 69) |
@@ -379,6 +380,7 @@ content-origin box (plan `529` §6.5), so the same ± 1 tolerances apply.
 | M6 | `scroll-auto` set to `overflowY: "scroll"` | **"an auto scroller reports no offset"** — red |
 | M7 | the thumb rendered even when the content fits | **"the short fixture paints no thumb"** — red |
 | M8 | `MIN_THUMB` 24 → 20 (unit) | **"keeps a 6 px thumb with a 24 px floor"** — red |
+| M9 | `scroll-v`'s child painted `background` | **"the vertical strip is the child's card, not a gutter: expected #191d25ff, got #11141aff"** — red |
 
 M2 uses a fixture-local overlay, not a runtime change: it proves the pixel
 check can see a thumb at all (the guard against a vacuous "agrees" check).
@@ -415,8 +417,9 @@ Each run is `--only scroll-affordance`; record the observed failure text.
 - The probe answered all five questions in §1 with decoded-frame or painted-box
   evidence, in **both** hosts, and §2 carries the measured numbers.
 - `scroll-affordance` and `live-scroll-affordance` are registered, green, and
-  90 checks each (measured); the full headless suite is **120/120 · 4449 · 65**,
-  exit `0`, exactly `4359 + 90`.
+  93 checks each (measured); the full headless suite is **120/120 · 4452 · 65**,
+  exit `0`, exactly `4359 + 93`. The strip's colour is named directly (M9), so
+  a uniform-but-wrong strip cannot pass.
 - The model's rules are unit-tested (18 cases), and M1–M8 were observed failing
   and reverted.
 - No claim is asserted from an authored style, a screenshot alone, or source
