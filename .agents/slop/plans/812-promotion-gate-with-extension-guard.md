@@ -1,6 +1,6 @@
 # 812 — Promotion gate on the head that includes the binding-extension guard
 
-**Phase:** F (merge gate) · **Workstream:** playground · **Status:** planned
+**Phase:** F (merge gate) · **Workstream:** playground · **Status:** landed
 
 **Depends on:** `639`, `653`, `656`, `675`, `677`, `691`, `699`, `702`, `714`,
 `723`, `735`, `739`, `745`, `751`, `755`, `762`, `768`, `777`, `786`, `791`,
@@ -40,7 +40,11 @@ plan produces the gate the merge needs on the current head; it does not merge.
 
 1. `git status --short` is empty.
 2. `git rev-list --count HEAD..origin/master` is `0`; if not, merge first and
-   re-record the head.
+   re-record the head. **Amended 2026-10-20:** master is red (four implicit-`any`
+   parameters in `packages/primitives/src/recipe/registry.ts`; see the TODO
+   blocker), so this gate runs on the last buildable head, `071a9670`, three
+   commits behind. The promotion merge stays blocked until master type-checks —
+   merging it now makes the playground build fail before any scenario runs.
 3. `git rev-parse --short HEAD` is recorded in the report's `commit` field.
 4. The installed binding is the **pinned release** artifact:
    ```sh
@@ -119,7 +123,47 @@ plan for the fixture rather than widening a tolerance.
 
 ---
 
-## 5. Outcome (fill in on completion)
+## 5. Outcome (measured 2026-10-21)
+
+**Head:** `071a9670` (three behind `origin/master`, which is red — see below).
+Registries listed before the runs: **121** headless / **110** live.
+
+**Headless** — `nub apps/playground/dist/smoke/run.js`, exit `0`:
+**121/121** scenarios · **4573** checks · **66** capabilities ·
+**368.4 s**. `host`: `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0
+(gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+
+**Live** — `nub apps/playground/dist/live/run.js --all`, exit `0`:
+**110/110** scenarios · **3354** checks · **64** capabilities ·
+**1582.3 s**. `host`: `gpuix live window darwin-x64 @gpuix/native 0.10.0
+(gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+
+**Delta arithmetic (exact):** the live total is plan `786`'s `3059 + 295`, and
+the four new ids report their planned counts — `live-dialog-scrim` **62**,
+`live-field-ink` **19**, `live-scroll-affordance` **93**, `live-gradient`
+**121**; `live-tier2-editing` took its **33**-check branch. Capabilities went
+**62 → 64**, not the predicted 62: `modal` (`live-dialog-scrim`) and `gradient`
+(`live-gradient`) are now covered by a live scenario directly, where `modal`
+was previously only an alias of `live-focus`/`live-overlay`.
+
+**Provenance:** both `host` lines carry the release pins; a plain run wrote no
+`provenance.json` and no capture directory. The artifact used was the pinned
+release (`fee1fcaa7d44`, `zIndex` count `0`).
+
+**Gates:** `nub run check` exit `0`, `nub run lint` exit `0`, `nub run test`
+exit `0` (playground **635**, testing **75**, components **308**, primitives
+**282**, tokens **196**, tw **103**, icons **19**, motion **34**, docs **7**).
+
+**The merge is blocked by master, not by this branch.** `origin/master` gained
+the three-tier migration (`a6cf3328`) and does not type-check:
+`nub run --filter @gpuixui/primitives check-types` exits `1` with four
+implicit-`any` callback parameters in
+`packages/primitives/src/recipe/registry.ts` (lines 257, 269, 275, 278). A
+local merge was taken **cleanly** and then failed
+`nub run --filter playground build` at the same errors (the playground vendors
+primitives), so the merge was reset and this gate ran on the last buildable
+head. A TODO cross-team blocker records it; once master type-checks, the merge
+and a fresh gate are the remaining steps.
 
 - Head: `<sha>`, 0 behind `origin/master`.
 - Registries listed before the runs: `<n>` headless / `<n>` live.

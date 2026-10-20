@@ -143,7 +143,43 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 147/147 plans-and-harness
+`[x]` `[██████████]` 149/149 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes the extension guard**
+      per plan `812`: the last gate (plan `786`) covered 106 live ids and four
+      scenarios had landed since, so no full live run had included them.
+      Verification only on `071a9670`: headless **121/121** (**4573** checks,
+      66 capabilities, **368.4 s**) and live **110/110** (**3354** checks,
+      **64** capabilities, **1582.3 s**), both exit `0`. The live total is
+      `3059 + 295` exactly — `live-dialog-scrim` **62**, `live-field-ink`
+      **19**, `live-scroll-affordance` **93**, `live-gradient` **121** — and
+      `live-tier2-editing` took its 33-check branch. Capabilities moved
+      `62 → 64` because `modal` and `gradient` are now live-covered directly
+      (not the predicted 62). Both `host` lines carry the release pins
+      (`gpuix 9fcd6288`, `zed 81c99f81`, runtime shaders), the artifact was the
+      pinned release (`fee1fcaa7d44`, `zIndex` 0), and a plain `--all` wrote no
+      `provenance.json` and no capture directory. `nub run check`/`lint`/`test`
+      green (playground **635**, testing **75**, components **308**, primitives
+      **282**, tokens **196**, tw **103**, icons **19**, motion **34**, docs
+      **7**). Exact ids: the whole headless registry (bare) and the whole live
+      registry (`--all`). **The promotion merge itself is blocked by master** —
+      see the cross-team blocker above; this is the gate for the playground
+      code, not a promotion. Plan:
+      `.agents/slop/plans/812-promotion-gate-with-extension-guard.md`.
+
+`[ ]` **Cross-team (blocker): `origin/master` does not type-check.** The
+      three-tier migration (`a6cf3328`, branch `agent/three-tier-styling`,
+      merged to master) left four implicit-`any` callback parameters in
+      `packages/primitives/src/recipe/registry.ts` (lines **257, 269, 275,
+      278**; e.g. `"h-space": (theme, value) => …`), so
+      `nub run --filter @gpuixui/primitives check-types` **exits 1 on master**.
+      Any branch that merges master then fails
+      `nub run --filter playground build` (the playground vendors primitives
+      through `tsconfig.vendor.json`), so `agent/playground` merged master
+      cleanly, hit the errors, and reset back to `071a9670` rather than carry a
+      red tree. The promotion gate (plan `812`) therefore runs on that head and
+      the promotion merge waits for master to be green. Owner:
+      `primitives`/`three-tier-styling`; evidence: the command above, 2026-10-20.
 
 `[x]` **Make the binding fingerprint see a local runtime extension** per plan
       `811`: plan `529` refuses a binding built from a newer source, but a build
@@ -2746,6 +2782,16 @@ focused id is `live-frames`.
       308, primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
       current gate for the promotion fast-forward**; the owner/supervisor still
       performs the merge.
+      **Superseded by plan `812` (2026-10-21):** the gate now covers 110 live
+      ids (`live-dialog-scrim`, `live-field-ink`, `live-scroll-affordance`,
+      `live-gradient` included) at **110/110 · 3354 · 64** and headless
+      **121/121 · 4573 · 66**, both exit `0`, on `071a9670`. **The promotion is
+      blocked by `origin/master`, not by this branch:** master's three-tier
+      migration (`a6cf3328`) leaves four implicit-`any` parameters in
+      `packages/primitives/src/recipe/registry.ts`, so `nub run --filter
+      @gpuixui/primitives check-types` exits `1` and a clean local merge fails
+      `nub run --filter playground build` at the same errors. Once master
+      type-checks, the merge and one fresh gate are the remaining steps.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
