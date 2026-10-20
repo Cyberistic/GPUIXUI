@@ -2202,6 +2202,18 @@ retired once both branches are one
       Offline 66 files / 913 tests, scoped runtime 5/5; eight mutations fail by
       name.
 
+`[x]` `packages/primitives`: **a `Surface` authored size was not a paintable
+      box** — measured (2026-10-20): `width={320.5}` painted a 320.5 host while
+      `rasterSurface` refused the bounds, so **no frame** painted and only a
+      logged error remained; `width={NaN}` dropped the width style and stretched
+      the host to its parent's 1256 px; `width={0}` reported a lifecycle error
+      for a legitimately collapsed panel. One `surfaceBounds` rule (a finite
+      positive value floors, zero stays zero, a negative or non-finite value
+      collapses) now feeds the host box, the resize compare and every adapter
+      call, and a zero-area raster records its bounds, paints nothing and reports
+      nothing. 8 core + 4 raster + 2 element + 2 scoped runtime cases, both
+      directions proven (offline 67 files, scoped live 7/7; plan `697`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

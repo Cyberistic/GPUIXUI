@@ -152,6 +152,62 @@ describe("raster surface", () => {
     expect(calls).toStrictEqual([]);
   });
 
+  it("records a zero-area box without painting or failing", async () => {
+    const calls: Array<{ width: number; height: number; bytes: number }> = [];
+    const adapter = rasterSurface({
+      paint: ({ width, height }) => Effect.succeed(frame(width, height)),
+    });
+
+    await Effect.runPromise(adapter.create(hostWith(calls)));
+    await Effect.runPromise(adapter.resize({ width: 0, height: 180 }));
+
+    expect(calls).toStrictEqual([]);
+
+    await Effect.runPromise(adapter.resize({ width: 2, height: 2 }));
+    expect(calls).toStrictEqual([{ width: 2, height: 2, bytes: 16 }]);
+  });
+
+  it("does not paint a zero-area box on a theme change", async () => {
+    const calls: Array<{ width: number; height: number; bytes: number }> = [];
+    const modes: Array<"light" | "dark"> = [];
+    const adapter = rasterSurface({
+      paint: ({ width, height }, context) => {
+        modes.push(context.mode);
+        return Effect.succeed(frame(width, height));
+      },
+    });
+
+    await Effect.runPromise(adapter.create(hostWith(calls)));
+    await Effect.runPromise(adapter.resize({ width: 0, height: 0 }));
+    await Effect.runPromise(adapter.setTheme("dark"));
+
+    expect(modes).toStrictEqual([]);
+    expect(calls).toStrictEqual([]);
+
+    await Effect.runPromise(adapter.resize({ width: 2, height: 2 }));
+    expect(modes).toStrictEqual(["dark"]);
+  });
+
+  it("still refuses a fractional or negative box on a direct adapter call", async () => {
+    const calls: Array<{ width: number; height: number; bytes: number }> = [];
+    const adapter = rasterSurface({
+      paint: ({ width, height }) => Effect.succeed(frame(width, height)),
+    });
+
+    await Effect.runPromise(adapter.create(hostWith(calls)));
+    await expectFailure(
+      adapter.resize({ width: 2.5, height: 2 }),
+      "resize",
+      "whole logical pixels, got 2.5×2",
+    );
+    await expectFailure(
+      adapter.resize({ width: -1, height: 2 }),
+      "resize",
+      "whole logical pixels, got -1×2",
+    );
+    expect(calls).toStrictEqual([]);
+  });
+
   it("keeps the adapter kind, defaulting to raster", () => {
     const adapter = rasterSurface({
       paint: ({ width, height }) => Effect.succeed(frame(width, height)),

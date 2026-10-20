@@ -46,11 +46,21 @@ export interface RasterSurfaceOptions {
   ) => Effect.Effect<RasterFrame, SurfaceError>;
 }
 
-const isUsableBounds = (bounds: SurfaceBounds): boolean =>
+const isWholeBox = (bounds: SurfaceBounds): boolean =>
   Number.isInteger(bounds.width) &&
   Number.isInteger(bounds.height) &&
-  bounds.width > 0 &&
-  bounds.height > 0;
+  bounds.width >= 0 &&
+  bounds.height >= 0;
+
+/**
+ * Whether a box has pixels to fill.
+ *
+ * A zero-area surface is a collapsed layout state, not a failure: it keeps its
+ * session and paints nothing, then paints its first frame when it grows (plan
+ * `697`).
+ */
+const hasArea = (bounds: SurfaceBounds): boolean =>
+  bounds.width > 0 && bounds.height > 0;
 
 const frameError = (
   bounds: SurfaceBounds,
@@ -88,11 +98,11 @@ export const rasterSurface = (
     operation: SurfaceOperation,
   ): Effect.Effect<void, SurfaceError> =>
     Effect.gen(function* () {
-      if (!isUsableBounds(target)) {
+      if (!isWholeBox(target)) {
         return yield* Effect.fail(
           surfaceError(
             operation,
-            `surface bounds must be positive integers, got ${target.width}×${target.height}`,
+            `surface bounds must be whole logical pixels, got ${target.width}×${target.height}`,
           ),
         );
       }
@@ -103,6 +113,7 @@ export const rasterSurface = (
           ),
         onSome: Effect.succeed,
       });
+      if (!hasArea(target)) return;
       const frame = yield* options.paint(target, { mode });
       const problem = frameError(target, frame);
       if (Option.isSome(problem)) {

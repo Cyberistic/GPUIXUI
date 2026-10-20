@@ -33,6 +33,7 @@ import {
   type SurfaceError,
   type SurfaceHost,
 } from "../surface/adapter.js";
+import { surfaceBounds } from "../surface/bounds.js";
 import { ariaName, mergeStyle, useFocus } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -40,9 +41,9 @@ import { useTheme } from "./ThemeProvider.js";
 export interface SurfaceProps {
   /** The adapter that owns the pixels and the lifecycle. */
   readonly adapter: SurfaceAdapter;
-  /** Authored width in logical pixels; there is no layout read-back in 0.10.0. */
+  /** Authored width in whole logical pixels; a fractional value floors. */
   readonly width: number;
-  /** Authored height in logical pixels; there is no layout read-back in 0.10.0. */
+  /** Authored height in whole logical pixels; a fractional value floors. */
   readonly height: number;
   /** The surface's accessible name. A blank label leaves it unnamed. */
   readonly label: string;
@@ -77,9 +78,9 @@ export interface RenderSurfaceProps {
 /**
  * Render the one host element a surface owns.
  *
- * The caller's style wins last, as everywhere in this package; `width` and
- * `height` are the adapter's bounds, so a caller that overrides them owns the
- * mismatch (there is no layout read-back).
+ * The caller's style wins last, as everywhere in this package. The authored size
+ * is normalised to the paintable box here too, so the seam cannot paint a
+ * fractional or `NaN` length even when it is called directly (plan `697`).
  */
 export const renderSurface = ({
   width,
@@ -95,6 +96,7 @@ export const renderSurface = ({
 }: RenderSurfaceProps): ReactElement => {
   const name = ariaName(label);
   const focusTab = name === undefined ? undefined : tabIndex;
+  const box = surfaceBounds({ width, height });
   return (
     <div
       ref={elementRef}
@@ -104,7 +106,10 @@ export const renderSurface = ({
       aria-label={focusTab === undefined ? undefined : name}
       onFocus={onFocus}
       onBlur={onBlur}
-      style={mergeStyle({ width, height, display: "flex" }, style)}
+      style={mergeStyle(
+        { width: box.width, height: box.height, display: "flex" },
+        style,
+      )}
     >
       <img
         ref={imageRef}
@@ -122,8 +127,10 @@ export const renderSurface = ({
  * Mount order is `create → resize → setVisible(true) → setTheme`; unmount is
  * `setVisible(false) → destroy`. A later bounds change resizes, a theme-mode
  * change re-themes (a raster adapter repaints), and a new adapter destroys the
- * old session first. The surface is presentational: a static surface exposes one
- * named image node; a `tabIndex` surface is a named group whose image is
+ * old session first. The authored size is normalised to whole, non-negative
+ * logical pixels — the box the host paints and the bounds every adapter call
+ * receives (plan `697`). The surface is presentational: a static surface exposes
+ * one named image node; a `tabIndex` surface is a named group whose image is
  * decorative, and it has no interior keyboard contract.
  */
 export const Surface = ({
@@ -142,13 +149,14 @@ export const Surface = ({
   const focus = useFocus();
   const focusRef = useRef(false);
   const live = useRef(false);
-  const boundsRef = useRef<SurfaceBounds>({ width, height });
+  const bounds = surfaceBounds({ width, height });
+  const boundsRef = useRef<SurfaceBounds>(bounds);
   const modeRef = useRef(theme.mode);
   const appliedBounds = useRef<Option.Option<SurfaceBounds>>(Option.none());
   const appliedMode = useRef<Option.Option<string>>(Option.none());
   const errorRef = useRef(onError);
 
-  boundsRef.current = { width, height };
+  boundsRef.current = bounds;
   modeRef.current = theme.mode;
   focusRef.current = focus.focused;
   const hostRef = useCallback(
@@ -228,12 +236,13 @@ export const Surface = ({
   }, [adapter, renderer]);
 
   useEffect(() => {
-    const next = { width, height };
+    const next = surfaceBounds({ width, height });
     if (!live.current) return;
     if (
       Option.exists(
         appliedBounds.current,
-        (bounds) => bounds.width === width && bounds.height === height,
+        (bounds) =>
+          bounds.width === next.width && bounds.height === next.height,
       )
     ) {
       return;
@@ -255,8 +264,8 @@ export const Surface = ({
   }, [adapter, theme.mode]);
 
   return renderSurface({
-    width,
-    height,
+    width: bounds.width,
+    height: bounds.height,
     label,
     style: mergeStyle(focus.focused ? focusRing(theme) : {}, style),
     tabIndex,

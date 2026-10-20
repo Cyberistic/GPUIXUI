@@ -265,6 +265,109 @@ describe("Surface", () => {
     expect(boundsOf(runtime).height).toBe(2);
   });
 
+  it("paints a fractional authored box at whole pixels", async () => {
+    const runtime = await openWindow();
+    const paints: Array<string> = [];
+    const errors: Array<SurfaceError> = [];
+    const adapter = rasterSurface({
+      paint: ({ width, height }) => {
+        paints.push(`${width}x${height}`);
+        return Effect.succeed({
+          width,
+          height,
+          pixels: new Uint8Array(width * height * 4),
+        });
+      },
+    });
+
+    runtime.render(
+      <Frame>
+        <SurfacePrimitive
+          adapter={adapter}
+          width={320.5}
+          height={180.9}
+          label="Fractional"
+          testId="raster"
+          onError={(error) => errors.push(error)}
+        />
+      </Frame>,
+    );
+    await awaitFrame(
+      () => paints.length > 0 || errors.length > 0,
+      "the fractional frame",
+    );
+
+    expect(errors).toStrictEqual([]);
+    expect(paints).toStrictEqual(["320x180"]);
+    expect(
+      Option.flatMap(runtime.element("raster"), (found) =>
+        Option.fromNullishOr(found.style.width),
+      ),
+    ).toStrictEqual(Option.some(320));
+    expect(boundsOf(runtime).width).toBe(320);
+    expect(boundsOf(runtime).height).toBe(180);
+  });
+
+  it("keeps a collapsed surface silent and paints it when it grows", async () => {
+    const runtime = await openWindow();
+    const paints: Array<string> = [];
+    const errors: Array<SurfaceError> = [];
+    const calls: Array<string> = [];
+    const raw = rasterSurface({
+      paint: ({ width, height }) => {
+        paints.push(`${width}x${height}`);
+        return Effect.succeed({
+          width,
+          height,
+          pixels: new Uint8Array(width * height * 4),
+        });
+      },
+    });
+    const adapter: SurfaceAdapter = {
+      ...raw,
+      create: (host) => {
+        calls.push("create");
+        return raw.create(host);
+      },
+      resize: (bounds) => {
+        calls.push(`resize:${bounds.width}x${bounds.height}`);
+        return raw.resize(bounds);
+      },
+      setTheme: (mode) => {
+        calls.push(`theme:${mode}`);
+        return raw.setTheme(mode);
+      },
+    };
+    const view = (width: number) => (
+      <Frame>
+        <SurfacePrimitive
+          adapter={adapter}
+          width={width}
+          height={180}
+          label="Collapsed"
+          testId="raster"
+          onError={(error) => errors.push(error)}
+        />
+      </Frame>
+    );
+
+    runtime.render(view(0));
+    await awaitFrame(
+      () => calls.includes("theme:light") || errors.length > 0,
+      "the collapsed session",
+    );
+
+    expect(errors).toStrictEqual([]);
+    expect(paints).toStrictEqual([]);
+
+    runtime.render(view(40));
+    await awaitFrame(() => paints.length > 0, "the first frame after growth");
+
+    expect(errors).toStrictEqual([]);
+    expect(paints).toStrictEqual(["40x180"]);
+    expect(boundsOf(runtime).width).toBe(40);
+  });
+
   it("reports a typed failure without unmounting the host", async () => {
     const runtime = await openWindow();
     const errors: Array<SurfaceError> = [];

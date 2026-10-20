@@ -64,13 +64,37 @@ first.
 mode change. A frame whose dimensions or byte count do not match the box fails
 with `SurfaceError`; it never reaches `setImagePixels` malformed.
 
+## Bounds
+
+A surface box is **whole, non-negative logical pixels**, because a buffer has
+whole pixels and a length the runtime cannot read has none. The authored
+`width` and `height` are normalised once and that one box is both what the host
+paints and what every adapter call receives:
+
+| Authored value | Box | Why |
+| -------------- | --- | --- |
+| a finite positive number | floored (`320.9` → `320`) | the box never exceeds the space the caller gave it |
+| `0` | `0` | a collapsed surface is a layout state, not an error |
+| negative or non-finite (`NaN`, `±Infinity`) | `0` | not a length; a computed size that never arrived must not stretch the host |
+
+Measured before this rule (plan `697`): `width={320.5}` painted a 320.5 box while
+`rasterSurface` refused the bounds and painted **no frame**, `width={NaN}` dropped
+the width style and stretched the host to its parent's 1256 px, and `width={0}`
+reported a lifecycle error. Now a fractional mount paints at `320×180`, and a
+zero-area surface keeps its session, reports nothing and paints its first frame
+when it grows.
+
+An adapter called **directly** still refuses a non-whole or negative box with a
+typed error: the adapter is public, and it must not paint a buffer it cannot
+represent.
+
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `adapter` | `SurfaceAdapter` | — (required) | owns the pixels and the lifecycle |
-| `width` | `number` | — (required) | authored logical width, also the adapter's bounds |
-| `height` | `number` | — (required) | authored logical height |
+| `width` | `number` | — (required) | authored logical width; floored to whole pixels, also the adapter's bounds |
+| `height` | `number` | — (required) | authored logical height; floored to whole pixels |
 | `label` | `string` | — (required) | the one accessibility name; a blank label is absent |
 | `style` | `StyleDesc` | none | merged last over the host's box |
 | `tabIndex` | `number` | none | makes the leaf a focus stop and routes focus |
@@ -119,6 +143,10 @@ consumer and closes over them.
   WebKit, AVPlayer or PTY adapter is a runtime ask (plan `437` §1).
 - **No layout read-back.** Bounds are the `width`/`height` props; there is no
   `onLayout` to measure a flex-sized box.
+- **Whole logical pixels only.** A fractional authored size floors, so a
+  surface cannot paint a half-pixel box; a caller that needs sub-pixel layout
+  precision should size the surrounding `Box` and give the surface tile-sized
+  bounds.
 - **No scale factor.** `getWindowSize()` reports logical size only, so the
   adapter works in logical pixels and there is no device-pixel contract yet.
 - **The raster path is not interactive.** Clicks and keys do not reach the
@@ -129,16 +157,20 @@ consumer and closes over them.
 ## Verification
 
 The lifecycle and the real raster path are proven in
-`runtime/surface.runtime.test.tsx` (5 cases):
+`runtime/surface.runtime.test.tsx` (7 cases):
 
 - `creates, sizes, shows and themes one session, then destroys it`
 - `resizes and re-themes a live session`
 - `paints a real RGBA frame through setImagePixels`
+- `paints a fractional authored box at whole pixels`
+- `keeps a collapsed surface silent and paints it when it grows`
 - `routes native focus into the adapter when the host is a tab stop`
 - `reports a typed failure without unmounting the host`
 
-The frame-shape rules are unit-tested in `src/surface/raster.test.ts`; the error
-boundary in `src/surface/adapter.test.ts`.
+The box rule is unit-tested in `src/surface/bounds.test.ts`; the frame-shape and
+zero-area rules in `src/surface/raster.test.ts`; the element seam in
+`src/components/Surface.test.tsx`; the error boundary in
+`src/surface/adapter.test.ts`.
 
 ```sh
 nub run --filter @gpuixui/primitives test

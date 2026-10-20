@@ -14,6 +14,7 @@ import {
   elementChildren,
   expectSome,
   hostProp,
+  hostStyle,
   hostTag,
 } from "./testing/element.js";
 
@@ -26,6 +27,20 @@ const render = (label: string, tabIndex?: number) =>
     elementRef: { current: null },
     imageRef: { current: null },
   });
+
+const renderSized = (width: number, height: number) =>
+  renderSurface({
+    width,
+    height,
+    label: "Revenue",
+    elementRef: { current: null },
+    imageRef: { current: null },
+  });
+
+const styleNumber = (tree: ReturnType<typeof render>, prop: string) =>
+  Option.flatMap(hostStyle(tree, prop), (value) =>
+    typeof value === "number" ? Option.some(value) : Option.none(),
+  );
 
 describe("Surface accessibility", () => {
   it("is one named image when it is static", () => {
@@ -58,5 +73,20 @@ describe("Surface accessibility", () => {
 
     const image = expectSome(Option.fromNullishOr(elementChildren(tree)[0]));
     expect(Option.isNone(hostProp(image, "alt"))).toBe(true);
+  });
+
+  it("paints a whole box, never a fractional or unreadable length", () => {
+    expect(styleNumber(renderSized(320.5, 180.9), "width")).toStrictEqual(
+      Option.some(320),
+    );
+    expect(styleNumber(renderSized(320.5, 180.9), "height")).toStrictEqual(
+      Option.some(180),
+    );
+    expect(styleNumber(renderSized(Number.NaN, 80), "width")).toStrictEqual(
+      Option.some(0),
+    );
+    expect(
+      styleNumber(renderSized(Number.POSITIVE_INFINITY, -4), "height"),
+    ).toStrictEqual(Option.some(0));
   });
 });
