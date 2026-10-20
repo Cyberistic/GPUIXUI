@@ -1163,6 +1163,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "the open-source word the License summary names",
     },
     {
+      query: "is it free",
+      expected: "/docs/license",
+      first: true,
+      what: "the licence question the page now answers",
+    },
+    {
+      query: "commercial use",
+      expected: "/docs/license",
+      first: true,
+      what: "the commercial-use question the page now answers",
+    },
+    {
       query: "theme switch",
       expected: "/docs/dark-mode",
       first: true,

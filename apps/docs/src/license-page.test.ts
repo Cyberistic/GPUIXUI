@@ -2,7 +2,9 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Order from "effect/Order";
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -11,6 +13,13 @@ import { describe, expect, it } from "vitest";
  * evidence rule and a verified reference. A reader was told the project had no
  * licence record, and nothing compared the page to the directory, so the next
  * record — or the release inventory landing — would keep the page wrong.
+ *
+ * The second bug guarded (plan 617): the page answered which licences the
+ * *references* carry but never whether the library itself is licensed. The
+ * repository has no root `LICENSE` and no manifest `license` field, so a
+ * consumer could not learn that no terms are published. The status test below
+ * reads the repository in both directions: it fails while a declared licence
+ * exists and the page still says none, and it fails when the section is removed.
  *
  * `node:fs`/`node:path` are deliberate, as in `content.test.ts` and
  * `docs-checks.test.ts`: this is a browser app whose tests read the repository
@@ -58,6 +67,40 @@ const baseGpui = readFileSync(join(licensesRoot, "base-gpui.md"), "utf8");
 const baseGpuiLicence = baseGpui.match(/Licence:\s*([\w.-]+)/)?.[1] ?? "";
 const baseGpuiCommit = baseGpui.match(/Commit read:\s*`(\w+)`/)?.[1] ?? "";
 
+/** A licence the library itself declares: a root file or a manifest field. */
+const licenceFileName = /^(?:licen[cs]e|copying|unlicense)(?:\..*)?$/i;
+
+const Manifest = Schema.Struct({
+  license: Schema.OptionFromOptionalKey(Schema.String),
+});
+const decodeManifest = Schema.decodeUnknownSync(
+  Schema.fromJsonString(Manifest),
+);
+
+const workspaceManifests = (): ReadonlyArray<string> =>
+  [
+    join(repoRoot, "package.json"),
+    ...["apps", "packages", "examples"].flatMap((group) =>
+      readdirSync(join(repoRoot, group), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(repoRoot, group, entry.name, "package.json")),
+    ),
+  ].filter(existsSync);
+
+const declaredLibraryLicences = (): ReadonlyArray<string> => [
+  ...readdirSync(repoRoot, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && licenceFileName.test(entry.name))
+    .map((entry) => entry.name),
+  ...workspaceManifests().flatMap((path) =>
+    Option.match(decodeManifest(readFileSync(path, "utf8")).license, {
+      onNone: () => [],
+      onSome: (licence) => [licence],
+    }),
+  ),
+];
+
+const declared = declaredLibraryLicences();
+
 describe("License page", () => {
   it("names every recorded licence file", () => {
     expect(baseGpuiLicence).not.toBe("");
@@ -79,6 +122,24 @@ describe("License page", () => {
       existsSync(join(repoRoot, path)),
     );
     expect(alreadyWritten).toEqual([]);
+  });
+
+  /**
+   * Both directions of the library's own licence (plan 617). The page may say
+   * "no licence has been declared" only while that is true; a root `LICENSE` or
+   * a manifest `license` field makes the sentence false, and removing the
+   * sentence while no licence exists removes the only answer a consumer has.
+   */
+  it("states the library's own licence status", () => {
+    const pageSaysUndeclared = page.includes(
+      "No licence has been declared for the library itself",
+    );
+    expect(pageSaysUndeclared).toBe(declared.length === 0);
+  });
+
+  it("names every licence the library declares", () => {
+    const unnamed = declared.filter((licence) => !page.includes(licence));
+    expect(unnamed).toEqual([]);
   });
 
   it("states the licence and commit its record states", () => {

@@ -45,6 +45,12 @@
  * (`nothing shows`, `invisible text`, `colors are wrong`) name the two
  * Troubleshooting sections that already answer them, and `window resize` names
  * Styling's media-query replacement.
+ *
+ * The twelfth block (plan 617) covers the licence question readers ask before
+ * they install anything: `is it free`, `can i use this`, `commercial use`,
+ * `price` and `copyright` name the License page, which now answers them.
+ * `cost` stays on Performance's cost model and `terms` on the component-page
+ * guide's search-vocabulary section.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -76,7 +82,27 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ],
   ],
   ["/docs/accessibility", ["keyboard focus"]],
-  ["/docs/license", ["credits", "acknowledgements", "acknowledgments"]],
+  [
+    "/docs/license",
+    [
+      "credits",
+      "acknowledgements",
+      "acknowledgments",
+      "is it free",
+      "is it open source",
+      "is this free",
+      "can i use this",
+      "can i use it",
+      "can i use this commercially",
+      "commercial use",
+      "commercial license",
+      "price",
+      "pricing",
+      "free",
+      "copyright",
+      "terms of use",
+    ],
+  ],
   [
     "/docs/contributing",
     [

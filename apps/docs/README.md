@@ -5,6 +5,20 @@ The docs shell never imports the native renderer; the one real GPUix surface is
 an isolated, opt-in WebAssembly document under `/gpuix-preview/` (tier L, plan
 455). See `MISSION.md`, plan `410-docs-site.md`, and `docs/preview-strategy.md`.
 
+## Licence status
+
+`/docs/license` answers the consumer question the rest of the site assumes. It
+states that the library itself has **no declared licence** — no root `LICENSE`
+and no `license` field in any workspace manifest — while recording the
+references' licences separately (base-gpui is MIT). `src/license-page.test.ts`
+reads the repository in both directions: the status sentence is required while
+nothing is declared, and a root licence file or a manifest field fails the suite
+until the page names it. Choosing the library's licence is the owner's release
+decision, tracked in `TODO.md`; this app states the status and does not choose
+it. The question forms (`is it free`, `can i use this`, `commercial use`,
+`price`, `copyright`) are exact page aliases, so ⌘K reaches the page that
+answers them.
+
 ## Brand and document head
 
 The site's identity is generated, not retyped. `src/lib/site-head.ts` owns the

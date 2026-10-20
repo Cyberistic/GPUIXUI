@@ -469,9 +469,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–616)
+## Docs site workstream (plans 410–499, plus 500–617)
 
-`[x]` `[██████████]` 183/183
+`[x]` `[██████████]` 184/185
+
+`[x]` **The licence question has an answer (plan 617)** — measured 2026-10-20:
+      `is it free` returned List, `commercial use` a text-area limitation,
+      `pricing` and `copyright` nothing, while the repository has no root
+      `LICENSE` and no manifest `license` field — so the one page about licences
+      never said whether a consumer may use the library. `/docs/license` now
+      states the library's own status (none declared), records the references'
+      terms separately, and 13 exact aliases reach it from ⌘K;
+      `license-page.test.ts` reads the tree in both directions and fails when a
+      licence lands without the page, and two production queries guard the
+      built index. 125 files / 1 225 docs tests, 106-page `smoke:build`; the
+      measured two-direction proofs are in plan 617 §8.
+
+`[ ]` **Reader questions and the workspace frame vocabulary** — measured
+      2026-10-20: `how to contribute` → Toggle, `does it work with next.js` →
+      Workspace, `title bar` → Alert, `status bar` → Roadmap, `split view` →
+      Preview card, `where is the source` → Theming, `coming soon` → Porting,
+      `no data` → Data display, `coverage` → Architecture. Each has a real owner
+      (Contributing, the porting page's framework section, the app-shell pattern,
+      Workspace, Empty state, the roadmap); a plan is owed.
 
 `[x]` **The preview strategy names only scenes that mount open (plan 616)** —
       the tier‑L paragraph offered "a menu, a dialog, a popover or the command
@@ -1554,6 +1574,14 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 `[ ]` **Components / repo docs**: `docs/component-api.md` §2 promises a warning when `value` and `defaultValue` are both supplied, and §4 promises `defaultPrevented` is respected. `packages/components/src/internal/controllable.ts` logs no warning, and `packages/primitives/src/core/keyboard.ts` records that GPUix 0.10.0 carries no `defaultPrevented` and no preventDefault. Plan 482 documents the shipped truth on `/docs/component-api`; correct the contract or the code, then align the page. Owner: components (the contract doc is outside `apps/docs`)
 `[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing
 `[ ]` **Licensing**: record the MPL-2.0 licence for `axe-core@4.10.2`, the dev-only accessibility engine `smoke:a11y` injects into the browser (plan 512). It is not in the shipped bundle, but it is a direct dev dependency; owner: licensing
+`[ ]` **Licensing: declare the library's own licence** — the repository has no root
+      `LICENSE`, no `COPYING`/`UNLICENSE` file and no `license` field in any
+      workspace manifest, so nothing grants a consumer permission to use,
+      modify or redistribute the library. `/docs/license` now states that
+      absence and `src/license-page.test.ts` fails as soon as a licence appears,
+      which forces the page to name it. Choosing and declaring the licence, and
+      adding the field to every published package, is the release decision
+      (plan 617 §2); owner: licensing.
 `[ ]` **Licensing**: `LICENSES/README.md` still ends "Nothing is recorded yet", but `LICENSES/base-gpui.md` is a verified record (plan 489 corrected the site's License page to match). Update the README line; owner: licensing
 `[-]` **Components**: expose `ContextMenu.point` and `DatePicker.defaultOpen` —
       superseded by plan 486: the docs' live scenes drive the real right-click

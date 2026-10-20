@@ -1,12 +1,25 @@
 ---
 title: License and attribution
-description: Open source licences, including the recorded MIT reference, and provenance for the library and its references.
+description: Whether you can use the library, the open source licences recorded for its references (including the MIT reference), and the attribution still owed.
 ---
 
 GPUIXUI reimplements behaviour from other projects and may reuse source where
 the licence permits it. Every reference and every adapted implementation is
 recorded before release; the licence inventory is written while the code is
 written, not after.
+
+## The library's own licence
+
+No licence has been declared for the library itself. The repository has no
+`LICENSE` file at its root and no workspace package manifest carries a `license`
+field, so the terms a consumer can rely on are not published: it is not yet
+accurate to call this library open source, free to use, or licensed for
+commercial use.
+
+The records below are the **references'** licences and the evidence rule for
+them, not a grant for this code. Until the owner declares the library's licence
+and the published packages carry it, do not redistribute or ship it. This page
+states the status; it does not choose the licence.
 
 ## How a licence is verified
 
@@ -26,6 +39,8 @@ states the rule and what each file must answer.
 The inventory and the notices are a release requirement, and they are not
 written yet:
 
+- `LICENSE` — the library's own licence, and a `license` field in every
+  published package manifest.
 - `LICENSES/inventory.md` — one row per dependency and reference: name,
   version or commit, licence, use and obligations.
 - `LICENSES/provenance.md` — one row per adapted implementation: source,
