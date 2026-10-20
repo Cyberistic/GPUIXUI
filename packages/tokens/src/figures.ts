@@ -542,6 +542,26 @@ const rowPressFillFigure: DocumentedFigure = {
 };
 
 /**
+ * The native field's caret on its own `input` fill. `caretPairs` publishes the
+ * pair, and `docs/tokens.md` quotes its tightest set — which drifted: the page
+ * said **7.831:1** on Linux dark, measured before the light platform inks moved,
+ * while no shipped set measures near it and `Light` is the tightest at
+ * **8.204:1**. The entry derives both the figure and the set, so the sentence
+ * cannot survive another palette move.
+ */
+const caretPairFigure: DocumentedFigure = {
+  document: "docs/tokens.md",
+  name: "the native field's caret on its input fill",
+  pairs: [["primaryText", "input", "mark"]],
+  kind: "plain",
+  claim: "tightest",
+  provenance: identityTheme("light", "default"),
+  decimals: 3,
+  sentence:
+    "Every shipped set clears the new pair (**{figure}:1** at the tightest, `Light`)",
+};
+
+/**
  * The two roles `docs/tokens.md` rejects as a groove, and the figures the
  * rejection rests on. `border` is a line role: as a groove it would have to
  * carry the four `PROGRESS_TONES` as marks, and the tightest of them measures
@@ -711,6 +731,7 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   trackSurfaceFigure,
   trackSelectedFigure,
   rowPressFillFigure,
+  caretPairFigure,
   ...trackRejectedRoleFigures,
   ...ringFigures,
 ];

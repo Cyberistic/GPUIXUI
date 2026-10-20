@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 323/400
+`[x]` `[████████░░]` 324/401
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2730,6 +2730,14 @@ base, so a theme can be created once at startup and shared"), but only one
 platform style/recipe and runs every public builder, resolver and read helper;
 the docs name the guard. No token value, pair, floor, metric or shipped theme
 moves, and the implementation already passes (plan 713)
+`[x]` Hold the caret pair's quoted tightest figure — the catalogue said every
+shipped set clears `primaryText` on the `input` fill at **7.831:1**, tightest in
+Linux dark, but no set measures near it: the measured tightest is **8.204:1** on
+`Light` (then Dark · Windows at 8.250), stale since a light platform ink moved
+after plan 557 wrote the sentence. `figures.ts` registers the pair as a
+`tightest` figure, so `figures.test.ts` derives both the ratio and the set, and
+the catalogue quotes the derived value. No token value, pair, floor, metric or
+shipped set moves (plan 714)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

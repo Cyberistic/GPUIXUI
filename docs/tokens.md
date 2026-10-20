@@ -3721,8 +3721,8 @@ field's caret — `primaryText`, the accent's ink rather than the `primary` fill
 on the field's own `input` fill (`caretPairs`) — after macOS dark's fill
 measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
-held by the `primaryText` text pairs. Every shipped set clears the new pair
-(**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
+held by the `primaryText` text pairs. Every shipped set clears the new pair (**8.204:1** at the tightest, `Light`), so
+no colour moves; taking it from
 396 to **464** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
 `671`, `698` and `700`.
 Plan `659` adds the field's typed text and hint inside a tone-tinted status
@@ -4098,7 +4098,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **32** entries across
+state — `documentedFigures` and `documentedTierFigures`, **33** entries across
 this page, the design system, the README, the ledger and the ring's JSDoc — and
 `packages/tokens/src/figures.test.ts` derives each one from `shippedThemes` with
 the checker's own measurement and asserts both the figure and the set (and
