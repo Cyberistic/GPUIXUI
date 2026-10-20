@@ -280,10 +280,10 @@ nub run --filter playground build
 # expected: exit 0, dist/ refreshed
 
 nub apps/playground/dist/smoke/run.js --only search-highlights
-# expected: 1/1 passed, exit 0; ~15 more checks than the previous 41
+# expected: 1/1 passed, exit 0; measured 41 → 82 checks
 
 nub apps/playground/dist/live/run.js --only live-highlights
-# expected: 1/1 passed, exit 0
+# expected: 1/1 passed, exit 0; measured 12 → 53 checks
 
 nub run check && nub run lint && nub run test
 # expected: all exit 0

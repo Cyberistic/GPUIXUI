@@ -111,12 +111,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       background, M5 token fixture using `accent`). Focused ids:
       `search-highlights`, `live-highlights`; no `--all` in that task.
 
-`[ ]` **Run the promotion gate on the head that includes the wash pixels** per
-      plan `702`: both registries once, totals read back from
-      `.artifacts/smoke-report.json`/`live-report.json`, no `provenance.json`
-      from a plain `--all`, `check`/`lint`/`test` green. Expected totals:
-      headless **106/106** (`3865` checks) and live **95/95** (`2617` checks),
-      each `+41` over plan `699`.
+`[x]` **Run the promotion gate on the head that includes the wash pixels** per
+      plan `702`: verification only on `1cb4d302` (code head `cee9b79c`, 0
+      behind `origin/master`) — headless **106/106** (`3865` checks, 65
+      capabilities, 105.5 s) and live **95/95** (**2616** checks, 61
+      capabilities, 1073.1 s), both exit `0`, so the 41 new wash checks ran in
+      both full sequences (`live-highlights` reports **53**). The live total is
+      plan `699`'s 2576 + 41 − one branch-variance check in the existing suite
+      (`live-tier2-editing` reports 31–33); a plain full run wrote no
+      `provenance.json`, both `host` lines carry the release-tag pins, and the
+      totals were read back from `.artifacts/smoke-report.json` /
+      `live-report.json`. `nub run check`/`lint`/`test` green (playground 446,
+      testing 68). Exact ids: the whole headless registry and the whole live
+      registry (`--all` live, bare headless). **This is the current gate for the
+      promotion fast-forward.**
 
 `[x]` **Run the promotion gate on the head that includes plan `697`'s chart
       colour pixels** per plan `699`: verification only on `4101684e` (code
@@ -1781,6 +1789,15 @@ focused id is `live-frames`.
       capabilities, 1078.0 s) and headless **106/106** (**3824** checks, 65
       capabilities), both exit `0`, with no `provenance.json`. `nub run
       check`/`lint`/`test` green (playground 442, testing 68, components 308,
+      primitives 282, tokens 196, tw 103, icons 19, docs 7). **Addendum (plan
+      `702`, 2026-10-20):** plan `701` then added 41 checks to `search-highlights`
+      and `live-highlights`, so both registries ran again on `1cb4d302` (code
+      head `cee9b79c`): headless **106/106** (**3865** checks, 65 capabilities,
+      105.5 s) and live **95/95** (**2616** checks, 61 capabilities, 1073.1 s),
+      both exit `0`, no `provenance.json`; `live-highlights` reports **53**
+      checks inside the full sequence. The live total is `2576 + 41 − 1`
+      branch-variance check in the existing `live-tier2-editing` (31–33). `nub
+      run check`/`lint`/`test` green (playground 446, testing 68, components 308,
       primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
       current gate for the promotion fast-forward.**
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)

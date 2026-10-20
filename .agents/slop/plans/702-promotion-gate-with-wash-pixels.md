@@ -76,7 +76,28 @@ and records the totals that authorise the promotion.
 
    Never push to master.
 
-## 3. STOP conditions
+## 3. Measured results (2026-10-20)
+
+Verification only, on `1cb4d302` (the plan-702 commit on the plan-701 code head
+`cee9b79c`); `origin/master` was 0 commits ahead at the start.
+
+- Headless: **106/106**, **3865** checks, 65 capabilities, 105.5 s, exit `0`.
+- Live: **95/95**, **2616** checks, 61 capabilities, 1073.1 s, exit `0`.
+  `live-highlights` reports **53** checks inside the full sequence.
+- The live total is plan `699`'s `2576` plus the 41 new wash checks minus one
+  check of run-to-run branch variance in the existing suite (`live-tier2-editing`
+  reports 31–33 depending on the blur branch); the scenario count and capability
+  count are unchanged at `95`/`61`.
+- Both `host` lines carry the release-tag pins (`gpuix 9fcd6288`, zed
+  `81c99f81`, runtime shaders).
+- A plain full run wrote **no** `provenance.json`.
+- `nub run check`, `nub run lint` and `nub run test` exit `0` (playground 446,
+  testing 68, components 308, primitives 282, tokens 196, tw 103, icons 19,
+  docs 7).
+
+This is the current gate for the promotion fast-forward.
+
+## 4. STOP conditions
 
 - Any scenario fails: stop, capture the failing check's `expected/actual` and
   the scenario id, and fix or record it in a new plan. Do not re-run hoping for
@@ -85,10 +106,10 @@ and records the totals that authorise the promotion.
   registries on the merge commit, and record that sha.
 - The live registry does not report `95/95`: stop and reconcile the registry
   count with `live/scenarios.tsx` first.
-- A `provenance.json` appears from a plain `--all`: stop; that is a capture-mode
-  regression.
+- A `provenance.json` appears from a plain full run: stop; that is a
+  capture-mode regression.
 
-## 4. Acceptance
+## 5. Acceptance
 
 - Both registries ran on one recorded sha, exit `0`.
 - The totals are read back from the report files and written into the ledgers.

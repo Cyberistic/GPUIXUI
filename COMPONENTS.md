@@ -96,15 +96,14 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities; **115.5 s** at the plan-`691` gate and **282.4 s** on an independent re-run under load, identical counts; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
-(`live-report.json`, **2576 checks**, 61 capabilities; **1078.0 s**, exit `0`)
-on 2026-10-19, the merge/release gate (plan `699`, head `21d02b2a` at the gate).
-That total is plan `659`'s 2469 plus the **22 checks `live-pixel-colour`** added
-(plan `674`) plus the **30 that plan `676` added to `live-theme`** (9 → 39) plus
-the **24 that plan `690` added to `live-content`** (44 → 68) plus the **31 that
-plan `697` added to `live-chart`** (40 → 71), so
-the palette's frame pixels, the image-source pixels and the chart's colour
-contract are included in the full
+The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3865 checks**, 65 capabilities; **105.5 s** at the plan-`702` gate; plan `701` added 41 checks to `search-highlights` and plan `674` added `pixel-colour`'s 22 checks). The live suite **last ran in full at 95/95**
+(`live-report.json`, **2616 checks**, 61 capabilities; **1073.1 s**, exit `0`)
+on 2026-10-20, the merge/release gate (plan `702`, head `1cb4d302` at the gate).
+That total is plan `699`'s 2576 plus the **41 checks plan `701` added to
+`live-highlights`** (12 → 53), less one branch-variance check in the existing
+`live-tier2-editing` (which reports 31–33), so
+the wash colours, the palette's frame pixels, the image-source pixels and the
+chart's colour contract are included in the full
 sequence rather than merely registered. The gate
 covered every live scenario registered at that point, including `live-scale`
 (plan `620`, the retained-tree cost model in a window), `live-selection-signal`
@@ -121,9 +120,10 @@ the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content
 origin and a borderless size — is what every geometry check now asserts.
 **Registered live scenarios are 95**, and the full gate covers all of them. The
 live registry is guarded by `liveScenarioProblems` (plan `639`); the count is
-unchanged by plans `676`, `677`, `690`, `691` and `697`. Plan `697` added **31**
-checks to `live-chart` (40 → 71), and plan `699` measured them inside the full
-sequence: **2576** checks (`2545 + 31`), exit `0`.
+unchanged by plans `676`, `677`, `690`, `691`, `697` and `701`. Plans `697` and
+`701` added **31** checks to `live-chart` (40 → 71) and **41** to
+`live-highlights` (12 → 53), and plan `702` measured them inside the full
+sequence: **2616** checks, exit `0`.
 
 **Colour is no longer screenshot-only (plan `674`, `pixel-colour` +
 `live-pixel-colour`):** the runtime writes the frame, and `@gpuixui/testing`'s
@@ -185,9 +185,10 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**95/95 green** (2576 checks, 61 capabilities; 1078.0 s) on the release-tag
-binding through plan `656`'s capture-capable live runner (plan `699`'s gate on
-head `21d02b2a`, including `live-theme`'s 39 pixel checks,
+**95/95 green** (2616 checks, 61 capabilities; 1073.1 s) on the release-tag
+binding through plan `656`'s capture-capable live runner (plan `702`'s gate on
+head `1cb4d302`, including `live-highlights`' 53 wash checks,
+`live-theme`'s 39 pixel checks,
 `live-pixel-colour`, `live-content`'s 68 image-source checks and `live-chart`'s
 71 chart-colour checks; a plain `--all`
 wrote no frame or `provenance.json`), and the **full
