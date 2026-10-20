@@ -49,8 +49,7 @@ export const searchRanks: ReadonlyArray<SearchRank> = [
   {
     constant: "TOKEN_MATCH_RANK",
     value: String(TOKEN_MATCH_RANK),
-    means:
-      "one word of a name, a multiword generated name, or the first word of a summary",
+    means: "one word of a name, or a multiword generated name",
   },
   {
     constant: "DESCRIPTION_MATCH_RANK",
