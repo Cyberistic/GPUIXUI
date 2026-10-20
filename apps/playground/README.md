@@ -2287,7 +2287,7 @@ wins), but a probe must not read a press as "active without hover".
 ## Evidence on this host
 
 The suite is **110/110 green** here (`exit 0`, 4077 checks, 65 capabilities,
-**240.0 s** with plan `754`'s six-frame state probe, 2026-10-20; plan `754`
+**250.2 s** with plan `754`'s six-frame state probe, 2026-10-20; plan `754`
 added the 50-check `state-pixels`, plan `745` added the 64-check
 `border-pixels`; plan `739`'s gate read 108/108 and 3963 on the shadow-pixel
 head; plan `736`

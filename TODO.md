@@ -118,7 +118,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       mutation proofs observed and reverted (M1–M5 and M7 fail by name, M6's
       precondition fails in 15 ms). Exact ids run: `state-pixels` (green ×3 +
       M1–M6), `live-state-pixels` (green ×2). Full headless **110/110**
-      (**4077** checks, 65 capabilities, 240.0 s), exit `0`; live registry
+      (**4077** checks, 65 capabilities, 250.2 s), exit `0`; live registry
       **99**, no full live gate (merge gate); `nub run check`/`lint`/`test`
       green.
 

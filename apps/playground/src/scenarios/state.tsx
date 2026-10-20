@@ -39,7 +39,6 @@ import {
   resolveStateColour,
   stateFixtures,
   type StateColours,
-  type StateFixtures,
 } from "./state-pixels.js";
 
 /** A logical window point. */
@@ -147,7 +146,7 @@ const stateChecks = <Host, E>(
   driver: StateDriver<E>,
 ): Effect.Effect<void, Smoke.SmokeAssertionError | E> =>
   Effect.gen(function* () {
-    const fixtures: StateFixtures = stateFixtures(palettes.dark.colors);
+    const fixtures = stateFixtures(palettes.dark.colors);
 
     yield* ctx.expectEqual(
       "the hover fixture's states are distinguishable",
@@ -170,14 +169,14 @@ const stateChecks = <Host, E>(
       true,
     );
 
-    const samplers = (frame: Pixels.Pixels) => ({
-      check: (testId: string, hex: string, label: string) =>
+    const sampled =
+      (frame: Pixels.Pixels) =>
+      (testId: string, hex: string, label: string) =>
         Effect.gen(function* () {
           const actual = yield* pixelAtId(ctx, driver.reader, frame, testId);
           const expected = yield* parseColour(`${label} parses`, hex);
           yield* expectColour(ctx, label, actual, expected);
-        }),
-    });
+        });
 
     const pressBox = yield* paintedBox(ctx, driver.reader, "state-press");
     const centre: Point = {
@@ -187,61 +186,61 @@ const stateChecks = <Host, E>(
 
     yield* driver.hover("state-hover");
     const hoverFrame = yield* driver.capture();
-    const hovered = samplers(hoverFrame);
+    const hovered = sampled(hoverFrame);
     yield* ctx.expectSome(
       "the frame's device scale is an integer",
       Pixels.frameScale(hoverFrame, yield* driver.reader.windowSize()),
     );
-    yield* hovered.check(
+    yield* hovered(
       "state-hover",
       resolveStateColour(fixtures.hover, "hover"),
       "hovering paints the hover colour",
     );
-    yield* hovered.check(
+    yield* hovered(
       "state-rest",
       fixtures.hover.rest,
       "hovering one element leaves its neighbour alone",
     );
-    yield* hovered.check(
+    yield* hovered(
       "state-away",
       fixtures.hover.rest,
       "hovering one element leaves the leave target alone",
     );
 
     yield* driver.hover("state-parent");
-    const parentHover = samplers(yield* driver.capture());
-    yield* parentHover.check(
+    const parentHover = sampled(yield* driver.capture());
+    yield* parentHover(
       "state-hover",
       fixtures.hover.rest,
       "leaving reverts the hovered element to its authored fill",
     );
-    yield* parentHover.check(
+    yield* parentHover(
       "state-parent",
       resolveStateColour(fixtures.parent, "hover"),
       "hovering the parent paints the parent's hover colour",
     );
-    yield* parentHover.check(
+    yield* parentHover(
       "state-child",
       fixtures.child.rest,
       "hovering the parent does not paint the child",
     );
 
     yield* driver.hover("state-child");
-    const childHover = samplers(yield* driver.capture());
-    yield* childHover.check(
+    const childHover = sampled(yield* driver.capture());
+    yield* childHover(
       "state-child",
       resolveStateColour(fixtures.child, "hover"),
       "hovering the child paints the child's own hover colour",
     );
-    yield* childHover.check(
+    yield* childHover(
       "state-parent",
       fixtures.parent.rest,
       "a child's hover reverts the parent's",
     );
 
     yield* driver.pressAt(centre);
-    const pressed = samplers(yield* driver.capture());
-    yield* pressed.check(
+    const pressed = sampled(yield* driver.capture());
+    yield* pressed(
       "state-press",
       resolveStateColour(fixtures.press, "active"),
       "pressing paints the active colour",
@@ -249,16 +248,16 @@ const stateChecks = <Host, E>(
 
     yield* driver.releaseAt(centre);
     yield* driver.hover("state-press");
-    const rehovered = samplers(yield* driver.capture());
-    yield* rehovered.check(
+    const rehovered = sampled(yield* driver.capture());
+    yield* rehovered(
       "state-press",
       resolveStateColour(fixtures.press, "hover"),
       "a release clears active and the hover applies",
     );
 
     yield* driver.pressAt(centre);
-    const pressedAgain = samplers(yield* driver.capture());
-    yield* pressedAgain.check(
+    const pressedAgain = sampled(yield* driver.capture());
+    yield* pressedAgain(
       "state-press",
       resolveStateColour(fixtures.press, "active"),
       "active wins over hover",

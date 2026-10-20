@@ -365,7 +365,7 @@ README records the rule.
 pointer states cost 107 s. The sequence was cut to the six distinct states that
 carry the claims — a seventh frame for active persistence outside the box was
 dropped and stays a plan-`557` geometry claim. The focused run is now ~40–52 s
-headless and ~36–41 s live; the full headless suite is **240.0 s**.
+headless and ~36–41 s live; the full headless suite is **240–250 s** (`250.2 s` on the final tree).
 
 **Commands run**
 
@@ -383,7 +383,7 @@ nub apps/playground/dist/live/run.js --only live-state-pixels
 # 1/1 scenarios passed · states=verified, exit 0; 50 checks
 
 nub apps/playground/dist/smoke/run.js
-# 110/110 scenarios passed, 4077 checks, 65 capabilities, 240.0 s, exit 0
+# 110/110 scenarios passed, 4077 checks, 65 capabilities, 250.2 s, exit 0
 ```
 
 The full live suite was **not** run: this is not the merge/release gate.
