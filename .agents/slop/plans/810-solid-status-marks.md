@@ -573,4 +573,34 @@ scenario is run for this plan.
 
 ## 14. Execution record
 
-_(filled in after execution)_
+Executed on 2026-10-20 on `agent/tokens-theme`.
+
+- The classification derived with both sides of `contrastPairs` as §1 now states:
+  `success` is `secondary`/`mark`/`surface`, `destructive` adds `boundary` and
+  `step`, and `warning`/`info` are `secondary`/`surface` only. The first probe
+  read the foreground alone and therefore missed the on-colour label and the
+  designed destructive step; the plan's first draft recorded that narrower view
+  and was corrected before the suite landed.
+- `markSurfacesOf` derived `success` as `background`/`card`/`popover`/`muted`/
+  `track` and `destructive` as the same plus `input`. `invalidRingPairs` derived
+  twelve rings, and the two field edges (`input`, `background`) complete the
+  fourteen boundary surfaces.
+- `nub exec vitest run src/solid-role-claims.test.ts src/docs.test.ts
+  src/status-solid.test.ts src/primary-mark-claims.test.ts` → four files, 249
+  tests green; nine new cases.
+- The mutations of §11 each failed the suite and the tree was restored green
+  after every one, including the two-directional ones: dropping the mark from
+  the `success` row, adding a mark claim to the `warning` row, deleting
+  `invalidRingPairs` from either catalogue paragraph, restoring the old design
+  system sentence, collapsing the `destructive` JSDoc, adding
+  `["success","hover","mark"]` to `markPairs` (which proves the surface lists
+  are read from the contract, not restated), and restoring the pre-plan
+  predicate's targets.
+- One guard was strengthened during execution: the role-row case first asserted
+  `toContain("mark")`, which the row's own trailing "at the mark floor" already
+  satisfied, so replacing "the mark a progress segment" with "the fill a
+  progress segment" passed. It now asserts the whole phrase and the mark floor.
+- `nub run --filter @gpuixui/tokens test` → **217 files / 7116 tests** green;
+  `nub run check` (check-tests, lint, fmt, type-check) clean.
+- No native scenario was run: the change is prose, JSDoc and a source-reading
+  suite, none of which the runtime paints.

@@ -157,7 +157,15 @@ export interface ThemeColors {
   readonly accentHover: string;
   /** Tinted emphasis surface while pressed. */
   readonly accentActive: string;
-  /** Destructive action background. */
+  /**
+   * Destructive action background. Also a **mark** — a progress segment, a
+   * slider fill or thumb ring, a rating star and a timeline dot paint it — and
+   * the invalid **boundary**: a failed field's edge and the ring an invalid
+   * control is focused with, the only focus indicator the runtime can draw.
+   * Measured as a fill (`statusFillPairs`), a mark (`markPairs`,
+   * `trackMarkPairs`) and a boundary (`invalidRingPairs` and the field's own
+   * edge), so a copied palette is held at 1.05:1, 3:1 and 3:1 (4.5:1 at AAA).
+   */
   readonly destructive: string;
   /** Text and icons on `destructive`. */
   readonly destructiveForeground: string;
@@ -165,15 +173,26 @@ export interface ThemeColors {
   readonly destructiveHover: string;
   /** Destructive action background while pressed. */
   readonly destructiveActive: string;
-  /** Success background and indicator. */
+  /**
+   * Success background, and the mark a progress segment, a slider fill or thumb
+   * ring, a rating star and a timeline dot paint (`markPairs`,
+   * `trackMarkPairs`). `successText` is the readable role for a label, icon or
+   * status dot on a plain surface.
+   */
   readonly success: string;
   /** Text and icons on `success`. */
   readonly successForeground: string;
-  /** Warning background and indicator. */
+  /**
+   * Warning background. A fill only: light `warning` is 1.78:1 on the canvas,
+   * under the mark floor, so a label, icon or status dot is `warningText`.
+   */
   readonly warning: string;
   /** Text and icons on `warning`. */
   readonly warningForeground: string;
-  /** Informational status, distinct from `primary`. */
+  /**
+   * Informational status fill, distinct from `primary`. A fill only; a label,
+   * icon or status dot is `infoText`.
+   */
   readonly info: string;
   /** Text and icons on `info`. */
   readonly infoForeground: string;

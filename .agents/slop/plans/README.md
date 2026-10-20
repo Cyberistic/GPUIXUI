@@ -408,7 +408,7 @@ references without buying correctness.
 | [805](./805-example-header-figures.md) | The copyable examples' header figures have no owner | F | 310, 394, 539, 651, 658, 717, 733, 803 | done |
 | [806](./806-primary-mark-claims.md) | `primary` is measured as a fill, and as nine marks | F | 082, 332, 341, 347, 516, 557, 563, 698, 749 | done |
 | [807](./807-elevation-rationale.md) | The AAA dark elevation rationale has no owner | F | 085, 099, 345, 390, 505, 509, 778 | done |
-| [810](./810-solid-status-marks.md) | The solid status roles are described as fills, and three of them are marks | F | 014, 057, 083, 332, 340, 394, 399, 733, 749, 806 | ready |
+| [810](./810-solid-status-marks.md) | The solid status roles are described as fills, and three of them are marks | F | 014, 057, 083, 332, 340, 394, 399, 733, 749, 806 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

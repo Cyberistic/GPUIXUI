@@ -54,7 +54,24 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 368/445
+`[x]` `[████████░░]` 369/445
+
+`[x]` Own the solid status roles' descriptions — the design system said "The
+solid roles are fills … so it is never the colour of text or a dot", the
+catalogue said "The solid roles are fills, not foregrounds", and
+`ThemeColors.destructive` said only "Destructive action background", while
+`markPairs`/`trackMarkPairs` measure `success` as five marks and `destructive`
+as six and `invalidRingPairs` plus the field edge hold `destructive` to fourteen
+boundary pairs — and the shipped `Progress`, `Slider`, `Rating` and `Timeline`
+paint exactly those marks. Both wrong sentences were *guarded* by `docs.test.ts`,
+so the suite enforced the overgeneralisation. The four descriptions now state
+the split — every solid status role is a surface, `primary`/`success`/
+`destructive` are marks, `warning`/`info` are fill-only, `destructive` is the
+invalid boundary — the two `docs.test.ts` cases reconstruct the corrected
+sentences, and `solid-role-claims.test.ts` derives the classes, the mark surfaces
+and the twelve-rings-plus-two-edges split from the published lists, holding both
+colour tables in both directions; no colour, pair, floor, metric, role or
+shipped theme moves (plan 810)
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)

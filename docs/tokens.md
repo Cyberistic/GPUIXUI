@@ -186,7 +186,14 @@ There are 71 roles. The four status families — `info`, `success`, `warning` an
 a readable foreground on it, a soft pair (`xSoft` / `xSoftForeground`) with an
 edge (`xSoftBorder`) for a tone-tinted Alert or Badge, and a text role (`xText`)
 for status labels, icons and indicator dots drawn on `background`, `card` or
-`popover`. Every filled action has designed hover and pressed steps —
+`popover`. The solid role's third job is the value indicator: `primary`,
+`success` and `destructive` are measured as marks too (`markPairs`,
+`trackMarkPairs`) — a progress segment, a slider fill or thumb ring, a rating
+star and a timeline dot paint them — and `destructive` is also the invalid
+boundary, the field's error edge and the ring an invalid control is focused with
+(`invalidRingPairs`). `warning` and `info` are fill-only: light `warning` is
+1.78:1 on the canvas, under the 3:1 mark floor. Every filled action has designed
+hover and pressed steps —
 `primaryHover`/`primaryActive`, `secondaryHover`/`secondaryActive`,
 `destructiveHover`/`destructiveActive` and `accentHover`/`accentActive` — so a
 component never composites an alpha fill over whatever surface sits behind it.
@@ -249,11 +256,11 @@ A runnable example lives in
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
 | `accentHover` | `#E0E3FF` | `#42319F` | toggle-on surface while hovered |
 | `accentActive` | `#C7CBFF` | `#4C39B5` | toggle-on surface while pressed |
-| `destructive` | `#CC3439` | `#FF6B6B` | destructive action, and the invalid field edge |
+| `destructive` | `#CC3439` | `#FF6B6B` | destructive action, the invalid field edge and the invalid control's focus ring; also the mark a progress segment, slider fill or thumb ring, rating star and timeline dot paint, at the mark floor |
 | `destructiveForeground` | `#FFFFFF` | `#3A0B0D` | text on `destructive` |
 | `destructiveHover` | `#A5262B` | `#FF9E9E` | destructive action while hovered |
 | `destructiveActive` | `#7E1D21` | `#FFC6C6` | destructive action while pressed |
-| `success` | `#158754` | `#3BC97F` | success |
+| `success` | `#158754` | `#3BC97F` | success fill; also the mark a progress segment, slider fill or thumb ring, rating star and timeline dot paint, at the mark floor |
 | `successForeground` | `#FFFFFF` | `#042015` | text on `success` |
 | `warning` | `#F5B01F` | `#FFC94D` | warning |
 | `warningForeground` | `#2A1B00` | `#2A1B00` | text on `warning` |
@@ -351,10 +358,18 @@ quiet panel a sidebar paints, or one of the state washes a row paints (`hover`,
 | `warning` | `warning` / `warningForeground` | `warningSoft` | `warningSoftForeground` | `warningSoftBorder` | `warningText` |
 | `destructive` | `destructive` / `destructiveForeground` | `destructiveSoft` | `destructiveSoftForeground` | `destructiveSoftBorder` | `destructiveText` |
 
-The solid roles are fills, not foregrounds. Light `warning` (`#F5B01F`) is
-1.78:1 against `background` and 1.89:1 against `card`, under the 3:1 non-text
-floor, and light `success` is 4.26:1, under the 4.5:1 text floor. `xText` is the
-readable tonality for the plain surfaces (`background`, `card` and `popover`),
+The solid roles are fills and marks, never foregrounds. Light `warning`
+(`#F5B01F`) is 1.78:1 against `background` and 1.89:1 against `card`, under the
+3:1 mark floor, so `warning` and `info` carry no mark pair; light `success` is
+4.26:1, under the 4.5:1 text floor and above the mark floor, so it joins
+`primary` and `destructive` as a mark: a progress segment, a slider fill or thumb
+ring, a rating star and a timeline dot paint those three at 3:1, 4.5:1 at AAA,
+on `background`, `card`, `popover` and `muted`, the `input` fill a destructive
+thumb rings, and the `track` groove (`markPairs`, `trackMarkPairs`).
+`destructive` is also the invalid boundary: the field's error edge and the ring
+an invalid control paints, its only focus indicator, held to the same floor on
+every surface `invalidRingPairs` names. `xText` is the readable tonality for the
+plain surfaces (`background`, `card` and `popover`),
 the `muted` quiet panel a sidebar or settings group paints, and the row washes
 a row paints (`hover`, `active`, `accent`, `selected` and the pressed
 `selectedActive`); it is held to
@@ -553,11 +568,11 @@ carries, so it cannot claim another.
 | `accentForeground` | `#2E2370` | `#E0E3FF` | text on `accent` |
 | `accentHover` | `#D5D8FF` | `#33257A` | toggle-on surface while hovered |
 | `accentActive` | `#BFC2FF` | `#42319F` | toggle-on surface while pressed |
-| `destructive` | `#7E1D21` | `#FF9E9E` | destructive action, and the invalid field edge |
+| `destructive` | `#7E1D21` | `#FF9E9E` | destructive action, the invalid field edge and the invalid control's focus ring; also the mark a progress segment, slider fill or thumb ring, rating star and timeline dot paint, at the mark floor |
 | `destructiveForeground` | `#FFFFFF` | `#000000` | text on `destructive` |
 | `destructiveHover` | `#5C1619` | `#FFC6C6` | destructive action while hovered |
 | `destructiveActive` | `#3A0B0D` | `#FFE0E0` | destructive action while pressed |
-| `success` | `#0E5135` | `#6FE0A3` | success |
+| `success` | `#0E5135` | `#6FE0A3` | success fill; also the mark a progress segment, slider fill or thumb ring, rating star and timeline dot paint, at the mark floor |
 | `successForeground` | `#FFFFFF` | `#000000` | text on `success` |
 | `warning` | `#F5B01F` | `#FFC94D` | warning |
 | `warningForeground` | `#000000` | `#000000` | text on `warning` |

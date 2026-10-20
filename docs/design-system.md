@@ -61,8 +61,14 @@ surface or the wash a row paints. `info` has its own blue ramp, so an
 informational message can never be mistaken for a primary action. A component
 names a status family and reads its roles; it never mixes a readable text colour
 out of a solid status colour at runtime, and never special-cases a mode to make a
-tint readable. The solid roles are fills: light `warning` is 1.78:1 against the
-canvas, so it is never the colour of text or a dot.
+tint readable. The solid roles are surfaces, and three of them are also marks:
+light `warning` is 1.78:1 against the canvas, under the 3:1 mark floor, so
+`warning` and `info` are fill-only and a status label, icon or dot on a plain
+surface is `xText`; `primary`, `success` and `destructive` also paint a progress
+segment, a slider fill or thumb ring, a rating star and a timeline dot, so they
+are held to the mark floor on the surfaces `markPairs` and `trackMarkPairs`
+name. `destructive` is also the invalid boundary — a failed field's edge and the
+ring it is focused with (`invalidRingPairs`) — held to the same floor.
 
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library. A brand that also uses its accent as text overrides

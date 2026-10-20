@@ -1509,13 +1509,14 @@ describe("docs/tokens.md quoted figures", () => {
   it("quotes the status ratios the light palette produces", () => {
     const light = themes.light.colors;
     const sentence =
-      "The solid roles are fills, not foregrounds. " +
+      "The solid roles are fills and marks, never foregrounds. " +
       `Light \`warning\` (\`${light.warning}\`) is ` +
       `${contrastRatio(light.warning, light.background).toFixed(2)}:1 against \`background\` and ` +
       `${contrastRatio(light.warning, light.card).toFixed(2)}:1 against \`card\`, under the ` +
-      `${contrastFloors.default.boundary}:1 non-text floor, and light \`success\` is ` +
+      `${contrastFloors.default.mark}:1 mark floor, so \`warning\` and \`info\` carry no mark pair; ` +
+      "light `success` is " +
       `${contrastRatio(light.success, light.background).toFixed(2)}:1, under the ` +
-      `${contrastFloors.default.secondary}:1 text floor.`;
+      `${contrastFloors.default.secondary}:1 text floor and above the mark floor,`;
 
     expect(markdownProse).toContain(sentence);
   });
@@ -1736,7 +1737,10 @@ describe("docs/tokens.md quoted figures", () => {
 
   it("quotes the warning figure the design system repeats", () => {
     const light = themes.light.colors;
-    const sentence = `The solid roles are fills: light \`warning\` is ${contrastRatio(light.warning, light.background).toFixed(2)}:1 against the canvas, so it is never the colour of text or a dot.`;
+    const sentence =
+      "The solid roles are surfaces, and three of them are also marks: " +
+      `light \`warning\` is ${contrastRatio(light.warning, light.background).toFixed(2)}:1 against the canvas, under the ` +
+      `${contrastFloors.default.mark}:1 mark floor, so \`warning\` and \`info\` are fill-only`;
 
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });

@@ -11,9 +11,14 @@
  * its edge and `xText` but not the solid pair, so a consumer retyped
  * `theme.colors[tone]` / `theme.colors[`${tone}Foreground`]` by hand.
  *
- * The mark is a different class (plan 332): a status dot or label is `xText`,
+ * The mark is a different class (plan 332): a *status* dot or label is `xText`,
  * never the solid fill, because the light `warning` fill is 1.78:1 on the canvas
- * — under the 3:1 a mark needs. These cases hold both halves.
+ * — under the 3:1 a mark needs. Three of the four solid roles are nevertheless
+ * marks: `Progress`, `Slider`, `Rating` and `Timeline` paint `primary`,
+ * `success` and `destructive` as a progress segment, a fill or thumb ring, a
+ * star and a dot, and `solid-role-claims.test.ts` holds every sentence that
+ * describes them to `markPairs`/`trackMarkPairs`. `warning` and `info` are the
+ * two fill-only families. These cases hold both halves.
  */
 import { describe, expect, it } from "vitest";
 import {
