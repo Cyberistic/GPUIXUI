@@ -300,10 +300,11 @@ it("paints the trigger's tracked focus through a caller's style", async () => {
   );
 });
 
-it("moves the trigger to the box a caller's style asks for", async () => {
+it("moves the trigger and its tip to the box a caller's style asks for", async () => {
   // The plan-357 use case on the one element InfoTip draws: nudge it onto a
-  // baseline without a `Box` wrapper. The painted box moves by the caller's
-  // margin, and the role/name stay the component's.
+  // baseline without a `Box` wrapper. The margin rides the anchor root, so the
+  // tip follows the trigger; measured, a margin on the trigger alone moved the
+  // icon and left the tip behind (plan 695).
   const runtime = await openWindow();
   const view = (nudge: boolean) => (
     <Surface>
@@ -311,17 +312,23 @@ it("moves the trigger to the box a caller's style asks for", async () => {
         content={CONTENT}
         label="Revenue definition"
         testId="trigger"
+        tipTestId="tip"
         style={nudge ? { marginLeft: 12 } : undefined}
       />
     </Surface>
   );
   runtime.render(view(false));
+  runtime.hover("trigger");
   runtime.flush();
-  const plain = boundsOf(runtime, "trigger");
+  const plainTrigger = boundsOf(runtime, "trigger");
+  const plainTip = boundsOf(runtime, "tip");
   runtime.render(view(true));
+  runtime.hover("trigger");
   runtime.flush();
-  const nudged = boundsOf(runtime, "trigger");
-  expect(nudged.x - plain.x).toBe(12);
+  const nudgedTrigger = boundsOf(runtime, "trigger");
+  const nudgedTip = boundsOf(runtime, "tip");
+  expect(nudgedTrigger.x - plainTrigger.x).toBe(12);
+  expect(nudgedTip.x - plainTip.x).toBe(12);
   expect(
     Option.isSome(
       a11yNode(runtime.a11y(), {

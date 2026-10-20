@@ -23,6 +23,7 @@ import {
   sliderRailStyle,
   sliderThumbStyle,
   sliderTrackStyle,
+  splitCallerStyle,
   surfaceStyle,
   textStyle,
   TEXT_TONES,
@@ -629,5 +630,32 @@ describe("value controls", () => {
     expect(track.active).toBeUndefined();
     expect(track.opacity).toBe(0.5);
     expect(track.cursor).toBe("not-allowed");
+  });
+});
+
+describe("splitCallerStyle", () => {
+  it("puts every margin on the anchor and nothing else", () => {
+    // A floating layer anchors to the root that hugs its trigger (plan 060), so
+    // a caller's margin belongs to that root; a margin on the trigger would
+    // move the icon inside the anchor and leave the tip behind (plan 695).
+    const split = splitCallerStyle({
+      margin: 4,
+      marginLeft: 12,
+      height: 40,
+      backgroundColor: "#123456",
+    });
+    expect(split.margin).toStrictEqual({ margin: 4, marginLeft: 12 });
+    expect(split.body).toStrictEqual({
+      height: 40,
+      backgroundColor: "#123456",
+    });
+  });
+
+  it("returns empty halves for a style that has neither", () => {
+    expect(splitCallerStyle({})).toStrictEqual({ margin: {}, body: {} });
+    expect(splitCallerStyle({ marginTop: 2 })).toStrictEqual({
+      margin: { marginTop: 2 },
+      body: {},
+    });
   });
 });

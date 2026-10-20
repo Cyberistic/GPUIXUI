@@ -789,3 +789,43 @@ export const otpGroupStyle = (theme: PrimitiveTheme): StyleDesc => ({
 
 // The cell itself is a square field, so its chrome lives with the field
 // recipe (`core/recipes.ts`) rather than with the density-driven controls.
+
+// ── Caller style seams ───────────────────────────────────────────────
+
+/** A resolved caller style, split by which element owns each part. */
+export interface SplitCallerStyle {
+  /** The offset the anchor root carries, so a floating layer follows it. */
+  readonly margin: StyleDesc;
+  /** Everything else, painted by the control itself. */
+  readonly body: StyleDesc;
+}
+
+/**
+ * Split a caller's style into the margin an anchor-carrying part owns and the
+ * rest.
+ *
+ * A floating layer anchors to the root that hugs its trigger (plan `060`). A
+ * `margin` on that trigger moves it **inside** the root and leaves the layer
+ * behind, while every other property either paints in place or grows the box
+ * the root hugs. `InfoTip` is the one part whose trigger is also an anchor
+ * target, so it applies the caller's margin to the root: measured, a
+ * `marginLeft: 12` moved the trigger but not the tip, and the same value on the
+ * root moves both (plan `695`). The caller still writes one `style`.
+ */
+export const splitCallerStyle = ({
+  margin,
+  marginTop,
+  marginRight,
+  marginBottom,
+  marginLeft,
+  ...body
+}: StyleDesc): SplitCallerStyle => ({
+  margin: {
+    ...(margin === undefined ? {} : { margin }),
+    ...(marginTop === undefined ? {} : { marginTop }),
+    ...(marginRight === undefined ? {} : { marginRight }),
+    ...(marginBottom === undefined ? {} : { marginBottom }),
+    ...(marginLeft === undefined ? {} : { marginLeft }),
+  },
+  body,
+});

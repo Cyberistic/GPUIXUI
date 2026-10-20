@@ -22,11 +22,12 @@ import type { StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
 import { focusRing } from "@gpuixui/tokens";
+import { splitCallerStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import {
   ariaNameOr,
   mergeStyle,
-  resolvePartStyle,
+  resolveCallerStyle,
   useFocus,
   type FocusState,
   type StateStyle,
@@ -86,33 +87,45 @@ export const renderInfoTip = (
   }: InfoTipProps,
   theme: PrimitiveTheme,
   focus: FocusState = { focused: false, onFocus: () => {}, onBlur: () => {} },
-): ReactElement => (
-  <Tooltip content={content} side={side} testId={tipTestId}>
-    <div
-      role="img"
-      aria-label={ariaNameOr(label, "More information")}
-      tabIndex={0}
-      testId={testId}
-      ref={focus.ref}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
-      style={resolvePartStyle(
-        mergeStyle(
-          infoTipTriggerStyle(theme),
-          focus.focused ? focusRing(theme) : undefined,
-        ),
-        style,
-        { focused: focus.focused },
-      )}
+): ReactElement => {
+  /* The tip anchors to the root that hugs this trigger (plan 060), so the
+     caller's margin rides the root: on the trigger it would move the icon
+     inside the anchor and leave the tip behind (measured, plan 695). */
+  const caller = splitCallerStyle(
+    resolveCallerStyle(style, { focused: focus.focused }),
+  );
+  return (
+    <Tooltip
+      content={content}
+      side={side}
+      testId={tipTestId}
+      style={caller.margin}
     >
-      <Icon
-        name={icon}
-        color={theme.colors.mutedForeground}
-        size={theme.iconSize.sm}
-      />
-    </div>
-  </Tooltip>
-);
+      <div
+        role="img"
+        aria-label={ariaNameOr(label, "More information")}
+        tabIndex={0}
+        testId={testId}
+        ref={focus.ref}
+        onFocus={focus.onFocus}
+        onBlur={focus.onBlur}
+        style={mergeStyle(
+          mergeStyle(
+            infoTipTriggerStyle(theme),
+            focus.focused ? focusRing(theme) : undefined,
+          ),
+          caller.body,
+        )}
+      >
+        <Icon
+          name={icon}
+          color={theme.colors.mutedForeground}
+          size={theme.iconSize.sm}
+        />
+      </div>
+    </Tooltip>
+  );
+};
 
 /** An info icon whose tooltip explains a nearby term. */
 export const InfoTip = (props: InfoTipProps): ReactElement =>

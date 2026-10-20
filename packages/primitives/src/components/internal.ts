@@ -132,6 +132,23 @@ export const composeHandler = <Event>(
 export type { StateStyle } from "@gpuix/react/floating";
 
 /**
+ * A caller's `style` resolved against its state, before a part decides where
+ * each property lands.
+ *
+ * `resolvePartStyle` is the one merge point for a part that paints its whole
+ * caller contribution on itself. A part with a second surface (an anchored
+ * trigger) needs the resolved object first, so it can split it.
+ */
+export const resolveCallerStyle = <State>(
+  style: StateStyle<State> | undefined,
+  state: State,
+): StyleDesc =>
+  Option.getOrElse(
+    Option.fromNullishOr(resolveStyle(style, state)),
+    () => ({}),
+  );
+
+/**
  * Resolve a part's `style` against its state and merge the result last.
  *
  * The one merge rule the library uses: a callback wins exactly where an object

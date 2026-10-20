@@ -2183,9 +2183,12 @@ retired once both branches are one
       (focus) was tracked for the ring but never published. It now takes
       `StateStyle<InfoTipState>` (`focused`) on the trigger, merged last through
       `resolvePartStyle`; the last hole in the state-aware-style slices is
-      closed. 3 element cases + 1 state-style case + 2 style-order cases + 2
-      scoped runtime cases, the focused state and the merge order each failing
-      when reverted (offline 896, scoped live 10/10; plan `695`).
+      closed. A `margin` rides the anchor root (`splitCallerStyle`) because a
+      trigger margin moved the icon and left the tip behind; the rest lands on
+      the trigger. 2 split + 4 element + 1 state-style + 2 style-order + 2
+      scoped runtime cases, the focused state, the merge order and the margin
+      routing each failing when reverted (offline 899, scoped live 10/10; plan
+      `695`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -65,11 +65,19 @@ The consequences a consumer hits:
   contract's allowed vocabulary (§3) and the same field `ScrollAreaState` uses
   for the same reason (a labelled, focusable region with no value).
 - **D3 — merge order is the package's one rule:** base chrome plus the ring
-  first, the caller's object or callback last, through `resolvePartStyle` (the
-  single merge point, plans `079`–`081`). A callback's result therefore wins
-  exactly where an object wins, and an object style keeps painting as before. A
-  caller who returns `boxShadow` replaces the ring — the same trade every other
-  part makes; the docs say the ring is part of the base.
+  first, the caller's object or callback last (plans `079`–`081`). A callback's
+  result therefore wins exactly where an object wins, and an object style keeps
+  painting as before. A caller who returns `boxShadow` replaces the ring — the
+  same trade every other part makes; the docs say the ring is part of the base.
+- **D3b — a `margin` rides the anchor root, everything else the trigger.**
+  Measured while writing this plan: `style={{ marginLeft: 12 }}` on the trigger
+  moved the trigger 12 px but **not the tip** (the layer anchors to the root
+  that hugs the trigger, plan `060`), while `paddingLeft: 12` grew the trigger
+  and kept the tip aligned. A trigger is also an anchor target here, so the
+  resolved caller style is split once (`splitCallerStyle`): the five margin keys
+  go to `Tooltip.style` (the root), the rest to the trigger. The natural nudge
+  then moves the whole control, tip included, and the caller still writes one
+  `style`.
 - **D4 — no other prop changes.** `role="img"`, the name, `tabIndex`, the slot
   description and the tip's behaviour come from props/`Tooltip`, never from
   `style`. A `style` cannot rename or unfocus the trigger.
@@ -78,9 +86,13 @@ The consequences a consumer hits:
 
 | File | Change |
 | ---- | ------ |
-| `packages/primitives/src/components/InfoTip.tsx` | add `InfoTipState`, `style?: StateStyle<InfoTipState>`; resolve base + ring then the caller last |
+| `packages/primitives/src/components/InfoTip.tsx` | add `InfoTipState`, `style?: StateStyle<InfoTipState>`; base + ring, then the caller's body last, its margin on the root |
+| `packages/primitives/src/core/style.ts` | `splitCallerStyle`: the five margin keys vs the rest, with the anchor reason |
+| `packages/primitives/src/core/index.ts` | export `splitCallerStyle` and `SplitCallerStyle` |
+| `packages/primitives/src/components/internal.ts` | `resolveCallerStyle`: resolve a caller style against a state before splitting |
+| `packages/primitives/src/core/style.test.ts` | two cases: every margin on the anchor, nothing else; empty halves |
 | `packages/primitives/src/components/index.ts` | export the new state type |
-| `packages/primitives/src/components/InfoTip.test.tsx` | object style survives; callback receives both states; role/name unchanged; ring still in the base |
+| `packages/primitives/src/components/InfoTip.test.tsx` | object style survives on the trigger; callback receives both states; role/name unchanged; ring still in the base; the margin lands on the root |
 | `packages/primitives/src/components/state-style.test.tsx` | one case: the callback receives `{ focused }` and paints |
 | `packages/primitives/src/components/style-order.test.tsx` | add `InfoTip` to the guard table; correct the header's false exclusion |
 | `packages/primitives/runtime/info-tip.runtime.test.tsx` | two native cases: focus reaches the public state; a caller's margin moves the painted trigger |
@@ -122,15 +134,14 @@ export interface InfoTipProps {
 }
 ```
 
-In `renderInfoTip`, replace the existing `mergeStyle(...)` with the one merge
-point:
+`core/style.ts` gains the split (the five margin keys; everything else is the
+body), and `components/internal.ts` a resolver for the object form:
 
 ```ts
-style={resolvePartStyle(
-  mergeStyle(infoTipTriggerStyle(theme), focus.focused ? focusRing(theme) : undefined),
-  style,
-  { focused: focus.focused },
-)}
+const caller = splitCallerStyle(
+  resolveCallerStyle(style, { focused: focus.focused }),
+);
+// <Tooltip style={caller.margin}> … <div style={mergeStyle(base + ring, caller.body)} />
 ```
 
 `focused` is already on the `FocusState` parameter (defaulted for element-tree
@@ -161,6 +172,8 @@ Offline (`nub run --filter @gpuixui/primitives test`):
 
 1. **state payload** — the callback receives `{ focused: false }` and
    `{ focused: true }`, in that order, from the same `renderInfoTip` shape.
+1b. **the split** (`core/style.test.ts`) — every margin key lands on the anchor,
+   nothing else does; a style with neither yields two empty halves.
 2. **callback wins** — its `backgroundColor` is the trigger's resolved value
    (`state-style`).
 3. **object style still works** — `style={{ marginLeft: 12 }}` paints `12` on
@@ -180,9 +193,11 @@ Runtime (`nub run --filter @gpuixui/primitives test:runtime runtime/info-tip.run
    to the trigger; assert the painted opacity is `0.5`, then leave and assert it
    returns to `1`. This proves the tracked focus (plans `583`, `590`) drives the
    public state, not only the internal ring.
-8. **a caller's margin moves the painted mark** — mount an un-styled and a
-   `style={{ marginLeft: 12 }}` `InfoTip` side by side; the second trigger's
-   painted left edge is `12` px further right, and its a11y name is unchanged.
+8. **a caller's margin moves the painted mark and its tip** — mount an un-styled
+   and a `style={{ marginLeft: 12 }}` `InfoTip`; the second trigger's painted
+   left edge is `12` px further right, the open tip's is too, and the a11y name
+   is unchanged. This is the case that proves D3b: with the margin on the
+   trigger the tip does not move (measured while writing this plan).
 
 Both directions (plan `047` §6's rule):
 
@@ -191,6 +206,9 @@ Both directions (plan `047` §6's rule):
   cases, and the runtime case times out waiting for `0.5`).
 - **old direction B:** merge the caller's style **before** the ring → the
   merge-order case fails because `boxShadow` stays `focusRing` (measured).
+- **old direction D:** put the caller's margin back on the trigger → the
+  element case and the runtime tip position fail (measured: the tip stayed at
+  `+0` while the trigger moved `+12`).
 - **old direction C:** drop `style` from the renderer → the new cases do not
   compile (and the old `InfoTip.test` still passes, which is why the guard
   matters).
@@ -240,8 +258,9 @@ merge (AGENTS.md §3).
 ## 7. Acceptance criteria
 
 - `InfoTip` takes `style?: StateStyle<InfoTipState>`, exports `InfoTipState`,
-  and merges the caller's contribution last on the trigger.
-- The four new offline cases, the two `style-order` cases and the two runtime
+  merges the caller's body last on the trigger and its margin on the anchor
+  root.
+- The nine new offline cases, the two `style-order` rows and the two runtime
   cases pass, and each named mutation above fails in the old direction.
 - `info-tip.mdx` has the `style` API row and a `## Style by state` section; it
   names `InfoTipState`; the README lists it; `contract.test.ts` records it.
@@ -251,19 +270,21 @@ merge (AGENTS.md §3).
 ## 8. Result (measured on this host, 2026-10-20)
 
 - `check-types`: exit `0`.
-- Offline: **63 files / 896 tests** (was 63 / 890), all passing. The six new
-  cases: one `InfoTip` state-style case, three `InfoTip.test` cases (caller
-  style on the trigger; the callback's two states and its win; the ring in the
-  base vs a caller's `boxShadow`), and the two `it.each` rows the 30-entry
-  `style-order` guard now runs for `InfoTip`.
+- Offline: **63 files / 899 tests** (was 63 / 890), all passing. The nine new
+  cases: two `splitCallerStyle` rules, one `InfoTip` state-style case, four
+  `InfoTip.test` cases (caller style on the trigger; the margin on the anchor
+  root; the callback's two states and its win; the ring in the base vs a
+  caller's `boxShadow`), and the two `it.each` rows the 30-entry `style-order`
+  guard now runs for `InfoTip`.
 - Scoped native (`runtime/info-tip.runtime.test.tsx`): **10/10** in 1 file
-  (3.3 s). The two new cases prove the tracker's focus reaches the callback's
+  (2.4 s). The two new cases prove the tracker's focus reaches the callback's
   paint (`opacity 1 → 0.5 → 1`, focused by `focusNext` and left for a `Button`)
-  and that `style={{ marginLeft: 12 }}` moves the painted trigger exactly 12 px
-  while the `Image` node keeps its name.
+  and that `style={{ marginLeft: 12 }}` moves the painted trigger **and the open
+  tip** exactly 12 px while the `Image` node keeps its name.
 - Old directions measured: passing a literal `{ focused: false }` to the state
   resolver failed 2 offline cases and the runtime opacity case (timed out
   waiting for `0.5`); merging the caller's style before the ring failed the
-  merge-order case (`boxShadow` stayed `Some(focusRing)`), and restoring the
-  code brought all three green.
+  merge-order case (`boxShadow` stayed `Some(focusRing)`); and leaving the
+  caller's margin on the trigger failed the element case and the runtime tip
+  position (`expected +0 to be 12`). Restoring each direction brought all green.
 - `nub run check` and `nub run lint`: exit `0`.
