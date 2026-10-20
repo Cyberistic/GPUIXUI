@@ -2276,6 +2276,20 @@ retired once both branches are one
       failing when reverted; offline 69 files / 940 tests, scoped live 5 files /
       116 (plan `732`).
 
+`[x]` `packages/primitives`: **a focusable `Surface` could not be a tooltip
+      trigger** — the Tooltip page promises every single-root focusable Tier 1
+      control forwards the slot contract, and a labelled `Surface` with
+      `tabIndex` is exactly that (`role="group"`, a name, a tab stop), yet it
+      declared no `TriggerHandlers`, so the cloned handlers and `ref` stopped at
+      the component boundary and a `Tooltip` around a chart surface was dead on
+      both paths. A focusable, labelled surface now forwards the slot contract
+      and carries the tip as `aria-description`; a static surface stays a named
+      image. Measured: **hover and keyboard both open the tip** — the full-size
+      raster image does not swallow the pointer, so the expected keyboard-only
+      limit did not exist. 2 element + 3 scoped runtime cases, three mutations
+      failing by name; offline 69 files / 941 tests, scoped live 3 files / 35
+      (plan `733`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

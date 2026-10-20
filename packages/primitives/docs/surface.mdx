@@ -44,6 +44,27 @@ when the data your `paint` closure reads changes:
 <Surface adapter={adapter} revision={dataVersion} … />
 ```
 
+### As a tooltip trigger
+
+A **focusable, labelled** surface is a single-root control, so it accepts the
+slot contract a `Tooltip` clones onto its child. Both paths work — measured: the
+raster image does not swallow the pointer, and the host is a real tab stop.
+
+```tsx
+<Tooltip content="Revenue by region, last 30 days" side="top">
+  <Surface
+    adapter={adapter}
+    width={320}
+    height={180}
+    label="Revenue"
+    tabIndex={0}
+  />
+</Tooltip>;
+```
+
+A static surface (no `tabIndex`) stays one named image and is not a trigger: it
+has no focus path, so a hover-only tip on it would reach no accessibility node.
+
 ## Repainting
 
 There are exactly three ways a live surface repaints, and they are not
@@ -125,8 +146,14 @@ represent.
 | `revision` | `number` | `0` | a repaint counter: a change repaints a live session at the same box |
 | `style` | `StyleDesc` | none | merged last over the host's box |
 | `tabIndex` | `number` | none | makes the leaf a focus stop and routes focus |
+| `aria-description` | `string` | none | announced after the name; a `Tooltip` writes its tip here |
 | `testId` | `string` | none | the runtime locator id |
 | `onError` | `(error: SurfaceError) => void` | logs | receives a typed lifecycle failure |
+
+A focusable surface also accepts the slot contract (`TriggerHandlers`): the
+passive pointer handlers, `onKeyDown`/`onKeyUp`, `ref` and `aria-description`
+that `TooltipTrigger asChild` clones onto its child. A static surface forwards
+none of them (plan `733`).
 
 `width` and `height` are **authored**, not read back: GPUix `0.10.0` has no
 `onLayout`. A caller that overrides them through `style` owns the mismatch
@@ -140,6 +167,10 @@ and paints the theme's focus ring — the release runtime dispatches no focus
 events, so the tracker drives it too. There is no interior keyboard contract:
 the raster surface is a picture, and a future native view owns its own input
 routing.
+
+A focusable surface is also a **`Tooltip` trigger** (above): it forwards the
+slot's pointer and key handlers, and the tip becomes the group's
+`aria-description` (plan `733`).
 
 ## Accessibility
 
@@ -176,8 +207,9 @@ consumer and closes over them.
   bounds.
 - **No scale factor.** `getWindowSize()` reports logical size only, so the
   adapter works in logical pixels and there is no device-pixel contract yet.
-- **The raster path is not interactive.** Clicks and keys do not reach the
-  painted pixels, and the interior is not in the accessibility tree.
+- **The raster path is not interactive.** The host can be a focus stop and a
+  `Tooltip` trigger, but clicks and keys do not reach the painted pixels, and the
+  interior is not in the accessibility tree.
 - **No paint loop.** Repaint is consumer-driven; the component does not own a
   frame scheduler.
 
@@ -198,19 +230,27 @@ The lifecycle and the real raster path are proven in
 
 The box rule is unit-tested in `src/surface/bounds.test.ts`; the frame-shape and
 zero-area rules in `src/surface/raster.test.ts`; the element seam in
-`src/components/Surface.test.tsx`; the error boundary in
-`src/surface/adapter.test.ts`.
+`src/components/Surface.test.tsx` (including the slot gate: a focusable surface
+forwards the handlers and description, a static one does not); the error boundary
+in `src/surface/adapter.test.ts`.
+
+`runtime/surface-trigger.runtime.test.tsx` (3 cases) proves the trigger contract
+in the real renderer: a `Tooltip` around a focusable surface opens on `Tab` and
+on hover, the group announces the tip as its description, and a static surface
+is neither a tab stop nor a trigger.
 
 ```sh
 # the offline suite (the surface cases among them)
 nub run --filter @gpuixui/primitives test
 # this file only: 1 file, 9 tests — do not add a second `--` before the path
 nub run --filter @gpuixui/primitives test:runtime runtime/surface.runtime.test.tsx
+nub run --filter @gpuixui/primitives test:runtime runtime/surface-trigger.runtime.test.tsx
 ```
 
 ## Related
 
 - [Box](box.mdx) — a themed surface with no pixels of its own.
+- [Tooltip](tooltip.mdx) — the description a focusable surface can carry.
 - [Text](text.mdx) — the text summary a raster chart needs for assistive
   technology.
 - [Meter](meter.mdx) — a value bar built from boxes, not a raster frame.

@@ -5,14 +5,20 @@
  * static one must be a named image. A blank label must drop the tab stop too —
  * otherwise the component publishes the unnamed focus stop plan `573`/`396`
  * removed everywhere else.
+ *
+ * The slot contract is the second bug (plan `733`): a focusable, labelled
+ * surface is a single-root control, so it must forward the handlers, `ref` and
+ * description a `Tooltip` clones onto it; a static surface has no focus path and
+ * must stay a bare named image.
  */
 
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import { renderSurface } from "./Surface.js";
+import { renderSurface, type RenderSurfaceProps } from "./Surface.js";
 import {
   elementChildren,
   expectSome,
+  hostHandler,
   hostProp,
   hostStyle,
   hostTag,
@@ -24,6 +30,22 @@ const render = (label: string, tabIndex?: number) =>
     height: 80,
     label,
     tabIndex,
+    elementRef: { current: null },
+    imageRef: { current: null },
+  });
+
+const renderSlot = (
+  label: string,
+  tabIndex: number | undefined,
+  slot: RenderSurfaceProps["slot"],
+) =>
+  renderSurface({
+    width: 120,
+    height: 80,
+    label,
+    tabIndex,
+    slot,
+    description: " A hint ",
     elementRef: { current: null },
     imageRef: { current: null },
   });
@@ -73,6 +95,30 @@ describe("Surface accessibility", () => {
 
     const image = expectSome(Option.fromNullishOr(elementChildren(tree)[0]));
     expect(Option.isNone(hostProp(image, "alt"))).toBe(true);
+  });
+
+  it("forwards the slot contract only when the surface is a focus stop", () => {
+    const handlers = {
+      onMouseEnter: () => {},
+      onMouseLeave: () => {},
+      onKeyDown: () => {},
+      onKeyUp: () => {},
+    };
+    const focusable = renderSlot("Revenue", 0, handlers);
+    expect(Option.isSome(hostHandler(focusable, "onMouseEnter"))).toBe(true);
+    expect(Option.isSome(hostHandler(focusable, "onMouseLeave"))).toBe(true);
+    expect(Option.isSome(hostHandler(focusable, "onKeyDown"))).toBe(true);
+    expect(Option.isSome(hostHandler(focusable, "onKeyUp"))).toBe(true);
+    expect(expectSome(hostProp(focusable, "aria-description"))).toBe("A hint");
+
+    const staticSurface = renderSlot("Revenue", undefined, handlers);
+    expect(Option.isNone(hostHandler(staticSurface, "onMouseEnter"))).toBe(
+      true,
+    );
+    expect(Option.isNone(hostHandler(staticSurface, "onKeyDown"))).toBe(true);
+    expect(Option.isNone(hostProp(staticSurface, "aria-description"))).toBe(
+      true,
+    );
   });
 
   it("paints a whole box, never a fractional or unreadable length", () => {

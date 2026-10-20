@@ -11,6 +11,7 @@
 
 import {
   useGpuix,
+  type EventPayload,
   type ImgInstance,
   type PublicInstance,
   type StyleDesc,
@@ -20,13 +21,7 @@ import { focusRing } from "@gpuixui/tokens";
 import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
 import * as Option from "effect/Option";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type ReactElement,
-  type Ref,
-} from "react";
+import { useEffect, useRef, type ReactElement, type Ref } from "react";
 import {
   surfaceError,
   type SurfaceAdapter,
@@ -35,11 +30,19 @@ import {
   type SurfaceHost,
 } from "../surface/adapter.js";
 import { surfaceBounds } from "../surface/bounds.js";
-import { ariaName, mergeStyle, useFocus } from "./internal.js";
+import {
+  ariaName,
+  composeHandler,
+  composeRef,
+  mergeStyle,
+  passiveTriggerHandlers,
+  useFocus,
+  type TriggerHandlers,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** The props of the `Surface` leaf. */
-export interface SurfaceProps {
+export interface SurfaceProps extends TriggerHandlers {
   /** The adapter that owns the pixels and the lifecycle. */
   readonly adapter: SurfaceAdapter;
   /** Authored width in whole logical pixels; a fractional value floors. */
@@ -60,6 +63,11 @@ export interface SurfaceProps {
   readonly style?: StyleDesc;
   /** Makes the leaf a focus stop and routes focus to `adapter.focus()`. */
   readonly tabIndex?: number;
+  /**
+   * Extra description announced after the name. A slot (a `Tooltip`) writes the
+   * tip here; only a focusable, labelled surface is a trigger.
+   */
+  readonly "aria-description"?: string;
   /** The host's test id, for runtime locators. */
   readonly testId?: string;
   /** Receives a typed lifecycle failure. Without one, the failure is logged. */
@@ -75,13 +83,16 @@ export interface RenderSurfaceProps {
   readonly width: number;
   readonly height: number;
   readonly label: string;
+  /** The slot contract, forwarded only when the surface is a focus stop. */
+  readonly slot?: Omit<TriggerHandlers, "ref">;
+  readonly description?: string;
   readonly style?: StyleDesc;
   readonly tabIndex?: number;
   readonly testId?: string;
   readonly elementRef: Ref<PublicInstance>;
   readonly imageRef: Ref<ImgInstance>;
-  readonly onFocus?: () => void;
-  readonly onBlur?: () => void;
+  readonly onFocus?: (event: EventPayload) => void;
+  readonly onBlur?: (event: EventPayload) => void;
 }
 
 /**
@@ -90,11 +101,17 @@ export interface RenderSurfaceProps {
  * The caller's style wins last, as everywhere in this package. The authored size
  * is normalised to the paintable box here too, so the seam cannot paint a
  * fractional or `NaN` length even when it is called directly (plan `697`).
+ *
+ * A **focusable, labelled** surface is a single-root control, so it forwards the
+ * slot contract the `Tooltip` clones onto it; a static surface has no focus path
+ * and stays a named image with no handlers (plan `733`, the D49 rule).
  */
 export const renderSurface = ({
   width,
   height,
   label,
+  slot,
+  description,
   style,
   tabIndex,
   testId,
@@ -113,6 +130,12 @@ export const renderSurface = ({
       tabIndex={focusTab}
       role={focusTab === undefined ? undefined : "group"}
       aria-label={focusTab === undefined ? undefined : name}
+      {...(focusTab === undefined ? {} : passiveTriggerHandlers(slot ?? {}))}
+      aria-description={
+        focusTab === undefined ? undefined : ariaName(description)
+      }
+      onKeyDown={focusTab === undefined ? undefined : slot?.onKeyDown}
+      onKeyUp={focusTab === undefined ? undefined : slot?.onKeyUp}
       onFocus={onFocus}
       onBlur={onBlur}
       style={mergeStyle(
@@ -154,6 +177,7 @@ export const Surface = ({
   tabIndex,
   testId,
   onError,
+  ...props
 }: SurfaceProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
@@ -182,12 +206,6 @@ export const Surface = ({
   boundsRef.current = bounds;
   modeRef.current = theme.mode;
   focusRef.current = focus.focused;
-  const hostRef = useCallback(
-    (instance: PublicInstance | null) => {
-      focus.ref?.(instance);
-    },
-    [focus.ref],
-  );
   errorRef.current = onError;
 
   const report = (error: SurfaceError): void => {
@@ -307,12 +325,14 @@ export const Surface = ({
     width: bounds.width,
     height: bounds.height,
     label,
+    slot: props,
+    description: ariaName(props["aria-description"]),
     style: mergeStyle(focus.focused ? focusRing(theme) : {}, style),
     tabIndex,
     testId,
-    elementRef: hostRef,
+    elementRef: composeRef(props.ref, focus.ref),
     imageRef,
-    onFocus: focus.onFocus,
-    onBlur: focus.onBlur,
+    onFocus: composeHandler(focus.onFocus, props.onFocus),
+    onBlur: composeHandler(focus.onBlur, props.onBlur),
   });
 };

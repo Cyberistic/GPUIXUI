@@ -28,6 +28,7 @@ accepts that contract:
 | ------- | ----- | -------------- |
 | `Button`, `IconButton`, `Toggle` | yes | yes |
 | `Checkbox`, `Switch`, `Slider`, `Select` | yes | yes |
+| `Surface` (focusable + labelled) | yes | yes |
 | `ScrollArea` (labelled) | the region itself only | yes |
 | `Input`, `TextArea`, `NumberField` | **no** (text host) | yes |
 | `InfoTip` | yes | yes |
@@ -48,6 +49,12 @@ and the wrapper can recognise the focus the tracker reports: `Tab` opens the tip
 bubble a mouse event to an ancestor, so the tip opens only when the pointer is
 over the region itself (an uncovered area, the scrollbar gutter, or content with
 `pointerEvents: "none"`). A content-filled region is a keyboard trigger.
+
+A focusable, labelled `Surface` is the same shape: one host div with
+`role="group"`, a name and a tab stop, whose raster image is decorative. It
+forwards the contract, and measured, **both** paths work — the full-size image
+does not swallow the pointer (plan `733`). A static surface has no focus path,
+so it is not a trigger.
 
 ### Full-width triggers
 
