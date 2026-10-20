@@ -356,6 +356,21 @@ export const rgbaNear = (
   Math.abs(actual.a - expected.a) <= tolerance;
 
 /**
+ * `over` at `amount` over an opaque `under`, rounded per channel.
+ *
+ * `amount` must be in `[0, 1]`; a caller passes a literal or `rgba.a / 255`. The
+ * runtime blends straight sRGB channels (measured in plan `701`), which is why
+ * this is a plain channel mix and not a linear-light one.
+ */
+export const blendOver = (over: Rgba, amount: number, under: Rgba): Rgba =>
+  new Rgba({
+    r: Math.round(amount * over.r + (1 - amount) * under.r),
+    g: Math.round(amount * over.g + (1 - amount) * under.g),
+    b: Math.round(amount * over.b + (1 - amount) * under.b),
+    a: 255,
+  });
+
+/**
  * The device scale of a captured frame: `Some(2)` when a 1280 × 800 window is a
  * 2560 × 1600 PNG.
  *

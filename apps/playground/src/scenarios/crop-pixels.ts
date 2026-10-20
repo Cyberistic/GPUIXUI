@@ -18,7 +18,7 @@ import * as Option from "effect/Option";
 import { Pixels, Smoke } from "@gpuixui/testing";
 import type { CropRect, Stage } from "./crop-model.js";
 import type { FrameReader } from "./frames.js";
-import { asHex, TOLERANCE } from "./frames.js";
+import { asHex, frameSampler, parseColour, TOLERANCE } from "./frames.js";
 
 /** The fixture's flat left half; the view builds its SVG from this. */
 export const IMAGE_LEFT = "#3B82F6";
@@ -38,24 +38,6 @@ export interface CropSample {
   /** Whether the background token's mask covers this point. */
   readonly masked: boolean;
 }
-
-/**
- * Composite `over` on top of `under` at a straight `amount` (0…1).
- *
- * The runtime blends 8-bit sRGB channels directly, so this is the arithmetic a
- * frame readback must match; the alpha of the result is the frame's own.
- */
-export const blendOver = (
-  over: Pixels.Rgba,
-  amount: number,
-  under: Pixels.Rgba,
-): Pixels.Rgba =>
-  new Pixels.Rgba({
-    r: Math.round(amount * over.r + (1 - amount) * under.r),
-    g: Math.round(amount * over.g + (1 - amount) * under.g),
-    b: Math.round(amount * over.b + (1 - amount) * under.b),
-    a: 255,
-  });
 
 /**
  * The four points one crop paints differently.
@@ -110,28 +92,6 @@ const failure = (
 ): Smoke.SmokeAssertionError =>
   new Smoke.SmokeAssertionError({ label, expected, actual });
 
-const parseColour = (
-  label: string,
-  hex: string,
-): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
-  Option.match(Pixels.hexToRgba(hex), {
-    onNone: () =>
-      Effect.fail(
-        failure(label, "a #RRGGBB or #RRGGBBAA colour", `unparseable ${hex}`),
-      ),
-    onSome: Effect.succeed,
-  });
-
-/**
- * A frame sample in logical window coordinates, or `None` outside the frame.
- */
-const frameSampler =
-  (frame: Pixels.Pixels, window: Smoke.WindowSize) =>
-  (x: number, y: number): Option.Option<Pixels.Rgba> =>
-    Option.flatMap(Pixels.framePoint(frame, window, x, y), (point) =>
-      Pixels.pixelAt(frame, point.x, point.y),
-    );
-
 /**
  * Sample the four crop points and compare each with its composite.
  *
@@ -175,7 +135,7 @@ export const cropFrameChecks = <E>(
             entry.image,
           );
           const expected = entry.masked
-            ? blendOver(backdrop, MASK_ALPHA, image)
+            ? Pixels.blendOver(backdrop, MASK_ALPHA, image)
             : image;
           yield* ctx.check(
             entry.label,

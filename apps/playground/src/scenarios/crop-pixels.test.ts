@@ -14,7 +14,6 @@ import { getTheme } from "@gpuixui/tokens";
 import type { CropRect, Stage } from "./crop-model.js";
 import { initialCrop, maskRects } from "./crop-model.js";
 import {
-  blendOver,
   cropSamples,
   IMAGE_LEFT,
   IMAGE_RIGHT,
@@ -43,10 +42,14 @@ const inside = (
 
 const samplesFor = (crop: CropRect) => cropSamples(crop, STAGE);
 
-describe("blendOver", () => {
+describe("Pixels.blendOver", () => {
   it("composites the mask over the image in sRGB, not the reverse", () => {
-    const overBlue = blendOver(rgba(BACKGROUND), MASK_ALPHA, rgba(IMAGE_LEFT));
-    const overAmber = blendOver(
+    const overBlue = Pixels.blendOver(
+      rgba(BACKGROUND),
+      MASK_ALPHA,
+      rgba(IMAGE_LEFT),
+    );
+    const overAmber = Pixels.blendOver(
       rgba(BACKGROUND),
       MASK_ALPHA,
       rgba(IMAGE_RIGHT),
@@ -61,7 +64,7 @@ describe("blendOver", () => {
 
   it("a masked colour is neither the token nor the image (the mask is translucent)", () => {
     const backdrop = rgba(BACKGROUND);
-    const blended = blendOver(backdrop, MASK_ALPHA, rgba(IMAGE_LEFT));
+    const blended = Pixels.blendOver(backdrop, MASK_ALPHA, rgba(IMAGE_LEFT));
     expect(blended).not.toEqual(backdrop);
     expect(blended).not.toEqual(rgba(IMAGE_LEFT));
   });

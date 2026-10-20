@@ -12,11 +12,7 @@ import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Pixels } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
-import {
-  RUNTIME_DARK_ACCENT,
-  blendOver,
-  washColours,
-} from "./highlight-pixels.js";
+import { RUNTIME_DARK_ACCENT, washColours } from "./highlight-pixels.js";
 
 const colour = (hex: string): Pixels.Rgba =>
   Option.getOrElse(Pixels.hexToRgba(hex), () => {
@@ -31,10 +27,10 @@ const hex = (rgba: Pixels.Rgba): string =>
 const background = colour(palettes.dark.colors.background);
 
 describe("highlight wash pixels", () => {
-  it("blendOver is exact at both ends", () => {
+  it("Pixels.blendOver is exact at both ends", () => {
     const foreground = colour("#FF8000");
-    expect(hex(blendOver(foreground, 1, background))).toBe("#ff8000");
-    expect(hex(blendOver(foreground, 0, background))).toBe("#11141a");
+    expect(hex(Pixels.blendOver(foreground, 1, background))).toBe("#ff8000");
+    expect(hex(Pixels.blendOver(foreground, 0, background))).toBe("#11141a");
   });
 
   it("the runtime's default washes are the dark accent at 30 % and 65 %", () => {
@@ -47,7 +43,11 @@ describe("highlight wash pixels", () => {
     const runtime = washColours(RUNTIME_DARK_ACCENT, background);
     const accent = washColours(colour(palettes.dark.colors.accent), background);
     const selection = colour(palettes.dark.colors.selection);
-    const selectionWash = blendOver(selection, selection.a / 255, background);
+    const selectionWash = Pixels.blendOver(
+      selection,
+      selection.a / 255,
+      background,
+    );
     expect(hex(accent.inactive)).not.toBe(hex(runtime.inactive));
     expect(hex(selectionWash)).not.toBe(hex(runtime.inactive));
   });
@@ -55,8 +55,8 @@ describe("highlight wash pixels", () => {
   it("an eight-digit token keeps its alpha", () => {
     const selection = colour(palettes.dark.colors.selection);
     expect(selection.a).toBe(61);
-    expect(hex(blendOver(selection, selection.a / 255, background))).toBe(
-      "#353851",
-    );
+    expect(
+      hex(Pixels.blendOver(selection, selection.a / 255, background)),
+    ).toBe("#353851");
   });
 });

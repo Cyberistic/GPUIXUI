@@ -37,25 +37,6 @@ export const WASH_ALPHA = {
   active: 0.65,
 } as const;
 
-/**
- * `foreground` at `alpha` over an opaque `background`, rounded per channel.
- *
- * `alpha` must be in `[0, 1]`; callers pass a literal or `rgba.a / 255`. The
- * runtime blends these washes in sRGB channels (measured in plan `701`), which
- * is why this is a plain channel mix and not a linear-light one.
- */
-export const blendOver = (
-  foreground: Pixels.Rgba,
-  alpha: number,
-  background: Pixels.Rgba,
-): Pixels.Rgba =>
-  new Pixels.Rgba({
-    r: Math.round(alpha * foreground.r + (1 - alpha) * background.r),
-    g: Math.round(alpha * foreground.g + (1 - alpha) * background.g),
-    b: Math.round(alpha * foreground.b + (1 - alpha) * background.b),
-    a: 255,
-  });
-
 /** The two default washes for an accent over a background. */
 export interface WashColours {
   readonly inactive: Pixels.Rgba;
@@ -67,6 +48,6 @@ export const washColours = (
   accent: Pixels.Rgba,
   background: Pixels.Rgba,
 ): WashColours => ({
-  inactive: blendOver(accent, WASH_ALPHA.inactive, background),
-  active: blendOver(accent, WASH_ALPHA.active, background),
+  inactive: Pixels.blendOver(accent, WASH_ALPHA.inactive, background),
+  active: Pixels.blendOver(accent, WASH_ALPHA.active, background),
 });

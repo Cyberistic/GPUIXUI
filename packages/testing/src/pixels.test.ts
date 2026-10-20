@@ -12,6 +12,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import {
+  blendOver,
   decodePng,
   framePoint,
   frameScale,
@@ -245,5 +246,20 @@ describe("pixel lookups", () => {
       rgba(17, 34, 51, 68),
     );
     expect(Option.isNone(hexToRgba("rgb(1,2,3)"))).toBe(true);
+  });
+
+  it("composites in straight sRGB, in the right direction", () => {
+    const primary = rgba(167, 169, 255, 255);
+    const card = rgba(25, 29, 37, 255);
+    const blended = blendOver(primary, 0.18, card);
+    expect([blended.r, blended.g, blended.b, blended.a]).toEqual([
+      51, 54, 76, 255,
+    ]);
+    const reversed = blendOver(card, 0.18, primary);
+    expect([reversed.r, reversed.g, reversed.b]).not.toEqual([
+      blended.r,
+      blended.g,
+      blended.b,
+    ]);
   });
 });

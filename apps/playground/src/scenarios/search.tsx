@@ -36,11 +36,7 @@ import {
   pixelAtRect,
   readSync,
 } from "./frames.js";
-import {
-  RUNTIME_DARK_ACCENT,
-  blendOver,
-  washColours,
-} from "./highlight-pixels.js";
+import { RUNTIME_DARK_ACCENT, washColours } from "./highlight-pixels.js";
 
 const FONT_SIZE = 14;
 const LINE_HEIGHT = 20;
@@ -506,7 +502,7 @@ export const highlightColourChecks = <E,>(
       ctx,
       "an eight-digit token wash composites over the background",
       tokenSelection,
-      blendOver(primary, selection.a / 255, background),
+      Pixels.blendOver(primary, selection.a / 255, background),
     );
   });
 

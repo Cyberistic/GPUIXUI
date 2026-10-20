@@ -22,7 +22,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Pixels, Smoke } from "@gpuixui/testing";
 import type { FrameReader } from "./frames.js";
-import { asHex, TOLERANCE } from "./frames.js";
+import { asHex, frameSampler, TOLERANCE } from "./frames.js";
 import type { QrSpec } from "./qr-layout.js";
 
 /** The two colours one route is allowed to paint. */
@@ -182,14 +182,6 @@ const parseColour = (
       ),
     onSome: Effect.succeed,
   });
-
-/** A frame sample in logical window coordinates, or `None` outside the frame. */
-const frameSampler =
-  (frame: Pixels.Pixels, window: Smoke.WindowSize) =>
-  (x: number, y: number): Option.Option<Pixels.Rgba> =>
-    Option.flatMap(Pixels.framePoint(frame, window, x, y), (point) =>
-      Pixels.pixelAt(frame, point.x, point.y),
-    );
 
 /**
  * Run the three frame checks for one route and return the reconstructed rows.

@@ -35,6 +35,36 @@ export const asHex = (colour: Pixels.Rgba): string =>
     .map((channel) => channel.toString(16).padStart(2, "0"))
     .join("")}`;
 
+/** A theme colour as RGBA, or a labelled failure naming the unparseable value. */
+export const parseColour = (
+  label: string,
+  hex: string,
+): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
+  Option.match(Pixels.hexToRgba(hex), {
+    onNone: () =>
+      Effect.fail(
+        new Smoke.SmokeAssertionError({
+          label,
+          expected: "a #RGB, #RRGGBB or #RRGGBBAA colour",
+          actual: `unparseable ${hex}`,
+        }),
+      ),
+    onSome: Effect.succeed,
+  });
+
+/**
+ * A frame sample in logical window coordinates, or `None` outside the frame.
+ *
+ * The lookup lives here so every pure expectation module shares one device-scale
+ * rule; recording a check per sample stays the caller's decision.
+ */
+export const frameSampler =
+  (frame: Pixels.Pixels, window: Smoke.WindowSize) =>
+  (x: number, y: number): Option.Option<Pixels.Rgba> =>
+    Option.flatMap(Pixels.framePoint(frame, window, x, y), (point) =>
+      Pixels.pixelAt(frame, point.x, point.y),
+    );
+
 /** The two host reads a sample needs, as Effects. */
 export interface FrameReader<E> {
   readonly bounds: (testId: string) => Effect.Effect<Smoke.Bounds | null, E>;
