@@ -3657,8 +3657,11 @@ A **chosen** row is the third state. It keeps `selected` under the pointer — t
 hover wash is for the unselected row — and paints `selectedActive` while
 pressed. That press previews the canvas the click returns it to when it
 deselects the row, so it is the one pointer state that moves toward the canvas;
-`selectedActive` is a 24% veil of the canvas colour over `selected`, shipped as
-an editable opaque literal in every palette. `selectionPressStepPairs` publishes
+`selectedActive` is a 24% veil of white in light and black in dark over
+`selected`, shipped as an editable opaque literal in every palette. The veil is
+the mode's extreme rather than the canvas value — a default canvas is near-white
+or near-black, so deriving the press from `background` is a different fill; the
+high-contrast sets are where the two agree. `selectionPressStepPairs` publishes
 the step, `selectionPressPairs` holds the seven text roles, the disabled label
 and the three chrome roles a pressed row paints, the four status labels come
 from `statusTextSurfaces`, and `stateLadders` carries the ladder with

@@ -1,18 +1,27 @@
 import {
+  alpha,
   compositeOver,
   extendTheme,
   getTheme,
   themeFailures,
 } from "./index.js";
 
+/** The share of the mode's extreme a selected row's press adds. */
+export const selectionPressVeilAmount = 0.24;
+
 /**
- * The canvas-tinted veil a selected row's press is designed with: 24% of the
- * canvas colour over `selected`. A light press lightens and a dark press
- * darkens, because both preview the row the click returns to.
+ * The veil a selected row's press adds: a 24% veil of white in light and black
+ * in dark over `selected`. A light press lightens and a dark press darkens,
+ * because both preview the row the click returns to.
+ *
+ * The extreme, not the canvas: a default canvas is near-white or near-black, so
+ * veiling the canvas itself is a different fill. The high-contrast sets are the
+ * only ones where the two readings agree, which is why the older wording
+ * survived.
  */
 export const selectionPressVeils = {
-  light: "#FFFFFF3D",
-  dark: "#0000003D",
+  light: alpha("#FFFFFF", selectionPressVeilAmount),
+  dark: alpha("#000000", selectionPressVeilAmount),
 } as const;
 
 const brandSelected = "#D8E6FF";

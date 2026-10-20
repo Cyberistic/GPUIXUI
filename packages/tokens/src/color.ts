@@ -268,8 +268,8 @@ export interface ThemeColors {
   /**
    * A selected row or item while pressed. The press previews the row's return
    * to the canvas when a click deselects it, so this is the one pointer fill
-   * that steps **toward** the canvas: a 24% veil of the canvas colour over
-   * `selected`, shipped as an opaque, editable literal.
+   * that steps **toward** the canvas: a 24% veil of white in light and black in
+   * dark over `selected`, shipped as an opaque, editable literal.
    */
   readonly selectedActive: string;
   /** Text and icons on `selected`. */

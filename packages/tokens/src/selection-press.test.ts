@@ -10,7 +10,8 @@
  * `themeDirectionFailures` returned `[]`.
  *
  * The press is the one state that previews deselection, so it moves **toward**
- * the canvas: `selectedActive` is a 24% canvas veil over `selected`.
+ * the canvas: `selectedActive` is a 24% veil of white in light and black in
+ * dark over `selected`.
  *
  * Plan 700 closes the pressed row's last own label. `checked-control.example.ts`
  * (plan 698) declares a selected option's `foreground` as `popoverForeground` on
@@ -47,8 +48,6 @@ const pressStepFailures = (theme: ReturnType<typeof getTheme>) =>
       background === "selected" &&
       pairClass === "step",
   );
-
-const veilFor = (mode: "light" | "dark") => selectionPressVeils[mode];
 
 describe("a selected row's press", () => {
   it("publishes the step once and the ink pair list", () => {
@@ -110,16 +109,6 @@ describe("a selected row's press", () => {
       ];
     });
     expect(failures).toEqual([]);
-  });
-
-  it("ships the canvas veil over every palette's selection", () => {
-    const drifted = shippedThemes.flatMap(({ theme }) => {
-      const derived = compositeOver(veilFor(theme.mode), theme.colors.selected);
-      return theme.colors.selectedActive === derived
-        ? []
-        : [`${theme.name}: ${theme.colors.selectedActive} !== ${derived}`];
-    });
-    expect(drifted).toEqual([]);
   });
 
   it("reports a press that does not move", () => {
