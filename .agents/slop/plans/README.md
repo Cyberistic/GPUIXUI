@@ -349,6 +349,7 @@ references without buying correctness.
 | [684](./684-remaining-eight-surface-counts.md) | The last two eight-surface counts after plan 651 | F | 308, 399, 651, 683 | done |
 | [685](./685-theme-diff.md) | The inverse of `extendTheme`: an edited theme as overrides | F | 011, 051, 063, 085, 089, 321, 353, 389, 529 | done |
 | [686](./686-density-boundary-truth.md) | A stale density keeps the preset; the page says it empties the metrics | F | 068, 089, 380, 534, 685 | done |
+| [687](./687-platform-theme-recipes.md) | Platform theme recipes: Windows XP (Luna), Aero, and Omarchy (Recipe B open) | E | 311, 688 | partial (Recipe A done in 311) |
 | [688](./688-plan-number-collision.md) | The plan-number collision at `433`, and the rule it exposes | F | 311, 052 | done |
 | [689](./689-field-text-selection.md) | A field's typed text through a text selection | F | 071, 087, 362, 506, 510, 527, 528, 659 | done |
 | [692](./692-platform-variant-owner.md) | The platform registry's retyped variant lists | F | 051, 063, 067, 387, 609, 678 | done |
@@ -392,6 +393,7 @@ references without buying correctness.
 | [775](./775-readme-index-counts.md) | The front door's index paragraph states four catalogue sizes, and none has an owner | F | 064, 519, 774 | done |
 | [777](./777-readme-elevation-paragraph.md) | The front door's elevation paragraph, and the twelve fills it states of fifteen | F | 347, 584, 610, 619, 665, 737, 749, 775 | done |
 | [778](./778-aaa-elevation-tint.md) | The AAA elevation tint and its three alphas, in three unguarded passages | F | 085, 099, 376, 505, 777 | done |
+| [780](./780-hex-guard-boundary.md) | The one boundary guard that cannot take a boundary value | F | 067, 068, 096, 371, 540, 565 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
