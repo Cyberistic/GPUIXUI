@@ -47,6 +47,17 @@ runs as a live scene on GPUix's published WebAssembly renderer, and the release
 smoke types the name, proves the count changed and opens the match. It is a
 list, not a table: `@gpuixui/data-grid` is still a roadmap target.
 
+## App shell
+
+The fifth pattern is the frame around everything else
+([`/docs/patterns/app-shell`](/docs/patterns/app-shell)): a title bar, a
+navigation rail that starts collapsed and opens from one control, one scrolling
+content region and a status bar, composed from the real layout primitives. It
+runs as a live scene on GPUix's published WebAssembly renderer, and the release
+smoke opens the rail and proves its destinations were not painted before the
+click. It is a frame, not a docking layout: resizable splits and panel groups
+remain `packages/docking` targets.
+
 ## Still to come
 
 The inspector workspace waits on `packages/docking`, which does not exist yet.

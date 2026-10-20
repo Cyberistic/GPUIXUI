@@ -56,6 +56,7 @@ export const LIVE_SCENES = [
   "confirmation-flow",
   "command-palette",
   "project-browser",
+  "app-shell",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -74,6 +75,7 @@ export const SCENE_PAGE: Readonly<Partial<Record<LiveScene, string>>> = {
   "confirmation-flow": "/docs/patterns/confirmation-flow",
   "command-palette": "/docs/patterns/command-palette",
   "project-browser": "/docs/patterns/project-browser",
+  "app-shell": "/docs/patterns/app-shell",
 };
 
 /**
@@ -89,6 +91,7 @@ export const SCENE_LABEL: ReadonlyArray<{
   { scene: "confirmation-flow", title: "Confirmation flow" },
   { scene: "command-palette", title: "Command palette" },
   { scene: "project-browser", title: "Project browser" },
+  { scene: "app-shell", title: "App shell" },
 ];
 
 /**
@@ -184,6 +187,7 @@ export const SCENE_GESTURE: Readonly<
     { kind: "click", testId: "scene-project-clear" },
     { kind: "click-text", text: "Atlas", within: "scene-project-list" },
   ],
+  "app-shell": [{ kind: "click", testId: "scene-shell-toggle" }],
 };
 
 /**
@@ -218,6 +222,7 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   "command-palette": "Open the palette, then run Duplicate project.",
   "project-browser":
     "Type a query that matches nothing, clear it, then open a project.",
+  "app-shell": "Open the navigation rail to see its destinations.",
 };
 
 /**

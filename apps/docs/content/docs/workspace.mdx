@@ -17,6 +17,12 @@ target and its status.
 
 ## Proven today
 
+The frame that holds these regions is already composable from the layout
+primitives: the [app-shell pattern](/docs/patterns/app-shell) builds a title bar,
+a collapsible navigation rail, a scrolling content region and a status bar on the
+live surface. Resizing, panel groups and docking stay in `@gpuixui/docking`, and
+nothing here claims otherwise.
+
 The package is not published, but the runtime primitives it will compose are
 measured. The scenarios below drive a real split pane, a real tab drag and a
 real divider resize in GPUix; run them yourself:

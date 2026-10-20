@@ -1,0 +1,98 @@
+---
+title: App shell
+description: A desktop application window — a title bar, a collapsible navigation rail, one scrolling content region and a status bar — composed from the layout primitives and running on GPUix's live surface.
+---
+
+A pattern is a composition with a job. This one is the frame every desktop
+application builds before it builds anything else: a title bar, a navigation
+rail a reader can collapse, one scrolling content region and a status bar. It
+uses only shipped packages — `Stack`, `Box`, `Separator`, `ScrollArea`, `Text`
+and `Button` from `@gpuixui/primitives`, plus `Card`, `Badge`, `Avatar` and
+`Icon` — and it runs on **GPUix's published WebAssembly renderer**, the same real
+surface every live scene uses. It is not the native desktop binary; the
+component pages carry that evidence.
+
+It is **not** a docking layout. Resizable splits, panel groups, tabbed panels and
+detachable tabs belong to `packages/docking`, which is still a target. A
+docs-owned resizable pane would be the placeholder this project refuses to
+ship, so the shell composes what is real: one rail with one open flag. The
+[roadmap](/docs/roadmap) records the docking targets and their status.
+
+## The task
+
+An application window for a deployment console. The title bar names the product
+and the workspace; the rail holds the destinations and starts collapsed so the
+content keeps the width; the toggle opens it; the content region scrolls on its
+own while the title and status bars stay put; the status bar reports the
+connection.
+
+The composition owns one piece of state — whether the rail is open — and three
+in-memory rows. Everything else is layout.
+
+## Composition
+
+<LiveSurface scene="app-shell" title="App shell" />
+
+The frame composes:
+
+- `Box` and `Stack` for the window column, the title bar, the rail, the content
+  region and the status bar. `grow` on the middle row is what keeps the status
+  bar at the bottom.
+- `Separator` for the three horizontal rules and the rail's vertical edge: one
+  border step from the theme, not a hand-drawn line.
+- `ScrollArea` for the content region, bounded by `minHeight: 0` on its flex
+  parent — the measured rule that lets a flex child scroll at all.
+- `Button` for the rail toggle, with `square`, a `label` and a leading `Icon`, so
+  the control is reachable by keyboard and named for assistive technology.
+- `Text` for the type scale: `bodyStrong` for the product name, `h3` for the
+  region heading, `label` for nav destinations and `caption` for metadata.
+- `Card` for each deployment row, `Badge` for its state and `Avatar` for the
+  signed-in person.
+
+The composition lives in `preview/patterns/app-shell.tsx`, not in a component
+demo: a shell is a frame around several parts, not a component of its own.
+
+## State
+
+The page owns the rail's open flag and the deployment rows. The primitives own
+nothing here — `Stack` and `Box` are pure resolvers over the theme, `ScrollArea`
+reports deltas but keeps no offset, and the status bar is static text.
+
+The rail starts collapsed. The toggle opens and closes it, and the destinations
+render only while it is open, so the state is visible rather than decorative.
+Navigation selection, routing and persistence are the application's: this
+composition shows one screen, and `packages/docking` will own panel state when
+it ships. The three deployment rows are in memory; there is no fetch, no
+pagination and no virtualisation, because three rows do not need any.
+
+The layout has no `position`, no overlay and no portal. Every region is ordinary
+flex flow, which is the only layout model the runtime has.
+
+## What is verified
+
+| Check | What it proves |
+| ----- | -------------- |
+| `nub run --filter docs smoke:preview` | clicks the rail toggle and asserts `Members` is absent before the click and present after it; also loads the page and proves its iframe carries the page's mode |
+| `packages/primitives` runtime suites | `Button`'s activation and focus ring, the layout resolvers and `ScrollArea`'s scroll contract |
+| `packages/components` behaviour suites | `Card`'s parts, `Badge`'s variants and `Avatar`'s initials and presence |
+| `nub run --filter docs test` | the scene contract (the expectation occurs in the composition), the page's required sections and the derived scene totals |
+
+Limits, stated rather than implied: the surface is the WebAssembly renderer, not
+a desktop window; the rail does not resize and the regions do not dock; the rows
+are in memory; and the nav destinations are labels, because routing belongs to
+the application.
+
+## Source
+
+<include lang="tsx" meta='title="apps/docs/preview/patterns/app-shell.tsx"'>
+  ../../../preview/patterns/app-shell.tsx
+</include>
+
+## Related
+
+- [Layouts](/docs/layouts) · [Workspace](/docs/workspace)
+- [Stack](/docs/components/stack) · [Box](/docs/components/box) ·
+  [ScrollArea](/docs/components/scroll-area) ·
+  [Separator](/docs/components/separator)
+- [Patterns](/docs/patterns) · [Project browser](/docs/patterns/project-browser)
+- [Roadmap](/docs/roadmap)

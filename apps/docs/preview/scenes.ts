@@ -80,6 +80,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "confirmation-flow": "Workspace deleted",
   "command-palette": "Duplicated the project into a new copy.",
   "project-browser": "Opened from the project list.",
+  "app-shell": "Members",
 };
 
 /**

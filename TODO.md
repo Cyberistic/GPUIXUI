@@ -471,7 +471,21 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–614)
 
-`[x]` `[██████████]` 181/181
+`[x]` `[██████████]` 182/182
+
+`[x]` **The app shell is a composed pattern on the live surface (plan 615)** —
+      `MISSION.md` asks for realistic compositions and the site's two layout
+      pages answered with a primitive list and a roadmap link; no scene proved
+      the layout primitives together. `/docs/patterns/app-shell` is a real
+      title bar, a collapsible navigation rail, one scrolling content region and
+      a status bar composed from `Stack`/`Box`/`Separator`/`ScrollArea`/`Text`/
+      `Button` plus `Card`/`Badge`/`Avatar`/`Icon`; one click opens the rail and
+      the smoke asserts `Members` is absent before it and present after. It is a
+      frame, not docking: resizable splits and panel groups stay
+      `packages/docking` targets, and Layouts, Workspace and the patterns index
+      link the composition. 50 scenes (45 record + five composed), 27 gestures,
+      106-page `smoke:build`, 125 files / 1 209 docs tests, `smoke:preview` exit
+      `0`; four two-direction proofs in plan 615 §9.
 
 `[x]` **The design system, the data grid and the failure phrasings have an
       owner (plan 614)** — measured 2026-10-20: `design system` reached a text

@@ -231,10 +231,10 @@ renderer (the browser's GPU backend) and exports one document per scene:
   with `liveScene: "<key>"`, `registry.test.ts` fails on a key no scene ships,
   and `scene-contract.test.ts` fails when a scene's expected text no longer
   occurs in its view. Live scenes ship for every record that declares a
-  `liveScene` (45 today), plus the Showcase page and the three composed pattern
-  screens — the confirmation flow, the command palette and the project browser
-  (plans 560, 521, 522 and 575); `docs/preview-strategy.md`
-  owns the tier table and names them all. 26 of those document state only a
+  `liveScene` (45 today), plus the Showcase page and the four composed pattern
+  screens — the confirmation flow, the command palette, the project browser and
+  the app shell (plans 560, 521, 522, 575 and 615); `docs/preview-strategy.md`
+  owns the tier table and names them all. 27 of those document state only a
   gesture produces — an open
   overlay, an opened list, a checked control, a value a key reaches, text a
   reader types or a colour/rename a reader commits — so

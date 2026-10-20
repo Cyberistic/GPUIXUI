@@ -95,6 +95,11 @@ describe("search", { timeout: 120_000 }, () => {
     );
   });
 
+  it("finds the app-shell pattern by its name (plan 615)", async () => {
+    const results = await search("app shell", 5);
+    expect(results[0]?.url).toBe("/docs/patterns/app-shell");
+  });
+
   it("points a planned record at the filtered index instead of a page", () => {
     // No Tier 1–2 record is planned after plan 461, so the rule is proven on a
     // fixture: a future record must not promise a page it does not have.

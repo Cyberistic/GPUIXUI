@@ -5,6 +5,7 @@
     "settings-form",
     "confirmation-flow",
     "command-palette",
-    "project-browser"
+    "project-browser",
+    "app-shell"
   ]
 }
