@@ -12,6 +12,7 @@ import {
 import type { PlatformRecipeName } from "./platform-recipes.js";
 import type { PlatformVariant } from "./platform-types.js";
 import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
+import { statusTones, type StatusTone } from "./styles.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /**
@@ -971,6 +972,29 @@ const bodyTierFigure = (
   sentence: `**{figure}:1** (\`mutedForeground\` vs \`${brighter}\`, high-contrast light on \`${surface}\`)`,
 });
 
+/**
+ * The caption below a tone-tinted status panel's own ink. At the default floors
+ * the 7:1 body floor implied the step above the 4.5:1 caption, but at AAA both
+ * floors are 7:1, so the six high-contrast light sets measured 1.003–1.042:1
+ * between an Alert's caption and its title before plan 729 moved the four light
+ * inks. The minimum sits in the AAA dark set for `info` and `destructive` and in
+ * the AAA light set for the two warm inks.
+ */
+const panelTierFigure = (tone: StatusTone): TierFigure => {
+  const mode: ThemeMode =
+    tone === "success" || tone === "warning" ? "light" : "dark";
+  return {
+    document: "docs/tokens.md",
+    name: `the caption below the ${tone} panel's ink`,
+    tier: ["mutedForeground", `${tone}SoftForeground`],
+    claim: "tightest",
+    provenance: identityTheme(mode, "high"),
+    surface: `${tone}Soft`,
+    decimals: 3,
+    sentence: `**{figure}:1** (\`mutedForeground\` vs \`${tone}SoftForeground\`, high-contrast ${mode} on \`${tone}Soft\`)`,
+  };
+};
+
 /** The unavailable label below secondary text. */
 const inactiveTierFigure: TierFigure = {
   document: "docs/tokens.md",
@@ -1042,6 +1066,7 @@ export const documentedTierFigures: ReadonlyArray<TierFigure> = [
   bodyTierFigure("cardForeground", "card"),
   bodyTierFigure("popoverForeground", "popover"),
   bodyTierFigure("inputForeground", "muted"),
+  ...statusTones.map(panelTierFigure),
   inactiveTierFigure,
   hintTierFigure,
   panelActionTierFigure,

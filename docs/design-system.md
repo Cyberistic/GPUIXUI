@@ -796,16 +796,23 @@ The inactive label is not merely above its floor; it stays **below** the
 secondary text it sits beside. The same is true of a field's hint. Those three
 relationships are part of the text hierarchy, and so is the body role each
 surface paints: `foreground` on the canvas and the row washes, `cardForeground`
-on a card, `popoverForeground` on a menu, dialog or toast and `inputForeground`
-in a field. `themeTextTierFailures` holds an edited theme to all of them: each
+on a card, `popoverForeground` on a menu, dialog or toast, `inputForeground`
+in a field and the panel's own ink (`infoSoftForeground` through
+`destructiveSoftForeground`) on a tone-tinted status panel. `themeTextTierFailures`
+holds an edited theme to all of them: each
 tier must sit one `contrastFloors[level].step` (1.05:1) below the tier above it,
 measured on the same surface. The surfaces come from `contrastPairs`, so the
 comparison follows the pair lists. A theme that raises `disabledForeground` to
 body strength passes every floor and still makes an unavailable control look
 enabled; so does one that sets `popoverForeground` to `mutedForeground`, which
-renders every menu label at secondary strength. This is the check that reports
-both, and every shipped set clears it — secondary text sits 1.274:1 below
-`foreground`, `cardForeground`, `popoverForeground` and `inputForeground`; the
+renders every menu label at secondary strength, or one that paints an Alert's
+caption with the panel's own ink, which the default floors could not see because
+a 4.5:1 caption sits below a 7:1 body. At AAA both are 7:1, so the six
+high-contrast light sets measured **1.003–1.042:1** between the two and the four
+light inks took one step below the ramp's 950 stop. This is the check that
+reports every case, and every shipped set clears it — secondary text sits 1.274:1
+below `foreground`, `cardForeground`, `popoverForeground` and `inputForeground`;
+a status panel's caption 1.068:1 below its own ink; the
 unavailable label 1.168:1 and the hint 1.157:1 below secondary text; the
 disabled label of a status-panel action 1.542:1 below the enabled one; and a
 selected row's inherited label 1.106:1 below its title on the five fills it

@@ -1220,11 +1220,18 @@ export const contrastFloors: Readonly<
  * The text tiers the library documents, each held a perceivable step below the
  * tier above it, as `[dimmer, brighter]`: the body role each surface paints —
  * `foreground` on the canvas and the row washes, `cardForeground` on a card,
- * `popoverForeground` on a menu, dialog or toast, `inputForeground` in a field —
- * then secondary text, then the two roles below it, an unavailable label and a
+ * `popoverForeground` on a menu, dialog or toast, `inputForeground` in a field
+ * and the panel's own `xSoftForeground` on a tone-tinted status panel — then
+ * secondary text, then the two roles below it, an unavailable label and a
  * field's hint. A tier that is only *at least* as readable as the one above it
  * is not a tier; the reader uses the difference to tell a caption from body copy
  * and a disabled label from an enabled one.
+ *
+ * The four panel inks are tiers of their own: at the default floors the 7:1 body
+ * floor implied the step above the 4.5:1 caption, but at AAA both floors are
+ * 7:1, so nothing separated an Alert's caption from its title. The six
+ * high-contrast light sets measured **1.003–1.042:1** there and an edited theme
+ * could paint both with one colour while this check returned `[]` (plan 729).
  *
  * The last two pairs are **states** rather than body tiers: a selected row's
  * inherited label (`selectedForeground`) stays one step below its title
@@ -1242,6 +1249,13 @@ export const textTiers = [
   ["mutedForeground", "cardForeground"],
   ["mutedForeground", "popoverForeground"],
   ["mutedForeground", "inputForeground"],
+  ...statusTones.map(
+    (tone) =>
+      ["mutedForeground", `${tone}SoftForeground`] as const satisfies readonly [
+        keyof ThemeColors,
+        keyof ThemeColors,
+      ],
+  ),
   ["disabledForeground", "mutedForeground"],
   ["placeholder", "mutedForeground"],
   ["disabledForeground", "softActionForeground"],

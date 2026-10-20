@@ -573,16 +573,20 @@ export const highContrastLightColors = {
   info: palette.blue[700],
   infoForeground: "#FFFFFF",
   infoSoft: palette.blue[200],
-  infoSoftForeground: palette.blue[950],
+  // The four panel inks sit one step below the ramp's 950 stop: the AAA caption
+  // (`mutedForeground` `#1F1F1F`) is far above its 7:1 floor, so the 950 values
+  // left a caption and the panel's own ink 1.003–1.042:1 apart. These keep a
+  // 1.109–1.133:1 step on every tint (plan 729).
+  infoSoftForeground: "#081226",
   infoSoftBorder: palette.blue[700],
   successSoft: palette.green[200],
-  successSoftForeground: palette.green[950],
+  successSoftForeground: "#03170E",
   successSoftBorder: palette.green[700],
   warningSoft: palette.amber[200],
-  warningSoftForeground: palette.amber[950],
+  warningSoftForeground: "#1E1300",
   warningSoftBorder: palette.amber[700],
   destructiveSoft: palette.red[200],
-  destructiveSoftForeground: palette.red[950],
+  destructiveSoftForeground: "#2A0607",
   destructiveSoftBorder: palette.red[700],
   softAction: palette.neutral[0],
   softActionForeground: "#000000",

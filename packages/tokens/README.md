@@ -343,14 +343,19 @@ screen iterates the index instead of retyping the kinds. The payload is the same
 or `MetricFailure` the individual check returns. `themeTextTierFailures` is the
 eighth check: `textTiers` is `[dimmer, brighter]` for `mutedForeground` below
 the body role each surface paints — `foreground` on the canvas and the row washes,
-`cardForeground` on a card, `popoverForeground` on a menu, dialog or toast and
-`inputForeground` in a field — and for `disabledForeground` and `placeholder`
+`cardForeground` on a card, `popoverForeground` on a menu, dialog or toast,
+`inputForeground` in a field and the panel's own `xSoftForeground` on a
+tone-tinted status panel — and for `disabledForeground` and `placeholder`
 below `mutedForeground`; each is held one 1.05:1 step below the tier above it on
-the surfaces both are documented on. `selectedForeground` is deliberately not a
+the surfaces both are documented on. The four panel tiers exist because the AAA
+floors put body and secondary at the same 7:1: a caption and an Alert's own title
+measured 1.003–1.042:1 there, so the four high-contrast light inks took one step
+below the ramp's 950 stop. `selectedForeground` is deliberately not a
 body tier: it is the secondary-strength tint an inherited label keeps inside a
-selected row, documented only on the four row fills. It is a state tier there:
+selected row, documented only on the five row fills. It is a state tier there:
 the label stays one 1.05:1 step below the row title `foreground` on the
-`hover`/`active`/`accent`/`selected` fills, and every shipped set clears the step. `themeDirectionFailures` is the
+`hover`/`active`/`accent`/`selected`/`selectedActive` fills, and every shipped set
+clears the step. `themeDirectionFailures` is the
 ninth: `stateLadders` — indexed by `stateLadderNames` — walks the four filled
 families, the panel action (`softAction`), the generic wash (`wash`), the
 selected step (`selection`) and both row presses (`rowPress` and

@@ -50,6 +50,7 @@ import {
   extendTheme,
   getTheme,
   selectionSurfaces,
+  statusTones,
   textTiers,
   themeTextTierFailures,
 } from "./index.js";
@@ -220,8 +221,19 @@ describe("tier figures the documents state in the present tense", () => {
       "selectedForeground",
       "foreground",
     ]);
+    const panelTiers = textTiers.filter(
+      ([dimmer, brighter]) =>
+        dimmer === "mutedForeground" &&
+        bodyRoles.includes(brighter) === false &&
+        brighter.endsWith("SoftForeground"),
+    );
+    expect(panelTiers).toHaveLength(statusTones.length);
+    const panelMinimum = Math.min(
+      ...panelTiers.map((tier) => tierMinimum(tier)),
+    ).toFixed(3);
     const sentence =
       `every shipped set clears it — secondary text sits ${[...bodyMinima][0]}:1 below ${bodyList}; ` +
+      `a status panel's caption ${panelMinimum}:1 below its own ink; ` +
       `the unavailable label ${minimum("disabledForeground", "mutedForeground")}:1 and the hint ${minimum("placeholder", "mutedForeground")}:1 below secondary text; ` +
       `the disabled label of a status-panel action ${minimum("disabledForeground", "softActionForeground")}:1 below the enabled one; ` +
       `and a selected row's inherited label ${minimum("selectedForeground", "foreground")}:1 below its title on the ${countWord(selectedLabelFills.length)} fills it keeps.`;

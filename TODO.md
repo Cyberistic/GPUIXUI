@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 330/408
+`[x]` `[████████░░]` 331/408
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2817,6 +2817,16 @@ stored artifact, `themeEdit(choice, edited)` resolves the choice before it diffs
 so a mismatched base is not representable, `applyThemeEdit(edit)` replays it, and
 `theme-edit.test.ts` walks all 24 platform and recipe sets plus the URL codec
 (plan 727)
+`[x]` Hold a status panel's caption below its own ink — a tone-tinted panel
+paints its title with `xSoftForeground` and its caption with `mutedForeground`,
+but `textTiers` named only the four plain body roles, so at AAA — where both
+floors are 7:1 — the six high-contrast light sets measured **1.003–1.042:1**
+between them and a theme that painted both with one colour returned `[]`.
+The four pairs derive from `statusTones`, the four light inks take one step below
+the ramp's 950 stop (`#081226`, `#03170E`, `#1E1300`, `#2A0607`), every shipped
+set clears 1.068:1 at the tightest (AAA dark destructive), and both documents'
+"four row fills" for the selected label became the five the contract measures
+(plan 729)
 
 ## Phase C — Tier 1–2 components
 

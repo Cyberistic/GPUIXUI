@@ -33,13 +33,17 @@ import {
  * A theme that edits the field fill and every role painted on it coherently:
  * on the pre-650 tree it passes all ten checks, and its only defect is the
  * designed disabled field — `disabledForeground` on `input` at 2.494:1.
+ *
+ * Plan 729 moved `mutedForeground` from `#2A2A2A` to `#383838`: the hierarchy
+ * now compares secondary text with the four soft-status panel inks, and the
+ * darker caption outranked them. Every other value is unchanged.
  */
 const planted: Theme = extendTheme(getTheme("light"), {
   colors: {
     input: "#B0B0B0",
     inputForeground: "#0D0F13",
     placeholder: "#404040",
-    mutedForeground: "#2A2A2A",
+    mutedForeground: "#383838",
     disabledForeground: "#6A6A6A",
     borderStrong: "#4A4A4A",
     primary: "#1B45A8",

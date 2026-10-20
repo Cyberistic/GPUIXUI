@@ -556,16 +556,16 @@ carries, so it cannot claim another.
 | `info` | `#1B45AC` | `#C5D8FF` | informational status, distinct from `primary` |
 | `infoForeground` | `#FFFFFF` | `#000000` | text and icons on `info` |
 | `infoSoft` | `#C5D8FF` | `#152F6B` | soft informational surface |
-| `infoSoftForeground` | `#0C1D42` | `#DEE9FF` | text and icons on `infoSoft` |
+| `infoSoftForeground` | `#081226` | `#DEE9FF` | text and icons on `infoSoft` |
 | `infoSoftBorder` | `#1B45AC` | `#6E9CFF` | edge around `infoSoft` |
 | `successSoft` | `#A8F0C6` | `#0A3A26` | soft success surface |
-| `successSoftForeground` | `#042015` | `#D3F9E2` | text and icons on `successSoft` |
+| `successSoftForeground` | `#03170E` | `#D3F9E2` | text and icons on `successSoft` |
 | `successSoftBorder` | `#116A43` | `#3BC97F` | edge around `successSoft` |
 | `warningSoft` | `#FFDE8A` | `#4B3100` | soft warning surface |
-| `warningSoftForeground` | `#2A1B00` | `#FFEFC6` | text and icons on `warningSoft` |
+| `warningSoftForeground` | `#1E1300` | `#FFEFC6` | text and icons on `warningSoft` |
 | `warningSoftBorder` | `#8E5B00` | `#D99400` | edge around `warningSoft` |
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
-| `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
+| `destructiveSoftForeground` | `#2A0607` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#A5262B` | `#FF6B6B` | edge around `destructiveSoft` |
 | `softAction` | `#FFFFFF` | `#343B47` | raised action on a soft status panel |
 | `softActionForeground` | `#000000` | `#FFFFFF` | text and icons on `softAction` and on the panel a ghost action rests on |
@@ -2885,7 +2885,8 @@ single-family rule. The executed example is
 The colour check enforces minimums, so it cannot see an inverted hierarchy. The
 design system documents the body role each surface paints — `foreground` on the
 canvas and the row washes, `cardForeground` on a card, `popoverForeground` on a
-menu, dialog or toast and `inputForeground` in a field — then secondary text
+menu, dialog or toast, `inputForeground` in a field and the panel's own
+`xSoftForeground` on a tone-tinted status panel — then secondary text
 (`mutedForeground`), then the two roles below it, an unavailable label
 (`disabledForeground`) and a field's hint (`placeholder`). A surface's own body
 role is the tier its secondary text sits below, so a card, menu or field that
@@ -2896,7 +2897,10 @@ both roles clear their floors.
 same surface**, where both roles already have a documented pair. `textTiers` is
 the ordered list: `mutedForeground` below `foreground`, `mutedForeground` below
 `cardForeground`, `mutedForeground` below `popoverForeground`, `mutedForeground`
-below `inputForeground`, `disabledForeground` below `mutedForeground`,
+below `inputForeground`, `mutedForeground` below `infoSoftForeground`,
+`mutedForeground` below `successSoftForeground`, `mutedForeground` below
+`warningSoftForeground`, `mutedForeground` below
+`destructiveSoftForeground`, `disabledForeground` below `mutedForeground`,
 `placeholder` below `mutedForeground`, and — the last two are **states** rather
 than body tiers — `disabledForeground` below `softActionForeground`, so the
 unavailable label of a filled status-panel action stays visibly dimmer than the
@@ -2916,13 +2920,21 @@ const flattened = extendTheme(identity, {
 themeTextTierFailures(flattened); // a failure per surface the tiers share
 ```
 
+The panel tiers exist because the floors stop implying the step at AAA: a
+secondary floor of 7:1 sits in the same place as the body floor, so the six
+high-contrast light sets measured a caption **1.003–1.042:1** from the panel's
+own title and an edited theme could paint both with one colour while
+`themeTextTierFailures` returned `[]`. The four high-contrast light inks take one
+step below the ramp's 950 stop (`#081226`, `#03170E`, `#1E1300`, `#2A0607`), so
+every shipped set clears the step without moving the caption role.
 The surfaces are derived from `contrastPairs`, not retyped: thirteen shared
 surfaces for secondary text below body copy, one `card` for `cardForeground`,
 five for `popoverForeground` (`popover` and the four row fills it shares), the
 fourteen surfaces typed text is documented on for `inputForeground` (`muted`,
 `background`, `card`, `popover`, `input`, the pressed `selectedActive` and the
 four row washes, plus the four soft status fills a field inside a status panel
-paints), fourteen for the
+paints), two for each panel ink (the tone's own fill and the `popover` card the
+shipped Toast paints that ink on), fourteen for the
 inactive label below secondary text (every surface `inactivePairs` measures
 except the `disabled` fill, which carries no secondary text), fourteen for a hint
 and a caption, five for the disabled panel-action label below the enabled one
@@ -2934,7 +2946,13 @@ tightest are **1.274:1**
 **1.274:1** (`mutedForeground` vs `cardForeground`, high-contrast light on
 `card`), **1.274:1** (`mutedForeground` vs `popoverForeground`, high-contrast
 light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
-high-contrast light on `muted`), **1.168:1** (`disabledForeground` vs
+high-contrast light on `muted`), **1.082:1** (`mutedForeground` vs
+`infoSoftForeground`, high-contrast dark on `infoSoft`), **1.125:1**
+(`mutedForeground` vs `successSoftForeground`, high-contrast light on
+`successSoft`), **1.109:1** (`mutedForeground` vs `warningSoftForeground`,
+high-contrast light on `warningSoft`), **1.068:1** (`mutedForeground` vs
+`destructiveSoftForeground`, high-contrast dark on `destructiveSoft`), **1.168:1**
+(`disabledForeground` vs
 `mutedForeground`, high-contrast dark on `active`), **1.157:1**
 (`placeholder` vs `mutedForeground`, high-contrast dark on every surface the two
 share), **1.542:1** (`disabledForeground` vs `softActionForeground`,
@@ -2946,8 +2964,9 @@ that sets `disabledForeground` to
 
 `selectedForeground` is deliberately not a body tier: it is the
 secondary-strength tint an inherited label keeps inside a selected row, whose
-title is painted with `foreground`, and it is documented only on the four row
-fills. It **is** a state tier there: the label stays one step below the title
+title is painted with `foreground`, and it is documented only on the five row
+fills (`hover`, `active`, `accent`, `selected` and the pressed `selectedActive`).
+It **is** a state tier there: the label stays one step below the title
 painted on the same fill, and every shipped set already clears the step — the
 design does have it.
 
@@ -4150,7 +4169,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **44** entries across
+state — `documentedFigures` and `documentedTierFigures`, **48** entries across
 this page, the design system, the README, the ledger and the package's own JSDoc
 modules — and `packages/tokens/src/figures.test.ts` derives each one from
 `shippedThemes` with the checker's own measurement and asserts both the figure
