@@ -403,6 +403,7 @@ references without buying correctness.
 | [795](./795-platform-disabled-step-figures.md) | The disabled fill's step off its platform surfaces has no owner | F | 535, 737, 781 | done |
 | [798](./798-linux-wash-premise.md) | The Linux wash rationale's figure and its premise | F | 506, 535, 710, 781, 795 | done |
 | [799](./799-aero-disabled-rationale.md) | The Aero recipe's disabled-fill rationale has no owner | F | 535, 737, 795 | done |
+| [800](./800-recipe-status-ink-ranges.md) | The recipes' three inherited status-ink ranges have no owner | F | 535, 574, 582, 649, 799 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4087,6 +4088,21 @@ with `nativeTextRoles` plus the three non-role rows (`appearance`,
 `fontSans`, `fontMono`); a swapped, moved, deleted or duplicated row fails, as
 does a bridge edit. No bridge field, colour, pair, floor, metric, role or
 shipped theme moves; `contrastPairs` stays **470**.
+
+Plan `800` owns the three historical ranges the recipe files quote for the inks
+plans `574`, `582` and `649` moved. `xp.ts` states "6.41–6.95:1 on the beige
+canvas, opaque and through the runtime's 3.5% ink wash", and `aero.ts` states
+"4.437–4.498:1 on the quiet panel and the canvas" and "4.429–4.496:1 through the
+active match". The pre-fix hexes survived only in the defect suites' planted
+tables — which pin single ratios, not endpoints — and XP's four inherited inks
+were written down nowhere, so a palette edit or a retyped digit staled a premise
+while every shipped ink still passed. `platform-claims.test.ts` now writes out
+each pre-fix palette, plants it on the shipped recipe theme, recomputes the
+composition the sentence names (opaque and 3.5% ink; the active find match over
+3.5% ink; the active match over each 5.5% diff tint), and holds the failing-pair
+count, the en-dash range and the floor word to the derivation. Each case fails
+on a mutated digit, a moved canvas or a collapsed count. No colour, pair, floor,
+metric, role, recipe or shipped theme moves; `contrastPairs` stays **470**.
 
 ## How to use a plan
 

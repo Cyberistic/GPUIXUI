@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 364/444
+`[x]` `[████████░░]` 365/444
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -3154,13 +3154,17 @@ and derives the panel, the shipped step (`disabled` on `muted`) and the pre-737
 premise from a written-out `#EAF0F7`, the same split plan 785 used for the
 pre-098 brand fill; no colour, pair, floor, metric, role or recipe moves
 (plan 799)
-`[ ]` The recipes' three inherited status-ink ranges are unguarded historical
-premises: `xp.ts` "6.41–6.95:1" (plan 574) and `aero.ts` "4.437–4.498:1" (plan
-649) and "4.429–4.496:1" (plan 582). Their endpoints live in the defect suites'
-pre-fix tables, not in a derivation of the ranges, so a palette edit could stale
-a premise while every shipped ink still passes; pin or reword them in a plan
-that writes out each pre-fix palette, and do not hand-type a history (found while
-landing plan 799)
+`[x]` The recipes' three inherited status-ink ranges had no owner — `xp.ts`
+"6.41–6.95:1" (plan 574), `aero.ts` "4.437–4.498:1" (plan 649) and
+"4.429–4.496:1" (plan 582) quoted historical premises whose endpoints lived only
+partly in the defect suites' planted tables, so a palette edit or a retyped digit
+could stale a premise while every shipped ink still passed;
+`platform-claims.test.ts` now writes out each pre-fix palette (the four identity
+inks XP inherited, Aero's two pre-582 inks and its two pre-649 inks), derives
+each range through the composition its sentence names, and holds the failing
+count, the range and the floor word to it — each case fails on a mutated digit, a
+moved canvas or a collapsed count; no colour, pair, floor, metric or recipe moves
+(plan 800)
 
 ## Phase C — Tier 1–2 components
 

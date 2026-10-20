@@ -9,6 +9,12 @@
  *
  * `node:fs` is deliberate: this is a documentation test over the package's own
  * style files, and the tokens package ships zero runtime dependencies.
+ *
+ * Plan 799 extended the suite to the recipe files. Plan 800 owns their three
+ * historical ranges: each pre-fix palette is written out, the range is derived
+ * through the composition the sentence names, and the failing-pair count and
+ * the sentence's floor word are asserted — so a palette edit, a wash change or
+ * a retyped digit fails the case.
  */
 
 import { readFileSync } from "node:fs";
@@ -17,7 +23,11 @@ import { compositeOver, contrastFloors, contrastRatio } from "./contrast.js";
 import { alpha } from "./color.js";
 import { statusTones } from "./styles.js";
 import { getPlatformRecipeTheme } from "./platform-recipes.js";
-import { getPlatformTheme } from "./theme.js";
+import { extendTheme, getPlatformTheme } from "./theme.js";
+import { nativeHighlight } from "./highlight.js";
+import { nativeInk, nativeInkOpacity } from "./native-ink.js";
+import { nativeSyntaxTints } from "./native-text-check.js";
+import { nativeTextRoles } from "./native-text.js";
 
 const source = (file: string): string =>
   readFileSync(new URL(`./platform-styles/${file}`, import.meta.url), "utf8")
@@ -34,6 +44,33 @@ const linuxPre506Fill = "#2B4F76";
 
 /** The identity fill Aero inherited before plan 737. */
 const aeroPreFixFill = "#EAF0F7";
+
+/** The identity light status inks Windows XP inherited before plan 574. */
+const xpPre574Inks = {
+  infoText: "#1B45AC",
+  successText: "#0E5739",
+  warningText: "#6B4500",
+  destructiveText: "#8F2126",
+} as const;
+
+/** The identity light inks Aero inherited before plan 582. */
+const aeroPre582Inks = {
+  successText: "#0E5739",
+  destructiveText: "#8F2126",
+} as const;
+
+/** The Aero light inks plan 649 moved for the diff-tint find match. */
+const aeroPre649Inks = {
+  mutedForeground: "#3D4C5F",
+  primaryText: "#0C4A8C",
+} as const;
+
+/** The two document tones the find-highlight sentences name. */
+const highlightSurfaces = ["background", "muted"] as const;
+
+/** The en-dash range a provenance sentence prints, at its own precision. */
+const range = (ratios: ReadonlyArray<number>, digits: number): string =>
+  `${fixed(Math.min(...ratios), digits)}–${fixed(Math.max(...ratios), digits)}`;
 
 /** The tightest border-over-scrim among the solid status chips. */
 const tightestChipBorder = (mode: "light" | "dark"): string => {
@@ -185,5 +222,83 @@ describe("the platform files' quoted figures", () => {
         )}:1) rather than the identity's neutral-850 (plan 737).`,
       );
     });
+  });
+
+  it("holds XP's inherited status-ink range to the palette it names", () => {
+    const theme = extendTheme(getPlatformRecipeTheme("xp", "light"), {
+      colors: xpPre574Inks,
+    });
+    const floor = contrastFloors[theme.contrast].body;
+    const painted = statusTones.flatMap((tone) => {
+      const ink = theme.colors[`${tone}Text`];
+      return [
+        contrastRatio(ink, theme.colors.background),
+        contrastRatio(ink, nativeInk(theme, "background")),
+      ];
+    });
+    const failing = painted.filter((ratio) => ratio < floor);
+
+    expect(failing).toHaveLength(6);
+    expect(source("recipes/xp.ts")).toContain(
+      `measured ${range(failing, 2)}:1 on the beige canvas, opaque and ` +
+        `through the runtime's ${fixed(nativeInkOpacity * 100, 1)}% ink wash, ` +
+        `under the ${floor}:1 body floor`,
+    );
+  });
+
+  it("holds Aero's inherited find-match range on the code ink", () => {
+    const theme = extendTheme(getPlatformRecipeTheme("aero", "light"), {
+      colors: aeroPre582Inks,
+    });
+    const floor = contrastFloors[theme.contrast].secondary;
+    const wash = nativeHighlight(theme).activeColor;
+    const failing = (["successText", "destructiveText"] as const)
+      .flatMap((role) =>
+        highlightSurfaces.map((surface) =>
+          contrastRatio(
+            theme.colors[role],
+            compositeOver(wash, nativeInk(theme, surface)),
+          ),
+        ),
+      )
+      .filter((ratio) => ratio < floor);
+
+    expect(failing).toHaveLength(4);
+    expect(source("recipes/aero.ts")).toContain(
+      `the inherited values measured ${range(failing, 3)}:1 through the ` +
+        `active match, under the ${floor}:1 secondary floor (plan 582)`,
+    );
+  });
+
+  it("holds Aero's inherited quiet-panel range to the diff tints", () => {
+    const theme = extendTheme(getPlatformRecipeTheme("aero", "light"), {
+      colors: aeroPre649Inks,
+    });
+    const floor = contrastFloors[theme.contrast].secondary;
+    const active = nativeHighlight(theme).activeColor;
+    const failing = (["mutedForeground", "primaryText"] as const)
+      .flatMap((role) =>
+        nativeSyntaxTints.flatMap(({ wash, opacity }) =>
+          highlightSurfaces.map((surface) =>
+            contrastRatio(
+              theme.colors[role],
+              compositeOver(
+                active,
+                compositeOver(
+                  alpha(theme.colors[nativeTextRoles[wash]], opacity),
+                  theme.colors[surface],
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      .filter((ratio) => ratio < floor);
+
+    expect(failing).toHaveLength(7);
+    expect(source("recipes/aero.ts")).toContain(
+      `the inherited values measured ${range(failing, 3)}:1 on the quiet ` +
+        `panel and the canvas, under ${floor}:1`,
+    );
   });
 });
