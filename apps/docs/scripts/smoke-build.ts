@@ -1168,6 +1168,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the performance vocabulary, which returned nothing before plan 605",
     },
+    {
+      query: "className",
+      expected: "/docs/styling",
+      first: true,
+      what: "the styling vocabulary a React reader brings, which returned nothing before plan 606",
+    },
+    {
+      query: "tailwind",
+      expected: "/docs/styling",
+      first: true,
+      what: "the styling model page, which did not exist before plan 606",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

@@ -30,6 +30,7 @@ import {
 } from "./scene-search";
 import { source } from "./source";
 import { siteOutputSearchEntry } from "./site-output-search";
+import { stylingSearchEntry } from "./styling-search";
 import { tokenSearchEntries } from "./token-search";
 import { tokensApiSearchEntry } from "./tokens-api-search";
 
@@ -136,6 +137,7 @@ const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
   roadmapSearchEntry,
   scenesIndexEntry,
   siteOutputSearchEntry,
+  stylingSearchEntry,
 ];
 
 const generatedByUrl = new Map(

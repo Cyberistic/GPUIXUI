@@ -1,0 +1,149 @@
+---
+title: Styling
+description: "How to style a component in GPUix: the style prop and every StyleDesc field, the shallow-merge contract, where values come from, and what replaces className, Tailwind, stylesheets, CSS variables, pseudo-classes and media queries."
+---
+
+A GPUix app has no CSS. There is no stylesheet, no class attribute and no
+selector: every element takes a **`style` object**, and the values it reads come
+from the active theme. This page is the mechanics — what the runtime accepts,
+what it does not, and how a component merges what you pass with what it already
+resolves. [Theming](/docs/theming) is the values; [Component API](/docs/component-api)
+is how a part exposes its own state.
+
+## What is not here
+
+A React developer arrives with a mental model this runtime does not have. Each
+row is a real absence, not a missing feature to wait for:
+
+<AbsentStylingConcepts />
+
+There is no cascade to fight: a style is a plain object, resolved once per
+render. That is why a value can be computed — from the theme, from a prop, from
+a window size — instead of being won by specificity.
+
+## The style prop
+
+Every host element in the library accepts `style?: StyleDesc`, including every
+part of a compound component. A component resolves its own style from the theme
+and then spreads yours over it, so **a field you pass replaces that field** and
+everything you omit keeps the component's value:
+
+```tsx
+import { useTheme } from "@gpuixui/tokens/react";
+import { Button } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+<Button
+  style={{
+    backgroundColor: theme.colors.primary,
+    paddingLeft: theme.spacing.md,
+    paddingRight: theme.spacing.md,
+  }}
+>
+  Save changes
+</Button>;
+```
+
+The merge is shallow (`{ ...base, ...override }`). That matters for the two
+nested fields: passing `hover` replaces the whole hover object, so a hover style
+that only sets a background drops the component's other hover fields.
+
+## The supported surface
+
+The table is generated from the installed `@gpuix/native` declarations, so it is
+the runtime's own list rather than a copy:
+
+<auto-type-table path="../../node_modules/@gpuix/native/dist/host.d.ts" name="StyleDesc" />
+
+The fields fall into seven families. The names are the runtime's; the grouping
+is ours, and a field that belongs to none of them fails the docs suite by name.
+
+- **Layout and flow** — `display`, `visibility`, the `flex*`, `align*`,
+  `justify*` and `grid*` groups, `position` with its four offsets, `overflow*`,
+  and the gaps (`gap`, `rowGap`, `columnGap`).
+- **Size** — `width` and `height` with their `min*` and `max*` bounds. A
+  dimension is a number of logical pixels or a `DimensionValue`.
+- **Spacing** — `padding` and `margin` with the four per-side fields each.
+- **Borders and elevation** — the `border*Width` fields, one `borderColor`,
+  the `borderRadius` corners, and `boxShadow`. There is a single shadow: no
+  `inset` variant, so an inner line is a border or a 1 px element.
+- **Colour** — `background` (a colour or a linear gradient),
+  `backgroundColor`, `color`, `opacity` and `selectionColor`.
+- **Text** — the `font*` fields, `textAlign`, `textOverflow`,
+  `textDecoration`, `whiteSpace`, `lineHeight` and `lineClamp`.
+- **Interaction** — `cursor`, `pointerEvents`, `userSelect`, `selectionColor`
+  and the two state objects `hover` and `active`.
+
+`userSelect` and `selectionColor` are inherited by a subtree, like their CSS
+counterparts, so a toolbar can disable selection once. Everything else applies
+to the element it is set on.
+
+## Values come from the theme
+
+Never retype a colour, a spacing step or a shadow. `useTheme()` returns the
+resolved `Theme`, and four helpers turn it into style fragments:
+
+```tsx
+import { useTheme } from "@gpuixui/tokens/react";
+import { alpha, elevationShadow, textStyle } from "@gpuixui/tokens";
+
+const theme = useTheme();
+
+const card = {
+  ...textStyle(theme, "body"),
+  backgroundColor: theme.colors.card,
+  color: theme.colors.cardForeground,
+  padding: theme.spacing.lg,
+  borderColor: theme.colors.border,
+  borderWidth: theme.borderWidth.thin,
+  borderRadius: theme.radius.lg,
+  boxShadow: elevationShadow(theme, "md"),
+};
+
+<aside style={card}>Draft saved</aside>;
+```
+
+`focusRing(theme)` is the keyboard ring as a single shadow — the runtime has no
+`outline` and no `focus-visible` state, so a control paints it while it holds
+focus and there is no way to tell a Tab from a click. `alpha(colour, amount)`
+derives a translucent shade of a role, which is how the library's own hover and
+pressed states are built.
+
+## Variants and state
+
+A **variant** is a named style resolved from roles, not a CSS class:
+`variant="destructive"` selects the `destructive` fill and its readable
+foreground, and a theme change repaints every variant at once. A **state** is
+the function form of `style` on a compound part — `style={(state) => …}` — and
+its vocabulary (`active`, `checked`, `open`, …) is fixed per part. Both are
+described on [Component API](/docs/component-api#state-aware-styles).
+
+## What the runtime will not do
+
+- **No selectors, at all.** There is nothing to target: no element queries, no
+  descendant rules, no pseudo-elements. A component owns its subtree.
+- **No `z-index` and no portal.** Overlays paint in mount order; the layers that
+  ship are documented under [Layering](/docs/component-api#layering).
+- **`position: "absolute"` resolves against the mount parent**, not against a
+  positioned ancestor, because there is no containing-block algorithm.
+- **No colour or transform interpolation.** A `motion` track moves offsets, sizes
+  and opacity; it cannot rotate, and it cannot animate a colour. See
+  [Motion](/docs/theming#motion).
+- **No `disabled` or `focus` style keys.** `hover` and `active` are the only
+  pointer states; a component decides what disabled and focused look like, and a
+  caller who needs a different disabled look passes a style computed from the
+  prop.
+- **No theme switch inside the runtime.** The app resolves the mode and passes
+  the theme; see [Dark mode](/docs/dark-mode).
+
+## Where to go next
+
+- [Theming](/docs/theming) — roles, scales, providers, platform styles and
+  extension.
+- [Typography](/docs/typography) — the type roles `textStyle` resolves and the
+  families the runtime can load.
+- [Component API](/docs/component-api) — parts, controlled state and the
+  state-aware `style` form.
+- [Troubleshooting](/docs/troubleshooting) — when the colour is wrong or a label
+  is invisible.

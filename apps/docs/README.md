@@ -95,6 +95,16 @@ authoring guide for a tier-L surface: the record field, the four files, the
 gesture vocabulary, the readiness contract and the guards, every fact checked
 against `preview/scenes.ts` and the real files.
 
+The styling model has its own page, `/docs/styling` (plan 606): the `style` prop,
+the shallow-merge contract, the seven `StyleDesc` families and the CSS concepts
+the runtime does not have. The supported surface is an `<auto-type-table>` over
+`node_modules/@gpuix/native/dist/host.d.ts`, so the page renders the runtime's own
+73 fields; the absent-concept table is `<AbsentStylingConcepts />`, drawn from
+`src/lib/styling.ts`. `src/lib/styling.test.ts` parses the same declarations in
+both directions and fails by name when a field is unclassified, a family anchor
+disappears, a concept is claimed absent after the runtime gained it, or the table
+stops resolving.
+
 The extension half is `/docs/extending` (plan 488): the `core/` layer, the real
 `Toggle` source and the theme example. `src/extending.test.ts` reads
 `packages/primitives/src/core` and the page, so a new core module cannot ship

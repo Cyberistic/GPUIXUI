@@ -1,6 +1,7 @@
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
+import { AbsentStylingConcepts } from "./absent-styling-concepts";
 import { AccessibilityIndex } from "./accessibility-index";
 import { ApiIndex } from "./api-index";
 import { AriaSupportTable } from "./aria-support-table";
@@ -42,6 +43,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ApiIndex,
     AriaSupportTable,
     AccessibilityIndex,
+    AbsentStylingConcepts,
     HostPropsTable,
     PartIndex,
     PageTemplateSections,

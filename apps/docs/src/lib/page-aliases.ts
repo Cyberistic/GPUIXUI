@@ -53,6 +53,27 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ],
   ["/docs/accessibility", ["keyboard focus"]],
   [
+    "/docs/styling",
+    [
+      "classname",
+      "class name",
+      "css",
+      "css class",
+      "tailwind",
+      "sx",
+      "sx prop",
+      "stylesheet",
+      "style prop",
+      "inline style",
+      "style attribute",
+      "media query",
+      "pseudo class",
+      "pseudo element",
+      "custom styles",
+      "override styles",
+    ],
+  ],
+  [
     "/docs/performance",
     [
       "benchmark",
