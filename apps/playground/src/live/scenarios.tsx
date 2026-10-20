@@ -131,6 +131,10 @@ import {
   stateColourView,
 } from "../scenarios/state.js";
 import { opacityLiveScenario, opacityView } from "../scenarios/opacity.js";
+import {
+  textDecorationLiveScenario,
+  textDecorationView,
+} from "../scenarios/text-decoration.js";
 import { textInkLiveScenario, textInkView } from "../scenarios/text-ink.js";
 import {
   captureLive,
@@ -13112,6 +13116,27 @@ const liveTextInk: LiveScenario = {
 };
 
 /**
+ * Text decoration in a real window (plan `775`).
+ *
+ * The headless pass proves the two declared lines, the control's absence and
+ * the wrapper's inheritance; this twin proves the same lines survive a window's
+ * glyph rasteriser, which is the layer the authored style report cannot see.
+ */
+const liveTextDecoration: LiveScenario = {
+  ...textDecorationLiveScenario,
+  view: textDecorationView,
+  ready: "decoration-stage",
+  steps: (ctx) =>
+    textDecorationLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-text-decoration.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -14251,6 +14276,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveBorderPixels,
   liveStatePixels,
   liveOpacityPixels,
+  liveTextDecoration,
   liveTextInk,
   terminal,
   selectionSignal,

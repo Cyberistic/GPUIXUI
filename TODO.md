@@ -119,20 +119,43 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        **538**). The second session's files were left untouched. The `scripts/`
        fix is still the only durable remedy.
 
+       **Resolution 2026-10-20 ~17:30:** the second session finished the unit it
+       had claimed: `775`'s model, scenario and live twin now compile, and
+       `text-decoration-pixels` / `live-text-decoration` are green (18 checks
+       each, two mutation proofs, 10 pure tests). The other session committed
+       `773` and its recurrence note, and no second `swarm:playground` process is
+       live any more, so this is the only writer again. The plan numbers still do
+       not collide (`773`, `775`; `774` belongs to another workstream).
+
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 138/138 plans-and-harness
 
-`[~]` **Prove text decoration reaches the frame, and measure the link variant's
+`[x]` **Prove text decoration reaches the frame, and measure the link variant's
       inheritance** per plan `775`: `textDecoration` is declared by the pinned
       runtime, shipped by the `link` Button variant's hover refinement (on the
-      button `div`, not the label) and by `tw`'s `underline`, and no check reads
-      the frame for it — `paintedStyle` reports the authored value and
-      `getPaintedText()` the source run. `text-decoration-pixels` /
-      `live-text-decoration` will classify a decoration as a continuous
-      full-width ink row in a named band (glyph rows cannot qualify), prove the
-      control paints none, and assert the wrapper→`<text>` inheritance in its
-      measured direction. Owner: playground; plan `775`.
+      button `div`, not the label) and by `tw`'s `underline`, and no check read
+      the frame for it. `text-decoration-pixels` / `live-text-decoration`
+      (**18 checks each**) classify a decoration as a continuous
+      near-full-width ink row: a **427 px** row at panel-relative `y=0.67`
+      (underline) and `y=0.45` (line-through), both exactly
+      `foreground #EEF1F5`; the undeclared control's widest row is a **22 px**
+      glyph stem, and the stage point stays `background`. **Measured:** an
+      underline paints **1–2 device px below the `<text>` box** (the line sits
+      in the leading space under the baseline), so the probe scans each
+      fixture's `280 × 96` panel and its bands are panel-relative; and the
+      wrapper `div`'s declaration **does** reach its child `<text>`, so the
+      shipped `link` variant's hover underline is visible — the check asserts
+      the present direction. A pure `text-decoration-model.ts` owns the metric
+      (10 tests; playground **538 → 548**). Two mutation proofs, exit `1`
+      (underline declared as `line-through` → `widest 427px at y=0.45`; the
+      control given an underline → `widest 427px at y=0.67`), plus a unit
+      mutation (`DECORATION_SPAN = 0` fails three tests). Full headless
+      **115/115** (**4206** checks, 65 capabilities, exit `0`; exactly
+      `4188 + 18`); live registry **103 → 104** (`live-text-decoration` green
+      focused); no full live gate (merge gate). Focused ids run:
+      `text-decoration-pixels` (green + M1 + M2 + green),
+      `live-text-decoration`.
 
 `[x]` **Prove text ink reaches the glyph pixels** per plan `773`: every
       text-colour claim read the **authored** style or the **source** run, so a

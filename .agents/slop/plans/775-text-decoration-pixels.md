@@ -1,6 +1,6 @@
 # 775 — Text decoration, in the frame: underline, line-through, and the link variant's inheritance
 
-**Phase:** F (pixel evidence) · **Workstream:** playground · **Status:** planned
+**Phase:** F (pixel evidence) · **Workstream:** playground · **Status:** landed
 
 **Depends on:** `100`, `110`, `120`, `140`, `150`, `197`, `342`, `591`, `674`,
 `690`, `697`, `701`, `707`, `708`, `713`, `715`, `722`, `736`, `745`, `754`,
@@ -117,9 +117,10 @@ export interface DecorationScan {
 - `decorationPresent(scan, box, factor, band)` is
   `span >= box.width * factor * DECORATION_SPAN` **and** the row's normalised
   `y` inside `band`.
-- Bands: `UNDERLINE_BAND = [0.55, 0.95]`, `STRIKE_BAND = [0.30, 0.70]`. The
+- Bands: `UNDERLINE_BAND = [0.62, 0.78]`, `STRIKE_BAND = [0.35, 0.55]`. The
   control check is the same predicate with `band = ANY_BAND = [0, 1]` and must
-  be **false**.
+  be **false**. Both bands are **panel-relative** — see §3.5 for the measured
+  reason.
 
 `DECORATION_SPAN = 0.6` of the run's device width. The measured advance of
 `MMMM` at 64 px is ~236 logical px inside a `264`-wide block, so an underline
@@ -159,20 +160,14 @@ One `decorationChecks(ctx, driver)` used by both hosts, exactly like
    - `the strike run paints a line in its band` — present with `STRIKE_BAND`;
    - `the {role} line is the run's ink` — the widest row's `colour` is near
      `foreground` (this is the colour half; a hard-coded black/panel line fails).
-5. **The inheritance fixture — one check, asserted in the measured direction.**
-   Read `decorationPresent` for `decoration-inherited`. Run the probe once,
-   then:
-   - if it is **present**: keep the check as `the wrapper's decoration reaches
-     its child run` and record in §7 that inheritance works, so the `link`
-     variant's hover underline paints;
-   - if it is **absent**: keep the check as `the wrapper's decoration does not
-     reach its child run` with a `// Measured:` comment and record the defect in
-     `COMPONENTS.md` (Text/Button rows) and a cross-team `TODO.md` row for
-     `primitives` — the `link` variant must put the declaration on the label or
-     draw an explicit line, because its hover affordance is invisible.
-
-   Either way the check must assert the measured truth, so a runtime change
-   flips it red and the record is corrected rather than silently stale.
+5. **The inheritance fixture — asserted as measured: it *does* inherit.** The
+   wrapper `div`'s `underline` reaches the child `<text>` and paints a line at
+   the same row as the direct declaration (measured, §7), so the check reads
+   `the wrapper's decoration reaches its child run` and uses
+   `UNDERLINE_BAND`. This is the `link` Button variant's production shape: its
+   hover underline is visible. If a future runtime stops propagating the
+   declaration the check fails by name and the record is corrected — the
+   direction is recorded, never assumed.
 6. `the underline sits below the strike band` — a direct comparison of the two
    widest rows' normalised `y`, so the probe cannot pass if both lines land in
    the same place (this catches a renderer that draws every decoration at one
@@ -183,6 +178,20 @@ One `decorationChecks(ctx, driver)` used by both hosts, exactly like
 The inheritance design is deliberate: a **div-level** declaration is the shape
 the shipped `link` variant uses, so measuring only the `<text>`-level form would
 leave the production path unproven.
+
+### 3.5 The scan region: the panel, not the run's box
+
+Measured while executing this plan: an underline is painted **1–2 device px
+below the `<text>` element's reported box** with `lineHeight: 64` — the line
+sits in the leading space under the baseline, outside the box the tracker
+returns. A scan bounded by the run therefore misses it (the first run measured
+the underline's widest glyph row, 21 px, and failed).
+
+The probe scans each fixture's **panel** box instead (`280 × 96`, which contains
+the run and its `8` px padding). The four panels are disjoint, so no scan can
+read a neighbour's line, and the bands above are normalised against the panel's
+reported box. This is a measured harness fact, not a stylistic choice: a
+consumer that wants to hit-test a decoration must not use the text box either.
 
 ### 3.4 Scenario registration
 
@@ -331,17 +340,25 @@ Mutation check for the unit file itself (record in §7): set `DECORATION_SPAN` t
 | ---- | ----- |
 | headless frame / device scale | `2560 × 1600` for `1280 × 800` — scale **2** |
 | live frame / device scale | `2200 × 1440` for `1100 × 720` — scale **2** |
-| run box | `264 × 64` logical = **67,584** device pixels |
-| control's widest contiguous run | _measure_ (predicted < 10 % of the box) |
-| underline's widest run / band | _measure_ |
-| strike's widest run / band | _measure_ |
-| wrapper inheritance | _measure_ — present or absent, asserted in that direction |
-| decoration colour | _measure_ — near `foreground #EEF1F5` or a defect |
-| check count per host | _measure_ |
-| headless suite | `115/115`, `4188 + n` checks, 65 capabilities, exit `0` |
-| live registry | `103 → 104`; focused `live-text-decoration` green twice |
-| playground unit tests | **538 + 9** |
-| both-direction failures | _measure_ — M1 and M2 failure text |
+| scan box | the panel, `280 × 96` logical = 560 × 192 device pixels |
+| run box | `264 × 64` logical; the underline paints **1–2 device px below** it |
+| control's widest contiguous run | **22** device px (a glyph stem), at `y ≈ 0.2` |
+| underline's widest run / band | **427** device px (76 % of the panel) at **`y = 0.67`** |
+| strike's widest run / band | **427** device px at **`y = 0.45`** |
+| wrapper inheritance | **present** — the wrapper's line paints at the same `y = 0.67` as the direct declaration |
+| decoration colour | exactly `#EEF1F5` (the `foreground` token) for both lines |
+| check count per host | **18** |
+| headless suite | `115/115`, **4206** checks, 65 capabilities, exit `0` (was 114/114 · 4188) |
+| live registry | `103 → 104`; focused `live-text-decoration` green, 18 checks, exit `0` |
+| playground unit tests | **548** (was 538, +10) |
+| both-direction failures | **M1** the underline declared as `line-through` → `the underline paints a line in its band` (`widest 427px at y=0.45`), exit `1`; **M2** the control given `underline` → `the undeclared run paints no line` (`widest 427px at y=0.67`), exit `1`. Both reverted green. **Unit mutation:** `DECORATION_SPAN = 0` fails three tests (`glyph stems`, `contiguity`, `threshold`); reverted 548 green |
+
+**Measured correction to the plan:** the bands are not where the CSS intuition
+puts them. In the panel's box the line-through sits at `y = 0.45` (not the
+"middle 0.3–0.7" band of §3.2's first draft) and the underline at `0.67`; the
+first draft's `[0.62, 1]` band missed the underline by 0.01. The bands above are
+the measured ones, with margin on both sides and no overlap. The underline
+paints **outside** the `<text>` box, so the panel is the scan region (§3.5).
 
 ---
 
@@ -356,9 +373,9 @@ Stop and report instead of improvising if:
   affordance is then invisible), do **not** lower `DECORATION_SPAN`;
 - the decoration paints in a colour other than the run's ink — record it as a
   defect, do not relax the colour check;
-- the wrapper fixture is the only one that paints nothing **and** the direct
-  forms paint — that is the measured inheritance result; write it down and
-  assert it, do not delete the fixture;
+- the wrapper fixture paints nothing while the direct forms paint — record the
+  measured inheritance defect, assert the absence and write a cross-team row;
+  do not delete the fixture;
 - the live host cannot capture a frame or paints no line;
 - the coverage guard requires editing `scenario-problems.ts` (it should not —
   `text` is covered);

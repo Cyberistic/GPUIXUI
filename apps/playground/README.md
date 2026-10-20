@@ -1683,6 +1683,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-state-pixels` | declared hover and active **colours** in a window: a real hover paints `primary` and leaves its neighbours, leaving reverts, hovering the parent paints `accent` but not the child, hovering the child paints `success` and reverts the parent, a press paints `destructive`, a release-then-hover paints `primary`, and a press while hovered stays `destructive` — 50 checks (plan `754`). **The press itself enters hover**: with `active` removed the pressed box paints the hover fill, so the check is precedence, not "active without hover" |
 | `live-opacity-pixels` | declared **opacity** in a window: an opaque fill paints `primary` exactly, the 0.5 disabled fill paints the blend `#5C5F8D`, its opaque neighbour stays `card`, a `success` child inside a half-opacity parent paints `#266F4D` (the subtree is dimmed with it), and two nested halves paint the product `#383B55` rather than a single `0.5` (`#5E608F`) — 29 checks (plan `761`). The runtime composites a nested pair in 8-bit steps, so the frame is 1–2 channels lighter than the idealised `0.25` mix (`#373953`) |
 | `live-text-ink` | the four text roles in a window: a 64 px run's glyph pixels carry `foreground #EEF1F5`, `mutedForeground #A1A9B7`, `destructive #FF6B6B` or `success #3BC97F` (at least 32 device pixels each, exact ink), no run paints the next role's token, and the stage stays `background` — 23 checks (plan `773`). The scan maps the run's logical box through the frame's device scale (2) and reports the closest pixel on failure |
+| `live-text-decoration` | `underline` and `line-through` in a window: a 427 px continuous ink row at `y=0.67` (underline) and `y=0.45` (line-through) on a 280 × 96 panel, the undeclared control's widest row is 22 px (a glyph stem), both lines are exactly `foreground #EEF1F5`, and a wrapper `div`'s declaration reaches its child run — 18 checks (plan `775`). The scan uses the panel because an underline paints 1–2 device px **below** the `<text>` box |
 | `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
@@ -2398,6 +2399,59 @@ two runs are green in both hosts (two focused live runs).
 **Not claimed:** glyph shape, hinting, anti-aliasing quality, `textAlign` (a
 no-op in 0.10.0) or syntax colours. Only the ink colour is asserted.
 
+### Text decoration, in the frame (plan `775`)
+
+`textDecoration` is declared by the pinned runtime (`host.d.ts`) and shipped by
+the **`link` Button variant's hover refinement** and by `tw`'s `underline`. No
+check read the frame for it: `paintedStyle` reports the authored value and
+`getPaintedText()` the source run, so a runtime that accepted the property and
+drew nothing would leave a link's hover affordance invisible while the suite
+stayed green. `text-decoration-pixels` / `live-text-decoration` (**18 checks
+each**) mount four 64 px `MMMM` runs on one 640 × 360 stage — no declaration,
+`underline`, `line-through`, and the `link` variant's shape (a wrapper `div`
+that declares `underline`) — and classify a decoration as a **continuous
+near-full-width ink row** on one device row. Glyph rows are short strokes, so
+they cannot qualify.
+
+| Sample | Expectation | Measured |
+| ------ | ----------- | -------- |
+| the control run | no near-full-width ink row | widest **22** device px (a stem) at `y ≈ 0.2` |
+| the control's box | still has ink, so "no line" is not vacuous | ≥ 32 ink pixels |
+| the `underline` run | a ≥ 60 %-wide row in `y 0.62..0.78` | **427** px (76 %) at `y = 0.67` |
+| the `line-through` run | a ≥ 60 %-wide row in `y 0.35..0.55` | **427** px at `y = 0.45` |
+| both lines | the run's own ink | exactly `#EEF1F5` |
+| the wrapper `div`'s `underline` | reaches its child `<text>` | **present**, same `y = 0.67` |
+| the stage point | `background #11141A` | `#11141A` |
+
+**The measured facts that shaped the probe:**
+
+- An underline is painted **1–2 device px below the `<text>` element's reported
+  box** with `lineHeight: 64`: the line sits in the leading space under the
+  baseline. A scan bounded by the run's box missed it (the first run measured
+  the widest *glyph* row, 21 px). The probe therefore scans each fixture's
+  **panel** (`280 × 96`, which contains the run and its 8 px padding), and the
+  bands are panel-relative. A consumer must not use the text box to hit-test a
+  decoration either.
+- The bands are not where CSS intuition puts them: panel-relative, the
+  line-through is at `0.45` and the underline at `0.67` — 0.22 apart, with no
+  overlap. The first draft's underline band started at `0.62` and the measured
+  `0.67` was 0.01 inside it, which is why the band is now asserted with margin.
+- **The link variant works.** The wrapper `div`'s declaration propagates to the
+  child `<text>` and paints the identical line, so the shipped hover underline
+  is visible; the check asserts the present direction and will fail if a future
+  runtime stops propagating it.
+
+**Both-direction proofs, observed and reverted.** Declaring the underline as
+`line-through` fails `the underline paints a line in its band` with
+`widest 427px at y=0.45` (exit `1`); giving the undeclared control an underline
+fails `the undeclared run paints no line` with `widest 427px at y=0.67` (exit
+`1`). Setting the pure span threshold to `0` turns three unit tests red
+(glyph stems, contiguity, threshold); reverting restores 548 green tests.
+
+**Not claimed:** decoration offset, thickness or dash pattern, `<code>`/`<diff>`
+syntax decorations, and selection interaction. Only a solid line's presence,
+band, continuity and colour are asserted.
+
 ### Editing actions: clipboard, history and the OTP paste (plan `764`)
 
 The native editor binds `cmd-c`, `cmd-x`, `cmd-v`, `cmd-z` and `shift-cmd-z`
@@ -2480,10 +2534,12 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-**Plan `773` then added the 23-check `text-ink-pixels`; the head is now 114/114 ·
-4188 and the live registry is 103 with `live-text-ink` focused-green (23 checks,
-twice). Plan `771`'s `live-font-family` remains focused-green (13 checks,
-twice). The full live suite is still the gate below and has not been re-run.**
+**Plan `773` added the 23-check `text-ink-pixels` and plan `775` the 18-check
+`text-decoration-pixels`; the head is now 115/115 · 4206 and the live registry
+is 104 with `live-text-ink` (23 checks, twice) and `live-text-decoration`
+(18 checks) focused-green. Plan `771`'s `live-font-family` remains
+focused-green (13 checks, twice). The full live suite is still the gate below
+and has not been re-run.**
 
 The last full merge/release gate ran **101/101** (`exit 0`, **2933** checks, 61
 capabilities; **1220.8 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
@@ -2713,9 +2769,10 @@ narrower. Each deviation is deliberate and measured:
   (`list-reorder`, plan `391`), the **hierarchical reorder probe**
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`), the **media surface**
-  (`media-surface`, plan `520`) and the **text ink** probe (`text-ink-pixels`,
-  plan `773`)
-  pass in real GPUix 0.10.0 on this host (114/114, 4188 checks), with a written report and
+  (`media-surface`, plan `520`), the **text ink** probe (`text-ink-pixels`,
+  plan `773`) and the **text decoration** probe (`text-decoration-pixels`,
+  plan `775`)
+  pass in real GPUix 0.10.0 on this host (115/115, 4206 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
