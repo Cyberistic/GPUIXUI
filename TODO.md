@@ -136,7 +136,10 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        and its report copied aside immediately to keep a durable artifact. No
        source was clobbered (`git status` showed only this session's files), and
        the duplicate was gone by the time the re-run started. The `scripts/` fix
-       is still the only durable remedy.
+       is still the only durable remedy. The duplicate then reconciled plan
+       `784`'s ledgers (same counts: `117/117 · 4278 · 65 · 302.4 s`) and
+       claimed plan `786` (the live promotion gate) while this session finished
+       the headless total; there is one ledger text and no source conflict.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
@@ -289,6 +292,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       (then re-run the two probes plan `771` records) or ship the limitation and
       drop the native acceptance line. Owner: `tokens`; evidence: plan `771`
       §1/§11.
+
+`[ ]` **Cross-team:** hoist the content-surface theme into
+      `@gpuixui/primitives` — `packages/primitives/src/core/style.ts` already
+      owns `nativeTextTheme` for `<input>`/`<textarea>`; the mapping plan `784`
+      measured belongs beside it (`nativeContentTheme` for `<code>`, `<diff>`
+      and `<markdown>`, including the 24-kind syntax palette) so a consumer does
+      not copy it. The playground's `surface-theme-model.ts` is the only
+      implementation today. Owner: `primitives`; evidence: plan `784` §9/§10.
 
 `[x]` **Run the promotion gate on the head that includes the editing actions**
       per plan `768`: plan `762` gated headless 111/111 and live 100/100, then

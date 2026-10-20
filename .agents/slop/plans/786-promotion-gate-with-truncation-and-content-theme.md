@@ -21,15 +21,17 @@ scenario and one live twin, and neither is inside a full gate:
 | `784` | `surface-theme` | `live-surface-theme` | 50 |
 
 The registries are therefore **117** headless and **106** live. Plan `778`'s
-end-of-task run covered the headless side at 116 (`4228` checks); plan `784`
-was verified only by its two focused runs (headless and live, 50 checks each)
-and its unit tests. The live half has never run as a whole at 106, so a
-promotion fast-forward now would put two ungated live scenarios on `main`.
+end-of-task run covered the headless side at 116 (`4228` checks), and plan
+`784`'s end-of-task run covered it again at **117/117 · 4278** (302.4 s); plan
+`784`'s **live** twin has only been run focused (1/1, 50 checks, 7.1 s). The
+live half has never run as a whole at 106, so a promotion fast-forward now would
+put two ungated live scenarios on `main`.
 
 This plan is **verification only**: no source change. It re-runs both full
-suites, reconciles the totals against the predicted `4228 + 50 = 4278`
-headless and `2987 + 22 + 50 = 3059` live (± the documented
-`live-tier2-editing` branch), and updates the ledgers plus the plan index.
+suites (the headless one as a confirmation of plan `784`'s recorded total),
+reconciles the totals against the predicted `4228 + 50 = 4278` headless and
+`2987 + 22 + 50 = 3059` live (± the documented `live-tier2-editing` branch), and
+updates the ledgers plus the plan index.
 
 ## 2. Preconditions
 

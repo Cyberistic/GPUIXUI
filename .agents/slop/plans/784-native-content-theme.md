@@ -1,6 +1,6 @@
 # 784 — The content-surface theme: does a token palette reach `<markdown>`, `<code>` and `<diff>`?
 
-**Phase:** F (pixel evidence) · **Workstream:** playground · **Status:** planned
+**Phase:** F (pixel evidence) · **Workstream:** playground · **Status:** landed
 
 **Depends on:** `100`, `110`, `120`, `140`, `150`, `161`, `180`, `181`, `197`,
 `302`, `518`, `577`, `586`, `674`, `676`, `690`, `697`, `701`, `707`, `713`,
@@ -426,8 +426,12 @@ nub apps/playground/dist/smoke/run.js                           # 117/117, 4278 
 The end-of-task full headless run measured **117/117** scenarios, **4278**
 checks (`4228 + 50`), **65** capabilities, host
 `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed
-81c99f81, runtime shaders)`, exit `0`. A second independent full run on the
-same head agreed on every count. The live half of the gate is plan `786`.
+81c99f81, runtime shaders)`, exit `0`. The totals were read from the second
+run's artifact (`302.4 s`); the first run on the same head also reported
+`117/117` and `exit 0`, but its report file was replaced by a concurrent
+focused run from a duplicate `swarm:playground` session (B3, `TODO.md` §Phase
+A), so only the second run's check total is recorded. The live half of the gate
+is plan `786`.
 
 The live artifact is `apps/playground/.artifacts/live/live-surface-theme.png`
 (2200 × 1440, device scale 2): the themed/default pairs are visible side by side
