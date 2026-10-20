@@ -336,3 +336,51 @@ tables can fail (scroll regions, table headers).
 - Copying any shadcn/ui source or asset: this page maps *concepts*, and the
   License page already records shadcn as inspiration only.
 - A `ToggleGroup`, data table or docking component (Tier 3–4, other owners).
+
+---
+
+## 11. Implementation record (2026-10-20)
+
+Delivered on `agent/docs-site` in `6e5a7121` and `d45b624c`.
+
+- `src/lib/porting.ts` — 41 mapped components, 7 React idioms, 5 roadmap gaps.
+- `src/components/porting-tables.tsx` — the three tables, each a labelled
+  `role="region"` scroll wrapper with a `data-porting-*` hook.
+- `content/docs/porting-from-shadcn.mdx` — the six sections, the shadcn-shaped
+  "before" fence and the real "after" fence, ordered directly after Getting
+  started in `meta.json`.
+- `src/porting-page.test.tsx` — 12 guards (the plan's §6 plus the remembered-
+  count check below) and a 3-query search block. The other six queries are
+  `owned` rows in `page-aliases.test.ts`, so the full nine-term proof runs there.
+- Ten aliases: `migration`, `migrate`, `migrating`, `porting`, `port`,
+  `convert`, `conversion`, `shadcn`, `shadcn ui`, `shadcn/ui`, `from shadcn`,
+  `radix`, `radix ui`, `aschild`, `as child` (fifteen terms, ten behaviours).
+
+Measured after the change: `migration`, `porting`, `shadcn`, `radix`, `asChild`
+and `convert` return `/docs/porting-from-shadcn` first; `tailwind`, `className`
+and `sx` keep `/docs/styling`.
+
+### Forced defects (all run, observed failing, reverted)
+
+| # | Defect | Failure |
+| - | ------ | ------- |
+| F1 | `slug: "button"` → `"button-missing"` | `Button → button-missing` |
+| F2 | `roadmap: "Tables"` → `"Tabel"` | `Tabel is not a target` |
+| F3 | evidence `packages/tokens/src/styles.ts` → `styl.ts` | `focus-visible: utilities: …/styl.ts` |
+| F4 | `<PortingGaps />` removed from the MDX | `["<PortingGaps />"]` |
+| F5 | `"migration"` removed from the alias block | the query returned no result at all |
+| F6 | `"tailwind"` added to the porting aliases | `["tailwind"]` shared term |
+| F7 | `Some` → `Five` before “shadcn components” | the count guard failed |
+
+F2 proves the target-resolution branch and F1 the record branch; the
+delivered-title branch has no reachable input today (every Tier 3–5 target is
+`todo`), so it stays as a guard for the day the inventory gains a delivered
+row rather than a tested direction.
+
+### Gates
+
+`nub run --filter docs test` 123 files / 1 143 tests; `check-types`;
+`smoke:build` 105 pages / 0 failures with the three new production queries;
+`smoke:a11y --only /docs/porting-from-shadcn` 2 documents / 0 violations;
+`nub run check`, `nub run lint`, `nub run test` exit `0`. No playground
+scenario was touched, so no headless or live scenario was run for this change.
