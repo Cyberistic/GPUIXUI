@@ -13,9 +13,10 @@ import {
 /**
  * Contoso's primary family. A brand that moves a fill moves the whole family —
  * fill, foreground, hover, pressed and text — because an inherited state keeps
- * the base hue and an inherited foreground can miss the on-colour floor. The
- * Windows dark foreground this example used to inherit measured 2.96:1 on the
- * fill and 2.12:1 on the hover (plan 310).
+ * the base hue and an inherited foreground can miss the on-colour floor:
+ * inheriting the Windows dark foreground on this family's fill measures
+ * **1.900:1** and **1.485:1** on its hover, under the **4.5:1** on-colour floor
+ * the designed pair clears (plan 310 found the same failure with a darker fill).
  */
 const contosoPrimary = {
   light: {

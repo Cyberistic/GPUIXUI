@@ -3,11 +3,12 @@
  *
  * The shipped Toast countdown paints its 2px groove with `muted`, a surface
  * role, on a `popover` card (`components/src/toast/viewport.tsx`). `muted` is
- * `popover` in the identity dark theme and every platform and recipe dark set,
- * so the groove measures **1.000:1** and the unfilled remainder of the
- * countdown has no shape. The designed groove is `track` (plans `347` and
- * `503`); it clears the floor on the toast card at **1.069:1** in the tightest
- * shipped set.
+ * `popover` in the identity dark theme and every default-contrast platform and
+ * recipe dark set, so the groove measures **1.000:1** there and the unfilled
+ * remainder of the countdown has no shape; the AAA dark sets step it to
+ * **1.059:1**, a hair over the surface floor. The designed groove is `track`
+ * (plans `347` and `503`); it clears the floor on the toast card at **1.069:1**
+ * in the tightest shipped set.
  *
  * The bar is the tone's readable ink (`xText`), not `xSoftForeground`: the soft
  * foreground is designed for the tone's own tint, not for a `popover` card
