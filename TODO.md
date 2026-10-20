@@ -143,7 +143,27 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 150/150 plans-and-harness
+`[x]` `[██████████]` 151/151 plans-and-harness
+
+`[x]` **Prove the hidden-surface recipe in the frame** per plan `819`: the
+      tabbed-pane/carousel recipe (`visibility: "hidden"` + `pointerEvents:
+      "none"` in absolute slots) was stated in **text and geometry** only, so a
+      hidden fill that still painted, or a hidden overlay that still swallowed
+      clicks, passed every check. `hidden-surface` / `live-hidden-surface`
+      (**60 checks each**, three decoded frames per host) isolate both halves:
+      `display: "none"` is inert on a fill, `visibility: "hidden"` hides the
+      fill **and reports no painted bounds** while keeping its 140 px layout
+      slot, a `visibility`-only overlay **still blocks the press with its own
+      handler inert** (`hit=none` — so `pointerEvents: "none"` is
+      load-bearing), and the full recipe paints only the active pane, lets the
+      press through to its action, and keeps the hidden pane's draft. The recipe
+      is `hiddenSlot`/`slotProblems` (`scenarios/hidden-slot.ts`, 3 unit tests;
+      playground **642 → 645**). Four mutations failed by name (hidden fill
+      repainted `#222730`; `pointerEvents` dropped `hit=none`; fixture
+      `visibility` dropped `#191d25`; the guard returning empty) and the
+      `display: "none"` removal was the **null control**. Focused ids run:
+      `hidden-surface` (green ×3 + four mutations), `live-hidden-surface` (green
+      ×2). Plan: `.agents/slop/plans/819-hidden-surface-recipe.md`.
 
 `[x]` **Make the content-surface washes translucent** per plan `816`:
       `nativeContentTheme` mapped `codeWash` and `diffHunkBg` to the **opaque**

@@ -1064,6 +1064,28 @@ The component contract: keep tab panes mounted and hide them with
 wheel with `pointerEvents: "auto"`, and pass an explicit content height down from
 the split.
 
+## Hidden surfaces (plan `819`)
+
+`hidden-surface` / `live-hidden-surface` isolate the recipe plan `177` stated —
+60 checks each, three decoded frames per host. The two mechanisms are **not**
+interchangeable, and `visibility` alone is not "click-through":
+
+| Fact | Measured |
+| ---- | -------- |
+| `display: "none"` | still a **no-op** on a fill: a 140 × 64 `card` box paints its token at its declared position (the text-only claim from plan `177` now has paint evidence) |
+| `visibility: "hidden"` | the fill does **not** paint (the stage's `background` shows through) and the element reports **no painted bounds** (`bounds` is `null`), while `text()` still returns its retained text |
+| its layout | the hidden box keeps its 140 px slot: the painted sibling starts 140 px into the row and the row is still 280 px wide |
+| its hitbox | **a hidden element still blocks the press and its own handler never runs** — clicking a `visibility`-only overlay leaves `hit=none`, so neither layer takes it. This is why the recipe needs `pointerEvents` |
+| `pointerEvents: "none"` | the press reaches the base fill beneath (`hit=base`), so that half is load-bearing, not stated intent |
+| the slot recipe | `hiddenSlot(active)` paints only the active pane, the hidden pane's text leaves `paintedText()`, a press through the hidden pane reaches the active pane's action, and the hidden pane's draft survives a switch away and back |
+
+The recipe lives in `scenarios/hidden-slot.ts` (`hiddenSlot`, `slotProblems`) so
+a component and the probe share one shape; `slotProblems` names the mechanism a
+slot dropped. Plan `819` records four mutations that fail by name (hidden fill
+repainted, `pointerEvents` dropped, `visibility` dropped on the fixture, the
+recipe guard returning empty) and the `display: "none"` removal as the null
+control.
+
 ## Docking layouts (plan `184`)
 
 `docking-layout` is the composition a docking grid needs: a recursive tree of

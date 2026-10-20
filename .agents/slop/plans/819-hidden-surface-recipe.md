@@ -326,6 +326,58 @@ existing pixel checks do.
 
 ---
 
-## 9. Outcome (filled after implementation)
+## 9. Outcome (measured 2026-10-21)
 
-**Status:** pending.
+**Status:** landed. The recipe's two mechanisms are both load-bearing, and one
+expectation was corrected by the frame.
+
+**Measured facts.**
+
+- `display: "none"` is inert on a **fill**: the 140 × 64 `card` box paints its
+  token at its declared position. Plan `177` only had the text evidence.
+- `visibility: "hidden"` hides the fill (the stage's `background` shows) **and
+  the element reports no painted bounds** (`bounds` is `null`); `text()` still
+  returns its retained text, so it is hidden, not unmounted.
+- The hidden box keeps its **layout**: the painted sibling starts 140 px into
+  the 280 px row.
+- **A `visibility`-only overlay still blocks the press and its own handler does
+  not run.** The plain control sets `hit=base`; the same click on the hidden
+  overlay leaves `hit=none`, so the press is swallowed by an element that paints
+  nothing. This is the fact the old one-sentence recipe hid: `pointerEvents:
+  "none"` is not belt-and-braces, it is what makes the hidden layer
+  click-through.
+- `pointerEvents: "none"` on the hidden overlay hands the press to the base
+  (`hit=base`).
+- The slot recipe paints only the active pane across a switch, the hidden pane's
+  text leaves `paintedText()`, a press through the hidden pane reaches the
+  active pane's action (`hits=1`), and the hidden pane's draft (`draft=hi`)
+  survives the switch away and back.
+
+**Corrected expectation.** The plan predicted the first overlay's press would
+land on `base` or `overlay`. The frame measured a third answer, `none`: the
+invisible element keeps a blocking hitbox while its own callback is suppressed.
+The check, the README and `COMPONENTS.md` record it as the reason the recipe
+needs both halves.
+
+**Runs.**
+
+| Run | Result |
+| --- | ------ |
+| `nub run --filter playground test` | 645 tests (642 → **645**, +3) |
+| `nub apps/playground/dist/smoke/run.js --only hidden-surface` | 1/1, **60** checks, exit `0` (three green runs) |
+| `nub apps/playground/dist/live/run.js --only live-hidden-surface` | 1/1, **60** checks, exit `0` (two green runs) |
+
+**Mutation proofs (each failed by name, then reverted).**
+
+| Mutation | Failing check |
+| -------- | ------------- |
+| `hiddenSlot(false)` always `visible` | `the recipe has no missing half: expected 0, got 1` |
+| the pane overrides `hiddenSlot` with `visibility: "visible"` | `the active pane's fill moves with the switch: expected #191d25ff, got #222730ff` |
+| the second overlay drops `pointerEvents: "none"` | `pointerEvents: none hands the press to the base: expected "hit=base", got "hit=none"` |
+| `hs-hidden` drops `visibility` | `a hidden fill does not paint: expected #11141aff, got #191d25ff` |
+| `slotProblems` always `[]` (unit) | two unit tests red (`expected [ … ] to deeply equal []`) |
+| **null control:** `hs-display` drops `display: "none"` | green, as expected — the property is inert |
+
+**Files:** `scenarios/hidden-slot.ts` (+ test), `scenarios/hidden-surface.tsx`,
+`scenarios/index.ts`, `live/scenarios.tsx`, `apps/playground/README.md`,
+`COMPONENTS.md` (two rows), the plan index and `TODO.md`.

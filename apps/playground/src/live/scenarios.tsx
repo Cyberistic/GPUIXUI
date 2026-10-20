@@ -132,6 +132,10 @@ import {
 } from "../scenarios/state.js";
 import { opacityLiveScenario, opacityView } from "../scenarios/opacity.js";
 import {
+  hiddenSurfaceLiveScenario,
+  hiddenSurfaceView,
+} from "../scenarios/hidden-surface.js";
+import {
   textDecorationLiveScenario,
   textDecorationView,
 } from "../scenarios/text-decoration.js";
@@ -13113,6 +13117,29 @@ const liveOpacityPixels: LiveScenario = {
 };
 
 /**
+ * The hidden-surface recipe in a real window (plan `819`).
+ *
+ * The headless pass isolates the paint and the hit path; this twin proves the
+ * same two mechanisms in a window, where a hidden fill, an overlay press and a
+ * slot switch each take a real frame.
+ */
+const liveHiddenSurface: LiveScenario = {
+  ...hiddenSurfaceLiveScenario,
+  view: hiddenSurfaceView,
+  ready: "hs-stage",
+  steps: (ctx) =>
+    hiddenSurfaceLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(
+            `${LIVE_ARTIFACTS}/${hiddenSurfaceLiveScenario.id}.png`,
+          ),
+        ),
+      ),
+};
+
+/**
  * Text ink in a real window (plan `773`).
  *
  * The headless pass proves the four roles and the cross checks; this twin
@@ -14425,6 +14452,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveBorderPixels,
   liveStatePixels,
   liveOpacityPixels,
+  liveHiddenSurface,
   liveTextDecoration,
   liveTextInk,
   liveFieldInk,
