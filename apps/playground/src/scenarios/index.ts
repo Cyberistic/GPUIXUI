@@ -92,6 +92,7 @@ import {
   themeTypeAndShadowScenario,
 } from "./theme.js";
 import { pixelColourScenario } from "./pixels.js";
+import { shadowScenario } from "./shadow.js";
 import {
   primitivesActionsScenario,
   primitivesDisplayScenario,
@@ -251,6 +252,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   themeTypeAndShadowScenario,
   themePlatformScenario,
   pixelColourScenario,
+  shadowScenario,
   a11yScenario,
   nativeSurfacesScenario,
   diffSurfaceScenario,

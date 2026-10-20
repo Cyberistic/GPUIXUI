@@ -120,6 +120,7 @@ import {
   pixelColourLiveScenario,
   pixelColourView,
 } from "../scenarios/pixels.js";
+import { shadowLiveScenario, shadowView } from "../scenarios/shadow.js";
 import {
   captureLive,
   expectColour,
@@ -12723,6 +12724,27 @@ const livePixelColour: LiveScenario = {
 };
 
 /**
+ * The focus ring and elevation in a real window (plan `736`).
+ *
+ * The headless pass proves the frame; this twin proves the same band and
+ * darkening survive a window's paint path, and writes the frame as the run
+ * artifact the docs cite.
+ */
+const liveShadowPixels: LiveScenario = {
+  ...shadowLiveScenario,
+  view: shadowView,
+  ready: "shadow-stage",
+  steps: (ctx) =>
+    shadowLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-shadow-pixels.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -13856,6 +13878,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTheme,
   liveThemePlatform,
   livePixelColour,
+  liveShadowPixels,
   terminal,
   selectionSignal,
 ];
