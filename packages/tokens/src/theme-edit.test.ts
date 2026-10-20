@@ -13,6 +13,7 @@
  * itself: it fails if the stored pair stops carrying the base, and its replay
  * half fails if the pair stops reproducing the edit.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   applyThemeEdit,
@@ -38,6 +39,7 @@ import {
   exportedPlatformEdit,
   exportedPlatformTheme,
 } from "./theme-diff.example.js";
+import { brandLightTheme } from "./brand-theme.example.js";
 
 /** The stored pair, failing the test on the cross-mode absence. */
 const editOf = (choice: ThemeChoice, edited: Theme): ThemeEdit => {
@@ -148,5 +150,61 @@ describe("a stored edit records its base", () => {
     }
     expect(stored.base).toEqual(exportedBaseChoice);
     expect(applyThemeEdit(stored)).toEqual(exportedPlatformTheme);
+  });
+});
+
+/**
+ * Guards the claim plan 744 corrects: the JSDoc and the catalogue said an edit
+ * of a base a `ThemeChoice` cannot name — a brand theme, or any theme built by
+ * `extendTheme` — "is stored as the whole theme", but `ThemeEdit` is exactly
+ * `{ base, overrides }` and there is no whole-theme variant. The sentence sent a
+ * consumer looking for an artifact the package never returns, and hid the
+ * capability the pair has: the diff is measured against the resolved choice, so
+ * a brand's differences travel in the overrides and the pair reproduces it.
+ */
+describe("a brand edit in the stored pair", () => {
+  it("carries the brand's differences against the resolved choice", () => {
+    const stored = editOf({ mode: "light" }, brandLightTheme);
+
+    expect(themeFailures(brandLightTheme)).toEqual([]);
+    expect(stored.overrides.name).toBe("Acme Light");
+    expect(stored.overrides.colors?.primary).toBe("#6A45F0");
+    expect(applyThemeEdit(stored)).toEqual(brandLightTheme);
+  });
+
+  it("has no whole-theme storage path", () => {
+    const stored = editOf(
+      { mode: "light" },
+      extendTheme(getTheme("light"), { radius: { md: 8 } }),
+    );
+
+    const keys = Object.keys(stored);
+    expect(keys).toHaveLength(2);
+    expect(keys).toContain("base");
+    expect(keys).toContain("overrides");
+    // The one theme the pair cannot express, and the only `undefined`.
+    expect(themeEdit({ mode: "light" }, getTheme("dark"))).toBeUndefined();
+  });
+
+  it("states the rule the artifact has, not a whole-theme one", () => {
+    const source = readFileSync(
+      new URL("./theme-diff.ts", import.meta.url),
+      "utf8",
+    );
+    const declaration = source.indexOf("export function themeEdit");
+    const block = source.slice(
+      source.lastIndexOf("/**", declaration),
+      source.indexOf("*/", declaration),
+    );
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    [block, catalogue].forEach((prose) => {
+      expect(prose).not.toContain("stored as the whole theme");
+      expect(prose).toContain("resolved choice");
+    });
+    expect(catalogue).toContain("the caller keeps its theme object");
   });
 });

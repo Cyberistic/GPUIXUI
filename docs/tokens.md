@@ -2300,7 +2300,10 @@ settings row or a URL already persists, plus the overrides. `themeEdit(choice,
 edited)` resolves the choice *before* it diffs, so the pair can never name a base
 it was not measured against, and `applyThemeEdit(edit)` resolves the recorded
 choice and applies the overrides. A base a `ThemeChoice` cannot name — a brand
-theme, or any theme built by `extendTheme` — is stored as the whole theme.
+theme, or any theme built by `extendTheme` — is measured against the resolved
+choice, so the brand's own differences travel in the overrides and the pair still
+reproduces it. The one theme the pair cannot express is a different `mode`;
+`themeEdit` returns `undefined` there and the caller keeps its theme object.
 
 ```ts
 import {

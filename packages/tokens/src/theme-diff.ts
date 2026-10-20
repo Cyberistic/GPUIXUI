@@ -323,8 +323,11 @@ export interface ThemeEdit {
  * `undefined` — the one case `extendTheme` cannot express; every same-mode
  * choice reproduces `edited` through {@link applyThemeEdit}.
  *
- * An edit of a theme a choice cannot name — a brand theme, or any theme built
- * by `extendTheme` — is stored as the whole theme instead.
+ * An edit of a theme a choice cannot name — a brand theme, or any theme built by
+ * `extendTheme` — is measured against the resolved choice, so the brand's own
+ * differences travel in the overrides and the pair still reproduces it. The one
+ * theme the artifact cannot express is a different `mode`; that case returns
+ * `undefined` and the caller keeps its theme object.
  *
  * @example
  * ```ts

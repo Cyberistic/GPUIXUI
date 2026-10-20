@@ -24,6 +24,11 @@ import { createTheme, darkTheme } from "./index.js";
  * the identity 65% scrim and this brand's primary action, so the example takes
  * the base scrim. A brand whose fill is darker than the base accent deepens it,
  * the way the macOS dark style does (plan 526).
+ *
+ * The light brand's link ink takes one step inside its own violet family —
+ * `#5330C8` → `#4B2AB4` — because a native document paints body text on a 3.5%
+ * ink wash, where the old value measured 6.941:1, under the body floor the
+ * total check enforces (plan 745).
  */
 export const brandTheme = createTheme({
   mode: "dark",
@@ -50,7 +55,7 @@ export const brandLightTheme = createTheme({
     primaryForeground: "#FFFFFF",
     primaryHover: "#5A38D8",
     primaryActive: "#4929B8",
-    primaryText: "#5330C8",
+    primaryText: "#4B2AB4",
     ring: "#7C5CFF",
   },
 });

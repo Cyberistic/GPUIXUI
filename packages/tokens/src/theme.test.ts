@@ -26,6 +26,8 @@ import {
   lightTheme,
   themes,
   themeContrastFailures,
+  themeFailures,
+  type ThemeFailure,
 } from "./index.js";
 
 describe("built-in themes", () => {
@@ -290,6 +292,43 @@ describe("brand example", () => {
   it("holds the documented examples to the contrast contract", () => {
     expect(themeContrastFailures(brandTheme)).toEqual([]);
     expect(themeContrastFailures(brandLightTheme)).toEqual([]);
+  });
+
+  it("holds both documented examples to the total check", () => {
+    expect(themeFailures(brandTheme)).toEqual([]);
+    expect(themeFailures(brandLightTheme)).toEqual([]);
+  });
+
+  it("clears the native document's ink wash on the light brand's link", () => {
+    const regressed = createTheme({
+      mode: "light",
+      name: "Acme Light",
+      colors: {
+        primary: "#6A45F0",
+        primaryForeground: "#FFFFFF",
+        primaryHover: "#5A38D8",
+        primaryActive: "#4929B8",
+        primaryText: "#5330C8",
+        ring: "#7C5CFF",
+      },
+    });
+
+    // The defect plan 745 fixes: the contrast half passes while the ink-washed
+    // link misses the body floor the native-text check enforces.
+    expect(themeContrastFailures(regressed)).toEqual([]);
+    expect(
+      themeFailures(regressed)
+        .filter(
+          (failure): failure is Extract<ThemeFailure, { kind: "nativeText" }> =>
+            failure.kind === "nativeText",
+        )
+        .map(({ role, surface }) => `${role} on ${surface}`),
+    ).toEqual([
+      "primaryText on background",
+      "primaryText on background",
+      "primaryText on background",
+    ]);
+    expect(themeFailures(brandLightTheme)).toEqual([]);
   });
 
   it("keeps the brand's selected-option check on the fill it marks", () => {
