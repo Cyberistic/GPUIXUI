@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 171/171
+`[x]` `[████████████]` 172/172
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -238,7 +238,11 @@ retired once both branches are one
       landed (plan 054) — core modules, element-tree and runtime suites, docs
       pages and examples. `OTPField`'s multi-character fill is proven as a pure
       rule; a real clipboard paste is unverifiable in 0.10.0 (no `onPaste`, no
-      clipboard simulation) and is documented as such
+      clipboard simulation) and is documented as such.
+      **Corrected 2026-10-20 by plan `752`:** a paste needs no `onPaste` — the
+      native `<input>` reports the pasted run as one multi-character edit, and
+      the `TestRenderer` uses the **real** system pasteboard. The path is now
+      proven end to end in `runtime/otp-paste.runtime.test.tsx`.
 `[x]` `packages/primitives`: `ToggleGroup` — the segmented control and
       formatting set the inventory already claimed as a "merged variant" but
       never had. Single/multiple selection, a roving tab stop, arrows that
@@ -2450,6 +2454,23 @@ retired once both branches are one
       failing with focus still on the first item before the wiring (offline 71
       files / 982 tests, scoped live 6/6 and the existing group file 12/12; plan
       `751`).
+
+`[x]` `packages/primitives`: **`OTPField`'s paste was documented as unverified,
+      and the most common two-factor gesture had no native guard** — the page and
+      the OTP suite's header said the `TestRenderer` has no clipboard, so a
+      multi-character fill was "proven only as a pure rule". Measured (2026-10-20):
+      the renderer wraps the real platform and uses the **system** pasteboard, so
+      a real `cmd-c`/`cmd-v` reaches the native cells; a copied `123456` fills six
+      cells with one `onValueChange`, one `onComplete` and focus on the last cell,
+      `123-456` drops the separator, an eight-digit run truncates, a paste into a
+      full code fills forward from the receiving cell (`999999` + `123456` at
+      cell 3 → `991234`), and a disabled field refuses it with no ring. The false
+      limitation is replaced by the measured contract and
+      `runtime/otp-paste.runtime.test.tsx` holds it in five cases; taking only the
+      first character of a paste and dropping the `onComplete` call each fail four
+      cases, and removing both disabled guards fails the fifth. The suite replaces
+      the user's clipboard, which its header states (plan `752`; runtime file
+      count 70 → 71).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

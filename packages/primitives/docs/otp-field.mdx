@@ -42,6 +42,17 @@ that carries no letter or digit — a typed separator, a space — **leaves the 
 as it was**, so a code a provider prints with hyphens can be typed without
 losing a digit (plan `358`).
 
+A real clipboard paste takes that same path. There is no `onPaste` in 0.10.0,
+and none is needed: the native `<input>` reports the pasted run as one
+multi-character edit, so `applyOtpInput` fills it forward from the receiving
+cell. Measured in the runtime (plan `752`): copying `123456` and pasting into
+cell 1 fills all six cells with **one** `onValueChange` and **one** `onComplete`
+and leaves focus on the last cell; `123-456` drops the separator; an eight-digit
+run truncates to six; a paste into a full code replaces from the receiving cell
+onward (`999999` with `123456` pasted at cell 3 → `991234`); and a disabled field
+refuses it. The headless `TestRenderer` and a real window both use the **system**
+pasteboard, so the package's paste test replaces the clipboard.
+
 `onComplete` is not a one-shot event: every edit that leaves the code full
 reports the new code, including a correction made inside a code that was already
 full. That is what lets the usual `onComplete={(code) => verify(code)}` verify a
@@ -161,12 +172,6 @@ or `filled`.
 
 ## Limitations
 
-
-- **Paste is unverified.** `@gpuix/native` 0.10.0 has no `onPaste` and the
-  `TestRenderer` has no clipboard simulation. A multi-character edit fills
-  forward from the receiving cell — proven as a pure rule — but the real
-  clipboard path has not been observed; it is documented as unverified rather
-  than claimed.
 - **Arrows do not repeat.** They are handled on key up, because the editor
   consumes their key down.
 - **The code is contiguous.** Clearing a middle character shifts the following
@@ -200,6 +205,11 @@ or `filled`.
   every cell; one ring, painted from mount with `autoFocus`; disabled refuses
   input and leaves the tab order; **Tab enters the code once and leaves it**
   (plan `076`). Measured 2026-10-17 (plans 054 §9, 064 §6 and 076 §7).
+- `runtime/otp-paste.runtime.test.tsx` — the real clipboard path: a copied
+  six-digit code fills every cell from one paste, with one `onValueChange`, one
+  `onComplete` and focus on the last cell; a separator is dropped; an over-long
+  run truncates; a paste into a full code fills forward from the receiving cell;
+  a disabled field refuses it and paints no ring (plan `752`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

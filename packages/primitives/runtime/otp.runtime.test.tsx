@@ -6,11 +6,11 @@
  * contiguous string, focus follows the character into the next cell, arrows and
  * Backspace move it, and every cell is a named text input inside a named group.
  *
- * **Not proven here:** a real clipboard paste. `@gpuix/native` 0.10.0 exposes no
- * `onPaste` and the `TestRenderer` has no clipboard simulation, so the paste
- * branch is proven only as a pure rule (`core/otp.test.ts`: a multi-character
- * edit fills forward) and is documented as unverified in the docs page. It is
- * not faked with a keyboard sequence.
+ * **Paste** is proven end to end in `otp-paste.runtime.test.tsx` (plan `752`):
+ * 0.10.0 exposes no `onPaste`, but the native `<input>` reports a pasted run as
+ * one multi-character edit, and the headless renderer uses the real platform
+ * pasteboard — so a real `cmd-v` reaches this component. Typing one character at
+ * a time is what this suite covers.
  */
 
 import type { ReactNode } from "react";
