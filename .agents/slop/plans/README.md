@@ -365,6 +365,7 @@ references without buying correctness.
 | [714](./714-caret-pair-figure.md) | The caret pair's quoted tightest figure | F | 557, 563, 590, 698, 705, 706, 710 | done |
 | [716](./716-highlight-figures.md) | The find-highlight JSDoc figures no test derives | F | 573, 574, 581, 590, 649, 710, 714 | done |
 | [717](./717-jsdoc-figures.md) | The figures the package's own JSDoc and five page sentences state, and the one hard set count | F | 536, 544, 613, 637, 705, 706, 714, 716 | done |
+| [720](./720-density-consumer-exception.md) | The density promise the shipped field family and Button no longer keep | F | 010, 089, 353, 389, primitives `370`–`372` | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3669,6 +3670,18 @@ held, and nothing measured it there. The pair joins `selectionPressPairs`
 (463 → 464 pairs); every shipped set already clears the 7:1 body floor — Linux
 dark at **11.59:1**, the tightest, beside 8.98:1 on `selected` — so no colour,
 floor or shipped metric moves.
+
+Plan `720` closes the one consumer claim the density prose never qualified. The
+preset still publishes `controlHeight` / `controlPaddingX` / `rowHeight`, but
+`primitives` plans `370`–`372` pinned the text-entry field family to one 36 px
+box and the Button to the shadcn 32 / 36 / 40 heights, which are the `spacious`
+preset's three steps — so both pages read as if a compact theme still shrank a
+field or a button while the shipped library does not. The two density sections
+now name the exception, the families that still read the metrics (`Toggle`,
+`ToggleGroup`, a `Select` option row), and the proof, and
+`density-exception.test.ts` holds the prose to the preset arithmetic and fails
+on the old unconditional sentence. No token value, pair, floor, metric or
+shipped theme moves.
 
 ## How to use a plan
 

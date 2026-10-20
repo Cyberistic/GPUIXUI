@@ -1013,7 +1013,7 @@ no font entry.
 
 ## Density
 
-Density changes control height, horizontal padding and row height only. Type
+The preset publishes control height, horizontal padding and row height; type
 and spacing are unaffected.
 
 | Preset | `controlHeight` sm/md/lg | `controlPaddingX` sm/md/lg | `rowHeight` |
@@ -1021,6 +1021,17 @@ and spacing are unaffected.
 | `compact` | 24 / 28 / 32 | 6 / 8 / 10 | 28 |
 | `comfortable` (default) | 28 / 32 / 36 | 8 / 10 / 12 | 32 |
 | `spacious` | 32 / 36 / 40 | 10 / 12 / 14 | 36 |
+
+A preset cannot force a control to read its metrics. Two families in the
+`primitives` package take their geometry from the shadcn recipes instead: the
+text-entry field family — `Input`, `TextArea`, a `Select`'s trigger,
+`NumberField` and the OTP cells — is one 36 px box at every size and preset, and
+a `Button` (its square `IconButton` included) is 32 / 36 / 40 at `sm` / `md` /
+`lg` in every preset, the `spacious` preset's three steps. `Toggle` and
+`ToggleGroup` still read `controlHeight` / `controlPaddingX`, and a `Select`
+option row still uses `controlHeight.sm`, so those are the density proof. A
+component that wants the preset to own its geometry reads
+`controlHeight(theme, size)` the way `Toggle` does.
 
 ```ts
 import { controlHeight, controlPaddingX, getTheme } from "@gpuixui/tokens";

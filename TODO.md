@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 326/403
+`[x]` `[████████░░]` 327/404
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2762,6 +2762,19 @@ take the table to **44**, `styles.ts` stops stating "24 shipped sets" (the count
 is `shippedThemes.length` and a source JSDoc has no derivation site), and the
 catalogue names every document category the tables read, held by a new case. No
 colour, pair, floor, metric or shipped set moves (plan 717)
+`[x]` Hold the density prose to the shipped consumer — both pages said the
+preset moves every control ("Density changes control height, horizontal padding
+and row height only"; "Components read `controlHeight(theme, size)` … instead of
+hardcoding numbers"), but `primitives` plans `370`–`372` pinned the text-entry
+field family to one 36 px box and the `Button` to the shadcn 32 / 36 / 40 at
+every preset (the `spacious` ladder), so a compact theme paints a 36 px field
+beside a 24–32 px `Toggle` while the design system promised otherwise; nothing
+read either paragraph. Both sections now state the exception, name what still
+reads the metrics (`Toggle`, `ToggleGroup`, a `Select` option row's
+`controlHeight.sm`) and the proof (`Toggle`), `COMPONENTS.md` records it, and
+`density-exception.test.ts` holds the prose to `densityPresets.spacious` and
+fails on the old unconditional sentence. No token value, pair, floor, metric or
+shipped set moves (plan 720)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

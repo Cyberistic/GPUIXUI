@@ -204,10 +204,16 @@ Density is a **theme** property, not a component prop:
 - `comfortable` — 28/32/36 controls, 32px rows. Default.
 - `spacious` — 32/36/40 controls, 36px rows. Touch-leaning and presentation.
 
-It changes control height, horizontal padding and row height only. Type sizes
+The preset publishes the metrics; a control still has to read them. Type sizes
 and the spacing scale stay fixed, so a density switch cannot reflow text
-unexpectedly. Components read `controlHeight(theme, size)` and
-`controlPaddingX(theme, size)` instead of hardcoding numbers.
+unexpectedly. `Toggle`, `ToggleGroup`, a `Select` option row (its
+`controlHeight.sm`) and any component reading `controlHeight(theme, size)` /
+`controlPaddingX(theme, size)` follow the preset. Two families in the
+`primitives` package follow the shadcn recipes instead: the text-entry field
+family (`Input`, `TextArea`, a `Select` trigger, `NumberField` and the OTP
+cells) is one 36 px box at every preset, and a `Button` is 32 / 36 / 40 at
+`sm` / `md` / `lg` in every preset — the `spacious` steps — so a density switch
+does not reflow either family. The density proof is `Toggle`.
 
 A control's horizontal padding is a shape: it stays positive and at least the
 theme's own hairline (`spacing["2xs"]`, 2px), because it is the only space
