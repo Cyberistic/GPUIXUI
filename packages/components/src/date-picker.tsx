@@ -62,6 +62,7 @@ import {
   startOfMonth,
   startOfYear,
   stepMonth,
+  tabStopOf,
   weekdayLabels,
   type CalendarLabels,
   type DayBounds,
@@ -489,8 +490,17 @@ export const DatePickerCalendar = ({
 
   useLayoutEffect(() => {
     if (!pendingFocus.current) return;
-    const day = Option.getOrElse(active, () => anchor);
-    const id = cellIds.current[formatIsoDay(day)];
+    // A day that cannot be chosen must not take focus: with an empty range the
+    // open leaves the keyboard where the user left it (plan 773).
+    const day = Option.filter(
+      Option.orElse(active, () => tabbable),
+      (value) => isAvailable(value, bounds),
+    );
+    if (Option.isNone(day)) {
+      pendingFocus.current = false;
+      return;
+    }
+    const id = cellIds.current[formatIsoDay(day.value)];
     if (id === undefined) return;
     pendingFocus.current = false;
     renderer?.focusElement?.(id);
@@ -498,6 +508,11 @@ export const DatePickerCalendar = ({
 
   useLayoutEffect(() => {
     if (!pendingMonthFocus.current) return;
+    // The chooser cannot offer a month the range excludes.
+    if (availableMonths[monthFocus] !== true) {
+      pendingMonthFocus.current = false;
+      return;
+    }
     const id = monthIds.current[monthFocus];
     if (id === undefined) return;
     pendingMonthFocus.current = false;
@@ -552,6 +567,8 @@ export const DatePickerCalendar = ({
   const availableMonths = Arr.map(Arr.range(0, 11), (index) =>
     isMonthAvailable(monthAt(index), bounds),
   );
+  /** A reversed range leaves no month to choose, so the chooser is unreachable. */
+  const hasAvailableMonth = Arr.some(availableMonths, (value) => value);
   const viewMonthIndex = DateTime.toPartsUtc(viewMonth).month - 1;
 
   /** Point the chooser at the viewed month and focus it once it has rendered. */
@@ -645,13 +662,18 @@ export const DatePickerCalendar = ({
   const grid = monthGrid(viewMonth, weekStartsOn);
   // Three cells span the seven-column day grid so the chooser keeps its width.
   const monthCell = (CELL * 7 - theme.spacing["2xs"] * 2) / 3;
-  const tabbable = clampToBounds(
+  /** The grid has a day the user can choose; a reversed range has none. */
+  const hasAvailableDay = Arr.some(Arr.flatten(grid), ({ day }) =>
+    isAvailable(day, bounds),
+  );
+  const tabbable = tabStopOf(
     Option.getOrElse(
       Option.filter(active, (day) => isSameDay(startOfMonth(day), viewMonth)),
       () => startOfMonth(viewMonth),
     ),
     bounds,
   );
+  const highlighted = Option.orElse(active, () => tabbable);
 
   return (
     <>
@@ -697,7 +719,7 @@ export const DatePickerCalendar = ({
           variant="ghost"
           size="sm"
           testId="date-month"
-          disabled={disabled}
+          disabled={disabled || !hasAvailableMonth}
           aria-label={mode === "months" ? labels.showDays : labels.chooseMonth}
           onClick={() => (mode === "months" ? backToDays() : openMonths())}
         >
@@ -777,7 +799,9 @@ export const DatePickerCalendar = ({
                         : `${formatMonthLabel(month, labels)}, ${labels.unavailable}`
                     }
                     aria-selected={isSelected}
-                    tabIndex={!disabled && index === monthFocus ? 0 : -1}
+                    tabIndex={
+                      !disabled && available && index === monthFocus ? 0 : -1
+                    }
                     ref={attachMonth(index)}
                     testId={`date-month-${index}`}
                     onClick={interactive ? () => chooseMonth(index) : undefined}
@@ -819,7 +843,10 @@ export const DatePickerCalendar = ({
         <div
           role="grid"
           aria-label={label}
-          {...stateDescription(disabled)}
+          {...stateDescription(
+            disabled,
+            hasAvailableDay ? undefined : labels.noAvailableDays,
+          )}
           onKeyDown={handleKeyDown}
           style={{
             display: "flex",
@@ -866,7 +893,13 @@ export const DatePickerCalendar = ({
                     }
                     aria-selected={isSelected}
                     tabIndex={
-                      !disabled && iso === formatIsoDay(tabbable) ? 0 : -1
+                      !disabled &&
+                      Option.exists(
+                        tabbable,
+                        (stop) => iso === formatIsoDay(stop),
+                      )
+                        ? 0
+                        : -1
                     }
                     ref={attachCell(iso)}
                     testId={`date-day-${iso}`}
@@ -898,8 +931,10 @@ export const DatePickerCalendar = ({
                           ? undefined
                           : { backgroundColor: theme.colors.hover },
                       ...(interactive &&
-                      iso ===
-                        formatIsoDay(Option.getOrElse(active, () => tabbable))
+                      Option.exists(
+                        highlighted,
+                        (day) => iso === formatIsoDay(day),
+                      )
                         ? focusRing(theme)
                         : {}),
                     }}

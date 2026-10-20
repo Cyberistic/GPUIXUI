@@ -134,8 +134,12 @@ is ignored, exactly like a malformed `value`.
   disabled.
 - Bounds constrain **choosing**, not a controlled `value`: a value outside the
   bounds is displayed as the consumer supplied it.
-- `min` after `max` makes no day selectable — the grid is visible and inert. That
-  is a caller bug, and it fails safely instead of throwing from render.
+- `min` after `max` makes no day selectable — the grid is visible and inert. It
+  has **no tab stop**, an open takes no focus, the month label is disabled (no
+  month contains an available day, so the chooser cannot be entered) and the grid
+  announces `No available dates` through `aria-description`. That is a caller bug,
+  and it fails safely instead of throwing from render or trapping the keyboard on
+  a cell that cannot be chosen.
 
 ## Clearing
 
@@ -186,9 +190,9 @@ value:
 ## Labels
 
 Every string the calendar paints can come from the caller: month names, weekday
-headings, the suffix on a day that cannot be chosen, the previous/next month and
-year control names, the month-chooser control, its back control and the `Clear`
-text. The defaults are English.
+headings, the suffix on a day that cannot be chosen, the empty-range description,
+the previous/next month and year control names, the month-chooser control, its
+back control and the `Clear` text. The defaults are English.
 
 ```tsx
 <DatePicker
@@ -196,6 +200,7 @@ text. The defaults are English.
     months: ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"],
     weekdays: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
     unavailable: "nicht verfügbar",
+    noAvailableDays: "Keine verfügbaren Daten",
     previousMonth: "Vorheriger Monat",
     nextMonth: "Nächster Monat",
     previousYear: "Vorheriges Jahr",
@@ -238,9 +243,12 @@ One cell is the tab stop (the selected day, else today clamped to `min`/`max`); 
 arrow keys move real focus, so the highlight and the focus are the same cell. An
 adjacent-month day is a real cell but never adds a second tab stop. A no-value
 open therefore lands on today — or on the first selectable day when today is out
-of range — never on the month's first day.
+of range — never on the month's first day. When the bounds leave **no** available
+day, there is no tab stop and an open leaves focus on the trigger.
 
-In the month chooser the focused month is its one tab stop:
+In the month chooser the focused month is its one tab stop; a month with no
+available day never is, and the month label is disabled when no month is
+available at all, so a reversed `min`/`max` cannot enter the chooser:
 
 | Key | Result |
 | ---- | ------ |
@@ -253,9 +261,10 @@ In the month chooser the focused month is its one tab stop:
 ## API
 
 `CalendarLabels` is `{ months: ReadonlyArray<string>; weekdays:
-ReadonlyArray<string>; unavailable: string; previousMonth: string;
-nextMonth: string; previousYear: string; nextYear: string; chooseMonth: string;
-showDays: string; clear: string }`. Every part merges `style` last where it takes one.
+ReadonlyArray<string>; unavailable: string; noAvailableDays: string;
+previousMonth: string; nextMonth: string; previousYear: string; nextYear: string;
+chooseMonth: string; showDays: string; clear: string }`. Every part merges `style`
+last where it takes one.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
@@ -293,7 +302,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   tab order, does not activate, and is named as unavailable instead of carrying a
   disabled state. A disabled picker puts the same signal on the grid through the
   supported `aria-description` channel, and its cells leave the tab order.
-- **`min` after `max`** makes the grid inert (see Bounds) rather than throwing.
+- **`min` after `max`** makes the grid inert (see Bounds) rather than throwing:
+  it has no tab stop, an open takes no focus, the month label is disabled, and the
+  grid is described `No available dates` (never `Disabled` — the surface itself is
+  enabled; only the range is empty).
 - **Labels are the caller's.** The defaults are English; `labels` supplies the
   month names, weekday headings, unavailable suffix, the two month controls, the
   two year controls, the chooser's open/back names and `Clear`. There is no
@@ -315,18 +327,21 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/date-picker/calendar.test.ts` (30 tests) covers leap February, a mid-week
+`src/date-picker/calendar.test.ts` (33 tests) covers leap February, a mid-week
 month start under both week starts, a month start on the week start, the 42-cell
 shape of real days, adjacent-day neighbours and continuity, uniqueness and month
 membership, year-crossing month arithmetic, the last day of a month without
 `Date`, day identity, labels, ISO parsing (including `2026-02-30`), inclusive
 bounds, malformed bounds, clamping, month browse limits, `min` after `max`, the
-English defaults, a partial label merge, caller month/day names, a rotated
-caller weekday list, month availability from an interior day, year availability
-in both directions, keeping the day-of-month when a shorter month is chosen, and
-keyboard month stepping without a year wrap.
+English defaults (including the empty-range description), a partial label merge,
+caller month/day names, a rotated caller weekday list, a month available only
+when a real day is inside **both** bounds, no available month or year for an
+inverted range, year availability in both directions, the grid tab stop kept only
+while it is available (unbounded, clamped and inverted), keeping the
+day-of-month when a shorter month is chosen, and keyboard month stepping without
+a year wrap.
 
-`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (37 tests):
+`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (41 tests):
 open + day focus, `defaultOpen`, the controlled open/close contract (a refused
 close leaves the surface painted and focus in place), a no-value open on today, a
 no-value open clamped to `min`, selection
@@ -345,6 +360,12 @@ to the grid, keyboard month movement and selection, the chooser's own label
 names, and a forced-open disabled picker that refuses a day, hides `Clear`,
 leaves every control out of the tab order with a `Disabled` description and no
 focus, and ignores the arrow keys after it turns disabled.
+
+Four of those cases cover the empty range (plan 773): the grid paints all 42
+cells with **no** tab stop and says `No available dates`, each cell is still named
+`, unavailable`, opening leaves focus on the trigger and `Enter`/arrows report
+nothing, the month label is disabled and cannot render the chooser, and an open
+range keeps its one grid tab stop and its chooser tab stop.
 
 ```sh
 nub run --filter @gpuixui/components test

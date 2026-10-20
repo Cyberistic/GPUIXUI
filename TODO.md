@@ -1317,6 +1317,19 @@ retired once both branches are one
     - [x] Message scroller — plan 206: pinned follow over a 1px tail sentinel, no yank when scrolled up, unread count, jump-to-latest, streamed growth; 11 rule + 10 native tests + 1 theme-matrix case; both-direction proof (behaviour 437, unit 296). Non-virtualized viewport recorded as the limitation (`<virtual-list>` takes an item count, not compound children)
     - [x] AI conversation — plan 207: `Message` (variants + avatar/content/reasoning/tool calls/sources/attachments/streaming/actions) and `Chat` (transcript + composer + status union); 10 + 9 native behaviour tests, 10 transition tests, both-theme rows; credit on both docs pages, `LICENSES/` interlock recorded
     - [x] Tier 2 gap cluster complete: all twelve landed with code, a native test, an example, a docs page and an inventory row; after plan 206 the suite is behaviour 437, unit 296
+    - [x] An empty date range is inert, not a dead tab stop — plan 773; measured
+      2026-10-20: an inverted `min`/`max` left the grid's only tab stop on the
+      clamped `max` (unavailable), opened with native focus on it, could not
+      arrow off it, and still opened the month chooser on an unavailable month.
+      `tabStopOf` keeps a clamped day only when it is available, the open/focus
+      effect and both tab stops gate on availability, `isMonthAvailable` /
+      `isYearAvailable` intersect the span with **both** bounds (so no month is
+      available at all), and the grid describes `labels.noAvailableDays`
+      (`No available dates`) while the disabled month label cannot enter the
+      chooser. 3 pure `tabStopOf` + 1 span case + the label default assertion +
+      4 native cases (37 → 41 native, 29 → 33 calendar), three native cases red
+      at `HEAD` and the open-range pin green both ways; docs, `COMPONENTS.md` and
+      the inventory synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

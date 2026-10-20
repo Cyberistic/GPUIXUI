@@ -22,6 +22,12 @@
  * open (or that is already open when it turns disabled) used to focus a day,
  * choose one, clear the value and browse months. The cases below pin that the
  * value cannot change and that every control leaves the tab order and the ring.
+ *
+ * Plan 773 adds the empty range: a reversed `min`/`max` used to put the grid's
+ * only tab stop and the open focus on a day that could not be chosen, and still
+ * open a month chooser over unavailable months. The last four cases guard that
+ * the grid has no tab stop, says `No available dates`, takes no focus on open
+ * and cannot enter the chooser — while an open range keeps all three.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -103,6 +109,26 @@ const Picker = ({
 const open = (picker: ReturnType<typeof renderComponent>): void => {
   clickCentreOf(picker, "date-picker-trigger");
 };
+
+/** An inverted range: `min` after `max` names no available day (plan 773). */
+const inverted = { min: "2026-06-10", max: "2026-06-01" } as const;
+
+/** Every day cell the grid painted. */
+const dayCells = (picker: ReturnType<typeof renderComponent>) =>
+  Arr.filter(
+    picker.renderer.findByType("div"),
+    (element) => element.testId?.startsWith("date-day-") === true,
+  );
+
+/** The day grid's host element. */
+const calendarGrid = (picker: ReturnType<typeof renderComponent>) =>
+  picker.renderer
+    .findByType("div")
+    .find(
+      (element) =>
+        element.customProps?.role === "grid" &&
+        element.customProps?.["aria-label"] === "Calendar",
+    );
 
 describe("DatePicker", () => {
   it("opens on the selected month and focuses a day", () => {
@@ -521,6 +547,100 @@ describe("DatePicker", () => {
     clickCentreOf(picker, "date-prev");
 
     expect(picker.renderer.findByText("October 2026")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  /**
+   * The bugs these guard (plan 773): an inverted `min`/`max` leaves no day
+   * selectable, and the grid used to take its tab stop on the clamped `max`
+   * anyway — an inert cell, focused on open, that no arrow key could leave.
+   * The month chooser repeated it, and nothing in the tree said why.
+   */
+  it("gives an empty range no tab stop and says why", () => {
+    const picker = renderComponent(
+      <Picker defaultValue="2026-05-20" {...inverted} />,
+    );
+    open(picker);
+
+    const cells = dayCells(picker);
+    expect(cells).toHaveLength(42);
+    expect(
+      Arr.filter(cells, (cell) => cell.customProps?.tabIndex === 0),
+    ).toHaveLength(0);
+    // The grid is still painted and still explains its cells.
+    expect(
+      picker.renderer.findByTestId("date-day-2026-06-01")?.customProps?.[
+        "aria-label"
+      ],
+    ).toBe("1 June 2026, unavailable");
+    expect(calendarGrid(picker)?.customProps?.["aria-description"]).toBe(
+      "No available dates",
+    );
+
+    picker.unmount();
+  });
+
+  it("does not move focus into an empty range", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker {...inverted} onValueChange={onValueChange} />,
+    );
+    open(picker);
+
+    expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
+
+    picker.renderer.simulateKeystrokes("enter");
+    picker.renderer.simulateKeystrokes("right");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("cannot open the month chooser when no month is available", () => {
+    const picker = renderComponent(
+      <Picker defaultValue="2026-05-20" {...inverted} defaultOpen />,
+    );
+
+    const monthLabel = picker.renderer.findByTestId("date-month");
+    expect(monthLabel?.customProps?.tabIndex).toBe(-1);
+    expect(monthLabel?.customProps?.["aria-description"]).toBe("Disabled");
+
+    clickCentreOf(picker, "date-month");
+
+    expect(picker.renderer.findByTestId("date-month-0")).toBeUndefined();
+    expect(picker.renderer.findByTestId("date-day-2026-06-01")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("keeps the tab stop and the chooser for an open range", () => {
+    const picker = renderComponent(
+      <Picker defaultValue="2026-10-17" min="2026-10-01" max="2026-10-31" />,
+    );
+    open(picker);
+
+    expect(
+      Arr.map(
+        Arr.filter(
+          dayCells(picker),
+          (cell) => cell.customProps?.tabIndex === 0,
+        ),
+        (cell) => cell.testId,
+      ),
+    ).toEqual(["date-day-2026-10-17"]);
+
+    clickCentreOf(picker, "date-month");
+
+    expect(isShown(picker, "date-month-9")).toBe(true);
+    expect(
+      picker.renderer.findByTestId("date-month-9")?.customProps?.tabIndex,
+    ).toBe(0);
+    expect(
+      picker.renderer.findByTestId("date-month-0")?.customProps?.tabIndex,
+    ).toBe(-1);
 
     picker.unmount();
   });

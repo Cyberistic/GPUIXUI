@@ -30,6 +30,8 @@ export interface CalendarLabels {
   readonly weekdays: ReadonlyArray<string>;
   /** The suffix after the name of a day that cannot be chosen. */
   readonly unavailable: string;
+  /** The grid's description when the range leaves no day to choose. */
+  readonly noAvailableDays: string;
   /** The previous-month control's accessible name. */
   readonly previousMonth: string;
   /** The next-month control's accessible name. */
@@ -77,6 +79,7 @@ export const defaultCalendarLabels: CalendarLabels = {
   months: MONTHS,
   weekdays: WEEKDAYS,
   unavailable: "unavailable",
+  noAvailableDays: "No available dates",
   previousMonth: "Previous month",
   nextMonth: "Next month",
   previousYear: "Previous year",
@@ -96,6 +99,8 @@ export const resolveCalendarLabels = (
   months: overrides?.months ?? defaultCalendarLabels.months,
   weekdays: overrides?.weekdays ?? defaultCalendarLabels.weekdays,
   unavailable: overrides?.unavailable ?? defaultCalendarLabels.unavailable,
+  noAvailableDays:
+    overrides?.noAvailableDays ?? defaultCalendarLabels.noAvailableDays,
   previousMonth:
     overrides?.previousMonth ?? defaultCalendarLabels.previousMonth,
   nextMonth: overrides?.nextMonth ?? defaultCalendarLabels.nextMonth,
@@ -255,26 +260,35 @@ export const isAvailable = (day: DateTime.Utc, bounds: DayBounds): boolean => {
   );
 };
 
+/**
+ * Whether any day in the inclusive span `[first, last]` satisfies both bounds.
+ * A reversed range names no day at all: clamping the span into each bound
+ * separately would otherwise report a month that contains `max` **and** a day
+ * after `min` as available (plan 773).
+ */
+const spanAvailable = (
+  first: DateTime.Utc,
+  last: DateTime.Utc,
+  bounds: DayBounds,
+): boolean => {
+  const start = Option.match(bounds.min, {
+    onNone: () => first,
+    onSome: (min) =>
+      DateTime.toEpochMillis(first) < DateTime.toEpochMillis(min) ? min : first,
+  });
+  const end = Option.match(bounds.max, {
+    onNone: () => last,
+    onSome: (max) =>
+      DateTime.toEpochMillis(last) > DateTime.toEpochMillis(max) ? max : last,
+  });
+  return DateTime.toEpochMillis(start) <= DateTime.toEpochMillis(end);
+};
+
 /** Whether any day of `value`'s month lies inside the bounds. */
 export const isMonthAvailable = (
   value: DateTime.Utc,
   bounds: DayBounds,
-): boolean => {
-  const first = startOfMonth(value);
-  const last = lastDayOfMonth(value);
-  return (
-    Option.match(bounds.min, {
-      onNone: () => true,
-      onSome: (min) =>
-        DateTime.toEpochMillis(last) >= DateTime.toEpochMillis(min),
-    }) &&
-    Option.match(bounds.max, {
-      onNone: () => true,
-      onSome: (max) =>
-        DateTime.toEpochMillis(first) <= DateTime.toEpochMillis(max),
-    })
-  );
-};
+): boolean => spanAvailable(startOfMonth(value), lastDayOfMonth(value), bounds);
 
 /** Whether any day of `value`'s year lies inside the bounds. */
 export const isYearAvailable = (
@@ -282,19 +296,7 @@ export const isYearAvailable = (
   bounds: DayBounds,
 ): boolean => {
   const first = startOfYear(value);
-  const last = lastDayOfMonth(addMonths(first, 11));
-  return (
-    Option.match(bounds.min, {
-      onNone: () => true,
-      onSome: (min) =>
-        DateTime.toEpochMillis(last) >= DateTime.toEpochMillis(min),
-    }) &&
-    Option.match(bounds.max, {
-      onNone: () => true,
-      onSome: (max) =>
-        DateTime.toEpochMillis(first) <= DateTime.toEpochMillis(max),
-    })
-  );
+  return spanAvailable(first, lastDayOfMonth(addMonths(first, 11)), bounds);
 };
 
 /** `day` moved inside the bounds; an unbounded side returns it unchanged. */
@@ -313,6 +315,20 @@ export const clampToBounds = (
       DateTime.toEpochMillis(lower) > DateTime.toEpochMillis(max) ? max : lower,
   });
 };
+
+/**
+ * The day a grid may take its tab stop on: `day` clamped into the bounds, kept
+ * only while it is actually available. A range with nothing available — a
+ * reversed `min`/`max` — names no tab stop at all, so the grid cannot trap
+ * focus on a cell that cannot be chosen (plan 773).
+ */
+export const tabStopOf = (
+  day: DateTime.Utc,
+  bounds: DayBounds,
+): Option.Option<DateTime.Utc> =>
+  Option.liftPredicate(clampToBounds(day, bounds), (clamped) =>
+    isAvailable(clamped, bounds),
+  );
 
 /** Whether the previous (`-1`) or next (`1`) month is browseable. */
 export const canBrowseMonth = (

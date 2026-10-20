@@ -5,7 +5,7 @@
 | Workstream | components (Tier 2 composition and feedback) |
 | Phase | F — integration and polish |
 | Depends on | 110, 112, 119, 127, 303, 368, 375, 396, 603, 612 |
-| Status | pending |
+| Status | done — measured 2026-10-20: the inverted range has no tab stop, takes no focus on open, announces `No available dates`, and cannot enter the chooser; 4 new native cases (37 → 41) and 4 new pure cases (29 → 33), three native cases red at `HEAD`, the open-range pin green both ways |
 | Claimed number | `773` — the first free number across every worktree at claim time (`770`/`772` are this workstream's, `771` is the playground's; checked in the shared checkout and every `workspaces/*` tree) |
 
 ## 1. The bug

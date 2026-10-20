@@ -44,6 +44,7 @@ import {
   startOfMonth,
   startOfYear,
   stepMonth,
+  tabStopOf,
   unbounded,
   weekdayLabels,
   type CalendarCell,
@@ -206,6 +207,7 @@ describe("caller labels", () => {
     expect(labels.months[9]).toBe("October");
     expect(labels.weekdays[0]).toBe("Sun");
     expect(labels.unavailable).toBe("unavailable");
+    expect(labels.noAvailableDays).toBe("No available dates");
     expect(labels.previousMonth).toBe("Previous month");
     expect(labels.nextMonth).toBe("Next month");
     expect(labels.previousYear).toBe("Previous year");
@@ -336,6 +338,33 @@ describe("day bounds", () => {
     expect(Option.isSome(inverted.max)).toBe(true);
     expect(isAvailable(day("2026-06-15"), inverted)).toBe(false);
   });
+
+  /**
+   * The bug these guard (plan 773): the grid took its tab stop from the clamped
+   * day even when that day was unavailable, so an inverted range focused an
+   * inert cell no arrow key could leave.
+   */
+  it("keeps an available day as the tab stop", () => {
+    const bounds = boundsOf("2026-10-17", "2026-10-20");
+    expect(
+      Option.map(tabStopOf(day("2026-10-18"), bounds), formatIsoDay),
+    ).toEqual(Option.some("2026-10-18"));
+    expect(
+      Option.map(tabStopOf(day("2026-10-01"), bounds), formatIsoDay),
+    ).toEqual(Option.some("2026-10-17"));
+  });
+
+  it("keeps the candidate when the range is unbounded", () => {
+    expect(
+      Option.map(tabStopOf(day("2026-10-18"), unbounded), formatIsoDay),
+    ).toEqual(Option.some("2026-10-18"));
+  });
+
+  it("gives an inverted range no tab stop", () => {
+    const inverted = boundsOf("2026-06-10", "2026-06-01");
+    expect(Option.isNone(tabStopOf(day("2026-06-01"), inverted))).toBe(true);
+    expect(Option.isNone(tabStopOf(day("2026-05-20"), inverted))).toBe(true);
+  });
 });
 
 describe("month chooser", () => {
@@ -345,6 +374,13 @@ describe("month chooser", () => {
     expect(isMonthAvailable(day("2026-02-01"), bounds)).toBe(false);
     expect(isMonthAvailable(day("2026-04-01"), bounds)).toBe(false);
     expect(isMonthAvailable(day("2026-04-01"), unbounded)).toBe(true);
+  });
+
+  it("gives an inverted range no available month or year", () => {
+    const inverted = boundsOf("2026-06-10", "2026-06-01");
+    expect(isMonthAvailable(day("2026-06-01"), inverted)).toBe(false);
+    expect(isMonthAvailable(day("2026-05-01"), inverted)).toBe(false);
+    expect(isYearAvailable(day("2026-01-01"), inverted)).toBe(false);
   });
 
   it("browses a year that only touches the bounds, in both directions", () => {
