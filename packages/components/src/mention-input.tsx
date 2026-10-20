@@ -160,11 +160,14 @@ export const MentionInput = ({
       ? 0
       : ((highlighted % visible.length) + visible.length) % visible.length;
 
-  const openKey = Option.isSome(open) ? "open" : "closed";
+  const queryKey = Option.match(open, {
+    onNone: () => "closed",
+    onSome: (query) => `open:${query.query}`,
+  });
   // A new query starts at its first candidate.
   useLayoutEffect(() => {
     setHighlighted(0);
-  }, [openKey]);
+  }, [queryKey]);
 
   const select = (value: string): void => {
     Option.match(open, {

@@ -1240,6 +1240,17 @@ retired once both branches are one
       981 with the baseline's same 20 classes; the scoped smoke scenarios
       `overlay-dialog` and `modal-focus-trap` are green (no scenario mounts a
       hover surface) (owner: components)
+    - [x] A narrower mention query restarts the highlight — plan 765; measured
+      2026-10-20: after `@a`, two `ArrowDown`s (`joan` highlighted) and then
+      typing `n` (query `an`) left `joan` selected, because the reset was keyed
+      on the list being open rather than on the query, so `Enter` inserted the
+      stale candidate. The reset key now carries the query text, so a narrower
+      query starts at its first match while opening, closing and an unrelated
+      edit behave as before; 1 native case (Mention input 21 → 22) failing at
+      `HEAD`; unit 495 in 47 files, full native suite 962/20 of 982 with the
+      baseline's same 20 classes, and no playground smoke/live scenario mounts a
+      mention field; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      count synced (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

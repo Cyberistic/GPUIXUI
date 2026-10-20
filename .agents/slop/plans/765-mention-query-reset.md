@@ -5,7 +5,7 @@
 | Workstream | components (Tier 2 composition and feedback) |
 | Phase | F — integration and polish |
 | Depends on | 110, 319, 399, 759 |
-| Status | in progress — measured 2026-10-20: after `@a`, two `ArrowDown`s (row `joan` highlighted) and then typing `n` (query `an`, still three matches) row `joan` stayed highlighted, so `Enter` inserted the stale candidate; `src/mention-input.tsx` resets the highlight only when the list opens or closes. One native case fails at `HEAD` |
+| Status | done — measured 2026-10-20: after `@a`, two `ArrowDown`s (row `joan` highlighted) and then typing `n` (query `an`, still three matches) row `joan` stayed highlighted, so `Enter` inserted the stale candidate, because `src/mention-input.tsx` reset the highlight only when the list opened or closed. The reset key now carries the query text; 1 native case (Mention input 21 → 22) red at `HEAD` and green after (21/22, the remaining failure the recorded plan-540 caller-focus case); unit 495 in 47 files, full native suite **962 passed / 20 failed of 982** with exactly the baseline's 20 recorded plan-540 classes; `check`/`lint`/`test` all exit 0 |
 | Claimed number | `765` — the first free number across every worktree at claim time (`763` is this branch's malformed hover delay, `764` is the playground's editing-actions plan; checked in the shared checkout and every `workspaces/*` tree) |
 
 ## 1. The bug

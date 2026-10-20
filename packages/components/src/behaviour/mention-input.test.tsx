@@ -2,10 +2,11 @@
  * MentionInput behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a list that never opens on `@`, a query that does not
- * narrow, arrows that do not move the highlight, Enter or a press that inserts
- * the wrong name, Escape/space that fail to close, a double `onMention`, a row
- * that activates on the press instead of the release (plan 759), and a disabled
- * field that opens the list.
+ * narrow, arrows that do not move the highlight, a highlight that survives a
+ * narrower query (plan 765), Enter or a press that inserts the wrong name,
+ * Escape/space that fail to close, a double `onMention`, a row that activates on
+ * the press instead of the release (plan 759), and a disabled field that opens
+ * the list.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -163,6 +164,41 @@ describe("MentionInput", () => {
         "aria-selected": true,
       },
     );
+
+    mention.unmount();
+  });
+
+  /**
+   * A narrower query restarts the highlight (plan 765). The bug this guards,
+   * measured: the reset was keyed on the list being open, so typing `n` after
+   * reaching `joan` left `joan` selected even though the query had changed, and
+   * `Enter` inserted the stale candidate.
+   */
+  it("restarts the highlight when the query narrows", () => {
+    const onMention = vi.fn();
+    const mention = renderComponent(<Harness onMention={onMention} />);
+    type(mention, "@a");
+
+    mention.renderer.simulateKeystrokes("down");
+    mention.renderer.simulateKeystrokes("down");
+    expect(
+      mention.renderer.findByTestId("row-joan")?.customProps,
+    ).toMatchObject({ "aria-selected": true });
+
+    type(mention, "n");
+
+    expect(mention.renderer.findByTestId("row-ana")?.customProps).toMatchObject(
+      {
+        "aria-selected": true,
+      },
+    );
+    expect(
+      mention.renderer.findByTestId("row-joan")?.customProps,
+    ).toMatchObject({ "aria-selected": false });
+
+    mention.renderer.simulateKeystrokes("enter");
+    expect(valueOf(mention)).toBe("@ana ");
+    expect(onMention).toHaveBeenCalledWith("ana");
 
     mention.unmount();
   });

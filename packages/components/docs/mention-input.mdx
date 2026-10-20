@@ -52,11 +52,16 @@ each in declaration order, capped by `maxVisible` (default 6). A non-finite
 none. Insertion replaces the `@query` token with `@value` plus one space, and
 reports both `onValueChange` and `onMention`.
 
+The highlight always starts at the first ranked match. Extending the query
+restarts it there (plan 765), so `Enter` confirms the best match for what is
+currently typed rather than an index left over from a wider query.
+
 ## Key and pointer behaviour
 
 | Action | Result |
 | ------ | ------ |
 | `ArrowDown` / `ArrowUp` | moves the highlight, wrapping |
+| Typing more of the query | restarts the highlight at the first match (plan 765) |
 | `Enter` | inserts the highlighted name (arrives as the input's submit event) |
 | Click a row | inserts that name on the release; a press dragged off the row inserts nothing |
 | `Enter` / `Space` on a focused row | inserts that row's name — `Enter` on press, `Space` on release (plan 759) |
@@ -126,8 +131,9 @@ never looks editable or focused (plan 527).
 
 ## Verification
 
-`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (21 tests):
-opening, narrowing, arrow movement, Enter insertion, a clicked row, a press
+`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (22 tests):
+opening, narrowing, arrow movement, the highlight restarting when the query
+narrows, Enter insertion, a clicked row, a press
 dragged off a row inserting nothing, `Space` inserting on release rather than on
 press, Escape from the field and from a focused row, one surface per Escape
 inside a dialog, no-match closing, a non-finite `maxVisible` listing every match,
