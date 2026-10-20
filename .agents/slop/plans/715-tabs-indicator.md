@@ -3,7 +3,7 @@
 **Workstream:** components (Tier 2 composition and feedback).
 **Phase:** C/F (closing a Tier 2 contract gap).
 **Depends on:** 110, 113, 117, 200, 304, 305, 323, 366, 511, 564, 646, 712.
-**Status:** done — 6 pure + 9 native cases, four mutation proofs; full native suite 884 passed / 28 failed of 912 (the same plan-540 binding defects).
+**Status:** done — 6 pure + 10 native cases, four mutation proofs; full native suite 885 passed / 28 failed of 913 (the same plan-540 binding defects).
 
 ---
 
@@ -291,6 +291,8 @@ breaks them.
    stale box (dynamic fixture from plan 511).
 8. **light theme** — the bar paints the light `primary` role (the Tabs suite
    already proves both themes for the rail; this pins the bar's role).
+9. **controlled follow and refusal** — a refused press leaves the bar on the
+   controlled tab, and a new controlled `value` moves it.
 
 Expected totals after the change: Tabs 41 native cases, `tabs/logic` 5.
 
@@ -315,8 +317,8 @@ worktree (`apps/playground/src/scenarios/` covers GPUix primitives only — ther
 are no `tier2` scenario ids here), so no `--only <id>` run applies. The native
 evidence is the package behaviour suite, which renders the real `TestRenderer`
 on this host: `nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx`
-is 42 tests with the one recorded plan-540 `onBlur` failure, and the full suite is
-884 passed / 28 failed of 912 — the same 28 recorded binding defects.
+is 43 tests with the one recorded plan-540 `onBlur` failure, and the full suite is
+885 passed / 28 failed of 913 — the same 28 recorded binding defects.
 
 ---
 

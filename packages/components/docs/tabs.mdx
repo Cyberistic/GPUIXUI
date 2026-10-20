@@ -244,7 +244,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (42 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (43 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
@@ -278,7 +278,8 @@ jump and fails the case), hangs on the left edge in a vertical set, paints the
 active theme's `primary`, refuses to paint with no selection or after its
 selected trigger is removed, takes the selected fill off the trigger (the same
 tree without an indicator still paints `colors.card`), and keeps a caller's
-`testId`. Reading the bar with the rail's padding removed fails the span and the
+`testId`, follows a controlled `value`, and stays put when a controlled set
+refuses the press. Reading the bar with the rail's padding removed fails the span and the
 vertical cases; taking the caller's `testId` away fails the naming case.
 
 A trigger forwards `onBlur` after clearing its focus ring, so the caller's handler

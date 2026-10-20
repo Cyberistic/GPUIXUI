@@ -201,9 +201,9 @@ retired once both branches are one
       change, paints a `primary` bar on the rail's inner edge (bottom for
       horizontal, left for vertical) and animates `left`/`top`/`width`/`height`
       between tabs; mounting it moves the selected fill off the trigger, so the
-      rail never paints two emphases. 6 pure + 9 native cases (Tabs 33 → 42,
+      rail never paints two emphases. 6 pure + 10 native cases (Tabs 33 → 43,
       `tabs/logic` 2 → 8), four mutation proofs (padding, motion, fill, testId);
-      the full native suite is 884 passed / 28 failed of 912 — the same recorded
+      the full native suite is 885 passed / 28 failed of 913 — the same recorded
       plan-540 binding defects and no new failure. `check`/`lint`/`test` exit 0
       with unit 485 in 46 files; docs, example, `COMPONENTS.md`,
       `docs/component-api.md` §8, `PLAN.md` D30 and the inventory synced

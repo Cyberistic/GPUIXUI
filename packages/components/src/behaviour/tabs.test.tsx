@@ -1145,6 +1145,24 @@ describe("Tabs", () => {
     tabs.unmount();
   });
 
+  it("follows a controlled value and stays put when the caller refuses", () => {
+    const tabs = renderComponent(<IndicatorSettings value="profile" />);
+    const start = requireBounds(tabs, "list-indicator");
+
+    clickCentreOf(tabs, "tab-danger");
+    finishMotion(tabs, 300);
+    // The press reports, but a controlled set keeps the panel and the bar.
+    expect(requireBounds(tabs, "list-indicator").x).toBe(start.x);
+
+    tabs.rerender(<IndicatorSettings value="danger" />);
+    finishMotion(tabs, 300);
+    const moved = requireBounds(tabs, "list-indicator");
+    expect(moved.x).toBe(requireBounds(tabs, "tab-danger").x);
+    expect(moved.x).not.toBe(start.x);
+
+    tabs.unmount();
+  });
+
   it("keeps the caller's testId on the indicator", () => {
     const tabs = renderComponent(
       <Tabs defaultValue="a" testId="named-tabs">
