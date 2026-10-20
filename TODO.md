@@ -95,7 +95,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[█████████░]` 118/120 plans-and-harness
+`[x]` `[██████████]` 120/120 plans-and-harness
 
 `[x]` **Prove the highlight wash colour contract in pixels** per plan `701`:
       six fixtures in `search-highlights` (**41 → 82** checks) and
@@ -124,7 +124,11 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `live-report.json`. `nub run check`/`lint`/`test` green (playground 446,
       testing 68). Exact ids: the whole headless registry and the whole live
       registry (`--all` live, bare headless). **This is the current gate for the
-      promotion fast-forward.**
+      promotion fast-forward.** `origin/master` then advanced by one docs-only
+      commit (`bc433838`, plan `438`: one plan file and one index row, no code),
+      merged cleanly; the merged head re-ran the whole headless registry
+      (**106/106**, **3865**, exit `0`) and `check`/`lint`/`test` (playground
+      446), all green, and the live gate still describes the code.
 
 `[x]` **Run the promotion gate on the head that includes plan `697`'s chart
       colour pixels** per plan `699`: verification only on `4101684e` (code
@@ -1799,7 +1803,10 @@ focused id is `live-frames`.
       branch-variance check in the existing `live-tier2-editing` (31–33). `nub
       run check`/`lint`/`test` green (playground 446, testing 68, components 308,
       primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
-      current gate for the promotion fast-forward.**
+      current gate for the promotion fast-forward.** `origin/master` then added
+      one docs-only plan (`bc433838`, plan `438`), merged cleanly; the merged
+      head re-ran the whole headless registry (106/106, 3865) and the gates, so
+      the live gate still describes the code.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

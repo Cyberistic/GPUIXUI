@@ -97,6 +97,14 @@ Verification only, on `1cb4d302` (the plan-702 commit on the plan-701 code head
 
 This is the current gate for the promotion fast-forward.
 
+**Post-gate merge (docs only).** `origin/master` then advanced by one commit,
+`bc433838` (plan `438`: one 613-line plan file plus one index row, no code),
+which merged cleanly. The merged head re-ran the whole headless registry
+(**106/106**, **3865** checks, 65 capabilities, exit `0`), `nub run check`,
+`nub run lint` and `nub run test` (playground 446) — all exit `0`. No scenario,
+view, host verb or package changed, so the live gate above still describes the
+promotion's code; this follows plan `699`'s docs-only-merge precedent.
+
 ## 4. STOP conditions
 
 - Any scenario fails: stop, capture the failing check's `expected/actual` and
