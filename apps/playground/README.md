@@ -2174,11 +2174,11 @@ pixel module; `parseColour` is the one token parser.
 
 ## Evidence on this host
 
-The suite is **107/107 green** here (`exit 0`, 3920 checks, 65 capabilities,
-**168.6 s**, 2026-10-20; plan `722` added 10 media checks — the count was 3892
-after the plan-`715` gate; plan `713` added 8 crop-mask
-pixel checks; plan `708` added 7 QR pixel checks; plan `701` added 41 wash
-checks to `search-highlights`):
+The suite is **107/107 green** here (`exit 0`, 3935 checks, 65 capabilities,
+**197.4 s**, 2026-10-20; plan `724` added the 18-check `click-routing` and plan
+`734` grew it to 33; the count was 3902 at the plan-`723` gate; plan `713` added
+8 crop-mask pixel checks; plan `708` added 7 QR pixel checks; plan `701` added
+41 wash checks to `search-highlights`):
 
 ```
 107/107 scenarios passed · capabilities: layout=verified root=verified text=verified
@@ -2198,11 +2198,11 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **95/95** (`exit 0`, **2663** checks, 61
-capabilities; **1153.6 s**; `.artifacts/live-report.json`, 2026-10-20) on code
-head `74e27a3f` (plan `723`, 0 behind `origin/master`; the plan commit after it
+The last full merge/release gate ran **96/96** (`exit 0`, **2688** checks, 61
+capabilities; **1191.4 s**; `.artifacts/live-report.json`, 2026-10-20) on code
+head `e384a66a` (plan `735`, 0 behind `origin/master`; the plan commit after it
 changes only plans), with the whole headless
-registry at **106/106** (**3902** checks, 65 capabilities, 168.8 s) on the same
+registry at **107/107** (**3935** checks, 65 capabilities, 197.4 s) on the same
 head. It
 includes every scenario this branch added: `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
@@ -2210,11 +2210,13 @@ additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
 checks (plan `676`), `live-pixel-colour` (22), `live-content`'s image pixels
 (68), `live-chart`'s colour pixels (71), `live-highlights`' wash fixtures (53),
 `live-diff`'s word wash (31), `live-qr`'s module pixels (52),
-`live-crop-area`'s mask pixels (18), `live-docking`'s indicator paint order (22)
-and `live-media`'s waveform pixels (25). The total is the plan-`714` gate's 2638
-plus plan `715`'s 14 and plan `722`'s 11 exactly — the plan-`722` note predicted
-2649 because it counted only its own 11 and missed plan `715`. A plain `--all`
-wrote no frame and no `provenance.json`. This gate supersedes plan `714`'s 2638 on
+`live-crop-area`'s mask pixels (18), `live-docking`'s indicator paint order (22),
+`live-media`'s waveform pixels (25) and `live-click-routing`'s click-routing
+contract (25). The total is the plan-`723` gate's 2663 plus `live-click-routing`'s
+25 exactly (plan `724` registered the id at 13; plan `734` added 12 inline
+checks), and the headless registry grew by `click-routing`'s 33. A plain `--all`
+wrote no frame and no `provenance.json`. This gate supersedes plan `723`'s 95/95
+(`2663`) on `74e27a3f`, plan `714`'s 2638 on
 `f91537b0`, plan `702`'s 2616 on `1cb4d302`, plan `699`'s 2576 on `4101684e`,
 plan `691`'s 2545 on `47068722`,
 plan `677`'s 2521 on `86057653`, plan `675`'s 2491 on `d206df18`,
@@ -2222,9 +2224,6 @@ plan `659`'s 94/94 on `d9346a9d`, plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
 gate for the promotion merge; the owner/supervisor performs that merge. The
 full live suite is a merge/release gate rather than a per-task check.
-**Superseded for one id:** plan `724` added `live-click-routing` (13 checks)
-after this gate, so the live registry is **96** ids and the next gate's total
-should be `2663 + 13 = 2676`.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2413,7 +2412,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (107/107, 3920 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (107/107, 3935 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -2421,13 +2420,14 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **95/95** on
-  2026-10-20 (**2663** checks, 61 capabilities; 1153.6 s; exit `0`, the merge
-  gate; plan `723` on code head `74e27a3f`, including `live-highlights`' 53 wash
+  The **real-window** suite (`smoke:live`) ran in full at **96/96** on
+  2026-10-20 (**2688** checks, 61 capabilities; 1191.4 s; exit `0`, the merge
+  gate; plan `735` on code head `e384a66a`, including `live-highlights`' 53 wash
   checks, `live-theme`'s 39 pixel checks,
   `live-pixel-colour`, `live-content`'s 68 image-source checks, `live-chart`'s
-  71 chart-colour checks, `live-docking`'s 22 indicator checks and
-  `live-media`'s 25 waveform checks,
+  71 chart-colour checks, `live-docking`'s 22 indicator checks,
+  `live-media`'s 25 waveform checks and `live-click-routing`'s 25 click-routing
+  checks,
   plan `658`'s Tier 1 checks, `live-theme-platform` and `live-shell`) — the plan
   `532` terminal twin, the plan `534` variable-row twin, the plan `535`/`536`
   pointer twins, plan `554`'s select/combobox/tooltip twins, plan `556`'s

@@ -107,6 +107,27 @@ entries; a delta that is not the table above is a real finding, not rounding.
 - One commit on `agent/playground` recording the gate, pushed to origin. The
   merge itself is the owner/supervisor's.
 
-## 7. As measured
+## 7. As measured (2026-10-20)
 
-To be filled after the run.
+Verification only on code head `e384a66a`, 0 behind `origin/master` (the head
+still fast-forwards; the plan commit `febd0144` changes only this plan and the
+plan index):
+
+| Registry | Result | Checks | Capabilities | Duration |
+| -------- | ------ | ------ | ------------ | -------- |
+| headless | **107/107**, exit `0` | **3935** | 65 | 197.4 s |
+| live | **96/96**, exit `0` | **2688** | 61 | **1191.4 s** |
+
+`click-routing` is **33** and `live-click-routing` **25**, so the live total is
+`2663 + 25` and the headless total `3902 + 33` exactly; `live-tier2-editing`
+took its 32-check branch. Both `host` lines carry the release-tag pins
+(`gpuix 9fcd6288`, `zed 81c99f81`, runtime shaders), and a plain `--all` wrote
+no `provenance.json` and no capture directory. Artifacts:
+`apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
+
+`nub run check`, `nub run lint` and `nub run test` are green (playground **481**,
+testing **69**, components 308, primitives 282, tokens 196, tw 103, icons 19,
+docs 7).
+
+No source changed; the ledgers cite this run and it is the gate for the
+promotion fast-forward.

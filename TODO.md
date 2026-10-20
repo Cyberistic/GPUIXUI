@@ -95,7 +95,25 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 126/126 plans-and-harness
+`[x]` `[██████████]` 127/127 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes the inline click-routing
+      probe** per plan `735`: verification only on code head `e384a66a` (0 behind
+      `origin/master`, so the promotion is still a fast-forward) — headless
+      **107/107** (**3935** checks, 65 capabilities, 197.4 s) and live **96/96**
+      (**2688** checks, 61 capabilities, **1191.4 s**), both exit `0`.
+      `click-routing` is **33** and `live-click-routing` **25**, so the live
+      total is plan `723`'s 2663 + 25 exactly and the headless total is
+      `3902 + 33`; `live-tier2-editing` took its 32-check branch. Both `host`
+      lines carry the release-tag pins (`gpuix 9fcd6288`, `zed 81c99f81`,
+      runtime shaders), and a plain `--all` wrote no `provenance.json`. Artifacts:
+      `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
+      `nub run check`/`lint`/`test` green (playground **481**, testing 69,
+      components 308, primitives 282, tokens 196, tw 103, icons 19, docs 7).
+      Commands run: `nub run --filter playground build`, the bare headless
+      runner, `nub apps/playground/dist/live/run.js --all`, then the three gates.
+      Records updated: `apps/playground/README.md`, `COMPONENTS.md`, plan `735`
+      §7 and the plan index.
 
 `[x]` **Measure inline click routing** per plan `734`: plan `724` left exactly
       one case open — an in-flow label on the shipped `Button` activates it, while
@@ -2009,6 +2027,18 @@ focused id is `live-frames`.
       reports **22**, `live-media` **25**, and the total is `2638 + 14 + 11`
       exactly. The plan-`722` note's predicted `2649` was wrong by plan `715`'s
       14 and is corrected in that task. `nub run check`/`lint`/`test` green
+      (playground **481**, testing 69, components 308, primitives 282, tokens
+      196, tw 103, icons 19, docs 7). **This is the current gate for the
+      promotion fast-forward.**
+      **Addendum (plan `735`, 2026-10-20):** plans `724`/`734` added
+      `click-routing` (33 headless) and `live-click-routing` (25 live) after that
+      gate, so both full registries ran again on code head `e384a66a` (0 behind
+      `origin/master`): headless **107/107** (**3935** checks, 65 capabilities,
+      197.4 s) and live **96/96** (**2688** checks, 61 capabilities,
+      **1191.4 s**), both exit `0`, with no `provenance.json`; `click-routing`
+      reports **33**, `live-click-routing` **25** and `live-tier2-editing` **32**
+      (its measured branch). The live total is `2663 + 25` exactly and the
+      headless total is `3902 + 33`. `nub run check`/`lint`/`test` green
       (playground **481**, testing 69, components 308, primitives 282, tokens
       196, tw 103, icons 19, docs 7). **This is the current gate for the
       promotion fast-forward.**
