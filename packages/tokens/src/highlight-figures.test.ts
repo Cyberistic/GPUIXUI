@@ -1,19 +1,18 @@
 /**
- * Guards the figures the find-highlight contract states. Its paragraph in
- * `docs/tokens.md` and the two JSDoc blocks in `src/highlight.ts` quote eleven
- * ratios and no test read any of them.
+ * Guards the figures the find-highlight contract states. The two JSDoc blocks in
+ * `src/highlight.ts` quote seven current ratios and no test reads them; the
+ * catalogue paragraph's figures are derived by `native-highlight.test.ts`, but
+ * only as a presence check — it cannot tell which sentence a number belongs to.
  *
- * Five were stale after plan 574 moved eight light platform text roles and plans
- * 590/649 moved the Aero inks: the plain minima still read 5.59/4.80 (now
- * 5.77/4.99), the painted-ink minima 5.21/4.51 (now 5.38/4.64), and syntax
- * through the hover wash 6.30 (now 6.74). The step JSDoc printed the washes'
- * own plain-tone ratios as if they were the step, while the step itself is
- * 1.06:1 at its weakest on a painted surface.
+ * Five JSDoc figures were stale after plan 574 moved eight light platform text
+ * roles and plans 590/649 moved the Aero inks: the plain minima still read
+ * 5.59/4.80 (now 5.77/4.99), the painted-ink minima 5.21/4.51 (now 5.38/4.64),
+ * and syntax through the hover wash 6.30 (now 6.74). The step JSDoc printed the
+ * washes' own plain-tone ratios as if they were the step, while the step itself
+ * is 1.06:1 at its weakest on a painted surface.
  *
- * `native-highlight.test.ts` derives the page's figures but only requires each
- * number to appear *somewhere* in it, so a figure can move to the wrong
- * sentence and pass. This file derives each figure from the composition its
- * sentence names and asserts that sentence, in the module and on the page.
+ * This file derives each figure from the composition its sentence names and
+ * asserts that sentence, in the module and on the page.
  */
 
 import { readFileSync } from "node:fs";

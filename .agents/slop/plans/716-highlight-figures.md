@@ -94,7 +94,7 @@ One pass over `shippedThemes` mirroring the composition in
 ink paint and (for the step) the two diff tints — recording the minima named in
 §1. Three cases:
 
-1. **“are the ones the shipped sets produce”** pins all fourteen figures
+1. **“are the ones the shipped sets produce”** pins all fifteen figures
    (5.77, 4.99, 5.38, 4.64, 9.65, 8.03, 8.93, 7.31, 1.08, 1.06, 1.17, 1.28,
    1.25, 1.06 step, 6.74), so a palette edit fails here with the set and
    composition named.
@@ -196,7 +196,7 @@ step floor and draw a wash the check rejects.
 
 - `highlight.ts`'s two JSDoc blocks quote only derived values, with the step's
   own 1.06 separated from the washes' plain-tone 1.17/1.28.
-- `highlight-figures.test.ts` derives all fourteen figures and reads both the
+- `highlight-figures.test.ts` derives all fifteen figures and reads both the
   module and the page sentences.
 - The pre-fix failures and the post-fix run are recorded verbatim in §7.
 - `nub run check`, `nub run lint`, `nub run fmt` and the tokens suite are green.
