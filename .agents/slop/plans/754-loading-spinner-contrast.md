@@ -75,7 +75,7 @@ neutral surface.
 | `packages/primitives/src/components/Button.tsx` | import `buttonVariants`; render `<Spinner … color={buttonVariants[variant].foreground(theme)} />` |
 | `packages/primitives/src/core/loading.test.ts` | add the case in §6 (every dot takes `color`; the active dot differs from the default accent) |
 | `packages/primitives/src/components/Button.test.tsx` | add the case in §6 (the `Spinner` child carries the variant foreground for `primary`, `destructive` and `outline`) |
-| `packages/primitives/runtime/loading.runtime.test.tsx` | add the case in §6 (a loading `Button`'s painted fill is `colors.primary`, and every painted dot is `colors.primaryForeground`) |
+| `packages/primitives/runtime/button-loading.runtime.test.tsx` | **new file**: the case in §6 (a loading `Button`'s painted fill is `colors.primary`, and every painted dot is `colors.primaryForeground`); isolated so the shared loading suite is untouched |
 | `packages/primitives/docs/spinner.mdx` | API row for `color`; Theming sentence; Verification names the new case |
 | `packages/primitives/docs/button.mdx` | the `loading` row / busy paragraph states that the spinner takes the variant's foreground |
 | `packages/primitives/docs/icon-button.mdx` | the busy paragraph states the spinner inherits the same foreground tint as the icon |
@@ -94,7 +94,7 @@ Run from the repository root unless a package filter is given:
 | --- | --- |
 | `nub run --filter @gpuixui/primitives test src/core/loading.test.ts` | the file passes; the new colour case fails **before** the fix on `backgroundColor` (`primary` instead of `primaryForeground`) |
 | `nub run --filter @gpuixui/primitives test src/components/Button.test.tsx` | the file passes; the new prop case fails **before** the fix (`color` is `undefined`) |
-| `nub run --filter @gpuixui/primitives test:runtime runtime/loading.runtime.test.tsx` | 1 file, exit `0`; the new case fails **before** the fix because the lit dot equals the button fill |
+| `nub run --filter @gpuixui/primitives test:runtime runtime/button-loading.runtime.test.tsx` | 1 file / 1 test, exit `0`; the case fails **before** the fix because the lit dot equals the button fill |
 | `nub run --filter @gpuixui/primitives test` | all offline files green (the current count plus the two new cases) |
 | `nub run --filter @gpuixui/primitives check-types` | exit `0` |
 | `nub run lint` | exit `0` |
