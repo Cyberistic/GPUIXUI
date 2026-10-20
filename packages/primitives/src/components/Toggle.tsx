@@ -16,18 +16,21 @@
  * shrinkable item for the same measured reason as `Button` (plan `368`).
  */
 
-import type { ReactElement, ReactNode } from "react";
+import { Fragment, type ReactElement, type ReactNode } from "react";
 import type { EventPayload } from "@gpuix/react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { decideActivation } from "../core/keyboard.js";
 import {
   controlFocusStyle,
   controlLabelStyle,
   controlStyle,
+  labelRowLayout,
 } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
+import { hasOpaqueContent, labelParts } from "./content.js";
 import {
   ariaName,
   composeHandler,
@@ -115,6 +118,8 @@ export const renderToggle = (
         toggle();
       handler?.(event);
     };
+  /** An icon child beside the words shares their line (plan `803`). */
+  const mixedLabel = hasOpaqueContent(props.children);
   return (
     <div
       {...passiveTriggerHandlers(props)}
@@ -145,7 +150,19 @@ export const renderToggle = (
     >
       {props.leading}
       {props.children === undefined || props.children === null ? null : (
-        <div style={controlLabelStyle}>{props.children}</div>
+        <div style={mixedLabel ? labelRowLayout(theme) : controlLabelStyle}>
+          {mixedLabel
+            ? Arr.map(labelParts(props.children), (part, index) =>
+                part.kind === "text" ? (
+                  <div key={index} style={controlLabelStyle}>
+                    {part.text}
+                  </div>
+                ) : (
+                  <Fragment key={index}>{part.element}</Fragment>
+                ),
+              )
+            : props.children}
+        </div>
       )}
       {props.trailing}
     </div>

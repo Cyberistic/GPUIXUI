@@ -29,7 +29,8 @@
  * button and over its neighbours (measured, plan `368`).
  */
 
-import { type ReactElement, type ReactNode } from "react";
+import { Fragment, type ReactElement, type ReactNode } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
@@ -38,10 +39,12 @@ import { buttonRecipeRing, buttonRecipeStyle } from "../core/recipes.js";
 import {
   clippedFocusRingStyle,
   controlLabelStyle,
+  labelRowLayout,
   shrinkLayoutStyle,
 } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
 import { buttonVariants, type ButtonVariant } from "../core/variants.js";
+import { hasOpaqueContent, labelParts } from "./content.js";
 import { useGroupShape, type GroupShape } from "./group-shape.js";
 import {
   ariaName,
@@ -159,6 +162,8 @@ export const renderButton = (
       handler?.(event);
     };
   const showRing = focus.focused && props.disabled !== true;
+  /** An icon child beside the words shares their line (plan `803`). */
+  const mixedLabel = hasOpaqueContent(props.children);
   const recipe = buttonRecipeStyle(
     {
       variant,
@@ -226,7 +231,19 @@ export const renderButton = (
         props.leading
       )}
       {props.children === undefined || props.children === null ? null : (
-        <div style={controlLabelStyle}>{props.children}</div>
+        <div style={mixedLabel ? labelRowLayout(theme) : controlLabelStyle}>
+          {mixedLabel
+            ? Arr.map(labelParts(props.children), (part, index) =>
+                part.kind === "text" ? (
+                  <div key={index} style={controlLabelStyle}>
+                    {part.text}
+                  </div>
+                ) : (
+                  <Fragment key={index}>{part.element}</Fragment>
+                ),
+              )
+            : props.children}
+        </div>
       )}
       {props.trailing}
       {clipped && showRing ? (

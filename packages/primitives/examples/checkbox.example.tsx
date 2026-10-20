@@ -10,12 +10,21 @@
  * A label **beside** a standalone box is still inert (GPUix has no
  * `aria-labelledby`); a label **inside** the control is the supported shape,
  * which is what every row here uses. `CheckboxGroup` remains the shape for a
- * value list with a select-all parent of its own.
+ * value list with a select-all parent of its own. The priority row mounts an
+ * icon beside its words on the same line (plan `803`).
  */
 
 import { useState, type ReactElement } from "react";
 import * as Arr from "effect/Array";
-import { Box, Checkbox, Separator, Stack, Text } from "../src/index.js";
+import { Icon } from "@gpuixui/icons";
+import {
+  Box,
+  Checkbox,
+  Separator,
+  Stack,
+  Text,
+  useTheme,
+} from "../src/index.js";
 
 /** The assets a draft release carries. */
 const ASSETS = [
@@ -26,6 +35,7 @@ const ASSETS = [
 
 /** Release assets: a tri-state header and one standalone box per row. */
 export const CheckboxExample = (): ReactElement => {
+  const theme = useTheme();
   const [selected, setSelected] = useState<ReadonlyArray<string>>(["notes.md"]);
   const all = Arr.length(selected) === Arr.length(ASSETS);
   const none = Arr.isReadonlyArrayEmpty(selected);
@@ -75,6 +85,16 @@ export const CheckboxExample = (): ReactElement => {
 
         <Separator orientation="horizontal" />
 
+        <Checkbox
+          testId="checkbox-example-priority"
+          defaultChecked
+          description="Shown at the top of the release page."
+        >
+          <Icon name="star" size="sm" color={theme.colors.primary} />
+          Prioritise this release
+        </Checkbox>
+
+        <Separator orientation="horizontal" />
         <Checkbox
           testId="checkbox-example-approved"
           defaultChecked

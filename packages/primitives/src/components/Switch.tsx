@@ -8,7 +8,8 @@
  * animation that is a one-way position change (plan `329`).
  */
 
-import { type ReactElement, type ReactNode } from "react";
+import { Fragment, type ReactElement, type ReactNode } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { motion, type EventPayload } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
@@ -21,10 +22,10 @@ import {
   type SelectionAccent,
   type SelectionSpec,
 } from "../core/selection.js";
-import { shrinkLayoutStyle } from "../core/style.js";
+import { shrinkLayoutStyle, labelRowLayout } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { paintsContent } from "./content.js";
+import { hasOpaqueContent, labelParts, paintsContent } from "./content.js";
 import {
   composeHandler,
   composeRef,
@@ -194,7 +195,24 @@ export const renderSwitch = (
       </div>
     );
   }
-  const label = (
+  const label = hasOpaqueContent(props.children) ? (
+    <div style={labelRowLayout(theme)}>
+      {Arr.map(labelParts(props.children), (part, index) =>
+        part.kind === "text" ? (
+          <Text
+            key={index}
+            role="label"
+            tone={props.disabled === true ? "muted" : "default"}
+            style={shrinkLayoutStyle}
+          >
+            {part.text}
+          </Text>
+        ) : (
+          <Fragment key={index}>{part.element}</Fragment>
+        ),
+      )}
+    </div>
+  ) : (
     <Text
       role="label"
       tone={props.disabled === true ? "muted" : "default"}

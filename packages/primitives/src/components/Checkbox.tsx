@@ -7,7 +7,8 @@
  * same three states are one paint resolved by `core/selection.ts`.
  */
 
-import { type ReactElement, type ReactNode } from "react";
+import { Fragment, type ReactElement, type ReactNode } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
@@ -23,10 +24,10 @@ import {
   type SelectionSpec,
   type SelectionState,
 } from "../core/selection.js";
-import { shrinkLayoutStyle } from "../core/style.js";
+import { shrinkLayoutStyle, labelRowLayout } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
-import { paintsContent } from "./content.js";
+import { hasOpaqueContent, labelParts, paintsContent } from "./content.js";
 import {
   composeHandler,
   composeRef,
@@ -224,7 +225,24 @@ export const renderCheckbox = (
       </div>
     );
   }
-  const label = (
+  const label = hasOpaqueContent(props.children) ? (
+    <div style={labelRowLayout(theme)}>
+      {Arr.map(labelParts(props.children), (part, index) =>
+        part.kind === "text" ? (
+          <Text
+            key={index}
+            role="label"
+            tone={props.disabled === true ? "muted" : "default"}
+            style={shrinkLayoutStyle}
+          >
+            {part.text}
+          </Text>
+        ) : (
+          <Fragment key={index}>{part.element}</Fragment>
+        ),
+      )}
+    </div>
+  ) : (
     <Text
       role="label"
       tone={props.disabled === true ? "muted" : "default"}

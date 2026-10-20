@@ -40,7 +40,7 @@ different states.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | from the density scale |
 | `square` | `boolean` | `false` | equal width and height, for an icon-only toggle |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
-| `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
+| `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label; the dedicated slots for an end icon, while a child element beside text shares the line (plan `803`) |
 | `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<ToggleState>` | — | merged last; an object or a state callback |
@@ -148,6 +148,9 @@ property; returning `{}` keeps the default look. `ToggleState` is exported.
   repaints the accent fill; Enter down and Space up each activate once; a
   disabled toggle leaves the tab order; the ring follows focus. Measured
   2026-10-17 (plan 054 §9).
+- `src/components/label-row.test.tsx` and `runtime/label-row.runtime.test.tsx`
+  — an icon child beside the words is one row, a text-only label is unchanged,
+  and a long mixed label stays inside a narrow toggle (plan `803`).
 - The disabled **handler** guard is proven at the element-tree level: a
   tabIndex-less toggle cannot be focused natively, so the runtime test can only
   prove the tab order.

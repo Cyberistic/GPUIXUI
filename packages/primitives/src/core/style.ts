@@ -233,6 +233,27 @@ export const controlLabelStyle: StyleDesc = {
 };
 
 /**
+ * The layout for a label that mixes an icon (or another opaque element) with
+ * text.
+ *
+ * GPUix lays a box's children on the cross axis by default, so an icon child
+ * and the words beside it stacked: measured, a `Checkbox`'s 16 px star sat at
+ * `y 12…28` and its word at `28…45` in a 33-high label column, although the
+ * selection pages advertise the icon “beside” the label. A row puts them on one
+ * line with the inline spacing step; the container's shrink rules stay with
+ * the caller, because a button clips one line while a selection label may grow
+ * (plans `368`, `803`).
+ */
+export const labelRowLayout = (theme: PrimitiveTheme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  gap: theme.spacing.xs,
+  flexShrink: 1,
+  minWidth: 0,
+});
+
+/**
  * A flex item that may shrink: a text run in a row, a group item or a group
  * root whose width is imposed.
  *

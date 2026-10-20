@@ -28,6 +28,10 @@ takes its name from `label`. The text may be wrapped (`<Checkbox><Text>Accept
 </Text></Checkbox>`) or sit beside a decorative icon (`<Checkbox><Icon
 name="star"/> Accept</Checkbox>`): the name is the text the row paints (plan
 `746`). An icon **alone** paints no text and names nothing — pass `label`.
+The icon and the words share **one line**: GPUix stacks a box's children on the
+cross axis by default, so before plan `803` the star painted above the word in a
+33 px label column (measured: star `y 12…28`, word `28…45`) instead of the row's
+one 17 px line. A text-only label is unchanged.
 
 **A blank text child is not a label.** A computed label that trims to nothing
 paints no row: the box renders on its own and `label` (when supplied) still
@@ -229,6 +233,11 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
   against the old row gate) — including a blank label wrapped in a `Text` run
   (plan `782`). A **description** paints its caption, is announced as the row's
   description, and a press on the caption still toggles (plan `748`).
+- `src/components/label-row.test.tsx` — a mixed icon-and-text label carries the
+  one-row layout while a text-only label's tree is unchanged (plan `803`).
+- `runtime/label-row.runtime.test.tsx` — measured: the icon and the word overlap
+  on the vertical axis and the label is one line tall, where the old tree left
+  their edges touching in a 33 px column (plan `803`).
 - `runtime/examples.runtime.test.tsx` — the **checkbox example** (plan `374`)
   mounts the labelled boxes in their real role: a tri-state header over a column
   of rows. The header announces `mixed`, a row click repaints the caller's

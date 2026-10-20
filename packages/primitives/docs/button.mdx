@@ -76,7 +76,7 @@ sm / md / lg.
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
 | `loading` | `boolean` | `false` | decorative spinner (fitted to the content box in a square button), `Loading` description, blocks activation |
-| `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
+| `leading` / `trailing` | `ReactNode` | none | an icon or element on either side; the dedicated slots for a leading or trailing icon |
 | `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text (e.g. an icon) |
 | `onActivate` | `() => void` | none | called after `onClick` for a click or an activating key; not called while busy |
 | `onClick` | `(event) => void` | none | the event that activated the button: the pointer click, or the Enter/Space key event. Runs before `onActivate` |
@@ -85,7 +85,7 @@ sm / md / lg.
 | `aria-description` | `string` | none | announced after the name; trimmed, and a blank value is absent; a `Tooltip` trigger's text arrives here, joined after `"Loading"` while busy |
 | `style` | `StateStyle<ButtonState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator; the busy spinner becomes `${testId}-spinner` (plan `798`) |
-| `children` | `ReactNode` | — | the visible label |
+| `children` | `ReactNode` | — | the visible label; an element child beside text shares its line, and a text-only label is unchanged (plan `803`) |
 
 ## Keyboard
 
@@ -217,6 +217,10 @@ look. `ButtonState` is exported.
   is the control's only announcement (plan 785). A clipped button paints the
   ring as an inset overlay and no shadow; a standalone one keeps the outer ring
   (plan 344).
+- `src/components/label-row.test.tsx` and `runtime/label-row.runtime.test.tsx`
+  — an icon child beside the words is one row; the painted icon and text overlap
+  on the vertical axis, a text-only label's tree is unchanged, and a long mixed
+  label stays inside a narrow button (plan `803`).
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name; a button wired with `onClick`

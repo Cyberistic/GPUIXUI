@@ -212,6 +212,7 @@ export {
   controlLabelStyle,
   controlStyle,
   interactionBorder,
+  labelRowLayout,
   nativeTextTheme,
   numberInputStyle,
   numberStepperColumnStyle,

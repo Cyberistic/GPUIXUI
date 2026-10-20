@@ -31,6 +31,10 @@ takes its name from `label`. The text may be wrapped (`<Switch><Text>Pause
 </Text></Switch>`) or sit beside a decorative icon: the name is the text the row
 paints (plan `746`). An icon **alone** paints no text and names nothing — pass
 `label`.
+The icon and the words share **one line**: GPUix stacks a box's children on the
+cross axis by default, so before plan `803` the star painted above the word in a
+33 px label column instead of the row's one 17 px line. A text-only label is
+unchanged.
 
 **A blank text child is not a label.** A computed label that trims to nothing
 paints no row: the track renders on its own and `label` (when supplied) still
@@ -201,6 +205,10 @@ exported.
   empty row (plan `743`) — including a blank label wrapped in a `Text` run
   (plan `782`). A **description** paints its caption, is announced as the row's
   description, and a press on the caption still toggles (plan `748`).
+- `src/components/label-row.test.tsx` and `runtime/label-row.runtime.test.tsx`
+  — an icon beside the words is one row: the element tree carries the layout,
+  the painted boxes overlap on the vertical axis, a text-only label is
+  unchanged, and a long mixed label stays inside a narrow control (plan `803`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

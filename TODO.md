@@ -1790,6 +1790,19 @@ retired once both branches are one
       the track and each thumb (plan `802`; offline 74 files / 1041 tests, the
       new native file 6/6, ten scoped runtime files 206/206).
 
+`[x]` `packages/primitives`: **an icon beside a label painted above it** —
+      measured (2026-10-20): GPUix lays a box's children on the cross axis by
+      default, so the documented `<Checkbox><Icon name="star"/> Accept
+      </Checkbox>` painted the 16 px star at `y 12…28` and the word at
+      `28…45` in a 33 px label column (a text-only row is 17 px); `Button`,
+      `Toggle` and `Switch` children stacked the same way inside fixed-height
+      chrome. One `labelRowLayout` + a `labelParts` split now put a mixed label
+      on one line, with the words in one fitted run so a long label still
+      stays inside the control; a text-only label's tree is unchanged. 13
+      offline + 10 runtime cases, four part mutations and the ungated-row
+      direction each failing by name (plan `803`; offline 75 files / 1054
+      tests, the new native file 10/10, six scoped runtime files 114/114).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
