@@ -95,7 +95,29 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 125/125 plans-and-harness
+`[x]` `[██████████]` 126/126 plans-and-harness
+
+`[x]` **Measure inline click routing** per plan `734`: plan `724` left exactly
+      one case open — an in-flow label on the shipped `Button` activates it, while
+      an absolutely positioned label swallowed the click. A second counter set in
+      the same probe measures six shapes in both hosts: **an in-flow `<text>` is
+      not a hit target** (the box's handler runs and a `tabIndex=0` ancestor
+      takes native focus), **a `<text>` with its own `onClick` is a hit target**
+      and runs alone (a painted background changes nothing), **an absolutely
+      positioned `<text>` is a hit target** and swallows the click when it has no
+      handler, **a `<code>` surface is not a hit target** (the box runs), and a
+      label inside a painted handler-less child is swallowed by that child.
+      `click-routing` **18 → 33 checks** and `live-click-routing` **13 → 25**,
+      three consecutive focused green runs each. Five mutation proofs observed
+      and reverted, all `exit 1` and by name: the label box's handler removed,
+      the text's handler removed, the absolute label made in-flow (`abs=1`), a
+      handler on the painted badge (`badgebox=1`), and the row's `tabIndex`
+      removed (focus stayed `cr-reset`). **One null result:** painting the text
+      with a background changed nothing — a text run's hitbox is not decided by
+      its background, unlike a `<div>`. Full headless **107/107** (**3935**
+      checks, 65 capabilities, 167.9 s), exit `0`; `nub run check`/`lint`/`test`
+      green. Focused ids run: `click-routing` (×3 + five mutations),
+      `live-click-routing` (×3). No full live gate (merge gate).
 
 `[x]` **Measure click routing** per plan `724`: three records disagreed (plan
       `381`'s transparent wrapper made its painted child's click not reach it,

@@ -1883,11 +1883,33 @@ when its painted child owns the handler); a decorative painted child inside a
 clickable row will swallow the click unless it owns no paint or the row is the
 hit target; and an inside press cannot be observed by an ancestor, so a
 close-on-inside-click surface must classify the press itself. Both hosts agree on
-every case (18 headless checks, 13 live). **Not measured:** a text run and a
-`<code>` surface inside a clickable box — the first read inconsistent across
-positions (in-flow text on a shipped `Button` works, an absolutely positioned
-label swallowed the click), so that needs its own probe before a component
-relies on either.
+every case (18 headless checks, 13 live).
+
+### Inline content (plan `734`)
+
+Plan 724 left one case open: an in-flow label on the shipped `Button` activates
+it, while an absolutely positioned label swallowed the click. A second counter
+set in the same probe measured all six shapes, in both hosts:
+
+| Case | Measured |
+| ---- | -------- |
+| an **in-flow** `<text>` inside a handler box | the **box's** handler runs; the text is not a hit target |
+| a `<text>` with its own `onClick` | the **text's** handler runs alone — a painted text label **is** a hit target |
+| that text with a painted background | no change: the text's handler still runs alone (null mutation — a text's background does not decide its hitbox) |
+| an **absolutely positioned** `<text>` with no handler | the click is **swallowed** — the recorded plan-724 case |
+| a `<code>` surface inside a handler box | the **box's** handler runs; `<code>` is not a hit target |
+| a `<text>` inside a painted handler-less child | swallowed by that child (plan 724's box rule) |
+| a label inside a `tabIndex=0` row | the row's handler runs **and** the row takes native focus |
+
+The rule: **an in-flow `<text>` and a `<code>` surface are not hit targets — the
+painted ancestor's handler runs.** Two additions: a `<text>` that **owns**
+`onClick` is a hit target and runs alone, and an **absolutely positioned**
+`<text>` is a hit target, so with no handler it swallows the click. A component
+can put a label inside a `Button` or a row and the control still activates; it
+must not position that label absolutely, because the positioned run then owns
+the hitbox and swallows the click. A text element that owns its handler is a
+valid control surface. Both hosts agree (33 headless checks, 25 live); five
+mutations fail by name and one is a null result (`734` §8).
 
 ## The shipped Tier 2 catalogue (plans `330`, `344`)
 

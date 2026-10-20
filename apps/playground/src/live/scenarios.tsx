@@ -736,6 +736,46 @@ const clickRouting: LiveScenario = {
         "outer=0 mid=1 deep=0 plainbox=0 clear=0",
       );
 
+      const inlineCaseOf = (testId: string) =>
+        Effect.gen(function* () {
+          yield* ctx.host.click("cr-reset");
+          yield* settle;
+          yield* ctx.host.click(testId);
+          yield* settle;
+          return yield* textOf(ctx, "cr-inline-counts");
+        });
+
+      yield* ctx.expectEqual(
+        "a live in-flow label inside a handler box routes to the box",
+        yield* inlineCaseOf("cr-label"),
+        "label=1 abs=0 code=0 badgebox=0 row=0 textbtn=0",
+      );
+      yield* ctx.expectEqual(
+        "a live absolutely positioned label does not reach its handler box",
+        yield* inlineCaseOf("cr-abs"),
+        "label=0 abs=0 code=0 badgebox=0 row=0 textbtn=0",
+      );
+      yield* ctx.expectEqual(
+        "a live code surface inside a handler box routes to the box",
+        yield* inlineCaseOf("cr-code"),
+        "label=0 abs=0 code=1 badgebox=0 row=0 textbtn=0",
+      );
+      yield* ctx.expectEqual(
+        "a live label inside a painted handler-less child is swallowed",
+        yield* inlineCaseOf("cr-badge-label"),
+        "label=0 abs=0 code=0 badgebox=0 row=0 textbtn=0",
+      );
+      yield* ctx.expectEqual(
+        "a live label inside a focusable clickable row routes to the row",
+        yield* inlineCaseOf("cr-rowlabel"),
+        "label=0 abs=0 code=0 badgebox=0 row=1 textbtn=0",
+      );
+      yield* ctx.expectEqual(
+        "a live text element can own a click handler",
+        yield* inlineCaseOf("cr-textbtn"),
+        "label=0 abs=0 code=0 badgebox=0 row=0 textbtn=1",
+      );
+
       yield* ctx.host.screenshot(
         `${LIVE_ARTIFACTS}/${clickRoutingScenario.id}.png`,
       );
