@@ -170,6 +170,13 @@ describe("the shadcn/ui porting page", () => {
     expect(required.filter((block) => !page.includes(block))).toEqual([]);
   });
 
+  it("counts no row total in prose", () => {
+    const page = readFileSync(pagePath, "utf8");
+    const counted =
+      /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+shadcn\s+components/i;
+    expect(page).not.toMatch(counted);
+  });
+
   it("links the page that owns the CSS vocabulary instead of denying it", () => {
     const concepts = absentStylingConcepts.map((concept) => concept.concept);
     expect(concepts).toContain("className and CSS classes");
