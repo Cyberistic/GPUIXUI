@@ -373,6 +373,8 @@ references without buying correctness.
 | [733](./733-unchecked-selection-control.md) | The unchecked selection control's off switch and its unmeasured knob | F | 084, 332, 347, 503, 601, 651 | done |
 | [737](./737-disabled-fill-surface.md) | The disabled fill is a fill: measured on the panel it paints on | F | 306, 309, 595, 610, 733 | done |
 | [742](./742-pressed-row-exclusion-reason.md) | The pressed row's exclusion reason, after plan 723 | F | 359, 651, 663, 674, 700, 723 | done |
+| [744](./744-brand-edit-storage.md) | The brand edit `ThemeEdit` already carries | F | 685, 727, 742 | done |
+| [745](./745-light-brand-total-check.md) | The documented light brand fails the one-call guarantee | F | 098, 553, 574, 611–617, 742, 744 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3794,6 +3796,31 @@ the list's; plan `723` Decision 3 keeps those pairs at rest in
 metric or role moves: `selectionWashPairs` stays **11**, `selectionSurfaces` nine
 and `contrastPairs` **470**, and a new suite reads all six prose blocks and
 fails on the refuted reason or on a claim the pair lists contradict.
+
+744 corrects the one storage rule the extension story got wrong. `ThemeEdit` is
+`{ base, overrides }` — there is no whole-theme variant — but both the JSDoc and
+the catalogue said an edit of a base a `ThemeChoice` cannot name "is stored as
+the whole theme", so a consumer looked for an artifact the package never returns
+while the sentence hid the capability it has: `themeEdit` measures the overrides
+against the **resolved** choice, so a brand theme's differences travel in them
+and the pair reproduces the brand. The two sentences now state that mechanism
+and the one limit — a different `mode` returns `undefined`, and the caller keeps
+its theme object — and `theme-edit.test.ts` stores and replays a brand theme
+built from the identity, pins the artifact's two fields, and fails on the old
+sentence. No token, pair, colour, floor or metric moves.
+
+745 closes the one example the total check rejects. `brand-theme.example.ts`
+exports a dark brand the catalogue holds to `themeFailures` and a light brand
+`theme.test.ts` held only to `themeContrastFailures`; the light brand's
+`primaryText: "#5330C8"` measures **6.941:1** through the 3.5% ink a native
+`<markdown>`/`<code>`/`<diff>` paints under its body — a layer the native-text
+check gained after plan 098 wrote the family — so the executed example a consumer
+copies failed the package's own one-call guarantee while its contrast half
+passed. The link ink takes one designed step inside its violet family
+(`#5330C8` → **`#4B2AB4`**, 7.957:1 through the wash), both brands are held to
+`themeFailures`, and a regression case rebuilds the pre-fix palette and pins the
+three `nativeText` entries so the example cannot fall behind another check
+unnoticed. Only the example moves.
 
 ## How to use a plan
 
