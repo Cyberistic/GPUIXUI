@@ -1,13 +1,9 @@
 import { useTheme } from "fumadocs-ui/provider/base";
-import { Hero } from "./deck";
-import {
-  aiSurfaces,
-  attribution,
-  navLinks,
-  repo,
-  roadmapTiers,
-  shippingComponents,
-} from "./data";
+import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { Hero, PlatformWindow } from "./deck";
+import { Lineage } from "./lineage";
+import { demos } from "../docs/demos";
+import { attribution, navLinks, platforms, repo } from "./data";
 
 export function Landing() {
   return (
@@ -15,11 +11,10 @@ export function Landing() {
       <div className="landing-wrap">
         <Nav />
         <Hero />
+        <Lineage />
         <Licence />
-        <Platforms />
-        <MakeItYours />
-        <Library />
-        <Proof />
+        <Defaults />
+        <CodeAndComponent />
         <Footer />
       </div>
     </div>
@@ -148,168 +143,90 @@ function Licence() {
   );
 }
 
-function Platforms() {
-  const defaults = [
-    {
-      name: "macOS",
-      body: "System type, soft radii, traffic-light chrome.",
-    },
-    {
-      name: "Windows 11",
-      body: "Segoe-style type, square-ish controls, Mica-friendly surfaces.",
-    },
-    {
-      name: "Linux / Arch",
-      body: "Distro-neutral, high-contrast friendly, no assumptions.",
-    },
-  ] as const;
+const recipes = [
+  {
+    name: "Windows XP / 7 Aero",
+    body: "Luna surfaces, bevel edges, Segoe/Tahoma — an approximation where the runtime has no blur or inset shadow, labelled as such.",
+    href: "/docs/theming",
+  },
+  {
+    name: "Omarchy",
+    body: "Read the active theme's palette and re-apply it live when omarchy-theme-set runs.",
+    href: "/docs/theming",
+  },
+] as const;
 
+function Defaults() {
   return (
     <section className="landing-section" id="platforms">
-      <p className="landing-kicker">The three</p>
-      <h2 className="landing-h2">Defaults, not skins.</h2>
+      <p className="landing-kicker">Defaults, then make them yours</p>
+      <h2 className="landing-h2">Three native looks, one starting point.</h2>
       <p className="landing-lead">
-        Each platform ships its own default style. Pick one and it looks native
-        out of the box.
-      </p>
-      <div className="landing-grid3">
-        {defaults.map((item) => (
-          <div className="landing-panel" key={item.name}>
-            <h3>{item.name}</h3>
-            <p>{item.body}</p>
-            <span className="landing-stat">default</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function MakeItYours() {
-  const recipes = [
-    {
-      name: "Windows XP / 7 Aero",
-      body: "Luna surfaces, bevel edges, Segoe/Tahoma — an approximation where the runtime has no blur or inset shadow, labelled as such.",
-      stat: "recipe 433",
-    },
-    {
-      name: "Omarchy",
-      body: "Read the active theme's palette and re-apply it live when omarchy-theme-set runs.",
-      stat: "recipe 433",
-    },
-    {
-      name: "Your own",
-      body: "Copy a theme file, change any value, ship it. The source is yours.",
-      stat: "tokens only",
-    },
-  ] as const;
-
-  return (
-    <section className="landing-section">
-      <p className="landing-kicker">Make it yours</p>
-      <h2 className="landing-h2">A platform style is a starting point.</h2>
-      <p className="landing-lead">
-        Everything is tokens. Reshape Windows into XP or 7 Aero, or follow
-        Omarchy's live theme on Linux — without forking a component.
-      </p>
-      <div className="landing-grid3">
-        {recipes.map((item) => (
-          <div className="landing-panel" key={item.name}>
-            <h3>{item.name}</h3>
-            <p>{item.body}</p>
-            <span className="landing-stat">{item.stat}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Library() {
-  return (
-    <section className="landing-section" id="library">
-      <p className="landing-kicker">The library</p>
-      <h2 className="landing-h2">
-        Built in the open, verified in the runtime.
-      </h2>
-      <p className="landing-lead">
-        Foundations, composition, data, workspace and AI surfaces — each with a
-        docs page, an example and a native behaviour suite.
+        Each platform ships its own default — the same component in native
+        chrome and type. Pick one and it looks at home out of the box, then
+        reshape it with <a href="/docs/theming">tokens</a> or in the{" "}
+        <a href="/docs/themes">theme editor</a>.
       </p>
 
-      <h3 className="landing-h3">AI-native surfaces</h3>
       <div className="landing-grid3">
-        {aiSurfaces.map((item) => (
-          <div className="landing-panel landing-panel-ai" key={item.name}>
-            <h3>{item.name}</h3>
-            <p>{item.blurb}</p>
-            <span className={`landing-chip landing-chip-${item.status}`}>
-              {item.status}
-              {item.note ? ` · ${item.note}` : ""}
+        {platforms.map((platform) => (
+          <a
+            className="landing-default"
+            href="/docs/components/dialog"
+            key={platform.id}
+          >
+            <PlatformWindow platform={platform} />
+            <span className="landing-default-link">
+              Dialog docs <span aria-hidden="true">→</span>
             </span>
-          </div>
+          </a>
         ))}
       </div>
 
-      <h3 className="landing-h3">Shipping today</h3>
-      <div className="landing-tiles">
-        {shippingComponents.map((name) => (
-          <span className="landing-tile" key={name}>
-            {name}
-            <span aria-hidden="true" className="landing-tile-dot" />
-          </span>
-        ))}
-      </div>
-
-      <h3 className="landing-h3">On the roadmap</h3>
-      <div className="landing-tiles">
-        {roadmapTiers.map((tier) => (
-          <span className="landing-tile landing-tile-planned" key={tier.name}>
-            {tier.name} · {tier.detail}
-            <span className="landing-chip landing-chip-planned">planned</span>
-          </span>
+      <div className="landing-recipes">
+        {recipes.map((item) => (
+          <a
+            className="landing-panel landing-recipe"
+            href={item.href}
+            key={item.name}
+          >
+            <h3>{item.name}</h3>
+            <p>{item.body}</p>
+            <span className="landing-stat">recipe →</span>
+          </a>
         ))}
       </div>
     </section>
   );
 }
 
-function Proof() {
-  const proofs = [
-    {
-      name: "Native suite",
-      body: "Interactions exercised in a real GPUix window, not a DOM mock.",
-      stat: "18/18",
-    },
-    {
-      name: "Both themes",
-      body: "Every component checked in light and dark, plus high contrast, against the contrast contract.",
-      stat: "matrix",
-    },
-    {
-      name: "Documented limits",
-      body: "What the runtime cannot do is written down with evidence — never faked.",
-      stat: "capability map",
-    },
-  ] as const;
+function CodeAndComponent() {
+  const demo = demos["tabs-demo"];
+  if (demo === undefined) {
+    throw new Error('CodeAndComponent: no demo named "tabs-demo"');
+  }
 
   return (
-    <section className="landing-section" id="proof">
-      <p className="landing-kicker">Proof</p>
-      <h2 className="landing-h2">No fake screenshots.</h2>
+    <section className="landing-section" id="code">
+      <p className="landing-kicker">Code, rendered</p>
+      <h2 className="landing-h2">The code and the component.</h2>
       <p className="landing-lead">
-        451 native behaviour checks across the component set, with the honest
-        limitations written down instead of hidden.
+        The API you read is the API you ship. A Tabs composition — compound
+        parts, typed triggers, keyboard navigation — next to the component it
+        renders.
       </p>
-      <div className="landing-grid3">
-        {proofs.map((item) => (
-          <div className="landing-panel" key={item.name}>
-            <h3>{item.name}</h3>
-            <p>{item.body}</p>
-            <span className="landing-stat">{item.stat}</span>
-          </div>
-        ))}
+
+      <div className="landing-code">
+        <DynamicCodeBlock lang="tsx" code={demo.source} />
+        <div className="landing-code-preview">
+          <div className="gx-demo">{demo.render()}</div>
+        </div>
       </div>
+
+      <p className="landing-code-caption">
+        <a href="/docs/components/tabs">Tabs</a> — a compound-part component;
+        browser preview of the native geometry and palette.
+      </p>
     </section>
   );
 }

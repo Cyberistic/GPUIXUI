@@ -154,10 +154,17 @@ engine. From `packages/tw/src/motion.ts:1-16,138-145`:
 - The renderer animates **opacity, size, position, radius** only — **no
   `transform`** (`motion.ts:4-8`). `zoom-in/out` stay `unsupported`
   (`motion.ts:143`).
-- There is **no `AnimatePresence`/presence API** and **no JS-side spring/tween
-  engine**: `COMPONENTS.md:59-63` ("no `./button` … `AnimatePresence` +
-  `createPortal`"), `COMPONENTS.md:132-135` (skeletons/progress via "opacity
-  `motion`"), `COMPONENTS.md:174` (drawer "no slide animation (no transform)").
+- **Correction (see §5):** `AnimatePresence` + `usePresence`/`useIsPresent` **do
+  ship** in the pinned `@gpuix/react@0.10.0` (and `@gpuix/solid@0.10.0`). The
+  earlier draft misread `COMPONENTS.md:59-63`, which actually lists
+  `AnimatePresence` as an *available* building block for toasts; the changelog,
+  homepage, and Solid guide all document it (changelog `@gpuix/react@0.10.0`
+  item 2, `@gpuix/solid@0.10.0` item 1; homepage "Animate unmount"). What is
+  still absent is a **JS-side spring/tween engine**: the renderer only tweens
+  `initial`→`animate`→`exit` over `duration`/`ease` — no springs, keyframes,
+  variants, or `transform` (`motion.ts:4-8,143`; homepage "Targets and timing"
+  "Springs, keyframes, variants, and shared layout animations are not available
+  yet").
 
 So GPUix **executes** opacity/size/position/radius transitions on its own clock;
 it does **not** compute spring values, retarget, sequence, or expose progress
@@ -354,6 +361,8 @@ techniques, which MIT permits with attribution.
 | ------- | ------- | -------- |
 | open-gpui `crates/motion` | **port** (the math to TS) | Pure std-only crate (no `[dependencies]`, `Cargo.toml`; purity asserted by `tests/public_contracts.rs:394-420`); Apache-2.0 permits adaptation; GPUix `motion` is a renderer-native executor with no JS-side physics (`packages/tw/src/motion.ts:1-16`), so the spring/timeline/sequence/retarget model is net-new. |
 | Ely-GPUI-Components | **spec-only** (skip Rust source) | MIT permits adaptation, but the crate is GPUI-bound (`gpui-pre =0.3.8`, `motion` imports `gpui`/`ActiveTheme`); the port targets a different runtime with a smaller capability surface. Take: theming technique, palette cross-fade, reduced-motion helper, semantic-colour checklist, and the Tier 3–5 catalogue as a gap list. Do not import Rust. |
+| GPUix runtime `motion` (0.10.0) | **take as-is** (presence/exit + scalar tweens) | n/a (closed renderer) | `AnimatePresence`/`usePresence`/`useIsPresent`/`onMotionComplete` and opacity/size/position/radius tweens now ship (changelog 0.10.0, homepage "Native animations"). Do **not** reimplement presence; the net-new JS layer is physics/keyframes/inertia only. |
+| gpui-motion `gpui-ce-motion` (0.4.0) | **borrow API shape + easing + inertia** | Pure core (`default = []`, `gpui` optional, §5.2) | MIT OR Apache-2.0 (`Cargo.toml`). Complementary to open-gpui: broader Motion-like API (`Target`/`Presence`/`Variants`/`GestureTargets`/`Inertia`, richer `Easing`) but no policy layer. Port the *math* from open-gpui; borrow the *surface* from here. No Rust import. |
 
 No new dependency is proposed. No Rust code is imported.
 
@@ -405,3 +414,188 @@ No new dependency is proposed. No Rust code is imported.
 **Versions**: open-gpui-motion `0.2.0` (workspace), Ely `0.1.1`, `@gpuix/react`
 `0.10.0`, `@gpuix/native` `0.10.0`, `effect` `4.0.5` (all from the respective
 `Cargo.toml` / `package.json` catalogs).
+
+---
+
+## 5. Motion sources compared
+
+Two more sources, read 2026-10-20 in a fresh clone of `Cyberistic/GPUIXUI`
+(`@gpuix/react@0.10.0`, `@gpuix/native@0.10.0`): the **GPUix docs** (Solid guide
++ homepage React "Native animations" + changelog) and **`gpui-motion`**
+(shallow clone `1bye/gpui-motion` @ `fd9baf9`, crate `gpui-ce-motion` `0.4.0`).
+
+> There is **no `/guides/react` page** — `https://gpuix.dev/guides/react` returns
+> 404 and `/llms.txt` lists only `index`, `guides/solid`, `guides/hermes`,
+> `changelog`. The React motion API lives on the **homepage**
+> (`https://gpuix.dev/index.md`, section **"Native animations"**), which I quote
+> below. The Solid guide's **"Motion"** section (`guides/solid.md`) mirrors it.
+
+### 5.1 What the GPUix runtime actually provides (docs, not source)
+
+- `motion.div` (and `motion` in `@gpuix/solid`) with `initial` / `animate` /
+  `exit` / `transition` / `style`, plus `onMotionComplete`. React sends the
+  target **once**; Rust computes intermediate values on its own clock with no
+  per-frame React render or N-API call (homepage "Animate a target").
+- Numeric targets only: **`width`, `height`, `top`, `right`, `bottom`, `left`,
+  `opacity` (0–1), `borderRadius`** (homepage "Targets and timing"; Solid
+  "Motion"). No `transform`.
+- Transition: `duration` (seconds, default `0.3`), `delay` (seconds, default
+  `0`), `ease` = `"linear" | "ease" | "easeIn" | "easeOut" | "easeInOut" |
+  [x1,y1,x2,y2]` (default `"easeOut"`). §1.5's ease enum omitted `"ease"`; the
+  canonical token set includes it.
+- Explicit gap, verbatim: **"Springs, keyframes, variants, and shared layout
+  animations are not available yet."** (homepage "Targets and timing").
+- **`AnimatePresence`** (added `@gpuix/react@0.10.0`, Sep 21 2026; Solid has it
+  in `0.10.0` too): `AnimatePresence` (`initial={false}`, `onExitComplete`),
+  `useIsPresent()`, `usePresence()` → `[isPresent, safeToRemove]`, child `exit`
+  targets, unique `key` per leaving child (homepage "Animate unmount";
+  changelog `@gpuix/react@0.10.0` item 2, `@gpuix/solid@0.10.0` item 1).
+- Deterministic frame capture for tests: `app.clock.pause()` +
+  `app.captureFrames(path, [t0, t0+50, …])` freezes the native motion clock
+  (homepage "Capture exact frames").
+
+**Gaps a `packages/motion` must still add:** springs, keyframes, variants,
+inertia/momentum, colour interpolation, sequence/stagger orchestration,
+transform/projection math, and reduced-motion-as-policy on the JS side. The
+renderer has **no JS-side physics**; it is a declarative tween executor.
+
+### 5.2 What `gpui-motion` adds (and whether it is pure)
+
+`gpui-ce-motion` `0.4.0`, Rust 1.95, edition 2024. License **MIT OR Apache-2.0**
+(`Cargo.toml`), "Copyright (c) 2026 1keep contributors" (`LICENSE-MIT`),
+extracted from 1keep @ `0cb95d0`.
+
+- **Public surface** (README "Public export index"): `Motion`/`MotionState`/
+  `Target`/`Frame`/`Presence`/`Property`, `Transition`/`Spring`/`Easing`/
+  `Bezier`/`CustomEasing`, `MotionValue`/`ValueFrame`/`Inertia`, `Animation`/
+  `AnimationState`/`Keyframe`/`Timeline`/`Repeat`/`stagger`, `Color`/
+  `ColorState`, `Drag`/`GestureTargets`/`InView`/`Interaction`/`Variants`,
+  `PresenceGroup`/`PresenceMode`, `SvgMotion`/`SvgTarget`, `StyleMotion`/
+  `StyleTarget`, `MotionGraph`, `MotionTree`/`MotionConfig`, `TypedAnimation`/
+  `TypedTimeline`/`TypedState`, `PathShape`/`PathMorphState`/`StrokeReveal`,
+  `LayoutPositionState`, `GeometryError`/`ScrollEdge`/`ScrollOffsets`.
+- **Physics** (`transition.rs`, `value.rs`): `Easing::sample(t) -> (value,
+  derivative)` covers Linear / EaseIn / EaseOut / EaseInOut / CircIn/Out/InOut /
+  BackIn/Out/InOut / Anticipate / Bezier / Custom; `Spring` + `Transition`
+  (tween or spring); `MotionValue` retains position + velocity (retarget,
+  jump); `Inertia` = exponential deceleration + hard bounds + boundary spring +
+  `project`.
+- **Composition**: `Variants` (named states), `GestureTargets` (`while_hover`/
+  `while_press`/`while_focus`/`while_drag`/`while_in_view`), `PresenceGroup`
+  (enter/exit), `MotionTree` (parent/child variant inheritance + stagger/
+  sequence), `Timeline`/`TypedTimeline` (keyframes, labels, stagger),
+  `MotionGraph` (reactive derived values + subscriptions), linear-light colour
+  interpolation, plus text/SVG/vector motion (README; `COVERAGE.md`).
+- **Reduced motion** is an explicit `sample(elapsed, reduced_motion: bool)`
+  flag; native adapters read `App::reduce_motion()` (README "Lifecycle and
+  accessibility"; `lib.rs` doc example).
+
+**Purity: yes, the core is pure.** `Cargo.toml` sets `default = []`; `gpui`,
+`text`, `svg-path`, and `demo` are all opt-in features. The pure modules
+(`motion`, `transition`, `value`, `animation`, `motions`, `color`, `interaction`,
+`presence`, `svg`, `layout`, `style_motion`, `geometry`, `graph`,
+`orchestration`, `completion`, `typed_animation`, `vector`) import only `std` +
+`crate::*`; `gpui` appears solely behind `#[cfg(feature = "gpui")]` (the
+`frame`/`now` methods and the `*_native` modules — verified by grep across the
+module set above). Same portability profile as open-gpui: the caller owns the
+clock and passes an elapsed `Duration`. Default build has **zero** third-party
+dependencies (`svgtypes`, `unicode-segmentation`, `gpui-ce =0.2.2`,
+`gpui_ce_platform =0.1.0` are all optional).
+
+### 5.3 Is it pure / better than open-gpui, or complementary?
+
+**Complementary, not a replacement.** open-gpui `crates/motion` is the focused,
+minimal *physics + policy* layer (closed-form spring retarget, `MotionSpec`/
+`MotionEasing`, keyed `MotionSequence`, `validate_motion_policy`
+downgrade-to-immediate, projection). `gpui-motion` is the **broad Motion-like
+API** (targets/variants/gestures/presence/inertia/keyframes/timeline/stagger/
+graph) with a richer easing set and momentum, but no policy layer and no
+projection-policy machinery. For a TS `packages/motion` over GPUix: **port the
+math from open-gpui** (smaller, policy-aware, already vetted in §1) and
+**borrow the API surface + easing variants + `Inertia` from gpui-motion**
+(dual-licensed MIT/Apache, pure core). Its `Target`/`Motion`/`MotionState.
+sample(elapsed, reduced_motion)` and `Presence`/`Variants`/`GestureTargets`
+map 1:1 onto a React hook, which open-gpui's facade does not.
+
+### 5.4 Comparison table
+
+| Source | What it provides | Purity | License | Take / skip |
+| ------ | ---------------- | ------ | ------- | ----------- |
+| GPUix runtime `motion` (`@gpuix/react@0.10.0`) | declarative tween executor: `initial`/`animate`/`exit` + `transition{duration,delay,ease}`; `AnimatePresence`/`usePresence`/`useIsPresent`/`onMotionComplete`; opacity/size/position/radius only | n/a (closed renderer) | n/a (runtime) | **take as-is** for presence/exit + scalar tweens; skip reimplementing presence; gap = physics/keyframes/transform |
+| open-gpui `crates/motion` (`0.2.0`) | springs (retarget, under/critical/over-damped), easing/spec, keyed sequences, reduced-motion policy, projection/geometry | pure, zero deps | Apache-2.0 (+ Zed NOTICE) | **port the math** (`spring.ts`/`timeline.ts`/`policy.ts`) |
+| `gpui-motion` `gpui-ce-motion` (`0.4.0`) | Motion-like API: spring/tween/easing (+Circ/Back/Anticipate)/Bezier, keyframes/timeline/stagger, variants, gesture targets, presence, inertia/momentum, colour, graph, orchestration, typed clips; GPUI adapters behind `gpui` feature | pure core (`default = []`), `gpui` optional | MIT OR Apache-2.0 | **borrow API shape + easing + `Inertia`**; skip text/SVG/vector/native modules |
+
+### 5.5 Reconciled verdict + revised first slice
+
+**Reconciled verdict** (updates §1.5 and §3):
+
+1. Presence/exit is **solved by the runtime** (`0.10.0`) — do **not** rebuild
+   `AnimatePresence`/`usePresence`.
+2. The net-new JS layer is **physics + policy + keyframes + inertia**: springs,
+   easing, retarget, momentum, reduced-motion, sequences — which GPUix's tween
+   executor does not compute.
+3. Port the **math from open-gpui** (§1, already vetted); borrow the **API
+   surface + easing variants + `Inertia` from gpui-motion** (§5.2).
+4. No new npm dependency, no Rust import. Dual attribution: Apache-2.0
+   (open-gpui, Zed + Open GPUI lines) and MIT (gpui-motion, "Copyright (c) 2026
+   1keep contributors") under `LICENSES/`.
+
+**Revised first slice** (supersedes §1.6's list where it differs):
+
+1. `packages/motion/src/spring.ts` — open-gpui `spring.rs` closed-form
+   under/critical/over-damped sampling + retarget + `rest_delta`/`rest_speed` +
+   sanitize, **plus** gpui-motion `Spring`/`Transition`/`Inertia`
+   (`transition.rs`, `value.rs`) for momentum/bounds.
+2. `packages/motion/src/timeline.ts` — open-gpui `MotionSpec`/`MotionEasing`
+   (`motion.rs`) **plus** gpui-motion `Animation`/`Keyframe`/`Timeline`/`stagger`
+   and the extended `Easing` set (Circ/Back/Anticipate/Bezier).
+3. `useMotion(target, spec)` hook — shape borrowed from gpui-motion
+   `Target`/`Motion`/`MotionState.sample(elapsed, reduced_motion)`, returning
+   `{ value, velocity, present, complete }`; reduced-motion branch returns the
+   final value immediately (open-gpui `MotionPreference::Reduced`, gpui-motion
+   `sample(_, true)`).
+4. **Leave to the runtime**: `AnimatePresence`/`usePresence`/`useIsPresent`/
+   `onMotionComplete` and all opacity/size/position/radius tweens. Our hook
+   feeds `animate` targets (or computes transform/projection/scrub values the
+   runtime cannot animate).
+5. **Skip**: subtree transform (the runtime has none; both crates defer it —
+   open-gpui projection is geometry-only, `COVERAGE.md` "Scale/rotation/skew/
+   perspective … unsupported"), text/SVG/vector motion, and the `gpui`-feature
+   native adapters (gesture/scroll/reorder/layout).
+
+STOP condition (added to §1.6's list): if `onMotionComplete` + the automation
+clock (`clock.pause()`/`captureFrames`) cannot deterministically assert spring
+settling in the playground, report rather than improvise.
+
+### 5.6 API shape worth borrowing from the guides
+
+- Both guides express transitions as **declarative target triples** —
+  `<motion.div initial={{…}} animate={{…}} exit={{…}} transition={{ duration,
+  ease }}>` wrapped in `AnimatePresence`. Mirror this in `packages/motion`: a
+  single declarative `Motion` descriptor (initial/target/exit + transition),
+  not an imperative tween call, so it composes with the runtime's own
+  `motion.div` and `AnimatePresence`.
+- The runtime's **seconds** `duration` + **named `ease`** (or cubic-bezier
+  tuple) is the vocabulary `timeline.ts`/`spring.ts` should speak, so produced
+  values map cleanly onto `transition`/`animate` props.
+- `initial={false}` ("mount at the first `animate` target") and `usePresence()`
+  / `safeToRemove` (deferred removal) are worth mirroring in the hook API.
+- gpui-motion's "ownership in four rules" (retain state; declare the
+  destination; keep exits mounted; use one clock) is the discipline our
+  `useMotion`/`useTransition` hooks should adopt — a retained `MotionState` over
+  one monotonic `performance.now()` epoch.
+
+### 5.7 Citations
+
+| Finding | Source |
+| ------- | ------ |
+| React `motion`/`AnimatePresence`/`onMotionComplete`/`captureFrames`, targets + "not available yet" | `https://gpuix.dev/index.md` → "Native animations" ("Animate a target", "Targets and timing", "Animate unmount", "Capture exact frames") |
+| Solid `motion`/`AnimatePresence`/`usePresence`, targets + ease list | `https://gpuix.dev/guides/solid.md` → "Motion" |
+| `AnimatePresence` release notes | `https://gpuix.dev/changelog.md` → `@gpuix/react@0.10.0` item 2, `@gpuix/solid@0.10.0` item 1 |
+| No React guide (404 / index) | `https://gpuix.dev/llms.txt`, `https://gpuix.dev/guides/react` |
+| gpui-motion crate/features/license/deps | `gpui-motion/Cargo.toml` (name `gpui-ce-motion`, `0.4.0`, `default = []`, `gpui` optional, `license = "MIT OR Apache-2.0"`) |
+| Pure core vs `gpui`-gated modules | `gpui-motion/src/lib.rs` (`#[cfg(feature = "gpui")]` gates), grep of `src/*.rs` imports |
+| Easing/Spring/Transition | `gpui-motion/src/transition.rs:1-140` (`Easing::sample` → `(value, derivative)`) |
+| MotionValue/Inertia (momentum) | `gpui-motion/src/value.rs:1-120` |
+| API catalogue + renderer limits | `gpui-motion/README.md` "Public export index", `COVERAGE.md` |
+| License text | `gpui-motion/LICENSE-MIT` ("Copyright (c) 2026 1keep contributors"), `LICENSE-APACHE` |

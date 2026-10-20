@@ -5,9 +5,10 @@ import type { Platform } from "./data";
 const SHUFFLE_MS = 1600;
 
 /**
- * The hero: a centered headline with the platform switch as the segmented
- * control above it, and the deck presented as a product window below. Owns the
- * shuffle state so the "Certified on …" line always tracks the top card.
+ * The hero: a centered headline with actions, then the platform switch as the
+ * control for the deck, and the deck as a single dialog window that shuffles
+ * between the three platform looks. Owns the shuffle state so the switch and
+ * the deck stay in sync.
  */
 export function Hero() {
   const [top, setTop] = useState(0);
@@ -36,17 +37,8 @@ export function Hero() {
     setPaused(true);
   };
 
-  const current = platforms[top] ?? platforms[0];
-
   return (
     <header className="landing-hero">
-      <div className="landing-hero-badge">
-        <span className="landing-pill">New</span>
-        <p className="landing-eyebrow">GPUix + React · native components</p>
-      </div>
-
-      <PlatformSwitch onChange={select} value={top} />
-
       <h1 className="landing-title">
         One library.
         <br />
@@ -75,55 +67,44 @@ export function Hero() {
         </a>
       </div>
 
-      <p className="landing-cert">
-        Certified on <strong>{current.label}</strong>
-      </p>
+      <div className="landing-switch-row">
+        <PlatformSwitch onChange={select} value={top} />
+      </div>
 
       <div
-        className="landing-window"
+        className="landing-deck"
         onBlur={() => setPaused(false)}
         onFocus={() => setPaused(true)}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        <div aria-hidden="true" className="landing-window-bar">
-          <span className="landing-window-dots">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span className="landing-window-name">GPUIxUI</span>
-          <span className="landing-window-spacer" />
-        </div>
-        <div aria-hidden="true" className="landing-deck">
-          {platforms.map((platform, index) => (
-            <DialogCard
-              key={platform.id}
-              platform={platform}
-              position={(index - top + platforms.length) % platforms.length}
-            />
-          ))}
-        </div>
+        {platforms.map((platform, index) => (
+          <PlatformWindow
+            key={platform.id}
+            platform={platform}
+            position={(index - top + platforms.length) % platforms.length}
+          />
+        ))}
       </div>
-
-      <p className="landing-deck-note">
-        Illustrative — the same Dialog component on each platform. Native
-        captures land with the playground gallery.
-      </p>
     </header>
   );
 }
 
-function DialogCard({
+/**
+ * One dialog window in a platform's chrome. The dialog itself is the window —
+ * no outer shell. Used by the hero deck (shuffled) and the defaults section
+ * (side by side).
+ */
+export function PlatformWindow({
   platform,
   position,
 }: {
   platform: Platform;
-  position: number;
+  position?: number;
 }) {
   return (
     <div
-      className={`landing-card landing-card-${platform.chrome}`}
+      className={`landing-window landing-window-${platform.chrome}`}
       data-pos={position}
     >
       <Bar platform={platform} />
