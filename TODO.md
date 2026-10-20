@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 365/444
+`[x]` `[████████░░]` 366/445
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -3165,6 +3165,20 @@ each range through the composition its sentence names, and holds the failing
 count, the range and the floor word to it — each case fails on a mutated digit, a
 moved canvas or a collapsed count; no colour, pair, floor, metric or recipe moves
 (plan 800)
+`[x]` Give the palette's inline rationale figures an owner — `color.ts` quotes
+the `disabled` fill's step off the quiet panel and the popover (`1.131:1`), the
+AAA light panel inks' pre-729 range (`1.003–1.042:1`) and current step
+(`1.109–1.133:1`) beside the caption's own `#1F1F1F`, and the AAA raised
+action's label through the inverse veil (`7.165:1`) and fill off the four soft
+tints (`1.071:1`) — all in `//` comments that no suite read, because
+`disabled-fill-claims.test.ts` reads the `lightColors` doc block and the role
+JSDoc while `soft-panel-caption-tier.test.ts` derives the current step; a palette
+edit above every floor could leave the file a consumer copies quoting a margin
+the package no longer produces. `palette-rationale-figures.test.ts` reads only
+the `//` lines, derives each figure, plants `palette[ramp][950]` for the range
+whose sentence names that stop, and holds each sentence whole; every case fails
+under a mutated digit, a moved ramp step or a retuned veil; no colour, pair,
+floor, metric, role or shipped theme moves (plan 803)
 
 ## Phase C — Tier 1–2 components
 

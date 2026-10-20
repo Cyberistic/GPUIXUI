@@ -404,6 +404,7 @@ references without buying correctness.
 | [798](./798-linux-wash-premise.md) | The Linux wash rationale's figure and its premise | F | 506, 535, 710, 781, 795 | done |
 | [799](./799-aero-disabled-rationale.md) | The Aero recipe's disabled-fill rationale has no owner | F | 535, 737, 795 | done |
 | [800](./800-recipe-status-ink-ranges.md) | The recipes' three inherited status-ink ranges have no owner | F | 535, 574, 582, 649, 799 | done |
+| [803](./803-palette-rationale-figures.md) | The palette's inline rationale figures have no owner | F | 504, 528, 729, 737, 800 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4103,6 +4104,20 @@ composition the sentence names (opaque and 3.5% ink; the active find match over
 count, the en-dash range and the floor word to the derivation. Each case fails
 on a mutated digit, a moved canvas or a collapsed count. No colour, pair, floor,
 metric, role, recipe or shipped theme moves; `contrastPairs` stays **470**.
+
+Plan `803` closes the same class inside the palette itself, where no suite read
+the comments at all: `disabled-fill-claims.test.ts` owns the `lightColors` doc
+block and the `ThemeColors.disabled` JSDoc, and `soft-panel-caption-tier.test.ts`
+derives the current caption step, but neither sees a `//` line — so the
+`disabled` fill's 1.131:1 on the quiet panel and the popover, the AAA light
+panel inks' pre-729 1.003–1.042:1 and current 1.109–1.133:1 ranges, the quoted
+`#1F1F1F` caption, and the AAA raised action's 7.165:1 through the inverse veil
+and 1.071:1 off the four soft tints could all be retyped while every gate stayed
+green. `palette-rationale-figures.test.ts` reads only the `//` lines, derives
+each figure through `contrastRatio`/`compositeOver`/`contrastFloors`, plants
+`palette[ramp][950]` for the range whose own sentence names that stop, and holds
+each sentence whole. No colour, pair, floor, metric, role or shipped theme
+moves.
 
 ## How to use a plan
 
