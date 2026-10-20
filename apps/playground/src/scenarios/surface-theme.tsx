@@ -36,6 +36,7 @@ import {
   CODE_FONT_SIZE,
   CODE_LINE_HEIGHT,
   CODE_SAMPLE,
+  CODE_WASH_ALPHA,
   DARK_INK_FLOOR,
   GUTTER_WIDTH,
   LIGHT_INK_CEILING,
@@ -57,6 +58,7 @@ import {
   hunkPaint,
   nativeContentTheme,
   scanDarkest,
+  washOver,
 } from "./surface-theme-model.js";
 
 const theme = palettes.dark;
@@ -226,7 +228,11 @@ const expectInk = <Host, E>(
   testId: string,
   expected: Pixels.Rgba,
   label: string,
-  options: { readonly band?: number; readonly minimum?: number } = {},
+  options: {
+    readonly band?: number;
+    readonly minimum?: number;
+    readonly tolerance?: number;
+  } = {},
 ): Effect.Effect<void, Smoke.SmokeAssertionError | E> =>
   Effect.gen(function* () {
     const box = yield* paintedBox(ctx, reader, testId);
@@ -237,7 +243,7 @@ const expectInk = <Host, E>(
       yield* reader.windowSize(),
       target,
       expected,
-      INK_TOLERANCE,
+      options.tolerance ?? INK_TOLERANCE,
     );
     const minimum = options.minimum ?? MIN_SURFACE_PIXELS;
     const ok = minimum === 0 ? scan.near === 0 : inkEvidence(scan, minimum);
@@ -390,6 +396,18 @@ const check = <Host, E>(
       ink.code,
       "the default inline code does not paint the codeText token",
       { minimum: 0 },
+    );
+    // The chip behind the run is the codeWash fill: 12 % primary over the card.
+    yield* expectInk(
+      ctx,
+      driver.reader,
+      frame,
+      "st-md-code",
+      washOver(ink.code, CODE_WASH_ALPHA, ink.card),
+      "the inline-code chip paints the codeWash wash",
+      // The card's own border (#2A303B) is within INK_TOLERANCE of the chip
+      // composite, so this check needs the chip's exact interior fill.
+      { tolerance: 2 },
     );
 
     // 2. The accent field: the bullet disc, and the link's monochrome rule.

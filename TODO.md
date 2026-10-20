@@ -156,9 +156,12 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       hosts — dark **`#1A1D23`**, light `#ECEFF1` — and the old value fails by
       name (`expected #1a1d23ff, got #222730ff`, exit `1`); two unit guards
       failed with `expected '30' to be '1F'`. `surface-theme` and
-      `live-surface-theme` went **50 → 55** checks each; playground tests
-      **635 → 642**; `nub run check`/`lint`/`test` green. The inline-code chip's
-      own pixels stay unsampled (its geometry follows the text layout). Focused
+      `live-surface-theme` went **50 → 57** checks each (the inline-code chip is
+      scanned for its composite `#2A2E3F`; the first attempt was **vacuous** —
+      the card's border `#2A303B` is within 6 of it — so that check uses
+      tolerance 2, and the opaque mutation then failed `got 12/35552 pixels,
+      closest #2a2f3dff`); playground tests
+      **635 → 642**; `nub run check`/`lint`/`test` green. Focused
       ids run: `surface-theme`, `live-surface-theme` (plus the two mutation
       runs). Plan: `.agents/slop/plans/816-content-surface-washes.md`.
 

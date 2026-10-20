@@ -104,11 +104,13 @@ diffHunkBg: alpha(theme.colors.mutedForeground, 0.06),
    differs from `muted` by more than the tolerance, so restoring the old value
    fails **by name** rather than merely differing.
 
-The inline-code chip is **not** pixel-sampled: the chip's geometry depends on
-the runtime's text layout (`INLINE_CODE_PAD_X`/`INSET_Y`), and a glyph-free
-sample point inside it cannot be derived without a new scan. Its translucent
-value is pinned by the mapping test, and the hunk band proves the same mechanism
-(an alpha theme field reaching the paint) in both hosts. Recorded, not hidden.
+The inline-code chip **is** sampled — not by geometry but by scanning the
+panel for the expected composite (`washOver(primary, 0.12, card)`), because the
+chip's exact position depends on the runtime's text layout. The scan must use
+tolerance **2**, not `INK_TOLERANCE`: the card's own border (`#2A303B`) is
+within 6 channels of the chip composite (`#2A2E3F`), so the first attempt
+counted the border and passed with the opaque mutation still in place — see
+§9. This is the same class of trap plan `745` recorded for a 2 px border band.
 
 ### 3.3 The pure guards
 
@@ -195,6 +197,7 @@ No other path is edited.
 | `both washes differ from the plane and from muted` | invisibility and the regression fingerprint | both equal `muted`/plane |
 | `the light palette keeps the relation` | derived, not literal, values | a hardcoded dark colour |
 | `the hunk header paints diffHunkBg over the diff plane` (runtime, both hosts) | the value reaches the paint | restoring `muted` |
+| `the inline-code chip paints the codeWash wash` (runtime, both hosts) | the chip's composite reaches the paint, at tolerance 2 | restoring `muted` (and at `INK_TOLERANCE` the check is vacuous — the card border matches) |
 
 Each runtime check must name the measured values in its failure message, as the
 existing surface checks do.
@@ -222,8 +225,9 @@ existing surface checks do.
 
 - `nativeContentTheme` maps both fields through `alpha` from semantic roles.
 - The unit tests fail against the old opaque mapping and pass against the new.
-- `surface-theme` and `live-surface-theme` each report **55** checks, green, and
-  the hunk-band check fails by name when the old value is restored.
+- `surface-theme` and `live-surface-theme` each report **57** checks, green, and
+  both the hunk-band and chip checks fail by name when the old value is
+  restored.
 - The README section records the measured composites and the chip limit;
   `COMPONENTS.md` and the ledgers are updated.
 - `nub run check`, `nub run lint`, `nub run test` green.
@@ -256,11 +260,19 @@ and `surface-theme` failed by name with
 | Run | Result |
 | --- | ------ |
 | `nub run --filter playground test` | 642 tests (635 → **642**, +7) |
-| `nub apps/playground/dist/smoke/run.js --only surface-theme` | 1/1, **55** checks, exit `0` (~31–34 s) |
-| `nub apps/playground/dist/live/run.js --only live-surface-theme` | 1/1, **55** checks, exit `0` (~25 s) |
+| `nub apps/playground/dist/smoke/run.js --only surface-theme` | 1/1, **57** checks, exit `0` |
+| `nub apps/playground/dist/live/run.js --only live-surface-theme` | 1/1, **57** checks, exit `0` |
 | `nub run check` / `lint` / `test` | all exit `0` |
 
-The inline-code chip stays unsampled, as §3.2 recorded; the hunk band proves
-the fill mechanism in both hosts. Files: `surface-theme-model.ts` (+ test),
+**The chip follow-up (a measured correction).** The first version of this plan
+left the chip unsampled. Scanning the panel for the composite instead is
+cheaper and exact, so the scenario gained
+`the inline-code chip paints the codeWash wash`. The first attempt used
+`INK_TOLERANCE` and **passed with `codeWash: muted` still in place**: the card's
+border `#2A303B` is within 6 channels of `#2A2E3F`, so the border alone met the
+32-pixel floor. Tightening this one check to tolerance **2** made the mutation
+fail by name (`got 12/35552 pixels, closest #2a2f3dff`) and the corrected
+mapping pass in both hosts. The reported colour is the chip's exact interior
+fill, not a geometry guess. Files: `surface-theme-model.ts` (+ test),
 `surface-theme.tsx`, `apps/playground/README.md`, `COMPONENTS.md` (three rows),
 the plan index and `TODO.md`.

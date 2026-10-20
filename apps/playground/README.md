@@ -2565,7 +2565,7 @@ scenario in either registry passed one**. The runtime's base is always
 `Theme::dark()` (`Theme::from_prop(None)`), so a preview or code block inside
 our light palette painted Comet's colours while bounds, painted text and the
 authored style report all stayed green. `surface-theme` /
-`live-surface-theme` (**55 checks each**) mount eleven fixtures on one
+`live-surface-theme` (**57 checks each**) mount eleven fixtures on one
 880 × 580 stage — the themed mount beside its default twin — and read a single
 A/B frame per host:
 
@@ -2602,14 +2602,17 @@ carries both. The hunk band is asserted in both hosts; restoring `muted` fails
 `expected #1a1d23ff, got #222730ff`, and the opaque mapping fails two unit
 guards (`expected '30' to be '1F'`).
 
-**Not claimed:** the inline-code chip's own pixels — its geometry follows the
-runtime's text layout (`INLINE_CODE_PAD_X`/`INSET_Y`), and a glyph-free sample
-point inside it cannot be derived without a new scan, so its translucent value
-is pinned by the mapping test while the hunk band proves the fill mechanism.
-`border` (table hairline), `textDim` and `caret` are mapped and unit-tested but
-not pixel-sampled; `font_sans` / `font_mono` advances are already measured by
-`font-family` for `<text>`. The diff row bands assume the default 36/28/21
-metrics.
+The inline-code chip is sampled too, without deriving its geometry: the panel
+is scanned for the expected composite `#2A2E3F` (12 % `primary` over `card`),
+which the runtime paints as a solid quad. That check needs tolerance **2**, not
+`INK_TOLERANCE`: the card's own border `#2A303B` is within 6 channels of the
+chip colour, so the first version passed even with the opaque `muted` mapping
+(mutation `got 12/35552 pixels, closest #2a2f3dff` after tightening).
+
+**Not claimed:** `border` (table hairline), `textDim` and `caret` are mapped and
+unit-tested but not pixel-sampled; `font_sans` / `font_mono` advances are already
+measured by `font-family` for `<text>`. The diff row bands assume the default
+36/28/21 metrics.
 
 ### The modal veil: what the scrim actually paints (plan `791`)
 
