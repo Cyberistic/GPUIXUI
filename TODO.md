@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 332/410
+`[x]` `[████████░░]` 333/411
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2846,6 +2846,18 @@ which `trackMarkPairs` now holds on the groove. An unchecked checkbox keeps its
 transparent box and takes `borderStrong` (row 601). Copy the composition from
 `packages/tokens/src/unchecked-selection.example.ts` (owner: `primitives`;
 plan 733)
+`[x]` Hold the disabled fill like the fill it is — `disabledControl(theme)`
+returns the fill, its label and its edge at `opacity: 1`, but plan `306`
+exempted the fill with "no neutral can clear both a white card and the quiet
+panel", which is false (the shipped light fill cleared both at 1.133:1 and
+1.103:1 against a 1.05:1 floor); seven shipped pairs in six sets sat under the
+surface floor — the identity dark fill **was** its `muted` panel and its
+`popover` (**1.000:1**), the identity light fill **was** its `hover` wash, and
+four light platform variants painted a fill lighter than their window — while
+every check returned `[]`. `disabledFillPairs` measures the fill on the five
+surfaces a control is placed on (465 → 470), five values move one designed step
+in their own neutral families, and every shipped set clears 1.065:1 at the
+tightest (plan 737)
 
 ## Phase C — Tier 1–2 components
 

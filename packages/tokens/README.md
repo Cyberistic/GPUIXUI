@@ -665,9 +665,13 @@ and the four soft status fills a tone-tinted Alert's action sits on
 straight onto the menu's `popover` and measured 1.99:1 on Linux dark until plan
 306. A disabled field keeps its own
 `input` fill — it is the surface it edits — so that fill is the pair plan 650
-added. The `disabled` fill is allowed to
-sit near the panel — no neutral clears both a white card and the quiet panel — so
-a disabled control paints its `border` edge, measured on `disabled` and on the
+added. The `disabled` fill is a measured fill, not an exemption: plan `306`
+left it out because "no neutral can clear both a white card and the quiet
+panel", but the light fill it shipped cleared both at once (1.133:1 and 1.103:1,
+against a 1.05:1 floor); `disabledFillPairs` holds it to the surface floor on the
+five surfaces a control is placed on, plan `737` moves five values one designed
+step, and every shipped set clears **1.065:1** at the tightest (XP light). The
+control still paints its `border` edge, measured on `disabled` and on the
 `muted` panel a settings sidebar divides. A disabled control is not an
 `opacity: 0.5` composite; it paints the designed pair and the edge — the dim
 measures **1.468:1** at worst (Linux light, a card). `disabledControl(theme)`

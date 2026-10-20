@@ -285,7 +285,7 @@ A runnable example lives in
 | `selected` | `#E0E3FF` | `#402F94` | selected row or item, one step past the `accent` hover wash |
 | `selectedActive` | `#E7EAFF` | `#312471` | selected row or item while pressed; a step toward the canvas, because the press previews deselection |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
-| `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
+| `disabled` | `#E6EAF0` | `#2A303B` | fill of an unavailable control, measured on every surface a control is placed on (`disabledFillPairs`); the control's `border` edge is held on it |
 | `disabledForeground` | `#545D6C` | `#B0B8C6` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#CBD1DB` | `#434C5A` | loading placeholder |
 | `track` | `#D5D9E2` | `#3D4552` | the unfilled groove of a progress bar, meter or slider rail, and a switch that is off |
@@ -2525,11 +2525,22 @@ that exemption is not a licence to erase the state, because the point of an
 unavailable control is that a reader can find out what is unavailable. A disabled
 `Select` item paints this role straight onto the menu's `popover` with no fill
 behind it, and measured **1.99:1** on Linux dark and 2.09:1 on the identity until
-plan `306` moved the value. The `disabled` fill itself is deliberately not held
-to a floor against the panel: no neutral can clear both a white card and the
-quiet panel, so a disabled control keeps its shape with its `border` edge, which
-is held to the divider floor on `disabled` and on the previously unmeasured
-`muted` panel.
+plan `306` moved the value.
+
+The `disabled` fill is a fill, not an exemption. Plan `306` left it unmeasured
+with the reason "no neutral can clear both a white card and the quiet panel", but
+that is not true of these palettes: the light fill it shipped cleared the card at
+1.133:1 and the quiet panel at 1.103:1 at the same time, because the surface
+floor is 1.05:1. `disabledFillPairs` holds the fill to that floor on the five
+surfaces a control is placed on — `background`, `card`, `popover`, the quiet
+`muted` panel and the field's `input` fill — and plan `737` moved five values so
+every shipped set clears **1.065:1** at the tightest (XP light, on its canvas).
+The audit found the identity dark fill **was** its `muted` panel and its
+`popover` (**1.000:1**) and the identity light fill **was** its `hover` wash, so
+an unavailable filled control painted no fill on the sidebar, in a menu or under
+the pointer; four light platform variants painted a fill *lighter* than their own
+window. The `border` edge stays measured on the fill at the divider floor: the
+fill is the control's shape and the edge is its outline.
 
 The label is also read while it is selected. `selectionColor` inherits into a
 disabled control's text like any other, and the accent-tinted wash composites
@@ -3798,9 +3809,9 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair (**8.204:1** at the tightest, `Light`), so
 no colour moves; taking it from
-396 to **465** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
-`671`, `698`, `700` and `733`, the last of which adds the off switch's knob
-(`trackMarkPairs`).
+396 to **470** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
+`671`, `698`, `700`, `733` and `737`, the last of which measures the disabled
+fill on the five surfaces a control is placed on (`disabledFillPairs`).
 Plan `659` adds the field's typed text and hint inside a tone-tinted status
 panel — `softFieldPairs`, eight pairs — and the typed text on a pressed selected
 row, and moves the identity and AAA light hints one half-step that already
@@ -3902,6 +3913,28 @@ becomes a designed step between the 850 panel and the 800 press (`#262C36`) and
 the AAA dark accent lightens to `#251B5C`, so a selected row is perceivable on
 the AAA panel and popover. Light mode therefore layers canvas → quiet panel →
 card, a deliberate decision rather than an accident.
+
+An unavailable control's fill is a fill too. `disabledControl(theme)` returns
+three roles and `opacity: 1`, and the `disabled` fill was the only one no pair
+measured: an edited theme whose fill equalled its panel returned `[]` from every
+check while the control painted no shape at all. Plan `306` exempted it because
+"no neutral can clear both a white card and the quiet panel", but the shipped
+light fill cleared the card at 1.133:1 and the quiet panel at 1.103:1 together
+(the floor is 1.05:1, not 3:1), and the audit found the identity dark fill **was**
+its `muted` panel and its `popover` (**1.000:1**), the identity light fill **was**
+its `hover` wash, and four light platform variants painted a fill *lighter* than
+their own window (macOS 1.015:1, Windows 1.021:1, Windows 7 1.025:1, Linux
+1.040:1) — eight pairs in six sets, while every check returned `[]`.
+`disabledFillPairs` holds the fill to the surface floor on the same
+`stateFillSurfaces` list an interactive fill uses, and plan `737` moves five
+values one designed step inside their own neutral families (identity light
+`#EEF1F5` → `#E6EAF0`, identity dark `#222730` → `#2A303B`, macOS dark
+`#353537`, Linux dark `#383838`, Aero light `#EAF0F7` → `#E2EBF5`), so every
+shipped set clears **1.065:1** at the tightest (XP light, on its canvas). The
+pointer washes stay out, exactly as they do for an interactive fill: a wash is a
+row state, not the panel a control is placed on. The label and the edge keep
+their own pairs — `disabledForeground` on the fill at the `inactive` floor and
+`border` on it at the divider floor — so moving the fill cannot erase either.
 
 Each filled family also has a **step** floor. The three fills are designed to
 walk `x` → `xHover` → `xActive`, and a step that is not perceivable is not a
@@ -4107,8 +4140,9 @@ Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `overlayWashPairs` measure the
 painted roles — `inactivePairs` is the fourteen-surface
 inactive list, `softBorderSurfacePairs` the nine-surface chip edge,
-`statusFillPairs` the solid status fill on the same chip surfaces and `disabled`
-is measured as its own fill — and
+`statusFillPairs` the solid status fill on the same chip surfaces and
+`disabledFillPairs` the unavailable fill on the five surfaces a control is placed
+on — and
 `themeContrastFailures` measures `shadow` composited at each elevation level's
 alpha over `elevationSurfaces`. `contrast.test.ts` keeps a declared exemption
 list for the one role that is not a pair: `scrollbar`, reserved because the
