@@ -407,6 +407,7 @@ references without buying correctness.
 | [803](./803-palette-rationale-figures.md) | The palette's inline rationale figures have no owner | F | 504, 528, 729, 737, 800 | done |
 | [805](./805-example-header-figures.md) | The copyable examples' header figures have no owner | F | 310, 394, 539, 651, 658, 717, 733, 803 | done |
 | [806](./806-primary-mark-claims.md) | `primary` is measured as a fill, and as nine marks | F | 082, 332, 341, 347, 516, 557, 563, 698, 749 | done |
+| [807](./807-elevation-rationale.md) | The AAA dark elevation rationale has no owner | F | 085, 099, 345, 390, 505, 509, 778 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4153,6 +4154,22 @@ all nine surfaces, and `primary-mark-claims.test.ts` derives the classes and the
 surfaces from `contrastPairs`/`markPairs`/`trackMarkPairs`, reads the mark clause
 as the unit, holds both floors to `contrastFloors`, and rejects the pre-806
 wording with a case that proves the predicate can fail. No colour, pair, floor,
+metric, role or shipped theme moves.
+
+Plan `807` closes the last unowned rationale in `elevation.ts`: the
+`highContrastDarkElevation` JSDoc explains why the AAA dark set paints with a
+light tint by quoting the counterfactual — the identity dark tint at the
+identity's alphas over the pre-505 surfaces — and by naming the two constraints
+the set keeps, and no suite read it. The card figure had two spellings in the
+tree (`1.030` in the source and in `elevation-contrast.test.ts`'s header,
+`1.031` in plan 505's own text), setting the set's alphas to the identity's
+returned no failure, and moving one level's geometry returned no failure.
+`elevation-rationale.test.ts` writes out the pre-505 palette, derives the two
+figures with the package's own maths and holds both copies of the sentence to
+them, and derives the three structural claims — the light tint the scrim also
+chooses, the set's own alphas and the inherited geometry — from the shipped
+sets. The card composition is `1.030451…:1`, so `1.030` is the correct
+spelling and plan 505's `1.031` was an over-rounding; no colour, pair, floor,
 metric, role or shipped theme moves.
 
 ## How to use a plan

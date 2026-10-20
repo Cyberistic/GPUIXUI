@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 367/445
+`[x]` `[████████░░]` 368/445
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2893,6 +2893,22 @@ and `primary-mark-claims.test.ts` derives both from
 `contrastPairs`/`markPairs`/`trackMarkPairs`, reads the mark clause as the unit
 and rejects the old wording. No colour, pair, floor, metric, role or shipped
 theme moves (plan 806)
+`[x]` Give the AAA dark elevation rationale an owner — the JSDoc above
+`highContrastDarkElevation` is the copy-and-own explanation of why the set
+paints with a light tint, and no suite read it: its card figure had two
+spellings in the tree (`1.030` in the source and in
+`elevation-contrast.test.ts`'s header, `1.031` in plan 505's own text — the
+composition is `1.030451…:1`, so `1.030` is right and the plan over-rounded),
+setting the set's alphas to the identity's (0.4 / 0.65 / 0.8) returned no
+failure from any check, and so did moving one level's geometry, while both
+structural claims are what keep plan 345's near-white halo and the feather
+ladder true. `elevation-rationale.test.ts` writes out the pre-505 palette,
+derives both counterfactual figures with the package's own maths and holds the
+source, the catalogue and the test header to them, and derives the three
+structural claims — the white tint the AAA scrim also chooses, the set's own
+alphas and the inherited geometry — from the shipped sets; the source sentence
+now names the tightest level and the guard, and the catalogue names the guard.
+No colour, pair, floor, metric, role or shipped theme moves (plan 807)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

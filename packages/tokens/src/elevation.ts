@@ -132,13 +132,15 @@ export const darkElevation: Elevation = {
 };
 
 /**
- * High-contrast dark elevation. The canvas is pure black, so a dark tint cannot
- * darken it: the identity dark set measured **1.000:1** on the canvas at every
- * level and 1.030:1 at the tightest on the card. This set paints with the light
- * tint instead — the same choice the AAA scrim makes (plan 099) — and its
- * alphas are its own, because a light tint is as potent on black as a dark tint
+ * High-contrast dark elevation. The canvas is pure black, so a black tint
+ * cannot darken it: the identity dark set measured **1.000:1** on the canvas at
+ * every level and **1.030:1** at the tightest on the card — the small level at
+ * the identity's own 40%. This set paints with the light tint instead — the
+ * same choice the AAA scrim makes (plan 099) — and its alphas are its own
+ * (10, 14 and 18%), because a light tint is as potent on black as a dark tint
  * is on white. The geometry is the identity dark set's, so the feather ladder
- * still holds.
+ * still holds. `elevation-rationale.test.ts` derives both figures and the three
+ * structural claims.
  */
 export const highContrastDarkElevation: Elevation = {
   sm: [{ offsetX: 0, offsetY: 1, blurRadius: 2, spreadRadius: 0, alpha: 0.1 }],

@@ -1285,7 +1285,10 @@ The AAA dark set is the exception to a dark tint: its canvas is pure black, so a
 shadow cannot darken it. `colors.shadow` is `#FFFFFF` there and
 `highContrastDarkElevation` carries the set's own alphas — 10%, 14% and 18% —
 the way the AAA scrim already veils with light (plan `099`). A black tint
-measured **1.000:1** at every level on that canvas. `elevationSurfaces` is the
+measured **1.000:1** at every level on that canvas, and **1.030:1** at the
+tightest on the card; `elevation-rationale.test.ts` derives both figures, the
+alphas and the geometry the set keeps from the identity dark set's own levels.
+`elevationSurfaces` is the
 six persistent page surfaces a raised element floats over — the canvas, a card,
 the quiet `muted` panel, the `input` fill a flipped popover opens over, the
 `selected` fill a context menu or preview card opens over and a floating
