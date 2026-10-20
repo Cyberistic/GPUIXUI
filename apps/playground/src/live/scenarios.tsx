@@ -26,7 +26,7 @@ import { dragAutoscrollScenario } from "../scenarios/drag-autoscroll.js";
 import { dragTargetsScenario } from "../scenarios/drag-targets.js";
 import { markdownScenario } from "../scenarios/markdown.js";
 import { liveSurfacesView } from "../scenarios/surfaces.js";
-import { diffSurfaceScenario } from "../scenarios/diff.js";
+import { diffSurfaceScenario, wordWashChecks } from "../scenarios/diff.js";
 import { nestedLayerScenario } from "../scenarios/layers.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { floatScenario } from "../scenarios/float.js";
@@ -8561,7 +8561,18 @@ const liveDiff: LiveScenario = {
         0,
       );
 
-      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveDiff.id}.png`);
+      // 6. The word wash: a frame pair proves the tint's direction and extent.
+      yield* ctx.host.click("diff-reset");
+      yield* settle;
+      const offFrame = yield* captureLive(ctx.host);
+      yield* ctx.host.click("diff-word");
+      yield* settle;
+      yield* waitForText(ctx, "diff-readout", "word=1");
+      const onFrame = yield* captureLive(
+        ctx.host,
+        `${LIVE_ARTIFACTS}/${liveDiff.id}.png`,
+      );
+      yield* wordWashChecks(ctx, readAsync(ctx.host), offFrame, onFrame, box);
     }),
 };
 

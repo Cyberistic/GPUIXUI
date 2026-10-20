@@ -616,7 +616,7 @@ collapse and expand is the consumer's, driven by three events.
 | `onToggleFile` | a **file header** click emits `value = file.path`; nothing else collapses. `collapsedPaths` removes the hunk, lines and body pad (collapsing the first file of a 354 px document leaves 192 px; the second leaves 234 px), and the other file stays |
 | `maxLines` | a **global** cap on line rows, not per file. It appends `Show N more lines` and emits `showMore` with `value = "N"` as a **string**; the element does not expand. The consumer adds N to its cap (`maxLines` 3 → `show 7` → 10 restores all rows) |
 | `onLineClick` | `value` is the line text, `oldLine`/`newLine` are the side numbers (`1/1`, `2/none`, `none/2`). Hunk and file headers emit neither |
-| `wordDiff` | paints word washes only; the box and every row stay identical — **screenshot evidence** (no pixel readback) |
+| `wordDiff` | paints word washes only; the box and every row stay identical — the frame pair proves a 10 px green-dominant run on the added row, a red-dominant run on the removed row and untouched context rows (plan `707`) |
 | `scroll` | a 240 px viewport over a native list; a wheel scrolls it, and a **patch swap keeps the reader's place** (adding `key` to remount loses it — the reverse proof) |
 | empty `patch` | a bounded 640 px surface painting `No changes` |
 
@@ -626,7 +626,9 @@ a header or line only by coordinates: 36 px file header, 28 px hunk, 21 px line,
 cap are app state; the probe's two pure transitions (`togglePath`,
 `revealMore`) live in `src/scenarios/diff-state.ts` with four tests.
 `live-diff` repeats the header toggle, cap, line click, wheel and anchor path in
-the real 1100 × 720 window.
+the real 1100 × 720 window, and captures the `wordDiff` off/on frame pair (the
+on frame is its artifact), so the word wash's direction and extent are asserted
+in a window too.
 
 
 ## Cross-element drag and file drops (plan `162`)
@@ -1636,7 +1638,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
 | `live-content` | the host-element surfaces in a window: the sourced `<svg>` keeps its 48 × 48 box, a missing `src` paints `img: no src` and an undecodable one `img: load failed`, a valid PNG data URL and a ref-uploaded 2 × 2 bitmap lay out without adding a fallback, the 640 px `<diff>` paints its four patch lines, and `<canvas>` has no bounds and drops its child from the paint (the retained child still answers `text`) — 28 checks (plan `577`). An `<img>` keeps the tracker's 1 px-per-axis loss live too (`96 × 64` → `94 × 62`) |
 | `live-markdown` | the markdown surface in a window: the GFM blocks paint as text, a real drag across the boundary selects the heading and the fenced code, a real coordinate click on the link fires `onLinkClick` while prose fires nothing, and React children stay out of the paint — 19 checks (plan `577`). The article role stays headless (no live a11y dump, plan `197`) |
-| `live-diff` | the diff interaction contract in a window: a real coordinate click on the file header emits `toggleFile` and the consumer collapse shrinks the box 354 → 192 px; a second click restores it; `maxLines` paints `Show 7 more lines`, and a real click on that row raises the cap to 10; a real click on a deleted line's gutter reports `line=2/none`; a hover + real `-200` wheel leaves the first line behind, and a patch swap paints the new value without returning to the top — 24 checks (plan `648`) |
+| `live-diff` | the diff interaction contract in a window: a real coordinate click on the file header emits `toggleFile` and the consumer collapse shrinks the box 354 → 192 px; a second click restores it; `maxLines` paints `Show 7 more lines`, and a real click on that row raises the cap to 10; a real click on a deleted line's gutter reports `line=2/none`; a hover + real `-200` wheel leaves the first line behind, and a patch swap paints the new value without returning to the top; a `wordDiff` off/on frame pair decodes twice and proves the wash's direction and its token-sized extent — 31 checks (plans `648`, `707`) |
 | `live-tier2-foundation` | the catalogue's foundation view in a window: the Card stack and 32 px avatar paint, the alert dismiss and empty-state action run, a click selects a List row and `Down`/`Enter` move and select while skipping the disabled row — 18 checks. A live key must follow the click's React commit (`settle`), or it moves from the previous active row |
 | `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, a vertical tab set stacks its rail with the panel beside it and a real click selects (the disabled row stays inert), Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 26 checks (the vertical half is plan `633`). Whether a click runs React's `onFocus` is window-state dependent (plan `390`), so the old click-then-arrow limit is no longer asserted; the Tabs fix remains a robustness task |
 | `live-tier2-choice` | Popover opens below its trigger and Escape restores focus, a live editor types/submits/clears, a Combobox ranks and selects, the DatePicker month grid picks a day and clears, and both TimePicker segments compose one value — 13 checks |
@@ -2200,6 +2202,7 @@ src/scenarios/a11y.tsx      the AccessKit dump: roles, names, states, window
 src/scenarios/surfaces.tsx  svg, img (fallbacks, data URL, ref upload), diff, canvas
 src/scenarios/diff.tsx      the <diff> interaction contract (rows, cap, clicks, anchor)
 src/scenarios/diff-state.ts the consumer transitions a controlled diff needs
+src/scenarios/word-wash.ts  the changed-run finder behind the word-wash pixels
 src/scenarios/drag-targets.tsx capture, hover during drag, file drops
 src/scenarios/text-selection.tsx selection across text, code, diff and chrome
 src/scenarios/context-menu.tsx right click, pointer placement, dismissal

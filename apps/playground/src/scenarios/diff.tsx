@@ -20,11 +20,18 @@ import { Effect, Option } from "effect";
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
 import type { EventPayload } from "@gpuix/react";
-import type { Smoke } from "@gpuixui/testing";
+import { Pixels, Smoke } from "@gpuixui/testing";
 import { Pressable, Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
 import { revealMore, togglePath } from "./diff-state.js";
 import { elementTypeOf, read, readoutField } from "./probes.js";
+import { captureHeadless, readSync, type FrameReader } from "./frames.js";
+import {
+  channelDeltas,
+  findWashRun,
+  type RowBand,
+  type WashRun,
+} from "./word-wash.js";
 
 export const APP_PATCH = [
   "diff --git a/src/app.ts b/src/app.ts",
@@ -278,6 +285,110 @@ const showMoreAt = (box: Smoke.Bounds) => ({
   x: box.x + 20,
   y: box.y + box.height - HEADER / 2,
 });
+
+/**
+ * The band of one diff line row, in window coordinates.
+ *
+ * `+40` starts after the accent bar, both gutters and the change marker; `-48`
+ * keeps the sample inside the 640 px surface. The row metrics are the ones plan
+ * `648` measured (`36 / 28 / 21`).
+ */
+export const diffRowBand = (box: Smoke.Bounds, lineIndex: number): RowBand => ({
+  x: box.x + 40,
+  y: box.y + HEADER + HUNK + lineIndex * LINE,
+  width: box.width - 48,
+  height: LINE,
+});
+
+const describeRun = (run: WashRun): string =>
+  `x=${run.x} y=${run.y} width=${run.width}`;
+
+const describeDelta = (run: WashRun): string => {
+  const deltas = channelDeltas(run.before, run.after);
+  return `deltas r=${deltas.r} g=${deltas.g} b=${deltas.b}`;
+};
+
+/** One assertion whose failure reports the measured value, not just `false`. */
+const expectCondition = (
+  ctx: Pick<Smoke.SmokeContext, "check">,
+  label: string,
+  condition: boolean,
+  actual: string,
+): Effect.Effect<void, Smoke.SmokeAssertionError> =>
+  ctx.check(
+    label,
+    condition
+      ? Effect.void
+      : Effect.fail(
+          new Smoke.SmokeAssertionError({ label, expected: "true", actual }),
+        ),
+  );
+
+/**
+ * The `<diff>`'s word-level wash, read from a `wordDiff` off/on frame pair.
+ *
+ * The runtime tints only `line.word_ranges` with its own `diff_add`/`diff_del`
+ * at 28 %, so the frames differ in a short run on the two changed rows and
+ * nowhere else. Direction is the only colour claim the library can make: the
+ * tint is the runtime's, not a `@gpuixui/tokens` role. Both hosts share this
+ * helper; they differ only in how the frame was captured.
+ */
+export const wordWashChecks = <E,>(
+  ctx: Pick<Smoke.SmokeContext, "check" | "expectSome">,
+  reader: FrameReader<E>,
+  off: Pixels.Pixels,
+  on: Pixels.Pixels,
+  box: Smoke.Bounds,
+): Effect.Effect<void, Smoke.SmokeAssertionError | E> =>
+  Effect.gen(function* () {
+    const window = yield* reader.windowSize();
+    const added = yield* ctx.expectSome(
+      "the added line paints a word wash",
+      findWashRun(off, on, window, diffRowBand(box, 2)),
+    );
+    const removed = yield* ctx.expectSome(
+      "the removed line paints a word wash",
+      findWashRun(off, on, window, diffRowBand(box, 1)),
+    );
+    yield* expectCondition(
+      ctx,
+      "the added wash is a token, not the row",
+      added.width >= 3 && added.width <= 40,
+      describeRun(added),
+    );
+    const addedDelta = channelDeltas(added.before, added.after);
+    yield* expectCondition(
+      ctx,
+      "the added wash is green-dominant",
+      addedDelta.g > addedDelta.r && addedDelta.g > addedDelta.b,
+      describeDelta(added),
+    );
+    const removedDelta = channelDeltas(removed.before, removed.after);
+    yield* expectCondition(
+      ctx,
+      "the removed wash is red-dominant",
+      removedDelta.r > removedDelta.g && removedDelta.r > removedDelta.b,
+      describeDelta(removed),
+    );
+    const contextRuns = Arr.map([0, 3] as const, (index) =>
+      findWashRun(off, on, window, diffRowBand(box, index)),
+    );
+    const context = Arr.map(contextRuns, (run) =>
+      Option.getOrElse(Option.map(run, describeRun), () => "none"),
+    );
+    yield* expectCondition(
+      ctx,
+      "a context row keeps its background",
+      Arr.every(contextRuns, Option.isNone),
+      Arr.join(context, ", "),
+    );
+    yield* expectCondition(
+      ctx,
+      "the wash does not cover the line",
+      added.x + added.width < box.x + box.width / 2,
+      describeRun(added),
+    );
+  });
 
 export const diffSurfaceScenario: PlaygroundScenario = {
   id: "diff-surface",
@@ -547,6 +658,7 @@ export const diffSurfaceScenario: PlaygroundScenario = {
       // 7. `wordDiff` is a wash: the rows and the box must not move.
       press(ctx, "diff-reset");
       const beforeWordBox = yield* boxOf(ctx, "diff-surface");
+      const offFrame = yield* captureHeadless(ctx.host);
       press(ctx, "diff-word");
       yield* ctx.expectEqual("word diff is on", field(ctx, "word"), "1");
       const afterWordBox = yield* boxOf(ctx, "diff-surface");
@@ -569,6 +681,14 @@ export const diffSurfaceScenario: PlaygroundScenario = {
           (needle) => paints(ctx, needle),
         ),
         true,
+      );
+      const onFrame = yield* captureHeadless(ctx.host);
+      yield* wordWashChecks(
+        ctx,
+        readSync(ctx.host),
+        offFrame,
+        onFrame,
+        beforeWordBox,
       );
 
       // 8. The scroll path keeps the reader's place across a patch rebuild.

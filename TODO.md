@@ -97,6 +97,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 120/120 plans-and-harness
 
+`[x]` **Prove the diff's word-level wash in pixels** per plan `707`: the last
+      named colour gap (`wordDiff` was "screenshot-only" since plan `648`) is
+      now a decoded-frame assertion. A pure `word-wash.ts` finds the run that
+      changed between a `wordDiff` off/on frame pair on a named row band,
+      bridges a glyph-sized gap, refuses a span on ink and samples at logical
+      coordinates; 6 tests (playground **446 → 452**). `diff-surface` **70 → 77**
+      checks and `live-diff` **24 → 31** share seven checks: the added run is
+      green-dominant (`Δg 55` vs `Δr -2`) and 10 px wide at `x=186`, the removed
+      run red-dominant (`Δr 66` vs `Δg 25`), context rows keep their background
+      and the wash reaches only the token; the on frame is the live artifact.
+      Five mutation proofs observed and reverted, all `exit 1` (identical frames,
+      an off frame captured after the press, each dominance inverted, and a
+      41 px width requirement). Focused ids: `diff-surface`, `live-diff`; no
+      `--all`, no full live gate (merge gate). End-of-task full headless:
+      **106/106** (**3872** checks, 65 capabilities), exit `0`.
+
 `[x]` **Prove the highlight wash colour contract in pixels** per plan `701`:
       six fixtures in `search-highlights` (**41 → 82** checks) and
       `live-highlights` (**12 → 53**) sample a decoded frame at the top of each
