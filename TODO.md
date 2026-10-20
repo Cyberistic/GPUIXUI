@@ -471,7 +471,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–617)
 
-`[x]` `[██████████]` 184/185
+`[x]` `[██████████]` 185/185
 
 `[x]` **The licence question has an answer (plan 617)** — measured 2026-10-20:
       `is it free` returned List, `commercial use` a text-area limitation,
@@ -485,13 +485,20 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       built index. 125 files / 1 225 docs tests, 106-page `smoke:build`; the
       measured two-direction proofs are in plan 617 §8.
 
-`[ ]` **Reader questions and the workspace frame vocabulary** — measured
-      2026-10-20: `how to contribute` → Toggle, `does it work with next.js` →
-      Workspace, `title bar` → Alert, `status bar` → Roadmap, `split view` →
-      Preview card, `where is the source` → Theming, `coming soon` → Porting,
-      `no data` → Data display, `coverage` → Architecture. Each has a real owner
-      (Contributing, the porting page's framework section, the app-shell pattern,
-      Workspace, Empty state, the roadmap); a plan is owed.
+`[x]` **Reader questions and the workspace frame vocabulary (plan 618)** —
+      measured 2026-10-20: `how to contribute` → Toggle, `does it work with
+      next.js` → Workspace, `title bar` → Alert, `status bar` → Roadmap,
+      `split view` → Preview card, `where is the source` → Theming, `coming
+      soon` → Porting, `no data` → Data display, `coverage` → Architecture.
+      All nine now return their owner first: Contributing, Porting, the App
+      shell pattern, Workspace, Empty states and the Roadmap. 34 exact page
+      aliases across five pages and one component alias carry the words;
+      `/docs/roadmap` now states what coverage the table publishes and that no
+      line/branch coverage is measured. `status bars` stays with the roadmap
+      target; `split view` is a phrase because the alias matcher is
+      prefix-based and `split pane` would steal `split panes`. 36 alias rows,
+      1 search case, 2 roadmap guards; 125 files / 1 264 docs tests, 106-page
+      `smoke:build`, five two-direction proofs in plan 618 §8.
 
 `[x]` **The preview strategy names only scenes that mount open (plan 616)** —
       the tier‑L paragraph offered "a menu, a dialog, a popover or the command

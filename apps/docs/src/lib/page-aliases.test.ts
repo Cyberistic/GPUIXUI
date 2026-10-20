@@ -35,6 +35,13 @@ import { source } from "./source";
  * existing sections, and `window resize`. The regression rows keep `grid`,
  * `resize`, `text`, `label`, `empty state` and `color picker` with their owners,
  * so a phrase alias cannot steal a shorter word.
+ *
+ * Plan 618 adds the thirteenth block: the nine measured question forms and
+ * frame words plan 617 recorded (`how to contribute`, `does it work with
+ * next.js`, `title bar`, `status bar`, `split view`, `where is the source`,
+ * `coming soon`, `coverage`). The regression rows pin `split panes` to the
+ * roadmap target, so the new `split view` alias proves the table is
+ * exact-only.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -340,6 +347,40 @@ const owned = [
   ["window resize", "/docs/styling"],
   ["resize window", "/docs/styling"],
   ["window size", "/docs/styling"],
+  ["how to contribute", "/docs/contributing"],
+  ["how do i contribute", "/docs/contributing"],
+  ["how can i contribute", "/docs/contributing"],
+  ["contribute", "/docs/contributing"],
+  ["contributing guide", "/docs/contributing"],
+  ["where is the source", "/docs/contributing"],
+  ["where is the source code", "/docs/contributing"],
+  ["where is the code", "/docs/contributing"],
+  ["source code", "/docs/contributing"],
+  ["does it work with next.js", "/docs/porting-from-shadcn"],
+  ["does it work with nextjs", "/docs/porting-from-shadcn"],
+  ["does it work with remix", "/docs/porting-from-shadcn"],
+  ["does it work with electron", "/docs/porting-from-shadcn"],
+  ["does it work with tauri", "/docs/porting-from-shadcn"],
+  ["title bar", "/docs/patterns/app-shell"],
+  ["titlebar", "/docs/patterns/app-shell"],
+  ["title bars", "/docs/patterns/app-shell"],
+  ["status bar", "/docs/patterns/app-shell"],
+  ["statusbar", "/docs/patterns/app-shell"],
+  ["window frame", "/docs/patterns/app-shell"],
+  ["app frame", "/docs/patterns/app-shell"],
+  ["application frame", "/docs/patterns/app-shell"],
+  ["app chrome", "/docs/patterns/app-shell"],
+  ["window chrome", "/docs/patterns/app-shell"],
+  ["split view", "/docs/workspace"],
+  ["split views", "/docs/workspace"],
+  ["coming soon", "/docs/roadmap"],
+  ["unreleased", "/docs/roadmap"],
+  ["not yet available", "/docs/roadmap"],
+  ["planned components", "/docs/roadmap"],
+  ["future components", "/docs/roadmap"],
+  ["coverage", "/docs/roadmap"],
+  ["coverage map", "/docs/roadmap"],
+  ["what is implemented", "/docs/roadmap"],
 ] as const;
 
 const regressions = [
@@ -391,6 +432,8 @@ const regressions = [
   ["keyboard navigation", "/docs/roadmap"],
   ["grid", "/docs/components/stack"],
   ["resize", "/docs/workspace"],
+  ["split panes", "/docs/roadmap"],
+  ["data", "/docs/data-display"],
 ] as const;
 
 describe(

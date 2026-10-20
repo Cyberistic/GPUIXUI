@@ -1312,6 +1312,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the planned chat target, which reached a performance prose chunk before",
     },
+    {
+      query: "how to contribute",
+      expected: "/docs/contributing",
+      first: true,
+      what: "the contribution question, which reached Toggle before plan 618",
+    },
+    {
+      query: "title bar",
+      expected: "/docs/patterns/app-shell",
+      first: true,
+      what: "the frame word the App shell composition paints, which reached Alert before",
+    },
+    {
+      query: "coverage",
+      expected: "/docs/roadmap",
+      first: true,
+      what: "the coverage question the Roadmap page now answers",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

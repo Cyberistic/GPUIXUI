@@ -15,7 +15,9 @@
  * `segmented control`, `hover card`, …): a term is added only when the record's
  * own fields cannot match it and a whole-query match is unambiguous. Plan 583
  * adds the third measured set (`cmdk`, `autosuggest`, `gauge`, `pill`,
- * `callout`, `busy`, `sheet`) under the same rule.
+ * `callout`, `busy`, `sheet`) under the same rule. Plan 618 adds one measured
+ * question: a reader looking for the "no data" state is describing Empty
+ * states, whose record says `empty` but never the phrase they typed.
  */
 export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -114,6 +116,7 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
     "inline-validation",
     ["helper text", "hint", "supporting text", "error message"],
   ],
+  ["empty-state", ["no data"]],
   ["time-picker", ["time"]],
 ]);
 

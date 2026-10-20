@@ -146,3 +146,32 @@ describe("problems are reported instead of published", () => {
     expect(roadmapProblems([target])).toContain("Tier 5: no targets");
   });
 });
+
+/**
+ * Plan 618: `coverage` and `coming soon` reach the Roadmap, so the page has to
+ * answer them. This guard fails when the section is deleted, when it stops
+ * saying what coverage it is not, or when one of the three evidence pages it
+ * links is dropped — the aliases would then land on a page with no answer.
+ */
+describe("the roadmap says what coverage it publishes", () => {
+  const pagePath = fileURLToPath(
+    new URL("../../content/docs/roadmap.mdx", import.meta.url),
+  );
+  const page = readFileSync(pagePath, "utf8");
+  const start = page.indexOf("## What coverage means here");
+  const end = start === -1 ? -1 : page.indexOf("\n## ", start + 1);
+  const section =
+    start === -1 ? "" : page.slice(start, end === -1 ? undefined : end);
+
+  it("names the status coverage and the absent code coverage", () => {
+    expect(section).toContain("status coverage");
+    expect(section).toContain("No line, branch or function coverage");
+    expect(section).toContain("todo");
+  });
+
+  it("links the three pages that own the evidence", () => {
+    expect(section).toContain("(/docs/capabilities)");
+    expect(section).toContain("(/docs/native-testing)");
+    expect(section).toContain("(/docs/previews)");
+  });
+});

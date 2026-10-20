@@ -63,7 +63,12 @@ limits so the page's table can import them without the server index, and
 `src/lib/search-docs.ts` lists the generated documents — `search-docs.test.ts`
 compares that list with the real entries. A page title enters the typo tier as a
 whole name only, never by a word inside it, so `seach` still names Search input.
-`smoke:build` queries the production index; `smoke:search` operates the palette.
+The page-alias table answers a reader's whole question (`how to contribute`,
+`does it work with next.js`, `coverage`) and the frame words a desktop developer
+types (`title bar`, `status bar`, `split view`); the match is exact, so a new
+phrasing is a reviewed row in `page-aliases.ts`, not a ranker change (plans 598
+and 618). `smoke:build` queries the production index; `smoke:search` operates the
+palette.
 
 ## Commands
 

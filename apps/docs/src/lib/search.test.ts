@@ -339,6 +339,16 @@ describe("search", { timeout: 120_000 }, () => {
   });
 
   /**
+   * Plan 618: `no data` names the situation Empty states explains, but the
+   * record says "empty" and the phrase landed on Data display. The row fails
+   * when the component alias is dropped.
+   */
+  it("finds Empty states by the situation it explains (plan 618)", async () => {
+    const [first] = await search("no data");
+    expect(first?.url).toBe("/docs/components/empty-state");
+  });
+
+  /**
    * Plan 607: a misspelling has a tier of its own. Before it, the lexical
    * index still returned *some* page for a typo, so `botton` returned Toggle
    * and `theem` the Values API, while `acordian` and `dropdwon` returned

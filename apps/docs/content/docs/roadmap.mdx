@@ -8,6 +8,21 @@ That file owns the target inventory; the table below is generated from its Tier 
 so a row here cannot disagree with the inventory. Nothing on this page is a placeholder: a target
 listed as `todo` has no implementation and no page yet, and says so.
 
+## What coverage means here
+
+This table is the **status coverage** of the inventory: one row per Tier 3–5
+target, generated from `COMPONENTS.md`, so a target cannot be missing without
+the inventory changing. "Coming soon" is the reader's word for a row whose
+status is `todo`: it has no implementation and no page yet.
+
+It is not a code-coverage figure. No line, branch or function coverage is
+measured or published, and a `done` status is not a claim about one. The
+evidence that does exist lives on three pages: the [GPUix
+capabilities](/docs/capabilities) matrix (what the runtime can do, with the
+scenario that proves it), the [Native smoke suite](/docs/native-testing) (what
+the suite proves and what it does not), and [Previews](/docs/previews) (how each
+page's evidence is labelled).
+
 <RoadmapTable />
 
 ## What a status means

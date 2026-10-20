@@ -51,6 +51,15 @@
  * `price` and `copyright` name the License page, which now answers them.
  * `cost` stays on Performance's cost model and `terms` on the component-page
  * guide's search-vocabulary section.
+ *
+ * The thirteenth block (plan 618) covers the two classes plan 617 left open.
+ * The question forms — `how to contribute`, `where is the source`,
+ * `does it work with next.js`, `coming soon`, `coverage` — are whole sentences,
+ * so only an exact alias reaches them; the workspace frame words (`title bar`,
+ * `status bar`, `split view`) name the App shell and Workspace compositions.
+ * `split panes` deliberately keeps reaching the roadmap's `Resizable split
+ * panes` target (plan 564), so `split view` is a separate phrase, not a
+ * prefix.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -113,6 +122,15 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "github actions",
       "checks",
       "quality gate",
+      "how to contribute",
+      "how do i contribute",
+      "how can i contribute",
+      "contribute",
+      "contributing guide",
+      "where is the source",
+      "where is the source code",
+      "where is the code",
+      "source code",
     ],
   ],
   [
@@ -170,7 +188,38 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "production build",
     ],
   ],
-  ["/docs/workspace", ["panel", "panels", "pane", "panes"]],
+  [
+    "/docs/workspace",
+    ["panel", "panels", "pane", "panes", "split view", "split views"],
+  ],
+  [
+    "/docs/patterns/app-shell",
+    [
+      "title bar",
+      "titlebar",
+      "title bars",
+      "status bar",
+      "statusbar",
+      "window frame",
+      "app frame",
+      "application frame",
+      "app chrome",
+      "window chrome",
+    ],
+  ],
+  [
+    "/docs/roadmap",
+    [
+      "coming soon",
+      "unreleased",
+      "not yet available",
+      "planned components",
+      "future components",
+      "coverage",
+      "coverage map",
+      "what is implemented",
+    ],
+  ],
   [
     "/docs/styling",
     [
@@ -415,6 +464,11 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "remix",
       "tauri",
       "electron",
+      "does it work with next.js",
+      "does it work with nextjs",
+      "does it work with remix",
+      "does it work with electron",
+      "does it work with tauri",
     ],
   ],
 ]);
