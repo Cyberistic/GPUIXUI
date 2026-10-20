@@ -7,9 +7,10 @@
 **Status:** done — implemented in this workstream. Offline **75 files / 1060
 tests**; the new native file **7/7**; nine scoped runtime files **164/164**
 (`toggle-read-only`, `tab-order`, `pointer-feedback`, `toggle`, `toggle-group`,
-`toggle-group-typeahead`, `examples`). Six mutation rounds were reverted one at a
-time and each failed its named case: the resolver's read-only branch, the
-`Toggle` inert guard, the group renderer's move and item-key guards, the
+`toggle-group-typeahead`, `examples`, `focus-ring`, `state-style`); the full
+`test:runtime` **78 files / 992 tests** green. Six mutation rounds were reverted
+one at a time and each failed its named case: the resolver's read-only branch,
+the `Toggle` inert guard, the group renderer's move and item-key guards, the
 component's `onPress` guard, the renderer/component pair behind a click, and the
 read-only stop index. One finding changed the implementation: the group's one tab
 stop had to follow the ring while read-only, or Tab returned to the selected item
@@ -286,6 +287,7 @@ Measured 2026-10-20/21 in this worktree:
 | `nub run --filter @gpuixui/primitives test` | 75 files / **1060 tests** green (was 1059; +1 net offline case after the read-only cases) |
 | `nub run --filter @gpuixui/primitives test:runtime runtime/toggle-read-only.runtime.test.tsx` | 1 file / **7 tests** green |
 | nine scoped runtime files (`toggle-read-only`, `tab-order`, `pointer-feedback`, `toggle`, `toggle-group`, `toggle-group-typeahead`, `examples`, `focus-ring`, `state-style`) | 9 files / **164 tests** green |
+| full `test:runtime` (end-of-task, `controlStyle` is shared by the family) | **78 files / 992 tests** green, exit 0 |
 | `nub run lint` | exit 0 |
 | `nub run fmt` | exit 0 (primitives paths) |
 

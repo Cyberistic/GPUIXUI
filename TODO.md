@@ -2731,9 +2731,9 @@ retired once both branches are one
       Measured while implementing: a read-only `single` group's stop stayed on
       the value, so Tab returned to the selection after an arrow — it now
       follows the ring. D54 records the revised boundary; `Button`/`IconButton`
-      stay out. Offline 75 files / 1060 tests, the new native file 7/7, seven
-      scoped files 164/164, six mutation rounds failing their named case
-      (plan `804`).
+      stay out. Offline 75 files / 1060 tests, the new native file 7/7, nine
+      scoped files 164/164, full runtime 78 files / 992 tests, six mutation
+      rounds failing their named case (plan `804`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
