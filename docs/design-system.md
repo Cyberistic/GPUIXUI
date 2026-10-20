@@ -204,6 +204,9 @@ Density is a **theme** property, not a component prop:
 - `comfortable` — 28/32/36 controls, 32px rows. Default.
 - `spacious` — 32/36/40 controls, 36px rows. Touch-leaning and presentation.
 
+The order is a contract: each metric rises from `compact` to `spacious`, and a
+preset that inverted it would fail `scale.test.ts` rather than ship.
+
 The preset publishes the metrics; a control still has to read them. Type sizes
 and the spacing scale stay fixed, so a density switch cannot reflow text
 unexpectedly. `Toggle`, `ToggleGroup`, a `Select` option row (its

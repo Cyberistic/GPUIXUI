@@ -1105,6 +1105,9 @@ describe("docs/tokens.md numeric tables", () => {
         `| ${label} | ${height.sm} / ${height.md} / ${height.lg} | ${padding.sm} / ${padding.md} / ${padding.lg} | ${preset.rowHeight} |`,
       );
     });
+    expect(markdown).toContain(
+      "`scale.test.ts` walks `densityNames` and `controlSizes` pairwise",
+    );
   });
 
   it("lists every elevation level with both modes' shadow", () => {

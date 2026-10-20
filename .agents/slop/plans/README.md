@@ -367,6 +367,7 @@ references without buying correctness.
 | [717](./717-jsdoc-figures.md) | The figures the package's own JSDoc and five page sentences state, and the one hard set count | F | 536, 544, 613, 637, 705, 706, 714, 716 | done |
 | [720](./720-density-consumer-exception.md) | The density promise the shipped field family and Button no longer keep | F | 010, 089, 353, 389, primitives `370`–`372` | done |
 | [723](./723-pressed-row-selection-wash.md) | The pressed selected row's text selection | F | 081, 524, 651, 689, 700 | done |
+| [725](./725-scale-ladder-indexes.md) | The scale ladders the tests still retype | F | 068, 096, 305, 372, 552, 668 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3698,6 +3699,20 @@ surface a reader drags over while the row is pressed. The pair joins
 `contrastPairs` stays 464. `selectionSurfaces` is untouched, because `figures.ts`
 derives the caret's four "nine surfaces" figures from it; the pressed row stays
 outside the scrim and elevation walks, which are read at rest.
+
+Plan `725` closes the last hand-typed ladders in the scale suite. Plan `668`
+shipped the ordered indexes (`spacingSteps`, `avatarSizeSteps`) and plans
+`068`/`096` the axis indexes (`densityNames`, `controlSizes`) so a table or a
+test walks the owner; `scale.test.ts` still typed nine spacing pairs, the two
+preset pairs, the three avatar comparisons and the within-preset control sizes
+by hand, and `rowHeight` had no cross-preset order at all. A fourth preset added
+to `densityNames` would compile, ship and never be compared to `spacious`; a
+preset whose rows shrank as density grew passed every check. The pairs now derive
+from the indexes, each list's length is held to `index.length - 1`, the density
+ladder covers control height, padding and the row, and a synthetic inverted
+preset proves the order check can fail. Every shipped value already holds
+(spacing 2…64, avatars 16…40, controls 24/28/32 → 32/36/40, rows 28 → 32 → 36),
+so no metric moves.
 
 ## How to use a plan
 

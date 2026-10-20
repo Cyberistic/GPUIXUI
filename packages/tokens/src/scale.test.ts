@@ -1,34 +1,62 @@
 import { describe, expect, it } from "vitest";
 import {
   avatarSize,
+  avatarSizeSteps,
   controlSizes,
   densityNames,
   densityPresets,
   spacing,
+  spacingSteps,
+  type Density,
   type DensityName,
 } from "./scale.js";
 
-const ascendingSpacing = [
-  [spacing["2xs"], spacing.xs],
-  [spacing.xs, spacing.sm],
-  [spacing.sm, spacing.md],
-  [spacing.md, spacing.lg],
-  [spacing.lg, spacing.xl],
-  [spacing.xl, spacing["2xl"]],
-  [spacing["2xl"], spacing["3xl"]],
-  [spacing["3xl"], spacing["4xl"]],
-  [spacing["4xl"], spacing["5xl"]],
-] as const;
+/** `[smaller, larger]` for every neighbouring pair of an ordered index. */
+const adjacent = <Step extends string>(
+  steps: ReadonlyArray<Step>,
+): ReadonlyArray<readonly [Step, Step]> =>
+  steps.flatMap((step, index) => {
+    const next = steps[index + 1];
+    return next === undefined ? [] : ([[step, next]] as const);
+  });
 
-const ascendingDensities: readonly [DensityName, DensityName][] = [
-  ["compact", "comfortable"],
-  ["comfortable", "spacious"],
-];
+const ascendingSpacing = adjacent(spacingSteps);
+const ascendingDensities = adjacent(densityNames);
+
+/**
+ * Why a preset does not rise above the one below it, as readable labels.
+ *
+ * The three density metrics are a ladder, not three independent numbers: a
+ * preset whose rows shrink as density grows makes "compact" a lie even while
+ * every individual metric is positive. `themeMetricFailures` holds the active
+ * preset's own ladders, but no `Theme` holds all three presets — they are
+ * shipped data — so the cross-preset order lives here.
+ */
+const presetOrderFailures = (
+  presets: Readonly<Record<DensityName, Density>>,
+): ReadonlyArray<string> =>
+  ascendingDensities.flatMap(([smaller, larger]) => [
+    ...controlSizes.flatMap((size) =>
+      presets[larger].controlHeight[size] > presets[smaller].controlHeight[size]
+        ? []
+        : [`controlHeight.${size}: ${larger} is not above ${smaller}`],
+    ),
+    ...controlSizes.flatMap((size) =>
+      presets[larger].controlPaddingX[size] >
+      presets[smaller].controlPaddingX[size]
+        ? []
+        : [`controlPaddingX.${size}: ${larger} is not above ${smaller}`],
+    ),
+    ...(presets[larger].rowHeight > presets[smaller].rowHeight
+      ? []
+      : [`rowHeight: ${larger} is not above ${smaller}`]),
+  ]);
 
 describe("spacing scale", () => {
-  it("increases strictly from 2xs to 5xl", () => {
+  it("increases strictly along the index", () => {
+    expect(ascendingSpacing).toHaveLength(spacingSteps.length - 1);
     ascendingSpacing.forEach(([smaller, larger]) => {
-      expect(larger).toBeGreaterThan(smaller);
+      expect(spacing[larger]).toBeGreaterThan(spacing[smaller]);
     });
   });
 
@@ -40,10 +68,12 @@ describe("spacing scale", () => {
 });
 
 describe("avatar size scale", () => {
-  it("increases strictly from xs to lg", () => {
-    expect(avatarSize.sm).toBeGreaterThan(avatarSize.xs);
-    expect(avatarSize.md).toBeGreaterThan(avatarSize.sm);
-    expect(avatarSize.lg).toBeGreaterThan(avatarSize.md);
+  it("increases strictly along the index", () => {
+    const ascending = adjacent(avatarSizeSteps);
+    expect(ascending).toHaveLength(avatarSizeSteps.length - 1);
+    ascending.forEach(([smaller, larger]) => {
+      expect(avatarSize[larger]).toBeGreaterThan(avatarSize[smaller]);
+    });
   });
 
   it("gives every size a positive whole number of pixels", () => {
@@ -55,37 +85,45 @@ describe("avatar size scale", () => {
 });
 
 describe("density presets", () => {
-  it("orders control heights from compact to spacious", () => {
-    ascendingDensities.forEach(([smaller, larger]) => {
-      controlSizes.forEach((size) => {
-        expect(
-          densityPresets[smaller].controlHeight[size],
-          `${smaller} < ${larger} (${size})`,
-        ).toBeLessThan(densityPresets[larger].controlHeight[size]);
-      });
-    });
+  it("orders every preset pair on all three metrics", () => {
+    expect(ascendingDensities).toHaveLength(densityNames.length - 1);
+    expect(presetOrderFailures(densityPresets)).toEqual([]);
   });
 
-  it("orders horizontal padding from compact to spacious", () => {
-    ascendingDensities.forEach(([smaller, larger]) => {
-      controlSizes.forEach((size) => {
-        expect(
-          densityPresets[smaller].controlPaddingX[size],
-          `${smaller} < ${larger} (${size})`,
-        ).toBeLessThan(densityPresets[larger].controlPaddingX[size]);
-      });
-    });
+  it("catches a preset ladder that steps the wrong way", () => {
+    const inverted: Readonly<Record<DensityName, Density>> = {
+      ...densityPresets,
+      compact: { ...densityPresets.compact, rowHeight: 100 },
+    };
+
+    expect(presetOrderFailures(inverted)).toEqual([
+      "rowHeight: comfortable is not above compact",
+    ]);
+
+    const squeezed: Readonly<Record<DensityName, Density>> = {
+      ...densityPresets,
+      spacious: {
+        ...densityPresets.spacious,
+        controlHeight: { ...densityPresets.spacious.controlHeight, md: 1 },
+      },
+    };
+
+    expect(presetOrderFailures(squeezed)).toEqual([
+      "controlHeight.md: spacious is not above comfortable",
+    ]);
   });
 
-  it("orders sizes within every preset", () => {
+  it("orders the control sizes the index holds inside every preset", () => {
+    const sizes = adjacent(controlSizes);
+    expect(sizes).toHaveLength(controlSizes.length - 1);
     densityNames.forEach((preset) => {
-      expect(densityPresets[preset].controlHeight.sm).toBeLessThan(
-        densityPresets[preset].controlHeight.md,
-      );
-      expect(densityPresets[preset].controlHeight.md).toBeLessThan(
-        densityPresets[preset].controlHeight.lg,
-      );
       expect(densityPresets[preset].rowHeight).toBeGreaterThan(0);
+      sizes.forEach(([smaller, larger]) => {
+        expect(
+          densityPresets[preset].controlHeight[larger],
+          `${preset}: ${larger} > ${smaller}`,
+        ).toBeGreaterThan(densityPresets[preset].controlHeight[smaller]);
+      });
     });
   });
 

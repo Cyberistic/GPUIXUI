@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 328/406
+`[x]` `[████████░░]` 329/407
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2798,6 +2798,14 @@ reason the list itself contradicts; a theme whose wash composited to
 **1.000:1**. The pair joins the wash walk (10 → 11), every shipped set already
 clears **1.185:1** at the tightest (`High contrast dark`), so no colour moves and
 `contrastPairs` stays 464 (plan 723)
+`[x]` Hold the scale ladders to their own indexes — `scale.test.ts` hand-typed
+the neighbours `spacingSteps`, `avatarSizeSteps`, `densityNames` and
+`controlSizes` own, so a tenth spacing step, a fourth avatar tier or a fourth
+density preset joined the package without being compared, and `rowHeight` had no
+cross-preset order at all (a preset whose rows shrank as density grew passed
+every check); the pairs now derive from the indexes, the density ladder covers
+all three metrics, and a synthetic inverted preset proves the check can fail —
+every shipped value already holds, so no metric moves (plan 725)
 
 ## Phase C — Tier 1–2 components
 

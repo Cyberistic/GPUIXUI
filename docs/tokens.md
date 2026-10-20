@@ -1022,6 +1022,11 @@ and spacing are unaffected.
 | `comfortable` (default) | 28 / 32 / 36 | 8 / 10 / 12 | 32 |
 | `spacious` | 32 / 36 / 40 | 10 / 12 / 14 | 36 |
 
+The three metrics rise with the preset — `compact` → `comfortable` →
+`spacious` for every control height, every horizontal padding and the row — and
+`scale.test.ts` walks `densityNames` and `controlSizes` pairwise, so a fourth
+preset or a fourth size cannot ship without its neighbours compared.
+
 A preset cannot force a control to read its metrics. Two families in the
 `primitives` package take their geometry from the shadcn recipes instead: the
 text-entry field family — `Input`, `TextArea`, a `Select`'s trigger,
