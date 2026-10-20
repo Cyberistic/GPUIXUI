@@ -210,7 +210,7 @@ nub run --filter playground build
 # 3. Focused headless.
 nub apps/playground/dist/smoke/run.js --only qr-code
 # expect: "1/1 scenarios passed · capabilities: qr=verified", exit 0.
-# qr-code reports 59 + 7 = 66 checks.
+# qr-code reports 53 + 7 = 60 checks.
 
 # 4. Focused live (opens a real window, ~1–3 s).
 nub apps/playground/dist/live/run.js --only live-qr
@@ -262,7 +262,7 @@ Stop and report, do not improvise, if:
 - `qr-pixels.ts` + `qr-pixels.test.ts` exist, pure, no host import.
 - `qr-code` and `live-qr` both sample the module grid and the image route from
   decoded frames, and compare the two reconstructions.
-- 7 new checks per suite (59 → 66 headless, 45 → 52 live); the focused runs are
+- 7 new checks per suite (53 → 60 headless, 45 → 52 live); the focused runs are
   green and the M1–M6 mutations fail in the documented direction.
 - `COMPONENTS.md`'s QR row no longer says "no pixel readback"; it names the new
   evidence and keeps "no decoder" as the honest limit.
@@ -270,3 +270,43 @@ Stop and report, do not improvise, if:
   totals and this plan's status.
 - `TODO.md` ticks the task, `.agents/slop/plans/README.md` indexes plan `708`,
   and `nub run check`, `nub run lint`, `nub run test` are green.
+
+## 7. Landed
+
+**Measured 2026-10-20.** No STOP condition was hit; both routes sample cleanly.
+
+| Fact | Measured |
+| ---- | -------- |
+| headless checks | `qr-code` **53 → 60** (+7) |
+| live checks | `live-qr` **45 → 52** (+7) |
+| frame scale | 2 in both hosts (`Pixels.frameScale`), unchanged |
+| headless capture cost | ~7–10 s per `captureHeadless` (2560 × 1600 PNG); `qr-code` 0.7 s → 14.6–19.6 s with two frames |
+| live capture cost | ~7–9 s per `captureLive`; `live-qr` 1.1 s → 15.0–19.4 s with two frames |
+| reconstruction | 441 module centres per route, **0 mismatches**, 226 dark modules derived from the frame |
+| `div` route colours | `#EEF1F5` foreground on `#11141A` background (the dark palette, exact) |
+| `img` route colours | `#000000` on `#FFFFFF` (the SVG's baked fills, exact) |
+| full headless suite | **106/106** (`3879` checks, 65 capabilities), exit `0`, 146.4 s |
+| unit tests | playground **452 → 461** (9 new) |
+
+**Mutation proofs** (each observed `exit 1`, then reverted; the checked tree was
+rebuilt and re-run green after every revert):
+
+| # | Mutation | Observed failure |
+| - | -------- | ---------------- |
+| M1 | `moduleCentre` drops `spec.quiet` from both axes | `the module grid: the frame's module grid reconstructs the authored matrix` |
+| M2 | `qr-dot-3-3` paints `success` instead of `foreground` | the same check, `got 1 mismatches; first r3c3 is dark, painted #3bc97fff` |
+| M3 | the image route is checked with the theme foreground instead of `#000` | `the image route: ...`, `226 mismatches; first r0c0 is dark, painted #000000ff` |
+| M4 | `darkCount` returns the row count (`21`) | `the painted dark modules match the fixture: expected 226, got 21` |
+| M5 | `classify` inverts dark/light | `441 mismatches` on the module grid |
+| M6 | the quiet-zone comparison uses `colours.dark` | `the quiet zone paints the light colour` (the matrix check still passes, so the check is isolated) |
+
+**Recorded limits.** The quiet-zone label prints the expected light colour and
+the actual sample; under M6 both happen to be `#11141A`, so that artificial
+mutation's message reads "expected #11141aff, got #11141aff". A real wrong
+sample reports its own colour. The `img` route's `#000`/`#FFF` are the SVG's
+fills, not tokens — a consumer that wants themeable modules uses the module-grid
+or sourced-`svg` route.
+
+**Focused ids run:** `qr-code`, `live-qr`. Full headless: `nub
+apps/playground/dist/smoke/run.js` (106/106, exit `0`). No full live run (merge
+gate); the live registry total is therefore not claimed.

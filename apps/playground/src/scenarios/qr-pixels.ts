@@ -164,6 +164,13 @@ export interface QrPixelRoute {
   readonly light: string;
 }
 
+const failure = (
+  label: string,
+  expected: string,
+  actual: string,
+): Smoke.SmokeAssertionError =>
+  new Smoke.SmokeAssertionError({ label, expected, actual });
+
 const parseColour = (
   label: string,
   hex: string,
@@ -177,19 +184,12 @@ const parseColour = (
   });
 
 /** A frame sample in logical window coordinates, or `None` outside the frame. */
-export const frameSampler =
+const frameSampler =
   (frame: Pixels.Pixels, window: Smoke.WindowSize) =>
   (x: number, y: number): Option.Option<Pixels.Rgba> =>
     Option.flatMap(Pixels.framePoint(frame, window, x, y), (point) =>
       Pixels.pixelAt(frame, point.x, point.y),
     );
-
-const failure = (
-  label: string,
-  expected: string,
-  actual: string,
-): Smoke.SmokeAssertionError =>
-  new Smoke.SmokeAssertionError({ label, expected, actual });
 
 /**
  * Run the three frame checks for one route and return the reconstructed rows.
@@ -301,6 +301,8 @@ export const qrFrameChecks = <E>(
       }),
     );
 
+    // The first check already failed if the box was missing, so this only
+    // reports the rows of a reading the frame checks have accepted.
     return Option.getOrElse(
       Option.map(reading, (value) => value.rows),
       () => [],

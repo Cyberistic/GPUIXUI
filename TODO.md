@@ -95,15 +95,21 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 120/120 plans-and-harness
+`[x]` `[██████████]` 121/121 plans-and-harness
 
-`[~]` **Prove the QR module grid in pixels** per plan `708`: the last named
+`[x]` **Prove the QR module grid in pixels** per plan `708`: the last named
       QR gap ("scannability is not asserted — no pixel readback") is now a
-      decoded-frame assertion. A pure `qr-pixels.ts` samples every module centre
-      and reconstructs the authored 21 × 21 matrix on the `div` route and the
-      `<img>` route; the quiet zone is sampled at four corners; the two
-      reconstructions must agree. No decoder, so scannability itself stays
-      unclaimed. Focused ids: `qr-code`, `live-qr`.
+      decoded-frame assertion. A pure `qr-pixels.ts` (9 tests; playground
+      **452 → 461**) samples every module centre and reconstructs the authored
+      21 × 21 matrix on the `div` route and the `<img>` route; the quiet zone is
+      sampled at four corners; the derived dark count is 226; the two
+      reconstructions agree. `qr-code` **53 → 60** checks, `live-qr`
+      **45 → 52**. Six mutation proofs observed and reverted, all `exit 1`
+      (dropped quiet offset, one recoloured module, the image route checked
+      against the theme token, a row-count dark total, an inverted classifier,
+      and a dark-comparison quiet check). No decoder, so scannability itself
+      stays unclaimed. Focused ids: `qr-code`, `live-qr`; full headless
+      **106/106** (**3879** checks), exit `0`; `check`/`lint`/`test` green.
 
 `[x]` **Prove the diff's word-level wash in pixels** per plan `707`: the last
       named colour gap (`wordDiff` was "screenshot-only" since plan `648`) is

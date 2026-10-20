@@ -383,7 +383,7 @@ layer exactly *and* know the colours it paints.
 
 ## The QR recipe in a real window (plan `599`)
 
-`qr-code` decides how a matrix can be drawn; `live-qr` (45 checks) measures the
+`qr-code` decides how a matrix can be drawn; `live-qr` (52 checks) measures the
 226-node absolute grid and both single-node routes in a window:
 
 | Fact | Measured live |
@@ -396,9 +396,11 @@ layer exactly *and* know the colours it paints.
 | hit target | a click on `qr-dot-3-3` reports `hit=r3c3` |
 | SVG mask | one painted `174 × 174` node and no module nodes |
 | image | the SVG data URL keeps `174 × 174` and paints no `img:` fallback |
+| frame pixels | `qr-matrix`'s 21 × 21 module centres reconstruct the authored matrix on both routes; dark count 226; quiet zone background (modules) / white (image) |
 
-Colour, the retained-node cost and the `Image` accessibility node stay headless:
-the live renderer exposes no style, retained count or a11y dump (plan `197`).
+The retained-node cost and the `Image` accessibility node stay headless: the
+live renderer exposes no retained count or a11y dump (plan `197`). Colour no
+longer is — plan `708` decodes the frame on both routes.
 
 ## The shipped Tier 1 components (plan `168`)
 
@@ -1649,7 +1651,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-command-palette` | the shipped command surface in a window: `cmd-k` opens it with **nothing focused**, the veil is the window (1100 × 720), typing filters while the window handler sees each letter, arrows move the row and keep focus in the input, Enter commits through `onSubmit`, Escape/veil/row clicks dismiss with their reason, and a click-opened palette returns focus to its trigger — 80 checks |
 | `live-reorder` | the reorder probe in a window: a paced `drag` from row 0 by `+80` px lands the row at **index 2** (boundary 3), the moved row paints two rows below `bravo`, the drop is not an activation, a real click on a handle focuses it and activates without reordering, the keyboard lift/up/drop moves the row to index 1 and keeps native focus, and a keyboard cancel leaves the order and removes the indicator — 19 checks |
 | `live-tree` | the virtualized tree in a window: a real click expands `dir-0` to 48 rows and keeps it selected, a child indents 16 px inside a virtual row, the painted window is smaller than the flattened tree, a second click collapses it, a real `-800` wheel moves the anchor and unpaints the rows above, `scrollToItem(25)` anchors `[25, 0, 260]` and paints `dir-3/file-24`, a click and `Down`/`Up` move native focus and the selection, and `Right` expands/walks while `Left` returns to the parent and collapses — 44 checks (plan `559`). The list anchor reports the **flex-resolved** 260 px viewport, not the declared 280 |
-| `live-qr` | the QR matrix in a window: the 226-node absolute grid paints at the headless offsets (quiet zone `+24`, module `6`, finders `+60`/`(42, 42)`), a light module has no bounds, a real click reports `hit=r3c3`, the SVG mask and the SVG data-URL image each paint one `174 × 174` node, and the v4 scale is exact (`164`, `+16`, `4`) — 45 checks (plan `599`) |
+| `live-qr` | the QR matrix in a window: the 226-node absolute grid paints at the headless offsets (quiet zone `+24`, module `6`, finders `+60`/`(42, 42)`), a light module has no bounds, a real click reports `hit=r3c3`, the SVG mask and the SVG data-URL image each paint one `174 × 174` node, the v4 scale is exact (`164`, `+16`, `4`), and both the module grid and the image route reconstruct the authored matrix from the decoded frame — 52 checks (plans `599`, `708`) |
 | `live-scroll-into-view` | the element scroll route in a window: `End` focuses row 199 and the list paints it, `Home` returns to `y = 0`, `scrollToItem(120)` and `scrollIntoView(row 10)` both move the window and paint their target while leaving focus alone, three `Down`s paint and focus row 13, and a second `scrollIntoView` paints row 199 without moving focus — 39 checks (plan `601`). **Measured limit:** the element route only reveals a row the list has laid out; from the anchor at 120, row 20 moved the list while rows 50 and 100 did nothing — use `scrollToItem` for a far jump |
 
 ### Search and replace in a real window (plan `587`)
@@ -2084,9 +2086,9 @@ absence of the fixture's colour: the loader still emits no load/error event.
 
 ## Evidence on this host
 
-The suite is **106/106 green** here (`exit 0`, 3865 checks, 65 capabilities,
-**105.5 s**, 2026-10-20; plan `702`'s gate; plan `701` added 41 wash checks to
-`search-highlights`):
+The suite is **106/106 green** here (`exit 0`, 3879 checks, 65 capabilities,
+**146.4 s**, 2026-10-20; plan `708` added 7 QR pixel checks; plan `701` added 41
+wash checks to `search-highlights`):
 
 ```
 106/106 scenarios passed · capabilities: layout=verified root=verified text=verified
