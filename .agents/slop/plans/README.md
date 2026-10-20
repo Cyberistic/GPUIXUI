@@ -383,6 +383,7 @@ references without buying correctness.
 | [755](./755-canonical-density.md) | The canonical link writes the density it resolves | F | 380, 529, 534, 542, 688 | done |
 | [757](./757-tint-measurement-claims.md) | The tint is measured, and three passages still say it is not | F | 085, 371, 505, 747–750, 754 | done |
 | [758](./758-theme-edit-member-boundary.md) | The edit artifact that drops a scale member the theme declares | F | 685, 727, 744 | done |
+| [760](./760-native-text-figures.md) | The native-text figures have one owner | F | 071, 544, 569–592, 717 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3878,6 +3879,24 @@ the JSDoc, catalogue, design system, README and COMPONENTS row state the total
 rule, `canonicalLink` executes the platform-only row, and
 `theme-choice-params.test.ts` fails on the omission. No token value, pair,
 floor, role, metric or shipped theme moves.
+
+Plan `760` closes the last section of the catalogue whose figures had no owner.
+`docs/tokens.md` §*Native text documents* states four "tightest" figures — the
+opaque syntax minimum at 7.706:1 (`Light`), the 3.5% ink wash at 7.110:1
+(`Light · macOS`), the inline-code pair at 7.102:1 (`Light · Windows XP`) and
+the pressed diff tint at 7.008:1 (`Light`) — and one named value, the 28%
+word-level wash at 5.813:1 in identity dark, and none of them was derived:
+falsifying any one left every suite green. The ledger stated the same pair of
+minima as plan `574` measured them (opaque 7.562:1, inked 7.008:1), which later
+palette plans moved. The word-level figure is also wrong by a rounding step —
+the shipped composition measures 5.813 852…, so the page now quotes **5.814**.
+The table gains the `"ink"` kind, because the runtime's ink wash is black on a
+light tone and white on a dark one rather than a theme role, and it calls
+`nativeInk` so the table and `themeNativeTextFailures` measure one paint. Seven
+entries (five page clauses, the ledger's two) take `documentedFigures` to
+56; the ledger states each figure with its set and its pair, and
+`figures.test.ts` rejects the pre-760 digits per entry. No colour, pair, floor,
+metric, role or shipped theme moves.
 
 ## How to use a plan
 
