@@ -197,14 +197,32 @@ sh apps/playground/scripts/build-native-binding.sh
 ```
 
 It installs Rust 1.97.1 and the pinned zed tree under
-`.agents/slop/scratch/gpuix-build/` (agent state, gitignored), applies
-`apps/playground/patches/gpuix-zindex.patch` (the binding's `StyleDesc.zIndex`,
-which orders paint and hit testing among `absolute`/`fixed` siblings — plan
-`530`), builds the cdylib with `runtime_shaders`, and drops it at
+`.agents/slop/scratch/gpuix-build/` (agent state, gitignored), builds the
+cdylib with `runtime_shaders`, and drops it at
 `node_modules/@gpuix/native/gpuix-native.darwin-x64.node`. The recipe, commands,
 STOP conditions and the measured per-capability facts are in
 `.agents/slop/plans/140-gpuix-native-darwin-x64-build.md`; the decision is
 `.agents/adr/0003-darwin-x64-source-build.md`.
+
+**The default build is release-parity.** `apps/playground/patches/gpuix-zindex.patch`
+(plan `530`) adds `StyleDesc.zIndex`, a field the published package can neither
+type nor install, so it is opt-in: `GPUIX_ZINDEX=1` applies it and says the
+artifact is **not release evidence**; without the flag the script reverts a
+stale application, exactly as it does for `GPUIX_TRANSFORM`. No scenario
+exercises `zIndex` (plan `530` measured it with a scratch probe; the library
+ships paint order, not stacking — `packages/tw/src/unsupported.ts`,
+`ToastViewport`).
+
+There are two install routes and they agree by default:
+`build-native-binding.sh` writes `node_modules` directly, while the build hook
+`scripts/install-binding.mjs` copies `apps/playground/native/` over the store on
+every `nub run --filter playground build` — so an extension build is replaced by
+the release copy at the next build. Before any scenario runs, the suite scans
+the installed artifact and **refuses** one that is not release-parity: a newer
+source (`MAIN_ONLY_MARKERS`) or this repo's `zIndex` extension
+(`LOCAL_EXTENSION_MARKERS`, plan `811`). Measured on the 0.10.0 release
+artifact, `zIndex` appears zero times in the binary and every release style key
+appears once.
 
 The artifact is a build product (gitignored). A fresh checkout has no binding
 and reports exit `2` until the script is run. Its provenance: same version, same

@@ -143,7 +143,26 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 146/146 plans-and-harness
+`[x]` `[██████████]` 147/147 plans-and-harness
+
+`[x]` **Make the binding fingerprint see a local runtime extension** per plan
+      `811`: plan `529` refuses a binding built from a newer source, but a build
+      with **this repo's** `zIndex` patch carried an extension the published
+      package cannot type or install and the fingerprint returned `None` — so a
+      run could print the release pin over a runtime a consumer cannot have.
+      `LOCAL_EXTENSION_MARKERS` (`zIndex`) + `extensionIssue` + `artifactIssue`
+      close it (gated on the measured `0.10.0` pin, main-only reason first);
+      `build-native-binding.sh` is now release-parity by default and
+      `GPUIX_ZINDEX=1` is opt-in with a reverse-revert, matching the transform
+      flag. **Measured:** the installed/local artifact `fee1fcaa7d44` has
+      `zIndex` **0** times and every release style key once (25 546 368 B); the
+      boundary proof ran `layout-flex` green on it, then the same file plus a
+      trailing `zIndex` exited `1` **before any scenario** with the extension
+      message, and the restored copy was green again. Six unit tests
+      (testing 69 → **75**); `nub run check`/`lint`/`test` green (playground
+      **635**). Plan `530` is amended: opt-in, artifact superseded, still no
+      scenario. Focused id run: `layout-flex`. Plan:
+      `.agents/slop/plans/811-local-binding-extension-guard.md`.
 
 `[x]` **Prove gradient backgrounds in the frame** per plan `807`:
       `StyleDesc.background` publishes a **two-stop linear gradient**

@@ -2,12 +2,22 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | landed |
+| Status | landed, then **opt-in** (plan `811`): the default build is release-parity and the suite refuses an artifact that carries the extension |
 | Phase | F (native capability) |
 | Owner | gpuix-zindex workstream |
 | Depends on | `140` (the source build), `529` (binding provenance) |
 | Feeds | plan `524` §5 (`packages/tw`), Toast / Dialog / Popover stacking |
-| Amends | `524` §5 (the GPUix extension is now applied, not just designed) |
+| Amends | `524` §5 (the GPUix extension is designed and available behind `GPUIX_ZINDEX=1`) |
+
+> **Amendment (plan `811`, 2026-10-20).** The artifact this plan measured is no
+> longer installed: the suite's build hook restores `apps/playground/native/`,
+> which is plan `529`'s release-tag build, and the installed release artifact
+> carries no `zIndex` (`strings` count `0`; release style keys appear once).
+> Because the published package cannot type or install the field, the extension
+> is now **opt-in** (`GPUIX_ZINDEX=1`), and the binding fingerprint refuses an
+> artifact that carries it, so no run can claim `verified 0.10.0` on a runtime a
+> consumer cannot install. There is still **no scenario** for `zIndex`; the Rust
+> unit tests below are its only automated guard.
 
 ## 1. Goal
 
