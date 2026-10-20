@@ -81,7 +81,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | scale | `scale-cost`, `live-scale` | verified |
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow`, `tier2-scroller`, `tier2-command` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
-| states | `declared-styles`, `state-pixels`, `live-states`, `live-state-pixels` | verified |
+| states | `declared-styles`, `state-pixels`, `live-states`, `live-state-pixels`, `opacity-pixels`, `live-opacity-pixels` | verified |
 | truncation | `text-truncation`, `live-truncation` | verified |
 | inspector | `property-panel`, `live-inspector` | verified |
 | editor | `multi-pane-editor`, `live-editor` | verified |
@@ -96,7 +96,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **110/110 green here** (exit `0`, `.artifacts/smoke-report.json`, **4077 checks**, 65 capabilities; **224.9 s** at the plan `755` gate, **250.2 s** with plan `754`'s six-frame state probe; **177.8 s** at the plan `751` gate; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`, and plan `754` added the 50-check `state-pixels`). The live suite **last ran in full at 99/99**
+The suite is **111/111 green here** (exit `0`, `.artifacts/smoke-report.json`, **4106 checks**, 65 capabilities; **398.1 s** on the plan `756` head, **224.9 s** at the plan `755` gate; plan `756` added the 29-check `opacity-pixels`, plan `754` added the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 99/99**
 (`live-report.json`, **2831 checks**, 61 capabilities; **1245.6 s**, exit `0`)
 on 2026-10-20, the merge/release gate (plan `755`, code head `7b304a1f` at the
 gate). That total is plan `751`'s 2780 plus **50 checks from
@@ -120,17 +120,20 @@ colours), all through plan `656`'s capture-capable live runner (`live-shell`
 included; a plain `--all` wrote no frame or sidecar). Both `host` lines carry
 the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content
 origin and a borderless size — is what every geometry check now asserts.
-**Registered live scenarios are 99, and the full gate covers all 99** (plan
-`754`'s `live-state-pixels` passed inside it). The live registry is guarded by
+**Registered live scenarios are 100, and the full gate covers the 99 that existed
+when it ran** (plan `756`'s `live-opacity-pixels` is registered and
+focused-green). The live registry is guarded by
 `liveScenarioProblems` (plan `639`); the count grew from 96 to 97 with plan
-`736`'s `live-shadow-pixels`, to 98 with plan `745`'s `live-border-pixels` and
-to 99 with plan `754`'s `live-state-pixels`. Plans `697` and
+`736`'s `live-shadow-pixels`, to 98 with plan `745`'s `live-border-pixels`, to
+99 with plan `754`'s `live-state-pixels` and to 100 with plan `756`'s
+`live-opacity-pixels`. Plans `697` and
 `701` added **31** checks to `live-chart` (40 → 71) and **41** to
 `live-highlights` (12 → 53), plan `715` added **14** to `live-docking`, plan
 `722` added **11** to `live-media`, plans `724`/`734` added **25** to
 `live-click-routing`, plan `736` added **28** to `live-shadow-pixels`, plan
-`745` added **64** to the new `live-border-pixels` and plan `754` added **50**
-to the new `live-state-pixels`; plan `755`
+`745` added **64** to the new `live-border-pixels`, plan `754` added **50**
+to the new `live-state-pixels` and plan `756` added **29** to the new
+`live-opacity-pixels`; plan `755`
 measured the 99-scenario registry inside the full sequence: **2831** checks, exit
 `0`.
 

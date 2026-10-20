@@ -111,6 +111,10 @@ puts the child on a role close to its parent's blend must fail by name.
 
 ## 5. Checks (identical in both hosts)
 
+The harness records a lookup for every sample, so the measured count is **29**
+per host (not the 11 assertions below): each `expectPixel` contributes the
+bounds, scale-mapping and pixel-present checks before the comparison.
+
 Preconditions (5):
 
 1. `the fill roles are distinguishable`
@@ -128,9 +132,9 @@ Frame (6):
 10. `a child is dimmed with its parent` — `op-child` = `blend(success, 0.5, background)`
 11. `nested opacities multiply` — `op-nested-child` = `blend(primary, 0.25, background)`
 
-11 checks per host. If the measurement disproves 10 or 11, replace the check
-with the measured rule, keep the guard (it must still fail on a wrong value),
-and add the finding to §8 and to `COMPONENTS.md`.
+11 assertions per host, **29 recorded checks**. If the measurement disproves 10
+or 11, replace the check with the measured rule, keep the guard (it must still
+fail on a wrong value), and add the finding to §8 and to `COMPONENTS.md`.
 
 ## 6. Unit tests (`opacity-pixels.test.ts`, meaningful and able to fail)
 
@@ -150,10 +154,10 @@ reversed) or if the nesting is made additive — state that in the header commen
 nub run --filter playground build                      # exit 0
 nub apps/playground/dist/smoke/run.js --list | wc -l   # 111
 nub apps/playground/dist/smoke/run.js --only opacity-pixels
-# expected: 1/1, exit 0, 11 checks
-nub run --filter playground test                       # playground 508 -> 512 tests
+# expected: 1/1, exit 0, 29 checks
+nub run --filter playground test                       # playground 508 -> 520 tests
 nub apps/playground/dist/live/run.js --only live-opacity-pixels
-# expected: 1/1, exit 0, 11 checks, one window
+# expected: 1/1, exit 0, 29 checks, one window
 nub apps/playground/dist/smoke/run.js                  # end-of-task: 111/111, exit 0
 nub run check && nub run lint && nub run test
 ```
@@ -161,13 +165,15 @@ nub run check && nub run lint && nub run test
 ## 8. Mutation proofs (observed, then reverted)
 
 - **M1** — drop `opacity` from `op-half`: check 7 must fail with
-  `expected #575eafff, got #a7a9ffff` (the exact blend is read from the run).
+  `expected #5c5f8dff, got #a7a9ffff`.
 - **M2** — drop `opacity` from `op-parent`: check 10 must fail with the
-  undimmed `success` (`#3bc97fff`).
+  undimmed `success` (`expected #266f4dff, got #3bc97fff`).
 - **M3** — set `op-nested-child`'s opacity to `1`: check 11 must fail with the
-  single-0.5 blend.
-- **M4** — swap the `blendOver` arguments in `opacityBlend`: unit test 1 fails.
-- **M5** — make `nestedOpacity` additive: unit test 2 fails.
+  single-0.5 blend (`expected #383b55ff, got #5e608fff`).
+- **M4** — swap the `blendOver` arguments in `opacityBlend`: the channel-mix and
+  nested-paint unit tests fail.
+- **M5** — make `nestedOpacity` additive: three unit tests fail
+  (`expected 1 to be 0.25`, `expected 1.5 to be 0.5`, `expected 1 not to be 1`).
 
 Record the actual failure strings in §8; if any mutation **passes**, that check
 is not load-bearing and must be replaced, not kept.
@@ -187,13 +193,50 @@ is not load-bearing and must be replaced, not kept.
 
 ## 10. Acceptance
 
-- 11 checks green in both hosts, focused, twice each.
-- Unit tests green; playground total is **512**.
+- 29 checks green in both hosts, focused, twice each.
+- Unit tests green; playground total is **520**.
 - The full headless registry is **111/111**, live registry **100**.
 - Five mutation proofs observed and reverted (§8).
 - Ledgers, plan index, `COMPONENTS.md` `states` row and the cross-team row
   updated; nothing in `packages/*` changed.
 
-## 11. Results
+## 11. Results (2026-10-20, darwin-x64)
 
-_To be filled by the executor._
+**Measured.** Opacity works and dims the **whole subtree**: `op-half` paints
+`#5c5f8d` (`primary #a7a9ff` at 0.5 over `background #11141a`), the opaque
+neighbour stays `card #191d25`, a `success` child inside a half-opacity parent
+paints `#266f4d` instead of `#3bc97f`, and two nested halves paint `#383b55` —
+the product `0.25`, not a single `0.5` (`#5e608f`).
+
+**Measured correction:** the two-step composite (parent surface, then child,
+then the group at the parent's opacity) is 1–2 channels lighter than the
+idealised one-shot `0.25` mix (`#383b55` vs `#373953`) because the runtime
+rounds to 8 bits at each step. The pure `nestedPaint` models the steps, and a
+4-channel drift still fails; the idealised mix is asserted to agree within the
+frame tolerance in a unit test.
+
+| Suite | Scenarios | Checks | Duration | Exit |
+| ----- | --------- | ------ | -------- | ---- |
+| headless `opacity-pixels` | 1/1 | **29** | 7.2 s | `0` |
+| live `live-opacity-pixels` | 1/1 | **29** | 5.7 s | `0` |
+
+Both hosts ran focused twice, green. Playground unit tests **508 → 520** (12
+new). Five mutation proofs observed and reverted (§8); the M3 run exposed a
+duplicate-property edit that the type-checker caught before the suite ran, and
+the expectation was then corrected for the two-step rounding before any check
+was weakened.
+
+End-of-task: the full headless registry is **111/111 · 4106 checks · 65
+capabilities · 398.1 s**, exit `0` — exactly `4077 + 29`; the live registry is
+**100** (`live-opacity-pixels` focused-green; the full live suite is the merge
+gate and was not run here). `nub run check`/`lint`/`test` green.
+
+```sh
+nub run --filter playground build                       # exit 0
+nub apps/playground/dist/smoke/run.js --only opacity-pixels
+# 1/1 · 29 checks · 7.2 s · exit 0 (twice)
+nub apps/playground/dist/live/run.js --only live-opacity-pixels
+# 1/1 · 29 checks · 5.7 s · exit 0 (twice)
+nub apps/playground/dist/smoke/run.js                   # 111/111 · 4106 · 65 · 398.1 s · exit 0
+nub run --filter playground test                        # 520 tests
+```

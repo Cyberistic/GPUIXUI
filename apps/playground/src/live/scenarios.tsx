@@ -126,6 +126,7 @@ import {
   stateColourLiveScenario,
   stateColourView,
 } from "../scenarios/state.js";
+import { opacityLiveScenario, opacityView } from "../scenarios/opacity.js";
 import {
   captureLive,
   expectColour,
@@ -12792,6 +12793,27 @@ const liveStatePixels: LiveScenario = {
 };
 
 /**
+ * Declared opacity in a real window (plan `756`).
+ *
+ * The headless pass proves the blend and the subtree; this twin proves the same
+ * rule survives a window's paint path. The probe is static, so one frame and one
+ * settle after mount are the whole interaction.
+ */
+const liveOpacityPixels: LiveScenario = {
+  ...opacityLiveScenario,
+  view: opacityView,
+  ready: "op-stage",
+  steps: (ctx) =>
+    opacityLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-opacity-pixels.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -13928,6 +13950,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveShadowPixels,
   liveBorderPixels,
   liveStatePixels,
+  liveOpacityPixels,
   terminal,
   selectionSignal,
 ];

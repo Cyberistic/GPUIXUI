@@ -95,6 +95,7 @@ import { pixelColourScenario } from "./pixels.js";
 import { shadowScenario } from "./shadow.js";
 import { borderScenario } from "./border.js";
 import { stateColourScenario } from "./state.js";
+import { opacityScenario } from "./opacity.js";
 import {
   primitivesActionsScenario,
   primitivesDisplayScenario,
@@ -257,6 +258,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   shadowScenario,
   borderScenario,
   stateColourScenario,
+  opacityScenario,
   a11yScenario,
   nativeSurfacesScenario,
   diffSurfaceScenario,
