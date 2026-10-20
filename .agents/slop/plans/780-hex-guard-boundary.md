@@ -155,9 +155,10 @@ floor, metric, role or shipped theme.
 
 - Add one row to `.agents/slop/plans/README.md` in the `tokens-theme` table:
   `| [780](./780-hex-guard-boundary.md) | The one boundary guard that cannot take a boundary value | F | 067, 068, 096, 371, 540, 565 | done |`.
-- While editing that table, add the **missing** row for the existing plan
-  `687-platform-theme-recipes.md` (its file exists and `TODO.md` cites it twice,
-  but the index has no row): `| [687](./687-platform-theme-recipes.md) | Platform theme recipes: Windows XP (Luna), Aero, and Omarchy (Recipe B open) | E | 311, 688 | partial (Recipe A done in 311) |`.
+- Do **not** add a second row for plan `687`. It is already indexed, in the
+  *Reference adoption (block `200–299`)* table, as a backticked name rather than a
+  link; a link-only check of the index reports it as missing. Leave that row
+  where the reference-adoption executor put it.
 - Add one ticked row to `TODO.md` under *Design tokens and theming*, phrased as
   the defect, with "(plan 780)".
 
@@ -258,5 +259,7 @@ Two-direction proof to record in §7:
   the four new guard cases), `nub run check`, `nub run lint` and `nub run test`
   pass. No colour, pair, floor, metric, role or shipped theme moves;
   `contrastPairs` stays **470** and the figure table stays **70**.
-- **Index hygiene**: plan `687` gained the row it was missing (its file existed
-  and `TODO.md` cited it twice); plan `780` is indexed.
+- **Index**: plan `780` is indexed in the `tokens-theme` table. Plan `687` was
+  already indexed — in the *Reference adoption* table, as a backticked name
+  rather than a link, which is why a link-only scan reports it as missing; no
+  second row was added.

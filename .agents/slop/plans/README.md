@@ -349,7 +349,6 @@ references without buying correctness.
 | [684](./684-remaining-eight-surface-counts.md) | The last two eight-surface counts after plan 651 | F | 308, 399, 651, 683 | done |
 | [685](./685-theme-diff.md) | The inverse of `extendTheme`: an edited theme as overrides | F | 011, 051, 063, 085, 089, 321, 353, 389, 529 | done |
 | [686](./686-density-boundary-truth.md) | A stale density keeps the preset; the page says it empties the metrics | F | 068, 089, 380, 534, 685 | done |
-| [687](./687-platform-theme-recipes.md) | Platform theme recipes: Windows XP (Luna), Aero, and Omarchy (Recipe B open) | E | 311, 688 | partial (Recipe A done in 311) |
 | [688](./688-plan-number-collision.md) | The plan-number collision at `433`, and the rule it exposes | F | 311, 052 | done |
 | [689](./689-field-text-selection.md) | A field's typed text through a text selection | F | 071, 087, 362, 506, 510, 527, 528, 659 | done |
 | [692](./692-platform-variant-owner.md) | The platform registry's retyped variant lists | F | 051, 063, 067, 387, 609, 678 | done |
