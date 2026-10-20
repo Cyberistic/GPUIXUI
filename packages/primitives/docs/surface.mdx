@@ -101,7 +101,8 @@ routing.
 - A static surface is exactly one named `Image` node from `label`; a focusable
 surface (`tabIndex`) is one named `group` whose inner image is decorative, so
 the tab stop always has a name. A blank `label` leaves either shape unnamed
-rather than inventing a name. The interior is invisible to `getAutomationTree()`:
+rather than inventing a name, and it drops the tab stop too (an unnamed focus
+stop is not shipped). The interior is invisible to `getAutomationTree()`:
 a raster chart needs a text summary or a table elsewhere, and a native view's
 contents are the adapter's responsibility, not this component's.
 

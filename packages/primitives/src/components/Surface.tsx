@@ -92,25 +92,29 @@ export const renderSurface = ({
   imageRef,
   onFocus,
   onBlur,
-}: RenderSurfaceProps): ReactElement => (
-  <div
-    ref={elementRef}
-    testId={testId}
-    tabIndex={tabIndex}
-    role={tabIndex === undefined ? undefined : "group"}
-    aria-label={tabIndex === undefined ? undefined : ariaName(label)}
-    onFocus={onFocus}
-    onBlur={onBlur}
-    style={mergeStyle({ width, height, display: "flex" }, style)}
-  >
-    <img
-      ref={imageRef}
-      src={TRANSPARENT_PIXEL}
-      alt={tabIndex === undefined ? ariaName(label) : undefined}
-      style={{ width: "100%", height: "100%" }}
-    />
-  </div>
-);
+}: RenderSurfaceProps): ReactElement => {
+  const name = ariaName(label);
+  const focusTab = name === undefined ? undefined : tabIndex;
+  return (
+    <div
+      ref={elementRef}
+      testId={testId}
+      tabIndex={focusTab}
+      role={focusTab === undefined ? undefined : "group"}
+      aria-label={focusTab === undefined ? undefined : name}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      style={mergeStyle({ width, height, display: "flex" }, style)}
+    >
+      <img
+        ref={imageRef}
+        src={TRANSPARENT_PIXEL}
+        alt={focusTab === undefined ? name : undefined}
+        style={{ width: "100%", height: "100%" }}
+      />
+    </div>
+  );
+};
 
 /**
  * A leaf whose pixels belong to an adapter.
