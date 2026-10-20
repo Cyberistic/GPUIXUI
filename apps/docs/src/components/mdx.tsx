@@ -73,6 +73,19 @@ import {
   TestingAbsences,
   TestWindowTable,
 } from "./test-surface";
+import {
+  AutomationAbsences,
+  AutomationAppSideTable,
+  AutomationAppTable,
+  AutomationCapabilities,
+  AutomationClockTable,
+  AutomationEntryTable,
+  AutomationLocatorTable,
+  AutomationMouseTable,
+  AutomationProtocolErrors,
+  AutomationProtocolTable,
+  AutomationTreeNode,
+} from "./automation-tables";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -143,6 +156,17 @@ export function getMDXComponents(components?: MDXComponents) {
     TestMethods,
     TestMethodExclusions,
     TestingAbsences,
+    AutomationAppSideTable,
+    AutomationEntryTable,
+    AutomationLocatorTable,
+    AutomationAppTable,
+    AutomationMouseTable,
+    AutomationClockTable,
+    AutomationProtocolTable,
+    AutomationCapabilities,
+    AutomationProtocolErrors,
+    AutomationTreeNode,
+    AutomationAbsences,
     ...components,
   } satisfies MDXComponents;
 }

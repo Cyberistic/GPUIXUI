@@ -161,6 +161,16 @@
  * stays on Deployment's shipping section, and `update`/`updates` are
  * deliberately absent — the plain word also means "a component updates its
  * state", and the page title already answers the hyphenated spelling.
+ *
+ * Plan 634 adds the driver vocabulary: `ui automation`, `e2e`, `end to end`,
+ * `integration test`, `locator`, `selector`, `automation tree`, `drive the
+ * app`, `simulate input`, `fake mouse`, `capture frames`, `screenshot test`
+ * and the transport phrases name Automation, which documents
+ * `@gpuix/native/automation`. `e2e` and `end to end` move here from Testing,
+ * which owns the offscreen renderer and the absent tools, not the real-app
+ * driver. `screenshot` stays on Previews, `test id` and `testid` stay on
+ * Component API, `playwright`/`webdriver` stay on Testing, `selection` stays on
+ * Selection and find, and `tree` stays on Data display.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -536,8 +546,6 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "golden test",
       "visual regression",
       "visual regression test",
-      "e2e",
-      "end to end",
       "component test",
       "component tests",
       "unit test",
@@ -932,6 +940,48 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "abortsignal",
       "error handling",
       "async error",
+    ],
+  ],
+  ["/docs/previews", ["screenshot", "screenshots"]],
+  [
+    "/docs/automation",
+    [
+      "ui automation",
+      "automation api",
+      "app automation",
+      "e2e",
+      "e2e test",
+      "e2e tests",
+      "end to end",
+      "end-to-end",
+      "end to end test",
+      "end-to-end test",
+      "integration test",
+      "integration tests",
+      "locator",
+      "locators",
+      "element locator",
+      "selector",
+      "selectors",
+      "test selector",
+      "automation tree",
+      "element tree",
+      "drive the app",
+      "drive a real app",
+      "simulate input",
+      "fake mouse",
+      "simulate mouse",
+      "control the clock",
+      "capture frames",
+      "app screenshot",
+      "save screenshot",
+      "screenshot test",
+      "launch the app",
+      "stdio automation",
+      "sse automation",
+      "sse",
+      "server sent events",
+      "server-sent events",
     ],
   ],
 ]);

@@ -182,6 +182,11 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     what: "the test renderer, every method a component test uses and the absent tools",
   },
   {
+    title: "Automation",
+    url: "/docs/automation",
+    what: "the app driver, every Locator method and the wire protocol",
+  },
+  {
     title: "Troubleshooting",
     url: "/docs/troubleshooting",
     what: "the render-error path: boundary, overlay and `onUncaughtError`",

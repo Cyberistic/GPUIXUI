@@ -1504,6 +1504,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the update API name, which returned nothing before plan 633",
     },
+    {
+      query: "automation",
+      expected: "/docs/automation",
+      first: true,
+      what: "the app driver, which reached the Icon page before plan 634",
+    },
+    {
+      query: "getByTestId",
+      expected: "/docs/automation",
+      first: true,
+      what: "a locator name, which returned nothing before plan 634",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

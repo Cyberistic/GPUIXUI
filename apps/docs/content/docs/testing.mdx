@@ -193,6 +193,14 @@ commit to wait for. Measure after the input call returns, not after a timeout.
 The first two are a package's own proof. The last one tests the docs site, never
 the library: a browser surface is not the desktop runtime.
 
+## Driving a real window
+
+Everything above runs in a window this process owns. The app your consumer
+ships is a separate process with a real window and a frame loop, and the
+runtime ships a driver for it: `enableAutomation` in the app, `launch` and
+`Locator` in the test. [Automation](/docs/automation) documents that protocol,
+including why Playwright is not part of it.
+
 ## What is not provided
 
 <TestingAbsences />

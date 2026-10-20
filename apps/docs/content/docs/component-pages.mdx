@@ -169,7 +169,8 @@ The expectation table is the contract, not decoration:
 ### The gesture vocabulary
 
 A scene that needs an interaction declares steps instead of mounting the state
-directly. The smoke runs them through the renderer's own automation API, asserts
+directly. The smoke runs them through the renderer's own automation API
+([Automation](/docs/automation) documents the consumer-facing driver), asserts
 the expectation is **absent before** the steps and **present after** them, and
 fails naming the scene when either half is wrong.
 

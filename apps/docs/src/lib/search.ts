@@ -9,6 +9,7 @@ import type { ComponentMetaInput } from "@/component-meta/schema";
 import { componentSymbols } from "@/component-meta/symbols";
 import { accessibilitySearchEntry } from "./accessibility-search";
 import { valueExports } from "./api-values.generated";
+import { automationSearchEntry } from "./automation-search";
 import { capabilitySearchEntry } from "./capability-search";
 import { aliasesFor } from "./component-aliases";
 import {
@@ -171,6 +172,7 @@ export const generatedSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   troubleshootingErrorSearchEntry,
   selectionSearchEntry,
   testingSearchEntry,
+  automationSearchEntry,
   updaterSearchEntry,
 ];
 

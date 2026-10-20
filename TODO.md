@@ -431,6 +431,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `nub.lock` reproducibility | tooling | **resolved** — tracked on `master` |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source | licensing | pending |
 | **Evidence for `/docs/updates`**: a packaged app (one real packager format) plus a fixture update feed, to prove `checkUpdate`, signature verification and `downloadAndInstall`; the page states they are declared, never executed (plan 633) | release / CI owner | pending — needs packaging, which no workstream owns yet |
+| **Evidence for `/docs/automation`**: one playground scenario served over `enableAutomation` so a test process can `launch` it, use a `Locator`, capture a frame and assert a real end-to-end run; the page states the gap until then (plan 634 §11.6) | playground | pending — thesis: the harness already mounts the real renderer, so the ask is one scenario plus a pipe |
 
 ## Phase D — data and workspace components
 
@@ -472,7 +473,23 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 200/200
+`[x]` `[██████████]` 201/201
+
+`[x]` **Driver automation has a page (plan 634)** — `@gpuix/native/automation`
+      and the app-side `enableAutomation`/`installBrowserAutomation` had no owner,
+      so measured 2026-10-21 `automation`, `ui automation`, `locator` and
+      `automation tree` reached the Icon page, `getByTestId`, `connectStdio` and
+      `dragTo` returned nothing, `e2e` reached Testing and `sse` the Roadmap, while
+      Testing named Playwright and WebDriver as absent without naming the runtime's
+      own answer. `/docs/automation` renders the 38 entry exports, four runtime
+      functions, 17 `Locator` methods, the `App`/mouse/clock surface, 25 protocol
+      methods, 8 error codes, 9 `TreeNode` fields and nine absences from the
+      installed declarations; `automation.test.ts` (35 cases) fails in both
+      directions, and Testing gained `## Driving a real window`. 152 files /
+      1 764 docs tests, 115-page `smoke:build` and two production queries, scoped
+      axe (2 schemes) and 390 px green; nine forced defects and the measured
+      search proof in plan 634 §11. **The page states that no workspace connects
+      to a running app yet** — the cross-team ask is in Interlocks.
 
 `[x]` **Auto-update has a page, and Deployment stops denying it (plan 633)** —
       `@gpuix/native@0.10.0` implements a signed update client

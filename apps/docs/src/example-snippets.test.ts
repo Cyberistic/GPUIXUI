@@ -46,7 +46,7 @@ const pages = Arr.sort(
  * the same compiler the component pages get; the other hand-authored pages hold
  * illustrative fragments that are not standalone modules.
  */
-const extraPages = ["async-data", "updates"] as const;
+const extraPages = ["async-data", "updates", "automation"] as const;
 
 const examples: ReadonlyArray<ExampleSnippet> = [
   ...pages.map((page) => ({

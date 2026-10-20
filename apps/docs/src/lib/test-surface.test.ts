@@ -284,7 +284,7 @@ const owned: ReadonlyArray<readonly [string, string]> = [
   ["storybook", "/docs/testing"],
   ["testing library", "/docs/testing"],
   ["react testing library", "/docs/testing"],
-  ["e2e", "/docs/testing"],
+  ["e2e", "/docs/automation"],
   ["mock", "/docs/testing"],
   ["mocking", "/docs/testing"],
   ["fixture", "/docs/testing"],

@@ -91,7 +91,7 @@ const internalLinks = (): ReadonlyArray<readonly [string, string]> =>
   );
 
 describe("troubleshooting page", () => {
-  it("is served from the sidebar after the two test pages", () => {
+  it("is served from the sidebar after the three test pages", () => {
     const served = source
       .getPages()
       .find((entry) => entry.url === "/docs/troubleshooting");
@@ -101,6 +101,9 @@ describe("troubleshooting page", () => {
       pages: ReadonlyArray<string>;
     };
     expect(meta.pages.indexOf("troubleshooting")).toBe(
+      meta.pages.indexOf("automation") + 1,
+    );
+    expect(meta.pages.indexOf("automation")).toBe(
       meta.pages.indexOf("testing") + 1,
     );
     expect(meta.pages.indexOf("testing")).toBe(

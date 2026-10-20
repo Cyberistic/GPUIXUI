@@ -1,0 +1,196 @@
+---
+title: Automation
+description: "Drive a running GPUix app from a test: enableAutomation over stdio, launch and Locator selectors by testId, mouse and clock control, screenshots and the wire protocol — and what it does not replace."
+---
+
+The runtime ships a driver for a **running** app. The app serves a protocol on
+standard input and output; the test process gets an `App` with `Locator`s and can
+click, type, scroll, read text, move the clock and capture a frame. This page
+documents that surface from the installed declarations.
+
+## What it is
+
+It is the strongest of the three test layers:
+
+| Layer | What it proves | Runs on |
+| ----- | -------------- | ------- |
+| pure logic | a decision, reducer or formatter | any host |
+| [test renderer](/docs/testing) | layout, hit-testing, focus, input and paint in an offscreen window | a host with a GPUix binding |
+| automation | the app your consumer launches: its real process, its real window, its frame loop | a host with a desktop session |
+
+[Testing your components](/docs/testing) owns the offscreen renderer and the
+component-level methods. [Native smoke suite](/docs/native-testing) is the
+repository's own capability suite. This page is neither: it is how a consumer
+drives the built app.
+
+## Turn it on in the app
+
+`@gpuix/react`'s `render()` builds its renderer through `createNativeRenderer`,
+which starts automation automatically when `process.stdin` is **not a TTY** —
+exactly what a spawned test process gives it. A React app started by `launch`
+therefore needs no code change.
+
+For an app that creates its renderer by hand, call `enableAutomation` once the
+renderer exists. It is the same composition the automatic path uses:
+`serveAutomationStdio(new InProcessBackend(liveRendererAsTest(renderer)))`.
+
+```ts
+import { createRenderer, enableAutomation } from "@gpuix/react";
+
+const renderer = createRenderer(() => {});
+renderer.init({ title: "Settings", width: 960, height: 640 });
+enableAutomation(renderer);
+```
+
+<AutomationAppSideTable />
+
+A browser or wasm app has no stdio: `installBrowserAutomation(renderer)` from
+`@gpuix/native/runtime` returns an `App` bound to the page's renderer, so a
+harness in the same document can drive it. In a browser, pointer events go to
+the canvas and **every** key and IME event goes to the hidden element
+`IME_MIRROR_SELECTOR`; `browserRendererAsTest` and `browserKeystrokeInit` make
+that split transparent.
+
+## Connect from the test
+
+`launch` spawns the app with piped stdio, performs the `initialize` handshake and
+returns the `App`. `close()` kills the child. Use `connectStdio` when you own the
+transport — a worker, a socket, an already-running process.
+
+```ts
+import { launch } from "@gpuix/native/automation";
+import { expect, test } from "vitest";
+
+test("the settings form saves", async () => {
+  const app = await launch({ command: "node", args: ["dist/app.js"] });
+  try {
+    await app.getByTestId("name").fill("Ada");
+    await app.getByTestId("save").click();
+    const saved = await app.getByText("Saved").waitFor({ timeoutMs: 2000 });
+    expect(saved.text).toBe("Saved");
+  } finally {
+    await app.close();
+  }
+});
+```
+
+<AutomationEntryTable group="drive" />
+
+## Find an element
+
+A locator is a selector plus the operations scoped to it. Three roots are
+declared: `getByTestId`, `getByText` and `getByType`, each chainable with the
+same three and with a `parent` selector.
+
+Prefer `getByTestId`. It is the `testId` you passed to a part, which makes the
+test survive a change in the renderer's element ids or internal order;
+[Component API](/docs/component-api#shared-host-props) owns the prop itself.
+`getByText` matches an element's own or descendant text, and `getByType` names a
+host tag from [Native elements](/docs/native-elements).
+
+<AutomationLocatorTable />
+
+## Act on it
+
+The action methods are `click`, `hover`, `wheel`, `dragTo`, `dragBy`, `fill`
+and `press`. `dragTo`/`dragBy` send `steps` move events between the press and the
+release (default 8); a single jump would prove nothing about snapping, live
+previews or per-move commits. `wheel` takes the runtime's sign: negative
+`deltaY` scrolls down, the opposite of the DOM.
+
+`App.mouse` takes raw window coordinates. Use it for empty space, a marquee, or
+a gesture that ends outside every hitbox; use a locator whenever the target is
+an element.
+
+<AutomationAppTable />
+
+<AutomationMouseTable />
+
+## Read and wait
+
+`all`, `count`, `element`, `bounds`, `center` and `textContent` read the tree;
+`waitFor` polls until a locator matches and throws a `Timeout` when it does not.
+`textContent` concatenates the element's own text and every descendant's, in
+document order — a wrapper around `<text>` therefore reads the string a person
+sees.
+
+There is no assertion in the protocol. `expect(await app.getByTestId("row").count()).toBe(3)`
+is your runner's assertion over a value this API returned.
+
+## Control time
+
+`App.clock` moves the **app's** clock, not the test process's: `pause` returns
+the instant and stops time, `set` jumps, `fastForward` advances and runs the
+timers that become due, `resume` returns to real time. Use it for a toast's
+dismissal, a countdown or a debounce, so a test does not sleep.
+
+[Testing](/docs/testing#time) owns the renderer's two clocks and the difference
+between them.
+
+<AutomationClockTable />
+
+## Capture frames
+
+`App.screenshot({ path })` writes a PNG and returns the path;
+`captureFrames(dir, timesMs)` writes several at the given instants. A frame is an
+artifact for a human or a bug report, never an assertion: a pixel diff cannot
+say which token painted it, while a measured bound or a painted string names the
+value that failed. [Previews](/docs/previews) owns the screenshots this
+documentation site commits.
+
+## The wire protocol
+
+A driver in another language speaks the same messages. `PROTOCOL_VERSION` is
+`1`; `initialize` answers with the process id, the capabilities and the window
+size. Each request carries an `id`, a `method` and `params`; the reply carries
+the same `id` and either a `result` or an error.
+
+<AutomationCapabilities />
+
+<AutomationProtocolTable />
+
+The eight error codes are the only failure taxonomy. `NotFound` and `Ambiguous`
+come from a selector, `Timeout` from `waitFor` or a transport, `Protocol` from a
+malformed message or a version mismatch, `Closed` from a dead app, and
+`Unsupported`, `Security` and `Cancelled` from the request itself.
+
+<AutomationProtocolErrors />
+
+The tree the protocol reads is the renderer's own, not a DOM:
+
+<AutomationTreeNode />
+
+`parseRequest`, `parseResponse`, `parseWireMessage`, `encodeSse`,
+`decodeSseChunk` and `createSseDecoder` are the message helpers; `methods` is
+the single source of truth the types `MethodName`, `ParamsOf` and `ResultOf`
+derive from.
+
+## What it is not
+
+<AutomationAbsences />
+
+## Evidence on this site
+
+Every row on this page is derived from the installed `@gpuix/native@0.10.0` and
+`@gpuix/react` declarations, and `automation.test.ts` fails in both directions
+when the runtime gains or drops a member. Both code blocks above are compiled by
+the repository's own `tsc`.
+
+No workspace in this repository connects to a running app over this protocol
+yet. The playground runs its scenarios through the offscreen `TestRenderer`, and
+the live previews run the wasm renderer in a browser. So this page documents the
+declared contract and the recipes, **not** an end-to-end run; the playground ask
+is tracked in `TODO.md`.
+
+## Related
+
+- [Testing your components](/docs/testing) — the offscreen renderer, every
+  `TestRenderer` method and the tools that are absent.
+- [Native smoke suite](/docs/native-testing) — this repository's capability
+  scenarios and their `0`/`1`/`2` exit contract.
+- [Component API](/docs/component-api#shared-host-props) — the `testId` prop a
+  locator reads.
+- [Accessibility](/docs/accessibility) — the ARIA surface and why the
+  automation tree is not the accessibility tree.
+- [Selection and find](/docs/selection) — the selection API and the clipboard
+  absence.
