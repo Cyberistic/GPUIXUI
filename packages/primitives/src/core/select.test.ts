@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import {
   isSelectGroup,
+  selectHasChoices,
   selectOpen,
   selectOptions,
   selectRowCounts,
@@ -92,6 +93,25 @@ describe("select open state", () => {
     expect(selectOpen(true, true)).toBe(false);
     expect(selectOpen(true, false)).toBe(true);
     expect(selectOpen(false, false)).toBe(false);
+  });
+
+  it("has no choices when every entry is absent or an empty group", () => {
+    // The bug guarded (plan 745): an empty list painted a listbox with no rows
+    // — a dead menu. A group is its options; a disabled option is still a row
+    // the list can show, so it counts.
+    expect(selectHasChoices([])).toBe(false);
+    expect(selectHasChoices([{ label: "Empty", options: [] }])).toBe(false);
+    expect(selectHasChoices([{ label: "Empty", options: [] }, ...flat])).toBe(
+      true,
+    );
+    expect(
+      selectHasChoices([
+        { label: "Europe", options: [{ value: "eu", label: "Europe West" }] },
+      ]),
+    ).toBe(true);
+    expect(
+      selectHasChoices([{ value: "off", label: "Off", disabled: true }]),
+    ).toBe(true);
   });
 });
 

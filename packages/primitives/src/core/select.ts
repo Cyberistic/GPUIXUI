@@ -82,6 +82,19 @@ export const selectOpen = (
 ): boolean => requestedOpen && !disabled;
 
 /**
+ * Whether a select has anything to list.
+ *
+ * A group contributes its own options, so an empty group is no choice; a flat
+ * option is a choice **even when disabled**, because the list must be able to
+ * show why nothing can be picked. The wrapper closes a select with no choices:
+ * a `listbox` with no rows is the dead menu plan `346` refused for a disabled
+ * select (plan `745`).
+ */
+export const selectHasChoices = (
+  entries: ReadonlyArray<SelectEntry>,
+): boolean => Arr.isReadonlyArrayNonEmpty(selectOptions(entries));
+
+/**
  * The row counts the height estimate needs.
  *
  * An empty group paints no heading, so it counts as nothing rather than leaving

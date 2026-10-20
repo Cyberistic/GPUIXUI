@@ -2355,6 +2355,20 @@ retired once both branches are one
       node tip fails against an over-broad one (offline 70 files / 958 tests,
       scoped live 1 file / 4; plan `744`).
 
+`[x]` `packages/primitives`: **an empty `Select` opened an empty list** — plan
+      `346` closed a disabled select because a painted list the runtime refuses
+      is a dead menu, but nothing refused a select with **no choices**: measured
+      (2026-10-20), `Enter` on `<Select options={[]}>` painted an empty `ListBox`
+      node while the trigger offered nothing, and a computed options list reaches
+      that state in normal use. One `selectHasChoices` rule (rows, not array
+      length — an empty group is no choice, a disabled option still is) now
+      closes it: the trigger stays a focusable, named field showing its
+      placeholder, a controlled `open` is asked to close once, and an
+      all-disabled list still opens. 1 core case + 4 scoped runtime cases; the
+      old behaviour fails 3 runtime cases by name and an `options.length` gate
+      fails the empty-group one (offline 70 files / 959 tests, scoped live 1 file /
+      4; plan `745`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

@@ -98,11 +98,19 @@ plan `346`). An uncontrolled select closes itself; a controlled parent receives
 `onOpenChange(false)` and the wrapper paints closed regardless, so a stale
 `open` cannot resurrect the dead menu.
 
+**An empty select is closed too.** A select with nothing to list — an empty
+`options` array, or only groups with no rows — opens no list: a `listbox` with
+no rows is the same dead menu, and measured, `Enter` painted an empty `ListBox`
+node while the trigger offered nothing (plan `745`). The trigger stays a normal
+focusable, named field showing its placeholder; a controlled parent receives one
+`onOpenChange(false)`, and an all-disabled list still opens, because seeing why
+nothing can be picked is information.
+
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | choices in paint order (`{ value, label, disabled? }`), optionally under a heading; a blank `label` paints and announces the `value` |
+| `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | choices in paint order (`{ value, label, disabled? }`), optionally under a heading; a blank `label` paints and announces the `value`; an empty list (or only empty groups) opens no list (plan `745`) |
 | `value` | `string` | — | controlled selection; `""` is a real value (see below) |
 | `defaultValue` | `string` | — | initial selection when uncontrolled; omit it (with `value`) for no selection |
 | `onValueChange` | `(value: string) => void` | none | committed value |
@@ -511,7 +519,15 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - `src/core/select.test.ts` — the entry model: a flat list reads as itself, a
   group flattens in paint order without its heading, an empty group contributes
   nothing, a blank heading counts nothing, disabled flags survive the flatten,
-  and a disabled select is closed whatever its requested open says (plan `346`).
+  and a disabled select is closed whatever its requested open says (plan `346`);
+  and `selectHasChoices` is about rows, not array length — an empty list and an
+  empty group are no choices, a disabled option still is (plan `745`).
+- `runtime/select-empty.runtime.test.tsx` — an empty select paints no list and
+  publishes no `ListBox` on `Enter`, `ArrowDown` and a click, then opens
+  normally once options arrive; an empty group is no choice; an all-disabled
+  list still opens; a controlled `open` is asked to close once and paints when
+  rows appear (plan `745`; the old behaviour failed three of the four cases by
+  name).
 - `src/core/floating.test.ts` — the side decision: fits below, does not fit
   below but fits above, the collision margin, an exact fit, the more-room
   fallback, a preferred side, and the space on each side — including the height

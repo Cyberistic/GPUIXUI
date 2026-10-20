@@ -68,6 +68,7 @@ import {
 } from "@gpuix/react/select";
 import {
   isSelectGroup,
+  selectHasChoices,
   selectOpen,
   selectOptions,
   selectRowCounts,
@@ -721,13 +722,17 @@ export const Select = (props: SelectProps): ReactElement => {
     props.defaultOpen ?? false,
     props.onOpenChange,
   );
-  // A disabled select is closed. The request also reaches a controlled parent,
-  // so its state can agree with what the field paints (plan 346).
+  // A disabled select is closed, and so is one with nothing to list: the
+  // runtime refuses every choice on a disabled control, and a listbox with no
+  // rows offers nothing either (plans 346, 745). The request also reaches a
+  // controlled parent, so its state can agree with what the field paints.
+  const hasChoices = selectHasChoices(props.options);
   useEffect(() => {
-    if (props.disabled === true && openState.value.current)
+    if ((props.disabled === true || !hasChoices) && openState.value.current)
       openState.set(false);
-  }, [props.disabled, openState.value.current]);
-  const open = selectOpen(openState.value.current, props.disabled === true);
+  }, [props.disabled, hasChoices, openState.value.current]);
+  const open =
+    selectOpen(openState.value.current, props.disabled === true) && hasChoices;
   /**
    * The host window, sampled only while the list is painted.
    *
