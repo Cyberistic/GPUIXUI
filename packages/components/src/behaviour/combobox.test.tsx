@@ -203,6 +203,30 @@ const LoadingPicker = ({ loading }: { readonly loading: boolean }) => (
   <Picker optionList={[]} loading={loading} />
 );
 
+/** The picker where a tab-out is observable: app controls on both sides. */
+const Framed = ({ inDialog = false }: { readonly inDialog?: boolean }) => {
+  const [dialogOpen, setDialogOpen] = useState(true);
+  const body = (
+    <>
+      <Button testId="before">Before</Button>
+      <Picker />
+      <Button testId="after">After</Button>
+    </>
+  );
+  return inDialog ? (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent label="Assign" testId="dialog">
+        <DialogTitle>Assign</DialogTitle>
+        {body}
+      </DialogContent>
+    </Dialog>
+  ) : (
+    <div style={{ display: "flex", flexDirection: "column", padding: 40 }}>
+      {body}
+    </div>
+  );
+};
+
 /** A trigger near the window centre, where a centred popup has room to sit. */
 const CentredPicker = ({
   align = "center",
@@ -649,6 +673,46 @@ describe("Combobox", () => {
 
     expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
+
+    picker.unmount();
+  });
+
+  it("closes on Tab and continues with the control after the trigger", async () => {
+    const picker = renderComponent(<Framed />);
+    await open(picker);
+
+    picker.renderer.simulateKeystrokes("tab");
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("after"));
+
+    picker.unmount();
+  });
+
+  it("closes on Shift+Tab and continues with the control before the trigger", async () => {
+    const picker = renderComponent(<Framed />);
+    await open(picker);
+
+    picker.renderer.simulateKeystrokes("shift-tab");
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("before"));
+
+    picker.unmount();
+  });
+
+  it("closes on Tab inside a dialog without moving focus twice", async () => {
+    const picker = renderComponent(<Framed inDialog />);
+    await open(picker);
+
+    picker.renderer.simulateKeystrokes("tab");
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(picker.renderer.findByTestId("dialog")).toBeDefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("after"));
 
     picker.unmount();
   });

@@ -78,7 +78,7 @@ import {
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
-import { isDismiss } from "./internal/key.js";
+import { isDismiss, isTab } from "./internal/key.js";
 import { controlName } from "./internal/name.js";
 import { useNativeFocusId } from "./internal/native-focus.js";
 import {
@@ -128,6 +128,8 @@ interface ComboboxContextValue {
   readonly revealRow: (row: PublicInstance) => void;
   /** An Escape press: close and return focus to the trigger. */
   readonly noteEscape: () => void;
+  /** Tab left the popup: close, then continue after/before the trigger. */
+  readonly noteLeave: (direction: "next" | "previous") => void;
   /** An outside press: it already moved focus, and it may have been the trigger. */
   readonly noteOutsidePress: (event: EventPayload) => void;
 }
@@ -275,6 +277,8 @@ export const Combobox = ({
   const trigger = useRef<PublicInstance | null>(null);
   const list = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
+  /** Where a `Tab` that closes the popup continues from the trigger. */
+  const leave = useRef<"next" | "previous" | null>(null);
   const wasOpen = useRef(false);
   /** Whether the outside press that is closing the popup landed on our trigger. */
   const dismissedOnTrigger = useRef(false);
@@ -381,11 +385,21 @@ export const Combobox = ({
 
   /** Close, restoring focus only for the paths that should (Escape, select). */
   useLayoutEffect(() => {
-    if (wasOpen.current && !visibleOpen && restoreFocus.current) {
+    if (wasOpen.current && !visibleOpen) {
       const instance = trigger.current;
-      if (instance !== null) renderer?.focusElement?.(instance.id);
+      const direction = leave.current;
+      if (instance !== null && direction !== null) {
+        renderer?.focusElement?.(instance.id);
+        if (direction === "next") renderer?.focusNext?.();
+        else renderer?.focusPrevious?.();
+      } else if (instance !== null && restoreFocus.current) {
+        renderer?.focusElement?.(instance.id);
+      }
     }
-    if (!visibleOpen) restoreFocus.current = false;
+    if (!visibleOpen) {
+      restoreFocus.current = false;
+      leave.current = null;
+    }
     wasOpen.current = visibleOpen;
   }, [visibleOpen, renderer]);
 
@@ -449,6 +463,9 @@ export const Combobox = ({
         revealRow,
         noteEscape: () => {
           restoreFocus.current = true;
+        },
+        noteLeave: (direction) => {
+          leave.current = direction;
         },
         noteOutsidePress: (event) => {
           restoreFocus.current = false;
@@ -750,7 +767,7 @@ export const ComboboxInput = ({
   onChange,
 }: ComboboxInputProps) => {
   const theme = useTheme();
-  const { noteEscape, noteQueryChange, open } = useCombobox();
+  const { noteEscape, noteLeave, noteQueryChange, open } = useCombobox();
   // The field mounts with the popup and the root focuses it natively after
   // React's effects, so `onFocus` does not run on open (plans 388, 523).
   const [focused, setFocused] = useState(open);
@@ -775,6 +792,12 @@ export const ComboboxInput = ({
         // the layer would already be gone by then (plan 398).
         if (isDismiss(event)) {
           noteEscape();
+          dismissTopLayer(event);
+        } else if (isTab(event)) {
+          // Close through the stack, then continue in app order from the
+          // trigger: otherwise the popup stayed painted and, inside a dialog,
+          // the modal trap wrapped focus back to the trigger (plan 721).
+          noteLeave(event.modifiers?.shift === true ? "previous" : "next");
           dismissTopLayer(event);
         }
       }}
