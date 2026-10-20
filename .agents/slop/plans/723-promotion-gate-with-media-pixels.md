@@ -41,7 +41,7 @@ From `/Users/cyberistic/GPUIXUI/workspaces/playground`.
 
 ```sh
 nub run --filter playground build          # dist matches the head
-nub apps/playground/dist/smoke/run.js --all # the whole headless registry
+nub apps/playground/dist/smoke/run.js       # the whole headless registry (bare = all)
 nub apps/playground/dist/live/run.js --all  # the whole live registry (merge gate)
 nub run check && nub run lint && nub run test
 ```
@@ -108,5 +108,28 @@ entries; a delta that is not the table above is a real finding, not rounding.
 
 ## 7. As measured (2026-10-20)
 
-To be filled by the run; this section is the record, and a wrong expectation
-above is corrected here with the evidence rather than edited away.
+Verification only on code head `74e27a3f`, 0 behind `origin/master` (the head
+still fast-forwards; the plan commit `8a4bfa53` changes only this plan and the
+plan index):
+
+| Registry | Result | Checks | Capabilities | Duration |
+| -------- | ------ | ------ | ------------ | -------- |
+| headless | **106/106**, exit `0` | **3902** | 65 | 168.8 s |
+| live | **95/95**, exit `0` | **2663** | 61 | **1153.6 s** |
+
+`live-docking` 22 and `live-media` 25, so the live total is `2638 + 14 + 11`
+exactly and the plan-`722` prediction of `2649` was wrong by plan `715`'s 14.
+`live-tier2-editing` took its 32-check branch. Both `host` lines carry the
+release-tag pins (`gpuix 9fcd6288`, `zed 81c99f81`, runtime shaders), and a plain
+`--all` wrote no `provenance.json` and no capture directory. Artifacts:
+`apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
+
+`nub run check`, `nub run lint` and `nub run test` are green (playground **481**,
+testing **69**, components 308, primitives 282, tokens 196, tw 103, icons 19,
+docs 7).
+
+**One command correction:** the headless runner's bare command already means
+"all"; `--all` is a usage error there (`unknown argument: --all`, exit `2`, no
+scenario runs). The plan's §2 was corrected to the bare command before the run,
+and the `--all` form is the live runner's. No source changed; the ledgers cite
+this run and it is the gate for the promotion fast-forward.
