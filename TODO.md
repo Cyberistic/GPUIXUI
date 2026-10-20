@@ -471,7 +471,19 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 197/197
+`[x]` `[██████████]` 198/198
+
+`[x]` **Display scale and pixel density have an owner (plan 631)** — measured
+      2026-10-20: `hidpi`, `retina`, `dpr`, `ppi` and `4k` returned nothing or
+      the Roadmap, `hi dpi`/`high dpi` reached Theming's high-contrast roles,
+      `display scale`/`scale factor` reached the token scale table, and `pixel
+      density`/`device pixel ratio` reached a Separator border sentence.
+      `/docs/window` now owns the subject — the logical-pixel unit, the absent
+      scale query, vector icons, the single-image rule and the unmeasured
+      boundary — with `src/lib/display-scale.ts` and a both-direction guard over
+      the installed declarations; 16 exact aliases, 149 files / 1 630 docs
+      tests, 112-page `smoke:build` and all gates green. `zoom`/`scale` stay
+      unclaimed as a measured non-fix.
 
 `[x]` **A function word no longer names a component (plan 630)** — every
       question containing `to` returned Toggle/Tooltip, because `to` is a name

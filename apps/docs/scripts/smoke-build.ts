@@ -1427,6 +1427,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "a window method that returned nothing before plan 625",
     },
     {
+      query: "hi dpi",
+      expected: "/docs/window",
+      first: true,
+      what: "the display-scale subject, which reached Theming's high-contrast roles before plan 631",
+    },
+    {
+      query: "retina",
+      expected: "/docs/window",
+      first: true,
+      what: "the same subject, which returned nothing before plan 631",
+    },
+    {
       query: "intrinsic elements",
       expected: "/docs/native-elements",
       first: true,

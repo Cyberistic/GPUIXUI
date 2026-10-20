@@ -1,6 +1,6 @@
 # 631 — Display scale and pixel density have an owner
 
-**Status:** proposed
+**Status:** implemented
 **Phase:** F
 **Depends on:** 410, 413, 419, 431, 568, 574, 598, 607, 608, 610, 625, 626, 629, 630
 
@@ -305,4 +305,75 @@ Stop and report instead of improvising if:
 
 ## 8. Results
 
-*(filled in after implementation)*
+### 8.1 What landed
+
+- `apps/docs/src/lib/display-scale.ts` — the two absence symbols and the
+  six-rule both-direction guard.
+- `apps/docs/src/lib/window-surface.ts` — the "A display scale factor" absence
+  row, rendered by `<WindowAbsences />` and checked by the existing
+  `windowSurfaceViolations` symbol loop.
+- `apps/docs/content/docs/window.mdx` — `## Display scale and pixel density`
+  (logical pixels, no scale query, vector icons, one raster file, the unmeasured
+  boundary), the summary sentence and one Typography related link.
+- `apps/docs/src/lib/page-aliases.ts` — 16 exact terms on `/docs/window`.
+- `apps/docs/scripts/smoke-build.ts` — `hi dpi` and `retina` against the
+  production index.
+- `apps/docs/src/display-scale.test.ts` — six fixture rules, the real-declaration
+  run and three page-content checks.
+
+### 8.2 Measured before/after (real index, first result)
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `hidpi` | nothing | `/docs/window` |
+| `retina` | nothing | `/docs/window` |
+| `dpr` | nothing | `/docs/window` |
+| `hi dpi` | `/docs/theming#high-contrast` | `/docs/window` |
+| `high dpi` | `/docs/theming#high-contrast` | `/docs/window` |
+| `display scale` | `/docs/theming#scales-and-control-metrics` | `/docs/window` |
+| `scale factor` | `/docs/theming#scales-and-control-metrics` | `/docs/window` |
+| `ui scale` | `/docs/theming#scales-and-control-metrics` | `/docs/window` |
+| `pixel density` | a Separator `## Sizes` chunk | `/docs/window` |
+| `device pixel ratio` | a Separator `## Sizes` chunk | `/docs/window` |
+| `logical pixels` | a Styling chunk | `/docs/window` |
+| `ppi` | `/docs/roadmap` | `/docs/window` |
+| `4k` | `/docs/roadmap` | `/docs/window` |
+
+Regressions kept: `high contrast` → `/docs/theming#high-contrast`,
+`scales` → `/docs/theming#scales-and-control-metrics`, `zoom` and `scale` stay
+unclaimed (measured non-fix: `zoomWindow()` is the native zoom/maximise action,
+not a UI-scale control).
+
+### 8.3 Tests and gates actually run
+
+| Command | Result |
+| ------- | ------ |
+| `nub exec vitest run src/display-scale.test.ts src/lib/page-aliases.test.ts src/lib/window-surface.test.ts` | 3 files / 494 tests passed |
+| `nub run --filter docs check-types` | exit `0` |
+| `nub run --filter docs test` | 149 files / 1 630 tests passed |
+| `nub run --filter docs smoke:build` | exit `0`; 112 pages, 245 links, 1 445 anchors, both queries first |
+| `nub scripts/smoke-build.ts --no-build` | exit `0` (`smoke: ok`) |
+| `nub run check` | exit `0` |
+| `nub run lint` | exit `0` |
+| `nub run test` | exit `0` (docs 149 / 1 630, primitives 25 / 282, components green) |
+
+### 8.4 Two-direction proofs measured
+
+1. Renamed `## Display scale and pixel density` to `## Display density` →
+   `display-scale.test.ts` reported 2 failures; restored.
+2. Removed all 16 display-scale terms from the `/docs/window` alias block →
+   5 owned rows failed (`hidpi`, `retina`, `retina display`, `dpr`,
+   `logical pixels`). `hi dpi` still passed, because the page's authored summary
+   plus the typo/alias path already rank it; that is recorded rather than
+   claimed as alias evidence.
+3. Temporarily added `high contrast` to the window block → the regression row
+   failed with `/docs/window` where Theming's palette belongs; reverted.
+4. The six fixture rules (scale query, density descriptor, missing `ImgProps`,
+   missing `SvgProps`, lost `source`, lost `width: pixels`) each fail in
+   `display-scale.test.ts`; the installed declarations pass.
+
+The production both-direction proof (rebuilding with an alias removed) was not
+run; the production queries pass against the built index and the unit-level
+alias removal was measured. Recorded as a limit rather than a completed
+direction.
+

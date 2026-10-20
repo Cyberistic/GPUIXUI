@@ -10,7 +10,13 @@
  * declarations by `window-surface.test.ts`: a field the package adds fails
  * until it is explained, and a field this module invents fails by name. The
  * page renders these arrays, so nothing is retyped at the call site.
+ *
+ * Plan 631 adds the display-scale absence: the runtime has no scale query, so
+ * the row borrows `display-scale.ts`'s symbol and the existing guard fails the
+ * day one appears.
  */
+import { scaleQuerySymbol } from "./display-scale";
+
 export interface WindowField {
   readonly name: string;
   readonly summary: string;
@@ -340,6 +346,12 @@ export const windowAbsences: ReadonlyArray<WindowAbsence> = [
     statement:
       "The React entry opens one window per process and `render()` is not re-entrant: a second call throws, as `apps/playground/src/main.tsx` records.",
     symbol: /createWindow|newWindow|windowCount|openWindow/u,
+  },
+  {
+    subject: "A display scale factor",
+    statement:
+      "No API reports the display's backing scale. Sizes are logical pixels and the runtime exposes no `devicePixelRatio`, `scaleFactor` or OS zoom query, so an application cannot choose a 2× asset from JavaScript; icons are vector markup and an image paints the one `src` it is given.",
+    symbol: scaleQuerySymbol,
   },
   {
     subject: "Browser DevTools or an element inspector",

@@ -134,6 +134,14 @@
  * display, the overlay dismissal phrases on Component API, and `tab index`,
  * `tabindex` and `autofocus` on Accessibility. `center` alone stays on Component
  * API: an alias is exact, so `center content` cannot claim the bare word.
+ *
+ * Plan 631 adds the display-scale vocabulary: the density words (`hidpi`,
+ * `retina`, `dpr`, `ppi`, `pixel density`, `device pixel ratio`) and the size
+ * words (`display scale`, `scale factor`, `ui scale`, `logical pixels`, `4k`)
+ * name the Window page's `## Display scale and pixel density`. `high contrast`
+ * stays on Theming, where it is a palette; `scales` stays on Theming's token
+ * scale; `zoom` and `scale` alone are deliberately absent, because `zoom` is
+ * `zoomWindow()`'s native action and `scale` is a token word.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -816,6 +824,22 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "file picker",
       "path picker",
       "app id",
+      "display scale",
+      "scale factor",
+      "ui scale",
+      "hidpi",
+      "hi dpi",
+      "high dpi",
+      "retina",
+      "retina display",
+      "device pixel ratio",
+      "pixel density",
+      "pixel ratio",
+      "dpr",
+      "ppi",
+      "4k",
+      "logical pixels",
+      "display resolution",
     ],
   ],
 ]);

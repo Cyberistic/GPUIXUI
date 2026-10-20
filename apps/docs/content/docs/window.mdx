@@ -1,6 +1,6 @@
 ---
 title: Application window
-description: Open and configure the native window — size, title, traffic lights, safe-area and IME insets, fullscreen, the Wayland layer shell, the frame overlay and the native file picker.
+description: Open and configure the native window — size, display scale and pixel density, title, traffic lights, safe-area and IME insets, fullscreen, the Wayland layer shell, the frame overlay and the native file picker.
 ---
 
 The library paints inside one native window. `@gpuix/react` opens it with
@@ -88,6 +88,32 @@ export function Shell({ children }: { readonly children: ReactNode }) {
 
 `useWindowInsets()` returns the renderer's three regions plus the observer's
 three keyboard numbers; the table above is that full shape.
+
+## Display scale and pixel density
+
+Every number this page takes is a **logical pixel**: `WindowOptions` sizes,
+`getWindowSize()` and a `style` dimension all describe the same layout unit, so
+a layout is written without a scale multiplier.
+
+The runtime exposes no way to read the display's backing scale. There is no
+`devicePixelRatio`, `scaleFactor`, pixel-ratio or OS-zoom query in the installed
+declarations, so a component cannot branch on 1× versus 2× from JavaScript. The
+row is one of the [absences](#what-the-window-does-not-provide) below.
+
+Two consequences follow for assets:
+
+- **Icons stay sharp.** An [icon](/docs/components/icon) paints `SvgProps.source`
+  — vector markup sized by `iconPixels` — so there is no 1×/2× icon file to
+  choose.
+- **A raster image is one file.** [`img`](/docs/native-elements) takes `src`,
+  `objectFit` and `alt`; there is no `srcSet` or density descriptor, so the file
+  is painted into its layout box and `objectFit` decides the fit. If the target
+  displays are dense, pass a larger asset; nothing selects one automatically.
+
+Whether the compositor rasterises at 1× or 2× is the platform's decision, and no
+probe in this repository has measured a painted frame at either scale. The
+[Performance](/docs/performance) page owns that measurement rule, and
+[Typography](/docs/typography) owns the typeface side of the same question.
 
 ## Custom window chrome
 
@@ -188,5 +214,6 @@ window's content edge.
 - [App shell](/docs/patterns/app-shell) — the frame this window contains.
 - [Styling](/docs/styling) — the `style` surface, and the CSS that is not there.
 - [Performance](/docs/performance) — the measured probes, and what is not measured.
+- [Typography](/docs/typography) — fonts, the type scale and the absent `registerFont`.
 - [Installation](/docs/installation) — the pinned `@gpuix/react` and `@gpuix/native`.
 - [Dark mode](/docs/dark-mode) — the mode the application resolves.

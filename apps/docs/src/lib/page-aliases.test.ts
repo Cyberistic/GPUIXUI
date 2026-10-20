@@ -559,6 +559,24 @@ const owned = [
   ["tab index", "/docs/accessibility"],
   ["tabindex", "/docs/accessibility"],
   ["autofocus", "/docs/accessibility"],
+  // Plan 631: display scale and pixel density. The Window page owns the
+  // subject; `high contrast` and `scales` stay on Theming below.
+  ["hidpi", "/docs/window"],
+  ["hi dpi", "/docs/window"],
+  ["high dpi", "/docs/window"],
+  ["retina", "/docs/window"],
+  ["retina display", "/docs/window"],
+  ["device pixel ratio", "/docs/window"],
+  ["pixel density", "/docs/window"],
+  ["pixel ratio", "/docs/window"],
+  ["dpr", "/docs/window"],
+  ["scale factor", "/docs/window"],
+  ["display scale", "/docs/window"],
+  ["ui scale", "/docs/window"],
+  ["ppi", "/docs/window"],
+  ["4k", "/docs/window"],
+  ["logical pixels", "/docs/window"],
+  ["display resolution", "/docs/window"],
 ] as const;
 
 const regressions = [
@@ -630,6 +648,9 @@ const regressions = [
   ["menu bar", "/docs/components/navigation-menu"],
   ["dialog", "/docs/components/dialog"],
   ["menu", "/docs/components/context-menu"],
+  // Plan 631: the palette and the token scale keep their words.
+  ["high contrast", "/docs/theming#high-contrast"],
+  ["scales", "/docs/theming#scales-and-control-metrics"],
 ] as const;
 
 describe(
