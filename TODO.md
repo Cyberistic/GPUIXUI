@@ -2174,7 +2174,7 @@ retired once both branches are one
       failing by `part · handler`; the guard fails on `ScrollArea · onKeyUp`
       before the fix and on `Button`/`Input`/`TextArea` when their forwarding is
       removed. Offline 63 files / 890 tests, scoped live `layout` +
-      `scroll-area-trigger` 37/37 (plan `694`).
+      `scroll-area-trigger` 38/38 (plan `694`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

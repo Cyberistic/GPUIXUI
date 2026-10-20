@@ -109,7 +109,9 @@ then the caller's; a handler it does not compose is passed through unchanged.
    handlers, `ref`, `onFocus`/`onBlur`/`onKeyDown` composed with its scroll rule,
    and `onKeyUp` unchanged), with the existing note that only a labelled area is
    a trigger. The keyboard section keeps its contract table.
-4. `COMPONENTS.md` — the ScrollArea row gains one sentence recording the fix and
+4. `packages/primitives/runtime/layout.runtime.test.tsx` — one case proving the
+   runtime delivers both key phases to the composed handler (see §4.6).
+5. `COMPONENTS.md` — the ScrollArea row gains one sentence recording the fix and
    the guard, in the row's existing style.
 
 ## 3. STOP conditions
@@ -149,9 +151,12 @@ then the caller's; a handler it does not compose is passed through unchanged.
 5. Type check and repo gates: `nub run check`, `nub run lint`, `nub run test`
    from the repo root.
 6. Runtime, scoped to the touched surface (the forwarding contract is proven in
-   the tree; this run proves the region still behaves):
+   the tree; this run proves the region still behaves). Add one case to
+   `runtime/layout.runtime.test.tsx` — "forwards the caller's key handlers from
+   a labelled region": a focused region scrolls on `PageDown`, and the caller's
+   `onKeyDown`/`onKeyUp` each run once. It fails with the fix removed (0 calls).
    ```sh
-   nub run --filter @gpuixui/primitives test:runtime -- runtime/layout.runtime.test.tsx runtime/scroll-area-trigger.runtime.test.tsx
+   nub exec vitest run --config vitest.runtime.config.ts runtime/layout.runtime.test.tsx runtime/scroll-area-trigger.runtime.test.tsx
    ```
    Expected: both files green. Record the exact command and result in §5.
 
@@ -175,7 +180,12 @@ then the caller's; a handler it does not compose is passed through unchanged.
   and it was updated with the new guard's line.
 - **Runtime, scoped:**
   `nub exec vitest run --config vitest.runtime.config.ts runtime/layout.runtime.test.tsx runtime/scroll-area-trigger.runtime.test.tsx`
-  → **2 files / 37 tests, 0 failed**.
+  → **2 files / 38 tests, 0 failed**. `layout` gained one case
+  ("forwards the caller's key handlers from a labelled region"): a focused
+  region's `PageDown` scrolls, and both the caller's `onKeyDown` and `onKeyUp`
+  run exactly once. With the fix removed, that case fails
+  (`expected "vi.fn()" to be called 1 times, but got 0 times`) — so both
+  directions are measured in the element tree **and** in the real runtime.
 - **Repo gates:** `nub run check` and `nub run test` both exit `0`
   (primitives 63/890; components 32/308; icons 4/27; tokens 10/196; tw 9/103;
   testing 3/19; docs 1/7; playground 2/20).

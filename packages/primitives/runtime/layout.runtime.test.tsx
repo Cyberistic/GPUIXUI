@@ -12,7 +12,7 @@
  */
 
 import { createRef } from "react";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
@@ -494,6 +494,38 @@ it("scrolls a horizontal area with Left/Right only", async () => {
   expect(offsetOf(runtime).x).toBe(-line);
   runtime.keyDown("s", "down");
   expect(offsetOf(runtime)).toStrictEqual({ x: -line, y: 0 });
+});
+
+it("forwards the caller's key handlers from a labelled region", async () => {
+  // The bug guarded (plan 694): `ScrollAreaProps` advertises `TriggerHandlers`,
+  // but `renderScrollArea` forwarded `onFocus`/`onBlur`/`onKeyDown` and dropped
+  // `onKeyUp`, so a consumer's handler silently never ran while the region's
+  // own scroll keys worked. The offline matrix pins the props; this proves the
+  // runtime delivers both phases to the composed handler.
+  const runtime = await openWindow();
+  const down = vi.fn();
+  const up = vi.fn();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        label="Properties"
+        style={{ height: 120, width: 300 }}
+        testId="s"
+        onKeyDown={down}
+        onKeyUp={up}
+      >
+        <Box tone="card" style={{ width: 600, height: 600 }} testId="tall" />
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  runtime.keyDown("s", "pagedown");
+  runtime.keyUp("s", "pagedown");
+  expect(offsetOf(runtime).y).toBeLessThan(0);
+  expect(down).toHaveBeenCalledTimes(1);
+  expect(up).toHaveBeenCalledTimes(1);
 });
 
 it("does not make an unlabelled ScrollArea a tab stop", async () => {
