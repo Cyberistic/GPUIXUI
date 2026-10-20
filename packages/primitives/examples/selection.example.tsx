@@ -77,18 +77,14 @@ export const SelectionExample = (): ReactElement => {
 
         <Separator orientation="horizontal" />
 
-        <Stack direction="column" gap="2xs">
-          <Switch
-            checked={paused}
-            onValueChange={setPaused}
-            testId="selection-example-pause"
-          >
-            Pause all notifications
-          </Switch>
-          <Text role="caption" tone="muted">
-            Keeps your preferences; sends nothing until paused off.
-          </Text>
-        </Stack>
+        <Switch
+          checked={paused}
+          onValueChange={setPaused}
+          testId="selection-example-pause"
+          description="Keeps your preferences; sends nothing until paused off."
+        >
+          Pause all notifications
+        </Switch>
       </Stack>
     </Box>
   );
