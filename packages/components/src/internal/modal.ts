@@ -5,6 +5,11 @@
  * Dialog and Drawer differ in where their surface sits, not in how it behaves, so
  * these three pieces live once. Each caller keeps its own PART tree (the
  * compound-part contract), and this module imports no component.
+ *
+ * Layer order and focus entry follow the tree's nesting, not the order React
+ * runs effects in (plan 730): the modal host context supplies the depth, so a
+ * confirmation mounted with its dialog is still the top layer and the one that
+ * holds focus.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -12,17 +17,24 @@ import { useGpuix } from "@gpuix/react";
 import { Match } from "effect";
 import { useLayoutEffect, useRef, useState } from "react";
 import { useControllableState } from "./controllable.js";
-import { dismissTopLayer, pushDismissLayer } from "./dismiss-layer.js";
+import {
+  dismissTopLayer,
+  hasDeeperLayer,
+  pushDismissLayer,
+} from "./dismiss-layer.js";
 import { claimEvent, isEventClaimed } from "./event-claim.js";
 import { isDismiss, isTab } from "./key.js";
+import { useModalHost, type ModalHost } from "./modal-host.js";
 
 /** The open state a modal exposes to its parts. */
 export interface ModalState {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  /** How deeply the modal is nested in other modal surfaces; its layer depth. */
+  readonly depth: number;
 }
 
-/** The open state and the dismiss layer it owns while open. */
+/** The open state, its layer depth and the dismiss layer it owns while open. */
 export const useModalState = ({
   open: openProp,
   defaultOpen = false,
@@ -39,6 +51,7 @@ export const useModalState = ({
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
+  const depth = useModalHost().depth + 1;
 
   // The layer handler must see the latest props without being re-pushed: a
   // re-push would move this surface above an overlay that opened after it.
@@ -51,15 +64,19 @@ export const useModalState = ({
 
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer(() => dismiss.current());
-  }, [open]);
+    return pushDismissLayer(() => dismiss.current(), depth);
+  }, [open, depth]);
 
-  return { open, setOpen };
+  return { depth, open, setOpen };
 };
 
 /**
  * Move focus into `contentId` once it exists, run the caller's `initialFocus`
  * after that, and return focus to whatever held it before on unmount.
+ *
+ * A modal only enters when no deeper modal is open: the enclosing dialog's
+ * effect runs last, and must not take focus from the surface painted above it.
+ * A close with no live opener returns focus to the enclosing surface.
  */
 export const useModalFocus = (
   contentId: number | undefined,
@@ -73,6 +90,11 @@ export const useModalFocus = (
   const [previousFocus] = useState<number | null>(
     () => renderer?.getFocusedElementId?.() ?? null,
   );
+  const host = useModalHost();
+  const hostRef = useRef<ModalHost>(host);
+  useLayoutEffect(() => {
+    hostRef.current = host;
+  });
   const initialFocusRef = useRef(initialFocus);
   useLayoutEffect(() => {
     initialFocusRef.current = initialFocus;
@@ -80,6 +102,7 @@ export const useModalFocus = (
 
   useLayoutEffect(() => {
     if (contentId === undefined) return;
+    if (hasDeeperLayer(host.depth)) return;
     renderer?.focusElement?.(contentId);
     const initial = initialFocusRef.current?.() ?? null;
     if (initial !== null && initial !== contentId) {
@@ -88,16 +111,19 @@ export const useModalFocus = (
     return () => {
       // A destroyed opener must not be focused: `getElementBounds` is the
       // renderer's own existence check, and it is null once the element is gone.
-      if (
-        previousFocus === null ||
-        previousFocus === contentId ||
-        renderer?.getElementBounds?.(previousFocus) === null
-      ) {
+      // A confirmation mounted with its dialog has no opener at all, so it hands
+      // focus to the enclosing surface rather than to nothing (plan 730).
+      const usable =
+        previousFocus !== null &&
+        previousFocus !== contentId &&
+        renderer?.getElementBounds?.(previousFocus) !== null;
+      const target = usable ? previousFocus : hostRef.current.contentId;
+      if (target === null || target === undefined || target === contentId) {
         return;
       }
-      renderer?.focusElement?.(previousFocus);
+      renderer?.focusElement?.(target);
     };
-  }, [contentId, previousFocus, renderer]);
+  }, [contentId, host.depth, previousFocus, renderer]);
 };
 
 /**

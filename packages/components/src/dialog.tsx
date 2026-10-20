@@ -39,6 +39,7 @@ import { useDescriptionRegistry } from "./internal/description.js";
 import { controlName } from "./internal/name.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { headingLevel, type HeadingLevel } from "./internal/heading.js";
+import { ModalHostProvider, useModalHost } from "./internal/modal-host.js";
 import { motionProps, MotionSurface } from "./internal/motion.js";
 import {
   handleModalKeyDown,
@@ -114,12 +115,13 @@ export const Dialog = ({
   dismissible = true,
   children,
 }: DialogProps) => {
-  const { open, setOpen } = useModalState({
+  const { open, setOpen, depth } = useModalState({
     open: openProp,
     defaultOpen,
     onOpenChange,
     dismissible,
   });
+  const host = useModalHost();
   const { description, register: registerDescription } =
     useDescriptionRegistry();
 
@@ -131,7 +133,11 @@ export const Dialog = ({
   assertParts(dialogRoot, children);
 
   return (
-    <DialogContext.Provider value={context}>{children}</DialogContext.Provider>
+    <DialogContext.Provider value={context}>
+      <ModalHostProvider depth={depth} contentId={host.contentId}>
+        {children}
+      </ModalHostProvider>
+    </DialogContext.Provider>
   );
 };
 
@@ -247,6 +253,7 @@ const DialogSurface = ({
     ref,
   );
   const contentId = content?.id;
+  const host = useModalHost();
   useModalFocus(open ? contentId : undefined, initialFocus);
 
   const close = () => setOpen(false);
@@ -304,7 +311,9 @@ const DialogSurface = ({
               style,
             )}
           >
-            {children}
+            <ModalHostProvider depth={host.depth} contentId={contentId}>
+              {children}
+            </ModalHostProvider>
             {showClose ? (
               <IconButton
                 label="Close"

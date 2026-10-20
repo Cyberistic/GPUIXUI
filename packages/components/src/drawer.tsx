@@ -38,6 +38,7 @@ import {
   useModalState,
 } from "./internal/modal.js";
 import { headingLevel, type HeadingLevel } from "./internal/heading.js";
+import { ModalHostProvider, useModalHost } from "./internal/modal-host.js";
 import { motionProps, MotionSurface } from "./internal/motion.js";
 import {
   assertParts,
@@ -111,12 +112,13 @@ export const Drawer = ({
   dismissible = true,
   children,
 }: DrawerProps) => {
-  const { open, setOpen } = useModalState({
+  const { open, setOpen, depth } = useModalState({
     open: openProp,
     defaultOpen,
     onOpenChange,
     dismissible,
   });
+  const host = useModalHost();
   const { description, register: registerDescription } =
     useDescriptionRegistry();
 
@@ -128,7 +130,11 @@ export const Drawer = ({
   assertParts(drawerRoot, children);
 
   return (
-    <DrawerContext.Provider value={context}>{children}</DrawerContext.Provider>
+    <DrawerContext.Provider value={context}>
+      <ModalHostProvider depth={depth} contentId={host.contentId}>
+        {children}
+      </ModalHostProvider>
+    </DrawerContext.Provider>
   );
 };
 
@@ -263,6 +269,7 @@ const DrawerSurface = ({
   );
 
   const contentId = content?.id;
+  const host = useModalHost();
   useModalFocus(open ? contentId : undefined, initialFocus);
 
   const box = surfaceSize(side, size, window);
@@ -314,7 +321,9 @@ const DrawerSurface = ({
               onKeyDown={handleKeyDown}
               style={mergeStyles(surfaceStyle(theme, box), style)}
             >
-              {children}
+              <ModalHostProvider depth={host.depth} contentId={contentId}>
+                {children}
+              </ModalHostProvider>
               {showClose ? (
                 <IconButton
                   label="Close drawer"
