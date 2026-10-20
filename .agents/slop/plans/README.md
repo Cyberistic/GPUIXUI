@@ -397,6 +397,7 @@ references without buying correctness.
 | [785](./785-brand-example-figures.md) | The brand example's quoted figures have one owner | F | 098, 526, 536, 544, 698, 760 | done |
 | [787](./787-ledger-scale-ranges.md) | The ledger's scale ranges: the avatar range and the density ladder it hid | F | 054, 062, 303, 313, 664, 725, 766, 767 | done |
 | [789](./789-selection-press-veil.md) | The pressed selected row's veil: the mode's extreme, not the canvas | F | 081, 651, 723, 742 | done |
+| [792](./792-native-syntax-capture-table.md) | The native syntax capture paragraph: its roles and its three counts | F | 569, 574, 583, 592, 717, 760 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4054,6 +4055,22 @@ ledger; every one of the four mutations, and a shipped `avatarSize.lg` edit,
 fails the case. The row and the plan index state the corrected ranges; plan
 `725`'s own file keeps its authored text as history. No token value, pair, floor,
 metric, role or shipped theme moves; `contrastPairs` stays **470**.
+
+Plan `792` closes the same class one table over. The native syntax palette has
+no generated table: its only documentation is a paragraph in the catalogue that
+groups captures by role, and the policy case in `native-text.test.ts` read the
+**names**, not the assignments. Moving `property` from `foreground` to
+`warningText` in that prose left 244 tests green while every name and role still
+appeared somewhere, so a consumer could follow the page and paint a different
+role than the bridge. The three sentences that state the palette's size — the
+type table's "24 syntax capture colours", the native-text paragraph's
+"24-capture syntax palette" and the ledger's "24-capture syntax palette" — had
+no owner either: mutating any of them left the suite green, and a 25th capture
+would ship with all three still saying 24. The case now parses each
+`capture … are \`role\`` group, rejects a duplicate capture, compares the whole
+`capture → role` map with `nativeSyntaxRoles` both ways, and derives the three
+counts from the palette's keys. No colour, pair, floor, metric, role or shipped
+theme moves; `contrastPairs` stays **470**.
 
 ## How to use a plan
 
