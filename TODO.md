@@ -95,7 +95,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 131/131 plans-and-harness
+`[~]` `[█████████░]` 131/132 plans-and-harness
+
+`[~]` **Prove declared hover and active colours in the frame** per plan `754`:
+      the 30 `hover:`/39 `active:` declarations are colour-only and were proven
+      only as geometry (`declared-styles`) plus the authored style report, so a
+      runtime that applies the refinement but drops its fill would leave every
+      button, row, tab and menu item with an invisible hover/pressed state.
+      `state-pixels` and `live-state-pixels` decode ten pointer states from the
+      frame: hover replaces and leaving reverts, hover is owned per element,
+      active paints, active wins over hover, and a held pointer outside keeps
+      it. Pure `state-pixels.ts` + tests; exact ids run recorded here.
 
 `[x]` **Run the promotion gate on the head that includes the border pixels**
       per plan `751`: verification only on code head `debe433a` (0 behind
