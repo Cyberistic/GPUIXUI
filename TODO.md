@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–606)
+## Docs site workstream (plans 410–499, plus 500–607)
 
-`[x]` `[██████████]` 173/173
+`[x]` `[██████████]` 174/174
 
 `[x]` **Styling has a page (plan 606)** — a React reader's first move is
       `className`, and the site never said there is no CSS: `className` and
@@ -484,17 +484,25 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       owned words stay put. 117 files / 983 docs tests, 102-page `smoke:build`,
       root gates green; five forced defects in plan 606 §8.4.
 
-`[ ]` **Reader vocabulary, ninth pass — the measured leftovers of plan 606** —
-      `line height` still returns Timeline (Typography owns the subject but never
-      says the words), `does it work on windows` returns Workspace instead of
-      Installation's native-binding table, and `localization`/`i18n` have no
-      page. Separately, the typo class measured while writing 606 is structural:
-      the lexical index tolerates most misspellings, but the ranker has no typo
-      tier, so `botton`/`buton` return Toggle, `componet` returns Roadmap,
-      `theem` returns Values API and `seach` returns Icon names, while
-      `acordian` and `dropdwon` return nothing. Give a one-edit (Damerau) match
-      on a name a tier below every real match, synthesized when the index omits
-      it, and never guess between two plausible names.
+`[x]` **Reader vocabulary, ninth pass (plan 607)** — `line height`,
+      `line spacing` and `leading` reach Typography (the tie was three pages at
+      rank 7, not a missing sentence), `does it work on windows` reaches
+      Installation's native-binding table, and `i18n`/`localization`/`rtl`/
+      `locale`/`text direction` reach Layouts' new sourced
+      `## Localization and direction`. A one-edit typo tier
+      (`src/lib/typo.ts`) now scores a misspelled name below every real match
+      and synthesizes the page the index cannot retrieve, so `botton`, `buton`,
+      `acordian`, `dropdwon`, `seach`, `theem` and `componet` reach their pages;
+      119 files / 1 026 docs tests, 102-page `smoke:build`, six two-direction
+      proofs, four measured limits recorded in plan 607 §8.5.
+
+`[ ]` **Reader vocabulary, tenth pass — the boundaries plan 607 measured** —
+      the typo tier compares one word only, so a phrase with a misspelling
+      (`theem editr`) gets no help, and a word more than one edit away (`btton`
+      collapses to `bton`) is deliberately not promoted. Sweep the remaining
+      reader phrases for a subject still owned by nothing (the plan-607 pass
+      exhausted its measured list), and record any further boundary in the plan
+      rather than widening the tier silently.
 
 `[x]` **Performance has an answer (plan 605)** — measured 2026-10-20:
       `performance`, `benchmark`, `fps` and `10k rows` returned nothing or the

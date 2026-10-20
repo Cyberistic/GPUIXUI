@@ -2,7 +2,7 @@
 
 Phase: F
 Depends on: 410, 413, 419, 431, 561, 566, 568, 574, 579, 583, 585, 590, 592, 593, 598, 599, 601, 603, 606
-Status: planned
+Status: implemented
 
 ## 1. The measured defect
 
@@ -66,18 +66,24 @@ uses plain arithmetic and native arrays, the same deliberate exception
 `src/lib/search.ts` records.
 
 ```ts
-/** Optimal string alignment distance: Damerau with adjacent transposition. */
-export const editDistance: (left: string, right: string) => number;
+/** The stem `search.ts` matches names by, shared with the typo tier. */
+export const stem: (word: string) => string;
+
+/** Camel-case, dotted, hyphenated and spaced names as lower-case words. */
+export const splitWords: (value: string) => ReadonlyArray<string>;
 
 /**
  * A word's typo identity: lower-case, repeated letters collapsed, then the
- * stem `search.ts` already uses (`theem` -> `them`, `accordion` -> `acordion`,
+ * shared stem (`theem` -> `them`, `accordions` -> `acordion`,
  * `components` -> `component`).
  */
 export const typoKey: (value: string) => string;
 
-/** The `typoKey` of every word in a name, camelCase and punctuation split. */
+/** The `typoKey` of every word in a name. */
 export const typoWords: (name: string) => ReadonlyArray<string>;
+
+/** One substitution, insertion, deletion or adjacent transposition. */
+export const withinOneEdit: (left: string, right: string) => boolean;
 
 export interface TypoName {
   readonly name: string;
@@ -239,7 +245,7 @@ that writes to `/private/tmp/opencode/`; delete it before the first commit.
 
 | Test | Fails when |
 | ---- | ---------- |
-| `editDistance` returns `0` for equal, `1` for one substitution, insertion, deletion and adjacent transposition, `2` for two substitutions | the algorithm degrades to plain Levenshtein (transposition becomes `2`) or counts a match twice |
+| `withinOneEdit` accepts an equal word, one substitution, insertion, deletion and an adjacent transposition, and rejects a second edit or a longer gap | the predicate degrades to plain Levenshtein (a transposition becomes `2`) or counts a match twice |
 | `typoKey` collapses repeated letters, drops a plural and applies the shared stem | `theem` no longer keys to `them`, or `components` stops keying to `component` |
 | `typoWords` splits camelCase, dotted, hyphenated and spaced names | a part name (`DropdownMenuGroup`) is compared as one opaque token |
 | a whole name beats a word of a longer name (`botton`, `buton`, `componet`) | the tier order is lost and Button groups or Component API wins |
@@ -297,3 +303,99 @@ Regressions (first result unchanged): `button`, `accordion`, `dropdown`,
   `nub run --filter docs smoke:build` are green.
 - §8 records what shipped, the before/after table, every command's real result
   and the two-direction proofs.
+
+## 8. Results
+
+Implemented 2026-10-20.
+
+### 8.1 What shipped
+
+- `src/lib/typo.ts` — `stem` (moved from `search.ts`), `splitWords`, `typoKey`,
+  `typoWords`, `withinOneEdit` (one substitution, insertion, deletion or
+  adjacent transposition), and `typoMatch` with its four tiers and the
+  ambiguity rule.
+- `src/lib/search.ts` — `typoNames` built from every component name and alias,
+  every page title and every page alias; `TYPO_MATCH_RANK = 8`;
+  `typoHits(query)` synthesizes the page; `mergeResults` scores only a
+  `type: "page"` candidate whose URL is the typo target.
+- `src/lib/page-aliases.ts` — Typography gains `line height`, `line-height`,
+  `line spacing`, `leading`; Installation gains nine platform question and
+  support phrasings; Layouts gains sixteen localization and direction terms.
+- `content/docs/layouts.mdx` — `## Localization and direction` with the four
+  sourced limits (Date pickers, Time pickers, Countdown, the confirmation
+  flow), the absent `locale` and formatter, the RTL limitation, and the
+  app-owned alternative; the summary now names localization and right-to-left.
+- `src/lib/typo.test.ts` (14 tests) and `src/lib/layouts-page.test.ts`
+  (3 tests); `search.test.ts` gains the seven-query typo table, the real-name
+  regression, the rank-invariant/merge test and the text-chunk rule; the new
+  alias terms join `page-aliases.test.ts`'s `owned` table; `smoke:build` gains
+  `line height`, `does it work on windows`, `i18n`, `botton` and `acordian`.
+
+### 8.2 Measured before / after
+
+Same queries, same `search()`, before at `cb8fed63` and after this change:
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `line height`, `line-height`, `line spacing`, `leading` | Timeline / Badge / Timeline / List | `/docs/typography` |
+| `does it work on windows`, `does it work on linux`, `works on windows`, `is windows supported` | Workspace | `/docs/installation` |
+| `localization`, `localisation`, `i18n`, `internationalization`, `translation`, `locale`, `rtl`, `right to left`, `text direction`, `mirroring` | nothing, Date pickers, Countdown, Text, Toggle | `/docs/layouts` |
+| `botton`, `buton` | Toggle | `/docs/components/button` |
+| `acordian`, `dropdwon` | **(nothing)** | `/docs/components/accordion`, `/docs/components/dropdown-menu` |
+| `componet` | Roadmap | `/docs/components` |
+| `theem` | Values API | `/docs/theming` |
+| `seach` | Icon names | `/docs/components/search-input` |
+| `spacing`, `font size`, `platform support`, `native binding` | — | unchanged (Theming, Typography, Installation) |
+
+The `line height` cause was measured, not assumed: Timeline, Inline edit,
+Inline validation and Typography each earned rank `7` (a suffix token match for
+the first three; the summary phrase for Typography), and the shorter title won
+the tie. The alias gives Typography rank `0`; no ranker rule changed.
+
+Suite: 117 files / 983 tests → **119 files / 1 026 tests**. Pages: 102
+unchanged (no new page).
+
+### 8.3 Commands run
+
+| Command | Result |
+| ------- | ------ |
+| `nub exec vitest run src/lib/typo.test.ts` | 14 passed |
+| `nub exec vitest run src/lib/search.test.ts` | 90 passed |
+| `nub exec vitest run src/lib/page-aliases.test.ts` | 148 passed |
+| `nub exec vitest run src/lib/layouts-page.test.ts` | 3 passed |
+| `nub run --filter docs test` | 119 files / 1 026 tests passed |
+| `nub run --filter docs check-types` | exit `0` |
+| `nub run --filter docs smoke:build` | `smoke: ok` — 102 pages, search checked, exit `0` |
+| `nub run check`, `nub run lint`, `nub run test` (root) | green |
+
+### 8.4 Two-direction proofs (each run, then reverted)
+
+1. Removed `...typoHits(query)` from `search()` → four rows failed:
+   `acordian -> nothing`, `dropdwon -> nothing`, `theem -> /docs/api-values`,
+   `componet -> /docs/roadmap`.
+2. Set `TYPO_MATCH_RANK = 7` → `scores a typo below every real rank` failed on
+   the invariant (`expected 7 to be greater than 7`).
+3. Removed the Typography alias block → `line height` failed with Timeline
+   first.
+4. Removed the `## Localization and direction` heading → two guard tests
+   failed (empty section, no links).
+5. Made every typo target a `name` → `prefers a name over an alias` failed;
+   `dropdwon` tied between Dropdown menus and Select's alias and was not
+   promoted.
+6. Returned the first tied target instead of refusing → `refuses to guess
+   between two equally plausible names` failed.
+
+### 8.5 Measured limits, deliberately not fixed
+
+- **A phrase is not typo-matched.** `theem editr` gets no typo tier; only a
+  single word is compared, so a typo over every word of a sentence cannot
+  guess.
+- **A typo more than one edit away is not promoted.** `btton` collapses to
+  `bton`, still two edits from `buton`; the tier stops at one, which is what
+  keeps `team`/`them`-class near words from naming unrelated pages.
+- **An alias never outranks a title.** `dropdwon` reaches Dropdown menus, not
+  Select, even though Select's alias is `dropdown list`; that is the tier
+  order working as designed.
+- The Layouts section links four component pages rather than repeating their
+  claims inline; each page still owns its own limitation, and the links are
+  guarded against a page the site does not serve.
