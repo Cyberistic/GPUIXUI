@@ -408,10 +408,12 @@ it.each(
 const starStyle = (runtime: Runtime, label: string): Record<string, unknown> =>
   byLabel(runtime, label).style;
 
-it("drops the ring and the blocked cursor when a focused rating becomes read-only", async () => {
-  // The bug guarded (plan 796): `ratingStarStyle` excluded only `disabled` from
-  // the ring and treated read-only as blocked, so a rating made read-only while
-  // star 3 held native focus kept a ring although every star lost its tab stop.
+it("keeps a read-only rating reachable, ringed and inert", async () => {
+  // The bug guarded (plan 800): the tab stop was gated on "interactive", so a
+  // read-only rating fell out of the tab order — the one value control that did
+  // — and plan 796 removed its ring to match, justified by a claim about plan
+  // 786 that 786 does not make (a read-only field keeps its stop and its ring).
+  const seen: number[] = [];
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -421,11 +423,17 @@ it("drops the ring and the blocked cursor when a focused rating becomes read-onl
   runtime.focusNext();
   await awaitFrame(
     () => starStyle(runtime, "3 of 5")["boxShadow"] !== undefined,
-    "the rating ring",
+    "the writable rating ring",
   );
   runtime.render(
     <Surface>
-      <Rating testId="ra" label="Quality" defaultValue={3} readOnly />
+      <Rating
+        testId="ra"
+        label="Quality"
+        defaultValue={3}
+        readOnly
+        onValueChange={(value) => seen.push(value)}
+      />
     </Surface>,
   );
   runtime.flush();
@@ -433,10 +441,42 @@ it("drops the ring and the blocked cursor when a focused rating becomes read-onl
     () => starStyle(runtime, "3 of 5")["cursor"] === "default",
     "the read-only paint",
   );
-  expect(starStyle(runtime, "3 of 5")["boxShadow"]).toBeUndefined();
-  // The component does not move the runtime's focus; it only stops painting a
-  // state it no longer owns.
+  // The star that held focus is still the tab stop, so it keeps the ring, and
+  // the display state keeps its pointer and contrast (plan 796).
+  expect(starStyle(runtime, "3 of 5")["boxShadow"]).toBeDefined();
   expect(Option.getOrUndefined(runtime.focused())).toBe("ra-star-3");
+  // It still takes no input: neither an arrow, a key activation nor a click
+  // reports.
+  runtime.keyDown("ra-star-3", "arrowright");
+  runtime.keyDown("ra-star-3", "enter");
+  runtime.keyUp("ra-star-3", "space");
+  runtime.click("ra-star-4");
+  expect(seen).toStrictEqual([]);
+});
+
+it("keeps the writable twin's ring and reports its activation", async () => {
+  // The control for the case above: the same mount without `readOnly` reaches
+  // the value star and reports a change, so "nothing happened" cannot be the
+  // reason the read-only case passed.
+  const seen: number[] = [];
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating
+        testId="ra"
+        label="Quality"
+        defaultValue={3}
+        onValueChange={(value) => seen.push(value)}
+      />
+    </Surface>,
+  );
+  runtime.focusNext();
+  await awaitFrame(
+    () => starStyle(runtime, "3 of 5")["boxShadow"] !== undefined,
+    "the writable rating ring",
+  );
+  runtime.click("ra-star-4");
+  expect(seen).toStrictEqual([4]);
 });
 
 it("keeps a disabled rating visually blocked", async () => {

@@ -244,18 +244,44 @@ describe("Rating", () => {
     expect(onSelect).toHaveBeenCalledWith(3);
   });
 
-  it("drops every tab stop and every input when disabled or read-only", () => {
-    Arr.forEach([{ disabled: true }, { readOnly: true }] as const, (props) => {
-      const element = render(props, 3);
-      const star = starsOf(element)[0] ?? expect.fail("no star");
-      expect(hostProp(star, "tabIndex")).toStrictEqual(Option.none());
-      const onSelect = vi.fn();
-      const clicked = render(props, 3, undefined, { onSelect });
-      expectSome(
-        hostHandler(starsOf(clicked)[1] ?? expect.fail("no star"), "onClick"),
-      )(keyEvent("click"));
-      expect(onSelect).toHaveBeenCalledTimes(0);
-    });
+  it("keeps one tab stop and refuses every input when read-only", () => {
+    // The bug guarded (plan 800): the tab stop was gated on "interactive", so a
+    // read-only rating was the one value control a keyboard user could not
+    // reach — while every field, the select and the selection family keep
+    // theirs (plan 786/797/799). Only `disabled` leaves the tab order.
+    const element = render({ readOnly: true }, 3);
+    expect(
+      Arr.map(starsOf(element), (star) =>
+        Option.getOrUndefined(hostProp(star, "tabIndex")),
+      ),
+    ).toStrictEqual([-1, -1, 0, -1, -1]);
+    const onSelect = vi.fn();
+    const clicked = render({ readOnly: true }, 3, undefined, { onSelect });
+    expectSome(
+      hostHandler(starsOf(clicked)[1] ?? expect.fail("no star"), "onClick"),
+    )(keyEvent("click"));
+    expect(onSelect).toHaveBeenCalledTimes(0);
+  });
+
+  it("stops an unrated read-only rating on the first star", () => {
+    const element = render({ readOnly: true }, 0);
+    expect(
+      Arr.map(starsOf(element), (star) =>
+        Option.getOrUndefined(hostProp(star, "tabIndex")),
+      ),
+    ).toStrictEqual([0, -1, -1, -1, -1]);
+  });
+
+  it("drops every tab stop and every input when disabled", () => {
+    const element = render({ disabled: true }, 3);
+    const star = starsOf(element)[0] ?? expect.fail("no star");
+    expect(hostProp(star, "tabIndex")).toStrictEqual(Option.none());
+    const onSelect = vi.fn();
+    const clicked = render({ disabled: true }, 3, undefined, { onSelect });
+    expectSome(
+      hostHandler(starsOf(clicked)[1] ?? expect.fail("no star"), "onClick"),
+    )(keyEvent("click"));
+    expect(onSelect).toHaveBeenCalledTimes(0);
   });
 
   it("rings only the star that holds focus", () => {
@@ -270,20 +296,33 @@ describe("Rating", () => {
     expect(starred).toStrictEqual([false, true, false, false, false]);
   });
 
-  it("paints no ring on a read-only star that still holds focus", () => {
-    // The bug guarded (plan 796): a rating focused on star 3 keeps native focus
-    // when it becomes read-only, and the old guard excluded only `disabled`, so
-    // the star painted a ring although it had no tab stop and refused input.
-    const readOnly = render({ readOnly: true }, 3, 2);
-    expect(
-      starsOf(readOnly).map((star) =>
+  it("rings the read-only star that holds focus", () => {
+    // The bug guarded (plan 800): read-only was made unreachable and the ring
+    // was removed to match, so a focused read-only rating painted no focus at
+    // all. It keeps its tab stop (plan 786's rule for every field), so it
+    // rings; a disabled rating still paints no ring.
+    const starred = (element: ReactElement): ReadonlyArray<boolean> =>
+      starsOf(element).map((star) =>
         Option.isSome(
           Option.flatMap(hostStyleRecord(star), (style) =>
             Option.fromNullishOr(style["boxShadow"]),
           ),
         ),
-      ),
-    ).toStrictEqual([false, false, false, false, false]);
+      );
+    expect(starred(render({ readOnly: true }, 3, 2))).toStrictEqual([
+      false,
+      true,
+      false,
+      false,
+      false,
+    ]);
+    expect(starred(render({ disabled: true }, 3, 2))).toStrictEqual([
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
   });
 
   it("paints the star under the pointer and keeps the announcement committed", () => {

@@ -45,7 +45,7 @@ unrated; an infinity is out of range and clamps to its own end (`+Infinity` is
 | `max` | `number` | `5` | how many stars to paint; a non-finite count (`NaN`, `Infinity`) reads as one star (plan `366`) |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
-| `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop; the display state: full contrast, default pointer, no ring (plan `796`) |
+| `readOnly` | `boolean` | `false` | shows the value and keeps the group's one tab stop, but takes no input; full contrast, default pointer, rings while focused (plans `796`, `800`) |
 | `invalid` | `boolean` | `false` | a failed validation paints the empty stars destructive |
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
 | `style` | `StateStyle<RatingState>` | — | merged last; an object or a state callback |
@@ -116,13 +116,15 @@ read-only one is `default` and a disabled one `not-allowed` (plan `796`).
   **`aria-valuetext`** (`"checked"` / `"unchecked"`), because GPUix 0.10.0 has no
   `aria-checked`. A hover preview never changes that announcement — only the
   committed value does.
-- `readOnly` keeps the group visible to assistive technology but removes it from
-  the tab order; `disabled` also paints it muted. Neither previews. A read-only
-  star is **not** the blocked state: it keeps full contrast and the default
-  pointer and paints **no** focus ring, even when it still holds native focus
-  from before the prop changed — that ring would mark a control with no tab stop
-  and no input (plan `796`). A disabled star keeps `not-allowed` and half
-  opacity.
+- `readOnly` is a **display state that stays reachable** (plan `800`, the rule
+  plan `786` gave every field): the group keeps its one tab stop — on the
+  value's star, or star 1 when unrated — so a keyboard user can hear the value,
+  and the focused star paints the ring. It takes no input: no click, no
+  `Enter`/`Space`, no arrows, no preview. GPUix 0.10.0 has no `aria-readonly`,
+  so that reachable star's `"N of max"` and `checked`/`unchecked` are the only
+  announcement. `disabled` is the blocked state: it leaves the tab order, paints
+  muted, `not-allowed` and no ring. Only `disabled` drops out of the tab order
+  (plan `800`).
 
 ## Theming
 
@@ -147,7 +149,7 @@ The star size is `theme.iconSize[size]` and the focus ring is the shared
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `disabled` | `boolean` | refuses pointer and keys, and leaves the tab order |
-| `readOnly` | `boolean` | shows the value, refuses pointer and keys, and is not a tab stop (plan `786`) |
+| `readOnly` | `boolean` | shows the value and keeps the tab stop, refuses pointer, keys and preview (plans `786`, `800`) |
 | `invalid` | `boolean` | paints the empty stars destructive |
 
 The callback's result merges after the component's own rules, so it wins per
@@ -212,7 +214,14 @@ each star:
   restores the value, a downward preview follows the pointer, an invalid preview
   keeps the brand role and disabled/readOnly never preview (plan `094`); and
   Delete through the focused star leaves native focus **and** the ring on
-  star 1, the tab stop (plan `334`).
+  star 1, the tab stop (plan `334`); a read-only rating keeps the tab stop, the
+  ring and its display paint while every input path reports nothing, and the
+  writable twin in the same file reports a click (plan `800`).
+- `runtime/tab-order.runtime.test.tsx` — the read-only tab-stop matrix over the
+  ten parts that declare the state: `Input`, `TextArea`, `NumberField`,
+  `OTPField`, `Select`, `Rating`, `Checkbox`, `Switch`, `CheckboxGroup`,
+  `RadioGroup`; the `Rating` row is the bug plan `800` fixed (it landed on the
+  trailing sentinel instead).
   Measured 2026-10-17 (plan 054 §9, plan 070 §6) and 2026-10-18 (plans 094, 334).
 - `runtime/roving-arrows.runtime.test.tsx` — a controlled parent that never
   applies a reported value: three arrows move the ring 2 → 3 → 4 → 3 and report

@@ -261,13 +261,6 @@ describe("controlStyle", () => {
       ratingStarStyle({ size: "md", focused: true, disabled: true }, testTheme)
         .boxShadow,
     ).toBeUndefined();
-    // Plan 796: reading is not acting either. A rating that becomes read-only
-    // keeps native focus (nothing can move it from the component), so the ring
-    // painted a control that no longer had a tab stop.
-    expect(
-      ratingStarStyle({ size: "md", focused: true, readOnly: true }, testTheme)
-        .boxShadow,
-    ).toBeUndefined();
     // The enabled direction still rings, so the cases above cannot pass by the
     // painter having lost its ring entirely.
     expect(
@@ -275,6 +268,17 @@ describe("controlStyle", () => {
     ).toBeDefined();
     expect(
       ratingStarStyle({ size: "md", focused: true }, testTheme).boxShadow,
+    ).toBeDefined();
+  });
+
+  it("rings a read-only star that keeps its tab stop", () => {
+    // The bug guarded (plan 800): a read-only star was made unreachable and the
+    // ring was removed to match, so the one value control outside the tab order
+    // also had no focus paint. Read-only keeps the tab stop (plan 786's rule),
+    // so it keeps the ring; only `disabled` leaves the tab order.
+    expect(
+      ratingStarStyle({ size: "md", focused: true, readOnly: true }, testTheme)
+        .boxShadow,
     ).toBeDefined();
   });
 

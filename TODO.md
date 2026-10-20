@@ -1755,6 +1755,21 @@ retired once both branches are one
       directions measured (offline 74 files / 1032 tests, the new live file 8/8,
       17 neighbour runtime files 359/359; plan `799`)
 
+`[x]` `packages/primitives`: **a read-only `Rating` was the one value control
+      outside the tab order** — plan `796` gated every star's `tabIndex` on
+      "interactive" and removed the ring to match, citing plan `786` for a
+      "no tab stop" rule that `786` says the opposite of. Measured, nine of the
+      ten read-only parts kept their stop (`Input`, `TextArea`, `NumberField`,
+      `OTPField`, `Select`, `Checkbox`, `Switch`, `CheckboxGroup`,
+      `RadioGroup`) and `Rating` landed on the trailing sentinel, so a keyboard
+      user could not reach — or hear — the value the control displays. Read-only
+      now keeps the group's one tab stop (the value's star, star 1 when
+      unrated) and rings while focused, still refusing click, keys and preview
+      with the default pointer and full contrast. The read-only tab-stop matrix
+      in `runtime/tab-order.runtime.test.tsx` covers all ten parts and its
+      `Rating` row fails by name in the old direction; 1 core + 2 element + 2
+      runtime cases rewritten, plan `800`
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

@@ -798,11 +798,12 @@ export interface RatingStarSpec {
 /**
  * One star's hit area: the icon plus a hairline of padding for the ring.
  *
- * Three states, not two (plan `796`): an **interactive** star is a pointer
- * target and rings while focused; a **disabled** one is blocked and dimmed; a
- * **read-only** one is a display state — full contrast, the default pointer, and
- * no ring, because plan `786` gives it no tab stop and a ring would mark a
- * control that cannot act (the class plan `332` fixed for `disabled`).
+ * Three states, not two (plans `796`, `800`): an **interactive** star is a
+ * pointer target and rings while focused; a **disabled** one is blocked,
+ * dimmed and has no tab stop, so it rings never; a **read-only** one is a
+ * display state — full contrast and the default pointer, but it keeps the
+ * group's tab stop (the rule plan `786` gave every field), so it rings while
+ * focused. Only `disabled` leaves the tab order.
  */
 export const ratingStarStyle = (
   spec: RatingStarSpec,
@@ -822,7 +823,7 @@ export const ratingStarStyle = (
         : "default",
   };
   if (spec.disabled === true) style.opacity = 0.5;
-  if (spec.focused === true && interactive)
+  if (spec.focused === true && spec.disabled !== true)
     style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };

@@ -41,7 +41,7 @@ import { useTheme } from "./ThemeProvider.js";
 /** The public state a `Rating` style callback receives. */
 export interface RatingState {
   readonly disabled: boolean;
-  /** Shows the value but takes no input and is not a tab stop (plan `786`). */
+  /** Shows the value and keeps its tab stop, but takes no input (plan `800`). */
   readonly readOnly: boolean;
   readonly invalid: boolean;
 }
@@ -67,7 +67,7 @@ export interface RatingProps {
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   readonly disabled?: boolean;
-  /** Shows the value but takes no input and no tab stop. */
+  /** Shows the value and keeps its tab stop, but takes no input (plan `800`). */
   readonly readOnly?: boolean;
   /** Validation failed: the empty stars take the destructive role. */
   readonly invalid?: boolean;
@@ -129,6 +129,12 @@ export const renderRating = (
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
   /**
+   * A read-only rating is a display state, not a disabled one: it keeps the
+   * group's single tab stop so a keyboard user can reach the value it shows
+   * (plan `800`, the rule plan `786` gave every field).
+   */
+  const focusable = props.disabled !== true;
+  /**
    * Where the keyboard is: the focused star, else the committed value.
    *
    * A controlled parent that defers or rejects the value leaves the ring ahead
@@ -154,7 +160,7 @@ export const renderRating = (
         role="radio"
         aria-label={`${index} of ${max}`}
         aria-valuetext={index <= value ? "checked" : "unchecked"}
-        tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
+        tabIndex={focusable ? (index === tabStop ? 0 : -1) : undefined}
         testId={
           props.testId === undefined
             ? undefined
