@@ -16,6 +16,7 @@ import { describe, expect, it } from "vitest";
 import { compositeOver, contrastFloors, contrastRatio } from "./contrast.js";
 import { alpha } from "./color.js";
 import { statusTones } from "./styles.js";
+import { getPlatformRecipeTheme } from "./platform-recipes.js";
 import { getPlatformTheme } from "./theme.js";
 
 const source = (file: string): string =>
@@ -30,6 +31,9 @@ const fixed = (value: number, digits: number): string => value.toFixed(digits);
 
 /** The pre-506 Linux dark fill the wash rationale is measured against. */
 const linuxPre506Fill = "#2B4F76";
+
+/** The identity fill Aero inherited before plan 737. */
+const aeroPreFixFill = "#EAF0F7";
 
 /** The tightest border-over-scrim among the solid status chips. */
 const tightestChipBorder = (mode: "light" | "dark"): string => {
@@ -148,6 +152,20 @@ describe("the platform files' quoted figures", () => {
         `${fixed(contrastFloors.default.surface, 2)}:1 highlight floor (plan 506).`,
     );
     expect(source("linux.ts")).not.toContain("cannot soften further");
+  });
+
+  it("holds the Aero disabled fill's rationale to its own quiet panel", () => {
+    const light = getPlatformRecipeTheme("aero", "light");
+    const { muted } = light.colors;
+
+    expect(source("recipes/aero.ts")).toContain(
+      `The quiet panel is ${muted}, so the inherited identity fill measured ` +
+        `${fixed(contrastRatio(aeroPreFixFill, muted), 3)}:1 on it; this step ` +
+        `clears it at ${fixed(
+          contrastRatio(light.colors.disabled, muted),
+          3,
+        )}:1 (plan 737).`,
+    );
   });
 
   it("holds the disabled fill's step off its own dark surfaces", () => {

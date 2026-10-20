@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 363/441
+`[x]` `[████████░░]` 364/444
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -3144,6 +3144,23 @@ states the pre-506 title (6.648:1 at 20%) and the weakened wash (7.094:1 title,
 derives the fraction, both titles, the highlight and the floor, the test header
 states the same premise, and no colour, pair, floor, metric, role or shipped
 theme moves (plan 798)
+`[x]` Give the Aero recipe's disabled-fill rationale an owner — the plan-737
+comment in `platform-styles/recipes/aero.ts` states "The quiet panel is
+`#EBF3FC`, so the inherited identity fill measured 1.025:1 on it; this step
+clears it at 1.076:1", and no test read anything under `recipes/` because
+`platform-claims.test.ts`'s `source()` was only ever called with a file directly
+under `platform-styles/`. `platform-claims.test.ts` now reads `recipes/aero.ts`
+and derives the panel, the shipped step (`disabled` on `muted`) and the pre-737
+premise from a written-out `#EAF0F7`, the same split plan 785 used for the
+pre-098 brand fill; no colour, pair, floor, metric, role or recipe moves
+(plan 799)
+`[ ]` The recipes' three inherited status-ink ranges are unguarded historical
+premises: `xp.ts` "6.41–6.95:1" (plan 574) and `aero.ts` "4.437–4.498:1" (plan
+649) and "4.429–4.496:1" (plan 582). Their endpoints live in the defect suites'
+pre-fix tables, not in a derivation of the ranges, so a palette edit could stale
+a premise while every shipped ink still passes; pin or reword them in a plan
+that writes out each pre-fix palette, and do not hand-type a history (found while
+landing plan 799)
 
 ## Phase C — Tier 1–2 components
 
