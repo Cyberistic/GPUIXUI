@@ -372,6 +372,7 @@ references without buying correctness.
 | [729](./729-soft-panel-caption-tier.md) | The soft status panel's caption is not a tier below its ink | F | 320, 346, 362, 392, 500, 623, 703 | done |
 | [733](./733-unchecked-selection-control.md) | The unchecked selection control's off switch and its unmeasured knob | F | 084, 332, 347, 503, 601, 651 | done |
 | [737](./737-disabled-fill-surface.md) | The disabled fill is a fill: measured on the panel it paints on | F | 306, 309, 595, 610, 733 | done |
+| [742](./742-pressed-row-exclusion-reason.md) | The pressed row's exclusion reason, after plan 723 | F | 359, 651, 663, 674, 700, 723 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3775,6 +3776,24 @@ and five values move one designed step inside their own neutral families
 macOS dark `#353537`, Linux dark `#383838`, Aero light `#EAF0F7` → `#E2EBF5`),
 so every shipped set clears 1.065:1 at the tightest while its label keeps the
 inactive floor and its edge the divider floor.
+
+742 finishes the half of plan `723`'s Decision 5 that shipped undone. The wash
+walk gained the pressed `selectedActive` fill, but the passages that carry the
+old reason — *"a row is selected at rest"* — were never corrected, and four of
+them still said the pressed fill is **deliberately outside the selection-wash
+walk**: `selectionPressPairs`' JSDoc, `selectionInputPairs`' JSDoc, the
+catalogue's interaction-states paragraph and the design system's selected-row
+paragraph. That left `docs/tokens.md` and the design system contradicting their
+own *Text selection* sections (plan `723`), and left a reader with the false
+impression that a drag across a chosen row is unmeasured. Three further passages
+state the same reason about lists that *do* stop at the pressed row — the design
+system's `disabled` and inactive-label rows (the second pinned by `docs.test.ts`)
+and a case comment in `selection-input-text.test.ts` — where the reason is not
+the list's; plan `723` Decision 3 keeps those pairs at rest in
+`selectionPressPairs`, and that is what they now say. No pair, colour, floor,
+metric or role moves: `selectionWashPairs` stays **11**, `selectionSurfaces` nine
+and `contrastPairs` **470**, and a new suite reads all six prose blocks and
+fails on the refuted reason or on a claim the pair lists contradict.
 
 ## How to use a plan
 
