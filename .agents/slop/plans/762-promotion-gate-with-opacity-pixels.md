@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release gate) |
 | Owner | playground workstream |
 | Depends on | `639`, `653`, `656`, `702`, `714`, `723`, `735`, `739`, `745`, `751`, `755`, `761` |
@@ -159,8 +159,8 @@ only and landed while the live suite was running.
 
 | Suite | Scenarios | Checks | Capabilities | Duration | Exit |
 | ----- | --------- | ------ | ------------ | -------- | ---- |
-| headless (`TestRenderer`) | **111/111** | **4106** | 65 | 321.6 s | `0` |
-| live (real window) | **100/100** | **2860** | 61 | **1179.7 s** | `0` |
+| headless (`TestRenderer`) | **111/111** | **4106** | 65 | 247.2 s | `0` |
+| live (real window) | **100/100** | **2860** | 61 | **1226.4 s** | `0` |
 
 `opacity-pixels` and `live-opacity-pixels` each report **29**;
 `state-pixels` and `live-state-pixels` each report **50**; `live-tier2-editing`
@@ -168,13 +168,13 @@ took its **33**-check branch. The headless total is plan `755`'s 4077 + 29
 exactly; the live total is 2831 + 29, the same arithmetic as `2830 + 29 + 1`
 branch check. Both `host` lines carry `gpuix 9fcd6288`, `zed 81c99f81` and
 runtime shaders; a plain `--all` wrote no `provenance.json` and no capture
-directory. A concurrent full headless run with identical counts re-wrote
-`smoke-report.json` at 247.2 s; the live artifact is this run's.
+directory. An independent full run on the same head measured 321.6 s headless
+and 1179.7 s live with identical counts, differing only in wall-clock.
 
 ```sh
 nub run --filter playground build            # exit 0
-nub apps/playground/dist/smoke/run.js        # 111/111 · 4106 · 65 · 321.6 s · exit 0
-nub apps/playground/dist/live/run.js --all   # 100/100 · 2860 · 61 · 1179.7 s · exit 0
+nub apps/playground/dist/smoke/run.js        # 111/111 · 4106 · 65 · 247.2 s · exit 0
+nub apps/playground/dist/live/run.js --all   # 100/100 · 2860 · 61 · 1226.4 s · exit 0
 nub run check                                # exit 0
 nub run lint                                 # exit 0
 nub run test                                 # exit 0; playground 520, testing 69, components 308,

@@ -96,8 +96,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **111/111 green here** (exit `0`, `.artifacts/smoke-report.json`, **4106 checks**, 65 capabilities; **321.6 s** at the plan `762` gate, **398.1 s** on the plan `761` head, **224.9 s** at the plan `755` gate; plan `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 100/100**
-(`live-report.json`, **2860 checks**, 61 capabilities; **1179.7 s**, exit `0`)
+The suite is **111/111 green here** (exit `0`, `.artifacts/smoke-report.json`, **4106 checks**, 65 capabilities; **247.2 s** at the plan `762` gate, **398.1 s** on the plan `761` head, **224.9 s** at the plan `755` gate; plan `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 100/100**
+(`live-report.json`, **2860 checks**, 61 capabilities; **1226.4 s**, exit `0`)
 on 2026-10-20, the merge/release gate (plan `762`, code head `05013949` at the
 gate). That total is plan `755`'s 2831 plus **29 checks from
 `live-opacity-pixels`** (plan `761`), so the disabled/subtree pixels join the border and

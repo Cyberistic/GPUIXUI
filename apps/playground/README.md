@@ -2321,7 +2321,8 @@ additive turns three unit tests red.
 ## Evidence on this host
 
 The suite is **111/111 green** here (`exit 0`, 4106 checks, 65 capabilities,
-**398.1 s** with plans `754` and `761`'s pixel probes, 2026-10-20; plan
+**247.2 s** at the plan `762` gate with plans `754` and `761`'s pixel probes,
+2026-10-20; plan
 `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check
 `state-pixels`, plan `745` added the 64-check
 `border-pixels`; plan `739`'s gate read 108/108 and 3963 on the shadow-pixel
@@ -2351,10 +2352,12 @@ media=verified window=verified frames=verified
 ```
 
 The last full merge/release gate ran **100/100** (`exit 0`, **2860** checks, 61
-capabilities; **1179.7 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
+capabilities; **1226.4 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
 head that includes plan `761` (`05013949`; 0 behind `origin/master`), with the
 whole headless registry at **111/111** (**4106** checks, 65 capabilities,
-321.6 s) on the same code. Plan `762` is the current promotion gate, and the
+247.2 s) on the same code (an independent run on the same head measured
+1179.7 s live and 321.6 s headless, identical counts, differing only in
+wall-clock). Plan `762` is the current promotion gate, and the
 gate covers every registered id: plan `761`'s `live-opacity-pixels` (29 checks)
 joins the sequence here. It includes every scenario this branch added:
 `live-theme-platform` (plan `654`),

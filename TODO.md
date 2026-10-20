@@ -126,15 +126,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       still fails. Five mutations observed and reverted, all by name (§8).
       Focused ids run: `opacity-pixels`, `live-opacity-pixels` (twice each);
       end-of-task full headless **111/111** (**4106** checks, 65 capabilities,
-      398.1 s, exit `0`; exactly `4077 + 29`). **Not run:** the full live suite
-      (merge gate); live registry **99 → 100**.
+      398.1 s, exit `0`; exactly `4077 + 29`). The full live suite ran in plan
+      `762` (100/100, below); live registry **99 → 100**.
 
 `[x]` **Run the promotion gate on the head that includes the opacity pixels** per
       plan `762`: the last full gate (plan `755`) covered 99 of the 100 live
       scenarios. Both suites re-ran on the code head that includes plan `761`
-      (0 behind `origin/master`): headless **111/111** (**4106** checks, 65
-      capabilities, 321.6 s) and live **100/100** (**2860** checks, 61
-      capabilities, **1179.7 s**), both exit `0`. The live total is plan `755`'s
+      (0 behind `origin/master`): headless **111/111** (**4106**
+      checks, 65 capabilities, 247.2 s) and live **100/100** (**2860** checks,
+      61 capabilities, **1226.4 s**), both exit `0` (an independent run on the
+      same head measured 321.6 s and 1179.7 s, identical counts, differing only
+      in wall-clock). The live total is plan `755`'s
       2831 + `live-opacity-pixels`' 29 exactly and the headless total `4077 + 29`;
       `live-tier2-editing` took its 33-check branch, both `host` lines carry the
       release-tag pins, and a plain `--all` wrote no `provenance.json` or capture
@@ -2264,10 +2266,12 @@ focused id is `live-frames`.
       for the promotion fast-forward**; the owner/supervisor still performs the
       merge. **Addendum (plan `762`, 2026-10-20):** plan `761` then registered
       `opacity-pixels` (29 checks) and `live-opacity-pixels` (29), so both full
-      registries ran again on the code head that includes them (`05013949`, 0
-      behind `origin/master`): headless **111/111** (**4106** checks, 65
-      capabilities, 321.6 s) and live **100/100** (**2860** checks, 61
-      capabilities, **1179.7 s**), both exit `0`. The live total is `2831 + 29`
+      registries ran again on the code head that includes them (`05013949` + the
+      renumber and ledger commits, 0 behind `origin/master`): headless
+      **111/111** (**4106** checks, 65 capabilities, 247.2 s) and live
+      **100/100** (**2860** checks, 61 capabilities, **1226.4 s**), both exit
+      `0` (an independent run on the same head measured 321.6 s and 1179.7 s,
+      identical counts). The live total is `2831 + 29`
       and the headless total `4077 + 29` exactly; `live-tier2-editing` took its
       33-check branch. A plain `--all` wrote no `provenance.json` and no capture
       directory, and both `host` lines carry the release-tag pins. `nub run
