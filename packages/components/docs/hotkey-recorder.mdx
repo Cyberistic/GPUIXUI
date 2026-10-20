@@ -80,7 +80,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   separately named button, so both are reachable by keyboard.
 - `Enter` starts a recording on press and `Space` on release. The clear control
   clears on the same split, and its key never reaches the recorder, so clearing
-  from the keyboard does not start a recording.
+  from the keyboard does not start a recording. The clear control unmounts with
+  the binding, so clearing hands focus to the recorder itself — a tab stop that
+  stays — instead of leaving focus on nothing (plan 769).
 - Recording is visual ("Press keys…") and the field keeps focus while listening.
 - There is no `aria-keyshortcuts` and no `aria-disabled` in `0.10.0`; disabled
   leaves the tab order, dims and announces `Disabled` through
@@ -111,10 +113,11 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (16 tests):
+`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (18 tests):
 the display, click-to-record, a real captured chord, Escape, a recording Escape
 that leaves its dialog open, the clear control by pointer and keyboard (and that
-the next click after a keyboard clear starts a recording), the clear control's
+the next click after a keyboard clear starts a recording), the focus the clear
+hands to the recorder (on a key and on a press), the clear control's
 focus ring, Space starting on release, a captured Space not reopening the
 recorder, cancellation on `Tab` and on an outside press, disabled, and both
 themes.

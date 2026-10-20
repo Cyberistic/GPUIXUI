@@ -90,7 +90,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   `autoFocus` seeds the group ring (the runtime applies native focus after
   React's effects, so `onFocus` never runs — plan 522).
 - Removing a chip by keyboard is possible by tabbing to its control and pressing
-  `Enter`, or releasing `Space`.
+  `Enter`, or releasing `Space`. The control unmounts with its chip, so the
+  removal hands focus to the field — the next token's stop — instead of leaving
+  focus on nothing (plan 769).
 - There is no `aria-disabled` in 0.10.0; the field and the group announce
   `Disabled` through `aria-description`.
 
@@ -111,9 +113,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (19 tests):
 rendering, Enter, comma commit, duplicates, the named removal control, removal
-by pointer and Space release, the chip control's focus ring, the group ring a
+by pointer and Space release, the focus the removal hands to the field (on a key
+and on a press), the chip control's focus ring, the group ring a
 field's `autoFocus` seeds, `max`, a fractional `max`, a disabled field
 (read-only, no removal controls, no Enter path, out of the tab order, ignoring
 `autoFocus` and painting no ring), a caller that refuses a change, and a refused

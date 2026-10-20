@@ -5,7 +5,7 @@
 | Workstream | components (Tier 2 composition and feedback) |
 | Phase | F — integration and polish |
 | Depends on | 110, 111, 314, 316, 332, 334, 522, 613, 659, 680, 693, 754, 755 |
-| Status | pending |
+| Status | done — measured 2026-10-20: all four new native cases red at `HEAD` (`tag-input.test.tsx` + `hotkey-recorder.test.tsx` = 33 passed / 4 failed of 37, the four failures each reading `Option.none()` for the focused host) and green after (37/37); the full native suite is **966 passed / 20 failed of 986**, exactly the baseline's 20 recorded plan-540 classes plus the four new passes; unit 495 in 47 files; `check`/`lint`/`test` exit 0 |
 | Claimed number | `769` — the first free number across every worktree at claim time (`766`/`767` are the tokens theme's, `768` the playground's; checked in the shared checkout and every `workspaces/*` tree) |
 
 ## 1. The bug

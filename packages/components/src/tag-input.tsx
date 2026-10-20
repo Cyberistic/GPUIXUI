@@ -18,6 +18,7 @@ import type {
   Props,
   PublicInstance,
 } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -65,6 +66,8 @@ interface TagInputContextValue {
   readonly editDraft: (text: string) => void;
   readonly addDraft: () => void;
   readonly remove: (value: string) => void;
+  /** Puts focus in the field after a control that removed itself was used. */
+  readonly focusField: () => void;
   /** Seeds the group ring for an `autoFocus` field (no React event arrives). */
   readonly setFocused: (focused: boolean) => void;
   /** Registers the field's host so the group ring can follow native focus. */
@@ -113,6 +116,7 @@ export const TagInput = ({
   ...rest
 }: TagInputProps) => {
   const theme = useTheme();
+  const renderer = useGpuix().renderer;
   const [draft, setDraft] = useState("");
   const [focused, setFocused] = useState(false);
   const [fieldId, setFieldId] = useState<number | null>(null);
@@ -120,6 +124,9 @@ export const TagInput = ({
   const registerField = useCallback((instance: PublicInstance | null) => {
     setFieldId(instance?.id ?? null);
   }, []);
+  const focusField = useCallback(() => {
+    if (fieldId !== null) renderer?.focusElement?.(fieldId);
+  }, [fieldId, renderer]);
   // A null sample keeps the `autoFocus` seed; once a host is reported it is the
   // only truth, so the ring clears when the field loses native focus (plan 755).
   const groupFocused =
@@ -157,6 +164,7 @@ export const TagInput = ({
     },
     setFocused,
     registerField,
+    focusField,
   };
 
   return (
@@ -292,7 +300,7 @@ export const TagInputChip = ({
   ...rest
 }: TagInputChipProps) => {
   const theme = useTheme();
-  const { disabled, remove } = useTagInput();
+  const { disabled, remove, focusField } = useTagInput();
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -302,6 +310,12 @@ export const TagInputChip = ({
   const [focused, setFocused] = useFocusState(false, disabled, instance?.id);
   const removeTestId =
     rest.testId === undefined ? undefined : `${rest.testId}-remove`;
+  // The control (and its chip) leaves the tree, so focus would be left on
+  // nothing; the field is the next stop and always exists (plan 769).
+  const removeAndFocus = (): void => {
+    remove(value);
+    focusField();
+  };
 
   return (
     <div
@@ -339,8 +353,8 @@ export const TagInputChip = ({
           testId={removeTestId}
           tabIndex={0}
           ref={attach}
-          onClick={() => remove(value)}
-          {...activationHandlers(() => remove(value))}
+          onClick={removeAndFocus}
+          {...activationHandlers(removeAndFocus)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           style={{

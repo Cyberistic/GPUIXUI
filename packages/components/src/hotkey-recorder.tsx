@@ -15,6 +15,7 @@
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -83,6 +84,7 @@ export const HotkeyRecorder = ({
   ...rest
 }: HotkeyRecorderProps) => {
   const theme = useTheme();
+  const renderer = useGpuix().renderer;
   const [recording, setRecording] = useState(false);
   const [rootInstance, setRootInstance] = useState<PublicInstance | undefined>(
     undefined,
@@ -126,11 +128,14 @@ export const HotkeyRecorder = ({
   /**
    * Drop the binding. `skip` marks the clear control's own click, which bubbles
    * to the root and must not start a recording; a keyboard clear claims its key
-   * instead, so it leaves the flag alone (plan 693).
+   * instead, so it leaves the flag alone (plan 693). The control unmounts with
+   * the binding, so focus moves to the recorder, which stays a tab stop (plan
+   * 769).
    */
   const clear = (skip: boolean): void => {
     skipStart.current = skip;
     onChange(null);
+    if (rootInstance !== undefined) renderer?.focusElement?.(rootInstance.id);
   };
 
   return (

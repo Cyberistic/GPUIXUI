@@ -1251,6 +1251,17 @@ retired once both branches are one
       baseline's same 20 classes, and no playground smoke/live scenario mounts a
       mention field; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       count synced (owner: components)
+    - [x] A control that removes itself hands focus on — plan 769; measured
+      2026-10-20: activating a `TagInputChip`'s removal control or the
+      `HotkeyRecorder`'s clear control left the focused host on nothing
+      (`Option.none()`), because the control unmounts with the token/binding, so
+      the next `Tab` restarted at the window's first stop. Each activation
+      handler now moves focus to its group's surviving stop — the tag field and
+      the recorder root — and a value change the app made never moves focus. 2
+      tag-input + 2 hotkey-recorder native cases, all four red at `HEAD`; unit
+      495 in 47 files, full native suite 966/20 of 986 with the baseline's same
+      plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index
+      synced (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

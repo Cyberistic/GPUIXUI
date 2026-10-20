@@ -6,8 +6,9 @@
  * present, a disabled chip that still removes, a draft that stops the field
  * from keeping focus, a chip control that removes on Space key down instead of
  * on release, a removal control that only a child index could find, a
- * disabled field whose Enter path still committed (plan 394), and a refused
- * duplicate, cap or empty commit that still reported a change (plan 562).
+ * disabled field whose Enter path still committed (plan 394), a refused
+ * duplicate, cap or empty commit that still reported a change (plan 562), and a
+ * removal control that unmounted itself and left focus on nothing (plan 769).
  */
 
 import type { TestElement } from "@gpuix/react/testing";
@@ -179,6 +180,38 @@ describe("TagInput", () => {
     tags.renderer.nativeSimulateKeyUp(control.id, "space");
     expect(tags.renderer.findByTestId("chip-design")).toBeUndefined();
     expect(onValueChange).toHaveBeenLastCalledWith(["docs"]);
+
+    tags.unmount();
+  });
+
+  it("hands focus to the field when a chip's control removes it", () => {
+    // The control unmounts with its chip, so focus was left on nothing and the
+    // next Tab restarted at the window's first stop (plan 769).
+    const tags = renderComponent(<Harness initial={["design", "docs"]} />);
+    const control = removeControlOf(tags, "chip-design");
+    expect(control).toBeDefined();
+    if (control === undefined) return;
+
+    tags.renderer.focusElement(control.id);
+    tags.renderer.nativeSimulateKeyDown(control.id, "enter");
+
+    expect(tags.renderer.findByTestId("chip-design")).toBeUndefined();
+    expect(focusedTestId(tags)).toEqual(Option.some("tag-field"));
+
+    tags.unmount();
+  });
+
+  it("hands focus to the field when a press removes a chip", () => {
+    const tags = renderComponent(<Harness initial={["design", "docs"]} />);
+    const control = removeControlOf(tags, "chip-design");
+    expect(control).toBeDefined();
+    if (control === undefined) return;
+
+    tags.renderer.focusElement(control.id);
+    clickElement(tags, control);
+
+    expect(tags.renderer.findByTestId("chip-design")).toBeUndefined();
+    expect(focusedTestId(tags)).toEqual(Option.some("tag-field"));
 
     tags.unmount();
   });

@@ -6,8 +6,10 @@
  * outlives the field because the runtime delivers no blur, a disabled recorder
  * that can be activated, Space starting
  * a recording on key down instead of on release, a captured Space reopening the
- * recorder on its key-up, a keyboard-cleared value starting one instead, and an
- * Escape that stopped the recording and closed the dialog around it (plan 514).
+ * recorder on its key-up, a keyboard-cleared value starting one instead, an
+ * Escape that stopped the recording and closed the dialog around it (plan 514),
+ * and a clear control that unmounted itself and left focus on nothing (plan
+ * 769).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -203,6 +205,44 @@ describe("HotkeyRecorder", () => {
     expect(onChange).toHaveBeenCalledWith(null);
     expect(recorder.renderer.getAllText()).toContain("Click to record");
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
+
+    recorder.unmount();
+  });
+
+  it("hands focus to the recorder when its control clears the binding", () => {
+    // The clear control unmounts with the binding, so focus was left on nothing
+    // and the next Tab restarted at the window's first stop (plan 769).
+    const onChange = vi.fn();
+    const recorder = renderComponent(
+      <Harness initial="ctrl+k" onChange={onChange} />,
+    );
+    const clear = recorder.renderer.findByTestId("recorder-clear");
+    expect(clear).toBeDefined();
+    if (clear === undefined) return;
+
+    recorder.renderer.focusElement(clear.id);
+    recorder.renderer.nativeSimulateKeyDown(clear.id, "enter");
+
+    expect(onChange).toHaveBeenCalledWith(null);
+    expect(focusedTestId(recorder)).toEqual(Option.some("recorder"));
+
+    recorder.unmount();
+  });
+
+  it("hands focus to the recorder when a press clears the binding", () => {
+    const onChange = vi.fn();
+    const recorder = renderComponent(
+      <Harness initial="ctrl+k" onChange={onChange} />,
+    );
+    const clear = recorder.renderer.findByTestId("recorder-clear");
+    expect(clear).toBeDefined();
+    if (clear === undefined) return;
+
+    recorder.renderer.focusElement(clear.id);
+    clickCentreOf(recorder, "recorder-clear");
+
+    expect(onChange).toHaveBeenCalledWith(null);
+    expect(focusedTestId(recorder)).toEqual(Option.some("recorder"));
 
     recorder.unmount();
   });
