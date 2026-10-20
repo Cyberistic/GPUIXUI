@@ -143,7 +143,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 142/142 plans-and-harness
+`[~]` `[█████████░]` 142/143 plans-and-harness
+
+`[~]` **Prove the modal veil in the frame** per plan `791`: the shipped
+      `DialogContent`/`DrawerContent` backdrop is named by **no scenario** in
+      either registry (`grep dialog-backdrop|drawer-backdrop` is empty for
+      `apps/playground`), so a veil with no background, a veil sized to the
+      surface, or a veil that never unmounts passes every existing check.
+      `dialog-scrim-pixels` / `live-dialog-scrim` decode four frames per host
+      and assert the `overlay` role composited over two page fills, the far
+      corner, the undimmed `popover` surface and the close restore. Plan:
+      `.agents/slop/plans/791-modal-veil-pixels.md`.
 
 `[x]` **Run the promotion gate on the head that includes the truncation and
       content-theme pixels** per plan `786`: verification only, 0 behind
