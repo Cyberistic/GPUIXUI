@@ -8,9 +8,9 @@
  * a 16px glyph disappeared.
  *
  * The three shipped marks that paint the *wrong* role are held by TODO rows, not
- * by a pair: the avatar's presence dot paints the solid `warning` (1.78:1 on a
- * light card), the timeline's upcoming dot paints `muted` (1.036:1 on the
- * identity canvas), and the menu row's highlight bar paints `accent`
+ * by a pair: the avatar's presence dot paints the solid `warning` (1.89:1 on the
+ * `card` its ring paints), the timeline's upcoming dot paints `muted` (1.036:1
+ * on the identity canvas), and the menu row's highlight bar paints `accent`
  * (1.118–1.392:1 on `popover`). A status mark is `xText`, which the status-text
  * pairs already measure, and a 2px bar needs `borderStrong`; adding a pair for
  * the bad composition would bless it.

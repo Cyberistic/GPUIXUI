@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 376/451
+`[x]` `[████████░░]` 377/452
 
 `[x]` Own the two catalogue sentences that state a figure beside a derived
 claim — `docs.test.ts` derives §Text selection's *set* of affected fills (through
@@ -708,7 +708,7 @@ boundary, already measured on `popover`/`hover`/`active`) or
 `components`)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
-`card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the
+`card`-coloured ring, and light `warning` measures **1.89:1** on its card, so the
 "away" dot is effectively invisible; use `statusTone(...).text` (`xText`), which
 the status-text contract already measures on `card` (plan 332; owner:
 `components`)
@@ -3328,6 +3328,21 @@ own figure, and `disabled-label-tier-claims.test.ts` derives all four steps with
 the hierarchy's own surface list and measurement, reads both passages, rejects
 the pre-fix attribution, and moves the figures with a planted palette; no
 colour, pair, floor, metric, role or shipped theme moves (plan 822)
+`[x]` Own the wrong-role marks' five figures — the design system's §9 quotes the
+evidence for the avatar's presence dot, the timeline's pending dot and the menu
+row's highlight bar, and two further passages restated the avatar's figure as
+"1.78:1 on a light card" / "**1.78:1** on its card" while `1.78:1` is the fill's
+measurement against the **canvas** and the light `card` measures **1.89:1** (the
+catalogue publishes that split). No test read any of the five figures — the two
+`warning` surfaces, the timeline dot's `1.036:1` on the identity canvas, and both
+`accent` ranges (`1.118–1.392:1` on `popover`, `1.000–1.113:1` on `hover`) — so
+a palette edit in any of the 24 shipped sets could leave three documents quoting
+numbers, and a premise, the package no longer produces. Both attributions now
+name the card's own figure, and `wrong-role-mark-claims.test.ts` derives every
+figure from `shippedThemes`, holds the §9 paragraph, both `TODO.md` rows and the
+test header, checks the premise per set against `contrastFloors`, and moves the
+ranges with a planted palette; no colour, pair, floor, metric, role or shipped
+theme moves (plan 823)
 
 ## Phase C — Tier 1–2 components
 
