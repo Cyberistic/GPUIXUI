@@ -405,6 +405,7 @@ references without buying correctness.
 | [799](./799-aero-disabled-rationale.md) | The Aero recipe's disabled-fill rationale has no owner | F | 535, 737, 795 | done |
 | [800](./800-recipe-status-ink-ranges.md) | The recipes' three inherited status-ink ranges have no owner | F | 535, 574, 582, 649, 799 | done |
 | [803](./803-palette-rationale-figures.md) | The palette's inline rationale figures have no owner | F | 504, 528, 729, 737, 800 | done |
+| [805](./805-example-header-figures.md) | The copyable examples' header figures have no owner | F | 310, 394, 539, 651, 658, 717, 733, 803 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4118,6 +4119,21 @@ each figure through `contrastRatio`/`compositeOver`/`contrastFloors`, plants
 `palette[ramp][950]` for the range whose own sentence names that stop, and holds
 each sentence whole. No colour, pair, floor, metric, role or shipped theme
 moves.
+
+Plan `805` closes the same class one surface further out: every copyable
+`*.example.ts` opens with a rationale paragraph that a consumer copies and
+edits, and bumping every ratio digit across nine of them left 7071 of 7075
+tests green — only the brand example and the toast groove's 1.069:1 were owned.
+`styles.ts`'s copy of the same three disabled figures survived on its own, and
+four sentences were already wrong: the toast counted the AAA dark sets as
+1.000:1 (they are 1.058:1), the unchecked control called both roles 1.000:1 in
+identity light and on every platform dark card (1.027:1 and 1.221:1 are the
+two cases it named), and the platform example quoted two figures measured on
+hexes the file no longer contains. Twelve figures join `documentedFigures`, the
+figures suite reads a source document as prose so a wrapped JSDoc sentence is
+matchable, and `example-header-figures.test.ts` owns the example-own-theme
+figures and the two sweeps. No colour, pair, floor, metric, role or shipped
+theme moves.
 
 ## How to use a plan
 
