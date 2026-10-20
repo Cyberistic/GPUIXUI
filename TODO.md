@@ -2199,7 +2199,7 @@ retired once both branches are one
       host source is required (a source-less `<img>` took the fallback and not
       its authored box, measured); the mount path applies the first bounds/mode
       once. No native child view, scale factor or input routing is claimed.
-      Offline 65 files / 910 tests, scoped runtime 4/4; seven mutations fail by
+      Offline 66 files / 913 tests, scoped runtime 5/5; eight mutations fail by
       name.
 
 ### Cross-workstream dependencies (do not edit their paths — record only)

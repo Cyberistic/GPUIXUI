@@ -425,7 +425,7 @@ needs it; the component passes `useGpuix().renderer` when present.
 
 ```sh
 nub run --filter @gpuixui/primitives check-types   # exit 0
-nub run --filter @gpuixui/primitives test          # 65 files / 910 tests green
+nub run --filter @gpuixui/primitives test          # 66 files / 913 tests green
 nub exec vitest run src/surface src/components/style-order.test.tsx
                                                      # 3 files / 73 tests green
 nub exec vitest run --config vitest.runtime.config.ts runtime/surface.runtime.test.tsx
@@ -447,3 +447,4 @@ nub exec vitest run --config vitest.runtime.config.ts \
 | `onError` call removed | `reports a typed failure without unmounting the host` times out |
 | caller style merged before the box | `Surface paints every caller property` fails (`height` `80` not `77`) |
 | duplicate-effect suppression removed | the mount sequence gains a second `resize:120x80` and `theme:light` (measured before the fix) |
+| blank label keeps its tab stop | `Surface accessibility > drops the tab stop when the label says nothing` fails |
