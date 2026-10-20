@@ -297,7 +297,10 @@ The pages are prose and lists; the scoped accessibility sweep was run over the
 three changed pages, one invocation each:
 `nub scripts/smoke-a11y.ts --no-build --only /docs`, `… --only /docs/installation`
 and `… --only /docs/contributing`. Each reported `1 pages × 2 schemes, 0
-violations` and exit `0`. No live scene changes.
+violations` and exit `0`. Because both plans 619 and 620 changed alias rows, the
+client search path was operated too: `nub scripts/smoke-search.ts --no-build`
+exited `0` (`search palette, index filter and phone path checked`). No live
+scene changes.
 
 ## 8. Two-direction proofs
 
