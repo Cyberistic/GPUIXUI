@@ -1753,7 +1753,11 @@ the docs-site workstream; the `packages/components` half is plan 337)
       2026-10-20: `check`, `lint` and `test` exit 0 (unit 495 in 47 files) and
       the full native suite is **961 passed / 20 failed of 981** — the four new
       malformed-delay cases pass and the 20 failures are the same recorded
-      plan-540 classes.
+      plan-540 classes. Plan 782 re-ran the same gates on 2026-10-20: `check`,
+      `lint` and `test` exit 0 (unit 504 in 47 files) and the full native suite
+      is **989 passed / 20 failed of 1009** — the four new heading cases pass,
+      the 20 failures are exactly the pre-change run's list, and no other file
+      changed.
 
 ## Swarm-owned blockers (fix these)
 
