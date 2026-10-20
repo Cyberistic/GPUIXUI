@@ -4126,14 +4126,14 @@ edits, and bumping every ratio digit across nine of them left 7071 of 7075
 tests green — only the brand example and the toast groove's 1.069:1 were owned.
 `styles.ts`'s copy of the same three disabled figures survived on its own, and
 four sentences were already wrong: the toast counted the AAA dark sets as
-1.000:1 (they are 1.058:1), the unchecked control called both roles 1.000:1 in
-identity light and on every platform dark card (1.027:1 and 1.221:1 are the
-two cases it named), and the platform example quoted two figures measured on
-hexes the file no longer contains. Twelve figures join `documentedFigures`, the
-figures suite reads a source document as prose so a wrapped JSDoc sentence is
-matchable, and `example-header-figures.test.ts` owns the example-own-theme
-figures and the two sweeps. No colour, pair, floor, metric, role or shipped
-theme moves.
+1.000:1 (they are 1.059:1), the unchecked control called both roles 1.000:1 in
+identity light and on every platform dark card (1.027:1, identity dark's 1.126:1
+and macOS dark's 1.221:1 are the values), and the platform example quoted two
+figures measured on hexes the file no longer contains. Thirteen figures join
+`documentedFigures`, the figures suite reads a source document as prose so a
+wrapped JSDoc sentence is matchable, and `example-header-figures.test.ts` owns
+the example-own-theme figures and the two sweeps. No colour, pair, floor,
+metric, role or shipped theme moves.
 
 ## How to use a plan
 
