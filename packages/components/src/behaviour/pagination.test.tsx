@@ -8,9 +8,16 @@
  * ellipsis that was a focus stop; a current page that was not painted with the
  * primary role; a root that ignored the parts the caller composed; and a single
  * hidden page reached through an ellipsis instead of being rendered.
+ *
+ * Bare items (plan 756): a `PaginationItem` rendered outside the window forwarded
+ * its own `page` straight to `onPageChange`, so an impossible `9` in a 5-page
+ * control reached the app and a fractional `2.9` was reported un-truncated —
+ * although every other control had reported only real pages since plan 611.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Option from "effect/Option";
+import { nodesNamed } from "../internal/a11y.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { clickCentreOf } from "../internal/interaction.js";
 import {
@@ -303,6 +310,59 @@ describe("Pagination", () => {
 
     clickCentreOf(pager, "extra-next");
     expect(onPageChange).toHaveBeenCalledWith(7);
+
+    pager.unmount();
+  });
+
+  it("keeps a bare item naming a page the control does not have inert", () => {
+    const onPageChange = vi.fn();
+    const onClick = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={1} pageCount={5} onPageChange={onPageChange}>
+        <PaginationList />
+        <PaginationItem page={9} testId="page-nine" onClick={onClick}>
+          9
+        </PaginationItem>
+      </Pagination>,
+    );
+
+    clickCentreOf(pager, "page-nine");
+
+    // An inert control reports nothing and runs no caller handler.
+    expect(onPageChange).not.toHaveBeenCalled();
+    expect(onClick).not.toHaveBeenCalled();
+    expect(
+      pager.renderer.findByTestId("page-nine")?.customProps?.tabIndex,
+    ).toBe(-1);
+    expect(
+      Option.getOrUndefined(
+        Option.flatMap(
+          Option.fromNullishOr(nodesNamed(pager.renderer, "Page 9")[0]),
+          (node) => node.description,
+        ),
+      ),
+    ).toBe("Disabled");
+
+    pager.unmount();
+  });
+
+  it("truncates a fractional bare item to its whole page", () => {
+    const onPageChange = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={1} pageCount={10} onPageChange={onPageChange}>
+        <PaginationList />
+        <PaginationItem page={2.9} testId="page-odd">
+          2.9
+        </PaginationItem>
+      </Pagination>,
+    );
+
+    expect(
+      pager.renderer.findByTestId("page-odd")?.customProps?.["aria-label"],
+    ).toBe("Page 2");
+    clickCentreOf(pager, "page-odd");
+
+    expect(onPageChange).toHaveBeenCalledWith(2);
 
     pager.unmount();
   });

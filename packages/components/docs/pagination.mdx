@@ -31,7 +31,7 @@ const [page, setPage] = useState(1);
 | `Pagination` | the `role="navigation"` root, its name, the clamped page and the window |
 | `PaginationPrevious` | the "Prev" control with a leading chevron; leaves the tab order on the first page |
 | `PaginationList` | the page window: page buttons and the ellipses for gaps |
-| `PaginationItem` | one page number; the current page is primary and non-pressable |
+| `PaginationItem` | one page number; the current page is primary and non-pressable, and an item naming a page the control does not have is inert |
 | `PaginationNext` | the "Next" control with a trailing chevron; leaves the tab order on the last page |
 | `PaginationEllipsis` | the non-focusable `…` that stands in for omitted pages |
 
@@ -73,6 +73,14 @@ leave the tab order at the ends instead of merely looking disabled, and a caller
 not make the control pressable, and neither control reports a page outside
 `1…pageCount`.
 
+A bare `PaginationItem` follows the same rule (plan 756). Its `page` is truncated
+like the root's `page`, so `page={2.9}` is page 2. An item whose page is outside
+`1…pageCount` is **inert**: it leaves the tab order, runs neither its own action
+nor the caller's `onClick`, announces `Disabled`, and never hands `onPageChange`
+a page the app cannot render. A valid item outside the numbered window — the
+documented "jump to page" shortcut — still reports its page, and the current page
+still runs the caller's `onClick` while reporting nothing.
+
 ## Keyboard
 
 Tab moves through the enabled buttons only. Enter and Space activate the focused
@@ -87,7 +95,7 @@ Every part takes the GPUix host props and **merges `style` last**.
 | `Pagination` | `div` (`role="navigation"`, `aria-label="Pagination"`) | `page: number` (required), `pageCount: number` (required), `onPageChange: (page: number) => void` (required), `siblingCount?: number` (default `1`), `showEdges?: boolean` (default `true`) |
 | `PaginationPrevious` | `div` (`role="button"`, `aria-label="Previous page"`) | host props; disabled on the first page (or by `disabled`) |
 | `PaginationList` | `div` | host props |
-| `PaginationItem` | `div` (`role="button"`) | `page: number` (required), `style?: StateStyle<{ active: boolean }>` |
+| `PaginationItem` | `div` (`role="button"`) | `page: number` (required), `style?: StateStyle<{ active: boolean }>`; a page outside `1…pageCount` is inert |
 | `PaginationNext` | `div` (`role="button"`, `aria-label="Next page"`) | host props; disabled on the last page (or by `disabled`) |
 | `PaginationEllipsis` | `text` (`aria-label="More pages"`) | host props |
 
@@ -129,7 +137,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (18 tests):
+`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (20 tests):
 disabled edges (including a caller `disabled={false}` that cannot re-enable
 them), the page number (not index) reported, the current page no-op,
 Previous/Next stepping, a fractional page and page count normalised to whole
@@ -137,13 +145,17 @@ numbers and stopped at the real last page, a non-finite `siblingCount` rendering
 every page, the ellipsis not being a tab stop, a
 single hidden page being rendered instead of an ellipsis, Enter activation,
 `pageCount: 0`, the current fill in both themes, the composed part order, an
-item outside the list reading the root's page, and a caller `onClick` composing
-with each page change (including a click on the current page, which reports the
-caller and changes nothing).
+item outside the list reading the root's page, a bare item naming an impossible
+page staying inert (no report, no caller handler, no tab stop, announced
+`Disabled`), a fractional item truncating to its whole page, and a caller
+`onClick` composing with each page change (including a click on the current page,
+which reports the caller and changes nothing).
 
 `src/pagination/logic.test.ts` covers the window table above, including clamping,
 truncation of fractional and non-finite inputs, wide siblings, unique ascending
-pages, and the invariant that every ellipsis stands for at least two pages.
+pages, and the invariant that every ellipsis stands for at least two pages, plus
+`itemPageOf` (a real page, a truncated page, an out-of-range page, a malformed
+page, and a control with no pages).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

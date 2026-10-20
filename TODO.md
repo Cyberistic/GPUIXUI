@@ -1131,6 +1131,16 @@ retired once both branches are one
       the eight touched suites are 145/150 with the same five recorded plan-540
       failures; docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and
       the inventory counts synced (owner: components)
+    - [x] A bare pagination item never reports a page the control does not have —
+      plan 756; measured 2026-10-20: `PaginationItem page={9}` in a 5-page
+      control reported `9` and `page={2.9}` reported `2.9`, although plan 611
+      made Previous/Next report only real pages. One `itemPageOf` rule truncates
+      a finite page and refuses one outside `1…pageCount`; an impossible item is
+      inert (no tab stop, no caller handler, announced `Disabled`) and a
+      fractional one reports its whole page. 5 pure + 2 native cases (unit 25 in
+      the file, Pagination 20/20), both new native cases failing at `HEAD` with
+      `[9]` and `[2.9]`; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      synced (owner: components)
     - [x] A nested modal owns its Tab — plan 728: measured 2026-10-20 that a
       confirmation opened from a dialog lost the keyboard on the first Tab
       (Cancel → the outer dialog's first control, while the confirmation stayed
@@ -1618,7 +1628,11 @@ the docs-site workstream; the `packages/components` half is plan 337)
       `check`, `lint` and `test` exit 0 (unit 488 in 46 files), and the full
       native suite is **922 passed / 28 failed of 950** — the three new toast
       hover cases pass and the remaining failures are the same plan-540
-      classes.
+      classes. Plan 756 re-ran the same gates on 2026-10-20: `check`, `lint` and
+      `test` exit 0 (unit 493 in 46 files), Pagination 20/20 and the full native
+      suite is **955 passed / 20 failed of 975** — its 20 failures are exactly
+      the baseline's recorded plan-540 classes (diffed against the pre-change
+      run), and no other file's cases changed.
 
 ## Swarm-owned blockers (fix these)
 

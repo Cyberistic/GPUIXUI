@@ -18,6 +18,7 @@ import {
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { createContext, useContext, useMemo } from "react";
 import { Button } from "./internal/button.js";
 import {
@@ -29,6 +30,7 @@ import {
 import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
 import {
   currentPageOf,
+  itemPageOf,
   pageCountOf,
   pageWindow,
   type PageItem,
@@ -260,7 +262,9 @@ export interface PaginationItemState {
 
 /**
  * One page number. The current page is painted with the primary role, carries
- * `aria-selected`, and pressing it does nothing.
+ * `aria-selected`, and pressing it does nothing. An item whose `page` is not one
+ * of the control's pages is inert rather than reporting a page the caller cannot
+ * render (plan 756); a fractional `page` is truncated like the root's `page`.
  */
 export const PaginationItem = ({
   page,
@@ -269,8 +273,9 @@ export const PaginationItem = ({
   ...rest
 }: PaginationItemProps) => {
   const theme = useTheme();
-  const { current, onPageChange } = usePagination();
-  const isCurrent = page === current;
+  const { current, pageCount, onPageChange } = usePagination();
+  const target = itemPageOf(page, pageCount);
+  const isCurrent = Option.contains(target, current);
   const height = controlHeight(theme, "sm");
   const state: PaginationItemState = { active: isCurrent };
 
@@ -278,12 +283,18 @@ export const PaginationItem = ({
     <Button
       variant={isCurrent ? "primary" : "ghost"}
       size="sm"
-      aria-label={`Page ${page}`}
+      aria-label={`Page ${Option.getOrElse(target, () => page)}`}
       aria-selected={isCurrent}
       {...rest}
+      disabled={Option.isNone(target)}
       onClick={(event) => {
         onClick?.(event);
-        if (!isCurrent) onPageChange(page);
+        Option.match(target, {
+          onNone: () => undefined,
+          onSome: (value) => {
+            if (value !== current) onPageChange(value);
+          },
+        });
       }}
       style={mergeStyles(
         {
@@ -364,6 +375,7 @@ export const paginationMeta = {
   limitations: [
     "no aria-current in 0.10.0; the current page carries aria-selected",
     "page numbers are the only navigation: there is no page-size control",
+    "a bare PaginationItem whose page is outside 1…pageCount is inert and announces Disabled, and a fractional page is truncated like the root's page; the part never reports a page the control does not have",
   ],
   docs: "docs/pagination.mdx",
   example: "examples/pagination.example.tsx",

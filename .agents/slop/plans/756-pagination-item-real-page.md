@@ -5,7 +5,7 @@
 | Workstream | components (Tier 2 composition and feedback) |
 | Phase | F — integration and polish |
 | Depends on | 110, 113, 117, 300, 611 |
-| Status | planned |
+| Status | done — 2 native cases red at `HEAD` (`[9]` and `Page 2.9`) and green after; 5 pure + 2 native cases, Pagination 20/20, unit 493 in 46 files, full native suite 955/20 of 975 (the same plan-540 classes, diffed against the baseline) |
 | Claimed number | `756` — the first free number across every worktree at claim time (`755` was the highest; checked in the shared checkout and every `workspaces/*` tree) |
 
 ## 1. The bug

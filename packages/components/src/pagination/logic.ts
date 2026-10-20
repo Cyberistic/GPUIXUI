@@ -9,6 +9,7 @@
 
 import * as Arr from "effect/Array";
 import * as Num from "effect/Number";
+import * as Option from "effect/Option";
 import { wholeCap } from "../internal/count.js";
 
 /** A rendered entry in the page list. */
@@ -23,6 +24,25 @@ export const pageCountOf = (raw: number): number =>
 /** The current page: whole, at least 1, at most the whole count. */
 export const currentPageOf = (raw: number, pageCount: number): number =>
   Num.clamp({ minimum: 1, maximum: pageCount })(Math.trunc(raw));
+
+/**
+ * A bare page item's target: one of the control's own pages, or `None` when the
+ * item names something that is not a page.
+ *
+ * A finite value is truncated exactly like the root's `page` (plan 611), so an
+ * item and the window agree on what `2.9` means. A value outside `1..pageCount`
+ * is not a page — unlike the root's `page`, which is clamped, the item is not
+ * silently redirected to another page; its caller rendered a number the control
+ * does not have, so the part stays inert (plan 756).
+ */
+export const itemPageOf = (
+  raw: number,
+  pageCount: number,
+): Option.Option<number> => {
+  if (!Number.isFinite(raw) || pageCount < 1) return Option.none();
+  const page = Math.trunc(raw);
+  return page >= 1 && page <= pageCount ? Option.some(page) : Option.none();
+};
 
 /** Input to {@link pageWindow}. */
 export interface PageWindowInput {

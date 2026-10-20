@@ -16,6 +16,7 @@ import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import {
   currentPageOf,
+  itemPageOf,
   pageCountOf,
   pageWindow,
   type PageItem,
@@ -284,5 +285,35 @@ describe("pageWindow", () => {
     expect(
       pageWindow({ page: 1, pageCount: Number.POSITIVE_INFINITY }),
     ).toEqual([]);
+  });
+});
+
+describe("itemPageOf", () => {
+  it("names a real page of the control", () => {
+    expect(itemPageOf(3, 5)).toEqual(Option.some(3));
+    expect(itemPageOf(1, 5)).toEqual(Option.some(1));
+    expect(itemPageOf(5, 5)).toEqual(Option.some(5));
+  });
+
+  it("truncates a fractional page like the root's page", () => {
+    expect(itemPageOf(2.9, 5)).toEqual(Option.some(2));
+    expect(itemPageOf(0.9, 5)).toEqual(Option.none());
+  });
+
+  it("refuses a page outside the control", () => {
+    expect(itemPageOf(0, 5)).toEqual(Option.none());
+    expect(itemPageOf(6, 5)).toEqual(Option.none());
+    expect(itemPageOf(-3, 5)).toEqual(Option.none());
+  });
+
+  it("refuses a malformed page", () => {
+    expect(itemPageOf(Number.NaN, 5)).toEqual(Option.none());
+    expect(itemPageOf(Number.POSITIVE_INFINITY, 5)).toEqual(Option.none());
+    expect(itemPageOf(Number.NEGATIVE_INFINITY, 5)).toEqual(Option.none());
+  });
+
+  it("refuses every page when the control has none", () => {
+    expect(itemPageOf(1, 0)).toEqual(Option.none());
+    expect(itemPageOf(1, -2)).toEqual(Option.none());
   });
 });
