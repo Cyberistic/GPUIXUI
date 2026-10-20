@@ -471,7 +471,25 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 198/198
+`[x]` `[██████████]` 199/199
+
+`[x]` **Async data and effects have a page (plan 632)** — the library is built
+      on Effect and the site never answered how a consumer loads data: measured
+      2026-10-21, `async` reached a Combobox limitation, `data fetching` the
+      Data display page, `suspense`/`useeffect`/`isloading`/`cache`/
+      `cancellation` returned nothing, `retry` the Roadmap, `server state` the
+      part-state table and `error handling` Inline validation. `/docs/async-data`
+      states the missing data layer, the toast `ManagedRuntime` boundary, the
+      tagged loading/ready/failed union with a compiled `useProjects` example,
+      cancellation and StrictMode disposal, failure as a value, and the seven
+      absences (Suspense, query cache, HTTP client, worker, async validation,
+      async options, dialog runner). `async-page.test.ts` re-derives the only
+      `ManagedRuntime`, the three timers, the timer-free Countdown, every
+      workspace manifest and the installed `@gpuix/react` in both directions;
+      30 exact aliases carry the queries and five regressions keep
+      `loading`/`state management`/`managed runtime`/`fetch`/`debounce` with
+      their owners. 150 files / 1 672 docs tests, 113-page `smoke:build` with
+      two production queries; five forced defects measured in plan 632 §5.
 
 `[x]` **Display scale and pixel density have an owner (plan 631)** — measured
       2026-10-20: `hidpi`, `retina`, `dpr`, `ppi` and `4k` returned nothing or
