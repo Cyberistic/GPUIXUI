@@ -80,11 +80,13 @@ const decodeManifest = Schema.decodeUnknownSync(
 const workspaceManifests = (): ReadonlyArray<string> =>
   [
     join(repoRoot, "package.json"),
-    ...["apps", "packages", "examples"].flatMap((group) =>
-      readdirSync(join(repoRoot, group), { withFileTypes: true })
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => join(repoRoot, group, entry.name, "package.json")),
-    ),
+    ...["apps", "packages", "examples"]
+      .filter((group) => existsSync(join(repoRoot, group)))
+      .flatMap((group) =>
+        readdirSync(join(repoRoot, group), { withFileTypes: true })
+          .filter((entry) => entry.isDirectory())
+          .map((entry) => join(repoRoot, group, entry.name, "package.json")),
+      ),
   ].filter(existsSync);
 
 const declaredLibraryLicences = (): ReadonlyArray<string> => [
