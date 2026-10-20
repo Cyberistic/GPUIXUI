@@ -189,6 +189,15 @@ From `apps/docs`:
 | `nub run --filter docs test` | **112 files / 878 tests** pass |
 | `nub run --filter docs smoke:build` | 99 pages, search checked, **exit `0`** |
 
+Browser gates for the new section (a table and four headings, so not only the
+crawl):
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter docs smoke:a11y --no-build --only /docs/theming` | 1 page × 2 schemes, **0 violations** |
+| `nub run --filter docs smoke:responsive --no-build` | 99 pages at 390 px, phone controls and mobile navigation checked |
+| `nub run --filter docs smoke:console --no-build` | 99 pages, **0 errors** |
+
 From the repository root: `nub run check`, `nub run lint`, `nub run test` — all
 exit `0`; the docs package reports 112 files / 878 tests.
 
