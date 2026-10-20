@@ -356,6 +356,17 @@ All four exit 0. The full native suite is the merge gate, not an iteration
 check; run it once at the end and confirm the only failures are the recorded
 plan-540 binding defects.
 
+Measured on 2026-10-20: **902 passed / 32 failed of 934**, but that run is
+**contaminated** — a second session began writing this worktree at 07:37
+(`packages/components/src/empty-state.tsx`, its test, docs and example, plus plan
+`726-empty-state-heading.md`) and its transient `zz-probe.test.tsx` was in the
+run. Four of the 32 failures belong to that session (3 EmptyState heading cases
+and the probe). The remaining **28 are the recorded plan-540 binding classes**
+(centre/flip/submenu placement, focus/blur restoration, command-menu scroll and
+one measured density height), and **`navigation-menu.test.tsx` passed 28/28**
+inside the same run. Recorded as a B3 recurrence in `TODO.md`; do not read the
+32 as this change's verdict.
+
 The playground smoke registry has no Tier 2 navigation scenario (its rows are
 GPUix primitives), so the native `TestRenderer` suite is the interaction
 evidence. The two layer scenarios this change touches were re-run on 2026-10-20:

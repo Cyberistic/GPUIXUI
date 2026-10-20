@@ -1053,6 +1053,15 @@ retired once both branches are one
       (search-input 13, inline-edit 17, hotkey-recorder 13, chat 10, preview-card
       13, behaviour 654), both-direction proof; docs, `COMPONENTS.md` and the
       inventory synced
+    - [x] An empty state's title is a heading — plan 726. Measured: the title
+      was a generic `label:"No projects yet"` while Card, Dialog, Drawer and
+      Keyboard shortcuts all use caller-levelled headings, so a screen-reader
+      user could not jump to an empty panel. `EmptyState` takes
+      `level?: HeadingLevel` (default 3), the title is `role="heading"` through
+      the shared `headingLevel` rule, a raw `aria-level` is honoured and never
+      spread onto the root; 3 native cases (6 → 9) all failing at `HEAD`, three
+      mutation proofs; example, docs, `COMPONENTS.md` and the inventory count
+      synced
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
@@ -1191,6 +1200,18 @@ timestamp while `time_updated` kept advancing, so `time_idle is null` printed
 The older turn finished and pushed plan 525; this turn verified it and then
 claimed plan 526. Details and the corrected query are in plan 118's recurrence
 section.
+
+**Recurred 2026-10-20 07:37–07:39** while this session ran the plan-724 full
+native suite. The tree was clean at commit `f9ce8b95` (07:31) and the other
+session then wrote `packages/components/src/empty-state.tsx` (07:38:14), its
+behaviour test (07:37:20), docs (07:38:48), example (07:38:28) and plan
+`726-empty-state-heading.md` (07:37:10), and its transient
+`src/behaviour/zz-probe.test.tsx` was collected by the run. Totals measured:
+902 passed / 32 failed of 934; 4 of the failures are that session's (3 EmptyState
+heading cases + the probe), the other 28 are the recorded plan-540 binding
+classes, and `navigation-menu.test.tsx` is 28/28. The full-suite count is
+therefore not a clean verdict until one writer owns the tree; the plan-724
+scoped run (28/28) was taken before the second session started.
 
 ## Interlocks (cross-workstream dependencies)
 
