@@ -393,6 +393,7 @@ references without buying correctness.
 | [777](./777-readme-elevation-paragraph.md) | The front door's elevation paragraph, and the twelve fills it states of fifteen | F | 347, 584, 610, 619, 665, 737, 749, 775 | done |
 | [778](./778-aaa-elevation-tint.md) | The AAA elevation tint and its three alphas, in three unguarded passages | F | 085, 099, 376, 505, 777 | done |
 | [780](./780-hex-guard-boundary.md) | The one boundary guard that cannot take a boundary value | F | 067, 068, 096, 371, 540, 565 | done |
+| [781](./781-platform-style-text-step.md) | The three platform headers that name the wrong readable ink | F | 063, 082, 528, 591 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
