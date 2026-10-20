@@ -59,9 +59,11 @@ export interface InfoTipProps {
   /** The tip's locator; `testId` names the trigger. */
   readonly tipTestId?: string;
   /**
-   * An object, or a callback over the trigger's public state. Merged last on
-   * the trigger — the element this component draws. The tip's own surface is
-   * `Tooltip`'s theme paint.
+   * An object, or a callback over the trigger's public state. The trigger is
+   * the element this component draws, and everything but a `margin` lands on
+   * it, merged last. A `margin` rides the anchor root so the tip follows the
+   * control (a margin on the trigger would leave the tip behind, plan `695`).
+   * The tip's own surface is `Tooltip`'s theme paint.
    */
   readonly style?: StateStyle<InfoTipState>;
 }
