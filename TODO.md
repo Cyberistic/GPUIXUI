@@ -1077,6 +1077,13 @@ retired once both branches are one
       ends on the outer surface, not the confirmation's Cancel). A nested modal
       opened later is correct (plan 728); the mount-order case needs its own
       plan (owner: components)
+    - [ ] Two modals opened in one commit are ordered by effect time, so the
+      enclosing dialog is the topmost dismiss layer: measured 2026-10-20, one
+      `Escape` with a confirmation and its dialog both `open` at mount closed
+      **both** (the outer closed first and took the confirmation with it, focus
+      `none`), while a later-opened confirmation closes alone (plan 728). The
+      layer and focus order need the nesting, not the mount order; own plan
+      (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
