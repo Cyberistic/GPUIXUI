@@ -5,13 +5,16 @@
  * control must announce its value through `aria-valuetext` (there is no
  * `aria-valuenow` in GPUix 0.10.0), must not invent the attributes the runtime
  * ignores, must keep its keyboard contract even while painting a ring, and must
- * drop both its tab stop and its key handling when disabled. The pointer
+ * drop both its tab stop and its key handling when disabled. Plan `802` adds the
+ * other side of that gate: **read-only keeps the tab stop and refuses the keys**
+ * — a value a reviewer can reach, announce and never change. The pointer
  * geometry and the native focus movement are the runtime suite's job
- * (`runtime/value.runtime.test.tsx`).
+ * (`runtime/value.runtime.test.tsx`, `runtime/slider-read-only.runtime.test.tsx`).
  */
 
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { initValueState, type ValueState } from "../core/state.js";
@@ -249,6 +252,37 @@ describe("Slider", () => {
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("right"));
     expect(onValueChange).toHaveBeenCalledTimes(0);
   });
+
+  it("keeps its tab stop and refuses its keys while read-only", () => {
+    // The bug guarded (plan 802): the slider family had only `disabled`, which
+    // both faded the value and removed it from the tab order. A read-only
+    // slider is reachable, announced and unchanged.
+    const onValueChange = vi.fn();
+    const onCommit = vi.fn();
+    const element = renderSlider(
+      { readOnly: true },
+      testTheme,
+      valueOf(42),
+      idle,
+      { ...sliderHandlers(onValueChange), onCommit },
+    );
+    expect(expectSome(hostProp(element, "tabIndex"))).toBe(0);
+    Arr.forEach(["right", "end", "pageup", "home"], (key) =>
+      expectSome(hostHandler(element, "onKeyDown"))(keyEvent(key)),
+    );
+    expect(onValueChange).toHaveBeenCalledTimes(0);
+    expect(onCommit).toHaveBeenCalledTimes(0);
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42");
+    // `disabled` is the stronger state: both supplied leaves no tab stop.
+    const both = renderSlider(
+      { disabled: true, readOnly: true },
+      testTheme,
+      valueOf(42),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    expect(hostProp(both, "tabIndex")).toStrictEqual(Option.none());
+  });
 });
 
 describe("RangeSlider", () => {
@@ -364,6 +398,33 @@ describe("RangeSlider", () => {
     expect(hostProp(end ?? expect.fail("no thumb"), "tabIndex")).toStrictEqual(
       Option.none(),
     );
+  });
+
+  it("keeps both tab stops and refuses the keys while read-only", () => {
+    // Plan 802: both ends stay reachable and announced, and neither moves.
+    const onSpanChange = vi.fn();
+    const onSpanCommit = vi.fn();
+    const element = renderRangeSlider(
+      { readOnly: true },
+      testTheme,
+      spanOf(20, 60),
+      { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
+      { ...rangeHandlers(onSpanChange), onSpanCommit },
+    );
+    const [, start, , end] = partsOf(element);
+    expect(
+      [start, end].map((thumb) =>
+        expectSome(hostProp(thumb ?? expect.fail("no thumb"), "tabIndex")),
+      ),
+    ).toStrictEqual([0, 0]);
+    expectSome(hostHandler(end ?? expect.fail("no thumb"), "onKeyDown"))(
+      keyEvent("left"),
+    );
+    expectSome(hostHandler(start ?? expect.fail("no thumb"), "onKeyDown"))(
+      keyEvent("end"),
+    );
+    expect(onSpanChange).toHaveBeenCalledTimes(0);
+    expect(onSpanCommit).toHaveBeenCalledTimes(0);
   });
 });
 

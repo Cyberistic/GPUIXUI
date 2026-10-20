@@ -562,13 +562,83 @@ describe("group roots and overlays", () => {
     expect(lastState(slider.seen)).toStrictEqual({
       disabled: true,
       invalid: true,
+      readOnly: false,
     });
     expect(lastState(range.seen)).toStrictEqual({
       disabled: true,
       invalid: true,
+      readOnly: false,
     });
     expect(background(sliderElement)).toBe(PAINT);
     expect(background(rangeElement)).toBe(PAINT);
+  });
+
+  it("Slider and RangeSlider report read-only on the track and each thumb", () => {
+    // Plan 802: a review state has to reach the styling callback, and a range
+    // has two thumbs to tell apart from a disabled one.
+    const slider = recorder<SliderState>();
+    const sliderThumb = recorder<SliderThumbState>();
+    const range = recorder<RangeSliderState>();
+    const rangeThumb = recorder<RangeSliderThumbState>();
+    const sliderHandlers: SliderHandlers = {
+      onValueChange: vi.fn(),
+      onCommit: vi.fn(),
+      registerTrack: () => {},
+      onPointerDown: vi.fn(),
+      onPointerMove: vi.fn(),
+      onPointerUp: vi.fn(),
+    };
+    const rangeHandlers: RangeSliderHandlers = {
+      onSpanChange: vi.fn(),
+      onSpanCommit: vi.fn(),
+      registerTrack: () => {},
+      registerThumb: () => () => {},
+      onPointerDown: vi.fn(),
+      onPointerMove: vi.fn(),
+      onPointerUp: vi.fn(),
+    };
+    renderSlider(
+      {
+        style: slider.style,
+        thumbStyle: sliderThumb.style,
+        readOnly: true,
+      },
+      testTheme,
+      initValueState(Option.some(50), 0),
+      idle,
+      sliderHandlers,
+    );
+    renderRangeSlider(
+      {
+        style: range.style,
+        thumbStyle: rangeThumb.style,
+        readOnly: true,
+      },
+      testTheme,
+      spanState([20, 80]),
+      rangeFocus,
+      rangeHandlers,
+    );
+    expect(lastState(slider.seen)).toStrictEqual({
+      disabled: false,
+      invalid: false,
+      readOnly: true,
+    });
+    expect(lastState(sliderThumb.seen)).toStrictEqual({
+      focused: false,
+      disabled: false,
+      invalid: false,
+      readOnly: true,
+    });
+    expect(lastState(range.seen)).toStrictEqual({
+      disabled: false,
+      invalid: false,
+      readOnly: true,
+    });
+    expect(Arr.map(rangeThumb.seen, (state) => state.readOnly)).toStrictEqual([
+      true,
+      true,
+    ]);
   });
 
   it("Label reports its invalid state on the stack", () => {
@@ -890,6 +960,7 @@ describe("per-item style", () => {
       focused: true,
       disabled: true,
       invalid: true,
+      readOnly: false,
     });
     const rail = expectSome(Arr.get(elementChildren(element), 0));
     expect(painted(expectSome(Arr.get(elementChildren(rail), 1)))).toBe(PAINT);
@@ -914,8 +985,20 @@ describe("per-item style", () => {
       handlers,
     );
     expect(record.seen).toStrictEqual([
-      { end: "start", focused: false, disabled: false, invalid: false },
-      { end: "end", focused: true, disabled: false, invalid: false },
+      {
+        end: "start",
+        focused: false,
+        disabled: false,
+        invalid: false,
+        readOnly: false,
+      },
+      {
+        end: "end",
+        focused: true,
+        disabled: false,
+        invalid: false,
+        readOnly: false,
+      },
     ]);
     const rail = expectSome(Arr.get(elementChildren(element), 0));
     expect(

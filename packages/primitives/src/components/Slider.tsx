@@ -73,18 +73,23 @@ import { useTheme } from "./ThemeProvider.js";
 export interface SliderState {
   readonly disabled: boolean;
   readonly invalid: boolean;
+  /** Visible and focusable, but refuses to change (plan `802`). */
+  readonly readOnly: boolean;
 }
 
 /** The public state a `RangeSlider` style callback receives. */
 export interface RangeSliderState {
   readonly disabled: boolean;
   readonly invalid: boolean;
+  /** Visible and focusable, but refuses to change (plan `802`). */
+  readonly readOnly: boolean;
 }
 
 /** The public state a `Slider` thumb callback receives. */
 export interface SliderThumbState {
   readonly focused: boolean;
   readonly disabled: boolean;
+  readonly readOnly: boolean;
   readonly invalid: boolean;
 }
 
@@ -115,6 +120,17 @@ export interface SliderProps extends TriggerHandlers {
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   readonly disabled?: boolean;
+  /**
+   * Shows the value as something to review.
+   *
+   * A read-only slider keeps its tab stop, name, announced value and thumb
+   * ring while every change path is refused: a press focuses the track but
+   * moves nothing, the keys step nothing and neither callback runs. It paints
+   * full contrast with a `default` cursor and no hover/press wash; `disabled`
+   * is the stronger state (half opacity, no tab stop). 0.10.0 has no
+   * `aria-readonly`, so the difference is behavioural and visual (plan `802`).
+   */
+  readonly readOnly?: boolean;
   /** A failed validation paints the destructive role, like a field. */
   readonly invalid?: boolean;
   /** Accessible name. */
@@ -146,6 +162,16 @@ export interface RangeSliderProps {
   readonly step?: number;
   readonly size?: ControlSize;
   readonly disabled?: boolean;
+  /**
+   * Shows both ends as something to review.
+   *
+   * Both thumbs keep their tab stops, names, announced values and rings; a
+   * press focuses the nearest thumb but moves neither end, the keys step
+   * nothing and neither callback runs. Full contrast, `default` cursor, no
+   * hover/press wash; `disabled` wins. 0.10.0 has no `aria-readonly`
+   * (plan `802`).
+   */
+  readonly readOnly?: boolean;
   readonly invalid?: boolean;
   /** The group's name; each thumb becomes "<label> minimum"/"<label> maximum". */
   readonly label?: string;
@@ -196,10 +222,12 @@ export const renderSlider = (
 ): ReactElement => {
   const range = sliderRange(props);
   const value = clampValue(state.current, range);
+  const inert = props.disabled === true || props.readOnly === true;
   const spec: SliderSpec = {
     size: props.size ?? "md",
     invalid: props.invalid,
     disabled: props.disabled,
+    readOnly: props.readOnly,
     focused: focus.focused,
   };
   return (
@@ -229,7 +257,7 @@ export const renderSlider = (
       onAuxClick={props.onAuxClick}
       onScroll={props.onScroll}
       onKeyDown={(event) => {
-        if (props.disabled !== true) {
+        if (!inert) {
           Option.match(decideValueKey(value, range, event.key ?? ""), {
             onNone: () => {},
             onSome: (next) => {
@@ -245,6 +273,7 @@ export const renderSlider = (
       onBlur={composeHandler(focus.onBlur, props.onBlur)}
       style={resolvePartStyle(sliderTrackStyle(spec, theme), props.style, {
         disabled: props.disabled === true,
+        readOnly: props.readOnly === true,
         invalid: props.invalid === true,
       })}
     >
@@ -262,6 +291,7 @@ export const renderSlider = (
             {
               focused: focus.focused,
               disabled: props.disabled === true,
+              readOnly: props.readOnly === true,
               invalid: props.invalid === true,
             },
           )}
@@ -306,10 +336,12 @@ export const renderRangeSlider = (
 ): ReactElement => {
   const range = sliderRange(props);
   const span = spanOf(state.current, range);
+  const inert = props.disabled === true || props.readOnly === true;
   const base: SliderSpec = {
     size: props.size ?? "md",
     invalid: props.invalid,
     disabled: props.disabled,
+    readOnly: props.readOnly,
   };
   const labels = pipe(
     usableLabel(props.label),
@@ -335,7 +367,7 @@ export const renderRangeSlider = (
         onFocus={() => focus.onFocus(index)}
         onBlur={() => focus.onBlur(index)}
         onKeyDown={(event) => {
-          if (props.disabled === true) return;
+          if (inert) return;
           Option.match(decideValueKey(value, range, event.key ?? ""), {
             onNone: () => {},
             onSome: (next) => {
@@ -357,6 +389,7 @@ export const renderRangeSlider = (
             end,
             focused,
             disabled: props.disabled === true,
+            readOnly: props.readOnly === true,
             invalid: props.invalid === true,
           },
         )}
@@ -374,6 +407,7 @@ export const renderRangeSlider = (
       onMouseUp={handlers.onPointerUp}
       style={resolvePartStyle(sliderTrackStyle(base, theme), props.style, {
         disabled: props.disabled === true,
+        readOnly: props.readOnly === true,
         invalid: props.invalid === true,
       })}
     >
@@ -469,6 +503,9 @@ export const Slider = (props: SliderProps): ReactElement => {
     },
     onPointerDown: (event) => {
       if (props.disabled === true || event.button !== 0) return;
+      // The track is a tab stop, so the runtime focuses it on the press while
+      // no gesture starts and nothing changes (measured, plan `802`).
+      if (props.readOnly === true) return;
       dragging.current = true;
       Option.match(pointerOf(event, renderer, trackId.current, range, inset), {
         onNone: () => {},
@@ -482,7 +519,12 @@ export const Slider = (props: SliderProps): ReactElement => {
       });
     },
     onPointerMove: (event) => {
-      if (props.disabled === true || !dragging.current) return;
+      if (
+        props.disabled === true ||
+        props.readOnly === true ||
+        !dragging.current
+      )
+        return;
       if (event.pressedButton !== 0) {
         dragging.current = false;
         endGesture();
@@ -571,6 +613,19 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
       onPointerDown: (event) => {
         if (props.disabled === true || event.button !== 0) return;
         const span = spanOf(state.value.current, range);
+        if (props.readOnly === true) {
+          // Focus the thumb a press lands nearest to; neither end moves, and
+          // no gesture exists to commit (plan `802`).
+          Option.match(
+            pointerOf(event, renderer, trackId.current, range, inset),
+            {
+              onNone: () => {},
+              onSome: (value) =>
+                focusThumb(nearestEnd(value, span) === "start" ? 0 : 1),
+            },
+          );
+          return;
+        }
         Option.match(
           pointerOf(event, renderer, trackId.current, range, inset),
           {
@@ -590,7 +645,12 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         );
       },
       onPointerMove: (event) => {
-        if (props.disabled === true || !dragging.current) return;
+        if (
+          props.disabled === true ||
+          props.readOnly === true ||
+          !dragging.current
+        )
+          return;
         if (event.pressedButton !== 0) {
           dragging.current = false;
           endGesture();

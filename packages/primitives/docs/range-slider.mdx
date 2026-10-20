@@ -48,6 +48,24 @@ gesture that ends on its starting pair reports no commit (the stream still
 reported the pairs it passed through), and a press that changed nothing reports
 neither callback.
 
+## Read-only
+
+`readOnly` is the review state: both thumbs keep their tab stops, names,
+announced values and focus rings, and every change path is refused. A pointer
+press focuses the nearest thumb but moves neither end and creates no gesture, so
+neither `onValueChange` nor `onValueCommit` runs; the keys and type-ahead step
+nothing. The track paints at full contrast with a `default` cursor and no
+hover/press wash. `disabled` is the stronger state (half opacity, no tab stops)
+and wins when both are passed.
+
+GPUix 0.10.0 has no `aria-readonly`, so the two values are announced but the
+state is not; the difference from `disabled` is behavioural and visual, the same
+rule `Select`, `Rating` and the selection family follow.
+
+```tsx
+<RangeSlider label="Budget" defaultValue={[20, 80]} readOnly />
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -60,6 +78,7 @@ neither callback.
 | `step` | `number` | `1` | quantisation; `0` is continuous, and **`max` is always a stop** |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
 | `disabled` | `boolean` | `false` | both thumbs leave the tab order |
+| `readOnly` | `boolean` | `false` | shows both ends for review: keeps both tab stops, rings and announced values, and refuses pointer, keys and commit; `disabled` wins (plan `802`) |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
 | `label` | `string` | none | group name, trimmed; thumbs become `"<label> minimum"` / `"<label> maximum"`, and a blank label leaves the group and both thumbs unnamed |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb; a blank result falls back to the value |
@@ -103,6 +122,9 @@ reports nothing.
   reader but the range does not.
 - The default names — `"Budget minimum"`, `"Budget maximum"` — are derived from
   `label`, so a group with one name is never two unnamed sliders.
+- A **read-only** range keeps both tab stops, names and announced values and
+  stays reachable; 0.10.0 has no `aria-readonly`, so the state itself is not
+  announced (plan `802`).
 
 ## Theming
 
@@ -111,7 +133,8 @@ at rest), `colors.primary` fill, thumb `colors.input` with a `colors.primary`
 border, `focusRing` for focus. The end values are painted as two fills; the
 second fill is the length between the ends. The track carries the
 `colors.hover` / `colors.active` wash while the pointer is over it or a thumb is
-being dragged, and a disabled group paints neither (plan `361`).
+being dragged, and a disabled **or read-only** group paints neither (plan `361`).
+Read-only keeps the full-contrast paint and the `default` cursor (plan `802`).
 
 ## Pointer behaviour
 
@@ -133,6 +156,7 @@ focus ring stays on the focused thumb, which is the one the arrows act on.
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `disabled` | `boolean` | refuses pointer and keys |
+| `readOnly` | `boolean` | shows both ends for review: refuses pointer, keys and commit |
 | `invalid` | `boolean` | paints the destructive role |
 
 The callback's result merges after the component's own rules, so it wins per
@@ -156,6 +180,7 @@ last on each thumb:
 | `end` | `"start" \| "end"` | which end of the range this thumb paints |
 | `focused` | `boolean` | this thumb holds native focus |
 | `disabled` | `boolean` | refuses pointer and keys |
+| `readOnly` | `boolean` | this thumb shows a review value |
 | `invalid` | `boolean` | paints the destructive role |
 
 `RangeSliderThumbState` extends `SliderThumbState`, so a callback written for
@@ -181,11 +206,16 @@ one slider reads the same focus/disabled/invalid fields on the other.
   rule (including both thumbs at one value), and the maximum as a stop when the
   step does not divide the span (plan `331`).
 - `src/components/Slider.test.tsx` — two named sliders, per-thumb keys, the
-  crossing result, per-thumb rings, disabled tab stops, and the value fallback
-  for a blank formatter on both parts (plan `580`).
+  crossing result, per-thumb rings, disabled tab stops, both read-only tab stops
+  with refused keys, and the value fallback for a blank formatter on both parts
+  (plans `580`, `802`).
 - `runtime/pointer-feedback.runtime.test.tsx` — the cross-control matrix: both
-  sliders declare a hover and press rule on the track, and a disabled one
-  declares no visible change (plan `361`).
+  sliders declare a hover and press rule on the track, a disabled one declares no
+  visible change, and a read-only one declares no wash (plans `361`, `802`).
+- `runtime/slider-read-only.runtime.test.tsx` — a read-only range keeps two tab
+  stops (start, end, then out), rings the focused thumb, changes neither end on
+  a click or a key, and focuses the nearest thumb on a press; a writable twin
+  moves both ends (plan `802`).
 - `runtime/value.runtime.test.tsx` — a real press at 10% moves the start, at 90%
   the end; focus follows the grabbed thumb; an arrow moves only that end; a
   start dragged past the end stops on it; a dragged end keeps tracking outside

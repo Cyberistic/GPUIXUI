@@ -141,7 +141,8 @@ Deviations, kept deliberate:
   non-editing state, and the same fact is on `OTPFieldState`, `OTPCellState` and
   `RatingState` (plan `786`). The selection family carries it too:
   `CheckboxState`, `SwitchState`, `CheckboxGroupState`/`CheckboxRowState` and
-  `RadioGroupState`/`RadioOptionState` (plan `799`).
+  `RadioGroupState`/`RadioOptionState` (plan `799`), and so do the sliders:
+  `SliderState`/`RangeSliderState`/`SliderThumbState` (plan `802`).
 - The data-driven groups (`CheckboxGroup`, `RadioGroup`, `ToggleGroup`,
   `Rating`, `OTPField`) take their options as data instead of compound children
   (D16, D25, D27); a compound API would move the group's own roving and
@@ -264,7 +265,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. The runtime suite is **75 test files**. The latest run's
+runtime-proven too. The runtime suite is **76 test files**. The latest run's
 totals live in `TODO.md`'s live-suite row and plan `597`, not here: a prose
 count cannot be held true by a test.
 The store artifact is the **release-tag** build (plan `529`;

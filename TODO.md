@@ -1781,6 +1781,15 @@ retired once both branches are one
       `runtime/rating.runtime.test.tsx` (22/22), the old direction failing both
       rows with `expected 4 to be 2`; plan `801`
 
+`[x]` `packages/primitives`: **the slider family's read-only state** — `Slider`
+      and `RangeSlider` were the last value-bearing controls with only
+      `disabled` (faded and out of the tab order), while plans `786`–`800` gave
+      every other one a reachable review state. `readOnly` keeps the tab stops
+      and thumb ring, refuses pointer/keys/commit (a press focuses only), paints
+      full contrast with a `default` cursor and no wash, and reports itself on
+      the track and each thumb (plan `802`; offline 74 files / 1041 tests, the
+      new native file 6/6, ten scoped runtime files 206/206).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

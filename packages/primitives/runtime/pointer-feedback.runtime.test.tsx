@@ -246,6 +246,39 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase.node] as const))(
   },
 );
 
+/**
+ * The read-only half, for the surfaces whose pointer *is* the gesture.
+ *
+ * Plan `802`: the slider track owns the press, the captured drag and the
+ * `cursor`, so a read-only track that kept its hover/active wash would promise
+ * an edit it refuses. This is a slider-only rule on purpose — a read-only text
+ * field still invites text selection and therefore keeps its boundary hover
+ * (`core/recipes.ts`), and `Rating` declares no pointer style at all.
+ */
+const READ_ONLY_GESTURES: ReadonlyArray<{
+  readonly name: string;
+  readonly node: ReactElement;
+}> = [
+  { name: "Slider", node: <Slider testId="c" label="Volume" readOnly /> },
+  {
+    name: "RangeSlider",
+    node: <RangeSlider testId="c" label="Band" readOnly />,
+  },
+];
+
+it.each(
+  READ_ONLY_GESTURES.map((testCase) => [testCase.name, testCase.node] as const),
+)("%s paints no pointer response while read-only", async (_name, node) => {
+  const runtime = await openWindow();
+  runtime.render(<Surface>{node}</Surface>);
+  expect(
+    Arr.map(responding(runtime, "hover"), (element) => element.testId),
+  ).toStrictEqual([]);
+  expect(
+    Arr.map(responding(runtime, "active"), (element) => element.testId),
+  ).toStrictEqual([]);
+});
+
 it("records Rating's preview as the one exception to a hover style", async () => {
   // A star's pointer feedback is the repaint of the stars up to it, not a
   // pseudo-state rule; `rating.runtime.test.tsx` owns that paint (plan 094).

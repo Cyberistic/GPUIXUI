@@ -625,6 +625,8 @@ export interface SliderSpec {
   readonly size: ControlSize;
   readonly invalid?: boolean;
   readonly disabled?: boolean;
+  /** Visible, focusable and unchanged — the review state (plan `802`). */
+  readonly readOnly?: boolean;
   readonly focused?: boolean;
 }
 
@@ -648,14 +650,16 @@ export const sliderInset = (size: ControlSize, theme: PrimitiveTheme): number =>
  *
  * Because the track is the element that owns the press and the captured drag,
  * it is also the element that owes the pointer feedback: a hover wash and a
- * press wash, and neither while disabled (plan `361`). The thumb cannot carry
- * it — it is `pointerEvents: "none"` so a press on it reaches this track.
+ * press wash, and neither while disabled or read-only (plans `361`, `802`). The
+ * thumb cannot carry it — it is `pointerEvents: "none"` so a press on it reaches
+ * this track.
  */
 export const sliderTrackStyle = (
   spec: SliderSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
   const inset = sliderInset(spec.size, theme);
+  const inert = spec.disabled === true || spec.readOnly === true;
   const style: StyleDesc = {
     display: "flex",
     flexDirection: "row",
@@ -665,11 +669,16 @@ export const sliderTrackStyle = (
     paddingLeft: inset,
     paddingRight: inset,
     borderRadius: theme.radius.sm,
-    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+    cursor:
+      spec.disabled === true
+        ? "not-allowed"
+        : spec.readOnly === true
+          ? "default"
+          : "pointer",
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;
-  } else {
+  } else if (!inert) {
     style.hover = { backgroundColor: theme.colors.hover };
     style.active = { backgroundColor: theme.colors.active };
   }
@@ -710,6 +719,9 @@ export const sliderFillStyle = (
  * layout on each side, so the thumb's **centre** lands on the fraction the fill
  * ends at. Without them the thumb would sit half a thumb to the right of the
  * value it represents. Measured in plan 053 §11.
+ *
+ * The ring needs only focus and not-disabled: a read-only thumb is a value to
+ * review, so it keeps the ring its focus earns (plan `802`).
  */
 export const sliderThumbStyle = (
   spec: SliderSpec,

@@ -711,6 +711,39 @@ describe("value controls", () => {
     expect(track.opacity).toBe(0.5);
     expect(track.cursor).toBe("not-allowed");
   });
+
+  it("gives a read-only track no feedback, no fade and the display cursor", () => {
+    // The bug guarded (plan 802): the slider family had only `disabled`, so a
+    // review form's value was faded and outside the tab order. Read-only is the
+    // display state: full contrast, a `default` cursor, and no wash promising a
+    // gesture it refuses.
+    const track = sliderTrackStyle({ ...spec, readOnly: true }, testTheme);
+    expect(track.hover).toBeUndefined();
+    expect(track.active).toBeUndefined();
+    expect(track.opacity).toBeUndefined();
+    expect(track.cursor).toBe("default");
+  });
+
+  it("keeps the ring on a focused read-only thumb", () => {
+    // Read-only is reachable and announced, so the value it shows keeps the
+    // focus indicator the platform expects (plan 802).
+    const thumb = sliderThumbStyle(
+      { ...spec, readOnly: true, focused: true },
+      testTheme,
+    );
+    expect(thumb.boxShadow?.color).toBe(testTheme.colors.ring);
+  });
+
+  it("lets disabled win when both states are supplied", () => {
+    // Both pages document `disabled` as the stronger state (plan 802).
+    const track = sliderTrackStyle(
+      { ...spec, disabled: true, readOnly: true },
+      testTheme,
+    );
+    expect(track.cursor).toBe("not-allowed");
+    expect(track.opacity).toBe(0.5);
+    expect(track.hover).toBeUndefined();
+  });
 });
 
 describe("splitCallerStyle", () => {

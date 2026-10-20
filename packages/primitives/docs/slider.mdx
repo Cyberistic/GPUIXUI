@@ -55,6 +55,24 @@ no commit — the stream still reported the values it passed through on the way 
 and a press that never changed the value reports neither callback, the same no-op
 rule the rest of the package follows.
 
+## Read-only
+
+`readOnly` is the review state: the slider keeps its tab stop, its name, its
+announced value and its thumb's focus ring, and refuses every change path — a
+pointer press only focuses the track, the keys step nothing, and neither
+`onValueChange` nor `onValueCommit` runs. It paints the normal track at full
+contrast with a `default` cursor and no hover/press wash, because the wash would
+promise a gesture it refuses. `disabled` is the stronger state (half opacity and
+no tab stop); passing both paints disabled and removes the tab stop.
+
+GPUix 0.10.0 has no `aria-readonly`, so a screen reader is told the value, not
+the state; the difference from `disabled` is behavioural and visual, the same
+rule `Select`, `Rating` and the selection family follow.
+
+```tsx
+<Slider label="Volume" defaultValue={62} readOnly />
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -67,6 +85,7 @@ rule the rest of the package follows.
 | `step` | `number` | `1` | quantisation; `0` is continuous (arrows move 1% of the span) |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb `iconSize`, track `density.controlHeight` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no pointer or keys |
+| `readOnly` | `boolean` | `false` | shows the value for review: keeps the tab stop, ring and announced value, and refuses pointer, keys and commit; `disabled` wins (plan `802`) |
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name, trimmed; a blank label is absent |
 | `formatValue` | `(value: number) => string` | `String` | the announced text; a blank result falls back to the value |
@@ -104,7 +123,9 @@ that cannot move the value (an arrow at a bound) reports nothing.
   the value but not the range. Give the slider a `label`, and a `formatValue`
   when the number alone is ambiguous (`"62%"`, `"$40"`).
 - A disabled slider has no tab stop, so it is skipped rather than announced as
-  a control that cannot be used.
+  a control that cannot be used. A **read-only** slider keeps its tab stop, name
+  and announced value: it is reachable and unchanged. 0.10.0 has no
+  `aria-readonly`, so the state is not announced (plan `802`).
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
   tip opens on hover and on keyboard focus. The track is always 100 % wide, so a
   `Tooltip` around it needs `style={{ width: … }}` on the tooltip root — the root
@@ -119,8 +140,9 @@ a slider does not become a bar as tall as the control. The fill is
 `density.controlHeight[size]`, the thumb `iconSize[size]`, its border
 `borderWidth.strong`, and the focus ring is `@gpuixui/tokens`' `focusRing`.
 Hovering or pressing the track paints a `colors.hover` / `colors.active` wash on
-the track itself (rounded by `radius.sm`), and a disabled slider paints neither.
-Nothing in the component names a literal.
+the track itself (rounded by `radius.sm`), and a disabled **or read-only** slider
+paints neither. Read-only keeps the full-contrast fill and thumb and takes the
+`default` cursor (plan `802`). Nothing in the component names a literal.
 
 ## Pointer behaviour
 
@@ -153,6 +175,7 @@ Releasing ends the gesture; a plain hover never moves the value.
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `disabled` | `boolean` | refuses pointer and keys |
+| `readOnly` | `boolean` | shows the value for review: refuses pointer, keys and commit |
 | `invalid` | `boolean` | paints the destructive role |
 
 The callback's result merges after the component's own rules, so it wins per
@@ -171,6 +194,7 @@ the thumb:
 | ----- | ---- | ------- |
 | `focused` | `boolean` | the slider holds native focus |
 | `disabled` | `boolean` | refuses pointer and keys |
+| `readOnly` | `boolean` | the thumb shows a review value |
 | `invalid` | `boolean` | paints the destructive role |
 
 `SliderThumbState` is exported. `RangeSlider` has its own
@@ -201,9 +225,16 @@ the thumb:
   `361`).
 - `runtime/pointer-feedback.runtime.test.tsx` — the cross-control matrix: an
   element that owns a pointer gesture changes something on hover and on press,
-  and a disabled control changes nothing in either state (plan `361`).
+  a disabled control changes nothing in either state, and a read-only slider
+  paints no wash (plans `361`, `802`).
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint,
-  and the value fallback when a formatter is blank (plan `580`).
+  the read-only tab stop and refused keys, and the value fallback when a
+  formatter is blank (plans `580`, `802`).
+- `runtime/slider-read-only.runtime.test.tsx` — a read-only slider reaches focus
+  by Tab, rings its thumb, keeps its announcement and refuses click, drag, keys
+  and commit; a press focuses it without moving the value; a read-only range
+  keeps both tab stops and changes neither end; writable twins report the same
+  gestures (plan `802`).
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
   by Tab, a drag that leaves the track keeps tracking and clamps at both ends,

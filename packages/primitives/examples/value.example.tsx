@@ -6,7 +6,9 @@
  * meter reporting a measurement. A coarse slider (`max` not on the step grid)
  * shows the stop rule: 0, 3, 6, 9, then the maximum, 10. The sliders are
  * controlled, so the example shows the API a settings screen uses: the panel's
- * own state is the source of truth and the readout is derived from it.
+ * own state is the source of truth and the readout is derived from it. The last
+ * row is a **read-only** profile setting: a value the panel shows but refuses to
+ * change, reachable by Tab (plan `802`).
  */
 
 import { useState, type ReactElement } from "react";
@@ -99,6 +101,18 @@ export const ValueExample = (): ReactElement => {
             value={depth}
             onValueChange={setDepth}
             formatValue={(value) => `${value} bit`}
+          />
+        </Row>
+
+        <Separator orientation="horizontal" />
+
+        <Row title="Locked profile" value="Studio · 80%">
+          <Slider
+            testId="value-example-locked"
+            label="Locked profile"
+            defaultValue={80}
+            readOnly
+            formatValue={(value) => `${value}%`}
           />
         </Row>
 
