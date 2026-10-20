@@ -77,8 +77,8 @@ press closes the list and the next closes the dialog.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `MentionInput` | a `role="group"` field wrapping a real `<input>` | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, `onMention?`, `maxVisible?`, `disabled?`, children |
-| `MentionInputList` | anchored suggestion surface, labelled "Mentions" | children (`MentionInputItem`s) |
-| `MentionInputItem` | a selected button row | `value` (required), `label?` (defaults to `@value`), `style?` |
+| `MentionInputList` | a named `role="listbox"` suggestion surface, labelled `Mentions` by default | `label?`, children (`MentionInputItem`s) |
+| `MentionInputItem` | a `listboxoption` row, selected while highlighted | `value` (required), `label?` (defaults to `@value`), `style?` |
 
 The list renders nothing while there is no query or no match.
 
@@ -101,11 +101,13 @@ never looks editable or focused (plan 527).
 
 - The field is a real input named by `label`, so typing, selection and focus are
   native.
-- Suggestion rows are buttons with `aria-selected` on the highlighted one; the
-  surface is a named group.
-- `role="listbox"` and `role="option"` are **dropped** by
-  `@gpuix/native@0.10.0`'s accessibility dump (measured), so the list is not
-  announced as a listbox. There is no `aria-activedescendant` either.
+- The suggestion surface is a **named listbox** and every row a **named
+  `listboxoption`**: a row's name is its authored `aria-label`, else its
+  `label`, else `@value` (plan 810). The list's name is `label`, else `Mentions`,
+  and an authored `aria-label` wins over both.
+- The highlighted row carries `aria-selected`; 0.10.0 has no
+  `aria-activedescendant`, so the selection is the only channel for the row
+  `Enter` will insert.
 - Rows are focusable (`tabIndex=0`), so `Tab` then `Enter` or `Space` can pick a
   row; the input's `Tab` behaviour is the platform's. A focused row paints the token ring
   from the renderer's focused host (plan 754) even when it is not the
@@ -120,8 +122,8 @@ never looks editable or focused (plan 527).
   field sees it (measured in the test renderer). Escape or picking a row closes
   the list; there is no "type a space to dismiss" path.
 - No async or remote candidates — the items you declare are the candidate set.
-- No `role="listbox"`/`option` in the dump, no `aria-activedescendant`.
-- Fixed `"Mentions"` label for the surface.
+- No `aria-activedescendant`: the highlight is `aria-selected` on a listbox
+  option, and every row is individually focusable (no roving tab stop).
 
 - Focus cues are seeded by `autoFocus` and then follow the renderer's focused
   host (a 50 ms sample while the field is enabled): a suggestion row's ring and
@@ -131,7 +133,7 @@ never looks editable or focused (plan 527).
 
 ## Verification
 
-`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (22 tests):
+`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (25 tests):
 opening, narrowing, arrow movement, the highlight restarting when the query
 narrows, Enter insertion, a clicked row, a press
 dragged off a row inserting nothing, `Space` inserting on release rather than on
@@ -139,7 +141,8 @@ press, Escape from the field and from a focused row, one surface per Escape
 inside a dialog, no-match closing, a non-finite `maxVisible` listing every match,
 the two callbacks firing once, a focused row's ring, the group
 ring a field's `autoFocus` seeds, a disabled field that ignores `autoFocus`, stays
-out of the tab order and paints no ring, and the caller's
+out of the tab order and paints no ring, a named listbox of named options whose
+highlight is the selected option, a caller's list and row names, and the caller's
 `onKeyDown`/`onFocus`/`onBlur` and row handlers composing with the component's
 own action.
 

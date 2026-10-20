@@ -1489,6 +1489,18 @@ retired once both branches are one
       files, full native suite 1032 passed / 20 failed of 1052 (the same plan-540
       classes); docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
       (owner: components)
+    - [x] A mention suggestion is a named option in a listbox — plan 810;
+      measured 2026-10-20: every suggestion row was a `role="button"` with an
+      empty accessible name (0.10.0 does not name a role-bearing `div` from its
+      text child) and the surface a `group`, on the recorded claim that
+      `listbox`/`option` are dropped from the dump — a bare probe reports
+      `listbox`/`listboxoption` with `selected` intact. The surface is now a
+      named `listbox` (`label`, default `Mentions`; caller `aria-label` wins) and
+      each row a `listboxoption` named by `aria-label` > `label` > `@value`;
+      3 native cases (Mention input 22 → 25), all three red at `HEAD`, and 24/25
+      on this host with the recorded plan-540 focus case the only failure; docs,
+      `COMPONENTS.md`, `TODO.md`, the index and `PLAN.md` D30 synced
+      (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

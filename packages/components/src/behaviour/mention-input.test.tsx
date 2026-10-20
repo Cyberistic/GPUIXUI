@@ -5,11 +5,13 @@
  * narrow, arrows that do not move the highlight, a highlight that survives a
  * narrower query (plan 765), Enter or a press that inserts the wrong name,
  * Escape/space that fail to close, a double `onMention`, a row that activates on
- * the press instead of the release (plan 759), and a disabled field that opens
- * the list.
+ * the press instead of the release (plan 759), a disabled field that opens the
+ * list, and a suggestion that was an unnamed `role="button"` rather than a named
+ * option in a listbox (plan 810).
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
@@ -111,7 +113,7 @@ describe("MentionInput", () => {
     expect(mention.renderer.findByTestId("row-ana")).toBeDefined();
     expect(mention.renderer.findByTestId("row-anna")).toBeDefined();
     expect(mention.renderer.findByTestId("row-joan")).toBeDefined();
-    expect(nodesWithRole(mention.renderer, "button")).toHaveLength(3);
+    expect(nodesWithRole(mention.renderer, "listboxoption")).toHaveLength(3);
 
     mention.unmount();
   });
@@ -549,6 +551,98 @@ describe("MentionInput", () => {
     expect(
       mention.renderer.findByTestId("mention-group")?.style.boxShadow,
     ).toEqual(focusRing(darkTheme).boxShadow);
+
+    mention.unmount();
+  });
+
+  /**
+   * The bug this guards (plan 810), measured 2026-10-20: the surface was a
+   * `role="group"` of `role="button"` rows, and every row's accessible name was
+   * `""` — 0.10.0 does not name a role-bearing `div` from its text child, and
+   * the all-example contract never opens a popup. The recorded "listbox/option
+   * are dropped" claim was also false: a bare probe reports `listboxoption`.
+   */
+  it("is a named listbox of named options", () => {
+    const mention = renderComponent(<Harness />);
+
+    type(mention, "@");
+
+    const lists = nodesWithRole(mention.renderer, "listbox");
+    expect(Arr.map(lists, (list) => list.name)).toEqual(["Mentions"]);
+    const options = nodesWithRole(mention.renderer, "listboxoption");
+    expect(Arr.map(options, (option) => option.name)).toEqual([
+      "@ana",
+      "@anna",
+      "@joan",
+    ]);
+    expect(
+      Arr.map(options, (option) =>
+        Option.getOrElse(option.selected, () => false),
+      ),
+    ).toEqual([true, false, false]);
+
+    mention.unmount();
+  });
+
+  /** The highlight is the option's selected state, since 0.10.0 has no
+   * `aria-activedescendant` to carry an active row. */
+  it("marks the highlighted option as selected", () => {
+    const mention = renderComponent(<Harness />);
+
+    type(mention, "@a");
+    mention.renderer.simulateKeystrokes("down");
+
+    const options = nodesWithRole(mention.renderer, "listboxoption");
+    expect(Arr.map(options, (option) => option.name)).toEqual([
+      "@ana",
+      "@anna",
+      "@joan",
+    ]);
+    expect(
+      Arr.map(options, (option) =>
+        Option.getOrElse(option.selected, () => false),
+      ),
+    ).toEqual([false, true, false]);
+
+    mention.unmount();
+  });
+
+  /** A caller names the list and a row; the visible sources still name the rest. */
+  it("keeps the caller's list and row names", () => {
+    const Named = () => {
+      const [text, setText] = useState("");
+      return (
+        <MentionInput
+          testId="mention"
+          label="Comment"
+          value={text}
+          onValueChange={setText}
+        >
+          <MentionInputList label="People">
+            <MentionInputItem
+              testId="row-ana"
+              value="ana"
+              aria-label="Ana Alvarez"
+            />
+            <MentionInputItem testId="row-anna" value="anna" />
+            <MentionInputItem testId="row-joan" value="joan" />
+          </MentionInputList>
+        </MentionInput>
+      );
+    };
+    const mention = renderComponent(<Named />);
+
+    type(mention, "@");
+
+    expect(
+      Arr.map(nodesWithRole(mention.renderer, "listbox"), (list) => list.name),
+    ).toEqual(["People"]);
+    expect(
+      Arr.map(
+        nodesWithRole(mention.renderer, "listboxoption"),
+        (option) => option.name,
+      ),
+    ).toEqual(["Ana Alvarez", "@anna", "@joan"]);
 
     mention.unmount();
   });

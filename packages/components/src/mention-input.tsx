@@ -41,6 +41,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
 import { useFocusState } from "./internal/focus.js";
 import { isDismiss, isDown, isUp } from "./internal/key.js";
+import { controlNameFrom } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -272,6 +273,8 @@ export const MentionInput = ({
 
 /** {@link MentionInputList} props. */
 export interface MentionInputListProps extends Omit<Props, "children"> {
+  /** The listbox's accessible name. Default `"Mentions"`; `aria-label` wins. */
+  readonly label?: string;
   readonly children?: PartChildren;
 }
 
@@ -283,8 +286,16 @@ const isItemElement = (child: unknown): child is ItemElement =>
   child.type === MentionInputItem &&
   typeof (child.props as { readonly value?: unknown }).value === "string";
 
-/** The ranked suggestion surface, rendered only while a query is open. */
+/**
+ * The ranked suggestion surface, rendered only while a query is open.
+ *
+ * It is a named `listbox` of `MentionInputItem` options: 0.10.0 reports
+ * `listbox`/`listboxoption` (measured, plan 810), so the rows are grouped as a
+ * set rather than read out as loose buttons. The highlight is the selected
+ * option because there is no `aria-activedescendant`.
+ */
 export const MentionInputList = ({
+  label = "Mentions",
   children,
   style,
   ...rest
@@ -292,6 +303,7 @@ export const MentionInputList = ({
   const theme = useTheme();
   const { query, highlighted, maxVisible, reportVisible } = useMention();
   assertParts(mentionList, children);
+  const name = controlNameFrom(rest["aria-label"], [label]);
 
   const items = Children.toArray(children).filter(isItemElement);
   const ranked = Option.match(query, {
@@ -318,9 +330,9 @@ export const MentionInputList = ({
       align="start"
       sideOffset={4}
       collisionPadding={8}
-      role="group"
-      aria-label="Mentions"
+      role="listbox"
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       style={mergeStyles(
         {
           display: "flex",
@@ -361,9 +373,13 @@ export interface MentionInputItemProps extends Omit<Props, "children"> {
 }
 
 /**
- * One suggestion row. Click it, or focus it and press Enter or Space. It is a
- * button, so it activates on the release: a press dragged off the row, or Space
- * released after focus moved away, inserts nothing (plan 759).
+ * One suggestion row. Click it, or focus it and press Enter or Space. It is
+ * button-shaped, so it activates on the release: a press dragged off the row, or
+ * Space released after focus moved away, inserts nothing (plan 759).
+ *
+ * The row paints `role="option"` and names itself from its visible label, because
+ * 0.10.0 neither names a role-bearing `div` from its text child nor drops the
+ * option role (plan 810).
  */
 export const MentionInputItem = ({
   value,
@@ -382,6 +398,7 @@ export const MentionInputItem = ({
   const theme = useTheme();
   const { highlighted } = useContext(MentionItemContext);
   const { select, close } = useMention();
+  const name = controlNameFrom(rest["aria-label"], [label, `@${value}`]);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -405,10 +422,11 @@ export const MentionInputItem = ({
 
   return (
     <div
-      role="button"
+      role="option"
       aria-selected={highlighted}
       tabIndex={0}
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       ref={setElement}
       autoFocus={autoFocus}
       onFocus={(event) => {
@@ -484,8 +502,8 @@ export const mentionInputMeta = {
     "a space typed while the floating list is mounted is consumed by the runtime before the field sees it; Escape or a selection closes the list",
     "Tab insertion is not claimed: 0.10.0 moves focus at the platform level",
     "Enter arrives as the input's submit event, so it is handled there",
-    "role=listbox and role=option are dropped from 0.10.0's accessibility dump, so the surface is a named group and rows are selected buttons",
-    "no aria-activedescendant in 0.10.0",
+    "the highlight is aria-selected on a listbox option because 0.10.0 has no aria-activedescendant",
+    "the list is a named listbox of named options, and every row is individually focusable (no roving tab stop)",
   ],
   docs: "docs/mention-input.mdx",
   example: "examples/mention-input.example.tsx",
