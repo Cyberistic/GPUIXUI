@@ -97,6 +97,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 122/122 plans-and-harness
 
+`[~]` **Prove the media waveform in pixels** per plan `722`: the envelope,
+wash and playhead were geometry and authored style only (`media-surface`), and
+the README recorded the limit as "colour/pixel readback (screenshot evidence
+only)". A pure `media-pixels.ts` samples the bar route's bar/gap/above-slot,
+the played wash over `card` and over a bar, the playhead, and the SVG image
+route's bar and transparent slot. In progress — counts land with the plan
+`722` §10 measurement.
+
 `[x]` **Prove the docking drop indicator's paint order in pixels** per plan
       `715`: the indicator's box and authored `backgroundColor` were asserted,
       so a bar painted **under** the pane's tab strip or body passed every
