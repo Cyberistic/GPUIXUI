@@ -398,6 +398,7 @@ references without buying correctness.
 | [787](./787-ledger-scale-ranges.md) | The ledger's scale ranges: the avatar range and the density ladder it hid | F | 054, 062, 303, 313, 664, 725, 766, 767 | done |
 | [789](./789-selection-press-veil.md) | The pressed selected row's veil: the mode's extreme, not the canvas | F | 081, 651, 723, 742 | done |
 | [792](./792-native-syntax-capture-table.md) | The native syntax capture paragraph: its roles and its three counts | F | 569, 574, 583, 592, 717, 760 | done |
+| [793](./793-native-field-table.md) | The native field table's role assignments | F | 569, 574, 583, 592, 792 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4071,6 +4072,17 @@ would ship with all three still saying 24. The case now parses each
 `capture → role` map with `nativeSyntaxRoles` both ways, and derives the three
 counts from the palette's keys. No colour, pair, floor, metric, role or shipped
 theme moves; `contrastPairs` stays **470**.
+
+Plan `793` closes the same class in the table above that paragraph. The native
+field table is the only field-to-role mapping for a hand-built document, and the
+policy case checked its names the same way: changing `bg` from `card` to
+`foreground` left 264 tests green while every name still appeared, and a
+consumer following the table would paint a document's content plane in the text
+role. The case now parses the table's rows, order included, and compares them
+with `nativeTextRoles` plus the three non-role rows (`appearance`,
+`fontSans`, `fontMono`); a swapped, moved, deleted or duplicated row fails, as
+does a bridge edit. No bridge field, colour, pair, floor, metric, role or
+shipped theme moves; `contrastPairs` stays **470**.
 
 ## How to use a plan
 
