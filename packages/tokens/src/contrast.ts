@@ -1639,6 +1639,14 @@ export const selectionInactivePairs: readonly ContrastPair[] =
  * joins the list because the unavailable label plan `510` measures through the
  * same wash is painted on it: a highlight that matches that fill erases the
  * selection while every text pair still passes.
+ *
+ * The pressed `selectedActive` fill joins them too (plan `723`). Plans `651`,
+ * `689` and `700` excluded it as "a row is selected at rest", but the list
+ * already holds `hover` and `active` — the pointer states of an *unselected*
+ * row — because a reader drags a selection with the button held, and on a
+ * chosen row that state is the pressed fill. The scrim a dialog opens over and
+ * the elevation shadow a menu casts are read at rest, so `selectedActive` stays
+ * outside those two walks.
  */
 export const selectionWashPairs: readonly ContrastPair[] = [
   ...selectionSurfaces.map(
@@ -1647,6 +1655,10 @@ export const selectionWashPairs: readonly ContrastPair[] = [
   // The unavailable label is selected with the copy around it (plan 510), so
   // the wash must stay visible on the fill it keeps.
   ["selection", "disabled", "surface"],
+  // A reader click-drags a chosen row's text with the button held, so the fill
+  // under the selection is the pressed `selectedActive` (plan 651) — the pointer
+  // state of a selected row, as `hover`/`active` are for an unselected one.
+  ["selection", "selectedActive", "surface"],
 ];
 
 /**

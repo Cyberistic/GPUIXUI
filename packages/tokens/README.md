@@ -461,7 +461,9 @@ status roles one half-step, and the AAA tightest is 7.370:1 (identity light high
 `warningText` on `active`). `selectionWashPairs` also holds the
 wash itself to 1.05:1 against each surface — including the `disabled` fill an
 unavailable label keeps, because plan 510 measures that label through the same
-wash — so a highlight cannot be made invisible to satisfy a text floor. A card's
+wash, and the pressed `selectedActive` a chosen row keeps while the button is
+held, because that is when a reader drags a selection across it (plan 723) — so
+a highlight cannot be made invisible to satisfy a text floor. A card's
 own `cardForeground` is measured beside the default `foreground`, because both
 Windows recipes ship the two apart
 (plan 363), and a selected row's title (`foreground`) is measured beside its

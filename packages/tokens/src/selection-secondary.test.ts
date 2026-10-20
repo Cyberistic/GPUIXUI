@@ -117,6 +117,7 @@ describe("the selection wash stays visible", () => {
     expect(selectionWashPairs).toEqual([
       ...selectionSurfaces.map((surface) => ["selection", surface, "surface"]),
       ["selection", "disabled", "surface"],
+      ["selection", "selectedActive", "surface"],
     ]);
   });
 
@@ -148,6 +149,7 @@ describe("the selection wash stays visible", () => {
     expect(failures.map(({ background }) => background)).toEqual([
       ...selectionSurfaces,
       "disabled",
+      "selectedActive",
       ...selectionSoftWashPairs.map(([, background]) => background),
     ]);
     expect(

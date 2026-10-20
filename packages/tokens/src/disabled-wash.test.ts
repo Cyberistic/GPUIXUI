@@ -8,6 +8,10 @@
  * as readable as it was at rest, so the text pair passed too, and the highlight
  * was gone while the checker called the theme good. The disabled fill is the
  * one surface where a washed label is measured but the wash is not.
+ *
+ * Plan 723 gives the list its second explicit entry: the pressed
+ * `selectedActive` a chosen row keeps while the pointer is held, the pointer
+ * state `hover` and `active` already cover for an unselected row.
  */
 import { describe, expect, it } from "vitest";
 import {

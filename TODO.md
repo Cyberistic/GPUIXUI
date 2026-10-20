@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 327/405
+`[x]` `[████████░░]` 328/406
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2787,6 +2787,17 @@ landing plan 688; `689` found while landing plan 692)
 `docs/tokens.md` and `docs/design-system.md`, guarded by
 `density-exception.test.ts`, and the text also names the
 `controlHeight.sm` option row it asked for (owner: `primitives`; plan 720)
+`[x]` Hold the selection wash on the pressed selected row — a reader
+click-drags across a chosen row's text with the button held, so the fill under
+the highlight is `selectedActive`, but `selectionWashPairs` held the nine
+`selectionSurfaces` (the pointer states of an *unselected* row, `hover` and
+`active`, among them) plus the `disabled` fill and never the pressed one, and
+plans 651/689/700 justified the exclusion with "a row is selected at rest" — a
+reason the list itself contradicts; a theme whose wash composited to
+`selectedActive` returned `[]` from `themeFailures` while the highlight measured
+**1.000:1**. The pair joins the wash walk (10 → 11), every shipped set already
+clears **1.185:1** at the tightest (`High contrast dark`), so no colour moves and
+`contrastPairs` stays 464 (plan 723)
 
 ## Phase C — Tier 1–2 components
 

@@ -366,6 +366,7 @@ references without buying correctness.
 | [716](./716-highlight-figures.md) | The find-highlight JSDoc figures no test derives | F | 573, 574, 581, 590, 649, 710, 714 | done |
 | [717](./717-jsdoc-figures.md) | The figures the package's own JSDoc and five page sentences state, and the one hard set count | F | 536, 544, 613, 637, 705, 706, 714, 716 | done |
 | [720](./720-density-consumer-exception.md) | The density promise the shipped field family and Button no longer keep | F | 010, 089, 353, 389, primitives `370`–`372` | done |
+| [723](./723-pressed-row-selection-wash.md) | The pressed selected row's text selection | F | 081, 524, 651, 689, 700 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3682,6 +3683,21 @@ now name the exception, the families that still read the metrics (`Toggle`,
 `density-exception.test.ts` holds the prose to the preset arithmetic and fails
 on the old unconditional sentence. No token value, pair, floor, metric or
 shipped theme moves.
+
+Plan `723` closes the one pointer surface the selection walk omitted. A reader
+click-drags a text selection with the button held, so the fill under the
+highlight is the row's pointer state: `hover`/`active` for an unselected row —
+both in `selectionSurfaces` since plan `081` — and the pressed `selectedActive`
+(plan `651`) for a chosen one. The pressed fill was excluded by plans `651`, `689`
+and `700` with the sentence "a row is selected at rest", a reason the list itself
+contradicts, so a theme whose `selection` composited to `selectedActive` returned
+`[]` from `themeFailures` while the highlight measured **1.000:1** on the only
+surface a reader drags over while the row is pressed. The pair joins
+`selectionWashPairs` (10 → **11**); every shipped set already clears the floor
+(**1.185:1** at the tightest, `High contrast dark`), so no colour moves and
+`contrastPairs` stays 464. `selectionSurfaces` is untouched, because `figures.ts`
+derives the caret's four "nine surfaces" figures from it; the pressed row stays
+outside the scrim and elevation walks, which are read at rest.
 
 ## How to use a plan
 

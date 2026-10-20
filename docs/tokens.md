@@ -1679,7 +1679,9 @@ second text role
 three washes it paints and a selected row's title (`foreground`) beside its
 inherited label on all four resting fills it keeps, plus the pressed
 `selectedActive`, and `selectionWashPairs` holds the wash itself to the
-1.05:1 perceivability floor on each surface, so a highlight that is technically
+1.05:1 perceivability floor on each surface — the nine `selectionSurfaces`, the
+`disabled` fill an unavailable label keeps and the pressed `selectedActive` a
+chosen row holds (plan `723`) — so a highlight that is technically
 readable but invisible fails the check too.
 
 ```tsx
@@ -2364,8 +2366,10 @@ surface it paints on, so a highlight that has become imperceptible is reported
 as well; `selectionWashPairs` is that list. It also holds the `disabled` fill,
 because plan `510` measures the unavailable label through this wash on the fill
 it keeps — a highlight that matches that fill would erase the selection while
-every text pair still passed. Every shipped set already clears the floor, so no
-colour moves.
+every text pair still passed — and the pressed `selectedActive` fill, because a
+reader click-drags across a chosen row's text with the button held, so that is
+the pointer state the selection lands on (plan `723`). Every shipped set already
+clears the floor, so no colour moves.
 
 A runnable example of the wash that matches the disabled fill is
 [`src/disabled-wash.example.ts`](../packages/tokens/src/disabled-wash.example.ts).
@@ -3960,8 +3964,9 @@ their floors, a menu row's `popoverForeground` on the three washes it paints, an
 a selected row's inherited `selectedForeground` on all four resting fills it
 keeps, plus the pressed `selectedActive`, and
 `selectionWashPairs` holds the wash itself to the 1.05:1
-perceivability floor on each plain surface and on the `disabled` fill an
-unavailable label keeps, because a highlight can be readable and still be
+perceivability floor on each plain surface, on the `disabled` fill an
+unavailable label keeps and on the pressed `selectedActive` a chosen row keeps
+under the pointer, because a highlight can be readable and still be
 invisible. Windows dark and both high-contrast sets already cleared the secondary
 floor through the wash; the other seven moved their secondary grey one step away
 from the canvas (plan `087`). The four soft status surfaces are measured the same

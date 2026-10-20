@@ -165,7 +165,7 @@ describe("the disabled field's label on its input fill", () => {
 
   it("keeps the washed pair on a measured wash", () => {
     expect(hasPair(selectionWashPairs, "selection", "input")).toBe(true);
-    expect(selectionWashPairs).toHaveLength(selectionSurfaces.length + 1);
+    expect(selectionWashPairs).toHaveLength(selectionSurfaces.length + 2);
   });
 
   it("keeps the two inactive lists on one surface owner", () => {
