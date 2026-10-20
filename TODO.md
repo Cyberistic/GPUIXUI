@@ -164,12 +164,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       accumulated deltas), the `-400` control and a midpoint track press
       (`-920`) each moving the thumb and its pixel. A pure
       `scrollbar-model.ts` owns the rules (18 tests; playground **605 → 623**).
-      Seven runtime mutations and one unit mutation observed red and reverted
+      Eight runtime mutations and one unit mutation observed red and reverted
       (padding gutter; a drawn thumb in the runtime strip; a pinned thumb
       start; a `card` thumb; a track press pinned to 0 → `expected -920 ± 2,
-      got 0`; `auto` → `scroll`; a thumb rendered on fitting content;
-      `MIN_THUMB` 20). Focused ids run: `scroll-affordance`,
-      `live-scroll-affordance` (plus M1–M7). End-of-task full headless
+      got 0`; `auto` → `scroll`; a thumb rendered on fitting content; the
+      strip's child painted `background`; `MIN_THUMB` 20). Focused ids run:
+      `scroll-affordance`, `live-scroll-affordance` (×4) and the
+      comment-correction control `tab-strip-overflow`, then the whole headless
+      registry. End-of-task full headless
       **120/120** (**4452** checks, 65 capabilities, 525.80 s, exit `0`;
       exactly `4359 + 93`); live registry **108 → 109**; no full live gate
       (merge gate). **Corrected records:** `COMPONENTS.md`'s Scrollable
