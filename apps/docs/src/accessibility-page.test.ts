@@ -31,6 +31,7 @@ const sections = [
   "What assistive technology sees",
   "Missing attributes have substitutes",
   "Keyboard",
+  "Pointer and touch input",
   "Recorded limitations",
   "What is verified",
   "What is not verified",

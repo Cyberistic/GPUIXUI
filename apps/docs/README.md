@@ -44,6 +44,14 @@ repository for a committed `CHANGELOG.md` and `CODE_OF_CONDUCT.md`, reads
 `src/lib/site.ts` for the environment variable, and resolves every FAQ link
 through the page tree, so each claim fails in both directions.
 
+## Input capabilities
+
+`/docs/accessibility` also states the pointer surface: the mouse and key
+handlers a part really receives, `onScroll`, and the absent touch, pointer and
+stylus events with the host-application consequence. `src/lib/input-capabilities.ts`
+derives the four groups from the installed `HostProps` and the page suite fails
+by handler name when the package and the prose disagree.
+
 ## Brand and document head
 
 The site's identity is generated, not retyped. `src/lib/site-head.ts` owns the

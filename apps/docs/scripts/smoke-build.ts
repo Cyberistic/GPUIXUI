@@ -1217,6 +1217,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "the self-hosting variable Deployment owns",
     },
     {
+      query: "touch",
+      expected: "/docs/accessibility",
+      first: true,
+      what: "the touch question the input section now answers",
+    },
+    {
+      query: "skip link",
+      expected: "/docs/accessibility",
+      first: true,
+      what: "the site's own skip link, which Accessibility verifies",
+    },
+    {
+      query: "windows style",
+      expected: "/docs/theming",
+      first: true,
+      what: "a platform style phrase Theming owns",
+    },
+    {
       query: "theme switch",
       expected: "/docs/dark-mode",
       first: true,

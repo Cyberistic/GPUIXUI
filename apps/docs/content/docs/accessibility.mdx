@@ -1,6 +1,6 @@
 ---
 title: Accessibility
-description: The ARIA attributes the pinned GPUix runtime supports, keyboard focus, what the library substitutes for the rest, what assistive technology and screen readers receive, and a11y and WCAG 2.1 AA conformance.
+description: The ARIA attributes the pinned GPUix runtime supports, keyboard focus and pointer, touch and mouse input, what the library substitutes for the rest, what assistive technology and screen readers receive, and a11y and WCAG 2.1 AA conformance.
 ---
 
 GPUix is not the DOM. Components render host elements into GPUI, and assistive
@@ -54,6 +54,25 @@ the keys it adds.
 `@gpuix/native` has no `preventDefault` and no `defaultPrevented`, so a Space
 press inside a scroll container can also scroll. No component pretends
 otherwise.
+
+## Pointer and touch input
+
+The runtime declares mouse and keyboard events, not the DOM's Pointer Events. A
+part can receive `onClick`, `onAuxClick`, `onMouseDown`, `onMouseUp`,
+`onMouseEnter`, `onMouseLeave`, `onMouseMove` and `onMouseDownOutside`, plus
+`onKeyDown` and `onKeyUp`; scrolling arrives as `onScroll` on the container.
+
+It declares **no touch, pointer or stylus events**: there is no `onTouch*`,
+`onPointer*` or stylus handler. A touchscreen or pen therefore works only where
+the operating system synthesises mouse events, and a component cannot read
+multi-touch gestures, pressure or tilt. Build those interactions in the host
+application and pass the resulting state in, the same way a file drop or a
+window shortcut is passed in.
+
+`autoFocus` sets native focus without dispatching `onFocus`; a click is the
+reliable way to focus a field. [Component API](/docs/component-api#shared-host-props)
+lists the shared props and [Styling](/docs/styling) records the cursor values
+the runtime accepts.
 
 ## Recorded limitations
 

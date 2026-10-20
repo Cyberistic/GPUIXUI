@@ -104,7 +104,22 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "providers",
     ],
   ],
-  ["/docs/accessibility", ["keyboard focus"]],
+  [
+    "/docs/accessibility",
+    [
+      "keyboard focus",
+      "touch",
+      "touchscreen",
+      "touch screen",
+      "stylus",
+      "pen input",
+      "pointer events",
+      "pointer input",
+      "mouse events",
+      "mouse input",
+      "skip link",
+    ],
+  ],
   [
     "/docs/license",
     [
@@ -437,6 +452,12 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "colorblind",
       "colour blindness",
       "color blindness",
+      "macos style",
+      "macos theme",
+      "windows style",
+      "windows theme",
+      "linux style",
+      "linux theme",
     ],
   ],
   [

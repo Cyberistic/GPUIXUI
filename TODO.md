@@ -471,7 +471,19 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–617)
 
-`[x]` `[██████████]` 187/187
+`[x]` `[██████████]` 188/188
+
+`[x]` **Pointer and touch input have an answer (plan 621)** — measured
+      2026-10-20: `touch` reached a Preview card limitation, `touchscreen`
+      returned nothing, `stylus`/`pointer input` reached Styling or Text inputs,
+      `skip link` reached Breadcrumb, and `windows style` reached Styling.
+      `/docs/accessibility` now names every mouse and key handler, `onScroll`,
+      and the absent touch/pointer/stylus events with the host-application
+      consequence; `input-capabilities.ts` derives the groups from the installed
+      `HostProps` so a dependency upgrade fails by handler name, and its fixture
+      proves the denial branch. Theming gains the six platform style phrases.
+      129 files / 1 350 docs tests, 107-page `smoke:build`, scoped axe green;
+      six proofs in plan 621 §8.
 
 `[x]` **Operational vocabulary reaches its owner (plan 620)** — measured
       2026-10-20: `changelog` returned nothing, `release notes` reached the

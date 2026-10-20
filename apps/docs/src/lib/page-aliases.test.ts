@@ -52,6 +52,10 @@ import { source } from "./source";
  * conduct/command-line/offline words name Contributing, the self-hosting
  * variable names Deployment, and `faq` names the Introduction. The regression
  * rows keep `pwa`, `bundle size` and `version` where they already belong.
+ *
+ * Plan 621 adds the input surface: touch, stylus, pointer and mouse phrases and
+ * the site's `skip link` name Accessibility, and the three platform style
+ * phrases name Theming. `platform style` stays pinned to Theming's section.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -433,6 +437,22 @@ const owned = [
   ["site url", "/docs/deployment"],
   ["faq", "/docs"],
   ["frequently asked questions", "/docs"],
+  ["touch", "/docs/accessibility"],
+  ["touchscreen", "/docs/accessibility"],
+  ["touch screen", "/docs/accessibility"],
+  ["stylus", "/docs/accessibility"],
+  ["pen input", "/docs/accessibility"],
+  ["pointer events", "/docs/accessibility"],
+  ["pointer input", "/docs/accessibility"],
+  ["mouse events", "/docs/accessibility"],
+  ["mouse input", "/docs/accessibility"],
+  ["skip link", "/docs/accessibility"],
+  ["macos style", "/docs/theming"],
+  ["macos theme", "/docs/theming"],
+  ["windows style", "/docs/theming"],
+  ["windows theme", "/docs/theming"],
+  ["linux style", "/docs/theming"],
+  ["linux theme", "/docs/theming"],
 ] as const;
 
 const regressions = [
@@ -490,6 +510,7 @@ const regressions = [
   ["pwa", "/docs/contributing"],
   ["bundle size", "/docs/performance"],
   ["version", "/docs/installation"],
+  ["platform style", "/docs/theming#platform-styles"],
 ] as const;
 
 describe(
