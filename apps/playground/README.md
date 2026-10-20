@@ -2687,7 +2687,8 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 ## Evidence on this host
 
 The suite is **120/120 green** here (`exit 0`, 4452 checks, 65 capabilities,
-2026-10-20 after plan `801`; **525.80 s**; **119/119** · 4359 after plan
+2026-10-20 after plan `801`; **525.80 s**, or **348.41 s** on the head that
+merges `origin/master`'s `packages/motion`; **119/119** · 4359 after plan
 `797`; **118/118** · 4340 · 302.0 s before it, after plan
 `791`; **302.4 s** at plan `784`, which
 read 117/117 · 4278; **275.0 s** after plan `778`, which
