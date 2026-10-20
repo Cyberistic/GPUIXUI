@@ -24,10 +24,11 @@ and records the totals that authorise the promotion.
    git rev-list --count HEAD..origin/master   # expected: 0 (or merge and re-run)
    ```
 
-2. Run the whole headless registry:
+2. Run the whole headless registry (a bare command; `--all` is the live CLI's
+   flag and the headless CLI rejects unknown flags):
 
    ```sh
-   nub apps/playground/dist/smoke/run.js --all
+   nub apps/playground/dist/smoke/run.js
    ```
 
    Expected: `106/106` scenarios, exit `0`, checks = `3824 + M` where `M` is the
@@ -44,7 +45,7 @@ and records the totals that authorise the promotion.
    live addition recorded in plan `701`; capabilities stay `61`;
    `.artifacts/live-report.json` written; no window means exit `2` (a failure).
 
-4. Confirm a plain `--all` wrote **no** `provenance.json` and no capture frames:
+4. Confirm a plain full run wrote **no** `provenance.json` and no capture frames:
 
    ```sh
    ls apps/playground/.artifacts/provenance.json 2>/dev/null  # expected: absent
