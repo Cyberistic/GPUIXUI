@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 336/414
+`[x]` `[████████░░]` 337/415
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2882,6 +2882,19 @@ reproduces it. The two sentences now state that mechanism and the one limit (a
 different `mode` returns `undefined` and the caller keeps its theme object), and
 `theme-edit.test.ts` stores and replays the executed light brand, pins the
 artifact's two fields, and fails on the old sentence (plan 744)
+`[x]` Hold the disabled fill's three surviving exemption claims to the contract —
+plan `737` made `disabled` a measured fill on the five surfaces a control is
+placed on and moved five values, but the public `ThemeColors.disabled` JSDoc,
+the design system's inactive rule and the catalogue's high-contrast role row
+still said the fill is "deliberately allowed to sit near the panel" because "no
+neutral clears both a white card and the quiet panel" — the reason plan `737`
+refuted, and one the same pages reject elsewhere — so a consumer reading the
+type or the rule was told the fill may equal its panel while `themeFailures`
+rejects exactly that theme. All three passages now name `disabledFillPairs` and
+the five surfaces, `disabled-fill-claims.test.ts` derives the surface list from
+the pair list and fails on the restored reason or a missing surface, and no
+colour, pair, floor, metric or role moves (`contrastPairs` stays 470)
+(plan 747)
 `[x]` Hold the documented light brand to the one-call guarantee — the catalogue
 holds the dark brand to `themeFailures`, but `theme.test.ts` held the light one to
 `themeContrastFailures` only, so its `primaryText: "#5330C8"` measured **6.941:1**

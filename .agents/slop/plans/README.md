@@ -375,6 +375,7 @@ references without buying correctness.
 | [742](./742-pressed-row-exclusion-reason.md) | The pressed row's exclusion reason, after plan 723 | F | 359, 651, 663, 674, 700, 723 | done |
 | [744](./744-brand-edit-storage.md) | The brand edit `ThemeEdit` already carries | F | 685, 727, 742 | done |
 | [745](./745-light-brand-total-check.md) | The documented light brand fails the one-call guarantee | F | 098, 553, 574, 611–617, 742, 744 | done |
+| [747](./747-disabled-fill-exemption-claims.md) | The disabled fill's exemption, in the three passages plan 737 missed | F | 306, 737, 742 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3821,6 +3822,20 @@ passed. The link ink takes one designed step inside its violet family
 `themeFailures`, and a regression case rebuilds the pre-fix palette and pins the
 three `nativeText` entries so the example cannot fall behind another check
 unnoticed. Only the example moves.
+
+747 closes the last three passages plan `737` left carrying the exemption it
+refuted. `disabledFillPairs` holds the `disabled` fill to the 1.05:1 floor on the
+five surfaces a control is placed on, and the catalogue, the design system's
+history section, the README and `disabledControl`'s JSDoc all say so — but the
+public `ThemeColors.disabled` JSDoc, the design system's inactive-control rule
+and the catalogue's high-contrast role row still stated that the fill is
+"deliberately allowed to sit near the panel" because "no neutral clears both a
+white card and the quiet panel", so a consumer reading the type or the rule was
+told the fill may equal its panel while `themeFailures` rejects exactly that
+theme, and both pages refuted the same reason elsewhere. All three now name
+`disabledFillPairs` and the five surfaces, `disabled-fill-claims.test.ts` derives
+the surface list from the pair list and fails on the restored reason or a missing
+surface, and no colour, pair, floor, metric or role moves.
 
 ## How to use a plan
 
