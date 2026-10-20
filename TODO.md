@@ -471,7 +471,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–617)
 
-`[x]` `[█████████░]` 189/190
+`[x]` `[██████████]` 190/190
 
 `[x]` **The part-state contract stops claiming a fixed vocabulary (plan 622)** —
       measured 2026-10-20 by parsing `packages/components/src`: the page claimed
@@ -485,11 +485,17 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       and runtime import. 131 files / 1 359 docs tests, 107-page `smoke:build`,
       scoped axe green; five proofs in plan 622 §8.
 
-`[ ]` **Generate a per-part state table** for `/docs/component-api` — each of
-      the 25 exported `*State` types and its fields, with a generated module, an
-      index document and a search entry (D32), so `editing`/`pinned` and the
-      state type names are findable as rows rather than prose (plan 622 §2.4);
-      owner: docs-site
+`[x]` **The per-part state table is generated from the package (plan 623)** —
+      every one of the 25 exported `*State` types and its 27 fields now renders
+      on `/docs/component-api#every-state-type` from
+      `src/lib/part-states.generated.ts`, regenerated with
+      `nub run --filter docs part-states`. The staleness guard compares the
+      committed module with the package byte for byte, `<PartStates />` renders
+      one row per type, and a `Part states` search document promotes whole type
+      names only: the first full run found `MenuCheckboxItemState` stealing the
+      exported `checkboxState` helper, so the entry sets `exactNamesOnly`.
+      133 files / 1 370 docs tests, 107-page `smoke:build`, scoped axe green;
+      seven proofs in plan 623 §9/§10.
 
 `[x]` **Pointer and touch input have an answer (plan 621)** — measured
       2026-10-20: `touch` reached a Preview card limitation, `touchscreen`

@@ -11,6 +11,7 @@
     "check-types": "fumadocs-mdx && tsc --noEmit && tsc -p preview/tsconfig.json --noEmit",
     "test": "vitest run",
     "api:values": "nub scripts/api-values.ts",
+    "part-states": "nub scripts/part-states.ts",
     "icons": "nub scripts/icons.ts",
     "roadmap": "nub scripts/roadmap.ts",
     "smoke:build": "nub scripts/smoke-build.ts",

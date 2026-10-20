@@ -19,6 +19,7 @@ import { NativePreview } from "./preview/native-preview";
 import { IconCatalogue } from "./icon-catalogue";
 import { PageTemplateSections } from "./page-template";
 import { PartIndex } from "./part-index";
+import { PartStates } from "./part-states-table";
 import { NativePlatforms } from "./native-platforms";
 import { PlatformPreviews } from "./preview/platform-previews";
 import { PreviewTiers } from "./preview/preview-tiers";
@@ -52,6 +53,7 @@ export function getMDXComponents(components?: MDXComponents) {
     AbsentStylingConcepts,
     HostPropsTable,
     PartIndex,
+    PartStates,
     PageTemplateSections,
     ComponentState,
     ComponentDependencies,

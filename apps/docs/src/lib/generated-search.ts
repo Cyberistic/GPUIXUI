@@ -12,6 +12,12 @@ import type { Index } from "fumadocs-core/search/server";
 export interface GeneratedSearchEntry {
   readonly index: Index;
   readonly names: ReadonlyArray<string>;
+  /**
+   * A precise symbol name (a state type) matches whole only: letting its words
+   * prefix-match would promote `MenuCheckboxItemState` for `checkboxState` and
+   * steal the exported helper's page (plan 623).
+   */
+  readonly exactNamesOnly?: boolean;
 }
 
 /**
@@ -71,5 +77,6 @@ export const promotedNameRank = (
   const needle = query.trim().toLowerCase();
   if (entry === undefined || needle.length === 0) return undefined;
   if (entry.names.some((name) => name.toLowerCase() === needle)) return 0;
+  if (entry.exactNamesOnly === true) return undefined;
   return namesVariant(entry.names, query) ? TOKEN_MATCH_RANK : undefined;
 };

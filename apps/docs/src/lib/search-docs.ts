@@ -87,6 +87,11 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     what: "the overlay paint order and the dismiss rule",
   },
   {
+    title: "Part states",
+    url: "/docs/component-api#every-state-type",
+    what: "every exported state type and the fields it declares",
+  },
+  {
     title: "Colour roles",
     url: "/docs/theming#semantic-roles",
     what: "every semantic colour role and its value",

@@ -839,6 +839,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "the shared host props section's own heading",
     },
     {
+      query: "InlineEditState",
+      expected: "/docs/component-api#every-state-type",
+      first: true,
+      what: "a state type named by the generated part-state table",
+    },
+    {
       query: "alertdialog",
       expected: "/docs/components/confirm-dialog",
       first: true,

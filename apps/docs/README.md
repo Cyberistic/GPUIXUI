@@ -61,6 +61,13 @@ their types. `src/lib/part-states.ts` parses every exported `*State` interface
 and `src/part-states-page.test.ts` requires each example, frequency and runtime
 import (`ComboboxItemState`) to stay true.
 
+`/docs/component-api#every-state-type` renders every parsed state type and its
+fields from `src/lib/part-states.generated.ts`; regenerate it with
+`nub run --filter docs part-states` after changing a part's state. The generated
+data, its renderer and the `Part states` search document are guarded by
+`src/lib/part-states-generated.test.ts` and
+`src/components/part-states-table.test.tsx`.
+
 ## Brand and document head
 
 The site's identity is generated, not retyped. `src/lib/site-head.ts` owns the

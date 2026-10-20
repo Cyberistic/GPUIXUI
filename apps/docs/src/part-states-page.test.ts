@@ -123,4 +123,10 @@ describe("the part-state contract", () => {
     expect(section).not.toContain("vocabulary is fixed");
     expect(section).toContain("no single fixed vocabulary");
   });
+
+  it("carries the generated table under its own heading", () => {
+    expect(section).toContain("### Every state type");
+    expect(section).toContain("<PartStates />");
+    expect(section).toContain("nub run --filter docs part-states");
+  });
 });

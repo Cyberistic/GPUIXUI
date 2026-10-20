@@ -107,6 +107,14 @@ runtime component uses that component's state type instead, such as
 `ComboboxItemState` from `@gpuix/react`. Every token a style reads comes from the
 active theme; see [Theming](/docs/theming).
 
+### Every state type
+
+The table below is generated from every exported `*State` interface in
+`@gpuixui/components`; run `nub run --filter docs part-states` after changing a
+part's state. A row's fields are the fields its `style` function receives.
+
+<PartStates />
+
 ## Shared host props
 
 Every part is a host element, so its props type extends `Props` from
