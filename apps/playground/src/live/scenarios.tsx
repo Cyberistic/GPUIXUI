@@ -131,6 +131,7 @@ import {
   stateColourView,
 } from "../scenarios/state.js";
 import { opacityLiveScenario, opacityView } from "../scenarios/opacity.js";
+import { textInkLiveScenario, textInkView } from "../scenarios/text-ink.js";
 import {
   captureLive,
   expectColour,
@@ -13090,6 +13091,27 @@ const liveOpacityPixels: LiveScenario = {
 };
 
 /**
+ * Text ink in a real window (plan `773`).
+ *
+ * The headless pass proves the four roles and the cross checks; this twin
+ * proves the same runs carry their tokens through a window's glyph rasteriser,
+ * which is the layer the authored style report cannot see.
+ */
+const liveTextInk: LiveScenario = {
+  ...textInkLiveScenario,
+  view: textInkView,
+  ready: "ink-stage",
+  steps: (ctx) =>
+    textInkLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-text-ink.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -14229,6 +14251,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveBorderPixels,
   liveStatePixels,
   liveOpacityPixels,
+  liveTextInk,
   terminal,
   selectionSignal,
 ];

@@ -110,6 +110,37 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 138/138 plans-and-harness
 
+`[~]` **Prove text decoration reaches the frame, and measure the link variant's
+      inheritance** per plan `775`: `textDecoration` is declared by the pinned
+      runtime, shipped by the `link` Button variant's hover refinement (on the
+      button `div`, not the label) and by `tw`'s `underline`, and no check reads
+      the frame for it — `paintedStyle` reports the authored value and
+      `getPaintedText()` the source run. `text-decoration-pixels` /
+      `live-text-decoration` will classify a decoration as a continuous
+      full-width ink row in a named band (glyph rows cannot qualify), prove the
+      control paints none, and assert the wrapper→`<text>` inheritance in its
+      measured direction. Owner: playground; plan `775`.
+
+`[x]` **Prove text ink reaches the glyph pixels** per plan `773`: every
+      text-colour claim read the **authored** style or the **source** run, so a
+      runtime that accepted `color` and rasterised every glyph in a default ink
+      would have passed the whole suite. `text-ink-pixels` / `live-text-ink`
+      (**23 checks each**) mount four 64 px `<text>` runs on one stage and scan
+      each run's decoded frame: `foreground #EEF1F5` (13,617 of 67,584 device
+      pixels, exact), `mutedForeground #A1A9B7`, `destructive #FF6B6B` and
+      `success #3BC97F` each carry their own token, **no** run paints the next
+      role's token, and the stage point stays `background` — in both hosts
+      (frame scale 2: `2560 × 1600` and `2200 × 1440`). A pure
+      `text-ink-model.ts` owns the roles, the scan and the guards (11 tests;
+      playground **527 → 538**). Two mutation proofs observed and reverted (M1
+      destructive painted `foreground` → `0/67584`, M2 the cross check pointed
+      at its own token → `13617/67584`), both exit `1`. **Measured correction:**
+      in a foreign scan the closest pixel is not the ink, so `near` is the
+      load-bearing number. Full headless **114/114** (**4188** checks, 65
+      capabilities, exit `0`; exactly `4165 + 23`); live registry **102 → 103**
+      (`live-text-ink` green focused); no full live gate (merge gate). Focused
+      ids run: `text-ink-pixels`, `live-text-ink`.
+
 `[x]` **Prove the typeface reaches the shaped glyphs, and record the missing
       registration API** per plan `771`: the platform type styles were proven
       only from the **authored** style report, so a runtime that shaped every

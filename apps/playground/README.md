@@ -1632,8 +1632,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 113-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 102 scenarios. `smoke:live` opens
+The 114-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 103 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1682,6 +1682,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-states` | the declared-style probe in a window: a real hover applies `100 → 140`, hover is per element (parent `420` / child `100`, then parent `400` / child `120`), leaving reverts both, a press applies `active` `180` (and enters hover, corrected by plan `754`; the release still returns `100`), and a held pointer outside keeps `180` until release — 32 checks (plan `557`) |
 | `live-state-pixels` | declared hover and active **colours** in a window: a real hover paints `primary` and leaves its neighbours, leaving reverts, hovering the parent paints `accent` but not the child, hovering the child paints `success` and reverts the parent, a press paints `destructive`, a release-then-hover paints `primary`, and a press while hovered stays `destructive` — 50 checks (plan `754`). **The press itself enters hover**: with `active` removed the pressed box paints the hover fill, so the check is precedence, not "active without hover" |
 | `live-opacity-pixels` | declared **opacity** in a window: an opaque fill paints `primary` exactly, the 0.5 disabled fill paints the blend `#5C5F8D`, its opaque neighbour stays `card`, a `success` child inside a half-opacity parent paints `#266F4D` (the subtree is dimmed with it), and two nested halves paint the product `#383B55` rather than a single `0.5` (`#5E608F`) — 29 checks (plan `761`). The runtime composites a nested pair in 8-bit steps, so the frame is 1–2 channels lighter than the idealised `0.25` mix (`#373953`) |
+| `live-text-ink` | the four text roles in a window: a 64 px run's glyph pixels carry `foreground #EEF1F5`, `mutedForeground #A1A9B7`, `destructive #FF6B6B` or `success #3BC97F` (at least 32 device pixels each, exact ink), no run paints the next role's token, and the stage stays `background` — 23 checks (plan `773`). The scan maps the run's logical box through the frame's device scale (2) and reports the closest pixel on failure |
 | `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
@@ -2359,6 +2360,44 @@ observed and reverted: removing the disabled fill reads
 `expected #383b55ff, got #5e608fff`, and reversing the blend or making nesting
 additive turns three unit tests red.
 
+### Text ink, in the frame (plan `773`)
+
+Every text-colour claim stopped at the **authored** style report or the
+**source** run: `theme-type-and-shadow` reads `paintedStyle`, `font-family`
+reads the shaped run's advance, and `getPaintedText()` returns the string. A
+runtime that accepted `color` and rasterised every glyph in its default ink
+would pass all of them while `foreground`, `mutedForeground`, `destructive` and
+`success` text painted identically. `text-ink-pixels` and `live-text-ink`
+(**23 checks each**) mount four 64 px `MMMM` runs on one 640 × 360 stage and
+scan the decoded frame.
+
+| Sample | Expectation | Measured |
+| ------ | ----------- | -------- |
+| a run's painted box | `264 × 64` logical, **67,584** device pixels at scale 2 | `264 × 64` |
+| `foreground` run | at least 32 pixels within 6 channels of `#EEF1F5` | **13,617** pixels, closest exactly `#EEF1F5` |
+| `mutedForeground` run | at least 32 pixels near `#A1A9B7` | ≥ 32, exact ink |
+| `destructive` run | at least 32 pixels near `#FF6B6B` | ≥ 32, exact ink |
+| `success` run | at least 32 pixels near `#3BC97F` | ≥ 32, exact ink |
+| each run scanned for the **next** role | **zero** pixels — a run painting every token in one ink fails | `0` |
+| the stage point | `background #11141A` | `#11141A` |
+
+The scan walks **device** pixels through `Pixels.frameScale`, so a wrong scale
+reads nothing instead of a nearby pixel, and it reports the closest pixel it
+found so a failure names the ink actually painted. The roles and the threshold
+are pure in `text-ink-model.ts`; the frame is the other witness.
+
+**Both-direction proofs, observed and reverted.** Painting the destructive run
+with `foreground` fails `the destructive run carries its token in the frame`
+with `0/67584 pixels, closest #B1B4B9` — the nearest pixel in a grey run is an
+anti-aliased edge, which is why the count, not the closest colour, is the check.
+Pointing the cross check at the run's **own** token fails
+`the foreground run does not paint the muted token` with
+`13617/67584 pixels, closest #EEF1F5`, which is also the measured ink count. The
+two runs are green in both hosts (two focused live runs).
+
+**Not claimed:** glyph shape, hinting, anti-aliasing quality, `textAlign` (a
+no-op in 0.10.0) or syntax colours. Only the ink colour is asserted.
+
 ### Editing actions: clipboard, history and the OTP paste (plan `764`)
 
 The native editor binds `cmd-c`, `cmd-x`, `cmd-v`, `cmd-z` and `shift-cmd-z`
@@ -2405,11 +2444,13 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **113/113 green** here (`exit 0`, 4165 checks, 65 capabilities,
-**237.6 s** at plan `771`, 2026-10-20; **246.8 s** at the plan `768` gate, which
+The suite is **114/114 green** here (`exit 0`, 4188 checks, 65 capabilities,
+**484.1 s** at plan `773`, 2026-10-20; **237.6 s** at plan `771`, which read
+113/113 · 4165; **246.8 s** at the plan `768` gate, which
 read 112/112 · 4152; **339.8 s** on the plan `764`
 head; the runs at the plan `762` gate read 111/111 · 4106 · 247.2 s with plans
-`754` and `761`'s pixel probes; plan `771` added the 13-check `font-family`, plan
+`754` and `761`'s pixel probes; plan `773` added the 23-check `text-ink-pixels`,
+plan `771` added the 13-check `font-family`, plan
 `764` added the 46-check `editing-actions`, plan
 `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check
 `state-pixels`, plan `745` added the 64-check
@@ -2422,7 +2463,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-113/113 scenarios passed · capabilities: layout=verified root=verified text=verified
+114/114 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2439,10 +2480,10 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-**Plan `771` then added the 13-check `font-family`; the head is now 113/113 ·
-4165 and the live registry is 102 with `live-font-family` focused-green (13
-checks, twice). The full live suite is still the gate below and has not been
-re-run.**
+**Plan `773` then added the 23-check `text-ink-pixels`; the head is now 114/114 ·
+4188 and the live registry is 103 with `live-text-ink` focused-green (23 checks,
+twice). Plan `771`'s `live-font-family` remains focused-green (13 checks,
+twice). The full live suite is still the gate below and has not been re-run.**
 
 The last full merge/release gate ran **101/101** (`exit 0`, **2933** checks, 61
 capabilities; **1220.8 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
@@ -2671,9 +2712,10 @@ narrower. Each deviation is deliberate and measured:
   probe** (`query-builder`, plan `378`), the **reorder probe**
   (`list-reorder`, plan `391`), the **hierarchical reorder probe**
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
-  **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
-  (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (113/113, 4165 checks), with a written report and
+  **application menu bar** (`menu-bar`, plan `519`), the **media surface**
+  (`media-surface`, plan `520`) and the **text ink** probe (`text-ink-pixels`,
+  plan `773`)
+  pass in real GPUix 0.10.0 on this host (114/114, 4188 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

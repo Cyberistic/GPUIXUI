@@ -98,6 +98,7 @@ import { shadowScenario } from "./shadow.js";
 import { borderScenario } from "./border.js";
 import { stateColourScenario } from "./state.js";
 import { opacityScenario } from "./opacity.js";
+import { textInkScenario } from "./text-ink.js";
 import {
   primitivesActionsScenario,
   primitivesDisplayScenario,
@@ -263,6 +264,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   borderScenario,
   stateColourScenario,
   opacityScenario,
+  textInkScenario,
   a11yScenario,
   nativeSurfacesScenario,
   diffSurfaceScenario,
