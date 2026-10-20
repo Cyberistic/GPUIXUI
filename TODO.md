@@ -469,9 +469,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–602)
+## Docs site workstream (plans 410–499, plus 500–603)
 
-`[x]` `[██████████]` 169/169
+`[x]` `[██████████]` 170/170
+
+`[x]` **A reader whose page is broken has a starting point (plan 603)** — the
+      site documented each failure only where the feature lived, so `nothing
+      renders`, `blank window`, `no provider`, `font not applied`, `unsupported
+      host`, `debug`, `help` and `support` returned another page or nothing. The
+      new `/docs/troubleshooting` page answers nine failures from the real
+      sources (the two provider contexts, the absent `registerFont`, the
+      published binding targets, the live surface's `data-gpuix` status, the
+      no-portal stacking rule, the type-only platform style and the `0/1/2` exit
+      contract) and 15 guarded search phrases reach it first. 8 content guards,
+      114 files / 950 docs tests, 100-page `smoke:build`, root gates green;
+      four two-direction proofs in plan 603 §8.
 
 `[x]` **Architecture states the runtime contract (plan 602)** — the page named
       every package but never said where Effect lives or which renderer paints

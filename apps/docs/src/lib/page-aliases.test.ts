@@ -167,6 +167,22 @@ const owned = [
   ["ssr", "/docs/architecture"],
   ["server rendering", "/docs/architecture"],
   ["hydration", "/docs/architecture"],
+  ["troubleshooting", "/docs/troubleshooting"],
+  ["not working", "/docs/troubleshooting"],
+  ["does not work", "/docs/troubleshooting"],
+  ["nothing renders", "/docs/troubleshooting"],
+  ["component not rendering", "/docs/troubleshooting"],
+  ["blank window", "/docs/troubleshooting"],
+  ["blank screen", "/docs/troubleshooting"],
+  ["crash", "/docs/troubleshooting"],
+  ["no provider", "/docs/troubleshooting"],
+  ["missing provider", "/docs/troubleshooting"],
+  ["font not applied", "/docs/troubleshooting"],
+  ["unsupported host", "/docs/troubleshooting"],
+  ["debug", "/docs/troubleshooting"],
+  ["problem", "/docs/troubleshooting"],
+  ["help", "/docs/troubleshooting"],
+  ["support", "/docs/troubleshooting"],
 ] as const;
 
 const regressions = [

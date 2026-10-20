@@ -11,7 +11,10 @@
  * `disabled` and `how to install` — a third the keyboard conventions
  * (plan 601), and a fourth the runtime vocabulary (plan 602): `effect`,
  * `managed runtime`, `browser`, `ssr` and `hydration` name Architecture's
- * `## State and Effect` and `## What runs where` sections. `page-aliases.test.ts`
+ * `## State and Effect` and `## What runs where` sections. A fifth covers the
+ * failure vocabulary (plan 603): `not working`, `nothing renders`, `blank
+ * window`, `no provider`, `font not applied`, `unsupported host`, `debug`,
+ * `help` and `support` name the Troubleshooting page. `page-aliases.test.ts`
  * proves every key is a page `source.getPages()` serves, no key is a component
  * page (that is plan 566's table), no term is shared, and no term shadows a page
  * or component name — an alias that names something else misroutes the query.
@@ -65,6 +68,26 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["/docs/data-display", ["select row", "selectable rows"]],
   ["/docs/examples", ["demo", "sample"]],
   ["/docs/installation", ["version", "versions", "how to install"]],
+  [
+    "/docs/troubleshooting",
+    [
+      "not working",
+      "does not work",
+      "nothing renders",
+      "component not rendering",
+      "blank window",
+      "blank screen",
+      "crash",
+      "no provider",
+      "missing provider",
+      "font not applied",
+      "unsupported host",
+      "debug",
+      "problem",
+      "help",
+      "support",
+    ],
+  ],
   [
     "/docs/theming",
     [

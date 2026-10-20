@@ -7,7 +7,9 @@
 `apps/docs/content/docs/meta.json`, `apps/docs/src/lib/page-aliases.ts`,
 `apps/docs/src/lib/troubleshooting-page.test.ts`,
 `apps/docs/src/lib/page-aliases.test.ts`
-**Status:** planned
+**Status:** implemented — 8 new tests, 15 measured queries, 114 files / 950 docs
+tests, 100-page `smoke:build`; §8 records every command and the four
+two-direction proofs.
 
 ## 1. The measured gap
 
@@ -272,4 +274,55 @@ this change is content, aliases, one guard and one test.
 
 ## 8. Results
 
-Pending.
+Implemented on 2026-10-20.
+
+**What shipped**
+
+- `apps/docs/content/docs/troubleshooting.mdx` — nine sections, every claim tied
+  to the source named in §2; served at `/docs/troubleshooting` and listed after
+  Native smoke suite.
+- `apps/docs/content/docs/meta.json` — the sidebar entry.
+- `apps/docs/src/lib/page-aliases.ts` — 15 failure phrases (the page title needs
+  no alias; `pageTitleHits` ranks it).
+- `apps/docs/src/lib/troubleshooting-page.test.ts` — 8 tests over the real
+  sources.
+- `apps/docs/src/lib/page-aliases.test.ts` — 15 measured queries added to the
+  owned table.
+- Cross-links from Installation (`#native-bindings`) and Getting started
+  (`#providers`).
+- `TODO.md` and the plan index updated.
+
+**Commands and results**
+
+| Command | Result |
+| ------- | ------ |
+| `cd apps/docs && nub x vitest run src/lib/troubleshooting-page.test.ts` | 8/8 pass |
+| `cd apps/docs && nub x vitest run src/lib/page-aliases.test.ts` | 115/115 pass (100 existing + 15 new) |
+| `nub run --filter docs test` | 114 files / 950 tests pass (was 114 / 927) |
+| `nub run --filter docs check-types` | exit 0 |
+| `nub run --filter docs smoke:build` then `nub apps/docs/scripts/smoke-build.ts --no-build` | sitemap 100 pages, 100 checked, 222 links, 1310 anchors, search, not-found and robots green |
+| `nub run check` | exit 0 (test-quality, lint, format, every package's types) |
+| `nub run test` | exit 0 — components 308, primitives 282, docs 950, every workspace green |
+
+**Two-direction proofs** (each mutation run alone, then reverted; files compared
+byte-for-byte with a backup afterwards):
+
+1. Removed `"troubleshooting"` from `meta.json` → `is served from the sidebar
+   after the native suite` failed (`1 failed | 7 passed`).
+2. Changed the page's "does not fail when the provider is missing" to "throws
+   when…" → `agrees with the two provider contexts` failed.
+3. Changed the page's "Colours, spacing, radius and density stay the base
+   theme's" to "Colours also change with the platform" → `states the platform
+   style's real scope` failed.
+4. Removed the `"debug"` alias only → `debug → /docs/troubleshooting` failed
+   (`1 failed | 114 passed`).
+
+**Deviation from §4.** Proof 3 mutates the page claim, not
+`packages/tokens/src/theme.ts`. That file belongs to the tokens workstream, so
+the source direction is proved by the test reading the real `platformTheme` body
+on every run; a palette added there fails the same test because the page's
+type-only sentence becomes false. This keeps the one-writer rule while proving
+both directions.
+
+**Not changed:** no native or live suite was run — content, aliases and one
+content guard only. No path outside the docs-site workstream was edited.

@@ -1,0 +1,159 @@
+---
+title: Troubleshooting
+description: "Fix the failures readers hit: an empty window, a missing or doubled theme provider, a font that is not applied, a host with no native binding, a blank live preview, a clipped overlay, a platform switch that only changes the type, and a check that exits 2."
+---
+
+Most problems are one of these eight. Each failure section names the cause, how
+to confirm it, and the page that owns the topic.
+
+## Nothing appears in the window
+
+Two different bugs look like an empty window in a screenshot:
+
+- **A primitive with no provider throws.** `@gpuixui/primitives` deliberately
+  has no default theme, so a `Button`, `Stack` or `Text` rendered above no
+  `<ThemeProvider>` fails with `MissingThemeProviderError` and a message naming
+  the provider. The error reaches the console or your error boundary; without
+  one the subtree does not render.
+- **A components-only tree paints light.** `@gpuixui/components` reads the token
+  context, whose default value is `lightTheme`, so it does not fail when the
+  provider is missing — it silently draws the light palette. On a dark window
+  this reads as "nothing is visible" when the real bug is the missing provider.
+
+Mount the provider at the root and pass the resolved theme:
+[Getting started](/docs/getting-started#providers) shows both provider shapes,
+and [Theming](/docs/theming#providers) explains why the two packages have
+separate contexts. If the window itself never opens, the host has no native
+binding — see the native-binding section below.
+
+## The colours are wrong, or a label is invisible
+
+Check three things, in this order:
+
+1. **Both providers are mounted.** A mixed app nests the token provider outside
+   the primitives provider with the **same** resolved theme. Two different theme
+   values give you a dark window with light controls, or the reverse; the
+   nesting is on [Getting started](/docs/getting-started#providers).
+2. **The mode is the one you think it is.** GPUix exposes no appearance query,
+   so the library cannot follow the OS by itself; the application decides the
+   mode and passes the theme. [Dark mode](/docs/dark-mode) is the recipe.
+3. **Contrast is the accessibility axis, not a colour.** If body text is legal
+   but hard to read, switch to a high-contrast theme rather than editing
+   individual roles; both palettes and their floors are on
+   [Theming](/docs/theming#high-contrast).
+
+A colour you set with a raw hex value is outside this contract — components
+read semantic roles, and a literal does not follow the theme. Use `extendTheme`
+instead.
+
+## A font is not applied
+
+GPUI resolves a family **by name at paint time**, so an unknown name falls back
+silently. The pinned runtime (`@gpuix/native` 0.10.0) exposes no `registerFont`
+API: a font file bundled with your application cannot be registered, and a name
+the machine does not have is not drawn.
+
+Two honest routes remain:
+
+- Point `typography.sans` or `typography.mono` at a family the target machines
+  already install, through `extendTheme`. The copyable recipe and its limits are
+  on [Typography](/docs/typography#custom-fonts-on-the-pinned-runtime).
+- Keep `.SystemUIFont` (the default sans), which the runtime resolves to each
+  platform's own UI face.
+
+Distribution is the missing half, not selection. Treat a bundled custom face as
+unsupported on the pinned release; the registration plan is tracked in
+`TODO.md`.
+
+## The native binding is missing for this platform
+
+`@gpuix/native` publishes prebuilt binaries for macOS on Apple silicon, Linux
+x64 and Windows x64. Intel macOS has no published binary for 0.10.0, so the
+JavaScript package installs but no window can be created.
+
+The published targets, the source-build script for Intel macOS and the exact
+commands are on [Installation](/docs/installation#native-bindings); the
+measured evidence and the affected verdicts are on
+[GPUix capabilities](/docs/capabilities). A native suite on such a host exits
+`2` before running anything — that is "unverified", not a pass.
+
+## The live surface stays blank
+
+The site's live previews are real GPUix surfaces, but they load differently
+from a screenshot:
+
+- **They load on request.** The renderer is about 20 MB, so the surface mounts
+  only after you press its control. A blank placeholder before the click is the
+  design, not a failure.
+- **A failed frame says so.** The preview document reports
+  `data-gpuix="ready"` once GPUI's window exists and `data-gpuix="failed"` with
+  a `data-reason` otherwise. Inspect the iframe when the frame stays blank.
+- **It needs a working GPU backend in the tab.** A browser without WebGL cannot
+  paint the scene; the canvas is also outside the browser accessibility tree,
+  so the page's prose remains the description
+  ([Accessibility](/docs/accessibility)).
+- **It is not the desktop runtime.** A blank live surface says nothing about
+  the native binding or the native suites; [Previews](/docs/previews) states
+  what each tier proves.
+
+## An overlay is clipped or paints underneath
+
+GPUix has no `z-index` and no portal. Stacking is **paint order**: the surface
+mounted last is on top, and an app-level surface such as a toast viewport or a
+command palette must be rendered last at the window root. A dialog veil is
+anchored at window coordinates, so a dialog mounted inside a scroll container
+still paints at the window origin.
+
+The full rule, the dismiss stack and the real source are under
+[Layering](/docs/component-api#layering). If you are placing a raw `<anchored>`
+layer yourself, prefer `align="start"` and an explicit side near a window edge:
+`fit="snap"` clamps without flipping and `align="center"` is short by half the
+panel on the pinned runtime. GPUixUI's own overlays compensate; the measured
+rows are on [GPUix capabilities](/docs/capabilities). Moving the surface later
+in the tree fixes "underneath"; moving it out of the scroll parent fixes
+"clipped".
+
+## The platform switch only changes the type
+
+`platformTheme` replaces the theme's **name** and its `typography.sans`/`mono`
+families. Colours, spacing, radius and density stay the base theme's. The table
+on [Theming](/docs/theming#platform-styles) is generated from the package, so it
+shows exactly what changes rather than what a platform style might eventually
+change.
+
+Full per-platform palettes are tracked in `TODO.md` against `packages/tokens`;
+they are not shipped yet, and the docs do not paint colours the package does not
+have. Extending the returned theme with `extendTheme` is supported today.
+
+## A check exits 2
+
+`2` means **the check could not run**, never that it passed:
+
+| Check | `1` | `2` |
+| ----- | --- | --- |
+| native smoke (`run.js`) | a scenario failed and a report exists | no binding loaded, so no scenario ran |
+| docs smokes (`smoke:*`) | the built site or the browser state is wrong | the build, server or Chrome was missing |
+
+An `exit 2` run upgrades no component's status; re-run it where the check can
+actually run. The native contract is on
+[Native smoke suite](/docs/native-testing#run-it); the docs commands and their
+exit codes are on [Contributing](/docs/contributing#docs-site). A test that did
+not run is not evidence, and a skipped suite is not a pass.
+
+## Where to ask
+
+The repository's issue tracker is the only channel:
+[github.com/Cyberistic/GPUIXUI](https://github.com/Cyberistic/GPUIXUI). There is
+no chat support, address or response-time promise; an issue is the record.
+
+Paste the four facts that make a report answerable:
+
+- the host platform and architecture, and the binding target if one loaded;
+- the exact `@gpuix/react` and `@gpuix/native` version (the workspace pins both
+  to `0.10.0`);
+- the exact command and its exit code;
+- for a rendering failure, the console message — `MissingThemeProviderError`,
+  a `data-reason`, or the scenario name.
+
+[Contributing](/docs/contributing#issues-and-pull-requests) has the repository
+workflow and the gates a change must pass.
