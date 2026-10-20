@@ -37,8 +37,11 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `testId` | `string` | — | stable locator |
 
 Values outside 0–100 are clamped, so a bar can never paint outside its track.
-`NaN` is treated as empty, never as complete. The indeterminate row layout is the
-component's default, not a rule the caller cannot touch: `display` and
+`NaN` is treated as empty, never as complete. A computed percentage
+(`(loaded / total) * 100`) keeps its exact fraction in the fill but is
+**announced as a whole percent** — `33.333…` reads `"33%"` — because the value
+text is a sentence, not geometry (plan `755`). The indeterminate row layout is
+the component's default, not a rule the caller cannot touch: `display` and
 `flexDirection` are merged before `style`, so a caller who sets them owns the
 consequence. The guard in `src/components/style-order.test.tsx` holds that.
 
@@ -51,6 +54,9 @@ Not focusable. Progress is status, not a control; there is no slider behaviour.
 - Role: `progressbar` (`ProgressIndicator` in AccessKit).
 - The value is announced through **`aria-valuetext`** — `"42%"` or
   `"loading"` — because GPUix 0.10.0 has no `aria-valuenow`.
+- A computed value's announcement is rounded to a whole percent (`"33%"` for a
+  third) while the fill keeps its exact fraction; `NaN` announces `"0%"` and an
+  infinity the bound on its side.
 - The name comes from `label`. Without one, a progress bar is an unnamed
   progress bar; give it the task's name ("Uploading", "Saving").
 
@@ -71,11 +77,15 @@ role — the indeterminate segment resolves the same `progressToneColor` map, so
 
 ## Verification
 
-- `src/core/style.test.ts` — clamping, including `NaN` and infinity.
+- `src/core/style.test.ts` — clamping, including `NaN` and infinity, and the
+  whole-percent announcement of a computed value (plan `755`).
 - `src/components/Progress.test.tsx` — tree-level track/fill, tone (determinate
-  and indeterminate) and the value text.
+  and indeterminate) and the value text, including a third that announces
+  `"33%"` while its fill stays exact.
 - `src/components/style-order.test.tsx` — the caller's `style`, `display` and
   `flexDirection` included, survives the merged row layout (plan 097).
+- `runtime/progress-announcement.runtime.test.tsx` — a computed third announces
+  `"33%"` in AccessKit and paints a third of the track (plan `755`).
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
   and −5 to `"0%"`, the fill tracks the value, the indeterminate segment moves
   over real time and paints its requested tone, and a determinate bar schedules

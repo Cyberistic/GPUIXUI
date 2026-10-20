@@ -505,6 +505,18 @@ export const scrollStyle = (spec: ScrollSpec): StyleDesc => {
 export const progressPercent = (value: number): number =>
   Number.isNaN(value) ? 0 : Math.min(100, Math.max(0, value));
 
+/**
+ * The whole percentage a progress bar announces.
+ *
+ * `progressPercent` keeps the fill exact, which is right for a track; the
+ * announcement is a sentence, and a caller-computed value
+ * (`(loaded / total) * 100`) made it `"33.333333333333336%"`. A whole percent is
+ * what a person reads, so the paint stays fractional and the text rounds
+ * (plans `580`, `755`).
+ */
+export const progressValueText = (value: number): string =>
+  `${Math.round(progressPercent(value))}%`;
+
 /** The tones a progress bar can paint; `primary` by default. */
 export const PROGRESS_TONES = [
   "primary",

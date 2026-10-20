@@ -124,6 +124,15 @@ export type SpinnerAccent = (typeof SPINNER_ACCENTS)[number];
 export interface SpinnerSpec {
   readonly size: number;
   readonly accent: SpinnerAccent;
+  /**
+   * A resolved dot colour, for a spinner on a filled surface.
+   *
+   * It overrides `accent` for **every** dot; the existing per-dot opacity is
+   * the trail. A primary button's fill is `colors.primary`, so a spinner that
+   * also lights its dot with `colors.primary` is invisible on that fill
+   * (plan `754`). Absent keeps the accent/muted rule.
+   */
+  readonly color?: string;
 }
 
 /** One dot of the activity indicator. */
@@ -189,7 +198,12 @@ const accentColor = (accent: SpinnerAccent, theme: PrimitiveTheme): string =>
       ? theme.colors.mutedForeground
       : theme.colors.primary;
 
-/** One dot of the indicator. The lit dot takes the accent, the rest the muted role. */
+/**
+ * One dot of the indicator.
+ *
+ * A caller colour wins for every dot (a busy button on its own fill); without
+ * one the lit dot takes the accent and the trail the muted role.
+ */
 export const spinnerDotStyle = (
   spec: SpinnerSpec,
   dot: SpinnerDot,
@@ -202,9 +216,11 @@ export const spinnerDotStyle = (
     flexShrink: 0,
     borderRadius: theme.radius.full,
     opacity: dot.opacity,
-    backgroundColor: dot.active
-      ? accentColor(spec.accent, theme)
-      : theme.colors.mutedForeground,
+    backgroundColor:
+      spec.color ??
+      (dot.active
+        ? accentColor(spec.accent, theme)
+        : theme.colors.mutedForeground),
   };
 };
 

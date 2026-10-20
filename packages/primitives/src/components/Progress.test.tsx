@@ -4,6 +4,8 @@
  * GPUix has no `aria-valuenow` (plan 020 §1.4), so the value rides on
  * `aria-valuetext`. The bug to guard is paint outside the track: a value above
  * 100 or below 0 must clamp, and an indeterminate bar must not look finished.
+ * A computed percentage must announce as a whole number while the fill keeps its
+ * exact fraction (plan 754).
  */
 
 import { describe, expect, it } from "vitest";
@@ -50,6 +52,17 @@ describe("Progress", () => {
     const element = bar(Option.some(42));
     expect(hostProp(element, "aria-valuenow")).toStrictEqual(Option.none());
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42%");
+  });
+
+  it("announces a computed value as a whole percent while the fill stays exact", () => {
+    // Plan 754: the announcement is a sentence a person hears; the fill is
+    // geometry. Rounding the paint would be a different, wrong fix.
+    const element = renderProgress({ value: 100 / 3 }, testTheme, 0);
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("33%");
+    const fill = expectSome(Arr.get(elementChildren(element), 0));
+    expect(expectSome(hostStyleString(fill, "width"))).toBe(
+      "33.333333333333336%",
+    );
   });
 
   it("paints an indeterminate bar in the requested tone", () => {

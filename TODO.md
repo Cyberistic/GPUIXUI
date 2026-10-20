@@ -54,6 +54,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       the tree then went green (`nub run check`, 133 + 18 tests). The runner
       **still forks a new session per loop iteration**, so every workstream will
       re-acquire a duplicate until §5.1 lands in the shared `scripts/`.
+      **Re-acquired 2026-10-20 17:02:** while this session was writing plan
+      `755`, a second live session created `.agents/slop/plans/754-loading-spinner-contrast.md`
+      and added its tests to `Button.test.tsx`, `loading.test.ts` and
+      `loading.runtime.test.tsx` within two minutes (mtimes 17:02:29–17:03:22).
+      Both units were kept: this session moved its only shared-file case into
+      `runtime/progress-announcement.runtime.test.tsx` and committed only its own
+      paths, leaving the other session's uncommitted work untouched. The
+      supervisor fix in §5.1 is still the real remedy.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
@@ -2483,6 +2491,28 @@ retired once both branches are one
       `min={10}`) are unchanged. 3 core assertions + 2 fields in the non-finite
       runtime matrix, both directions proven, and the page no longer states the
       defect (plan `753`; the scoped `nonsense-numbers` file 5/5).
+
+`[x]` `packages/primitives`: **a computed `Progress` announced a raw float** —
+      measured (2026-10-20): `aria-valuetext` is the bar's only accessibility
+      channel, and it interpolated the clamped percentage raw, so a caller
+      feeding `(loaded / total) * 100` announced `"33.333333333333336%"` on
+      every tick while the fill was correct. One `progressValueText` rule rounds
+      the sentence to a whole percent and leaves the paint's exact fraction
+      alone (a rounded paint fails the width assertion); core + element-tree +
+      scoped runtime cases, both directions proven (plan `755`).
+
+`[x]` `packages/primitives`: **a busy button's spinner was invisible on its own
+      fill** — measured (2026-10-20) from the element tree and the native paint:
+      a primary `Button`/`IconButton` fills with `colors.primary`, and the
+      default `Spinner` lit its dot with the same role, so the one dot that
+      carries the animation was 1:1 on the surface and the busy state read as a
+      moving hole; the trail was an unrelated `mutedForeground`. `Spinner` gains
+      an optional `color` that paints every dot (the per-dot opacity stays the
+      trail), and `Button` passes its variant's **foreground** — the role the
+      label and `IconButton`'s icon already use. Core + element + a native
+      `runtime/button-loading` case (the fill is `primary`, every dot is
+      `primaryForeground`); the standalone default is unchanged. Both
+      directions proven (plan `754`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

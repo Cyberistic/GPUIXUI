@@ -27,6 +27,12 @@ export interface SpinnerProps {
   readonly size?: number;
   /** Defaults to `primary`. */
   readonly accent?: SpinnerAccent;
+  /**
+   * A resolved dot colour. Use the surrounding surface's foreground on a filled
+   * control; `Button` passes its variant's. It overrides `accent` for every dot,
+   * so the lit dot cannot disappear into the surface behind it (plan `754`).
+   */
+  readonly color?: string;
   /** Accessible name. Defaults to "Loading". */
   readonly label?: string;
   readonly style?: StyleDesc;
@@ -35,7 +41,14 @@ export interface SpinnerProps {
 
 /** The element tree `Spinner` renders with its lit dot at the given index. */
 export const renderSpinner = (
-  { size, accent = "primary", label = "Loading", style, testId }: SpinnerProps,
+  {
+    size,
+    accent = "primary",
+    color,
+    label = "Loading",
+    style,
+    testId,
+  }: SpinnerProps,
   theme: PrimitiveTheme,
   step: number,
 ): ReactElement => {
@@ -50,7 +63,7 @@ export const renderSpinner = (
       {Arr.map(spinnerDots(step, SPINNER_DOTS), (point, index) => (
         <div
           key={index}
-          style={spinnerDotStyle({ size: dot, accent }, point, theme)}
+          style={spinnerDotStyle({ size: dot, accent, color }, point, theme)}
         />
       ))}
     </div>

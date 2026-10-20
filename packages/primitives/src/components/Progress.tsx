@@ -6,7 +6,8 @@
  * progressbar legible to assistive technology. A `value` outside 0–100 is
  * clamped by `core/style.ts`; an absent `value` means indeterminate. The step
  * timer runs only while the bar is indeterminate, and `tone` colours the fill
- * in both modes (plan 328).
+ * in both modes (plan 328). The announced percentage is a whole number while the
+ * fill keeps its exact fraction (plan `754`).
  */
 
 import type { ReactElement } from "react";
@@ -19,9 +20,9 @@ import {
 } from "../core/loading.js";
 import {
   progressFillStyle,
-  progressPercent,
   progressToneColor,
   progressTrackStyle,
+  progressValueText,
   type ProgressSpec,
   type ProgressTone,
 } from "../core/style.js";
@@ -62,7 +63,6 @@ export const renderProgress = (
   });
   const track = mergeStyle(row, style);
   const determinate = !isIndeterminate(value);
-  const percent = determinate ? progressPercent(value) : 0;
   const fill = determinate
     ? progressFillStyle(spec, theme)
     : indeterminateFillStyle(SEGMENT, progressToneColor(tone, theme), theme);
@@ -70,7 +70,7 @@ export const renderProgress = (
     <div
       role="progressbar"
       aria-label={ariaName(label)}
-      aria-valuetext={determinate ? `${percent}%` : "loading"}
+      aria-valuetext={determinate ? progressValueText(value) : "loading"}
       testId={testId}
       style={track}
     >

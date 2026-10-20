@@ -198,6 +198,33 @@ describe("spinnerDots", () => {
     ).toBe(true);
   });
 
+  it("takes the caller's colour for every dot on a filled surface", () => {
+    // The bug guarded (plan 754): a primary Button paints its fill with
+    // `colors.primary`, and the default Spinner paints the lit dot with the
+    // same role, so the one dot that carries the animation is invisible.
+    const dots = spinnerDots(0);
+    const colour = testTheme.colors.primaryForeground;
+    const painted = Arr.map(dots, (dot) =>
+      spinnerDotStyle(
+        { size: 6, accent: "primary", color: colour },
+        dot,
+        testTheme,
+      ),
+    );
+    expect(Arr.every(painted, (s) => s.backgroundColor === colour)).toBe(true);
+    const active = Option.getOrElse(
+      Arr.findFirst(dots, (dot) => dot.active),
+      () => ({ opacity: -1, active: false }),
+    );
+    expect(
+      spinnerDotStyle(
+        { size: 6, accent: "primary", color: colour },
+        active,
+        testTheme,
+      ).backgroundColor,
+    ).not.toBe(testTheme.colors.primary);
+  });
+
   it("paints a usable dot when the requested side cannot be painted", () => {
     // The bug guarded (plan 371): a `NaN` side was dropped by the runtime, so
     // every dot lost its width and the spinner painted a zero-high row.

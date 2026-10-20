@@ -25,6 +25,7 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `size` | `number` | `theme.iconSize.md` | the dot side in pixels; a non-finite or negative side uses the default |
 | `accent` | `primary \| destructive \| muted` | `"primary"` | the lit dot's colour role |
+| `color` | `string` | — | a resolved dot colour for **every** dot, for a spinner on a filled surface (a busy `Button` passes its variant's foreground); overrides `accent` |
 | `label` | `string` | `"Loading"` | accessible name announced as a status; a blank label falls back to the default |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
@@ -48,7 +49,11 @@ Not focusable. Activity is status, not an action.
 ## Theming
 
 `spinnerDots` decides the lit index and each dot's opacity; `spinnerDotStyle`
-resolves size and colour from the accent role. The gap is `spacing["2xs"]`.
+resolves size and colour from the accent role. The gap is `spacing["2xs"]`. A
+`color` paints every dot with the same role and lets the opacity carry the
+trail; that is how a busy `Button` keeps its indicator visible on a filled
+`primary` or `destructive` surface, where the default lit dot would be the fill
+itself (plan `754`).
 
 ## Limitations
 
@@ -61,10 +66,17 @@ resolves size and colour from the accent role. The gap is `spacing["2xs"]`.
 ## Verification
 
 - `src/core/loading.test.ts` — the lit index and fade across steps; a dot side
-  the runtime cannot paint falls back to the theme's `md` (plan `371`).
+  the runtime cannot paint falls back to the theme's `md` (plan `371`); a custom
+  `color` paints every dot and the default accent/muted pair is unchanged
+  (plan `754`).
+- `src/components/Button.test.tsx` — a busy button passes the variant's
+  foreground to its spinner (plan `754`).
 - `runtime/loading.runtime.test.tsx` — the lit dot's index changes over real
   time, the accent role reaches the paint, and AccessKit reports `Status` with
   the label.
+- `runtime/button-loading.runtime.test.tsx` — a busy primary `Button` paints
+  its fill `colors.primary` and every dot `colors.primaryForeground`, so the
+  indicator is not lost in the fill (plan `754`).
 - `runtime/nonsense-numbers.runtime.test.tsx` — a `NaN` side paints the
   documented default instead of a zero-high row (plan `371`).
 - `runtime/examples.runtime.test.tsx` — the feedback example mounts it.

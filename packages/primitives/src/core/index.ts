@@ -219,6 +219,7 @@ export {
   progressFillStyle,
   progressPercent,
   progressTrackStyle,
+  progressValueText,
   ratingStarColor,
   ratingStarStyle,
   PROGRESS_TONES,

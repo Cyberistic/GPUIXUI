@@ -14,6 +14,7 @@ import {
   progressFillStyle,
   progressPercent,
   progressTrackStyle,
+  progressValueText,
   PROGRESS_TONES,
   ratingStarStyle,
   ruleStyle,
@@ -531,6 +532,19 @@ describe("progress", () => {
   it("treats a non-finite value as empty rather than full", () => {
     expect(progressPercent(Number.NaN)).toBe(0);
     expect(progressPercent(Number.POSITIVE_INFINITY)).toBe(100);
+  });
+
+  it("announces a whole percentage, not the float a computed value carries", () => {
+    // Plan 754: a caller feeding (loaded / total) * 100 made the bar announce
+    // "33.333333333333336%" — the paint stays exact, the sentence rounds.
+    expect(progressValueText(100 / 3)).toBe("33%");
+    expect(progressValueText(42)).toBe("42%");
+    expect(progressValueText(99.6)).toBe("100%");
+    expect(progressValueText(-0.4)).toBe("0%");
+    expect(progressValueText(140.5)).toBe("100%");
+    expect(progressValueText(Number.NaN)).toBe("0%");
+    expect(progressValueText(Number.POSITIVE_INFINITY)).toBe("100%");
+    expect(progressValueText(Number.NEGATIVE_INFINITY)).toBe("0%");
   });
 
   it("paints the fill at the clamped percentage", () => {

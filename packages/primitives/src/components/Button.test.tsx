@@ -16,6 +16,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
 import { buttonRecipeRing } from "../core/recipes.js";
+import { buttonVariants } from "../core/variants.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton } from "./Button.js";
 import { Text } from "./Text.js";
@@ -298,6 +299,26 @@ describe("Button", () => {
     );
     // A text button is auto-width: its spinner keeps the text-sized step.
     expect(spinnerSize({ children: "Save" })).toBe(testTheme.iconSize.sm);
+  });
+
+  it("tints the busy spinner with the variant's foreground", () => {
+    // The bug guarded (plan 754): the default spinner lit its dot with
+    // `colors.primary`, which is exactly a primary button's fill, so the busy
+    // indicator read as a moving hole instead of a lit dot.
+    const spinnerColour = (
+      variant: Parameters<typeof renderButton>[0]["variant"],
+    ): unknown => {
+      const element = resting({ loading: true, variant, children: "Save" });
+      const spinner = expectSome(
+        Option.fromNullishOr(elementChildren(element)[0]),
+      );
+      return Option.getOrUndefined(elementProp(spinner, "color"));
+    };
+    Arr.forEach(["primary", "destructive", "outline"] as const, (variant) => {
+      expect(spinnerColour(variant)).toBe(
+        buttonVariants[variant].foreground(testTheme),
+      );
+    });
   });
 
   it("takes a disabled button out of the tab order", () => {

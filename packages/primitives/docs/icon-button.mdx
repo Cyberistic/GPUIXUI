@@ -87,7 +87,9 @@ Escape, and the tip text arrives as the button's `aria-description`.
 `loading` keeps it, so a keyboard user is not dropped mid-action. When both are
 set, `disabled` wins. The loading indicator is fitted to the square's content
 box — three 9/10/12 px dots at `sm`/`md`/`lg`, less a border — because the
-text-sized row was 46 px and painted outside a 36 px button (plan `644`).
+text-sized row was 46 px and painted outside a 36 px button (plan `644`). Its
+dots take the same variant **foreground** as the icon it replaces, so the busy
+state stays visible on a filled `primary` button (plan `754`).
 
 ## Accessibility
 

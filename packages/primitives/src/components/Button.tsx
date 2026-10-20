@@ -41,7 +41,7 @@ import {
   shrinkLayoutStyle,
 } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
-import type { ButtonVariant } from "../core/variants.js";
+import { buttonVariants, type ButtonVariant } from "../core/variants.js";
 import { useGroupShape, type GroupShape } from "./group-shape.js";
 import {
   ariaName,
@@ -211,7 +211,11 @@ export const renderButton = (
       style={resolvePartStyle(chrome, props.style, state)}
     >
       {props.loading === true ? (
-        <Spinner size={spinnerDot} label="Loading" />
+        <Spinner
+          size={spinnerDot}
+          label="Loading"
+          color={buttonVariants[variant].foreground(theme)}
+        />
       ) : (
         props.leading
       )}
