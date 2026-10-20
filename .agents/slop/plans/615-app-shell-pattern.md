@@ -254,6 +254,10 @@ Record each forced defect and revert it before committing.
 | `nub run --filter docs test` | 125 files / **1 209** tests pass |
 | `nub run --filter docs smoke:preview` | exit `0` — `scene app-shell opened by 1 step(s) — 640x520 canvas, 25 text nodes`; `/docs/patterns/app-shell loaded the live iframe — …&scene=app-shell&…&mode=dark (606x358)` |
 | `nub run --filter docs smoke:build` | exit `0` — **106** pages, 233 links, 1 365 anchors |
+| `nub run --filter docs smoke:a11y` | exit `0` — 106 pages × 2 schemes, 0 violations |
+| `nub run --filter docs smoke:responsive` | exit `0` — 106 pages at 390 px, phone controls and mobile navigation |
+| `nub run --filter docs smoke:console` | exit `0` — 106 pages, 0 console errors |
+| `nub run check` / `nub run lint` / `nub run test` | exit `0` — 1 209 docs tests |
 
 Forced defects, each run and reverted:
 
