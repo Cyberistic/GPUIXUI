@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release gate) |
 | Owner | playground workstream |
 | Depends on | `639`, `653`, `656`, `702`, `714`, `723`, `735`, `739`, `745`, `751`, `755`, `762`, `764` |
@@ -156,7 +156,39 @@ source mutations and two reverse proofs. Do not add code to "prove" a gate.
 
 ## 7. Results
 
-_(fill in after the run)_
+Verification only; no source change. `origin/master` was 0 behind, so no merge
+was needed. The gate ran on the head that includes plan `764`'s code (code head
+`f0c9a8f8`; this plan's own documentation commit `0caf7643` landed before the
+run and changes no source).
+
+| Suite | Scenarios | Checks | Capabilities | Duration | Exit |
+| ----- | --------- | ------ | ------------ | -------- | ---- |
+| headless (`TestRenderer`) | **112/112** | **4152** | 65 | 246.8 s | `0` |
+| live (real window) | **101/101** | **2933** | 61 | **1220.8 s** | `0` |
+
+`editing-actions` reports **46** and `live-editing-actions` **73**;
+`opacity-pixels` and `live-opacity-pixels` each report **29**; `live-state-pixels`
+stays **50**; `live-tier2-editing` took its **33**-check branch. The headless
+total is plan `762`'s 4106 + 46 exactly; the live total is 2860 + 73 exactly, so
+the new scenario ran inside the full sequence rather than only in a focused
+batch. Both `host` lines carry `gpuix 9fcd6288`, `zed 81c99f81` and runtime
+shaders; a plain `--all` wrote no `provenance.json` and no capture directory.
+
+```sh
+nub run --filter playground build            # exit 0; binding current
+nub apps/playground/dist/smoke/run.js --list | wc -l          # 112
+nub apps/playground/dist/live/run.js --list | wc -l           # 101
+nub apps/playground/dist/smoke/run.js        # 112/112 · 4152 · 65 · 246.8 s · exit 0
+nub apps/playground/dist/live/run.js --all   # 101/101 · 2933 · 61 · 1220.8 s · exit 0
+nub run check                                # exit 0
+nub run lint                                 # exit 0
+nub run test                                 # exit 0; playground 520, testing 69, components 308,
+                                             # primitives 282, tokens 196, tw 103, icons 19, docs 7
+```
+
+Artifacts: `apps/playground/.artifacts/smoke-report.json` and
+`live-report.json`. This is the gate for the promotion fast-forward; the
+owner/supervisor performs the merge.
 
 ## 8. Rollback
 

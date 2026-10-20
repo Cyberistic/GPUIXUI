@@ -2366,9 +2366,10 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 ## Evidence on this host
 
 The suite is **112/112 green** here (`exit 0`, 4152 checks, 65 capabilities,
-**339.8 s** on the head that adds plan `764`'s 46-check `editing-actions`,
-2026-10-20; the runs at the plan `762` gate read 111/111 · 4106 · 247.2 s with plans
+**246.8 s** at the plan `768` gate, 2026-10-20; **339.8 s** on the plan `764`
+head; the runs at the plan `762` gate read 111/111 · 4106 · 247.2 s with plans
 `754` and `761`'s pixel probes; plan
+`764` added the 46-check `editing-actions`, plan
 `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check
 `state-pixels`, plan `745` added the 64-check
 `border-pixels`; plan `739`'s gate read 108/108 and 3963 on the shadow-pixel
@@ -2397,19 +2398,17 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **100/100** (`exit 0`, **2860** checks, 61
-capabilities; **1226.4 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
-head that includes plan `761` (`05013949`; 0 behind `origin/master`), with the
-whole headless registry at **111/111** (**4106** checks, 65 capabilities,
-247.2 s) on the same code (an independent run on the same head measured
-1179.7 s live and 321.6 s headless, identical counts, differing only in
-wall-clock). The live registry is now **101** entries with plan `764`'s
-`live-editing-actions` (73 checks, derived live total **2933** = `2860 + 73`);
-the full headless suite on that head is **112/112 · 4152 · 339.8 s**, and the
-next full live gate belongs to the promotion plan that follows. Plan `762` is
-the last run gate, and the
-gate covers every registered id: plan `761`'s `live-opacity-pixels` (29 checks)
-joins the sequence here. It includes every scenario this branch added:
+The last full merge/release gate ran **101/101** (`exit 0`, **2933** checks, 61
+capabilities; **1220.8 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
+head that includes plan `764` (`f0c9a8f8`; 0 behind `origin/master`), with the
+whole headless registry at **112/112** (**4152** checks, 65 capabilities,
+246.8 s) on the same code. The live registry is **101** entries, plan `764`'s
+`live-editing-actions` (73 checks) included, and the
+full headless suite on that head is **112/112 · 4152**, so every registered id
+ran inside the gate. Plan `768` is the last run gate, and it covers every
+registered id: plan `761`'s `live-opacity-pixels` (29 checks)
+and plan `764`'s `live-editing-actions` (73) join the sequence here. It includes
+every scenario this branch added:
 `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
@@ -2423,10 +2422,10 @@ contract (25), `live-shadow-pixels`' ring/elevation pixels (28),
 hover/active pixels (50) and `live-opacity-pixels`' disabled/subtree pixels (29)
 and `live-editing-actions`' clipboard, cut/paste, undo/redo and OTP-paste checks
 (73).
-The total is plan `755`'s 2831 plus plan `761`'s 29, and the headless registry is
-that gate's 4077 plus `opacity-pixels`' 29 plus `editing-actions`' 46 (`4152`). A plain
-`--all` wrote no frame and no `provenance.json`. Plan `762` re-ran both suites on
-this head and is the current promotion gate. This gate supersedes plan `755`'s
+The total is plan `762`'s 2860 plus `live-editing-actions`' 73, and the headless
+registry is that gate's 4106 plus `editing-actions`' 46 (`4152`). A plain
+`--all` wrote no frame and no `provenance.json`. This gate supersedes plan `762`'s
+100/100 (`2860`) on `05013949`, plan `755`'s
 99/99 (`2831`) on `7b304a1f`, plan `751`'s
 98/98 (`2780`) on `debe433a`, plan `739`'s 97/97
 (`2716`) on `ea2e668b`, plan `735`'s 96/96

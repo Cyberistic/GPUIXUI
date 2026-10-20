@@ -108,16 +108,27 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 136/136 plans-and-harness
+`[x]` `[██████████]` 137/137 plans-and-harness
 
-`[~]` **Run the promotion gate on the head that includes the editing actions**
+`[x]` **Run the promotion gate on the head that includes the editing actions**
       per plan `768`: plan `762` gated headless 111/111 and live 100/100, then
       plan `764` added `editing-actions` (46 checks) and `live-editing-actions`
-      (73), so a promotion would carry an ungated live scenario. Verification
-      only on the code head that includes `764` (0 behind `origin/master`):
-      re-run both full suites, reconcile `4106 + 46 = 4152` headless and
-      `2860 + 73 = 2933` live (± the `live-tier2-editing` branch), then update
-      the ledgers and the plan index.
+      (73), so a promotion would have carried an ungated live scenario.
+      Verification only on the code head that includes `764` (`f0c9a8f8`, 0
+      behind `origin/master`): headless **112/112** (**4152** checks, 65
+      capabilities, **246.8 s**) and live **101/101** (**2933** checks, 61
+      capabilities, **1220.8 s**), both exit `0`. The live total is plan `762`'s
+      2860 + `live-editing-actions`' 73 exactly, so the clipboard/history probe
+      ran inside the full sequence; `editing-actions` reports **46**,
+      `live-editing-actions` **73**, `opacity-pixels`/`live-opacity-pixels`
+      stay **29** each, and `live-tier2-editing` took its **33**-check branch.
+      Both `host` lines carry the release-tag pins (`gpuix 9fcd6288`, `zed
+      81c99f81`, runtime shaders), and a plain `--all` wrote no
+      `provenance.json` and no capture directory. `nub run check`/`lint`/`test`
+      green (playground **520**, testing 69, components 308, primitives 282,
+      tokens 196, tw 103, icons 19, docs 7). Exact ids: the whole headless
+      registry (bare) and the whole live registry (`--all`). This is the
+      promotion gate; the owner/supervisor performs the merge.
 
 `[x]` **Prove the editor's clipboard and history, and the OTP paste path** per
       plan `764`: the native `<input>`/`<textarea>` binds `cmd-c`/`cmd-x`/`cmd-v`/
@@ -178,7 +189,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       directory. `nub run check`/`lint`/`test` green (playground **520**, testing
       69, components 308, primitives 282, tokens 196, tw 103, icons 19, docs 7).
       Exact ids: the whole headless registry and the whole live registry
-      (`--all`). This is the promotion gate.
+      (`--all`). **Superseded by plan `768`**, which re-ran both suites on the
+      head that includes the editing actions.
 
 `[x]` **Run the promotion gate on the head that includes the state pixels** per
       plan `755`: plan `751` gated code head `c4224479` at headless 109/109 and
