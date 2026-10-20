@@ -401,6 +401,7 @@ references without buying correctness.
 | [793](./793-native-field-table.md) | The native field table's role assignments | F | 569, 574, 583, 592, 792 | done |
 | [794](./794-edit-artifact-defined-overlay.md) | The edit artifact refuses a defined `overlay` level it can carry | F | 685, 758 | done |
 | [795](./795-platform-disabled-step-figures.md) | The disabled fill's step off its platform surfaces has no owner | F | 535, 737, 781 | done |
+| [798](./798-linux-wash-premise.md) | The Linux wash rationale's figure and its premise | F | 506, 535, 710, 781, 795 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

@@ -13,7 +13,8 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { compositeOver, contrastRatio } from "./contrast.js";
+import { compositeOver, contrastFloors, contrastRatio } from "./contrast.js";
+import { alpha } from "./color.js";
 import { statusTones } from "./styles.js";
 import { getPlatformTheme } from "./theme.js";
 
@@ -26,6 +27,9 @@ const source = (file: string): string =>
     .trim();
 
 const fixed = (value: number, digits: number): string => value.toFixed(digits);
+
+/** The pre-506 Linux dark fill the wash rationale is measured against. */
+const linuxPre506Fill = "#2B4F76";
 
 /** The tightest border-over-scrim among the solid status chips. */
 const tightestChipBorder = (mode: "light" | "dark"): string => {
@@ -118,6 +122,32 @@ describe("the platform files' quoted figures", () => {
         2,
       )}:1 on the pressed wash`,
     );
+  });
+
+  it("holds the Linux wash rationale to the fill it was measured on", () => {
+    const dark = getPlatformTheme("linux", "dark");
+    const { colors } = dark;
+    const wash = alpha(colors.selection, 0.1);
+    const shipped = alpha(colors.selection, 0.2);
+
+    const title = (paint: string, fill: string): string =>
+      fixed(contrastRatio(compositeOver(paint, fill), colors.foreground), 3);
+    const highlight = (paint: string, fill: string): string =>
+      fixed(contrastRatio(compositeOver(paint, fill), fill), 3);
+
+    expect(
+      Math.round(
+        (Number.parseInt(colors.selection.slice(7, 9), 16) / 255) * 100,
+      ),
+    ).toBe(20);
+    expect(source("linux.ts")).toContain(
+      `The fill moved rather than the wash: on the fill plan 381 shipped, ` +
+        `the 20% wash held the title at ${title(shipped, linuxPre506Fill)}:1, ` +
+        `and a 10% wash cleared it at ${title(wash, linuxPre506Fill)}:1 but measured ` +
+        `${highlight(wash, linuxPre506Fill)}:1 on that fill — a hair over the ` +
+        `${fixed(contrastFloors.default.surface, 2)}:1 highlight floor (plan 506).`,
+    );
+    expect(source("linux.ts")).not.toContain("cannot soften further");
   });
 
   it("holds the disabled fill's step off its own dark surfaces", () => {

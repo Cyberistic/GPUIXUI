@@ -30,8 +30,10 @@ import {
  * its floor through the inverse veil (plan 382). The dark selected row is one
  * designed step darker than plan 381 left it, so the row's title (`foreground`)
  * keeps the 7:1 body floor through the selection wash while the row stays a
- * 1.216:1 step past its accent wash; the wash itself cannot soften further — at
- * the alpha the title needs it measures 1.052:1 on the fill (plan 506). The hint
+ * 1.216:1 step past its accent wash. The fill moved rather than the wash: on
+ * the fill plan 381 shipped, the 20% wash held the title at 6.648:1, and a 10%
+ * wash cleared it at 7.094:1 but measured 1.052:1 on that fill — a hair over
+ * the 1.05:1 highlight floor (plan 506). The hint
  * clears the secondary floor on the row washes a field inside a row paints
  * (plan 527). The dark link is a step lighter so it keeps the secondary floor
  * through the selection wash (plan 528).

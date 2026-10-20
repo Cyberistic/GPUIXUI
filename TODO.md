@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 362/441
+`[x]` `[████████░░]` 363/441
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -3133,6 +3133,17 @@ own step above them (1.126:1 / 1.139:1)", computed once by hand, while
 `contrastRatio(disabled, card)` and requires the three surfaces to be the one hex
 the sentence prints, so a palette edit cannot leave a stale rationale; no colour,
 pair, floor, metric, role or shipped theme moves (plan 795)
+`[x]` Hold the Linux wash rationale to its premise — `linux.ts` said "the wash
+itself cannot soften further — at the alpha the title needs it measures 1.052:1
+on the fill", but 1.052 belongs to the **pre-506** `selected` fill `#2B4F76` at a
+10% wash (today's fill measures 1.143:1 at the shipped 20%), the wash never
+softened — the fill moved — and at the alpha the title actually allows (27/255)
+the figure is 1.065:1; no test read the clause. It now says the fill moved and
+states the pre-506 title (6.648:1 at 20%) and the weakened wash (7.094:1 title,
+1.052:1 highlight), `platform-claims.test.ts` writes the old fill out and
+derives the fraction, both titles, the highlight and the floor, the test header
+states the same premise, and no colour, pair, floor, metric, role or shipped
+theme moves (plan 798)
 
 ## Phase C — Tier 1–2 components
 

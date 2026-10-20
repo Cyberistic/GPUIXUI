@@ -11,8 +11,9 @@
  * `selectionPairs` now carries `foreground` on `selected` beside the inherited
  * label, and three dark values move: the identity wash 20% → 14%, the Windows (and
  * XP and Aero) wash 40% → 26%, and Linux dark's selected fill one designed step
- * darker, because its wash cannot soften far enough without falling under the
- * 1.05:1 highlight floor.
+ * darker, because at the alpha its title needed its wash measured barely over
+ * the 1.05:1 highlight floor on the old fill, so the fill moved instead of the
+ * wash.
  */
 
 import { describe, expect, it } from "vitest";
