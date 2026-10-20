@@ -184,6 +184,16 @@ each phrase and holds it to `statusTones.length`, `platformNames.length`,
 `motionLevels.length` and `motionPhases.length`, and the two neighbouring
 retypings (`Object.entries(motion)` and a literal `four`) read the indexes too
 (plan 775)
+`[ ]` Hold the front door's elevation paragraph to the contract — it names the
+six `elevationSurfaces`, the `md` content fills as "the four filled actions, the
+three solid status chips, the raised panel action and the four soft status
+panels" and quotes **1.058:1** (AAA dark, `md` on `info`) and **1.061:1**
+(identity dark, `sm` on `background`), and `readme.test.ts` reads none of it:
+mutating the two group counts and both ratios left 36/36 green while
+`docs.test.ts` derives the same claims for the catalogue and the design system
+(plans 376, 584, 610, 665). Give the groups to `elevationSurfaces`,
+`elevationContentSurfaces`, `filledControlFamilies` and `statusTones`, and the
+two ratios to the figure table (found while landing plan 775)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan
