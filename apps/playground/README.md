@@ -1908,7 +1908,8 @@ painted ancestor's handler runs.** Two additions: a `<text>` that **owns**
 can put a label inside a `Button` or a row and the control still activates; it
 must not position that label absolutely, because the positioned run then owns
 the hitbox and swallows the click. A text element that owns its handler is a
-valid control surface. Both hosts agree (33 headless checks, 25 live); five
+valid control surface. Both hosts agree; the inline half adds **15** headless
+and **12** live checks (`click-routing` is 33, `live-click-routing` 25). Five
 mutations fail by name and one is a null result (`734` §8).
 
 ## The shipped Tier 2 catalogue (plans `330`, `344`)
