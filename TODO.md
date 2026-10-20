@@ -2843,6 +2843,10 @@ under <https://gpuixui.sudokw.com/docs>
 `[x]` Land the Blocks and Theme Editor docs surfaces (plan 436) — the
 `/docs/blocks` index with Login/Settings recipes and the `/docs/themes` live
 token editor, deployed under <https://gpuixui.sudokw.com/docs>
+`[x]` Land the Dashboard block and landing window — a `dashboard-01` recipe
+composed from `@gpuixui/*` (card, badge, progress, search, icon) with an SVG
+chart primitive (bar, donut, stacked bar) labelled as a gap, shown on `/` as the
+product window and linked from `/docs/blocks/dashboard`
 `[x]` Land the marketing landing page at `/` (plan 434) — Hunter License
 identity, stacked-native deck hero, library grid, proof, attribution
 `[x]` Deploy the Fumadocs app (landing + getting started) to

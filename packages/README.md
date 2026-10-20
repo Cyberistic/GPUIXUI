@@ -10,6 +10,7 @@ Dependencies point down this list and never up:
 
 ```
 tokens      → (nothing)
+motion      → (nothing; pure math, `react` peer for the hooks)
 primitives  → tokens
 components  → tokens, primitives
 icons       → tokens
@@ -30,6 +31,7 @@ consume API metadata and examples; nothing in `packages/` may import from it.
 | ------- | ------- |
 | `config` | Shared TypeScript configuration (`tsconfig.base.json`) |
 | `deploy` | Alchemy stack declaring the docs site's Cloudflare resources |
+| `motion` | Renderer-neutral motion physics (springs, easing, timelines, inertia) plus React hooks that drive GPUix motion targets |
 | `testing` | Platform-free half of the native smoke suite: check/scenario model, report, runtime preflight (consumed from `dist`, no `@gpuix/*` import) |
 
 The rest are Phase B/C deliverables, created by their plans in dependency order.

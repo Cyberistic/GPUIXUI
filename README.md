@@ -27,7 +27,10 @@ Tabs are the pattern pages; their previews are labelled browser renderings of
 the native components, and the Code tab plus **Component source** show the real
 implementation. The remaining shadcn surfaces — **Blocks** (`/docs/blocks`) and
 the **Theme Editor** (`/docs/themes`) — landed too: recipe pages composed from
-the library and a live token editor backed by `@gpuixui/tokens`.
+the library and a live token editor backed by `@gpuixui/tokens`. The **Dashboard**
+block (`/docs/blocks/dashboard`) is the landing's product window: a six-card
+activity dashboard composed from the library with a labelled-gap SVG chart
+primitive (bars, donut, stacked bars).
 
 ## Layout
 
@@ -37,6 +40,7 @@ apps/playground    Native GPUix playground and smoke tests
 packages/config    Shared TypeScript and tooling configuration
 packages/deploy    Alchemy stack: the docs site's Cloudflare resources
 packages/tokens     Design tokens, themes and the React theme provider
+packages/motion     Motion physics (springs, easing, timelines, inertia) + React hooks
 packages/primitives Tier 1 render primitives
 packages/icons      Icon set and sizing rules
 packages/components Tier 2 composition and feedback components
