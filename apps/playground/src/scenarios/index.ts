@@ -100,6 +100,7 @@ import { stateColourScenario } from "./state.js";
 import { opacityScenario } from "./opacity.js";
 import { textDecorationScenario } from "./text-decoration.js";
 import { textInkScenario } from "./text-ink.js";
+import { fieldInkScenario } from "./field-ink.js";
 import { textTruncationPixelsScenario } from "./text-truncation.js";
 import { surfaceThemeScenario } from "./surface-theme.js";
 import { dialogScrimScenario } from "./dialog-scrim.js";
@@ -270,6 +271,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   opacityScenario,
   textDecorationScenario,
   textInkScenario,
+  fieldInkScenario,
   textTruncationPixelsScenario,
   surfaceThemeScenario,
   dialogScrimScenario,

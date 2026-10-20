@@ -15,10 +15,8 @@
  * pixel.
  */
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
-import { Pixels } from "@gpuixui/testing";
-import type { Smoke } from "@gpuixui/testing";
 import type { ThemeColors } from "@gpuixui/tokens";
+import { scanBox, type BoxScan } from "./frames.js";
 
 /**
  * Per-channel slack for glyph interior pixels.
@@ -141,93 +139,11 @@ export const distinctInk = (fixtures: InkFixtures): boolean => {
   return Arr.length(Arr.dedupe(values)) === Arr.length(values);
 };
 
-/** What a scan of one painted run found. */
-export interface InkScan {
-  /** Device pixels inspected inside the box. */
-  readonly sampled: number;
-  /** Pixels within `tolerance` of the expected token. */
-  readonly near: number;
-  /** The inspected pixel closest to the expected token, for the failure text. */
-  readonly closest: Pixels.Rgba;
-}
+/** A glyph scan, shared with every pixel probe that samples a box. */
+export type InkScan = BoxScan;
 
-const BLACK = new Pixels.Rgba({ r: 0, g: 0, b: 0, a: 255 });
-
-const channelDistance = (left: number, right: number): number =>
-  Math.abs(left - right);
-
-const distanceTo = (pixel: Pixels.Rgba, expected: Pixels.Rgba): number =>
-  Math.max(
-    channelDistance(pixel.r, expected.r),
-    channelDistance(pixel.g, expected.g),
-    channelDistance(pixel.b, expected.b),
-    channelDistance(pixel.a, expected.a),
-  );
-
-/**
- * Scan the device pixels inside a painted run's logical box.
- *
- * The loops are indexed on purpose: this walks tens of thousands of pixels, and
- * an `Arr` fold would allocate a wrapper per pixel. A frame whose size does not
- * match the window returns `sampled: 0`, so a caller cannot pass by sampling
- * nothing.
- */
-export const scanInk = (
-  frame: Pixels.Pixels,
-  window: Smoke.WindowSize,
-  box: Smoke.Bounds,
-  expected: Pixels.Rgba,
-  tolerance: number,
-): InkScan => {
-  return Option.match(Pixels.frameScale(frame, window), {
-    onNone: () => ({ sampled: 0, near: 0, closest: BLACK }),
-    onSome: (factor) => scanAtScale(frame, box, expected, tolerance, factor),
-  });
-};
-
-const scanAtScale = (
-  frame: Pixels.Pixels,
-  box: Smoke.Bounds,
-  expected: Pixels.Rgba,
-  tolerance: number,
-  factor: number,
-): InkScan => {
-  const startX = Math.round(box.x * factor);
-  const endX = Math.round((box.x + box.width) * factor);
-  const startY = Math.round(box.y * factor);
-  const endY = Math.round((box.y + box.height) * factor);
-  let sampled = 0;
-  let near = 0;
-  let closest = BLACK;
-  let best = Number.POSITIVE_INFINITY;
-  for (let y = startY; y < endY; y += 1) {
-    if (y < 0 || y >= frame.height) {
-      continue;
-    }
-    for (let x = startX; x < endX; x += 1) {
-      if (x < 0 || x >= frame.width) {
-        continue;
-      }
-      const offset = (y * frame.width + x) * 4;
-      const pixel = new Pixels.Rgba({
-        r: frame.data[offset] ?? 0,
-        g: frame.data[offset + 1] ?? 0,
-        b: frame.data[offset + 2] ?? 0,
-        a: frame.data[offset + 3] ?? 0,
-      });
-      sampled += 1;
-      if (Pixels.rgbaNear(pixel, expected, tolerance)) {
-        near += 1;
-      }
-      const distance = distanceTo(pixel, expected);
-      if (distance < best) {
-        best = distance;
-        closest = pixel;
-      }
-    }
-  }
-  return { sampled, near, closest };
-};
+/** Scan a run's box for pixels near `expected` (see `scanBox`). */
+export const scanInk = scanBox;
 
 /** Enough interior ink to be evidence, not a stray anti-aliased pixel. */
 export const inkEvidence = (scan: InkScan, minimum: number): boolean =>

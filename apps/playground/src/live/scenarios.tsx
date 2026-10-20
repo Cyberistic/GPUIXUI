@@ -136,6 +136,7 @@ import {
   textDecorationView,
 } from "../scenarios/text-decoration.js";
 import { textInkLiveScenario, textInkView } from "../scenarios/text-ink.js";
+import { fieldInkLiveScenario, fieldInkView } from "../scenarios/field-ink.js";
 import {
   surfaceThemeLiveScenario,
   surfaceThemeView,
@@ -13128,6 +13129,28 @@ const liveTextInk: LiveScenario = {
 };
 
 /**
+ * The field ink contract in a real window (plan `797`).
+ *
+ * The headless pass proves the text, placeholder and selection inks in one
+ * offscreen paint; this twin proves them through a window's rasteriser and adds
+ * the half only an **active** window paints: the caret, on the shipped field
+ * (`primary`) and on a raw field whose `theme.caret` is `success`.
+ */
+const liveFieldInk: LiveScenario = {
+  ...fieldInkLiveScenario,
+  view: fieldInkView,
+  ready: "field-ink-stage",
+  steps: (ctx) =>
+    fieldInkLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-field-ink.png`),
+        ),
+      ),
+};
+
+/**
  * Text decoration in a real window (plan `775`).
  *
  * The headless pass proves the two declared lines, the control's absence and
@@ -14355,6 +14378,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveOpacityPixels,
   liveTextDecoration,
   liveTextInk,
+  liveFieldInk,
   liveTruncationPixels,
   liveSurfaceTheme,
   liveDialogScrim,

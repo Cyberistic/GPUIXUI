@@ -143,19 +143,55 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[██████████]` 143/144 plans-and-harness
+`[x]` `[██████████]` 144/144 plans-and-harness
 
-`[~]` **Prove the field ink contract in the frame** per plan `797`: the library's
+`[x]` **Prove the field ink contract in the frame** per plan `797`: the library's
       `nativeTextTheme` claims it keeps a field's "placeholder, caret and
       selection in the same palette", every `Input`/`TextArea`/`NumberField`/OTP
-      cell passes it, and **no scenario reads a field's pixels** — so a runtime
-      that ignored the theme entirely passed the suite. Recon measured text ink
-      `#EEF1F5` (the `inputForeground` token), **placeholder `#8F8F8F` — the
-      runtime's fixed grey, not the `placeholder` token** (`0` px), **selection
-      `#3C4271` — the fixed `#7C86FF59` wash, not the `selection` token** (`0`
-      px), and the caret as the only themed ink (`theme.caret`) that paints only
-      in an **active** window (the offscreen host is inactive, so that half is
-      live-only). Plan: `.agents/slop/plans/797-field-ink-pixels.md`.
+      cell passes it, and **no scenario read a field's pixels** — so a runtime
+      that ignored the theme first passed the suite. `field-ink-pixels` /
+      `live-field-ink` (**19 checks each**, one frame per host) mount the shipped
+      `Input` and prove: text ink `#EEF1F5` (`inputForeground`),
+      **placeholder `#8F8F8F` — the runtime's fixed grey, with the `placeholder`
+      token painting 0 px**, and **selection `#3C4271` — the fixed `#7C86FF59`
+      wash over `input`, with the dark `selection` blend `#3B3E59` painting
+      0 px**. **Measured limit:** the caret is `theme.caret` in the source, but
+      `caret_shown` needs an active window and neither the offscreen
+      `TestRenderer` nor the live automation window is active (0 caret pixels at
+      0 ms and 250 ms with native focus confirmed), so the caret half was
+      removed as §8 required and stays source evidence. The light theme's fixed
+      placeholder is **3.23:1** on white (AA needs 4.5) while the token is
+      **5.01:1** — recorded cross-team below. Five runtime mutations and one
+      unit mutation observed red and reverted (M1 text ink swapped → closest
+      `#7C8595`; M2 placeholder expectation → closest `#888889`; M3 selection
+      expectation → closest `#3C4271`; M4 placeholder removed; M5 no `cmd-a`;
+      M6 stage `card`). 12 pure tests (playground **593 → 605**). Focused ids
+      run: `field-ink-pixels` (green, then M1–M6, then green again),
+      `live-field-ink` (green ×3). End-of-task full headless **119/119**
+      (**4359** checks, 65 capabilities, exit `0`; exactly `4340 + 19`); live
+      registry **107 → 108**; no full live gate (merge gate). Plan:
+      `.agents/slop/plans/797-field-ink-pixels.md`.
+
+`[ ]` **Cross-team (defect):** `@gpuixui/primitives`' `nativeTextTheme`
+      (`core/style.ts`) documents that it keeps a field's "placeholder, caret
+      and selection in the same palette", but the pinned runtime's
+      `<input>`/`<textarea>` reads **only** `caret`: `layout_text` uses the
+      element's `style.color`, the placeholder is the literal
+      `rgba(0x8f8f8fff)`, and the selection wash is the literal
+      `rgba(0x7c86ff59)` — so `text`, `textMuted`, `textFaint`, `bg`, `border`
+      and `accent` are inert for a field. The fixed placeholder is `#8F8F8F`,
+      which is **3.23:1** on the light `input` (below AA; the `placeholder`
+      token would be 5.01:1). Correct the doc comment and document the limit, or
+      stop passing the inert fields; a real fix needs a runtime theme field.
+      Owner: `primitives`; evidence: plan `797` §2/§2.4, `field-ink-pixels` /
+      `live-field-ink`.
+
+`[ ]` **Cross-team:** the `tokens` `selection` token has **no consumer** in the
+      native editor — a real `cmd-a` selection paints the runtime's fixed
+      `#7C86FF59` (`#3C4271` over the dark `input`), and the dark token's blend
+      (`#3B3E59`) paints 0 px. Either document that the token is for web/preview
+      surfaces only or negotiate a runtime field. Owner: `tokens`; evidence:
+      plan `797` §2.2, `field-ink-pixels`.
 
 `[x]` **Prove the modal veil in the frame** per plan `791`: the shipped
       `DialogContent`/`DrawerContent` backdrop was named by **no scenario** in

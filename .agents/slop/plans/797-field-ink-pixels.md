@@ -84,14 +84,25 @@ fields on `input #191D25`:
 | ------- | ---------- | ------- |
 | text `MMMMMM` | `color: inputForeground` | **1246 px of `#EEF1F5`** (0 near the placeholder token) |
 | placeholder `MMMMMM` | `placeholder: "MMMMMM"` | **1250 px of `#8F8F8F`** (0 near the `placeholder` token `#7C8595`) |
-| selected (`cmd-a`) | selection | **4348 px of `#3C4271`** = `blendOver(#7C86FF59, #191D25)`; **0 px** of the theme's selection blend `#2F2F56` (= `#7567F23D` over the input) |
+| selected (`cmd-a`) | selection | **4348 px of `#3C4271`** = `blendOver(#7C86FF59, #191D25)`; **0 px** of the theme's selection blend `#3B3E59` (= the dark `#A7A9FF3D` over the input) |
 | caret (empty, focused by a click + `end`) | `theme.caret = #3BC97F` | **0 px** of either `success` or `primary` — the offscreen window is not *active*, so `caret_shown` is false |
 
 The text/placeholder columns start at content-relative `x = 1.5`, so an
-element's `bounds` box is its **content origin** — the caret's `origin.x + 0`
-is the box's left edge.
+element's `bounds` box is its **content origin**.
 
-### 2.3 Contrast, computed from the tokens (arithmetic, not a check)
+### 2.3 The caret, measured live — it does not paint here
+
+The first live run of the twin (§6 step 6) measured the raw caret field after a
+click (native focus confirmed on `field-caret` by `host.focused()`), a typed `m`
+(which resets the blink anchor) and `home`: **0 caret pixels at 0 ms and at
+250 ms** — two different blink phases — with the closest pixel a grey glyph
+edge (`#7C8086`). The screenshot also showed nowhere in the field for the caret
+to be. So `window.is_window_active()` is false for this host's automation
+window as well, and the caret is **source evidence only** in both hosts. The
+caret half (fixtures, checks 11–15, the `CARET_*` constants and `caretColumn`)
+was removed, exactly as §8 requires. No caret claim is made.
+
+### 2.4 Contrast, computed from the tokens (arithmetic, not a check)
 
 | Pair | Ratio |
 | ---- | ----- |
@@ -109,9 +120,10 @@ it is below AA. This is the cross-team consequence of §2.1, recorded in
 
 ## 3. What is deliberately *not* claimed
 
-- **The caret in the offscreen host.** §2.2 measured it unpaintable there
-  (`window.is_window_active()` is false), so the caret checks are **live-only**
-  and the headless pass records the reason.
+- **The caret in either host.** §2.2 and §2.3 measured it unpaintable
+  (`window.is_window_active()` is false in the offscreen TestRenderer and in the
+  live automation window), so it stays source evidence. The plan's original
+  live-only caret half was removed after that measurement.
 - **Caret width, blink phase or blink rate.** Only its ink.
 - **Placeholder or selection *colour choice*.** The probe asserts the measured
   runtime value and the absence of the token; it does not ask for a better grey.
@@ -138,18 +150,9 @@ One `700 × 240` stage on `theme.colors.background`, with a `24` px inset and a
 | `field-text` | shipped `Input` (`@gpuixui/primitives`) | `value="MMMMMM"` | the editor's text ink |
 | `field-placeholder` | shipped `Input` | empty, `placeholder="MMMMMM"` | the placeholder ink, with `nativeTextTheme` applied |
 | `field-selected` | shipped `Input` | `value="MMMMMM"`; clicked + `cmd-a` in the steps | the selection wash |
-| `field-caret` | raw `<input>` | `defaultValue=""`, `theme={{ caret: success, bg: input }}` | the caret follows `theme.caret` |
-| `field-caret-lib` | shipped `Input` | `defaultValue=""` | the shipped mapping's caret (primary) |
 
-Layout: left column `field-text` `(24,24)`, `field-placeholder` `(24,84)`,
-`field-selected` `(24,144)`; right column `field-caret` `(376,24)`,
-`field-caret-lib` `(376,84)`. The stage is `700 × 240`.
-
-Raw `<input>` chrome (only the two raw fixtures) is the shipped field's
-equivalent, written out: `width 300`, `height 44`, `paddingLeft/Right 10`,
-`borderRadius` `radius.md`, `borderWidth` `borderWidth.thin`,
-`borderColor` `border`, `backgroundColor` `input`, `color` `inputForeground`,
-`fontSize` `typography.body.fontSize`, `lineHeight` `typography.body.lineHeight`.
+One `420 × 200` stage on `background`; the three fields are one 300-wide column
+at `(24, 24)` with a `16` px gap (heights are the shipped `md` control height).
 Every role is read from `useTheme()`, never a literal — except the two measured
 runtime constants, which are named in the model.
 
@@ -163,26 +166,19 @@ export const RUNTIME_SELECTION = "#7c86ff59";
 
 /** Interior pixels that must carry an ink before it is evidence. */
 export const FIELD_INK_MINIMUM = 400;
-/** A caret is 2 px wide and one line tall: ~80 device px at scale 2. */
-export const CARET_INK_MINIMUM = 20;
-/** The caret's painted column inside a field's content box. */
-export const CARET_COLUMN_WIDTH = 4;
 
 export interface FieldFixtures {
   readonly text: string;          // inputForeground
   readonly placeholder: string;   // the placeholder token
   readonly selection: string;     // the selection token
-  readonly caret: string;         // the success token — nowhere else in a field
   readonly input: string;         // the field surface, for both blends
 }
 
 export const fieldFixtures = (colors: ThemeColors): FieldFixtures;
 /** `hex` at its own alpha over `under`, or None when either will not parse. */
 export const washOver: (hex: string, under: string) => Option.Option<Pixels.Rgba>;
-/** True when `hex` parses and neither token can be mistaken for the other. */
-export const tokensSeparate: (over: string, under: string, other: string, under2: string, tolerance: number) => boolean;
-/** The caret's 4 px column at a field box's content origin. */
-export const caretColumn = (box: Smoke.Bounds) => Smoke.Bounds;
+/** True when two colours can be told apart at `tolerance`. */
+export const tokensSeparate: (left: string, right: string, tolerance: number) => boolean;
 ```
 
 The scan itself is the existing glyph scan, hoisted (see §4.4): `scanInk(frame,
@@ -206,11 +202,9 @@ or three (`live`), where `driver` is the one headless/live difference:
 | 8 | the two washes are far enough apart to fail a swap | `tokensSeparate(...)` — a fixture guard, no frame |
 | 9 | the placeholder grey and the token are far enough apart | same guard, `tolerance 6` |
 | 10 | the stage point is `background` | one sample at the stage's bottom-right inset |
-| 11 *(live)* | the raw field's caret is `theme.caret` | `scanInk(caret box, success, 2).near >= 20` |
-| 12 *(live)* | the caret is the only `success` ink in the field | `scanInk(caret box, success, 2).near === scanInk(caretColumn(box), success, 2).near` |
-| 13 *(live)* | the raw field's caret is not the shipped mapping | `scanInk(caret box, primary, 2).near === 0` |
-| 14 *(live)* | the shipped field's caret is `primary` | `scanInk(caret-lib box, primary, 2).near >= 20` and equals its column count |
-| 15 *(live)* | the shipped field's caret is not the override | `scanInk(caret-lib box, success, 2).near === 0` |
+
+The frame checks also count `paintedBox` and the device-scale read, so the
+scenario reports **19** checks, not the ten rows above.
 
 The wash checks use `blendOver`'s own arithmetic (`Pixels.blendOver(over,
 alpha, under)`), so a change to the blend model fails the check rather than
@@ -227,19 +221,10 @@ public shape are unchanged.
 
 ### 4.5 The live steps
 
-The frame's state changes between captures, so the live driver runs three:
-
-1. click `field-selected`; `cmd-a`; settle `120`; **capture A** → checks 1–10.
-2. click `field-caret`; key `m`; key `home`; settle `50`; **capture B** → 11–13.
-   (`m` resets the blink anchor; `home` returns the caret to the content origin
-   so the column is exact. The field is uncontrolled so `m` sticks.)
-3. click `field-caret-lib`; key `m`; key `home`; settle `50`; **capture C** →
-   14–15.
-
-The headless steps run (1) only: click `field-selected`, `cmd-a`, capture A.
-The `50` ms settle exists to let the keystroke's paint land while the caret is
-still in the visible half of its 500 ms blink; it is a measured value, and a
-flaky caret run is a STOP (§8), not a widened tolerance.
+Both hosts run the same path: click `field-selected`, `cmd-a`, settle `120`,
+one capture, checks 1–10. The live twin adds the settle and one retained
+artifact; there is no second state to capture because the caret half was
+measured unobservable (§2.3).
 
 ---
 
@@ -247,13 +232,13 @@ flaky caret run is a STOP (§8), not a widened tolerance.
 
 | File | Change |
 | ---- | ------ |
-| `apps/playground/src/scenarios/field-ink-model.ts` | **new** — constants, fixtures, `washOver`, separations, `caretColumn`, `FieldScan` re-exports |
+| `apps/playground/src/scenarios/field-ink-model.ts` | **new** — the two runtime constants, fixtures, `washOver`, `tokensSeparate`, ids |
 | `apps/playground/src/scenarios/field-ink-model.test.ts` | **new** — see §7 |
 | `apps/playground/src/scenarios/field-ink.tsx` | **new** — view, shared checks, headless + live scenarios |
 | `apps/playground/src/scenarios/text-ink-model.ts` | move `scanInk`/`InkScan`/`inkEvidence` to `frames.ts`, re-export them here |
 | `apps/playground/src/scenarios/frames.ts` | hold the hoisted scan |
 | `apps/playground/src/scenarios/index.ts` | register `fieldInkScenario` |
-| `apps/playground/src/live/scenarios.tsx` | register the `live-field-ink` twin (`ready: "field-ink-stage"`, three captures, one retained artifact `live-field-ink.png`) |
+| `apps/playground/src/live/scenarios.tsx` | register the `live-field-ink` twin (`ready: "field-ink-stage"`, one capture, one retained artifact `live-field-ink.png`) |
 | `apps/playground/README.md` | a `###` section under Pixel evidence; the live table row; the two scenario totals |
 | `TODO.md` | tick the task with ids/counts; two cross-team rows (`primitives`, `tokens`) |
 | `.agents/slop/plans/README.md` | the number note and the table row |
@@ -292,9 +277,8 @@ package's `Pixels` helpers are used as they are.
    nub apps/playground/dist/smoke/run.js --only field-ink-pixels
    ```
 
-   Expected: `1/1 scenarios passed`, exit `0`, **13 checks** (10 ink + stage +
-   two guards). Record the real number; if the frame disagrees with §2.2, go to
-   §8.
+   Expected: `1/1 scenarios passed`, exit `0`, **19 checks** (measured). If the
+   frame disagrees with §2.2, go to §8.
 
 6. **Live, focused (opens a window):**
 
@@ -302,8 +286,8 @@ package's `Pixels` helpers are used as they are.
    nub apps/playground/dist/live/run.js --only live-field-ink
    ```
 
-   Expected: `1/1`, exit `0`, **18 checks** (the shared 13 + 5 caret checks).
-   Run it twice; record both.
+   Expected: `1/1`, exit `0`, **19 checks** (the same path as headless). The
+   caret half of this step was measured and removed (§2.3) before this run.
 
 7. **Mutation proofs** (§7) — each observed red, then reverted, then focused
    green again.
@@ -326,35 +310,39 @@ package's `Pixels` helpers are used as they are.
 ### 7.1 Unit tests — `field-ink-model.test.ts` (each can fail)
 
 1. `fieldFixtures` maps each role to its token: text → `inputForeground`,
-   placeholder → `placeholder`, selection → `selection`, caret → `success`,
-   surface → `input`. Mutating any mapping fails one assertion.
-2. `washOver(RUNTIME_SELECTION, darkInput)` = `#3C4271` — the measured blend.
-3. `washOver(darkSelection, darkInput)` = `#2F2F56` and is **not** near the
-   runtime wash at tolerance `2` (the guard that makes check 7 falsifiable).
-4. `RUNTIME_PLACEHOLDER` and the dark `placeholder` token are not near each
+   placeholder → `placeholder`, selection → `selection`, surface → `input`.
+   Mutating any mapping fails one assertion.
+2. The text and placeholder inks are distinct, so a swap cannot pass.
+3. `washOver(RUNTIME_SELECTION, darkInput)` = `#3C4271` — the measured blend.
+4. `washOver(darkSelection, darkInput)` = `#3B3E59` (the dark `#A7A9FF3D` over
+   the input) and is **not** near the runtime wash at tolerance `2` — the guard
+   that makes check 7 falsifiable.
+5. `RUNTIME_PLACEHOLDER` and the dark `placeholder` token are not near each
    other at tolerance `6` (check 4's guard).
-5. `caretColumn({x: 24, y: 24, width: 300, height: 44})` is
-   `{x: 24, y: 24, width: 4, height: 44}` — the column starts at the content
-   origin.
-6. `scanInk` on a 4 × 4 synthetic frame counts only the expected pixels, and an
-   empty expectation returns `sampled: 0` (a mismatched frame size cannot pass).
-7. `washOver` on an unparseable hex is `None`.
+6. `scanBox` on a 2 × 2 synthetic frame counts exactly the two expected pixels,
+   and a frame whose size disagrees with the window returns `sampled: 0` (so it
+   cannot pass by sampling nothing).
+7. `washOver` on an unparseable colour is `None`, and `tokensSeparate` refuses
+   an unparseable side instead of claiming separation.
+8. `FIELD_IDS` are unique.
 
-That is seven tests, all pure, all able to fail against the old model.
+That is **12** tests (measured) plus the mutation below, all pure.
 
 ### 7.2 Runtime mutation proofs (observed, reverted, recorded in the plan)
 
 | # | Mutation | Expected red check |
 | - | -------- | ------------------ |
 | M1 | `field-text`'s style `color` set to `placeholder` | "the text field paints its token" — reports the closest hex |
-| M2 | check 3's expected changed to the `placeholder` token | "the placeholder paints the runtime's fixed grey" (`#8f8f8f` vs `#7c8595`) |
-| M3 | check 6's expected changed to the theme selection blend | "the selection paints the runtime wash" (`#3c4271` vs `#2f2f56`) |
-| M4 | the raw caret field's `theme.caret` set to `primary` | "the raw field's caret is theme.caret" (`#a7a9ff` vs `#3bc97f`) |
-| M5 | the shipped caret fixture given `theme.caret: success` | "the shipped field's caret is primary" (both live checks) |
-| M6 | the stage's background set to `card` | "the stage point is the background token" |
+| M2 | check 3's expected changed to the `placeholder` token | "the placeholder paints the runtime's fixed grey" (0/35760, closest `#888889`) |
+| M3 | check 6's expected changed to the theme selection blend | "the selection paints the runtime wash" (0/35760, closest `#3C4271`) |
+| M4 | the placeholder fixture's `placeholder` set to `""` | "the placeholder paints the runtime's fixed grey" (0/35760, closest `#2A303B`) |
+| M5 | the `field-selected` click and `cmd-a` removed | "the selection paints the runtime wash" (0/35760, closest `#51555C`) |
+| M6 | the stage's background set to `card` | "the stage point is the background token" (`#11141a` vs `#191d25`) |
 
-Unit mutation: `RUNTIME_PLACEHOLDER` changed to the token value fails tests 4
-and 3 (the blend) — proving the model, not just the frame, carries the fact.
+Unit mutation: `RUNTIME_PLACEHOLDER` changed to the token value failed **two**
+tests by name ("parses the placeholder grey as an opaque colour", "separates the
+runtime placeholder from the placeholder token"), proving the model, not just
+the frame, carries the fact.
 
 ---
 
@@ -363,14 +351,9 @@ and 3 (the blend) — proving the model, not just the frame, carries the fact.
 - **The text or placeholder scan finds fewer than 400 px** near its expected
   ink → STOP. Record the count and closest pixel; do not lower the minimum and
   do not widen the tolerance.
-- **The live caret is not painted** in both caret frames (0 `success` and 0
-  `primary`) → STOP the caret half: remove checks 11–15, record the measurement
-  (window not active, or blink phase) in §2 and the README, and keep the static
-  half. A caret check that passes with zero pixels is not evidence.
-- **The shipped caret frame's `primary` count exceeds its caret column** → the
-  focus ring is inside the box; STOP and record, then decide between a
-  non-focused route (no caret) and a narrower box — do not accept a ring as a
-  caret.
+- **The live caret is not painted** in both caret frames → **triggered**: 0
+  caret pixels at 0 ms and 250 ms with native focus confirmed (§2.3). The
+  caret half was removed; the caret is source evidence only.
 - **The selection wash is absent** (below 1000 px) → STOP: the step order is
   wrong (the click did not focus the field) or `cmd-a` did not select. Record
   the closest pixel; there is no smaller threshold to fall back to.
@@ -404,12 +387,11 @@ cite this plan so the owner can amend it.
 ## 10. Acceptance
 
 - `field-ink-pixels` and `live-field-ink` exist, are registered in both
-  registries (the live guard's uniqueness/capability rules pass), and the
-  headless one reports **13** checks and the live one **18** (or the caret half
-  is *recorded as dropped* per §8, with the reason in §2 and the README).
-- The frame evidence is the measured one: text `#EEF1F5`, placeholder
-  `#8F8F8F` (token absent), wash `#3C4271` (token absent), caret `primary` on the
-  shipped field and `success` on the overridden raw field — live.
+  registries (the live guard's uniqueness/capability rules pass), and both
+  report **19** checks.
+- The frame evidence is the measured one in both hosts: text `#EEF1F5`,
+  placeholder `#8F8F8F` (token absent), wash `#3C4271` (token absent); the caret
+  is recorded as unpaintable here (§2.3), not claimed.
 - M1–M6 fail by name; the unit mutation fails; each is reverted.
 - Full headless `119/119`, exit `0`, checks `4340 + N`; `check`/`lint`/`test`
   green; no full live gate.

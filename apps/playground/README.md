@@ -1632,8 +1632,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 114-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 103 scenarios. `smoke:live` opens
+The 119-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 108 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1705,6 +1705,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-tree` | the virtualized tree in a window: a real click expands `dir-0` to 48 rows and keeps it selected, a child indents 16 px inside a virtual row, the painted window is smaller than the flattened tree, a second click collapses it, a real `-800` wheel moves the anchor and unpaints the rows above, `scrollToItem(25)` anchors `[25, 0, 260]` and paints `dir-3/file-24`, a click and `Down`/`Up` move native focus and the selection, and `Right` expands/walks while `Left` returns to the parent and collapses — 44 checks (plan `559`). The list anchor reports the **flex-resolved** 260 px viewport, not the declared 280 |
 | `live-qr` | the QR matrix in a window: the 226-node absolute grid paints at the headless offsets (quiet zone `+24`, module `6`, finders `+60`/`(42, 42)`), a light module has no bounds, a real click reports `hit=r3c3`, the SVG mask and the SVG data-URL image each paint one `174 × 174` node, the v4 scale is exact (`164`, `+16`, `4`), and both the module grid and the image route reconstruct the authored matrix from the decoded frame — 52 checks (plans `599`, `708`) |
 | `live-scroll-into-view` | the element scroll route in a window: `End` focuses row 199 and the list paints it, `Home` returns to `y = 0`, `scrollToItem(120)` and `scrollIntoView(row 10)` both move the window and paint their target while leaving focus alone, three `Down`s paint and focus row 13, and a second `scrollIntoView` paints row 199 without moving focus — 39 checks (plan `601`). **Measured limit:** the element route only reveals a row the list has laid out; from the anchor at 120, row 20 moved the list while rows 50 and 100 did nothing — use `scrollToItem` for a far jump |
+| `live-field-ink` | the shipped `Input`'s three observable inks in a window: the typed text paints `inputForeground`, the placeholder paints the runtime's fixed `#8F8F8F` (the `placeholder` token paints 0 px), and a `cmd-a` selection paints the fixed `#3C4271` wash (the `selection` token paints 0 px) — 19 checks (plan `797`). The caret is not asserted: the automation window is never *active*, so `caret_shown` is false in both hosts |
 
 ### Search and replace in a real window (plan `587`)
 
@@ -2572,6 +2573,47 @@ because `absolute`/`fixed` resolve against the mount parent). The recipe proves
 that route works; the component change is owned by `components` (`TODO.md`).
 When it lands, the two anchored expectations flip to the recipe's.
 
+### The field ink: what a native editor paints (plan `797`)
+
+`nativeTextTheme` (`@gpuixui/primitives/src/core/style.ts`) is the one place the
+design system reaches a native `<input>`/`<textarea>`, and its comment claims it
+"keeps a field's placeholder, caret and selection in the same palette". Every
+`Input`, `TextArea`, `NumberField` and each `OTPField` cell passes it, and **no
+check in either registry read a field's pixels** — `text-entry` proved the
+placeholder *paints* and the caret *moves*, never what either looks like. So a
+runtime that ignored the theme passed the whole suite.
+
+`field-ink-pixels` / `live-field-ink` mount the shipped `Input` three times and
+decode one frame each (19 checks per host):
+
+| Ink | What the library gives it | What the frame paints (dark) |
+| --- | ------------------------- | ---------------------------- |
+| text | `style.color = inputForeground` | **`#EEF1F5`**, the token |
+| placeholder | `theme.textFaint = placeholder #7C8595` | **`#8F8F8F`**, the runtime's fixed grey — the token paints **0** pixels |
+| selection | `theme.accent = primary`, and a `selection` token exists | **`#3C4271`**, the fixed `#7C86FF59` over `input`; the dark `selection` blend (`#3B3E59`) paints **0** pixels |
+| caret | `theme.caret = primary` | **unmeasurable here** — see below |
+
+**The pinned runtime reads only `caret`.** `input.rs`'s `layout_text` uses
+`style.color` (never `theme.text`), its placeholder is the literal
+`rgba(0x8f8f8fff)` (never `text_faint`), and its selection wash is the literal
+`rgba(0x7c86ff59)` (never `accent`). The probe asserts the measured value and
+the token's absence, so a runtime that starts honouring either fails by name.
+
+**The caret never paints on this host.** `caret_shown` requires
+`focus_handle.is_focused(window) && window.is_window_active()`; the offscreen
+`TestRenderer` and the live automation window both report an inactive window, so
+a focused field with a typed `m` (which resets the 500 ms blink) painted 0 caret
+pixels at 0 ms and at 250 ms, in both hosts. The caret stays **source evidence**
+(`theme.caret`, and the runtime's own
+`caret_color_comes_from_the_input_theme` test); the probe does not claim it.
+
+**Cross-team consequence:** the mapping's placeholder and selection fields are
+inert, and the light theme is the worse case — the runtime's fixed `#8F8F8F` on
+the light `input` (`#FFFFFF`) is **3.23:1**, below AA, while the `placeholder`
+token (`#66707F`) is **5.01:1**. The fix is a `primitives` doc correction and,
+if a runtime field ever exists, a `tokens` consumer for `selection`; both are in
+`TODO.md` with this plan as the evidence.
+
 ### Editing actions: clipboard, history and the OTP paste (plan `764`)
 
 The native editor binds `cmd-c`, `cmd-x`, `cmd-v`, `cmd-z` and `shift-cmd-z`
@@ -2618,14 +2660,16 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **118/118 green** here (`exit 0`, 4340 checks, 65 capabilities,
-**302.0 s** after plan `791`, 2026-10-20; **302.4 s** at plan `784`, which
+The suite is **119/119 green** here (`exit 0`, 4359 checks, 65 capabilities,
+2026-10-20 after plan `797`; **118/118** · 4340 · 302.0 s before it, after plan
+`791`; **302.4 s** at plan `784`, which
 read 117/117 · 4278; **275.0 s** after plan `778`, which
 read 116/116 · 4228; **432.8 s** at the plan `777` gate,
 which read 115/115 · 4206; **484.1 s** at plan `773`, which read
 114/114 · 4188; **237.6 s** at plan `771`, which read
 113/113 · 4165; **246.8 s** at the plan `768` gate, which
-read 112/112 · 4152; plan `791` added the 62-check
+read 112/112 · 4152; plan `797` added the 19-check
+`field-ink-pixels`, plan `791` the 62-check
 `dialog-scrim-pixels`, plan `784` added the 50-check
 `surface-theme`, plan `778` added the 22-check
 `text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`,
@@ -2641,7 +2685,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-118/118 scenarios passed · capabilities: layout=verified root=verified text=verified
+119/119 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2893,7 +2937,7 @@ narrower. Each deviation is deliberate and measured:
   (`media-surface`, plan `520`), the **text ink** probe (`text-ink-pixels`,
   plan `773`) and the **text decoration** probe (`text-decoration-pixels`,
   plan `775`)
-  pass in real GPUix 0.10.0 on this host (118/118, 4340 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (119/119, 4359 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
