@@ -7,21 +7,17 @@
  * a shared link could not carry the theme the toggle resolves.
  *
  * The cases below hold the two properties a hand-written parser never had: an
- * unknown value is absent rather than an error, and the writer omits an axis the
- * reader's fallback already selects — every axis except density, whose fallback
- * belongs to the platform. The full matrix is
- * round-tripped through a real `URLSearchParams`, which also proves the
- * structural `ThemeParamSource` the package depends on instead of the global.
- *
- * Plan 542 fixes two holes in that paragraph: the writer's rule was stated as
- * "only the axes whose omission would change the resolved theme" while density
- * is deliberately written even when it equals the resolved preset (macOS is
- * already `compact`), and the case named "on every platform" derived the
- * platform from `theme.name.startsWith("macOS")` — never true for
- * `Light · macOS` — so it exercised `win32` twelve times and missed the compact
- * preset that makes the exception matter. The cases now derive each axis from
- * `shippedThemes`, pin the density exception, and check that a decoded link
- * re-encodes to the same link.
+ * unknown value is absent rather than an error, and the writer omits only an
+ * axis whose fallback is global (a light mode, a default contrast, the
+ * `default` platform). Density is the exception: it is written as the preset
+ * the choice resolves to, because the fallback belongs to the platform or
+ * recipe, so a link without it changes meaning when the platform axis is
+ * edited. Plan 755 closes the last case of that rule: a row that omits the
+ * axis used to write no density at all, so the canonical link for
+ * `{ platform: "darwin" }` lost its `compact` as soon as a reader switched the
+ * link to Windows. The full matrix is round-tripped through a real
+ * `URLSearchParams`, which also proves the structural `ThemeParamSource` the
+ * package depends on instead of the global.
  */
 
 import { describe, expect, it } from "vitest";
@@ -35,6 +31,7 @@ import {
   themeModes,
   type Theme,
 } from "./theme.js";
+import { canonicalLink } from "./theme-choice.example.js";
 import {
   resolveThemeChoice,
   themeChoiceFromParams,
@@ -106,22 +103,26 @@ describe("themeChoiceFromParams", () => {
 });
 
 describe("themeChoiceParams", () => {
-  it("omits every axis a fallback already selects", () => {
+  it("omits the axes with a global fallback and writes the resolved density", () => {
     expect(
       themeChoiceParams({
         mode: "light",
         contrast: "default",
         platform: "default",
       }),
-    ).toEqual([]);
-    expect(themeChoiceParams({ mode: "dark" })).toEqual([["mode", "dark"]]);
+    ).toEqual([["density", "comfortable"]]);
+    expect(themeChoiceParams({ mode: "dark" })).toEqual([
+      ["mode", "dark"],
+      ["density", "comfortable"],
+    ]);
     expect(themeChoiceParams({ contrast: "high" })).toEqual([
       ["contrast", "high"],
+      ["density", "comfortable"],
     ]);
     expect(themeChoiceParams({ platform: "win32" })).toEqual([
       ["platform", "win32"],
+      ["density", "comfortable"],
     ]);
-    expect(themeChoiceParams({ platform: "default" })).toEqual([]);
 
     // Every axis this row writes is necessary: removing it changes the theme.
     const entries = themeChoiceParams({
@@ -142,9 +143,32 @@ describe("themeChoiceParams", () => {
     });
   });
 
+  it("writes the density a choice omits", () => {
+    expect(canonicalLink).toContainEqual(["density", "compact"]);
+    expect(canonicalLink).toEqual(themeChoiceParams({ platform: "darwin" }));
+    expect(themeChoiceParams({ platform: "darwin" })).toContainEqual([
+      "density",
+      "compact",
+    ]);
+    expect(themeChoiceParams({})).toContainEqual(["density", "comfortable"]);
+    expect(themeChoiceParams({ recipe: "aero" })).toContainEqual([
+      "density",
+      resolveThemeChoice({ recipe: "aero" }).density.name,
+    ]);
+
+    // The rule's own example: the macOS link keeps its compact when a reader
+    // edits the platform axis, because the density travels with the link.
+    const edited = new URLSearchParams(toSearch({ platform: "darwin" }));
+    edited.set("platform", "win32");
+    expect(resolveThemeChoice(themeChoiceFromParams(edited)).density.name).toBe(
+      "compact",
+    );
+  });
+
   it("lets a recipe suppress the platform it overrides", () => {
     expect(themeChoiceParams({ platform: "win32", recipe: "aero" })).toEqual([
       ["recipe", "aero"],
+      ["density", resolveThemeChoice({ recipe: "aero" }).density.name],
     ]);
     expect(resolveThemeChoice({ platform: "win32", recipe: "aero" })).toEqual(
       resolve({ recipe: "aero" }),
@@ -202,6 +226,11 @@ describe("themeChoiceParams", () => {
     // …but it is still written, because the fallback belongs to the platform:
     // the same link edited to Windows would otherwise change its density.
     expect(themeChoiceParams(macos)).toContainEqual(["density", "compact"]);
+    // A row that never named the axis writes the preset it resolves to.
+    expect(themeChoiceParams({ platform: "darwin" })).toContainEqual([
+      "density",
+      "compact",
+    ]);
   });
 
   it("is canonical: re-encoding a decoded link writes the same link", () => {

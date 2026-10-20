@@ -3792,19 +3792,27 @@ describe("the applied level's documents", () => {
 describe("the shareable theme choice's documents", () => {
   const readmeProse = readmeSource.replace(/\s+/g, " ");
 
-  it("writes a density even where the resolved preset already names it", () => {
+  it("writes the density it resolves, whether the row names it or not", () => {
     // The exception the prose states: a macOS row is already `compact`, so
     // omitting the axis would resolve the same theme today. The writer writes it
     // anyway, so a platform edit in a shared link cannot change the density.
     expect(
       Tokens.themeChoiceParams({ platform: "darwin", density: "compact" }),
     ).toContainEqual(["density", "compact"]);
+    // The same rule for a row that never named the axis: plan 755 wrote no
+    // density here, so the link lost its `compact` on the Windows edit.
+    expect(Tokens.themeChoiceParams({ platform: "darwin" })).toContainEqual([
+      "density",
+      "compact",
+    ]);
   });
 
   it("states the density exception instead of a minimality rule", () => {
-    expect(markdownProse).toContain("Density is the one exception");
-    expect(readmeProse).toContain("density even when it equals the resolved");
-    expect(designSystem).toContain("every valid density");
+    expect(markdownProse).toContain(
+      "Density is the one exception: it is always written, as the preset the choice resolves to",
+    );
+    expect(readmeProse).toContain("the density the row resolves to");
+    expect(designSystem).toContain("even when the row names none");
 
     [markdownProse, designSystem, readmeProse].forEach((document) => {
       expect(document).not.toContain(
@@ -3821,6 +3829,7 @@ describe("the shareable theme choice's documents", () => {
     );
 
     expect(source).toContain("deliberately not minimal");
+    expect(source).toContain("the one axis always written");
     expect(source).not.toContain(
       "An axis is written only when omitting it would resolve",
     );

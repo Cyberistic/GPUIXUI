@@ -119,8 +119,7 @@ const encodeThemeChoice: Readonly<
         : undefined,
   recipe: (choice) =>
     isPlatformRecipeName(choice.recipe) ? choice.recipe : undefined,
-  density: (choice) =>
-    isDensityName(choice.density) ? choice.density : undefined,
+  density: (choice) => resolveThemeChoice(choice).density.name,
 };
 
 /**
@@ -132,12 +131,13 @@ const encodeThemeChoice: Readonly<
  * selects. A valid `recipe` suppresses `platform`, which
  * {@link resolveThemeChoice} could never apply beside it.
  *
- * `density` is the one axis written even when it equals the resolved theme's
- * preset, so the writer is deliberately not minimal there. Its fallback is the
- * *resolved theme's* preset, which the platform supplies (macOS ships
- * `compact`), so omitting it would make the same stored row resolve differently
- * the moment a reader edits the platform in the link: `platform=darwin` without
- * a density is `compact`, and the same link with `win32` is `comfortable`.
+ * `density` is the one axis always written: the preset the choice resolves to,
+ * which is the platform's (or the recipe's) when the row names none. Its
+ * fallback belongs to another axis, so a link without a density would change
+ * meaning the moment a reader edits that axis: `platform=darwin` writes
+ * `density=compact`, and editing the same link to `win32` keeps `compact`
+ * instead of silently taking Windows' `comfortable`. The writer is therefore
+ * deliberately not minimal there.
  *
  * The writer is the other half of {@link themeChoiceFromParams}: a consumer
  * clears `themeChoiceKeys` on its search object and then applies these entries,

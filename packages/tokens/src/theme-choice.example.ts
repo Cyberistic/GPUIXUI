@@ -1,4 +1,9 @@
-import { resolveThemeChoice, type Theme, type ThemeChoice } from "./index.js";
+import {
+  resolveThemeChoice,
+  themeChoiceParams,
+  type Theme,
+  type ThemeChoice,
+} from "./index.js";
 
 /**
  * A settings row as it comes back from storage. The shape is decoded by the
@@ -15,3 +20,10 @@ export const storedChoice: ThemeChoice = {
 
 /** The theme the stored row resolves to: Windows, AAA dark, compact. */
 export const resolvedChoice: Theme = resolveThemeChoice(storedChoice);
+
+/**
+ * The canonical link for a row that names only a platform: the platform and the
+ * density it resolves to, so the link keeps macOS' `compact` when a reader
+ * edits the platform axis. Asserted in `theme-choice-params.test.ts`.
+ */
+export const canonicalLink = themeChoiceParams({ platform: "darwin" });
