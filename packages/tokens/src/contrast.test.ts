@@ -180,39 +180,23 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import * as Tokens from "./index.js";
 import {
   colorRoles,
   compositeOver,
-  caretPairs,
   contrastFloors,
   contrastPairClasses,
   contrastPairs,
   contrastRatio,
-  controlBoundarySoftPairs,
-  dialogSurfacePairs,
-  disabledFillPairs,
   elevationContentSurfaces,
   elevationSurfaces,
   extendTheme,
   getTheme,
   inactivePairs,
-  inactivePanelActionPairs,
-  inactiveSoftPairs,
-  invalidRingPairs,
-  markPairs,
-  nativeHighlightPairs,
-  nativeSyntaxPairs,
   overlayWashPairs,
-  ringSoftPairs,
-  ringTrackPairs,
-  rowPressStepPairs,
   selectionPressPairs,
-  selectionPressStepPairs,
   selectionFillPairs,
   selectionFillInactivePairs,
   selectionFillWashPairs,
-  selectionInactivePairs,
   selectionInputPairs,
   selectionLinkPairs,
   selectionPairs,
@@ -223,12 +207,10 @@ import {
   selectionSurfaces,
   selectionWashPairs,
   shippedThemes,
-  skeletonPulsePairs,
   softActionLabelPairs,
   softActionPairs,
   softActionStepPairs,
   softBorderSurfacePairs,
-  softFieldPairs,
   softPanelTextPairs,
   stateFillSurfacePairs,
   statusFillPairs,
@@ -236,8 +218,6 @@ import {
   themeContrastFailures,
   themeContrasts,
   toastTonePairs,
-  trackMarkPairs,
-  trackSurfacePairs,
   washStepPairs,
   type ContrastPair,
 } from "./index.js";
@@ -249,6 +229,7 @@ import {
   quietRingFailures,
   quietRingTheme,
 } from "./contrast.example.js";
+import { publishedPairLists } from "./published-pair-lists.js";
 
 /**
  * Guards the defect plan 349 fixes: every "unique" assertion in this suite built
@@ -274,65 +255,6 @@ const duplicatePairKeys = (
     }
     return [key];
   });
-};
-
-/**
- * Every exported pair list, keyed by its export name. The key type derives from
- * the package's exports, so a new `*Pairs` value fails `check-types` until it is
- * listed here; the record form, rather than an array literal, is what makes the
- * inventory compile-enforced.
- */
-type PairListName = {
-  [Name in keyof typeof Tokens]: Name extends `${string}Pairs` ? Name : never;
-}[keyof typeof Tokens];
-
-const publishedPairLists: Readonly<
-  Record<PairListName, ReadonlyArray<ContrastPair>>
-> = {
-  caretPairs,
-  contrastPairs,
-  controlBoundarySoftPairs,
-  dialogSurfacePairs,
-  disabledFillPairs,
-  inactivePairs,
-  inactivePanelActionPairs,
-  inactiveSoftPairs,
-  invalidRingPairs,
-  markPairs,
-  nativeHighlightPairs,
-  nativeSyntaxPairs,
-  overlayWashPairs,
-  ringSoftPairs,
-  ringTrackPairs,
-  rowPressStepPairs,
-  selectionPressPairs,
-  selectionPressStepPairs,
-  selectionFillInactivePairs,
-  selectionFillPairs,
-  selectionFillWashPairs,
-  selectionInactivePairs,
-  selectionInputPairs,
-  selectionLinkPairs,
-  selectionPairs,
-  selectionSoftPairs,
-  selectionSoftWashPairs,
-  selectionStatusPairs,
-  selectionStepPairs,
-  selectionWashPairs,
-  skeletonPulsePairs,
-  softActionLabelPairs,
-  softActionPairs,
-  softActionStepPairs,
-  softBorderSurfacePairs,
-  softFieldPairs,
-  softPanelTextPairs,
-  stateFillSurfacePairs,
-  stateStepPairs,
-  statusFillPairs,
-  toastTonePairs,
-  trackMarkPairs,
-  trackSurfacePairs,
-  washStepPairs,
 };
 
 const publishedPairListEntries = Object.entries(publishedPairLists);
