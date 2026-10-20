@@ -96,6 +96,10 @@ export const linuxPlatformStyle = {
       inputForeground: "#FFFFFF",
       hover: "#3A3A3A",
       active: "#464646",
+      // The card, popover and quiet panel are #303030, so the fill is its own
+      // step above them (1.126:1) rather than the identity's neutral-850 (plan
+      // 737).
+      disabled: "#383838",
       skeleton: "#585858",
       track: "#2A2A2A",
       secondary: "#3A3A3A",

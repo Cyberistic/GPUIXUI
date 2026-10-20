@@ -311,9 +311,10 @@ export interface DisabledControlStyle {
  * label with the fill it sits on: a filled primary action's label measures
  * **1.575:1** on the identity light canvas and **1.468:1** at worst (Linux
  * light, a card), and a disabled field's typed text **3.273:1** on the macOS
- * light `input` fill, under the 3:1 `inactive` floor. The fill is allowed to sit
- * near the panel — no neutral clears both a white card and the quiet panel — so
- * the `border` edge carries the control's shape.
+ * light `input` fill, under the 3:1 `inactive` floor. The fill is a perceivable
+ * step off the five surfaces a control is placed on — `disabledFillPairs` holds
+ * it to the surface floor — and the `border` edge is held to the divider floor
+ * on the fill, so the shape survives on any panel.
  *
  * Inside a tone-tinted status panel the canvas `disabled` fill is not a panel
  * shape: keep the resting `softAction` fill and paint `disabledForeground`

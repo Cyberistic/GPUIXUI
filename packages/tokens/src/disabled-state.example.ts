@@ -9,8 +9,9 @@
  * measures **3.273:1** on the macOS light `input` fill.
  *
  * A control that paints `disabledControl(theme)` instead keeps its label at the
- * inactive floor and its shape on any panel: the fill is allowed to sit near the
- * panel, so the edge carries the shape. Inside a tone-tinted status panel the
+ * inactive floor and its shape on any panel: the fill is a perceivable step off
+ * every surface a control is placed on (`disabledFillPairs`), and the edge is
+ * held to the divider floor on the fill. Inside a tone-tinted status panel the
  * canvas fill is not a panel shape — keep the resting `softAction` fill and paint
  * `disabledForeground` (`inactivePanelActionPairs`).
  */

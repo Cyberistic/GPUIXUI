@@ -398,7 +398,10 @@ export const lightColors = {
   selected: palette.iris[100],
   selectedActive: "#E7EAFF",
   selectedForeground: palette.iris[800],
-  disabled: palette.neutral[100],
+  // A designed half-step between neutral-100 (the `hover` wash) and neutral-200
+  // (the `active` wash): the fill of an unavailable control is its own neutral,
+  // one perceivable step off the canvas, a card and the quiet panel (plan 737).
+  disabled: "#E6EAF0",
   disabledForeground: palette.neutral[600],
   skeleton: palette.neutral[300],
   track: "#D5D9E2",
@@ -514,7 +517,10 @@ export const darkColors = {
   selected: "#402F94",
   selectedActive: "#312471",
   selectedForeground: palette.iris[200],
-  disabled: palette.neutral[850],
+  // Neutral-850 is the `muted` panel and the `popover`, so an unavailable
+  // control had no fill on either; the next ramp step is the fill's own neutral
+  // and clears both at 1.131:1 (plan 737).
+  disabled: palette.neutral[800],
   disabledForeground: "#B0B8C6",
   skeleton: "#434C5A",
   track: palette.neutral[700],

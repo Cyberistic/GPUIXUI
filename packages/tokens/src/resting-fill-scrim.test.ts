@@ -130,6 +130,6 @@ describe("the scrim over the resting fills it excluded", () => {
     // elevation shadow, so only plan 651's press pairs grow the plain list.
     expect(overlayWashPairs).toHaveLength(21);
     expect(dialogSurfacePairs).toHaveLength(21);
-    expect(contrastPairs.length).toBe(465);
+    expect(contrastPairs.length).toBe(470);
   });
 });

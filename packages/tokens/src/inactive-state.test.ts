@@ -58,7 +58,7 @@ describe("inactive state", () => {
 
   it("reports the pre-fix inactive label through the public checker", () => {
     const oldLight = extendTheme(lightTheme, {
-      colors: { disabledForeground: "#A1A9B7" },
+      colors: { disabledForeground: "#A1A9B7", disabled: "#EEF1F5" },
     });
     const lightInactive = themeContrastFailures(oldLight).filter(
       ({ pairClass }) => pairClass === "inactive",
@@ -69,10 +69,9 @@ describe("inactive state", () => {
       pairClass: "inactive",
       floor: 3,
     });
-    expect(contrastRatio("#A1A9B7", lightTheme.colors.disabled)).toBeCloseTo(
-      2.09,
-      2,
-    );
+    // The historical pair plan 306 measured: the pre-306 label on the fill it
+    // shipped with. Plan 737 moved the fill, so the case pins both hexes.
+    expect(contrastRatio("#A1A9B7", "#EEF1F5")).toBeCloseTo(2.09, 2);
 
     const oldDark = extendTheme(darkTheme, {
       colors: { disabledForeground: "#545D6C" },
@@ -88,12 +87,9 @@ describe("inactive state", () => {
     );
   });
 
-  it("keeps the fill exempt by measuring the edge that carries the shape", () => {
+  it("keeps the shape on the edge the control paints on its fill", () => {
     expect(contrastPairs).toContainEqual(["border", "disabled", "divider"]);
     expect(contrastPairs).toContainEqual(["border", "muted", "divider"]);
-    expect(
-      contrastPairs.some(([foreground]) => foreground === "disabled"),
-    ).toBe(false);
     shipped.forEach(({ label, theme }) => {
       const floor = contrastFloors[theme.contrast].divider;
       (["disabled", "muted"] as const).forEach((fill) => {

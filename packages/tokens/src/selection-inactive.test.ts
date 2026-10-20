@@ -61,8 +61,10 @@ describe("the unavailable label under the selection wash", () => {
   });
 
   it("reports the shipped light value through the public checker", () => {
+    // The pre-510 label on the fill it was measured with: plan 737 moved the
+    // `disabled` fill, so the case pins both hexes and keeps its six surfaces.
     const old = extendTheme(themes.light, {
-      colors: { disabledForeground: "#6E7787" },
+      colors: { disabledForeground: "#6E7787", disabled: "#EEF1F5" },
     });
     const failures = themeContrastFailures(old).filter(
       ({ foreground }) => foreground === "disabledForeground",

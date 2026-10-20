@@ -334,6 +334,24 @@ export const stateFillSurfacePairs: readonly ContrastPair[] =
     ),
   );
 
+/**
+ * The disabled fill, measured on each surface a filled control paints on.
+ *
+ * `disabledControl` returns the fill as the control's shape (`opacity` is 1, so
+ * nothing composites it), and a disabled action sits on the same panels an
+ * enabled one does. Plan 306 exempted it — "no neutral can clear both a white
+ * card and the quiet panel" — but the shipped light fill cleared both at once
+ * (the floor is 1.05:1, not 3:1), and the identity dark fill **was** the `muted`
+ * panel and the `popover` a menu paints, so an unavailable control painted no
+ * fill there while every check returned `[]`.
+ *
+ * The pointer washes stay out, exactly as they do for an interactive fill: a
+ * wash is a row state, not the panel a control is placed on.
+ */
+export const disabledFillPairs: readonly ContrastPair[] = stateFillSurfaces.map(
+  (background): ContrastPair => ["disabled", background, "surface"],
+);
+
 /** The interactive compositions, so a later fill list does not repeat one. */
 const stateFillCompositions: ReadonlySet<string> = new Set(
   stateFillSurfacePairs.map(
@@ -1182,6 +1200,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...controlFillPairs,
   ...selectedRowEdgePairs,
   ...stateFillSurfacePairs,
+  ...disabledFillPairs,
   ...statusFillPairs,
   ...softActionPairs,
   ...softActionStepPairs,

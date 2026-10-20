@@ -191,6 +191,7 @@ import {
   contrastRatio,
   controlBoundarySoftPairs,
   dialogSurfacePairs,
+  disabledFillPairs,
   elevationContentSurfaces,
   elevationSurfaces,
   extendTheme,
@@ -292,6 +293,7 @@ const publishedPairLists: Readonly<
   contrastPairs,
   controlBoundarySoftPairs,
   dialogSurfacePairs,
+  disabledFillPairs,
   inactivePairs,
   inactivePanelActionPairs,
   inactiveSoftPairs,
@@ -647,7 +649,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(465);
+    expect(contrastPairs.length).toBe(470);
     expect(statusFillPairs).toHaveLength(32);
     expect(
       statusFillPairs.map(([foreground, background]) => [

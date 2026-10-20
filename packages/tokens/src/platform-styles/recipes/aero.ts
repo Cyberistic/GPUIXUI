@@ -57,7 +57,9 @@ export const aeroPlatformRecipe = {
       secondaryForeground: "#101828",
       secondaryHover: "#CFDFF0",
       secondaryActive: "#C2D4E9",
-      disabled: "#EAF0F7",
+      // The quiet panel is #EBF3FC, so the inherited identity fill measured
+      // 1.025:1 on it; this step clears it at 1.076:1 (plan 737).
+      disabled: "#E2EBF5",
       disabledForeground: "#5A6678",
       primary: "#1565C0",
       primaryForeground: "#FFFFFF",

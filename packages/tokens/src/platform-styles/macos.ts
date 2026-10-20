@@ -115,6 +115,10 @@ export const macosPlatformStyle = {
       inputForeground: "#F5F5F7",
       hover: "#3A3A3C",
       active: "#404042",
+      // The card, popover and quiet panel are #2C2C2E, so the fill is its own
+      // step above them (1.139:1) rather than the identity's neutral-850 (plan
+      // 737).
+      disabled: "#353537",
       skeleton: "#525254",
       track: "#242426",
       secondary: "#3A3A3C",
