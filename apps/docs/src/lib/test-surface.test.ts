@@ -231,6 +231,7 @@ describe("the page", () => {
       "## Scrolling",
       "## Paint and accessibility",
       "## The render loop",
+      "## Members another page owns",
       "## The suite this repository runs",
       "## What is not provided",
     ].filter((heading) => !page.includes(heading));

@@ -131,12 +131,15 @@ proves the library; this page is the consumer side).
 9. `## The render loop` — `flush` → `drainEvents` → `dispatchNativeEvents`;
    `applyBatch` is what `render` calls. No `act` and no `waitFor`: the loop is
    synchronous.
-10. `## The suite this repository runs` — a compact table of the layers with
+10. `## Members another page owns` — `<TestMethodExclusions />`: the 16 public
+    members another page documents, with its owner, so a reader from a
+    completion menu knows where the rest is.
+11. `## The suite this repository runs` — a compact table of the layers with
     their real commands: `nub run test` (logic), `nub run --filter
     @gpuixui/components test:behaviour` (this renderer, second vitest project),
     `nub run --filter playground smoke` (capability scenarios), the docs browser
     smokes (the docs site only). Link Contributing and Native smoke suite.
-11. `## What is not provided` — `<TestingAbsences />`: a DOM, jsdom/happy-dom,
+12. `## What is not provided` — `<TestingAbsences />`: a DOM, jsdom/happy-dom,
     React Testing Library, Playwright/Cypress/WebDriver, Storybook, snapshot and
     golden-image assertions, `act`/`waitFor`, renderer mocking, coverage — each
     with the honest substitute.

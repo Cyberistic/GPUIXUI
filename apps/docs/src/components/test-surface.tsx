@@ -106,13 +106,10 @@ export function TestMethods({ group }: { readonly group: string }) {
  */
 export function TestMethodExclusions() {
   return (
-    <section data-test-method-exclusions>
-      <h3 className="mt-5 mb-1 text-base font-medium">
-        Members another page owns
-      </h3>
+    <div data-test-method-exclusions>
       <p className="mb-2 text-sm text-fd-muted-foreground">
-        These are public on the same class. Each is documented where a test
-        would look for its subject, not duplicated here.
+        These members are public on the same class. Each is documented where a
+        test would look for its subject, not duplicated here.
       </p>
       <Table
         label="Test renderer members owned by another page"
@@ -131,7 +128,7 @@ export function TestMethodExclusions() {
           </tr>
         ))}
       </Table>
-    </section>
+    </div>
   );
 }
 
