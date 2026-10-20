@@ -4338,6 +4338,17 @@ derives the figure from the shipped light palette and the floor from
 separates this claim from the high-contrast `warning` *surface*, whose edge
 mixture is a different role (plan `818`).
 
+`packages/tokens/src/beside-derived-figures.test.ts` holds the two passages that
+state a figure beside a derived claim. §*Text selection* prints the accent wash's
+ratio on a `primary` fill and on the five chips it disappears into, while
+`selection-on-fill.test.ts` holds only the *set* of fills affected; §*Numeric
+metrics* prints the chip's own bound and the multiple a theme compares its
+`chipMinWidth` against, after a clause `docs.test.ts` derives and stops before.
+Both sentences looked owned, so the numbers inside them could drift while every
+gate passed. The suite derives each ratio from the shipped themes, the bound from
+the theme's own spacing, caption and adornment metrics, and the floor each one is
+held to, and it reads the sentences those figures belong to (plan `819`).
+
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.

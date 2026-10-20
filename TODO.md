@@ -54,7 +54,19 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 373/448
+`[x]` `[████████░░]` 374/449
+
+`[x]` Own the two catalogue sentences that state a figure beside a derived
+claim — `docs.test.ts` derives §Text selection's *set* of affected fills (through
+`selection-on-fill.test.ts`'s list) and the first half of the fixed-surface
+sentence, so both passages looked owned while the numbers a reader compares were
+prose: the accent wash's ratio on `primary` and on the five chips it disappears
+into, and the chip's own `44px` bound with the `1.82×` a theme compares
+`chipMinWidth` against. Replacing all eight left 220 files / 7130 tests green;
+`beside-derived-figures.test.ts` derives each ratio, the bound from the theme's
+spacing, caption and adornment metrics, and the floor each is held to, reads both
+sentences, and proves a palette or metric edit moves the figure; no colour, pair,
+floor, metric or shipped theme moves (plan 819)
 
 `[x]` Own the light `warning` fill's fill-only figure — the `1.78:1` against the
 canvas that justifies "`warning` and `info` carry no mark pair" is derived by
