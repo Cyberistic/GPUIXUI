@@ -205,7 +205,15 @@ panel is a raised fill instead (see
 [An action inside a status panel](#an-action-inside-a-status-panel)).
 
 The same fill-versus-text split applies to the brand action. `primary` is a
-surface: it carries `primaryForeground`, and it is measured only as a fill.
+surface: it carries `primaryForeground`, and it is measured as one — a fill on
+`background`, `card`, `popover`, `muted` and the field's `input` fill, the
+`primaryForeground` label on it, and the `primaryHover` → `primary` step. It is
+also a **mark**: a progress segment, a slider fill or thumb ring, a rating star,
+a combobox check and a timeline dot paint it, so the same role is held at the
+mark floor — 3:1, 4.5:1 at AAA — on `background`, `card`, `popover`, `muted`,
+the field's `input` fill, the `track` groove and the
+`hover`/`selected`/`selectedActive` fills a chosen option marks (`markPairs`,
+`trackMarkPairs`). It is not text.
 Brand-toned text — a link, a label, an icon — reads `primaryText`, held to
 4.5:1 on `background`, `card`, `popover` and `muted`, on the `hover` and
 `active` washes the Link variant paints behind its own label, on the
@@ -226,7 +234,7 @@ A runnable example lives in
 | `cardForeground` | `#191D25` | `#EEF1F5` | text on `card` |
 | `popover` | `#FFFFFF` | `#222730` | menus, popovers and dialogs |
 | `popoverForeground` | `#191D25` | `#F6F8FA` | text on `popover` |
-| `primary` | `#5F4BDB` | `#A7A9FF` | primary action |
+| `primary` | `#5F4BDB` | `#A7A9FF` | primary action fill; also the mark a progress segment, slider fill or thumb ring, rating star, combobox check and timeline dot paint, at the mark floor |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
 | `primaryActive` | `#3B2C8F` | `#E0E3FF` | primary action while pressed |

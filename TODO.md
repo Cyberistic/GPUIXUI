@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 366/445
+`[x]` `[████████░░]` 367/445
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2879,6 +2879,20 @@ reads the metrics (`Toggle`, `ToggleGroup`, a `Select` option row's
 `density-exception.test.ts` holds the prose to `densityPresets.spacious` and
 fails on the old unconditional sentence. No token value, pair, floor, metric or
 shipped set moves (plan 720)
+`[x]` Hold `primary`'s measurement classes — plan 332 split a solid role into a
+fill and a mark, so the role has carried five `surface` pairs, its on-colour,
+its step and **nine** `mark` pairs ever since, and `docs/tokens.md` and the
+package README still said it was "measured only as a fill": the `primaryText`
+half of the same paragraph is held by `docs.test.ts` and the `primary` half was
+read by nothing, so the phrase survived while the mark compositions a copied
+theme erases first — a progress segment, a slider fill or thumb ring, a rating
+star, a combobox check, a timeline dot, the tightest shipped at **3.149:1** —
+went unmentioned; both documents, the role table's Use cell and
+`ThemeColors.primary`'s JSDoc now name the four classes and all nine surfaces,
+and `primary-mark-claims.test.ts` derives both from
+`contrastPairs`/`markPairs`/`trackMarkPairs`, reads the mark clause as the unit
+and rejects the old wording. No colour, pair, floor, metric, role or shipped
+theme moves (plan 806)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

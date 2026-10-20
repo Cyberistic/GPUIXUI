@@ -119,7 +119,12 @@ export interface ThemeColors {
   readonly popover: string;
   /** Text on `popover`. */
   readonly popoverForeground: string;
-  /** Primary action background. */
+  /**
+   * Primary action background. Also the fill a progress segment, a slider fill
+   * or thumb ring, a rating star, a combobox check and a timeline dot paint, so
+   * the role is measured as a mark as well as a fill (`markPairs`,
+   * `trackMarkPairs`).
+   */
   readonly primary: string;
   /** Text and icons on `primary`. */
   readonly primaryForeground: string;
