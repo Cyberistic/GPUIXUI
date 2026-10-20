@@ -413,6 +413,7 @@ references without buying correctness.
 | [815](./815-border-role-figures.md) | The border role's two floors and its fill list have no owner | F | 080, 084, 318, 327, 335, 352, 501, 550, 555, 683, 754, 814 | done |
 | [817](./817-state-floor-figures.md) | The state table's floor figures and the inactive floor have no owner | F | 306, 309, 347, 354, 381, 393, 501, 510, 543, 674, 737, 815 | done |
 | [818](./818-warning-fill-figures.md) | The light `warning` fill's fill-only figure is restated in twelve passages and derived in two | F | 057, 332, 348, 399, 733, 749, 806, 810, 815, 817 | done |
+| [819](./819-beside-derived-figures.md) | Two catalogue passages state figures beside a derived claim | F | 344, 382, 504, 513, 620, 624, 627, 645, 667, 818 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
