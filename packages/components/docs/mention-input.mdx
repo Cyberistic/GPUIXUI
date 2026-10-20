@@ -58,7 +58,8 @@ reports both `onValueChange` and `onMention`.
 | ------ | ------ |
 | `ArrowDown` / `ArrowUp` | moves the highlight, wrapping |
 | `Enter` | inserts the highlighted name (arrives as the input's submit event) |
-| Press a row | inserts that name |
+| Click a row | inserts that name on the release; a press dragged off the row inserts nothing |
+| `Enter` / `Space` on a focused row | inserts that row's name — `Enter` on press, `Space` on release (plan 759) |
 | `Escape` | closes the list, text unchanged — from the field or a focused row |
 | Typing a query with no matches | closes the list |
 | `Tab` | not claimed: the platform moves focus out of the field |
@@ -100,8 +101,8 @@ never looks editable or focused (plan 527).
 - `role="listbox"` and `role="option"` are **dropped** by
   `@gpuix/native@0.10.0`'s accessibility dump (measured), so the list is not
   announced as a listbox. There is no `aria-activedescendant` either.
-- Rows are focusable (`tabIndex=0`), so `Tab` then `Enter` can pick a row; the
-  input's `Tab` behaviour is the platform's. A focused row paints the token ring
+- Rows are focusable (`tabIndex=0`), so `Tab` then `Enter` or `Space` can pick a
+  row; the input's `Tab` behaviour is the platform's. A focused row paints the token ring
   from the renderer's focused host (plan 754) even when it is not the
   highlighted row, and a field with `autoFocus` seeds the group ring (plan 522).
 
@@ -125,11 +126,12 @@ never looks editable or focused (plan 527).
 
 ## Verification
 
-`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (19 tests):
-opening, narrowing, arrow movement, Enter insertion, row presses, Escape from the
-field and from a focused row, one surface per Escape inside a dialog,
-no-match closing, a non-finite `maxVisible` listing every match, the two
-callbacks firing once, a focused row's ring, the group
+`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (21 tests):
+opening, narrowing, arrow movement, Enter insertion, a clicked row, a press
+dragged off a row inserting nothing, `Space` inserting on release rather than on
+press, Escape from the field and from a focused row, one surface per Escape
+inside a dialog, no-match closing, a non-finite `maxVisible` listing every match,
+the two callbacks firing once, a focused row's ring, the group
 ring a field's `autoFocus` seeds, a disabled field that ignores `autoFocus`, stays
 out of the tab order and paints no ring, and the caller's
 `onKeyDown`/`onFocus`/`onBlur` and row handlers composing with the component's

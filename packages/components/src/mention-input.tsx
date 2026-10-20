@@ -36,10 +36,11 @@ import {
   useState,
   type ReactElement,
 } from "react";
+import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
 import { useFocusState } from "./internal/focus.js";
-import { isActivation, isDismiss, isDown, isUp } from "./internal/key.js";
+import { isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -356,13 +357,19 @@ export interface MentionInputItemProps extends Omit<Props, "children"> {
   readonly label?: string;
 }
 
-/** One suggestion row. Press it, or highlight it and press Enter. */
+/**
+ * One suggestion row. Click it, or focus it and press Enter or Space. It is a
+ * button, so it activates on the release: a press dragged off the row, or Space
+ * released after focus moved away, inserts nothing (plan 759).
+ */
 export const MentionInputItem = ({
   value,
   label,
   style,
+  onClick,
   onMouseDown,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   autoFocus = false,
@@ -380,6 +387,18 @@ export const MentionInputItem = ({
   }, []);
   const setElement = useMergedRef<PublicInstance | null>(attach, ref);
   const [focused, setFocused] = useFocusState(autoFocus, false, instance?.id);
+  const keyHandlers = activationHandlers(() => select(value), {
+    onKeyDown: (event) => {
+      onKeyDown?.(event);
+      // A focused row can be the surface the user dismisses from; the claim
+      // keeps an enclosing dialog open for the next Escape (plan 399).
+      if (isDismiss(event)) {
+        claimEvent(event);
+        close();
+      }
+    },
+    onKeyUp,
+  });
 
   return (
     <div
@@ -397,21 +416,12 @@ export const MentionInputItem = ({
         setFocused(false);
         onBlur?.(event);
       }}
-      onMouseDown={(event) => {
-        onMouseDown?.(event);
+      onMouseDown={(event) => onMouseDown?.(event)}
+      onClick={(event) => {
+        onClick?.(event);
         select(value);
       }}
-      onKeyDown={(event: EventPayload) => {
-        onKeyDown?.(event);
-        // A focused row can be the surface the user dismisses from; the claim
-        // keeps an enclosing dialog open for the next Escape (plan 399).
-        if (isDismiss(event)) {
-          claimEvent(event);
-          close();
-          return;
-        }
-        if (isActivation(event)) select(value);
-      }}
+      {...keyHandlers}
       style={mergeStyles(
         {
           display: "flex",

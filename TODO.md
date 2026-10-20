@@ -1141,6 +1141,15 @@ retired once both branches are one
       the file, Pagination 20/20), both new native cases failing at `HEAD` with
       `[9]` and `[2.9]`; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       synced (owner: components)
+    - [x] A mention row activates on the release, like every other button-shaped
+      part — plan 759; measured 2026-10-20: a press on a suggestion row inserted
+      on **mouse down** (dragging off and releasing elsewhere still inserted
+      `"ana"`), and `Space` inserted on the key **press**, although the row draws
+      `role="button"` and the contract is Enter on press / Space on release /
+      pointer on click. The row uses `activationHandlers` plus `onClick`,
+      composing the caller's handlers and keeping the Escape claim; 2 native
+      cases (Mention input 19 → 21), both failing at `HEAD`; docs,
+      `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced (owner: components)
     - [x] A nested modal owns its Tab — plan 728: measured 2026-10-20 that a
       confirmation opened from a dialog lost the keyboard on the first Tab
       (Cancel → the outer dialog's first control, while the confirmation stayed

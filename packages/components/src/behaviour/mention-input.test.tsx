@@ -3,8 +3,9 @@
  *
  * The bugs these guard: a list that never opens on `@`, a query that does not
  * narrow, arrows that do not move the highlight, Enter or a press that inserts
- * the wrong name, Escape/space that fail to close, a double `onMention`, and a
- * disabled field that opens the list.
+ * the wrong name, Escape/space that fail to close, a double `onMention`, a row
+ * that activates on the press instead of the release (plan 759), and a disabled
+ * field that opens the list.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -23,6 +24,7 @@ import {
   finishMotion,
   focusedTestId,
   nextTask,
+  requireBounds,
   until,
 } from "../internal/interaction.js";
 import { nodesWithRole } from "../internal/a11y.js";
@@ -193,6 +195,55 @@ describe("MentionInput", () => {
     mention.unmount();
   });
 
+  /**
+   * Activation contract (plan 759). The bug these guard, measured: the row ran
+   * `select` from `onMouseDown` and read Space through `isActivation` on key
+   * down, so a press dragged off the row still inserted a mention and Space
+   * could not be cancelled by moving focus before the release. A button-shaped
+   * control activates on the release (plans 332/334/640).
+   */
+  it("does not insert a mention when a press is dragged off the row", () => {
+    const onMention = vi.fn();
+    const mention = renderComponent(<Harness onMention={onMention} />);
+    type(mention, "@an");
+
+    const row = requireBounds(mention, "row-ana");
+    mention.renderer.nativeSimulateMouseDown(
+      row.x + row.width / 2,
+      row.y + row.height / 2,
+    );
+    // Empty window space: the suggestion list sits over the composer, so a
+    // release just below the field would land on another row.
+    mention.renderer.nativeSimulateMouseUp(1200, 760);
+
+    expect(onMention).not.toHaveBeenCalled();
+    expect(valueOf(mention)).toBe("@an");
+    expect(mention.renderer.findByTestId("row-ana")).toBeDefined();
+
+    mention.unmount();
+  });
+
+  it("inserts a mention on Space release, not on press", () => {
+    const onMention = vi.fn();
+    const mention = renderComponent(<Harness onMention={onMention} />);
+    type(mention, "@an");
+
+    const row = mention.renderer.findByTestId("row-anna");
+    expect(row).toBeDefined();
+    if (row === undefined) return;
+    mention.renderer.focusElement(row.id);
+
+    mention.renderer.nativeSimulateKeyDown(row.id, "space");
+    expect(onMention).not.toHaveBeenCalled();
+
+    mention.renderer.nativeSimulateKeyUp(row.id, "space");
+    expect(onMention).toHaveBeenCalledTimes(1);
+    expect(onMention).toHaveBeenCalledWith("anna");
+    expect(valueOf(mention)).toBe("@anna ");
+
+    mention.unmount();
+  });
+
   it("closes on Escape without changing the text", () => {
     const mention = renderComponent(<Harness />);
     type(mention, "@an");
@@ -317,6 +368,7 @@ describe("MentionInput", () => {
     clickCentreOf(pressed, "row-ana");
 
     expect(onMouseDown).toHaveBeenCalledTimes(1);
+    expect(onMention).toHaveBeenCalledTimes(1);
     expect(onMention).toHaveBeenCalledWith("ana");
     pressed.unmount();
 
@@ -331,6 +383,7 @@ describe("MentionInput", () => {
     keyed.renderer.simulateKeystrokes("enter");
 
     expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(onMention).toHaveBeenCalledTimes(1);
     expect(onMention).toHaveBeenCalledWith("ana");
     keyed.unmount();
   });
