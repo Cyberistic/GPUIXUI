@@ -53,6 +53,7 @@ import {
 } from "react";
 import { Badge } from "./badge.js";
 import { EmptyState } from "./empty-state.js";
+import { headingLevel, type HeadingLevel } from "./internal/heading.js";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
@@ -576,29 +577,35 @@ export const NotificationCentreContent = ({
 };
 
 /** {@link NotificationCentreHeader} props. */
-export interface NotificationCentreHeaderProps {
+export interface NotificationCentreHeaderProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
 /** The title and the panel actions, above the list. */
 export const NotificationCentreHeader = ({
   children,
+  style,
+  ...rest
 }: NotificationCentreHeaderProps) => {
   const theme = useTheme();
   assertParts(notificationCentreHeader, children);
 
   return (
     <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: theme.spacing.md,
-        padding: theme.spacing.lg,
-        borderBottomWidth: theme.borderWidth.thin,
-        borderColor: theme.colors.border,
-      }}
+      {...rest}
+      style={mergeStyles(
+        {
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: theme.spacing.md,
+          padding: theme.spacing.lg,
+          borderBottomWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+        },
+        style,
+      )}
     >
       {children}
     </div>
@@ -606,24 +613,34 @@ export const NotificationCentreHeader = ({
 };
 
 /** {@link NotificationCentreTitle} props. */
-export interface NotificationCentreTitleProps {
-  readonly children?: ReactNode;
+export interface NotificationCentreTitleProps extends Props {
+  /** The heading level in the document outline. Default `3`. */
+  readonly level?: HeadingLevel;
 }
 
-/** The panel's heading; defaults to the root's `label`. */
+/** The panel's heading; its level belongs to the surrounding outline. */
 export const NotificationCentreTitle = ({
+  level,
   children,
+  style,
+  ...rest
 }: NotificationCentreTitleProps) => {
   const theme = useTheme();
   const { label } = useNotificationCentre();
 
   return (
     <text
-      style={{
-        ...textStyle(theme, "label"),
-        color: theme.colors.foreground,
-        flexGrow: 1,
-      }}
+      role="heading"
+      {...rest}
+      aria-level={headingLevel(level, rest["aria-level"], 3)}
+      style={mergeStyles(
+        {
+          ...textStyle(theme, "label"),
+          color: theme.colors.foreground,
+          flexGrow: 1,
+        },
+        style,
+      )}
     >
       {children ?? label}
     </text>
@@ -706,12 +723,15 @@ export interface NotificationCentreListProps extends Omit<Props, "children"> {
   readonly emptyTitle?: string;
   /** Shown under the empty title. */
   readonly emptyDescription?: string;
+  /** Each group label's heading level. Default `4`, one below the title. */
+  readonly groupLevel?: HeadingLevel;
 }
 
 /** The scrollable rows, grouped by the caller's contiguous `group` labels. */
 export const NotificationCentreList = ({
   emptyTitle,
   emptyDescription,
+  groupLevel,
   style,
   testId,
   ref,
@@ -906,6 +926,8 @@ export const NotificationCentreList = ({
           row.kind === "header" ? (
             <text
               key={row.key}
+              role="heading"
+              aria-level={groupLevel ?? 4}
               style={{
                 ...textStyle(theme, "caption"),
                 color: theme.colors.mutedForeground,
@@ -1080,6 +1102,7 @@ export const notificationCentreMeta = {
     "the panel is non-modal: no focus trap and no `aria-modal`; `Tab` leaves it",
     "keyboard focus moves best-effort through `renderer.focusElement`; the active row's accent fill and ring are the visible cursor, and the feed scrolls it into view (plan 644), because 0.10.0 has no `aria-activedescendant`",
     "a focused row that is removed hands focus to the first live row only when nothing else holds native focus; the holder is remembered while the row exists, because a removed host cannot be read (plan 746)",
+    "a group label is a heading, not a labelled region: 0.10.0 has no `aria-labelledby`, so its rows are not associated with it",
   ],
   docs: "docs/notification-centre.mdx",
   example: "examples/notification-centre.example.tsx",

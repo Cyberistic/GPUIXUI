@@ -17,7 +17,10 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { nodesWithRole } from "../internal/a11y.js";
+import type { HeadingLevel } from "../internal/heading.js";
 import {
   clickCentreOf,
   focusedTestId,
@@ -114,6 +117,50 @@ const Centre = ({
         <NotificationCentreClear testId="clear" />
       </NotificationCentreHeader>
       <NotificationCentreList testId="feed" emptyTitle="No notifications" />
+    </NotificationCentreContent>
+  </NotificationCentre>
+);
+
+/** Two ungrouped notifications, so the panel title is the only heading. */
+const ungrouped: ReadonlyArray<NotificationItem> = [
+  { id: "build", title: "Build passed" },
+  { id: "sync", title: "Sync complete", read: true },
+];
+
+/** An open centre whose header parts are configurable, for the outline cases. */
+const Outline = ({
+  notifications,
+  level,
+  rawLevel,
+  groupLevel,
+  headerTestId,
+  titleTestId,
+  titleStyle,
+  children,
+}: {
+  readonly notifications: ReadonlyArray<NotificationItem>;
+  readonly level?: HeadingLevel;
+  readonly rawLevel?: number;
+  readonly groupLevel?: HeadingLevel;
+  readonly headerTestId?: string;
+  readonly titleTestId?: string;
+  readonly titleStyle?: { readonly backgroundColor: string };
+  readonly children?: ReactNode;
+}) => (
+  <NotificationCentre notifications={notifications} defaultOpen>
+    <NotificationCentreTrigger />
+    <NotificationCentreContent testId="panel">
+      <NotificationCentreHeader testId={headerTestId}>
+        <NotificationCentreTitle
+          level={level}
+          aria-level={rawLevel}
+          testId={titleTestId}
+          style={titleStyle}
+        >
+          {children}
+        </NotificationCentreTitle>
+      </NotificationCentreHeader>
+      <NotificationCentreList testId="feed" groupLevel={groupLevel} />
     </NotificationCentreContent>
   </NotificationCentre>
 );
@@ -618,6 +665,96 @@ describe("NotificationCentre", () => {
       Math.abs(requireBounds(root, "feed-n5").y - before),
     ).toBeLessThanOrEqual(1);
     expect(offsetOf(root)).toBeLessThan(beforeOffset);
+
+    root.unmount();
+  });
+
+  it("announces the panel title as a level-3 heading", () => {
+    const root = renderComponent(<Outline notifications={ungrouped} />);
+    const headings = nodesWithRole(root.renderer, "heading");
+
+    expect(headings.map((node) => node.name)).toEqual(["Notifications"]);
+    expect(headings.map((node) => node.level)).toEqual([Option.some(3)]);
+
+    root.unmount();
+  });
+
+  it("takes the title level from the caller", () => {
+    const explicit = renderComponent(
+      <Outline notifications={ungrouped} level={1} />,
+    );
+    expect(
+      nodesWithRole(explicit.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(1)]);
+    explicit.unmount();
+
+    // The typed prop wins over the raw attribute it replaces.
+    const both = renderComponent(
+      <Outline notifications={ungrouped} level={2} rawLevel={5} />,
+    );
+    expect(
+      nodesWithRole(both.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(2)]);
+    both.unmount();
+
+    // With no typed prop, the caller's raw aria-level is the level.
+    const raw = renderComponent(
+      <Outline notifications={ungrouped} rawLevel={5} />,
+    );
+    expect(
+      nodesWithRole(raw.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(5)]);
+    raw.unmount();
+  });
+
+  it("announces each group label as a heading below the title", () => {
+    const root = renderComponent(<Outline notifications={seed} />);
+    const headings = nodesWithRole(root.renderer, "heading");
+
+    expect(
+      headings.map((node) => [node.name, Option.getOrNull(node.level)]),
+    ).toEqual([
+      ["Notifications", 3],
+      ["Today", 4],
+      ["Earlier", 4],
+    ]);
+
+    root.unmount();
+
+    const moved = renderComponent(
+      <Outline notifications={seed} groupLevel={2} />,
+    );
+    expect(
+      nodesWithRole(moved.renderer, "heading").map((node) => [
+        node.name,
+        Option.getOrNull(node.level),
+      ]),
+    ).toEqual([
+      ["Notifications", 3],
+      ["Today", 2],
+      ["Earlier", 2],
+    ]);
+
+    moved.unmount();
+  });
+
+  it("addresses the header and the title", () => {
+    const root = renderComponent(
+      <Outline
+        notifications={ungrouped}
+        headerTestId="inbox-header"
+        titleTestId="inbox-title"
+        titleStyle={{ backgroundColor: "#FF0000" }}
+      >
+        Inbox
+      </Outline>,
+    );
+
+    expect(root.renderer.findByTestId("inbox-header")).toBeDefined();
+    expect(root.renderer.findByTestId("inbox-title")).toBeDefined();
+    expect(
+      root.renderer.findByTestId("inbox-title")?.style.backgroundColor,
+    ).toBe("#FF0000");
 
     root.unmount();
   });

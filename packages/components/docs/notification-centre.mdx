@@ -75,7 +75,10 @@ A group is a **contiguous** run of items with the same `group` label:
 
 `Today` is painted once before `a`, `Earlier` once before `c`. An item with no
 `group` gets no heading. A group label repeated after another run gets its own
-heading, so a filtered list never renames a section.
+heading, so a filtered list never renames a section. Each label is a real
+heading (`groupLevel`, default `4`, one below the title's default `3`), so a
+reader can jump between groups; the rows are not wrapped in a labelled group,
+because 0.10.0 has no `aria-labelledby` to associate them.
 
 ## Keyboard
 
@@ -99,11 +102,11 @@ panel is **non-modal**, so `Tab` leaves it rather than trapping focus.
 | `NotificationCentre` | the positioning root; owns open state and the derived rows | `notifications`, `onRead?`, `onMarkAllRead?`, `onClear?`, `open?`, `defaultOpen?`, `onOpenChange?`, `label?`, `empty?`, children |
 | `NotificationCentreTrigger` | the button, its label and the derived badge | Button props, `children?` (visible label only), `showBadge?` |
 | `NotificationCentreContent` | the anchored, non-modal panel, `role="region"` | `label?`, `side?` (default `bottom`), `align?` (default `end`), `sideOffset?`, `alignOffset?`, `collisionPadding?`, `autoFocus?`, children |
-| `NotificationCentreHeader` | the title/actions row | children |
-| `NotificationCentreTitle` | the panel heading | children (defaults to the root `label`) |
+| `NotificationCentreHeader` | the title/actions row | children, host props |
+| `NotificationCentreTitle` | the panel heading, `role="heading"` | children (defaults to the root `label`), `level?` (default `3`), host props; a raw `aria-level` is honoured |
 | `NotificationCentreMarkAll` | a ghost button bound to `onMarkAllRead` | Button props except `variant`/`size`; renders only with a handler |
 | `NotificationCentreClear` | a ghost button bound to `onClear` | Button props except `variant`/`size`; renders only with a handler |
-| `NotificationCentreList` | grouped rows, a scrolling viewport, or the empty state | `emptyTitle?`, `emptyDescription?`, host props |
+| `NotificationCentreList` | grouped rows, a scrolling viewport, or the empty state | `emptyTitle?`, `emptyDescription?`, `groupLevel?` (default `4`), host props |
 
 `notifications` is the only required prop. A row's data is `{ id, title,
 description?, timestamp?, group?, read? }`; an absent `read` means unread.
@@ -121,6 +124,16 @@ glyph); the badge and the name still follow the data.
 0.10.0 reports no accessible name from a text child, so each row is named
 `"{title}, unread"` or `"{title}, read"`. The unread dot is decorative; the name
 carries the state.
+
+### Headings
+
+The panel's title is `role="heading"` with `level` (default `3`) — the same rule
+as Card, Dialog and Empty state — and a raw `aria-level` is honoured when no
+typed level is passed. Each group label is a heading one level below it
+(`groupLevel`, default `4`), so move both together if you move the title: an
+outline where a group outranks its panel is worse than the default. The header
+and the title take host props, so `testId="inbox-title"` addresses the title
+like any other part.
 
 ## Placement
 
@@ -161,6 +174,9 @@ medium elevation. The badge is the theme's `primary`; the active row is
   be read after it is gone (plan 746).
 - State is app-owned: a remount resets nothing you persist, and nothing you do
   not persist.
+- **A group label is a heading, not a labelled region:** 0.10.0 has no
+  `aria-labelledby`, so a group's rows are not associated with its heading by
+  anything the runtime can announce.
 - No per-notification actions menu, bulk selection or toast bridge in v1. The
   centre is durable; a toast is transient.
 
@@ -170,7 +186,7 @@ medium elevation. The badge is the theme's `primary`; the active row is
 
 ## Verification
 
-`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (25 tests):
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (29 tests):
 closed by default with the derived count in the trigger's name, open and named
 by a press, opening that marks nothing read, contiguous grouping in the
 caller's order, unread dots and row names, one read request from a press with
@@ -184,7 +200,9 @@ without reading a row,
 a header action that keeps the reading cursor and focus in place, arrows and
 Enter still reaching the row that holds focus, a prepend that leaves the reader's
 row where it was, the light theme's roles, and a controlled close the caller
-refuses leaving the panel and focus where they are. Removing the focused row
+refuses leaving the panel and focus where they are. The panel title and each
+group label are headings with caller-owned levels, and the header and the title
+take a caller's `testId` and `style`. Removing the focused row
 hands focus to the first live row while a removal under the trigger's focus (or
 another row's) leaves it alone. The pure grouping
 and count rules live in `src/notification-centre/model.test.ts` (5 tests).

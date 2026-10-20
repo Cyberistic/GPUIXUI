@@ -1,9 +1,13 @@
 # 782 — The notification centre's title and group labels are headings
 
-**Status:** planned 2026-10-20. **Workstream:** components. **Number claim:**
-`782` is the first free number across every worktree — components last took
-`779`, tokens-theme holds `780`/`781`, primitives holds `780`/`781`; recorded in
-`PLAN.md` D30.
+**Status:** done 2026-10-20 — 4 native cases, all four red at `HEAD` (zero
+headings; `testId` `undefined`), five mutation proofs; Notification centre
+25 → 29 (`src/behaviour/notification-centre.test.tsx` 29/29), unit 504 in 47
+files, full native suite 989 passed / 20 failed of 1009 — the same recorded
+plan-540 binding classes as the pre-change run, `check`/`lint`/`test` exit 0.
+**Workstream:** components. **Number claim:** `782` is the first free number
+across every worktree — components last took `779`, tokens-theme and primitives
+hold `780`/`781`; recorded in `PLAN.md` D30.
 
 ---
 
