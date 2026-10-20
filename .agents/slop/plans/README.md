@@ -387,6 +387,7 @@ references without buying correctness.
 | [766](./766-status-row-surface-claims.md) | The status row counts a list of eight and names seven surfaces | F | 399, 548, 549, 651, 683 | done |
 | [767](./767-status-fill-chip-count.md) | The package front door counts eight solid chip surfaces | F | 399, 651, 683, 766 | done |
 | [770](./770-washed-inactive-figure.md) | The washed unavailable label's AAA figure is stale, and three more washed figures have no owner | F | 510, 512, 520, 714, 717, 745, 760 | done |
+| [772](./772-inset-ring-figures.md) | The inset ring's figure and count have one owner, and the source-count guard cannot see `sixteen` | F | 609, 717, 760, 770 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3945,6 +3946,23 @@ canvas — the tightest of the four document tones. The plan-510 history sentenc
 also loses the unguarded "thirteen", which the list has not held since plan
 `650`. No token value, pair, floor, metric, role or shipped theme moves;
 `contrastPairs` stays 470.
+
+Plan `772` gives the inset ring's two published numbers an owner outside the
+catalogue. `insetFocusRing` quotes **4.697:1** at the tightest and says `ring`
+meets `primary` at **1.000:1** in sixteen shipped sets; `docs/tokens.md` derived
+both, but `COMPONENTS.md`'s Focus state row and the helper's own JSDoc quoted the
+same two numbers with no derivation behind them, so a palette edit that moved a
+family foreground or changed a set's side failed the catalogue's case and left
+the other two places stale (falsifying either number in both places stayed green
+at 7024 tests). Three `figures.ts` entries now derive the ratio from
+`filledControlFamilies` × the three fills, `inset-focus-ring.test.ts` holds the
+ledger's count word and the JSDoc's "most" (`identicalCount * 2 >
+shippedThemes.length`), and the digit-only no-count guard in `figures.test.ts`
+learned the spelled-out forms — the rule plan `717` wrote could not see
+`sixteen shipped sets`, and `styles.ts` shipped exactly that one line away from
+the phrase the rule replaced. No token value, pair, floor, metric, role or
+shipped theme moves; the figure table moves 65 → 68 and `contrastPairs` stays
+**470**.
 
 ## How to use a plan
 
