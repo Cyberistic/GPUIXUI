@@ -272,3 +272,34 @@ was **wrong**, not merely advisory:
 - The permanent fix is still plan `022` §5. The added requirement from this
   recurrence: the liveness gate must be `time_updated`-based, not
   `time_idle`-based.
+
+## Recurrence 2026-10-20 16:52–16:56 — the 30-minute tick overlapped a running turn
+
+Measured while implementing plan `773` in this worktree:
+
+- This turn (`opencode run --title swarm:components`, pid `44939`, started
+  16:26) was mid-implementation when the supervisor's next tick started a
+  **second** `swarm:components` turn in the same directory (pid `28640`, started
+  **16:52:33**).
+- The second turn read the plan index — which listed `773` as pending, because
+  this turn had committed and pushed the plan — and began implementing the same
+  plan. `packages/components/src/date-picker/calendar.ts` gained a
+  `spanAvailable` helper at **16:55:32**, 15 s after this turn's last read of the
+  file, while this turn was running `date-picker.test.tsx`. The two writers'
+  changes are interleaved in the same four files.
+- The §5 gate cannot see this: both sessions are a single `opencode run` each,
+  the runner pid check sees only the newest, and the components package has no
+  per-file lock.
+- Resolution this time: **this turn (the older one) stood down.** Plan `772`
+  (a shortcut row's name) was complete, verified and pushed before the
+  collision. Plan `773` is committed and pushed as a plan only (`7daa8e85`);
+  its uncommitted implementation — this turn's day-grid half plus the newer
+  turn's month/year `spanAvailable` half — is left in the tree for the newer
+  turn, which is the one the supervisor will replace next. This turn's scratch
+  probe was deleted so it cannot poison the newer turn's suite, and no further
+  component file was touched.
+- The open defect this leaves for the newer turn: the `date-month` control's
+  disabled state depends on `hasAvailableMonth`, which now needs
+  `isMonthAvailable` to honour `hasAnyDay` (the newer turn's `spanAvailable`
+  already does); the one failing case at 16:55 was
+  `cannot open the month chooser when no month is available`.
