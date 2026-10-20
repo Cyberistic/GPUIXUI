@@ -143,7 +143,19 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 143/143 plans-and-harness
+`[~]` `[██████████]` 143/144 plans-and-harness
+
+`[~]` **Prove the field ink contract in the frame** per plan `797`: the library's
+      `nativeTextTheme` claims it keeps a field's "placeholder, caret and
+      selection in the same palette", every `Input`/`TextArea`/`NumberField`/OTP
+      cell passes it, and **no scenario reads a field's pixels** — so a runtime
+      that ignored the theme entirely passed the suite. Recon measured text ink
+      `#EEF1F5` (the `inputForeground` token), **placeholder `#8F8F8F` — the
+      runtime's fixed grey, not the `placeholder` token** (`0` px), **selection
+      `#3C4271` — the fixed `#7C86FF59` wash, not the `selection` token** (`0`
+      px), and the caret as the only themed ink (`theme.caret`) that paints only
+      in an **active** window (the offscreen host is inactive, so that half is
+      live-only). Plan: `.agents/slop/plans/797-field-ink-pixels.md`.
 
 `[x]` **Prove the modal veil in the frame** per plan `791`: the shipped
       `DialogContent`/`DrawerContent` backdrop was named by **no scenario** in

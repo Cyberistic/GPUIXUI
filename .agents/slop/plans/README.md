@@ -280,7 +280,10 @@ claim time). `774` was claimed on master first, so the text-decoration pixel
 probe takes `775` (verified free across every worktree at claim time). The
 components workstream then claimed `779` and `783`, and `780`–`782` went to the
 components and primitives workstreams, so the content-surface theme probe takes
-`784` (verified free across every worktree at claim time).
+`784` (verified free across every worktree at claim time). The modal veil's
+pixels took `791`; `792`–`796` were claimed by the components, tokens-theme and
+primitives workstreams first, so the field-ink probe takes `797` (verified free
+across every worktree at claim time).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -548,3 +551,4 @@ Cross-cutting records:
    workaround that the plan did not authorise.
 5. When done, update this table's status column and tick the matching task in
    `TODO.md`.
+| [797](./797-field-ink-pixels.md) | The field ink contract, in the frame: text, placeholder, selection wash and caret | F | `100`, `110`, `120`, `140`, `150`, `188`, `197`, `330`, `533`, `624`, `674`, `690`, `697`, `701`, `707`, `708`, `713`, `715`, `722`, `736`, `745`, `754`, `761`, `764`, `771`, `773`, `775`, `778`, `784`, `791` | **planned** — `nativeTextTheme` claims it keeps a field's "placeholder, caret and selection in the same palette", and no scenario reads a field's pixels. Recon measured: text ink = `inputForeground`, **placeholder = the runtime's fixed `#8F8F8F`** (the `placeholder` token never paints), **selection = the fixed `#7C86FF59`** (the `selection` token never paints), and the caret is the only themed ink (`theme.caret`) but paints only in an **active** window, so it is a live-only check. `field-ink-pixels` / `live-field-ink`, 13 + 5 checks |
