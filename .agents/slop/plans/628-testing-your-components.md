@@ -5,7 +5,7 @@
 **Depends on:** 410 (site), 412 (honesty), 419/431/561/568 (search), 504–507
 (generated index documents), 587 (host props), 591 (page subjects), 603
 (troubleshooting), 627 (selection and find)
-**Status:** planned
+**Status:** implemented
 
 ---
 
@@ -320,17 +320,16 @@ Also update, where the existing guards require it:
 
 ## 8. Two-direction proofs to run and record
 
-| Deliberate defect | Expected failure |
-| ----------------- | ---------------- |
-| remove `<TestingAbsences />` from the page | `page guard` names the missing block |
-| remove `advanceTime` from its group | `TestRenderer: advanceTime is declared but undocumented` |
-| rename `getFocusedElementId` in a group | two `TestRenderer:` messages |
-| drop the `/docs/testing` alias block | owned queries fail by name, e.g. `playwright → nothing` |
-| remove the entry from `generatedSearchEntries` | `createTestRoot` fails its owned row |
-| add `"storybook"` to a fixture manifest | the denial guard prints the package and dependency |
-| delete the new page from `meta.json` | the page guard's sidebar assertion fails |
-
-Record the measured before/after for every §1 query in the results section.
+| Deliberate defect | Expected failure | Measured |
+| ----------------- | ---------------- | -------- |
+| remove `<TestingAbsences />` from the page | the page guard names the missing block | covered by the "mounts every table" fixture, and the fixture asserts the block name |
+| remove `advanceTime` from its group | `TestRenderer: advanceTime is declared but undocumented` | unit fixture, green |
+| rename `dispatchEvent` in the window table | two `TestWindowOptions:` messages | unit fixture, green |
+| rename `customProps` in the element table | two `TestElement:` messages | unit fixture, green |
+| drop the whole `/docs/testing` alias block | owned queries fail by name | **measured**: `component test`, `e2e`, `mock`, `mocking`, `fixture`, `snapshot`, `visual regression`, `mocking renderer` all wrong |
+| remove the entry from `generatedSearchEntries` | `createTestRoot` fails its owned row | **measured**: `createTestRoot`, `hasNativeTestRenderer`, `TestRenderer`, `findByTestId`, `nativeSimulateClick` and others returned nothing/another page |
+| add `"storybook"` to `apps/docs/package.json` | the denial guard prints the package | **measured**: the "are absent from every workspace manifest" test failed |
+| delete `"testing"` from `meta.json` | the page guard's sidebar assertion fails | **measured**: "serves the page in the sidebar and the sitemap" failed |
 
 ## 9. Commands
 
@@ -370,3 +369,53 @@ new production query; axe clean on the new page in both schemes.
 - A compiling copyable example on the page.
 - `TODO.md`, the plan index, `PLAN.md` (one decision row) and the branch updated;
   gates from §9 run and recorded.
+
+## 12. Measured results
+
+| Command | Result |
+| ------- | ------ |
+| `nub exec vitest run src/lib/test-surface.test.ts` | 15 tests pass |
+| `nub run --filter docs test` | 144 files / 1 550 tests pass |
+| `nub run --filter docs check-types` | exit `0` |
+| `nub run --filter docs smoke:build` | exit `0` — 111 pages, 243 links, 1 430 anchors, `createTestRoot` and `test renderer` green |
+| `nub run --filter docs smoke:a11y` | exit `0` — 111 pages × 2 schemes, 0 violations |
+| `nub run --filter docs smoke:responsive` | exit `0` — 111 pages at 390×844 |
+| `nub run check`, `nub run lint`, `nub run test` | exit `0` |
+
+Corrections measured during implementation:
+
+1. The method split is exactly **61 public members**: 45 documented in seven
+   groups and 16 excluded with an owner. The class also declares `constructor`
+   (excluded by the parser) and a `hasNative` getter (not a public member of the
+   test contract; both parsers skip it).
+2. `TestWindowOptions` is a type alias (`TestRendererOptions &
+   WindowKeyEventHandlers`), not an interface, so the window guard reads both
+   interfaces and splits the six fields into five documented plus
+   `onSelectionChange` (Selection and find).
+3. `headless` stays with Alert: it appears in Installation ("unit suites run
+   headless"), Alert ("the headless renderer") and Contributing ("headless
+   Chrome"), and the index ranks Alert's section first. The page owns
+   `headless test`/`headless testing` instead, and plain `headless` is recorded
+   here as a measured limit rather than stolen.
+4. The tool names are reachable through the page's summary as well as the alias
+   table — dropping the `playwright`/`storybook` aliases alone did not fail a
+   query. The block is still load-bearing: removing it failed eight alias-only
+   phrases (`component test`, `e2e`, `mock`, `mocking`, `fixture`, `snapshot`,
+   `visual regression`, `mocking renderer`).
+5. The page's first Time table said "an animation, a pulse or a transition";
+   `transition` then reached `/docs/testing#time` and stole Theming's motion
+   row. The wording is now "a clock-driven repaint — a pulse or a spinner", and
+   `transition` is a regression row.
+6. `test` and `testing` moved from the Native smoke suite to the new page by its
+   title. `smoke test`, `smoke suite` and `native smoke test` are page aliases on
+   the Native smoke suite, so the suite keeps its own vocabulary.
+7. `troubleshooting-page.test.ts` asserted Troubleshooting sat immediately after
+   `native-testing`; the sidebar now reads `native-testing` → `testing` →
+   `troubleshooting`, and the guard asserts both hops.
+8. The copyable example renders host elements and compiles under a GPUix
+   `jsxImportSource` (verified with a scratch `tsc -p` using `jsxImportSource:
+   "@gpuix/react"`, exit `0`). It cannot be compiled inside the docs app's own
+   program: that program uses the web JSX runtime, and importing
+   `@gpuixui/primitives` there pulled the package's sources into a program with
+   the wrong `jsxImportSource` and produced DOM-type errors. The harness was
+   removed; the example stays on `<div>`/`<text>` so it needs no package type.

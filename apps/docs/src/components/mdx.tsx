@@ -57,6 +57,13 @@ import {
   PortingConcepts,
   PortingGaps,
 } from "./porting-tables";
+import {
+  TestElementTable,
+  TestMethodExclusions,
+  TestMethodGroups,
+  TestingAbsences,
+  TestWindowTable,
+} from "./test-surface";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -114,6 +121,11 @@ export function getMDXComponents(components?: MDXComponents) {
     PortingComponents,
     PortingConcepts,
     PortingGaps,
+    TestWindowTable,
+    TestElementTable,
+    TestMethodGroups,
+    TestMethodExclusions,
+    TestingAbsences,
     ...components,
   } satisfies MDXComponents;
 }

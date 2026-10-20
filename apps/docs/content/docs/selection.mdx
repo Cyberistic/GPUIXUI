@@ -219,3 +219,7 @@ export const usePaintedHighlightCount = (): number => {
   return renderer.getPaintedHighlights?.().length ?? 0;
 };
 ```
+
+A behaviour test drives a real drag with the test renderer's `dragSelect` and
+reads `getPaintedHighlights` back; [Testing your
+components](/docs/testing) owns that test surface.

@@ -62,6 +62,15 @@ import { source } from "./source";
  * Component API's `## Refs and element handles`. The regression rows keep
  * `reference` on the API reference page and `scrollbar` on Scrollable
  * containers, proving the table matches the whole query only.
+ *
+ * Plan 628 adds the testing vocabulary: the absent tools (`jsdom`,
+ * `playwright`, `storybook`, React Testing Library, WebDriver), the test
+ * spellings (`test renderer`, `component test`, `a11y tree`, `keyboard test`),
+ * the snapshot words and `fixture`/`mock`/`spy` name Testing your components,
+ * while the smoke phrases name Native smoke suite. The regressions keep
+ * `vitest`/`ci` on Contributing, `screenshot` on Previews, `coverage` on the
+ * Roadmap, `selection` on Selection and find, and `transition` on Theming's
+ * motion section — the page's first wording used that word and lost the row.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -508,6 +517,17 @@ const owned = [
   ["path picker", "/docs/window"],
   ["app id", "/docs/window"],
   ["menu bar", "/docs/components/navigation-menu"],
+  // Plan 628: the testing vocabulary. The page's own suite lists the full
+  // table; these are the phrases a later alias block is most likely to steal.
+  ["jsdom", "/docs/testing"],
+  ["playwright", "/docs/testing"],
+  ["storybook", "/docs/testing"],
+  ["snapshot", "/docs/testing"],
+  ["mock", "/docs/testing"],
+  ["fixture", "/docs/testing"],
+  ["test renderer", "/docs/testing"],
+  ["a11y tree", "/docs/testing"],
+  ["smoke test", "/docs/native-testing"],
 ] as const;
 
 const regressions = [

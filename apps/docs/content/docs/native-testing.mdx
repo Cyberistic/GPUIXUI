@@ -12,6 +12,11 @@ preflight can be tested on a host with no native binding:
 | platform-free | `@gpuixui/testing` | no | any host |
 | native adapter | `apps/playground` | yes | a host with the `0.10.0` binding |
 
+This page is the suite *this repository* runs. Testing your own screen is a
+different surface — the runtime's offscreen renderer, `createTestRoot` and the
+`TestRenderer` methods — documented on [Testing your
+components](/docs/testing).
+
 The package exposes three namespaces: `Smoke` (the check model, host boundary
 and runner), `Report` (the human and JSON output, and the exit code) and
 `Runtime` (the preflight). The playground adapts a real renderer to one
@@ -34,7 +39,6 @@ nub run --filter playground smoke
 
 The suite writes `.artifacts/smoke-report.json` and, when asked, screenshots.
 The exit code is the contract:
-
 | Code | Meaning |
 | ---- | ------- |
 | `0` | a report was produced and every scenario passed |

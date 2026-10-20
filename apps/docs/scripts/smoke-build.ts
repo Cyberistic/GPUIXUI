@@ -1432,6 +1432,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the selection API, which reached the Text component before plan 627",
     },
+    {
+      query: "createTestRoot",
+      expected: "/docs/testing",
+      first: true,
+      what: "the test renderer, which returned nothing before plan 628",
+    },
+    {
+      query: "test renderer",
+      expected: "/docs/testing",
+      first: true,
+      what: "the testing page's own subject, which reached a Hotkey limitation before plan 628",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

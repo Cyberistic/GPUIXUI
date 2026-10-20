@@ -815,12 +815,17 @@ describe("search", { timeout: 120_000 }, () => {
    * while `time` returned Timeline. Each row is a page subject its owning
    * summary should name, or a component synonym the record cannot spell; no
    * ranker rule is added.
+   *
+   * Plan 628 moves `test` and `testing` to Testing your components: they used to
+   * reach the Native smoke suite by its summary, and the new page owns the
+   * consumer's test surface by its title. `smoke test` and `smoke suite` stay on
+   * the Native smoke suite by a page alias.
    */
   it("finds the sixth set of reader words and page subjects (plan 591)", async () => {
     const expected = [
       ["setup", "/docs/installation"],
-      ["test", "/docs/native-testing"],
-      ["testing", "/docs/native-testing"],
+      ["test", "/docs/testing"],
+      ["testing", "/docs/testing"],
       ["border", "/docs/theming"],
       ["shadow", "/docs/theming"],
       ["overlay", "/docs/component-api"],

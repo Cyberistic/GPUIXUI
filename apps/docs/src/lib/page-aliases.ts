@@ -102,6 +102,19 @@
  * this table: a page alias matches the whole query only, and `input`, `text`
  * and `svg` keep the component page each already had. `code` moved to the
  * element page by its authored summary (plan 626 §8), not by an alias.
+ *
+ * Plan 628 adds the testing vocabulary. The absent tools (`jsdom`, `happy-dom`,
+ * React Testing Library, Playwright, Cypress, WebDriver, Storybook), the
+ * framework names (`jest`, `mock`, `mocking`, `spy`, `fixture`), the snapshot
+ * words and the test spellings (`test renderer`, `component test`, `unit test`,
+ * `a11y tree`, `keyboard test`, `headless test`) name Testing your components,
+ * whose `## What is not provided` section answers each. The smoke phrases
+ * (`smoke test`, `native smoke test`, `smoke suite`) name Native smoke suite,
+ * which is the repository's own suite, not a consumer's test. `test` and
+ * `testing` move to the new page by its title; `vitest`, `ci` and `github
+ * actions` stay on Contributing, `screenshot` on Previews, `coverage` on the
+ * Roadmap, `selection` on Selection and find, `accessibility tree` on
+ * Accessibility, and `snapshot`/`golden` deliberately leave Architecture.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -371,6 +384,62 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "highlight text",
       "text highlight",
       "find and highlight",
+    ],
+  ],
+  [
+    "/docs/testing",
+    [
+      "jsdom",
+      "happy-dom",
+      "happy dom",
+      "react testing library",
+      "testing library",
+      "playwright",
+      "cypress",
+      "webdriver",
+      "webdriverio",
+      "storybook",
+      "jest",
+      "mock",
+      "mocking",
+      "spy",
+      "fixture",
+      "test fixture",
+      "snapshot test",
+      "snapshot tests",
+      "snapshot",
+      "snapshots",
+      "golden",
+      "golden image",
+      "golden test",
+      "visual regression",
+      "visual regression test",
+      "e2e",
+      "end to end",
+      "component test",
+      "component tests",
+      "unit test",
+      "unit tests",
+      "test renderer",
+      "test setup",
+      "testing setup",
+      "mock renderer",
+      "mocking renderer",
+      "a11y tree",
+      "keyboard test",
+      "headless test",
+      "headless tests",
+      "headless testing",
+    ],
+  ],
+  [
+    "/docs/native-testing",
+    [
+      "smoke test",
+      "smoke tests",
+      "native smoke",
+      "native smoke test",
+      "smoke suite",
     ],
   ],
   [

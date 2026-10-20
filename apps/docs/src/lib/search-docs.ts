@@ -172,6 +172,11 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     what: "the selection API, every `HighlightSpec` field and the find controller",
   },
   {
+    title: "Testing your components",
+    url: "/docs/testing",
+    what: "the test renderer, every method a component test uses and the absent tools",
+  },
+  {
     title: "Troubleshooting",
     url: "/docs/troubleshooting",
     what: "the render-error path: boundary, overlay and `onUncaughtError`",

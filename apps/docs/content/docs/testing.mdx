@@ -1,0 +1,188 @@
+---
+title: Testing your components
+description: "Test a GPUix screen without a DOM: the native test renderer, createTestRoot, every TestRenderer method, the one-window rule and a gated suite — and why jsdom, React Testing Library, Playwright and Storybook are absent."
+---
+
+GPUix paints a native tree, so there is no DOM to query. The runtime instead
+ships an offscreen window that runs the real render, layout and paint pipeline
+under vitest; this page is that surface. [Native smoke
+suite](/docs/native-testing) is the other half: the suite this repository runs to
+prove the library's capabilities.
+
+Three test layers, from cheapest to strongest:
+
+| Layer | What it proves | Runs on |
+| ----- | -------------- | ------- |
+| pure logic | a decision, reducer or formatter | any host |
+| component behaviour | layout, hit-testing, focus, input and paint in the real renderer | a host with a GPUix binding |
+| capability smoke | a cross-component scenario, reported as a verdict | a host with a GPUix binding |
+
+## Render a component
+
+`createTestRoot` mounts a React tree in an offscreen window and gives you the
+`TestRenderer`. `render` replaces the tree; `unmount` tears the window down.
+
+```tsx
+import { createTestRoot } from "@gpuix/react/testing";
+import { expect, it } from "vitest";
+
+it("activates on a real click", () => {
+  const root = createTestRoot({ width: 480, height: 320 });
+  let activations = 0;
+  root.render(
+    <div
+      testId="save"
+      role="button"
+      onClick={() => (activations += 1)}
+      style={{ padding: 12, borderRadius: 6 }}
+    >
+      <text>Save</text>
+    </div>,
+  );
+
+  const button = root.renderer.findByTestId("save");
+  const bounds = root.renderer.getElementBounds(button?.id ?? -1);
+  if (bounds === null) throw new Error("the Save control did not render");
+
+  root.renderer.nativeSimulateClick(
+    bounds.x + bounds.width / 2,
+    bounds.y + bounds.height / 2,
+  );
+
+  expect(activations).toBe(1);
+  root.unmount();
+});
+```
+
+<TestWindowTable />
+
+`onSelectionChange` is a window handler; [Selection and
+find](/docs/selection) owns what the event carries.
+
+Two rules make this reliable:
+
+- **One window at a time.** A second live root takes the window over and the
+  first tree reads as empty, which looks like a component that rendered nothing.
+  Unmount before the next root, and keep `fileParallelism: false` in the project
+  that runs these suites.
+- **The binding loads eagerly.** On a host with no published `@gpuix/native`
+  binary, a *static* import of `@gpuix/react/testing` throws while the file
+  loads — `describe.skipIf` never runs. Put these suites in their own vitest
+  project so an unsupported host never collects them:
+
+```ts
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    include: ["src/**/*.behaviour.test.tsx"],
+    pool: "forks",
+    fileParallelism: false,
+  },
+});
+```
+
+`hasNativeTestRenderer` answers whether the binding loaded. It is for a runtime
+message in a host that can already import the module, not a substitute for the
+separate project.
+
+## Finding what rendered
+
+<TestElementTable />
+
+Prefer `findByTestId` over an index or a type. The tree's ids and order belong
+to the renderer and change when an implementation does; the `testId` you passed
+to a part is the contract you wrote.
+
+<TestMethodGroups />
+
+## Driving input
+
+`simulateKeystrokes` sends keys to whatever currently holds focus, so it is the
+way to prove that a click, `autoFocus` or an arrow key really moved focus.
+`nativeSimulateKeystrokes` focuses an element first; `nativeSimulateKeyDown` with
+`isHeld` proves a repeat without a key up, which is how a held key is told apart
+from a tap.
+
+A pointer gesture is the same three steps the runtime uses: measure the bounds,
+move to the centre, then down, move and up. `nativeSimulateScrollWheel`'s
+`deltaY` is **negative** to scroll down, the opposite of the DOM.
+
+## Focus
+
+Focus is native state. Move it with `focusElement`, read it back with
+`getFocusedElementId` and resolve the id through `getElement` to get the
+`testId`. `focusNext`/`focusPrevious` walk the window's tab order;
+`focusNextWithin`/`focusPreviousWithin` wrap inside one container, which is how
+a dialog's Tab trap is proved ([Component API](/docs/component-api) explains the
+contract the trap implements).
+
+## Time
+
+There are two clocks, and confusing them is the usual flake:
+
+| What you are testing | Method |
+| -------------------- | ------ |
+| a clock-driven repaint — a pulse or a spinner | `clockPause`, `clockSet`, `clockFastForward`, `clockResume` |
+| a timer the app scheduled — a toast's dismissal, a debounce | `advanceTime` |
+
+`clockFastForward` moves the motion clock only. `advanceTime` advances GPUI's
+test dispatcher and runs due timers, including caret blink and list edge scroll.
+[Theming](/docs/theming) records what the runtime's motion system can animate.
+
+## Scrolling
+
+`scrollTo` sets the offset of a scroll container (`y` more negative is further
+down). `scrollToItem` scrolls a child into view by index and accepts
+`offsetInItem` in pixels: a negative offset anchors the viewport top above the
+item so a row stays pixel-stable while unmeasured rows are spliced in above it.
+`getListScrollTop` returns a virtual list's logical anchor, which is exact even
+while row heights are estimates.
+
+## Paint and accessibility
+
+`getPaintedText` is the only read that sees native text: `<code>`, `<diff>` and
+`<markdown>` paint inside GPUI, so they never appear in `getAllText`. `getA11yTree`
+returns the accessibility dump for the last painted frame — the same roles and
+labels assistive technology receives ([Accessibility](/docs/accessibility) owns
+what is and is not declared).
+
+`captureScreenshot` writes a PNG for a human. It is an artifact, never an
+assertion: a pixel diff cannot say which token painted it, while a measured
+bound, a painted string or the runtime's own style report names the value that
+failed.
+
+`setImage` and `setImagePixels` supply bytes to an `<img>`, so an image or avatar
+test needs no fixture file on disk.
+
+## The render loop
+
+A render is synchronous: `flush` runs the pipeline, `drainEvents` collects what
+both ends queued, and `dispatchNativeEvents` feeds those events into React and
+runs the resulting updates until none remain. `applyBatch` is the mutation batch
+`render` calls for you.
+
+That is why there is no `act` and no `waitFor` here: there is no pending async
+commit to wait for. Measure after the input call returns, not after a timeout.
+
+## The suite this repository runs
+
+| Command | Layer |
+| ------- | ----- |
+| `nub run test` | the pure-logic suites in every package |
+| `nub run --filter @gpuixui/components test:behaviour` | component behaviour on this renderer, in its own vitest project |
+| `nub run --filter playground smoke` | the capability scenarios and their report ([Native smoke suite](/docs/native-testing)) |
+| `nub run --filter docs smoke:build` and the other docs smokes | this documentation site in a real browser ([Contributing](/docs/contributing)) |
+
+The first two are a package's own proof. The last one tests the docs site, never
+the library: a browser surface is not the desktop runtime.
+
+## What is not provided
+
+<TestingAbsences />
+
+<TestMethodExclusions />
+
+The [Component pages](/docs/component-pages) guide covers the docs-side
+showcase, and [Previews](/docs/previews) lists every live scene a component page
+can carry.

@@ -471,15 +471,20 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[~]` `[██████████]` 194/195
+`[x]` `[██████████]` 195/195
 
-`[~]` **Testing your components has a page (plan 628)** — the consumer-facing
+`[x]` **Testing your components has a page (plan 628)** — the consumer-facing
       test renderer had no owner: `createTestRoot`, `hasNativeTestRenderer`,
       `jsdom`, `playwright`, `storybook`, `fixture` and `spy` returned nothing,
       and `test renderer` reached a Hotkey input limitation. `/docs/testing`
       renders the window options, `TestElement`, 45 of the 61 `TestRenderer`
       members in seven groups, the 16 another page owns, and the nine absent
-      tools with their substitutes.
+      tools with their substitutes; a workspace-manifest scan fails the day one
+      of those tools is installed. 144 files / 1 550 docs tests, 111-page
+      `smoke:build` with two production queries, a11y (111×2) and responsive
+      green. `test`/`testing` moved here from the Native smoke suite, which
+      keeps `smoke test`/`smoke suite`; plain `headless` stays on Alert
+      (recorded limit).
 
 `[x]` **Selection, highlighting and find have a page (plan 627)** — the
       runtime selects text natively, paints match washes and exposes a find
