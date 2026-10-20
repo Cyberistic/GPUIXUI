@@ -3327,9 +3327,10 @@ chosen row keeps while a disabled control is pressed (`selectionPressPairs`) and
 the four soft status fills a tone-tinted Alert's action sits on (plan `307`),
 because a disabled `Select` item paints it on the menu's `popover`
 with no fill behind it and measured 1.99:1 on Linux dark. The `disabled` fill
-stays near the panel by design, so a disabled control's shape is carried by its
-`border` edge — held to the divider floor on `disabled`, and on the `muted` panel
-a settings sidebar divides (plan `306`). The filled action inside a status panel
+is a perceivable step off each of the five surfaces a control is placed on
+(`disabledFillPairs`, plan `737`), so a disabled control's shape starts with its
+fill and is reinforced by its `border` edge — held to the divider floor on
+`disabled`, and on the `muted` panel a settings sidebar divides (plan `306`). The filled action inside a status panel
 keeps its raised fill when it is disabled and paints `disabledForeground`:
 `inactivePanelActionPairs` holds the resting label (5.148:1 identity dark,
 7.310:1 AAA dark), and the label is also a step below `softActionForeground`, so

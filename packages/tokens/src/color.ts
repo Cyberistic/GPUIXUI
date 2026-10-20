@@ -317,8 +317,10 @@ export interface ThemeColors {
  * roles, so no state composites an alpha fill (plan 097). `disabledForeground` is
  * neutral 600 so an inactive label clears the 3:1
  * `inactive` floor on the darkest platform pressed wash with margin, while the
- * fill stays near the panel and the control's `border` edge carries its shape
- * (plan 306). The role is a full ramp step rather than a half-step toward
+ * fill is a perceivable step off each of the five surfaces a control is placed
+ * on (`disabledFillPairs`, plan `737`) and the control's `border` edge
+ * reinforces its shape (plan 306). The role is a full ramp step rather than a
+ * half-step toward
  * neutral 500 because the label is selected with the copy around it: the
  * previous value measured **2.586:1** through the `selection` wash on Windows
  * light's `selected` fill, under the 3:1 floor (plan 510), while the tier below
