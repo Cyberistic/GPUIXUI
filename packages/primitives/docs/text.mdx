@@ -178,6 +178,22 @@ identical string at the same width (plan `082`). The cap is per element, so it
 cannot leak, and the line count follows the role's own leading rather than a
 hard-coded pixel value.
 
+`selectionColor` is the runtime's **inherited** selection wash — the platform
+default is the accent at 35 %. Set it through `style` on the run or on any
+container above it; a child's own value wins. There is no dedicated prop,
+because `style` is the one escape hatch (the same rule as `Box`):
+
+```tsx
+<Text selectable style={{ selectionColor: alpha(theme.colors.primary, 0.35) }}>
+  Selectable release notes
+</Text>
+```
+
+Measured in the runtime (plan `784`): the default wash repaints under a drag, a
+caller's colour changes the paint, a container's colour inherits into the run,
+and the run's own value overrides its container. `alpha` is exported by
+`@gpuixui/primitives/core` (re-exported from `@gpuixui/tokens`).
+
 ## Limitations
 
 - `clamp` is a **hard cut with no ellipsis**. It stops at the line boundary; the
@@ -205,8 +221,9 @@ hard-coded pixel value.
   offset, and no way to decorate part of a string. Split the run into adjacent
   `Text` nodes when only a word is struck (they merge onto one line).
 - No responsive type scale or fluid sizing.
-- Selection is **pointer-only**: no keyboard extension, no copy binding, and no
-  `selectionColor` prop — the runtime paints its own highlight colour.
+- Selection is **pointer-only**: no keyboard extension and no copy binding. The
+  wash colour is caller-controlled through the inherited `selectionColor` style
+  (above); the runtime owns the highlight geometry.
 - `truncate` needs a bounded width to truncate against, and it is one line: the
   leading form cannot be combined with a multi-line `clamp`, because the clamp
   wins and clips the bottom edge without an ellipsis.
@@ -227,7 +244,10 @@ hard-coded pixel value.
 - `runtime/layout.runtime.test.tsx` — a `max-content` grid cell measures 0 with
   the default shrink and its content with `shrink={false}` (plan `587`).
 - `runtime/text-selection.runtime.test.tsx` — a real drag selects a
-  `selectable` run and selects nothing from a non-selectable one (plan `385`).
+  `selectable` run and selects nothing from a non-selectable one (plan `385`);
+  four captured windows also prove the default wash, a caller's
+  `selectionColor`, its inheritance from a container and a child's override
+  (plan `784`).
 - `runtime/text.runtime.test.tsx` — the clamp's measured height at 1/2/3 lines,
   both directions of the shared-layout regression, and the full string in the
   accessibility tree (plan `082`).

@@ -2580,6 +2580,19 @@ retired once both branches are one
       cases, two runtime cases (`false` equality; 54 vs 18 px height) and the
       example case (32 vs 16) (plan `783`).
 
+`[x]` `packages/primitives`: **the selection wash was documented as not
+      caller-controlled** — `docs/text.mdx` ended its selection bullet with
+      "the runtime paints its own highlight colour", but `StyleDesc` exposes an
+      inherited `selectionColor` (default the accent at 35 %), `Text` already
+      reaches it through its documented `style` escape hatch, and the package's
+      own capability table records it. A consumer on a tinted surface therefore
+      shipped a low-contrast selection for no reason. The page now names the
+      property, shows a token snippet and keeps only the true half of the
+      limitation (pointer-only, no copy binding); four captured windows prove
+      the default wash, a caller's colour, inheritance from a container and a
+      child's override, and a cross-document guard fails if the page denies it
+      again. Both directions measured (plan `784`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails

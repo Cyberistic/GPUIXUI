@@ -202,4 +202,17 @@ describe("GPUix capability reference", () => {
     expect(scrollRow).toContain("Keyboard (610)");
     expect(scrollRow).toContain("opens on `Tab`");
   });
+
+  it("does not deny the selection colour the table records", async () => {
+    // The bug guarded (plan 784): text.mdx ended its selection bullet with
+    // "the runtime paints its own highlight colour", while this table records
+    // `selectionColor` as an inherited style and `style` already reaches it.
+    const doc = await Effect.runPromise(readCapabilities());
+    const text = await Effect.runPromise(
+      root("packages", "primitives", "docs", "text.mdx"),
+    );
+    expect(doc).toContain("selectionColor");
+    expect(text).toContain("selectionColor");
+    expect(text).not.toContain("the runtime paints its own highlight colour");
+  });
 });
