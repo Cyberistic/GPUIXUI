@@ -6,7 +6,7 @@
 | Owner | primitives workstream |
 | Paths | `packages/primitives/` (plus the Label row in `COMPONENTS.md`) |
 | Depends on | `030` (package), `041` (runtime suite), `045` (`labelledBy`), `047` (docs/examples), `059` (text semantics), `087` (the inert-label truth), `368`/`383` (label containment), `581` (required marker), `597` (paint bounds) |
-| Status | **done** — `control` takes the field's ref; a press on the name, marker or description calls `renderer.focusElement(instance.id)`, pointer-only, with no `aria-labelledby` claim and a null ref a no-op. 9 element + 5 scoped runtime cases; both runtime press cases fail with focus left on the sentinel when the wiring is removed, and the offline "absent without a control" case fails when the activation is unconditional. The form example pairs all four labels; offline 71 files / 975 tests, runtime 69 files / 891 tests, examples 19/19 |
+| Status | **done** — `control` takes the field's ref; a press on the name, marker or description calls `renderer.focusElement(instance.id)`, pointer-only, with no `aria-labelledby` claim and a null ref a no-op. 9 element + 6 scoped runtime cases; both runtime press cases fail with focus left on the sentinel when the wiring is removed, and the offline "absent without a control" case fails when the activation is unconditional. The form example pairs all four labels; offline 71 files / 975 tests, runtime 69 files / 892 tests, examples 19/19 |
 
 ## 0. Why
 
@@ -30,7 +30,7 @@ and an `<Input testId="email" ref={fieldRef} />`:
 | ----- | ------ |
 | click the name text | the text's **and** the root's `onClick` run — clicks bubble |
 | `focusElement(fieldRef.current.id)` | `getFocusedElementId()` reports the field; `runtime.focused()` is `"email"` |
-| click a transparent root that paints nothing | **no handler runs** — the hit-test needs painted content, so the name/description/marker is the real target |
+| click a transparent root that paints nothing | **no handler runs**; a root that paints a text child **is** hit across its whole box (both measured) |
 | `getElementBounds("email")` | **throws** (`String` into `f64`): the renderer's lookups take the numeric instance id, not a `testId` |
 
 The last row decides the API: a `testId: string` prop would need a
@@ -49,11 +49,11 @@ association, it restores the platform's pointer behaviour.
 1. **One new optional prop:** `Label.control?: RefObject<PublicInstance | null>`
    — the ref of the control the label names. `PublicInstance` is
    `@gpuix/react`'s published instance type (already imported by `Select`).
-2. With `control`, a **primary click anywhere on the painted label** — the name,
-   the required marker, the description — moves **native focus** to the
-   instance's `id` through `renderer.focusElement`. A click on the empty part of
-   a full-width label does nothing (measured: an unpainted transparent box is
-   not hit-tested; the text is the target).
+2. With `control`, a **primary click anywhere on the label's painted box** — the
+   name, the required marker, the description, or the space beside them — moves
+   **native focus** to the instance's `id` through `renderer.focusElement`. A
+   root that paints nothing at all is not hit-tested; a label always paints its
+   name, so its whole box is the target (measured).
 3. Without `control` the element tree is **unchanged**: no handler, no style
    change. A label is not a control and invents no role and no tab stop.
 4. The label is **pointer-only**, exactly like a native label: it is not
@@ -181,16 +181,19 @@ must not.
 2. `"the description is a target too"` — same shape with
    `description="Shown on invitations"`; click the description's text; focus
    moves.
-3. `"without control nothing moves"` — the same label with no `control`, a
+3. `"the whole label box is the target"` — click the full-width label's **centre**
+   (the space beside the name); focus moves, because a root that paints a text
+   child is hit across its box (measured).
+4. `"without control nothing moves"` — the same label with no `control`, a
    sentinel keeps focus after a press.
-4. `"a null ref is a no-op"` — `control` points at an empty
+5. `"a null ref is a no-op"` — `control` points at an empty
    `useRef<PublicInstance | null>(null)` and no field carries it; the press runs
    without throwing and focus stays on the sentinel.
-5. `"the label is not a tab stop"` — from a sentinel, `focusNext()` lands on the
+6. `"the label is not a tab stop"` — from a sentinel, `focusNext()` lands on the
    input, not the label (the label never appears in `focused()`).
-6. `"a caller's cursor wins"` — `style={{ cursor: "default" }}` on a clickable
-   label paints `default` (element tree covers the value; this case may live in
-   `Label.test.tsx` instead if no runtime paint adds information).
+
+The caller's cursor override is covered in `Label.test.tsx`; no runtime paint
+adds information.
 
 Use `awaitFrame` for the focus assertion if the click dispatch settles on the
 next frame (plan `691`'s rule: wait for the paint, never a fixed sleep).
@@ -200,8 +203,8 @@ next frame (plan `691`'s rule: wait for the paint, never a fixed sleep).
 - Replace the false limitation with the real contract:
   - **Click-to-focus** — `control` takes the field's ref and a press on the
     label focuses it; no association is implied.
-  - The pointer-only rule and the "empty area of a full-width label is not a
-    target" rule (the text is).
+  - The pointer-only rule and the hit-test rule: the **whole label box** is the
+    target (a root that paints nothing is not hit-tested).
   - The single-root targets and the roving-composite limit.
   - A disabled target receives focus; point it at a focusable control.
 - API table: add `control` (`RefObject<PublicInstance | null>`, default none).

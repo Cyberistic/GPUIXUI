@@ -119,8 +119,9 @@ property; returning `{}` keeps the default look. The state type is exported.
   group's ref is its non-focusable root, so a press on a label pointing at
   `RadioGroup`, `CheckboxGroup`, `ToggleGroup`, `Rating`, `Slider`,
   `RangeSlider` or `OTPField` focuses nothing.
-- Only the **painted text** is a target: the empty part of a full-width label is
-  not hit-tested (measured, plan `749`), so a press there does nothing.
+- The **whole label box** is the target — the name, the marker, the description
+  and the space beside them. (A root that paints nothing at all is not
+  hit-tested, which is why an empty label has no target; measured, plan `749`.)
 - A **disabled** target receives focus if the ref points at one. The renderer
   exposes no focusable query and the ref carries no state; the control's
   handlers are guarded (plan `025`) and it paints no ring (plan `332`). Point

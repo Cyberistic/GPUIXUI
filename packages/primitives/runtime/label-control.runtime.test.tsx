@@ -89,6 +89,28 @@ it("a press on the description is the same target", async () => {
   expect(focused(runtime)).toBe("email");
 });
 
+it("the whole label box is the target", async () => {
+  const runtime = await openWindow();
+  const email = fieldRef();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Button testId="sentinel">Before</Button>
+        <Label testId="label" control={email}>
+          Email
+        </Label>
+        <Input testId="email" label="Email" ref={email} />
+      </Stack>
+    </Surface>,
+  );
+  runtime.flush();
+  runtime.keyDown("sentinel", "a");
+
+  // The label is full width; its centre is the empty space beside the name.
+  runtime.click("label");
+  expect(focused(runtime)).toBe("email");
+});
+
 it("a label without a control moves nothing", async () => {
   const runtime = await openWindow();
   runtime.render(
