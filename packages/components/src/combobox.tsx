@@ -76,6 +76,7 @@ import {
   visibleOptions,
   type ComboboxOption,
 } from "./combobox/logic.js";
+import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import {
@@ -136,6 +137,8 @@ interface ComboboxContextValue {
   readonly noteLeave: (direction: "next" | "previous") => void;
   /** An outside press: it already moved focus, and it may have been the trigger. */
   readonly noteOutsidePress: (event: EventPayload) => void;
+  /** A trigger activation: open when closed, close when open. */
+  readonly toggleOpen: () => void;
 }
 
 const ComboboxContext = createContext<ComboboxContextValue | undefined>(
@@ -480,6 +483,18 @@ export const Combobox = ({
             event,
           );
         },
+        // The keyboard activation of the trigger. It shares the pointer path's
+        // two transitions, so an Enter that closes drops a pending query report
+        // and an Enter that opens reports the empty query once (plan 736).
+        toggleOpen: () => {
+          if (visibleOpen) {
+            close.current();
+            return;
+          }
+          restoreFocus.current = false;
+          setQuery("");
+          setOpen(true);
+        },
       }}
     >
       <HeadlessCombobox
@@ -581,13 +596,21 @@ export const ComboboxTrigger = ({
   onFocus,
   onBlur,
   onKeyDown,
+  onKeyUp,
   style,
   ref,
   ...rest
 }: ComboboxTriggerProps) => {
   const theme = useTheme();
-  const { selectedValues, open, disabled, labelFor, registerTrigger, trigger } =
-    useCombobox();
+  const {
+    selectedValues,
+    open,
+    disabled,
+    labelFor,
+    registerTrigger,
+    trigger,
+    toggleOpen,
+  } = useCombobox();
   const setTrigger = useMergedRef<PublicInstance | null>(registerTrigger, ref);
   // The runtime delivers no React `focus`/`blur` for a native focus change
   // (plans 536/540), so the ring follows the host the renderer reports —
@@ -610,6 +633,19 @@ export const ComboboxTrigger = ({
   // `label` is optional — fall back to the visible text, exactly as a browser
   // names `<button>Select…</button>` (plan 666).
   const name = controlName(rest["aria-label"] ?? label, display);
+  // A role-bearing div gets no activation click from the runtime, so the
+  // documented Enter/Space opening is ours: the shared button contract (plan
+  // 736). GPUix's own trigger keeps the arrows and Escape inside the headless
+  // surface, which wraps these handlers.
+  const keyHandlers = activationHandlers(toggleOpen, {
+    disabled,
+    onKeyDown: (event) => {
+      onKeyDown?.(event);
+      // Escape closes the open popup as one surface, like the search field.
+      if (isDismiss(event)) dismissTopLayer(event);
+    },
+    onKeyUp,
+  });
 
   return (
     <HeadlessTrigger
@@ -624,11 +660,7 @@ export const ComboboxTrigger = ({
       {...stateDescription(disabled, rest["aria-description"])}
       onFocus={onFocus}
       onBlur={onBlur}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        // Escape closes the open popup as one surface, like the search field.
-        if (isDismiss(event)) dismissTopLayer(event);
-      }}
+      {...keyHandlers}
       style={mergeStyles(
         {
           ...textStyle(theme, "label"),

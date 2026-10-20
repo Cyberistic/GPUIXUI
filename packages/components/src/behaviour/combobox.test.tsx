@@ -37,10 +37,16 @@
  * Same-commit regression: a picker mounted open inside a dialog that is open at
  * the same commit pushed its layer first, so one Escape closed the dialog too
  * (plan 732).
+ *
+ * Keyboard opening (plan 736): the page promised `click / Enter / Down` on the
+ * trigger, but GPUix's headless trigger maps only the arrows and `Escape`, and a
+ * role-bearing div gets no activation click from the runtime — so `Enter` and
+ * `Space` did nothing and only the undocumented `ArrowDown` opened the picker
+ * for a keyboard-only user. The trigger now follows the shared button contract.
  */
 
 import { describe, expect, it, vi } from "vitest";
-import type { PublicInstance } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { createRef, useState, type Ref } from "react";
@@ -98,6 +104,8 @@ const Picker = ({
   empty,
   triggerPlaceholder,
   triggerLabel = "Assign reviewer",
+  triggerKeyDown,
+  triggerKeyUp,
   onCreate,
   createLabel,
   onQueryChange,
@@ -119,6 +127,8 @@ const Picker = ({
   readonly empty?: string;
   readonly triggerPlaceholder?: string;
   readonly triggerLabel?: string;
+  readonly triggerKeyDown?: (event: EventPayload) => void;
+  readonly triggerKeyUp?: (event: EventPayload) => void;
   readonly onCreate?: (query: string) => void;
   readonly createLabel?: (query: string) => string;
   readonly onQueryChange?: (query: string) => void;
@@ -155,6 +165,8 @@ const Picker = ({
       <ComboboxTrigger
         ref={triggerRef}
         label={triggerLabel}
+        {...(triggerKeyDown === undefined ? {} : { onKeyDown: triggerKeyDown })}
+        {...(triggerKeyUp === undefined ? {} : { onKeyUp: triggerKeyUp })}
         {...(triggerPlaceholder === undefined
           ? {}
           : { placeholder: triggerPlaceholder })}
@@ -347,6 +359,30 @@ const open = async (root: ComponentTestRoot): Promise<void> => {
   await settle();
 };
 
+/** The closed trigger's host, focused, for a keyboard gesture. */
+const focusTrigger = (root: ComponentTestRoot): number => {
+  const trigger = root.renderer.findByTestId("combobox-trigger");
+  if (trigger === undefined) throw new Error("combobox suite: no trigger");
+  root.renderer.focusElement(trigger.id);
+  return trigger.id;
+};
+
+/** One real key press on the closed trigger: down, then up on the focused host. */
+const pressOnTrigger = async (
+  root: ComponentTestRoot,
+  key: "enter" | "space",
+): Promise<void> => {
+  const id = focusTrigger(root);
+  root.renderer.nativeSimulateKeyDown(id, key);
+  await settle();
+  // A real release lands on whatever holds focus after the press: `Enter` has
+  // already opened the popup and moved focus to its search field, and sending
+  // the release back to the trigger would pull native focus there instead.
+  const focused = root.renderer.getFocusedElementId?.() ?? null;
+  root.renderer.nativeSimulateKeyUp(focused ?? id, key);
+  await settle();
+};
+
 /** Type into the focused search field. */
 const type = (root: ComponentTestRoot, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
@@ -383,6 +419,73 @@ describe("Combobox", () => {
 
     expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+
+    picker.unmount();
+  });
+
+  it("opens the popup on Enter at the trigger", async () => {
+    const picker = renderComponent(<Picker />);
+
+    await pressOnTrigger(picker, "enter");
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+
+    picker.unmount();
+  });
+
+  it("opens on the release of Space, not on its press", async () => {
+    // The button contract: Space activates on key up, so moving focus away
+    // before releasing cancels it. Key-down activation would open here.
+    const picker = renderComponent(<Picker />);
+
+    const id = focusTrigger(picker);
+    picker.renderer.nativeSimulateKeyDown(id, "space");
+    await settle();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+
+    picker.renderer.nativeSimulateKeyUp(id, "space");
+    await settle();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+
+    picker.unmount();
+  });
+
+  it("opens nothing from Enter or Space while disabled", async () => {
+    const onOpenChange = vi.fn();
+    const picker = renderComponent(
+      <Picker disabled onOpenChange={onOpenChange} />,
+    );
+
+    await pressOnTrigger(picker, "enter");
+    await pressOnTrigger(picker, "space");
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    picker.unmount();
+  });
+
+  it("composes the caller's key handlers once per keystroke", async () => {
+    const onKeyDown = vi.fn();
+    const onKeyUp = vi.fn();
+    const picker = renderComponent(
+      <Picker triggerKeyDown={onKeyDown} triggerKeyUp={onKeyUp} />,
+    );
+
+    await pressOnTrigger(picker, "enter");
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+
+    // Escape returns focus to the trigger, which is where a real Space lands.
+    picker.renderer.simulateKeystrokes("escape");
+    await settle();
+    const downs = onKeyDown.mock.calls.length;
+    const ups = onKeyUp.mock.calls.length;
+    await pressOnTrigger(picker, "space");
+    expect(onKeyDown).toHaveBeenCalledTimes(downs + 1);
+    expect(onKeyUp).toHaveBeenCalledTimes(ups + 1);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
 
     picker.unmount();
   });
