@@ -10,11 +10,11 @@
  * (the same one a component would use) and asserts on the runtime's own report
  * of the washes, not on a readout alone.
  *
- * `getPaintedHighlights()` does not report the wash colour, so colour is not
- * asserted here — a screenshot is the only visual evidence and is never an
- * assertion (see `theme-color-roles` for the style-report route).
+ * `getPaintedHighlights()` does not report the wash colour, so the colour
+ * contract is asserted from a captured frame (plan `701`): the two runtime
+ * defaults and the explicit `color`/`activeColor` and token routes.
  *
- * Measured facts: plan `171` §8.
+ * Measured facts: plan `171` §8 (geometry) and plan `701` (wash colours).
  */
 import { useState } from "react";
 import { Effect } from "effect";
@@ -23,10 +23,24 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { useTextSearch } from "@gpuix/react";
 import type { EventPayload } from "@gpuix/react";
+import { Pixels, type Smoke } from "@gpuixui/testing";
 import { useTheme } from "@gpuixui/tokens/react";
-import type { Smoke } from "@gpuixui/testing";
+import { palettes } from "../palettes.js";
 import { Pressable, Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
+import {
+  type FrameReader,
+  TOLERANCE,
+  captureHeadless,
+  expectColour,
+  pixelAtRect,
+  readSync,
+} from "./frames.js";
+import {
+  RUNTIME_DARK_ACCENT,
+  blendOver,
+  washColours,
+} from "./highlight-pixels.js";
 
 const FONT_SIZE = 14;
 const LINE_HEIGHT = 20;
@@ -256,6 +270,56 @@ const SearchProbe = () => {
             ))}
           </virtual-list>
         </div>
+
+        <div
+          testId="search-colour"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            marginTop: 12,
+            backgroundColor: theme.colors.background,
+          }}
+        >
+          <div testId="search-wash-default" highlight={{ query: "wash" }}>
+            <text style={lineStyle}>alpha wash</text>
+          </div>
+          <div
+            testId="search-wash-default-active"
+            highlight={{ query: "wash", activeIndex: 0 }}
+          >
+            <text style={lineStyle}>bravo wash</text>
+          </div>
+          <div
+            testId="search-wash-custom"
+            highlight={{ query: "wash", color: "#FF0000" }}
+          >
+            <text style={lineStyle}>charlie wash</text>
+          </div>
+          <div
+            testId="search-wash-custom-active"
+            highlight={{
+              query: "wash",
+              color: "#FF0000",
+              activeColor: "#00FF00",
+              activeIndex: 0,
+            }}
+          >
+            <text style={lineStyle}>delta wash wash</text>
+          </div>
+          <div
+            testId="search-wash-primary"
+            highlight={{ query: "wash", color: theme.colors.primary }}
+          >
+            <text style={lineStyle}>echo wash</text>
+          </div>
+          <div
+            testId="search-wash-selection"
+            highlight={{ query: "wash", color: theme.colors.selection }}
+          >
+            <text style={lineStyle}>foxtrot wash</text>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -285,6 +349,166 @@ const codeWashes = (
 
 const readout = (ctx: Smoke.SmokeContext, testId: string): string =>
   Option.getOrElse(Option.fromNullishOr(ctx.host.text(testId)), () => "");
+
+/** The unique run text of each colour fixture, so its wash is unambiguous. */
+const WASH_LINE = {
+  default: "alpha wash",
+  defaultActive: "bravo wash",
+  custom: "charlie wash",
+  customActive: "delta wash wash",
+  primary: "echo wash",
+  selection: "foxtrot wash",
+} as const;
+
+/** The expectation verbs the colour checks use; both hosts provide them. */
+type WashCheckContext = Pick<
+  Smoke.SmokeContext,
+  "check" | "expectSome" | "expectEqual"
+>;
+
+/**
+ * Assert the wash colour contract against a captured frame.
+ *
+ * Shared by `search-highlights` and `live-highlights`: the view and the
+ * expectations are one source of truth, and only the frame reader differs.
+ * `reported` is the host's own `getPaintedHighlights()` output, so the sample
+ * point comes from the runtime's rect rather than from a hard-coded layout.
+ */
+export const highlightColourChecks = <E,>(
+  ctx: WashCheckContext,
+  reader: FrameReader<E>,
+  frame: Pixels.Pixels,
+  reported: ReadonlyArray<Smoke.HighlightMatch>,
+): Effect.Effect<void, Smoke.SmokeAssertionError | E> =>
+  Effect.gen(function* () {
+    const background = yield* ctx.expectSome(
+      "the playground background parses",
+      Pixels.hexToRgba(palettes.dark.colors.background),
+    );
+    const primary = yield* ctx.expectSome(
+      "the primary token parses",
+      Pixels.hexToRgba(palettes.dark.colors.primary),
+    );
+    const selection = yield* ctx.expectSome(
+      "the selection token parses",
+      Pixels.hexToRgba(palettes.dark.colors.selection),
+    );
+    const tokenAccent = yield* ctx.expectSome(
+      "the accent token parses",
+      Pixels.hexToRgba(palettes.dark.colors.accent),
+    );
+
+    const sample = (line: string, matchIndex: number, label: string) =>
+      Effect.gen(function* () {
+        const match = yield* ctx.expectSome(
+          `${label}: the line's wash is painted`,
+          Arr.get(
+            Arr.filter(reported, (wash) => wash.text === line),
+            matchIndex,
+          ),
+        );
+        const rect = yield* ctx.expectSome(
+          `${label}: the wash reports its rect`,
+          Arr.head(match.rects),
+        );
+        return yield* pixelAtRect(ctx, reader, frame, rect, label);
+      });
+
+    const defaults = washColours(RUNTIME_DARK_ACCENT, background);
+    const defaultInactive = yield* sample(
+      WASH_LINE.default,
+      0,
+      "the runtime default wash",
+    );
+    yield* expectColour(
+      ctx,
+      "the runtime default wash is the GPUix accent at 30 %",
+      defaultInactive,
+      defaults.inactive,
+    );
+    const defaultActive = yield* sample(
+      WASH_LINE.defaultActive,
+      0,
+      "the runtime default active wash",
+    );
+    yield* expectColour(
+      ctx,
+      "the runtime default active wash is the GPUix accent at 65 %",
+      defaultActive,
+      defaults.active,
+    );
+
+    // A component that wants a token wash has to pass one: the runtime default
+    // is its own accent, not the library's.
+    yield* ctx.expectEqual(
+      "the runtime default is not the library's accent wash",
+      Pixels.rgbaNear(
+        defaultInactive,
+        washColours(tokenAccent, background).inactive,
+        TOLERANCE,
+      ),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "the active default is brighter than the inactive default",
+      defaultActive.r + defaultActive.g + defaultActive.b >
+        defaultInactive.r + defaultInactive.g + defaultInactive.b,
+      true,
+    );
+
+    const custom = yield* sample(WASH_LINE.custom, 0, "the custom colour wash");
+    yield* expectColour(
+      ctx,
+      "an explicit color reaches the wash",
+      custom,
+      new Pixels.Rgba({ r: 255, g: 0, b: 0, a: 255 }),
+    );
+    const customActive = yield* sample(
+      WASH_LINE.customActive,
+      0,
+      "the custom active wash",
+    );
+    yield* expectColour(
+      ctx,
+      "an explicit activeColor reaches the active wash",
+      customActive,
+      new Pixels.Rgba({ r: 0, g: 255, b: 0, a: 255 }),
+    );
+    const customSibling = yield* sample(
+      WASH_LINE.customActive,
+      1,
+      "the custom active fixture's second wash",
+    );
+    yield* expectColour(
+      ctx,
+      "the same line's other wash keeps its color",
+      customSibling,
+      new Pixels.Rgba({ r: 255, g: 0, b: 0, a: 255 }),
+    );
+
+    const tokenPrimary = yield* sample(
+      WASH_LINE.primary,
+      0,
+      "the primary token wash",
+    );
+    yield* expectColour(
+      ctx,
+      "a token colour passed as color paints exactly",
+      tokenPrimary,
+      primary,
+    );
+    const tokenSelection = yield* sample(
+      WASH_LINE.selection,
+      0,
+      "the selection token wash",
+    );
+    yield* expectColour(
+      ctx,
+      "an eight-digit token wash composites over the background",
+      tokenSelection,
+      blendOver(primary, selection.a / 255, background),
+    );
+  });
 
 export const searchScenario: PlaygroundScenario = {
   id: "search-highlights",
@@ -553,6 +777,15 @@ export const searchScenario: PlaygroundScenario = {
           () => false,
         ),
         true,
+      );
+
+      // Colour is the last part of the contract the report cannot carry.
+      const frame = yield* captureHeadless(ctx.host);
+      yield* highlightColourChecks(
+        ctx,
+        readSync(ctx.host),
+        frame,
+        ctx.host.highlights(),
       );
     }),
 };

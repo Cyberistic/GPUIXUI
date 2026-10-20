@@ -854,9 +854,16 @@ document. What holds, and the traps it records:
 | `<code>` | `query` searches native code text; a `ranges` spec paints **nothing** inside `<code>` |
 | virtual list | `matchIndexOffset: row` + `activeIndex: 90` makes row 90 the only active wash after `scrollToItem(list, 90)` — numbering is document-wide, not window-local |
 
-The honest gap: `getPaintedHighlights()` reports no colour, so the wash colour
-and `activeColor` are not asserted; a screenshot is visual evidence, never an
-assertion.
+Wash **colour** is now measured from a decoded frame (plan `701`), not a
+screenshot claim. `color`/`activeColor` default to the **runtime's** own dark
+accent (`#7C86FF`, `oklch(0.673, 0.182, 276.935)`) at 30 %/65 % alpha, which the
+runtime composites over the line's background in sRGB channels: over
+`#11141A` those are exactly `#31365F` and `#575EAF` in both hosts. That accent is
+**not** `@gpuixui/tokens`' `accent` (`#2E2370`) or `selection` (`#A7A9FF3D`), so
+a component that wants a token wash must pass one explicitly — an opaque token
+(`primary`) paints exactly, and the eight-digit `selection` composites to
+`#353851`. The fixtures also prove `color` and `activeColor` are independent on
+one line. A sample is taken at the top of the wash rect, which is glyph-free.
 
 ## Drag edge auto-scroll (plan `172`)
 
@@ -1615,7 +1622,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, the selection survives, and `getListScrollTop` reports the logical anchor exactly — `[0, 0, h]` at rest, `[120, 0, h]` after `scrollToItem(120)` |
 | `live-variable-rows` | the variable-height list in a window: rows stack at 20/40/60 px, a real click expands row 2 to 120 px and moves the rows below by exactly `+60` with the anchor unmoved, a second click collapses, `scrollToItem(30)` sits row 30 at the viewport top, and a real wheel keeps its in-row offset — 49 checks (plan `534`) |
 | `live-preview` | the **first live hover** scenario: a real mouse move over the trigger opens the card (`open=true`), the pointer reaches the card body and the fire-time presence check keeps it open past the 200 ms grace close (`closes=0`), a control inside the hover-opened card clicks, leaving closes through the last hovered child (`reason=action`), a re-enter inside the delay cancels, and a final leave closes from the trigger (`closes=2`). The card enter and trigger leave arrive in **one batch** live, so the `prev`/`last` readout collapses them — the append-only log keeps both |
-| `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, and a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering in a real window |
+| `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering — and six colour fixtures sampled from the window's own frame prove the two runtime defaults (`#31365F`/`#575EAF`), explicit `color`/`activeColor`, an opaque token and the eight-digit `selection` wash — 53 checks (plans `197`, `701`) |
 | `live-search-replace` | the document half of find/replace in a window: real typing drives the query (`errorx` → `total=0`, Backspace → `total=5`), the cursor steps, one replace recounts and re-washes (`total=4`, `an fixed follows`), replace-all empties the document, reset restores (`fired=1`), a count-preserving `ERROR` replace moves the washes without a new count event, longer/shorter replacements shift survivors (start `7` / `4`), a length-changing replace-all rewrites once, and `<code>` re-highlights by prop — 48 checks (plan `587`) |
 | `live-scroller` | the message scroller opens at the latest message, a pinned append follows to the new max scroll, a real `400` wheel unpins it and paints the affordance, an append while unpinned leaves the anchor and counts unread, jump-to-latest re-pins, two streamed rows keep the tail on the viewport bottom, and the 3-row history has nowhere to scroll — 45 checks. An element that is **retained but unpainted** has no bounds: the protocol answers `NotFound` and the host maps exactly that to `null` |
 | `live-log` | the log viewer opens at the tail (`[30,0]`), a real click and append follow to `[50,0]`, a real wheel over the wrapper moves the reader to `[31,0]` and leaves the tail unpainted, an append while scrolled up keeps `[31,0]` and does not yank, the at-end sentinel returns to `[70,0]`, and the next append follows to `[90,0]` — 26 checks (plan `571`). Measured: a **bottom-aligned** list reports the anchor as `[count, 0]` at the tail, not the max-scroll row/offset a plain list reports |

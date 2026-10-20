@@ -245,7 +245,9 @@ the image-source pixel evidence takes `690`, and the promotion gate on that
 head takes `691`; `692`–`696` were claimed by other workstreams before this one
 needed a number, so the chart's colour-contract pixels take `697`, and `698` was
 claimed by the tokens-theme workstream first, so the promotion gate on that head
-takes `699`.
+takes `699`. `700` was claimed by the components workstream on master, so the
+highlight wash-colour pixels take `701` and the promotion gate on that head
+takes `702`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -409,6 +411,8 @@ takes `699`.
 | [691](./691-promotion-gate-with-image-pixels.md) | The promotion gate on the head that includes the image-source pixels | F | `639`, `653`, `656`, `677`, `690` | **landed** — verification only on the `836b4d63` code head (a concurrent session merged `origin/master`'s `scripts/swarm-model.sh` change as `76edbe63`): headless **106/106** (`3824` checks, 65 capabilities; 115.5 s at the gate, an independent re-run at 282.4 s with identical counts) and live **95/95** (`2545` checks, 61 capabilities, 1094.3 s), both exit `0`; `live-content` reports its 68 checks inside the full sequence (`2521 + 24`), a plain `--all` wrote no `provenance.json`, `check`/`lint`/`test` green (playground 442, testing 68); no source change |
 | [697](./697-chart-colour-pixels.md) | The chart recipe's colour contract in a real window | F | `180`, `593`, `674`, `690`, `691` | **landed** — the chart view gains two `40 × 40` solid sourced masks and `live-chart` decodes one captured frame: both mask tints (`#A7A9FF`, `#3BC97F`) and the image's two fills (`#E5484D`, `#30A46C`), radial centre (`#FFD166`) and linear top/bottom are exact/dominant samples. `live-chart` **40 → 71** checks (68 predicted), `chart-svg` **52** unchanged, headless **106/106** (`3824`); `check`/`lint`/`test` green (playground 442, testing 68); six mutations fail (`exit 1`), including one variant isolating the radial left-edge check |
 | [699](./699-promotion-gate-with-chart-colour-pixels.md) | The promotion gate on the head that includes the chart colour pixels | F | `639`, `653`, `656`, `691`, `697` | **landed** — verification only on `4101684e` (code head `21d02b2a`): headless **106/106** (`3824` checks, 65 capabilities, 78.9 s) and live **95/95** (`2576` checks, 61 capabilities, 1078.0 s), both exit `0`; `live-chart` reports its **71** checks inside the full sequence (`2545 + 31`), `chart-svg` stays **52**, a plain `--all` wrote no `provenance.json`; `check`/`lint`/`test` green (playground 442, testing 68); no source change |
+| [701](./701-highlight-wash-pixels.md) | The highlight wash colour contract, in pixels: the runtime's defaults and the explicit token route | F | `171`, `674`, `676`, `690`, `697`, `197`, `587` | **landed** — six wash fixtures in `search-highlights` (**41 → 82** checks) and `live-highlights` (**12 → 53**); the pure `highlight-pixels.ts` derives the runtime defaults (`#31365F` / `#575EAF`), and the frame proves explicit `color`/`activeColor`, an opaque token (`#A7A9FF`) and the eight-digit `selection` wash (`#353851`). Five mutation proofs (`exit 1`); playground **442 → 446** tests |
+| [702](./702-promotion-gate-with-wash-pixels.md) | The promotion gate on the head that includes the wash pixels | F | `639`, `653`, `656`, `699`, `701` | planned — verification only; both registries on the `701` head, totals read back from the report files |
 
 Cross-cutting records:
 

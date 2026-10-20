@@ -60,7 +60,7 @@ import {
 } from "../scenarios/popups.js";
 import { scrollScenario } from "../scenarios/scroll.js";
 import { scrollIntoViewScenario } from "../scenarios/scroll-into-view.js";
-import { searchScenario } from "../scenarios/search.js";
+import { highlightColourChecks, searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { selectionSignalScenario } from "../scenarios/selection-signal.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
@@ -3992,7 +3992,19 @@ const highlights: LiveScenario = {
         true,
       );
 
-      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${highlights.id}.png`);
+      // The wash colours, from the window's own frame (plan `701`). The
+      // capture is also this scenario's run artifact.
+      yield* settle;
+      const frame = yield* captureLive(
+        ctx.host,
+        `${LIVE_ARTIFACTS}/${highlights.id}.png`,
+      );
+      yield* highlightColourChecks(
+        ctx,
+        readAsync(ctx.host),
+        frame,
+        yield* ctx.host.highlights(),
+      );
     }),
 };
 

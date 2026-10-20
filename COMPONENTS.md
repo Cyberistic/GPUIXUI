@@ -584,8 +584,13 @@ after it still paints. `<code>` is searched by `query`; a `ranges` spec paints
 nothing inside native code text. In a `<virtual-list>`,
 `matchIndexOffset` + `activeIndex` number matches **document-wide**: each row
 declaring `matchIndexOffset: row` made row 90 the only active wash after
-`scrollToItem(list, 90)`. The honest gap: the report carries no wash colour, so
-`color`/`activeColor` are unasserted — screenshot evidence only.
+`scrollToItem(list, 90)`. The wash colour is now measured from a decoded frame
+(plan `701`, `search-highlights` + `live-highlights`): `color`/`activeColor`
+default to the **runtime's** dark accent (`#7C86FF`) at 30 %/65 % over the line's
+background, i.e. `#31365F` and `#575EAF` over `#11141A`; explicit values reach
+the paint exactly, and an 8-digit token keeps its alpha (`selection` →
+`#353851`). The default is **not** the library's `accent` (`#2E2370`) or
+`selection`, so a component that wants a token wash must pass one.
 
 `replace-contract` is the replace half of that contract (plan `333`), and its
 first finding is a limit: **an `<input>`'s own `highlight` finds nothing** — the

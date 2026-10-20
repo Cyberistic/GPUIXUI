@@ -176,6 +176,32 @@ export const pixelAtId = <E>(
     );
   });
 
+/**
+ * The pixel at the top-centre of a highlight wash.
+ *
+ * A wash's rect starts at the run's top; plan `701` measured that the first
+ * 5–6 px are glyph-free (the glyphs sit below the ascender line) and that the
+ * top 1 px is the anti-aliased edge. `+2` is the first fully uniform row.
+ */
+export const pixelAtRect = <E>(
+  ctx: Pick<Smoke.SmokeContext, "expectSome">,
+  reader: FrameReader<E>,
+  frame: Pixels.Pixels,
+  rect: Smoke.HighlightRect,
+  label: string,
+): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError | E> =>
+  Effect.gen(function* () {
+    const window = yield* reader.windowSize();
+    return yield* pixelAtPoint(
+      ctx,
+      frame,
+      window,
+      rect.x + rect.width / 2,
+      rect.y + 2,
+      label,
+    );
+  });
+
 /** Record one colour comparison through the scenario's check sink. */
 export const expectColour = (
   ctx: Pick<Smoke.SmokeContext, "check">,

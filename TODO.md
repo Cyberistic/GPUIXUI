@@ -95,7 +95,28 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 118/118 plans-and-harness
+`[~]` `[█████████░]` 118/120 plans-and-harness
+
+`[x]` **Prove the highlight wash colour contract in pixels** per plan `701`:
+      six fixtures in `search-highlights` (**41 → 82** checks) and
+      `live-highlights` (**12 → 53**) sample a decoded frame at the top of each
+      wash: the runtime's two defaults (GPUix accent `#7C86FF` at 30 %/65 % over
+      `#11141A` = `#31365F`/`#575EAF`), explicit `color`/`activeColor`, an opaque
+      token (`#A7A9FF`), and the `selection` role's eight-digit wash
+      (`#353851`). The pure `highlight-pixels.ts` (4 tests; suite **442 → 446**)
+      derives the expectations and records that the default is **not** the
+      library's `accent` token, so a component must pass its own. Five mutation
+      proofs observed and reverted, all `exit 1` (M1 no custom `color`, M2
+      swapped colours, M3 token accent as the runtime constant, M4 card
+      background, M5 token fixture using `accent`). Focused ids:
+      `search-highlights`, `live-highlights`; no `--all` in that task.
+
+`[ ]` **Run the promotion gate on the head that includes the wash pixels** per
+      plan `702`: both registries once, totals read back from
+      `.artifacts/smoke-report.json`/`live-report.json`, no `provenance.json`
+      from a plain `--all`, `check`/`lint`/`test` green. Expected totals:
+      headless **106/106** (`3865` checks) and live **95/95** (`2617` checks),
+      each `+41` over plan `699`.
 
 `[x]` **Run the promotion gate on the head that includes plan `697`'s chart
       colour pixels** per plan `699`: verification only on `4101684e` (code
