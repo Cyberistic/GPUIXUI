@@ -10,6 +10,10 @@
  * The options are data rather than compound children because the trigger needs
  * their labels; the `SelectItem` composition below is the shadcn escape hatch
  * for anything the data shape cannot express.
+ *
+ * The resting appearance is a Tailwind recipe (`recipe/selectTriggerClass`,
+ * `recipe/selectContentClass`, `recipe/selectItemClass`), compiled through
+ * `@gpuixui/tw`.
  */
 
 import type { ReactElement } from "react";
@@ -25,10 +29,16 @@ import {
   type SelectItemState,
   type SelectTriggerState,
 } from "@gpuix/react/select";
-import { controlStyle, surfaceStyle, type ControlSpec } from "../core/style.js";
+import type { ControlSpec } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
-import { mergeStyle } from "./internal.js";
+import {
+  selectContentClass,
+  selectItemClass,
+  selectTriggerClass,
+} from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
+import { mergeStyle, suppressFeedback } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface SelectOption {
@@ -59,54 +69,37 @@ export interface SelectProps {
 }
 
 /** The trigger is the field chrome with the value pushed to the far edge. */
-export const selectTriggerStyle =
-  (
-    spec: ControlSpec,
-    theme: PrimitiveTheme,
-  ): ((state: SelectTriggerState) => StyleDesc) =>
-  (state) =>
-    mergeStyle(controlStyle({ ...spec, disabled: state.disabled }, theme), {
-      justifyContent: "space-between",
-    });
+export const selectTriggerStyle = (
+  spec: ControlSpec,
+  theme: PrimitiveTheme,
+): ((state: SelectTriggerState) => StyleDesc) => {
+  const resolved = recipeTw.classesToStyle(
+    selectTriggerClass({
+      size: spec.size,
+      invalid: spec.invalid,
+      fullWidth: spec.fullWidth,
+    }),
+    theme,
+  );
+  return (state) => {
+    let style = resolved.style;
+    if (spec.invalid === true) style = mergeStyle(style, resolved.invalid);
+    if (state.disabled === true) {
+      style = suppressFeedback(mergeStyle(style, resolved.disabled));
+    }
+    return style;
+  };
+};
 
 /** The list: the popover surface, one step of padding, full trigger width. */
-export const selectContentStyle = (theme: PrimitiveTheme): StyleDesc => ({
-  ...surfaceStyle(
-    { tone: "popover", radius: "md", border: true, elevation: "overlay" },
-    theme,
-  ),
-  padding: theme.spacing.xs,
-  gap: theme.spacing["2xs"],
-  minWidth: "100%",
-});
+export const selectContentStyle = (theme: PrimitiveTheme): StyleDesc =>
+  recipeTw.classesToStyle(selectContentClass, theme).style;
 
 /** An item's paint, from the three states the runtime reports. */
 export const selectItemStyle =
   (theme: PrimitiveTheme): ((state: SelectItemState) => StyleDesc) =>
-  (state) => ({
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    height: theme.density.controlHeight.sm,
-    paddingLeft: theme.spacing.sm,
-    paddingRight: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-    fontSize: theme.typography.label.fontSize,
-    lineHeight: theme.typography.label.lineHeight,
-    color:
-      state.disabled === true
-        ? theme.colors.disabledForeground
-        : theme.colors.popoverForeground,
-    backgroundColor:
-      state.disabled === true
-        ? undefined
-        : state.selected === true
-          ? theme.colors.selected
-          : state.highlighted === true
-            ? theme.colors.hover
-            : undefined,
-    cursor: state.disabled === true ? "not-allowed" : "pointer",
-  });
+  (state) =>
+    recipeTw.classesToStyle(selectItemClass(state), theme).style;
 
 /** The element tree `Select` renders. Pure in its arguments. */
 export const renderSelect = (

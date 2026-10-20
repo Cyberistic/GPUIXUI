@@ -4,8 +4,44 @@ The primitives' resting appearance is moving from the imperative resolvers in
 `core/style.ts` / `core/variants.ts` / `core/layout.ts` to Tailwind class
 strings compiled through `@gpuixui/tw`. This is a **syntax migration, not a
 redesign**: the compiled `StyleDesc` must equal what the old resolver produced,
-which is exactly what `src/recipe/recipe.test.ts` proves for the five converted
-primitives (Button, Input, Text, Stack, Grid).
+which is exactly what `src/recipe/recipe.test.ts` proves for the converted
+primitives.
+
+## Conversion status
+
+Converted — the resting appearance is a `src/recipe` class string, compiled
+through `recipeTw`, with the caller's `className` joined last:
+
+| Primitive | Recipe | Notes |
+| --------- | ------ | ----- |
+| `Button` | `buttonClass` | first wave |
+| `Input`, `TextArea` | `fieldClass` | `TextArea` is transitive — it renders `Input`'s `fieldChrome` |
+| `Text` | `textClass` | first wave |
+| `Stack`, `Grid` | `stackClass`, `gridClass` | first wave |
+| `Box` | `boxClass` | surface tones + layout facts |
+| `Label` | — | a `Stack` of `Text`; its `className`/`style` flow to the outer column |
+| `Separator` | `separatorClass` | also `separatorGroupClass` for the labelled row |
+| `ScrollArea` | `scrollClass` | |
+| `ButtonGroup` | `buttonGroupClass` | |
+| `Toggle` | `toggleClass` | |
+| `OTPField` | `otpGroupClass`, `fieldSquareClass` | |
+| `Select` | `selectTriggerClass`, `selectContentClass`, `selectItemClass` | |
+| `Rating` | `ratingStarClass`, `ratingGroupClass` | |
+| `Tooltip` | `tooltipClass` | |
+
+Skipped — the component's resting appearance is a **computed numeric or
+dynamic value** that no utility maps to a static class string, so it stays on
+its `core/` resolver:
+
+| Primitive | Reason |
+| --------- | ------ |
+| `NumberField` | the stepper column width is `iconSize.md + spacing.sm`, a computed sum |
+| `Checkbox`, `RadioGroup`, `Switch` | `iconSize`-derived geometry — a scale the registry does not map — plus computed derivatives (radio dot `round(iconSize/2)`, switch track `round(iconSize × 1.75)`, switch thumb `iconSize − 2·spacing.2xs`) |
+| `Slider`, `RangeSlider` | computed percentage fill widths, `iconSize` thumb dimensions and negative margins |
+| `Meter`, `Progress` | computed percentage fill widths |
+| `Spinner` | a caller-number dot side plus per-step computed opacity |
+| `Skeleton` | arbitrary `width`/`height` (number or string) plus per-step pulse opacity |
+
 
 ## The two halves
 
@@ -92,6 +128,9 @@ Geometry, colour and type map to the classes below. Columns are the
 | `height` (control) | `h-<size>` (`sm`/`md`/`lg`) | registry family → `density.controlHeight` |
 | `paddingLeft`/`Right` (control) | `px-<size>` | registry family → `density.controlPaddingX` |
 | `paddingLeft`/`Right: 0` | `px-0` | built-in |
+| `padding` (spacing step) | `p-<step>` | registry family → `theme.spacing` |
+| `paddingLeft`/`Right`/`Top`/`Bottom` (spacing step) | `pl-` `pr-` `pt-` `pb-` | registry family → `theme.spacing` |
+| `marginLeft`/`Right`/`Top`/`Bottom` (spacing step) | `ml-` `mr-` `mt-` `mb-` (`-0` exact) | registry family → `theme.spacing` |
 | `borderRadius` | `rounded-<step>` | registry family → `theme.radius` |
 | `borderWidth: 1` | `border` | built-in |
 | `borderWidth: 0` | `border-0` | built-in |
@@ -99,6 +138,7 @@ Geometry, colour and type map to the classes below. Columns are the
 | `backgroundColor` | `bg-<role>` (`bg-primary`, `bg-input`, …) | built-in role table |
 | `color` | `text-<role>` (`text-foreground`, `text-primary`, …) | built-in role table |
 | `fontSize`/`lineHeight`/`fontWeight` | `type-<role>` (`type-label`, `type-body`, `type-h2`, …) | registry family → `theme.typography` |
+| `fontSize`/`lineHeight` (inherited weight) | `type-size-<role>` (`type-size-caption`, `type-size-label`) | registry family → `theme.typography`, no weight |
 | `fontFamily` | `font-sans` / `font-mono` | registry |
 | `cursor` | `cursor-pointer` `cursor-text` `cursor-not-allowed` | `pointer`/`not-allowed` built-in, `text` registry |
 | `userSelect` | `select-none` / `select-text` | `none` built-in, `text` registry |
@@ -108,6 +148,11 @@ Geometry, colour and type map to the classes below. Columns are the
 | `lineClamp: n` | `line-clamp-<n>` | registry family |
 | `opacity` | `opacity-<n>` | built-in |
 | `textDecoration: "underline"` | `underline` | built-in |
+| `overflowX` / `overflowY` | `overflow-x-*` `overflow-y-*` | registry |
+| `height`/`width: borderWidth.thin` | `h-px` / `w-px` | registry |
+| `flexShrink: 1` | `shrink-1` | registry |
+| `minWidth: "100%"` | `min-w-full` | registry |
+| `boxShadow` (elevation) | `shadow-<level>` (`sm`/`md`/`lg`) | built-in; `overlay` is empty |
 | `boxShadow` (focus ring) | not a class — `focusRingStyle(theme, invalid)` | registry of `internal.ts` |
 
 Interaction state is expressed with the same prefixes `@gpuixui/tw` already
@@ -154,12 +199,17 @@ anything else, so the built-in table still runs for numeric/unknown classes:
 | ------ | -------- | -------- |
 | `h-` / `px-` / `size-` | density control metrics | `h-md` → `density.controlHeight.md`; `h-9` falls back to 36 |
 | `gap-` | spacing scale | `gap-sm` → `theme.spacing.sm`; `gap-2` falls back to 8 |
+| `p-` `pl-` `pr-` `pt-` `pb-` | spacing scale (padding) | `p-xs` → `theme.spacing.xs`; `pl-sm` → `theme.spacing.sm` |
+| `ml-` `mr-` `mt-` `mb-` | spacing scale (margin) | `ml-md` → `theme.spacing.md`; `ml-0` exact → 0 |
 | `rounded-` | radius scale | `rounded-md` → `theme.radius.md`; `rounded-2xl` falls back to 16 |
 | `type-` | typography role | `type-label` → label size/leading/weight; `text-sm` still a size, `text-primary` still a colour |
+| `type-size-` | typography role, size/leading only | `type-size-caption` → caption size/leading, weight inherited |
 
 `type-*` (not `text-*`) is deliberate: `cn` resolves `text-*` as size-vs-colour,
 so a `text-h2` would be dropped as a colour conflict. The `type-` prefix keeps
-the role out of that namespace.
+the role out of that namespace. `type-size-*` is the same role resolution
+*without* `fontWeight`, for surfaces that take a role's size but inherit the
+surrounding weight (a menu row, a tooltip).
 
 ## Unsupported utilities
 

@@ -11,6 +11,9 @@
  * **Limitation:** the trigger must be a focusable element for the keyboard
  * behaviour to work, and GPUix has no `focusVisible` (plan 020 §1.2), so a
  * tooltip opened by a mouse press looks the same as one opened by Tab.
+ *
+ * The resting appearance is a Tailwind recipe (`recipe/tooltipClass`), compiled
+ * through `@gpuixui/tw`.
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -21,8 +24,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
-import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { tooltipClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
@@ -39,19 +43,8 @@ export interface TooltipProps {
 }
 
 /** The tip: the popover surface, the caption type, no wrapping. */
-export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc => ({
-  ...surfaceStyle(
-    { tone: "popover", radius: "sm", border: true, elevation: "overlay" },
-    theme,
-  ),
-  paddingLeft: theme.spacing.sm,
-  paddingRight: theme.spacing.sm,
-  paddingTop: theme.spacing.xs,
-  paddingBottom: theme.spacing.xs,
-  fontSize: theme.typography.caption.fontSize,
-  lineHeight: theme.typography.caption.lineHeight,
-  whiteSpace: "nowrap",
-});
+export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc =>
+  recipeTw.classesToStyle(tooltipClass, theme).style;
 
 /** The element tree `Tooltip` renders. Pure in its arguments. */
 export const renderTooltip = (

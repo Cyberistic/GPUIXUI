@@ -20,6 +20,10 @@
  * cell rather than repeating. Backspace on a filled cell is the native edit and
  * arrives through `onChange`; the key-up handler must not delete the previous
  * cell as well, so it remembers that this key already emptied the cell.
+ *
+ * The resting appearance is a Tailwind recipe (`recipe/otpGroupClass` and
+ * `recipe/fieldSquareClass`), compiled through `@gpuixui/tw`; the caller's
+ * `className` is joined last so it wins conflicts exactly as `cn` resolves them.
  */
 
 import { useRef, useState, type ReactElement } from "react";
@@ -27,6 +31,7 @@ import { useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { cn } from "@gpuixui/tw";
 import {
   applyOtpInput,
   decideOtpKey,
@@ -35,10 +40,17 @@ import {
   otpLength,
   type OtpEdit,
 } from "../core/otp.js";
-import { nativeTextTheme, otpCellStyle, otpGroupStyle } from "../core/style.js";
+import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import { fieldSquareClass, otpGroupClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
+import {
+  focusRingStyle,
+  mergeStyle,
+  suppressFeedback,
+  useControlState,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface OTPFieldProps {
@@ -62,6 +74,8 @@ export interface OTPFieldProps {
   /** Focus the first cell on mount. */
   readonly autoFocus?: boolean;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -101,12 +115,34 @@ export const renderOtpField = (
   const limit = otpLength(props.length ?? 6);
   const disabled = props.disabled === true;
   const cells = otpCells(state.current, limit);
+  const group = recipeTw.classesToStyle(
+    cn(otpGroupClass, props.className),
+    theme,
+  ).style;
+  const cellStyle = (index: number): StyleDesc => {
+    const resolved = recipeTw.classesToStyle(
+      fieldSquareClass({ size: props.size ?? "md", invalid: props.invalid }),
+      theme,
+    );
+    let style = resolved.style;
+    if (props.invalid === true) style = mergeStyle(style, resolved.invalid);
+    if (disabled) {
+      style = suppressFeedback(mergeStyle(style, resolved.disabled));
+    }
+    if (
+      !disabled &&
+      Option.exists(focus.focusedIndex, (focused) => focused === index)
+    ) {
+      style = mergeStyle(style, focusRingStyle(theme, props.invalid));
+    }
+    return style;
+  };
   return (
     <div
       role="group"
       aria-label={props.label}
       testId={props.testId}
-      style={mergeStyle(otpGroupStyle(theme), props.style)}
+      style={mergeStyle(group, props.style)}
     >
       {Arr.map(cells, (cell, index) => (
         <input
@@ -123,18 +159,7 @@ export const renderOtpField = (
           tabIndex={disabled ? -1 : 0}
           theme={nativeTextTheme(theme)}
           aria-label={otpCellLabel(props.label, index)}
-          style={otpCellStyle(
-            {
-              size: props.size ?? "md",
-              invalid: props.invalid,
-              disabled: props.disabled,
-              focused: Option.exists(
-                focus.focusedIndex,
-                (focused) => focused === index,
-              ),
-            },
-            theme,
-          )}
+          style={cellStyle(index)}
           onChange={(event: EventPayload) => {
             if (disabled) return;
             handlers.onEdit(index, event.value ?? "");

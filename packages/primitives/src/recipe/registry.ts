@@ -58,6 +58,10 @@ const TEXT_ROLE: Readonly<Partial<Record<string, TextRole>>> = {
   "code-block": "codeBlock",
 };
 
+/** A spacing step by its class-string name, or nothing for a non-step value. */
+const spacingStep = (value: string | undefined): SpaceStep | undefined =>
+  value === undefined ? undefined : SPACING_STEP[value];
+
 /** The three typographic numbers a role resolves to (family is separate). */
 const roleType = (
   theme: Theme,
@@ -69,6 +73,15 @@ const roleType = (
     lineHeight: type.lineHeight,
     fontWeight: type.fontWeight,
   };
+};
+
+/** A role's size and leading only, for text that inherits the surrounding weight. */
+const roleSize = (
+  theme: Theme,
+  role: TextRole,
+): Pick<StyleDesc, "fontSize" | "lineHeight"> => {
+  const type = theme.typography[role];
+  return { fontSize: type.fontSize, lineHeight: type.lineHeight };
 };
 
 /** The primitives' compiler: built-in utilities plus the theme-scale steps. */
@@ -91,11 +104,75 @@ export const recipeTw = createTw({
     "text-ellipsis": () => ({ textOverflow: "ellipsis" }),
     "font-sans": (theme) => ({ fontFamily: theme.typography.sans }),
     "font-mono": (theme) => ({ fontFamily: theme.typography.mono }),
+    "h-px": (theme) => ({ height: theme.borderWidth.thin }),
+    "w-px": (theme) => ({ width: theme.borderWidth.thin }),
+    "shrink-1": () => ({ flexShrink: 1 }),
+    "min-w-full": () => ({ minWidth: "100%" }),
+    "overflow-x-hidden": () => ({ overflowX: "hidden" }),
+    "overflow-x-scroll": () => ({ overflowX: "scroll" }),
+    "overflow-y-hidden": () => ({ overflowY: "hidden" }),
+    "overflow-y-scroll": () => ({ overflowY: "scroll" }),
+    "ml-0": () => ({ marginLeft: 0 }),
+    "mr-0": () => ({ marginRight: 0 }),
+    "mt-0": () => ({ marginTop: 0 }),
+    "mb-0": () => ({ marginBottom: 0 }),
 
     // Scale-step families → theme values, falling back to the built-in table.
     gap: (theme, value) => {
-      const step = value === undefined ? undefined : SPACING_STEP[value];
+      const step = spacingStep(value);
       return step === undefined ? undefined : { gap: theme.spacing[step] };
+    },
+    p: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined ? undefined : { padding: theme.spacing[step] };
+    },
+    pl: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined
+        ? undefined
+        : { paddingLeft: theme.spacing[step] };
+    },
+    pr: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined
+        ? undefined
+        : { paddingRight: theme.spacing[step] };
+    },
+    pt: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined
+        ? undefined
+        : { paddingTop: theme.spacing[step] };
+    },
+    pb: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined
+        ? undefined
+        : { paddingBottom: theme.spacing[step] };
+    },
+    ml: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined
+        ? undefined
+        : { marginLeft: theme.spacing[step] };
+    },
+    mr: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined
+        ? undefined
+        : { marginRight: theme.spacing[step] };
+    },
+    mt: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined
+        ? undefined
+        : { marginTop: theme.spacing[step] };
+    },
+    mb: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined
+        ? undefined
+        : { marginBottom: theme.spacing[step] };
     },
     h: (theme, value) => {
       const size = value === undefined ? undefined : CONTROL_SIZE[value];
@@ -126,6 +203,10 @@ export const recipeTw = createTw({
     type: (theme, value) => {
       const role = value === undefined ? undefined : TEXT_ROLE[value];
       return role === undefined ? undefined : roleType(theme, role);
+    },
+    "type-size": (theme, value) => {
+      const role = value === undefined ? undefined : TEXT_ROLE[value];
+      return role === undefined ? undefined : roleSize(theme, role);
     },
     "line-clamp": (_theme, value) =>
       value === undefined

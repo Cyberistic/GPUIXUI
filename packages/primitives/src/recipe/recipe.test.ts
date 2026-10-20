@@ -1,11 +1,11 @@
 /**
  * The recipe → `StyleDesc` equivalence guard.
  *
- * The migration moved the resting appearance of Button, Input, Text, Stack and
- * Grid from `core/style.ts`'s / `core/layout.ts`'s imperative resolvers to
- * Tailwind class strings compiled through `@gpuixui/tw`. This suite proves the
- * two expressions agree: for every variant, size and modifier, the compiled
- * recipe equals what the pre-migration resolver produced.
+ * The migration moved the resting appearance of the primitives from
+ * `core/style.ts`'s / `core/layout.ts`'s imperative resolvers to Tailwind class
+ * strings compiled through `@gpuixui/tw`. This suite proves the two expressions
+ * agree: for every variant, size and modifier, the compiled recipe equals what
+ * the pre-migration resolver produced.
  *
  * Exact equality is achievable because the primitives' recipe uses theme-scale
  * utilities (`h-md`, `gap-sm`, `type-label`) instead of shadcn's fixed metrics
@@ -27,12 +27,20 @@ import * as Arr from "effect/Array";
 import {
   controlStyle,
   fieldTextStyle,
+  otpCellStyle,
+  otpGroupStyle,
+  ratingStarStyle,
+  ruleStyle,
+  scrollStyle,
+  surfaceStyle,
   textStyle,
   type TextSpec,
 } from "../core/style.js";
 import {
-  stackStyle,
+  boxStyle,
   gridStyle,
+  stackStyle,
+  type BoxSpec,
   type GridSpec,
   type StackSpec,
 } from "../core/layout.js";
@@ -42,15 +50,31 @@ import {
   BUTTON_VARIANTS,
   buttonVariants,
   fieldVariant,
+  TOGGLE_VARIANTS,
+  toggleVariants,
   type ButtonVariant,
+  type ToggleVariant,
 } from "../core/variants.js";
-import { mergeStyle } from "../components/internal.js";
+import { mergeStyle, suppressFeedback } from "../components/internal.js";
 import {
+  boxClass,
   buttonClass,
+  buttonGroupClass,
   fieldClass,
+  fieldSquareClass,
   gridClass,
+  otpGroupClass,
+  ratingGroupClass,
+  ratingStarClass,
+  scrollClass,
+  selectContentClass,
+  selectItemClass,
+  selectTriggerClass,
+  separatorClass,
   stackClass,
   textClass,
+  toggleClass,
+  tooltipClass,
 } from "./index.js";
 import { recipeTw } from "./registry.js";
 
@@ -300,6 +324,281 @@ describe("Grid recipe", () => {
   });
 });
 
+describe("Box recipe", () => {
+  it("matches boxStyle across surfaces and layout facts", () => {
+    const cases: ReadonlyArray<BoxSpec> = [
+      { tone: "none" },
+      { tone: "background", padding: "md", radius: "lg" },
+      { tone: "card", border: true },
+      { tone: "popover", radius: "md", border: true, elevation: "overlay" },
+      { tone: "muted", elevation: "md" },
+      { tone: "accent", grow: true },
+      { tone: "selected", shrink: true, fullWidth: true },
+      { tone: "skeleton", fullHeight: true },
+    ];
+    Arr.forEach(cases, (spec) => {
+      expect(recipeTw.classesToStyle(boxClass(spec), testTheme).style).toEqual(
+        boxStyle(spec, testTheme),
+      );
+    });
+  });
+
+  it("reads the surface role from the theme, not a fixed value", () => {
+    const repainted: PrimitiveTheme = {
+      ...testTheme,
+      colors: { ...testTheme.colors, card: "#ABCDEF" },
+    };
+    expect(
+      recipeTw.classesToStyle(boxClass({ tone: "card" }), repainted).style
+        .backgroundColor,
+    ).toBe("#ABCDEF");
+  });
+});
+
+describe("Toggle recipe", () => {
+  it("matches controlStyle for every variant, state and size", () => {
+    Arr.forEach(TOGGLE_VARIANTS, (variant: ToggleVariant) => {
+      Arr.forEach([false, true] as const, (pressed) => {
+        Arr.forEach(SIZES, (size) => {
+          const spec = {
+            variant: pressed
+              ? toggleVariants[variant].pressed
+              : toggleVariants[variant].rest,
+            size,
+          };
+          expect(
+            recipeTw.classesToStyle(
+              toggleClass(variant, pressed, size),
+              testTheme,
+            ).style,
+          ).toEqual(controlStyle(spec, testTheme));
+        });
+      });
+    });
+  });
+
+  it("reads the accent role from the theme while pressed", () => {
+    const repainted: PrimitiveTheme = {
+      ...testTheme,
+      colors: { ...testTheme.colors, accent: "#112233" },
+    };
+    expect(
+      recipeTw.classesToStyle(toggleClass("default", true, "md"), repainted)
+        .style.backgroundColor,
+    ).toBe("#112233");
+  });
+});
+
+describe("Separator recipe", () => {
+  it("matches ruleStyle for both orientations and insets", () => {
+    Arr.forEach(["horizontal", "vertical"] as const, (orientation) => {
+      Arr.forEach([undefined, "sm", "lg"] as const, (inset) => {
+        expect(
+          recipeTw.classesToStyle(separatorClass(orientation, inset), testTheme)
+            .style,
+        ).toEqual(ruleStyle({ orientation, inset }, testTheme));
+      });
+    });
+  });
+});
+
+describe("ScrollArea recipe", () => {
+  it("matches scrollStyle for each axis", () => {
+    Arr.forEach(["vertical", "horizontal", "both"] as const, (axis) => {
+      expect(
+        recipeTw.classesToStyle(scrollClass(axis), testTheme).style,
+      ).toEqual(scrollStyle({ axis }));
+    });
+  });
+});
+
+describe("ButtonGroup recipe", () => {
+  it("matches the attached and separated layouts", () => {
+    expect(
+      recipeTw.classesToStyle(buttonGroupClass("attached", "sm"), testTheme)
+        .style,
+    ).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 0,
+      borderRadius: testTheme.radius.md,
+      overflow: "hidden",
+    });
+    expect(
+      recipeTw.classesToStyle(buttonGroupClass("separated", "sm"), testTheme)
+        .style,
+    ).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: testTheme.spacing.sm,
+    });
+  });
+});
+
+describe("OTP recipe", () => {
+  it("matches otpGroupStyle", () => {
+    expect(recipeTw.classesToStyle(otpGroupClass, testTheme).style).toEqual(
+      otpGroupStyle(testTheme),
+    );
+  });
+
+  it("matches otpCellStyle for every size and invalid state", () => {
+    Arr.forEach(SIZES, (size) => {
+      Arr.forEach([false, true] as const, (invalid) => {
+        const resolved = recipeTw.classesToStyle(
+          fieldSquareClass({ size, invalid }),
+          testTheme,
+        );
+        const actual = mergeStyle(
+          resolved.style,
+          invalid ? resolved.invalid : undefined,
+        );
+        expect(actual).toEqual(otpCellStyle({ size, invalid }, testTheme));
+      });
+    });
+  });
+
+  it("suppresses feedback for a disabled cell", () => {
+    const resolved = recipeTw.classesToStyle(
+      fieldSquareClass({ size: "md" }),
+      testTheme,
+    );
+    expect(
+      suppressFeedback(mergeStyle(resolved.style, resolved.disabled)),
+    ).toEqual(otpCellStyle({ size: "md", disabled: true }, testTheme));
+  });
+});
+
+describe("Select recipe", () => {
+  it("matches the trigger's field chrome and space-between justify", () => {
+    Arr.forEach(SIZES, (size) => {
+      Arr.forEach([false, true] as const, (invalid) => {
+        const resolved = recipeTw.classesToStyle(
+          selectTriggerClass({ size, invalid }),
+          testTheme,
+        );
+        const actual = mergeStyle(
+          resolved.style,
+          invalid ? resolved.invalid : undefined,
+        );
+        const oracle = mergeStyle(
+          controlStyle({ variant: fieldVariant, size, invalid }, testTheme),
+          { justifyContent: "space-between" },
+        );
+        expect(actual).toEqual(oracle);
+      });
+    });
+  });
+
+  it("matches the popover list surface", () => {
+    const oracle = {
+      ...surfaceStyle(
+        { tone: "popover", radius: "md", border: true, elevation: "overlay" },
+        testTheme,
+      ),
+      padding: testTheme.spacing.xs,
+      gap: testTheme.spacing["2xs"],
+      minWidth: "100%",
+    };
+    expect(
+      recipeTw.classesToStyle(selectContentClass, testTheme).style,
+    ).toEqual(oracle);
+  });
+
+  it("matches an item's paint for each reported state", () => {
+    const states = [
+      { selected: false, highlighted: false, disabled: false },
+      { selected: true, highlighted: false, disabled: false },
+      { selected: false, highlighted: true, disabled: false },
+      { selected: false, highlighted: false, disabled: true },
+    ] as const;
+    Arr.forEach(states, (state) => {
+      const oracle = {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        height: testTheme.density.controlHeight.sm,
+        paddingLeft: testTheme.spacing.sm,
+        paddingRight: testTheme.spacing.sm,
+        borderRadius: testTheme.radius.sm,
+        fontSize: testTheme.typography.label.fontSize,
+        lineHeight: testTheme.typography.label.lineHeight,
+        color:
+          state.disabled === true
+            ? testTheme.colors.disabledForeground
+            : testTheme.colors.popoverForeground,
+        backgroundColor:
+          state.disabled === true
+            ? undefined
+            : state.selected === true
+              ? testTheme.colors.selected
+              : state.highlighted === true
+                ? testTheme.colors.hover
+                : undefined,
+        cursor: state.disabled === true ? "not-allowed" : "pointer",
+      };
+      expect(
+        recipeTw.classesToStyle(selectItemClass(state), testTheme).style,
+      ).toEqual(oracle);
+    });
+  });
+});
+
+describe("Rating recipe", () => {
+  it("matches ratingStarStyle for each interactivity", () => {
+    const cases = [
+      { disabled: false, readOnly: false },
+      { disabled: true, readOnly: false },
+      { disabled: false, readOnly: true },
+    ] as const;
+    Arr.forEach(cases, (options) => {
+      const resolved = recipeTw.classesToStyle(
+        ratingStarClass(options),
+        testTheme,
+      );
+      const actual = mergeStyle(
+        resolved.style,
+        options.disabled === true ? resolved.disabled : undefined,
+      );
+      expect(actual).toEqual(
+        ratingStarStyle({ size: "md", ...options }, testTheme),
+      );
+    });
+  });
+
+  it("matches the star row", () => {
+    expect(recipeTw.classesToStyle(ratingGroupClass, testTheme).style).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: testTheme.spacing["2xs"],
+    });
+  });
+});
+
+describe("Tooltip recipe", () => {
+  it("matches the popover surface, caption type and padding", () => {
+    const oracle = {
+      ...surfaceStyle(
+        { tone: "popover", radius: "sm", border: true, elevation: "overlay" },
+        testTheme,
+      ),
+      paddingLeft: testTheme.spacing.sm,
+      paddingRight: testTheme.spacing.sm,
+      paddingTop: testTheme.spacing.xs,
+      paddingBottom: testTheme.spacing.xs,
+      fontSize: testTheme.typography.caption.fontSize,
+      lineHeight: testTheme.typography.caption.lineHeight,
+      whiteSpace: "nowrap",
+    };
+    expect(recipeTw.classesToStyle(tooltipClass, testTheme).style).toEqual(
+      oracle,
+    );
+  });
+});
+
 describe("the recipe stays one expression, not a stub", () => {
   it("changes when the resolver's decision changes", () => {
     const repainted: PrimitiveTheme = {
@@ -315,13 +614,26 @@ describe("the recipe stays one expression, not a stub", () => {
     ).toBe("#FF00FF");
   });
 
-  it("registers no unsupported classes for the five recipes", () => {
+  it("registers no unsupported classes for the migrated recipes", () => {
     const joined = [
       buttonClass("primary", "md"),
       fieldClass({ size: "md", invalid: true, fullWidth: true }),
       textClass({ role: "code", tone: "muted", truncate: true }),
       stackClass({ direction: "column", gap: "lg" }),
       gridClass({ columns: 3, rows: 2, gap: "md" }),
+      boxClass({ tone: "card", border: true, elevation: "md" }),
+      toggleClass("outline", true, "lg"),
+      separatorClass("horizontal", "md"),
+      scrollClass("both"),
+      buttonGroupClass("attached", "sm"),
+      fieldSquareClass({ size: "md", invalid: true }),
+      otpGroupClass,
+      ratingStarClass({ disabled: true }),
+      ratingGroupClass,
+      tooltipClass,
+      selectTriggerClass({ size: "md", invalid: true, fullWidth: true }),
+      selectContentClass,
+      selectItemClass({ selected: true, highlighted: false, disabled: false }),
     ];
     const unsupported = Arr.flatMap(
       joined,

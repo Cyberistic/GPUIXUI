@@ -9,6 +9,10 @@
  * The paint uses two icons of the same geometry — an outline star and a filled
  * one — tinted with the brand and muted roles, because GPUix's `<svg>` is
  * monochrome and cannot be filled by a style.
+ *
+ * The resting appearance is a Tailwind recipe (`recipe/ratingStarClass` and
+ * `recipe/ratingGroupClass`), compiled through `@gpuixui/tw`; the caller's
+ * `className` is joined last so it wins conflicts exactly as `cn` resolves them.
  */
 
 import { useRef, useState, type ReactElement } from "react";
@@ -16,12 +20,15 @@ import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { clampRating, decideRating, ratingTabStop } from "../core/rating.js";
-import { ratingStarColor, ratingStarStyle } from "../core/style.js";
+import { ratingStarColor } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import { ratingGroupClass, ratingStarClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
+import { focusRingStyle, mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface RatingProps {
@@ -39,6 +46,8 @@ export interface RatingProps {
   /** The group's name; each star is announced as "N of max". */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -73,6 +82,18 @@ export const renderRating = (
   const value = clampRating(state.current, max);
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
+  const starStyle = (index: number): StyleDesc => {
+    const resolved = recipeTw.classesToStyle(
+      ratingStarClass({ disabled: props.disabled, readOnly: props.readOnly }),
+      theme,
+    );
+    let style = resolved.style;
+    if (props.disabled === true) style = mergeStyle(style, resolved.disabled);
+    if (Option.exists(focus.focusedIndex, (focused) => focused === index)) {
+      style = mergeStyle(style, focusRingStyle(theme));
+    }
+    return style;
+  };
   const star = (index: number): ReactElement => (
     <div
       key={index}
@@ -86,18 +107,7 @@ export const renderRating = (
       }}
       onFocus={() => focus.onFocus(index)}
       onBlur={() => focus.onBlur(index)}
-      style={ratingStarStyle(
-        {
-          size: props.size ?? "md",
-          disabled: props.disabled,
-          readOnly: props.readOnly,
-          focused: Option.exists(
-            focus.focusedIndex,
-            (focused) => focused === index,
-          ),
-        },
-        theme,
-      )}
+      style={starStyle(index)}
     >
       <Icon
         name={index <= value ? "star-filled" : "star"}
@@ -119,12 +129,8 @@ export const renderRating = (
         });
       }}
       style={mergeStyle(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing["2xs"],
-        },
+        recipeTw.classesToStyle(cn(ratingGroupClass, props.className), theme)
+          .style,
         props.style,
       )}
     >

@@ -67,7 +67,7 @@ identity, stacked-native deck hero, library grid, proof, attribution
 
 ### `@gpuixui/tw` migration (`tw-primitives`)
 
-`[~]` `[██░░░░░░░]` 1/3
+`[~]` `[██████░░░░]` 2/3
 
 `[x]` Add `@gpuixui/tw` as a `@gpuixui/primitives` dependency and convert the
 core primitives — `Button`, `Input`, `Text`, `Stack`, `Grid` (plus `TextArea`'s
@@ -79,11 +79,17 @@ variant/size/tone; `MIGRATION.md` records the mapping for the rest. `Grid`
 landed with `grid-cols-*` / `grid-rows-*` utilities added to `@gpuixui/tw`'s
 built-in table (the runtime's grid is numeric, so spans and arbitrary templates
 stay unsupported — `MIGRATION.md` §"The grid").
-`[ ]` Convert the remaining `packages/primitives/src/components` (`Box`, `Label`,
-`Separator`, `ScrollArea`, `ButtonGroup`, `Toggle`, `TextArea`, `NumberField`,
-`OTPField`, `Select`, `Checkbox`, `RadioGroup`, `Switch`, `Rating`, `Slider`,
-`RangeSlider`, `Meter`, `Progress`, `Spinner`, `Skeleton`, `Tooltip`) with the
-recipe in `MIGRATION.md`.
+`[x]` Convert the remaining `packages/primitives/src/components` with the recipe
+in `MIGRATION.md` — `Box`, `Label`, `Separator`, `ScrollArea`, `ButtonGroup`,
+`Toggle`, `OTPField`, `Select`, `Rating`, `Tooltip` now render through
+`recipeTw` (plus `TextArea`, transitively via `fieldChrome`). The components
+whose resting appearance is a computed numeric or dynamic value with no utility
+mapping stay on their `core/` resolver and are recorded as skips in
+`MIGRATION.md` §"Conversion status": `NumberField` (stepper column width),
+`Checkbox`/`RadioGroup`/`Switch` (iconSize-derived geometry and its computed
+derivatives), `Slider`/`RangeSlider` (percentage fills, iconSize thumbs,
+negative margins), `Meter`/`Progress` (percentage fills), `Spinner` (caller dot
+size + per-step opacity) and `Skeleton` (arbitrary dimensions + pulse opacity).
 `[ ]` Convert `packages/components` (Toast, Dialog, Popover, …) onto
 `@gpuixui/tw` — these may adopt the shadcn recipes' fixed metrics instead of the
 primitives' density scale.

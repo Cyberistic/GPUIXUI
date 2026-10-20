@@ -10,20 +10,28 @@
  * `"not pressed"`), the same channel Checkbox and Switch use. A screen reader
  * hears a button with a value, not a pressed button; the docs page says so.
  *
- * The paint is the shared control resolver with `core/variants.ts`'
- * `toggleVariants`, and the activation/keyboard contract is `Button`'s —
- * Enter on key down, Space on key up, a held key ignored.
+ * The paint is the shared control recipe with `core/variants.ts`' toggle
+ * variants, and the activation/keyboard contract is `Button`'s — Enter on key
+ * down, Space on key up, a held key ignored.
+ *
+ * The resting appearance is a Tailwind recipe (`recipe/toggleClass`), compiled
+ * through `@gpuixui/tw`; the caller's `className` is joined last so it wins
+ * conflicts exactly as `cn` resolves them.
  */
 
 import type { ReactElement, ReactNode } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
+import { cn } from "@gpuixui/tw";
 import { decideActivation } from "../core/keyboard.js";
-import { controlFocusStyle, controlStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { toggleVariants, type ToggleVariant } from "../core/variants.js";
+import type { ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
+import { toggleClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import {
+  focusRingStyle,
   mergeStyle,
+  suppressFeedback,
   useControlState,
   useFocus,
   type FocusState,
@@ -47,6 +55,8 @@ export interface ToggleProps {
   /** Accessible name. Required when the toggle has only an icon. */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -64,13 +74,6 @@ export const renderToggle = (
   onPressedChange: (pressed: boolean) => void,
 ): ReactElement => {
   const { size = "md", variant = "default" } = props;
-  const paint = toggleVariants[variant];
-  const spec = {
-    variant: state.current ? paint.pressed : paint.rest,
-    size,
-    square: props.square,
-    disabled: props.disabled,
-  };
   const toggle = (): void => {
     if (props.disabled === true) return;
     onPressedChange(!state.current);
@@ -81,6 +84,18 @@ export const renderToggle = (
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
     };
+  const resolved = recipeTw.classesToStyle(
+    cn(
+      toggleClass(variant, state.current, size, { square: props.square }),
+      props.className,
+    ),
+    theme,
+  );
+  let style = resolved.style;
+  if (props.disabled === true) {
+    style = suppressFeedback(mergeStyle(style, resolved.disabled));
+  }
+  if (focus.focused) style = mergeStyle(style, focusRingStyle(theme));
   return (
     <div
       role="button"
@@ -93,15 +108,7 @@ export const renderToggle = (
       onKeyUp={onKey("up")}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(
-        focus.focused
-          ? mergeStyle(
-              controlStyle(spec, theme),
-              controlFocusStyle(spec, theme),
-            )
-          : controlStyle(spec, theme),
-        props.style,
-      )}
+      style={mergeStyle(style, props.style)}
     >
       {props.leading}
       {props.children}

@@ -5,12 +5,19 @@
  * separator is a rule with a caption, which is a composition rather than a rule
  * property, so it is built from the same two elements here instead of growing
  * the resolver.
+ *
+ * The resting appearance is a Tailwind recipe (`recipe/separatorClass`),
+ * compiled through `@gpuixui/tw`; the caller's `className` is joined last so it
+ * wins conflicts exactly as `cn` resolves them.
  */
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import { ruleStyle, type RuleSpec } from "../core/style.js";
+import { cn } from "@gpuixui/tw";
+import type { RuleSpec } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { separatorClass, separatorGroupClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
@@ -19,33 +26,33 @@ export interface SeparatorProps extends RuleSpec {
   /** A caption centred on the rule. */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** Stable locator for automation. */
   readonly testId?: string;
 }
 
 export const renderSeparator = (
-  { orientation, inset, label, style, testId }: SeparatorProps,
+  { orientation, inset, label, style, className, testId }: SeparatorProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
-  const rule = mergeStyle(ruleStyle({ orientation, inset }, theme), style);
+  const classes = cn(separatorClass(orientation, inset), className);
+  const rule = mergeStyle(recipeTw.classesToStyle(classes, theme).style, style);
   if (label === undefined || orientation === "vertical") {
     return <div testId={testId} style={rule} />;
   }
+  const grown = mergeStyle(
+    recipeTw.classesToStyle(cn(classes, "flex-grow"), theme).style,
+    style,
+  );
+  const row = recipeTw.classesToStyle(separatorGroupClass, theme).style;
   return (
-    <div
-      testId={testId}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: theme.spacing.sm,
-      }}
-    >
-      <div style={{ ...rule, flexGrow: 1 }} />
+    <div testId={testId} style={row}>
+      <div style={grown} />
       <Text role="caption" tone="muted">
         {label}
       </Text>
-      <div style={{ ...rule, flexGrow: 1 }} />
+      <div style={grown} />
     </div>
   );
 };

@@ -6,11 +6,14 @@
  * control carries its own `aria-label` and `Label` is the visible text beside
  * it; `labelledBy` builds the control's own `label` prop so a caller writes the
  * name once and spreads it into the control.
+ *
+ * A label is a composition — a `Stack` of `Text` — so it has no resolver of its
+ * own: its appearance is the already-migrated Stack and Text recipes. Its
+ * `className`/`style` flow to the outer column.
  */
 
 import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import { mergeStyle } from "./internal.js";
 import { Stack } from "./Stack.js";
 import { Text } from "./Text.js";
 
@@ -22,6 +25,8 @@ export interface LabelProps {
   /** A second line of help under the name. */
   readonly description?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -45,13 +50,16 @@ export const renderLabel = ({
   invalid,
   description,
   style,
+  className,
   children,
   testId,
 }: LabelProps): ReactElement => (
   <Stack
     direction="column"
     gap="2xs"
-    style={mergeStyle({ width: "100%" }, style)}
+    fullWidth
+    className={className}
+    style={style}
     testId={testId}
   >
     <Stack direction="row" gap="2xs" align="baseline">
