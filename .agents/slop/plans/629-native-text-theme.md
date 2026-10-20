@@ -234,7 +234,7 @@ Change:
   markdown section to the new page (not a rewrite).
 - `apps/docs/content/docs/components/text-input.mdx` — point its Theming
   sentence at the new page.
-- `.agents/slop/plans/README.md`, `TODO.md`, `PLAN.md` (D64 row).
+- `.agents/slop/plans/README.md`, `TODO.md`, `PLAN.md` (D65 row).
 
 ## 6. Search ownership
 
@@ -342,7 +342,7 @@ Expected: every command exits `0`; `smoke:build` reports one more page
 - Every §1 missing query reaches the page; every regression row keeps its owner.
 - A compiling `nativeTextTheme` example and a compiling `<code>` example ship.
 - Build, a11y, responsive and root gates are run and recorded.
-- The plan index, `TODO.md` and `PLAN.md` D64 are updated; the branch is pushed.
+- The plan index, `TODO.md` and `PLAN.md` D65 are updated; the branch is pushed.
 
 ## 11. Measured results
 
