@@ -408,6 +408,7 @@ references without buying correctness.
 | [805](./805-example-header-figures.md) | The copyable examples' header figures have no owner | F | 310, 394, 539, 651, 658, 717, 733, 803 | done |
 | [806](./806-primary-mark-claims.md) | `primary` is measured as a fill, and as nine marks | F | 082, 332, 341, 347, 516, 557, 563, 698, 749 | done |
 | [807](./807-elevation-rationale.md) | The AAA dark elevation rationale has no owner | F | 085, 099, 345, 390, 505, 509, 778 | done |
+| [810](./810-solid-status-marks.md) | The solid status roles are described as fills, and three of them are marks | F | 014, 057, 083, 332, 340, 394, 399, 733, 749, 806 | ready |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4171,6 +4172,26 @@ chooses, the set's own alphas and the inherited geometry — from the shipped
 sets. The card composition is `1.030451…:1`, so `1.030` is the correct
 spelling and plan 505's `1.031` was an over-rounding; no colour, pair, floor,
 metric, role or shipped theme moves.
+
+Plan `810` corrects the mirror-image claim about the other three solid roles.
+The design system said "The solid roles are fills: light `warning` is 1.78:1
+against the canvas, so it is never the colour of text or a dot", the catalogue
+said "The solid roles are fills, not foregrounds", and `ThemeColors.destructive`
+said only "Destructive action background." — while `markPairs` and
+`trackMarkPairs` measure `success` as five marks and `destructive` as six, and
+the shipped `Progress`, `Slider`, `Rating` and `Timeline` paint exactly those
+compositions. `destructive` has a third job the descriptions never named: it is
+the invalid boundary — the field's error edge and the ring an invalid control is
+focused with, fourteen `boundary` pairs — so a copied palette could clear the
+error signal while every sentence called the role "a background". Both wrong
+sentences were *guarded*: `docs.test.ts` reconstructed them, which is why every
+later plan preserved them. The four descriptions now state the split — every
+solid status role is a surface, `primary`/`success`/`destructive` are marks,
+`warning`/`info` are fill-only, `destructive` is the boundary — and
+`solid-role-claims.test.ts` derives the classes, the mark surfaces and the
+twelve-rings-plus-two-edges split from the published lists, holding the role
+rows in both directions so a mark claim on `warning` fails as loudly as a missing
+one on `success`. No colour, pair, floor, metric, role or shipped theme moves.
 
 ## How to use a plan
 
