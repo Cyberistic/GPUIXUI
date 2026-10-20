@@ -126,6 +126,12 @@ import {
 import { palettePixels } from "../scenarios/palette-pixels.js";
 import { qrFrameChecks } from "../scenarios/qr-pixels.js";
 import { cropFrameChecks } from "../scenarios/crop-pixels.js";
+import {
+  dockBarChecks,
+  dockCentreChecks,
+  dockCentrePoint,
+  dockRestoredCheck,
+} from "../scenarios/dock-pixels.js";
 import { palettes, type PaletteId } from "../palettes.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
@@ -2254,12 +2260,37 @@ const docking: LiveScenario = {
       );
 
       // Drop on the editor's right edge: the pointer travels from the tab's
-      // centre to the edge band, the gesture `docking-layout` measured.
-      const deltaX =
-        paneBox.x + paneBox.width - 10 - (tabBox.x + tabBox.width / 2);
-      const deltaY =
-        paneBox.y + paneBox.height / 2 - (tabBox.y + tabBox.height / 2);
-      yield* ctx.host.drag("dock-tab-notes", deltaX, deltaY, 8);
+      // centre to the edge band, the gesture `docking-layout` measured. The
+      // press and the move are separate steps here because the held state is
+      // the only moment the drop indicator exists — and plan `715` reads its
+      // pixels from the frame before the release.
+      const edge = {
+        x: paneBox.x + paneBox.width - 10,
+        y: paneBox.y + paneBox.height / 2,
+      };
+      yield* ctx.host.pressWindow(
+        tabBox.x + tabBox.width / 2,
+        tabBox.y + tabBox.height / 2,
+      );
+      yield* settle;
+      yield* ctx.host.movePointer(edge.x, edge.y);
+      yield* ctx.host.waitFor("dock-indicator-editor");
+      yield* settle;
+
+      const editorTab = yield* boxOf(ctx, "dock-tab-main.ts");
+      yield* dockBarChecks(
+        ctx,
+        readAsync(ctx.host),
+        yield* captureLive(
+          ctx.host,
+          `${LIVE_ARTIFACTS}/${docking.id}-drop.png`,
+        ),
+        yield* boxOf(ctx, "dock-indicator-editor"),
+        editorTab,
+        palettes.dark.colors,
+      );
+
+      yield* ctx.host.releasePointer(edge.x, edge.y);
       yield* settle;
 
       const after = yield* textOf(ctx, "dock-signature");
@@ -2277,6 +2308,63 @@ const docking: LiveScenario = {
         "the drop split the target pane",
         after,
         "split-1=",
+      );
+
+      // The centre zone: a second held gesture over the left pane, then out of
+      // every pane. Nothing is dropped, so the split above is unchanged.
+      const left = yield* boxOf(ctx, "dock-group-left");
+      const surface = yield* boxOf(ctx, "dock-surface");
+      const explorer = yield* boxOf(ctx, "dock-tab-explorer");
+      yield* ctx.host.pressWindow(
+        explorer.x + explorer.width / 2,
+        explorer.y + explorer.height / 2,
+      );
+      yield* settle;
+      yield* ctx.host.movePointer(
+        left.x + left.width / 2,
+        left.y + left.height / 2,
+      );
+      yield* ctx.host.waitFor("dock-indicator-left");
+      yield* settle;
+      yield* dockCentreChecks(
+        ctx,
+        readAsync(ctx.host),
+        yield* captureLive(
+          ctx.host,
+          `${LIVE_ARTIFACTS}/${docking.id}-centre.png`,
+        ),
+        left,
+        palettes.dark.colors,
+      );
+
+      // The gap above the dock surface is inside the probe and outside every
+      // pane, so the gesture keeps running with no drop target.
+      const outside = { x: surface.x + 2, y: surface.y - 2 };
+      yield* ctx.host.movePointer(outside.x, outside.y);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "leaving the pane removes the drop indicator",
+        Option.isNone(
+          Option.fromNullishOr(yield* ctx.host.bounds("dock-indicator-left")),
+        ),
+        true,
+      );
+      yield* dockRestoredCheck(
+        ctx,
+        readAsync(ctx.host),
+        yield* captureLive(
+          ctx.host,
+          `${LIVE_ARTIFACTS}/${docking.id}-restored.png`,
+        ),
+        dockCentrePoint(left),
+        palettes.dark.colors,
+      );
+      yield* ctx.host.releasePointer(outside.x, outside.y);
+      yield* settle;
+      yield* ctx.expectContains(
+        "a release outside every pane drops nothing",
+        yield* textOf(ctx, "dock-signature"),
+        "left=explorer,search@explorer",
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${docking.id}.png`);

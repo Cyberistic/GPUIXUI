@@ -30,6 +30,8 @@ import { Pressable, Readout } from "../ui.js";
 import { SplitPane } from "../panels/split-pane.js";
 import { palettes } from "../palettes.js";
 import type { PlaygroundScenario } from "../types.js";
+import { captureHeadless, readSync } from "./frames.js";
+import { CENTRE_OPACITY, dockBarChecks } from "./dock-pixels.js";
 import {
   INITIAL_DOCK,
   SURFACE_HEIGHT,
@@ -125,7 +127,7 @@ const DockGroupView = ({
             width: bar.width,
             height: bar.height,
             backgroundColor: theme.colors.primary,
-            opacity: drop.edge === "center" ? 0.18 : 1,
+            opacity: drop.edge === "center" ? CENTRE_OPACITY : 1,
             pointerEvents: "none",
           }}
         />
@@ -540,6 +542,18 @@ export const dockingScenario: PlaygroundScenario = {
         ),
         palettes.dark.colors.primary,
       );
+
+      // 2. Pixels: the bar paints above the pane, not under its strip or body.
+      const editorTab = yield* boxOf("dock-tab-main.ts");
+      yield* dockBarChecks(
+        ctx,
+        readSync(ctx.host),
+        yield* captureHeadless(ctx.host),
+        rightBar,
+        editorTab,
+        palettes.dark.colors,
+      );
+
       ctx.host.releasePointer(editor.x + editor.width - 20, editor.y + 160);
       yield* ctx.expectEqual(
         "the right drop split the editor",
