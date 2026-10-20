@@ -58,10 +58,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `755`, a second live session created `.agents/slop/plans/754-loading-spinner-contrast.md`
       and added its tests to `Button.test.tsx`, `loading.test.ts` and
       `loading.runtime.test.tsx` within two minutes (mtimes 17:02:29–17:03:22).
-      Both units were kept: this session moved its only shared-file case into
-      `runtime/progress-announcement.runtime.test.tsx` and committed only its own
-      paths, leaving the other session's uncommitted work untouched. The
-      supervisor fix in §5.1 is still the real remedy.
+      Both units were kept. This session moved its only shared-file case into
+      `runtime/progress-announcement.runtime.test.tsx` and edited no file the
+      other session owned, apart from format-normalising its two test files. By
+      17:08 the other unit was implementation-complete and green (its scoped
+      runtime file and element suite pass), so it was landed in the same commit
+      with its plan, code, tests and docs rather than left uncommitted, and the
+      inventories were updated for both (`73` runtime files). The supervisor fix
+      in §5.1 is still the real remedy.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
