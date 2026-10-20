@@ -103,6 +103,8 @@ diffHunkBg: alpha(theme.colors.mutedForeground, 0.06),
 2. `the hunk band is lighter than the opaque muted surface` — the composite
    differs from `muted` by more than the tolerance, so restoring the old value
    fails **by name** rather than merely differing.
+3. `the inline-code chip paints the codeWash wash` — scans the panel for
+   `wash(primary, 0.12, card)` at tolerance 2 (see §9's measured correction).
 
 The inline-code chip **is** sampled — not by geometry but by scanning the
 panel for the expected composite (`washOver(primary, 0.12, card)`), because the
@@ -165,7 +167,7 @@ No other path is edited.
    nub apps/playground/dist/smoke/run.js --only surface-theme
    nub apps/playground/dist/live/run.js --only live-surface-theme
    ```
-   Expected: both green, each **50 → 55** checks (`expectPoint` emits three checks — maps into the frame, has a pixel, equals — and the distinctness guard one).
+   Expected: both green, each **50 → 57** checks (`expectPoint` emits three checks — maps into the frame, has a pixel, equals — plus the distinctness guard, the chip scan and its parse step).
 
 5. **Mutation proof (the two directions).**
    - Restore `diffHunkBg: theme.colors.muted` → `surface-theme` fails
