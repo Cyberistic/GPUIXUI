@@ -93,7 +93,7 @@ merges `style` last.
 | `NavigationMenuList` | `role="list"` row | children |
 | `NavigationMenuItem` | `role="listitem"`; owns its value | `value` (required), children |
 | `NavigationMenuTrigger` | button with `aria-expanded` | button props |
-| `NavigationMenuContent` | anchored `role="group"` panel, rendered while open | children, host props including `ref` |
+| `NavigationMenuContent` | anchored `role="group"` panel named by its trigger (the item's `value` when the trigger has no plain text; a caller `aria-label` wins), rendered while open | children, host props including `ref` |
 | `NavigationMenuLink` | a full-width button row; `disabled` makes it inert | `onSelect?`, button props |
 
 ## Theming
@@ -108,6 +108,10 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 - The nav is a named `navigation` region; the trigger row is a `list`.
 - A trigger reports `aria-expanded`; the open state is one value, so two panels
   cannot both claim to be open.
+- The panel borrows its trigger's accessible name — `0.10.0` has no
+  `aria-labelledby` — and falls back to the item's `value` when the trigger has
+  no plain text (an icon-only trigger passes `aria-label`). A caller `aria-label`
+  on the panel wins.
 - `Escape` uses the shared dismiss stack: a nav inside a dialog closes first, and
   focus returns to the trigger that opened it.
 - Links are buttons with `onSelect`; `0.10.0` has no anchor element or `href`.
@@ -138,7 +142,7 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 
 ## Verification
 
-`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (24 tests):
+`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (28 tests):
 declaration order, press-to-open with `aria-expanded`, one panel at a
 time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
 Escape with focus return, outside-press dismissal, a **held** trigger press
@@ -151,8 +155,11 @@ intent on a controlled nav — a disabled trigger whose arrow keys neither open
 its panel nor move focus while the caller's `onKeyDown` still runs, a disabled
 link that paints no hover and runs nothing while an enabled link does both, a
 bottom panel flipping above a trigger at the window's bottom edge, the
-caller's `ref` receiving the panel instance, and a controlled close the caller
-refuses leaving the panel and focus where they are.
+caller's `ref` receiving the panel instance, a controlled close the caller
+refuses leaving the panel and focus where they are, a panel named by its
+trigger's visible label, a caller `aria-label` naming the panel, an icon-only
+trigger falling back to the item's `value`, and a renamed trigger updating the
+panel while keeping its place in the registry.
 
 One measured implementation fact: the trigger registry updates its ordered key
 list only when the key sequence changes. An always-new array (or a ref callback

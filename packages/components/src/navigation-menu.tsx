@@ -24,6 +24,8 @@ import {
   floatingRootStyle,
   mergeStyles,
 } from "@gpuix/react/floating";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import {
   createContext,
   useCallback,
@@ -46,6 +48,7 @@ import {
   isLeft,
   isRight,
 } from "./internal/key.js";
+import { controlName } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -57,6 +60,12 @@ import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
+/** One trigger in declaration order: its value and its visible name. */
+interface NavigationRow {
+  readonly value: string;
+  readonly name: Option.Option<string>;
+}
+
 /** The rules a nav part follows; throws outside a {@link NavigationMenu}. */
 interface NavigationMenuContextValue {
   readonly open: string | null;
@@ -67,6 +76,13 @@ interface NavigationMenuContextValue {
     value: string,
     instance: PublicInstance | null,
   ) => void;
+  /** Record a trigger's plain-text name without moving it in the registry. */
+  readonly registerTriggerName: (
+    value: string,
+    name: string | undefined,
+  ) => void;
+  /** The registered trigger's name, when it has plain text. */
+  readonly triggerName: (value: string) => Option.Option<string>;
   readonly moveFocus: (value: string, delta: 1 | -1 | "first" | "last") => void;
   readonly focusTrigger: (value: string) => void;
   /** The registered trigger instance for a value, once React has attached it. */
@@ -149,7 +165,7 @@ export const NavigationMenu = ({
     onChange: onValueChange,
   });
   const triggers = useRef(new Map<string, PublicInstance>());
-  const [order, setOrder] = useState<ReadonlyArray<string>>([]);
+  const [rows, setRows] = useState<ReadonlyArray<NavigationRow>>([]);
   const [panelFocus, setPanelFocus] = useState<string | null>(null);
   // The pointer policy is one instance for the whole nav so entering the next
   // trigger cancels the previous item's pending close in the same pointer move.
@@ -194,18 +210,51 @@ export const NavigationMenu = ({
     (value: string, instance: PublicInstance | null) => {
       if (instance === null) {
         triggers.current.delete(value);
-      } else {
-        triggers.current.set(value, instance);
+        setRows((current) => Arr.filter(current, (row) => row.value !== value));
+        return;
       }
-      const keys = Array.from(triggers.current.keys());
-      setOrder((current) =>
-        current.length === keys.length &&
-        keys.every((key, index) => key === current[index])
+      triggers.current.set(value, instance);
+      setRows((current) =>
+        Arr.some(current, (row) => row.value === value)
           ? current
-          : keys,
+          : [...current, { value, name: Option.none() }],
       );
     },
     [],
+  );
+
+  // A renamed trigger must not re-register: another register would append it at
+  // the end and the next arrow key would skip its authored neighbour.
+  const registerTriggerName = useCallback(
+    (value: string, name: string | undefined) => {
+      const next = Option.fromNullishOr(name);
+      setRows((current) => {
+        const index = Option.getOrElse(
+          Arr.findFirstIndex(current, (row) => row.value === value),
+          () => -1,
+        );
+        const row = current[index];
+        if (
+          row === undefined ||
+          Option.getOrUndefined(row.name) === Option.getOrUndefined(next)
+        ) {
+          return current;
+        }
+        return Arr.map(current, (entry, position) =>
+          position === index ? { value: entry.value, name: next } : entry,
+        );
+      });
+    },
+    [],
+  );
+
+  const triggerName = useCallback(
+    (value: string) =>
+      Option.flatMap(
+        Arr.findFirst(rows, (row) => row.value === value),
+        (row) => row.name,
+      ),
+    [rows],
   );
 
   const focusTrigger = useCallback(
@@ -223,18 +272,21 @@ export const NavigationMenu = ({
 
   const moveFocus = useCallback(
     (value: string, delta: 1 | -1 | "first" | "last") => {
-      if (order.length === 0) return;
-      const index = order.indexOf(value);
+      if (rows.length === 0) return;
+      const index = Option.getOrElse(
+        Arr.findFirstIndex(rows, (row) => row.value === value),
+        () => -1,
+      );
       const next =
         delta === "first"
           ? 0
           : delta === "last"
-            ? order.length - 1
-            : (((index + delta) % order.length) + order.length) % order.length;
-      const target = order[next];
-      if (target !== undefined) focusTrigger(target);
+            ? rows.length - 1
+            : (((index + delta) % rows.length) + rows.length) % rows.length;
+      const target = rows[next];
+      if (target !== undefined) focusTrigger(target.value);
     },
-    [focusTrigger, order],
+    [focusTrigger, rows],
   );
 
   // One dismiss layer for the whole nav: Escape closes only this panel when the
@@ -269,6 +321,8 @@ export const NavigationMenu = ({
       setOpen,
       requestClose,
       registerTrigger,
+      registerTriggerName,
+      triggerName,
       moveFocus,
       focusTrigger,
       triggerFor,
@@ -290,9 +344,11 @@ export const NavigationMenu = ({
       openOnHover,
       panelFocus,
       registerTrigger,
+      registerTriggerName,
       requestClose,
       setOpen,
       triggerFor,
+      triggerName,
     ],
   );
 
@@ -394,6 +450,7 @@ export const NavigationMenuTrigger = ({
   onClick,
   ref,
   onKeyDown,
+  children,
   ...rest
 }: ButtonProps) => {
   const {
@@ -401,18 +458,36 @@ export const NavigationMenuTrigger = ({
     setOpen,
     requestClose,
     registerTrigger,
+    registerTriggerName,
     moveFocus,
     requestPanelFocus,
     openOnHover,
     hover,
   } = useNavigationMenu();
   const { value } = useNavItem();
-  const expanded = open === value;
-  const register = useCallback(
-    (instance: PublicInstance | null) => registerTrigger(value, instance),
-    [registerTrigger, value],
+  const name = controlName(rest["aria-label"], children);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
   );
-  const setTrigger = useMergedRef<PublicInstance | null>(register, ref);
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setTrigger = useMergedRef<PublicInstance | null>(attach, ref);
+
+  // Mount owns the row's position; a renamed trigger only updates its name, so
+  // the next arrow key still reaches the authored neighbour (plan 620's rule).
+  useLayoutEffect(() => {
+    if (instance === undefined) return;
+    registerTrigger(value, instance);
+    return () => registerTrigger(value, null);
+  }, [instance, registerTrigger, value]);
+
+  useLayoutEffect(() => {
+    if (instance === undefined) return;
+    registerTriggerName(value, name);
+  }, [instance, name, registerTriggerName, value]);
+
+  const expanded = open === value;
 
   return (
     <Button
@@ -450,7 +525,9 @@ export const NavigationMenuTrigger = ({
           moveFocus(value, "last");
         }
       }}
-    />
+    >
+      {children}
+    </Button>
   );
 };
 
@@ -464,14 +541,21 @@ export const NavigationMenuContent = ({
   children,
   style,
   onMouseDownOutside,
+  "aria-label": label,
   ref,
   ...rest
 }: NavigationMenuContentProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const { value, open } = useNavItem();
-  const { panelFocus, clearPanelFocus, openOnHover, hover, triggerFor } =
-    useNavigationMenu();
+  const {
+    panelFocus,
+    clearPanelFocus,
+    openOnHover,
+    hover,
+    triggerFor,
+    triggerName,
+  } = useNavigationMenu();
   const [panel, setPanel] = useState<PublicInstance | undefined>(undefined);
   const panelId = panel?.id;
   const surface = useRef<PublicInstance | null>(null);
@@ -495,6 +579,14 @@ export const NavigationMenuContent = ({
   });
   assertParts(navigationMenuContent, children);
 
+  // 0.10.0 has no `aria-labelledby`, so the panel borrows the trigger's name —
+  // the same plain-text rule the trigger paints. The caller's `aria-label` wins,
+  // and a composed trigger falls back to the item's value.
+  const panelName = Option.getOrElse(
+    Option.firstSomeOf([Option.fromNullishOr(label), triggerName(value)]),
+    () => value,
+  );
+
   useLayoutEffect(() => {
     if (!open || panelFocus !== value || panelId === undefined) return;
     renderer?.focusElement?.(panelId);
@@ -511,7 +603,7 @@ export const NavigationMenuContent = ({
       alignOffset={placement.alignOffset}
       collisionPadding={8}
       role="group"
-      aria-label={value}
+      aria-label={panelName}
       tabIndex={-1}
       {...rest}
       ref={setLayer}
@@ -648,6 +740,7 @@ export const navigationMenuMeta = {
     "hover never takes focus; the panel is not auto-focused on hover, so a keyboard user enters through ArrowDown",
     "ArrowDown moves focus to the panel surface, not straight to the first link",
     "no aria-haspopup in 0.10.0",
+    "no aria-labelledby in 0.10.0: the panel borrows its trigger's visible label, falls back to the item's value when the trigger has no plain text, and a caller aria-label wins",
     "the panel is placed once per open: a bottom panel near the window edge flips above its trigger instead of being snapped over it",
   ],
   docs: "docs/navigation-menu.mdx",

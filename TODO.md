@@ -245,6 +245,16 @@ retired once both branches are one
       83 passed / 3 failed of 86 — the same plan-540 placement failures), five
       mutation proofs; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       synced (owner: components)
+    - [x] The navigation panel is named by its trigger — plan 724; measured
+      2026-10-20: a panel for `Platform` over the item value
+      `nav-platform-panel` announced `group:"nav-platform-panel"` while its
+      trigger said `Platform` (the plan-564 defect in `NavigationMenuContent`).
+      The trigger registry now carries each row's plain-text name and updates it
+      in place, so the panel prefers the caller's `aria-label`, then the
+      trigger's name, then the item's `value`, and a renamed trigger keeps its
+      place; 4 native cases (Navigation menu 28, 28/28 on this host) and three
+      mutation proofs; docs, `COMPONENTS.md` and the inventory count synced
+      (owner: components)
     - [x] List: focus continuity across a row removal — plan 708; two recorded
       "removed-host" cases were red (`focused = None`) and a row removed while a
       `Button` in its `trailing` slot held focus dropped focus entirely, because

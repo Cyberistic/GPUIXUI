@@ -11,12 +11,16 @@
  * with the arrow keys, `openOnHover={false}` that still opens, a bottom
  * panel that covers its trigger at the window's edge, and a caller `ref` that is
  * discarded in favour of the internal panel ref. A held trigger press closed on
- * the press and re-opened on the release (plan 583).
+ * the press and re-opened on the release (plan 583). The panel was announced by
+ * its item's internal value (`nav-platform-panel`) instead of the trigger's
+ * visible label (`Platform`), so the one region the nav revealed had a name a
+ * screen-reader user could not map to the trigger (plan 724).
  */
 
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
-import { createRef, type Ref } from "react";
+import { createRef, type ReactNode, type Ref } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   NavigationMenu,
@@ -26,6 +30,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "../navigation-menu.js";
+import { nodesWithRole } from "../internal/a11y.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   clickCentreOf,
@@ -126,6 +131,73 @@ const Workspace = ({
     <div testId="elsewhere" tabIndex={0} style={{ width: 120, height: 20 }}>
       Elsewhere
     </div>
+  </div>
+);
+
+/** One item whose panel name can be varied, over an opaque internal value. */
+const NamedPanel = ({
+  value,
+  trigger,
+  panelLabel,
+}: {
+  readonly value: string;
+  readonly trigger?: ReactNode;
+  readonly panelLabel?: string;
+}) => (
+  <div style={{ padding: 20 }}>
+    <NavigationMenu label="Product">
+      <NavigationMenuList>
+        <NavigationMenuItem value={value}>
+          <NavigationMenuTrigger testId="trigger-named">
+            {trigger ?? "Platform"}
+          </NavigationMenuTrigger>
+          <NavigationMenuContent
+            testId="panel-named"
+            {...(panelLabel === undefined ? {} : { "aria-label": panelLabel })}
+          >
+            <NavigationMenuLink testId="link-named">
+              Overview
+            </NavigationMenuLink>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
+  </div>
+);
+
+/** Two items whose first trigger label is the caller's. */
+const RenamableNav = ({ firstLabel }: { readonly firstLabel: string }) => (
+  <div style={{ padding: 20 }}>
+    <NavigationMenu label="Product">
+      <NavigationMenuList>
+        <NavigationMenuItem value="first">
+          <NavigationMenuTrigger testId="trigger-first">
+            {firstLabel}
+          </NavigationMenuTrigger>
+          <NavigationMenuContent testId="panel-first">
+            <NavigationMenuLink testId="link-first">
+              Overview
+            </NavigationMenuLink>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        <NavigationMenuItem value="second">
+          <NavigationMenuTrigger testId="trigger-second">
+            Pricing
+          </NavigationMenuTrigger>
+          <NavigationMenuContent testId="panel-second">
+            <NavigationMenuLink testId="link-second">Plans</NavigationMenuLink>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        <NavigationMenuItem value="third">
+          <NavigationMenuTrigger testId="trigger-third">
+            Docs
+          </NavigationMenuTrigger>
+          <NavigationMenuContent testId="panel-third">
+            <NavigationMenuLink testId="link-third">Guides</NavigationMenuLink>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   </div>
 );
 
@@ -585,6 +657,80 @@ describe("NavigationMenu", () => {
     expect(ref.current?.id).toBe(
       nav.renderer.findByTestId("panel-platform")?.id,
     );
+
+    nav.unmount();
+  });
+
+  it("names a panel by its trigger's visible label, not its value", () => {
+    const nav = renderComponent(<NamedPanel value="nav-platform-panel" />);
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-named")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("enter");
+
+    expect(
+      Arr.map(nodesWithRole(nav.renderer, "group"), (n) => n.name),
+    ).toEqual(["Platform"]);
+
+    nav.unmount();
+  });
+
+  it("lets the caller's aria-label name the panel", () => {
+    const nav = renderComponent(
+      <NamedPanel value="nav-platform-panel" panelLabel="Platform menu" />,
+    );
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-named")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("enter");
+
+    expect(
+      Arr.map(nodesWithRole(nav.renderer, "group"), (n) => n.name),
+    ).toEqual(["Platform menu"]);
+
+    nav.unmount();
+  });
+
+  it("falls back to the item's value when the trigger has no plain text", () => {
+    const nav = renderComponent(
+      <NamedPanel
+        value="nav-platform-panel"
+        trigger={<div testId="glyph" style={{ width: 8, height: 8 }} />}
+      />,
+    );
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-named")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("enter");
+
+    expect(
+      Arr.map(nodesWithRole(nav.renderer, "group"), (n) => n.name),
+    ).toEqual(["nav-platform-panel"]);
+
+    nav.unmount();
+  });
+
+  it("a renamed trigger updates its panel and keeps its registry place", () => {
+    const nav = renderComponent(<RenamableNav firstLabel="Platform" />);
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-first")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("enter");
+    expect(nav.renderer.findByTestId("panel-first")).toBeDefined();
+
+    nav.rerender(<RenamableNav firstLabel="Products" />);
+
+    expect(
+      Arr.map(nodesWithRole(nav.renderer, "group"), (n) => n.name),
+    ).toEqual(["Products"]);
+
+    // A row that re-registered would move to the end, so `End` would land on
+    // the renamed trigger instead of the last authored one.
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-first")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("end");
+    expect(focusedTestId(nav)).toEqual(Option.some("trigger-third"));
 
     nav.unmount();
   });
