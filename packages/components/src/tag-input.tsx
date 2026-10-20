@@ -35,6 +35,8 @@ import {
 import { activationHandlers } from "./internal/activate.js";
 import { useFocusState } from "./internal/focus.js";
 import { isEnter } from "./internal/key.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
+import { useMergedRef } from "./internal/ref.js";
 import {
   assertParts,
   type PartChildren,
@@ -63,7 +65,10 @@ interface TagInputContextValue {
   readonly editDraft: (text: string) => void;
   readonly addDraft: () => void;
   readonly remove: (value: string) => void;
+  /** Seeds the group ring for an `autoFocus` field (no React event arrives). */
   readonly setFocused: (focused: boolean) => void;
+  /** Registers the field's host so the group ring can follow native focus. */
+  readonly registerField: (instance: PublicInstance | null) => void;
 }
 
 const TagInputContext = createContext<TagInputContextValue | undefined>(
@@ -110,6 +115,15 @@ export const TagInput = ({
   const theme = useTheme();
   const [draft, setDraft] = useState("");
   const [focused, setFocused] = useState(false);
+  const [fieldId, setFieldId] = useState<number | null>(null);
+  const focusedId = useNativeFocusId(!disabled);
+  const registerField = useCallback((instance: PublicInstance | null) => {
+    setFieldId(instance?.id ?? null);
+  }, []);
+  // A null sample keeps the `autoFocus` seed; once a host is reported it is the
+  // only truth, so the ring clears when the field loses native focus (plan 755).
+  const groupFocused =
+    !disabled && (focusedId === null ? focused : focusedId === fieldId);
   assertParts(tagInputRoot, children);
 
   // The rules return the current list by reference when they accept nothing, so
@@ -142,6 +156,7 @@ export const TagInput = ({
       if (next !== value) onValueChange(next);
     },
     setFocused,
+    registerField,
   };
 
   return (
@@ -168,7 +183,7 @@ export const TagInput = ({
             borderWidth: theme.borderWidth.thin,
             borderColor: theme.colors.border,
             opacity: disabled ? 0.5 : 1,
-            ...(focused && !disabled ? focusRing(theme) : {}),
+            ...(groupFocused ? focusRing(theme) : {}),
           },
           style,
         )}
@@ -199,10 +214,17 @@ export const TagInputField = ({
   onFocus,
   onBlur,
   autoFocus = false,
+  ref,
   ...rest
 }: TagInputFieldProps) => {
   const theme = useTheme();
-  const { draft, disabled, editDraft, addDraft, setFocused } = useTagInput();
+  const { draft, disabled, editDraft, addDraft, setFocused, registerField } =
+    useTagInput();
+  const attach = useCallback(
+    (next: PublicInstance | null) => registerField(next),
+    [registerField],
+  );
+  const setField = useMergedRef<PublicInstance | null>(attach, ref);
   const seeded = useRef(false);
 
   // `autoFocus` focuses the native input after React's effects, so `onFocus`
@@ -219,6 +241,7 @@ export const TagInputField = ({
       {...(disabled ? { tabIndex: -1 } : {})}
       {...stateDescription(disabled, rest["aria-description"])}
       autoFocus={autoFocus && !disabled}
+      ref={setField}
       readOnly={disabled}
       value={draft}
       onChange={(event) => editDraft(event.value ?? "")}
@@ -227,14 +250,8 @@ export const TagInputField = ({
         if (isEnter(event)) addDraft();
       }}
       onSubmit={() => addDraft()}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
+      onFocus={(event) => onFocus?.(event)}
+      onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(
         {
           ...textStyle(theme, "body"),

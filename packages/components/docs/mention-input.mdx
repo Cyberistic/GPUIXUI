@@ -117,16 +117,15 @@ never looks editable or focused (plan 527).
 - No `role="listbox"`/`option` in the dump, no `aria-activedescendant`.
 - Fixed `"Mentions"` label for the surface.
 
-- Focus cues are seeded by `autoFocus`; suggestion rows also sample the
-  renderer's focused host (50 ms), so a row's ring follows a `Tab` entry, a
-  programmatic move or a press and clears when focus leaves. The **group** ring
-  then follows React `focus`/`blur`, which the runtime does not deliver for a
-  native move, so the group may not ring when focus reaches the field by code
-  (plans 390/603/605, 754).
+- Focus cues are seeded by `autoFocus` and then follow the renderer's focused
+  host (a 50 ms sample while the field is enabled): a suggestion row's ring and
+  the **group** ring paint on a `Tab` entry, a programmatic move or a press, and
+  clear when focus leaves; the seed stands only until a host is reported (plans
+  390/603/605, 754, 755).
 
 ## Verification
 
-`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (18 tests):
+`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (19 tests):
 opening, narrowing, arrow movement, Enter insertion, row presses, Escape from the
 field and from a focused row, one surface per Escape inside a dialog,
 no-match closing, a non-finite `maxVisible` listing every match, the two

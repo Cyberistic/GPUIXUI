@@ -176,12 +176,11 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   0.10.0 has no `preventDefault` in key handlers, so the component cannot place
   the caret itself.
 
-- Focus cues are seeded by `autoFocus`; the clear control also samples the
-  renderer's focused host (50 ms), so its ring follows a `Tab` entry, a
-  programmatic move or a press and clears when focus leaves. A segment's own
-  focus state (and the group ring it drives) still follows React `focus`/`blur`,
-  which the runtime does not deliver for a native move, so those may not paint
-  when focus arrives by code (plans 390/603/605, 754).
+- Focus cues are seeded by `autoFocus` and then follow the renderer's focused
+  host (a 50 ms sample while the field is enabled): the clear control, a
+  segment's own focus state and the **group** ring paint when a segment or the
+  control holds native focus, and clear when it leaves; the seed stands only
+  until a host is reported (plans 390/603/605, 754, 755).
 
 ## Verification
 
@@ -190,7 +189,7 @@ and a round-trip of all 1440 minutes, hour carry in both directions, midnight
 wrapping, day wrap, strict and clamping segment parsers, padding, step
 normalisation, the last-two-digits rule and segment composition.
 
-`src/behaviour/time-picker.test.tsx` runs in the real GPUix renderer (14 tests): typed hours reaching
+`src/behaviour/time-picker.test.tsx` runs in the real GPUix renderer (15 tests): typed hours reaching
 `onValueChange`, typed minutes completing the value, out-of-range clamping,
 arrow carry and midnight wrap, `minuteStep`, padding on the other segment's
 edit, on `Tab` and on an outside press, the clear rules and

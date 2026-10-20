@@ -131,6 +131,7 @@ export const MentionInput = ({
   onFocus,
   onBlur,
   autoFocus = false,
+  ref,
   ...rest
 }: MentionInputProps) => {
   const theme = useTheme();
@@ -142,7 +143,14 @@ export const MentionInput = ({
   const [dismissed, setDismissed] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const [visible, setVisible] = useState<ReadonlyArray<string>>([]);
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setField = useMergedRef<PublicInstance | null>(attach, ref);
+  const [focused] = useFocusState(autoFocus, disabled, instance?.id);
   assertParts(mentionRoot, children);
 
   const open = dismissed ? Option.none() : mentionQuery(text);
@@ -213,6 +221,7 @@ export const MentionInput = ({
             aria-label={label}
             {...stateDescription(disabled, rest["aria-description"])}
             testId={testId}
+            ref={setField}
             autoFocus={autoFocus && !disabled}
             value={text}
             readOnly={disabled}
@@ -240,14 +249,8 @@ export const MentionInput = ({
                 setDismissed(true);
               }
             }}
-            onFocus={(event) => {
-              onFocus?.(event);
-              setFocused(true);
-            }}
-            onBlur={(event) => {
-              onBlur?.(event);
-              setFocused(false);
-            }}
+            onFocus={(event) => onFocus?.(event)}
+            onBlur={(event) => onBlur?.(event)}
             style={{
               ...textStyle(theme, "body"),
               flexGrow: 1,

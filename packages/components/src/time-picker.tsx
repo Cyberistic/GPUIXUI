@@ -42,6 +42,7 @@ import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { useFocusState } from "./internal/focus.js";
 import { isTab } from "./internal/key.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
 import {
   assertParts,
   type PartChildren,
@@ -83,9 +84,13 @@ interface TimePickerContextValue {
   readonly edit: (segment: TimeSegment, raw: string) => void;
   readonly handleKeyDown: (segment: TimeSegment, event: EventPayload) => void;
   readonly normalize: () => void;
-  readonly setFocused: (focused: boolean) => void;
   readonly clear: () => void;
   readonly registerHours: (instance: PublicInstance | null) => void;
+  /** Registers a segment's host so the group ring follows native focus. */
+  readonly registerSegment: (
+    segment: TimeSegment,
+    instance: PublicInstance | null,
+  ) => void;
 }
 
 const TimePickerContext = createContext<TimePickerContextValue | undefined>(
@@ -155,13 +160,25 @@ export const TimePicker = ({
       onSome: (time) => padSegment(time.minutes),
     }),
   );
-  const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useControllableState<string | null>({
     value,
     defaultValue: defaultValue ?? null,
     onChange: onValueChange,
   });
   const hoursInput = useRef<PublicInstance | null>(null);
+  const segmentIds = useRef<{ hours?: number; minutes?: number }>({});
+  const registerSegment = useCallback(
+    (segment: TimeSegment, instance: PublicInstance | null) => {
+      segmentIds.current[segment] = instance?.id;
+    },
+    [],
+  );
+  const focusedId = useNativeFocusId(!disabled);
+  const focused =
+    !disabled &&
+    focusedId !== null &&
+    (focusedId === segmentIds.current.hours ||
+      focusedId === segmentIds.current.minutes);
 
   /** Adopt an external value; keep raw text while it still canonicalises to it. */
   useLayoutEffect(() => {
@@ -278,11 +295,11 @@ export const TimePicker = ({
         edit,
         handleKeyDown,
         normalize,
-        setFocused,
         clear,
         registerHours: (instance) => {
           hoursInput.current = instance;
         },
+        registerSegment,
       }}
     >
       <div
@@ -333,7 +350,9 @@ export const TimePickerSegment = ({
   style,
 }: TimePickerSegmentProps) => {
   const theme = useTheme();
-  const [focused, setFocusedSegment] = useState(false);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
   const {
     hoursText,
     minutesText,
@@ -343,9 +362,18 @@ export const TimePickerSegment = ({
     edit,
     handleKeyDown,
     normalize,
-    setFocused,
     registerHours,
+    registerSegment,
   } = useTimePicker();
+  const [focused] = useFocusState(false, disabled, instance?.id);
+  const attach = useCallback(
+    (next: PublicInstance | null) => {
+      setInstance(next ?? undefined);
+      registerSegment(segment, next);
+      if (segment === "hours") registerHours(next);
+    },
+    [registerHours, registerSegment, segment],
+  );
   const text = segment === "hours" ? hoursText : minutesText;
   const state: TimePickerSegmentState = { disabled, focused };
 
@@ -359,14 +387,9 @@ export const TimePickerSegment = ({
     tabIndex: disabled ? -1 : 0,
     onChange: (event) => edit(segment, event.value ?? ""),
     onKeyDown: (event) => handleKeyDown(segment, event),
-    onFocus: () => {
-      setFocusedSegment(true);
-      setFocused(true);
-    },
+    ref: attach,
     onBlur: () => {
       normalize();
-      setFocusedSegment(false);
-      setFocused(false);
     },
     style: {
       ...textStyle(theme, "body"),
@@ -380,12 +403,7 @@ export const TimePickerSegment = ({
     },
   };
 
-  return (
-    <input
-      {...props}
-      {...(segment === "hours" ? { ref: registerHours } : {})}
-    />
-  );
+  return <input {...props} />;
 };
 
 /** {@link TimePickerSeparator} props. */

@@ -1118,6 +1118,19 @@ retired once both branches are one
       caller-handler case remains the binding's missing React `onFocus`
       (`1 failed / 97 passed`). No count changed; docs, `COMPONENTS.md`,
       `docs/component-api.md` and the plan index synced (owner: components)
+    - [x] The last ring owners follow native focus — plan 755; measured
+      2026-10-20: eight focusable parts still painted (or kept) a ring from React
+      `onFocus`/`onBlur`, which 0.10.0 never delivers for a native move — the
+      `BreadcrumbLink`, the Chat composer, the InlineEdit display,
+      `ContextMenuTrigger`, `CommandMenuInput` (a permanent `true` seed) and the
+      Tag input, Mention input and Time picker group rings. A 10-case scratch
+      probe was 10/10 red; each part now samples the renderer's focused host
+      (`useFocusState` host id, or one sample per group like the carousel dots),
+      and the group rings clear when focus leaves. 9 new native cases (one per
+      measured path, plus the seeded-ring clear), all failing on the old source;
+      the eight touched suites are 145/150 with the same five recorded plan-540
+      failures; docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and
+      the inventory counts synced (owner: components)
     - [x] A nested modal owns its Tab — plan 728: measured 2026-10-20 that a
       confirmation opened from a dialog lost the keyboard on the first Tab
       (Cancel → the outer dialog's first control, while the confirmation stayed

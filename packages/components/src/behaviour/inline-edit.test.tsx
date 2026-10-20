@@ -24,11 +24,13 @@ import {
   focusedTestId,
   nextTask,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
 } from "../internal/test-root.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 
 /** A caller-owned value with a sibling focus target for the blur test. */
 const Harness = ({
@@ -442,6 +444,31 @@ describe("InlineEdit", () => {
     expect(display?.style.boxShadow).toBeUndefined();
     expect(display?.style.hover).toBeUndefined();
     expect(display?.customProps?.tabIndex).toBe(-1);
+
+    edit.unmount();
+  });
+
+  /**
+   * The display's ring followed React `focus`/`blur` only, so a display reached
+   * by `Tab` or a press painted no ring (plan 755).
+   */
+  it("paints the display's ring on native focus", async () => {
+    const edit = renderComponent(
+      <InlineEdit
+        testId="name"
+        label="Workspace name"
+        value="Draft"
+        onCommit={() => undefined}
+      />,
+    );
+    edit.renderer.focusElement(edit.renderer.findByTestId("name")?.id ?? -1);
+
+    await until(
+      () => edit.renderer.findByTestId("name")?.style.boxShadow !== undefined,
+    );
+    expect(edit.renderer.findByTestId("name")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
 
     edit.unmount();
   });

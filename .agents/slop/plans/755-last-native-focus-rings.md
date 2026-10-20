@@ -7,7 +7,7 @@
 **Number:** `755` is the first free number across every worktree — the highest
 claimed anywhere is `754` (this workstream, `playground` and `tokens-theme`).
 
-**Status: planned** — implement from §3; fill §9 when done.
+**Status: done** (2026-10-20) — see §9 for the measured result.
 
 ---
 
@@ -290,6 +290,39 @@ Stop and report with evidence if any of these happen:
   suite shows no new failure class.
 - Committed on `agent/components` and pushed (never to `master`).
 
-## 9. Result (filled when done)
+## 9. Result (completed 2026-10-20)
 
-_Not started._
+- **The fix.** Every part in §1 now reads the renderer's focused host.
+  `BreadcrumbLink`, the Chat composer, the InlineEdit display,
+  `ContextMenuTrigger` and `CommandMenuInput` pass their own host id to
+  `useFocusState` (the command field keeps its `true` seed only until a host is
+  reported, so the palette no longer keeps a stale ring). The Tag input and
+  Mention input roots sample once and compare the reported id with the field id
+  the field registers; the Time picker registers both segment ids and its
+  segments read their own host ids for the public `focused` state. The tag
+  input's `autoFocus` seed is kept so that case stays synchronous; the time
+  picker has no seed and lights on the sample.
+- **Both directions.** With the eight sources reverted (`git stash push`), the
+  scoped run is `14 failed / 136 passed (150)`: the nine new cases fail plus the
+  five recorded plan-540 cases (`command-menu` scroll, `context-menu`
+  left-placement, `inline-edit` blur and caller handlers, `mention-input` caller
+  handlers). With the fix it is `5 failed / 145 passed (150)` — only the recorded
+  binding cases remain.
+- **Counts.** Breadcrumb 13 → 15, Chat 12 → 13, Inline edit 19 → 20, Context
+  menu 24 → 25, Command menu 25 → 26, Tag / token input 16 → 17, Mention input
+  18 → 19, Time picker 14 → 15. Every docs `Verification` line and every
+  `COMPONENTS.md` row states the new number and the inventory check holds them
+  to the suites.
+- **Full native suite.** `953 passed / 20 failed of 973` (was `944/20 of 964`):
+  the same 20 recorded plan-540 classes (placement/centring, the density height
+  probe, the scroll case and the missing React `onFocus`/`onBlur` cases), no new
+  failing file.
+- **Gates.** `nub run check`, `nub run lint` and `nub run test` exit `0`; the
+  unit suite is 488 tests in 46 files (unchanged — no pure logic moved).
+- **Excluded, with evidence.** A `DatePicker` day cell's ring is the grid's
+  keyboard cursor and the grid moves native focus with it; an external
+  `focusElement` on another day leaves the previous day ringed. The behaviour is
+  recorded in the Date pickers row of `COMPONENTS.md` instead of adding a second
+  cursor authority or 42 sampled cells. The scratch probe
+  (`src/behaviour/zz-probe.test.tsx`) measured the ten red cases in §1 and was
+  deleted before the commit.

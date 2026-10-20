@@ -8,7 +8,7 @@
  * the item that follows them, so hiding an item hides its separator too.
  */
 
-import type { Props } from "@gpuix/react";
+import type { Props, PublicInstance } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -17,12 +17,14 @@ import {
   createContext,
   Fragment,
   isValidElement,
+  useCallback,
   useContext,
   useState,
   type ReactNode,
 } from "react";
 import { collapse, type Crumb } from "./breadcrumb/logic.js";
 import { activationHandlers } from "./internal/activate.js";
+import { useFocusState } from "./internal/focus.js";
 import { controlName } from "./internal/name.js";
 import {
   assertParts,
@@ -30,6 +32,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
 
 /** The rules a breadcrumb part follows; throws outside a root. */
@@ -266,15 +269,23 @@ export const BreadcrumbLink = ({
   autoFocus = false,
   style,
   children,
+  ref,
   ...rest
 }: BreadcrumbLinkProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(autoFocus);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
+  const [focused, setFocused] = useFocusState(autoFocus, false, instance?.id);
   const name = controlName(rest["aria-label"], children);
 
   if (current) {
     return (
-      <BreadcrumbPage {...rest} style={style}>
+      <BreadcrumbPage {...rest} ref={ref} style={style}>
         {children}
       </BreadcrumbPage>
     );
@@ -287,6 +298,7 @@ export const BreadcrumbLink = ({
       {...(name === undefined ? {} : { "aria-label": name })}
       autoFocus={autoFocus}
       tabIndex={0}
+      ref={setElement}
       onClick={(event) => {
         onClick?.(event);
         onSelect?.();

@@ -21,6 +21,7 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 import { TagInput, TagInputChip, TagInputField } from "../tag-input.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 
 /** A caller-owned token list. */
 const Harness = ({
@@ -357,6 +358,35 @@ describe("TagInput", () => {
     tags.renderer.flush();
 
     expect(tags.renderer.findByTestId("tags")?.style.boxShadow).toBeUndefined();
+
+    tags.unmount();
+  });
+
+  /**
+   * The group ring followed the field's React `focus`/`blur` only, so a field
+   * reached by `Tab` or a press left the group without its cue (plan 755).
+   */
+  it("paints the group ring when native focus reaches the field", async () => {
+    const tags = renderComponent(
+      <TagInput
+        testId="tags"
+        label="Tags"
+        value={[]}
+        onValueChange={() => undefined}
+      >
+        <TagInputField testId="tag-field" />
+      </TagInput>,
+    );
+    tags.renderer.focusElement(
+      tags.renderer.findByTestId("tag-field")?.id ?? -1,
+    );
+
+    await until(
+      () => tags.renderer.findByTestId("tags")?.style.boxShadow !== undefined,
+    );
+    expect(tags.renderer.findByTestId("tags")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
 
     tags.unmount();
   });

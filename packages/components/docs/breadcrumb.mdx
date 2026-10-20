@@ -106,13 +106,14 @@ Links and separators use the `caption` type role; links are
   button and not in the tab order.
 - Separators are `role="presentation"`.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus` and then follow the renderer's focused
+  host (a 50 ms sample while the part is enabled), so `Tab`, a programmatic focus
+  and a press paint the ring and it clears when focus leaves; the seed stands
+  only until a host is reported (plans 390/603/605, 755).
 
 ## Verification
 
-`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (15 tests):
 the trail and its separator count, an authored separator glyph, selecting a link
 but not the current page, Enter on press and Space on release, collapsing the
 middle while keeping both ends and the authored separator, a non-finite

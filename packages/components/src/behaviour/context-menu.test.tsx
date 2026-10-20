@@ -30,11 +30,13 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
 } from "../internal/test-root.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -681,6 +683,31 @@ describe("Tab leaves the context menu", () => {
 
     expect(row.renderer.findByTestId("menu")).toBeUndefined();
     expect(focusedTestId(row)).toEqual(Option.some("after"));
+
+    row.unmount();
+  });
+
+  /**
+   * The trigger is a tab stop whose ring followed React `focus`/`blur` only, so
+   * a press or `Tab` left it without a focus cue (plan 755).
+   */
+  it("paints the trigger's ring on native focus", async () => {
+    const row = renderComponent(
+      <ContextMenu>
+        <ContextMenuTrigger testId="trigger">Project</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onSelect={() => undefined}>Open</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+    row.renderer.focusElement(row.renderer.findByTestId("trigger")?.id ?? -1);
+
+    await until(
+      () => row.renderer.findByTestId("trigger")?.style.boxShadow !== undefined,
+    );
+    expect(row.renderer.findByTestId("trigger")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
 
     row.unmount();
   });

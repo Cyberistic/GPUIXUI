@@ -13,8 +13,13 @@
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  until,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -324,5 +329,63 @@ describe("Breadcrumb", () => {
     ).toEqual(Option.some("You are here"));
 
     authored.unmount();
+  });
+
+  /**
+   * A link's ring followed React `focus`/`blur` only, which 0.10.0 never
+   * delivers for a native move: `focusElement` painted nothing, and a seeded
+   * `autoFocus` ring survived after focus moved away (plan 755).
+   */
+  it("paints the focus ring on a natively focused link", async () => {
+    const trail = renderComponent(<Trail />);
+    trail.renderer.focusElement(
+      trail.renderer.findByTestId("projects")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        trail.renderer.findByTestId("projects")?.style.boxShadow !== undefined,
+    );
+    expect(trail.renderer.findByTestId("projects")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
+
+    trail.unmount();
+  });
+
+  it("clears a seeded link ring when focus moves elsewhere", async () => {
+    const trail = renderComponent(
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink testId="projects" autoFocus>
+                Projects
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <div testId="elsewhere" tabIndex={0} style={{ height: 20 }}>
+          x
+        </div>
+      </div>,
+    );
+    expect(
+      trail.renderer.findByTestId("projects")?.style.boxShadow,
+    ).toBeDefined();
+
+    trail.renderer.focusElement(
+      trail.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        trail.renderer.findByTestId("projects")?.style.boxShadow === undefined,
+    );
+    expect(
+      trail.renderer.findByTestId("projects")?.style.boxShadow,
+    ).toBeUndefined();
+
+    trail.unmount();
   });
 });

@@ -26,6 +26,7 @@ import {
   finishMotion,
   focusedTestId,
   nextTask,
+  until,
 } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -392,6 +393,32 @@ describe("Chat", () => {
     expect(
       chat.renderer.findByTestId("composer")?.style.boxShadow,
     ).toBeUndefined();
+
+    chat.unmount();
+  });
+
+  /**
+   * The composer ring was seeded from `autoFocus` only (plan 595), so a composer
+   * reached by `Tab` or a press painted no ring: 0.10.0 delivers no React
+   * `focus` for a native move (plan 755).
+   */
+  it("paints the ring when native focus reaches the composer", async () => {
+    const chat = renderComponent(
+      <Chat label="Assistant" status={idle} onSubmit={() => undefined}>
+        <ChatComposer label="Message" testId="composer" />
+      </Chat>,
+    );
+    chat.renderer.focusElement(
+      chat.renderer.findByTestId("composer")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        chat.renderer.findByTestId("composer")?.style.boxShadow !== undefined,
+    );
+    expect(chat.renderer.findByTestId("composer")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
 
     chat.unmount();
   });

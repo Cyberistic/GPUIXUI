@@ -32,6 +32,7 @@ import {
   OverlayHostProvider,
   useOverlayHost,
 } from "./internal/overlay-host.js";
+import { useFocusState } from "./internal/focus.js";
 import { isMenuKey } from "./internal/key.js";
 import {
   assertParts,
@@ -228,9 +229,13 @@ export const ContextMenuTrigger = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const { openAt, openFromKeyboard, setTrigger } = useContextMenuContext();
-  const [focused, setFocused] = useState(autoFocus && !disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
+  );
+  const [focused, setFocused] = useFocusState(
+    autoFocus,
+    disabled,
+    instance?.id,
   );
 
   // Stable identity: a fresh ref callback each render would re-register on every

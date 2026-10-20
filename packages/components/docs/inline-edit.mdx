@@ -105,13 +105,14 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   and the component will still have closed the edit.
 - No multi-line editor in v1; `Textarea`-based inline editing is a future variant.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus` and then follow the renderer's focused
+  host (a 50 ms sample while the part is enabled), so `Tab`, a programmatic focus
+  and a press paint the ring and it clears when focus leaves; the seed stands
+  only until a host is reported (plans 390/603/605, 755).
 
 ## Verification
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (19 tests):
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (20 tests):
 display mode, click-to-edit with focus, keyboard entry with Space starting on
 release, Enter commit with focus return, Escape discard, blur commit, an outside
 press that commits and restores the display, a press on another control that

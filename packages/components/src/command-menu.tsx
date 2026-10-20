@@ -41,6 +41,7 @@ import {
 import { Dialog, DialogContent } from "./dialog.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
+import { useFocusState } from "./internal/focus.js";
 import { isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
@@ -282,12 +283,23 @@ export const CommandMenuInput = ({
   // The dialog focuses this field through `initialFocus` after recording the
   // opener; an `autoFocus` here would claim focus first and break the restore
   // (plan 589). The runtime focuses after React's effects, so `onFocus` never
-  // runs on mount (plans 388, 523) and the ring is seeded from the open state.
-  const [focused, setFocused] = useState(true);
+  // runs on mount: the ring is seeded from the open state until the sample names
+  // the field, then follows the renderer's focused host (plans 388, 523, 755).
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback(
+    (next: PublicInstance | null) => {
+      setInstance(next ?? undefined);
+      registerInput(next);
+    },
+    [registerInput],
+  );
+  const [focused] = useFocusState(true, false, instance?.id);
 
   return (
     <input
-      ref={registerInput}
+      ref={attach}
       testId="command-input"
       aria-label={label}
       placeholder={placeholder}
@@ -295,8 +307,6 @@ export const CommandMenuInput = ({
       onChange={(event) => setQuery(event.value ?? "")}
       onSubmit={runActive}
       onKeyDown={handleKeyDown}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
       style={{
         ...textStyle(theme, "body"),
         height: controlHeight(theme, "md"),

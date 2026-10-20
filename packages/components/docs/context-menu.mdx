@@ -190,13 +190,14 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - `Shift+F10` opens at the trigger's bottom-left, not at a text caret; a
   keyboard-opened menu returns focus to its trigger on Escape and activation.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus` and then follow the renderer's focused
+  host (a 50 ms sample while the part is enabled), so `Tab`, a programmatic focus
+  and a press paint the ring and it clears when focus leaves; the seed stands
+  only until a host is reported (plans 390/603/605, 755).
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (24 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (25 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not

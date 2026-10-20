@@ -22,6 +22,7 @@ import {
   until,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 import {
   CommandMenu,
   CommandMenuEmpty,
@@ -702,6 +703,42 @@ describe("CommandMenu", () => {
     finishMotion(palette);
 
     expect(focusedTestId(palette)).toEqual(Option.some("open-palette"));
+
+    palette.unmount();
+  });
+
+  /**
+   * The input's ring was seeded `true` for the life of the palette, so it never
+   * cleared when native focus left the field (plan 755).
+   */
+  it("drops the input's ring when native focus leaves", async () => {
+    const palette = renderComponent(
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <div testId="elsewhere" tabIndex={0} style={{ height: 20 }}>
+          x
+        </div>
+        <CommandMenu open actions={[]} onOpenChange={() => undefined}>
+          <CommandMenuInput />
+          <CommandMenuList />
+        </CommandMenu>
+      </div>,
+    );
+    expect(
+      palette.renderer.findByTestId("command-input")?.style.boxShadow,
+    ).toEqual(focusRing(darkTheme).boxShadow);
+
+    palette.renderer.focusElement(
+      palette.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        palette.renderer.findByTestId("command-input")?.style.boxShadow ===
+        undefined,
+    );
+    expect(
+      palette.renderer.findByTestId("command-input")?.style.boxShadow,
+    ).toBeUndefined();
 
     palette.unmount();
   });

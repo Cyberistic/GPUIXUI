@@ -26,6 +26,7 @@ import {
   until,
 } from "../internal/interaction.js";
 import { nodesWithRole } from "../internal/a11y.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -428,6 +429,37 @@ describe("MentionInput", () => {
     expect(
       mention.renderer.findByTestId("mention-group")?.style.boxShadow,
     ).toBeUndefined();
+
+    mention.unmount();
+  });
+
+  /**
+   * The group ring followed the field's React `focus`/`blur` only, so a field
+   * reached by `Tab` or a press left the group without its cue (plan 755).
+   */
+  it("paints the group ring when native focus reaches the field", async () => {
+    const mention = renderComponent(
+      <MentionInput
+        testId="mention"
+        label="Comment"
+        value=""
+        onValueChange={() => undefined}
+      >
+        <MentionInputList />
+      </MentionInput>,
+    );
+    mention.renderer.focusElement(
+      mention.renderer.findByTestId("mention")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        mention.renderer.findByTestId("mention-group")?.style.boxShadow !==
+        undefined,
+    );
+    expect(
+      mention.renderer.findByTestId("mention-group")?.style.boxShadow,
+    ).toEqual(focusRing(darkTheme).boxShadow);
 
     mention.unmount();
   });

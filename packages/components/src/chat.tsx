@@ -16,11 +16,12 @@
  * the error banner is `role="alert"` because that is the role AccessKit reports.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
   Children,
   createContext,
+  useCallback,
   useContext,
   useState,
   type ReactNode,
@@ -37,6 +38,7 @@ import { EmptyState } from "./empty-state.js";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
+import { useFocusState } from "./internal/focus.js";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -44,6 +46,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
 import {
   focusRing,
   textStyle,
@@ -227,6 +230,7 @@ export const ChatComposer = ({
   onBlur,
   style,
   onKeyDown,
+  ref,
   ...rest
 }: ChatComposerProps) => {
   const theme = useTheme();
@@ -236,9 +240,17 @@ export const ChatComposer = ({
     defaultValue,
     onChange: onValueChange,
   });
-  // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
-  // runs on mount; seed the state or the ring never lights (plans 388, 536).
-  const [focused, setFocused] = useState(autoFocus);
+  // The ring follows the renderer's focused host: 0.10.0 delivers no React
+  // `focus`/`blur` for a native move, so `autoFocus` seeds it only until the
+  // sample names a host (plans 388, 536, 748, 755).
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setComposer = useMergedRef<PublicInstance | null>(attach, ref);
+  const [focused, setFocused] = useFocusState(autoFocus, false, instance?.id);
 
   const send = (): void => {
     const text = draft.trim();
@@ -291,6 +303,7 @@ export const ChatComposer = ({
           minRows={1}
           maxRows={6}
           autoFocus={autoFocus}
+          ref={setComposer}
           onChange={(event) => setDraft(event.value ?? "")}
           onSubmit={(event: EventPayload) => {
             // Shift+Enter is a newline; the runtime reports it through the same

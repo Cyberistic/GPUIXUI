@@ -227,9 +227,13 @@ are enabled (a 50 ms sample of `getFocusedElementId()`): `FieldInput` (plan 748)
 `useFocusState` host id (plan 752). The remaining ring owners read the same
 sample through their own host ids: `Carousel` and its indicator dots, the colour
 swatches and HEX field, the recorder and its clear control, a chip's removal
-control, a mention row and the time-picker clear control (plan 754). The sample
-reads the renderer's focus; it never invents focus from colour or hover, and
-every component page whose parts can take focus states the limitation (plan 608).
+control, a mention row and the time-picker clear control (plan 754).
+`BreadcrumbLink`, the Chat composer, the InlineEdit display,
+`CommandMenuInput` and `ContextMenuTrigger` complete the set through the same
+hook, and the Tag input, Mention input and Time picker **group** rings take one
+sample per group rather than one per member (plan 755). The sample reads the
+renderer's focus; it never invents focus from colour or hover, and every
+component page whose parts can take focus states the limitation (plan 608).
 A part that becomes disabled drops its painted focus even though no `blur`
 arrives, so a disabled control never shows a ring; re-enabling waits for the
 next real focus signal (plan `680`).

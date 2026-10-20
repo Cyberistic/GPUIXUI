@@ -22,6 +22,7 @@ import {
   renderComponent,
   type ComponentTestRoot,
 } from "../internal/test-root.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 import {
   TimePicker,
   TimePickerClear,
@@ -365,6 +366,61 @@ describe("TimePicker", () => {
     );
     expect(
       time.renderer.findByTestId("time-clear")?.style.boxShadow,
+    ).toBeUndefined();
+
+    time.unmount();
+  });
+
+  /**
+   * The group ring followed the segments' React `focus`/`blur` only, so a
+   * segment reached by `Tab` or a press left the field without its cue, and
+   * moving between the two segments never repainted it (plan 755).
+   */
+  it("paints the group ring on a natively focused segment", async () => {
+    const time = renderComponent(
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <TimePicker defaultValue="09:30" onValueChange={() => undefined}>
+          <TimePickerSegment segment="hours" />
+          <TimePickerSeparator />
+          <TimePickerSegment segment="minutes" />
+        </TimePicker>
+        <div testId="elsewhere" tabIndex={0} style={{ height: 20 }}>
+          x
+        </div>
+      </div>,
+    );
+
+    time.renderer.focusElement(
+      time.renderer.findByTestId("time-picker-hours")?.id ?? -1,
+    );
+    await until(
+      () =>
+        time.renderer.findByTestId("time-picker")?.style.boxShadow !==
+        undefined,
+    );
+    expect(time.renderer.findByTestId("time-picker")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
+
+    time.renderer.focusElement(
+      time.renderer.findByTestId("time-picker-minutes")?.id ?? -1,
+    );
+    await until(
+      () =>
+        time.renderer.findByTestId("time-picker")?.style.boxShadow !==
+        undefined,
+    );
+
+    time.renderer.focusElement(
+      time.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+    await until(
+      () =>
+        time.renderer.findByTestId("time-picker")?.style.boxShadow ===
+        undefined,
+    );
+    expect(
+      time.renderer.findByTestId("time-picker")?.style.boxShadow,
     ).toBeUndefined();
 
     time.unmount();

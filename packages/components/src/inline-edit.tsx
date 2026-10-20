@@ -106,8 +106,10 @@ export const InlineEdit = ({
     onChange: onEditingChange,
   });
   const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const [input, setInput] = useState<PublicInstance | undefined>(undefined);
+  const [displayInstance, setDisplayInstance] = useState<
+    PublicInstance | undefined
+  >(undefined);
   const display = useRef<PublicInstance | null>(null);
   // Enter can arrive twice (keyDown and submit); one finish per edit.
   const finished = useRef(false);
@@ -121,8 +123,14 @@ export const InlineEdit = ({
   }, []);
   const attachDisplay = useCallback((next: PublicInstance | null) => {
     display.current = next;
+    setDisplayInstance(next ?? undefined);
   }, []);
   const setDisplay = useMergedRef<PublicInstance | null>(attachDisplay, ref);
+  const [focused, setFocused] = useFocusState(
+    autoFocus,
+    disabled,
+    displayInstance?.id,
+  );
 
   const inputId = input?.id;
   const refocusDisplay = useRef<Refocus>("keep");
