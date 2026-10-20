@@ -430,6 +430,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | `nub.lock` reproducibility | tooling | **resolved** — tracked on `master` |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source | licensing | pending |
+| **Evidence for `/docs/updates`**: a packaged app (one real packager format) plus a fixture update feed, to prove `checkUpdate`, signature verification and `downloadAndInstall`; the page states they are declared, never executed (plan 633) | release / CI owner | pending — needs packaging, which no workstream owns yet |
 
 ## Phase D — data and workspace components
 
