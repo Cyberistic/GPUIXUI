@@ -305,5 +305,8 @@ Implemented as planned; the only correction is the measured failure count.
 - **Gates**: `nub run check` (with `oxfmt` applied), `nub run lint` and
   `nub run test` exit 0, unit 509 in 48 files.
 - **Native suite**: 1012 passed / 20 failed of 1032 — the baseline's same 20
-  plan-540 classes, no new failure. Headless smoke was not run: the playground
-  registry mounts no list or tabs example, so it cannot exercise this change.
+  plan-540 classes, no new failure.
+- **Headless smoke**: `nub apps/playground/dist/smoke/run.js` is **17/20** — only
+  `focus-traversal`, `floating-placement` and `shell-navigation`, the same three
+  the playground workstream records; no scenario mounts a list or tabs example,
+  so the native suites above are this change's real evidence.
