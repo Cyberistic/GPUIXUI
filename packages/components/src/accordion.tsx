@@ -21,6 +21,7 @@ import { Icon } from "@gpuixui/icons";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import {
   createContext,
   useCallback,
@@ -98,6 +99,9 @@ interface AccordionItemContextValue {
   readonly disabled: boolean;
   /** The section header's native instance, so a close can return focus to it. */
   readonly trigger: RefObject<Option.Option<PublicInstance>>;
+  /** The header's plain-text name, so the body can borrow it (plan 779). */
+  readonly name: Option.Option<string>;
+  readonly setName: (name: Option.Option<string>) => void;
 }
 
 const AccordionItemContext = createContext<
@@ -352,10 +356,11 @@ export const AccordionItem = ({
   const theme = useTheme();
   const { lastValue } = useAccordionContext();
   const trigger = useRef<Option.Option<PublicInstance>>(Option.none());
+  const [name, setName] = useState<Option.Option<string>>(Option.none());
 
   const item = useMemo<AccordionItemContextValue>(
-    () => ({ value, disabled, trigger }),
-    [disabled, trigger, value],
+    () => ({ value, disabled, trigger, name, setName }),
+    [disabled, name, trigger, value],
   );
   const isLast = Option.contains(lastValue, value);
   assertParts(accordionItem, children);
@@ -414,7 +419,7 @@ export const AccordionTrigger = ({
   const theme = useTheme();
   const { isOpen, toggle, registerTrigger, updateTrigger, moveFrom, jumpTo } =
     useAccordionContext();
-  const { value, disabled, trigger } = useAccordionItemContext();
+  const { value, disabled, trigger, setName } = useAccordionItemContext();
   const name = controlName(rest["aria-label"], children);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
@@ -437,6 +442,12 @@ export const AccordionTrigger = ({
     [trigger],
   );
   const setElement = useMergedRef<PublicInstance | null>(attach, ref);
+
+  useLayoutEffect(() => {
+    // The name names the body's region too, and a rename must not re-register
+    // the header: its position is what the arrow keys and the divider read.
+    setName(Option.fromNullishOr(name));
+  }, [name, setName]);
 
   useLayoutEffect(() => {
     // The native id only exists after commit, and it is what `moveFrom` focuses.
@@ -564,7 +575,22 @@ export const AccordionContent = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const { isOpen } = useAccordionContext();
-  const { value, trigger } = useAccordionItemContext();
+  const { value, trigger, name } = useAccordionItemContext();
+  const open = isOpen(value);
+  // 0.10.0 has neither `aria-labelledby` nor `aria-controls`, so the body borrows
+  // the header's plain-text name. A caller's own label wins; an unnamed header
+  // leaves the body unnamed rather than inventing a region (plan 779).
+  const label = Option.getOrUndefined(
+    Option.firstSomeOf([
+      pipe(
+        Option.fromNullishOr(rest["aria-label"]),
+        Option.map(Str.trim),
+        Option.filter(Str.isNonEmpty),
+      ),
+      name,
+    ]),
+  );
+  const region = open && rest.role === undefined && label !== undefined;
   const restoreFocus = useCallback(() => {
     Option.match(trigger.current, {
       onNone: () => undefined,
@@ -574,10 +600,11 @@ export const AccordionContent = ({
 
   return (
     <Reveal
-      open={isOpen(value)}
+      open={open}
       animate={animate}
       restoreFocus={restoreFocus}
       {...rest}
+      {...(region ? { role: "region", "aria-label": label } : {})}
       style={mergeStyles(
         {
           display: "flex",
@@ -628,6 +655,7 @@ export const accordionMeta = {
   limitations: [
     "the chevron swaps direction: 0.10.0's StyleDesc has no transform",
     "closed bodies stay mounted and are hidden by `visibility`; a rewrap while closed is not re-measured until the next open",
+    "a closed body is out of the tab order, but the headless accessibility dump still lists a visibility-hidden node, so its removal from the accessible tree is unverified",
     "a close that began with focus inside the body returns focus to its header by box containment; a control clipped out of the visible body is not recognised",
   ],
   docs: "docs/accordion.mdx",

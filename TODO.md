@@ -1338,6 +1338,19 @@ retired once both branches are one
       cases (41 → 43), both red at `HEAD` (zero headers; a `weekStartsOn={0}`
       grid starting on the wrong column); docs, `COMPONENTS.md` and the
       inventory synced (owner: components)
+    - [x] An accordion section's body is a named region — plan 779; measured
+      2026-10-20: an open body was a loose `label` and its header pointed at
+      nothing (`aria-controls`/`aria-labelledby` are absent in 0.10.0), so with
+      several sections open a reader could not tell which header a body belonged
+      to; the same probe showed the headless dump still lists a
+      visibility-hidden node, so the page's "leaves the accessible tree" claim
+      was corrected. `AccordionContent` now carries `role="region"` named by its
+      header's plain-text name while open, a caller `aria-label` wins, a
+      composed/unnamed header yields no region, and a rename updates the name in
+      place. 4 native cases (26 → 30), three red at `HEAD`; unit 504 in 47
+      files, full native suite 984/20 of 1004 with the baseline's same 20
+      plan-540 classes; `docs/accordion.mdx`, `COMPONENTS.md`, `PLAN.md` D30 and
+      the inventory synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

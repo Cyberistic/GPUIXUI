@@ -34,11 +34,16 @@ import {
 | `AccordionContent` | the body; stays mounted and reveals its measured height |
 
 A closed body is hidden with `visibility: hidden`, not unmounted, so its state
-survives a switch between sections and it leaves the tab order and the
-accessible tree. Hiding by the `overflow` clip alone was not enough: the runtime
-refuses the pointer but keeps a clipped subtree in the keyboard order (plan
-372). The height is measured from the content's own bounds after commit, and
-`animate={false}` snaps instead of tweening.
+survives a switch between sections and it leaves the tab order. Hiding by the
+`overflow` clip alone was not enough: the runtime refuses the pointer but keeps a
+clipped subtree in the keyboard order (plan 372). The height is measured from the
+content's own bounds after commit, and `animate={false}` snaps instead of
+tweening.
+
+While a section is open its body is a `region` named by the header, so a reader
+can tell which header the content belongs to and jump to the section (plan 779).
+0.10.0 has no `aria-labelledby`, so the name is copied from the trigger's
+plain-text name; a caller `aria-label` on `AccordionContent` wins.
 
 ## The two modes
 
@@ -96,7 +101,7 @@ pointer and key handlers) and **merges `style` last**.
 | `Accordion` | `div` | one of two shapes. Single: `type: "single"`, `collapsible?: boolean` (default `false`), `value?: string \| null`, `defaultValue?: string`, `onValueChange?: (value: string \| null) => void`. Multiple: `type: "multiple"`, `value?: ReadonlyArray<string>`, `defaultValue?: ReadonlyArray<string>`, `onValueChange?: (value: ReadonlyArray<string>) => void` |
 | `AccordionItem` | `div` | `value: string` (required), `disabled?: boolean` (default `false`) |
 | `AccordionTrigger` | `div` (`role="button"`) | `style?: StateStyle<{ open: boolean; disabled: boolean; focused: boolean }>` |
-| `AccordionContent` | `div` | `animate?: boolean` (default `true`) |
+| `AccordionContent` | `div` (`role="region"` while open and named) | `animate?: boolean` (default `true`); `aria-label` names the body, and an authored `role` opts out |
 
 `autoFocus` sets the initial `focused` state, so the header's ring is painted on
 the first commit — the runtime applies native focus after React's effects and
@@ -130,13 +135,19 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 `aria-disabled` semantics (plan 516).
 
 - `aria-expanded` on each trigger; the trigger names the section.
+- An open body is a `region` named by that header, because the runtime exposes no
+  `aria-labelledby`/`aria-controls`; a caller `aria-label` on `AccordionContent`
+  wins, and a composed or icon-only header without one leaves the body unnamed
+  rather than borrowing an unrelated string. A rename updates the name in place.
 - A plain-text header names itself (`aria-label`), because 0.10.0 reports no
   name from contents; a header composed from elements passes `aria-label`.
 - **No `aria-controls`** in 0.10.0; the relationship is positional.
 - The indicator is decorative: `aria-expanded` on the trigger carries the state.
 - Arrow keys move focus between enabled headers; they do not activate them.
 - A closed body stays mounted and is hidden, so its state survives a section
-  switch and its controls leave the tab order.
+  switch and its controls leave the tab order. The headless accessibility dump
+  still lists a visibility-hidden node, so its removal from the accessible tree
+  cannot be verified here; the tab-order removal is measured.
 - The measured natural height is re-measured on open, not on a width change, so a
   rewrap while collapsed can correct once on the next open.
 - Closing a section with focus inside its body returns focus to that section's
@@ -155,7 +166,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (26 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (30 tests):
 single mode closing the previous section, the non-collapsible no-op (silent in a
 controlled accordion), the collapsible close, multiple mode keeping sections, the disabled section, Enter
 activation, Space on release, a held Enter toggling only once, the controlled
@@ -166,6 +177,8 @@ tween (plus the `animate={false}` snap), and a close that began inside a body
 returning focus to its header while a close that began outside does not steal
 focus. A section disabled and enabled again keeps its authored position, so the
 next arrow key reaches its neighbour and the divider stays on the last section.
+The open body is a `region` named by its header, a caller label wins, a rename
+updates that name in place, and a nameless composed header yields no region.
 
 `src/accordion/logic.test.ts` covers the transition table (15 cases), and
 `src/internal/collection.test.ts` covers the shared movement arithmetic.

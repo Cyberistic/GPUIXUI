@@ -19,8 +19,11 @@
 
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
+import { Icon } from "@gpuixui/icons";
 import { createRef, useState } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { nodesWithRole } from "../internal/a11y.js";
 import {
   clickCentreOf,
   focusedTestId,
@@ -152,6 +155,31 @@ const Stateful = () => {
         </AccordionContent>
       </AccordionItem>
     </Accordion>
+  );
+};
+
+/** A section whose header text the app can rename (plan 779). */
+const Renamable = () => {
+  const [label, setLabel] = useState("Before");
+  return (
+    <div testId="root">
+      <div
+        role="button"
+        tabIndex={0}
+        testId="rename"
+        onClick={() => setLabel("After")}
+      >
+        rename
+      </div>
+      <Accordion type="single" defaultValue="one">
+        <AccordionItem value="one">
+          <AccordionTrigger testId="trigger-one">{label}</AccordionTrigger>
+          <AccordionContent testId="content-one">
+            <text>Body one</text>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
   );
 };
 
@@ -731,6 +759,76 @@ describe("Accordion", () => {
     expect(
       faq.renderer.findByTestId("trigger-two")?.style.boxShadow,
     ).toBeUndefined();
+
+    faq.unmount();
+  });
+
+  /**
+   * The body's region (plan 779). The bug this guards, measured: an open body was
+   * a loose `label` and its header pointed at nothing, because 0.10.0 has neither
+   * `aria-controls` nor `aria-labelledby`; with several sections open a reader
+   * could not tell which header a body belonged to.
+   */
+  it("names the open section's body with its header", () => {
+    const faq = renderComponent(<Faq />);
+
+    expect(
+      Arr.map(nodesWithRole(faq.renderer, "region"), (region) => region.name),
+    ).toEqual(["What is GPUix?"]);
+
+    faq.unmount();
+  });
+
+  it("lets the caller name the body", () => {
+    const faq = renderComponent(
+      <Accordion type="single" defaultValue="one">
+        <AccordionItem value="one">
+          <AccordionTrigger testId="trigger-one">Shipping</AccordionTrigger>
+          <AccordionContent testId="content-one" aria-label="Delivery details">
+            <text>Body one</text>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>,
+    );
+
+    expect(
+      Arr.map(nodesWithRole(faq.renderer, "region"), (region) => region.name),
+    ).toEqual(["Delivery details"]);
+
+    faq.unmount();
+  });
+
+  it("renames the body when its header is renamed", () => {
+    const faq = renderComponent(<Renamable />);
+    const regionNames = (): ReadonlyArray<string> =>
+      Arr.map(nodesWithRole(faq.renderer, "region"), (region) => region.name);
+
+    expect(regionNames()).toEqual(["Before"]);
+
+    clickCentreOf(faq, "rename");
+
+    // One region under the new name: a rename updates it in place rather than
+    // registering a second header.
+    expect(regionNames()).toEqual(["After"]);
+
+    faq.unmount();
+  });
+
+  it("leaves a body unnamed when its header has no name", () => {
+    const faq = renderComponent(
+      <Accordion type="single" defaultValue="one">
+        <AccordionItem value="one">
+          <AccordionTrigger testId="trigger-one">
+            <Icon name="check" color={darkTheme.colors.foreground} />
+          </AccordionTrigger>
+          <AccordionContent testId="content-one">
+            <text>Body one</text>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>,
+    );
+
+    expect(nodesWithRole(faq.renderer, "region")).toEqual([]);
 
     faq.unmount();
   });
