@@ -8,7 +8,13 @@
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../src/tabs.js";
+import {
+  Tabs,
+  TabsContent,
+  TabsIndicator,
+  TabsList,
+  TabsTrigger,
+} from "../src/tabs.js";
 
 /** One read-only settings row. */
 const Row = ({
@@ -67,6 +73,7 @@ export const TabsExample = () => {
         style={{ padding: theme.spacing.lg, paddingTop: 0 }}
       >
         <TabsList testId="settings-tabs">
+          <TabsIndicator />
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="danger">Danger</TabsTrigger>
@@ -104,6 +111,7 @@ export const VerticalTabsExample = () => (
     </CardHeader>
     <Tabs defaultValue="general" orientation="vertical">
       <TabsList label="Workspace sections" testId="workspace-tabs">
+        <TabsIndicator />
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="members" disabled>
           Members

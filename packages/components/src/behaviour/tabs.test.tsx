@@ -24,7 +24,13 @@ import type { StateStyle } from "@gpuix/react/floating";
 import { createRef, useCallback, useLayoutEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  finishMotion,
+  focusedTestId,
+  isShown,
+  requireBounds,
+} from "../internal/interaction.js";
 import { FOCUS_SAMPLE_MS } from "../internal/native-focus.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -35,6 +41,7 @@ import {
 import {
   Tabs,
   TabsContent,
+  TabsIndicator,
   TabsList,
   TabsTrigger,
   type TabsTriggerState,
@@ -217,6 +224,67 @@ const VerticalSettings = ({
     <TabsContent testId="panel-danger" value="danger">
       <text>Danger panel</text>
     </TabsContent>
+  </Tabs>
+);
+
+/** The settings rail with the shared indicator plan 715 ships. */
+const IndicatorSettings = ({
+  value,
+  orientation = "horizontal",
+  driver,
+}: {
+  readonly value?: string;
+  readonly orientation?: "horizontal" | "vertical";
+  readonly driver?: (value: string) => void;
+}) => (
+  <Tabs
+    defaultValue="profile"
+    value={value}
+    onValueChange={driver}
+    orientation={orientation}
+    testId="tabs-root"
+  >
+    <TabsList testId="list">
+      <TabsIndicator />
+      <TabsTrigger testId="tab-profile" value="profile">
+        Profile
+      </TabsTrigger>
+      <TabsTrigger testId="tab-billing" value="billing" disabled>
+        Billing
+      </TabsTrigger>
+      <TabsTrigger testId="tab-danger" value="danger">
+        Danger
+      </TabsTrigger>
+    </TabsList>
+    <TabsContent testId="panel-profile" value="profile">
+      <text>Profile panel</text>
+    </TabsContent>
+    <TabsContent testId="panel-danger" value="danger">
+      <text>Danger panel</text>
+    </TabsContent>
+  </Tabs>
+);
+
+/** Data-driven tabs with an indicator, so the set can lose its selection. */
+const IndicatorTabs = ({
+  values,
+}: {
+  readonly values: ReadonlyArray<string>;
+}) => (
+  <Tabs defaultValue="a" testId="tabs-root">
+    <TabsList testId="list">
+      <TabsIndicator />
+      {Arr.map(values, (value) => (
+        <TabsTrigger key={value} testId={`tab-${value}`} value={value}>
+          {value.toUpperCase()}
+        </TabsTrigger>
+      ))}
+    </TabsList>
+    {Arr.map(values, (value) => (
+      <TabsContent key={value} testId={`panel-${value}`} value={value}>
+        <text>{value}</text>
+      </TabsContent>
+    ))}
   </Tabs>
 );
 
@@ -948,6 +1016,149 @@ describe("Tabs", () => {
     expect(tabs.renderer.findByTestId("tab-c")?.customProps).toMatchObject({
       "aria-selected": false,
     });
+
+    tabs.unmount();
+  });
+
+  it("paints the rail's indicator on the selected tab's span", () => {
+    const tabs = renderComponent(<IndicatorSettings />);
+
+    const bar = requireBounds(tabs, "list-indicator");
+    const tab = requireBounds(tabs, "tab-profile");
+    const rail = requireBounds(tabs, "list");
+
+    expect(bar.x).toBe(tab.x);
+    expect(bar.width).toBe(tab.width);
+    expect(bar.height).toBe(2);
+    // The bar sits on the rail's inner bottom edge: the rail reports a
+    // content-box origin and a padding-box size, so its padding comes off first.
+    expect(bar.y + bar.height).toBe(
+      rail.y - darkTheme.spacing.xs + rail.height,
+    );
+
+    tabs.unmount();
+  });
+
+  it("moves the indicator to the tab the user selects", () => {
+    const tabs = renderComponent(<IndicatorSettings />);
+    const before = requireBounds(tabs, "list-indicator");
+
+    clickCentreOf(tabs, "tab-danger");
+    finishMotion(tabs, 300);
+
+    const bar = requireBounds(tabs, "list-indicator");
+    const danger = requireBounds(tabs, "tab-danger");
+
+    expect(bar.x).toBe(danger.x);
+    expect(bar.width).toBe(danger.width);
+    expect(bar.x).not.toBe(before.x);
+
+    tabs.unmount();
+  });
+
+  it("slides the indicator rather than jumping to the new tab", () => {
+    const tabs = renderComponent(<IndicatorSettings />);
+    const start = requireBounds(tabs, "list-indicator");
+    const target = requireBounds(tabs, "tab-danger");
+
+    clickCentreOf(tabs, "tab-danger");
+    tabs.renderer.flush();
+
+    const mid = requireBounds(tabs, "list-indicator");
+    expect(mid.x).toBeGreaterThan(start.x);
+    expect(mid.x).toBeLessThan(target.x);
+
+    finishMotion(tabs, 300);
+    expect(requireBounds(tabs, "list-indicator").x).toBe(target.x);
+
+    tabs.unmount();
+  });
+
+  it("hangs the indicator on the rail's left edge in a vertical set", () => {
+    const tabs = renderComponent(<IndicatorSettings orientation="vertical" />);
+
+    const bar = requireBounds(tabs, "list-indicator");
+    const rail = requireBounds(tabs, "list");
+    const tab = requireBounds(tabs, "tab-profile");
+
+    expect(bar.x).toBe(rail.x - darkTheme.spacing.xs);
+    expect(bar.width).toBe(2);
+    expect(bar.y).toBe(tab.y);
+    expect(bar.height).toBe(tab.height);
+
+    tabs.unmount();
+  });
+
+  it("moves the selected fill from the trigger to the indicator", () => {
+    const withBar = renderComponent(<IndicatorSettings />);
+    expect(
+      withBar.renderer.findByTestId("tab-profile")?.style.backgroundColor,
+    ).toBeUndefined();
+    expect(
+      withBar.renderer.findByTestId("list-indicator")?.style.backgroundColor,
+    ).toBe(darkTheme.colors.primary);
+    withBar.unmount();
+
+    const withoutBar = renderComponent(<Settings />);
+    expect(
+      withoutBar.renderer.findByTestId("tab-profile")?.style.backgroundColor,
+    ).toBe(darkTheme.colors.card);
+    expect(isShown(withoutBar, "tabs-indicator")).toBe(false);
+    withoutBar.unmount();
+  });
+
+  it("paints the indicator from the active theme", () => {
+    const tabs = renderComponent(<IndicatorSettings />, "light");
+    expect(
+      tabs.renderer.findByTestId("list-indicator")?.style.backgroundColor,
+    ).toBe(lightTheme.colors.primary);
+    tabs.unmount();
+  });
+
+  it("paints no indicator while no tab is selected", () => {
+    const tabs = renderComponent(
+      <Tabs defaultValue="" testId="empty-tabs">
+        <TabsList testId="empty-list">
+          <TabsIndicator />
+          <TabsTrigger testId="empty-a" value="a">
+            A
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="a">
+          <text>A panel</text>
+        </TabsContent>
+      </Tabs>,
+    );
+
+    expect(isShown(tabs, "empty-list-indicator")).toBe(false);
+
+    tabs.unmount();
+  });
+
+  it("drops the indicator when the selected tab is removed", () => {
+    const tabs = renderComponent(<IndicatorTabs values={["a", "b"]} />);
+    expect(isShown(tabs, "list-indicator")).toBe(true);
+
+    tabs.rerender(<IndicatorTabs values={["b"]} />);
+    expect(isShown(tabs, "list-indicator")).toBe(false);
+
+    tabs.unmount();
+  });
+
+  it("keeps the caller's testId on the indicator", () => {
+    const tabs = renderComponent(
+      <Tabs defaultValue="a" testId="named-tabs">
+        <TabsList testId="named-list">
+          <TabsIndicator testId="custom-bar" />
+          <TabsTrigger testId="named-a" value="a">
+            A
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+
+    expect(isShown(tabs, "custom-bar")).toBe(true);
+    expect(isShown(tabs, "named-list-indicator")).toBe(false);
 
     tabs.unmount();
   });

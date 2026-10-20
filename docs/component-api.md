@@ -318,7 +318,7 @@ parts.
 | Dropdown menus | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuGroup`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | `MenuRoot` + 18 parts | plan 114, 387 |
 | Context menus | `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent`, `ContextMenuItem`, `ContextMenuCheckboxItem`, `ContextMenuRadioGroup`, `ContextMenuRadioItem`, `ContextMenuGroup`, `ContextMenuLabel`, `ContextMenuSeparator`, `ContextMenuSub`, `ContextMenuSubTrigger`, `ContextMenuSubContent` | `ContextMenuRoot`/`Trigger` | plan 114, 387 |
 | Command menus | `CommandMenu`, `CommandMenuInput`, `CommandMenuList`, `CommandMenuItem`, `CommandMenuEmpty` | — | plan 114, 301 |
-| Tabs | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `TabsRoot`/`List`/`Tab`/`Panel`/`Indicator` | plan 113 |
+| Tabs | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`, `TabsIndicator` | `TabsRoot`/`List`/`Tab`/`Panel`/`Indicator` | plan 113/715 |
 | Accordions | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `AccordionRoot`/`Header`/`Item`/`Trigger`/`Panel` | plan 113 |
 | Collapsible sections | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` | `CollapsibleRoot`/`Trigger`/`Panel` | plan 113 |
 | Breadcrumbs | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`, `BreadcrumbSeparator` | — | plan 113 |

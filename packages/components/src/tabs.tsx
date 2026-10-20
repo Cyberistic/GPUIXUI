@@ -13,7 +13,7 @@
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
-import { useGpuix } from "@gpuix/react";
+import { useGpuix, useWindowSize } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -51,6 +51,7 @@ import {
   isRight,
   isUp,
 } from "./internal/key.js";
+import { MotionSurface } from "./internal/motion.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   assertParts,
@@ -65,10 +66,16 @@ import {
   textStyle,
   useTheme,
 } from "./internal/theme.js";
-import { selectsOnFocus, type TabsActivation } from "./tabs/logic.js";
+import {
+  indicatorBox,
+  indicatorThickness,
+  selectsOnFocus,
+  type IndicatorBox,
+  type TabsActivation,
+  type TabsOrientation,
+} from "./tabs/logic.js";
 
-/** The two axes a tab list can run along. */
-export type TabsOrientation = "horizontal" | "vertical";
+export type { TabsOrientation } from "./tabs/logic.js";
 
 /** One registered trigger: its value, native id, whether it accepts input, and
  *  the name it paints (so its panel can be announced by the same label). */
@@ -79,6 +86,12 @@ interface TabRow {
   readonly name: Option.Option<string>;
 }
 
+/** The registered rail: the host the indicator measures, and its test handle. */
+interface TabListRow {
+  readonly id: number;
+  readonly testId: Option.Option<string>;
+}
+
 /** The rules a tab part follows; throws outside a {@link Tabs} root. */
 interface TabsContextValue {
   readonly selected: string;
@@ -87,6 +100,12 @@ interface TabsContextValue {
   readonly orientation: TabsOrientation;
   readonly activation: TabsActivation;
   readonly rows: ReadonlyArray<TabRow>;
+  /** The rail, so {@link TabsIndicator} can measure it; none before mount. */
+  readonly list: Option.Option<TabListRow>;
+  readonly setList: (row: Option.Option<TabListRow>) => void;
+  /** Whether an indicator owns the rail's emphasis, so a trigger steps aside. */
+  readonly indicator: boolean;
+  readonly registerIndicator: () => () => void;
   readonly register: (row: TabRow) => () => void;
   /** Change a registered trigger in place; a re-register would move it. */
   readonly updateRow: (row: TabRow) => void;
@@ -176,6 +195,14 @@ export const Tabs = ({
   });
   const [active, setActive] = useState<Option.Option<string>>(Option.none());
   const [rows, setRows] = useState<ReadonlyArray<TabRow>>([]);
+  const [list, setList] = useState<Option.Option<TabListRow>>(Option.none());
+  const [indicator, setIndicator] = useState(false);
+
+  /** An indicator owns the rail's emphasis from its first commit (plan 715). */
+  const registerIndicator = useCallback((): (() => void) => {
+    setIndicator(true);
+    return () => setIndicator(false);
+  }, []);
 
   /**
    * The tab the user is on, when it still exists and accepts input. A tab that
@@ -401,6 +428,10 @@ export const Tabs = ({
       orientation,
       activation,
       rows,
+      list,
+      setList,
+      indicator,
+      registerIndicator,
       register,
       updateRow,
       select,
@@ -412,12 +443,15 @@ export const Tabs = ({
     [
       activation,
       focusRow,
+      indicator,
       jumpTo,
+      list,
       liveActive,
       moveBy,
       noteFocus,
       orientation,
       register,
+      registerIndicator,
       rows,
       select,
       selected,
@@ -460,10 +494,33 @@ export const TabsList = ({
   onKeyDown,
   children,
   style,
+  ref,
   ...rest
 }: TabsListProps) => {
   const theme = useTheme();
-  const { orientation, moveBy, jumpTo } = useTabsContext();
+  const { orientation, moveBy, jumpTo, setList } = useTabsContext();
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
+  const testId = rest.testId;
+
+  // The rail's host id is what the indicator measures, so it is registered with
+  // the root rather than held here (plan 715).
+  useLayoutEffect(() => {
+    if (instance === undefined) return;
+    setList(
+      Option.some({
+        id: instance.id,
+        testId: Option.fromNullishOr(testId),
+      }),
+    );
+    return () => setList(Option.none());
+  }, [instance, setList, testId]);
+
   assertParts(tabsList, children);
 
   const direction = (event: EventPayload): Option.Option<1 | -1> =>
@@ -497,6 +554,7 @@ export const TabsList = ({
       role="tablist"
       {...(label === undefined ? {} : { "aria-label": label })}
       {...rest}
+      ref={setElement}
       onKeyDown={(event) => {
         handleKeyDown(event);
         onKeyDown?.(event);
@@ -563,6 +621,7 @@ export const TabsTrigger = ({
     active,
     orientation,
     tabbable,
+    indicator,
     register,
     updateRow,
     select,
@@ -609,6 +668,9 @@ export const TabsTrigger = ({
 
   const isSelected = selected === value;
   const isTabbable = Option.contains(tabbable, value);
+  // The rail's selection is one thing at a time: an indicator paints it, so the
+  // trigger only changes its text colour (plan 715).
+  const filled = isSelected && !indicator;
   const state: TabsTriggerState = {
     active: isSelected,
     disabled,
@@ -664,7 +726,7 @@ export const TabsTrigger = ({
           paddingLeft: theme.spacing.lg,
           paddingRight: theme.spacing.lg,
           borderRadius: theme.radius.sm,
-          backgroundColor: isSelected ? theme.colors.card : undefined,
+          backgroundColor: filled ? theme.colors.card : undefined,
           color: isSelected
             ? theme.colors.foreground
             : theme.colors.mutedForeground,
@@ -673,9 +735,11 @@ export const TabsTrigger = ({
           hover: disabled
             ? undefined
             : {
-                backgroundColor: isSelected
+                backgroundColor: filled
                   ? theme.colors.card
-                  : theme.colors.hover,
+                  : isSelected
+                    ? undefined
+                    : theme.colors.hover,
                 color: theme.colors.foreground,
               },
           ...(focused ? focusRing(theme) : {}),
@@ -686,6 +750,121 @@ export const TabsTrigger = ({
       {children}
     </div>
   );
+};
+
+/** {@link TabsIndicator} props. */
+export interface TabsIndicatorProps extends Omit<Props, "children"> {
+  /** The bar's thickness in px. Default 2; a fractional value truncates. */
+  readonly thickness?: number;
+  /** Whether the bar travels to a new tab. Default `true`. */
+  readonly animate?: boolean;
+}
+
+/** 150 ms, easeOut: one tab's width, not an overlay's entrance. */
+const INDICATOR_MOTION = { duration: 0.15, ease: "easeOut" } as const;
+
+/**
+ * The rail's selected cue as one shared bar, so it can travel between tabs.
+ *
+ * Mounted inside {@link TabsList}; while it is mounted the selected trigger does
+ * not paint its own fill, so the rail's emphasis is exactly one element (plan
+ * 715). The box is measured from the rail and the selected trigger after every
+ * commit that can move it — the rail registers late, the selection and the rows
+ * change, and the theme or the window resize the rail — and animates `left`,
+ * `top`, `width` and `height`. A missing host renders nothing rather than a bar
+ * at the origin.
+ */
+export const TabsIndicator = ({
+  thickness: thicknessProp,
+  animate = true,
+  style,
+  ...rest
+}: TabsIndicatorProps) => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const window = useWindowSize();
+  const { list, selected, rows, orientation, registerIndicator } =
+    useTabsContext();
+  const thickness = indicatorThickness(thicknessProp);
+  const [box, setBox] = useState<Option.Option<IndicatorBox>>(Option.none());
+
+  useLayoutEffect(() => registerIndicator(), [registerIndicator]);
+
+  /** The selected trigger's host, or `-1` while no live trigger carries it. */
+  const triggerId = Option.getOrElse(
+    Option.map(
+      Arr.findFirst(rows, (row) => row.value === selected),
+      (row) => row.id,
+    ),
+    () => -1,
+  );
+
+  useLayoutEffect(() => {
+    setBox(
+      Option.flatMap(list, (rail) =>
+        Option.flatMap(
+          Option.fromNullishOr(renderer?.getElementBounds?.(rail.id) ?? null),
+          (listBox) =>
+            Option.map(
+              Option.fromNullishOr(
+                renderer?.getElementBounds?.(triggerId) ?? null,
+              ),
+              (triggerBox) =>
+                indicatorBox({
+                  list: listBox,
+                  trigger: triggerBox,
+                  padding: theme.spacing.xs,
+                  orientation,
+                  thickness,
+                }),
+            ),
+        ),
+      ),
+    );
+  }, [
+    list,
+    orientation,
+    renderer,
+    rows,
+    selected,
+    theme,
+    thickness,
+    triggerId,
+    window.height,
+    window.width,
+  ]);
+
+  // A caller's testId wins; otherwise the rail names the bar it owns.
+  const testId =
+    rest.testId ??
+    Option.getOrElse(
+      Option.flatMap(list, (rail) =>
+        Option.map(rail.testId, (value) => `${value}-indicator`),
+      ),
+      () => "tabs-indicator",
+    );
+
+  return Option.match(box, {
+    onNone: () => null,
+    onSome: (value) => (
+      <MotionSurface
+        {...rest}
+        testId={testId}
+        initial={false}
+        animate={value}
+        transition={animate ? INDICATOR_MOTION : { duration: 0 }}
+        style={mergeStyles(
+          {
+            position: "absolute",
+            pointerEvents: "none",
+            backgroundColor: theme.colors.primary,
+            borderRadius: theme.radius.sm,
+          },
+          style,
+        )}
+      />
+    ),
+  });
 };
 
 /** {@link TabsContent} props. */
@@ -740,6 +919,7 @@ const tabsParts: ReadonlyArray<PartComponent> = [
   Tabs,
   TabsList,
   TabsTrigger,
+  TabsIndicator,
   TabsContent,
 ];
 
@@ -753,8 +933,8 @@ const tabsRoot: PartsContract = {
 const tabsList: PartsContract = {
   parent: "TabsList",
   family: tabsParts,
-  accepts: [TabsTrigger],
-  hint: "Put TabsTrigger directly inside TabsList; put TabsContent beside it.",
+  accepts: [TabsTrigger, TabsIndicator],
+  hint: "Put TabsTrigger and TabsIndicator directly inside TabsList; put TabsContent beside it.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
@@ -768,6 +948,7 @@ export const tabsMeta = {
     "no aria-orientation, aria-controls or aria-labelledby in 0.10.0; the panel borrows its trigger's plain-text name, falling back to the value for a composed trigger",
     "the trigger/panel relationship is positional, not semantic",
     "a panel renders only while a live trigger with its value is registered; the selection is never rewritten",
+    "the indicator's start along the rail is the list's own spacing.xs padding, so a caller padding override shifts it; no transform, so the slide animates left/top/width/height, and no reduced-motion signal",
   ],
   docs: "docs/tabs.mdx",
   example: "examples/tabs.example.tsx",

@@ -194,6 +194,19 @@ retired once both branches are one
     - [x] `src/behaviour/theme-matrix.test.tsx`: the both-theme matrix for the 11 components without one
     - [x] Six records corrected from `gpuixSupport: "yes"` to `partial` where the runtime lacks the ARIA surface or a keyboard path
   - Tier 2 hardening after the inventory closed (plans 120+)
+    - [x] Tabs: the rail gets a measured shared indicator (`TabsIndicator`) —
+      plan 715, closing the last §8 parts gap for Tabs. The selected fill was
+      painted per trigger, so the emphasis could not travel. The part measures
+      the rail and the selected trigger after every selection/rows/theme/window
+      change, paints a `primary` bar on the rail's inner edge (bottom for
+      horizontal, left for vertical) and animates `left`/`top`/`width`/`height`
+      between tabs; mounting it moves the selected fill off the trigger, so the
+      rail never paints two emphases. 6 pure + 9 native cases (Tabs 33 → 42,
+      `tabs/logic` 2 → 8), four mutation proofs (padding, motion, fill, testId);
+      the full native suite is 884 passed / 28 failed of 912 — the same recorded
+      plan-540 binding defects and no new failure. `check`/`lint`/`test` exit 0
+      with unit 485 in 46 files; docs, example, `COMPONENTS.md`,
+      `docs/component-api.md` §8, `PLAN.md` D30 and the inventory synced
     - [x] List: focus continuity across a row removal — plan 708; two recorded
       "removed-host" cases were red (`focused = None`) and a row removed while a
       `Button` in its `trailing` slot held focus dropped focus entirely, because

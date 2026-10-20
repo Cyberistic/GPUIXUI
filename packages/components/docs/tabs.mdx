@@ -11,12 +11,14 @@ otherwise.
 import {
   Tabs,
   TabsContent,
+  TabsIndicator,
   TabsList,
   TabsTrigger,
 } from "@gpuixui/components/tabs";
 
 <Tabs defaultValue="profile">
   <TabsList label="Account">
+    <TabsIndicator />
     <TabsTrigger value="profile">Profile</TabsTrigger>
     <TabsTrigger value="notifications">Notifications</TabsTrigger>
   </TabsList>
@@ -31,6 +33,7 @@ import {
 | ---- | -------------- |
 | `Tabs` | the selected value, the trigger registry, the tab stop |
 | `TabsList` | `role="tablist"`, the arrow/Home/End keys, the rail |
+| `TabsIndicator` | the rail's selected cue: one measured bar that travels between tabs |
 | `TabsTrigger` | one `role="tab"`, `aria-selected`, its own focus |
 | `TabsContent` | one `role="tabpanel"`, mounted only while selected and its trigger is registered |
 
@@ -64,7 +67,36 @@ activation and the controlled rule are identical on both axes.
 ```
 
 `examples/tabs.example.tsx` exports both shapes: the horizontal account settings
-and the vertical workspace settings.
+and the vertical workspace settings, each with an indicator.
+
+## Indicator
+
+A tab rail has one selected state. Without an indicator the selected trigger
+paints its own `card` fill; mounting `TabsIndicator` inside `TabsList` moves that
+cue into one shared element, a bar on the rail's inner edge that spans the
+selected tab and slides to the next one.
+
+```tsx
+<TabsList label="Account settings">
+  <TabsIndicator />
+  <TabsTrigger value="profile">Profile</TabsTrigger>
+  <TabsTrigger value="billing">Billing</TabsTrigger>
+</TabsList>
+```
+
+- The bar is measured, not inferred: the rail's and the selected trigger's boxes
+  are read after commit, so it follows a label that grows, a theme or density
+  change and a window resize.
+- It hugs the rail's inner bottom edge (horizontal) or inner left edge
+  (vertical) and is exactly as long as the selected trigger.
+- `left`, `top`, `width` and `height` animate over 150 ms `easeOut`;
+  `animate={false}` snaps. The runtime has no reduced-motion signal, so the app
+  chooses.
+- While the indicator is mounted the selected trigger keeps only its
+  `foreground` text colour — the pair never paints two fills. Leave the
+  indicator out and today's filled pill is unchanged.
+- A set with no selected tab, or whose selected trigger is not registered,
+  paints no bar rather than a bar at the origin.
 
 ## Keyboard
 
@@ -141,6 +173,7 @@ Every part takes the GPUix host props and **merges `style` last**.
 | ---- | ------- | ----- |
 | `Tabs` | provider (no host element) | `value?: string`, `defaultValue?: string` (default `""`), `onValueChange?: (value: string) => void`, `orientation?: "horizontal" \| "vertical"` (default `"horizontal"`), `activation?: "automatic" \| "manual"` (default `"automatic"`) |
 | `TabsList` | `div` (`role="tablist"`) | `label?: string` (the list's accessible name) |
+| `TabsIndicator` | `div`, absolutely positioned in the rail | `thickness?: number` (default `2`), `animate?: boolean` (default `true`), `testId?: string` (default `<list testId>-indicator`, else `tabs-indicator`), `style?: StyleDesc` |
 | `TabsTrigger` | `div` (`role="tab"`) | `value: string` (required), `disabled?: boolean` (default `false`), `style?: StateStyle<{ active: boolean; disabled: boolean; focused: boolean; highlighted: boolean; orientation: TabsOrientation }>` |
 | `TabsContent` | `div` (`role="tabpanel"`), only while a live trigger with `value` is registered | `value: string` (required); an `aria-label` overrides the trigger's name |
 
@@ -154,6 +187,9 @@ The rail paints `colors.background`, a `borderWidth.thin` border in `colors.bord
 and `radius.md`. The selected trigger takes `colors.card` with
 `colors.foreground`; unselected triggers use `colors.mutedForeground` and hover
 with `colors.hover`. Trigger height is `controlHeight(theme, "md")`.
+
+`TabsIndicator` paints `colors.primary` with `radius.sm`. While it is mounted
+the selected trigger drops `colors.card`, so the rail's emphasis is one element.
 
 ## Style by state
 
@@ -199,10 +235,16 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
   React `focus`/`blur`, so a ring may not paint when focus moves by code
   (plans 390/603/605).
+- `TabsIndicator` is measured from the rail and the selected trigger: the bar's
+  start along the rail is **the component's own `spacing.xs` padding**, so a
+  caller who overrides `TabsList`'s `style.padding` shifts it off the tab. The
+  runtime has no `transform`, so the slide animates `left`/`top`/`width`/`height`
+  rather than translating, and there is no reduced-motion signal. RTL is out of
+  scope (no logical edges in 0.10.0).
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (33 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (42 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
@@ -228,6 +270,16 @@ guard is
 proven in both directions: inverting the axis mapping fails the movement and
 axis-isolation tests, inverting the layout fails the layout test, and forcing
 `selectsOnFocus` to `true` fails the manual test.
+
+The indicator (plan 715) is measured in the real renderer: it sits on the
+selected tab's span and the rail's inner edge, follows a selection change, is
+caught mid-slide on the first frame after a switch (dropping the motion makes it
+jump and fails the case), hangs on the left edge in a vertical set, paints the
+active theme's `primary`, refuses to paint with no selection or after its
+selected trigger is removed, takes the selected fill off the trigger (the same
+tree without an indicator still paints `colors.card`), and keeps a caller's
+`testId`. Reading the bar with the rail's padding removed fails the span and the
+vertical cases; taking the caller's `testId` away fails the naming case.
 
 A trigger forwards `onBlur` after clearing its focus ring, so the caller's handler
 runs exactly once.
