@@ -471,7 +471,17 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 193/193
+`[x]` `[██████████]` 193/194
+
+`[~]` **Selection, highlighting and find have a page (plan 627)** — the
+      runtime selects text natively, paints match washes and exposes a find
+      controller, and none of it had an owner: `getSelectedText`,
+      `onSelectionChange`, `observeSelectedText`, `useTextSearch` and
+      `findRanges` returned nothing or the roadmap, `search highlight` reached
+      Search input, `match count` Countdown and `clear selection` Time picker.
+      `/docs/selection` names the selection API, every `HighlightSpec` field,
+      the virtualized `matchIndexOffset` rule, the find controller and the five
+      real absences (no clipboard, no DOM selection, no replace).
 
 `[x]` **The runtime's element catalogue and its error path (plan 626)** — the
       site documents how to style a host element and which props it inherits,
