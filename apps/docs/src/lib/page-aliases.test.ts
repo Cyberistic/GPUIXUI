@@ -28,6 +28,13 @@ import { source } from "./source";
  * `read only`, so a future fix has to change the row deliberately. Plan 610
  * deliberately moves `search index` from that list to `owned`: the Site search
  * page now owns it.
+ *
+ * Plan 614 adds the eleventh block: `design system` (Theming's subject, which
+ * reached a text-area limitation), the two-word `data grid` phrase plan 579
+ * named but never guarded, the failure phrasings that name Troubleshooting's two
+ * existing sections, and `window resize`. The regression rows keep `grid`,
+ * `resize`, `text`, `label`, `empty state` and `color picker` with their owners,
+ * so a phrase alias cannot steal a shorter word.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -301,6 +308,25 @@ const owned = [
   ["remix", "/docs/porting-from-shadcn"],
   ["tauri", "/docs/porting-from-shadcn"],
   ["electron", "/docs/porting-from-shadcn"],
+  ["design system", "/docs/theming"],
+  ["design systems", "/docs/theming"],
+  ["data grid", "/docs/data-display"],
+  ["nothing shows", "/docs/troubleshooting"],
+  ["empty window", "/docs/troubleshooting"],
+  ["window is empty", "/docs/troubleshooting"],
+  ["screen is empty", "/docs/troubleshooting"],
+  ["invisible text", "/docs/troubleshooting"],
+  ["text invisible", "/docs/troubleshooting"],
+  ["text is invisible", "/docs/troubleshooting"],
+  ["why is my text invisible", "/docs/troubleshooting"],
+  ["label is invisible", "/docs/troubleshooting"],
+  ["colors are wrong", "/docs/troubleshooting"],
+  ["colours are wrong", "/docs/troubleshooting"],
+  ["wrong colors", "/docs/troubleshooting"],
+  ["wrong colours", "/docs/troubleshooting"],
+  ["window resize", "/docs/styling"],
+  ["resize window", "/docs/styling"],
+  ["window size", "/docs/styling"],
 ] as const;
 
 const regressions = [
@@ -350,6 +376,8 @@ const regressions = [
   ["read only", "/docs/troubleshooting"],
   ["tabel", "/docs/components/label"],
   ["keyboard navigation", "/docs/roadmap"],
+  ["grid", "/docs/components/stack"],
+  ["resize", "/docs/workspace"],
 ] as const;
 
 describe(

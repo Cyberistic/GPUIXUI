@@ -36,6 +36,15 @@
  * `porting`, `shadcn`, `radix` and `asChild` name the porting guide, while
  * `tailwind` and `className` stay on Styling (plan 606) — the porting page links
  * that owner rather than claiming its subject.
+ *
+ * The eleventh block (plan 614) covers three measured gaps. `design system` had
+ * no owner although Theming renders every value the repository's design-system
+ * document describes. `data grid`, the two-word phrase plan 579 named but never
+ * guarded, still returned Stack because the summary says `datagrids` and
+ * `descriptionMatchRank` compares words, not phrases. The failure phrasings
+ * (`nothing shows`, `invisible text`, `colors are wrong`) name the two
+ * Troubleshooting sections that already answer them, and `window resize` names
+ * Styling's media-query replacement.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -169,6 +178,9 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "letter-spacing",
       "tracking",
       "character spacing",
+      "window resize",
+      "resize window",
+      "window size",
     ],
   ],
   [
@@ -219,7 +231,13 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ],
   [
     "/docs/data-display",
-    ["select row", "selectable rows", "virtualization", "virtualisation"],
+    [
+      "data grid",
+      "select row",
+      "selectable rows",
+      "virtualization",
+      "virtualisation",
+    ],
   ],
   ["/docs/examples", ["demo", "sample"]],
   [
@@ -272,6 +290,19 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "component not rendering",
       "blank window",
       "blank screen",
+      "nothing shows",
+      "empty window",
+      "window is empty",
+      "screen is empty",
+      "invisible text",
+      "text invisible",
+      "text is invisible",
+      "why is my text invisible",
+      "label is invisible",
+      "colors are wrong",
+      "colours are wrong",
+      "wrong colors",
+      "wrong colours",
       "crash",
       "no provider",
       "missing provider",
@@ -286,6 +317,8 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   [
     "/docs/theming",
     [
+      "design system",
+      "design systems",
       "motion",
       "animation",
       "easing",

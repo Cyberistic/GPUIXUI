@@ -1276,6 +1276,30 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the Radix substrate the porting guide owns, which reached the Values API before",
     },
+    {
+      query: "design system",
+      expected: "/docs/theming",
+      first: true,
+      what: "the design-system identity, which reached a component limitation before plan 614",
+    },
+    {
+      query: "data grid",
+      expected: "/docs/data-display",
+      first: true,
+      what: "the two-word data-grid phrase plan 579 named but never guarded",
+    },
+    {
+      query: "invisible text",
+      expected: "/docs/troubleshooting",
+      first: true,
+      what: "a failure phrasing the Troubleshooting page answers",
+    },
+    {
+      query: "chat",
+      expected: "/docs/roadmap",
+      first: true,
+      what: "the planned chat target, which reached a performance prose chunk before",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

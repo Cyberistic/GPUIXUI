@@ -1,12 +1,19 @@
 ---
 title: Theming
-description: Semantic colour roles, spacing, radius, border widths, shadows, density and elevation, light, dark and high-contrast themes, platform styles for macOS, Linux and Windows, and the extension mechanism.
+description: "The GPUIXUI design system: semantic colour roles, spacing, radius, border widths, shadows, density and elevation, light, dark and high-contrast themes, platform styles for macOS, Linux and Windows, and the extension mechanism."
 ---
 
 GPUIXUI themes are semantic. Components read roles such as `background`,
 `foreground`, `border`, `muted`, `accent`, `primary`, `destructive` and `ring` —
 never literal colours — so an application can rebrand the library without
 touching component source.
+
+GPUIXUI's design system is **graphite and iris**: a cool graphite canvas with one
+confident iris accent reserved for primary actions, focus and selection. This page
+owns its values; [Typography](/docs/typography) owns the type scale,
+[Styling](/docs/styling) the `style` prop and the CSS it replaces,
+[Component API](/docs/component-api) the shared part contract, and
+[Tokens API](/docs/tokens-api) the typed surface.
 
 A theme is **plain data**: colours, typography, spacing, radius, density,
 elevation, border widths and icon sizes, resolved together. There is no CSS

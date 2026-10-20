@@ -141,4 +141,14 @@ describe("roadmap search", { timeout: 120_000 }, () => {
   it("does not invent a target", async () => {
     expect(await search("zzzznosuchtarget", 5)).toEqual([]);
   });
+
+  /**
+   * Plan 614: `chat` named a performance prose chunk although the roadmap ships
+   * the `Chat (AI conversation)` target. The word is in the target's name and
+   * note, so it is a roadmap alias, not a page alias.
+   */
+  it("finds the planned chat target by the word a reader types", async () => {
+    const [first] = await search("chat", 5);
+    expect(first?.url).toBe("/docs/roadmap");
+  });
 });

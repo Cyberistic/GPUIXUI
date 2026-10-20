@@ -642,9 +642,12 @@ describe("search", { timeout: 120_000 }, () => {
 
   /**
    * Plan 579: an alternate name is authored metadata, not a ranker rule. The
-   * first summary pass (plan 574) named the subjects' primary words; `datagrid`,
-   * `data grid` and `sidebar` still reached Stack or nothing. The page owns the
-   * subject, so its summary owns the word.
+   * first summary pass (plan 574) named the subjects' primary words; `datagrid`
+   * and `sidebar` still reached Stack or nothing, so each page's summary owns
+   * the word. The two-word `data grid` is a phrase, and a description is
+   * compared word by word, so plan 614 gives it an exact alias in
+   * `page-aliases.test.ts` instead; this test keeps the single-word summary
+   * owners it was written for.
    */
   it("reaches a page by the alternate name its summary names (plan 579)", async () => {
     const expected = [
