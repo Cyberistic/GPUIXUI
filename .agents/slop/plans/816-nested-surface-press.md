@@ -330,8 +330,6 @@ nub run --filter @gpuixui/components test
 
 # 3. Every suite the change touches, because the rule is shared.
 nub exec vitest run --config vitest.behaviour.config.ts \
-  src/internal/../behaviour 2>/dev/null || true
-nub exec vitest run --config vitest.behaviour.config.ts \
   src/behaviour/dialog.test.tsx src/behaviour/drawer.test.tsx \
   src/behaviour/confirm-dialog.test.tsx src/behaviour/popover.test.tsx \
   src/behaviour/combobox.test.tsx src/behaviour/dropdown-menu.test.tsx \
