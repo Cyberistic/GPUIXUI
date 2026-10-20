@@ -2214,6 +2214,20 @@ retired once both branches are one
       nothing. 8 core + 4 raster + 2 element + 2 scoped runtime cases, both
       directions proven (offline 67 files, scoped live 7/7; plan `697`).
 
+`[x]` `packages/primitives`: **a `Surface` could not repaint its data** — plan
+      `696` promised a `revision` prop and the component shipped none, while the
+      page told readers to "change a prop your `paint` closure reads and render
+      again". Measured (2026-10-20): a parent re-render with a stable adapter kept
+      `paints: 1` (a stale chart), and the only working path — rebuilding the
+      adapter — tore the session down (`create → paint → destroy → create →
+      paint`). `Surface` now takes `revision` (default 0): a change repaints a
+      live session through `adapter.resize` at its current box with **one**
+      `create`, the value is seeded at mount so a rebuilt adapter is not resized
+      twice, and an unchanged revision never calls the adapter. The page states
+      all three repaint paths. 1 scoped runtime case (3 assertions), both
+      directions proven (removed effect → timeout; removed seed guard → 5 cases
+      fail by name; plan `698`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

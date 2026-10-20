@@ -47,6 +47,14 @@ export interface SurfaceProps {
   readonly height: number;
   /** The surface's accessible name. A blank label leaves it unnamed. */
   readonly label: string;
+  /**
+   * A repaint counter: any change repaints a live session at the same box.
+   *
+   * Bump it when the data your `paint` closure reads changes. A new `adapter`
+   * identity rebuilds the session instead; an unrelated prop change repaints
+   * nothing (plan `698`).
+   */
+  readonly revision?: number;
   /** Caller style, merged last over the host's own box. */
   readonly style?: StyleDesc;
   /** Makes the leaf a focus stop and routes focus to `adapter.focus()`. */
@@ -138,6 +146,7 @@ export const Surface = ({
   width,
   height,
   label,
+  revision = 0,
   style,
   tabIndex,
   testId,
@@ -154,6 +163,7 @@ export const Surface = ({
   const modeRef = useRef(theme.mode);
   const appliedBounds = useRef<Option.Option<SurfaceBounds>>(Option.none());
   const appliedMode = useRef<Option.Option<string>>(Option.none());
+  const appliedRevision = useRef(revision);
   const errorRef = useRef(onError);
 
   boundsRef.current = bounds;
@@ -250,6 +260,13 @@ export const Surface = ({
     appliedBounds.current = Option.some(next);
     run(adapter.resize(next));
   }, [adapter, width, height]);
+
+  useEffect(() => {
+    if (Object.is(appliedRevision.current, revision)) return;
+    appliedRevision.current = revision;
+    if (!live.current) return;
+    run(adapter.resize(boundsRef.current));
+  }, [adapter, revision]);
 
   useEffect(() => {
     if (!focus.focused || !live.current) return;

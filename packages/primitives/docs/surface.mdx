@@ -37,8 +37,32 @@ const adapter = rasterSurface({
 />;
 ```
 
-A repaint is caller-driven: change a prop your `paint` closure reads and render
-again. There is no hidden animation loop; a timer belongs to the consumer.
+A repaint is caller-driven; there is no hidden animation loop. Bump `revision`
+when the data your `paint` closure reads changes:
+
+```tsx
+<Surface adapter={adapter} revision={dataVersion} … />
+```
+
+## Repainting
+
+There are exactly three ways a live surface repaints, and they are not
+interchangeable:
+
+| Change | What happens | When to use it |
+| ------ | ------------ | -------------- |
+| `revision` | `adapter.resize(bounds)` at the current box | new data for the same paint function (the common chart update) |
+| a new `adapter` identity | the session is destroyed and created again (`create → resize → paint`) | a different paint function, or a resource the adapter acquires in `create` must be replaced |
+| `width`/`height` or the theme mode | `resize` or `setTheme` | a new box, or a palette change |
+
+An unrelated prop change repaints **nothing** — the component cannot see what a
+closure reads. Measured before this rule (plan `698`): a parent re-render with a
+stable adapter kept `paints: 1`, so the page's old advice ("change a prop your
+`paint` closure reads and render again") produced a stale chart. A `revision`
+bump repaints with **one** `create`; the revision is seeded at mount, so a
+rebuilt adapter is not resized twice.
+
+A timer still belongs to the consumer: drive `revision` from your own state.
 
 ## The adapter contract
 
@@ -96,6 +120,7 @@ represent.
 | `width` | `number` | — (required) | authored logical width; floored to whole pixels, also the adapter's bounds |
 | `height` | `number` | — (required) | authored logical height; floored to whole pixels |
 | `label` | `string` | — (required) | the one accessibility name; a blank label is absent |
+| `revision` | `number` | `0` | a repaint counter: a change repaints a live session at the same box |
 | `style` | `StyleDesc` | none | merged last over the host's box |
 | `tabIndex` | `number` | none | makes the leaf a focus stop and routes focus |
 | `testId` | `string` | none | the runtime locator id |
@@ -157,13 +182,14 @@ consumer and closes over them.
 ## Verification
 
 The lifecycle and the real raster path are proven in
-`runtime/surface.runtime.test.tsx` (7 cases):
+`runtime/surface.runtime.test.tsx` (8 cases):
 
 - `creates, sizes, shows and themes one session, then destroys it`
 - `resizes and re-themes a live session`
 - `paints a real RGBA frame through setImagePixels`
 - `paints a fractional authored box at whole pixels`
 - `keeps a collapsed surface silent and paints it when it grows`
+- `repaints on a revision without rebuilding the session`
 - `routes native focus into the adapter when the host is a tab stop`
 - `reports a typed failure without unmounting the host`
 

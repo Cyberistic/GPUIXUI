@@ -24,6 +24,7 @@ import { a11yNode } from "../src/testing/index.js";
 import {
   awaitFrame,
   openWindow,
+  sleep,
   Surface as Frame,
   testTheme,
   testThemeDark,
@@ -366,6 +367,88 @@ describe("Surface", () => {
     expect(errors).toStrictEqual([]);
     expect(paints).toStrictEqual(["40x180"]);
     expect(boundsOf(runtime).width).toBe(40);
+  });
+
+  it("repaints on a revision without rebuilding the session", async () => {
+    const runtime = await openWindow();
+    const calls: Array<string> = [];
+    const build = (): SurfaceAdapter => {
+      const raw = rasterSurface({
+        paint: ({ width, height }) => {
+          calls.push("paint");
+          return Effect.succeed({
+            width,
+            height,
+            pixels: new Uint8Array(width * height * 4),
+          });
+        },
+      });
+      return {
+        ...raw,
+        create: (host) => {
+          calls.push("create");
+          return raw.create(host);
+        },
+        destroy: () => {
+          calls.push("destroy");
+          return raw.destroy();
+        },
+        resize: (bounds) => {
+          calls.push(`resize:${bounds.width}x${bounds.height}`);
+          return raw.resize(bounds);
+        },
+      };
+    };
+    const first = build();
+    const view = (adapter: SurfaceAdapter, revision: number) => (
+      <Frame>
+        <SurfacePrimitive
+          adapter={adapter}
+          width={40}
+          height={30}
+          label="Data"
+          revision={revision}
+          testId="raster"
+        />
+      </Frame>
+    );
+
+    runtime.render(view(first, 0));
+    await awaitFrame(() => calls.includes("paint"), "the first frame");
+    runtime.render(view(first, 0));
+    await sleep(120);
+    expect(calls).toStrictEqual(["create", "resize:40x30", "paint"]);
+
+    runtime.render(view(first, 1));
+    await awaitFrame(
+      () => calls.filter((call) => call === "paint").length === 2,
+      "the second frame",
+    );
+    expect(calls).toStrictEqual([
+      "create",
+      "resize:40x30",
+      "paint",
+      "resize:40x30",
+      "paint",
+    ]);
+
+    runtime.render(view(build(), 1));
+    await awaitFrame(
+      () => calls.filter((call) => call === "create").length === 2,
+      "the rebuilt session",
+    );
+    await sleep(120);
+    expect(calls).toStrictEqual([
+      "create",
+      "resize:40x30",
+      "paint",
+      "resize:40x30",
+      "paint",
+      "destroy",
+      "create",
+      "resize:40x30",
+      "paint",
+    ]);
   });
 
   it("reports a typed failure without unmounting the host", async () => {
