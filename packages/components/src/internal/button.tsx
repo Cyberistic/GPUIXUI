@@ -15,13 +15,15 @@
  * `Disabled` through `aria-description` (plan 516).
  */
 
-import type { Props, StyleDesc } from "@gpuix/react";
+import type { Props, PublicInstance, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
+import { useCallback, useState } from "react";
 import { activationHandlers } from "./activate.js";
 import { useFocusState } from "./focus.js";
 import { useHoverGroupMember } from "./hover-group.js";
 import { controlName } from "./name.js";
+import { useMergedRef } from "./ref.js";
 import { stateDescription } from "./state-description.js";
 import {
   alpha,
@@ -175,13 +177,25 @@ export const Button = ({
   onMouseEnter,
   onMouseLeave,
   style,
+  ref,
   children,
   ...rest
 }: ButtonProps) => {
   const theme = useTheme();
   const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const name = controlName(rest["aria-label"], children);
-  const hoverMember = useHoverGroupMember(onMouseEnter, onMouseLeave);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
+  const hoverMember = useHoverGroupMember(
+    instance?.id,
+    onMouseEnter,
+    onMouseLeave,
+  );
 
   return (
     <div
@@ -193,6 +207,7 @@ export const Button = ({
       {...stateDescription(disabled, rest["aria-description"])}
       autoFocus={autoFocus && !disabled}
       {...activation(disabled, onClick, onKeyDown, onKeyUp)}
+      ref={setElement}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);
@@ -235,12 +250,24 @@ export const IconButton = ({
   onMouseEnter,
   onMouseLeave,
   style,
+  ref,
   ...rest
 }: IconButtonProps) => {
   const theme = useTheme();
   const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const side = controlHeight(theme, size);
-  const hoverMember = useHoverGroupMember(onMouseEnter, onMouseLeave);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
+  const hoverMember = useHoverGroupMember(
+    instance?.id,
+    onMouseEnter,
+    onMouseLeave,
+  );
 
   return (
     <div
@@ -252,6 +279,7 @@ export const IconButton = ({
       {...stateDescription(disabled, rest["aria-description"])}
       autoFocus={autoFocus && !disabled}
       {...activation(disabled, onClick, onKeyDown, onKeyUp)}
+      ref={setElement}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

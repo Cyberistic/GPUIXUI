@@ -20,7 +20,9 @@
  *
  * The roving origin is read from the renderer when a key arrives, because a
  * native focus change never runs React's `onFocus`; React state only paints
- * (plan 367's rule, applied here in plan 578).
+ * (plan 367's rule, applied here in plan 578). For the same reason the row that
+ * holds focus is sampled every 50 ms while the list has rows, so a row removed
+ * by the app can still hand the user's focus on instead of dropping it (plan 708).
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
@@ -78,6 +80,7 @@ import {
   isUp,
   typedChar,
 } from "./internal/key.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
 import { useTypeahead } from "./internal/typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
@@ -94,6 +97,17 @@ interface Row {
   readonly label: string;
 }
 
+/**
+ * Which row held focus, and whether the row's own host held it or a control in
+ * its `leading`/`trailing` slot. A native focus change runs no React `onFocus`
+ * and a removed host cannot be read afterwards, so the holder is observed while
+ * it still exists (plan 708).
+ */
+interface FocusHolder {
+  readonly value: string;
+  readonly viaRow: boolean;
+}
+
 /** The rules a {@link ListItem} follows; throws when there is no list above it. */
 interface ListContextValue {
   readonly selectable: boolean;
@@ -106,6 +120,8 @@ interface ListContextValue {
   readonly activate: (value: string, event: EventPayload) => void;
   /** Note that `value` now holds focus, so keys move on from it. */
   readonly noteFocus: (value: string) => void;
+  /** Replace the host ids of the focusable controls a row's slots registered. */
+  readonly noteMembers: (value: string, ids: ReadonlyArray<number>) => void;
   /** Register a row; returns the unregister function. */
   readonly register: (row: Row) => () => void;
   /** Replace a registered row in place; never moves it. */
@@ -117,7 +133,7 @@ const ListContext = createContext<ListContextValue | undefined>(undefined);
 /** The stable half of the context: the actions a row calls. */
 type ListActions = Pick<
   ListContextValue,
-  "activate" | "noteFocus" | "register" | "updateRow"
+  "activate" | "noteFocus" | "noteMembers" | "register" | "updateRow"
 >;
 
 /** The list a {@link ListItem} belongs to. Throws when there is none. */
@@ -345,10 +361,61 @@ export const List = (props: ListProps) => {
   );
 
   /**
-   * The native id of the row the list last focused. Read after a rows change to
-   * tell a vanished row from a list that was never focused (plan 510).
+   * The row that held focus when it was last observable. A native focus change
+   * runs no React `onFocus` and a removed host can no longer be read, so the
+   * holder is remembered while the element still exists (plan 708).
    */
-  const focusedRow = useRef<Option.Option<number>>(Option.none());
+  const heldFocus = useRef<Option.Option<FocusHolder>>(Option.none());
+
+  /**
+   * The host ids of the focusable controls a row registered for its `leading`
+   * and `trailing` slots, by row value. They live in a ref because nothing
+   * renders them: the handover reads them once per commit.
+   */
+  const members = useRef(new Map<string, ReadonlyArray<number>>());
+
+  const noteMembers = useCallback(
+    (value: string, ids: ReadonlyArray<number>) => {
+      if (ids.length === 0) {
+        members.current.delete(value);
+        return;
+      }
+      members.current.set(value, ids);
+    },
+    [],
+  );
+
+  /**
+   * Which row a host id belongs to: its own row, else a row whose slot control
+   * registered that host. Members live in a ref because nothing renders them.
+   */
+  const focusHolderOf = useCallback(
+    (id: number | null): Option.Option<FocusHolder> =>
+      id === null
+        ? Option.none()
+        : pipe(
+            Arr.findFirst(rows, (row) => row.nativeId === id),
+            Option.match({
+              onNone: () =>
+                Option.map(
+                  Arr.findFirst(rows, (row) =>
+                    Arr.contains(id)(members.current.get(row.value) ?? []),
+                  ),
+                  (row) => ({ value: row.value, viaRow: false }),
+                ),
+              onSome: (row) => Option.some({ value: row.value, viaRow: true }),
+            }),
+          ),
+    [rows],
+  );
+
+  /**
+   * The host that held focus between commits, sampled: a native focus change
+   * runs no React `onFocus` (plans 536/540), and a host removed in the next
+   * commit cannot be read after it is gone, so the row it belonged to is
+   * remembered while it still exists (plan 708).
+   */
+  const nativeFocus = useNativeFocusId(rows.length > 0);
 
   /**
    * The row a key acts on or moves from: the natively focused registered row,
@@ -389,10 +456,12 @@ export const List = (props: ListProps) => {
   const register = useCallback(
     (row: Row) => {
       updateRow(row);
-      return () =>
+      return () => {
+        members.current.delete(row.value);
         setRows((current) =>
           Arr.filter(current, (candidate) => candidate.value !== row.value),
         );
+      };
     },
     [setRows, updateRow],
   );
@@ -408,7 +477,7 @@ export const List = (props: ListProps) => {
   const focusRow = useCallback(
     (row: Row) => {
       setActiveIfChanged(row.value);
-      focusedRow.current = Option.some(row.nativeId);
+      heldFocus.current = Option.some({ value: row.value, viaRow: true });
       renderer?.focusElement?.(row.nativeId);
     },
     [renderer, setActiveIfChanged],
@@ -425,8 +494,8 @@ export const List = (props: ListProps) => {
         Arr.findFirst(rows, (row) => row.value === value),
         {
           onNone: () => undefined,
-          onSome: (row) => {
-            focusedRow.current = Option.some(row.nativeId);
+          onSome: () => {
+            heldFocus.current = Option.some({ value, viaRow: true });
           },
         },
       );
@@ -672,46 +741,65 @@ export const List = (props: ListProps) => {
   /**
    * A row that vanishes or turns disabled takes the user's focus with it: the
    * native element is gone, and a disabled row cannot run its action. The origin
-   * is the **natively focused** row: a `Tab` entry and a programmatic move focus
-   * the host without running React's `onFocus` (plans 345/536/578), so the
-   * renderer is asked first; the last focused row is the fallback for a focus no
-   * handler can see. Hand focus to the row that now owns the tab stop, but never
-   * steal it from another control the consumer focused in the same update
-   * (plans 510/647).
+   * is the row that held focus when it still existed — sampled, because a native
+   * focus change runs no React `onFocus` and a removed host can no longer be
+   * read (plans 536/540/578, 708). Hand focus to the row that now owns the tab
+   * stop, but never steal it from another control the consumer focused in the
+   * same update (plan 510).
+   *
+   * A control in a row's `leading`/`trailing` slot owns its own keys (plan 577),
+   * so a row that only turns `disabled` leaves focus on a control inside it: the
+   * control is still enabled. Only a row that is **gone** takes that focus with
+   * it, because its host no longer exists.
    */
   useLayoutEffect(() => {
-    const nativeRow = Option.flatMap(
-      Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
-      (id) => Arr.findFirst(rows, (row) => row.nativeId === id),
+    const live = Option.fromNullishOr(
+      renderer?.getFocusedElementId?.() ?? null,
     );
-    const remembered = Option.orElse(
-      Option.map(nativeRow, (row) => row.nativeId),
-      () => focusedRow.current,
+    const liveHolder = Option.flatMap(live, focusHolderOf);
+    const holder = Option.orElse(liveHolder, () => heldFocus.current);
+    const target = Option.flatMap(holder, (held) =>
+      Arr.findFirst(rows, (row) => row.value === held.value),
     );
-    if (Option.isNone(remembered)) return;
-
-    const target = Arr.findFirst(
-      rows,
-      (row) => row.nativeId === remembered.value,
+    const lost = Option.exists(holder, (held) =>
+      Option.match(target, {
+        onNone: () => true,
+        onSome: (row) => held.viaRow && row.disabled,
+      }),
     );
-    if (Option.exists(target, (row) => !row.disabled)) return;
+    // A control outside the list that the consumer focused in this update wins.
+    const claimed = Option.isSome(live) && Option.isNone(liveHolder);
+    if (lost && !claimed) {
+      Option.match(tabbable, {
+        onNone: () => undefined,
+        onSome: (value) =>
+          Option.match(
+            Arr.findFirst(rows, (row) => row.value === value),
+            {
+              onNone: () => undefined,
+              onSome: focusRow,
+            },
+          ),
+      });
+    }
+  }, [focusHolderOf, focusRow, renderer, rows, tabbable]);
 
-    focusedRow.current = Option.none();
-    const focused = Option.fromNullishOr(renderer?.getFocusedElementId?.());
-    if (Option.exists(focused, (id) => id !== remembered.value)) return;
-
-    Option.match(tabbable, {
-      onNone: () => undefined,
-      onSome: (value) =>
-        Option.match(
-          Arr.findFirst(rows, (row) => row.value === value),
-          {
-            onNone: () => undefined,
-            onSome: (row) => focusRow(row),
-          },
-        ),
-    });
-  }, [focusRow, renderer, rows, tabbable]);
+  /**
+   * Remember the row the focus belongs to, so the next rows change can tell a
+   * vanished host from a list that never held focus. Runs after the handover:
+   * the handover must read the holder from before this commit. The live read
+   * wins over the sample (which is up to one interval old), so a focus the list
+   * just restored is not overwritten by a stale row.
+   */
+  useLayoutEffect(() => {
+    heldFocus.current = Option.orElse(
+      Option.flatMap(
+        Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
+        focusHolderOf,
+      ),
+      () => focusHolderOf(nativeFocus),
+    );
+  }, [focusHolderOf, nativeFocus, renderer]);
 
   // The per-row paint state. `rowMasks.replace` notifies a row only when one of
   // its own bits changes, so a focus move re-renders the two rows that moved —
@@ -742,14 +830,27 @@ export const List = (props: ListProps) => {
   // them must never change — a changing context re-renders every row, which is
   // exactly the cost this design removes. The ref is updated after commit and
   // before any event can call through it.
-  const handlers = useRef({ activate, noteFocus, register, updateRow });
+  const handlers = useRef({
+    activate,
+    noteFocus,
+    noteMembers,
+    register,
+    updateRow,
+  });
   useLayoutEffect(() => {
-    handlers.current = { activate, noteFocus, register, updateRow };
+    handlers.current = {
+      activate,
+      noteFocus,
+      noteMembers,
+      register,
+      updateRow,
+    };
   });
   const actions = useMemo<ListActions>(
     () => ({
       activate: (value, event) => handlers.current.activate(value, event),
       noteFocus: (value) => handlers.current.noteFocus(value),
+      noteMembers: (value, ids) => handlers.current.noteMembers(value, ids),
       register: (row) => handlers.current.register(row),
       updateRow: (row) => handlers.current.updateRow(row),
     }),
@@ -842,18 +943,41 @@ export const ListItem = ({
     rowMasks,
     activate,
     noteFocus,
+    noteMembers,
     register,
     updateRow,
   } = useListContext();
   const [selfHovered, setSelfHovered] = useState(false);
   const [memberHovers, setMemberHovers] = useState(0);
   const hovered = !disabled && (selfHovered || memberHovers > 0);
+  // The focusable controls in this row's slots, so a row that is removed while
+  // one of them holds focus can hand that focus on (plan 708). The group keeps
+  // one identity for the row's lifetime: a new object re-renders the slots.
+  const slotHosts = useRef<ReadonlyArray<number>>([]);
+  const syncSlots = useRef<(ids: ReadonlyArray<number>) => void>(
+    () => undefined,
+  );
+  useLayoutEffect(() => {
+    syncSlots.current = (ids) => noteMembers(value, ids);
+  });
+  const registerSlot = useCallback((id: number) => {
+    slotHosts.current = Arr.append(slotHosts.current, id);
+    syncSlots.current(slotHosts.current);
+    return () => {
+      slotHosts.current = Arr.filter(
+        slotHosts.current,
+        (known) => known !== id,
+      );
+      syncSlots.current(slotHosts.current);
+    };
+  }, []);
   const hoverGroup = useMemo<HoverGroup>(
     () => ({
       enter: () => setMemberHovers((count) => count + 1),
       leave: () => setMemberHovers((count) => (count > 0 ? count - 1 : 0)),
+      register: registerSlot,
     }),
-    [],
+    [registerSlot],
   );
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
@@ -872,13 +996,17 @@ export const ListItem = ({
     // exists after the element is committed (`instance` is state, so this
     // re-runs once it arrives).
     if (instance === undefined) return;
-    return register({
+    const unregister = register({
       value,
       disabled,
       nativeId: instance.id,
       label: textValue ?? "",
     });
-  }, [instance, register, value]);
+    // A slot control's layout effect runs before the row's, so its host may be
+    // known before the row was registered: report it again now (plan 708).
+    noteMembers(value, slotHosts.current);
+    return unregister;
+  }, [instance, noteMembers, register, value]);
 
   useLayoutEffect(() => {
     // Update in place: re-registering would move the row to the end of the
@@ -1088,7 +1216,7 @@ export const listMeta = {
     "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
     "type-ahead matches an explicit ListItem textValue, not rendered children",
     "activation is a callback on single/none lists: no href or link role; a plain list without onActivate has no tab stop, and a multiple list has no activation",
-    "focus tracking follows the rows the list focused: a focusable control in a row's trailing slot is not tracked when the row disappears",
+    "focus continuity covers a Button/IconButton in a slot (the hover-group members): a custom interactive child is not tracked",
     "no drag reorder or virtualisation",
   ],
   docs: "docs/list.mdx",

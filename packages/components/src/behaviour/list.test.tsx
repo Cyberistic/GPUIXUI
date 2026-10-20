@@ -58,6 +58,7 @@ import {
 } from "../internal/interaction.js";
 import { List, ListItem, ListItemDescription, ListItemTitle } from "../list.js";
 import { Button } from "../internal/button.js";
+import { FOCUS_SAMPLE_MS } from "../internal/native-focus.js";
 import { darkTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -208,6 +209,38 @@ const dataRows = (
   </List>
 );
 
+/** Rows built from data, each with a focusable control in its `trailing` slot. */
+const trailingRows = (
+  values: ReadonlyArray<string>,
+  disabled: ReadonlyArray<string> = [],
+) => (
+  <List testId="list" selectionMode="single">
+    {Arr.map(values, (value) => (
+      <ListItem
+        key={value}
+        testId={`row-${value}`}
+        value={value}
+        disabled={Arr.contains(value)(disabled)}
+        trailing={
+          <Button size="sm" testId={`trail-${value}`}>
+            Open
+          </Button>
+        }
+      >
+        <ListItemTitle>{value.toUpperCase()}</ListItemTitle>
+      </ListItem>
+    ))}
+  </List>
+);
+
+/**
+ * Wait for the list's focus sample (50 ms) to observe a native focus move. The
+ * binding delivers no React `onFocus`, so the holder is read on a timer
+ * (plans 613/659/708).
+ */
+const sampleFocus = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, FOCUS_SAMPLE_MS + 30));
+
 /** A control rendered before the list that claims focus in the same update. */
 const Claim = ({ claim }: { readonly claim: boolean }) => {
   const renderer = useGpuix().renderer;
@@ -239,6 +272,14 @@ const claiming = (values: ReadonlyArray<string>, claim: boolean) => (
   <div style={{ display: "flex", flexDirection: "column" }}>
     <Claim claim={claim} />
     {dataRows(values)}
+  </div>
+);
+
+/** The same container, with a slot control in every row. */
+const claimingTrailing = (values: ReadonlyArray<string>, claim: boolean) => (
+  <div style={{ display: "flex", flexDirection: "column" }}>
+    <Claim claim={claim} />
+    {trailingRows(values)}
   </div>
 );
 
@@ -1465,10 +1506,11 @@ describe("List", () => {
     list.unmount();
   });
 
-  it("hands focus to the tab stop when the focused row is removed", () => {
+  it("hands focus to the tab stop when the focused row is removed", async () => {
     const list = renderComponent(dataRows(["a", "b", "c"]));
 
     list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    await sampleFocus();
     list.rerender(dataRows(["a", "c"]));
 
     expect(focusedTestId(list)).toEqual(Option.some("row-a"));
@@ -1480,11 +1522,12 @@ describe("List", () => {
     list.unmount();
   });
 
-  it("falls back to the surviving selection when the focused row is removed", () => {
+  it("falls back to the surviving selection when the focused row is removed", async () => {
     const list = renderComponent(dataRows(["a", "b", "c"]));
 
     clickCentreOf(list, "row-a");
     list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    await sampleFocus();
     list.rerender(dataRows(["a", "c"]));
 
     expect(tabStop(list, ["row-a", "row-c"])).toEqual(["row-a"]);
@@ -1534,6 +1577,65 @@ describe("List", () => {
 
     expect(tabStop(list, ["row-a", "row-c"])).toEqual(["row-a"]);
     expect(focusedTestId(list)).toEqual(Option.none());
+
+    list.unmount();
+  });
+
+  /**
+   * Focus inside a row's slot (plan 708). The bug these guard, measured: a row
+   * removed while a `Button` in its `trailing` slot held native focus dropped
+   * focus entirely (`None`), although the list could hand it to the row that now
+   * owns the tab stop. A native focus move runs no React `onFocus` and a removed
+   * host cannot be read afterwards, so the holder is sampled while it exists.
+   */
+  it("hands focus to the tab stop when a row with a focused slot control is removed", async () => {
+    const list = renderComponent(trailingRows(["a", "b", "c"]));
+
+    list.renderer.focusElement(list.renderer.findByTestId("trail-b")?.id ?? -1);
+    await sampleFocus();
+    list.rerender(trailingRows(["a", "c"]));
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-a"));
+
+    list.unmount();
+  });
+
+  it("keeps a slot control's focus when its row only turns disabled", async () => {
+    // The row hands the tab stop over, but the control inside it is still
+    // enabled and owns its keys (plan 577), so focus must stay where it is.
+    const list = renderComponent(trailingRows(["a", "b", "c"]));
+
+    list.renderer.focusElement(list.renderer.findByTestId("trail-b")?.id ?? -1);
+    await sampleFocus();
+    list.rerender(trailingRows(["a", "b", "c"], ["b"]));
+
+    expect(focusedTestId(list)).toEqual(Option.some("trail-b"));
+    expect(tabStop(list, ["row-a", "row-b", "row-c"])).toEqual(["row-a"]);
+
+    list.unmount();
+  });
+
+  it("keeps a slot control's focus when another row is removed", async () => {
+    const list = renderComponent(trailingRows(["a", "b", "c"]));
+
+    list.renderer.focusElement(list.renderer.findByTestId("trail-a")?.id ?? -1);
+    await sampleFocus();
+    list.rerender(trailingRows(["a", "c"]));
+
+    expect(focusedTestId(list)).toEqual(Option.some("trail-a"));
+
+    list.unmount();
+  });
+
+  it("leaves a consumer's focus alone when the removed row held none", async () => {
+    const list = renderComponent(claimingTrailing(["a", "b", "c"], false));
+
+    list.renderer.focusElement(list.renderer.findByTestId("trail-b")?.id ?? -1);
+    await sampleFocus();
+    list.rerender(claimingTrailing(["a", "c"], true));
+
+    expect(focusedTestId(list)).toEqual(Option.some("claim"));
+    expect(tabStop(list, ["row-a", "row-c"])).toEqual(["row-a"]);
 
     list.unmount();
   });

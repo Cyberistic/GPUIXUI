@@ -216,14 +216,17 @@ set — can change while it is focused. The tab stop and focus never ride a row
 that is gone:
 
 - Removing the row that owns the tab stop hands the stop to the selected row,
-  else the first enabled row. Focus follows it when the list itself held the
-  user's focus, read from the renderer at handover time — a `Tab` entry and a
-  programmatic move focus the row without running React's `onFocus`.
+  else the first enabled row. Focus follows it when the list held the user's
+  focus. The holder is sampled while it still exists: a `Tab` entry and a
+  programmatic move focus the row without running React's `onFocus`, and a
+  removed host can no longer be read afterwards.
 - Disabling that row does the same, so the stop never lands on a row that cannot
   be activated, and the disabled row stops painting the focus ring. The row's
-  host still reports its focus, so the handover recognises it; a row **removed
-  in the same update** has no host left to report, so the stop moves but focus
-  is left to the app (a missing focus signal, not a kept one — plan 647).
+  host still reports its focus, so the handover recognises it.
+- Removing a row whose `Button` or `IconButton` in the `leading`/`trailing` slot
+  held native focus hands that focus to the tab stop too, instead of dropping it.
+  A row that only turns `disabled` leaves focus on such a control, because the
+  control is still enabled and owns its keys.
 - A row that changes `disabled` or `textValue` is updated in place, so its
   authored position never drifts: arrows, `Home`/`End`, `Shift` ranges and
   type-ahead keep the declaration order.
@@ -231,9 +234,10 @@ that is gone:
   that focus alone.
 - An emptied list focuses nothing, and rows that arrive later do not grab focus.
 
-The rule follows the row the **list** focused. A focusable control placed in a
-row's `trailing` slot is the consumer's own focus target and is not tracked; it
-also owns its keys, so a key pressed in it never acts on the row.
+A custom interactive child in a slot is the consumer's own focus target and is
+not tracked — only `Button` and `IconButton` report their host to the row. A
+control in a slot also owns its keys, so a key pressed in it never acts on the
+row.
 
 ## API
 
@@ -348,7 +352,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (61 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (65 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
@@ -371,9 +375,11 @@ entering a selection. A row that is disabled and enabled again keeps its authore
 position, so the next arrow key reaches its neighbour. A focus move repaints exactly the two rows that changed,
 counted through the public `style` function. Dynamic rows: a removed or newly
 disabled row never keeps the tab stop; a disabled row hands focus to the stop
-through the renderer's focused host, a row removed in the same update has no host
-left to read and leaves focus to the app, a consumer's own focus in the same
-update is never stolen, and an emptied list that refills does not grab focus. A
+through the renderer's focused host, a removed row hands focus to the stop from
+the holder sampled while it still existed (and so does a row whose slot `Button`
+held focus), a row that only turns disabled leaves focus on a still-enabled slot
+control, a consumer's own focus in the same update is never stolen, and an
+emptied list that refills does not grab focus. A
 control in a row's `leading`/`trailing`
 slot keeps its own `Enter` (the row does not also activate) and a field there
 keeps native focus while typing. A keyboard origin the React tree never saw — a
