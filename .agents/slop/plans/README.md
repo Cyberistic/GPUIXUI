@@ -406,6 +406,7 @@ references without buying correctness.
 | [800](./800-recipe-status-ink-ranges.md) | The recipes' three inherited status-ink ranges have no owner | F | 535, 574, 582, 649, 799 | done |
 | [803](./803-palette-rationale-figures.md) | The palette's inline rationale figures have no owner | F | 504, 528, 729, 737, 800 | done |
 | [805](./805-example-header-figures.md) | The copyable examples' header figures have no owner | F | 310, 394, 539, 651, 658, 717, 733, 803 | done |
+| [806](./806-primary-mark-claims.md) | `primary` is measured as a fill, and as nine marks | F | 082, 332, 341, 347, 516, 557, 563, 698, 749 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4133,6 +4134,25 @@ figures measured on hexes the file no longer contains. Thirteen figures join
 `documentedFigures`, the figures suite reads a source document as prose so a
 wrapped JSDoc sentence is matchable, and `example-header-figures.test.ts` owns
 the example-own-theme figures and the two sweeps. No colour, pair, floor,
+metric, role or shipped theme moves.
+
+Plan `806` closes the same class for a role's *measurement classes*. Plan `332`
+split a solid role into a fill and a mark, so `primary` has carried four classes
+ever since — `surface` on five panels, `secondary` for the label on it, `step`
+for its hover, and nine `mark` pairs (`track`, the four plain surfaces, the
+`input` fill and the three fills a chosen option marks). `docs/tokens.md` and
+the package README still said the role was "measured only as a fill": the
+`primaryText` half of the same paragraph is held by `docs.test.ts` and the
+`primary` half was read by nothing, and the phrase survived because no guard
+looked for it. A reader who believed it had no reason to check the mark floor
+before painting `primary` as a progress segment, a slider fill or thumb ring, a
+rating star, a combobox check or a timeline dot — the tightest shipped primary
+mark is 3.149:1 (macOS light, `primary` on `track`). Both documents, the role
+table's Use cell and `ThemeColors.primary`'s JSDoc now name the four classes and
+all nine surfaces, and `primary-mark-claims.test.ts` derives the classes and the
+surfaces from `contrastPairs`/`markPairs`/`trackMarkPairs`, reads the mark clause
+as the unit, holds both floors to `contrastFloors`, and rejects the pre-806
+wording with a case that proves the predicate can fail. No colour, pair, floor,
 metric, role or shipped theme moves.
 
 ## How to use a plan
