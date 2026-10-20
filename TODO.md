@@ -1227,6 +1227,19 @@ retired once both branches are one
       focus alone. 1 new + 1 strengthened native case that both fail at `HEAD`,
       one pin, three mutation proofs (25 total); docs, `COMPONENTS.md`,
       `TODO.md`, `PLAN.md` D30 and the inventory count synced (owner: components)
+    - [x] A malformed hover delay keeps the default timing — plan 763; measured
+      2026-10-20: `openDelay={NaN}` opened a `PreviewCard`/`NavigationMenu`
+      immediately and `closeDelay={NaN}` closed it the moment the pointer left
+      the trigger, because `setTimeout(fn, NaN)` runs at once, so the pointer
+      could not travel into the surface. One `hoverDelay` rule in
+      `internal/hover.ts` falls back to each component's documented default,
+      while `0` and a negative value still mean "no delay"; 2 pure + 4 native
+      cases (Preview card 18 → 20, Navigation menu 28 → 30), the four native
+      cases red at `HEAD`; docs, `COMPONENTS.md`, `PLAN.md` D30 and the
+      inventory count synced. Unit 495 in 47 files, full native suite 961/20 of
+      981 with the baseline's same 20 classes; the scoped smoke scenarios
+      `overlay-dialog` and `modal-focus-trap` are green (no scenario mounts a
+      hover surface) (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
@@ -1641,7 +1654,11 @@ the docs-site workstream; the `packages/components` half is plan 337)
       `test` exit 0 (unit 493 in 46 files), Pagination 20/20 and the full native
       suite is **955 passed / 20 failed of 975** — its 20 failures are exactly
       the baseline's recorded plan-540 classes (diffed against the pre-change
-      run), and no other file's cases changed.
+      run), and no other file's cases changed. Plan 763 re-ran the same gates on
+      2026-10-20: `check`, `lint` and `test` exit 0 (unit 495 in 47 files) and
+      the full native suite is **961 passed / 20 failed of 981** — the four new
+      malformed-delay cases pass and the 20 failures are the same recorded
+      plan-540 classes.
 
 ## Swarm-owned blockers (fix these)
 

@@ -57,6 +57,14 @@ export interface HoverTravel {
 /** A timer handle, independent of the DOM/Node typings. */
 type Timer = ReturnType<typeof setTimeout>;
 
+/**
+ * A hover delay in milliseconds. A caller's explicit `0` (or negative) value
+ * means "no delay"; a non-finite one falls back to the component's default, so
+ * a malformed value cannot make a surface open or close instantly.
+ */
+export const hoverDelay = (value: number, fallback: number): number =>
+  Number.isFinite(value) ? Math.max(0, value) : fallback;
+
 /** {@link HoverTravel} over `setTimeout`; one instance per hoverable surface. */
 export const useHoverTravel = (options: HoverTravelOptions): HoverTravel => {
   const latest = useRef(options);

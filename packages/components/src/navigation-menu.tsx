@@ -43,7 +43,11 @@ import {
   OverlayHostProvider,
   useOverlayHost,
 } from "./internal/overlay-host.js";
-import { useHoverTravel, type HoverTravel } from "./internal/hover.js";
+import {
+  hoverDelay,
+  useHoverTravel,
+  type HoverTravel,
+} from "./internal/hover.js";
 import {
   isDismiss,
   isDown,
@@ -148,6 +152,10 @@ export interface NavigationMenuProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
+/** The shipped hover timings, and the fallback for a malformed delay. */
+const OPEN_DELAY_MS = 100;
+const CLOSE_DELAY_MS = 150;
+
 /** The nav root: one open item, the dismiss layer and the roving triggers. */
 export const NavigationMenu = ({
   label,
@@ -155,8 +163,8 @@ export const NavigationMenu = ({
   defaultValue = null,
   onValueChange,
   openOnHover = true,
-  openDelay = 100,
-  closeDelay = 150,
+  openDelay = OPEN_DELAY_MS,
+  closeDelay = CLOSE_DELAY_MS,
   children,
   style,
   onKeyDown,
@@ -196,8 +204,8 @@ export const NavigationMenu = ({
     close: () => {
       if (openRef.current === open) requestClose(null);
     },
-    openDelay,
-    closeDelay,
+    openDelay: hoverDelay(openDelay, OPEN_DELAY_MS),
+    closeDelay: hoverDelay(closeDelay, CLOSE_DELAY_MS),
   });
   assertParts(navigationMenuRoot, children);
 

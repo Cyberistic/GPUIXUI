@@ -5,7 +5,7 @@
 | Workstream | components (Tier 2 composition and feedback) |
 | Phase | F — integration and polish |
 | Depends on | 110, 112, 113, 317, 320, 323, 325, 326, 327, 651, 652, 677 |
-| Status | planned — measured at `HEAD` 2026-10-20 (probe §1) |
+| Status | done — measured 2026-10-20: all four new native cases red at `HEAD` (`Preview card 11/20`: the seven recorded plan-540 cases plus the two new ones; `Navigation menu 28/30`: the two new ones) and green after (`Preview card 13/20` with only the recorded seven, `Navigation menu 30/30`); unit 495 in 47 files, full native suite **961 passed / 20 failed of 981** with exactly the baseline's 20 recorded plan-540 classes (focus/blur, box conventions, the command-menu scroll and the drawer width) |
 | Claimed number | `763` — the first free number across every worktree at claim time (`761`/`762` are claimed by the playground; checked in the shared checkout and every `workspaces/*` tree) |
 
 ## 1. The bug

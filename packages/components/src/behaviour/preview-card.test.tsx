@@ -10,7 +10,9 @@
  * trigger that opened on hover and on focus; an Escape that closed the card
  * and the dialog around it (plan 514); and a dismissal that restored focus and
  * re-opened the card (plan 515). A held trigger press closed on the press and
- * re-opened through the hover delay on the release (plan 583).
+ * re-opened through the hover delay on the release (plan 583). A malformed
+ * `openDelay`/`closeDelay` ran its `setTimeout` at once, so the card opened on
+ * hover and closed before the pointer could travel into it (plan 763).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -48,10 +50,14 @@ const Workspace = ({
   open,
   onOpenChange,
   disabled,
+  openDelay = 20,
+  closeDelay = 20,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly disabled?: boolean;
+  readonly openDelay?: number;
+  readonly closeDelay?: number;
 }) => (
   <div
     style={{
@@ -65,8 +71,8 @@ const Workspace = ({
     <PreviewCard
       open={open}
       onOpenChange={onOpenChange}
-      openDelay={20}
-      closeDelay={20}
+      openDelay={openDelay}
+      closeDelay={closeDelay}
     >
       <PreviewCardTrigger testId="trigger" disabled={disabled}>
         design-system.md
@@ -120,6 +126,38 @@ describe("PreviewCard", () => {
     );
     expect(focused.renderer.findByTestId("preview")).toBeDefined();
     focused.unmount();
+  });
+
+  it("keeps the default open delay when openDelay is malformed", async () => {
+    const card = renderComponent(<Workspace openDelay={Number.NaN} />);
+
+    hoverCentreOf(card, "trigger");
+    await after(40);
+    // 40 ms is well inside the default 300 ms; the old code ran the NaN timer
+    // at once and painted the card here.
+    expect(isShown(card, "preview")).toBe(false);
+
+    await until(() => isShown(card, "preview"));
+    expect(card.renderer.findByTestId("preview")).toBeDefined();
+
+    card.unmount();
+  });
+
+  it("keeps the default close delay when closeDelay is malformed", async () => {
+    const card = renderComponent(<Workspace closeDelay={Number.NaN} />);
+
+    hoverCentreOf(card, "trigger");
+    await until(() => isShown(card, "preview"));
+    hoverCentreOf(card, "elsewhere");
+    await after(30);
+    // The default 150 ms is still running; the old code closed at once, so the
+    // pointer could not travel into the card.
+    expect(isShown(card, "preview")).toBe(true);
+
+    await until(() => !isShown(card, "preview"));
+    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+    card.unmount();
   });
 
   it("stays closed after a held trigger press, and a new press opens it", async () => {

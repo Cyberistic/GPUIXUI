@@ -42,7 +42,9 @@ The runnable build is `examples/preview-card.example.tsx`, registered in
 | Press on the trigger while closed | opens (the touch path) |
 | Any action on a `disabled` trigger | nothing opens |
 
-The delays are props, so a test or a dense UI can use `0`. They are component
+The delays are props, so a test or a dense UI can use `0`. A non-finite value
+(`NaN`, `Infinity`) falls back to the default, so a delay computed from
+configuration cannot make the card open or close instantly. They are component
 timers at the UI boundary — not domain time.
 
 ## API
@@ -95,7 +97,8 @@ glance. A custom theme changes it with no code change — see
 ## Limitations
 
 - **Timers are the component's**; a consumer that wants a different policy passes
-  the two delay props, and `0` is supported.
+  the two delay props, and `0` is supported. A non-finite delay uses the
+  component's default instead of running the timer at once.
 - **No pointer-type signal**: touch has no hover, so the press-to-toggle path is
   the honest touch interaction.
 - Not auto-focused on hover; a purely hover-driven user never focuses the card.
@@ -110,7 +113,7 @@ glance. A custom theme changes it with no code change — see
 
 ## Verification
 
-`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (18 tests):
+`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (20 tests):
 closed by default, delayed hover open and immediate focus open, staying open
 while the pointer is inside, closing after leaving both, Escape with focus
 return, an Escape that leaves its dialog open, outside-press dismissal, a
@@ -118,7 +121,8 @@ return, an Escape that leaves its dialog open, outside-press dismissal, a
 naming and `aria-expanded`, a controlled card that stays closed, a disabled
 trigger that opens by neither hover nor focus, a centre-aligned card landing on
 its trigger's centre, a bottom card flipping above a trigger at the window's
-bottom edge, and two dismissals that restore focus without re-opening the card.
+bottom edge, two dismissals that restore focus without re-opening the card, and
+a malformed `openDelay`/`closeDelay` that keeps the default timing.
 Timers are real but sized to 20 ms by the props. A controlled close the caller
 refuses leaves the card and focus where they are; the same card restores focus
 when a later close is accepted. One measured fact

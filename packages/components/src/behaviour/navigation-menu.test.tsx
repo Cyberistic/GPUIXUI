@@ -14,7 +14,9 @@
  * the press and re-opened on the release (plan 583). The panel was announced by
  * its item's internal value (`nav-platform-panel`) instead of the trigger's
  * visible label (`Platform`), so the one region the nav revealed had a name a
- * screen-reader user could not map to the trigger (plan 724).
+ * screen-reader user could not map to the trigger (plan 724). A malformed
+ * `openDelay`/`closeDelay` ran its `setTimeout` at once, so the panel opened on
+ * hover and closed before the pointer could travel into it (plan 763).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -404,6 +406,42 @@ describe("NavigationMenu", () => {
       nav.renderer.findByTestId("trigger-platform")?.customProps,
     ).toMatchObject({ "aria-expanded": true });
     expect(focusedTestId(nav)).toEqual(Option.none());
+
+    nav.unmount();
+  });
+
+  it("keeps the default open delay when openDelay is malformed", async () => {
+    const nav = renderComponent(
+      <Workspace openDelay={Number.NaN} closeDelay={20} />,
+    );
+
+    hoverCentreOf(nav, "trigger-platform");
+    await after(30);
+    // 30 ms is inside the default 100 ms; the old code ran the NaN timer
+    // at once.
+    expect(isShown(nav, "panel-platform")).toBe(false);
+
+    await until(() => isShown(nav, "panel-platform"));
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+
+    nav.unmount();
+  });
+
+  it("keeps the default close delay when closeDelay is malformed", async () => {
+    const nav = renderComponent(
+      <Workspace openDelay={20} closeDelay={Number.NaN} />,
+    );
+
+    hoverCentreOf(nav, "trigger-platform");
+    await until(() => isShown(nav, "panel-platform"));
+    hoverCentreOf(nav, "elsewhere");
+    await after(30);
+    // The default 150 ms is still running; the old code closed at once, so the
+    // pointer could not travel into the panel.
+    expect(isShown(nav, "panel-platform")).toBe(true);
+
+    await until(() => !isShown(nav, "panel-platform"));
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
     nav.unmount();
   });

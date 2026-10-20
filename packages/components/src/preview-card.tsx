@@ -37,7 +37,11 @@ import {
   OverlayHostProvider,
   useOverlayHost,
 } from "./internal/overlay-host.js";
-import { useHoverTravel, type HoverTravel } from "./internal/hover.js";
+import {
+  hoverDelay,
+  useHoverTravel,
+  type HoverTravel,
+} from "./internal/hover.js";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -78,6 +82,10 @@ const usePreviewCard = (): PreviewCardContextValue => {
   return value;
 };
 
+/** The shipped hover timings, and the fallback for a malformed delay. */
+const OPEN_DELAY_MS = 300;
+const CLOSE_DELAY_MS = 150;
+
 /** {@link PreviewCard} props. */
 export interface PreviewCardProps {
   /** The controlled open state. `undefined` means uncontrolled. */
@@ -96,8 +104,8 @@ export const PreviewCard = ({
   open: openProp,
   defaultOpen = false,
   onOpenChange,
-  openDelay = 300,
-  closeDelay = 150,
+  openDelay = OPEN_DELAY_MS,
+  closeDelay = CLOSE_DELAY_MS,
   children,
 }: PreviewCardProps) => {
   const [open, setOpen] = useControllableState({
@@ -126,8 +134,8 @@ export const PreviewCard = ({
   const hover = useHoverTravel({
     isOpen: () => open,
     close: () => requestClose("none"),
-    openDelay,
-    closeDelay,
+    openDelay: hoverDelay(openDelay, OPEN_DELAY_MS),
+    closeDelay: hoverDelay(closeDelay, CLOSE_DELAY_MS),
   });
 
   const context = useMemo<PreviewCardContextValue>(
