@@ -25,8 +25,16 @@ import type { EventPayload } from "@gpuix/react";
 import { alpha } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
+import { palettes } from "../palettes.js";
 import { Pressable, Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
+import {
+  cropFrameChecks,
+  IMAGE_LEFT,
+  IMAGE_RIGHT,
+  MASK_ALPHA,
+} from "./crop-pixels.js";
+import { captureHeadless, readSync } from "./frames.js";
 import {
   describeCrop,
   initialCrop,
@@ -55,10 +63,12 @@ import {
 const STAGE: Stage = { width: 320, height: 200 };
 const MIN_SIZE = 16;
 const HANDLE = 12;
-const MASK_ALPHA = 0.6;
+
+/** The crop after the measured `+40/+20` SE-handle drag (plan `385`). */
+const RESIZED: CropRect = { x: 64, y: 40, width: 232, height: 140 };
 
 /** A 2 : 1 image so its natural ratio differs from the stage's 8 : 5. */
-const IMAGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect width="400" height="200" fill="#3b82f6"/><rect x="200" width="200" height="200" fill="#f59e0b"/><circle cx="200" cy="100" r="48" fill="#111827"/></svg>`;
+const IMAGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect width="400" height="200" fill="${IMAGE_LEFT}"/><rect x="200" width="200" height="200" fill="${IMAGE_RIGHT}"/><circle cx="200" cy="100" r="48" fill="#111827"/></svg>`;
 const IMAGE = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(IMAGE_SVG)}`;
 
 const CORNERS: ReadonlyArray<Corner> = ["nw", "ne", "sw", "se"];
@@ -495,7 +505,18 @@ export const cropScenario: PlaygroundScenario = {
         false,
       );
 
-      // 2. The four masks are the exact complement of the crop.
+      // 2. Pixels: the image is undimmed inside the crop and dimmed outside it.
+      const clearFrame = yield* captureHeadless(ctx.host);
+      yield* cropFrameChecks(
+        ctx,
+        readSync(ctx.host),
+        clearFrame,
+        stage,
+        initialCrop(STAGE),
+        palettes.dark.colors.background,
+      );
+
+      // 3. The four masks are the exact complement of the crop.
       const top = yield* boxOf(ctx, "crop-mask-top");
       const left = yield* boxOf(ctx, "crop-mask-left");
       const right = yield* boxOf(ctx, "crop-mask-right");
@@ -545,7 +566,7 @@ export const cropScenario: PlaygroundScenario = {
         1,
       );
 
-      // 3. Each handle is a 12 px square centred on its corner.
+      // 4. Each handle is a 12 px square centred on its corner.
       const se = yield* boxOf(ctx, "crop-handle-se");
       yield* ctx.expectNear("the SE handle is 12 px wide", se.width, 12, 0.5);
       yield* ctx.expectNear("the SE handle is 12 px tall", se.height, 12, 0.5);
@@ -562,7 +583,7 @@ export const cropScenario: PlaygroundScenario = {
         1,
       );
 
-      // 4. objectFit is accepted, but only the box is observable.
+      // 5. objectFit is accepted, but only the box is observable.
       ctx.host.click("crop-fit");
       ctx.host.advance(0);
       yield* ctx.expectEqual(
@@ -591,7 +612,7 @@ export const cropScenario: PlaygroundScenario = {
         "contain",
       );
 
-      // 5. `none` reaches the plane (and the mask handler); `auto` blocks it.
+      // 6. `none` reaches the plane (and the mask handler); `auto` blocks it.
       const point = topMaskPoint(stage);
       ctx.host.clickWindow(point.x, point.y);
       ctx.host.advance(0);
@@ -630,7 +651,7 @@ export const cropScenario: PlaygroundScenario = {
         "1",
       );
 
-      // 6. A captured handle resize: every move lands and the release commits.
+      // 7. A captured handle resize: every move lands and the release commits.
       ctx.host.click("crop-reset");
       ctx.host.advance(0);
       const restHandle = yield* boxOf(ctx, "crop-handle-se");
@@ -671,7 +692,19 @@ export const cropScenario: PlaygroundScenario = {
         "click:se",
       );
 
-      // 7. The SE handle clamps at the stage edge.
+      // The same four samples after the resize: the 240 px point is now inside
+      // the wider crop and the 312 px point is still inside its mask.
+      const resizedFrame = yield* captureHeadless(ctx.host);
+      yield* cropFrameChecks(
+        ctx,
+        readSync(ctx.host),
+        resizedFrame,
+        stage,
+        RESIZED,
+        palettes.dark.colors.background,
+      );
+
+      // 8. The SE handle clamps at the stage edge.
       ctx.host.click("crop-reset");
       ctx.host.advance(0);
       const clampHandle = yield* boxOf(ctx, "crop-handle-se");
@@ -682,7 +715,7 @@ export const cropScenario: PlaygroundScenario = {
         "x=64 y=40 w=256 h=160 fit=contain mask=none image=0 blocked=0",
       );
 
-      // 8. Moving the box clamps at both ends and the masks re-derive.
+      // 9. Moving the box clamps at both ends and the masks re-derive.
       ctx.host.click("crop-reset");
       ctx.host.advance(0);
       const moveBox = yield* boxOf(ctx, "crop-box");
@@ -720,7 +753,7 @@ export const cropScenario: PlaygroundScenario = {
       );
       yield* absent(ctx, "crop-mask-top", "a crop at y = 0 paints no top mask");
 
-      // 9. A shrink stops at the minimum size; the opposite corner is fixed.
+      // 10. A shrink stops at the minimum size; the opposite corner is fixed.
       ctx.host.click("crop-reset");
       ctx.host.advance(0);
       const minHandle = yield* boxOf(ctx, "crop-handle-se");
@@ -738,7 +771,7 @@ export const cropScenario: PlaygroundScenario = {
         "x=64 y=40 w=16 h=16 fit=contain mask=none image=0 blocked=0",
       );
 
-      // 10. Native focus and keys: arrows move, shift+arrows resize.
+      // 11. Native focus and keys: arrows move, shift+arrows resize.
       ctx.host.click("crop-reset");
       ctx.host.advance(0);
       const keyBox = yield* boxOf(ctx, "crop-box");
@@ -764,7 +797,7 @@ export const cropScenario: PlaygroundScenario = {
         "121",
       );
 
-      // 11. Accessibility: the image and the crop region are named.
+      // 12. Accessibility: the image and the crop region are named.
       const tree = yield* treeOf(ctx);
       yield* ctx.expectSome(
         "the stage is a named Image",

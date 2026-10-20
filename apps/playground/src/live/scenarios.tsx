@@ -125,6 +125,7 @@ import {
 } from "../scenarios/frames.js";
 import { palettePixels } from "../scenarios/palette-pixels.js";
 import { qrFrameChecks } from "../scenarios/qr-pixels.js";
+import { cropFrameChecks } from "../scenarios/crop-pixels.js";
 import { palettes, type PaletteId } from "../palettes.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
@@ -9397,6 +9398,10 @@ const columnConfig: LiveScenario = {
     }),
 };
 
+/** The crop probe's stage-relative rectangles (plan `385`). */
+const LIVE_CROP = { x: 64, y: 40, width: 192, height: 120 } as const;
+const LIVE_CROP_RESIZED = { x: 64, y: 40, width: 232, height: 140 } as const;
+
 const cropArea: LiveScenario = {
   id: "live-crop-area",
   title: "Live crop area: the image box, masks, a handle drag and a key",
@@ -9434,7 +9439,17 @@ const cropArea: LiveScenario = {
       );
       yield* waitForText(ctx, "crop-readout", "w=192 h=120");
 
-      // 2. A real paced drag on the SE handle resizes both edges.
+      // 2. Pixels: the image is undimmed inside the crop and dimmed outside it.
+      yield* cropFrameChecks(
+        ctx,
+        readAsync(ctx.host),
+        yield* captureLive(ctx.host),
+        stage,
+        LIVE_CROP,
+        palettes.dark.colors.background,
+      );
+
+      // 3. A real paced drag on the SE handle resizes both edges.
       yield* ctx.host.drag("crop-handle-se", 40, 20);
       yield* settle;
       yield* waitForText(ctx, "crop-readout", "w=232 h=140");
@@ -9452,7 +9467,17 @@ const cropArea: LiveScenario = {
         1,
       );
 
-      // 3. Pass-through and blocking, at the stage's top mask.
+      // The same four samples after the resize.
+      yield* cropFrameChecks(
+        ctx,
+        readAsync(ctx.host),
+        yield* captureLive(ctx.host),
+        stage,
+        LIVE_CROP_RESIZED,
+        palettes.dark.colors.background,
+      );
+
+      // 4. Pass-through and blocking, at the stage's top mask.
       yield* ctx.host.clickWindow(stage.x + 160, stage.y + 10);
       yield* settle;
       yield* waitForText(ctx, "crop-readout", "image=1 blocked=0");
@@ -9463,7 +9488,7 @@ const cropArea: LiveScenario = {
       yield* settle;
       yield* waitForText(ctx, "crop-readout", "image=1 blocked=1");
 
-      // 4. The box takes native focus and an arrow moves it.
+      // 5. The box takes native focus and an arrow moves it.
       yield* ctx.host.click("crop-box");
       yield* settle;
       yield* ctx.expectEqual(
@@ -9475,7 +9500,7 @@ const cropArea: LiveScenario = {
       yield* settle;
       yield* waitForText(ctx, "crop-readout", "x=65");
 
-      // 5. A reset restores the initial geometry.
+      // 6. A reset restores the initial geometry.
       yield* ctx.host.click("crop-reset");
       yield* settle;
       yield* waitForText(
