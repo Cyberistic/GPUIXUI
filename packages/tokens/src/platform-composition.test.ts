@@ -74,6 +74,23 @@ const shippedBases = (mode: Theme["mode"], contrast: Theme["contrast"]) => [
   ),
 ];
 
+/**
+ * The composition matrix is one unit per shipped base, because a single case
+ * over the whole product builds 384 themes between two check runs and holds the
+ * package's largest wall-clock budget: on 2026-10-20 a full parallel suite
+ * descheduled it past the 20 s budget while every other file passed, and a
+ * loaded box must not turn a real failure into a timeout. One base per case runs
+ * in a fraction of the budget and names the base that timed out.
+ */
+const baseCases = modes.flatMap((mode) =>
+  levels.flatMap((contrast) =>
+    shippedBases(mode, contrast).map(([name, base]) => ({
+      label: `${mode}/${contrast} ${name}`,
+      base,
+    })),
+  ),
+);
+
 describe("a platform style applied over another platform", () => {
   it("keeps the applied dark style's own soft destructive tint", () => {
     const linux = getPlatformTheme("linux", "dark");
@@ -103,23 +120,33 @@ describe("a platform style applied over another platform", () => {
     });
   });
 
-  it(`holds every shipped base and applied style to all ${themeChecks.length} checks`, () => {
-    const failures = modes.flatMap((mode) =>
-      levels.flatMap((contrast) =>
-        shippedBases(mode, contrast).flatMap(([baseName, base]) =>
-          appliedStyles.flatMap(([styleName, style]) =>
-            levels.flatMap((level) => {
-              const label = `${mode}/${contrast} ${baseName} -> ${styleName} @${level}`;
-              return failuresOf(applyPlatformStyle(base, style, level)).map(
-                (failure) => `${label}: ${JSON.stringify(failure)}`,
-              );
-            }),
+  describe.each(baseCases)("$label", ({ base }) => {
+    it(`holds every applied style to all ${themeChecks.length} checks`, () => {
+      const failures = appliedStyles.flatMap(([styleName, style]) =>
+        levels.flatMap((level) =>
+          failuresOf(applyPlatformStyle(base, style, level)).map(
+            (failure) => `${styleName} @${level}: ${JSON.stringify(failure)}`,
           ),
         ),
-      ),
-    );
+      );
 
-    expect(failures).toEqual([]);
+      expect(failures).toEqual([]);
+    });
+  });
+
+  /**
+   * The split must keep every combination the single case measured: 32 bases
+   * (identity and the builder, four platform variants and two recipes, in both
+   * modes and at both contrasts) × 6 applied styles × 2 requested levels = 384
+   * compositions per run. The number is deliberate: adding a platform, a recipe,
+   * a style or a level must update it in the same commit, so a refactor cannot
+   * quietly shrink the matrix.
+   */
+  it("covers every base, style and requested level", () => {
+    const basesPerAxis = 2 + platformNames.length + platformRecipeNames.length;
+
+    expect(baseCases).toHaveLength(modes.length * levels.length * basesPerAxis);
+    expect(baseCases.length * appliedStyles.length * levels.length).toBe(384);
   });
 
   it("moves no shipped pixel: the named tint is the one inherited", () => {

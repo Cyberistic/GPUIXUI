@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 321/398
+`[x]` `[████████░░]` 322/399
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2712,6 +2712,15 @@ paragraph quoting the pre-698 figure. A `documentedFigures` entry derives the
 ratio from macOS dark, and a premise case holds both halves — macOS dark is the
 only set under the floor on the rejected fill, every set clears it on the kept
 one; no colour, pair, floor, metric or shipped set moves (plan 710)
+`[x]` Give the composition matrix its own budget — the completion gate
+`nub run --filter @gpuixui/tokens test` failed on 2026-10-20 with no code change:
+`platform-composition.test.ts` built 384 themes in one case, took 7.13 s of a
+full parallel run and was descheduled past plan 333's 20 s budget while the box
+sat at load ~20. The matrix is one case per shipped base now (32 cases, 384
+compositions, same product), a completeness case pins the 384 so a refactor
+cannot shrink it, and `vitest.config.ts` states the current size and the split.
+No token value, pair, floor, metric, platform style, recipe or theme moves
+(plan 711)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now
