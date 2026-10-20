@@ -103,7 +103,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (110/110 green); -> 2 on a host with no binding
+# -> 0 here (113/113 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -1632,8 +1632,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 110-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 99 scenarios. `smoke:live` opens
+The 113-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 102 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -2405,10 +2405,11 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **112/112 green** here (`exit 0`, 4152 checks, 65 capabilities,
-**246.8 s** at the plan `768` gate, 2026-10-20; **339.8 s** on the plan `764`
+The suite is **113/113 green** here (`exit 0`, 4165 checks, 65 capabilities,
+**237.6 s** at plan `771`, 2026-10-20; **246.8 s** at the plan `768` gate, which
+read 112/112 · 4152; **339.8 s** on the plan `764`
 head; the runs at the plan `762` gate read 111/111 · 4106 · 247.2 s with plans
-`754` and `761`'s pixel probes; plan
+`754` and `761`'s pixel probes; plan `771` added the 13-check `font-family`, plan
 `764` added the 46-check `editing-actions`, plan
 `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check
 `state-pixels`, plan `745` added the 64-check
@@ -2421,7 +2422,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-112/112 scenarios passed · capabilities: layout=verified root=verified text=verified
+113/113 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2437,6 +2438,11 @@ editor=verified data-toolbar=verified query=verified notification=verified
 crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
+
+**Plan `771` then added the 13-check `font-family`; the head is now 113/113 ·
+4165 and the live registry is 102 with `live-font-family` focused-green (13
+checks, twice). The full live suite is still the gate below and has not been
+re-run.**
 
 The last full merge/release gate ran **101/101** (`exit 0`, **2933** checks, 61
 capabilities; **1220.8 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
@@ -2667,7 +2673,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (110/110, 4077 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (113/113, 4165 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

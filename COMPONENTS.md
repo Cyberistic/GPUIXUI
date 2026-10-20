@@ -96,10 +96,11 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **112/112 green here** (exit `0`, `.artifacts/smoke-report.json`, **4152 checks**, 65 capabilities; **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head, **247.2 s** at the plan `762` gate; plan `764` added the 46-check `editing-actions`, plan `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 101/101**
+The suite is **113/113 green here** (exit `0`, `.artifacts/smoke-report.json`, **4165 checks**, 65 capabilities; **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head, **247.2 s** at the plan `762` gate; plan `771` added the 13-check `font-family`, plan `764` added the 46-check `editing-actions`, plan `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 101/101**
 (`live-report.json`, **2933 checks**, 61 capabilities; **1220.8 s**, exit `0`)
 on 2026-10-20, the merge/release gate (plan `768`, code head `f0c9a8f8` at the
-gate). That total is plan `762`'s 2860 plus **73 checks from
+gate); the live registry is **102** since plan `771`'s `live-font-family` (13
+checks, focused-green twice — the full suite has not been re-run). That total is plan `762`'s 2860 plus **73 checks from
 `live-editing-actions`** (plan `764`), so the clipboard, history and OTP-paste
 contract joins the disabled/subtree pixels, the border and
 radius pixels, the ring and elevation pixels, the docking indicator's paint order, the
@@ -196,8 +197,9 @@ wheel is always `precise: true`, `touchPhase: "moved"`, so `precise` cannot tell
 a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**101/101 green** (2933 checks, 61 capabilities; 1220.8 s) on the release-tag
+(`nub run --filter playground smoke:live`, plan `189`). The registry is **102**
+scenarios; the last full run was **101/101 green** (2933 checks, 61 capabilities;
+1220.8 s) on the release-tag
 binding through plan `656`'s capture-capable live runner (plan `768`'s gate on
 code head `f0c9a8f8`, including `live-editing-actions`' 73 clipboard/history
 checks,
