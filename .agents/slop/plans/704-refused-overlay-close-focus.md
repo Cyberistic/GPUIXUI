@@ -255,8 +255,8 @@ where it has none. Every case states the bug in the file's header comment.
 5. `src/behaviour/context-menu.test.tsx` — add `RefuseClose` fixture that
    accepts the open and refuses the close.
    - **keeps focus in a keyboard-opened menu whose close is refused**:
-     `Shift+F10`, Escape; menu defined, focus is still one of the menu rows
-     (at `HEAD`: `row`).
+     `Shift+F10`, Escape; menu defined, focus is still the menu surface it was
+     on (at `HEAD`: `row`).
 
 The existing accepted-close cases in all five suites are the other direction and
 must stay green: Escape returns focus, Tab leaves past the trigger, outside
