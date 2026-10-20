@@ -410,6 +410,7 @@ references without buying correctness.
 | [807](./807-elevation-rationale.md) | The AAA dark elevation rationale has no owner | F | 085, 099, 345, 390, 505, 509, 778 | done |
 | [810](./810-solid-status-marks.md) | The solid status roles are described as fills, and three of them are marks | F | 014, 057, 083, 332, 340, 394, 399, 733, 749, 806 | done |
 | [814](./814-track-surface-enumerations.md) | The value groove's surface list: three pages count twelve of thirteen | F | 347, 503, 651, 674, 683, 684, 706, 754 | done |
+| [815](./815-border-role-figures.md) | The border role's two floors and its fill list have no owner | F | 080, 084, 318, 327, 335, 352, 501, 550, 555, 683, 754, 814 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4207,6 +4208,23 @@ clause defers to "the row washes" without naming the pressed fill. The existing
 the count word from `trackSurfacePairs` and `statusTones`, reads the four
 clauses, and fails on the pre-plan sentences; no colour, pair, floor, metric or
 shipped theme moves.
+
+815 closes the other half of the border story plan `814` touched: `border` and
+`borderStrong` are documented as a floor plus a fill list, and the three
+present-tense passages state four floor figures (1.05:1 / 3:1 for the decorative
+divider, 3:1 / 4.5:1 for the functional boundary) and two count words (eight
+control fills, four soft fills) that no case read — changing any of them left all
+7121 tests green — while the catalogue's role introduction named six of the eight
+fills `controlFillRoles` measures and omitted the toggle's `accentHover` /
+`accentActive` pointer states even though the same page's Verification paragraph
+names them. `docs.test.ts` holds the §7 enumerations and the `borderStrong`
+surface list, but not the figures or the counts. A new
+`border-role-claims.test.ts` derives the four figures from `contrastFloors`, the
+two count words from `controlFillRoles` and `statusTones`, and the four
+enumerations from `controlFillRoles`, so the next floor or list edit has to take
+the documents with it; the catalogue names all eight fills and §7 states the
+boundary's high-contrast floor beside its default. No colour, pair, floor, metric
+or shipped theme moves.
 
 ## How to use a plan
 
