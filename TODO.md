@@ -95,7 +95,38 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 129/129 plans-and-harness
+`[x]` `[██████████]` 130/130 plans-and-harness
+
+`[x]` **Prove borders and corner radii in the frame** per plan `745`: the two
+      style families every component is built from (78 `borderRadius` uses)
+      were only ever read back from the runtime's **style report**, so a
+      runtime that painted every box square and borderless passed. A pure
+      `border-pixels.ts` (8 tests; playground **487 → 495**) derives every
+      sample from the token width and the `529` §6.5 content-origin box;
+      `border-pixels` and `live-border-pixels` (**64 checks each**) decode one
+      frame in each host. **Measured:** the 1 px border paints
+      `primary #A7A9FF` on all four edges with `card #191D25` inside and
+      `background #11141A` past it; the 2 px band paints at its full width
+      (**the outer quarter** is the sample that proves it — the first
+      middle-only sample passed the M3 mutation and was corrected); a square
+      corner is `card` and a `radius.xl` corner is `background`, with the
+      straight edge still `card`; and **`overflow: "hidden"` clips to the
+      square content box**, so a child that reaches a rounded parent's corner
+      paints it (`primary`) unless the **child** carries its own radius (the
+      third fixture, which reads `background`). Nine mutations observed and
+      reverted (M5 in both hosts, M8 a null result), three unit mutations red.
+      Full headless **109/109** (**4027** checks, 65 capabilities, 225.2 s),
+      exit `0`; `check`/`lint`/`test` green. No full live gate (merge gate);
+      live registry `97 → 98`. Focused ids run: `border-pixels` (×3 + mutations),
+      `live-border-pixels` (×2 + one mutation).
+
+`[ ]` **Cross-team:** a child that reaches a rounded parent's corner needs its
+      **own** radius — 0.10.0's `overflow: "hidden"` clips to the square content
+      box, not the rounded shape (`clip-hidden` paints the child at the corner;
+      `clip-rounded-child` is the working recipe). Audit images, skeleton
+      fills and coloured washes inside `Card`/`Avatar`/dialogs and give them the
+      parent's radius (or document a deliberate square corner). Owner:
+      `components`/`primitives`; evidence: plan `745` §10.
 
 `[x]` **Run the promotion gate on the head that includes the shadow pixels** per
       plan `739`: verification only on code head `ea2e668b` (0 behind

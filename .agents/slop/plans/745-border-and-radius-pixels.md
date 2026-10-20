@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (native evidence) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `150`, `189`, `197`, `529`, `674`, `690`, `697`, `701`, `707`, `708`, `713`, `715`, `722`, `736` |
@@ -126,12 +126,13 @@ export const cornerClearance: (radius: number, border?: number) => number;
 
 `borderBand` for `left` is `(x - width / 2, y + height / 2)`, `right` is
 `(x + width + width / 2, …)`, `top` is `(…, y - width / 2)` and `bottom` is
-`(…, y + height + width / 2)`. No literal `1` anywhere: the width is the
-token's.
+`(…, y + height + width / 2)`. The optional `at` fraction (default `0.5`) moves
+the sample across the band; `0.75` is the outer quarter that distinguishes a
+2 px band from a 1 px one. No literal `1` anywhere: the width is the token's.
 
 ### 3.2 The view — `apps/playground/src/scenarios/border.tsx`
 
-A `640 × 360` stage painted `theme.colors.background`, with seven boxes:
+A `640 × 360` stage painted `theme.colors.background`, with eight boxes:
 
 | testId | geometry | style |
 | ------ | -------- | ----- |
@@ -142,10 +143,14 @@ A `640 × 360` stage painted `theme.colors.background`, with seven boxes:
 | `radius-rounded` | `(240, 160)` `120 × 72` | `card` fill, `radius.xl` |
 | `clip-visible` | `(40, 270)` `120 × 72` | `card` fill, `radius.xl`, child `primary` inset `0` |
 | `clip-hidden` | `(240, 270)` `120 × 72` | `card` fill, `radius.xl`, `overflow: "hidden"`, child `primary` inset `0` |
+| `clip-rounded-child` | `(440, 270)` `120 × 72` | as `clip-hidden`, plus the child's own `radius.xl` |
 
 The two border boxes have different widths, the two radius boxes differ only by
-their radius, and the two clip boxes differ only by `overflow`. Every control is
-matched, so each check names one property.
+their radius, and the three clip boxes differ only by the parent's clip and the
+child's radius. Every control is matched, so each check names one property.
+`clip-rounded-child` is the **measured recipe**: the first run showed that
+`overflow: "hidden"` clips to the square content box, so a rounded parent must
+give a child that reaches the corner its own radius.
 
 ### 3.3 The scenarios
 
@@ -162,16 +167,18 @@ Checks, all tolerance 2:
 | 5 | `centre(thin)` | `card` — the border is a band, not a fill |
 | 6 | `beyondBorder(thin, thinWidth, 1, "left")` | `background` — the band has an outer edge |
 | 7 | `borderBand(strong, strongWidth, "left")` | `primary` — a 2 px token still paints |
-| 8 | `centre(strong)` | `card` — the 2 px band does not flood |
-| 9 | `beyondBorder(strong, strongWidth, 1, "left")` | `background` |
-| 10 | `contentCorner(radius-square)` | `card` — the control corner is square |
-| 11 | `contentCorner(radius-rounded)` | `background` — the radius clips the fill |
-| 12 | `centre(radius-rounded)` | `card` — the box still paints |
-| 13 | top edge of `radius-rounded`, 2 px inside, horizontal middle | `card` — only the corner is clipped |
-| 14 | `contentCorner(clip-visible)` | `primary` — an unclipped child paints the corner |
-| 15 | `contentCorner(clip-hidden)` | `background` — the rounded clip reaches the child |
-| 16 | `centre(clip-hidden)` | `primary` — the child still paints generally |
-| 17 | record `radius.xl` and its `cornerClearance`; require `>= 2` | a precondition, not a pixel |
+| 8 | `borderBand(strong, strongWidth, "left", 0.75)` | `primary` — the outer quarter proves the band is 2 px, not 1 |
+| 9 | `centre(strong)` | `card` — the 2 px band does not flood |
+| 10 | `beyondBorder(strong, strongWidth, 1, "left")` | `background` |
+| 11 | `contentCorner(radius-square)` | `card` — the control corner is square |
+| 12 | `contentCorner(radius-rounded)` | `background` — the radius clips the fill |
+| 13 | `centre(radius-rounded)` | `card` — the box still paints |
+| 14 | top edge of `radius-rounded`, 2 px inside, horizontal middle | `card` — only the corner is clipped |
+| 15 | `contentCorner(clip-visible)` | `primary` — an unclipped child paints the corner |
+| 16 | `contentCorner(clip-hidden)` | `primary` — **measured:** `overflow: "hidden"` does not round the child's clip |
+| 17 | `contentCorner(clip-rounded-child)` | `background` — the child's own radius is the working recipe |
+| 18 | `centre(clip-hidden)` | `primary` — the child still paints generally |
+| 19 | record `radius.xl` and its `cornerClearance`; require `>= 2` | a precondition, not a pixel |
 
 The two precondition checks are:
 
@@ -191,6 +198,8 @@ artifact.
 | `apps/playground/src/scenarios/border-pixels.ts` | new pure geometry + `cornerClearance` |
 | `apps/playground/src/scenarios/border-pixels.test.ts` | new unit tests (§5) |
 | `apps/playground/src/scenarios/border.tsx` | new view + both scenarios |
+| `apps/playground/src/scenarios/frames.ts` | hoist the "painted box or named failure" helper `paintedBox` out of `shadow.tsx` (second consumer) |
+| `apps/playground/src/scenarios/shadow.tsx` | use `paintedBox`; delete the local `boxOf` |
 | `apps/playground/src/scenarios/index.ts` | register `border-pixels` |
 | `apps/playground/src/live/scenarios.tsx` | register `live-border-pixels` (import, `LiveScenario`, array) |
 | `apps/playground/README.md` | a "Border and radius pixels" subsection with the measured values; update the pixel section, the suite totals and the `theme` row |
@@ -212,6 +221,7 @@ height: 72 }`):
 | `borderBand` left/right is `x - w/2` / `x + width + w/2` at the vertical middle | the sign or the axis is swapped |
 | `borderBand` top/bottom is `y - w/2` / `y + height + w/2` at the horizontal middle | top and bottom are transposed |
 | a width of 2 moves every sample 1 px further out than a width of 1 | the distance is hard-coded to 1 (a regression that would make the strong border check pass at 1 px) |
+| the outer quarter (`at: 0.75`) of a 2 px band is outside a 1 px band | the `at` fraction is ignored or the sample is clamped to the middle |
 | `beyondBorder` sits exactly `gap` outside the outer edge on all four sides, and is outside the band | the gap is measured from the content box |
 | `contentCorner` is the reported origin and `centre` is the middle | either returns the outer box or a rounded coordinate |
 | `cornerClearance(12, 0)` ≈ `4.97`, `(12, 1)` ≈ `3.56`, `(4, 0)` ≈ `1.66` | the formula drops the border term or the √2 factor |
@@ -222,9 +232,8 @@ labels):
 - **M1** remove `borderWidth`/`borderColor` from `border-thin` → checks 1–4
   read `card` or `background`;
 - **M2** paint the thin border in `card` → checks 1–4 read `card`;
-- **M3** use `borderWidth.thin` on `border-strong` → check 9
-  (`beyondBorder(strong, strongWidth, 1, "left")`) samples inside the 1 px
-  band instead of past it, so it reads `primary` instead of `background`;
+- **M3** use `borderWidth.thin` on `border-strong` → the outer-quarter check
+  samples past the 1 px band and reads `background` instead of `primary`;
 - **M4** set `radius-square` to `radius.xl` → check 10 reads `background`;
 - **M5** remove `borderRadius` from `radius-rounded` → check 11 reads `card`;
 - **M6** remove `overflow: "hidden"` from `clip-hidden` → check 15 reads
@@ -236,16 +245,16 @@ labels):
 
 ```sh
 nub run --filter playground test
-# expected: green; 45 files, 487 + 6 = 493 tests (report the real count)
+# expected: green; 46 files, 487 + 8 = 495 tests (measured)
 
 nub run --filter playground build
 # expected: exit 0
 
 nub apps/playground/dist/smoke/run.js --only border-pixels
-# expected: 1/1 scenarios passed · theme=verified, exit 0; 17 checks
+# expected: 1/1 scenarios passed · theme=verified, exit 0; 64 framework checks
 
 nub apps/playground/dist/live/run.js --only live-border-pixels
-# expected: 1/1 scenarios passed · theme=verified, exit 0; 17 checks
+# expected: 1/1 scenarios passed · theme=verified, exit 0; 64 framework checks
 # (one real window; the frame is the run artifact)
 ```
 
@@ -256,7 +265,7 @@ Because this adds a registry entry but no cross-cutting code:
 
 ```sh
 nub apps/playground/dist/smoke/run.js
-# expected: 109/109 scenarios passed, 3963 + N checks, 65 capabilities, exit 0
+# expected: 109/109 scenarios passed, 4027 checks, 65 capabilities, exit 0
 
 nub run check
 nub run lint
@@ -317,3 +326,91 @@ Stop and report instead of improvising if:
 Revert the two commits (plan, implementation). Nothing outside
 `apps/playground`, `COMPONENTS.md`, `TODO.md` and the plan index is touched, and
 no package API changes, so a revert cannot break a consumer.
+
+## 10. Results (2026-10-20, darwin-x64)
+
+**Implementation.** `border-pixels.ts` is the pure half: `borderBand` (with the
+`at` fraction), `beyondBorder`, `contentCorner`, `centre` and `cornerClearance`.
+The view and both scenarios are `border.tsx`; `borderChecks` is one generic
+function over the host and its inspection error, so the headless and live runs
+cannot drift. The "painted box or named failure" helper moved out of
+`shadow.tsx` into `frames.ts` as `paintedBox` when this became its second
+consumer; `shadow-pixels` is unchanged and still 28 checks.
+
+**Measured, both hosts, tolerance 2** (the live frame is also the run artifact
+`live/live-border-pixels.png`):
+
+| Sample | Headless | Live |
+| ------ | -------- | ---- |
+| frame / window | `2560 × 1600` / `1280 × 800` | `2200 × 1440` / `1100 × 720` |
+| device scale | `2` | `2` |
+| 1 px border, left / right / top / bottom | `primary #A7A9FF` | `primary #A7A9FF` |
+| 1 px interior | `card #191D25` | `card #191D25` |
+| past the 1 px band | `background #11141A` | `background #11141A` |
+| 2 px band, middle and outer quarter | `primary` | `primary` |
+| 2 px interior / past its band | `card` / `background` | `card` / `background` |
+| square box's corner | `card` | `card` |
+| rounded (`radius.xl = 12`) corner | `background` | `background` |
+| rounded interior + straight edge | `card` | `card` |
+| child without `overflow: hidden`, at the parent's corner | `primary` | `primary` |
+| child with `overflow: "hidden"`, at the parent's corner | **`primary`** | **`primary`** |
+| child with its own `radius.xl`, at the parent's corner | `background` | `background` |
+
+So the runtime **does** paint borders at the token width and **does** clip a
+box's own fill to its radius. The measured surprise is the child clip:
+`overflow: "hidden"` clips to the **square** content box, not the rounded
+shape. A rounded card with an image that reaches its corner must give the image
+its own radius (or leave a gap); the parent's radius alone does not do it. That
+is the `clip-rounded-child` fixture and the cross-team task in `TODO.md`.
+
+**A test correction found by M3.** The first draft sampled only the middle of
+the strong band (`x - 1`), and switching `border-strong` to `borderWidth.thin`
+**passed**: the outer edge of a 1 px band is exactly `x - 1`, so the middle of a
+2 px band is still inside it. `borderBand` gained the `at` fraction, the
+scenario samples the outer quarter (`x - 1.5`), and a unit test pins that the
+outer quarter of a 2 px band lies outside a 1 px band. The mutation then failed
+by name. The tolerance was not widened.
+
+**Commands run**
+
+```sh
+nub run --filter playground test
+# 46 files, 495 tests (487 + 8), green
+
+nub run --filter playground build
+# exit 0
+
+nub apps/playground/dist/smoke/run.js --only border-pixels
+# 1/1 scenarios passed · theme=verified, exit 0; 64 checks
+
+nub apps/playground/dist/live/run.js --only live-border-pixels
+# 1/1 scenarios passed · theme=verified, exit 0; 64 checks
+
+nub apps/playground/dist/smoke/run.js
+# 109/109 scenarios passed, 4027 checks, 65 capabilities, 225.2 s, exit 0
+```
+
+The full live suite was **not** run: this is not the merge/release gate. The
+live registry is now **98** and the headless registry **109**.
+
+**Mutation proofs (observed, then reverted)**
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| M1 | remove the thin border's width/colour | `the 1 px border paints its left edge: expected #a7a9ffff, got #11141aff`, exit `1` |
+| M2 | paint the thin border `card` | `… expected #a7a9ffff, got #191d25ff`, exit `1` |
+| M3 | give `border-strong` the thin width | `the 2 px band reaches its outer quarter: expected #a7a9ffff, got #11141aff`, exit `1` |
+| M4 | give the square box `radius.xl` | `a square box paints its corner: expected #191d25ff, got #11141aff`, exit `1` |
+| M5 | remove `radius.xl` from the rounded box | `a rounded box clips its corner: expected #11141aff, got #191d25ff`, exit `1` (headless **and** live) |
+| M6 | remove the rounded child's own radius | `a child with its own radius clears the parent's corner: … got #a7a9ffff`, exit `1` |
+| M7 | make `borderBand` sample `x` | three `border-pixels.test.ts` tests red, exit `1` |
+| M8 | remove `overflow: "hidden"` from `clip-hidden` | **null result** — passes, because the clip is square either way (the measured finding) |
+| M9 | square the parent of the rounded child | `a child with its own radius clears the parent's corner: … got #191d25ff`, exit `1` — the parent's radius is load-bearing too |
+
+**Limits.** The probe reads the shorthand `borderRadius` and the thin/strong
+widths; per-corner longhands and `borderStyle` are newer-source features and stay
+out of the published 0.10.0 contract. Anti-aliased profiles are not asserted;
+every sample is at least 2 logical px from an edge, which the
+`cornerClearance` precondition checks. The child-clip finding is a measured
+runtime limitation, not a component decision: the library must ship the
+child-radius recipe.

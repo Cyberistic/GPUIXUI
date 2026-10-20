@@ -103,7 +103,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (108/108 green); -> 2 on a host with no binding
+# -> 0 here (109/109 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -1592,8 +1592,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 106-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 95 scenarios. `smoke:live` opens
+The 109-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 98 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -2152,8 +2152,12 @@ ignoring the scale fails `green paints green: expected #00ff00ff, got
 #ff0000ff`; breaking the `Sub` unfilter fails the package test; and removing the
 capture fails with the named `ENOENT` reason instead of a crash.
 
-This settles **colour**, not pixels of everything: anti-aliased edges, glyph
-rendering and scannability are still out of scope. Bitmap **data URLs, bytes and
+This settles **colour and the two style families every surface uses**, not
+pixels of everything: anti-aliased edges, glyph rendering and scannability are
+still out of scope. Border bands and corner radii are now decoded insurance
+too (plan `745` below), including the measured rule that `overflow: "hidden"`
+clips a child to the **square** content box rather than the rounded shape.
+Bitmap **data URLs, bytes and
 a file path** are checked by colour (plan `690`), and so is the chart's SVG
 artwork — its two opaque fills and both gradients — plus the sourced-SVG mask
 tints (plan `697`, in `live-chart`). A refused http(s) URL is proven by the
@@ -2205,18 +2209,52 @@ giving the flat control its own shadow fails
 A ring or elevation the paint layer drops therefore fails by name — the ring is
 no longer a style-only proof.
 
+### Borders and corner radii, in the frame (plan `745`)
+
+`theme-type-and-shadow` proves `borderWidth`, `borderColor` and `borderRadius`
+reach the runtime's **style report**; it cannot tell whether the frame paints
+them. `border-pixels` and `live-border-pixels` (**64 checks each**) decode a
+frame and sample eight fixtures on one 640 × 360 stage:
+
+| Sample | Expectation | Measured |
+| ------ | ----------- | -------- |
+| the band of a 1 px border, left / right / top / bottom | `primary`, at the middle of a band of the token's width | `#A7A9FF` |
+| the 1 px box's interior / 1 px past its band | `card` / `background` — the border is a band with an outer edge | `#191D25` / `#11141A` |
+| the **outer quarter** of a 2 px band | `primary` — a middle-only sample also sits inside a 1 px band, so the width needs the quarter | `#A7A9FF` |
+| a square box's content corner | `card` — the control corner is filled | `#191D25` |
+| a `radius.xl` (12 px) box's content corner | `background` — the radius clips the fill | `#11141A` |
+| the rounded box's interior and straight top edge | `card` — only the corner is clipped | `#191D25` |
+| a child filling a rounded parent, no `overflow` | `primary` — the child paints the corner | `#A7A9FF` |
+| the same child under `overflow: "hidden"` | **`primary`** — the clip is the **square** content box, not the rounded shape | `#A7A9FF` |
+| the same child with **its own** `radius.xl` | `background` — the working recipe | `#11141A` |
+
+The load-bearing finding is the child clip: a rounded card whose image or wash
+reaches the corner must give that child the same radius (or leave a gap); the
+parent's radius alone does not clip it. `clip-rounded-child` is the fixture that
+proves the recipe, and `TODO.md` carries the cross-team audit.
+
+Nine mutations were observed and reverted, including the one that corrected the
+probe: at the middle of the 2 px band a 1 px border still reads `primary`, so
+that sample **passed** the thin-width mutation; the outer-quarter sample and a
+unit test pin the width instead. Removing the thin border reads
+`expected #a7a9ffff, got #11141aff`; removing the rounded box's radius reads
+`expected #11141aff, got #191d25ff`; removing the child's own radius reads
+`expected #11141aff, got #a7a9ffff`. Removing `overflow: "hidden"` is a
+**null result** — the clip is square either way, which is the finding itself.
+
 ## Evidence on this host
 
-The suite is **108/108 green** here (`exit 0`, 3963 checks, 65 capabilities,
-**223.6 s**, 2026-10-20; plan `739`'s gate; plan `736` added the 28-check
-`shadow-pixels`; plan
+The suite is **109/109 green** here (`exit 0`, 4027 checks, 65 capabilities,
+**225.2 s**, 2026-10-20; plan `745` added the 64-check `border-pixels`;
+plan `739`'s gate read 108/108 and 3963 on the shadow-pixel head; plan `736`
+added the 28-check `shadow-pixels`; plan
 `724` added the 18-check `click-routing` and plan `734` grew it to 33; the count
 was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `708` added 7 QR pixel checks; plan `701` added 41 wash checks to
 `search-highlights`):
 
 ```
-108/108 scenarios passed · capabilities: layout=verified root=verified text=verified
+109/109 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2238,7 +2276,9 @@ capabilities; **1140.5 s**; `.artifacts/live-report.json`, 2026-10-20) on code
 head `ea2e668b` (plan `739`, 0 behind `origin/master`; the plan commit after it
 changes only plans), with the whole headless
 registry at **108/108** (**3963** checks, 65 capabilities, 223.6 s) on the same
-head. It
+head. Plan `745` then registered **`live-border-pixels`** — the live registry is
+**98**, and that twin is focused-green (64 checks, twice) but has not yet run in
+a full live gate. It
 includes every scenario this branch added: `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
@@ -2292,7 +2332,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | virtual table | `onVisibleRange` **lags the painted window by one gesture** — after two wheel gestures the painted rows were `32–40` while the range read `16`; an index-driven feature must use the painted rows as the current window |
 | tree | `paddingLeft` indents exactly (16px per depth); expand/collapse repaints the subtree; a clicked row takes native focus and receives arrow keys. Focus movement from component code is measured separately (`modal`), so a roving-tabindex tree can use `renderer.focusElement` |
 | log | bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up and appending does **not** snap back — a follow toggle is app state plus a scroll |
-| theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch. **The ring and elevation are painted, not only accepted (`shadow-pixels`, plan `736`):** the 2 px band outside a ringed box is `ring #A7A9FF` on three edges, an unringed control is the stage `#11141A`, the interior stays `card #191D25`, and an `md` elevation samples `#0C0E12` below the box against `#11141A` below a flat control |
+| theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch. **The ring and elevation are painted, not only accepted (`shadow-pixels`, plan `736`):** the 2 px band outside a ringed box is `ring #A7A9FF` on three edges, an unringed control is the stage `#11141A`, the interior stays `card #191D25`, and an `md` elevation samples `#0C0E12` below the box against `#11141A` below a flat control. **Borders and radii are painted (`border-pixels`, plan `745`):** a 1 px border is `primary` on four edges with `card` inside, a 2 px band needs the outer-quarter sample to prove its width, a square corner is `card` while a `radius.xl` corner is `background`, and `overflow: "hidden"` clips a child to the **square** content box, so a rounded parent needs the child-radius recipe |
 | components | the shipped `@gpuixui/primitives` mount and behave in the runtime through the token theme: click/Enter-down/Space-up activation, a focus ring that the component merges and drops, controlled `Input` edits plus `onSubmit`, `Checkbox`/`Switch` state on `aria-valuetext`, the themed `Select` commit/dismiss, `Slider` arrow steps, `Progress`/`Meter` value text, a painted `Skeleton`, and a hover `Tooltip`. `simulateKeystrokes("space")` delivers no key up, so the harness now exposes `keyDown`/`keyUp` (plan `168`) |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | search | `highlight`/`getPaintedHighlights` paint window-space boxes; a nested declaration replaces its ancestor; soft wraps paint one box per row; a surrogate-split range is refused; `<code>` is searched by query, not ranges; a virtual row's `matchIndexOffset` numbers matches document-wide |
@@ -2448,7 +2488,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (108/108, 3963 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (109/109, 4027 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
