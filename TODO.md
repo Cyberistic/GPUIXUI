@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 333/411
+`[x]` `[████████░░]` 334/412
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2858,6 +2858,20 @@ every check returned `[]`. `disabledFillPairs` measures the fill on the five
 surfaces a control is placed on (465 → 470), five values move one designed step
 in their own neutral families, and every shipped set clears 1.065:1 at the
 tightest (plan 737)
+`[x]` Finish plan `723`'s Decision 5 — the wash pair landed, but the passages
+that carry the old reason ("a row is selected at rest") were never corrected: the
+catalogue's interaction-states paragraph, the design system's selected-row
+paragraph and both source blocks still said the pressed `selectedActive` fill is
+**deliberately outside the selection-wash walk**, so `docs/tokens.md` contradicted
+its own *Text selection* section and the design system, and a reader was told a
+drag across a chosen row is unmeasured when `selectionWashPairs` measures it.
+The three passages about lists that *do* stop at the pressed row (the design
+system's `disabled` and inactive-label rows and a `selection-input-text.test.ts`
+comment) now name `selectionPressPairs`, the list plan `723` gave the pressed
+row's own pairs. `selection-press-exclusion.test.ts` reads all six blocks and
+fails on the refuted reason or a claim the pair lists contradict; no pair,
+colour, floor, metric or role moves (`selectionWashPairs` 11, `contrastPairs`
+470) (plan 742)
 
 ## Phase C — Tier 1–2 components
 
