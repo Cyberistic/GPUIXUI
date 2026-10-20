@@ -1857,7 +1857,10 @@ the docs-site workstream; the `packages/components` half is plan 337)
       files) and the full native suite is **1022 passed / 20 failed of 1042** —
       the four new message/field cases pass, and the 20 failures are the same
       recorded plan-540 binding classes (position, focus and the command-menu
-      scroll), with no message or field case among them.
+      scroll), with no message or field case among them. The headless smoke suite
+      re-ran 17/20 with the three recorded playground-owned failures
+      (`focus-traversal`, `floating-placement`, `shell-navigation`); no scenario
+      mounts a message row or a field.
 
 ## Swarm-owned blockers (fix these)
 
