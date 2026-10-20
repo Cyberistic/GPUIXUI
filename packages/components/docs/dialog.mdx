@@ -92,6 +92,11 @@ enclosing handler reads it, and a genuinely new event is a new task.
 | `Escape` | close, when `dismissible`; focus returns to the opener |
 | `Enter` / `Space` | activate the focused action |
 
+A nested surface that handles `Tab` itself owns that press: a `Popover` inside
+the content walks its own controls and the trap resumes once its panel closes
+(plan 719). Every other `Tab`, and the caller's own `onKeyDown`, behaves as
+before.
+
 The opener is captured before the surface mounts, so a control inside the
 content that carries `autoFocus` (a form field, say) does not become the saved
 opener. The promise holds for that content too (plan 638).

@@ -161,7 +161,10 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   across a microtask (measured, plan `587`), so a shorter claim let one Escape
   close two nested layers. Every enclosing handler reads the same claim for the
   rest of that task — a submenu, its menu and the dialog around both all skip
-  one Escape (plan `669`) — and a genuinely new event is a new task.
+  one Escape (plan `669`) — and a genuinely new event is a new task. The claim
+  also carries **Tab ownership**: a popover walks its own tab stops and claims
+  each press, so the trap of an enclosing `Dialog` or `Drawer` leaves that press
+  alone and resumes once the panel closes (plan `719`).
   Composite rows and cells (`List`, menu rows, grid
   and calendar cells) keep Space as a **selection** key on key down, per ARIA's
   listbox/grid patterns.

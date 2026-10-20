@@ -217,6 +217,16 @@ retired once both branches are one
       (Popover 22 → 24; 21 pass on this host with the same three recorded
       plan-540 placement failures), three mutation proofs; docs, `COMPONENTS.md`,
       `PLAN.md` D30 and the inventory synced (owner: components)
+    - [x] A popover's Tab walk is its own inside a dialog — plan 719. Measured:
+      one `Tab` moved focus twice (the panel's walk, then the dialog's trap), so
+      `first` → `third` skipped a control and `Shift+Tab` left focus on no host
+      (`None`), which made a control-dense panel unusable by keyboard inside a
+      modal. The panel now claims each `Tab` it walks and `handleModalKeyDown`
+      ignores a claimed event while still calling the caller's `onKeyDown`; 2
+      new cases (Popover 24 → 26; 23 pass with the same three plan-540 placement
+      failures, Dialog 21/21) and both halves proven necessary; docs,
+      `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      synced (owner: components)
     - [x] List: focus continuity across a row removal — plan 708; two recorded
       "removed-host" cases were red (`focused = None`) and a row removed while a
       `Button` in its `trailing` slot held focus dropped focus entirely, because

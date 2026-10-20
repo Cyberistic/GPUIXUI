@@ -53,6 +53,11 @@ side. `align="center"` is exact: the runtime's `center` is not used.
 | press inside | does nothing |
 | click the trigger while open | closes it |
 
+The walk owns its key. Inside a `Dialog` or `Drawer` the modal's Tab trap would
+otherwise advance focus a second time on the same press, so the panel claims each
+`Tab` it handles and the modal leaves it alone; the trap resumes when the panel
+closes (plan 719).
+
 The popover is a layer in the same dismiss stack as `Dialog`, so pressing outside
 both closes the popover first and leaves the dialog open. A press on the
 popover's own trigger is not an outside press: the layer claims it and the click
@@ -135,7 +140,7 @@ transform, so no scale is faked.
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (24 tests):
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (26 tests):
 opens below the trigger by measured bounds, honours `side="right"`, centres a
 requested panel on its trigger, opens above a trigger near the window bottom
 instead of covering it, Escape closing and restoring focus, an outside press
@@ -154,7 +159,10 @@ controlled popover reporting `onOpenChange` while staying as the consumer says
 trigger `ref`, the 100 ms fade + side slide, the panel remaining through its
 exit before it unmounts, and a controlled close the caller refuses leaving the
 panel and focus where they are (Escape and Tab), with focus moving only when the
-close is accepted.
+close is accepted. Two further cases place that panel inside a `Dialog`: Tab
+walks its controls once each and closes after the last, Shift+Tab leaves before
+the trigger, and the dialog's own caller still observes every claimed key
+(plan 719).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
