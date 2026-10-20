@@ -18,7 +18,7 @@
  * `openDelay`/`closeDelay` ran its `setTimeout` at once, so the panel opened on
  * hover and closed before the pointer could travel into it (plan 763). Choosing
  * a link with `Enter` or a pointer left native focus on **nothing**, because the
- * link asked for the close without a focus target (plan 807); it now returns to
+ * link asked for the close without a focus target (plan 808); it now returns to
  * the item's trigger unless the app moves focus in `onSelect`.
  */
 

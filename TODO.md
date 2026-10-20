@@ -1469,7 +1469,7 @@ retired once both branches are one
       3 native cases (message 16 → 19), all three red at `HEAD`; docs,
       `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced (owner:
       components)
-    - [x] Choosing a navigation link returns focus to its trigger — plan 807;
+    - [x] Choosing a navigation link returns focus to its trigger — plan 808;
       measured 2026-10-20: a keyboard `Enter` and a pointer click both closed the
       panel and left the focused host on nothing (`Option.none()`), because the
       link requested the close with `null`. The link now sends its item's

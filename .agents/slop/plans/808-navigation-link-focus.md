@@ -1,12 +1,14 @@
-# 807 — Choosing a navigation link returns focus to its trigger
+# 808 — Choosing a navigation link returns focus to its trigger
 
 **Owner:** components workstream · **Phase:** F (focus continuity) ·
 **Depends on:** 110, 112, 114, 117, 200, 201, 320, 325, 366, 583, 704, 722, 724,
 730, 732, 755
 
-**Numbering:** `807` is free across `main` and every worktree on 2026-10-20
-(checked with `ls` over every `workspaces/*/.agents/slop/plans`; the highest
-claimed is `806`). Recorded in `PLAN.md` D30.
+**Numbering:** this plan was written as `807`, but tokens-theme
+(`807-elevation-rationale`) and the playground (`807-gradient-backgrounds`)
+claimed `807` in the same tick; `808` is free across every worktree on
+2026-10-20 (checked with `ls` over every `workspaces/*/.agents/slop/plans`), so
+the plan was renumbered to `808`. Recorded in `PLAN.md` D30.
 
 ## 1. Why
 
@@ -171,7 +173,8 @@ one line.
 - Add a row to the components table in `.agents/slop/plans/README.md`.
 - Add a ticked `[x]` line under "Tier 2 hardening after the inventory closed" in
   `TODO.md` describing the measurement, fix and counts.
-- Append `807` to the overflow sentence in `PLAN.md` D30 (after `806`).
+- Append `808` to the overflow sentence in `PLAN.md` D30 (after `806`, with
+  `807` recorded as claimed by tokens-theme and the playground).
 
 ## 4. Test plan
 

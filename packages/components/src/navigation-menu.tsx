@@ -199,7 +199,7 @@ export const NavigationMenu = ({
   openRef.current = open;
   // A close the caller refuses must leave the panel and the user's focus alone.
   // The token is the trigger to focus once the close is accepted; a chosen
-  // link's restore yields to focus the app has already placed (plan 807).
+  // link's restore yields to focus the app has already placed (plan 808).
   const requestClose = useCloseFocus<NavigationCloseFocus | null>(
     open !== null,
     () => setOpen(null),
