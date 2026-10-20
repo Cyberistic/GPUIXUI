@@ -356,6 +356,7 @@ Expected: every command exits `0`; `smoke:build` reports one more page
 | `nub run --filter docs smoke:build` | exit 0 — 112 pages, 245 links, 1 443 anchors; `GpuixTheme` and `syntax theme` both green |
 | `nub run --filter docs smoke:a11y` | exit 0 — 112 pages × 2 schemes, 0 violations |
 | `nub run --filter docs smoke:responsive` | exit 0 — 112 pages at 390×844 |
+| `nub apps/playground/dist/smoke/run.js --only text-native` | exit 0 — 1/1; `text=verified` (the scenario the page cites) |
 | `nub run check`, `nub run lint`, `nub run test` | exit 0 |
 
 Measured after the page landed (`search(query, 3)`), first result:
