@@ -61,3 +61,26 @@ export const exportedPlatformEdit = themeEdit(
   exportedBaseChoice,
   exportedPlatformTheme,
 );
+
+/**
+ * One shape on the reserved `overlay` level, which every shipped theme leaves
+ * empty. A level is replaced whole, so defining it is an ordinary override.
+ */
+export const exportedOverlayShape = {
+  offsetX: 0,
+  offsetY: 28,
+  blurRadius: 64,
+  spreadRadius: -12,
+  alpha: 0.24,
+} as const;
+
+/** The identity with the reserved level defined. */
+export const exportedOverlayTheme = extendTheme(exportedBase, {
+  elevation: { overlay: [exportedOverlayShape] },
+});
+
+/** The one-group diff that rebuilds {@link exportedOverlayTheme}. */
+export const exportedOverlayOverrides = themeOverrides(
+  exportedBase,
+  exportedOverlayTheme,
+);

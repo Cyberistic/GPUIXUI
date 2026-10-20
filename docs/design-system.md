@@ -1038,10 +1038,11 @@ The extension mechanism is deliberately small:
   edit instead of a whole theme object. A different mode returns `undefined`,
   because the mode is not overridable, and so does a group whose member set
   differs from the base's — a scale a brand widened with an extra step, which
-  the checks accept and a `ThemeOverrides` cannot name. The overrides are
-  relative to the exact base, not its mode, so the stored artifact is a
-  `ThemeEdit`: `themeEdit(choice, edited)` records the base's `ThemeChoice` and
-  `applyThemeEdit(edit)` resolves it back.
+  the checks accept and a `ThemeOverrides` cannot name. An elevation level is
+  not such a set: it is replaced whole, so a defined `overlay` travels in the
+  overrides. The overrides are relative to the exact base, not its mode, so the
+  stored artifact is a `ThemeEdit`: `themeEdit(choice, edited)` records the
+  base's `ThemeChoice` and `applyThemeEdit(edit)` resolves it back.
 
 A choice that survives a restart — the mode, the contrast variant, the density,
 the platform style — arrives as `unknown`. Narrow it with `isThemeMode`,

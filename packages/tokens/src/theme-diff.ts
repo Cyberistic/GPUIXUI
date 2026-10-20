@@ -52,15 +52,16 @@ const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
  * `ThemeOverrides` names only the declared members, so the diff cannot carry an
  * added step back; refusing the pair is what keeps a returned set able to
  * rebuild the theme it was measured against.
+ *
+ * An array is a value, not a member map: `extendTheme` replaces an elevation
+ * level whole, so a defined `overlay` — a level the identity ships empty and
+ * the metric contract governs — travels in the diff instead of being refused.
+ * The member boundary is the named members of a record; a level's entries are
+ * carried by `changedElevation`.
  */
 const sameMembers = (base: unknown, theme: unknown): boolean => {
   if (Array.isArray(base) || Array.isArray(theme)) {
-    return (
-      Array.isArray(base) &&
-      Array.isArray(theme) &&
-      base.length === theme.length &&
-      base.every((member, index) => sameMembers(member, theme[index]))
-    );
+    return Array.isArray(base) && Array.isArray(theme);
   }
   if (isRecord(base) && isRecord(theme)) {
     const members = Object.keys(base);
@@ -267,6 +268,11 @@ const changedMotion = (
  * while a `ThemeOverrides` can only name the declared members. Refusing is what
  * keeps the promise: a returned set always rebuilds the theme it was measured
  * against, and a caller holding an unnamed member keeps its theme object.
+ *
+ * A level's entries are not members: `extendTheme` replaces an elevation level
+ * whole, so a brand that defines the reserved `overlay` — empty in every
+ * shipped theme, and governed once defined — stores as
+ * `{ elevation: { overlay: [...] } }` like any other level it edits.
  *
  * The overrides are relative to that **exact** base, not merely its mode — a
  * Windows edit replayed on the identity of the same mode paints the identity's

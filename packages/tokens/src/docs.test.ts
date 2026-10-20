@@ -3941,6 +3941,34 @@ describe("the edit artifact's member boundary", () => {
       "The one theme the artifact cannot express is a different `mode`",
     );
   });
+
+  it("states the defined overlay the diff carries", () => {
+    const base = Tokens.getTheme("light");
+    const overlay = {
+      offsetX: 0,
+      offsetY: 28,
+      blurRadius: 64,
+      spreadRadius: -12,
+      alpha: 0.24,
+    };
+    const edited = Tokens.extendTheme(base, {
+      elevation: { overlay: [overlay] },
+    });
+
+    // The sentence is only true while the artifact carries the level.
+    expect(Tokens.themeOverrides(base, edited)).toEqual({
+      elevation: { overlay: [overlay] },
+    });
+    expect(markdownProse).toContain(
+      "a brand that defines the reserved `overlay`",
+    );
+    expect(designSystem).toContain(
+      "a defined `overlay` travels in the overrides",
+    );
+    expect(readmeProse).toContain(
+      "a defined `overlay` — a level every shipped theme leaves empty",
+    );
+  });
 });
 
 describe("the panel action's rationale figures", () => {

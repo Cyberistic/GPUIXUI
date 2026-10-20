@@ -2285,9 +2285,13 @@ field the way `extendTheme` merges them, and a group with no change is omitted,
 so `themeOverrides(theme, theme)` is `{}`. A tuned density is expressed against
 the preset it names — `mergeDensity` starts from that preset, not from the base's
 metrics — and an elevation level is replaced whole, matching the documented merge
-rule. `undefined` means the pair cannot be expressed, for one of two reasons: a
-different `mode`, because `extendTheme` cannot change the mode, or a group whose
-member set differs from the base's — the extra step a brand spreads into a scale
+rule. Because a level is replaced whole, its entries travel in the diff: a brand
+that defines the reserved `overlay` — empty in every shipped theme and governed
+once defined — stores as `{ elevation: { overlay: [...] } }`. The member
+boundary is a group's named members, not a level's list. `undefined` means the
+pair cannot be expressed, for one of two reasons: a different `mode`, because
+`extendTheme` cannot change the mode, or a group whose member set differs from
+the base's — the extra step a brand spreads into a scale
 (`{ ...spacing, "6xl": 96 }`) is a theme every check accepts, while a
 `ThemeOverrides` can only name the declared members, so refusing the pair is what
 keeps the returned set able to rebuild the theme it was measured against.

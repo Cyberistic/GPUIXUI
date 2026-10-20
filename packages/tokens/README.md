@@ -199,7 +199,9 @@ A complete, executed example lives in
 overrides that rebuild `theme` from `base`, for an editor that stores or prints
 an edit rather than a whole theme object. Each group is compared field by field
 and an unchanged group is omitted; a tuned density is expressed against the
-preset it names, an elevation level is replaced whole, and `undefined` means the
+preset it names, an elevation level is replaced whole, so a defined `overlay` —
+a level every shipped theme leaves empty — travels as
+`{ elevation: { overlay: [...] } }`, and `undefined` means the
 pair cannot be expressed: the modes differ, or a group carries a member the base
 does not declare — the extra step a brand spreads into a scale, which the checks
 accept and a `ThemeOverrides` cannot name, so the returned set always rebuilds

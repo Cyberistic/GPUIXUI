@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 360/437
+`[x]` `[████████░░]` 361/440
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -3117,6 +3117,14 @@ survived. The fraction now builds the two veils,
 and holds every shipped set, proves the canvas is a *different* fill in the two
 default identities, and reads every passage so the phrase cannot return; no
 colour, pair, floor, metric, role or shipped theme moves (plan 789)
+`[x]` Make the edit artifact carry a defined `overlay` — `themeOverrides` walked
+arrays as member maps, so a brand's defined `overlay` was refused by the diff
+while `themeFailures` accepted the theme and `elevationShadow` painted it, and
+`themeEdit` returned `undefined`. A level is replaced whole, so its entries are
+a value, not a member set; the record walk still owns the boundary, so a widened
+scale stays refused, the 0 → 1 and 1 → 0 transitions both round-trip, and the
+executed example defines the level; no colour, pair, floor, metric, role or
+shipped theme moves (plan 794)
 
 ## Phase C — Tier 1–2 components
 
