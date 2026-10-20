@@ -4185,7 +4185,7 @@ that one fill*, which is what `docs.test.ts` measured before plan `536`
 (plan `536`). Plan `537` extends the same table to the text hierarchy: a tier's
 figure is a ratio of ratios, so `tierSurfaces`, `deriveTierFigure` and
 `tierMinimum` measure it on the surfaces both roles are painted on — the rule
-`themeTextTierFailures` uses — and the eight minima above are pinned with the set
+`themeTextTierFailures` uses — and the twelve minima above are pinned with the set
 and surface each sentence names. It found two: the panel action's 1.542:1 step is
 high-contrast dark rather than identity dark (1.877:1), and the design system
 still quoted plan 392's 1.440:1 for the hint after plan `527` moved it to

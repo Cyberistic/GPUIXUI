@@ -27,7 +27,7 @@ import {
   textTiers,
   themeTextTierFailures,
 } from "./index.js";
-import { tierSurfaces } from "./figures.js";
+import { documentedTierFigures, tierSurfaces } from "./figures.js";
 
 const panelTiers = statusTones.map(
   (tone) =>
@@ -142,5 +142,31 @@ describe("the selected row's documented fills", () => {
         expect(sentence, `${path} names \`${fill}\``).toContain(`\`${fill}\``);
       });
     });
+  });
+
+  it("states the number of pinned tier minima", () => {
+    const words = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+      "eleven",
+      "twelve",
+    ];
+    const minima = documentedTierFigures.length;
+    expect(minima).toBe(textTiers.length);
+
+    const document = readDocument("../../../docs/tokens.md").replaceAll(
+      /\s+/g,
+      " ",
+    );
+    expect(document).toContain(`the ${words[minima]} minima above are pinned`);
   });
 });
