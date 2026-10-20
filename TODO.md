@@ -54,7 +54,20 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 369/445
+`[x]` `[████████░░]` 370/445
+
+`[x]` Own the value groove's surface list — `trackSurfacePairs` holds thirteen
+surfaces (four base, five state washes including the pressed `selectedActive`
+plan 651 added, four soft status fills), but the catalogue, the design system
+§8 narrative and the package README all enumerated twelve and omitted the
+pressed fill, and the §8 `unchecked` row's track clause deferred to "the row
+washes" while the existing `docs.test.ts` case read the row as a whole — so a
+neighbouring clause naming `selectedActive` satisfied it. All four clauses now
+name the five state washes and the derived count, and
+`track-surface-claims.test.ts` derives every surface, group and count word from
+the published lists, failing on the pre-plan sentences and on either direction
+of a contract change; no colour, pair, floor, metric or shipped theme moves
+(plan 814)
 
 `[x]` Own the solid status roles' descriptions — the design system said "The
 solid roles are fills … so it is never the colour of text or a dot", the

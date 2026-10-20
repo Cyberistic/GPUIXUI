@@ -544,9 +544,10 @@ wash needs (plan 332). The groove those value indicators sit in is `track`, a
 role of its own: identity dark's `muted` is its `popover` and every platform
 dark style's `muted` is its card and popover, all at 1.000:1, so an
 indeterminate progress bar drawn with the surface role painted nothing.
-`trackSurfacePairs` holds it to 1.05:1 on the four base surfaces, the persistent
-`accent`/`selected` fills, the `hover`/`active` washes a row or a slider paints
-under the pointer and the four soft status fills a status panel provides, and
+`trackSurfacePairs` holds it to 1.05:1 on thirteen surfaces — the four base
+surfaces (`background`, `card`, `popover`, `muted`), the five state washes a row
+or a slider paints (`hover`, `active`, `accent`, `selected` and the pressed
+`selectedActive`) and the four soft status fills a status panel provides — and
 `trackMarkPairs` holds the four progress fills and the knob of a switch that is
 off (`foreground`) to the mark floor on it (plans 347, 503 and 733). An indeterminate rail that vanishes under the pointer or inside an
 Alert is the same defect one surface over. Default body text

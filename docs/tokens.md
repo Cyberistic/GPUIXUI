@@ -4050,12 +4050,13 @@ the objection is direction, not contrast: a groove must be there at rest, while
 a press exists only under the pointer). So `track` is a designed neutral step
 in each palette: `#D5D9E2` light and `#3D4552` dark in the identity, one value
 per platform style, and `#C6C8CD`/`#414141` at high contrast. It is measured on
-the four base surfaces, the persistent `accent`/`selected` row fills, the
-`hover`/`active` washes a row or a slider paints under the pointer and the four
-soft status fills an Alert or Badge provides, at 1.05:1 (`trackSurfacePairs`) —
-a groove that disappears in a hovered row or inside a status panel erases an
-indeterminate indicator, because the rail *is* the value while the reader
-interacts with it (plan `503`). `primary`, `success`, `destructive` and
+thirteen surfaces at 1.05:1 (`trackSurfacePairs`): the four base surfaces
+(`background`, `card`, `popover`, `muted`), the five state washes a row or a
+slider paints under the pointer (`hover`, `active`, `accent`, `selected` and the
+pressed `selectedActive`), and the four soft status fills an Alert or Badge
+provides — a groove that disappears in a hovered row, in a chosen row under the
+press or inside a status panel erases an indeterminate indicator, because the
+rail *is* the value while the reader interacts with it (plan `503`). `primary`, `success`, `destructive` and
 `mutedForeground` — the four `PROGRESS_TONES` — are marks on the groove
 (`trackMarkPairs`). XP light's own `success` (`#0E6B40`) is what lets its rail
 clear the pressed wash: the inherited identity green forced the groove toward the
