@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 348/425
+`[x]` `[████████░░]` 349/426
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -156,6 +156,17 @@ documents promised the pair reproduces it; the diff now compares every group's
 member set at every depth and returns `undefined` beside a mode mismatch, so a
 returned set always rebuilds the theme it was measured against, and no colour,
 pair, metric or shipped theme moves (plan 758)
+`[x]` Give the inset ring's figure and count an owner outside the catalogue —
+`insetFocusRing` quotes `4.697:1` at the tightest and `ring` meeting `primary`
+at `1.000:1` in sixteen sets, but only `docs/tokens.md` derived either, so a
+palette edit that moved a family foreground or changed a set's side failed the
+catalogue's case and left the ledger and the helper's JSDoc quoting the old
+numbers (both falsified, whole suite green). Three `figures.ts` entries derive
+the ratio from `filledControlFamilies` × the three fills for the catalogue, the
+ledger and the JSDoc, `inset-focus-ring.test.ts` holds the ledger's count word
+and the JSDoc's "most", and `figures.test.ts` now rejects a spelled-out
+`<word> shipped sets` — the count form its digit-only case could not see, while
+`styles.ts` shipped one (plan 772)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan

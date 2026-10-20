@@ -18,7 +18,11 @@ import { nativeSyntaxRoles, nativeTextSurfaces } from "./native-text.js";
 import type { PlatformRecipeName } from "./platform-recipes.js";
 import type { PlatformVariant } from "./platform-types.js";
 import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
-import { statusTones, type StatusTone } from "./styles.js";
+import {
+  filledControlFamilies,
+  statusTones,
+  type StatusTone,
+} from "./styles.js";
 import type { Theme, ThemeContrast, ThemeMode } from "./theme.js";
 
 /**
@@ -891,6 +895,67 @@ const ringFigures: ReadonlyArray<DocumentedFigure> = [
 ];
 
 /**
+ * The on-colour pairs of the four filled families on the three fills each one
+ * paints — the list an inset focus indicator is drawn from. Derived from
+ * {@link filledControlFamilies} and the `x` → `xHover` → `xActive` ladder, so a
+ * fifth family joins the measurement without a typed pair.
+ */
+const insetRingPairs: ReadonlyArray<ContrastPair> =
+  filledControlFamilies.flatMap(
+    (family): ReadonlyArray<ContrastPair> => [
+      [`${family}Foreground`, family, "secondary"],
+      [`${family}Foreground`, `${family}Hover`, "secondary"],
+      [`${family}Foreground`, `${family}Active`, "secondary"],
+    ],
+  );
+
+/**
+ * The inset focus ring's tightest on-colour, in the three places that state it.
+ * `insetFocusRing` returns the family's on-colour, and `ring` — the outer
+ * indicator's role — meets `primary` at 1.000:1 in most shipped sets, so the
+ * catalogue, the ledger and the helper's own JSDoc quote this figure. Only the
+ * catalogue's copy was derived; falsifying the other two stayed green.
+ *
+ * The count is not here: a source JSDoc has no derivation site, so the JSDoc
+ * says "most shipped sets" and `inset-focus-ring.test.ts` holds "most" to the
+ * measured sets. The catalogue's and the ledger's counts live with that suite.
+ */
+const insetRingFigures: ReadonlyArray<DocumentedFigure> = [
+  {
+    document: "docs/tokens.md",
+    name: "the inset focus ring's tightest on-colour",
+    pairs: insetRingPairs,
+    kind: "plain",
+    claim: "tightest",
+    provenance: platformTheme("darwin", "light", "default"),
+    decimals: 3,
+    sentence:
+      "on the resting, hover and pressed fill ({figure}:1 at the tightest)",
+  },
+  {
+    document: "COMPONENTS.md",
+    name: "the ledger's inset focus ring figure",
+    pairs: insetRingPairs,
+    kind: "plain",
+    claim: "tightest",
+    provenance: platformTheme("darwin", "light", "default"),
+    decimals: 3,
+    sentence:
+      "measured on the resting, hover and pressed fill ({figure}:1 at the tightest)",
+  },
+  {
+    document: "packages/tokens/src/styles.ts",
+    name: "the inset focus ring's JSDoc figure",
+    pairs: insetRingPairs,
+    kind: "plain",
+    claim: "tightest",
+    provenance: platformTheme("darwin", "light", "default"),
+    decimals: 3,
+    sentence: "({figure}:1 at the tightest in the shipped sets)",
+  },
+];
+
+/**
  * The field's caret and the native document's fades — the compositions the
  * table could not express until it learned `fade` and `over-wash`. Quoted in
  * the two modules that own the contract and in the two pages that teach it;
@@ -1190,6 +1255,7 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   caretPairFigure,
   ...trackRejectedRoleFigures,
   ...ringFigures,
+  ...insetRingFigures,
   ...nativePaintFigures,
 ];
 

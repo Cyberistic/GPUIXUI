@@ -228,7 +228,7 @@ export interface InsetFocusRing {
  * The focus indicator for a filled control that cannot draw the outer shadow —
  * a clipped button inside a group, a calendar day whose cell is the fill, or a
  * selection box. `ring` is designed for the surface behind a control and
- * measures 1.000:1 against `primary` in sixteen shipped sets, so an inset ring
+ * measures 1.000:1 against `primary` in most shipped sets, so an inset ring
  * painted with it disappears. This returns the family's on-colour instead, which
  * the on-colour pairs already hold on the resting, hover and pressed fill
  * (4.697:1 at the tightest in the shipped sets), at the outer ring's

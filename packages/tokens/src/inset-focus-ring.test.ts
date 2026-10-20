@@ -61,6 +61,17 @@ const docs = [
   new URL("../README.md", import.meta.url),
 ] as const;
 
+/** The words a count is spelled with, for the ledger's prose. */
+const countWord = (count: number): string =>
+  "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty"
+    .split(" ")
+    .at(count) ?? String(count);
+
+/** The sets where `ring` and `primary` are the same colour. */
+const identicalCount = shippedThemes.filter(
+  ({ theme }) => contrastRatio(theme.colors.ring, theme.colors.primary) === 1,
+).length;
+
 describe("insetFocusRing", () => {
   it("is the family's on-colour at the outer ring's thickness", () => {
     [getTheme("light"), getTheme("dark")].forEach((theme) => {
@@ -177,23 +188,30 @@ describe("insetFocusRing", () => {
   });
 
   it("names the call in both documents and the README", () => {
-    const tightestShipped = Math.min(
-      ...shippedThemes.map(({ theme }) => tightest(theme).ratio),
-    );
-    const identicalCount = shippedThemes.filter(
-      ({ theme }) =>
-        contrastRatio(theme.colors.ring, theme.colors.primary) === 1,
-    ).length;
     const text = docs.map((url) => readFileSync(url, "utf8"));
     text.forEach((source) => {
       expect(source).toContain("insetFocusRing");
       expect(source).toContain("filled control");
     });
-    expect(text[0]).toContain(
-      `${tightestShipped.toFixed(3)}:1 at the tightest`,
-    );
-    expect(text[0]).toContain(
+  });
+
+  it("states the derived count in the catalogue and the ledger", () => {
+    // The figure itself is `figures.ts`'s (three entries, one per document that
+    // states it); this case owns the count, which is not a ratio and so has no
+    // place in that table.
+    expect(readFileSync(docs[0], "utf8")).toContain(
       `**1.000:1** in **${identicalCount}** shipped sets`,
     );
+    expect(
+      readFileSync(new URL("../../../COMPONENTS.md", import.meta.url), "utf8"),
+    ).toContain(`1.000:1 in ${countWord(identicalCount)} shipped sets`);
+  });
+
+  it("states 'most' in the helper's JSDoc, and most is true", () => {
+    // A source JSDoc has no derivation site (plan 717), so the helper says
+    // "most" rather than a count — and "most" is held to the measurement.
+    const jsdoc = readFileSync(new URL("./styles.ts", import.meta.url), "utf8");
+    expect(jsdoc).toContain("in most shipped sets");
+    expect(identicalCount * 2).toBeGreaterThan(shippedThemes.length);
   });
 });

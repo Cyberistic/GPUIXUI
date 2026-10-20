@@ -4251,7 +4251,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **65** entries across
+state — `documentedFigures` and `documentedTierFigures`, **68** entries across
 this page, the design system, the README, the ledger and the package's own JSDoc
 modules — and `packages/tokens/src/figures.test.ts` derives each one from
 `shippedThemes` with the checker's own measurement and asserts both the figure

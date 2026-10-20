@@ -360,8 +360,17 @@ describe("the figures the package's own JSDoc states", () => {
 
   it("states the shipped-set count nowhere in its own prose", () => {
     // The count is `shippedThemes.length` and a source JSDoc has no derivation
-    // site, so the sentence says "every shipped set" instead. This case fails
-    // on the tree before plan 717 (`styles.ts` said "in all 24 shipped sets").
+    // site, so the sentence says "every shipped set" (or "most") instead. This
+    // case fails on the tree before plan 717 (`styles.ts` said "in all 24
+    // shipped sets"), and plan 772 caught the spelled-out count the digit form
+    // could not see (`insetFocusRing` said "in sixteen shipped sets").
+    const countWord =
+      "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty";
+    const counted = (source: string) =>
+      new RegExp(`\\b\\d+ (?:of the )?shipped sets\\b`).test(source) ||
+      new RegExp(`\\b(?:${countWord}) (?:of the )?shipped sets\\b`).test(
+        source,
+      );
     const modules: ReadonlyArray<readonly [string, string]> = readdirSync(
       new URL(".", import.meta.url),
     )
@@ -370,11 +379,10 @@ describe("the figures the package's own JSDoc states", () => {
         file,
         readFileSync(new URL(file, import.meta.url), "utf8"),
       ]);
-    const counted = modules.filter(([, source]) =>
-      /\b\d+ (?:of the )?shipped sets\b/.test(source),
-    );
 
-    expect(counted.map(([file]) => file)).toEqual([]);
+    expect(
+      modules.filter(([, source]) => counted(source)).map(([file]) => file),
+    ).toEqual([]);
   });
 
   it("rejects the pre-717 figures", () => {
