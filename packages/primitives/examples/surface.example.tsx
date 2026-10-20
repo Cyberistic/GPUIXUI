@@ -13,6 +13,7 @@ import {
   Surface,
   Stack,
   Text,
+  Tooltip,
   rasterSurface,
   useTheme,
   type RasterFrame,
@@ -69,15 +70,22 @@ export const SurfaceExample = (): ReactElement => {
     <Box tone="card" padding="lg" radius="md" border testId="surface-example">
       <Stack direction="column" gap="sm">
         <Text role="h3">Raster surface</Text>
-        <Surface
-          adapter={adapter}
-          width={240}
-          height={120}
-          label="Theme gradient rendered as raster pixels"
-          testId="surface-leaf"
-        />
+        <Tooltip
+          content="Generated from the active theme's primary and accent roles"
+          side="top"
+        >
+          <Surface
+            adapter={adapter}
+            width={240}
+            height={120}
+            label="Theme gradient rendered as raster pixels"
+            tabIndex={0}
+            testId="surface-leaf"
+          />
+        </Tooltip>
         <Text role="caption" tone="muted">
-          A raster surface paints its own pixels; it is not a native view.
+          A raster surface paints its own pixels; it is not a native view. A
+          focusable one is also a tooltip trigger.
         </Text>
       </Stack>
     </Box>

@@ -191,8 +191,10 @@ Implemented 2026-10-20.
 
 **Files.** `src/components/Surface.tsx` (the slot type and the gated forwarding),
 `src/components/Surface.test.tsx` (the element-tree case),
-`runtime/surface-trigger.runtime.test.tsx` (new, 3 cases), `docs/surface.mdx`,
-`docs/tooltip.mdx`, `COMPONENTS.md`, the plans index and `TODO.md`.
+`runtime/surface-trigger.runtime.test.tsx` (new, 3 cases),
+`examples/surface.example.tsx` (the mounted example now wraps its focusable
+surface in a `Tooltip`), `docs/surface.mdx`, `docs/tooltip.mdx`,
+`COMPONENTS.md`, the plans index and `TODO.md`.
 
 **One measurement changed the plan.** §1.3 expected the raster `<img>` to own
 the pointer, making a surface keyboard-only. Measured in the real renderer: the
@@ -208,6 +210,7 @@ hover limitation to document.
 | `nub run --filter @gpuixui/primitives test src/components/Surface.test.tsx` | 1 file / **5 passed** |
 | `nub run --filter @gpuixui/primitives test:runtime runtime/surface-trigger.runtime.test.tsx` | 1 file / **3 passed** |
 | the same file + `surface` + `overlay-trigger` | 3 files / **35 passed** |
+| `nub run --filter @gpuixui/primitives test:runtime runtime/examples.runtime.test.tsx` | 1 file / **19 passed** (the mounted example, tip included) |
 | `nub run --filter @gpuixui/primitives test` | 69 files / **941 passed** (was 940; the new element case) |
 | `nub run --filter @gpuixui/primitives check-types` | exit `0` |
 | `nub run check-types` (whole repo) | exit `0` |
