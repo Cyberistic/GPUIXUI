@@ -480,10 +480,10 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       `## State and Effect` now names the toast `ManagedRuntime`, the `core/`
       decision layer and the app-owned clock; `## What runs where` separates the
       desktop renderer, the wasm live surface and the SSR/hydrated docs chrome.
-      `architecture-runtime.test.ts` reads the real provider, manifest,
+      `architecture-runtime.test.ts` reads the real provider, manifest, `Form`,
       countdown and preview-state sources in both directions, fourteen guarded
       alias terms send the vocabulary to the page, and three production queries
-      check it; 113 files / 925 docs tests, 99-page `smoke:build`, root gates
+      check it; 113 files / 926 docs tests, 99-page `smoke:build`, root gates
       green; the two measured proofs are in plan 602 §6.3.
 
 `[x]` **Keyboard and input conventions have one home (plan 601)** — `keyboard`,

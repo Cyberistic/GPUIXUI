@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
@@ -24,11 +25,32 @@ const page = read("../content/docs/architecture.mdx");
 const toastProvider = read(
   "../../../packages/components/src/toast/provider.tsx",
 );
+const form = read("../../../packages/components/src/form.tsx");
+const clock = read("../../../packages/components/src/internal/clock.ts");
 const countdown = read("../../../packages/components/src/countdown.tsx");
 const previewState = read("./components/preview/theme-surface.tsx");
 const liveSurface = fileURLToPath(
   new URL("../public/gpuix-preview/index.html", import.meta.url),
 );
+
+const componentsRoot = fileURLToPath(
+  new URL("../../../packages/components/src", import.meta.url),
+);
+
+/** Every non-test source file in the components package, path and text. */
+const componentSources = readdirSync(componentsRoot, {
+  recursive: true,
+  encoding: "utf8",
+})
+  .filter((file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file))
+  .map((file) => ({
+    file,
+    text: readFileSync(join(componentsRoot, file), "utf8"),
+  }));
+
+const runtimeFiles = componentSources
+  .filter(({ text }) => text.includes("effect/ManagedRuntime"))
+  .map(({ file }) => file);
 
 const ManifestWithDependencies = Schema.Struct({
   dependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
@@ -42,7 +64,9 @@ const componentsManifest = Schema.decodeUnknownSync(
 export interface RuntimeFacts {
   readonly page: string;
   readonly toastOwnsRuntime: boolean;
+  readonly toastIsOnlyRuntime: boolean;
   readonly declaresEffectDependency: boolean;
+  readonly formRunsValidation: boolean;
   readonly countdownOwnsNoTimer: boolean;
   readonly previewReadsPublishedState: boolean;
   readonly liveSurfaceExists: boolean;
@@ -53,7 +77,9 @@ const PAGE = {
   runsWhere: "## What runs where",
   managedRuntime: "ManagedRuntime",
   toastProvider: "ToastProvider",
+  onlyRuntime: "only `ManagedRuntime`",
   dependency: "declares `effect`",
+  formValidation: "`Effect.runSync`",
   countdown: "Countdown",
   remainingMs: "remainingMs",
   countdownClaim: "owns no timer",
@@ -74,6 +100,9 @@ export const architectureViolations = (
   const { page: text } = facts;
   const namesToastRuntime =
     text.includes(PAGE.managedRuntime) && text.includes(PAGE.toastProvider);
+  const claimsOnlyRuntime = text.includes(PAGE.onlyRuntime);
+  const claimsFormBoundary =
+    text.includes(PAGE.formValidation) && text.includes("validateAll");
   const claimsCountdownBoundary =
     text.includes(PAGE.countdown) &&
     text.includes(PAGE.remainingMs) &&
@@ -92,6 +121,26 @@ export const architectureViolations = (
       : []),
     ...(!facts.toastOwnsRuntime && namesToastRuntime
       ? ["the page names a toast runtime `provider.tsx` no longer creates"]
+      : []),
+    ...(facts.toastIsOnlyRuntime && !claimsOnlyRuntime
+      ? [
+          "the page does not say the toast provider is the only `ManagedRuntime`",
+        ]
+      : []),
+    ...(!facts.toastIsOnlyRuntime && claimsOnlyRuntime
+      ? [
+          "the page says the toast provider is the only `ManagedRuntime`, but another file imports it",
+        ]
+      : []),
+    ...(facts.formRunsValidation && !claimsFormBoundary
+      ? [
+          "the page does not name the `Effect.runSync` submit boundary in `Form`",
+        ]
+      : []),
+    ...(!facts.formRunsValidation && claimsFormBoundary
+      ? [
+          "the page names synchronous boundaries `Form` / `internal/clock.ts` no longer run",
+        ]
       : []),
     ...(facts.declaresEffectDependency && !text.includes(PAGE.dependency)
       ? ["the page does not state that `@gpuixui/components` declares `effect`"]
@@ -133,8 +182,14 @@ const facts: RuntimeFacts = {
   toastOwnsRuntime:
     /ManagedRuntime\.make/.test(toastProvider) &&
     /storeLayer\(/.test(toastProvider),
+  toastIsOnlyRuntime:
+    runtimeFiles.length === 1 &&
+    runtimeFiles[0]?.endsWith("toast/provider.tsx") === true,
   declaresEffectDependency:
     componentsManifest.dependencies?.["effect"] !== undefined,
+  formRunsValidation:
+    form.includes("Effect.runSync(validateAll") &&
+    clock.includes("Effect.runSync(Clock.monotonicTimeNanos)"),
   countdownOwnsNoTimer:
     countdown.includes(PAGE.remainingMs) &&
     !/set(Interval|Timeout)\(/.test(countdown),
@@ -179,6 +234,25 @@ describe("Architecture states the runtime contract", () => {
     );
     expect(withFacts({ declaresEffectDependency: false })).toContain(
       "the page claims an `effect` dependency the package no longer declares",
+    );
+  });
+
+  it("reports a second runtime or a lost submit boundary", () => {
+    expect(
+      withFacts({ page: page.replace(PAGE.onlyRuntime, "a runtime") }),
+    ).toContain(
+      "the page does not say the toast provider is the only `ManagedRuntime`",
+    );
+    expect(withFacts({ toastIsOnlyRuntime: false })).toContain(
+      "the page says the toast provider is the only `ManagedRuntime`, but another file imports it",
+    );
+    expect(
+      withFacts({ page: page.replace(PAGE.formValidation, "an effect") }),
+    ).toContain(
+      "the page does not name the `Effect.runSync` submit boundary in `Form`",
+    );
+    expect(withFacts({ formRunsValidation: false })).toContain(
+      "the page names synchronous boundaries `Form` / `internal/clock.ts` no longer run",
     );
   });
 

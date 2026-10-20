@@ -36,14 +36,19 @@ across the packages:
   (`Option`, `Array`, `Order`), so a decision has no nullable return and no
   thrown error to forget. [Extending](/docs/extending) documents that layer.
 - **A runtime exists only where a component owns ongoing work.** `ToastProvider`
-  is the one case: it creates a `ManagedRuntime` over the toast store's `layer`
-  and `useToast()` sends commands to it. No other component starts a runtime.
+  is the package's only `ManagedRuntime`: it creates one over the toast store's
+  `layer`, and `useToast()` sends commands to it.
+- **A single synchronous effect runs at the boundary that needs it, with no
+  provider.** `Form`'s submit runs `validateAll` with `Effect.runSync`, and the
+  type-ahead window reads a monotonic clock the same way. The exported
+  `validate` and `validateAll` return `Effect`s, so a caller outside `Form`
+  decides when to run them.
 
-What stays with the application: time and validation. `Countdown` owns no timer
-and renders the `remainingMs` your clock passes; `validate` returns an `Effect`
-that the caller runs. Using the components does not require writing Effect code
-— `@gpuixui/components` declares `effect` as a dependency because its toast
-runtime needs it, and `@gpuixui/tokens` declares no dependencies.
+What stays with the application: time. `Countdown` owns no timer and renders the
+`remainingMs` your clock passes. Using the components does not require writing
+Effect code — `@gpuixui/components` declares `effect` as a dependency because its
+toast runtime and those boundaries need it, and `@gpuixui/tokens` declares no
+dependencies.
 
 ## Tooling
 

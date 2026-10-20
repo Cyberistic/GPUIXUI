@@ -95,14 +95,19 @@ across the packages:
   (`Option`, `Array`, `Order`), so a decision has no nullable return and no
   thrown error to forget. [Extending](/docs/extending) documents that layer.
 - **A runtime exists only where a component owns ongoing work.** `ToastProvider`
-  is the one case: it creates a `ManagedRuntime` over the toast store's `Layer`
-  and `useToast()` sends commands to it. No other component starts a runtime.
+  is the package's only `ManagedRuntime`: it creates one over the toast store's
+  `layer`, and `useToast()` sends commands to it.
+- **A single synchronous effect runs at the boundary that needs it, with no
+  provider.** `Form`'s submit runs `validateAll` with `Effect.runSync`, and the
+  type-ahead window reads a monotonic clock the same way. The exported
+  `validate` and `validateAll` return `Effect`s, so a caller outside `Form`
+  decides when to run them.
 
-What stays with the application: time and validation. `Countdown` owns no timer
-and renders the `remainingMs` your clock passes; `validate` returns an
-`Effect` that the caller runs. Using the components does not require writing
-Effect code — `@gpuixui/components` declares `effect` as a dependency because
-its toast runtime needs it, and `@gpuixui/tokens` has no dependencies at all.
+What stays with the application: time. `Countdown` owns no timer and renders the
+`remainingMs` your clock passes. Using the components does not require writing
+Effect code — `@gpuixui/components` declares `effect` as a dependency because its
+toast runtime and those boundaries need it, and `@gpuixui/tokens` declares no
+dependencies.
 ```
 
 No `<include>`: the source these claims point at is already included where it
@@ -116,9 +121,11 @@ the real source once, and require each claim to exist in both directions.
 
 | Test | Page requires | Source it must match |
 | ---- | ------------- | -------------------- |
-| toast runtime | `ToastProvider`, `ManagedRuntime` | `packages/components/src/toast/provider.tsx` contains `ManagedRuntime.make` and a `Layer` |
+| toast runtime | `ToastProvider`, `ManagedRuntime` | `packages/components/src/toast/provider.tsx` contains `ManagedRuntime.make` and `storeLayer(` |
+| one runtime | `` only `ManagedRuntime` `` | exactly one non-test file under `packages/components/src` imports `effect/ManagedRuntime`, and it is `toast/provider.tsx` |
 | Effect is a declared dependency | `` declares `effect` `` | `packages/components/package.json` `dependencies.effect` is present |
-| time stays at the boundary | `Countdown`, `remainingMs` | `packages/components/src/countdown.tsx` contains `remainingMs` and no `setInterval` / `setTimeout` |
+| the submit boundary | `Effect.runSync`, `validateAll` | `packages/components/src/form.tsx` contains `Effect.runSync(validateAll` and `internal/clock.ts` contains `Effect.runSync(Clock.monotonicTimeNanos)` |
+| time stays at the boundary | `Countdown`, `remainingMs`, `owns no timer` | `packages/components/src/countdown.tsx` contains `remainingMs` and no `setInterval` / `setTimeout` |
 | preview state is published, not guessed | `data-platform`, `dark`, `useSyncExternalStore` | `apps/docs/src/components/preview/theme-surface.tsx` contains all three |
 | the live surface is the wasm document | `/gpuix-preview/`, `WebAssembly` | `apps/docs/public/gpuix-preview/index.html` exists |
 | the page has the two sections | `## State and Effect`, `## What runs where` | — |
@@ -219,6 +226,9 @@ Each direction run and reverted (record the exact message in §6):
    `smoke:build`'s `effect` query passes.
 7. Add `"webassembly"` to the architecture aliases → the shadow/ownership guard
    fails, proving the table cannot steal a page's subject.
+8. (in-suite fixtures) `toastIsOnlyRuntime: false` and
+   `formRunsValidation: false` → the only-runtime and submit-boundary rules
+   fail, so a second provider or a moved validation boundary cannot pass.
 
 Regressions measured in the same suite: `project browser` → the pattern page,
 `webassembly` → Previews, `countdown` → Countdown, `toast` → Toast,
@@ -229,14 +239,15 @@ Regressions measured in the same suite: `project browser` → the pattern page,
 ### 6.1 What shipped
 
 - `apps/docs/content/docs/architecture.mdx` — `## State and Effect` (toast
-  `ManagedRuntime`, the `core/` decision layer, the app-owned clock and
-  validation, the declared `effect` dependency) and `## What runs where` (the
-  desktop renderer / wasm live surface / SSR-and-hydrated docs chrome table,
-  the no-DOM-library statement, the published `data-platform` / `dark` state).
-  The frontmatter summary now names Effect, the browser story and the
+  `ManagedRuntime`, the `Form` submit boundary, the `core/` decision layer, the
+  app-owned clock, the declared `effect` dependency) and `## What runs where`
+  (the desktop renderer / wasm live surface / SSR-and-hydrated docs chrome
+  table, the no-DOM-library statement, the published `data-platform` / `dark`
+  state). The frontmatter summary now names Effect, the browser story and the
   hydration model, because a page summary is a search signal (plan 568).
-- `apps/docs/src/architecture-runtime.test.ts` — 8 tests (7 fixture rules +
-  the real-page check).
+- `apps/docs/src/architecture-runtime.test.ts` — 9 tests (8 fixture rules +
+  the real-page check) over the page, the toast provider, the manifest, `Form`,
+  `Countdown`, the preview-state reader and the wasm document.
 - `apps/docs/src/lib/page-aliases.ts` — one key, fourteen terms.
 - `apps/docs/src/lib/page-aliases.test.ts` — 99 tests (was 79): fourteen `owned`
   rows and five regressions.
@@ -262,12 +273,12 @@ vocabulary question from plan 601's conventions (the runtime exposes
 
 | Command | Result |
 | ------- | ------ |
-| `nub run --filter docs test src/architecture-runtime.test.ts` | 1 file / **8 tests** pass |
+| `nub run --filter docs test src/architecture-runtime.test.ts` | 1 file / **9 tests** pass |
 | `nub run --filter docs test src/lib/page-aliases.test.ts` | 1 file / **99 tests** pass |
 | `nub run --filter docs check-types` | exit `0` |
-| `nub run --filter docs test` | **113 files / 925 tests** pass (was 898) |
+| `nub run --filter docs test` | **113 files / 926 tests** pass (was 898) |
 | `nub run --filter docs smoke:build` | 99 pages, 220 links, 1 290 anchors, search checked, **exit `0`** |
-| root `nub run check`, `nub run lint`, `nub run test` | exit `0`; docs reports 113 files / 925 tests |
+| root `nub run check`, `nub run lint`, `nub run test` | exit `0`; docs reports 113 files / 926 tests |
 
 ### 6.3 Two-direction proofs (each run, then reverted)
 
@@ -280,6 +291,7 @@ vocabulary question from plan 601's conventions (the runtime exposes
 | 5 | (in-suite fixtures) `countdownOwnsNoTimer: false` | `the page says Countdown owns no timer, but countdown.tsx schedules one` |
 | 6 | (in-suite fixtures) `previewReadsPublishedState: false` | `the page claims previews read the published document state, but theme-surface.tsx does not` |
 | 7 | (in-suite fixtures) `liveSurfaceExists: false` | `the page names a \`/gpuix-preview/\` document that does not exist` |
+| 8 | (in-suite fixtures) `toastIsOnlyRuntime: false`, `formRunsValidation: false` | `the page says the toast provider is the only \`ManagedRuntime\`, but another file imports it` / `the page names synchronous boundaries \`Form\` / \`internal/clock.ts\` no longer run` |
 
 The source-side directions (3–7) are proven through the same pure rule the real
 files feed, rather than by editing another workstream's package: mutating
