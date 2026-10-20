@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 162/162
+`[x]` `[████████████]` 163/163
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2227,6 +2227,17 @@ retired once both branches are one
       all three repaint paths. 1 scoped runtime case (3 assertions), both
       directions proven (removed effect → timeout; removed seed guard → 5 cases
       fail by name; plan `698`).
+
+`[x]` `packages/primitives`: **a `Surface` adapter swap ran the old teardown
+      inside the new session** — plan `696` and the page promise "a new adapter
+      destroys the old session first", but nothing proved it: with a 200 ms
+      `destroy` and an immediate `create`, measured order was `a:visible:false,
+      b:create, b:resize, b:visible:true, b:theme, a:destroy` while both
+      sessions target the same reused `<img>` host id. One `Deferred` per
+      session now gates the next `create` on the previous `destroy`; the new
+      scoped runtime case fails on the old order (`expected 4 to be less than
+      2`), the file is 9/9, offline 67 files / 921 tests, `check-types` clean
+      (plan `699`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

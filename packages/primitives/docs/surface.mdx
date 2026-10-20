@@ -52,7 +52,7 @@ interchangeable:
 | Change | What happens | When to use it |
 | ------ | ------------ | -------------- |
 | `revision` | `adapter.resize(bounds)` at the current box | new data for the same paint function (the common chart update) |
-| a new `adapter` identity | the session is destroyed and created again (`create → resize → paint`) | a different paint function, or a resource the adapter acquires in `create` must be replaced |
+| a new `adapter` identity | the session is destroyed and created again (`create → resize → paint`), and the next `create` waits for the old `destroy` to finish | a different paint function, or a resource the adapter acquires in `create` must be replaced |
 | `width`/`height` or the theme mode | `resize` or `setTheme` | a new box, or a palette change |
 
 An unrelated prop change repaints **nothing** — the component cannot see what a
@@ -82,7 +82,9 @@ naming the operation that failed.
 The component drives `create → resize → setVisible(true) → setTheme` on mount,
 `resize` on a bounds change, `setTheme` on a mode change, and
 `setVisible(false) → destroy` on unmount. A new adapter destroys the old session
-first.
+first, and the next `create` waits for that `destroy` to finish: both sessions
+target the same host element, so a teardown that landed inside the new session
+could release a resource the new adapter had just acquired (plan `699`).
 
 `rasterSurface` calls `paint(bounds, { mode })` on every resize and on a real
 mode change. A frame whose dimensions or byte count do not match the box fails
@@ -182,7 +184,7 @@ consumer and closes over them.
 ## Verification
 
 The lifecycle and the real raster path are proven in
-`runtime/surface.runtime.test.tsx` (8 cases):
+`runtime/surface.runtime.test.tsx` (9 cases):
 
 - `creates, sizes, shows and themes one session, then destroys it`
 - `resizes and re-themes a live session`
@@ -190,6 +192,7 @@ The lifecycle and the real raster path are proven in
 - `paints a fractional authored box at whole pixels`
 - `keeps a collapsed surface silent and paints it when it grows`
 - `repaints on a revision without rebuilding the session`
+- `finishes the old adapter's teardown before creating the next session`
 - `routes native focus into the adapter when the host is a tab stop`
 - `reports a typed failure without unmounting the host`
 

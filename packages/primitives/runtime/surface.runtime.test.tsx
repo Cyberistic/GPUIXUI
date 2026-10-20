@@ -6,9 +6,13 @@
  * theme change that leaves stale pixels, or an unmount that leaks the session.
  * It also proves the one raster path published `0.10.0` actually has: an
  * `<img>` host receiving a 2×2 RGBA frame through `setImagePixels` (plan `696`).
+ *
+ * A session swap has its own case: a new adapter must not create its session
+ * until the old one's `destroy` has finished, because both target the same host
+ * element (plan `699`).
  */
 
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -449,6 +453,50 @@ describe("Surface", () => {
       "resize:40x30",
       "paint",
     ]);
+  });
+
+  it("finishes the old adapter's teardown before creating the next session", async () => {
+    const runtime = await openWindow();
+    const calls: Array<string> = [];
+    const adapter = (name: string, destroyMs: number): SurfaceAdapter => ({
+      kind: name,
+      create: () => Effect.sync(() => calls.push(`${name}:create`)),
+      resize: () => Effect.sync(() => calls.push(`${name}:resize`)),
+      focus: () => Effect.void,
+      setVisible: () => Effect.void,
+      setTheme: () => Effect.void,
+      destroy: () =>
+        Effect.sleep(Duration.millis(destroyMs)).pipe(
+          Effect.andThen(Effect.sync(() => calls.push(`${name}:destroy`))),
+        ),
+    });
+    const view = (next: SurfaceAdapter) => (
+      <Frame>
+        <SurfacePrimitive
+          adapter={next}
+          width={40}
+          height={30}
+          label="Swap"
+          testId="raster"
+        />
+      </Frame>
+    );
+
+    runtime.render(view(adapter("first", 200)));
+    await awaitFrame(() => calls.includes("first:create"), "the first session");
+
+    runtime.render(view(adapter("second", 0)));
+    await awaitFrame(
+      () => calls.includes("first:destroy") && calls.includes("second:create"),
+      "the swapped session",
+      3000,
+    );
+
+    expect(calls.indexOf("first:destroy")).toBeLessThan(
+      calls.indexOf("second:create"),
+    );
+    expect(calls.filter((call) => call === "first:create")).toHaveLength(1);
+    expect(calls.filter((call) => call === "second:create")).toHaveLength(1);
   });
 
   it("reports a typed failure without unmounting the host", async () => {

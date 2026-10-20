@@ -17,6 +17,7 @@ import {
 } from "@gpuix/react";
 import { Effect } from "effect";
 import { focusRing } from "@gpuixui/tokens";
+import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
 import * as Option from "effect/Option";
 import {
@@ -135,11 +136,13 @@ export const renderSurface = ({
  * Mount order is `create → resize → setVisible(true) → setTheme`; unmount is
  * `setVisible(false) → destroy`. A later bounds change resizes, a theme-mode
  * change re-themes (a raster adapter repaints), and a new adapter destroys the
- * old session first. The authored size is normalised to whole, non-negative
- * logical pixels — the box the host paints and the bounds every adapter call
- * receives (plan `697`). The surface is presentational: a static surface exposes
- * one named image node; a `tabIndex` surface is a named group whose image is
- * decorative, and it has no interior keyboard contract.
+ * old session first — the next `create` waits for that `destroy` to finish, so
+ * two sessions never own the one host element at the same time. The authored
+ * size is normalised to whole, non-negative logical pixels — the box the host
+ * paints and the bounds every adapter call receives (plan `697`). The surface is
+ * presentational: a static surface exposes one named image node; a `tabIndex`
+ * surface is a named group whose image is decorative, and it has no interior
+ * keyboard contract.
  */
 export const Surface = ({
   adapter,
@@ -165,6 +168,16 @@ export const Surface = ({
   const appliedMode = useRef<Option.Option<string>>(Option.none());
   const appliedRevision = useRef(revision);
   const errorRef = useRef(onError);
+  /**
+   * The teardown gate of the session currently mounted.
+   *
+   * A new adapter must not start its session until the old one has released the
+   * one host element both of them target. The cleanup completes its own gate
+   * after `destroy`; the next mount waits for the gate it found and replaces it
+   * (plan `699`). A mount without a previous session sees `None` and starts at
+   * once, and an unmount with no successor simply completes its gate.
+   */
+  const gate = useRef<Option.Option<Deferred.Deferred<void>>>(Option.none());
 
   boundsRef.current = bounds;
   modeRef.current = theme.mode;
@@ -210,8 +223,18 @@ export const Surface = ({
         element.setImagePixels(nextWidth, nextHeight, pixels),
     };
 
+    const previous = gate.current;
+    const completed = Deferred.makeUnsafe<void>();
+    gate.current = Option.some(completed);
+
     live.current = false;
-    const session = adapter.create(host).pipe(
+    const session = Effect.suspend(() =>
+      Option.match(previous, {
+        onNone: () => Effect.void,
+        onSome: (pending) => Deferred.await(pending),
+      }),
+    ).pipe(
+      Effect.andThen(adapter.create(host)),
       Effect.andThen(Effect.suspend(() => adapter.resize(boundsRef.current))),
       Effect.andThen(adapter.setVisible(true)),
       Effect.andThen(Effect.suspend(() => adapter.setTheme(modeRef.current))),
@@ -240,6 +263,8 @@ export const Surface = ({
         adapter.setVisible(false).pipe(
           Effect.catch((error) => Effect.sync(() => report(error))),
           Effect.andThen(adapter.destroy()),
+          Effect.catch((error) => Effect.sync(() => report(error))),
+          Effect.ensuring(Deferred.succeed(completed, void 0)),
         ),
       );
     };
