@@ -48,7 +48,7 @@ side. `align="center"` is exact: the runtime's `center` is not used.
 | ------ | ------ |
 | `Escape` | closes, and returns focus to the trigger |
 | `Tab` | moves to the next control inside the panel; past the last one it closes, and focus continues with the app control after the trigger |
-| `Shift+Tab` | the same, backwards |
+| `Shift+Tab` | the same, backwards; stepping back over a control and then tabbing forward again continues the walk instead of closing the panel |
 | press outside | closes without moving focus (the press already gave it) |
 | press inside | does nothing |
 | click the trigger while open | closes it |
@@ -122,8 +122,9 @@ transform, so no scale is faked.
   the trigger in that path. Escape is the keyboard path that restores it.
 - The renderer has no way to list an element's tab stops, so the panel's first
   stop is the one measured on open. Content that removes or adds tab stops while
-  open cannot trap the user — the visited stops bound the cycle — but a stop
-  removed mid-cycle can cost one extra Tab before the panel closes.
+  open cannot trap the user — the stops walked in the current direction bound the
+  cycle — but a stop removed mid-cycle can cost one extra Tab before the panel
+  closes. Turning round starts a new walk, so a step back never ends it early.
 - The animated panel wrapper carries `<testId>-surface`, while the panel keeps
   `<testId>`. The wrapper is the border box and the reported content size is its
   padding box, so the two differ by the border width (plan 540, plan 597).
@@ -134,7 +135,7 @@ transform, so no scale is faked.
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (22 tests):
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (24 tests):
 opens below the trigger by measured bounds, honours `side="right"`, centres a
 requested panel on its trigger, opens above a trigger near the window bottom
 instead of covering it, Escape closing and restoring focus, an outside press
@@ -144,7 +145,10 @@ open, Tab closing a control-less panel while handing focus to the next app
 control, opening focus on the first control, Tab walking the panel's controls
 (two presses, panel still open), Tab past the last control closing and continuing
 after the trigger, Shift+Tab walking backwards and leaving before the first
-control, closing rather than trapping when the first tab stop is removed, a
+control, tabbing forward again after a step back walking to the last control and
+leaving at the end (not closing on the step back), turning round and leaving
+before the first control, closing rather than trapping when the first tab stop is
+removed, a
 controlled popover reporting `onOpenChange` while staying as the consumer says
 (including an inline consumer that keeps it closed), both themes, a caller
 trigger `ref`, the 100 ms fade + side slide, the panel remaining through its

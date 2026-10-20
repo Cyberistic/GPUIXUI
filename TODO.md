@@ -207,6 +207,16 @@ retired once both branches are one
       plan-540 binding defects and no new failure. `check`/`lint`/`test` exit 0
       with unit 485 in 46 files; docs, example, `COMPONENTS.md`,
       `docs/component-api.md` §8, `PLAN.md` D30 and the inventory synced
+    - [x] Popover: turning round inside the panel does not end the Tab walk —
+      plan 718. Measured: open → `Tab` → `Shift+Tab` → `Tab` closed the panel and
+      left focus on the app control after the trigger, so the last control was
+      unreachable once the user stepped back; the walk was two “ever visited”
+      lists, and returning to a stop walked before the turn read as a wrap. One
+      direction-aware walk replaces both, so a turn starts a new walk while a
+      vanished first stop still ends it. 1 new failing case + 1 backward pin
+      (Popover 22 → 24; 21 pass on this host with the same three recorded
+      plan-540 placement failures), three mutation proofs; docs, `COMPONENTS.md`,
+      `PLAN.md` D30 and the inventory synced (owner: components)
     - [x] List: focus continuity across a row removal — plan 708; two recorded
       "removed-host" cases were red (`focused = None`) and a row removed while a
       `Button` in its `trailing` slot held focus dropped focus entirely, because
