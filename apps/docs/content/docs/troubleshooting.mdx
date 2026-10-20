@@ -109,9 +109,12 @@ The full rule, the dismiss stack and the real source are under
 layer yourself, prefer `align="start"` and an explicit side near a window edge:
 `fit="snap"` clamps without flipping and `align="center"` is short by half the
 panel on the pinned runtime. GPUixUI's own overlays compensate; the measured
-rows are on [GPUix capabilities](/docs/capabilities). Moving the surface later
-in the tree fixes "underneath"; moving it out of the scroll parent fixes
-"clipped".
+rows are on [GPUix capabilities](/docs/capabilities).
+
+Moving the surface later in the tree fixes "underneath". An ordinary child of a
+scroll or overflow container can be clipped by it, and there is no portal to
+escape to: mount app-level surfaces at the root and let the library's anchored
+overlays own the window coordinates.
 
 ## The platform switch only changes the type
 
