@@ -36,6 +36,14 @@ import { PlatformStyles } from "./platform-styles";
 import { TokenColors } from "./token-colors";
 import { TokenScales } from "./token-scales";
 import { ValueIndex } from "./value-index";
+import {
+  LayerShellTable,
+  PathPromptTable,
+  WindowAbsences,
+  WindowInsetsTable,
+  WindowMethodsTable,
+  WindowOptionsTable,
+} from "./window-tables";
 import { PlatformTypes, TypeScale } from "./type-scale";
 import {
   PortingComponents,
@@ -76,6 +84,12 @@ export function getMDXComponents(components?: MDXComponents) {
     TokenColors,
     ContrastColors,
     TypeScale,
+    WindowOptionsTable,
+    WindowMethodsTable,
+    WindowInsetsTable,
+    LayerShellTable,
+    PathPromptTable,
+    WindowAbsences,
     PlatformTypes,
     TokenScales,
     ValueIndex,

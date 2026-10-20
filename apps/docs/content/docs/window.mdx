@@ -1,0 +1,192 @@
+---
+title: Application window
+description: Open and configure the native window — size, title, traffic lights, safe-area and IME insets, fullscreen, the Wayland layer shell, the frame overlay and the native file picker.
+---
+
+The library paints inside one native window. `@gpuix/react` opens it with
+`render()`, `@gpuix/native` owns its `WindowOptions`, and everything on this
+page is the host application's side of that boundary: none of it is a component,
+a token or a preview.
+
+## Opening the window
+
+`render()` takes the React tree and the window options in one call:
+
+```tsx title="main.tsx"
+import { render } from "@gpuix/react";
+import { App } from "./app";
+
+render(<App />, {
+  title: "Notes",
+  width: 1100,
+  height: 720,
+  minWidth: 720,
+  minHeight: 480,
+});
+```
+
+That call also starts the frame loop; the process exits when the last window
+closes. It is called **once per process**: a second `render()` throws, and the
+playground's entry records the same rule. A custom root — a different renderer,
+or window-level error handling — uses `createRoot(renderer, handlers)` from the
+same package instead.
+
+## Options
+
+<WindowOptionsTable />
+
+Sizes are logical pixels. Omitted geometry is the runtime's choice, not a
+documented default. The window is never positioned from JavaScript.
+
+## Window methods
+
+The renderer exposes the window operations a custom title bar or window control
+needs. Read it with `useGpuixRequired()`; the methods are optional on the
+renderer type, so an application calls them optionally.
+
+```tsx
+import { useGpuixRequired } from "@gpuix/react";
+import { Button } from "@gpuixui/primitives";
+
+export function WindowActions() {
+  const renderer = useGpuixRequired();
+
+  return (
+    <Button onClick={() => renderer.toggleFullscreen?.()}>Fullscreen</Button>
+  );
+}
+```
+
+<WindowMethodsTable />
+
+`getWindowSize()` is the size layout sees: the paintable content, excluding the
+platform title bar. `setWindowTitle()` changes the OS title after the window is
+open; it is not in-app text.
+
+## Size and insets
+
+`useWindowSize()` and `useWindowInsets()` poll the renderer every 100 ms by
+default. Pass `{ intervalMs: false }` for one read, or a number to change the
+sampling interval. Insets matter on a notched display and when a soft keyboard
+is open.
+
+```tsx
+import type { ReactNode } from "react";
+import { useWindowInsets } from "@gpuix/react";
+import { Box } from "@gpuixui/primitives";
+
+export function Shell({ children }: { readonly children: ReactNode }) {
+  const insets = useWindowInsets();
+
+  return (
+    <Box style={{ paddingBottom: insets.effective.bottom }}>{children}</Box>
+  );
+}
+```
+
+<WindowInsetsTable />
+
+`useWindowInsets()` returns the renderer's three regions plus the observer's
+three keyboard numbers; the table above is that full shape.
+
+## Custom window chrome
+
+A desktop application that draws its own title bar sets
+`titlebarTransparent: true` and positions its chrome around the native traffic
+lights with `trafficLightX` / `trafficLightY`. On macOS the traffic lights
+themselves stay native — there is no API to draw or hide them. `windowBackground`
+chooses between an opaque, a transparent and a blurred window behind the tree;
+`transparent: true` is the plain alpha form.
+
+The [App shell pattern](/docs/patterns/app-shell) composes the in-content frame:
+a title bar, a navigation rail, a scrolling content region and a status bar. It
+is a composition of layout primitives, not a window API — this page is the
+window, that page is what to paint inside it.
+
+## Wayland layer shell
+
+On Wayland, `layerShell` opens a compositor-anchored surface instead of a
+floating window: a top bar, a dock, a notification overlay or a wallpaper. The
+window has no native titlebar in that mode.
+
+```tsx
+// `StatusBar` is your application's root; any React tree works here.
+render(<StatusBar />, {
+  appId: "dev.gpuixui.bar",
+  layerShell: {
+    layer: "top",
+    anchor: ["top", "left", "right"],
+    exclusiveZone: 32,
+    keyboardInteractivity: "none",
+  },
+});
+```
+
+Set `appId`: a compositor matches its window rules by it. The surface namespace
+cannot change after creation. Other platforms ignore the option.
+
+<LayerShellTable />
+
+## Native file picker
+
+`promptForPaths()` opens the operating system's picker — the same dialog the
+platform uses for any application — and resolves `null` when the user cancels.
+It is not a component and has no browser equivalent.
+
+```tsx
+import { useGpuixRequired } from "@gpuix/react";
+
+export function usePathPicker() {
+  const renderer = useGpuixRequired();
+
+  return async (): Promise<string | null> => {
+    const paths = await renderer.promptForPaths?.({ prompt: "Open note" });
+    return paths?.[0] ?? null;
+  };
+}
+```
+
+<PathPromptTable />
+
+## The frame overlay
+
+The runtime ships its own frame overlay, painted into the scene after layout. It
+is the tool for "is this frame slow?", and it is not a browser element
+inspector.
+
+```tsx
+import { useGpuixRequired } from "@gpuix/react";
+
+export function useFrameOverlay() {
+  const renderer = useGpuixRequired();
+
+  return (mode: "hidden" | "minimal" | "full") =>
+    renderer.setDebugFrameOverlay?.(mode);
+}
+```
+
+`cycleDebugFrameOverlay()` steps hidden → minimal → full → hidden.
+`getDebugFrameOverlayStats()` returns the same numbers the overlay paints —
+current, p90, p99, max, frames and samples — and
+`resetDebugFrameOverlayStats()` clears the last 1 000 draw samples without
+resetting the frame count. The same overlay can be requested at mount time with
+`render(node, { debugFrameOverlay: "minimal" })`.
+
+[Performance](/docs/performance) records which measurements exist; the overlay
+is how a consumer takes their own.
+
+## What the window does not provide
+
+<WindowAbsences />
+
+A host application that needs a tray icon or an application menu implements it
+outside this library, in its own native code. The library's job starts at the
+window's content edge.
+
+## Related
+
+- [App shell](/docs/patterns/app-shell) — the frame this window contains.
+- [Styling](/docs/styling) — the `style` surface, and the CSS that is not there.
+- [Performance](/docs/performance) — the measured probes, and what is not measured.
+- [Installation](/docs/installation) — the pinned `@gpuix/react` and `@gpuix/native`.
+- [Dark mode](/docs/dark-mode) — the mode the application resolves.

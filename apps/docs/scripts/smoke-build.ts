@@ -1402,6 +1402,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the ref contract, which returned nothing before plan 624",
     },
+    {
+      query: "traffic lights",
+      expected: "/docs/window",
+      first: true,
+      what: "the window chrome vocabulary, which reached the Values API before plan 625",
+    },
+    {
+      query: "fullscreen",
+      expected: "/docs/window",
+      first: true,
+      what: "a window method that returned nothing before plan 625",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

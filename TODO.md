@@ -471,7 +471,23 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 191/191
+`[x]` `[██████████]` 192/192
+
+`[x]` **The application window has a page (plan 625)** — the library documented
+      everything inside one GPUix window and nothing about the window itself:
+      measured 2026-10-20, `fullscreen`, `minimize`, `maximize`, `wayland`,
+      `gnome`, `kde` and `devtools` returned **nothing**, `traffic lights`
+      reached the Values API, `system tray` Dark mode and `file dialog` Dialogs.
+      `/docs/window` now renders all 17 `WindowOptions` fields in five families,
+      the 7 Wayland layer-shell fields, the 6 fields `useWindowInsets()` returns,
+      the 4 native path-picker fields, the 14 `GpuixRenderer` window methods and
+      the five real absences from `src/lib/window-surface.ts`;
+      `window-surface.test.ts` parses the installed declarations in both
+      directions, and `window-page.test.ts` guards the six tables, the sections
+      and 12 owned queries + 4 regressions; `smoke:build` (108 pages) asserts
+      `traffic lights` and `fullscreen` against the production index. 139 files /
+      1 489 docs tests, root gates green; five proofs and three corrections in
+      plan 625 §9.
 
 `[x]` **Refs and element handles have an answer (plan 624)** — every host
       part's generated props table carried a bare `ref?` row with no owner

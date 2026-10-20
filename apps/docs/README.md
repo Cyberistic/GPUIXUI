@@ -198,6 +198,17 @@ both directions and fails by name when a field is unclassified, a family anchor
 disappears, a concept is claimed absent after the runtime gained it, or the table
 stops resolving.
 
+The window is the other half of a desktop app and has its own page, `/docs/window`
+(plan 625): `render()`'s options, the `GpuixRenderer` window methods, the
+safe-area and IME insets, the Wayland layer shell, the native path picker, the
+debug frame overlay and the five window features the runtime does not provide.
+Every table is rendered from `src/lib/window-surface.ts`, and
+`src/lib/window-surface.test.ts` parses the installed declarations in both
+directions — a runtime option the page forgets, or an absence the runtime has
+since filled, fails by name. `src/window-page.test.ts` keeps the six table
+blocks, the sections and the search vocabulary (twelve owned queries, four
+regressions) honest.
+
 A misspelling has a tier of its own (plans 607, 608). The lexical index tolerates
 most typos by returning *some* page, so `botton` returned Toggle and `theem` the
 Values API, while `acordian` and `dropdwon` returned nothing at all.

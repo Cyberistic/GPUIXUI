@@ -78,6 +78,19 @@
  * `element handle`, `imperative handle`, `scroll into view` and the instance
  * phrases name the section that explains the element a ref receives. `reference`
  * keeps the API reference page, because an alias matches the whole query only.
+ *
+ * Plan 625 adds the window vocabulary: the chrome words (`traffic lights`,
+ * `traffic light`, `window controls`, `native title bar`, `title bar
+ * transparent`), the window actions (`fullscreen`, `minimize`, `maximize`,
+ * `set window title`), the Wayland surface (`wayland`, `layer shell`), geometry
+ * and insets (`window insets`, `safe area`, `keyboard inset`, `ime`), the
+ * absences a reader asks about (`system tray`, `tray icon`, `native menu`,
+ * `application menu`) and the runtime tools (`debug frame overlay`, `devtools`,
+ * `file dialog`, `file picker`). `title bar`, `titlebar` and `window chrome`
+ * stay on the App shell pattern, which owns the in-content frame; `window size`
+ * and `windows` stay on Styling and Theming, where they mean responsive sizing
+ * and the platform style; `menu bar` stays Navigation menu's component alias;
+ * `dialog` and `menu` keep their component pages.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -475,6 +488,9 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "macos theme",
       "windows style",
       "windows theme",
+      "windows",
+      "gnome",
+      "kde",
       "linux style",
       "linux theme",
     ],
@@ -567,6 +583,43 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "network access",
       "tracking cookies",
       "browser tracking",
+    ],
+  ],
+  [
+    "/docs/window",
+    [
+      "traffic light",
+      "traffic lights",
+      "window controls",
+      "native title bar",
+      "title bar transparent",
+      "fullscreen",
+      "full screen",
+      "minimize",
+      "minimize window",
+      "maximize",
+      "maximize window",
+      "set window title",
+      "window title",
+      "wayland",
+      "layer shell",
+      "safe area",
+      "window insets",
+      "keyboard inset",
+      "ime",
+      "system tray",
+      "tray icon",
+      "native menu",
+      "application menu",
+      "transparent window",
+      "blurred background",
+      "debug frame overlay",
+      "frame overlay",
+      "devtools",
+      "file dialog",
+      "file picker",
+      "path picker",
+      "app id",
     ],
   ],
 ]);

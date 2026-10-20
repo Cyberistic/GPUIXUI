@@ -74,7 +74,10 @@ states the absences instead:
 
 - **Frame time.** No frame rate, frame budget or frame-time percentile has been
   recorded. The probes assert painted content and interaction, never a duration,
-  so nothing on this site claims a specific frame rate.
+  so nothing on this site claims a specific frame rate. The runtime ships a
+  [debug frame overlay](/docs/window#the-frame-overlay) that paints frame times
+  and reports p90, p99 and max draw samples; it is how a consumer takes their
+  own measurement, and this site has not recorded one.
 - **Memory.** The retained tree holds every row by design; no memory
   measurement is recorded for any probe.
 - **Startup and download cost.** The opt-in live surface on this site downloads
