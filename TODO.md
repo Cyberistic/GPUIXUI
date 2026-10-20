@@ -54,7 +54,23 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 372/447
+`[x]` `[████████░░]` 373/448
+
+`[x]` Own the light `warning` fill's fill-only figure — the `1.78:1` against the
+canvas that justifies "`warning` and `info` carry no mark pair" is derived by
+`docs.test.ts` in exactly two sentences (the catalogue's §Status tones
+paragraph and the design system's §3), while twelve further passages restated the
+same number with no owner: the catalogue's two other statements, the design
+system's mark-floor paragraph, the package README, the ledger and four public
+source JSDoc blocks a consumer reads. Replacing all twelve with `1.79` left 220
+files / 7130 tests green, so a palette edit could pass the two guarded cases and
+leave twelve documents arguing from a number the package no longer produces;
+`warning-fill-claims.test.ts` derives the figure from the shipped light palette
+and the `mark` floor from `contrastFloors`, holds all fourteen passages across
+the seven files and the count each carries, proves the reader separates the
+fill's claim from the high-contrast soft surface's mixture, and shows the
+premise can fail on a planted palette; no colour, pair, floor, metric or shipped
+theme moves (plan 818)
 
 `[x]` Own the state table's floor figures and the inactive floor — §8's seven
 state rows (the surface floor on `hover`, `loading`, `unchecked` and `status`,

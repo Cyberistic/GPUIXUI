@@ -4325,6 +4325,19 @@ paints — the toggle's `accentHover`/`accentActive` pointer states were missing
 while the Verification paragraph above names all eight. No colour, pair, floor or
 metric moved (plan `815`).
 
+`packages/tokens/src/warning-fill-claims.test.ts` holds the figure the whole
+solid-status rationale rests on: the light identity `warning` fill's contrast
+with the canvas, which sits under the `mark` floor and is why `warning` and
+`info` carry no mark pair and a status label, icon or dot reads `xText`.
+`docs.test.ts` derives the sentences that argue it; every other passage that
+mentions it — this page, the design system, the package README, the ledger and
+four source modules whose JSDoc a consumer reads — was prose, so it could quote a
+number the palette no longer produced while the suite stayed green. The suite
+derives the figure from the shipped light palette and the floor from
+`contrastFloors`, reads every passage and the number each file carries, and
+separates this claim from the high-contrast `warning` *surface*, whose edge
+mixture is a different role (plan `818`).
+
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
