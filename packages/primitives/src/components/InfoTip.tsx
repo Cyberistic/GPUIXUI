@@ -11,6 +11,10 @@
  * `content` is a string because a string tip is also the trigger's
  * `aria-description`; a node tip would be painted but not announced, so the
  * type refuses the misleading case.
+ *
+ * The trigger is the one element this component draws, so it carries the
+ * package's caller-`style` seam (`StateStyle<InfoTipState>`); the tip's surface
+ * belongs to `Tooltip`.
  */
 
 import { type ReactElement } from "react";
@@ -22,11 +26,19 @@ import type { PrimitiveTheme } from "../core/theme.js";
 import {
   ariaNameOr,
   mergeStyle,
+  resolvePartStyle,
   useFocus,
   type FocusState,
+  type StateStyle,
 } from "./internal.js";
 import { Tooltip } from "./Tooltip.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state an `InfoTip` style callback receives. */
+export interface InfoTipState {
+  /** Whether the trigger itself holds native focus. */
+  readonly focused: boolean;
+}
 
 export interface InfoTipProps {
   /** The explanation. Announced as the trigger's description. */
@@ -45,6 +57,12 @@ export interface InfoTipProps {
   readonly testId?: string;
   /** The tip's locator; `testId` names the trigger. */
   readonly tipTestId?: string;
+  /**
+   * An object, or a callback over the trigger's public state. Merged last on
+   * the trigger — the element this component draws. The tip's own surface is
+   * `Tooltip`'s theme paint.
+   */
+  readonly style?: StateStyle<InfoTipState>;
 }
 
 /** The trigger's box: icon-sized chrome, no colour of its own. */
@@ -57,7 +75,15 @@ export const infoTipTriggerStyle = (theme: PrimitiveTheme): StyleDesc => ({
 
 /** The element tree `InfoTip` renders. Pure in its arguments. */
 export const renderInfoTip = (
-  { content, label, icon = "info", side, testId, tipTestId }: InfoTipProps,
+  {
+    content,
+    label,
+    icon = "info",
+    side,
+    testId,
+    tipTestId,
+    style,
+  }: InfoTipProps,
   theme: PrimitiveTheme,
   focus: FocusState = { focused: false, onFocus: () => {}, onBlur: () => {} },
 ): ReactElement => (
@@ -70,9 +96,13 @@ export const renderInfoTip = (
       ref={focus.ref}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(
-        infoTipTriggerStyle(theme),
-        focus.focused ? focusRing(theme) : undefined,
+      style={resolvePartStyle(
+        mergeStyle(
+          infoTipTriggerStyle(theme),
+          focus.focused ? focusRing(theme) : undefined,
+        ),
+        style,
+        { focused: focus.focused },
       )}
     >
       <Icon

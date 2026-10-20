@@ -96,7 +96,7 @@ const PARTS: ReadonlyArray<Part> = [
     states: ["SelectState", "SelectTriggerState"],
   },
   { name: "Tooltip", page: "tooltip", states: [] },
-  { name: "InfoTip", page: "info-tip", states: [] },
+  { name: "InfoTip", page: "info-tip", states: ["InfoTipState"] },
 ];
 
 /** Public PascalCase exports that are not components (plan 074's own allowlist). */

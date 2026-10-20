@@ -39,6 +39,7 @@ The icon itself is decorative, so the trigger is a single accessibility node.
 | `side` | `FloatingSide` | `top` | preferred side; flips when it does not fit (plan 067) |
 | `testId` | `string` | — | the **trigger's** locator |
 | `tipTestId` | `string` | — | the **tip's** locator |
+| `style` | `StateStyle<InfoTipState>` | — | merged last on the trigger; an object or a state callback |
 
 `content` is a string on purpose: a non-string tip is painted but has no text to
 announce (plan 071), and an info tip is prose. Pass an explicit `tipTestId` when
@@ -79,10 +80,39 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
 `colors.mutedForeground`; the focus ring is `focusRing(theme)`. The tip is
 `Tooltip`'s popover surface.
 
+## Style by state
+
+`style` is the package's one caller seam, merged **last** on the trigger — the
+element this component draws. The state is the trigger's own focus, the same
+value the ring is painted from:
+
+```tsx
+<InfoTip
+  content="Booked revenue, net of refunds."
+  label="Revenue definition"
+  // the ring is part of the base, so a caller can keep it and add layout
+  style={(state) => ({ marginLeft: 4, opacity: state.focused ? 0.9 : 1 })}
+/>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `focused` | `boolean` | the trigger holds native focus |
+
+`InfoTipState` is exported. An object style behaves exactly as before; the
+callback's result merges after the component's own chrome and ring, so it wins
+per property (returning `{}` keeps the default look). Because the merge is last,
+a callback that supplies `boxShadow` replaces the focus ring — the same trade
+every other part makes.
+
 ## Limitations
 
 - **Focus is painted but not "focus-visible"**: GPUix 0.10.0 has no such state,
   so a mouse press shows the same ring as `Tab`.
+- **The tip's own surface is not caller-styled.** `style` reaches the trigger;
+  the tip is `Tooltip`'s popover surface, and `Tooltip.style` is the anchoring
+  root rather than the tip. A caller who needs a different tooltip surface owns a
+  `Tooltip` composition, not an `InfoTip`.
 - **No click-to-open.** The published tooltip opens on hover and focus; a
   persistent popover is `Popover`/`Dialog` work in `@gpuixui/components`.
 - A long `content` **wraps** inside the room the resolved side and alignment
@@ -100,7 +130,10 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
 
 - `src/components/InfoTip.test.tsx` — the trigger is a named `img` tab stop, the
   icon is `presentation`, and the ring paints only while focused; a blank label
-  takes the "More information" fallback (plan `573`).
+  takes the "More information" fallback (plan `573`); a caller's `style` lands on
+  the trigger without changing the role, name or tab stop, the callback receives
+  both focus states, and the ring stays in the base unless the caller replaces
+  it (plan `695`).
 - `runtime/info-tip.runtime.test.tsx` — hover opens the tip; `focusNext` lands on
   the trigger and opens it (the component drives the controlled `open` from its
   tracker state, plan `595`), the `Image` node carries the description and the
@@ -109,7 +142,10 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
   paints more than one line, while a short one paints exactly one (plan `395`);
   a tip that is open while its trigger moves to the top edge flips below the
   trigger on the next follow sample (plan `649`); blank content paints no tip
-  and publishes no description (plan `573`).
+  and publishes no description (plan `573`); the tracked focus reaches a caller's
+  style callback (`opacity 1 → 0.5 → 1`) and a caller's `marginLeft: 12` moves
+  the painted trigger by exactly 12 px while the `Image` keeps its name (plan
+  `695`).
 - `runtime/blank-name.runtime.test.tsx` — a blank `InfoTip` label announces
   "More information" and still takes focus (plan `573`).
 - `src/docs-tooltip-wrap.test.ts` — the resolver's capped form is `normal` and

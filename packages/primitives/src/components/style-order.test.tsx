@@ -11,8 +11,9 @@
  * element, so the next re-base cannot hide in one component.
  *
  * Out of scope because they take no `style` prop of their own: `IconButton`
- * (forwards to `Button`), `InfoTip` and `Tooltip` (style their content from the
- * theme).
+ * (forwards to `Button`) and `Tooltip` (its `style` is the anchoring root, and
+ * its tip is the theme's surface). `InfoTip` used to be listed here too; plan
+ * `695` gave its trigger the seam this guard expects.
  */
 
 import type { ReactElement } from "react";
@@ -32,6 +33,7 @@ import {
   type CheckboxGroupHandlers,
 } from "./CheckboxGroup.js";
 import { renderInput } from "./Input.js";
+import { renderInfoTip } from "./InfoTip.js";
 import { renderLabel } from "./Label.js";
 import { renderMeter } from "./Meter.js";
 import { renderNumberField, type NumberFieldHandlers } from "./NumberField.js";
@@ -361,6 +363,15 @@ const GUARDS: ReadonlyArray<Guard> = [
   {
     name: "Label",
     render: (style) => renderLabel({ style, children: "Email" }),
+  },
+  {
+    name: "InfoTip",
+    render: (style) =>
+      renderInfoTip(
+        { content: "Hint", label: "More information", style },
+        testTheme,
+        idle,
+      ),
   },
 ];
 

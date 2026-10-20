@@ -262,3 +262,72 @@ it("follows its trigger when the trigger moves while the tip is open", async () 
   const tip = boundsOf(runtime, "tip");
   expect(tip.y).toBeGreaterThanOrEqual(target.y + target.height - 1);
 });
+
+it("paints the trigger's tracked focus through a caller's style", async () => {
+  // Plan 695: `focused` is the trigger's one public state. The ring already
+  // used the tracked focus (plans 583, 590); this proves the same value reaches
+  // the caller's callback and its paint on the release-tag build.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row" gap="sm">
+        <InfoTip
+          content={CONTENT}
+          label="Revenue definition"
+          testId="trigger"
+          style={(state) => ({ opacity: state.focused ? 0.5 : 1 })}
+        />
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>,
+  );
+  const opacity = () =>
+    Option.flatMap(runtime.element("trigger"), (element) =>
+      Option.fromNullishOr(element.style.opacity),
+    );
+  expect(opacity()).toStrictEqual(Option.some(1));
+  runtime.focusNext();
+  runtime.flush();
+  await awaitFrame(
+    () => Option.exists(opacity(), (value) => value === 0.5),
+    "the tracked focus reaches the caller's style callback",
+  );
+  runtime.focusNext();
+  runtime.flush();
+  await awaitFrame(
+    () => Option.exists(opacity(), (value) => value === 1),
+    "leaving focus restores the unfocused branch",
+  );
+});
+
+it("moves the trigger to the box a caller's style asks for", async () => {
+  // The plan-357 use case on the one element InfoTip draws: nudge it onto a
+  // baseline without a `Box` wrapper. The painted box moves by the caller's
+  // margin, and the role/name stay the component's.
+  const runtime = await openWindow();
+  const view = (nudge: boolean) => (
+    <Surface>
+      <InfoTip
+        content={CONTENT}
+        label="Revenue definition"
+        testId="trigger"
+        style={nudge ? { marginLeft: 12 } : undefined}
+      />
+    </Surface>
+  );
+  runtime.render(view(false));
+  runtime.flush();
+  const plain = boundsOf(runtime, "trigger");
+  runtime.render(view(true));
+  runtime.flush();
+  const nudged = boundsOf(runtime, "trigger");
+  expect(nudged.x - plain.x).toBe(12);
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), {
+        role: "Image",
+        label: "Revenue definition",
+      }),
+    ),
+  ).toBe(true);
+});

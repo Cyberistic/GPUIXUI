@@ -10,7 +10,11 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import { renderInfoTip } from "./InfoTip.js";
+import {
+  renderInfoTip,
+  type InfoTipProps,
+  type InfoTipState,
+} from "./InfoTip.js";
 import {
   elementChildren,
   elementProp,
@@ -20,9 +24,9 @@ import {
   hostTag,
 } from "./testing/element.js";
 
-const triggerOf = (focused = false) => {
+const triggerOf = (focused = false, style?: InfoTipProps["style"]) => {
   const tree = renderInfoTip(
-    { content: "Net of refunds.", label: "Revenue definition" },
+    { content: "Net of refunds.", label: "Revenue definition", style },
     testTheme,
     { focused, onFocus: () => {}, onBlur: () => {} },
   );
@@ -85,5 +89,41 @@ describe("InfoTip", () => {
     expect(hostStyle(triggerOf(false), "boxShadow")).toStrictEqual(
       Option.none(),
     );
+  });
+
+  it("merges a caller's style last on the trigger", () => {
+    // Plan 695: `InfoTip` was the one interactive part with no `style` seam, so
+    // an icon beside a heading could not be nudged onto the baseline without a
+    // `Box` wrapper. The caller's property lands on the trigger, and the role,
+    // name and tab stop stay the component's.
+    const trigger = triggerOf(false, { marginLeft: 12 });
+    expect(expectSome(hostStyle(trigger, "marginLeft"))).toBe(12);
+    expect(expectSome(hostProp(trigger, "role"))).toBe("img");
+    expect(expectSome(hostProp(trigger, "aria-label"))).toBe(
+      "Revenue definition",
+    );
+    expect(expectSome(hostProp(trigger, "tabIndex"))).toBe(0);
+  });
+
+  it("hands the callback the trigger's focus state and wins over the base", () => {
+    const seen: Array<boolean> = [];
+    const style = (state: InfoTipState) => {
+      seen.push(state.focused);
+      return { opacity: state.focused ? 0.5 : 1 };
+    };
+    const idle = triggerOf(false, style);
+    const active = triggerOf(true, style);
+    expect(seen).toStrictEqual([false, true]);
+    expect(expectSome(hostStyle(idle, "opacity"))).toBe(1);
+    expect(expectSome(hostStyle(active, "opacity"))).toBe(0.5);
+  });
+
+  it("keeps the ring in the base unless the caller replaces it", () => {
+    expect(
+      Option.isSome(hostStyle(triggerOf(true, { marginLeft: 4 }), "boxShadow")),
+    ).toBe(true);
+    expect(
+      hostStyle(triggerOf(true, { boxShadow: undefined }), "boxShadow"),
+    ).toStrictEqual(Option.none());
   });
 });

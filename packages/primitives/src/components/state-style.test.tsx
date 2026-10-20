@@ -28,6 +28,7 @@ import {
 } from "./CheckboxGroup.js";
 import { renderCheckbox, type CheckboxState } from "./Checkbox.js";
 import { fieldChrome, type FieldState } from "./Input.js";
+import { renderInfoTip, type InfoTipState } from "./InfoTip.js";
 import { renderLabel, type LabelState } from "./Label.js";
 import { renderNumberField, type NumberFieldHandlers } from "./NumberField.js";
 import {
@@ -112,6 +113,10 @@ const recorder = <State,>(): {
 /** The one state a single render produced. */
 const lastState = <State,>(seen: ReadonlyArray<State>): State =>
   seen[0] ?? expect.fail("the style callback was never called");
+
+/** The element a composed component renders around its own part. */
+const firstChild = (element: ReactElement): ReactElement =>
+  expectSome(Option.fromNullishOr(elementChildren(element)[0]));
 
 const background = (element: ReactElement): string =>
   expectSome(hostStyleString(element, "backgroundColor"));
@@ -225,6 +230,27 @@ describe("Switch", () => {
       invalid: true,
     });
     expect(background(element)).toBe(PAINT);
+  });
+});
+
+describe("InfoTip", () => {
+  it("hands the callback the trigger's focus state", () => {
+    // Plan 695: the last interactive part without a `style` seam. `focused` is
+    // the only state the trigger has, and it already painted the ring from it.
+    const record = recorder<InfoTipState>();
+    const idleTree = renderInfoTip(
+      { content: "Hint", label: "More information", style: record.style },
+      testTheme,
+      idle,
+    );
+    const focusedTree = renderInfoTip(
+      { content: "Hint", label: "More information", style: record.style },
+      testTheme,
+      focused,
+    );
+    expect(record.seen).toStrictEqual([{ focused: false }, { focused: true }]);
+    expect(background(firstChild(idleTree))).toBe(PAINT);
+    expect(background(firstChild(focusedTree))).toBe(PAINT);
   });
 });
 

@@ -96,8 +96,8 @@ wins (`src/components/style-order.test.tsx`, plan `097`). State types are export
 (`ButtonState`, `ToggleState`, `CheckboxState`, `SwitchState`, `FieldState`,
 `CheckboxGroupState`, `RadioGroupState`, `ToggleGroupState`, `RatingState`,
 `OTPFieldState`, `SliderState`, `RangeSliderState`, `LabelState`,
-`ScrollAreaState`, `SelectState`). Group and root `style` reports the state the
-container owns.
+`InfoTipState`, `ScrollAreaState`, `SelectState`). Group and root `style`
+reports the state the container owns.
 
 Parts built from data take a second, per-item prop with the same contract:
 `CheckboxGroup.rowStyle` (`CheckboxRowState`), `RadioGroup.optionStyle`
