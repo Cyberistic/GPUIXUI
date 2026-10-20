@@ -259,7 +259,9 @@ filters a local array in `onQueryChange`, which is where a request would go.
 | outside press | closes without stealing focus back |
 
 The popup closes one layer per event: inside a dialog, the first Escape or
-outside press closes the popup and leaves the dialog open.
+outside press closes the popup and leaves the dialog open. That also holds for a
+picker mounted open together with the dialog, because layer order follows the
+nesting rather than React's effect order (plan 732).
 
 The search input keeps focus and paints the token focus ring while it holds it
 (plan 523); the highlighted row is visual. The trigger paints the same token
@@ -350,7 +352,7 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (62 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (63 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), `defaultOpen` with its one empty-query report, a disabled combobox
 staying hidden, unfocused and out of the tab order even when open or
@@ -389,7 +391,8 @@ keeps a later group from jumping an earlier one, a heading disappearing with its
 last match, grouped rows selecting by value, and an ungrouped create row, plus
 the scroll contract: 30 options keep the highlighted row inside the popup after
 24 arrow presses while the search field stays fixed, and the list returns to the
-top when the highlight walks back up.
+top when the highlight walks back up. A picker mounted open together with its
+dialog closes alone and leaves the dialog open (plan 732).
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf`, the run rule
 (`groupOfOption`, `optionRuns`, `rowRuns`, in-run ranking and disappearing

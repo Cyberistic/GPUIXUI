@@ -1083,6 +1083,17 @@ retired once both branches are one
       to the enclosing surface; 3 pure + 3 confirmation + 1 drawer cases, all
       four native cases failing at `HEAD`; docs, `docs/component-api.md`,
       `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced (owner: components)
+    - [x] Every overlay's layer order follows the nesting — plan 732; measured
+      2026-10-20: a `Popover defaultOpen` or a `DropdownMenu defaultOpen`
+      mounted inside an open dialog pushed its layer before the dialog's, so one
+      `Escape` closed **both** and left focus on nothing. The plan-730 host now
+      generalises to every overlay root (`Popover`, `PreviewCard`,
+      `NavigationMenu`, `Combobox`, both menus, `NotificationCentre`, submenus):
+      each pushes at its nesting depth and publishes one level deeper to its
+      children, with open order only breaking ties between siblings; 3 behaviour
+      cases (Popover 27, Dropdown 63, Combobox 63), all three failing at `HEAD`,
+      two mutation proofs; docs, `docs/component-api.md`, `COMPONENTS.md`,
+      `PLAN.md` D30 and the inventory synced (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

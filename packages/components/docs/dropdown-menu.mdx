@@ -127,7 +127,8 @@ timer and no provider.
 Pressing outside, pressing the open trigger, `Escape` and choosing a row all
 close the menu. Menus are layers in the same dismiss stack as `Dialog` and
 `Popover`, so a menu opened inside a dialog closes first and leaves the dialog
-open.
+open — including a menu mounted open together with the dialog, because layer
+order follows the nesting, not React's effect order (plan 732).
 
 A press on the menu's own trigger is not an outside press: the menu's dismiss
 layer claims the press (so an enclosing dialog stays open) and the click that
@@ -337,7 +338,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (62 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (63 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a real `Space`
 key-down/key-up pair staying open on the first row, a disabled
 trigger that ignores `ArrowDown`/`ArrowUp`, a
@@ -370,6 +371,8 @@ internal surface ref, so a press inside it still runs its row (plan 696) — and
 `Shift+Tab`, the same inside a dialog where the modal trap must not also step,
 every level closing from a submenu row, and a refused controlled close leaving
 the menu and the user's focus alone (plan 722).
+
+A menu mounted open together with its dialog closes alone and leaves the dialog open (plan 732).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
