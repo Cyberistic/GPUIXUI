@@ -96,12 +96,11 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **111/111 green here** (exit `0`, `.artifacts/smoke-report.json`, **4106 checks**, 65 capabilities; **398.1 s** on the plan `761` head, **224.9 s** at the plan `755` gate; plan `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 99/99**
-(`live-report.json`, **2831 checks**, 61 capabilities; **1245.6 s**, exit `0`)
-on 2026-10-20, the merge/release gate (plan `755`, code head `7b304a1f` at the
-gate). That total is plan `751`'s 2780 plus **50 checks from
-`live-state-pixels`** (plan `754`) plus one check on `live-tier2-editing`'s
-documented 33-check branch, so the hover/active pixels join the border and
+The suite is **111/111 green here** (exit `0`, `.artifacts/smoke-report.json`, **4106 checks**, 65 capabilities; **321.6 s** at the plan `762` gate, **398.1 s** on the plan `761` head, **224.9 s** at the plan `755` gate; plan `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 100/100**
+(`live-report.json`, **2860 checks**, 61 capabilities; **1179.7 s**, exit `0`)
+on 2026-10-20, the merge/release gate (plan `762`, code head `05013949` at the
+gate). That total is plan `755`'s 2831 plus **29 checks from
+`live-opacity-pixels`** (plan `761`), so the disabled/subtree pixels join the border and
 radius pixels, the ring and elevation pixels, the docking indicator's paint order, the
 waveform's bars, gaps and wash, the
 wash colours, the palette's frame pixels, the image-source pixels,
@@ -120,9 +119,8 @@ colours), all through plan `656`'s capture-capable live runner (`live-shell`
 included; a plain `--all` wrote no frame or sidecar). Both `host` lines carry
 the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content
 origin and a borderless size — is what every geometry check now asserts.
-**Registered live scenarios are 100, and the full gate covers the 99 that existed
-when it ran** (plan `761`'s `live-opacity-pixels` is registered and
-focused-green). The live registry is guarded by
+**Registered live scenarios are 100, and the full gate covers all 100** (plan
+`762` includes plan `761`'s `live-opacity-pixels`). The live registry is guarded by
 `liveScenarioProblems` (plan `639`); the count grew from 96 to 97 with plan
 `736`'s `live-shadow-pixels`, to 98 with plan `745`'s `live-border-pixels`, to
 99 with plan `754`'s `live-state-pixels` and to 100 with plan `761`'s
@@ -133,8 +131,8 @@ focused-green). The live registry is guarded by
 `live-click-routing`, plan `736` added **28** to `live-shadow-pixels`, plan
 `745` added **64** to the new `live-border-pixels`, plan `754` added **50**
 to the new `live-state-pixels` and plan `761` added **29** to the new
-`live-opacity-pixels`; plan `755`
-measured the 99-scenario registry inside the full sequence: **2831** checks, exit
+`live-opacity-pixels`; plan `762`
+measured the 100-scenario registry inside the full sequence: **2860** checks, exit
 `0`.
 
 **Colour is no longer screenshot-only (plan `674`, `pixel-colour` +

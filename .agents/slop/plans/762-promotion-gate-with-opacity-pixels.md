@@ -152,7 +152,38 @@ Do not add code to "prove" a gate.
 
 ## 7. Results
 
-_To be filled by the executor._
+Verification only; no source change. `origin/master` was 0 behind, so no merge
+was needed. The gate ran on the head that includes plan `761`'s code (code head
+`05013949`); the renumber commits (`90a55540`, `3b74f04f`) are documentation
+only and landed while the live suite was running.
+
+| Suite | Scenarios | Checks | Capabilities | Duration | Exit |
+| ----- | --------- | ------ | ------------ | -------- | ---- |
+| headless (`TestRenderer`) | **111/111** | **4106** | 65 | 321.6 s | `0` |
+| live (real window) | **100/100** | **2860** | 61 | **1179.7 s** | `0` |
+
+`opacity-pixels` and `live-opacity-pixels` each report **29**;
+`state-pixels` and `live-state-pixels` each report **50**; `live-tier2-editing`
+took its **33**-check branch. The headless total is plan `755`'s 4077 + 29
+exactly; the live total is 2831 + 29, the same arithmetic as `2830 + 29 + 1`
+branch check. Both `host` lines carry `gpuix 9fcd6288`, `zed 81c99f81` and
+runtime shaders; a plain `--all` wrote no `provenance.json` and no capture
+directory. A concurrent full headless run with identical counts re-wrote
+`smoke-report.json` at 247.2 s; the live artifact is this run's.
+
+```sh
+nub run --filter playground build            # exit 0
+nub apps/playground/dist/smoke/run.js        # 111/111 · 4106 · 65 · 321.6 s · exit 0
+nub apps/playground/dist/live/run.js --all   # 100/100 · 2860 · 61 · 1179.7 s · exit 0
+nub run check                                # exit 0
+nub run lint                                 # exit 0
+nub run test                                 # exit 0; playground 520, testing 69, components 308,
+                                             # primitives 282, tokens 196, tw 103, icons 19, docs 7
+```
+
+Artifacts: `apps/playground/.artifacts/smoke-report.json` and
+`live-report.json`. This is the gate for the promotion fast-forward; the
+owner/supervisor performs the merge.
 
 ## 8. Rollback
 

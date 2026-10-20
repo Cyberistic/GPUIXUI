@@ -2350,17 +2350,14 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **99/99** (`exit 0`, **2831** checks, 61
-capabilities; **1245.6 s**; `.artifacts/live-report.json`, 2026-10-20) on code
-head `7b304a1f` (plan `755`, 0 behind `origin/master`), with the whole headless
-registry at **110/110** (**4077** checks, 65 capabilities, 224.9 s) on the same
-head. **The registry then grew to 100** with plan `761`'s
-`live-opacity-pixels` (29 checks, two focused green runs), so the last full gate
-describes 99 of the 100 registered ids; the full live suite is the merge gate and
-was not re-run for a probe that adds one static scenario. `.artifacts/live-report.json`
-now holds the focused `live-opacity-pixels` run rather than the full gate — the
-gate's numbers are recorded here and in plan `755` §7. The 99-scenario gate
-includes every scenario this branch added: `live-theme-platform` (plan `654`),
+The last full merge/release gate ran **100/100** (`exit 0`, **2860** checks, 61
+capabilities; **1179.7 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
+head that includes plan `761` (`05013949`; 0 behind `origin/master`), with the
+whole headless registry at **111/111** (**4106** checks, 65 capabilities,
+321.6 s) on the same code. Plan `762` is the current promotion gate, and the
+gate covers every registered id: plan `761`'s `live-opacity-pixels` (29 checks)
+joins the sequence here. It includes every scenario this branch added:
+`live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
 checks (plan `676`), `live-pixel-colour` (22), `live-content`'s image pixels
@@ -2370,11 +2367,12 @@ checks (plan `676`), `live-pixel-colour` (22), `live-content`'s image pixels
 `live-media`'s waveform pixels (25), `live-click-routing`'s click-routing
 contract (25), `live-shadow-pixels`' ring/elevation pixels (28),
 `live-border-pixels`' border/radius pixels (64) and `live-state-pixels`'
-hover/active pixels (50). The total is the plan-`751` gate's 2780 plus plan
-`754`'s 50 plus one check on `live-tier2-editing`'s documented 33-check branch,
-and the headless registry is that gate's 4027 plus `state-pixels`' 50. A plain
-`--all` wrote no frame and no `provenance.json`. Plan `755` re-ran both suites on
-this head and is the current promotion gate. This gate supersedes plan `751`'s
+hover/active pixels (50) and `live-opacity-pixels`' disabled/subtree pixels (29).
+The total is plan `755`'s 2831 plus plan `761`'s 29, and the headless registry is
+that gate's 4077 plus `opacity-pixels`' 29. A plain
+`--all` wrote no frame and no `provenance.json`. Plan `762` re-ran both suites on
+this head and is the current promotion gate. This gate supersedes plan `755`'s
+99/99 (`2831`) on `7b304a1f`, plan `751`'s
 98/98 (`2780`) on `debe433a`, plan `739`'s 97/97
 (`2716`) on `ea2e668b`, plan `735`'s 96/96
 (`2688`) on `e384a66a`, plan `723`'s 95/95

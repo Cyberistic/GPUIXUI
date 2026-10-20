@@ -108,7 +108,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 134/134 plans-and-harness
+`[x]` `[██████████]` 135/135 plans-and-harness
 
 `[x]` **Prove declared opacity, the disabled state and its subtree in the frame**
       per plan `761`: eleven shipped surfaces express `disabled` as nothing but
@@ -128,6 +128,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       end-of-task full headless **111/111** (**4106** checks, 65 capabilities,
       398.1 s, exit `0`; exactly `4077 + 29`). **Not run:** the full live suite
       (merge gate); live registry **99 → 100**.
+
+`[x]` **Run the promotion gate on the head that includes the opacity pixels** per
+      plan `762`: the last full gate (plan `755`) covered 99 of the 100 live
+      scenarios. Both suites re-ran on the code head that includes plan `761`
+      (0 behind `origin/master`): headless **111/111** (**4106** checks, 65
+      capabilities, 321.6 s) and live **100/100** (**2860** checks, 61
+      capabilities, **1179.7 s**), both exit `0`. The live total is plan `755`'s
+      2831 + `live-opacity-pixels`' 29 exactly and the headless total `4077 + 29`;
+      `live-tier2-editing` took its 33-check branch, both `host` lines carry the
+      release-tag pins, and a plain `--all` wrote no `provenance.json` or capture
+      directory. `nub run check`/`lint`/`test` green (playground **520**, testing
+      69, components 308, primitives 282, tokens 196, tw 103, icons 19, docs 7).
+      Exact ids: the whole headless registry and the whole live registry
+      (`--all`). This is the promotion gate.
 
 `[x]` **Run the promotion gate on the head that includes the state pixels** per
       plan `755`: plan `751` gated code head `c4224479` at headless 109/109 and
@@ -2248,7 +2262,19 @@ focused id is `live-frames`.
       `test` green (playground **508**, testing 69, components 308, primitives
       282, tokens 196, tw 103, icons 19, docs 7). **This is the current gate
       for the promotion fast-forward**; the owner/supervisor still performs the
-      merge.
+      merge. **Addendum (plan `762`, 2026-10-20):** plan `761` then registered
+      `opacity-pixels` (29 checks) and `live-opacity-pixels` (29), so both full
+      registries ran again on the code head that includes them (`05013949`, 0
+      behind `origin/master`): headless **111/111** (**4106** checks, 65
+      capabilities, 321.6 s) and live **100/100** (**2860** checks, 61
+      capabilities, **1179.7 s**), both exit `0`. The live total is `2831 + 29`
+      and the headless total `4077 + 29` exactly; `live-tier2-editing` took its
+      33-check branch. A plain `--all` wrote no `provenance.json` and no capture
+      directory, and both `host` lines carry the release-tag pins. `nub run
+      check`/`lint`/`test` green (playground **520**, testing 69, components
+      308, primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
+      current gate for the promotion fast-forward**; the owner/supervisor still
+      performs the merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
