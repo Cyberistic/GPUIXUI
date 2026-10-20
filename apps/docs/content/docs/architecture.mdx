@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: How the packages fit together, and how this site stays honest about previews.
+description: How the packages fit together, where the library, the live surface and this site run, how Effect is used, and how the site stays honest about previews.
 ---
 
 GPUIXUI is a TypeScript-first monorepo. The library packages point one way:
@@ -26,6 +26,25 @@ tokens → icons → primitives → components → data-grid · docking · edito
 have no package yet; the [component index](/docs/components) records what exists
 and what is still planned.
 
+## State and Effect
+
+Effect is part of the architecture, not of the component API. Two rules hold
+across the packages:
+
+- **Decisions are plain functions, and failure or absence is data.** The
+  `core/` layer under `@gpuixui/primitives` is written in Effect's data modules
+  (`Option`, `Array`, `Order`), so a decision has no nullable return and no
+  thrown error to forget. [Extending](/docs/extending) documents that layer.
+- **A runtime exists only where a component owns ongoing work.** `ToastProvider`
+  is the one case: it creates a `ManagedRuntime` over the toast store's `layer`
+  and `useToast()` sends commands to it. No other component starts a runtime.
+
+What stays with the application: time and validation. `Countdown` owns no timer
+and renders the `remainingMs` your clock passes; `validate` returns an `Effect`
+that the caller runs. Using the components does not require writing Effect code
+— `@gpuixui/components` declares `effect` as a dependency because its toast
+runtime needs it, and `@gpuixui/tokens` declares no dependencies.
+
 ## Tooling
 
 - `@gpuixui/config` — the shared TypeScript configuration.
@@ -35,14 +54,25 @@ and what is still planned.
 
 No library package is published to a registry yet.
 
-## The site and the runtime
+## What runs where
 
-The native runtime never depends on this documentation site. `apps/docs` is a
-browser app: it reads package source files at build time for prop tables and
-copyable source, and its **shell** never imports the native runtime. The one
-GPUix surface it can show is an isolated, opt-in WebAssembly document under
-`/gpuix-preview/` — a real GPUix renderer in the browser, not the desktop
-binary.
+| Surface | Renderer | What it proves |
+| ------- | -------- | -------------- |
+| A desktop app using the library | GPUix's native renderer (`@gpuix/native`) | the target the components are built and tested against |
+| The live previews on this site | the published GPUix **WebAssembly** renderer, in an isolated document under `/gpuix-preview/` | the real component code paints; it is not a DOM imitation |
+| This site's own chrome | React in the browser, server-rendered by TanStack Start and then hydrated | documentation only — its shell never imports the native runtime |
+
+The library is not a DOM component set: every component renders GPUix host
+elements, so the same code paints under the desktop binary and — through the
+published wasm build — inside a browser. That is the only browser story the
+project has; there is no HTML/CSS build of the components, and a browser
+approximation on this site is labelled as one.
+
+This site is server-rendered and then hydrated. The previews take their mode and
+platform from what the providers publish on `<html>` — `data-platform` and the
+`dark` class — through one `useSyncExternalStore` snapshot, so a preview cannot
+disagree with the chrome around it and a shared `?platform=` link paints the
+right surface after hydration.
 
 ## Preview strategy
 

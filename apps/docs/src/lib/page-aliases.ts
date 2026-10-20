@@ -8,11 +8,13 @@
  * This is editorial search vocabulary, not page content: it stays out of the
  * frontmatter and is read only by the ranker. A second measured pass covers the
  * integration vocabulary (plan 599) — `react`, `provider`, `mono`, `escape`,
- * `disabled` and `how to install` — and a third the keyboard conventions
- * (plan 601), each a word for a section or a convention rather than a title. `page-aliases.test.ts` proves
- * every key is a page `source.getPages()` serves, no key is a component page
- * (that is plan 566's table), no term is shared, and no term shadows a page or
- * component name — an alias that names something else misroutes the query.
+ * `disabled` and `how to install` — a third the keyboard conventions
+ * (plan 601), and a fourth the runtime vocabulary (plan 602): `effect`,
+ * `managed runtime`, `browser`, `ssr` and `hydration` name Architecture's
+ * `## State and Effect` and `## What runs where` sections. `page-aliases.test.ts`
+ * proves every key is a page `source.getPages()` serves, no key is a component
+ * page (that is plan 566's table), no term is shared, and no term shadows a page
+ * or component name — an alias that names something else misroutes the query.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -74,6 +76,25 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ],
   ],
   ["/docs/typography", ["mono", "mono font", "monospace"]],
+  [
+    "/docs/architecture",
+    [
+      "effect",
+      "effect ts",
+      "effect runtime",
+      "managed runtime",
+      "fiber",
+      "browser",
+      "browser build",
+      "run in browser",
+      "runs in browser",
+      "web app",
+      "webassembly",
+      "ssr",
+      "server rendering",
+      "hydration",
+    ],
+  ],
 ]);
 
 /** Every alias term, flattening the table for the guards. */

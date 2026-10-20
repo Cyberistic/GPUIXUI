@@ -153,6 +153,20 @@ const owned = [
   ["keyboard focus", "/docs/accessibility"],
   ["reduced motion", "/docs/theming"],
   ["prefers reduced motion", "/docs/theming"],
+  ["effect", "/docs/architecture"],
+  ["effect ts", "/docs/architecture"],
+  ["effect runtime", "/docs/architecture"],
+  ["managed runtime", "/docs/architecture"],
+  ["fiber", "/docs/architecture"],
+  ["browser", "/docs/architecture"],
+  ["browser build", "/docs/architecture"],
+  ["run in browser", "/docs/architecture"],
+  ["runs in browser", "/docs/architecture"],
+  ["web app", "/docs/architecture"],
+  ["webassembly", "/docs/architecture"],
+  ["ssr", "/docs/architecture"],
+  ["server rendering", "/docs/architecture"],
+  ["hydration", "/docs/architecture"],
 ] as const;
 
 const regressions = [
@@ -185,6 +199,12 @@ const regressions = [
   ["list", "/docs/components/list"],
   ["skeleton", "/docs/components/skeleton"],
   ["accessibility", "/docs/accessibility"],
+  ["project browser", "/docs/patterns/project-browser"],
+  ["webassembly", "/docs/architecture"],
+  ["wasm", "/docs/previews"],
+  ["countdown", "/docs/components/countdown"],
+  ["toast", "/docs/components/toast"],
+  ["architecture", "/docs/architecture"],
 ] as const;
 
 describe(

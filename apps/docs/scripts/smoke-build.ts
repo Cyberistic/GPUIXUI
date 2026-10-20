@@ -1102,6 +1102,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the keyboard contract a keycap's picture outranked",
     },
+    {
+      query: "effect",
+      expected: "/docs/architecture",
+      first: true,
+      what: "the runtime section a keyboard table's `Effect` column outranked",
+    },
+    {
+      query: "browser",
+      expected: "/docs/architecture",
+      first: true,
+      what: "the render table the Project browser pattern outranked",
+    },
+    {
+      query: "hydration",
+      expected: "/docs/architecture",
+      first: true,
+      what: "the site's server-render and hydration model, which returned nothing",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

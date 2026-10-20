@@ -555,6 +555,16 @@ exact name), `motion`/`animation` have no owner until `packages/tokens` ships
 motion tokens, and `disabled button` keeps Button. `smoke:build` asserts `react`,
 `how to install`, `easing` and `keyboard`.
 
+A fourth pass (plan 602) gave the **runtime vocabulary** a page instead of a
+component coincidence: `effect`, `effect ts`, `effect runtime`, `managed
+runtime`, `fiber`, `browser`, `browser build`, `run in browser`, `runs in
+browser`, `web app`, `webassembly`, `ssr`, `server rendering` and `hydration` →
+Architecture, whose `## State and Effect` names the toast `ManagedRuntime`, the
+`core/` decision layer and the app-owned clock, and whose `## What runs where`
+separates the desktop renderer, the wasm live surface and the server-rendered,
+hydrated docs chrome. `wasm` stays on Previews and `project browser` keeps the
+pattern page; `smoke:build` asserts `effect`, `browser` and `hydration`.
+
 The table got a second measured pass (plan 579). `typeahead`, `passcode`,
 `wizard`, `pin code`, `segmented control`, `hover card`, `menubar` and
 `scrollview` returned nothing or another component; the same table now answers
