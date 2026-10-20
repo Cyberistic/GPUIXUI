@@ -247,8 +247,12 @@ header or a message, not a row mark.
 Component dimensions are **fixed**, not density metrics: overlay surfaces take a
 180px minimum and a 220px default width, and a long list scrolls at 320px; a
 toast is 380px wide, a preview card runs 240–360px, and an icon or clear control
-inside a field is 16px. They live in `theme.dimensions` so a brand can widen a
-dialog or a toast without touching component source. A keycap is 20px and holds
+inside a field is 16px. They live in `theme.dimensions` and the metric contract
+holds their bounds, but the shipped consumer families still paint their own
+fixed literals — the dialog a 360/480/640 ladder, the Toast a 380px card, a menu
+a 180px minimum — and each migration to the token is a cross-team row in
+`TODO.md`, so a brand that needs a different width today passes the component's
+`style` prop as well as the token. A keycap is 20px and holds
 one `caption` line plus its two borders; a field's adornment holds one `caption`
 line, the glyph its clear control paints; the metric contract reports a theme
 whose caption leading outgrows either. Every fixed surface — the menu minimum, Toast
