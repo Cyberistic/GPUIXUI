@@ -15,7 +15,7 @@
     "test:behaviour": "vitest run --config vitest.behaviour.config.ts"
   },
   "dependencies": {
-    "@gpuix/react": "0.10.0",
+    "@gpuix/react": "catalog:",
     "@gpuixui/tokens": "workspace:*",
     "effect": "catalog:"
   },

@@ -28,7 +28,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@gpuix/react": "0.10.0",
+    "@gpuix/react": "catalog:",
     "@gpuixui/tokens": "workspace:*",
     "cn": "^0.5.0",
     "effect": "catalog:"

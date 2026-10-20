@@ -41,7 +41,8 @@
     "catalog": {
       "@effect/platform-node": "4.0.5",
       "@effect/vitest": "4.0.5",
-      "@gpuix/react": "0.10.0",
+      "@gpuix/native": "0.11.0",
+      "@gpuix/react": "0.11.0",
       "@tailwindcss/vite": "^4.3.2",
       "@tanstack/react-router": "^1.170.44",
       "@tanstack/react-start": "^1.169.2",

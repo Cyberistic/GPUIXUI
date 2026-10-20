@@ -11,8 +11,8 @@
     "test": "nub run --filter @gpuixui/testing build && vitest run"
   },
   "dependencies": {
-    "@gpuix/native": "0.10.0",
-    "@gpuix/react": "0.10.0",
+    "@gpuix/native": "catalog:",
+    "@gpuix/react": "catalog:",
     "@gpuixui/testing": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "effect": "catalog:",

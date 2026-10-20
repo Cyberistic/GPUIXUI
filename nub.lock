@@ -12,9 +12,12 @@ catalogs:
     '@effect/vitest':
       specifier: 4.0.5
       version: 4.0.5
+    '@gpuix/native':
+      specifier: 0.11.0
+      version: 0.11.0
     '@gpuix/react':
-      specifier: 0.10.0
-      version: 0.10.0
+      specifier: 0.11.0
+      version: 0.11.0
     '@tailwindcss/vite':
       specifier: ^4.3.2
       version: 4.3.3
@@ -145,11 +148,11 @@ importers:
   apps/playground:
     dependencies:
       '@gpuix/native':
-        specifier: 0.10.0
-        version: 0.10.0
+        specifier: 'catalog:'
+        version: 0.11.0
       '@gpuix/react':
-        specifier: 0.10.0
-        version: 0.10.0(react@19.3.1)
+        specifier: 'catalog:'
+        version: 0.11.0(react@19.3.1)
       '@gpuixui/testing':
         specifier: workspace:*
         version: link:../../packages/testing
@@ -199,7 +202,7 @@ importers:
     devDependencies:
       '@gpuix/react':
         specifier: 'catalog:'
-        version: 0.10.0(react@19.3.1)
+        version: 0.11.0(react@19.3.1)
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -216,8 +219,8 @@ importers:
   packages/components:
     dependencies:
       '@gpuix/react':
-        specifier: 0.10.0
-        version: 0.10.0(react@19.3.1)
+        specifier: 'catalog:'
+        version: 0.11.0(react@19.3.1)
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens
@@ -278,7 +281,7 @@ importers:
     devDependencies:
       '@gpuix/react':
         specifier: 'catalog:'
-        version: 0.10.0(react@19.3.1)
+        version: 0.11.0(react@19.3.1)
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../config
@@ -333,7 +336,7 @@ importers:
         version: 4.0.5(effect@4.0.5)(redis@6.3.0)
       '@gpuix/react':
         specifier: 'catalog:'
-        version: 0.10.0(react@19.3.1)
+        version: 0.11.0(react@19.3.1)
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../config
@@ -402,8 +405,8 @@ importers:
   packages/tw:
     dependencies:
       '@gpuix/react':
-        specifier: 0.10.0
-        version: 0.10.0(react@19.3.1)
+        specifier: 'catalog:'
+        version: 0.11.0(react@19.3.1)
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens
@@ -929,29 +932,34 @@ packages:
   '@fumari/image-size@0.1.1':
     resolution: {integrity: sha512-iaiV2wyzJ4mW358NX4CX3yGit+WjKYzpaQ+rldK9BjL/5jFpeV6ruWnZVq7MEyMn3Gd0DLi8g/79NZAAQaGscw==}
 
-  '@gpuix/native-darwin-arm64@0.10.0':
-    resolution: {integrity: sha512-Uu1aiZsKBPuk9llFkoaFU95k1t+drG3txv97SgZZZ2x4LKqvy5c0bmklhCG1r7Ypm62qY/NKY0Sl553r/G34Tg==}
+  '@gpuix/native-darwin-arm64@0.11.0':
+    resolution: {integrity: sha512-sOS94t4f3BeB4gcwUQrGbqCnxh9MNbDda9b2g2rcu1ilxT6VxPLx56ziRIz3omhrRgQ1P4rJNJ/OMywtYG9Wow==}
     cpu: [arm64]
     os: [darwin]
 
-  '@gpuix/native-linux-x64-gnu@0.10.0':
-    resolution: {integrity: sha512-HNLL+jp+FA5qvdHq52MDGnj6LmsbkVXojwalGgNYA+iJlffFGfzHkCRmoM21Z+TNKa5cvuRTPgnfP6FGr8KxIw==}
+  '@gpuix/native-linux-x64-gnu@0.11.0':
+    resolution: {integrity: sha512-WlDFnxKaKkw9NBhz2UAn7jXvhCvd/A6hYkxrJbtMLks5TRrjwxPpX2P0JQfppZvcQn13r2sivyQVdB1YX0hHTA==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@gpuix/native-win32-x64-msvc@0.10.0':
-    resolution: {integrity: sha512-4NQ81KBzcItiSJGupmvvSpuELCF139fqjQSSscHKbYCD+mcAyhOxADr3I2BNHXWhQr42jUgXhV2n/n0udN1KMQ==}
+  '@gpuix/native-win32-arm64-msvc@0.11.0':
+    resolution: {integrity: sha512-IxlKViURZP/j9JYgnmZFnhjdkqmodkIxCY/yAZ8xF9N3wO2n+2Uoadc+XZ/gz8hgJT/9pT9NQOFP7Ai2q4cxYw==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@gpuix/native-win32-x64-msvc@0.11.0':
+    resolution: {integrity: sha512-VXtDp1o39m0aFk6JADrH1pLaZWBQIC7hpbYsRAWE8Pe4Dgn3a0LEFDHvI0RNehg3GLPXPLoj9Jld0UO3KrGpNQ==}
     cpu: [x64]
     os: [win32]
 
-  '@gpuix/native@0.10.0':
-    resolution: {integrity: sha512-hBvQ0vT1ybOoRDQu6JASgRfdcWFbHTRQ0Fr3oiTxdclvzdR8v9fBUQVYfVtgZnnL4pl1LS02eNrQx8//E6/Xjw==}
+  '@gpuix/native@0.11.0':
+    resolution: {integrity: sha512-xnPBArvvkg6aD7/soznkzio3qrKP6yHzhTJ0uOZoRYnp4OgdO8kkSKidAryvCbyF39/C0/+3P+7FzgsGTOXsXg==}
 
-  '@gpuix/react@0.10.0':
-    resolution: {integrity: sha512-RB//IrYBghiso0K0h8V+K9huwzONtEhwdpXoCs/rZjqN1F4RGxjhaeChtAwTt/JnjTSM1rcLi5cicM1xy8kr+g==}
+  '@gpuix/react@0.11.0':
+    resolution: {integrity: sha512-jFbpCT2B1wSUajbItZGPr0bLhx5DDvljQL9l19tOg5ZoJlizZfv5lCnzQoi6ApQOM6//8zl5sQxVnG60CAYLuQ==}
     peerDependencies:
-      react: ^18.0.0 || ^19.0.0
+      react: ^19.2.0
 
   '@hono/node-server@1.19.9':
     resolution: {integrity: sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw==}
@@ -3768,11 +3776,11 @@ packages:
     peerDependencies:
       react: ^19.3.1
 
-  react-reconciler@0.31.0:
-    resolution: {integrity: sha512-7Ob7Z+URmesIsIVRjnLoDGwBEG/tVitidU0nMsqX/eeJaLY89RISO/10ERe0MqmzuKUUB1rmY+h1itMbUHg9BQ==}
+  react-reconciler@0.33.0:
+    resolution: {integrity: sha512-KetWRytFv1epdpJc3J4G75I4WrplZE5jOL7Yq0p34+OVOKF4Se7WrdIdVC45XsSSmUTlht2FM/fM1FZb1mfQeA==}
     engines: {node: '>=0.10.0'}
     peerDependencies:
-      react: ^19.0.0
+      react: ^19.2.0
 
   react-remove-scroll-bar@2.3.8:
     resolution: {integrity: sha512-9r+yi9+mgU33AKcj6IbT9oRCO78WriSj6t/cF8DWBZJ9aOGPOTEDvdUDz1FwKim7QXWwmHqtdHnRJfhAxEG46Q==}
@@ -3880,8 +3888,8 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  scheduler@0.25.0:
-    resolution: {integrity: sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA==}
+  scheduler@0.27.0:
+    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
 
   scheduler@0.28.0:
     resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
@@ -4763,29 +4771,33 @@ snapshots:
 
   '@fumari/image-size@0.1.1': {}
 
-  '@gpuix/native-darwin-arm64@0.10.0':
+  '@gpuix/native-darwin-arm64@0.11.0':
     optional: true
 
-  '@gpuix/native-linux-x64-gnu@0.10.0':
+  '@gpuix/native-linux-x64-gnu@0.11.0':
     optional: true
 
-  '@gpuix/native-win32-x64-msvc@0.10.0':
+  '@gpuix/native-win32-arm64-msvc@0.11.0':
     optional: true
 
-  '@gpuix/native@0.10.0':
+  '@gpuix/native-win32-x64-msvc@0.11.0':
+    optional: true
+
+  '@gpuix/native@0.11.0':
     dependencies:
       eventsource-parser: 4.1.2
       zod: 4.6.7
     optionalDependencies:
-      '@gpuix/native-darwin-arm64': 0.10.0
-      '@gpuix/native-linux-x64-gnu': 0.10.0
-      '@gpuix/native-win32-x64-msvc': 0.10.0
+      '@gpuix/native-darwin-arm64': 0.11.0
+      '@gpuix/native-linux-x64-gnu': 0.11.0
+      '@gpuix/native-win32-arm64-msvc': 0.11.0
+      '@gpuix/native-win32-x64-msvc': 0.11.0
 
-  '@gpuix/react@0.10.0(react@19.3.1)':
+  '@gpuix/react@0.11.0(react@19.3.1)':
     dependencies:
-      '@gpuix/native': 0.10.0
+      '@gpuix/native': 0.11.0
       react: 19.3.1
-      react-reconciler: 0.31.0(react@19.3.1)
+      react-reconciler: 0.33.0(react@19.3.1)
 
   '@hono/node-server@1.19.9(hono@4.11.4)':
     dependencies:
@@ -7455,10 +7467,10 @@ snapshots:
       react: 19.3.1
       scheduler: 0.28.0
 
-  react-reconciler@0.31.0(react@19.3.1):
+  react-reconciler@0.33.0(react@19.3.1):
     dependencies:
       react: 19.3.1
-      scheduler: 0.25.0
+      scheduler: 0.27.0
 
   react-remove-scroll-bar@2.3.8(@types/react@19.3.0)(react@19.3.1):
     dependencies:
@@ -7644,7 +7656,7 @@ snapshots:
       '@rolldown/binding-win32-arm64-msvc': 1.2.5
       '@rolldown/binding-win32-x64-msvc': 1.2.5
 
-  scheduler@0.25.0: {}
+  scheduler@0.27.0: {}
 
   scheduler@0.28.0: {}
 
