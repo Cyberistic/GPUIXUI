@@ -141,6 +141,10 @@ import {
   surfaceThemeView,
 } from "../scenarios/surface-theme.js";
 import {
+  dialogScrimLiveScenario,
+  scrimView,
+} from "../scenarios/dialog-scrim.js";
+import {
   textTruncationPixelsLiveScenario,
   textTruncationView,
 } from "../scenarios/text-truncation.js";
@@ -13187,6 +13191,29 @@ const liveSurfaceTheme: LiveScenario = {
 };
 
 /**
+ * The modal veil in a real window (plan `791`).
+ *
+ * The headless pass proves the veil's composite and span in one offscreen
+ * paint; this twin proves the same backdrop, the surface above it and both
+ * unmounts through a window's rasteriser, which no authored-style report can
+ * see.
+ */
+const liveDialogScrim: LiveScenario = {
+  ...dialogScrimLiveScenario,
+  view: scrimView,
+  ready: "scrim-stage",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* dialogScrimLiveScenario.steps(ctx);
+      // The artifact shows the open state — the plane the modal actually paints.
+      yield* ctx.host.click("scrim-open-dialog");
+      yield* Effect.sleep(Duration.millis(120));
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-dialog-scrim.png`);
+      yield* ctx.host.key("escape");
+    }),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -14330,6 +14357,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTextInk,
   liveTruncationPixels,
   liveSurfaceTheme,
+  liveDialogScrim,
   terminal,
   selectionSignal,
 ];

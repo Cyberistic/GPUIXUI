@@ -143,17 +143,45 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[█████████░]` 142/143 plans-and-harness
+`[x]` `[██████████]` 143/143 plans-and-harness
 
-`[~]` **Prove the modal veil in the frame** per plan `791`: the shipped
-      `DialogContent`/`DrawerContent` backdrop is named by **no scenario** in
-      either registry (`grep dialog-backdrop|drawer-backdrop` is empty for
+`[x]` **Prove the modal veil in the frame** per plan `791`: the shipped
+      `DialogContent`/`DrawerContent` backdrop was named by **no scenario** in
+      either registry (`grep dialog-backdrop|drawer-backdrop` was empty for
       `apps/playground`), so a veil with no background, a veil sized to the
-      surface, or a veil that never unmounts passes every existing check.
-      `dialog-scrim-pixels` / `live-dialog-scrim` decode four frames per host
-      and assert the `overlay` role composited over two page fills, the far
-      corner, the undimmed `popover` surface and the close restore. Plan:
+      surface, or a veil that never unmounts passed every existing check.
+      `dialog-scrim-pixels` / `live-dialog-scrim` (**62 checks each**, five
+      decoded frames per host) prove the `overlay` role reaches the paint, the
+      veil spans the window, the surface stays `popover` above it, and every
+      layer unmounts on close. **Found while measuring:** an `<anchored>` layer
+      is **opaque** on 0.10.0 (base `#1A1A1A`, with or without `occlude`), so an
+      open modal replaces the window with `#090909` instead of dimming the page;
+      an in-window `absolute` layer of the same token dims it correctly
+      (`#3A3B59` over `primary`, `#15462C` over `success`), and the probe now
+      asserts both routes plus a guard that they are distinguishable. Six
+      mutation proofs observed red and reverted (dialog fill removed → `#1A1A1A`;
+      backdrop sized to the surface → `#222730`; drawer fill removed → `#1A1A1A`;
+      dialog never unmounting → the closed frame is the plane; recipe mounted as
+      an in-flow anchored layer → `#090909`; the surface sample moved to the page
+      → `#090909`), plus a unit mutation (`veil.a / 255 → 0`, 5 tests red). Ten
+      new unit tests (playground **580 → 593**). Focused ids run:
+      `dialog-scrim-pixels` (green, 35.3 s), `live-dialog-scrim` (green, 48.8 s).
+      End-of-task full headless **118/118** (**4340** checks, 65 capabilities,
+      302.0 s, exit `0`; exactly `4278 + 62`); live registry **106 → 107**, no
+      full live gate (merge gate). Plan:
       `.agents/slop/plans/791-modal-veil-pixels.md`.
+
+`[ ]` **Cross-team (defect):** `@gpuixui/components` **Dialog/Drawer** veil — the
+      backdrop lives in an `<anchored>` layer, and that layer is **opaque** on
+      0.10.0 (a measured `#1A1A1A` plane, with or without `occlude`), so opening
+      a modal replaces the app with `#090909` instead of dimming it. An in-window
+      `absolute` layer of `colors.overlay` composites correctly
+      (`#3A3B59` over `primary`), but `absolute`/`fixed` resolve against the
+      **mount parent**, so the veil needs an app-root slot (the
+      `ToastViewport` "render last" contract) or a measured offset. The probe's
+      recipe and the six mutation proofs are the acceptance evidence; when the
+      component lands, flip the two anchored checks to the recipe's expectation.
+      Owner: `components`; evidence: plan `791` §1a/§7, `dialog-scrim-pixels`.
 
 `[x]` **Run the promotion gate on the head that includes the truncation and
       content-theme pixels** per plan `786`: verification only, 0 behind

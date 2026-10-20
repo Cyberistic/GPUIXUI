@@ -1686,6 +1686,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-text-decoration` | `underline` and `line-through` in a window: a 427 px continuous ink row at `y=0.67` (underline) and `y=0.45` (line-through) on a 280 × 96 panel, the undeclared control's widest row is 22 px (a glyph stem), both lines are exactly `foreground #EEF1F5`, and a wrapper `div`'s declaration reaches its child run — 18 checks (plan `775`). The scan uses the panel because an underline paints 1–2 device px **below** the `<text>` box |
 | `live-truncation-pixels` | the ellipsis glyph in a window: four 32 px runs in 200-wide boxes — the ellipsis's right edge is a short dot run (tallest column **0.11** against the clipped control's **0.70**), both keep **0** ink outside their box, the `MMMM` control's edge band is blank, and a `nowrap` run with neither leaks **1922** ink pixels beside its box — 22 checks (plan `778`). A blank right edge does not count as dots: `looksLikeDots` requires ink |
 | `live-surface-theme` | the content-surface theme in a window: one 880 × 580 stage mounts eleven themed/default fixtures and one frame proves the token reaches the paint — markdown text (`foreground`), inline code (`primary`), the bullet disc (`primary` at 85 %), the link underline (`mutedForeground`, and **no** `primary`: links are monochrome), both `appearance` bases, the code's syntax string and keyword tokens and its `placeholder` gutter, the `<code>`/`<markdown>` **absent** plane and the `<diff>` plane with both 5.5 % tints — 50 checks (plan `784`) |
+| `live-dialog-scrim` | the modal veil in a window: the shipped `Dialog`/`Drawer` paint the `overlay` role over the anchored layer's `#1A1A1A` plane (`#090909`) across the whole window, their surfaces stay `popover` above it, an **in-window** `absolute` layer of the same token dims the page to `#3A3B59`/`#15462C`, and every layer unmounts on close — 62 checks (plan `791`). **Measured: an anchored layer is opaque, so a modal hides the app instead of dimming it** |
 | `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
@@ -2517,6 +2518,60 @@ cross-team task (the playground cannot edit that package).
 `font_mono` advances are already measured by `font-family` for `<text>`. The
 diff row bands assume the default 36/28/21 metrics.
 
+### The modal veil: what the scrim actually paints (plan `791`)
+
+`DialogContent` and `DrawerContent` dim the window with a backdrop `div` whose
+only visible property is `backgroundColor: theme.colors.overlay`. **No scenario
+named either backdrop** — the modal probes close with Escape, and the drawer
+probe presses the veil's coordinates to dismiss it — so a transparent veil, a
+veil sized to the surface or a veil that never unmounts passed every check.
+`dialog-scrim-pixels` / `live-dialog-scrim` decode five frames per host
+(closed, dialog, drawer, recipe, closed) and found a second, larger fact while
+doing it.
+
+**An `<anchored>` layer is opaque on 0.10.0.** Opening a shipped modal replaces
+the window with `#090909` (`overlay` over the layer's `#1A1A1A` plane) instead of
+dimming the page; the page is not composited below it. A temporary four-route
+probe (50 % red over a `primary` page) measured the rule:
+
+| Layer route | Page pixel | Meaning |
+| ----------- | ---------- | ------- |
+| `<anchored position={0,0}>` | `#8D0D0D` | 50 % red over **`#1A1A1A`** — the app is hidden |
+| `<anchored … occlude>` | `#8D0D0D` | identical; `occlude` is not the cause |
+| `<div position="absolute">` at the root | `#D3547F` | 50 % red over `primary` — composites correctly |
+| `<div position="fixed">` at the root | `#D3547F` | identical; still parent-relative, not window-relative |
+
+A target **named div inside** an anchored layer behaves differently again: an
+`absolute` child escapes into the main window and composites, while an in-flow
+child paints inside the opaque layer. That trap invalidated the first mutation
+proof (it accidentally kept the working route) and is why the recipe uses an
+in-flow layer.
+
+What the probe asserts, in both hosts:
+
+| State | Measured |
+| ----- | -------- |
+| closed | both page panels paint `primary` / `success`; no surface and no layer is painted |
+| dialog open | the page point and the far corner both paint **`#090909`** — the anchored plane, so the veil spans the window; the dialog's blank interior paints `popover #222730` (the surface is above the veil) |
+| drawer open | the page point is the same plane and the drawer's interior is `popover` |
+| recipe open | an **in-window** `absolute` layer of `colors.overlay` paints `#3A3B59` over `primary` and `#15462C` over `success` — the intended dim |
+| closed again | both panels return to their tokens, so every layer unmounted |
+
+The route guard (`routesDiffer`) refuses the fixture if the anchored plane and
+the in-window composite are within the frame tolerance, so the probe cannot pass
+with the wrong route. Six mutations were observed red and reverted: the dialog
+fill removed (`#1A1A1A`), the backdrop sized to the surface (`#222730` over the
+page point), the drawer fill removed, the dialog never unmounting (the closed
+frame is the plane), the recipe mounted as an in-flow anchored layer (`#090909`),
+and the surface sample moved to the page (`#090909`).
+
+**Consumer consequence and cross-team fix:** a modal cannot dim the app on the
+pin. The veil must become an in-window layer (an app-root slot like
+`ToastViewport`'s documented "render the viewport last", or a measured offset
+because `absolute`/`fixed` resolve against the mount parent). The recipe proves
+that route works; the component change is owned by `components` (`TODO.md`).
+When it lands, the two anchored expectations flip to the recipe's.
+
 ### Editing actions: clipboard, history and the OTP paste (plan `764`)
 
 The native editor binds `cmd-c`, `cmd-x`, `cmd-v`, `cmd-z` and `shift-cmd-z`
@@ -2563,13 +2618,15 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **117/117 green** here (`exit 0`, 4278 checks, 65 capabilities,
-**302.4 s** after plan `784`, 2026-10-20; **275.0 s** after plan `778`, which
+The suite is **118/118 green** here (`exit 0`, 4340 checks, 65 capabilities,
+**302.0 s** after plan `791`, 2026-10-20; **302.4 s** at plan `784`, which
+read 117/117 · 4278; **275.0 s** after plan `778`, which
 read 116/116 · 4228; **432.8 s** at the plan `777` gate,
 which read 115/115 · 4206; **484.1 s** at plan `773`, which read
 114/114 · 4188; **237.6 s** at plan `771`, which read
 113/113 · 4165; **246.8 s** at the plan `768` gate, which
-read 112/112 · 4152; plan `784` added the 50-check
+read 112/112 · 4152; plan `791` added the 62-check
+`dialog-scrim-pixels`, plan `784` added the 50-check
 `surface-theme`, plan `778` added the 22-check
 `text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`,
 plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check
@@ -2584,7 +2641,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-117/117 scenarios passed · capabilities: layout=verified root=verified text=verified
+118/118 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2627,7 +2684,9 @@ and `live-editing-actions`' clipboard, cut/paste, undo/redo and OTP-paste checks
 `live-surface-theme`'s content-surface theme (50).
 The total is plan `777`'s 2987 plus those last two (22 + 50), and the headless
 total is that gate's 4206 plus 72 (`4278`). A plain
-`--all` wrote no frame and no `provenance.json`. This gate supersedes plan
+`--all` wrote no frame and no `provenance.json`. **The live registry is now
+107**: plan `791`'s `live-dialog-scrim` is focused-green at 62 checks and the
+next full gate must include it. This gate supersedes plan
 `777`'s 104/104 (`2987`) on the plan-`775` head, plan
 `768`'s 101/101 (`2933`) on `f0c9a8f8`, plan `762`'s
 100/100 (`2860`) on `05013949`, plan `755`'s
@@ -2834,7 +2893,7 @@ narrower. Each deviation is deliberate and measured:
   (`media-surface`, plan `520`), the **text ink** probe (`text-ink-pixels`,
   plan `773`) and the **text decoration** probe (`text-decoration-pixels`,
   plan `775`)
-  pass in real GPUix 0.10.0 on this host (115/115, 4206 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (118/118, 4340 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -2842,9 +2901,9 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **97/97** on
-  2026-10-20 (**2716** checks, 61 capabilities; 1140.5 s; exit `0`, the merge
-  gate; plan `739` on code head `ea2e668b`, including `live-highlights`' 53 wash
+  The **real-window** suite (`smoke:live`) ran in full at **106/106** on
+  2026-10-20 (**3059** checks, 62 capabilities; 1176.8 s; exit `0`, the merge
+  gate; plan `786` on the truncation/content-theme head, including `live-highlights`' 53 wash
   checks, `live-theme`'s 39 pixel checks,
   `live-pixel-colour`, `live-content`'s 68 image-source checks, `live-chart`'s
   71 chart-colour checks, `live-docking`'s 22 indicator checks,

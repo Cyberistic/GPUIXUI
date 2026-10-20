@@ -102,6 +102,7 @@ import { textDecorationScenario } from "./text-decoration.js";
 import { textInkScenario } from "./text-ink.js";
 import { textTruncationPixelsScenario } from "./text-truncation.js";
 import { surfaceThemeScenario } from "./surface-theme.js";
+import { dialogScrimScenario } from "./dialog-scrim.js";
 import {
   primitivesActionsScenario,
   primitivesDisplayScenario,
@@ -271,6 +272,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   textInkScenario,
   textTruncationPixelsScenario,
   surfaceThemeScenario,
+  dialogScrimScenario,
   a11yScenario,
   nativeSurfacesScenario,
   diffSurfaceScenario,
