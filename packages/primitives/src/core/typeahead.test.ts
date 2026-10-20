@@ -20,6 +20,7 @@ import {
   EMPTY_TYPEAHEAD,
   matchTypeahead,
   pressTypeahead,
+  startsTypeahead,
   typeaheadChar,
   TYPEAHEAD_WINDOW,
 } from "./typeahead.js";
@@ -27,6 +28,22 @@ import {
 const NOW = 10_000_000_000n;
 const WINDOW_MS = Duration.toMillis(TYPEAHEAD_WINDOW);
 const NANOS_PER_MS = 1_000_000n;
+
+describe("startsTypeahead", () => {
+  it("starts a prefix when nothing has been typed", () => {
+    expect(startsTypeahead(EMPTY_TYPEAHEAD, NOW)).toBe(true);
+  });
+
+  it("extends the prefix inside the window", () => {
+    expect(startsTypeahead({ text: "u", at: NOW }, NOW + 100n)).toBe(false);
+  });
+
+  it("starts over once the window has passed", () => {
+    const after = NOW + BigInt(WINDOW_MS) * NANOS_PER_MS;
+    expect(startsTypeahead({ text: "u", at: NOW }, after)).toBe(false);
+    expect(startsTypeahead({ text: "u", at: NOW }, after + 1n)).toBe(true);
+  });
+});
 
 describe("typeaheadChar", () => {
   it("falls back to the key when the renderer reports no keyChar", () => {

@@ -2518,6 +2518,18 @@ retired once both branches are one
       `primaryForeground`); the standalone default is unchanged. Both
       directions proven (plan `754`).
 
+`[x]` `packages/primitives`: **the first key after a type-ahead pause was dead** —
+      measured (2026-10-20): the shared hook kept the last match as its search
+      cursor and never reset it when the 500 ms prefix expired, so a fresh
+      prefix searched from where the previous session ended. On a `Select` whose
+      parent defers reports (the plan-`732` scene, value pinned at Estonia) the
+      third key landed on the value already shown and reported nothing —
+      `['ec','eu']` — instead of Ecuador. One `startsTypeahead` predicate (empty
+      buffer or window passed) now resets the cursor to the current item and is
+      the only definition of the window, used by `pressTypeahead` too; after,
+      `['ec','eu','ec']`. 3 core + 1 runtime case, both directions proven, the
+      RadioGroup/ToggleGroup suites unchanged (plan `756`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails

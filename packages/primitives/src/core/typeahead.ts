@@ -36,6 +36,12 @@ export const TYPEAHEAD_WINDOW: Duration.Duration = Duration.millis(500);
 
 const WINDOW_NANOS = BigInt(Duration.toMillis(TYPEAHEAD_WINDOW)) * 1_000_000n;
 
+/** Whether this keystroke begins a new prefix: nothing typed, or the window passed. */
+export const startsTypeahead = (
+  buffer: TypeaheadBuffer,
+  now: bigint,
+): boolean => Str.isEmpty(buffer.text) || now - buffer.at > WINDOW_NANOS;
+
 /**
  * The facts a key event must supply, structurally.
  *
@@ -102,7 +108,7 @@ export const pressTypeahead = (
   now: bigint,
 ): TypeaheadBuffer => {
   const letter = Str.toLowerCase(char);
-  if (Str.isEmpty(buffer.text) || now - buffer.at > WINDOW_NANOS) {
+  if (startsTypeahead(buffer, now)) {
     return { text: letter, at: now };
   }
   const repeating = Arr.every(

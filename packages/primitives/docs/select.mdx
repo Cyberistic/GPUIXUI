@@ -231,6 +231,9 @@ typed prefix the way a desktop select does (plan `731`):
 - consecutive letters accumulate for **500 ms** after the last keystroke, so
   `u` then `g` matches `Uganda`; a letter that matches nothing clears the prefix
   and nothing is reported;
+- after the window a letter starts a **new** prefix from the current value, not
+  from where the previous prefix ended, so the first key after a pause always
+  moves (plan `756`);
 - `ctrl`/`cmd`/`alt` chords and held repeats type nothing: the chord belongs to
   the application, and a held key repeats natively;
 - the caller's `onKeyDown` runs first for every key. There is no way to cancel
@@ -465,13 +468,17 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   and held repeats are refused, the 500 ms window resets the prefix, a repeated
   letter keeps it, and matching skips disabled/blank rows, advances after the
   current item, wraps and is case-insensitive (plan `731`). Reverting the `>`
-  search to `>=` fails the advance case.
+  search to `>=` fails the advance case. `startsTypeahead` is the one window
+  rule the buffer and the cursor both read (plan `756`).
 - `runtime/select-typeahead.runtime.test.tsx` — the same contract through the
   real renderer: `e` commits Europe, a second `e` advances to Estonia, `u` then
   `g` commits Uganda, a disabled option and a no-match letter report nothing, a
   miss does not poison the next letter, `cmd-e` and a held key report nothing
   while the caller's handler still sees them, and the caller sees every key
   (plan `731`). Removing the trigger's composed handler fails four cases by name.
+  Two cases pin the deferred-value cursor: a pinned parent still advances
+  (plan `732`), and a letter typed after the window starts a new prefix from the
+  current value instead of the stale last match (plan `756`).
   The last two cases are the cursor rule (plan `732`): a controlled parent that
   pins a non-matching value still cycles Europe → Estonia → Europe → Estonia
   (the value-derived origin reported the same option four times), and a value

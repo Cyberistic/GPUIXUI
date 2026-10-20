@@ -21,6 +21,9 @@
  *    defers or rejects a report must not trap a repeated letter on one option,
  *    and a value that changes between keystrokes must move the cursor with it
  *    (plan `732`).
+ * 7. that carry-over belongs to one prefix: a letter typed after the 500 ms
+ *    window begins a new prefix and searches from the current value, not from
+ *    where the last prefix ended (plan `756`).
  *
  * Measured on the pinned release build: a simulated printable key arrives as
  * `{ key: "e", keyChar: undefined }`, so the rule's fallback to `key` is what
@@ -28,9 +31,11 @@
  */
 
 import { expect, it } from "vitest";
+import { Duration } from "effect";
 import type { EventPayload } from "@gpuix/react";
 import { Select } from "../src/components/Select.js";
-import { Surface, openWindow } from "./fixture.js";
+import { TYPEAHEAD_WINDOW } from "../src/core/typeahead.js";
+import { Surface, openWindow, sleep } from "./fixture.js";
 
 const OPTIONS = [
   { value: "eu", label: "Europe" },
@@ -198,4 +203,26 @@ it("moves the cursor when the value changes between keystrokes", async () => {
   current.runtime.flush();
   press();
   expect(current.values).toEqual(["ee", "eu"]);
+});
+
+it("starts a new prefix from the current value after the window", async () => {
+  // The pinned value is Estonia. A pause ends the prefix, so the third key
+  // begins a new session and searches from Estonia — Ecuador. Carrying the
+  // last match (Europe) forward landed on the value already shown instead, and
+  // the key reported nothing (measured, plan `756`).
+  const options = [
+    { value: "eu", label: "Europe" },
+    { value: "ee", label: "Estonia" },
+    { value: "ec", label: "Ecuador" },
+  ] as const;
+  const current = await deferring("ee", options);
+  const press = (): void => {
+    current.runtime.keyDown("s-trigger", "e");
+    current.runtime.flush();
+  };
+  press();
+  press();
+  await sleep(Duration.toMillis(TYPEAHEAD_WINDOW) + 150);
+  press();
+  expect(current.values).toEqual(["ec", "eu", "ec"]);
 });

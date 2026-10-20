@@ -15,6 +15,7 @@ import {
   EMPTY_TYPEAHEAD,
   matchTypeahead,
   pressTypeahead,
+  startsTypeahead,
   type TypeaheadBuffer,
   type TypeaheadItem,
   type TypeaheadMatch,
@@ -38,6 +39,12 @@ const monotonicNanos = (): bigint => Effect.runSync(Clock.monotonicTimeNanos);
  * the rule `RadioGroup`/`ToggleGroup`/`Rating` already follow for their keyboard
  * cursor (plan `359`). `from` moves the cursor only when the value itself moved
  * (an applied selection, a click, a reset).
+ *
+ * That carry-over belongs to one prefix: when the window passes, the next letter
+ * begins a new prefix and the search starts at the current item again. Without
+ * the reset the first key after a pause searched from where the last prefix
+ * ended — measured, on a deferring parent it landed on the value already shown
+ * and the key did nothing (plan `756`).
  */
 export const useTypeahead = <Item extends TypeaheadItem>(
   items: ReadonlyArray<Item>,
@@ -51,11 +58,12 @@ export const useTypeahead = <Item extends TypeaheadItem>(
   const origin = useRef<Option.Option<number>>(Option.none());
   return useCallback(
     (char: string) => {
+      const now = monotonicNanos();
       const moved =
         Option.getOrUndefined(origin.current) !== Option.getOrUndefined(from);
-      if (moved) cursor.current = from;
+      if (moved || startsTypeahead(buffer.current, now)) cursor.current = from;
       origin.current = from;
-      const next = pressTypeahead(buffer.current, char, monotonicNanos());
+      const next = pressTypeahead(buffer.current, char, now);
       Option.match(
         matchTypeahead(
           items,
