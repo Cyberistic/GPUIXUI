@@ -183,6 +183,17 @@ const owned = [
   ["problem", "/docs/troubleshooting"],
   ["help", "/docs/troubleshooting"],
   ["support", "/docs/troubleshooting"],
+  ["benchmark", "/docs/performance"],
+  ["benchmarks", "/docs/performance"],
+  ["fps", "/docs/performance"],
+  ["frame rate", "/docs/performance"],
+  ["frames per second", "/docs/performance"],
+  ["10k rows", "/docs/performance"],
+  ["10000 rows", "/docs/performance"],
+  ["memory", "/docs/performance"],
+  ["memory usage", "/docs/performance"],
+  ["slow list", "/docs/performance"],
+  ["slow table", "/docs/performance"],
 ] as const;
 
 const regressions = [

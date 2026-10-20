@@ -1400,6 +1400,34 @@ describe("generated name candidates (plan 569)", () => {
     );
     expect(merged).toHaveLength(1);
   });
+
+  /**
+   * Plan 605: the site stated virtualisation facts in three fragments
+   * (Data display, the capability matrix, List's limitation), so `performance`,
+   * `benchmark`, `fps` and `10k rows` returned nothing or the wrong page.
+   * `virtualized` and `list` stay with the pages earlier plans assigned.
+   */
+  it("finds the performance page by the words readers use (plan 605)", async () => {
+    const expected = [
+      ["performance", "/docs/performance"],
+      ["benchmark", "/docs/performance"],
+      ["fps", "/docs/performance"],
+      ["frame rate", "/docs/performance"],
+      ["10k rows", "/docs/performance"],
+      ["memory", "/docs/performance"],
+      ["virtualized", "/docs/data-display"],
+      ["list", "/docs/components/list"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        return first?.type === "page" && first.url.split("#")[0] === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
 });
 
 describe("withoutTypeTableRows", () => {

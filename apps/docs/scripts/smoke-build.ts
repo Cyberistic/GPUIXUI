@@ -1162,6 +1162,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the site's server-render and hydration model, which returned nothing",
     },
+    {
+      query: "benchmark",
+      expected: "/docs/performance",
+      first: true,
+      what: "the performance vocabulary, which returned nothing before plan 605",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

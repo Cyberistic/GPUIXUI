@@ -1,0 +1,101 @@
+---
+title: Performance
+description: What the runtime measurably does with large data — the painted window for long lists, the four native probes behind it, the cost model, and what has not been measured.
+---
+
+Long collections are where a UI library either stays responsive or falls over.
+On the pinned runtime the answer is concrete: GPUix builds and paints only the
+rows near the viewport, so a long list costs what is **painted**, not what is
+declared. This page states what the native probes measured, what follows from
+it, and — because a documentation site is not a benchmark — what nobody has
+measured.
+
+## What is measured
+
+<CapabilityMatrix only={["virtual-list", "table", "tree", "log"]} />
+
+Four probes back those rows. Each is a scenario in the native smoke suite, and
+each asserts behaviour rather than a duration:
+
+| Probe | Declares | Establishes |
+| ----- | -------- | ----------- |
+| `virtual-list-window` | 5,000 rows | the tree retains every row while only a window near the viewport is painted; a wheel moves that window |
+| `virtualized-table` | 500 rows | fixed-height rows inside the window, a painted row hit-tested and selected, and selection surviving the row leaving the window |
+| `tree-view` | a directory tree | exact per-depth indentation, expand and collapse repaint, and arrow keys reaching a clicked row |
+| `log-viewer` | 30 lines, then 20 appended | a bottom-anchored list starts at the tail and re-anchors when lines arrive |
+
+The row counts are the probes' own declarations, not a recommendation. They are
+the largest the repository has driven; a larger collection is untested rather
+than unsupported.
+
+## The painted window
+
+A `<virtual-list>` keeps every child in the React tree — the 5,000-row probe's
+retained child count is 5,000 — and GPUI builds, lays out and paints only those
+around the viewport. The measured result at rest is a window of about nine rows.
+Four consequences follow, and each one is why the table and log probes are
+written the way they are:
+
+- **Row height should be fixed.** The window is computed from the row's height;
+  the table probe uses 32 px rows so its window is stable. A row that changes
+  height changes what "near the viewport" means.
+- **Hit-testing needs a painted row.** A pointer only reaches a row that exists
+  in the painted window, so a gesture that targets row 400 must scroll it in
+  first. The table probe does exactly that before it clicks.
+- **`onVisibleRange` is one gesture behind.** The first event reports the range
+  from *before* the scroll that caused it. Render from the painted rows where
+  correctness matters and treat the event as a hint.
+- **Selection is React state.** A selected row keeps its selection while it
+  leaves and re-enters the window, because nothing in the row's paint owns the
+  flag.
+
+`alignment="bottom"` and `followTail` overlap: either one anchors a log at the
+tail on its own. Scrolling up and then appending does **not** snap back, so a
+real "follow" toggle is application state plus a scroll, not a prop.
+
+## Choosing a container
+
+| Collection | Use | Why |
+| ---------- | --- | --- |
+| A few dozen rows, every row interactive | [`List`](/docs/components/list) | every row mounts; layout, selection and keyboard are the simplest contract |
+| Thousands of rows | `<virtual-list>` with fixed-height rows | only the window is built and painted; the table probe is the pattern |
+| A bottom-anchored log | `<virtual-list alignment="bottom" followTail>` | starts at the tail and re-anchors on append |
+| A directory or inspector tree | flat rows plus depth indentation | indentation is exact per depth and a toggle repaints the subtree |
+| A chat transcript | [`Message scroller`](/docs/components/message-scroller) | a pinned tail with an explicit jump back to the latest message |
+
+The `List` component is deliberately **not** virtualised: every row mounts. That
+is the right trade for a short collection and the wrong one for a table, which
+is why the long forms live in the [data display](/docs/data-display) layer.
+
+## What is not measured
+
+A performance page is easy to fill with numbers nobody can reproduce. This one
+states the absences instead:
+
+- **Frame time.** No frame rate, frame budget or frame-time percentile has been
+  recorded. The probes assert painted content and interaction, never a duration,
+  so nothing on this site claims a specific frame rate.
+- **Memory.** The retained tree holds every row by design; no memory
+  measurement is recorded for any probe.
+- **Startup and download cost.** The opt-in live surface on this site downloads
+  roughly 20 MB of WebAssembly, which is a network cost, not a rendering
+  measurement. The desktop renderer is a native binding, so its startup is the
+  application's, not the library's.
+- **A maximum row count.** 5,000 is the largest list a probe declares. That is a
+  coverage fact, not a limit.
+
+The measured facts come from one host and are recorded with their plans on the
+[GPUix capabilities](/docs/capabilities) page. Re-run them on yours before
+tuning anything; the [native testing](/docs/native-testing) page documents the
+harness and the `0`/`1`/`2` exit contract.
+
+## Running the probes
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/smoke/run.js --only virtual-list-window --only virtualized-table --only tree-view --only log-viewer
+```
+
+`--only` is repeatable, and a scenario that cannot run on the host reports exit
+`2` — unverified is never a pass. The [roadmap](/docs/roadmap) tracks the data
+and workspace packages these probes make possible.

@@ -10,6 +10,7 @@
     "component-api",
     "accessibility",
     "capabilities",
+    "performance",
     "previews",
     "native-testing",
     "troubleshooting",

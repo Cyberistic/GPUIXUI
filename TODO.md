@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–603)
+## Docs site workstream (plans 410–499, plus 500–605)
 
-`[x]` `[██████████]` 171/171
+`[x]` `[██████████]` 172/172
+
+`[x]` **Performance has an answer (plan 605)** — measured 2026-10-20:
+      `performance`, `benchmark`, `fps` and `10k rows` returned nothing or the
+      wrong page, while the repository has four native probes and a measured
+      painted window. `/docs/performance` states the 5 000-row virtual-list
+      probe, the 500-row table probe, the cost model and — explicitly — that no
+      frame rate, memory figure or startup time has been measured; every count
+      is derived from the shipped scenario source by a guard. 101-page
+      `smoke:build`, 116 files / 971 docs tests, root gates green.
 
 `[x]` **Every page stops downloading the lucide icon set (plan 604)** — the
       loader enabled `lucideIconsPlugin()`, whose `import { icons }` bundled all

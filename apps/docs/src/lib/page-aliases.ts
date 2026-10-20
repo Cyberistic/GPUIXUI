@@ -14,7 +14,10 @@
  * `## State and Effect` and `## What runs where` sections. A fifth covers the
  * failure vocabulary (plan 603): `not working`, `nothing renders`, `blank
  * window`, `no provider`, `font not applied`, `unsupported host`, `debug`,
- * `help` and `support` name the Troubleshooting page. `page-aliases.test.ts`
+ * `help` and `support` name the Troubleshooting page. A sixth covers the
+ * performance vocabulary (plan 605): `benchmark`, `fps`, `frame rate`, `10k
+ * rows` and `memory` name the Performance page, while `virtualized` and
+ * `large list` stay with Data display and List. `page-aliases.test.ts`
  * proves every key is a page `source.getPages()` serves, no key is a component
  * page (that is plan 566's table), no term is shared, and no term shadows a page
  * or component name — an alias that names something else misroutes the query.
@@ -49,6 +52,22 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ],
   ],
   ["/docs/accessibility", ["keyboard focus"]],
+  [
+    "/docs/performance",
+    [
+      "benchmark",
+      "benchmarks",
+      "fps",
+      "frame rate",
+      "frames per second",
+      "10k rows",
+      "10000 rows",
+      "memory",
+      "memory usage",
+      "slow list",
+      "slow table",
+    ],
+  ],
   [
     "/docs/component-api",
     [
