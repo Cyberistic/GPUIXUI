@@ -6,7 +6,7 @@
 dropped from search), 587 (shared host props), 606 (the styling page and the
 declaration-parser pattern), 624 (refs), 625 (the installed-declarations guard
 pattern), 603 (Troubleshooting)
-**Status:** planned
+**Status:** implemented
 
 ---
 
@@ -20,9 +20,10 @@ tree (`/docs/window`). **No page says which JSX tags exist.**
 The runtime declares exactly twelve (`@gpuix/native/dist/host.d.ts:137`,
 `ElementType`): `div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`,
 `anchored`, `code`, `diff`, `markdown`, `virtual-list`. Six of them have no
-library component and no documentation at all: `img`, `canvas`, `code`, `diff`,
-`markdown`, `svg` (only `Icons` uses it internally). A reader writing their own
-component — or asking "can I show an image?" — has nowhere to look.
+library component and no documentation at all: `canvas`, `code`, `diff`, `markdown`
+have no component at all, `img` is used only inside `Avatar`, and `svg` only by
+`Icons` and `Rating`. A reader writing their own component — or asking "can I
+show an image?" — has nowhere to look.
 
 Measured 2026-10-20 at `eb85c6b4` with the real search API (`search(query, 3)`,
 first two results; the full sweep is §9):
@@ -326,38 +327,53 @@ generated document (`src/lib/troubleshooting-error-search.ts`) promoting
 `error`: Inline validation owns error messages, and the regression table in §8
 keeps it there.
 
-## 8. Search: intended results, and the regressions that must not move
+## 8. Search: measured results, and the regressions that must not move
 
-Fill this table with the measured after-values before marking the plan done.
-Each row must return `/docs/native-elements` first unless marked otherwise.
+Measured 2026-10-20 after the page and both documents landed (`search(query, 1)`,
+first result). Every plain-word row below is the measured *after* value; the
+three that moved deliberately are marked.
 
-| Query | Owner |
-| ----- | ----- |
-| `img`, `image element`, `set image`, `load image` | Native elements |
-| `svg element`, `canvas`, `canvas element` | Native elements |
-| `markdown`, `render markdown`, `markdown element` | Native elements |
-| `diff element`, `unified diff` | Native elements |
-| `code element`, `highlighted code` | Native elements |
-| `intrinsic elements`, `jsx elements`, `native elements` | Native elements |
-| `virtual-list` | Native elements (`virtual-list-window` keeps Capabilities) |
-| `error boundary`, `uncaught error`, `component throws` | Troubleshooting |
+| Query | First result after |
+| ----- | ------------------ |
+| `img`, `image element`, `set image`, `load image` | `/docs/native-elements` |
+| `svg element`, `canvas`, `canvas element` | `/docs/native-elements` |
+| `markdown element`, `render markdown` | `/docs/native-elements` |
+| `diff element`, `unified diff` | `/docs/native-elements` (the phrase form lands on `#what-has-no-component`) |
+| `code`, `code element`, `highlighted code` | `/docs/native-elements` — **moved from Typography**, see below |
+| `intrinsic elements`, `jsx elements`, `native elements` | `/docs/native-elements` |
+| `virtual-list` | `/docs/native-elements` — **moved from Capabilities** |
+| `virtual-list-window` | `/docs/capabilities` |
+| `error boundary`, `uncaught error`, `component throws`, `runtime error` | `/docs/troubleshooting` |
+| `onUncaughtError` | `/docs/troubleshooting` |
 
-Regressions that must keep their owner:
+Regressions that kept their owner:
 
-| Query | Owner |
-| ----- | ----- |
-| `input` | Text inputs |
-| `text` | Text |
-| `code` | Typography |
-| `svg` | Icons |
-| `diff viewer`, `syntax highlighting`, `image preview`, `rich text` | Roadmap |
-| `error` | Inline validation |
-| `virtual-list-window` | Capabilities |
-| `jsx` or `intrinsic elements` must not reach Installation or Scrollable containers | — |
+| Query | First result after |
+| ----- | ------------------ |
+| `input` | `/docs/components/text-input` |
+| `text` | `/docs/components/text` |
+| `svg` | `/docs/components/icon` |
+| `mono`, `font size` | `/docs/typography` |
+| `diff viewer`, `syntax highlighting`, `image preview`, `rich text` | `/docs/roadmap` |
+| `error` | `/docs/components/inline-validation` |
+| `read only` | `/docs/native-elements` — **moved from Troubleshooting** |
 
-If a plain-word query cannot be won without stealing a component page, record
-it as a measured limit in this section and keep the phrase form; do not add a
-ranker rule.
+Three ownership decisions, each forced by a measured tie and each recorded
+rather than worked around with a ranker rule:
+
+1. **`code` moves to Native elements.** The page's summary names `code`, so the
+   summary rank beats Typography's text chunks. The element is the subject a
+   reader types; Typography keeps `mono` and `font size`, which are pinned.
+2. **`virtual-list` moves to Native elements, `virtual-list-window` stays on
+   Capabilities.** The element owns the element; the scenario id owns the
+   measured matrix. `capability-search.test.ts` now queries the scenario id —
+   its rule (a hyphenated scenario id reaches the matrix) is unchanged.
+3. **`read only` moves to Native elements.** Plan 608 recorded it as a measured
+   limit on Troubleshooting; the page now owns three read-only surfaces, so the
+   row in `page-aliases.test.ts` moved with a comment. `markdown` itself stays
+   on the roadmap: `roadmap-aliases.ts` deliberately promotes it for the
+   *Rich-text editing* target (plan 585), and the page's phrase form
+   `markdown element` is the element's name.
 
 ## 9. Exact files
 
@@ -390,42 +406,51 @@ Change:
 
 Do **not** touch `packages/*` or `apps/playground`; the page documents them.
 
-## 10. Test plan
+## 10. Test plan — and the measured forced failures
 
-Every test must fail without its subject. Prove each direction by temporarily
-reverting the named change, running the file, and recording the failure text in
-this section.
+Every test fails without its subject. The four proofs below were run by
+reverting the named change and reading the failure, then restoring it.
 
-1. **Parser fixtures** (`native-elements.test.ts`): a small fixture declaration
-   containing `type ElementType`, `interface IntrinsicElements`-shaped text and
-   two prop interfaces, asserting the parsers return the names and nothing else.
-   Fails if the regexes over- or under-read.
+1. **Parser fixtures** (`native-elements.test.ts`): `ElementType`,
+   `IntrinsicElements` (including a quoted hyphenated key), an interface's own
+   fields minus its parent's, a nested `position` object whose `x`/`y` are not
+   props, and the virtual list's shared + union shape.
 2. **Installed runtime agreement** — one call to `nativeElementViolations` with
-   the real `installedNativeDeclarations().join("\n")` and the real
-   `jsx-runtime.d.ts`; expects `[]`. Forced failures: add a fake tag to one
-   authored row (missing), delete one (extra), rename a prop (undocumented). Each
-   must produce a message naming the tag/prop.
-3. **Tag composition** — scan `packages/*/src` for `<tag` and compare with the
-   authored `composedBy` emptiness. Forced failure: give `markdown` a
-   `composedBy` row and see it fail; render a `<markdown>` in a scratch fixture
-   under `packages/components/src` and see `img`-style emptiness fail (revert
-   both).
-4. **Table render** (`native-elements-table.test.tsx`): every element renders a
-   row with its tag and props; every absence renders its replacement link.
-   Fails if a row is dropped.
-5. **Page guard** (`native-elements.test.ts`): the MDX uses
-   `<NativeElementsTable />`, `<AbsentElements />`, every rendered tag name
-   appears in the prose, and every section heading from §4 exists. Fails when a
-   section or a tag is removed.
-6. **Search** (`search.test.ts`): the §8 ownership table and the regression
-   table, plus `search("onUncaughtError", 1)[0].url` is the troubleshooting
-   anchor. Fails when an alias, a promoted name or the description is removed.
-7. **Build smoke** (`scripts/smoke-build.ts`): two queries against the
-   production index. Fails with the real URL printed when the page or index is
-   missing.
-8. **Accessibility**: the new page has one `h1`, ordered headings, a captioned
-   table region, and links with discernible text — covered by `smoke:a11y` (both
-   schemes) and `smoke:responsive` (390 px, no sideways scroll).
+   the real declarations, JSX runtime, package source and roadmap; expects `[]`.
+   The permanent mutation cases fail by name: an extra tag
+   (`button is documented but ElementType does not declare it`), a missing tag
+   (`diff is an element but undocumented`), a renamed prop
+   (`img: description is documented but ImgProps does not declare it` and
+   `img: alt is declared by ImgProps but undocumented`), a false no-component
+   row (`markdown: the table names Card, but no package source renders it`), a
+   composed row with no source (`textarea: the table says no component renders
+   it, but the package source does`), an absence that is now an element
+   (`div: the page says it is absent, but ElementType now declares it`) and an
+   unknown roadmap target.
+3. **Tag composition** — the package source scan proves the column both ways;
+   see the two composition messages above.
+4. **Table render** (`native-elements-table.test.tsx`): one `data-element` row
+   per element with its props, one `data-absent` row per absence, the roadmap
+   link count, and the page's two mounts.
+5. **Page guard** — the nine section headings, both components, the description
+   naming all twelve tags, every absence owner resolving through
+   `source.getPages()`, and every no-component row's roadmap target named in the
+   prose.
+6. **Search** — the measured table above and the regression table, plus
+   `onUncaughtError` reaching the Troubleshooting page.
+7. **Build smoke** — `intrinsic elements` and `img` against the production
+   `/api/search`.
+8. **Accessibility and responsive** — `smoke:a11y` (both schemes) and
+   `smoke:responsive`.
+
+Measured forced failures:
+
+| Change reverted | Failure |
+| --------------- | ------- |
+| the five element phrase aliases in `page-aliases.ts` (key renamed so the aliases hit no page) | `expected [ …(5) ] to deeply equal []` with `image element → …`, `svg element → …`, `markdown element → …`, `diff element → …`, `code element → …` |
+| `<AbsentElements />` removed from the page | `expected '---\ntitle: Native elements…' to contain '<AbsentElements />'` in both the page guard and the table suite |
+| `onUncaughtError` dropped from the generated names | `expected '/docs/troubleshooting#a-component-thr…' to be '/docs/troubleshooting'` |
+| a fake tag appended to the authored rows | the permanent mutation case (`button is documented but ElementType does not declare it`) |
 
 ## 11. Commands
 
@@ -476,7 +501,7 @@ passed unless its output was read.
 ## 13. Acceptance criteria
 
 - `/docs/native-elements` exists, is in the sidebar after Styling, renders all
-  twelve elements with their real props, the five uncomposed elements linked to
+  twelve elements with their real props, the four uncomposed elements linked to
   their roadmap targets, and the absence table with a real replacement page for
   each row.
 - `native-elements.test.ts` agrees with the installed `ElementType`,
@@ -491,3 +516,42 @@ passed unless its output was read.
   `check`, `lint` and `test` were run and their results recorded.
 - `TODO.md` and the plan index are updated and the branch is committed and
   pushed.
+
+## 14. Corrections measured during implementation
+
+1. **`<img>` is not uncomposed.** `Avatar` renders one when `src` is set
+   (`packages/components/src/avatar.tsx:116`, a multi-line `<img` the plan's
+   first grep pattern missed). The table now says `Avatar`, the note says there
+   is no *general* image component, and the page's "no general wrapper" list
+   keeps the roadmap link. `composedBy` is guarded against the source, so this
+   cannot regress.
+2. **`<textarea>` belongs to `TextArea`, not `Input`.** `Input` only shares its
+   props type; `TextArea.tsx:47` is the render.
+3. **`<anchored>` has a fifth source**: `menu/sub.tsx` composes it for the
+   dropdown and context submenus.
+4. **Four event props are shared host props.** `HostProps` itself declares
+   `onToggleFile`, `onShowMore`, `onLineClick` and `onLinkClick`, so
+   `<diff>`/`<markdown>` do not add them and the per-element column must not
+   repeat them. They remain documented on Component API's shared table.
+5. **The props parser needed brace depth.** `AnchoredProps.position` and
+   `.offset` are inline objects whose `x`/`y` matched a naive field regex; the
+   parser now counts braces and a fixture pins it.
+6. **A doc comment cannot spell `packages/*/src`.** The `*/` closes the block
+   comment and leaves an unterminated template literal — oxc reported a parse
+   error forty lines later. Both comments were rewritten.
+7. **`markdown` cannot move.** `roadmap-aliases.ts` promotes it for the
+   *Rich-text editing* target (plan 585); the element page owns the phrase
+   `markdown element` instead, recorded in §8.
+
+Measured command results:
+
+| Command | Result |
+| ------- | ------ |
+| `nub exec vitest run src/lib/native-elements.test.ts src/components/native-elements-table.test.tsx` | 23 tests pass |
+| `nub run --filter docs test` | 141 files / 1 512 tests pass |
+| `nub run --filter docs check-types` | exit 0 |
+| `nub run --filter docs build` | exit 0 |
+| `nub run --filter docs smoke:build` | exit 0 — 109 pages, 239 links, 1 411 anchors, search ok |
+| `nub run --filter docs smoke:a11y` | exit 0 — 109 pages × 2 schemes, 0 violations |
+| `nub run --filter docs smoke:responsive` | exit 0 — 109 pages at 390×844 |
+

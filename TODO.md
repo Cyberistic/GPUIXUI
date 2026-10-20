@@ -471,9 +471,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 192/193
+`[x]` `[██████████]` 193/193
 
-`[~]` **The runtime's element catalogue and its error path (plan 626)** — the
+`[x]` **The runtime's element catalogue and its error path (plan 626)** — the
       site documents how to style a host element and which props it inherits,
       but never which JSX tags exist: six of the runtime's twelve are
       undocumented (`img`, `svg`, `canvas`, `code`, `diff`, `markdown`), so
@@ -485,7 +485,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       gains the render-error section (a class boundary, the runtime's overlay,
       `createRoot`'s `onUncaughtError`); `native-elements.test.ts` reads the
       installed `ElementType`, `JSX.IntrinsicElements`, eight props interfaces
-      and the package source in both directions.
+      and the package source in both directions. 12 element rows, 10 absences,
+      141 files / 1 512 docs tests, 109-page `smoke:build`, a11y (109×2) and
+      responsive green; four forced failures in plan 626 §10.
 
 `[x]` **The application window has a page (plan 625)** — the library documented
       everything inside one GPUix window and nothing about the window itself:

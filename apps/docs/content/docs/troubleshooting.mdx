@@ -1,9 +1,9 @@
 ---
 title: Troubleshooting
-description: "Fix the failures readers hit: an empty window, a missing or doubled theme provider, a font that is not applied, a host with no native binding, a blank live preview, a clipped overlay, a platform switch that only changes the type, and a check that exits 2."
+description: "Fix the failures readers hit: an empty window, a missing or doubled theme provider, a component that throws, a font that is not applied, a host with no native binding, a blank live preview, a clipped overlay, a platform switch that only changes the type, and a check that exits 2."
 ---
 
-Most problems are one of these eight. Each failure section names the cause, how
+Most problems are one of these nine. Each failure section names the cause, how
 to confirm it, and the page that owns the topic.
 
 ## Nothing appears in the window
@@ -13,8 +13,9 @@ Two different bugs look like an empty window in a screenshot:
 - **A primitive with no provider throws.** `@gpuixui/primitives` deliberately
   has no default theme, so a `Button`, `Stack` or `Text` rendered above no
   `<ThemeProvider>` fails with `MissingThemeProviderError` and a message naming
-  the provider. The error reaches the console or your error boundary; without
-  one the subtree does not render.
+  the provider. The error reaches the console or your error boundary — [a
+  component that throws](#a-component-throws) says which; without one the
+  subtree does not render.
 - **A components-only tree paints light.** `@gpuixui/components` reads the token
   context, whose default value is `lightTheme`, so it does not fail when the
   provider is missing — it silently draws the light palette. On a dark window
@@ -25,6 +26,67 @@ Mount the provider at the root and pass the resolved theme:
 and [Theming](/docs/theming#providers) explains why the two packages have
 separate contexts. If the window itself never opens, the host has no native
 binding — see the native-binding section below.
+
+## A component throws
+
+A throw during render is not a blank window. It reaches one of two handlers.
+
+**A class error boundary keeps the tree.** React's only boundary is a class with
+`getDerivedStateFromError`; a function component cannot be one. It catches the
+throw, swaps in a fallback and leaves the rest of the tree mounted:
+
+```tsx
+import { Component, type ReactNode } from "react";
+
+interface CaughtState {
+  readonly message: string | null;
+}
+
+export class Boundary extends Component<
+  {
+    readonly children?: ReactNode;
+    readonly fallback: (message: string) => ReactNode;
+  },
+  CaughtState
+> {
+  state: CaughtState = { message: null };
+
+  static getDerivedStateFromError(error: Error): CaughtState {
+    return { message: error.message };
+  }
+
+  render() {
+    return this.state.message === null
+      ? this.props.children
+      : this.props.fallback(this.state.message);
+  }
+}
+```
+
+The components package observes its own part-position errors exactly this way
+in the native suite
+(`packages/components/src/behaviour/parts.test.tsx`), so the pattern is proven
+on the real renderer rather than in a browser test.
+
+**Without a boundary, `render()` paints the runtime's overlay.** The runtime
+mounts an "Uncaught runtime errors:" surface with a scrollable stack and a
+reload control (`testId="runtime-error-overlay"`). `render()` also installs
+process-level handlers for uncaught exceptions and unhandled rejections, so an
+async throw paints the same overlay instead of ending the process — a dead
+process stops the platform's event loop.
+
+If you own the root, `createRoot(renderer, { onUncaughtError })` replaces the
+default console error with your handler. `render()` exposes no such option: it
+always installs the overlay.
+
+Four limits are worth knowing before relying on this:
+
+- there is no hook-based boundary — it must be a class;
+- a boundary does not catch an async rejection; the process handlers do;
+- the overlay is the runtime's own surface and is not themed or styled by the
+  library;
+- the overlay's stack is the message to paste into an issue; see
+  [Where to ask](#where-to-ask).
 
 ## The colours are wrong, or a label is invisible
 

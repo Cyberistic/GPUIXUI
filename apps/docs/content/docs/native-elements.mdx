@@ -1,0 +1,253 @@
+---
+title: Native elements
+description: "The runtime's twelve JSX elements — div, text, img, svg, canvas, input, textarea, anchored, code, diff, markdown and virtual-list — their props, which components compose them, the HTML elements that do not exist (button, a, table, headings), and how a render error surfaces."
+---
+
+A GPUix app is not a web page, so it has no HTML element set. The runtime paints
+**twelve** element types, and every component in this library is built from
+them. This page is the catalogue: what each tag paints, the props it adds to the
+shared host props, and the components that already wrap it.
+[Styling](/docs/styling) is how an element looks; [Component API](/docs/component-api#shared-host-props)
+is what every element inherits.
+
+A string child is a text node. `<text>` is the element form of a text run, and
+it is the only text tag.
+
+## The twelve elements
+
+<NativeElementsTable />
+
+The prop column lists what the tag adds to `HostProps` — `style`, the event
+handlers, `role`, the seven `aria-*` names, `tabIndex`, `autoFocus`, `testId`,
+`highlight` and `motion`. Those are documented once on
+[Component API](/docs/component-api#shared-host-props) and
+[Accessibility](/docs/accessibility#what-assistive-technology-sees), not
+repeated here.
+
+## What has no component
+
+Five elements are declared and usable, and no component in this library is a
+general wrapper for them. Four are real [roadmap](/docs/roadmap) targets, not a
+missing primitive:
+
+- **`<img>`** — an image from a path, data URL or http(s) URL. `Avatar` paints
+  one when you pass `src`, but there is no general image component;
+  [image preview](/docs/roadmap) is the target.
+- **`<code>`** — syntax-highlighted, read-only code.
+  [Syntax highlighting](/docs/roadmap) is the planned component.
+- **`<diff>`** — a unified diff with clickable files and lines.
+  [Diff viewer](/docs/roadmap) is the planned component.
+- **`<markdown>`** — GitHub-flavoured markdown, rendered read-only.
+  [Rich-text editing](/docs/roadmap) covers the editor; rendering is already
+  here.
+- **`<canvas>`** — a raw drawing surface. Its type is declared, but **no probe
+  in this repository paints one**, so treat it as unverified rather than
+  working.
+
+## Images
+
+`<img src>` accepts a filesystem path, a data URL or an http(s) URL, and
+`objectFit` chooses how the image fills its box:
+
+```tsx
+import type { ReactElement } from "react";
+
+export const Avatar = (): ReactElement => (
+  <img
+    src="/Users/me/avatar.png"
+    alt="Ada Lovelace"
+    objectFit="cover"
+    style={{ width: 48, height: 48, borderRadius: 24 }}
+  />
+);
+```
+
+An image whose bytes are already in memory is painted through the element
+instance a `ref` receives; there is no `blob:` URL in this runtime:
+
+```ts
+import type { ImgInstance } from "@gpuix/react";
+
+export const paint = (image: ImgInstance, bytes: Uint8Array): void => {
+  image.setImage(bytes);
+};
+```
+
+`setImagePixels(width, height, pixels)` does the same for raw RGBA data. The
+element handle is the runtime's `ImgInstance`; [Refs and element
+handles](/docs/component-api#refs-and-element-handles) covers the ref contract.
+
+## Vector graphics
+
+`<svg>` takes either a desktop path in `src` or raw markup in `source`:
+
+```tsx
+import type { ReactElement } from "react";
+
+export const Mark = (): ReactElement => (
+  <svg
+    source={'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#3b5bdb"/></svg>'}
+    style={{ width: 16, height: 16 }}
+  />
+);
+```
+
+`source` is the portable form: the browser live surface paints it, while a
+desktop path does not exist there. `@gpuixui/icons` uses `src` for its own
+files and the docs icon gallery draws the same markup in the browser — see
+[Icons](/docs/components/icon).
+
+## Code, diffs and markdown
+
+These three are read-only content surfaces with no component yet. Each accepts
+the content as a prop, so the application owns the string.
+
+`<code>` highlights one block. It paints **no surface of its own** — no fill,
+border or padding — so `style` is the surface. Rows never wrap and the block
+scrolls itself:
+
+```tsx
+import type { ReactElement } from "react";
+
+const source = `export const answer = 42;`;
+
+export const Snippet = (): ReactElement => (
+  <code
+    code={source}
+    language="ts"
+    showLineNumbers
+    style={{ padding: 12, borderRadius: 8, backgroundColor: "#1f1f1f" }}
+  />
+);
+```
+
+`<diff>` renders a unified git patch. `wordDiff` highlights the words that
+changed inside a pair, `collapsedPaths` renders a file header only, and
+`maxLines` paints a "Show more" row. Its three events report a clicked file
+header, the hidden line count, and a clicked line with its old and new numbers.
+
+`<markdown>` renders GitHub-flavoured markdown — tables, strikethrough and task
+lists are on. Links do not open themselves: `onLinkClick` receives the URL and
+the application decides what to do with it, because the runtime declares no
+shell-open API.
+
+## Virtual lists
+
+`<virtual-list>` builds only the rows near its viewport while keeping every row
+in the React tree. There are two shapes: a fixed `itemCount` with an
+`estimatedItemHeight`, or no count and variable heights. `alignment="bottom"`
+with `followTail` starts at the end and re-anchors on append, which is the log
+viewer's contract. `overdraw` builds extra rows above and below the window.
+
+```tsx
+import type { ReactElement } from "react";
+
+export const Rows = ({ rows }: { readonly rows: ReadonlyArray<string> }): ReactElement => (
+  <virtual-list
+    itemCount={rows.length}
+    estimatedItemHeight={28}
+    style={{ height: 240 }}
+  >
+    {rows.map((row) => (
+      <text key={row} style={{ height: 28, paddingLeft: 8 }}>
+        {row}
+      </text>
+    ))}
+  </virtual-list>
+);
+```
+
+It is the one element that does **not** take the shared host props: there is no
+`onClick`, `onKeyDown` or `tabIndex` on the list itself, and its `style` has no
+`hover` or `active` state. Put interactions on the rows.
+[Data display](/docs/data-display) and [Performance](/docs/performance) record
+what the painted window does; `MessageScroller` composes it.
+
+## Floating layers
+
+`<anchored>` positions a child against its parent. `side` and `align` choose the
+edge, `gap` the distance, `anchor` a corner, `offset` a nudge, and `fit` what
+happens at the window edge. It paints no surface of its own, so the background
+and the event handlers belong on the content inside it:
+
+```tsx
+import type { ReactElement } from "react";
+
+export const Menu = (): ReactElement => (
+  <anchored side="bottom" align="start" gap={4}>
+    <div
+      style={{ padding: 8, borderRadius: 8, backgroundColor: "#ffffff" }}
+    >
+      <text>Duplicate project</text>
+    </div>
+  </anchored>
+);
+```
+
+Two measured limits matter when you place one: `align="center"` lands off by
+half the panel on both axes, and `fit="snap"` clamps inside the window without
+flipping to the other side. [Layering](/docs/component-api#layering) states the
+paint order, the dismiss rule and both limits.
+
+## What is not an element
+
+A React developer reaches for tags this runtime does not have. Each row is a
+real absence with a replacement that ships:
+
+<AbsentElements />
+
+Two more absences are worth naming because they shape a component's code:
+
+- **No `type` on `<input>`.** A number field, an OTP field and a search field
+  are components, not an input attribute.
+- **No DOM querying.** There is no `document`, `querySelector` or element
+  traversal from component code: the renderer addresses elements by id, and a
+  `ref` gives you the instance. [Refs and element
+  handles](/docs/component-api#refs-and-element-handles) is the contract.
+
+## Writing your own element
+
+A custom component follows the same three rules as the library's:
+
+1. **Use one of the twelve tags.** An unknown tag is a type error, not a
+   runtime surprise.
+2. **Style with `style`, never `className`.** Values come from the theme, so
+   read them through `useTheme` instead of hard-coding a colour.
+3. **Take events from `HostProps`.** A click is `onClick`, a key is `onKeyDown`,
+   and a focus ring is a border you draw in `onFocus` — there is no
+   `:focus-visible` selector.
+
+```tsx
+import type { ReactElement } from "react";
+import { useTheme } from "@gpuixui/tokens/react";
+
+export const Count = ({ value }: { readonly value: number }): ReactElement => {
+  const theme = useTheme();
+  return (
+    <div
+      role="status"
+      style={{
+        display: "flex",
+        paddingLeft: theme.spacing.sm,
+        paddingRight: theme.spacing.sm,
+        borderRadius: theme.radius.full,
+        backgroundColor: theme.colors.primary,
+        color: theme.colors.primaryForeground,
+      }}
+    >
+      <text
+        style={{
+          fontSize: theme.typography.caption.fontSize,
+          lineHeight: theme.typography.caption.lineHeight,
+          fontWeight: theme.typography.caption.fontWeight,
+        }}
+      >
+        {String(value)}
+      </text>
+    </div>
+  );
+};
+```
+
+[Extending](/docs/extending) is the larger version of this: how the `core/`
+layer decides variants, state and style, and where a new component belongs.

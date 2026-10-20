@@ -554,7 +554,9 @@ const regressions = [
   ["media queries", "/docs/styling"],
   ["table", "/docs/data-display"],
   ["tables", "/docs/data-display"],
-  ["read only", "/docs/troubleshooting"],
+  // Plan 626: Native elements owns the three read-only surfaces, so the
+  // phrase plan 608 recorded as a measured limit lands there.
+  ["read only", "/docs/native-elements"],
   ["tabel", "/docs/components/label"],
   ["keyboard navigation", "/docs/roadmap"],
   ["grid", "/docs/components/stack"],

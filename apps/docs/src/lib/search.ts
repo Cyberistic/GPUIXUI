@@ -33,6 +33,8 @@ import {
 import { source } from "./source";
 import { siteOutputSearchEntry } from "./site-output-search";
 import { stylingSearchEntry } from "./styling-search";
+import { nativeElementsSearchEntry } from "./native-elements-search";
+import { troubleshootingErrorSearchEntry } from "./troubleshooting-error-search";
 import { tokenSearchEntries } from "./token-search";
 import { tokensApiSearchEntry } from "./tokens-api-search";
 import { stem, typoMatch, type TypoName } from "./typo";
@@ -160,6 +162,8 @@ export const generatedSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   scenesIndexEntry,
   siteOutputSearchEntry,
   stylingSearchEntry,
+  nativeElementsSearchEntry,
+  troubleshootingErrorSearchEntry,
 ];
 
 const generatedByUrl = new Map(

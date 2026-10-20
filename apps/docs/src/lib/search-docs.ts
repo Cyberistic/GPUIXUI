@@ -161,4 +161,14 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     url: "/docs/styling",
     what: "every `StyleDesc` field the runtime paints",
   },
+  {
+    title: "Native elements",
+    url: "/docs/native-elements",
+    what: "every JSX element, its props and what has no component",
+  },
+  {
+    title: "Troubleshooting",
+    url: "/docs/troubleshooting",
+    what: "the render-error path: boundary, overlay and `onUncaughtError`",
+  },
 ];

@@ -22,6 +22,7 @@ import { PageTemplateSections } from "./page-template";
 import { PartIndex } from "./part-index";
 import { PartStates } from "./part-states-table";
 import { NativePlatforms } from "./native-platforms";
+import { AbsentElements, NativeElementsTable } from "./native-elements-table";
 import { PlatformPreviews } from "./preview/platform-previews";
 import { PreviewTiers } from "./preview/preview-tiers";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
@@ -74,6 +75,8 @@ export function getMDXComponents(components?: MDXComponents) {
     CapabilityMatrix,
     NativePreview,
     NativePlatforms,
+    NativeElementsTable,
+    AbsentElements,
     LiveSurface,
     LiveSceneIndex,
     ComponentPreview,

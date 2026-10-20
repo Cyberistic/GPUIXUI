@@ -55,8 +55,10 @@ describe("capability search", { timeout: 120_000 }, () => {
     expect(results[0]?.url).toBe("/docs/capabilities");
   });
 
-  it("finds the matrix from a hyphenated capability name", async () => {
-    const results = await search("virtual-list", 5);
+  it("finds the matrix from a hyphenated scenario id", async () => {
+    // The element's own name now belongs to Native elements (plan 626); the
+    // scenario id is what the matrix owns.
+    const results = await search("virtual-list-window", 5);
     expect(results[0]?.url).toBe("/docs/capabilities");
   });
 

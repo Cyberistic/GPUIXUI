@@ -91,6 +91,17 @@
  * and `windows` stay on Styling and Theming, where they mean responsive sizing
  * and the platform style; `menu bar` stays Navigation menu's component alias;
  * `dialog` and `menu` keep their component pages.
+ *
+ * Plan 626 adds the element vocabulary. `image element`, `svg element`,
+ * `canvas element`, `code element`, `diff element`, `markdown element`,
+ * `intrinsic elements`, `jsx elements`, `render markdown` and the element
+ * catalogue's synonyms name Native elements, and `error boundary`,
+ * `uncaught error`, `component throws` and `runtime error` name
+ * Troubleshooting's render-error section. The plain words (`img`, `svg`,
+ * `code`, `diff`, `markdown`, `input`, `text`) are deliberately absent from
+ * this table: a page alias matches the whole query only, and `input`, `text`
+ * and `svg` keep the component page each already had. `code` moved to the
+ * element page by its authored summary (plan 626 §8), not by an alias.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -319,6 +330,31 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ],
   ],
   [
+    "/docs/native-elements",
+    [
+      "image element",
+      "image elements",
+      "set image",
+      "load image",
+      "svg element",
+      "svg elements",
+      "canvas element",
+      "canvas elements",
+      "code element",
+      "code elements",
+      "highlighted code block",
+      "diff element",
+      "diff elements",
+      "markdown element",
+      "markdown elements",
+      "render markdown",
+      "intrinsic elements",
+      "jsx elements",
+      "native element",
+      "element catalogue",
+    ],
+  ],
+  [
     "/docs/performance",
     [
       "benchmark",
@@ -460,6 +496,10 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "wrong colors",
       "wrong colours",
       "crash",
+      "error boundary",
+      "uncaught error",
+      "component throws",
+      "runtime error",
       "no provider",
       "missing provider",
       "font not applied",
