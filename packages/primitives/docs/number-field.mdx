@@ -47,11 +47,14 @@ max={0}` collapsed to `0` for a value of `150`, and `step={Infinity}` painted
 The **value is made total the same way** (plan `392`): a non-finite `value` or
 `defaultValue` reads as a number the field can paint, so it can never show
 `"NaN"` or `"Infinity"`. `NaN` reads as the field's floor — its `min`, else `0`
-— which is the rule `Slider` already follows; `+Infinity` reads as the bound on
-its own side (`max`, else the floor) and `-Infinity` as `min` (else `max`, else
-`0`). The keyboard uses the same value: a field whose value was not a number
-steps from the floor instead of swallowing every key. A `precision` that is not
-a finite number is `0` decimals.
+— which is the rule `Slider` already follows. An infinity reads as a finite
+neighbour inside the bounds: `+Infinity` is `max` when one exists, otherwise the
+neutral `0` clamped up to a positive `min`; `-Infinity` is `min` when one exists,
+otherwise `0` clamped down to a negative `max` (plan `753`). An absent bound
+therefore never paints a value from the **opposite** side — `value={-Infinity}`
+under `max={100}` shows `0`, not `100`. The keyboard uses the same value: a field
+whose value was not a number steps from the painted neighbour instead of
+swallowing every key. A `precision` that is not a finite number is `0` decimals.
 
 The two spin buttons read that **same normalised range** (plan `378`), so with
 `min={100} max={0}` the field is simply `0…100`: at `0` the up button is live and
@@ -235,9 +238,13 @@ after the wrapper's chrome:
   one before it paints — `value={NaN}`/`defaultValue={NaN}` paint `"0"` (or
   `"10"` under `min={10}`), unbounded `value={±Infinity}` paint `"0"`, and
   `precision={Infinity}` paints `0` decimals; a `NaN` field steps to `-1`
-  instead of reporting nothing. Proven in
-  `runtime/nonsense-numbers.runtime.test.tsx` (5 cases) and the core range
-  cases.
+  instead of reporting nothing. **Plan `753`:** with no bound on an infinity's
+  own side it took the *other* bound — `value={-Infinity} max={100}` painted
+  `"100"` and `value={Infinity} min={-100}` painted `"-100"`; both now paint the
+  neutral `"0"` clamped into the bound that exists, and the single-bound cases
+  (`max={-10}`, `min={10}`) are unchanged. Proven in
+  `runtime/nonsense-numbers.runtime.test.tsx` (5 cases, two new fields) and the
+  core range cases.
 
 ```sh
 nub run --filter @gpuixui/primitives test

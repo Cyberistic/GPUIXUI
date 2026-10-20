@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 172/172
+`[x]` `[████████████]` 173/173
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2471,6 +2471,18 @@ retired once both branches are one
       cases, and removing both disabled guards fails the fifth. The suite replaces
       the user's clipboard, which its header states (plan `752`; runtime file
       count 70 → 71).
+
+`[x]` `packages/primitives`: **an infinite field value took the wrong side when
+      its own bound was absent** — measured (2026-10-20): `NumberField`
+      `value={-Infinity} max={100}` painted and announced `"100"`, and
+      `value={Infinity} min={-100}` painted `"-100"`, because the finite-value
+      rule fell through to the *opposite* bound when no bound existed on the
+      infinity's own side. An infinity now takes `max`/`min` when present,
+      otherwise the neutral `0` clamped into the only bound; the two wrong-side
+      fields paint `"0"` and the documented single-bound cases (`max={-10}`,
+      `min={10}`) are unchanged. 3 core assertions + 2 fields in the non-finite
+      runtime matrix, both directions proven, and the page no longer states the
+      defect (plan `753`; the scoped `nonsense-numbers` file 5/5).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

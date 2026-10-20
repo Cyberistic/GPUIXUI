@@ -128,6 +128,19 @@ describe("clampNumeric", () => {
     expect(clampNumeric(Number.NEGATIVE_INFINITY, { step: 1, max: -10 })).toBe(
       -10,
     );
+    // The bug guarded (plan 753): with no bound on the infinity's own side the
+    // value fell through to the *opposite* bound, so a negative infinity under
+    // a positive maximum painted the maximum (and the mirror case painted the
+    // minimum). The neutral 0 is clamped into whichever bound exists.
+    expect(clampNumeric(Number.NEGATIVE_INFINITY, { step: 1, max: 100 })).toBe(
+      0,
+    );
+    expect(clampNumeric(Number.POSITIVE_INFINITY, { step: 1, min: -100 })).toBe(
+      0,
+    );
+    expect(clampNumeric(Number.POSITIVE_INFINITY, { step: 1, min: 10 })).toBe(
+      10,
+    );
   });
 });
 

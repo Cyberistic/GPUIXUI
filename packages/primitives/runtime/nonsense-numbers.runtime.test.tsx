@@ -21,6 +21,12 @@
  * `"Infinity"`, `defaultValue={NaN}` painted `"NaN"`, and `precision={Infinity}`
  * painted the 20-decimal ceiling. Every field now reads a non-finite value as a
  * finite neighbour, so the same matrix covers the value itself.
+ *
+ * **The wrong-side follow-up this file guards (plan 753).** With no bound on an
+ * infinity's own side, `finiteFieldValue` fell through to the *opposite* bound:
+ * `value={-Infinity} max={100}` painted `"100"` and `value={Infinity}
+ * min={-100}` painted `"-100"`. Both now take the neutral `0` clamped into the
+ * present bound.
  */
 
 import { expect, it } from "vitest";
@@ -176,6 +182,18 @@ it("never paints NaNs for a bound or a step it cannot read", async () => {
         value={1.25}
         precision={Number.POSITIVE_INFINITY}
       />
+      <NumberField
+        testId="neg-inf-max"
+        label="Negative infinite value with a maximum"
+        value={Number.NEGATIVE_INFINITY}
+        max={100}
+      />
+      <NumberField
+        testId="inf-min"
+        label="Infinite value with a minimum"
+        value={Number.POSITIVE_INFINITY}
+        min={-100}
+      />
     </Surface>,
   );
   const painted = runtime.paintedText();
@@ -184,7 +202,8 @@ it("never paints NaNs for a bound or a step it cannot read", async () => {
   // A non-finite bound is absent, so the value is painted as it was given; an
   // inverted pair is swapped, so 150 takes the range's top. A non-finite value
   // reads as the field's floor (its `min`, else 0) and a non-finite precision
-  // is zero decimals (plan `392`).
+  // is zero decimals (plan `392`). An infinity with no bound on its own side
+  // takes the neutral 0, not the bound on the other side (plan `753`).
   expect(painted).toStrictEqual([
     "5",
     "5",
@@ -196,6 +215,8 @@ it("never paints NaNs for a bound or a step it cannot read", async () => {
     "0",
     "0",
     "1",
+    "0",
+    "0",
   ]);
 });
 

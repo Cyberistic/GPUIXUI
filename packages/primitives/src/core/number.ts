@@ -57,8 +57,10 @@ export const normalizeNumberRange = (range: NumberRange): NumberRange => {
  *
  * `NaN` reads as the floor — the rule `core/value.ts`'s `clampValue` already
  * follows for a slider, so an unknown number never looks like a deliberate
- * one. An infinity reads as the bound on its own side, because that is the
- * nearest paintable value the caller could have meant.
+ * one. An infinity reads as a finite neighbour inside the bounds: the bound on
+ * its own side when one exists, otherwise the neutral `0` clamped into the
+ * bound that does exist. Falling through to the *opposite* bound painted a
+ * negative infinity as the maximum (plan `753`).
  */
 const finiteFieldValue = (
   value: number,
@@ -66,9 +68,10 @@ const finiteFieldValue = (
   max: number | undefined,
 ): number => {
   if (Number.isFinite(value)) return value;
-  const floor = min ?? 0;
-  if (Number.isNaN(value)) return floor;
-  return value > 0 ? (max ?? floor) : (min ?? max ?? 0);
+  if (Number.isNaN(value)) return min ?? 0;
+  return value > 0
+    ? Math.max(max ?? 0, min ?? 0)
+    : Math.min(min ?? 0, max ?? 0);
 };
 
 /**
