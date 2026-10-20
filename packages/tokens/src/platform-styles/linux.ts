@@ -13,7 +13,7 @@ import {
  * body floor on the fills a row paints (plan 081). The dark secondary grey is
  * one step lighter so secondary text keeps its floor through the selection wash
  * on the selected row (plan 087). The accent's readable text
- * step is `#12488F` light and `#99C1F1` dark; the fill's `#1C71D8` is 3.51:1 on
+ * step is `#12488F` light and `#B4D5F7` dark; the fill's `#1C71D8` is 3.51:1 on
  * the pressed wash (plan 082). The dark boundary is one step lighter so a
  * checkbox edge clears the floor on the selected row (plan 084). Elevation
  * levels apply their own alpha to the `shadow` tint, so a copied style retints

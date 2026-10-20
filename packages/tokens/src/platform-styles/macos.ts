@@ -15,7 +15,7 @@ import {
  * `sans` stays GPUI's system sentinel; `mono` is
  * the family macOS installs. The dark divider is Apple's separator grey
  * (`#48484A`), so an outlined control's edge clears the floor on the washes it
- * paints (plan 080). The accent's readable text step is `#0055B3` light and
+ * paints (plan 080). The accent's readable text step is `#00478F` light and
  * `#A4D4FF` dark: the fill's `#0071E3` measures 4.21:1 on the canvas and
  * `#2E93FF` 4.47:1 on a dark card (plan 082). The light boundary is Apple's
  * secondary label grey (`#6E6E73`), so a checkbox in a row keeps its edge on

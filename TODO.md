@@ -210,6 +210,17 @@ no narrowed string; it is the only guard the `guards.test.ts` non-string matrix
 could not cover. It now takes `unknown` and narrows to the hex string, is held
 by the same matrix as the other seven guards, and the three passages state the
 narrowing; no colour, pair, floor, metric or shipped theme moves (plan 780)
+`[x]` Correct the three platform style headers that name the wrong readable ink
+— each opens by quoting its accent's text step, and plan 528 and plan 591 moved
+`primaryText` while the prose kept plan 082's value: macOS named `#0055B3`, a
+colour the file no longer declares at all, while Windows named `#005BA1` and
+Linux dark `#99C1F1`, which are each file's `primaryHover` — a hover fill
+presented as the ink the role split exists to separate, in the files a consumer
+copies and edits. The three headers name their own shipped values, the four fill
+figures are unchanged and derived, and `platform-header-text-step.test.ts` holds
+the sentence, the orphan-hex rule and the no-other-role's-colour rule to the
+resolved palette; no colour, pair, floor, metric or shipped theme moves (plan
+781)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan
