@@ -224,6 +224,10 @@ All four exit 0. The full native suite is the merge gate, not an iteration
 check; run it once at the end and confirm the only failures are the recorded
 plan-540 binding defects.
 
+Measured on 2026-10-20 after the change: **905 passed / 28 failed of 933** — the
+same 28 plan-540 binding failures (17 focus/blur, 10 position and 1 scroll), and
+no empty-state case among them. `empty-state.test.tsx` is 9/9 in that run.
+
 The playground smoke registry has no EmptyState scenario (its rows are GPUix
 primitives), so the native `TestRenderer` suite is the interaction evidence. No
 live window is opened for this change.
