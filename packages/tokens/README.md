@@ -257,9 +257,10 @@ A shareable URL is the same row, and the package owns the transport.
 real `URLSearchParams` satisfies the structural `ThemeParamSource`, so no runtime
 dependency is added — and an unknown value is absent. `themeChoiceParams(choice)`
 writes the canonical axes: `dark`, `high`, a non-`default` platform, a valid
-recipe (which suppresses the platform it overrides) and every valid density —
-density even when it equals the resolved preset, since the platform supplies the
-fallback. `themeChoiceKeys` is the key order
+recipe (which suppresses the platform it overrides) and the density the row
+resolves to — always written as the preset, so a row that names none still
+carries the platform's (`darwin` is `compact`) and a platform edit in the link
+cannot change it. `themeChoiceKeys` is the key order
 and the clear list, so a stale axis cannot survive a new choice.
 
 ```ts

@@ -1056,8 +1056,9 @@ reads the five keys through the same guards — a real `URLSearchParams` satisfi
 the structural `ThemeParamSource` — and treats an unknown value as absent, so a
 hand-edited link resolves to a readable theme. `themeChoiceParams(choice)` writes
 the canonical axes only: `mode=dark`, `contrast=high`, a non-`default` platform,
-a valid recipe, and every valid density, because the platform supplies the
-density fallback; a recipe suppresses the platform it overrides.
+a valid recipe, and the density the row resolves to, even when the row names
+none, because the platform (or recipe) supplies that fallback; a recipe
+suppresses the platform it overrides.
 `themeChoiceKeys` is both the key order and the list a consumer clears before
 writing a new choice, so a stale axis cannot survive beside its replacement. No
 theme, role or pair changes.

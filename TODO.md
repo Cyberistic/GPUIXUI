@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 341/418
+`[x]` `[████████░░]` 342/419
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -146,6 +146,7 @@ scrimmed surface, and the scrim to the face for the face-on-itself composition)
 and fails unless a public check reports it, and a planted composition no walk
 measures proves the predicate can fail. No colour, pair, floor, metric, role or
 shipped theme moves; `contrastPairs` stays 470 (plan 754)
+`[x]` Make the canonical theme link carry the density it resolves — `themeChoiceParams` documented density as the one axis always written (the fallback belongs to the platform: `platform=darwin` is compact, the same link on `win32` is comfortable) but encoded one only when the row named it, so the canonical link for `{ platform: "darwin" }` was `platform=darwin` alone and lost its compact on a platform edit; the writer now resolves the choice and always emits `density`, the JSDoc, catalogue, design system and README state the total rule, and `canonicalLink` is executed (plan 755)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan

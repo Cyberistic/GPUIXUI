@@ -2222,11 +2222,12 @@ so the package gains no runtime dependency — and treats an unknown value as
 absent, exactly like a missing key. `themeChoiceParams(choice)` is the canonical
 writer. It omits an axis whose fallback already selects it — a light mode, a
 default contrast, the `default` platform — and a valid `recipe` suppresses the
-`platform` it overrides. Density is the one exception: it is written even when it
-equals the resolved theme's preset (macOS is `compact`), because the fallback is
-the *platform's* preset, so the same row on another platform would otherwise
-change. `themeChoiceKeys` is the key order and the clear list, so a link cannot
-keep an axis the new choice replaced.
+`platform` it overrides. Density is the one exception: it is always written, as
+the preset the choice resolves to — `platform=darwin` writes
+`density=compact`, and a row that names no density writes the preset it resolves
+to — because the fallback is the *platform's* (or recipe's) preset, so the same
+link on another platform would otherwise change. `themeChoiceKeys` is the key
+order and the clear list, so a link cannot keep an axis the new choice replaced.
 
 ```ts
 import {
