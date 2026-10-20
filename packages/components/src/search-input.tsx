@@ -16,16 +16,19 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  SEARCH_INPUT,
+  SEARCH_INPUT_CLEAR,
+  SEARCH_INPUT_CONTROL,
+  SEARCH_INPUT_ICON,
+} from "@gpuixui/tw";
 import { useCallback, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 
 /** {@link SearchInput} props. */
 export interface SearchInputProps extends Omit<
@@ -44,6 +47,8 @@ export interface SearchInputProps extends Omit<
   /** Default `"Search…"`. */
   readonly placeholder?: string;
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the field's state. */
   readonly style?: StateStyle<SearchInputState>;
 }
@@ -63,6 +68,7 @@ export const SearchInput = ({
   onClear,
   placeholder = "Search…",
   disabled = false,
+  className,
   style,
   onChange,
   onKeyDown,
@@ -95,33 +101,15 @@ export const SearchInput = ({
   return (
     <div
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.md,
+        mergeStyles(recipeStyle(cn(SEARCH_INPUT, className), theme), {
           height: controlHeight(theme, "md"),
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          backgroundColor: theme.colors.background,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          borderRadius: theme.radius.md,
           opacity: disabled ? 0.5 : 1,
           ...(focused ? focusRing(theme) : {}),
-        },
+        }),
         resolveStyle(style, state),
       )}
     >
-      <text
-        style={{
-          ...textStyle(theme, "body"),
-          color: theme.colors.mutedForeground,
-          userSelect: "none",
-        }}
-      >
-        ⌕
-      </text>
+      <text style={recipeStyle(SEARCH_INPUT_ICON, theme)}>⌕</text>
       <input
         {...rest}
         ref={setInput}
@@ -146,13 +134,7 @@ export const SearchInput = ({
           setFocused(false);
           rest.onBlur?.(event);
         }}
-        style={{
-          ...textStyle(theme, "body"),
-          flexGrow: 1,
-          height: "100%",
-          backgroundColor: undefined,
-          color: theme.colors.inputForeground,
-        }}
+        style={recipeStyle(SEARCH_INPUT_CONTROL, theme)}
       />
       {value === "" ? null : (
         <div
@@ -164,21 +146,12 @@ export const SearchInput = ({
           onKeyDown={(event: KeyEvent) => {
             if (event.key === "enter" || event.key === "space") clear();
           }}
-          style={{
-            ...textStyle(theme, "caption"),
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 18,
-            height: 18,
-            borderRadius: theme.radius.sm,
-            color: theme.colors.mutedForeground,
-            cursor: "pointer",
+          style={mergeStyles(recipeStyle(SEARCH_INPUT_CLEAR, theme), {
             hover: {
               backgroundColor: theme.colors.accent,
               color: theme.colors.accentForeground,
             },
-          }}
+          })}
         >
           <text>✕</text>
         </div>

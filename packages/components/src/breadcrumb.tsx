@@ -10,6 +10,16 @@
 
 import type { KeyEvent, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import {
+  BREADCRUMB_ELLIPSIS,
+  BREADCRUMB_ITEM,
+  BREADCRUMB_LINK,
+  BREADCRUMB_LIST,
+  BREADCRUMB_PAGE,
+  BREADCRUMB_ROOT,
+  BREADCRUMB_SEPARATOR,
+  cn,
+} from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import {
   Children,
@@ -28,7 +38,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { focusRing, textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { focusRing, useTheme } from "./internal/theme.js";
 
 /** The rules a breadcrumb part follows; throws outside a root. */
 interface BreadcrumbContextValue {
@@ -54,6 +65,8 @@ export interface BreadcrumbProps extends Omit<Props, "children"> {
   readonly maxItems?: number;
   /** The separator between entries. Default `/`. */
   readonly separator?: ReactNode;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -61,10 +74,12 @@ export interface BreadcrumbProps extends Omit<Props, "children"> {
 export const Breadcrumb = ({
   maxItems,
   separator,
+  className,
   children,
   style,
   ...rest
 }: BreadcrumbProps) => {
+  const theme = useTheme();
   const context: BreadcrumbContextValue = { maxItems, separator };
   assertParts(breadcrumbRoot, children);
 
@@ -75,7 +90,7 @@ export const Breadcrumb = ({
         aria-label="Breadcrumb"
         {...rest}
         style={mergeStyles(
-          { display: "flex", flexDirection: "row", alignItems: "center" },
+          recipeStyle(cn(BREADCRUMB_ROOT, className), theme),
           style,
         )}
       >
@@ -115,13 +130,7 @@ const entries = (
 const Ellipsis = () => {
   const theme = useTheme();
   return (
-    <text
-      aria-label="More"
-      style={{
-        ...textStyle(theme, "caption"),
-        color: theme.colors.mutedForeground,
-      }}
-    >
+    <text aria-label="More" style={recipeStyle(BREADCRUMB_ELLIPSIS, theme)}>
       …
     </text>
   );
@@ -129,11 +138,14 @@ const Ellipsis = () => {
 
 /** {@link BreadcrumbList} props. */
 export interface BreadcrumbListProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** The horizontal row of crumbs. Collapses its middle when `maxItems` is set. */
 export const BreadcrumbList = ({
+  className,
   style,
   children,
   ...rest
@@ -153,13 +165,7 @@ export const BreadcrumbList = ({
       role="list"
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: theme.spacing.xs,
-        },
+        recipeStyle(cn(BREADCRUMB_LIST, className), theme),
         style,
       )}
     >
@@ -182,11 +188,14 @@ export const BreadcrumbList = ({
 
 /** One entry in the trail. */
 export interface BreadcrumbItemProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** One entry in the trail. */
 export const BreadcrumbItem = ({
+  className,
   children,
   style,
   ...rest
@@ -198,12 +207,7 @@ export const BreadcrumbItem = ({
       role="listitem"
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.xs,
-        },
+        recipeStyle(cn(BREADCRUMB_ITEM, className), theme),
         style,
       )}
     >
@@ -218,6 +222,8 @@ export interface BreadcrumbLinkProps extends Props {
   readonly onSelect?: () => void;
   /** Render as the current page instead of an interactive link. */
   readonly current?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** A link back up the trail, or — with `current` — plain text. */
@@ -228,6 +234,7 @@ export const BreadcrumbLink = ({
   onKeyDown,
   onFocus,
   onBlur,
+  className,
   style,
   ...rest
 }: BreadcrumbLinkProps) => {
@@ -235,7 +242,7 @@ export const BreadcrumbLink = ({
   const [focused, setFocused] = useState(false);
 
   if (current) {
-    return <BreadcrumbPage {...rest} style={style} />;
+    return <BreadcrumbPage {...rest} className={className} style={style} />;
   }
 
   return (
@@ -260,52 +267,59 @@ export const BreadcrumbLink = ({
         onBlur?.(event);
       }}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-          cursor: "pointer",
-          paddingLeft: theme.spacing["2xs"],
-          paddingRight: theme.spacing["2xs"],
-          borderRadius: theme.radius.sm,
+        mergeStyles(recipeStyle(cn(BREADCRUMB_LINK, className), theme), {
           hover: { color: theme.colors.foreground },
           ...(focused ? focusRing(theme) : {}),
-        },
+        }),
         style,
       )}
     />
   );
 };
 
+/** {@link BreadcrumbPage} props. */
+export interface BreadcrumbPageProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The current page: text, with no interaction and no tab stop. */
-export const BreadcrumbPage = ({ style, ...rest }: Props) => {
+export const BreadcrumbPage = ({
+  className,
+  style,
+  ...rest
+}: BreadcrumbPageProps) => {
   const theme = useTheme();
   return (
     <text
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "caption"),
-          color: theme.colors.foreground,
-        },
+        recipeStyle(cn(BREADCRUMB_PAGE, className), theme),
         style,
       )}
     />
   );
 };
 
+/** {@link BreadcrumbSeparator} props. */
+export interface BreadcrumbSeparatorProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The glyph between entries. Not focusable and not announced as content. */
-export const BreadcrumbSeparator = ({ style, ...rest }: Props) => {
+export const BreadcrumbSeparator = ({
+  className,
+  style,
+  ...rest
+}: BreadcrumbSeparatorProps) => {
   const theme = useTheme();
   return (
     <text
       role="presentation"
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-          userSelect: "none",
-        },
+        recipeStyle(cn(BREADCRUMB_SEPARATOR, className), theme),
         style,
       )}
     >

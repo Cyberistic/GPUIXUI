@@ -16,6 +16,16 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  FIELD_DESCRIPTION,
+  FIELD_ERROR,
+  FIELD_INPUT,
+  FIELD_LABEL,
+  FIELD_LABEL_ROW,
+  FIELD_REQUIRED,
+  FIELD_ROOT,
+} from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { createContext, useContext, useState } from "react";
 import { useFieldsetDisabled } from "./fieldset.js";
@@ -25,12 +35,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 
 /** What a {@link FieldInput} inherits from the field around it. */
 interface FieldContextValue {
@@ -51,6 +57,8 @@ export interface FieldProps extends Props {
   /** The message to show; also paints the control as invalid. */
   readonly error?: string;
   readonly required?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -60,6 +68,7 @@ export const Field = ({
   description,
   error,
   required = false,
+  className,
   children,
   style,
   ...rest
@@ -73,11 +82,7 @@ export const Field = ({
       <div
         {...rest}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing.xs,
-          },
+          recipeStyle(cn(FIELD_ROOT, className), theme),
           style,
         )}
       >
@@ -99,41 +104,32 @@ export const Field = ({
 export interface FieldLabelProps extends Props {
   /** Appends a destructive `*`; the accessible name stays clean. */
   readonly required?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** The field's label row. */
 export const FieldLabel = ({
   required = false,
+  className,
   children,
   style,
   ...rest
 }: FieldLabelProps) => {
   const theme = useTheme();
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        gap: theme.spacing["2xs"],
-      }}
-    >
+    <div style={recipeStyle(FIELD_LABEL_ROW, theme)}>
       <text
         {...rest}
         style={mergeStyles(
-          { ...textStyle(theme, "label"), color: theme.colors.foreground },
+          recipeStyle(cn(FIELD_LABEL, className), theme),
           style,
         )}
       >
         {children}
       </text>
       {required ? (
-        <text
-          aria-label="Required"
-          style={{
-            ...textStyle(theme, "label"),
-            color: theme.colors.destructive,
-          }}
-        >
+        <text aria-label="Required" style={recipeStyle(FIELD_REQUIRED, theme)}>
           *
         </text>
       ) : null}
@@ -142,30 +138,43 @@ export const FieldLabel = ({
 };
 
 /** Supporting copy under the control. */
-export const FieldDescription = ({ style, ...rest }: Props) => {
+export interface FieldDescriptionProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
+/** Supporting copy under the control. */
+export const FieldDescription = ({
+  className,
+  style,
+  ...rest
+}: FieldDescriptionProps) => {
   const theme = useTheme();
   return (
     <text
       {...rest}
       style={mergeStyles(
-        { ...textStyle(theme, "caption"), color: theme.colors.mutedForeground },
+        recipeStyle(cn(FIELD_DESCRIPTION, className), theme),
         style,
       )}
     />
   );
 };
 
+/** {@link FieldError} props. */
+export interface FieldErrorProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The message slot used when the field is invalid. Announced as an alert. */
-export const FieldError = ({ style, ...rest }: Props) => {
+export const FieldError = ({ className, style, ...rest }: FieldErrorProps) => {
   const theme = useTheme();
   return (
     <text
       role="alert"
       {...rest}
-      style={mergeStyles(
-        { ...textStyle(theme, "caption"), color: theme.colors.destructive },
-        style,
-      )}
+      style={mergeStyles(recipeStyle(cn(FIELD_ERROR, className), theme), style)}
     />
   );
 };
@@ -179,6 +188,8 @@ export interface FieldInputProps extends Omit<InputProps, "style"> {
    * Inferred from a disabled `Fieldset` as well as set directly.
    */
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the input's state. */
   readonly style?: StateStyle<FieldInputState>;
 }
@@ -197,6 +208,7 @@ export interface FieldInputState {
 export const FieldInput = ({
   invalid,
   disabled = false,
+  className,
   onFocus,
   onBlur,
   style,
@@ -237,27 +249,21 @@ export const FieldInput = ({
         onBlur?.(event);
       }}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "body"),
-          width: "100%",
+        mergeStyles(recipeStyle(cn(FIELD_INPUT, className), theme), {
           height: controlHeight(theme, "md"),
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
           backgroundColor: isDisabled
             ? theme.colors.disabled
             : theme.colors.input,
           color: isDisabled
             ? theme.colors.disabledForeground
             : theme.colors.inputForeground,
-          borderWidth: theme.borderWidth.thin,
           borderColor:
             isInvalid && !isDisabled
               ? theme.colors.destructive
               : theme.colors.border,
-          borderRadius: theme.radius.md,
           ...(isDisabled ? { cursor: "not-allowed" } : {}),
           ...(focused && !isInvalid && !isDisabled ? focusRing(theme) : {}),
-        },
+        }),
         resolveStyle(style, state),
       )}
     />

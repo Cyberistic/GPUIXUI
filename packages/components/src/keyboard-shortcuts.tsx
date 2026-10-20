@@ -17,6 +17,19 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  KEYBOARD_SHORTCUT,
+  KEYBOARD_SHORTCUT_KEYS,
+  KEYBOARD_SHORTCUT_LABEL,
+  KEYBOARD_SHORTCUTS_GROUP,
+  KEYBOARD_SHORTCUTS_HEADING,
+  KEYBOARD_SHORTCUTS_ROOT,
+  KEYBOARD_SHORTCUTS_ROW,
+  KEYBOARD_SHORTCUTS_SEPARATOR,
+  KEYCAP,
+  KEYCAP_TEXT,
+} from "@gpuixui/tw";
 import { Children, isValidElement } from "react";
 import {
   assertParts,
@@ -28,18 +41,22 @@ import {
   formatAccelerator,
   type AcceleratorPlatform,
 } from "./shortcut/accelerator.js";
-import { textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme } from "./internal/theme.js";
 
 /** {@link KeyboardShortcuts} props. */
 export interface KeyboardShortcutsProps extends Omit<Props, "children"> {
   /** The list's accessible name. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** A vertical list of shortcut groups. */
 export const KeyboardShortcuts = ({
   label,
+  className,
   children,
   style,
   ...rest
@@ -53,11 +70,7 @@ export const KeyboardShortcuts = ({
       {...(label === undefined ? {} : { "aria-label": label })}
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.xl,
-        },
+        recipeStyle(cn(KEYBOARD_SHORTCUTS_ROOT, className), theme),
         style,
       )}
     >
@@ -70,12 +83,15 @@ export const KeyboardShortcuts = ({
 export interface KeyboardShortcutsGroupProps extends Omit<Props, "children"> {
   /** The group's heading, also its accessible name. */
   readonly label: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** One named group of shortcuts. */
 export const KeyboardShortcutsGroup = ({
   label,
+  className,
   children,
   style,
   ...rest
@@ -96,43 +112,24 @@ export const KeyboardShortcutsGroup = ({
       aria-label={label}
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-        },
+        recipeStyle(cn(KEYBOARD_SHORTCUTS_GROUP, className), theme),
         style,
       )}
     >
       <text
         role="heading"
         aria-level={3}
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
+        style={recipeStyle(KEYBOARD_SHORTCUTS_HEADING, theme)}
       >
         {label}
       </text>
       {rows.map((row, index) => (
-        <div
-          key={index}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing["2xs"],
-          }}
-        >
+        <div key={index} style={recipeStyle(KEYBOARD_SHORTCUTS_ROW, theme)}>
           {row}
           {isValidElement(row) &&
           row.type === KeyboardShortcut &&
           index !== lastShortcut ? (
-            <div
-              style={{
-                height: theme.borderWidth.thin,
-                backgroundColor: theme.colors.border,
-              }}
-            />
+            <div style={recipeStyle(KEYBOARD_SHORTCUTS_SEPARATOR, theme)} />
           ) : null}
         </div>
       ))}
@@ -144,6 +141,8 @@ export const KeyboardShortcutsGroup = ({
 export interface KeycapProps extends Omit<Props, "children" | "style"> {
   /** One key's label, e.g. `"⌘"` or `"Ctrl"`. A single text node. */
   readonly children?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly style?: StateStyle<KeycapState>;
 }
 
@@ -153,7 +152,12 @@ export interface KeycapState {
 }
 
 /** One key cap. Compose several for a chord that is not an accelerator. */
-export const Keycap = ({ children, style, ...rest }: KeycapProps) => {
+export const Keycap = ({
+  children,
+  className,
+  style,
+  ...rest
+}: KeycapProps) => {
   const theme = useTheme();
   const label = children ?? "";
 
@@ -161,31 +165,11 @@ export const Keycap = ({ children, style, ...rest }: KeycapProps) => {
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          minWidth: 20,
-          height: 20,
-          paddingLeft: theme.spacing.sm,
-          paddingRight: theme.spacing.sm,
-          backgroundColor: theme.colors.muted,
-          borderRadius: theme.radius.sm,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-        },
+        recipeStyle(cn(KEYCAP, className), theme),
         resolveStyle(style, { label }),
       )}
     >
-      <text
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
-        {label}
-      </text>
+      <text style={recipeStyle(KEYCAP_TEXT, theme)}>{label}</text>
     </div>
   );
 };
@@ -201,6 +185,8 @@ export interface KeyboardShortcutProps extends Omit<
   readonly accelerator: string;
   /** Render the chord with another platform's glyphs. Default: the host. */
   readonly platform?: AcceleratorPlatform;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the formatted keycaps. */
   readonly style?: StateStyle<KeyboardShortcutState>;
 }
@@ -215,6 +201,7 @@ export const KeyboardShortcut = ({
   label,
   accelerator,
   platform,
+  className,
   style,
   ...rest
 }: KeyboardShortcutProps) => {
@@ -226,34 +213,12 @@ export const KeyboardShortcut = ({
       role="listitem"
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: theme.spacing.lg,
-          paddingTop: theme.spacing.sm,
-          paddingBottom: theme.spacing.sm,
-        },
+        recipeStyle(cn(KEYBOARD_SHORTCUT, className), theme),
         resolveStyle(style, { keys }),
       )}
     >
-      <text
-        style={{
-          ...textStyle(theme, "label"),
-          color: theme.colors.foreground,
-        }}
-      >
-        {label}
-      </text>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.xs,
-        }}
-      >
+      <text style={recipeStyle(KEYBOARD_SHORTCUT_LABEL, theme)}>{label}</text>
+      <div style={recipeStyle(KEYBOARD_SHORTCUT_KEYS, theme)}>
         {keys.map((key, index) => (
           <Keycap key={index}>{key}</Keycap>
         ))}

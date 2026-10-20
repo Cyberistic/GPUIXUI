@@ -13,8 +13,10 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { COUNTDOWN, cn } from "@gpuixui/tw";
 import { formatCountdown } from "./countdown/logic.js";
-import { textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme } from "./internal/theme.js";
 
 /** {@link Countdown} props. */
 export interface CountdownProps extends Omit<Props, "children" | "style"> {
@@ -24,6 +26,8 @@ export interface CountdownProps extends Omit<Props, "children" | "style"> {
   readonly label?: string;
   /** Render `Nd HH:MM:SS` for a day or more. Default `false`. */
   readonly showDays?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the remaining time. */
   readonly style?: StateStyle<CountdownState>;
 }
@@ -39,6 +43,7 @@ export const Countdown = ({
   remainingMs,
   label,
   showDays = false,
+  className,
   style,
   ...rest
 }: CountdownProps) => {
@@ -50,12 +55,11 @@ export const Countdown = ({
       {...(label === undefined ? {} : { "aria-label": label })}
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "caption"),
+        mergeStyles(recipeStyle(cn(COUNTDOWN, className), theme), {
           color: expired
             ? theme.colors.mutedForeground
             : theme.colors.foreground,
-        },
+        }),
         resolveStyle(style, { remainingMs, expired }),
       )}
     >

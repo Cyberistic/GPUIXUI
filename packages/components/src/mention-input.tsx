@@ -16,6 +16,14 @@ import {
   floatingRootStyle,
   mergeStyles,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  MENTION_INPUT_CONTROL,
+  MENTION_INPUT_FIELD,
+  MENTION_INPUT_ITEM,
+  MENTION_INPUT_ITEM_TEXT,
+  MENTION_INPUT_LIST,
+} from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import {
   Children,
@@ -41,12 +49,8 @@ import {
   rankMentions,
   type MentionQuery,
 } from "./mention/logic.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 
 /** The rules a mention part follows; throws outside a {@link MentionInput}. */
 interface MentionContextValue {
@@ -93,6 +97,8 @@ export interface MentionInputProps extends Omit<
   /** Rows offered at once. Default `6`. */
   readonly maxVisible?: number;
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -112,6 +118,7 @@ export const MentionInput = ({
   label,
   maxVisible = 6,
   disabled = false,
+  className,
   children,
   testId,
   ...rest
@@ -174,20 +181,14 @@ export const MentionInput = ({
         <div
           role="group"
           aria-label={label}
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            height: controlHeight(theme, "md"),
-            paddingLeft: theme.spacing.md,
-            paddingRight: theme.spacing.md,
-            backgroundColor: theme.colors.background,
-            borderRadius: theme.radius.md,
-            borderWidth: theme.borderWidth.thin,
-            borderColor: theme.colors.border,
-            opacity: disabled ? 0.5 : 1,
-            ...(focused ? focusRing(theme) : {}),
-          }}
+          style={mergeStyles(
+            recipeStyle(cn(MENTION_INPUT_FIELD, className), theme),
+            {
+              height: controlHeight(theme, "md"),
+              opacity: disabled ? 0.5 : 1,
+              ...(focused ? focusRing(theme) : {}),
+            },
+          )}
         >
           <input
             {...rest}
@@ -217,13 +218,7 @@ export const MentionInput = ({
             }}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            style={{
-              ...textStyle(theme, "body"),
-              flexGrow: 1,
-              height: "100%",
-              backgroundColor: undefined,
-              color: theme.colors.inputForeground,
-            }}
+            style={recipeStyle(MENTION_INPUT_CONTROL, theme)}
           />
         </div>
         {children}
@@ -234,6 +229,8 @@ export const MentionInput = ({
 
 /** {@link MentionInputList} props. */
 export interface MentionInputListProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -247,6 +244,7 @@ const isItemElement = (child: unknown): child is ItemElement =>
 
 /** The ranked suggestion surface, rendered only while a query is open. */
 export const MentionInputList = ({
+  className,
   children,
   style,
   ...rest
@@ -284,17 +282,7 @@ export const MentionInputList = ({
       aria-label="Mentions"
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          minWidth: 200,
-          padding: theme.spacing.xs,
-          backgroundColor: theme.colors.popover,
-          borderRadius: theme.radius.md,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          pointerEvents: "auto",
-        },
+        recipeStyle(cn(MENTION_INPUT_LIST, className), theme),
         style,
       )}
     >
@@ -320,12 +308,15 @@ export interface MentionInputItemProps extends Omit<Props, "children"> {
   readonly value: string;
   /** What the row shows; defaults to `@value`. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** One suggestion row. Press it, or highlight it and press Enter. */
 export const MentionInputItem = ({
   value,
   label,
+  className,
   style,
   ...rest
 }: MentionInputItemProps) => {
@@ -344,24 +335,16 @@ export const MentionInputItem = ({
         if (isActivation(event)) select(value);
       }}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          paddingLeft: theme.spacing.sm,
-          paddingRight: theme.spacing.sm,
-          paddingTop: theme.spacing.xs,
-          paddingBottom: theme.spacing.xs,
-          borderRadius: theme.radius.sm,
+        mergeStyles(recipeStyle(cn(MENTION_INPUT_ITEM, className), theme), {
           backgroundColor: highlighted ? theme.colors.accent : undefined,
           color: highlighted
             ? theme.colors.accentForeground
             : theme.colors.popoverForeground,
-        },
+        }),
         style,
       )}
     >
-      <text style={{ ...textStyle(theme, "body") }}>
+      <text style={recipeStyle(MENTION_INPUT_ITEM_TEXT, theme)}>
         {label ?? `@${value}`}
       </text>
     </div>

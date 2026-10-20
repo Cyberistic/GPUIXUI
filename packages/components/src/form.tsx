@@ -19,12 +19,14 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { cn, FORM_ERROR, FORM_ERRORS, FORM_ROOT } from "@gpuixui/tw";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { useCallback, useState, type ReactNode } from "react";
-import { textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme } from "./internal/theme.js";
 import { validateAll } from "./validation/logic.js";
 
 /** What the render prop receives. */
@@ -49,6 +51,8 @@ export interface FormProps<T> extends Omit<Props, "children" | "onSubmit"> {
   readonly pending?: boolean;
   /** The form's accessible name. Without it the root is a plain container. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children: (state: FormState) => ReactNode;
 }
 
@@ -61,6 +65,7 @@ export const Form = <T,>({
   onSubmit,
   pending = false,
   label,
+  className,
   children,
   style,
   ...rest
@@ -85,34 +90,14 @@ export const Form = <T,>({
     <div
       {...(label === undefined ? {} : { role: "form", "aria-label": label })}
       {...rest}
-      style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.lg,
-        },
-        style,
-      )}
+      style={mergeStyles(recipeStyle(cn(FORM_ROOT, className), theme), style)}
     >
       {Arr.match(errors, {
         onEmpty: () => null,
         onNonEmpty: (messages) => (
-          <div
-            role="alert"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: theme.spacing["2xs"],
-            }}
-          >
+          <div role="alert" style={recipeStyle(FORM_ERRORS, theme)}>
             {Arr.map(messages, (message) => (
-              <text
-                key={message}
-                style={{
-                  ...textStyle(theme, "caption"),
-                  color: theme.colors.destructive,
-                }}
-              >
+              <text key={message} style={recipeStyle(FORM_ERROR, theme)}>
                 {message}
               </text>
             ))}

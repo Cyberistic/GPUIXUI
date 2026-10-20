@@ -17,6 +17,14 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  TAG_INPUT_CHIP,
+  TAG_INPUT_CHIP_REMOVE,
+  TAG_INPUT_CHIP_TEXT,
+  TAG_INPUT_FIELD,
+  TAG_INPUT_ROOT,
+} from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -29,12 +37,8 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { addTokens, removeToken, splitDraft } from "./tag-input/logic.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 
 /** The rules a tag part follows; throws outside a {@link TagInput}. */
 interface TagInputContextValue {
@@ -73,6 +77,8 @@ export interface TagInputProps extends Omit<Props, "children"> {
   /** Keep repeated tokens. Default `false`. */
   readonly allowDuplicates?: boolean;
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -84,6 +90,7 @@ export const TagInput = ({
   max,
   allowDuplicates = false,
   disabled = false,
+  className,
   children,
   style,
   ...rest
@@ -132,24 +139,11 @@ export const TagInput = ({
         aria-label={label}
         {...rest}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: theme.spacing.xs,
+          mergeStyles(recipeStyle(cn(TAG_INPUT_ROOT, className), theme), {
             minHeight: controlHeight(theme, "md"),
-            paddingLeft: theme.spacing.sm,
-            paddingRight: theme.spacing.sm,
-            paddingTop: theme.spacing["2xs"],
-            paddingBottom: theme.spacing["2xs"],
-            backgroundColor: theme.colors.background,
-            borderRadius: theme.radius.md,
-            borderWidth: theme.borderWidth.thin,
-            borderColor: theme.colors.border,
             opacity: disabled ? 0.5 : 1,
             ...(focused ? focusRing(theme) : {}),
-          },
+          }),
           style,
         )}
       >
@@ -164,6 +158,8 @@ export interface TagInputFieldProps extends Omit<
   InputProps,
   "value" | "onChange" | "onSubmit" | "style"
 > {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly style?: StateStyle<TagInputFieldState>;
 }
 
@@ -174,6 +170,7 @@ export interface TagInputFieldState {
 
 /** The `<input>` that enters tokens. It reads and writes the root's draft. */
 export const TagInputField = ({
+  className,
   style,
   onKeyDown,
   onFocus,
@@ -203,14 +200,9 @@ export const TagInputField = ({
         onBlur?.(event);
       }}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "body"),
-          flexGrow: 1,
-          minWidth: 80,
+        mergeStyles(recipeStyle(cn(TAG_INPUT_FIELD, className), theme), {
           height: controlHeight(theme, "sm"),
-          backgroundColor: undefined,
-          color: theme.colors.inputForeground,
-        },
+        }),
         resolveStyle(style, { disabled }),
       )}
     />
@@ -221,6 +213,8 @@ export const TagInputField = ({
 export interface TagInputChipProps extends Omit<Props, "children" | "style"> {
   /** The token this chip removes. */
   readonly value: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly style?: StateStyle<TagInputChipState>;
 }
 
@@ -230,7 +224,12 @@ export interface TagInputChipState {
 }
 
 /** One token with a removal control. */
-export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
+export const TagInputChip = ({
+  value,
+  className,
+  style,
+  ...rest
+}: TagInputChipProps) => {
   const theme = useTheme();
   const { disabled, remove } = useTagInput();
 
@@ -238,30 +237,13 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.xs,
-          paddingLeft: theme.spacing.sm,
-          paddingRight: theme.spacing.sm,
-          paddingTop: theme.spacing["2xs"],
-          paddingBottom: theme.spacing["2xs"],
-          backgroundColor: theme.colors.muted,
-          borderRadius: theme.radius.sm,
+        mergeStyles(recipeStyle(cn(TAG_INPUT_CHIP, className), theme), {
           opacity: disabled ? 0.6 : 1,
-        },
+        }),
         resolveStyle(style, { disabled }),
       )}
     >
-      <text
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
-        {value}
-      </text>
+      <text style={recipeStyle(TAG_INPUT_CHIP_TEXT, theme)}>{value}</text>
       {disabled ? null : (
         <div
           role="button"
@@ -271,20 +253,12 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
           onKeyDown={(event: KeyEvent) => {
             if (isActivation(event)) remove(value);
           }}
-          style={{
-            ...textStyle(theme, "caption"),
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 16,
-            height: 16,
-            borderRadius: theme.radius.sm,
-            color: theme.colors.mutedForeground,
+          style={mergeStyles(recipeStyle(TAG_INPUT_CHIP_REMOVE, theme), {
             hover: {
               backgroundColor: theme.colors.accent,
               color: theme.colors.accentForeground,
             },
-          }}
+          })}
         >
           <text>✕</text>
         </div>

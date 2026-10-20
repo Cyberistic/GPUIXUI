@@ -17,6 +17,18 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  TIMELINE_CONNECTOR,
+  TIMELINE_CONTENT,
+  TIMELINE_DESCRIPTION,
+  TIMELINE_DOT,
+  TIMELINE_ITEM,
+  TIMELINE_RAIL,
+  TIMELINE_ROOT,
+  TIMELINE_TIMESTAMP,
+  TIMELINE_TITLE,
+} from "@gpuixui/tw";
 import { Children, createContext, isValidElement, useContext } from "react";
 import {
   assertParts,
@@ -24,7 +36,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { textStyle, useTheme, type Theme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme, type Theme } from "./internal/theme.js";
 
 /** Where an event sits in the history. */
 export type TimelineStatus = "complete" | "current" | "upcoming";
@@ -48,12 +61,15 @@ const dotFill = (theme: Theme, status: TimelineStatus): string =>
 export interface TimelineProps extends Omit<Props, "children"> {
   /** The list's accessible name. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** A vertical event rail. */
 export const Timeline = ({
   label,
+  className,
   children,
   style,
   ...rest
@@ -74,11 +90,7 @@ export const Timeline = ({
       {...(label === undefined ? {} : { "aria-label": label })}
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.lg,
-        },
+        recipeStyle(cn(TIMELINE_ROOT, className), theme),
         style,
       )}
     >
@@ -104,6 +116,8 @@ export interface TimelineItemProps extends Omit<Props, "children" | "style"> {
   readonly timestamp?: string;
   /** Default `"complete"`. */
   readonly status?: TimelineStatus;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the item's status and position. */
   readonly style?: StateStyle<TimelineItemState>;
 }
@@ -120,6 +134,7 @@ export const TimelineItem = ({
   description,
   timestamp,
   status = "complete",
+  className,
   style,
   ...rest
 }: TimelineItemProps) => {
@@ -133,81 +148,40 @@ export const TimelineItem = ({
       aria-selected={status === "current"}
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "stretch",
-          alignSelf: "stretch",
-          gap: theme.spacing.md,
-        },
+        recipeStyle(cn(TIMELINE_ITEM, className), theme),
         resolveStyle(style, { status, last }),
       )}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          width: 16,
-        }}
-      >
+      <div style={recipeStyle(TIMELINE_RAIL, theme)}>
         <div
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: theme.radius.full,
+          style={mergeStyles(recipeStyle(TIMELINE_DOT, theme), {
             backgroundColor: dotFill(theme, status),
-            marginTop: theme.spacing.xs,
-          }}
+          })}
         />
-        {last ? null : (
-          <div
-            style={{
-              width: theme.borderWidth.thin,
-              flexGrow: 1,
-              backgroundColor: theme.colors.border,
-              marginTop: theme.spacing["2xs"],
-            }}
-          />
-        )}
+        {last ? null : <div style={recipeStyle(TIMELINE_CONNECTOR, theme)} />}
       </div>
       <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-          flexGrow: 1,
+        style={mergeStyles(recipeStyle(TIMELINE_CONTENT, theme), {
           paddingBottom: last ? 0 : theme.spacing.lg,
-        }}
+        })}
       >
         {timestamp === undefined ? null : (
-          <text
-            style={{
-              ...textStyle(theme, "caption"),
-              color: theme.colors.mutedForeground,
-            }}
-          >
+          <text style={recipeStyle(TIMELINE_TIMESTAMP, theme)}>
             {timestamp}
           </text>
         )}
         <text
-          style={{
-            ...textStyle(theme, "label"),
+          style={mergeStyles(recipeStyle(TIMELINE_TITLE, theme), {
             color:
               status === "upcoming"
                 ? theme.colors.mutedForeground
                 : theme.colors.foreground,
-          }}
+          })}
         >
           {title}
         </text>
         {description === undefined ? null : (
-          <text
-            style={{
-              ...textStyle(theme, "body"),
-              color: theme.colors.mutedForeground,
-            }}
-          >
+          <text style={recipeStyle(TIMELINE_DESCRIPTION, theme)}>
             {description}
           </text>
         )}

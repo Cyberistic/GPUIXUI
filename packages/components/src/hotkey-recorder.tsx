@@ -17,17 +17,24 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  HOTKEY_RECORDER,
+  HOTKEY_RECORDER_CLEAR,
+  HOTKEY_RECORDER_KEYS,
+  HOTKEY_RECORDER_TEXT,
+} from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useRef, useState } from "react";
 import { acceleratorOf } from "./hotkey/logic.js";
 import { isActivation, isDismiss } from "./internal/key.js";
 import { Keycap } from "./keyboard-shortcuts.js";
 import { formatAccelerator } from "./shortcut/accelerator.js";
+import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
   currentPlatform,
   focusRing,
-  textStyle,
   useTheme,
 } from "./internal/theme.js";
 
@@ -45,6 +52,8 @@ export interface HotkeyRecorderProps extends Omit<
   /** Shown while no chord is bound. Default `"Click to record"`. */
   readonly placeholder?: string;
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the recording state. */
   readonly style?: StateStyle<HotkeyRecorderState>;
 }
@@ -62,6 +71,7 @@ export const HotkeyRecorder = ({
   onChange,
   placeholder = "Click to record",
   disabled = false,
+  className,
   style,
   testId,
   onClick,
@@ -130,52 +140,24 @@ export const HotkeyRecorder = ({
         onBlur?.(event);
       }}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: theme.spacing.md,
+        mergeStyles(recipeStyle(cn(HOTKEY_RECORDER, className), theme), {
           minHeight: controlHeight(theme, "md"),
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          backgroundColor: theme.colors.background,
-          borderRadius: theme.radius.md,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
           opacity: disabled ? 0.5 : 1,
           ...(focused ? focusRing(theme) : {}),
-        },
+        }),
         resolveStyle(style, { recording, disabled }),
       )}
     >
       {recording ? (
-        <text
-          style={{
-            ...textStyle(theme, "body"),
-            color: theme.colors.mutedForeground,
-          }}
-        >
+        <text style={recipeStyle(HOTKEY_RECORDER_TEXT, theme)}>
           Press keys…
         </text>
       ) : value === null ? (
-        <text
-          style={{
-            ...textStyle(theme, "body"),
-            color: theme.colors.mutedForeground,
-          }}
-        >
+        <text style={recipeStyle(HOTKEY_RECORDER_TEXT, theme)}>
           {placeholder}
         </text>
       ) : (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: theme.spacing.xs,
-          }}
-        >
+        <div style={recipeStyle(HOTKEY_RECORDER_KEYS, theme)}>
           {formatAccelerator(value, currentPlatform).map((key, index) => (
             <Keycap key={index}>{key}</Keycap>
           ))}
@@ -191,20 +173,12 @@ export const HotkeyRecorder = ({
           onKeyDown={(event: KeyEvent) => {
             if (isActivation(event)) clear();
           }}
-          style={{
-            ...textStyle(theme, "caption"),
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 16,
-            height: 16,
-            borderRadius: theme.radius.sm,
-            color: theme.colors.mutedForeground,
+          style={mergeStyles(recipeStyle(HOTKEY_RECORDER_CLEAR, theme), {
             hover: {
               backgroundColor: theme.colors.accent,
               color: theme.colors.accentForeground,
             },
-          }}
+          })}
         >
           <text>✕</text>
         </div>

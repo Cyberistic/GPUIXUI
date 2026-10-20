@@ -14,6 +14,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { cn, FIELDSET_LEGEND, FIELDSET_ROOT } from "@gpuixui/tw";
 import { createContext, useContext } from "react";
 import {
   assertParts,
@@ -21,7 +22,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme } from "./internal/theme.js";
 
 /** What the controls inside a fieldset inherit. */
 interface FieldsetContextValue {
@@ -45,6 +47,8 @@ export interface FieldsetProps extends Omit<Props, "children"> {
   readonly legend: string;
   /** Disables the controls that honour the context. Never inferred. */
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -55,6 +59,7 @@ export interface FieldsetProps extends Omit<Props, "children"> {
 export const Fieldset = ({
   legend,
   disabled = false,
+  className,
   children,
   style,
   ...rest
@@ -69,11 +74,7 @@ export const Fieldset = ({
         aria-label={legend}
         {...rest}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing.lg,
-          },
+          recipeStyle(cn(FIELDSET_ROOT, className), theme),
           style,
         )}
       >
@@ -88,11 +89,14 @@ export const Fieldset = ({
 export interface FieldsetLegendProps extends Props {
   /** Paints the legend with the disabled foreground. */
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** The group heading. Exported for completeness; the root renders it. */
 export const FieldsetLegend = ({
   disabled = false,
+  className,
   style,
   ...rest
 }: FieldsetLegendProps) => {
@@ -101,12 +105,11 @@ export const FieldsetLegend = ({
     <text
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "label"),
+        mergeStyles(recipeStyle(cn(FIELDSET_LEGEND, className), theme), {
           color: disabled
             ? theme.colors.disabledForeground
             : theme.colors.foreground,
-        },
+        }),
         style,
       )}
     />

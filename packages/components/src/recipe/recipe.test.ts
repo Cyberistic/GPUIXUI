@@ -48,6 +48,78 @@ import {
   STEPPER_ROOT,
   STEPPER_STEP,
   STEPPER_TEXT,
+  ACCORDION_CONTENT,
+  ACCORDION_INDICATOR,
+  ACCORDION_ITEM,
+  ACCORDION_ROOT,
+  ACCORDION_TRIGGER,
+  ACCORDION_TRIGGER_ROW,
+  BREADCRUMB_ELLIPSIS,
+  BREADCRUMB_ITEM,
+  BREADCRUMB_LINK,
+  BREADCRUMB_LIST,
+  BREADCRUMB_PAGE,
+  BREADCRUMB_ROOT,
+  BREADCRUMB_SEPARATOR,
+  CAROUSEL_ROOT,
+  CAROUSEL_SLIDE,
+  CAROUSEL_TRACK,
+  COLLAPSIBLE_CONTENT,
+  COLLAPSIBLE_ROOT,
+  COLLAPSIBLE_TRIGGER,
+  COUNTDOWN,
+  FIELD_DESCRIPTION,
+  FIELD_ERROR,
+  FIELD_INPUT,
+  FIELD_LABEL,
+  FIELD_LABEL_ROW,
+  FIELD_REQUIRED,
+  FIELD_ROOT,
+  FIELDSET_LEGEND,
+  FIELDSET_ROOT,
+  FORM_ERROR,
+  FORM_ERRORS,
+  FORM_ROOT,
+  HOTKEY_RECORDER,
+  HOTKEY_RECORDER_CLEAR,
+  HOTKEY_RECORDER_KEYS,
+  HOTKEY_RECORDER_TEXT,
+  INLINE_EDIT_DISPLAY,
+  INLINE_EDIT_DISPLAY_TEXT,
+  INLINE_EDIT_INPUT,
+  KEYBOARD_SHORTCUT,
+  KEYBOARD_SHORTCUT_KEYS,
+  KEYBOARD_SHORTCUT_LABEL,
+  KEYBOARD_SHORTCUTS_GROUP,
+  KEYBOARD_SHORTCUTS_HEADING,
+  KEYBOARD_SHORTCUTS_ROOT,
+  KEYBOARD_SHORTCUTS_ROW,
+  KEYBOARD_SHORTCUTS_SEPARATOR,
+  KEYCAP,
+  KEYCAP_TEXT,
+  MENTION_INPUT_CONTROL,
+  MENTION_INPUT_FIELD,
+  MENTION_INPUT_ITEM,
+  MENTION_INPUT_ITEM_TEXT,
+  MENTION_INPUT_LIST,
+  SEARCH_INPUT,
+  SEARCH_INPUT_CLEAR,
+  SEARCH_INPUT_CONTROL,
+  SEARCH_INPUT_ICON,
+  TAG_INPUT_CHIP,
+  TAG_INPUT_CHIP_REMOVE,
+  TAG_INPUT_CHIP_TEXT,
+  TAG_INPUT_FIELD,
+  TAG_INPUT_ROOT,
+  TIMELINE_CONNECTOR,
+  TIMELINE_CONTENT,
+  TIMELINE_DESCRIPTION,
+  TIMELINE_DOT,
+  TIMELINE_ITEM,
+  TIMELINE_RAIL,
+  TIMELINE_ROOT,
+  TIMELINE_TIMESTAMP,
+  TIMELINE_TITLE,
   classesToStyle,
   cn,
 } from "@gpuixui/tw";
@@ -305,6 +377,624 @@ describe("Layout and type recipes", () => {
   });
 });
 
+const sans = darkTheme.typography.sans;
+
+describe("Accordion recipe", () => {
+  it("resolves the disclosure shell and its parts", () => {
+    expect(style(ACCORDION_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      width: "100%",
+    });
+    expect(style(ACCORDION_ITEM)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+    });
+    expect(style(ACCORDION_TRIGGER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+      paddingLeft: 4,
+      paddingRight: 4,
+      width: "100%",
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(ACCORDION_TRIGGER_ROW)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      flexGrow: 1,
+      minWidth: 0,
+    });
+    expect(style(ACCORDION_INDICATOR)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(ACCORDION_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      paddingLeft: 4,
+      paddingRight: 4,
+      paddingBottom: 8,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+});
+
+describe("Breadcrumb recipe", () => {
+  it("resolves the trail and its crumbs", () => {
+    expect(style(BREADCRUMB_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+    });
+    expect(style(BREADCRUMB_LIST)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 4,
+    });
+    expect(style(BREADCRUMB_ITEM)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    });
+    expect(style(BREADCRUMB_LINK)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+      cursor: "pointer",
+      paddingLeft: 2,
+      paddingRight: 2,
+      borderRadius: 4,
+    });
+    expect(style(BREADCRUMB_PAGE)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(BREADCRUMB_SEPARATOR)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+      userSelect: "none",
+    });
+    expect(style(BREADCRUMB_ELLIPSIS)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+});
+
+describe("Carousel recipe", () => {
+  it("resolves the shell, track and slide", () => {
+    expect(style(CAROUSEL_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+    });
+    expect(style(CAROUSEL_TRACK)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      overflow: "hidden",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      backgroundColor: darkTheme.colors.card,
+    });
+    expect(style(CAROUSEL_SLIDE)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      flexGrow: 1,
+    });
+  });
+});
+
+describe("Collapsible recipe", () => {
+  it("resolves the section, trigger and content", () => {
+    expect(style(COLLAPSIBLE_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+    });
+    expect(style(COLLAPSIBLE_TRIGGER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+      paddingLeft: 8,
+      paddingRight: 8,
+      paddingTop: 6,
+      paddingBottom: 6,
+      borderRadius: 4,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+      cursor: "pointer",
+    });
+    expect(style(COLLAPSIBLE_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      paddingLeft: 8,
+      paddingRight: 8,
+      paddingTop: 6,
+      paddingBottom: 8,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+});
+
+describe("Countdown recipe", () => {
+  it("resolves the clock text", () => {
+    expect(style(COUNTDOWN)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+    });
+  });
+});
+
+describe("Field recipe", () => {
+  it("resolves the labelled block and its message slots", () => {
+    expect(style(FIELD_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+    });
+    expect(style(FIELD_LABEL_ROW)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      gap: 2,
+    });
+    expect(style(FIELD_LABEL)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(FIELD_REQUIRED)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.destructive,
+    });
+    expect(style(FIELD_DESCRIPTION)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(FIELD_ERROR)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.destructive,
+    });
+    expect(style(FIELD_INPUT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      width: "100%",
+      paddingLeft: 8,
+      paddingRight: 8,
+      borderRadius: 6,
+      borderWidth: 1,
+    });
+  });
+});
+
+describe("Fieldset and Form recipes", () => {
+  it("resolves the group and form shells", () => {
+    expect(style(FIELDSET_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+    });
+    expect(style(FIELDSET_LEGEND)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+    expect(style(FORM_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+    });
+    expect(style(FORM_ERRORS)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+    });
+    expect(style(FORM_ERROR)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.destructive,
+    });
+  });
+});
+
+describe("HotkeyRecorder recipe", () => {
+  it("resolves the capture control and its clear control", () => {
+    expect(style(HOTKEY_RECORDER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+      paddingLeft: 8,
+      paddingRight: 8,
+      backgroundColor: darkTheme.colors.background,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+    expect(style(HOTKEY_RECORDER_TEXT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(HOTKEY_RECORDER_KEYS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    });
+    expect(style(HOTKEY_RECORDER_CLEAR)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 16,
+      height: 16,
+      borderRadius: 4,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+});
+
+describe("InlineEdit recipe", () => {
+  it("resolves the display and input surfaces", () => {
+    expect(style(INLINE_EDIT_DISPLAY)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      alignSelf: "flex-start",
+      paddingLeft: 4,
+      paddingRight: 4,
+      borderRadius: 4,
+    });
+    expect(style(INLINE_EDIT_DISPLAY_TEXT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+    expect(style(INLINE_EDIT_INPUT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      paddingLeft: 6,
+      paddingRight: 6,
+      backgroundColor: darkTheme.colors.background,
+      color: darkTheme.colors.inputForeground,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+  });
+});
+
+describe("KeyboardShortcuts recipe", () => {
+  it("resolves the sheet, keycap and separator", () => {
+    expect(style(KEYBOARD_SHORTCUTS_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 16,
+    });
+    expect(style(KEYBOARD_SHORTCUTS_GROUP)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+    });
+    expect(style(KEYBOARD_SHORTCUTS_HEADING)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(KEYBOARD_SHORTCUTS_ROW)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+    });
+    expect(style(KEYBOARD_SHORTCUTS_SEPARATOR)).toEqual({
+      height: 1,
+      backgroundColor: darkTheme.colors.border,
+    });
+    expect(style(KEYBOARD_SHORTCUT)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      paddingTop: 6,
+      paddingBottom: 6,
+    });
+    expect(style(KEYBOARD_SHORTCUT_LABEL)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(KEYBOARD_SHORTCUT_KEYS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    });
+    expect(style(KEYCAP)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: 20,
+      height: 20,
+      paddingLeft: 6,
+      paddingRight: 6,
+      backgroundColor: darkTheme.colors.muted,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+    expect(style(KEYCAP_TEXT)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+});
+
+describe("MentionInput recipe", () => {
+  it("resolves the field, floating list and rows", () => {
+    expect(style(MENTION_INPUT_FIELD)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      paddingLeft: 8,
+      paddingRight: 8,
+      backgroundColor: darkTheme.colors.background,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+    expect(style(MENTION_INPUT_CONTROL)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      flexGrow: 1,
+      height: "100%",
+      color: darkTheme.colors.inputForeground,
+    });
+    expect(style(MENTION_INPUT_LIST)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      minWidth: 200,
+      padding: 4,
+      backgroundColor: darkTheme.colors.popover,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      pointerEvents: "auto",
+    });
+    expect(style(MENTION_INPUT_ITEM)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      paddingLeft: 6,
+      paddingRight: 6,
+      paddingTop: 4,
+      paddingBottom: 4,
+      borderRadius: 4,
+    });
+    expect(style(MENTION_INPUT_ITEM_TEXT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+    });
+  });
+});
+
+describe("SearchInput recipe", () => {
+  it("resolves the field, glyph and clear control", () => {
+    expect(style(SEARCH_INPUT)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingLeft: 8,
+      paddingRight: 8,
+      backgroundColor: darkTheme.colors.background,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      borderRadius: 6,
+    });
+    expect(style(SEARCH_INPUT_ICON)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+      userSelect: "none",
+    });
+    expect(style(SEARCH_INPUT_CONTROL)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      flexGrow: 1,
+      height: "100%",
+      color: darkTheme.colors.inputForeground,
+    });
+    expect(style(SEARCH_INPUT_CLEAR)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 18,
+      height: 18,
+      borderRadius: 4,
+      color: darkTheme.colors.mutedForeground,
+      cursor: "pointer",
+    });
+  });
+});
+
+describe("TagInput recipe", () => {
+  it("resolves the group, field and chip", () => {
+    expect(style(TAG_INPUT_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: 4,
+      paddingLeft: 6,
+      paddingRight: 6,
+      paddingTop: 2,
+      paddingBottom: 2,
+      backgroundColor: darkTheme.colors.background,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+    expect(style(TAG_INPUT_FIELD)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      flexGrow: 1,
+      minWidth: 80,
+      color: darkTheme.colors.inputForeground,
+    });
+    expect(style(TAG_INPUT_CHIP)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingLeft: 6,
+      paddingRight: 6,
+      paddingTop: 2,
+      paddingBottom: 2,
+      backgroundColor: darkTheme.colors.muted,
+      borderRadius: 4,
+    });
+    expect(style(TAG_INPUT_CHIP_TEXT)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(TAG_INPUT_CHIP_REMOVE)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 16,
+      height: 16,
+      borderRadius: 4,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+});
+
+describe("Timeline recipe", () => {
+  it("resolves the rail, dot, connector and content", () => {
+    expect(style(TIMELINE_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+    });
+    expect(style(TIMELINE_ITEM)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "stretch",
+      alignSelf: "stretch",
+      gap: 8,
+    });
+    expect(style(TIMELINE_RAIL)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      width: 16,
+    });
+    expect(style(TIMELINE_DOT)).toEqual({
+      width: 8,
+      height: 8,
+      borderRadius: 9999,
+      marginTop: 4,
+    });
+    expect(style(TIMELINE_CONNECTOR)).toEqual({
+      width: 1,
+      flexGrow: 1,
+      backgroundColor: darkTheme.colors.border,
+      marginTop: 2,
+    });
+    expect(style(TIMELINE_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+      flexGrow: 1,
+    });
+    expect(style(TIMELINE_TIMESTAMP)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(TIMELINE_TITLE)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+    expect(style(TIMELINE_DESCRIPTION)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+});
+
 describe("merge order", () => {
   it("lets the caller's className win over the recipe", () => {
     expect(style(cn(CARD_BASE, "rounded-none")).borderRadius).toBe(0);
@@ -321,6 +1011,14 @@ describe("merge order", () => {
       darkTheme.colors.primary,
     );
     expect(style(cn(STEPPER_LABEL, "font-semibold")).fontWeight).toBe(600);
+    expect(style(cn(ACCORDION_TRIGGER, "gap-4")).gap).toBe(16);
+    expect(style(cn(BREADCRUMB_LINK, "text-sm")).fontSize).toBe(14);
+    expect(style(cn(TIMELINE_DOT, "bg-primary")).backgroundColor).toBe(
+      darkTheme.colors.primary,
+    );
+    expect(style(cn(KEYCAP, "bg-accent")).backgroundColor).toBe(
+      darkTheme.colors.accent,
+    );
   });
 });
 
@@ -359,6 +1057,78 @@ describe("no unsupported classes", () => {
       STEPPER_LABEL,
       STEPPER_DESCRIPTION,
       STEPPER_TEXT,
+      ACCORDION_ROOT,
+      ACCORDION_ITEM,
+      ACCORDION_TRIGGER,
+      ACCORDION_TRIGGER_ROW,
+      ACCORDION_INDICATOR,
+      ACCORDION_CONTENT,
+      BREADCRUMB_ROOT,
+      BREADCRUMB_LIST,
+      BREADCRUMB_ITEM,
+      BREADCRUMB_LINK,
+      BREADCRUMB_PAGE,
+      BREADCRUMB_SEPARATOR,
+      BREADCRUMB_ELLIPSIS,
+      CAROUSEL_ROOT,
+      CAROUSEL_TRACK,
+      CAROUSEL_SLIDE,
+      COLLAPSIBLE_ROOT,
+      COLLAPSIBLE_TRIGGER,
+      COLLAPSIBLE_CONTENT,
+      COUNTDOWN,
+      FIELD_ROOT,
+      FIELD_LABEL_ROW,
+      FIELD_LABEL,
+      FIELD_REQUIRED,
+      FIELD_DESCRIPTION,
+      FIELD_ERROR,
+      FIELD_INPUT,
+      FIELDSET_ROOT,
+      FIELDSET_LEGEND,
+      FORM_ROOT,
+      FORM_ERRORS,
+      FORM_ERROR,
+      HOTKEY_RECORDER,
+      HOTKEY_RECORDER_TEXT,
+      HOTKEY_RECORDER_KEYS,
+      HOTKEY_RECORDER_CLEAR,
+      INLINE_EDIT_DISPLAY,
+      INLINE_EDIT_DISPLAY_TEXT,
+      INLINE_EDIT_INPUT,
+      KEYBOARD_SHORTCUTS_ROOT,
+      KEYBOARD_SHORTCUTS_GROUP,
+      KEYBOARD_SHORTCUTS_HEADING,
+      KEYBOARD_SHORTCUTS_ROW,
+      KEYBOARD_SHORTCUTS_SEPARATOR,
+      KEYBOARD_SHORTCUT,
+      KEYBOARD_SHORTCUT_LABEL,
+      KEYBOARD_SHORTCUT_KEYS,
+      KEYCAP,
+      KEYCAP_TEXT,
+      MENTION_INPUT_FIELD,
+      MENTION_INPUT_CONTROL,
+      MENTION_INPUT_LIST,
+      MENTION_INPUT_ITEM,
+      MENTION_INPUT_ITEM_TEXT,
+      SEARCH_INPUT,
+      SEARCH_INPUT_ICON,
+      SEARCH_INPUT_CONTROL,
+      SEARCH_INPUT_CLEAR,
+      TAG_INPUT_ROOT,
+      TAG_INPUT_FIELD,
+      TAG_INPUT_CHIP,
+      TAG_INPUT_CHIP_TEXT,
+      TAG_INPUT_CHIP_REMOVE,
+      TIMELINE_ROOT,
+      TIMELINE_ITEM,
+      TIMELINE_RAIL,
+      TIMELINE_DOT,
+      TIMELINE_CONNECTOR,
+      TIMELINE_CONTENT,
+      TIMELINE_TIMESTAMP,
+      TIMELINE_TITLE,
+      TIMELINE_DESCRIPTION,
     ];
     const unsupported = Arr.flatMap(
       recipes,

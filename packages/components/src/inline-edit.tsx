@@ -17,16 +17,18 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  INLINE_EDIT_DISPLAY,
+  INLINE_EDIT_DISPLAY_TEXT,
+  INLINE_EDIT_INPUT,
+} from "@gpuixui/tw";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isActivation, isDismiss, isEnter } from "./internal/key.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 
 /** {@link InlineEdit} props. */
 export interface InlineEditProps extends Omit<InputProps, "value" | "style"> {
@@ -43,6 +45,8 @@ export interface InlineEditProps extends Omit<InputProps, "value" | "style"> {
   readonly editing?: boolean;
   readonly defaultEditing?: boolean;
   readonly onEditingChange?: (editing: boolean) => void;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the edit state. */
   readonly style?: StateStyle<InlineEditState>;
 }
@@ -63,6 +67,7 @@ export const InlineEdit = ({
   editing: editingProp,
   defaultEditing = false,
   onEditingChange,
+  className,
   style,
   onKeyDown,
   onFocus,
@@ -160,30 +165,22 @@ export const InlineEdit = ({
           onBlur?.(event);
         }}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            alignSelf: "flex-start",
+          mergeStyles(recipeStyle(cn(INLINE_EDIT_DISPLAY, className), theme), {
             minHeight: controlHeight(theme, "sm"),
-            paddingLeft: theme.spacing.xs,
-            paddingRight: theme.spacing.xs,
-            borderRadius: theme.radius.sm,
             opacity: disabled ? 0.5 : 1,
             ...(focused ? focusRing(theme) : {}),
             hover: { backgroundColor: theme.colors.accent },
-          },
+          }),
           resolveStyle(style, state),
         )}
       >
         <text
-          style={{
-            ...textStyle(theme, "label"),
+          style={mergeStyles(recipeStyle(INLINE_EDIT_DISPLAY_TEXT, theme), {
             color:
               value === ""
                 ? theme.colors.mutedForeground
                 : theme.colors.foreground,
-          }}
+          })}
         >
           {value === "" ? placeholder : value}
         </text>
@@ -203,18 +200,10 @@ export const InlineEdit = ({
       onSubmit={() => commit()}
       onBlur={() => finish(true, false)}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "body"),
+        mergeStyles(recipeStyle(cn(INLINE_EDIT_INPUT, className), theme), {
           height: controlHeight(theme, "md"),
-          paddingLeft: theme.spacing.sm,
-          paddingRight: theme.spacing.sm,
-          backgroundColor: theme.colors.background,
-          color: theme.colors.inputForeground,
-          borderRadius: theme.radius.sm,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
           ...focusRing(theme),
-        },
+        }),
         resolveStyle(style, state),
       )}
     />

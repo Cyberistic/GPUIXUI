@@ -16,6 +16,15 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  ACCORDION_CONTENT,
+  ACCORDION_INDICATOR,
+  ACCORDION_ITEM,
+  ACCORDION_ROOT,
+  ACCORDION_TRIGGER,
+  ACCORDION_TRIGGER_ROW,
+  cn,
+} from "@gpuixui/tw";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -47,13 +56,9 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 
 /** What an accordion part can rely on, regardless of mode. */
 interface AccordionContextValue {
@@ -103,6 +108,8 @@ const useAccordionItemContext = (): AccordionItemContextValue => {
 
 /** Props every mode shares. */
 interface AccordionCommonProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -141,13 +148,16 @@ const singleState = (
 const AccordionFrame = ({
   state,
   onToggle,
+  className,
   children,
   style,
   ...rest
 }: Props & {
   readonly state: AccordionState;
   readonly onToggle: (item: string) => void;
+  readonly className?: string;
 }) => {
+  const theme = useTheme();
   const renderer = useGpuix().renderer;
   const [rows, setRows] = useState<ReadonlyArray<ValueItem>>([]);
 
@@ -211,11 +221,7 @@ const AccordionFrame = ({
       <div
         {...rest}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-          },
+          recipeStyle(cn(ACCORDION_ROOT, className), theme),
           style,
         )}
       >
@@ -316,6 +322,8 @@ export interface AccordionItemProps extends Omit<Props, "children"> {
   /** Stable id and the value the root reports. */
   readonly value: string;
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -323,6 +331,7 @@ export interface AccordionItemProps extends Omit<Props, "children"> {
 export const AccordionItem = ({
   value,
   disabled = false,
+  className,
   children,
   style,
   ...rest
@@ -342,16 +351,15 @@ export const AccordionItem = ({
       <div
         {...rest}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "column",
-            ...(isLast
-              ? {}
+          mergeStyles(
+            recipeStyle(cn(ACCORDION_ITEM, className), theme),
+            isLast
+              ? undefined
               : {
-                  borderBottomWidth: theme.borderWidth.thin,
+                  borderBottomWidth: 1,
                   borderColor: theme.colors.border,
-                }),
-          },
+                },
+          ),
           style,
         )}
       >
@@ -363,6 +371,8 @@ export const AccordionItem = ({
 
 /** {@link AccordionTrigger} props. */
 export interface AccordionTriggerProps extends Omit<Props, "style"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the header's state. */
   readonly style?: StateStyle<AccordionTriggerState>;
 }
@@ -381,6 +391,7 @@ export const AccordionTrigger = ({
   onKeyDown,
   onFocus,
   onBlur,
+  className,
   style,
   children,
   ref,
@@ -454,44 +465,20 @@ export const AccordionTrigger = ({
         onBlur?.(event);
       }}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "label"),
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: theme.spacing.md,
-          width: "100%",
+        mergeStyles(recipeStyle(cn(ACCORDION_TRIGGER, className), theme), {
           height: controlHeight(theme, "lg"),
-          paddingLeft: theme.spacing.xs,
-          paddingRight: theme.spacing.xs,
-          backgroundColor: undefined,
-          color: theme.colors.foreground,
           cursor: disabled ? "not-allowed" : "pointer",
           opacity: disabled ? 0.5 : 1,
           hover: disabled ? undefined : { color: theme.colors.primary },
           ...(focused ? focusRing(theme) : {}),
-        },
+        }),
         resolveStyle(style, state),
       )}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          flexGrow: 1,
-          minWidth: 0,
-        }}
-      >
-        {children}
-      </div>
+      <div style={recipeStyle(ACCORDION_TRIGGER_ROW, theme)}>{children}</div>
       <text
         aria-label={open ? "Collapse" : "Expand"}
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
+        style={recipeStyle(ACCORDION_INDICATOR, theme)}
       >
         {open ? "⌃" : "⌄"}
       </text>
@@ -499,8 +486,19 @@ export const AccordionTrigger = ({
   );
 };
 
+/** {@link AccordionContent} props. */
+export interface AccordionContentProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The body of an open section. Unmounts while closed. */
-export const AccordionContent = ({ style, children, ...rest }: Props) => {
+export const AccordionContent = ({
+  className,
+  style,
+  children,
+  ...rest
+}: AccordionContentProps) => {
   const theme = useTheme();
   const { isOpen } = useAccordionContext();
   const { value } = useAccordionItemContext();
@@ -511,15 +509,7 @@ export const AccordionContent = ({ style, children, ...rest }: Props) => {
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.md,
-          paddingLeft: theme.spacing.xs,
-          paddingRight: theme.spacing.xs,
-          paddingBottom: theme.spacing.md,
-          color: theme.colors.mutedForeground,
-        },
+        recipeStyle(cn(ACCORDION_CONTENT, className), theme),
         style,
       )}
     >

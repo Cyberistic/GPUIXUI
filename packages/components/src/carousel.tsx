@@ -17,6 +17,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { cn, CAROUSEL_ROOT, CAROUSEL_SLIDE, CAROUSEL_TRACK } from "@gpuixui/tw";
 import {
   Children,
   createContext,
@@ -34,6 +35,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 
 /** The rules a carousel part follows; throws outside a {@link Carousel}. */
@@ -75,6 +77,8 @@ export interface CarouselProps extends Omit<Props, "children"> {
   readonly loop?: boolean;
   /** The carousel's accessible name. */
   readonly label: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -85,6 +89,7 @@ export const Carousel = ({
   onValueChange,
   loop = false,
   label,
+  className,
   children,
   style,
   onKeyDown,
@@ -141,11 +146,7 @@ export const Carousel = ({
           onKeyDown?.(event);
         }}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing.md,
-          },
+          recipeStyle(cn(CAROUSEL_ROOT, className), theme),
           style,
         )}
       >
@@ -159,11 +160,14 @@ export const Carousel = ({
 
 /** {@link CarouselTrack} props. */
 export interface CarouselTrackProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** The slide container: reports the slide count and gives each slide its index. */
 export const CarouselTrack = ({
+  className,
   children,
   style,
   ...rest
@@ -181,15 +185,7 @@ export const CarouselTrack = ({
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          overflow: "hidden",
-          borderRadius: theme.radius.lg,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          backgroundColor: theme.colors.card,
-        },
+        recipeStyle(cn(CAROUSEL_TRACK, className), theme),
         style,
       )}
     >
@@ -204,6 +200,8 @@ export const CarouselTrack = ({
 
 /** {@link CarouselSlide} props. */
 export interface CarouselSlideProps extends Omit<Props, "children" | "style"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly style?: StateStyle<CarouselSlideState>;
   readonly children?: PartChildren;
 }
@@ -216,10 +214,12 @@ export interface CarouselSlideState {
 
 /** One slide. It stays mounted while inactive and is hidden with `display`. */
 export const CarouselSlide = ({
+  className,
   style,
   children,
   ...rest
 }: CarouselSlideProps) => {
+  const theme = useTheme();
   const { active: activeIndex } = useCarousel();
   const index = useContext(SlideIndexContext) ?? 0;
   const active = index === activeIndex;
@@ -228,11 +228,9 @@ export const CarouselSlide = ({
     <div
       {...rest}
       style={mergeStyles(
-        {
+        mergeStyles(recipeStyle(cn(CAROUSEL_SLIDE, className), theme), {
           display: active ? "flex" : "none",
-          flexDirection: "column",
-          flexGrow: 1,
-        },
+        }),
         resolveStyle(style, { active, index }),
       )}
     >

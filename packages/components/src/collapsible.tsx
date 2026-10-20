@@ -13,6 +13,12 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  COLLAPSIBLE_CONTENT,
+  COLLAPSIBLE_ROOT,
+  COLLAPSIBLE_TRIGGER,
+} from "@gpuixui/tw";
 import { createContext, useContext, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isActivation } from "./internal/key.js";
@@ -22,7 +28,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { focusRing, textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { focusRing, useTheme } from "./internal/theme.js";
 
 /** The rules a collapsible part follows; throws outside a root. */
 interface CollapsibleContextValue {
@@ -70,21 +77,15 @@ export const Collapsible = ({
 
   return (
     <CollapsibleContext.Provider value={{ open, setOpen }}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-        }}
-      >
-        {children}
-      </div>
+      <div style={recipeStyle(COLLAPSIBLE_ROOT, theme)}>{children}</div>
     </CollapsibleContext.Provider>
   );
 };
 
 /** {@link CollapsibleTrigger} props. */
 export interface CollapsibleTriggerProps extends Omit<Props, "style"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the trigger's state. */
   readonly style?: StateStyle<CollapsibleTriggerState>;
 }
@@ -102,6 +103,7 @@ export const CollapsibleTrigger = ({
   onKeyDown,
   onFocus,
   onBlur,
+  className,
   style,
   ...rest
 }: CollapsibleTriggerProps) => {
@@ -139,32 +141,31 @@ export const CollapsibleTrigger = ({
         onBlur?.(event);
       }}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "label"),
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: theme.spacing.md,
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          paddingTop: theme.spacing.sm,
-          paddingBottom: theme.spacing.sm,
-          borderRadius: theme.radius.sm,
-          color: theme.colors.foreground,
+        mergeStyles(recipeStyle(cn(COLLAPSIBLE_TRIGGER, className), theme), {
           cursor: "pointer",
           hover: { backgroundColor: theme.colors.hover },
           active: { backgroundColor: theme.colors.active },
           ...(focused ? focusRing(theme) : {}),
-        },
+        }),
         resolveStyle(style, state),
       )}
     />
   );
 };
 
+/** {@link CollapsibleContent} props. */
+export interface CollapsibleContentProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The revealed body. Unmounts while closed, so nothing inside it is running. */
-export const CollapsibleContent = ({ style, children, ...rest }: Props) => {
+export const CollapsibleContent = ({
+  className,
+  style,
+  children,
+  ...rest
+}: CollapsibleContentProps) => {
   const theme = useTheme();
   const { open } = useCollapsibleContext();
 
@@ -176,16 +177,7 @@ export const CollapsibleContent = ({ style, children, ...rest }: Props) => {
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.md,
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          paddingTop: theme.spacing.sm,
-          paddingBottom: theme.spacing.md,
-          color: theme.colors.mutedForeground,
-        },
+        recipeStyle(cn(COLLAPSIBLE_CONTENT, className), theme),
         style,
       )}
     >
