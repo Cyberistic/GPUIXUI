@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 327/404
+`[x]` `[████████░░]` 327/405
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2782,6 +2782,11 @@ collides too (our field-selection plan beside components' menu group name). Add
 a check that fails when two worktrees carry different plan files under one
 number, and take the next free number before writing a plan (found while
 landing plan 688; `689` found while landing plan 692)
+`[ ]` Cross-team: `primitives` ticks its *"tokens workstream"* row under
+`docs/tokens.md` §Density — plan 720 landed the exception in
+`docs/tokens.md` and `docs/design-system.md`, guarded by
+`density-exception.test.ts`, and the text also names the
+`controlHeight.sm` option row it asked for (owner: `primitives`; plan 720)
 
 ## Phase C — Tier 1–2 components
 
