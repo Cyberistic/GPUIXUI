@@ -425,8 +425,12 @@ classes and no new failure; `check`, `lint` and `test` exit 0.
 
 The dialog and drawer runs are the regression check for the registry move.
 
-Scoped smoke: no playground scenario mounts an alert, a form or a chat
-(`--list`), so the `TestRenderer` suites are the native evidence. Do not run
+Scoped smoke: no playground scenario mounts an alert, a form or a chat (the
+registry is GPUix primitives plus the Tier 2 samples), so the `TestRenderer`
+suites are the native evidence. The headless suite was still run as the
+end-of-task check: **17/20**, with the three failures the playground workstream
+already owns and records (`focus-traversal`, `floating-placement`,
+`shell-navigation`) and none in a component this plan touched. Do not run
 `--all`.
 
 ## 7. STOP conditions
