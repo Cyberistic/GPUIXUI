@@ -586,9 +586,11 @@ trio and its one foreground, and the consumer migration is recorded in
 
 An inactive control is not an opacity composite. It paints the `disabled` fill
 with `disabledForeground` on it and its `border` edge around it: the label keeps a
-readable dim (3:1, 4.5:1 at AAA) and the edge keeps the shape, because the fill
-is allowed to sit within the panel's own value — no neutral clears a white card
-and the quiet panel at once. A filled primary action at 50% opacity measures
+readable dim (3:1, 4.5:1 at AAA) and the edge keeps the shape, and the fill is
+itself a perceivable step off each of the five surfaces a control is placed on —
+`background`, `card`, `popover`, the `muted` panel and the field's `input` fill
+(`disabledFillPairs`) — because an unavailable control still needs a shape. A
+filled primary action at 50% opacity measures
 **1.575:1** on the identity light canvas, which is the state a designed pair
 replaces: GPUI composites an element and its children as one group, so the label
 is dimmed with the fill it sits on, not only the fill.

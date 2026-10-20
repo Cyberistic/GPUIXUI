@@ -285,7 +285,7 @@ A runnable example lives in
 | `selected` | `#E0E3FF` | `#402F94` | selected row or item, one step past the `accent` hover wash |
 | `selectedActive` | `#E7EAFF` | `#312471` | selected row or item while pressed; a step toward the canvas, because the press previews deselection |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
-| `disabled` | `#E6EAF0` | `#2A303B` | fill of an unavailable control, measured on every surface a control is placed on (`disabledFillPairs`); the control's `border` edge is held on it |
+| `disabled` | `#E6EAF0` | `#2A303B` | fill of an unavailable control, measured on `background`/`card`/`popover`/`muted`/`input` (`disabledFillPairs`); the control's `border` edge is held on it |
 | `disabledForeground` | `#545D6C` | `#B0B8C6` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#CBD1DB` | `#434C5A` | loading placeholder |
 | `track` | `#D5D9E2` | `#3D4552` | the unfilled groove of a progress bar, meter or slider rail, and a switch that is off |
@@ -589,7 +589,7 @@ carries, so it cannot claim another.
 | `selected` | `#D8DBFF` | `#33257A` | selected row or item, one step past the `accent` hover wash |
 | `selectedActive` | `#E1E4FF` | `#271C5D` | selected row or item while pressed; a step toward the canvas, because the press previews deselection |
 | `selectedForeground` | `#1C1547` | `#E0E3FF` | text on `selected` |
-| `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
+| `disabled` | `#E8E8E8` | `#2E2E2E` | fill of an unavailable control, measured on `background`/`card`/`popover`/`muted`/`input` (`disabledFillPairs`); the control's `border` edge is held on it |
 | `disabledForeground` | `#444444` | `#D0D0D0` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
 | `track` | `#C6C8CD` | `#414141` | the unfilled groove of a progress bar, meter or slider rail, and a switch that is off |

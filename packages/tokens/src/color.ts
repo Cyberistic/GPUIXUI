@@ -265,7 +265,12 @@ export interface ThemeColors {
   readonly selectedActive: string;
   /** Text and icons on `selected`. */
   readonly selectedForeground: string;
-  /** Disabled surface. Deliberately allowed to sit near the panel: no neutral clears both a white card and the quiet panel, so a disabled control paints its `border` edge on this fill to keep its shape. */
+  /**
+   * Disabled surface. A perceivable step off each of the five surfaces a
+   * control is placed on — the canvas, a card, a popover, the quiet `muted`
+   * panel and the field's `input` fill (`disabledFillPairs`) — with its
+   * `border` edge held to the divider floor on the fill.
+   */
   readonly disabled: string;
   /** Disabled text and icons; held to the `inactive` floor (3:1, 4.5:1 at AAA) so an unavailable control stays readable. */
   readonly disabledForeground: string;
