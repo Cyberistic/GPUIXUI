@@ -54,6 +54,7 @@ import {
 import { Badge } from "./badge.js";
 import { EmptyState } from "./empty-state.js";
 import { headingLevel, type HeadingLevel } from "./internal/heading.js";
+import { controlName } from "./internal/name.js";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
@@ -369,7 +370,8 @@ export interface NotificationCentreTriggerProps extends ButtonProps {
   readonly showBadge?: boolean;
 }
 
-/** The bell-shaped button: a visible label, the unread badge and the label. */
+/** The bell-shaped button: the caller's `aria-label` when authored, else the
+ *  visible label with the unread count. */
 export const NotificationCentreTrigger = ({
   children,
   showBadge = true,
@@ -382,6 +384,7 @@ export const NotificationCentreTrigger = ({
     useNotificationCentre();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
   const count = unread > 99 ? "99+" : String(unread);
+  const name = controlName(rest["aria-label"], `${label}, ${unread} unread`);
 
   return (
     <Button
@@ -389,7 +392,7 @@ export const NotificationCentreTrigger = ({
       ref={setTrigger}
       variant={variant}
       aria-expanded={open}
-      aria-label={`${label}, ${unread} unread`}
+      aria-label={name}
       onClick={(event) => {
         onClick?.(event);
         if (open) requestClose("none");

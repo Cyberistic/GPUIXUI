@@ -12,7 +12,9 @@
  *
  * A notification row draws as a button, but only Enter read it; Space on
  * release now does too (plan 741), because GPUix synthesizes no activation
- * click for a role-bearing div. A header action still owns its own keys.
+ * click for a role-bearing div. A header action still owns its own keys. A
+ * caller's authored trigger name was overwritten by the derived unread count,
+ * although the package's naming rule lets the caller win (plan 794).
  */
 
 import * as Arr from "effect/Array";
@@ -89,6 +91,7 @@ const Centre = ({
   onOpenChange,
   open,
   defaultOpen = false,
+  triggerLabel,
 }: {
   readonly notifications: ReadonlyArray<NotificationItem>;
   readonly onRead?: (id: string) => void;
@@ -97,6 +100,7 @@ const Centre = ({
   readonly onOpenChange?: (open: boolean) => void;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
+  readonly triggerLabel?: string;
 }) => (
   <NotificationCentre
     notifications={notifications}
@@ -107,7 +111,7 @@ const Centre = ({
     open={open}
     defaultOpen={defaultOpen}
   >
-    <NotificationCentreTrigger testId="bell" />
+    <NotificationCentreTrigger testId="bell" aria-label={triggerLabel} />
     <NotificationCentreContent testId="panel">
       <NotificationCentreHeader>
         <NotificationCentreTitle />
@@ -194,6 +198,50 @@ describe("NotificationCentre", () => {
       "aria-expanded": false,
     });
     expect(isShown(root, "bell-badge")).toBe(true);
+
+    root.unmount();
+  });
+
+  it("lets the caller's authored name be the whole trigger name", () => {
+    const root = renderComponent(
+      <Centre notifications={seed} triggerLabel="Alerts" />,
+    );
+
+    expect(root.renderer.findByTestId("bell")?.customProps).toMatchObject({
+      "aria-label": "Alerts",
+      "aria-expanded": false,
+    });
+
+    clickCentreOf(root, "bell");
+
+    expect(root.renderer.findByTestId("panel")?.customProps).toMatchObject({
+      role: "region",
+      "aria-label": "Notifications",
+    });
+
+    root.unmount();
+  });
+
+  it("trims the caller's authored trigger name", () => {
+    const root = renderComponent(
+      <Centre notifications={seed} triggerLabel="  Alerts  " />,
+    );
+
+    expect(root.renderer.findByTestId("bell")?.customProps).toMatchObject({
+      "aria-label": "Alerts",
+    });
+
+    root.unmount();
+  });
+
+  it("falls back to the derived name when the authored one is blank", () => {
+    const root = renderComponent(
+      <Centre notifications={seed} triggerLabel="   " />,
+    );
+
+    expect(root.renderer.findByTestId("bell")?.customProps).toMatchObject({
+      "aria-label": "Notifications, 3 unread",
+    });
 
     root.unmount();
   });

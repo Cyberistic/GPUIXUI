@@ -114,10 +114,14 @@ description?, timestamp?, group?, read? }`; an absent `read` means unread.
 ### Trigger naming
 
 The trigger's accessible name is `"{label}, {n} unread"` (default
-`Notifications, 3 unread`), and `aria-expanded` follows the panel. The badge is
-hidden at zero, but the name still says `0 unread`, so the count is never a
-colour-only signal. `children` replaces the visible label (use it for a bell
-glyph); the badge and the name still follow the data.
+`Notifications, 3 unread`), and `aria-expanded` follows the panel. A caller's
+authored `aria-label` (a Button prop) replaces that whole name, trimmed — the
+count is derived only when the name is. A blank or whitespace-only value is not
+a name and falls back to the derived one. The panel keeps the root `label`, so
+renaming the trigger never renames the region. The badge is hidden at zero, but
+the derived name still says `0 unread`, so the count is never a colour-only
+signal. `children` replaces the visible label (use it for a bell glyph); the
+badge and the derived name still follow the data.
 
 ### Row naming
 
@@ -186,9 +190,10 @@ medium elevation. The badge is the theme's `primary`; the active row is
 
 ## Verification
 
-`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (29 tests):
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (32 tests):
 closed by default with the derived count in the trigger's name, open and named
-by a press, opening that marks nothing read, contiguous grouping in the
+by a press, a caller-authored trigger name winning whole (trimmed, with a blank
+one falling back to the derived name and the panel keeping the root label), opening that marks nothing read, contiguous grouping in the
 caller's order, unread dots and row names, one read request from a press with
 the panel staying open and the dot clearing on the next data update, mark-all
 and clear, Escape and an outside press, a **held** trigger press closing on

@@ -1418,6 +1418,15 @@ retired once both branches are one
       509 in 48 files, full native suite 1012/20 of 1032 with the same plan-540
       classes; docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and
       the plan index synced (owner: components)
+    - [x] A notification trigger's caller-authored name wins — plan 794; measured
+      2026-10-20: `<NotificationCentreTrigger aria-label="Alerts" />` announced
+      `"Notifications, 1 unread"` while `Button` itself already honours an
+      authored label, because the trigger wrote the derived name after
+      `{...rest}`. The name is now composed once with `controlName`: an authored
+      name wins trimmed, a blank one falls back to `"{label}, {n} unread"`, and
+      the panel keeps the root `label`. 3 native cases (29 → 32), 2 red at
+      `HEAD`; docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
+      (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
