@@ -1,15 +1,23 @@
 /**
- * Guards the premises of the content-surface theme checks (plan `784`).
+ * Guards the premises of the content-surface theme checks (plans `784`, `816`).
  *
  * The bug being guarded: `<markdown>`, `<code>` and `<diff>` publish a `theme`
  * prop that no scenario passes, and the runtime's base is always dark. These
  * tests pin the token mapping (so a themed surface cannot silently lose a
- * field), the geometry the pixel scans depend on, the two hand-computed
+ * field), the geometry the pixel scans depend on, the hand-computed
  * composites, and the darkest-pixel scan — including its device-scale mapping
  * and its refusal of a mismatched frame.
  *
- * Each can fail: change one mapping, move the bullet by a pixel, drop a syntax
- * kind, point `bg` at the card, or scan logical instead of device pixels.
+ * The second bug (plan `816`): `codeWash` and `diffHunkBg` were mapped to the
+ * **opaque** `muted` surface, so inline code painted a solid block and the hunk
+ * header a solid bar, while the runtime treats both as translucent fills. The
+ * wash tests fail if either becomes opaque again, if a wash equals its plane
+ * (invisible) or the muted surface (the regression), or if the palette relation
+ * is replaced by a literal.
+ *
+ * Each can fail: change one mapping, make a wash opaque, move the bullet by a
+ * pixel, drop a syntax kind, point `bg` at the card, or scan logical instead of
+ * device pixels.
  */
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
@@ -17,8 +25,12 @@ import { Pixels, Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import {
   BULLET_ALPHA,
+  CODE_WASH_ALPHA,
+  DIFF_FILE_HEADER,
+  DIFF_HUNK_HEADER,
   DIFF_LINE,
   DIFF_TINT_ALPHA,
+  HUNK_TINT_ALPHA,
   LIGHT_INK_CEILING,
   DARK_INK_FLOOR,
   MIN_SURFACE_PIXELS,
@@ -29,14 +41,19 @@ import {
   bulletPoint,
   diffRowPoints,
   diffTint,
+  hunkPaint,
   luminanceOf,
   nativeContentTheme,
   panelsOverlap,
   scanDarkest,
   syntaxKinds,
   syntaxPalette,
+  washOver,
   type SurfacePanel,
 } from "./surface-theme-model.js";
+
+/** The published theme marks both washes optional; an unset field fails. */
+const set = (value: string | undefined): string => value ?? "<unset>";
 
 const rgba = (hex: string): Pixels.Rgba => {
   const parsed = Pixels.hexToRgba(hex);
@@ -89,14 +106,40 @@ describe("nativeContentTheme", () => {
       [dark.accent, palettes.dark.colors.primary],
       [dark.caret, palettes.dark.colors.primary],
       [dark.codeText, palettes.dark.colors.primary],
-      [dark.codeWash, palettes.dark.colors.muted],
       [dark.diffAdd, palettes.dark.colors.success],
       [dark.diffDel, palettes.dark.colors.destructive],
-      [dark.diffHunkBg, palettes.dark.colors.muted],
       [dark.fontSans, palettes.dark.typography.sans],
       [dark.fontMono, palettes.dark.typography.mono],
     ] as const;
     pairs.forEach(([actual, expected]) => expect(actual).toBe(expected));
+  });
+
+  it("maps the washes to translucent semantic roles, not to a surface", () => {
+    const light = nativeContentTheme(palettes.light);
+    expect(set(dark.codeWash).startsWith(palettes.dark.colors.primary)).toBe(
+      true,
+    );
+    expect(set(light.codeWash).startsWith(palettes.light.colors.primary)).toBe(
+      true,
+    );
+    expect(
+      set(dark.diffHunkBg).startsWith(palettes.dark.colors.mutedForeground),
+    ).toBe(true);
+    expect(
+      set(light.diffHunkBg).startsWith(palettes.light.colors.mutedForeground),
+    ).toBe(true);
+    // `muted` is an opaque surface; neither wash may be it (plan 816).
+    expect(set(dark.codeWash)).not.toBe(palettes.dark.colors.muted);
+    expect(set(dark.diffHunkBg)).not.toBe(palettes.dark.colors.muted);
+  });
+
+  it("carries a non-opaque alpha on both washes", () => {
+    const alphaOf = (hex: string): string => hex.slice(-2);
+    expect(alphaOf(set(dark.codeWash))).toBe("1F");
+    expect(alphaOf(set(dark.diffHunkBg))).toBe("0F");
+    expect(alphaOf(set(dark.codeWash))).not.toBe("FF");
+    expect(CODE_WASH_ALPHA).toBe(0.12);
+    expect(HUNK_TINT_ALPHA).toBe(0.06);
   });
 
   it("uses the canvas, not the card, as the content plane", () => {
@@ -206,6 +249,72 @@ describe("the measured geometry", () => {
     );
     expect(DIFF_TINT_ALPHA).toBe(0.055);
     expect(painted).toEqual(new Pixels.Rgba({ r: 0, g: 14, b: 0, a: 255 }));
+  });
+
+  it("reads the hunk point from the hunk row", () => {
+    const points = diffRowPoints({ x: 10, y: 20, width: 420, height: 152 });
+    expect(points.hunk).toEqual({
+      x: 406,
+      y: 20 + DIFF_FILE_HEADER + DIFF_HUNK_HEADER / 2,
+    });
+  });
+});
+
+describe("the content washes", () => {
+  const dark = nativeContentTheme(palettes.dark);
+  const light = nativeContentTheme(palettes.light);
+
+  const wash = (hex: string, amount: number, plane: string): Pixels.Rgba =>
+    washOver(rgba(hex), amount, rgba(plane));
+
+  it("paints the hunk band as a neutral over the plane, not as muted", () => {
+    const painted = hunkPaint(
+      rgba(palettes.dark.colors.mutedForeground),
+      rgba(palettes.dark.colors.background),
+    );
+    expect(painted).toEqual(rgba("#1A1D23"));
+    expect(Pixels.rgbaNear(painted, rgba(palettes.dark.colors.muted), 6)).toBe(
+      false,
+    );
+    expect(
+      Pixels.rgbaNear(painted, rgba(palettes.dark.colors.background), 6),
+    ).toBe(false);
+  });
+
+  it("keeps the relation in the light palette", () => {
+    const painted = hunkPaint(
+      rgba(palettes.light.colors.mutedForeground),
+      rgba(palettes.light.colors.background),
+    );
+    expect(painted).toEqual(rgba("#ECEFF1"));
+    expect(light.diffHunkBg).not.toBe(dark.diffHunkBg);
+  });
+
+  it("paints the inline-code chip as an accent wash over the card", () => {
+    const painted = wash(
+      palettes.dark.colors.primary,
+      CODE_WASH_ALPHA,
+      palettes.dark.colors.card,
+    );
+    expect(painted).toEqual(rgba("#2A2E3F"));
+    expect(Pixels.rgbaNear(painted, rgba(palettes.dark.colors.card), 6)).toBe(
+      false,
+    );
+    expect(Pixels.rgbaNear(painted, rgba(palettes.dark.colors.muted), 6)).toBe(
+      false,
+    );
+    const lightPainted = wash(
+      palettes.light.colors.primary,
+      CODE_WASH_ALPHA,
+      palettes.light.colors.card,
+    );
+    expect(lightPainted).toEqual(rgba("#ECE9FB"));
+  });
+
+  it("derives both washes from the theme, so a palette move changes them", () => {
+    expect(dark.codeWash).not.toBe(light.codeWash);
+    expect(dark.diffHunkBg).not.toBe(light.diffHunkBg);
+    expect(set(dark.codeWash).startsWith("#")).toBe(true);
   });
 });
 

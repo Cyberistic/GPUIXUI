@@ -10,7 +10,8 @@
  * frame per host: the A/B pair is in one paint, so a wrong theme cannot be
  * confused with a different capture.
  *
- * Measured facts and the deferred fields: plan `784` §5/§10.
+ * Measured facts and the deferred fields: plan `784` §5/§10. The two washes
+ * (`codeWash`, `diffHunkBg`) and the hunk band's frame check: plan `816`.
  */
 import { Duration, Effect } from "effect";
 import type { ReactNode } from "react";
@@ -53,6 +54,7 @@ import {
   bulletPoint,
   diffRowPoints,
   diffTint,
+  hunkPaint,
   nativeContentTheme,
   scanDarkest,
 } from "./surface-theme-model.js";
@@ -350,6 +352,7 @@ const check = <Host, E>(
         colors.background,
       ),
       card: yield* parseColour("the card role parses", colors.card),
+      surface: yield* parseColour("the muted role parses", colors.muted),
     };
 
     // 1. Text and inline code: the themed mount paints the token, the default
@@ -524,6 +527,23 @@ const check = <Host, E>(
     yield* ctx.expectEqual(
       "the two diff tints are distinct",
       Pixels.rgbaNear(added, deleted, INK_TOLERANCE),
+      false,
+    );
+
+    // 6. The hunk band is a wash over the plane, not the opaque muted surface.
+    const hunk = hunkPaint(ink.muted, ink.plane);
+    yield* expectPoint(
+      ctx,
+      driver.reader,
+      frame,
+      "st-diff",
+      (box) => diffRowPoints(box).hunk,
+      hunk,
+      "the hunk header paints diffHunkBg over the diff plane",
+    );
+    yield* ctx.expectEqual(
+      "the hunk band is a wash, not the muted surface",
+      Pixels.rgbaNear(hunk, ink.surface, INK_TOLERANCE),
       false,
     );
   });

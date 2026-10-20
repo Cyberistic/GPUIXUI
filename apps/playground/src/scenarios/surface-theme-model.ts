@@ -17,8 +17,23 @@
 import { Pixels } from "@gpuixui/testing";
 import type { Smoke } from "@gpuixui/testing";
 import type { GpuixTheme, SyntaxTheme } from "@gpuix/react";
+import { alpha } from "@gpuixui/tokens";
 import type { Theme, ThemeColors } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
+
+/**
+ * The inline-code wash: the runtime paints `code_wash` as a quad behind the run
+ * (`markdown/render.rs:362`), so only its alpha makes it a wash. The runtime's
+ * dark default is a violet at 12 %, which is the accent family here.
+ */
+export const CODE_WASH_ALPHA = 0.12;
+
+/**
+ * The diff hunk band: `diff_hunk_bg` is the row's `bg` (`diff.rs:546`). The
+ * runtime's defaults are 5 % (dark) and 7 % (light); 6 % is the same quiet
+ * neutral, and a neutral keeps the three diff hues meaning added/deleted/hunk.
+ */
+export const HUNK_TINT_ALPHA = 0.06;
 
 /**
  * The design system's theme for a native content surface.
@@ -40,10 +55,10 @@ export const nativeContentTheme = (theme: Theme): GpuixTheme => ({
   accent: theme.colors.primary,
   caret: theme.colors.primary,
   codeText: theme.colors.primary,
-  codeWash: theme.colors.muted,
+  codeWash: alpha(theme.colors.primary, CODE_WASH_ALPHA),
   diffAdd: theme.colors.success,
   diffDel: theme.colors.destructive,
-  diffHunkBg: theme.colors.muted,
+  diffHunkBg: alpha(theme.colors.mutedForeground, HUNK_TINT_ALPHA),
   fontSans: theme.typography.sans,
   fontMono: theme.typography.mono,
   syntax: syntaxPalette(theme.colors),
@@ -282,9 +297,10 @@ export const BULLET_ALPHA = 0.85;
 /** Ink that must carry a token before it is evidence, not a stray edge. */
 export const MIN_SURFACE_PIXELS = 32;
 
-/** The three points the diff's plane and its two tints are read at. */
+/** The three points the diff's plane, its wash and its two tints are read at. */
 export interface DiffRowPoints {
   readonly context: { readonly x: number; readonly y: number };
+  readonly hunk: { readonly x: number; readonly y: number };
   readonly deleted: { readonly x: number; readonly y: number };
   readonly added: { readonly x: number; readonly y: number };
 }
@@ -299,6 +315,7 @@ export const diffRowPoints = (box: Smoke.Bounds): DiffRowPoints => {
   const body = box.y + DIFF_FILE_HEADER + DIFF_HUNK_HEADER;
   return {
     context: { x, y: body + DIFF_LINE / 2 },
+    hunk: { x, y: body - DIFF_HUNK_HEADER / 2 },
     deleted: { x, y: body + DIFF_LINE + DIFF_LINE / 2 },
     added: { x, y: body + DIFF_LINE * 2 + DIFF_LINE / 2 },
   };
@@ -321,6 +338,19 @@ export const bulletPaint = (
 /** A diff row tint: the line colour at 5.5 % over the content plane. */
 export const diffTint = (line: Pixels.Rgba, plane: Pixels.Rgba): Pixels.Rgba =>
   Pixels.blendOver(line, DIFF_TINT_ALPHA, plane);
+
+/** Any translucent fill over a plane: the hunk band, and the shared shape. */
+export const washOver = (
+  ink: Pixels.Rgba,
+  amount: number,
+  plane: Pixels.Rgba,
+): Pixels.Rgba => Pixels.blendOver(ink, amount, plane);
+
+/** The composite the hunk header paints: a neutral at 6 % over the plane. */
+export const hunkPaint = (
+  mutedForeground: Pixels.Rgba,
+  plane: Pixels.Rgba,
+): Pixels.Rgba => washOver(mutedForeground, HUNK_TINT_ALPHA, plane);
 
 /** Relative luminance of a straight sRGB colour, `0..1`. */
 export const luminanceOf = (colour: Pixels.Rgba): number =>
