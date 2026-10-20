@@ -2601,20 +2601,16 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **104/104** (`exit 0`, **2987** checks,
-**62** capabilities; **1273.3 s**; `.artifacts/live-report.json`, 2026-10-20) on
-the plan-`775` head (`85bd8cf1`, with `origin/master`'s docs-only `21b32697`
-merged as `81b767e4`), with the whole headless registry at **115/115** (**4206**
-checks, 65 capabilities, 432.8 s) on the same code. The live total is plan
-`768`'s 2933 plus `live-font-family`'s 13, `live-text-ink`'s 23 and
-`live-text-decoration`'s 18, so every registered id ran inside the gate. The
-capability count is **62** rather than 61 because plans `773`/`775` now mount
-`text` in a live scenario directly, instead of relying on plan `653`'s
-`live-typography` alias alone. Plan `778` then added `live-truncation-pixels`
-(22 checks, focused-green in 8.0 s) and plan `784` added `live-surface-theme`
-(50 checks, focused-green in 7.1 s), so the registry is **106** and the full
-live suite has not been re-run since; plan `786` is the gate for this head. The
-plan-`775` gate included every scenario this branch added at that point:
+The last full merge/release gate ran **106/106** (`exit 0`, **3059** checks,
+**62** capabilities; **1176.8 s**; `.artifacts/live-report.json`, 2026-10-20,
+plan `786`) on the head that adds the truncation and content-theme pixels, with
+the whole headless registry at **117/117** (**4278** checks, 65 capabilities,
+302.4 s) on the same code. The live total is plan `777`'s 2987 plus
+`live-truncation-pixels`' 22 and `live-surface-theme`'s 50, so every registered
+id ran inside the gate. The capability count is **62** rather than 61 because
+plans `773`/`775` mount `text` in a live scenario directly, instead of relying
+on plan `653`'s `live-typography` alias alone. The gate includes every scenario
+this branch added:
 `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
@@ -2627,10 +2623,12 @@ contract (25), `live-shadow-pixels`' ring/elevation pixels (28),
 `live-border-pixels`' border/radius pixels (64) and `live-state-pixels`'
 hover/active pixels (50) and `live-opacity-pixels`' disabled/subtree pixels (29)
 and `live-editing-actions`' clipboard, cut/paste, undo/redo and OTP-paste checks
-(73).
-The total is plan `768`'s 2933 plus the three text probes' 13 + 23 + 18, and the
-headless total is that gate's 4152 plus 54 (`4206`). A plain
+(73), `live-truncation-pixels`' ellipsis and overflow pixels (22) and
+`live-surface-theme`'s content-surface theme (50).
+The total is plan `777`'s 2987 plus those last two (22 + 50), and the headless
+total is that gate's 4206 plus 72 (`4278`). A plain
 `--all` wrote no frame and no `provenance.json`. This gate supersedes plan
+`777`'s 104/104 (`2987`) on the plan-`775` head, plan
 `768`'s 101/101 (`2933`) on `f0c9a8f8`, plan `762`'s
 100/100 (`2860`) on `05013949`, plan `755`'s
 99/99 (`2831`) on `7b304a1f`, plan `751`'s

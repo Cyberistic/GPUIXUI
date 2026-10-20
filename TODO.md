@@ -143,7 +143,26 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 141/141 plans-and-harness
+`[x]` `[██████████]` 142/142 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes the truncation and
+      content-theme pixels** per plan `786`: verification only, 0 behind
+      `origin/master`, registries `--list`ed at **117** headless / **106** live
+      before either suite ran. Headless **117/117** (**4278** checks, 65
+      capabilities, **302.4 s**) and live **106/106** (**3059** checks, 62
+      capabilities, **1176.8 s**), both exit `0`. The live total is plan
+      `777`'s 2987 + `live-truncation-pixels`' 22 + `live-surface-theme`'s 50
+      exactly, so both new scenarios ran inside the full sequence;
+      `text-truncation-pixels` reports **22**, `surface-theme` **50**,
+      `live-tier2-editing` **33** (its documented branch). Both `host` lines
+      carry the release-tag pins (`gpuix 9fcd6288`, `zed 81c99f81`, runtime
+      shaders) and a plain `--all` wrote no `provenance.json` and no capture
+      directory. `nub run check`/`lint`/`test` green (playground **580**,
+      testing 69, components 308, primitives 282, tokens 196, tw 103, icons 19,
+      docs 7). Exact ids: the whole headless registry (bare) and the whole live
+      registry (`--all`). This is the gate for the promotion merge; the
+      owner/supervisor performs it. Plan:
+      `.agents/slop/plans/786-promotion-gate-with-truncation-and-content-theme.md`.
 
 `[x]` **Give the native content surfaces a token theme and prove which fields
       reach the paint** per plan `784`: `<markdown>`, `<code>` and `<diff>` all
@@ -2514,6 +2533,20 @@ focused id is `live-frames`.
       33-check branch. A plain `--all` wrote no `provenance.json` and no capture
       directory, and both `host` lines carry the release-tag pins. `nub run
       check`/`lint`/`test` green (playground **520**, testing 69, components
+      308, primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
+      current gate for the promotion fast-forward**; the owner/supervisor still
+      performs the merge.
+      **Addendum (plan `786`, 2026-10-20):** plans `778` and `784` then
+      registered `text-truncation-pixels` (22 checks) and `surface-theme` (50)
+      with their live twins, taking the registries to **117** headless and
+      **106** live. Both ran whole on this head (0 behind `origin/master`):
+      headless **117/117** (**4278** checks, 65 capabilities, 302.4 s) and live
+      **106/106** (**3059** checks, 62 capabilities, **1176.8 s**), both exit
+      `0`. The live total is `2987 + 22 + 50` exactly, so both new scenarios ran
+      inside the full sequence; `live-tier2-editing` took its 33-check branch,
+      both `host` lines carry the release-tag pins, a plain `--all` wrote no
+      `provenance.json` and no capture directory, and `nub run
+      check`/`lint`/`test` are green (playground **580**, testing 69, components
       308, primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
       current gate for the promotion fast-forward**; the owner/supervisor still
       performs the merge.

@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release gate) |
 | Owner | playground workstream |
 | Depends on | `639`, `653`, `656`, `702`, `714`, `723`, `735`, `739`, `745`, `751`, `755`, `762`, `764`, `768`, `771`, `773`, `775`, `777`, `778`, `784` |
@@ -158,4 +158,47 @@ and reverted).
 
 ## 7. Results
 
-_To be filled by the gate run._
+**Landed 2026-10-20.** Verification only: no source change. The tree was clean,
+pushed, 0 behind `origin/master` and the only live `swarm:playground` session.
+`--list` reported **117** headless and **106** live ids before either suite ran.
+
+**Headless — exact match with the prediction.**
+
+```sh
+nub apps/playground/dist/smoke/run.js
+# -> 117/117 scenarios passed, exit 0, 302.4 s
+```
+
+Artifact `apps/playground/.artifacts/smoke-report.json`: 117 scenarios,
+**4278** checks (`4228 + 50`), **65** capabilities; `text-truncation-pixels`
+**22**, `surface-theme` **50**; host
+`gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed
+81c99f81, runtime shaders)`. A second independent full run on the same head
+agreed on every count.
+
+**Live — exact match with the prediction.**
+
+```sh
+nub apps/playground/dist/live/run.js --all
+# -> 106/106 scenarios passed, exit 0, 1176.8 s
+```
+
+Artifact `apps/playground/.artifacts/live-report.json`: 106 scenarios,
+**3059** checks — exactly plan `777`'s `2987` + `live-truncation-pixels`' 22 +
+`live-surface-theme`'s 50 — **62** capabilities; `live-truncation-pixels`
+**22**, `live-surface-theme` **50**, `live-tier2-editing` **33** (its
+documented branch, so the ±1 predicted variance did not appear); host
+`gpuix live window darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed
+81c99f81, runtime shaders)`. A plain `--all` wrote no `provenance.json` and no
+capture directory.
+
+**Completion gate.**
+
+```sh
+nub run check   # exit 0
+nub run lint    # exit 0
+nub run test    # exit 0; playground 580, testing 69, components 308,
+                # primitives 282, tokens 196, tw 103, icons 19, docs 7
+```
+
+This is the gate for the promotion merge; the owner/supervisor performs it.
