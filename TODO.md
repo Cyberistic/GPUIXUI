@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 325/402
+`[x]` `[████████░░]` 326/403
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2749,6 +2749,19 @@ as if they were the step, which is **1.06** on a painted surface.
 the page's sentences; the page's values were already derived by
 `native-highlight.test.ts`, whose presence check could not tell which sentence a
 figure belonged to. No token, pair, floor or metric moves (plan 716)
+`[x]` Hold the last five unguarded figures — `primaryText` on the nine surfaces a
+field sits on (5.587:1), the native gutter number (3.595:1) and unchanged marker
+(2.082:1), the 28% word-level diff wash (4.389:1) and the Toast countdown's
+groove (1.069:1) — were quoted in six places with no test behind any of them:
+falsifying all five in place (`5.587 → 5.586`, `3.595 → 3.594`, `2.082 → 2.081`,
+`4.389 → 4.388`) left all 195 files and 6835 tests green, the reason none had
+joined the table being that it could not express a fade or a wash. `FigureKind`
+gains `fade` and `over-wash` with a `composition`, `caretInkPairs` derives the
+nine field surfaces from `contrastPairs` over `selectionSurfaces`, eleven entries
+take the table to **44**, `styles.ts` stops stating "24 shipped sets" (the count
+is `shippedThemes.length` and a source JSDoc has no derivation site), and the
+catalogue names every document category the tables read, held by a new case. No
+colour, pair, floor, metric or shipped set moves (plan 717)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

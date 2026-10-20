@@ -37,10 +37,10 @@ export interface NativeTextFade {
  * list marker and ordered number are 85% of the accent ink, the blockquote rail
  * 60% and its wash 5%.
  *
- * The gutter fades sit below the secondary floor in shipped sets — 3.595:1 at
- * 80% and 2.082:1 at 50% on Aero light's quiet panel — because the runtime dims
- * chrome, so they are held to the perceivability floor rather than to a text
- * one.
+ * The gutter fades sit below the secondary floor in shipped sets, because the
+ * runtime dims chrome, so they are held to the perceivability floor rather than
+ * to a text one: the line number measures **3.595:1** at 80% on Aero light's
+ * quiet panel, and the unchanged marker **2.082:1** at 50%.
  */
 export const nativeTextFades: readonly NativeTextFade[] = [
   { field: "text", opacity: 0.92, pairClass: "body" },
@@ -117,10 +117,9 @@ export interface NativeTextOverFade {
  * cannot be inspected, so both the painted run colour and the container
  * fallback are held over the 5% accent wash at the body floor. The runtime's 28%
  * word-level diff wash is deliberately absent: it paints a changed token's own
- * syntax colour over a wash of the add/delete family, which measures
- * **4.389:1** for `destructiveText` on its own wash in `Dark · Linux` and
- * cannot clear a text floor while staying visible; `docs/tokens.md` states the
- * omission.
+ * syntax colour over a wash of the add/delete family. `destructiveText` on its
+ * own 28% wash measures **4.389:1** in `Dark · Linux` and cannot clear a text
+ * floor while staying visible; `docs/tokens.md` states the omission.
  */
 export const nativeTextOverFades: readonly NativeTextOverFade[] = [
   {

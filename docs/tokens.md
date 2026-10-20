@@ -4098,12 +4098,12 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **33** entries across
-this page, the design system, the README, the ledger and the ring's JSDoc — and
-`packages/tokens/src/figures.test.ts` derives each one from `shippedThemes` with
-the checker's own measurement and asserts both the figure and the set (and
-surface) the sentence names. The quoted tightest figures beside each contract
-list are derived by `docs.test.ts` over the same shipped sets, so
+state — `documentedFigures` and `documentedTierFigures`, **44** entries across
+this page, the design system, the README, the ledger and the package's own JSDoc
+modules — and `packages/tokens/src/figures.test.ts` derives each one from
+`shippedThemes` with the checker's own measurement and asserts both the figure
+and the set (and surface) the sentence names. The quoted tightest figures beside
+each contract list are derived by `docs.test.ts` over the same shipped sets, so
 both suites read one enumeration and a palette edit and a sentence cannot drift
 apart. It found three: the Toast's tone margin rounds to 11.98:1 (the page said
 11.97), the disabled panel action measures 5.148:1 identity dark and 7.310:1 AAA

@@ -30,7 +30,7 @@
  * is rebuilt from the tier groups.
  */
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { assert, describe, expect, it } from "vitest";
 import {
   documentedFigures,
@@ -45,8 +45,11 @@ import {
   type FigureDocument,
 } from "./figures.js";
 import {
+  caretPairs,
+  contrastPairs,
   extendTheme,
   getTheme,
+  selectionSurfaces,
   textTiers,
   themeTextTierFailures,
 } from "./index.js";
@@ -71,6 +74,22 @@ const documents: Readonly<Record<FigureDocument, string>> = {
   ),
   "packages/tokens/src/ring.ts": readFileSync(
     new URL("./ring.ts", import.meta.url),
+    "utf8",
+  ),
+  "packages/tokens/src/contrast.ts": readFileSync(
+    new URL("./contrast.ts", import.meta.url),
+    "utf8",
+  ),
+  "packages/tokens/src/native-text-check.ts": readFileSync(
+    new URL("./native-text-check.ts", import.meta.url),
+    "utf8",
+  ),
+  "packages/tokens/src/styles.ts": readFileSync(
+    new URL("./styles.ts", import.meta.url),
+    "utf8",
+  ),
+  "packages/tokens/src/toast-countdown.example.ts": readFileSync(
+    new URL("./toast-countdown.example.ts", import.meta.url),
     "utf8",
   ),
 };
@@ -210,5 +229,117 @@ describe("tier figures the documents state in the present tense", () => {
     expect(
       documents["docs/design-system.md"].replaceAll(/\s+/g, " "),
     ).toContain(sentence);
+  });
+});
+
+/**
+ * Plan 717: five current figures quoted in six places had no test behind them —
+ * falsifying every one in place (`5.587 → 5.586`, `3.595 → 3.594`,
+ * `2.082 → 2.081`, `4.389 → 4.388`) left all 195 files and 6835 tests green.
+ * The entries above derive them; these cases hold the table's own rules.
+ */
+describe("the figures the package's own JSDoc states", () => {
+  it("composes the paints each kind needs", () => {
+    const composed = (kind: string) => kind === "fade" || kind === "over-wash";
+    const inUnit = (value: number | undefined) =>
+      value !== undefined && value > 0 && value <= 1;
+
+    // Listed rather than branched on, so a missing composition is a report and
+    // not a silently skipped assertion.
+    expect(
+      documentedFigures
+        .filter(
+          (entry) => composed(entry.kind) && entry.composition === undefined,
+        )
+        .map((entry) => entry.name),
+    ).toEqual([]);
+    expect(
+      documentedFigures
+        .filter(
+          (entry) => !composed(entry.kind) && entry.composition !== undefined,
+        )
+        .map((entry) => entry.name),
+    ).toEqual([]);
+    expect(
+      documentedFigures
+        .filter((entry) => {
+          const composition = entry.composition;
+          if (!composed(entry.kind) || composition === undefined) {
+            return false;
+          }
+          const wash = composition.wash;
+          return entry.kind === "over-wash"
+            ? wash === undefined || !inUnit(wash.opacity)
+            : !inUnit(composition.opacity) || wash !== undefined;
+        })
+        .map((entry) => entry.name),
+    ).toEqual([]);
+  });
+
+  it("measures the caret on the nine surfaces a field sits on", () => {
+    const expected = [
+      "background",
+      "card",
+      "popover",
+      "muted",
+      "hover",
+      "active",
+      "accent",
+      "selected",
+      "input",
+    ];
+    const derived = contrastPairs
+      .filter(
+        ([foreground, background]) =>
+          foreground === "primaryText" &&
+          selectionSurfaces.some((surface) => surface === background),
+      )
+      .map(([, background]) => background);
+
+    expect(derived).toEqual(expected);
+    expect(caretPairs.map(([, surface]) => surface)).toEqual(["input"]);
+
+    documentedFigures
+      .filter((entry) => entry.name.startsWith("the caret's nine surfaces"))
+      .forEach((entry) => {
+        expect(
+          entry.pairs.map(([, background]) => background),
+          entry.name,
+        ).toEqual(expected);
+      });
+  });
+
+  it("states the shipped-set count nowhere in its own prose", () => {
+    // The count is `shippedThemes.length` and a source JSDoc has no derivation
+    // site, so the sentence says "every shipped set" instead. This case fails
+    // on the tree before plan 717 (`styles.ts` said "in all 24 shipped sets").
+    const modules: ReadonlyArray<readonly [string, string]> = readdirSync(
+      new URL(".", import.meta.url),
+    )
+      .filter((file) => file.endsWith(".ts") && !file.endsWith(".test.ts"))
+      .map((file): readonly [string, string] => [
+        file,
+        readFileSync(new URL(file, import.meta.url), "utf8"),
+      ]);
+    const counted = modules.filter(([, source]) =>
+      /\b\d+ (?:of the )?shipped sets\b/.test(source),
+    );
+
+    expect(counted.map(([file]) => file)).toEqual([]);
+  });
+
+  it("rejects the pre-717 figures", () => {
+    // Each of the five measured values was in place before this plan; a guard
+    // that cannot fail is no guard, so the table refuses the old digits.
+    const stale = ["5.586", "3.594", "2.081", "4.388", "1.068"];
+
+    documentedFigures.forEach((entry) => {
+      stale.forEach((figure) => {
+        expect(
+          quotesFigure(documents[entry.document], entry, figure),
+          `${entry.name} must not accept ${figure}`,
+        ).toBe(false);
+      });
+    });
   });
 });

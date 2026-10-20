@@ -4,6 +4,7 @@ import {
   contrastPairs,
   contrastRatio,
   inactivePanelActionPairs,
+  selectionSurfaces,
   toastTonePairs,
   trackSurfacePairs,
   type ContrastPair,
@@ -14,8 +15,8 @@ import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /**
- * A figure `docs/tokens.md` states in the present tense about the shipped
- * package, beside the measurement that produces it.
+ * A figure a document states in the present tense about the shipped package,
+ * beside the measurement that produces it.
  *
  * A documented ratio is measured once, quoted in a page, and then left behind
  * when a later plan moves a role: three figures had drifted while every suite
@@ -26,6 +27,10 @@ import type { ThemeContrast, ThemeMode } from "./theme.js";
  * same measurement the contrast checker uses, and names the shipped set the
  * sentence points at, so a sentence that names the wrong set fails even when
  * its number is right.
+ *
+ * A document is not only a page: `ring.ts`, the modules that own the native
+ * contract and a copyable example quote current figures in their own JSDoc, and
+ * the table reads them like any other (plan 717).
  *
  * Test-shaped source, like `full-set-claims.ts`: it is not part of the package
  * entry, and the suites are its only consumers.
@@ -53,7 +58,18 @@ export type FigureKind =
    * geometric mean of the tone pair's contrast,
    * `sqrt(contrast(outer, inner))`.
    */
-  | "ring";
+  | "ring"
+  /**
+   * A role painted at a fraction on the tone, the way the native runtime fades
+   * a document's text: the painted result is held to the tone it sits on.
+   */
+  | "fade"
+  /**
+   * A role painted whole on a wash of a role, the way a changed diff token sits
+   * on the add/delete tint: the text is held to the washed tone, not the plain
+   * one.
+   */
+  | "over-wash";
 
 /** The opacity the shipped consumers dim a disabled control with. */
 export const disabledDimOpacity = 0.5;
@@ -64,7 +80,11 @@ export type FigureDocument =
   | "docs/design-system.md"
   | "docs/tokens.md"
   | "packages/tokens/README.md"
-  | "packages/tokens/src/ring.ts";
+  | "packages/tokens/src/contrast.ts"
+  | "packages/tokens/src/native-text-check.ts"
+  | "packages/tokens/src/ring.ts"
+  | "packages/tokens/src/styles.ts"
+  | "packages/tokens/src/toast-countdown.example.ts";
 
 /** Which shipped axis produced a theme, with the axes read from the theme. */
 export type ShippedThemeProvenance =
@@ -108,6 +128,19 @@ export interface DocumentedFigure {
    * whose pair already names its background.
    */
   readonly panel?: keyof ThemeColors;
+  /**
+   * The paints a `fade` or `over-wash` entry composes: the fraction the
+   * foreground role is painted at, and — for `over-wash` — the role painted
+   * behind it and its own fraction. Every other kind leaves it undefined, and
+   * the suite fails an entry that needs it and omits it.
+   */
+  readonly composition?: {
+    readonly opacity: number;
+    readonly wash?: {
+      readonly role: keyof ThemeColors;
+      readonly opacity: number;
+    };
+  };
   /** The precision the sentence quotes. */
   readonly decimals: number;
   /** The sentence, with `{figure}` where the derived ratio belongs. */
@@ -158,12 +191,12 @@ export const sameProvenance = (
 };
 
 const measure = (
-  kind: FigureKind,
+  entry: DocumentedFigure,
   [foreground, background]: ContrastPair,
   colors: ThemeColors,
-  panel: keyof ThemeColors | undefined,
 ): number => {
-  switch (kind) {
+  const composition = entry.composition;
+  switch (entry.kind) {
     case "plain":
       return contrastRatio(colors[foreground], colors[background]);
     case "selection":
@@ -176,7 +209,7 @@ const measure = (
       return contrastRatio(painted, colors[background]);
     }
     case "dim": {
-      if (panel === undefined) {
+      if (entry.panel === undefined) {
         return Number.NaN;
       }
       // One group: the fill composites onto the panel first, then the label
@@ -184,7 +217,7 @@ const measure = (
       // dimmed fill, not against the panel.
       const fill = compositeOver(
         alpha(colors[background], disabledDimOpacity),
-        colors[panel],
+        colors[entry.panel],
       );
       const label = compositeOver(
         alpha(colors[foreground], disabledDimOpacity),
@@ -197,13 +230,39 @@ const measure = (
       // pair's own ratio, so the worst case over every colour is its square
       // root.
       return Math.sqrt(contrastRatio(colors[foreground], colors[background]));
+    case "fade": {
+      if (composition === undefined) {
+        return Number.NaN;
+      }
+      const tone = colors[background];
+      const painted = compositeOver(
+        alpha(colors[foreground], composition.opacity),
+        tone,
+      );
+      return contrastRatio(painted, tone);
+    }
+    case "over-wash": {
+      const wash = composition?.wash;
+      if (composition === undefined || wash === undefined) {
+        return Number.NaN;
+      }
+      const washed = compositeOver(
+        alpha(colors[wash.role], wash.opacity),
+        colors[background],
+      );
+      const painted = compositeOver(
+        alpha(colors[foreground], composition.opacity),
+        washed,
+      );
+      return contrastRatio(painted, washed);
+    }
   }
 };
 
 /** The lowest ratio one set measures across the entry's pairs. */
 const within = (entry: DocumentedFigure, colors: ThemeColors): number =>
   entry.pairs
-    .map((pair) => measure(entry.kind, pair, colors, entry.panel))
+    .map((pair) => measure(entry, pair, colors))
     .reduce((best, current) => (current < best ? current : best));
 
 /** The result of deriving a documented figure. */
@@ -392,6 +451,13 @@ const identityTheme = (
   mode: ThemeMode,
   contrast: ThemeContrast,
 ): ShippedThemeProvenance => ({ source: "identity", mode, contrast });
+
+/** The provenance of a recipe in a given mode and contrast. */
+const recipeTheme = (
+  recipe: PlatformRecipeName,
+  mode: ThemeMode,
+  contrast: ThemeContrast,
+): ShippedThemeProvenance => ({ source: "recipe", recipe, mode, contrast });
 
 /** The Toast's tone on its floating card, the one unsplit status composition. */
 const toastToneFigure: DocumentedFigure = {
@@ -723,6 +789,159 @@ const ringFigures: ReadonlyArray<DocumentedFigure> = [
   ),
 ];
 
+/**
+ * The field's caret and the native document's fades — the compositions the
+ * table could not express until it learned `fade` and `over-wash`. Quoted in
+ * the two modules that own the contract and in the two pages that teach it;
+ * none was held, so a falsified figure in any of the six places left the whole
+ * suite green (plan 717).
+ */
+
+/**
+ * The nine surfaces a native field's caret sits on: its own `input` fill, where
+ * the caret pair is a `mark`, and the eight text surfaces `primaryTextPairs`
+ * holds — the four plain tones and the four washes a row or an in-place editor
+ * paints. Derived from `contrastPairs` over {@link selectionSurfaces}, so a new
+ * persistent surface joins the entry with the contract.
+ */
+const caretInkPairs: ReadonlyArray<ContrastPair> = contrastPairs.filter(
+  ([foreground, background]) =>
+    foreground === "primaryText" &&
+    selectionSurfaces.some((surface) => surface === background),
+);
+
+const caretFigures: ReadonlyArray<DocumentedFigure> = [
+  {
+    document: "packages/tokens/src/contrast.ts",
+    name: "the caret's nine surfaces, in caretPairs' JSDoc",
+    pairs: caretInkPairs,
+    kind: "plain",
+    claim: "tightest",
+    provenance: platformTheme("win32", "dark", "default"),
+    decimals: 3,
+    sentence: "({figure}:1 at the tightest, Windows dark on",
+  },
+  {
+    document: "packages/tokens/src/styles.ts",
+    name: "the caret's nine surfaces, in nativeFieldTheme's JSDoc",
+    pairs: caretInkPairs,
+    kind: "plain",
+    claim: "tightest",
+    provenance: platformTheme("win32", "dark", "default"),
+    decimals: 3,
+    sentence: "every shipped set (**{figure}:1** at the tightest)",
+  },
+  {
+    document: "docs/tokens.md",
+    name: "the caret's nine surfaces, in the catalogue",
+    pairs: caretInkPairs,
+    kind: "plain",
+    claim: "tightest",
+    provenance: platformTheme("win32", "dark", "default"),
+    decimals: 3,
+    sentence: "(**{figure}:1** at the tightest, Windows dark on `active`)",
+  },
+  {
+    document: "docs/design-system.md",
+    name: "the caret's nine surfaces, in the design system",
+    pairs: caretInkPairs,
+    kind: "plain",
+    claim: "tightest",
+    provenance: platformTheme("win32", "dark", "default"),
+    decimals: 3,
+    sentence: "surface with margin (**{figure}:1** at the tightest)",
+  },
+];
+
+/** The gutter number: `textFaint` at the runtime's 80% on the quiet panel. */
+const gutterNumberFigure = (
+  document: FigureDocument,
+  sentence: string,
+): DocumentedFigure => ({
+  document,
+  name: "the native gutter number",
+  pairs: [["placeholder", "muted", "surface"]],
+  kind: "fade",
+  claim: "value",
+  provenance: recipeTheme("aero", "light", "default"),
+  composition: { opacity: 0.8 },
+  decimals: 3,
+  sentence,
+});
+
+/** The unchanged marker: `textFaint` at the runtime's 50% on the quiet panel. */
+const unchangedMarkerFigure = (
+  document: FigureDocument,
+  sentence: string,
+): DocumentedFigure => ({
+  document,
+  name: "the native unchanged marker",
+  pairs: [["placeholder", "muted", "surface"]],
+  kind: "fade",
+  claim: "value",
+  provenance: recipeTheme("aero", "light", "default"),
+  composition: { opacity: 0.5 },
+  decimals: 3,
+  sentence,
+});
+
+/** The 28% word-level diff wash: the token's own ink on a wash of itself. */
+const wordLevelWashFigure = (
+  document: FigureDocument,
+  sentence: string,
+): DocumentedFigure => ({
+  document,
+  name: "the word-level diff wash",
+  pairs: [["destructiveText", "card", "body"]],
+  kind: "over-wash",
+  claim: "value",
+  provenance: platformTheme("linux", "dark", "default"),
+  composition: {
+    opacity: 1,
+    wash: { role: "destructiveText", opacity: 0.28 },
+  },
+  decimals: 3,
+  sentence,
+});
+
+/** The Toast's designed groove on its floating card, tightest shipped set. */
+const countdownGrooveFigure: DocumentedFigure = {
+  document: "packages/tokens/src/toast-countdown.example.ts",
+  name: "the Toast countdown's groove",
+  pairs: [["track", "popover", "surface"]],
+  kind: "plain",
+  claim: "tightest",
+  provenance: platformTheme("win32", "dark", "default"),
+  decimals: 3,
+  sentence: "it clears the floor on the toast card at **{figure}:1**",
+};
+
+const nativePaintFigures: ReadonlyArray<DocumentedFigure> = [
+  ...caretFigures,
+  gutterNumberFigure(
+    "packages/tokens/src/native-text-check.ts",
+    "the line number measures **{figure}:1** at 80% on Aero light's",
+  ),
+  unchangedMarkerFigure(
+    "packages/tokens/src/native-text-check.ts",
+    "and the unchanged marker **{figure}:1** at 50%",
+  ),
+  gutterNumberFigure("docs/tokens.md", "they measure {figure}:1 at 80%"),
+  unchangedMarkerFigure(
+    "docs/tokens.md",
+    "and {figure}:1 at 50% on Aero light's quiet panel",
+  ),
+  wordLevelWashFigure(
+    "packages/tokens/src/native-text-check.ts",
+    "28% wash measures **{figure}:1** in `Dark · Linux`",
+  ),
+  wordLevelWashFigure(
+    "docs/tokens.md",
+    "on its own 28% wash measures **{figure}:1** (`Dark · Linux`)",
+  ),
+  countdownGrooveFigure,
+];
+
 /** Every figure this table holds. */
 export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   toastToneFigure,
@@ -734,6 +953,7 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   caretPairFigure,
   ...trackRejectedRoleFigures,
   ...ringFigures,
+  ...nativePaintFigures,
 ];
 
 /** One body-role tier: secondary text below the role a surface paints. */

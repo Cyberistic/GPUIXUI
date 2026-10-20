@@ -164,6 +164,7 @@ import {
   documentedFigures,
   documentedTierFigures,
   tierSurfaces,
+  type FigureDocument,
 } from "./figures.js";
 import * as Tokens from "./index.js";
 import { themeMetricFailures } from "./metrics.js";
@@ -1749,6 +1750,39 @@ describe("docs/tokens.md quoted tightest figures", () => {
     expect(paragraph).not.toContain(
       "holds every figure this page states in the present tense",
     );
+
+    // The table may read only a document the sentence names, and a named
+    // category must have a document — otherwise a seventh document joins the
+    // table while the page keeps naming six (plan 717).
+    const categories: ReadonlyArray<
+      readonly [string, (document: FigureDocument) => boolean]
+    > = [
+      ["this page", (document) => document === "docs/tokens.md"],
+      ["the design system", (document) => document === "docs/design-system.md"],
+      ["the README", (document) => document === "packages/tokens/README.md"],
+      ["the ledger", (document) => document === "COMPONENTS.md"],
+      [
+        "the package's own",
+        (document) => document.startsWith("packages/tokens/src/"),
+      ],
+    ];
+    const figureDocuments = [
+      ...documentedFigures,
+      ...documentedTierFigures,
+    ].map((entry) => entry.document);
+
+    expect(
+      figureDocuments.filter(
+        (document) => !categories.some(([, includes]) => includes(document)),
+      ),
+    ).toEqual([]);
+    expect(
+      categories
+        .filter(([label, includes]) => {
+          return !figureDocuments.some(includes) || !paragraph.includes(label);
+        })
+        .map(([label]) => label),
+    ).toEqual([]);
   });
 
   const tightest = (

@@ -469,8 +469,8 @@ export interface NativeFieldTheme {
  * floor, so a caret in an in-place editor (`InlineEdit`, which plan 527 holds on
  * the four row washes) vanished there. Plan 698 has since moved it to 3.214:1
  * on `selected` and 3.317:1 on `active` for the option's check; the caret stays
- * the ink because `primaryText` clears all nine surfaces a field sits on in all
- * 24 shipped sets (5.587:1 at the tightest) — `primaryTextPairs` holds the
+ * the ink because `primaryText` clears all nine surfaces a field sits on in
+ * every shipped set (**5.587:1** at the tightest) — `primaryTextPairs` holds the
  * eight and {@link caretPairs} adds the field's own `input` fill as a mark.
  *
  * Without this prop the field keeps the runtime's built-in dark caret, which
