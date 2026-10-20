@@ -3643,9 +3643,12 @@ from `statusTextSurfaces`, and `stateLadders` carries the ladder with
 `direction: "toward"`. Before plan `651` the design system claimed the chosen row
 pressed to `active`: identity light measured **1.001:1** there, eleven of twelve
 default palettes sat under the 1.05:1 floor and eight moved the wrong way while
-both checks returned `[]`. The transient fill is deliberately outside the
-selection-wash, modal-scrim and elevation walks, which measure the persistent
-`selected` fill at rest, like the other pointer washes (plan `359`).
+both checks returned `[]`. The pressed fill is a selection surface: a reader
+click-drags a selection with the button held, so `selectionWashPairs` holds the
+wash on it beside the `hover` and `active` washes of an unselected row (plan
+`723`). The modal-scrim and elevation walks read a window at rest — a dialog
+opens and a menu casts its shadow with the pointer up — so they keep measuring
+the persistent `selected` fill, like the other pointer washes (plan `359`).
 
 The action a soft status panel carries is the last composition a canvas role
 could not serve. `hover`, `active` and `secondary` are tuned against

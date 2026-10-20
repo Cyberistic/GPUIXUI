@@ -458,10 +458,12 @@ export const selectionPressStepPairs: readonly ContrastPair[] = [
  * measured through {@link trackSurfacePairs} and {@link skeletonPulsePairs}, and
  * the fill on the surfaces it paints on through {@link stateFillSurfacePairs}.
  *
- * The transient state is deliberately outside the selection-wash, modal-scrim
- * and elevation walks: a reader drags a selection or opens a dialog at rest, so
- * the persistent `selected` fill is what those contracts measure, exactly as
- * plan 359 excludes the `hover`/`active` washes from the scrim.
+ * The pressed fill is a **selection** surface: a reader click-drags across a
+ * chosen row's text with the button held, so {@link selectionWashPairs} holds the
+ * wash on it beside the `hover`/`active` washes of an unselected row (plan 723).
+ * It stays outside the modal-scrim and elevation walks, which read a window at
+ * rest — a dialog opens and a menu casts its shadow with the pointer up —
+ * exactly as plan 359 excludes the `hover`/`active` washes from the scrim.
  */
 export const selectionPressPairs: readonly ContrastPair[] = [
   ["foreground", "selectedActive", "body"],
@@ -1850,8 +1852,9 @@ export const selectionSoftWashPairs: readonly ContrastPair[] =
  *
  * The hint (`placeholder`) is deliberately absent: a placeholder is not typed
  * text and is not a selection a reader can drag. The pressed `selectedActive`
- * row is absent for the same reason it stays out of the selection-wash
- * contract: a row is selected at rest.
+ * row is not one of the surfaces this list extends: a field inside a pressed row
+ * is measured at rest by {@link selectionPressPairs}, and the wash over the
+ * pressed fill by {@link selectionWashPairs} (plan 723).
  */
 export const selectionInputPairs: readonly ContrastPair[] = [
   ...inputTextSurfaces,

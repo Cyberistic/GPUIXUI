@@ -63,8 +63,8 @@ describe("a field's typed text through a text selection", () => {
         .map(([, surface]) => surface),
     );
     // The `input` fill is the `inputForeground` pair in `selectionPairs`; the
-    // pressed `selectedActive` row is transient, like every pressed row in the
-    // selection contract, and a reader selects text at rest.
+    // pressed row's own typed text lives at rest in `selectionPressPairs`, which
+    // is the list that owns it (plan 723).
     atRest.delete("input");
     atRest.delete("selectedActive");
 
