@@ -55,6 +55,9 @@ capped by the window size.
 
 ## Dismissal and focus
 
+A press inside a nested surface that extends beyond the drawer's edge belongs to
+that surface, not to the drawer (plan 816).
+
 - The trigger opens and closes the drawer and reports `aria-expanded`.
 - Focus moves into the surface; `Tab` and `Shift+Tab` wrap inside it.
 - `Escape` closes and returns focus to the trigger; an outside press closes.

@@ -71,6 +71,10 @@ that follows closes the popover. The runtime delivers that click in a later task
 than the press, so the rule reads the press position rather than marking the next
 click.
 
+A press **on the panel** is never a dismissal, even inside a dialog whose box the
+panel extends beyond: the runtime reports an outside press by bounds, and the
+layer answers for its own surface (plan 816).
+
 ## Controlled and uncontrolled
 
 ```tsx

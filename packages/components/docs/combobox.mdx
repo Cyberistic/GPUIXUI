@@ -341,7 +341,9 @@ same shape for a row composed by hand.
 - The popup is an anchored layer, not a portal. The runtime snaps it inside the
   window but does not flip it, so the component opens it on the opposite side
   when snapping would cover the trigger; `align="center"` is measured from the
-  trigger rather than using the runtime's containing-block centre.
+  trigger rather than using the runtime's containing-block centre. A press on
+  the popup is the popup's own, so a pick works inside a dialog whose box the
+  popup extends beyond (plan 816).
 - `align="center"` is clamped by the snap margin near a window edge.
 - The runtime coerces a non-finite host offset to `0`, so `sideOffset`,
   `alignOffset` and `collisionPadding` keep their documented defaults (4, 0, 8)

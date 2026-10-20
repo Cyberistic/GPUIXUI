@@ -8,6 +8,11 @@
  * anywhere else; a one-gesture mark cleared on a microtask cannot survive to the
  * click.
  *
+ * The same test answers the other direction (plan 816): 0.10.0 reports
+ * `mouseDownOutside` by bounds, so an enclosing overlay is told that a press on a
+ * nested surface is "outside" it. The dismiss stack asks its topmost layer
+ * whether the press landed on the layer's own surface before it closes anything.
+ *
  * The parameters use the runtime's own `| null` shapes (`renderer` from
  * `useGpuix`, `element` from a ref); each is converted here, once, at the
  * boundary. This is a point-in-box test, not a comparison of two origins, so the
@@ -22,19 +27,19 @@ import type {
 } from "@gpuix/react";
 import * as Option from "effect/Option";
 
-/** Whether `event` landed inside `element`'s measured box. */
-export const pressedOn = (
+/** Whether `event` landed inside the measured box of native element `id`. */
+export const pressedWithin = (
   renderer: NativeRenderer | null,
-  element: PublicInstance | null,
+  id: number | null | undefined,
   event: EventPayload,
 ): boolean =>
   Option.match(
     Option.all({
       x: Option.fromNullishOr(event.x),
       y: Option.fromNullishOr(event.y),
-      box: Option.flatMap(Option.fromNullishOr(element), (target) =>
+      box: Option.flatMap(Option.fromNullishOr(id), (target) =>
         Option.flatMap(Option.fromNullishOr(renderer), (live) =>
-          Option.fromNullishOr(live.getElementBounds?.(target.id)),
+          Option.fromNullishOr(live.getElementBounds?.(target)),
         ),
       ),
     }),
@@ -47,3 +52,22 @@ export const pressedOn = (
         y <= box.y + box.height,
     },
   );
+
+/** Whether `event` landed inside `element`'s measured box. */
+export const pressedOn = (
+  renderer: NativeRenderer | null,
+  element: PublicInstance | null,
+  event: EventPayload,
+): boolean => pressedWithin(renderer, element?.id, event);
+
+/**
+ * A dismiss layer's ownership test: the press landed on the surface `surfaceId`
+ * names. Read at event time, because a surface mounts after the layer it owns.
+ */
+export const ownsSurface =
+  (
+    renderer: NativeRenderer | null,
+    surfaceId: () => number | null | undefined,
+  ): ((event: EventPayload) => boolean) =>
+  (event) =>
+    pressedWithin(renderer, surfaceId(), event);

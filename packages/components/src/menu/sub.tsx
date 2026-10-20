@@ -31,6 +31,7 @@ import {
   type RefObject,
 } from "react";
 import { pushDismissLayer } from "../internal/dismiss-layer.js";
+import { ownsSurface } from "../internal/pointer.js";
 import {
   OverlayHostProvider,
   useOverlayHost,
@@ -356,16 +357,20 @@ export const MenuSubContent = ({
   useLayoutEffect(() => {
     if (!open) return;
     const release = parentClaim(() => setOpen(false));
-    const pop = pushDismissLayer((event) => {
-      if (event.eventType === "mouseDownOutside" && insideSurface(event))
-        return;
-      closeRef.current(event.eventType === "keyDown" ? "dismiss" : "outside");
-    }, depth);
+    const pop = pushDismissLayer(
+      (event) => {
+        if (event.eventType === "mouseDownOutside" && insideSurface(event))
+          return;
+        closeRef.current(event.eventType === "keyDown" ? "dismiss" : "outside");
+      },
+      depth,
+      ownsSurface(renderer, () => surface.current?.id),
+    );
     return () => {
       pop();
       release();
     };
-  }, [depth, insideSurface, open, parentClaim, setOpen]);
+  }, [depth, insideSurface, open, parentClaim, renderer, setOpen, surface]);
 
   useLayoutEffect(() => {
     if (open || !restoreFocus.current) return;

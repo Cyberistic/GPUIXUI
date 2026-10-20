@@ -136,6 +136,10 @@ follows closes the menu. The runtime delivers that click in a later task than th
 press, which is why the rule reads the press position instead of marking the
 next click.
 
+A press **on the panel** belongs to the panel, so a row runs even when the panel
+hangs below the box of the dialog around it — the runtime reports an outside
+press by bounds, and the layer answers for its own surface (plan 816).
+
 ## Checkbox rows and tones
 
 ```tsx

@@ -174,6 +174,13 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   submenu inside a menu, are still the top layer (plans `730`, `732`). A modal
   additionally ranks its **initial focus** and returns focus to the enclosing
   surface (plan `730`).
+  **A layer answers for its own surface**: the runtime reports
+  `mouseDownOutside` by bounds, not by tree, so a nested panel painted beyond an
+  ancestor's box is announced as an outside press for that ancestor. Each layer
+  therefore names the surface it paints, and a press inside it never dismisses
+  it — a picker popup, menu panel or popover hanging below a dialog keeps the
+  press meant for its row, instead of closing (and losing the choice and focus)
+  on mouse down (plan `816`).
   Composite rows and cells (`List`, menu rows, grid
   and calendar cells) keep Space as a **selection** key on key down, per ARIA's
   listbox/grid patterns.

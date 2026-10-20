@@ -36,6 +36,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type RefObject,
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useCloseFocus } from "./internal/close-focus.js";
@@ -65,7 +66,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { pressedOn } from "./internal/pointer.js";
+import { ownsSurface, pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -117,6 +118,8 @@ interface NavigationMenuContextValue {
   readonly closeDelay: number;
   /** The one pointer policy; the root owns it so a switch cannot race. */
   readonly hover: HoverTravel;
+  /** The panel's surface, so the layer owns the presses inside it (plan 816). */
+  readonly surface: RefObject<PublicInstance | null>;
 }
 
 const NavigationMenuContext = createContext<
@@ -320,6 +323,7 @@ export const NavigationMenu = ({
   // nav sits over a dialog, and focus returns to the open item's trigger once the
   // close is accepted. A press on that trigger is its own gesture (plan 583), so
   // the layer claims it without closing; the click closes the panel.
+  const surface = useRef<PublicInstance | null>(null);
   const dismiss = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
     dismiss.current = () =>
@@ -328,20 +332,24 @@ export const NavigationMenu = ({
   useLayoutEffect(() => {
     if (open === null) return;
     const trigger = triggerFor(open);
-    return pushDismissLayer((event) => {
-      if (
-        event.eventType !== "keyDown" &&
-        pressedOn(renderer, trigger ?? null, event)
-      ) {
-        return;
-      }
-      if (event.eventType === "keyDown") {
-        dismiss.current();
-        return;
-      }
-      requestClose(null);
-    }, depth);
-  }, [depth, open, renderer, requestClose, triggerFor]);
+    return pushDismissLayer(
+      (event) => {
+        if (
+          event.eventType !== "keyDown" &&
+          pressedOn(renderer, trigger ?? null, event)
+        ) {
+          return;
+        }
+        if (event.eventType === "keyDown") {
+          dismiss.current();
+          return;
+        }
+        requestClose(null);
+      },
+      depth,
+      ownsSurface(renderer, () => surface.current?.id),
+    );
+  }, [depth, open, renderer, requestClose, surface, triggerFor]);
 
   const context = useMemo<NavigationMenuContextValue>(
     () => ({
@@ -361,6 +369,7 @@ export const NavigationMenu = ({
       openDelay,
       closeDelay,
       hover,
+      surface,
     }),
     [
       closeDelay,
@@ -583,6 +592,7 @@ export const NavigationMenuContent = ({
     clearPanelFocus,
     openOnHover,
     hover,
+    surface: rootSurface,
     triggerFor,
     triggerName,
   } = useNavigationMenu();
@@ -591,7 +601,11 @@ export const NavigationMenuContent = ({
   const surface = useRef<PublicInstance | null>(null);
   const trigger = useRef<PublicInstance | null>(null);
   trigger.current = triggerFor(value) ?? null;
-  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const setSurface = useMergedRef<PublicInstance | null>(
+    surface,
+    rootSurface,
+    ref,
+  );
   const setLayer = useCallback(
     (instance: PublicInstance | null) => {
       setSurface(instance);

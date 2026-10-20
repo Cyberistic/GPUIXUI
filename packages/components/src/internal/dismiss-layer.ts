@@ -17,6 +17,13 @@
  * shared field claim in `event-claim.ts` can: the first handler claims the
  * event, every enclosing handler sees the claim. `EventPayload` has no
  * `preventDefault` in 0.10.0, so this is the smallest honest replacement.
+ *
+ * **A layer answers for its own surface.** An ancestor is told a press is
+ * "outside" it by bounds alone, so a nested surface painted beyond the ancestor's
+ * box arrives as an outside press for every enclosing overlay. The topmost layer
+ * therefore owns the presses inside its own surface (plan `816`): a picker
+ * popup, menu panel or popover hanging below a dialog keeps the press that was
+ * meant for its row.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -27,23 +34,34 @@ import { claimEvent, isEventClaimed } from "./event-claim.js";
 /** A layer's dismiss handler: it must close only the overlay that pushed it. */
 export type DismissHandler = (event: EventPayload) => void;
 
-/** One open overlay: its handler and how deeply it is nested in modal surfaces. */
+/**
+ * Whether a press belongs to a layer: it landed inside the surface the layer
+ * paints. 0.10.0 reports `mouseDownOutside` by bounds, so an enclosing overlay
+ * is told that a press on a nested surface is outside it; the topmost layer
+ * answers for itself (plan 816).
+ */
+export type DismissOwnership = (event: EventPayload) => boolean;
+
+/** One open overlay: its handler, its nesting depth and its painted surface. */
 interface DismissLayer {
   readonly onDismiss: DismissHandler;
   readonly depth: number;
+  readonly owns: DismissOwnership | undefined;
 }
 
 let layers: ReadonlyArray<DismissLayer> = [];
 
 /**
  * Make `onDismiss` the topmost layer at `depth`. Returns the removal function,
- * which the overlay calls when it closes or unmounts.
+ * which the overlay calls when it closes or unmounts. Pass `owns` so a press on
+ * the layer's own surface never dismisses it.
  */
 export const pushDismissLayer = (
   onDismiss: DismissHandler,
   depth = 0,
+  owns?: DismissOwnership,
 ): (() => void) => {
-  layers = Arr.append(layers, { onDismiss, depth });
+  layers = Arr.append(layers, { onDismiss, depth, owns });
   return () => {
     layers = Arr.filter(layers, (layer) => layer.onDismiss !== onDismiss);
   };
@@ -69,6 +87,10 @@ export const dismissTopLayer = (event: EventPayload): boolean => {
   return Option.match(topmost, {
     onNone: () => false,
     onSome: (layer) => {
+      // A press inside the layer's own surface is not an outside press, so
+      // nothing is dismissed and nothing is claimed: the click that follows
+      // belongs to the row or control under the pointer (plan 816).
+      if (layer.owns?.(event) === true) return false;
       claimEvent(event);
       layer.onDismiss(event);
       return true;

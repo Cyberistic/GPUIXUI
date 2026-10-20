@@ -69,6 +69,10 @@ does not change its own state. In uncontrolled mode it stores the value itself.
 
 ## Dismissal
 
+A press inside a nested surface — a picker popup, menu panel or popover that
+extends beyond the dialog's box — is not an outside press for the dialog, so the
+nested surface keeps the press and runs its row (plan 816).
+
 `dismissible` (default `true`) controls both Escape and an outside press. A dialog
 doing uninterruptible work sets `dismissible={false}` and re-enables it when the
 work settles.

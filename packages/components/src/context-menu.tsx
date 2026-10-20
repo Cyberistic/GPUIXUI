@@ -24,10 +24,12 @@ import {
   useMemo,
   useRef,
   useState,
+  type RefObject,
 } from "react";
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { ownsSurface } from "./internal/pointer.js";
 import {
   OverlayHostProvider,
   useOverlayHost,
@@ -79,6 +81,8 @@ interface ContextMenuContextValue {
   readonly openFromKeyboard: (point: Point) => void;
   /** Register the trigger's native id; returns the unregister function. */
   readonly setTrigger: (id: number) => () => void;
+  /** The panel's surface, so the layer owns the presses inside it (plan 816). */
+  readonly surface: RefObject<PublicInstance | null>;
 }
 
 const ContextMenuContext = createContext<ContextMenuContextValue | undefined>(
@@ -122,6 +126,7 @@ export const ContextMenu = ({
   });
   const [point, setPoint] = useState<Point>({ x: 0, y: 0 });
   const triggerId = useRef<number | undefined>(undefined);
+  const surface = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
 
   // The layer callback must see the latest setter without being re-pushed.
@@ -167,8 +172,9 @@ export const ContextMenu = ({
     return pushDismissLayer(
       (event) => close(event.eventType === "keyDown" ? "dismiss" : "outside"),
       depth,
+      ownsSurface(renderer, () => surface.current?.id),
     );
-  }, [close, depth, open]);
+  }, [close, depth, open, renderer, surface]);
 
   const openAt = useCallback((next: Point) => {
     restoreFocus.current = false;
@@ -190,7 +196,15 @@ export const ContextMenu = ({
   }, []);
 
   const context = useMemo<ContextMenuContextValue>(
-    () => ({ open, openAt, openFromKeyboard, setTrigger, setOpen, point }),
+    () => ({
+      open,
+      openAt,
+      openFromKeyboard,
+      setTrigger,
+      setOpen,
+      point,
+      surface,
+    }),
     [open, openAt, openFromKeyboard, point, setOpen, setTrigger],
   );
 
@@ -326,9 +340,13 @@ export const ContextMenuContent = ({
   ref,
   ...rest
 }: ContextMenuContentProps) => {
-  const { open, point } = useContextMenuContext();
+  const { open, point, surface: rootSurface } = useContextMenuContext();
   const surface = useRef<PublicInstance | null>(null);
-  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const setSurface = useMergedRef<PublicInstance | null>(
+    surface,
+    rootSurface,
+    ref,
+  );
   const surfaceStack = useMemo(() => [surface], [surface]);
   assertParts(contextMenuContent, children);
 

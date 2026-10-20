@@ -31,8 +31,10 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
+  type RefObject,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import { useTextRegistry } from "./internal/text-registry.js";
@@ -79,6 +81,8 @@ interface DialogContextValue {
   /** The plain text a mounted {@link DialogDescription} registers. */
   readonly description: string | undefined;
   readonly registerDescription: (text: string) => () => void;
+  /** Written by the content part, so the modal's layer owns its surface. */
+  readonly surfaceId: RefObject<number | null>;
 }
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
@@ -118,7 +122,7 @@ export const Dialog = ({
   dismissible = true,
   children,
 }: DialogProps) => {
-  const { open, setOpen, depth } = useModalState({
+  const { open, setOpen, depth, surfaceId } = useModalState({
     open: openProp,
     defaultOpen,
     onOpenChange,
@@ -133,8 +137,8 @@ export const Dialog = ({
   );
 
   const context = useMemo<DialogContextValue>(
-    () => ({ description, open, registerDescription, setOpen }),
-    [description, open, registerDescription, setOpen],
+    () => ({ description, open, registerDescription, setOpen, surfaceId }),
+    [description, open, registerDescription, setOpen, surfaceId],
   );
 
   assertParts(dialogRoot, children);
@@ -247,7 +251,7 @@ const DialogSurface = ({
   ...rest
 }: DialogContentProps) => {
   const theme = useTheme();
-  const { description, open, setOpen } = useDialogContext();
+  const { description, open, setOpen, surfaceId } = useDialogContext();
   const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
   assertParts(dialogContent, children);
@@ -260,6 +264,10 @@ const DialogSurface = ({
     ref,
   );
   const contentId = content?.id;
+  // The modal's layer owns the presses inside this surface (plan 816).
+  useLayoutEffect(() => {
+    surfaceId.current = contentId ?? null;
+  });
   const host = useOverlayHost();
   useModalFocus(open ? contentId : undefined, initialFocus);
 

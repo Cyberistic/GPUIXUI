@@ -76,7 +76,7 @@ import {
   isSpaceRelease,
   isUp,
 } from "./internal/key.js";
-import { pressedOn } from "./internal/pointer.js";
+import { ownsSurface, pressedOn } from "./internal/pointer.js";
 import { offsetOf } from "./internal/placement.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -493,19 +493,23 @@ export const NotificationCentreContent = ({
 
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer((event) => {
-      // A press on the panel's own trigger is its gesture: claim it and let the
-      // click close (the press and the click arrive in separate tasks — plan
-      // 583). An Escape still closes and returns focus.
-      if (
-        event.eventType !== "keyDown" &&
-        pressedOn(renderer, trigger.current, event)
-      ) {
-        return;
-      }
-      requestClose(event.eventType === "keyDown" ? "trigger" : "none");
-    }, depth);
-  }, [depth, open, renderer, trigger]);
+    return pushDismissLayer(
+      (event) => {
+        // A press on the panel's own trigger is its gesture: claim it and let the
+        // click close (the press and the click arrive in separate tasks — plan
+        // 583). An Escape still closes and returns focus.
+        if (
+          event.eventType !== "keyDown" &&
+          pressedOn(renderer, trigger.current, event)
+        ) {
+          return;
+        }
+        requestClose(event.eventType === "keyDown" ? "trigger" : "none");
+      },
+      depth,
+      ownsSurface(renderer, () => surface.current?.id),
+    );
+  }, [depth, open, renderer, surface, trigger]);
 
   /**
    * Whether the panel itself or one of its rows holds focus. A key that bubbles

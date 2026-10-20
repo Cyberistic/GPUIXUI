@@ -50,7 +50,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { offsetOf } from "./internal/placement.js";
-import { pressedOn } from "./internal/pointer.js";
+import { ownsSurface, pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -263,16 +263,20 @@ export const PreviewCardContent = ({
   // (plan 583).
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer((event) => {
-      if (
-        event.eventType !== "keyDown" &&
-        pressedOn(renderer, trigger.current, event)
-      ) {
-        return;
-      }
-      requestClose(event.eventType === "keyDown" ? "trigger" : "none");
-    }, depth);
-  }, [depth, open, renderer, requestClose, trigger]);
+    return pushDismissLayer(
+      (event) => {
+        if (
+          event.eventType !== "keyDown" &&
+          pressedOn(renderer, trigger.current, event)
+        ) {
+          return;
+        }
+        requestClose(event.eventType === "keyDown" ? "trigger" : "none");
+      },
+      depth,
+      ownsSurface(renderer, () => surface.current?.id),
+    );
+  }, [depth, open, renderer, requestClose, surface, trigger]);
 
   if (!open) return null;
 

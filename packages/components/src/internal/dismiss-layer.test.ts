@@ -206,6 +206,54 @@ describe("dismiss layer stack", () => {
     removeFirst();
   });
 
+  it("never dismisses a layer by a press inside its own surface", () => {
+    // Plan 816 measured this: 0.10.0 reports `mouseDownOutside` by bounds, so a
+    // picker popup hanging below a dialog arrived as an outside press for the
+    // dialog, which dismissed the popup under the user's pointer. The topmost
+    // layer answers for its own surface, and a press inside it is no dismissal.
+    const popup = vi.fn();
+    const dialog = vi.fn();
+    const removeDialog = pushDismissLayer(dialog, 0);
+    const removePopup = pushDismissLayer(popup, 1, () => true);
+
+    expect(dismissTopLayer({ ...escape(), x: 500, y: 510 })).toBe(false);
+    expect(popup).not.toHaveBeenCalled();
+    expect(dialog).not.toHaveBeenCalled();
+
+    removePopup();
+    removeDialog();
+  });
+
+  it("dismisses a layer by a press outside its own surface", () => {
+    const popup = vi.fn();
+    const removePopup = pushDismissLayer(popup, 0, () => false);
+
+    expect(dismissTopLayer({ ...escape(), x: 10, y: 10 })).toBe(true);
+    expect(popup).toHaveBeenCalledTimes(1);
+
+    removePopup();
+  });
+
+  it("leaves an owned press unclaimed for the enclosing layers", () => {
+    // The click that follows the press must reach the row, and an enclosing
+    // handler in the same task must not read the event as consumed: the owned
+    // press claims nothing, so the same event still reaches the next layer.
+    const popup = vi.fn();
+    const dialog = vi.fn();
+    const removeDialog = pushDismissLayer(dialog, 0);
+    const removePopup = pushDismissLayer(popup, 1, () => true);
+    const press = escape();
+
+    expect(dismissTopLayer(press)).toBe(false);
+    expect(popup).not.toHaveBeenCalled();
+
+    removePopup();
+    expect(dismissTopLayer(press)).toBe(true);
+    expect(dialog).toHaveBeenCalledTimes(1);
+
+    removeDialog();
+  });
+
   it("reports whether a deeper layer is open", () => {
     expect(hasDeeperLayer(0)).toBe(false);
     const removeDialog = pushDismissLayer(vi.fn(), 0);

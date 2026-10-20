@@ -15,7 +15,7 @@
 import type { EventPayload } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { Match } from "effect";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { useControllableState } from "./controllable.js";
 import {
   dismissTopLayer,
@@ -24,6 +24,7 @@ import {
 } from "./dismiss-layer.js";
 import { claimEvent, isEventClaimed } from "./event-claim.js";
 import { isDismiss, isTab } from "./key.js";
+import { ownsSurface } from "./pointer.js";
 import { useOverlayHost, type OverlayHost } from "./overlay-host.js";
 
 /** The open state a modal exposes to its parts. */
@@ -32,6 +33,12 @@ export interface ModalState {
   readonly setOpen: (open: boolean) => void;
   /** How deeply the modal is nested in other modal surfaces; its layer depth. */
   readonly depth: number;
+  /**
+   * The surface's native id, written by the content part once it mounts. The
+   * layer owns the presses inside it, so a nested modal painted beyond an
+   * enclosing one keeps its own press (plan 816).
+   */
+  readonly surfaceId: RefObject<number | null>;
 }
 
 /** The open state, its layer depth and the dismiss layer it owns while open. */
@@ -52,6 +59,8 @@ export const useModalState = ({
     onChange: onOpenChange,
   });
   const depth = useOverlayHost().depth + 1;
+  const renderer = useGpuix().renderer;
+  const surfaceId = useRef<number | null>(null);
 
   // The layer handler must see the latest props without being re-pushed: a
   // re-push would move this surface above an overlay that opened after it.
@@ -64,10 +73,14 @@ export const useModalState = ({
 
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer(() => dismiss.current(), depth);
-  }, [open, depth]);
+    return pushDismissLayer(
+      () => dismiss.current(),
+      depth,
+      ownsSurface(renderer, () => surfaceId.current),
+    );
+  }, [open, depth, renderer]);
 
-  return { depth, open, setOpen };
+  return { depth, open, setOpen, surfaceId };
 };
 
 /**

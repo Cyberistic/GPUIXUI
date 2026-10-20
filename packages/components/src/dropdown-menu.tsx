@@ -43,7 +43,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { pressedOn } from "./internal/pointer.js";
+import { ownsSurface, pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { textStyle, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -76,6 +76,8 @@ interface DropdownContextValue {
   readonly trigger: RefObject<PublicInstance | null>;
   /** The row a keyboard open should focus once the rows have registered. */
   readonly pendingFocus: RefObject<"first" | "last" | null>;
+  /** The panel's surface, so the layer owns the presses inside it (plan 816). */
+  readonly surface: RefObject<PublicInstance | null>;
 }
 
 const DropdownContext = createContext<DropdownContextValue | undefined>(
@@ -119,6 +121,7 @@ export const DropdownMenu = ({
   });
   const renderer = useGpuix().renderer;
   const trigger = useRef<PublicInstance | null>(null);
+  const surface = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   /** Where a `Tab` that closed the menu continues from the trigger. */
   const leaveFocus = useRef<LeaveDirection | null>(null);
@@ -151,16 +154,20 @@ export const DropdownMenu = ({
   // the press and the click arrive in separate tasks (plan 583).
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer((event) => {
-      if (
-        event.eventType !== "keyDown" &&
-        pressedOn(renderer, trigger.current, event)
-      ) {
-        return;
-      }
-      close(event.eventType === "keyDown" ? "dismiss" : "outside");
-    }, depth);
-  }, [close, depth, open, renderer]);
+    return pushDismissLayer(
+      (event) => {
+        if (
+          event.eventType !== "keyDown" &&
+          pressedOn(renderer, trigger.current, event)
+        ) {
+          return;
+        }
+        close(event.eventType === "keyDown" ? "dismiss" : "outside");
+      },
+      depth,
+      ownsSurface(renderer, () => surface.current?.id),
+    );
+  }, [close, depth, open, renderer, surface]);
 
   useLayoutEffect(() => {
     if (open) {
@@ -187,7 +194,7 @@ export const DropdownMenu = ({
   }, [open]);
 
   const context = useMemo<DropdownContextValue>(
-    () => ({ open, setOpen, trigger, pendingFocus }),
+    () => ({ open, setOpen, trigger, pendingFocus, surface }),
     [open, setOpen],
   );
 
@@ -278,11 +285,20 @@ export const DropdownMenuContent = ({
   ...rest
 }: DropdownMenuContentProps) => {
   const theme = useTheme();
-  const { open, trigger, pendingFocus } = useDropdownContext();
+  const {
+    open,
+    trigger,
+    pendingFocus,
+    surface: rootSurface,
+  } = useDropdownContext();
   const menu = useMenuContext();
   const keys = menuKeyHandler(menu);
   const surface = useRef<PublicInstance | null>(null);
-  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const setSurface = useMergedRef<PublicInstance | null>(
+    surface,
+    rootSurface,
+    ref,
+  );
   const surfaceStack = useMemo(() => [surface], [surface]);
   const placement = usePlacement({
     open,

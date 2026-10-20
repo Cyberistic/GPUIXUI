@@ -93,7 +93,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { offsetOf } from "./internal/placement.js";
-import { pressedOn } from "./internal/pointer.js";
+import { ownsSurface, pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { scrollRowIntoView } from "./internal/scroll.js";
 import { stateDescription } from "./internal/state-description.js";
@@ -140,6 +140,8 @@ interface ComboboxContextValue {
   readonly noteOutsidePress: (event: EventPayload) => void;
   /** A trigger activation: open when closed, close when open. */
   readonly toggleOpen: () => void;
+  /** The popup's surface, so the layer owns the presses inside it (plan 816). */
+  readonly surface: RefObject<PublicInstance | null>;
 }
 
 const ComboboxContext = createContext<ComboboxContextValue | undefined>(
@@ -284,6 +286,7 @@ export const Combobox = ({
   const visibleOpen = open && !disabled;
   const [query, setQuery] = useState("");
   const trigger = useRef<PublicInstance | null>(null);
+  const surface = useRef<PublicInstance | null>(null);
   const list = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   /** Where a `Tab` that closes the popup continues from the trigger. */
@@ -437,12 +440,16 @@ export const Combobox = ({
   // closes the popup (plan 583).
   useLayoutEffect(() => {
     if (!visibleOpen) return;
-    return pushDismissLayer((event) => {
-      if (dismissedOnTrigger.current) return;
-      close.current();
-      if (event.eventType === "keyDown") restoreFocus.current = true;
-    }, depth);
-  }, [depth, visibleOpen]);
+    return pushDismissLayer(
+      (event) => {
+        if (dismissedOnTrigger.current) return;
+        close.current();
+        if (event.eventType === "keyDown") restoreFocus.current = true;
+      },
+      depth,
+      ownsSurface(renderer, () => surface.current?.id),
+    );
+  }, [depth, renderer, surface, visibleOpen]);
 
   return (
     <ComboboxContext.Provider
@@ -450,6 +457,7 @@ export const Combobox = ({
         options,
         rows: items,
         selectedValues,
+        surface,
         open: visibleOpen,
         disabled,
         loading,
@@ -737,12 +745,21 @@ export const ComboboxContent = ({
   ...rest
 }: ComboboxContentProps) => {
   const theme = useTheme();
-  const { noteOutsidePress, open, trigger } = useCombobox();
+  const {
+    noteOutsidePress,
+    open,
+    trigger,
+    surface: rootSurface,
+  } = useCombobox();
   const gap = offsetOf(sideOffset, 4);
   const extra = offsetOf(alignOffset, 0);
   const margin = offsetOf(collisionPadding, 8);
   const surface = useRef<PublicInstance | null>(null);
-  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const setSurface = useMergedRef<PublicInstance | null>(
+    surface,
+    rootSurface,
+    ref,
+  );
   const placement = usePlacement({
     open,
     side,

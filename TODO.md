@@ -1501,6 +1501,22 @@ retired once both branches are one
       on this host with the recorded plan-540 focus case the only failure; docs,
       `COMPONENTS.md`, `TODO.md`, the index and `PLAN.md` D30 synced
       (owner: components)
+    - [x] A press on a nested overlay's surface is not an outside press — plan
+      816; measured 2026-10-21 with the first Tier 2 **composite** suite: 0.10.0
+      reports `mouseDownOutside` by bounds, so a picker popup, menu panel or
+      popover hanging below a dialog's box arrived as an outside press for the
+      dialog, which dismissed the nested layer on mouse **down** — the choice,
+      the row and the user's focus were all lost (measured bounds: dialog ends
+      at `y 482`, the option sat at `501…529`, so `onValueChange` stayed `[]`).
+      Every dismiss layer now names its own surface (`pushDismissLayer`'s third
+      argument) and `dismissTopLayer` refuses a press inside it, without
+      claiming the event, so the release reaches the row; 3 unit cases and the
+      new `src/behaviour/composition.test.tsx` (6 cases: the settings workflow
+      end to end plus the three regression cases), the four workflow cases red
+      at `HEAD` and 6/6 after, the affected suites' failure set identical to
+      the baseline (20 → 16 = exactly those four flipped); docs,
+      `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the index
+      synced (owner: components)
     - [x] A malformed overlay offset keeps the documented default — plan 813;
       measured 2026-10-20: a non-finite `sideOffset` collapsed the gap
       (Popover 91 → 85, Preview card 91 → 85, Notification centre 81 → 73,
