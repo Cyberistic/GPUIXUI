@@ -355,6 +355,25 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ],
   ],
   [
+    "/docs/selection",
+    [
+      "text selection",
+      "select text",
+      "selected text",
+      "clear selection",
+      "selection text",
+      "get selected text",
+      "find in page",
+      "find text",
+      "search highlight",
+      "highlight matches",
+      "match count",
+      "highlight text",
+      "text highlight",
+      "find and highlight",
+    ],
+  ],
+  [
     "/docs/performance",
     [
       "benchmark",

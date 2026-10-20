@@ -4,7 +4,7 @@
 **Workstream:** docs-site
 **Depends on:** 410, 448 (capabilities), 479 (generated tables are dropped from
 search), 587 (host props), 606 (styling), 624 (refs), 626 (native elements)
-**Status:** planned
+**Status:** implemented
 
 ---
 
@@ -154,22 +154,31 @@ Change: `src/lib/search.ts` (register), `src/lib/search-docs.ts` (row),
 `src/lib/page-aliases.ts` (see §6), `src/lib/page-aliases.test.ts`,
 `scripts/smoke-build.ts` (one query), `.agents/slop/plans/README.md`, `TODO.md`.
 
-## 6. Search
+## 6. Search: measured results
 
-Promoted API names plus exact page aliases (page aliases match the whole query
-only, plan 598):
+Measured 2026-10-20 after the page landed (`search(query, 1)`):
 
-`text selection`, `select text`, `selected text`, `selection text`,
-`get selected text`, `find in page`, `find text`, `search highlight`,
-`highlight matches`, `match count`, `highlight text`, `find and highlight`.
+| Query | First result after |
+| ----- | ------------------ |
+| `text selection`, `select text`, `selected text`, `get selected text`, `clear selection` | `/docs/selection` |
+| `find in page`, `find text`, `search highlight`, `highlight matches`, `match count`, `text highlight` | `/docs/selection` |
+| `getSelectedText`, `onSelectionChange`, `observeSelectedText`, `useTextSearch`, `findRanges` | `/docs/selection` |
+| `highlight` | `/docs/selection` — **moved from Mention input's states** |
+| `selection` | `/docs/selection` — **moved from Radio group's limitations** |
+| `find` | `/docs/selection` — was nothing |
+| `clipboard` | `/docs/selection` — **moved from OTP Field's limitations** |
+| `radio group` | `/docs/components/radio-group` |
+| `select`, `select row`, `search` | Select, Data display, Search input |
 
-Regressions to pin: `selection` (Radio group), `select` / `select row`
-(Select / Data display), `highlight` (still Mention input's states section? —
-measure; if the new page legitimately wins it, record the move), `copy` and
-`paste` (their current owners), `search` (Search input).
+Four deliberate moves, each recorded rather than hidden behind an alias:
 
-Measure every row in §1 again; record the after table in this section, and if a
-plain word moves, say which owner lost it and why.
+- `highlight`, `selection` and `find` name the runtime capability the page is
+  about; their previous owners were a mention-input states section, a radio
+  group limitation and nothing. The page title and summary earn them.
+- `clipboard` now reaches the page that states the absence, which is the honest
+  answer to "can I copy?"; OTP Field's limitation stays where it is.
+- `copy` and `paste` did **not** move (Theme editor, Troubleshooting), because
+  they are about the docs site's controls and a paste failure, not the runtime.
 
 ## 7. Test plan
 
@@ -186,6 +195,14 @@ plain word moves, say which owner lost it and why.
    `getSelectedText` and `useTextSearch` reaching the page.
 6. Build smoke: one query (`text selection`) against `/api/search`.
 7. `smoke:a11y` (both schemes) and `smoke:responsive` for the new page.
+
+Measured forced failures:
+
+| Change reverted | Failure |
+| --------------- | ------- |
+| the whole `/docs/selection` alias block (key renamed) | seven owned queries fail by name, e.g. `text selection → /docs/components/text`, `match count → /docs/components/countdown` |
+| `<HighlightFields />` removed from the page | `expected [ '<HighlightFields />' ] to deeply equal []` in both the page guard and the table suite |
+| `getSelectedText` renamed in the authored method list | `GpuixRenderer: readSelectedText is documented but not declared` and `GpuixRenderer: getSelectedText is a selection method but undocumented` (permanent cases) |
 
 ## 8. Commands
 
@@ -219,3 +236,27 @@ new query green.
 - Every §1 query reaches the page first; every regression row keeps its owner.
 - The build, a11y, responsive and root gates are run and recorded.
 - `TODO.md`, the plan index and the branch are updated.
+
+## 11. Measured results
+
+| Command | Result |
+| ------- | ------ |
+| `nub exec vitest run src/lib/selection.test.ts src/components/selection-tables.test.tsx` | 14 tests pass |
+| `nub run --filter docs test` | 143 files / 1 526 tests pass |
+| `nub run --filter docs check-types` | exit 0 |
+| `nub run --filter docs smoke:build` | exit 0 — 110 pages, 241 links, 1 419 anchors, `text selection` green |
+| `nub run --filter docs smoke:a11y` | exit 0 — 110 pages × 2 schemes, 0 violations |
+| `nub run --filter docs smoke:responsive` | exit 0 — 110 pages at 390×844 |
+| `nub run check`, `nub run lint`, `nub run test` | exit 0 |
+
+Corrections measured during implementation:
+
+1. `FindRangesOptions` has four fields, not three (`text`, `query`,
+   `caseSensitive`, `wholeWord`).
+2. `HighlightSpec` has nine fields; `radius` and `matchIndexOffset` are easy to
+   miss because they sit after the colour fields.
+3. The find-bar example first used a `<button>`, which this runtime does not have
+   (plan 626); the page now composes `Button` and links the element page.
+4. The table registration in `mdx.tsx` initially shipped without its imports —
+   seven suites caught it by name through `getMDXComponents()`, which is exactly
+   what that guard is for.

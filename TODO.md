@@ -471,9 +471,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 193/194
+`[x]` `[██████████]` 194/194
 
-`[~]` **Selection, highlighting and find have a page (plan 627)** — the
+`[x]` **Selection, highlighting and find have a page (plan 627)** — the
       runtime selects text natively, paints match washes and exposes a find
       controller, and none of it had an owner: `getSelectedText`,
       `onSelectionChange`, `observeSelectedText`, `useTextSearch` and
@@ -481,7 +481,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       Search input, `match count` Countdown and `clear selection` Time picker.
       `/docs/selection` names the selection API, every `HighlightSpec` field,
       the virtualized `matchIndexOffset` rule, the find controller and the five
-      real absences (no clipboard, no DOM selection, no replace).
+      real absences (no clipboard, no DOM selection, no replace). 9 + 7 + 4
+      fields and 4 renderer methods derived from the declarations; 143 files /
+      1 526 docs tests, 110-page `smoke:build`, a11y and responsive green.
 
 `[x]` **The runtime's element catalogue and its error path (plan 626)** — the
       site documents how to style a host element and which props it inherits,

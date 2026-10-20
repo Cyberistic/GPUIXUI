@@ -1426,6 +1426,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the image element, which reached Avatar's limitations before plan 626",
     },
+    {
+      query: "text selection",
+      expected: "/docs/selection",
+      first: true,
+      what: "the selection API, which reached the Text component before plan 627",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

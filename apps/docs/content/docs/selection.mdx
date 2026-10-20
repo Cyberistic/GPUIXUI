@@ -1,0 +1,221 @@
+---
+title: Selection and find
+description: "How a GPUix app reads the native text selection, highlights matches and drives a find bar: onSelectionChange, getSelectedText, observeSelectedText, every HighlightSpec field, the virtualized match offset, useTextSearch and findRanges — and the clipboard it does not have."
+---
+
+Text selection is the operating system's, not React's. The renderer reports what
+is selected, paints match washes over rendered text and ships a find controller;
+the library ships no component for any of it. This page is that surface.
+[Styling](/docs/styling) owns the `userSelect` and `selectionColor` fields that
+decide whether text can be selected at all.
+
+## Reading the selection
+
+`render()` enables selection events exactly when you pass a handler, and turns
+them off when the tree unmounts. The event's `value` is the selected text:
+
+```tsx
+import { render } from "@gpuix/react";
+import type { ReactElement } from "react";
+
+const App = (): ReactElement => <div />;
+
+render(<App />, {
+  title: "Notes",
+  onSelectionChange: (event) => {
+    const selected = event.value ?? "";
+    // Show a formatting toolbar when selected.length > 0.
+    void selected;
+  },
+});
+```
+
+A pull read is the renderer method. It returns `null` when nothing is selected,
+and `clearSelection` drops the selection and repaints:
+
+```tsx
+import { useGpuixRequired } from "@gpuix/react";
+import { useState } from "react";
+
+export const useSelection = () => {
+  const renderer = useGpuixRequired();
+  const [text, setText] = useState<string | null>(null);
+
+  return {
+    text,
+    read: () => setText(renderer.getSelectedText?.() ?? null),
+    clear: () => renderer.clearSelection?.(),
+  };
+};
+```
+
+`observeSelectedText(renderer, subscribe, callback)` is the framework-neutral
+version: it calls back immediately with the current text and again on each
+selection event. `subscribe` is the host's own event subscription, which is what
+the React renderer wires from `onSelectionChange`.
+
+## Highlighting matches
+
+Any host element accepts `highlight`. Give it a `HighlightSpec` (or an array of
+them) and the renderer paints a wash behind every match. The nearest declaration
+wins for its subtree, so a container can highlight the whole document while one
+row overrides it:
+
+```tsx
+import { useTheme } from "@gpuixui/tokens/react";
+import type { ReactElement } from "react";
+
+export const Article = ({ body }: { readonly body: string }): ReactElement => {
+  const theme = useTheme();
+  return (
+    <div
+      highlight={{ query: "income", activeIndex: 0 }}
+      style={{ display: "flex", flexDirection: "column", gap: theme.spacing.sm }}
+    >
+      <text>{body}</text>
+    </div>
+  );
+};
+```
+
+<HighlightFields />
+
+Two behaviours are worth knowing before styling a wash:
+
+- **A match never crosses a line**, but it does cross the several host nodes one
+  interpolated line is built from — `Hello {name}` matches `Hello Ada`.
+- **A root-level declaration searches the window**, not just that element's
+  subtree; a container-level declaration searches its own subtree.
+
+`onHighlight` reports the match count of that element's spec. It counts every
+retained match, not only the ones currently painted:
+
+```tsx
+import { useState } from "react";
+import type { ReactElement } from "react";
+
+export const Counted = ({ body }: { readonly body: string }): ReactElement => {
+  const [matches, setMatches] = useState(0);
+  return (
+    <div
+      highlight={{ query: "income" }}
+      onHighlight={(event) => setMatches(event.matchCount ?? 0)}
+    >
+      <text>{`${matches} matches`}</text>
+      <text>{body}</text>
+    </div>
+  );
+};
+```
+
+## A find bar
+
+`useTextSearch` owns the query state machine: the washed props, the total, the
+active index and the three moves. Spread `props` onto the container and render
+the rest as your own chrome:
+
+```tsx
+import { Button } from "@gpuixui/primitives";
+import { useTextSearch } from "@gpuix/react";
+import { useTheme } from "@gpuixui/tokens/react";
+import type { ReactElement } from "react";
+
+export const FindBar = ({ body }: { readonly body: string }): ReactElement => {
+  const theme = useTheme();
+  const search = useTextSearch({ query: "income" });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: theme.spacing.md }}>
+      <div style={{ display: "flex", flexDirection: "row", gap: theme.spacing.sm }}>
+        <text>{`${search.active + 1} of ${search.total}`}</text>
+        <Button size="sm" onClick={search.previous}>
+          Previous
+        </Button>
+        <Button size="sm" onClick={search.next}>
+          Next
+        </Button>
+      </div>
+      <div {...search.props}>
+        <text>{body}</text>
+      </div>
+    </div>
+  );
+};
+```
+
+`createTextSearchController()` is the same controller without React, for a host
+that owns its own render loop. `goTo(index)` jumps to any match.
+
+`findRanges({ text, query })` computes `[start, end)` pairs yourself — the same
+units `indexOf` returns:
+
+<FindRangeFields />
+
+Use it when the matches come from somewhere else (a server search, a saved
+query), or when you need to count them before rendering.
+
+## Virtualized content
+
+A virtual list mounts a window of its rows, so the renderer can only number the
+matches that window contains. `matchIndexOffset` tells it how many matches come
+**before** this subtree, so a global `activeIndex` lands on the right row:
+
+```ts
+import { findRanges } from "@gpuix/react";
+
+export const matchesBefore = (
+  rows: ReadonlyArray<string>,
+  query: string,
+  windowStart: number,
+): number =>
+  rows
+    .slice(0, windowStart)
+    .reduce((total, row) => total + findRanges({ text: row, query }).length, 0);
+```
+
+It is a **match count, not a row index**: rows hold different numbers of
+matches, so a row index cannot stand in. A negative or fractional value refuses
+the whole spec rather than marking the wrong match.
+
+<TextSearchFields />
+
+## Native text and ranges
+
+`<code>`, `<markdown>` and `<diff>` render native text that is not part of the
+subtree's text. A `ranges` spec cannot see it — use `query`, which the renderer
+matches natively.
+
+`ranges` indexes the declaring subtree's text in UTF-16 code units, with a
+newline between lines. That has three consequences: a match never crosses a
+line, a pair that splits a surrogate pair is rejected rather than snapped, and
+the offsets depend on exactly the text that subtree renders.
+
+## What is not provided
+
+<SelectionAbsences />
+
+Two of those gaps change a design:
+
+- **No clipboard.** A "Copy" action must be the host application's own (a Node
+  API or a platform integration). The library can tell you what is selected, not
+  move it.
+- **A wash is a paint.** Nothing about a highlight reaches the accessibility
+  tree, so a find bar must report its count as text — `onHighlight`'s
+  `matchCount` is the number to announce.
+
+## Proving a highlight
+
+`getPaintedHighlights()` returns every wash painted in the last frame: the text,
+the UTF-16 offsets, whether it is the active match, and one rectangle per
+visual row. A match that soft-wraps produces several boxes, which is exactly what
+a screenshot cannot tell you. The native smoke suites use it to assert a wash
+without an image diff:
+
+```ts
+import { useGpuixRequired } from "@gpuix/react";
+
+export const usePaintedHighlightCount = (): number => {
+  const renderer = useGpuixRequired();
+  return renderer.getPaintedHighlights?.().length ?? 0;
+};
+```
