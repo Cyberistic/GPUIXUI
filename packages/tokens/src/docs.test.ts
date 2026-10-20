@@ -134,6 +134,7 @@ import {
   overlaySurfaces,
   relativeLuminance,
   selectionInactivePairs,
+  selectionInputPairs,
   selectionPairs,
   selectionPressPairs,
   selectionSurfaces,
@@ -964,6 +965,75 @@ const elevationRatios: ReadonlyArray<ElevationRatio> = shippedThemes.flatMap(
         );
       }),
 );
+
+/**
+ * Plan 703 guards the one count in the design system's §9 narrative that no test
+ * read. Plan 650 grew `inactiveSurfaces` from thirteen to fourteen by adding the
+ * field's `input` fill, and the catalogue, the §8 state row and the §9 floor row
+ * were updated while the paragraph explaining the washed list kept "thirteen".
+ * The two neighbours in the same narrative — the field's washed text
+ * (`selectionInputPairs`) and the loading pulse's dim frame — were correct but
+ * equally unguarded, so all three counts derive from their owners here.
+ */
+describe("docs/design-system.md list counts", () => {
+  /** The design system's prose between two anchors. */
+  const between = (from: string, to: string): string => {
+    const start = designSystem.indexOf(from);
+    const end = designSystem.indexOf(to, start);
+    expect(start, from).toBeGreaterThan(-1);
+    expect(end, to).toBeGreaterThan(start);
+    return designSystem.slice(start, end);
+  };
+
+  /** Whether a passage states the washed inactive list at its shipped size. */
+  const statesWashedInactiveCount = (prose: string): boolean =>
+    prose.includes(
+      `on the same ${countWord(inactiveSurfaces.length)} surfaces at the same floor`,
+    ) && prose.includes("the field's `input` fill included");
+
+  it("states the washed inactive-label list at its shipped size", () => {
+    const paragraph = between(
+      "The label is read while it is selected, too.",
+      "The same gap exists one role over.",
+    );
+
+    expect(selectionInactivePairs).toHaveLength(inactiveSurfaces.length);
+    expect(statesWashedInactiveCount(paragraph)).toBe(true);
+    expect(paragraph).not.toContain("thirteen");
+  });
+
+  it("rejects the pre-650 sentence", () => {
+    const stale = [
+      "`selectionInactivePairs` holds `disabledForeground` through the wash",
+      "on the same thirteen surfaces at the same floor, and three values move",
+      "one designed step away from the panel",
+    ].join(" ");
+
+    expect(statesWashedInactiveCount(stale)).toBe(false);
+  });
+
+  it("states the field's washed text at its shipped size", () => {
+    const paragraph = between(
+      "The same gap exists one role over.",
+      "A disabled raised action keeps its `softAction` fill",
+    );
+
+    expect(paragraph).toContain(
+      `the ${countWord(selectionInputPairs.length)} surfaces a field sits on beside that fill`,
+    );
+  });
+
+  it("states the skeleton pulse's surface count at its shipped size", () => {
+    const paragraph = between(
+      "A role painted through an alpha needs the composited pair",
+      "A fill is not automatically a surface.",
+    );
+
+    expect(paragraph).toContain(
+      `on the same ${countWord(skeletonPulsePairs.length)} surfaces`,
+    );
+  });
+});
 
 const pageSurfaceNames = new Set<string>(elevationSurfaces);
 

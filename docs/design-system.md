@@ -752,8 +752,9 @@ light's `selected` fill and 2.604–2.945:1 on the other default light sets whil
 every check returned `[]`, and the AAA sets measured **3.430:1** (light,
 `destructiveSoft`) and **4.357:1** (dark, `active`) under 4.5:1.
 `selectionInactivePairs` holds `disabledForeground` through the wash on the same
-thirteen surfaces at the same floor, and three values move one designed step
-away from the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
+fourteen surfaces at the same floor — the field's `input` fill included
+(plan `650`) — and three values move one designed step away from
+the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
 `#B0B0B0` — staying 1.301:1 (identity dark) and 1.168:1 (AAA dark) below
 secondary text at the tightest. The tightest washed pair is now **3.177:1**
 (Aero light `destructiveSoft`) and **4.722:1** at AAA (plan `510`).

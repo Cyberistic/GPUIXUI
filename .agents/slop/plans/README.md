@@ -355,6 +355,7 @@ references without buying correctness.
 | [695](./695-blockquote-body-role.md) | The blockquote's painted body role | F | 569, 583, 588, 649 | done |
 | [698](./698-selected-option-check.md) | The selected option's check on its selected fill | F | 332, 341, 557, 651 | done |
 | [700](./700-pressed-option-label.md) | A menu option's label on the pressed selected fill | F | 314, 359, 651, 659, 698 | done |
+| [703](./703-design-system-inactive-surface-count.md) | The design system's inactive-label surface count | F | 510, 650, 674, 689 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

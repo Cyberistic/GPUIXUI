@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 316/393
+`[x]` `[████████░░]` 317/394
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2664,6 +2664,15 @@ measured it only there; the same foreground stays while the row presses to
 `selectedActive`. The pair joins `selectionPressPairs`, every shipped set
 already clears the body floor (**11.59:1** at the tightest, Linux dark), so no
 colour moves (plan 700)
+`[x]` Hold the design system's washed inactive-label count to its list — plan
+650 grew `inactiveSurfaces` to fourteen, but the §9 paragraph still said
+"thirteen" while the catalogue said fourteen in three places, the §8 state row
+and the §9 floor row said fourteen, and `selectionInactivePairs` derives
+fourteen; the sentence now states fourteen and names the field's `input` fill
+plan 650 added, and a guard derives that count, the field's washed-text count
+and the skeleton pulse's surface count from `inactiveSurfaces`,
+`selectionInputPairs` and `skeletonPulsePairs`, with a case proving the pre-fix
+sentence fails (plan 703)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now
