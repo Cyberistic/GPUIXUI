@@ -102,6 +102,36 @@ describe("Checkbox", () => {
     expect(hostProp(element, "aria-checked")).toStrictEqual(Option.none());
   });
 
+  it("carries autoFocus on its one root, and never while disabled", () => {
+    // The gap guarded (plan 807): the pressable controls own one focusable root,
+    // so a consent dialog whose first control is a checkbox must be able to put
+    // the keyboard there — the field contract of plan 584.
+    const element = renderCheckbox(
+      { autoFocus: true },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "autoFocus"))).toBe(true);
+    const inert = renderCheckbox(
+      { autoFocus: true, disabled: true },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(inert, "autoFocus")).toStrictEqual(Option.none());
+    const review = renderCheckbox(
+      { autoFocus: true, readOnly: true },
+      testTheme,
+      checked(true),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(review, "autoFocus"))).toBe(true);
+  });
+
   it("publishes a blank label as absent and trims a real one", () => {
     // Plan 026: a computed empty label must not become an empty name.
     const blank = renderCheckbox(
@@ -484,6 +514,27 @@ describe("Switch", () => {
     expect(onValueChange).toHaveBeenCalledTimes(0);
     expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
     expect(onValueChange).toHaveBeenCalledWith(true);
+  });
+
+  it("carries autoFocus on its one root, and never while disabled", () => {
+    // Plan 807: the switch is one focusable root, so a settings page that opens
+    // on a switch can put the keyboard there.
+    const element = renderSwitch(
+      { autoFocus: true },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "autoFocus"))).toBe(true);
+    const inert = renderSwitch(
+      { autoFocus: true, disabled: true },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(inert, "autoFocus")).toStrictEqual(Option.none());
   });
 
   it("publishes a blank label as absent and trims a real one", () => {

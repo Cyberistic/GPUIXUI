@@ -47,6 +47,27 @@ describe("Toggle", () => {
     expect(hostProp(element, "aria-pressed")).toStrictEqual(Option.none());
   });
 
+  it("carries autoFocus on its root, and never while disabled", () => {
+    // Plan 807: the toggle is one focusable root, so a toolbar that opens on a
+    // toggle can put the keyboard there.
+    const element = renderToggle(
+      { autoFocus: true },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "autoFocus"))).toBe(true);
+    const inert = renderToggle(
+      { autoFocus: true, disabled: true },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(inert, "autoFocus")).toStrictEqual(Option.none());
+  });
+
   it("announces a pressed toggle", () => {
     const element = renderToggle(
       { pressed: true },

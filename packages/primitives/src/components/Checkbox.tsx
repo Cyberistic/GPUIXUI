@@ -80,6 +80,16 @@ export interface CheckboxProps extends TriggerHandlers {
    */
   readonly readOnly?: boolean;
   readonly invalid?: boolean;
+  /**
+   * Take keyboard focus on mount, and ring while it holds that focus.
+   *
+   * The control's single focusable root asks the renderer through the host's
+   * own `autoFocus`, which a focusable `div` honours on a later mount too
+   * (probed for plan `806`; the field contract of plan `584`, plan `807`). A
+   * disabled box never takes it and is out of the tab order anyway; a read-only
+   * one still does, because it keeps its stop and ring (plan `799`).
+   */
+  readonly autoFocus?: boolean;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   /** Defaults to `primary`. */
@@ -210,6 +220,7 @@ export const renderCheckbox = (
       props["aria-description"],
     ),
     "aria-valuetext": selectionValueText(current),
+    autoFocus: props.disabled === true ? undefined : props.autoFocus,
     tabIndex: props.disabled === true ? undefined : 0,
     testId: props.testId,
     onClick: toggle,

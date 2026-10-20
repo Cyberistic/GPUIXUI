@@ -64,6 +64,7 @@ there is no row to paint into, so the hint is announced but not painted.
 | `onValueChange` | `(next: boolean) => void` | none | the next boolean |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
 | `readOnly` | `boolean` | `false` | keeps the tab stop, ring and announced value; refuses every change and paints full contrast (plan `799`) |
+| `autoFocus` | `boolean` | `false` | takes native focus on mount, including a later mount, and rings while it holds it; a disabled switch never does, a read-only one still does (plan `807`) |
 | `invalid` | `boolean` | `false` | the track takes the destructive role |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
@@ -90,6 +91,12 @@ is behavioural and visual (plan `799`).
 | Tab | reaches the switch when it is not disabled |
 
 ## Accessibility
+
+**A switch as the first control of a surface** can start with the keyboard:
+`autoFocus` puts native focus on the row and its ring follows — the same
+contract the fields have (plan `584`), because the control owns exactly one
+focusable root. A control mounted after a loading state focuses too; a disabled
+one never does, and a read-only one still does (plan `807`).
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
   delivers no `onFocus`/`onBlur` to a component

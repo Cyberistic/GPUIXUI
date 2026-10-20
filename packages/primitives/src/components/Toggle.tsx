@@ -79,6 +79,15 @@ export interface ToggleProps extends TriggerHandlers {
    * with a `default` cursor. `disabled` wins. 0.10.0 has no `aria-readonly`.
    */
   readonly readOnly?: boolean;
+  /**
+   * Take keyboard focus on mount, and ring while it holds that focus.
+   *
+   * The toggle is one focusable root, so it asks the renderer through the host's
+   * own `autoFocus`, which a focusable `div` honours on a later mount too
+   * (probed for plan `806`; plan `807`). A disabled toggle never takes it; a
+   * read-only one still does, because it keeps its stop and ring (plan `804`).
+   */
+  readonly autoFocus?: boolean;
   readonly leading?: ReactNode;
   readonly trailing?: ReactNode;
   /** Accessible name. Required when the toggle has only an icon. */
@@ -145,6 +154,7 @@ export const renderToggle = (
       )}
       aria-description={ariaName(props["aria-description"])}
       aria-valuetext={pressedValueText(state.current)}
+      autoFocus={props.disabled === true ? undefined : props.autoFocus}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onClick={toggle}

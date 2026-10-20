@@ -57,6 +57,7 @@ passed. 0.10.0 has no `aria-readonly`, so the state is behavioural and visual.
 | `square` | `boolean` | `false` | equal width and height, for an icon-only toggle |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
 | `readOnly` | `boolean` | `false` | shows the pressed mode for review: keeps the tab stop and ring, refuses every press, full contrast with a `default` cursor (plan `804`) |
+| `autoFocus` | `boolean` | `false` | takes native focus on mount, including a later mount, and rings while it holds it; a disabled toggle never does, a read-only one still does (plan `807`) |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label; the dedicated slots for an end icon, while a child element beside text shares the line (plan `803`) |
 | `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
@@ -89,6 +90,12 @@ boundary. The tip's string becomes the toggle's `aria-description`.
 ```
 
 ## Accessibility
+
+**A toggle as the first control of a surface** can start with the keyboard:
+`autoFocus` puts native focus on the button and its ring follows — the same
+contract the fields have (plan `584`), because the control owns exactly one
+focusable root. A control mounted after a loading state focuses too; a disabled
+one never does, and a read-only one still does (plan `807`).
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
   delivers no `onFocus`/`onBlur` to a component

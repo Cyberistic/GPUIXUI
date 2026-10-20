@@ -198,7 +198,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 176/176
+`[x]` `[████████████]` 177/177
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2762,6 +2762,29 @@ retired once both branches are one
       runtime cases stayed green without it, so no seed ships. 1 element + 4
       runtime cases, three mutations failing by name; offline 75 files / 1063
       tests, `auto-focus` 11/11 (plan `806`).
+
+`[x]` `packages/primitives`: **a pressable control could not be the first
+      control of a form** — `autoFocus` (the library's "keyboard starts here"
+      contract, plan `584`) shipped on every field and on `Select` after plan
+      `806`, but `Checkbox`, `Switch` and `Toggle` had no prop, so a consent
+      dialog whose first control is a checkbox, or a toolbar that opens on a
+      toggle, could only be reached with Tab. All three own exactly one focusable
+      root, so that root now carries the host `autoFocus`: a control mounted
+      after a loading state focuses, a disabled one never does, a read-only one
+      still does, and the ring follows the tracker as everywhere else. 3 element
+      + 9 runtime cases (one `it.each` table over the three parts), three
+      mutations failing by name; offline 75 files / 1066 tests, `auto-focus`
+      20/20 (plan `807`).
+
+`[ ]` `packages/primitives`: **`autoFocus` on the roving composites** —
+      `RadioGroup`, `CheckboxGroup`, `ToggleGroup`, `Rating`, `Slider` and
+      `RangeSlider` still have no `autoFocus` (plan `807` scoped them out on
+      purpose). Unlike the single-root controls, the decision is *which item*
+      receives the focus: the tab stop (the selected/checked item, or the first
+      enabled one), the slider's start thumb, the rating's value star. Measure
+      whether the tab-stop host honours `autoFocus` on a later mount, then add
+      the prop with a per-part rule, a matrix row each and a page row. Owner:
+      primitives.
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -69,6 +69,15 @@ export interface SwitchProps extends TriggerHandlers {
    * `aria-readonly`, so the difference is behavioural and visual (plan `799`).
    */
   readonly readOnly?: boolean;
+  /**
+   * Take keyboard focus on mount, and ring while it holds that focus.
+   *
+   * The switch is one focusable root, so it asks the renderer through the host's
+   * own `autoFocus`, which a focusable `div` honours on a later mount too
+   * (probed for plan `806`; plan `807`). A disabled switch never takes it; a
+   * read-only one still does, because it keeps its stop and ring (plan `799`).
+   */
+  readonly autoFocus?: boolean;
   readonly invalid?: boolean;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
@@ -180,6 +189,7 @@ export const renderSwitch = (
       props["aria-description"],
     ),
     "aria-valuetext": state.current ? "checked" : "unchecked",
+    autoFocus: props.disabled === true ? undefined : props.autoFocus,
     tabIndex: props.disabled === true ? undefined : 0,
     testId: props.testId,
     onClick: toggle,

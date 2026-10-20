@@ -75,6 +75,7 @@ there is no row to paint into, so the hint is announced but not painted.
 | `indeterminate` | `boolean` | `false` | paints a dash and announces `mixed`; overrides `checked` |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
 | `readOnly` | `boolean` | `false` | keeps the tab stop, ring and announced value; refuses every change and paints full contrast (plan `799`) |
+| `autoFocus` | `boolean` | `false` | takes native focus on mount — including a control added after a loading state — and rings while it holds it; a disabled box never does, and a read-only one still does (plan `807`) |
 | `invalid` | `boolean` | `false` | the empty box takes the destructive border |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize`; the tick is the box's content square, so it scales too (12 / 14 / 18 px) |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
@@ -122,6 +123,12 @@ behavioural and visual (plan `799`).
 | Tab | reaches the control when it is not disabled (one stop, label included) |
 
 ## Accessibility
+
+**A checkbox as the first control of a surface** can start with the keyboard:
+`autoFocus` puts native focus on the row and its ring follows — the same
+contract the fields have (plan `584`), because the control owns exactly one
+focusable root. A control mounted after a loading state focuses too; a disabled
+one never does, and a read-only one still does (plan `807`).
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
   delivers no `onFocus`/`onBlur` to a component

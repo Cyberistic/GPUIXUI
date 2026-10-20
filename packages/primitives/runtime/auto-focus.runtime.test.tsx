@@ -19,11 +19,14 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Input } from "../src/components/Input.js";
+import { Checkbox } from "../src/components/Checkbox.js";
 import { NumberField } from "../src/components/NumberField.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { Select } from "../src/components/Select.js";
+import { Switch } from "../src/components/Switch.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Text } from "../src/components/Text.js";
+import { Toggle } from "../src/components/Toggle.js";
 import { isFocusRing } from "../src/testing/index.js";
 import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
@@ -264,5 +267,74 @@ it("does not focus a disabled Select that mounts later with autoFocus", async ()
       />
     </Surface>,
   );
+  expect(focused(runtime)).toBe("none");
+});
+
+/**
+ * The three pressable controls own one focusable root each, so the far edge of
+ * `autoFocus` (plan `584`) applies to them too (plan `807`): a consent dialog or
+ * a settings page whose first control is a checkbox, switch or toggle must be
+ * able to put the keyboard there.
+ */
+interface PressableExtra {
+  readonly autoFocus?: boolean;
+  readonly readOnly?: boolean;
+  readonly disabled?: boolean;
+}
+
+const pressable: ReadonlyArray<{
+  readonly name: string;
+  readonly node: (extra: PressableExtra) => ReactElement;
+}> = [
+  {
+    name: "Checkbox",
+    node: (extra) => <Checkbox testId="control" label="Accept" {...extra} />,
+  },
+  {
+    name: "Switch",
+    node: (extra) => <Switch testId="control" label="Pause" {...extra} />,
+  },
+  {
+    name: "Toggle",
+    node: (extra) => <Toggle testId="control" label="Grid" {...extra} />,
+  },
+];
+
+/** A control mounted in a later render, with `extra` applied. */
+const mountPressable = async (
+  node: (extra: PressableExtra) => ReactElement,
+  extra: PressableExtra,
+): Promise<Awaited<ReturnType<typeof openWindow>>> => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Loading />
+    </Surface>,
+  );
+  runtime.render(<Surface>{node(extra)}</Surface>);
+  return runtime;
+};
+
+it.each(pressable)(
+  "focuses a $name that mounts after the first render",
+  async ({ node }) => {
+    const runtime = await mountPressable(node, { autoFocus: true });
+    expect(focused(runtime)).toBe("control");
+  },
+);
+
+it.each(pressable)("focuses a read-only $name", async ({ node }) => {
+  const runtime = await mountPressable(node, {
+    autoFocus: true,
+    readOnly: true,
+  });
+  expect(focused(runtime)).toBe("control");
+});
+
+it.each(pressable)("does not focus a disabled $name", async ({ node }) => {
+  const runtime = await mountPressable(node, {
+    autoFocus: true,
+    disabled: true,
+  });
   expect(focused(runtime)).toBe("none");
 });
