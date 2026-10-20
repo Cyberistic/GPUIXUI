@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 337/416
+`[x]` `[████████░░]` 338/416
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2895,13 +2895,16 @@ the five surfaces, `disabled-fill-claims.test.ts` derives the surface list from
 the pair list and fails on the restored reason or a missing surface, and no
 colour, pair, floor, metric or role moves (`contrastPairs` stays 470)
 (plan 747)
-`[ ]` Name the soft status fills in `ThemeColors.placeholder` — the public role
-enumerates its measured surfaces as the `input` fill, the four `Surface` tones
-and the four row washes, but plan `659` added the four soft status fills a field
-inside a status panel paints (`softFieldPairs`), so the type understates the
-contract a copied theme is held to; give the sentence the thirteen-surface list
-the catalogue narrates and guard it the way `disabled-fill-claims.test.ts` guards
-`disabled` (owner: `tokens-theme`; found while landing plan 747)
+`[x]` Name every surface in `ThemeColors.placeholder` — the public role
+enumerated its measured surfaces as the `input` fill, the four `Surface` tones
+and the four row washes, but plans `651` and `659` added the pressed
+`selectedActive` fill and the four soft status fills a field inside a status
+panel paints (`softFieldPairs`), so the type named nine of the **fourteen**
+surfaces `contrastPairs` measures and understated the contract a copied theme is
+held to; the JSDoc and both catalogue role rows now name all fourteen (the
+AAA row said only "placeholder text"), and `placeholder-claims.test.ts` derives
+the list from the pairs and fails on a missing surface or owner
+(plan 749)
 `[x]` Hold the documented light brand to the one-call guarantee — the catalogue
 holds the dark brand to `themeFailures`, but `theme.test.ts` held the light one to
 `themeContrastFailures` only, so its `primaryText: "#5330C8"` measured **6.941:1**
