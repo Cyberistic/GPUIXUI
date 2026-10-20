@@ -417,10 +417,17 @@ changed to `toBeCloseTo(1, 10)` rather than weakening the model.
 
 ```sh
 nub run --filter playground build
-nub apps/playground/dist/smoke/run.js --only surface-theme      # 1/1, 50 checks, 8.9 s
-nub apps/playground/dist/live/run.js --only live-surface-theme  # 1/1, 50 checks, 7.0 s
+nub apps/playground/dist/smoke/run.js --only surface-theme      # 1/1, 50 checks, 12.8 s
+nub apps/playground/dist/live/run.js --only live-surface-theme  # 1/1, 50 checks, 7.1 s
 nub run --filter playground test                                # 580 tests (19 new)
+nub apps/playground/dist/smoke/run.js                           # 117/117, 4278 checks, 302.4 s
 ```
+
+The end-of-task full headless run measured **117/117** scenarios, **4278**
+checks (`4228 + 50`), **65** capabilities, host
+`gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed
+81c99f81, runtime shaders)`, exit `0`. A second independent full run on the
+same head agreed on every count. The live half of the gate is plan `786`.
 
 The live artifact is `apps/playground/.artifacts/live/live-surface-theme.png`
 (2200 × 1440, device scale 2): the themed/default pairs are visible side by side

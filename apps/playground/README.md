@@ -2563,12 +2563,14 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **116/116 green** here (`exit 0`, 4228 checks, 65 capabilities,
-**275.0 s** after plan `778`, 2026-10-20; **432.8 s** at the plan `777` gate,
+The suite is **117/117 green** here (`exit 0`, 4278 checks, 65 capabilities,
+**302.4 s** after plan `784`, 2026-10-20; **275.0 s** after plan `778`, which
+read 116/116 · 4228; **432.8 s** at the plan `777` gate,
 which read 115/115 · 4206; **484.1 s** at plan `773`, which read
 114/114 · 4188; **237.6 s** at plan `771`, which read
 113/113 · 4165; **246.8 s** at the plan `768` gate, which
-read 112/112 · 4152; plan `778` added the 22-check
+read 112/112 · 4152; plan `784` added the 50-check
+`surface-theme`, plan `778` added the 22-check
 `text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`,
 plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check
 `font-family`, plan `764` the 46-check `editing-actions`, plan
@@ -2582,7 +2584,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-116/116 scenarios passed · capabilities: layout=verified root=verified text=verified
+117/117 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2609,9 +2611,10 @@ checks, 65 capabilities, 432.8 s) on the same code. The live total is plan
 capability count is **62** rather than 61 because plans `773`/`775` now mount
 `text` in a live scenario directly, instead of relying on plan `653`'s
 `live-typography` alias alone. Plan `778` then added `live-truncation-pixels`
-(22 checks, focused-green in 8.0 s), so the registry is **105** and the full
-live suite has not been re-run since. The gate includes every scenario this
-branch added:
+(22 checks, focused-green in 8.0 s) and plan `784` added `live-surface-theme`
+(50 checks, focused-green in 7.1 s), so the registry is **106** and the full
+live suite has not been re-run since; plan `786` is the gate for this head. The
+plan-`775` gate included every scenario this branch added at that point:
 `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel

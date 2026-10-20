@@ -127,19 +127,43 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        live any more, so this is the only writer again. The plan numbers still do
        not collide (`773`, `775`; `774` belongs to another workstream).
 
+       **Update 2026-10-20 ~19:15:** recurred during the plan-`784` gate. A
+       duplicate `swarm:playground` session ran the new `surface-theme`
+       scenario focused **after** this session's full run wrote
+       `.artifacts/smoke-report.json`, replacing the 117-scenario report with a
+       1-scenario/50-check one; the full run itself is real and recorded in its
+       own log (`117/117 scenarios passed`, `exit 0`). The full suite was re-run
+       and its report copied aside immediately to keep a durable artifact. No
+       source was clobbered (`git status` showed only this session's files), and
+       the duplicate was gone by the time the re-run started. The `scripts/` fix
+       is still the only durable remedy.
+
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[██████████]` 140/141 plans-and-harness
+`[x]` `[██████████]` 141/141 plans-and-harness
 
-`[~]` **Give the native content surfaces a token theme and prove which fields
+`[x]` **Give the native content surfaces a token theme and prove which fields
       reach the paint** per plan `784`: `<markdown>`, `<code>` and `<diff>` all
-      publish `theme?: GpuixTheme`, **no scenario in either registry passes
+      publish `theme?: GpuixTheme`, **no scenario in either registry passed
       one**, and the runtime's base is always `Theme::dark()` — so an unthemed
-      preview inside our light palette paints Comet's colours and the suite
-      stays green. One `880 × 580` stage mounts eleven fixtures (themed/default
-      markdown text and inline code, a monochrome link, a bullet, both
-      appearances, themed/default code with a gutter, one diff) and reads one
-      A/B frame per host: `surface-theme` + `live-surface-theme`. Plan first:
+      preview inside our light palette painted Comet's colours while the suite
+      stayed green. `surface-theme` / `live-surface-theme` (**50 checks each**)
+      mount eleven fixtures on one `880 × 580` stage and read one A/B frame per
+      host: the themed heading carries `foreground`, the inline code `primary`,
+      the bullet disc is `primary` at 85 % over `card` (**`#9294DE`** exactly),
+      the link underline is `mutedForeground` with **zero** `primary` (links are
+      monochrome), `appearance: "light"` paints ink luminance **0.13** against
+      dark's **0.90**, the code paints its `success` string and `primary`
+      keyword tokens and the `placeholder` gutter, `<code>`/`<markdown>` paint
+      **no** plane while `<diff>` paints `background` with both 5.5 % tints, and
+      every default twin paints the runtime's `#E5E5E5` base rather than our
+      token. `nativeContentTheme` maps every field (all 24 syntax kinds) to a
+      semantic role; 19 pure tests (playground **580**), seven mutation proofs
+      observed and reverted. Focused ids run: `surface-theme` (1/1, 50 checks,
+      12.8 s), `live-surface-theme` (1/1, 50 checks, 7.1 s). End-of-task full
+      headless **117/117** (**4278** checks, 65 capabilities, 302.4 s, exit
+      `0`; exactly `4228 + 50`). No full live gate here (merge gate): plan `786`
+      carries the promotion gate. Plan:
       `.agents/slop/plans/784-native-content-theme.md`.
 
 `[x]` **Prove the ellipsis glyph and the ink a constrained run keeps inside its
