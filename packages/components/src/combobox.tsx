@@ -267,6 +267,10 @@ export const Combobox = ({
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
+  // A disabled combobox paints no popup and takes no focus, but the caller's
+  // open state is theirs: disabling never asks them to close. Hiding the
+  // surface is what makes the runtime's hard-coded `autoFocus` unreachable.
+  const visibleOpen = open && !disabled;
   const [query, setQuery] = useState("");
   const trigger = useRef<PublicInstance | null>(null);
   const list = useRef<PublicInstance | null>(null);
@@ -312,9 +316,9 @@ export const Combobox = ({
   // a popup mounted with `defaultOpen`; a user open still reports exactly once.
   const reportedOpen = useRef(false);
   useLayoutEffect(() => {
-    if (open && !reportedOpen.current) reportQuery("", true);
-    reportedOpen.current = open;
-  }, [open, reportQuery]);
+    if (visibleOpen && !reportedOpen.current) reportQuery("", true);
+    reportedOpen.current = visibleOpen;
+  }, [visibleOpen, reportQuery]);
 
   // The list is the scroll viewport. `scrollIntoView` would scroll to its group
   // wrapper, so the row and the list are measured and the list is scrolled to a
@@ -377,13 +381,13 @@ export const Combobox = ({
 
   /** Close, restoring focus only for the paths that should (Escape, select). */
   useLayoutEffect(() => {
-    if (wasOpen.current && !open && restoreFocus.current) {
+    if (wasOpen.current && !visibleOpen && restoreFocus.current) {
       const instance = trigger.current;
       if (instance !== null) renderer?.focusElement?.(instance.id);
     }
-    if (!open) restoreFocus.current = false;
-    wasOpen.current = open;
-  }, [open, renderer]);
+    if (!visibleOpen) restoreFocus.current = false;
+    wasOpen.current = visibleOpen;
+  }, [visibleOpen, renderer]);
 
   // The close path is read by the dismiss layer, which must not re-push on every
   // render: a re-push would put this popup above a surface opened after it.
@@ -395,19 +399,27 @@ export const Combobox = ({
     };
   });
 
+  // A disable ends the visible search session: no pending report for text the
+  // user can no longer see, and no stale filter when the popup is shown again.
+  useLayoutEffect(() => {
+    if (!disabled) return;
+    cancelPendingQuery();
+    setQuery("");
+  }, [disabled, cancelPendingQuery]);
+
   // The popup is a dismiss layer, like every other overlay here. GPUix closes it
   // on Escape and outside presses but cannot claim the event, so without this an
   // enclosing dialog closed on the same Escape (plan 398). A press on our own
   // trigger is claimed without closing: the click that follows in a later task
   // closes the popup (plan 583).
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!visibleOpen) return;
     return pushDismissLayer((event) => {
       if (dismissedOnTrigger.current) return;
       close.current();
       if (event.eventType === "keyDown") restoreFocus.current = true;
     });
-  }, [open]);
+  }, [visibleOpen]);
 
   return (
     <ComboboxContext.Provider
@@ -415,7 +427,7 @@ export const Combobox = ({
         options,
         rows: items,
         selectedValues,
-        open,
+        open: visibleOpen,
         disabled,
         loading,
         labelFor,
@@ -485,9 +497,9 @@ export const Combobox = ({
         onInputValueChange={(next) => {
           // GPUix writes the selected label into the input as it closes a
           // single-select; that is not a query the user typed.
-          if (open) setQuery(next);
+          if (visibleOpen) setQuery(next);
         }}
-        open={open}
+        open={visibleOpen}
         onOpenChange={(next) => {
           if (next) {
             restoreFocus.current = false;

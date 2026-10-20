@@ -101,6 +101,12 @@ caller ignores leaves it open. An accepted close returns focus to the trigger; a
 `defaultOpen` popup also reports `onQueryChange("")` once, exactly like a popup
 the user opened. Ranking, selection and the dismiss stack are unchanged.
 
+A `disabled` combobox is inert even when it is open: no popup is painted, no
+opening query is reported and the search field never takes focus or joins the
+tab order (plan 706). Disabling does not ask the caller to close — an `open` the
+caller keeps true is still theirs — and re-enabling paints the popup again with a
+fresh empty query.
+
 ## Creating values
 
 A picker whose options come from a fixed list can still accept a new name. Pass
@@ -342,9 +348,11 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (55 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (59 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
-reopen), `defaultOpen` with its one empty-query report, the controlled
+reopen), `defaultOpen` with its one empty-query report, a disabled combobox
+staying hidden, unfocused and out of the tab order even when open or
+`defaultOpen`, and re-enabling it with a fresh empty query, the controlled
 open/close contract (a refused close leaves the popup painted), the trigger's own
 ring (auto-focused in both themes; given up while the
 popup's field holds focus; painted from the sampled native focus when the

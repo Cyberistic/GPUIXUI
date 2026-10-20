@@ -41,6 +41,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { createRef, useState, type Ref } from "react";
 import { nodesWithRole, type A11yNode } from "../internal/a11y.js";
+import { Button } from "../internal/button.js";
 import {
   finishMotion,
   clickCentreOf,
@@ -86,6 +87,7 @@ const Picker = ({
   defaultOpen,
   onOpenChange,
   multiple,
+  disabled,
   disabledCamera,
   empty,
   triggerPlaceholder,
@@ -106,6 +108,7 @@ const Picker = ({
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly multiple?: boolean;
+  readonly disabled?: boolean;
   readonly disabledCamera?: boolean;
   readonly empty?: string;
   readonly triggerPlaceholder?: string;
@@ -140,6 +143,7 @@ const Picker = ({
           : (optionList ?? options)
       }
       multiple={multiple}
+      disabled={disabled}
       onValueChange={onValueChange}
     >
       <ComboboxTrigger
@@ -388,6 +392,90 @@ describe("Combobox", () => {
     finishMotion(picker);
     expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
+
+    picker.unmount();
+  });
+
+  /**
+   * The bug these guard (plan 706): `disabled` was passed to the runtime but the
+   * raw `open` was passed to the popup, so a disabled combobox still painted its
+   * content and the field's hard-coded `autoFocus` took native focus. Selection
+   * and the trigger's tab stop were already refused; the popup was the leak.
+   */
+  it("paints nothing, reports nothing and takes no focus while disabled and open", async () => {
+    const onQueryChange = vi.fn();
+    const picker = renderComponent(
+      <Picker disabled defaultOpen onQueryChange={onQueryChange} />,
+    );
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(picker.renderer.findByTestId("combobox-input")).toBeUndefined();
+    expect(onQueryChange).not.toHaveBeenCalled();
+    expect(focusedTestId(picker)).not.toEqual(Option.some("combobox-input"));
+
+    picker.unmount();
+  });
+
+  it("keeps a controlled open popup hidden while disabled and reports no close", async () => {
+    const onOpenChange = vi.fn();
+    const picker = renderComponent(
+      <Picker disabled open onOpenChange={onOpenChange} />,
+    );
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    picker.unmount();
+  });
+
+  it("keeps a disabled combobox out of the tab order while open", async () => {
+    const picker = renderComponent(
+      <div>
+        <Button testId="before-picker">Before</Button>
+        <Picker disabled defaultOpen />
+      </div>,
+    );
+    await settle();
+
+    const before = picker.renderer.findByTestId("before-picker");
+    expect(before).toBeDefined();
+    if (before === undefined) return;
+    picker.renderer.focusElement(before.id);
+    await settle();
+    picker.renderer.focusNext();
+    await settle();
+
+    expect(focusedTestId(picker)).toEqual(Option.some("before-picker"));
+
+    picker.unmount();
+  });
+
+  it("hides an open popup when it turns disabled and repaints it fresh", async () => {
+    const onQueryChange = vi.fn();
+    const picker = renderComponent(
+      <Picker defaultOpen onQueryChange={onQueryChange} />,
+    );
+    await settle();
+    type(picker, "ca");
+    await settle();
+    expect(picker.renderer.getAllText()).not.toContain("Desk booking");
+
+    picker.rerender(
+      <Picker disabled defaultOpen onQueryChange={onQueryChange} />,
+    );
+    await settle();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(focusedTestId(picker)).not.toEqual(Option.some("combobox-input"));
+
+    picker.rerender(<Picker defaultOpen onQueryChange={onQueryChange} />);
+    await settle();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+    expect(picker.renderer.getAllText()).toContain("Desk booking");
+    expect(
+      onQueryChange.mock.calls.filter(([query]) => query === ""),
+    ).toHaveLength(2);
 
     picker.unmount();
   });
