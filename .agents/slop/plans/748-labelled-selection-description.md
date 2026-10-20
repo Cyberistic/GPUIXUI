@@ -271,3 +271,24 @@ Stop and report rather than improvise if:
 - Both pages, `COMPONENTS.md`, `TODO.md` and the plan index tell the truth.
 - `check-types` and the package suites pass; the end-of-task gates are run and
   their exact result recorded.
+
+## 7. Result (this host, 2026-10-20)
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter @gpuixui/primitives check-types` | pass |
+| `nub run --filter @gpuixui/primitives test` | **70 files / 966 tests**, 0 failed (961 before; +5) |
+| `nub exec vitest run --config vitest.runtime.config.ts labelled-selection` | **10/10** (8 before; +2) |
+| `nub exec vitest run --config vitest.runtime.config.ts examples` | **19/19** after the example change |
+| full runtime suite (one run, before the example edit) | **68 files / 886 tests**, 0 failed |
+| `nub run check:tests` | pass |
+| `nub run lint` | pass |
+| `nub run check-types` (repo) | pass |
+| `nub run test` (repo) | pass |
+| `nub run fmt` | **fails on `apps/docs/src/components/docs/demos.tsx` only** — the docs-site row already recorded in `TODO.md`; every primitives file is formatted |
+| `nub run check` | stops at `fmt` for that same outside file; the other three gates were run separately above |
+
+Both directions measured: with the caption removed, element cases 1–2 and
+runtime cases 1–2 fail; with the caption gated on `!== undefined` and the
+announcement reverted to the slot value, all five element cases and both runtime
+cases fail. Restored, every count above is the green one.
