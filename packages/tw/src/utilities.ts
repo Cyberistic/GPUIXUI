@@ -145,6 +145,16 @@ const spacingValue = (value: string): number | undefined => {
   return Number.isFinite(n) ? SPACING(n) : undefined;
 };
 
+/**
+ * A positive integer track count. GPUix exposes `gridTemplateColumns` /
+ * `gridTemplateRows` as numbers (no track strings, no `repeat()`), so only an
+ * integer count resolves; arbitrary templates and fractions fall through.
+ */
+const trackCount = (value: string): number | undefined => {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 ? n : undefined;
+};
+
 /** Resolves one unprefixed utility name. */
 export const resolveUtility = (
   name: string,
@@ -281,6 +291,14 @@ export const resolveUtility = (
   if (name.startsWith("left-")) {
     const value = spacingValue(name.slice(5));
     return value === undefined ? undefined : { left: value };
+  }
+  if (name.startsWith("grid-cols-")) {
+    const count = trackCount(name.slice(10));
+    return count === undefined ? undefined : { gridTemplateColumns: count };
+  }
+  if (name.startsWith("grid-rows-")) {
+    const count = trackCount(name.slice(10));
+    return count === undefined ? undefined : { gridTemplateRows: count };
   }
   if (name.startsWith("gap-x-")) {
     const value = spacingValue(name.slice(6));

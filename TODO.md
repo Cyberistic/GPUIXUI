@@ -70,12 +70,15 @@ identity, stacked-native deck hero, library grid, proof, attribution
 `[~]` `[██░░░░░░░]` 1/3
 
 `[x]` Add `@gpuixui/tw` as a `@gpuixui/primitives` dependency and convert the
-core primitives — `Button`, `Input`, `Text`, `Stack` (plus `TextArea`'s shared
-`fieldChrome`) — onto the Tailwind recipe (`src/recipe/`). Each renders a
+core primitives — `Button`, `Input`, `Text`, `Stack`, `Grid` (plus `TextArea`'s
+shared `fieldChrome`) — onto the Tailwind recipe (`src/recipe/`). Each renders a
 `className` recipe compiled through `classesToStyle`, accepts a caller
 `className` joined last, and keeps its rendered `StyleDesc` equivalent to the
 pre-migration resolver. `recipe.test.ts` proves the equivalence per
-variant/size/tone; `MIGRATION.md` records the mapping for the rest.
+variant/size/tone; `MIGRATION.md` records the mapping for the rest. `Grid`
+landed with `grid-cols-*` / `grid-rows-*` utilities added to `@gpuixui/tw`'s
+built-in table (the runtime's grid is numeric, so spans and arbitrary templates
+stay unsupported — `MIGRATION.md` §"The grid").
 `[ ]` Convert the remaining `packages/primitives/src/components` (`Box`, `Label`,
 `Separator`, `ScrollArea`, `ButtonGroup`, `Toggle`, `TextArea`, `NumberField`,
 `OTPField`, `Select`, `Checkbox`, `RadioGroup`, `Switch`, `Rating`, `Slider`,

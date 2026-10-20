@@ -86,6 +86,19 @@ describe("layout containers", () => {
     expect(stringIn(element, "gridAutoFlow")).toStrictEqual(Option.none());
   });
 
+  it("let the caller's className override the grid recipe", () => {
+    const element = renderGrid(
+      { columns: 1, className: "grid-cols-3 gap-md" },
+      testTheme,
+    );
+    expect(numberIn(element, "gridTemplateColumns")).toStrictEqual(
+      Option.some(3),
+    );
+    expect(numberIn(element, "gap")).toStrictEqual(
+      Option.some(testTheme.spacing.md),
+    );
+  });
+
   it("draw a rule on the border role, one border wide", () => {
     expect(
       numberIn(

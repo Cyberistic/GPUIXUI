@@ -11,6 +11,7 @@
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import type {
+  GridSpec,
   StackAlign,
   StackDirection,
   StackJustify,
@@ -178,4 +179,19 @@ export const stackClass = (spec: StackSpec): string =>
     spec.grow === true && "flex-grow",
     spec.fullWidth === true && "w-full",
     spec.fullHeight === true && "h-full",
+  );
+
+// ── Grid ─────────────────────────────────────────────────────────────
+
+/** A spec track count clamped to the numeric grid's minimum. */
+const track = (count: number): number => Math.max(1, Math.floor(count));
+
+/** The class string a `Grid` resolves from its fixed track spec. */
+export const gridClass = (spec: GridSpec): string =>
+  cn(
+    "grid",
+    `grid-cols-${track(spec.columns)}`,
+    spec.rows === undefined ? undefined : `grid-rows-${track(spec.rows)}`,
+    spec.gap === undefined ? undefined : `gap-${spec.gap}`,
+    spec.grow === true && "flex-grow",
   );

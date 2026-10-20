@@ -48,6 +48,10 @@ const layout: ReadonlyArray<readonly [string, StyleDesc]> = [
   ["overflow-hidden", { overflow: "hidden" }],
   ["leading-none", { lineHeight: 1 }],
   ["pointer-events-auto", { pointerEvents: "auto" }],
+  ["grid-cols-3", { gridTemplateColumns: 3 }],
+  ["grid-cols-12", { gridTemplateColumns: 12 }],
+  ["grid-rows-2", { gridTemplateRows: 2 }],
+  ["grid-rows-6", { gridTemplateRows: 6 }],
 ];
 
 describe("expanded shadcn utilities", () => {
@@ -104,6 +108,16 @@ describe("expanded shadcn utilities", () => {
     expect(result.responsive).toContain("sm:max-w-md");
     expect(result.unsupported).not.toContain("sm:max-w-md");
     expect(result.style.maxWidth).toBe(448);
+  });
+
+  it("resolves only integer track counts, never arbitrary templates", () => {
+    expect(resolved("grid-cols-0")).toBeUndefined();
+    expect(resolved("grid-cols-2.5")).toBeUndefined();
+    expect(resolved("grid-rows-0")).toBeUndefined();
+    expect(
+      classesToStyle("grid-cols-[repeat(3,minmax(0,1fr))]", lightTheme)
+        .unsupported,
+    ).toContain("grid-cols-[repeat(3,minmax(0,1fr))]");
   });
 
   it.each([

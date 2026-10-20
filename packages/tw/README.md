@@ -90,8 +90,9 @@ difference is pinned in `src/aliases.test.ts`.
 
 - Geometry: `h-*`, `w-*`, `min-h-*`, `min-w-*`, `max-w-*`, `size-*`, `p-*`,
   `px-*`, `py-*`, `mx-*`, `my-*`, `inset-*`, `top-*`, `right-*`, `bottom-*`,
-  `left-*`, `gap-*`, `rounded-*`, and the flex/overflow utilities the recipes
-  use.
+  `left-*`, `gap-*`, `rounded-*`, `grid-cols-*` / `grid-rows-*` (integer track
+  counts — the runtime's grid is numeric), and the flex/overflow utilities the
+  recipes use.
 - Type: `text-*` (size and colour roles), `font-*`, `line-height` via `text-*`,
   `leading-*`.
 - Surfaces: `bg-*`, `text-*`, `border-*`, semantic token roles, `/alpha`,

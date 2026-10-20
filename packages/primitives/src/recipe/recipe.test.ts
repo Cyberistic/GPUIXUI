@@ -1,11 +1,11 @@
 /**
  * The recipe → `StyleDesc` equivalence guard.
  *
- * The migration moved the resting appearance of Button, Input, Text and Stack
- * from `core/style.ts`'s imperative resolvers to Tailwind class strings compiled
- * through `@gpuixui/tw`. This suite proves the two expressions agree: for every
- * variant, size and modifier, the compiled recipe equals what the pre-migration
- * resolver produced.
+ * The migration moved the resting appearance of Button, Input, Text, Stack and
+ * Grid from `core/style.ts`'s / `core/layout.ts`'s imperative resolvers to
+ * Tailwind class strings compiled through `@gpuixui/tw`. This suite proves the
+ * two expressions agree: for every variant, size and modifier, the compiled
+ * recipe equals what the pre-migration resolver produced.
  *
  * Exact equality is achievable because the primitives' recipe uses theme-scale
  * utilities (`h-md`, `gap-sm`, `type-label`) instead of shadcn's fixed metrics
@@ -30,7 +30,12 @@ import {
   textStyle,
   type TextSpec,
 } from "../core/style.js";
-import { stackStyle, type StackSpec } from "../core/layout.js";
+import {
+  stackStyle,
+  gridStyle,
+  type GridSpec,
+  type StackSpec,
+} from "../core/layout.js";
 import type { PrimitiveTheme, TextRole } from "../core/theme.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -40,7 +45,13 @@ import {
   type ButtonVariant,
 } from "../core/variants.js";
 import { mergeStyle } from "../components/internal.js";
-import { buttonClass, fieldClass, stackClass, textClass } from "./index.js";
+import {
+  buttonClass,
+  fieldClass,
+  gridClass,
+  stackClass,
+  textClass,
+} from "./index.js";
 import { recipeTw } from "./registry.js";
 
 const SIZES: ReadonlyArray<ControlSize> = ["sm", "md", "lg"];
@@ -247,6 +258,48 @@ describe("Stack recipe", () => {
   });
 });
 
+describe("Grid recipe", () => {
+  it("matches gridStyle across the track layouts", () => {
+    const cases: ReadonlyArray<GridSpec> = [
+      { columns: 1 },
+      { columns: 12 },
+      { columns: 3, gap: "md" },
+      { columns: 12, rows: 2, gap: "lg" },
+      { columns: 2, rows: 6 },
+      { columns: 4, rows: 3, gap: "sm", grow: true },
+      // clamps and floors exactly as the resolver did
+      { columns: 0 },
+      { columns: 2.9 },
+      { columns: 1, rows: 0 },
+    ];
+    Arr.forEach(cases, (spec) => {
+      expect(recipeTw.classesToStyle(gridClass(spec), testTheme).style).toEqual(
+        gridStyle(spec, testTheme),
+      );
+    });
+  });
+
+  it("reads the gap from the spacing scale, not a fixed value", () => {
+    const repainted: PrimitiveTheme = {
+      ...testTheme,
+      spacing: { ...testTheme.spacing, sm: 99 },
+    };
+    expect(
+      recipeTw.classesToStyle(gridClass({ columns: 3, gap: "sm" }), repainted)
+        .style.gap,
+    ).toBe(99);
+  });
+
+  it("rejects an arbitrary template instead of resolving it", () => {
+    const result = recipeTw.classesToStyle(
+      "grid-cols-[repeat(3,minmax(0,1fr))]",
+      testTheme,
+    );
+    expect(result.style.gridTemplateColumns).toBeUndefined();
+    expect(result.unsupported).toContain("grid-cols-[repeat(3,minmax(0,1fr))]");
+  });
+});
+
 describe("the recipe stays one expression, not a stub", () => {
   it("changes when the resolver's decision changes", () => {
     const repainted: PrimitiveTheme = {
@@ -262,12 +315,13 @@ describe("the recipe stays one expression, not a stub", () => {
     ).toBe("#FF00FF");
   });
 
-  it("registers no unsupported classes for the four recipes", () => {
+  it("registers no unsupported classes for the five recipes", () => {
     const joined = [
       buttonClass("primary", "md"),
       fieldClass({ size: "md", invalid: true, fullWidth: true }),
       textClass({ role: "code", tone: "muted", truncate: true }),
       stackClass({ direction: "column", gap: "lg" }),
+      gridClass({ columns: 3, rows: 2, gap: "md" }),
     ];
     const unsupported = Arr.flatMap(
       joined,

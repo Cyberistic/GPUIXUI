@@ -4,15 +4,15 @@ The primitives' resting appearance is moving from the imperative resolvers in
 `core/style.ts` / `core/variants.ts` / `core/layout.ts` to Tailwind class
 strings compiled through `@gpuixui/tw`. This is a **syntax migration, not a
 redesign**: the compiled `StyleDesc` must equal what the old resolver produced,
-which is exactly what `src/recipe/recipe.test.ts` proves for the four converted
-primitives (Button, Input, Text, Stack).
+which is exactly what `src/recipe/recipe.test.ts` proves for the five converted
+primitives (Button, Input, Text, Stack, Grid).
 
 ## The two halves
 
 | Piece | File | Role |
 | ----- | ---- | ---- |
 | registry | `src/recipe/registry.ts` | `recipeTw`, the `createTw` compiler with the primitives' theme-scale utilities |
-| recipes | `src/recipe/index.ts` | `buttonClass`, `fieldClass`, `textClass`, `stackClass` — the class-string builders |
+| recipes | `src/recipe/index.ts` | `buttonClass`, `fieldClass`, `textClass`, `stackClass`, `gridClass` — the class-string builders |
 
 The recipe is the **single source of truth** for a component's resting
 appearance. A component no longer calls `controlStyle(spec, theme)`; it calls
@@ -83,6 +83,8 @@ Geometry, colour and type map to the classes below. Columns are the
 | `alignItems` | `items-start` `items-center` `items-end` `items-stretch` `items-baseline` | `start`/`center` built-in, rest registry |
 | `justifyContent` | `justify-start` `justify-center` `justify-end` `justify-between` `justify-around` | `center`/`between` built-in, rest registry |
 | `gap` (spacing step) | `gap-<step>` | registry family → `theme.spacing` |
+| `gridTemplateColumns` | `grid-cols-<n>` (1–12) | built-in → integer track count |
+| `gridTemplateRows` | `grid-rows-<n>` (1–6) | built-in → integer track count |
 | `flexWrap: "wrap"` | `flex-wrap` | registry |
 | `flexGrow: 1` | `flex-grow` | registry |
 | `flexShrink: 0` | `shrink-0` | built-in |
@@ -112,6 +114,35 @@ Interaction state is expressed with the same prefixes `@gpuixui/tw` already
 routes to buckets: `hover:` → `style.hover`, `active:` → `style.active`,
 `focus-visible:` → `focus`, `aria-invalid:` → `invalid`, `disabled:` →
 `disabled`. The component merges the bucket it needs.
+
+## The grid
+
+GPUix exposes `gridTemplateColumns` / `gridTemplateRows` as **numbers** — the
+runtime draws `n` equal tracks and has no track strings, no `repeat()`, no
+auto-flow, no named areas (plan 020 §1.2). `@gpuixui/tw`'s built-in table maps
+the integer classes to those numbers:
+
+- `grid-cols-<n>` (1–12) → `gridTemplateColumns: n`
+- `grid-rows-<n>` (1–6) → `gridTemplateRows: n`
+- `gap-<step>` → the spacing scale (the same family `Stack` uses)
+
+`gridClass` clamps and floors the spec exactly as the old `gridStyle` resolver
+did (`columns: 0` → `grid-cols-1`, `columns: 2.9` → `grid-cols-2`), so the
+compiled `StyleDesc` is byte-for-byte the pre-migration output.
+
+What the numeric runtime cannot express, and therefore stays out:
+
+- **`col-span-*` / `row-span-*`** — `@gpuix/native@0.10.0`'s `StyleDesc` has no
+  `gridColumn` / `gridRow` key (only `gridColumnMin` / `gridRowMin`, the
+  min-content track sizing), so there is no place for a span. Layouts that need
+  ragged placement belong in a wrapping `Stack`.
+- **Arbitrary templates** (`grid-cols-[repeat(3,minmax(0,1fr))]`) — there is no
+  track-string value to compile; the class lands in `TwResult.unsupported`, never
+  silently dropped.
+- **Responsive prefixes** (`md:grid-cols-3`) — the runtime has no container
+  queries, so a breakpoint can never reflow tracks. As with every responsive
+  token, it is recorded in `TwResult.responsive` for a later breakpoint pass and
+  otherwise applies the base value.
 
 ## Theme-scale utilities (the primitives' registry)
 

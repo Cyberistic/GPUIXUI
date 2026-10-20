@@ -3,17 +3,16 @@
  *
  * A Stack is flexbox in one direction; a Grid is the runtime's fixed-size grid.
  * Both are pure resolvers, so their spacing always comes from the theme instead
- * of a call-site pixel value. `Stack`'s recipe (`recipe/stackClass`) is a
- * Tailwind class string compiled through `@gpuixui/tw`; `Grid`'s numeric track
- * template has no utility and stays on `core/layout.ts`.
+ * of a call-site pixel value. Their recipes (`recipe/stackClass`,
+ * `recipe/gridClass`) are Tailwind class strings compiled through `@gpuixui/tw`.
  */
 
 import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
-import { gridStyle, type GridSpec, type StackSpec } from "../core/layout.js";
+import type { GridSpec, StackSpec } from "../core/layout.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { stackClass } from "../recipe/index.js";
+import { gridClass, stackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -47,18 +46,26 @@ export const Stack = (props: StackProps): ReactElement =>
 
 export interface GridProps extends GridSpec {
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
 export const renderGrid = (
-  { style, children, testId, ...spec }: GridProps,
+  { style, className, children, testId, ...spec }: GridProps,
   theme: PrimitiveTheme,
-): ReactElement => (
-  <div testId={testId} style={mergeStyle(gridStyle(spec, theme), style)}>
-    {children}
-  </div>
-);
+): ReactElement => {
+  const resolved = recipeTw.classesToStyle(
+    cn(gridClass(spec), className),
+    theme,
+  );
+  return (
+    <div testId={testId} style={mergeStyle(resolved.style, style)}>
+      {children}
+    </div>
+  );
+};
 
 /**
  * A fixed-size grid of equal tracks.
