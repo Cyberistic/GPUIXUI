@@ -144,18 +144,20 @@ interaction (`cursor`, `pointerEvents`, `userSelect`, `hover`, `active`).
 
 ### 2.3 `src/lib/style-field-search.ts` (new, generated document)
 
-One `GeneratedSearchEntry` (D32): the index lists every field with its type, so
-a pasted `pointerEvents` retrieves it; `names` promotes the **distinctive**
-field names only (`isDistinctiveName`, so `gap`, `margin`, `color` stay prose).
+One `GeneratedSearchEntry` (D32): the index lists every field with its family,
+so a pasted `pointerEvents` retrieves it; `names` promotes the **distinctive**
+(camelCase) field names only, so `gap`, `color` and `padding` stay prose and the
+pages that own those words keep them. No ownership exclusions are needed: every
+promoted spelling is unique to this table — Theming promotes the token names
+(`radius.md`, `spacing.md`) and `elevationShadow`, Typography promotes its text
+roles (`body`, `displayLg`), and none of those is a field name.
 
-`STYLE_FIELDS_OWNED_ELSEWHERE` names the owner of each field another page
-already documents, and none of those is promoted:
-
-| Fields | Owner |
-| ------ | ----- |
-| `fontSize`, `lineHeight`, `fontWeight`, `fontFamily` | Typography (type roles) |
-| `borderRadius`, `borderTopLeftRadius`, `borderTopRightRadius`, `borderBottomLeftRadius`, `borderBottomRightRadius` | Theming (radius scale) |
-| `boxShadow` | Theming (elevation) |
+> Amended while implementing (§8): the draft excluded `fontSize`, `lineHeight`,
+> `fontWeight`, `fontFamily`, the radius fields and `boxShadow` in favour of
+> Typography and Theming. That premise was wrong — those pages promote *roles,
+> scales and helpers*, not field names, so the exclusion made the field
+> unreachable without protecting anything. The rule is now "a field name belongs
+> to the field table".
 
 ### 2.4 Vocabulary
 
@@ -265,4 +267,80 @@ Theming, `fontSize` keeps Typography, and `table`/`panel`/`aria` do not move.
 
 ## 8. Results
 
-_(filled in after implementation)_
+Implemented 2026-10-20.
+
+### 8.1 What shipped
+
+- `content/docs/styling.mdx` — eight sections, placed between Typography and
+  Components; the `StyleDesc` table is an `<auto-type-table>` over
+  `node_modules/@gpuix/native/dist/host.d.ts` and renders all 73 entries.
+- `src/lib/styling.ts` — the field parser, the seven families, the seven absent
+  concepts (`wouldBeFields` included) and the two violation functions.
+- `src/components/absent-styling-concepts.tsx` — the absence table, so the
+  catalogue cannot drift from the page's prose; registered in `mdx.tsx`.
+- `src/lib/styling-search.ts` + one `generatedEntries` row — the 50 promoted
+  field names (54 distinctive, four kept as prose) and the absence vocabulary in
+  the index, so a field name outranks a prose chunk elsewhere.
+- `src/lib/page-aliases.ts` — 16 whole-query aliases; `smoke-build.ts` — the two
+  production queries `className` and `tailwind`.
+
+The draft's ownership exclusions were removed after measuring (§8.4).
+
+### 8.2 Measured before / after
+
+Same queries, same `search()`, before at `f84d20fa` and after this change:
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `className`, `tailwind` | **(none)** | `/docs/styling` |
+| `css`, `css class`, `css variable`, `css variables` | Stack › limitations / Component API | `/docs/styling` |
+| `sx`, `stylesheet`, `inline style`, `media query`, `pseudo class` | Icon names / Theming / Inline edit / Mention input / Dark mode | `/docs/styling` |
+| `style`, `styles`, `styling`, `style prop`, `custom styles`, `override styles`, `hover style` | Theming › Platform styles | `/docs/styling` |
+| `pointerEvents`, `userSelect`, `borderColor`, `margin`, `padding` | Toast / Text / Keycap / Spacer / Buttons | `/docs/styling` |
+| `lineClamp`, `rowGap`, `gridTemplateColumns`, `selectionColor`, `textOverflow`, `fontWeight`, `borderWidth` | **(none)** (or Theming's scale for `borderWidth`) | `/docs/styling` |
+| `spacing` | Theming | **Theming** (kept) |
+| `font size`, `font family` | Typography | **Typography** (kept) |
+| `table`, `panel`, `aria`, `theme switch`, `radius.md` | — | unchanged (kept) |
+
+Total pages: 101 → **102** (the crawl). Suite: 116 files / 971 tests → **117 /
+983**.
+
+### 8.3 Commands run
+
+| Command | Result |
+| ------- | ------ |
+| `nub exec vitest run src/lib/styling.test.ts` | 12 passed |
+| `nub run --filter docs test` | 117 files / 983 tests passed |
+| `nub run --filter docs check-types` | exit `0` |
+| `nub run --filter docs smoke:build` | `ok` — 102 pages, 225 links, 1 327 anchors, search checked |
+| `nub run --filter docs smoke:a11y` | 102 pages × 2 schemes, 0 violations |
+| `nub run --filter docs smoke:responsive` | 102 pages at 390 px, phone controls and mobile navigation checked |
+| `nub run check`, `nub run lint`, `nub run test` (root) | green |
+
+### 8.4 Two-direction proofs (each run, then reverted)
+
+1. Removed `<AbsentStylingConcepts />` from the page → `the page does not render
+   <AbsentStylingConcepts />`.
+2. Added `"gridGap"` to `styleFieldNames` → `gridGap is catalogued but StyleDesc
+   does not declare it`.
+3. Removed the `/docs/styling` alias block → `sx → /docs/components/icon` and
+   `media query → /docs/components/mention-input#states` (the other alias words
+   still reached the page through the generated document).
+4. Renamed the table's `name` to `Style` → `expected [ 'Style' ] to include
+   'StyleDesc'`.
+5. Removed `stylingSearchEntry` from `generatedEntries` → `borderWidth →
+   /docs/theming#scales-and-control-metrics`, and every promoted field name
+   dropped from the clean page URL to a `#type-table-…` fragment.
+
+### 8.5 Measured, not fixed
+
+- `line height` still reaches Timeline. Typography owns the subject (plan 574),
+  but its page does not name "line height"; recorded in `TODO.md`.
+- The four text fields are indexed but not promoted: `promotedNameRank`'s
+  variant tier would turn them into `font size` / `line height` phrases, which
+  Typography owns. The camelCase spellings still reach `/docs/styling` through
+  the index text.
+- `className` and `tailwind` would still reach the page without the alias block
+  (the generated document carries them); the aliases are load-bearing for `sx`
+  and `media query` only.
+

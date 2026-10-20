@@ -469,18 +469,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–605)
+## Docs site workstream (plans 410–499, plus 500–606)
 
-`[~]` `[██████████]` 172/173
+`[x]` `[██████████]` 173/173
 
-`[~]` **Styling has a page (plan 606)** — a React reader's first move is
-      `className`, and the site never says there is no CSS: `className` and
+`[x]` **Styling has a page (plan 606)** — a React reader's first move is
+      `className`, and the site never said there is no CSS: `className` and
       `tailwind` returned nothing, while `style`, `style prop`, `css`, `sx` and
       `media query` reached another page. `/docs/styling` renders the real
-      `StyleDesc` surface from the installed declarations, names the seven field
-      families and the absent concepts with their alternatives, and owns the
-      styling vocabulary without taking `spacing` (Theming), `fontSize`/
-      `lineHeight` (Typography) or `boxShadow`/`borderRadius` (Theming).
+      73-field `StyleDesc` surface from the installed declarations, names the
+      seven field families and the seven absent CSS concepts with their
+      alternatives, and the 50 promoted field names outrank prose (`borderWidth`
+      moved off Theming's scale table) while `spacing`, `font size` and the other
+      owned words stay put. 117 files / 983 docs tests, 102-page `smoke:build`,
+      root gates green; five forced defects in plan 606 §8.4.
+
+`[ ]` **Reader vocabulary, ninth pass — the measured leftovers of plan 606** —
+      `line height` still returns Timeline (Typography owns the subject but never
+      says the words), `does it work on windows` returns Workspace instead of
+      Installation's native-binding table, and `localization`/`i18n` have no
+      page. Separately, the typo class measured while writing 606 is structural:
+      the lexical index tolerates most misspellings, but the ranker has no typo
+      tier, so `botton`/`buton` return Toggle, `componet` returns Roadmap,
+      `theem` returns Values API and `seach` returns Icon names, while
+      `acordian` and `dropdwon` return nothing. Give a one-edit (Damerau) match
+      on a name a tier below every real match, synthesized when the index omits
+      it, and never guess between two plausible names.
 
 `[x]` **Performance has an answer (plan 605)** — measured 2026-10-20:
       `performance`, `benchmark`, `fps` and `10k rows` returned nothing or the
