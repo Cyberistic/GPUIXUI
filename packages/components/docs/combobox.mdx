@@ -249,7 +249,7 @@ filters a local array in `onQueryChange`, which is where a request would go.
 
 | Key | Result |
 | ---- | ------ |
-| click / Enter / Down on the trigger | opens the popup |
+| click / `Enter` / `Space` / `Down` on the trigger | opens the popup |
 | typing | filters; the first enabled match is highlighted |
 | `ArrowDown` / `ArrowUp` | moves the highlight, wrapping and skipping disabled rows |
 | `Enter` | selects the highlighted row |
@@ -257,6 +257,13 @@ filters a local array in `onQueryChange`, which is where a request would go.
 | `Tab` | closes and continues with the control after the trigger |
 | `Shift+Tab` | closes and continues with the control before the trigger |
 | outside press | closes without stealing focus back |
+
+The trigger is a `div` with `role="button"`, and GPUix synthesizes no activation
+click for it, so `Enter` and `Space` are the component's own: `Enter` asks to
+open on the press and `Space` on the release, a held `Enter` asks once, and a
+disabled trigger asks for nothing — the same button contract every other trigger
+here follows (plan 736). `ArrowDown`/`ArrowUp` stay with GPUix's headless trigger,
+which also handles `Escape`.
 
 The popup closes one layer per event: inside a dialog, the first Escape or
 outside press closes the popup and leaves the dialog open. That also holds for a
@@ -352,9 +359,11 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (63 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (67 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
-reopen), `defaultOpen` with its one empty-query report, a disabled combobox
+reopen), opening from `Enter` and from the release of `Space` (with `Space`
+inert on its press, a disabled trigger inert to both, and the caller's key
+handlers still running), `defaultOpen` with its one empty-query report, a disabled combobox
 staying hidden, unfocused and out of the tab order even when open or
 `defaultOpen`, and re-enabling it with a fresh empty query, the controlled
 open/close contract (a refused close leaves the popup painted), the trigger's own

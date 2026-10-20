@@ -1094,6 +1094,17 @@ retired once both branches are one
       cases (Popover 27, Dropdown 63, Combobox 63), all three failing at `HEAD`,
       two mutation proofs; docs, `docs/component-api.md`, `COMPONENTS.md`,
       `PLAN.md` D30 and the inventory synced (owner: components)
+    - [x] A closed combobox trigger opens from the keyboard — plan 736;
+      measured 2026-10-20: with the trigger focused, `Enter` and `Space` opened
+      nothing (`combobox-content` absent, focus stayed on the trigger) and only
+      the undocumented `ArrowDown` worked, although the page promised
+      `click / Enter / Down` — GPUix's headless trigger maps only the arrows and
+      `Escape`, and a role-bearing div gets no activation click, so the trigger is
+      now on the shared button contract (`Enter` on press, `Space` on release, a
+      disabled trigger inert) with one open rule in the root; 4 native cases
+      (Combobox 63 → 67), three of them failing at `HEAD` and the disabled pin
+      green; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory count synced
+      (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
