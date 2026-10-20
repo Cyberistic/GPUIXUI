@@ -318,8 +318,9 @@ export const styleFieldViolations = (input: {
 };
 
 /**
- * The page's own guards: every family, anchor and absent concept it claims is
- * named in the MDX, and the supported surface is a real `<auto-type-table>` for
+ * The page's own guards: every family and anchor it claims is named in the MDX,
+ * the absence table is the rendered `<AbsentStylingConcepts />` rather than a
+ * retyped copy, and the supported surface is a real `<auto-type-table>` for
  * `StyleDesc` rather than a heading with no table.
  */
 export const stylingPageViolations = (input: {
