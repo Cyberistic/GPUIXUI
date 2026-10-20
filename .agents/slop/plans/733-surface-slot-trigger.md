@@ -210,8 +210,11 @@ hover limitation to document.
 | the same file + `surface` + `overlay-trigger` | 3 files / **35 passed** |
 | `nub run --filter @gpuixui/primitives test` | 69 files / **941 passed** (was 940; the new element case) |
 | `nub run --filter @gpuixui/primitives check-types` | exit `0` |
+| `nub run check-types` (whole repo) | exit `0` |
 | `nub run lint` | exit `0` |
+| `nub run test` (whole repo) | primitives 69/941, components 32/308, playground 2/20, all green |
 | `nub exec oxfmt --check` on every touched file | exit `0` |
+| `nub run check` | stops at **`fmt`** on `apps/docs/src/components/docs/demos.tsx`, the pre-existing unformatted file outside this workstream (already recorded in `TODO.md`, owner `docs-site`); every earlier stage passed and every touched file is format-clean |
 
 The full live suite was not run: this change touches `Surface` only, and the
 scoped files above are its complete runtime surface plus the trigger matrix.
