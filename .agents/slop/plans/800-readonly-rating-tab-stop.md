@@ -303,8 +303,10 @@ Stop and report if any of these is true; do not improvise:
 `runtime/theme-matrix.runtime.test.tsx`, `runtime/value.runtime.test.tsx`,
 `runtime/examples.runtime.test.tsx`.
 
-The full runtime suite (75 files / 947 tests before this change) is the
-merge-gate check, not this plan's.
+The full runtime suite was **75 files / 961 tests green** after this change
+(947 before it: +10 read-only matrix rows, +4 in the rating file). It ran here
+as the end-of-task check because the change touches a shared paint resolver and
+a cross-control matrix; a scoped-only change would leave it to the merge gate.
 
 ### 7.2 Both-direction proof, by name
 

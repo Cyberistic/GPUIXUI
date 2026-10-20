@@ -137,6 +137,7 @@ AssertionError: expected 4 to be 2
 | old direction | effect body disabled | `drops a hover preview when the rating becomes read-only` and `… disabled` both fail: `expected 4 to be 2` |
 | offline | `nub run --filter @gpuixui/primitives test` | green (the same 74 files; the runtime file is not part of it) |
 | types / lint | `nub run check-types`, `nub run lint` | green |
+| full runtime suite | `nub run --filter @gpuixui/primitives test:runtime` | **75 files / 961 tests green** |
 
 The fix is four lines plus its comment: an effect drops the local preview when
 the control becomes inert, so the pointer-less transition cannot revive it.
