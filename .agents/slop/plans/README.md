@@ -389,6 +389,7 @@ references without buying correctness.
 | [770](./770-washed-inactive-figure.md) | The washed unavailable label's AAA figure is stale, and three more washed figures have no owner | F | 510, 512, 520, 714, 717, 745, 760 | done |
 | [772](./772-inset-ring-figures.md) | The inset ring's figure and count have one owner, and the source-count guard cannot see `sixteen` | F | 609, 717, 760, 770 | done |
 | [774](./774-index-paragraph-counts.md) | The index paragraph states four catalogue sizes, and none has an owner | F | 059, 064, 066, 327, 398, 611 | done |
+| [775](./775-readme-index-counts.md) | The front door's index paragraph states four catalogue sizes, and none has an owner | F | 064, 519, 774 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3979,6 +3980,19 @@ or an eleventh type role — moves the paragraph with its index, and a stale
 second copy fails. The page needed no prose edit: it was right, just unowned. No
 token value, pair, floor, metric, role or shipped theme moves; `contrastPairs`
 stays **470**.
+
+Plan `775` closes the same gap one document over: the package README's index
+paragraph states "the four status families", "the four platform variants", "the
+six timings" and "four easing phases", and replacing all four with
+`five`/`five`/`seven`/`five` left **7030 tests** green — while the equivalent
+`Motion` row in `docs/tokens.md` is held by `docs.test.ts`. `readme.test.ts` now
+captures every occurrence of each phrase and holds it to `statusTones.length`,
+`platformNames.length`, `motionLevels.length` and `motionPhases.length`, and the
+two retypings beside it go with it: the motion-level case iterates
+`motionLevels` instead of `Object.entries(motion)` (plan `519`'s rule) and the
+status-family sentence takes its count from `statusTones`. The README needed no
+prose edit. No token value, pair, floor, metric, role or shipped theme moves;
+`contrastPairs` stays **470**.
 
 ## How to use a plan
 

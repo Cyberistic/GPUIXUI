@@ -26,7 +26,7 @@ import {
   statusFillPairs,
 } from "./contrast.js";
 import { stateLadderNames } from "./direction.js";
-import { motion } from "./motion.js";
+import { motionLevels, motionPhases } from "./motion.js";
 import {
   platformNames,
   platformStyles,
@@ -66,6 +66,9 @@ const countWords = [
 ] as const;
 
 const countWord = (count: number): string => countWords[count] ?? String(count);
+
+/** Every count spelling the front door may use: words up to ten, then digits. */
+const numbers = "zero|one|two|three|four|five|six|seven|eight|nine|ten|\\d+";
 
 /** The failure type each check returns, keyed by the kind that tags it. */
 const failureTypes = {
@@ -371,19 +374,38 @@ describe("packages/tokens/README.md", () => {
   });
 
   it("lists every motion level, including the zero one", () => {
-    const levelNames = Object.entries(motion)
-      .filter(([, value]) => typeof value === "number")
-      .map(([level]) => `\`${level}\``);
+    const levelNames = motionLevels.map((level) => `\`${level}\``);
     expect(readme).toContain(`${sentenceList(levelNames)} are the levels`);
     expect(levelNames).toContain("`none`");
   });
 
   it("lists every status family in documentation order", () => {
-    expect(statusTones.length).toBe(4);
     const toneNames = statusTones.map((tone) => `\`${tone}\``);
     expect(readme).toContain(
-      `The four status families — ${sentenceList(toneNames)} —`,
+      `The ${countWord(statusTones.length)} status families — ${sentenceList(toneNames)} —`,
     );
+  });
+
+  it("states the index catalogues' sizes from the indexes", () => {
+    // The index paragraph says how big four catalogues are, and all four were
+    // hand-typed: replacing them with five/five/seven/five left the whole suite
+    // green at 7030 tests (plan 775). Every occurrence is captured, not the
+    // first, so a stale second copy elsewhere in the README fails too.
+    const catalogues: ReadonlyArray<readonly [string, number]> = [
+      ["status families", statusTones.length],
+      ["platform variants", platformNames.length],
+      ["timings", motionLevels.length],
+      ["easing phases", motionPhases.length],
+    ];
+
+    catalogues.forEach(([phrase, size]) => {
+      const stated = [
+        ...readme.matchAll(new RegExp(`\\b(${numbers})\\s+${phrase}\\b`, "g")),
+      ].map(([, count]) => count);
+
+      expect(stated.length, phrase).toBeGreaterThan(0);
+      stated.forEach((count) => expect(count, phrase).toBe(countWord(size)));
+    });
   });
 });
 

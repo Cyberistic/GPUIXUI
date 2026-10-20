@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 350/427
+`[x]` `[████████░░]` 351/428
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -175,6 +175,15 @@ and incrementing each in turn left the suite green at 7029 tests while the
 join `describe("contract prose counts")`, which captures every occurrence and
 holds it to `countWord(textRoles.length)`, `statusTones.length`,
 `platformNames.length` and `filledControlFamilies.length` (plan 774)
+`[x]` Give the front door's index paragraph the same owner — it states "the four
+status families", "the four platform variants", "the six timings" and "four
+easing phases", and replacing all four with `five`/`five`/`seven`/`five` left the
+suite green at 7030 tests while the equivalent `Motion` row in the catalogue was
+already held by `docs.test.ts`; `readme.test.ts` now captures every occurrence of
+each phrase and holds it to `statusTones.length`, `platformNames.length`,
+`motionLevels.length` and `motionPhases.length`, and the two neighbouring
+retypings (`Object.entries(motion)` and a literal `four`) read the indexes too
+(plan 775)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan
