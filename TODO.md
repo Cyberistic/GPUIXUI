@@ -2297,11 +2297,11 @@ retired once both branches are one
       makes the control a labelled row — the shape the groups already use: one
       role, one name, one tab stop and one hit area, with the box/track as
       decoration and the ring still on the box. `label` wins over the text and a
-      blank one falls back; without children the old tree is unchanged. 5
+      blank one falls back; without children the old tree is unchanged. 6
       element cases + a 6-case runtime file, **all six runtime cases failing
       against the unlabelled tree**; the checkbox and selection examples use the
-      composition; offline 69 files / 947 tests, scoped live 5 files / 104 (plan
-      `740`).
+      composition; offline 69 files / 947 tests, scoped live 5 files / 104, full
+      runtime 64 files / 858 tests (plan `740`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

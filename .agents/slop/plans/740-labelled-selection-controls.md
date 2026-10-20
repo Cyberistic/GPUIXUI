@@ -6,7 +6,7 @@
 | Owner | primitives workstream |
 | Paths | `packages/primitives/` (plus the two inventory rows in `COMPONENTS.md`) |
 | Depends on | `030` (package), `041` (runtime suite), `055` (theme axes), `396` (blank names), `590` (native-focus tracker), `640` (mark scale) |
-| Status | **done** — `children` is the row's visible label, name and hit area on both controls; 6 element + 6 runtime cases, all six runtime cases fail against the unlabelled tree; offline 69 files / 947 tests, scoped live 5 files / 104; README and the two inventory rows carry 64 runtime files |
+| Status | **done** — `children` is the row's visible label, name and hit area on both controls; 6 element + 6 runtime cases, all six runtime cases fail against the unlabelled tree; offline 69 files / 947 tests, scoped live 5 files / 104; full runtime 64 files / 858 tests green; README and the two inventory rows carry 64 runtime files |
 
 ## 0. Why
 
