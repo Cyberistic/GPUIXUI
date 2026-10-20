@@ -121,6 +121,7 @@ import {
   pixelColourView,
 } from "../scenarios/pixels.js";
 import { shadowLiveScenario, shadowView } from "../scenarios/shadow.js";
+import { borderLiveScenario, borderView } from "../scenarios/border.js";
 import {
   captureLive,
   expectColour,
@@ -12745,6 +12746,27 @@ const liveShadowPixels: LiveScenario = {
 };
 
 /**
+ * Borders and corner radii in a real window (plan `745`).
+ *
+ * The headless pass proves the frame; this twin proves the same bands, corner
+ * clip and child clip survive a window's paint path, and writes the frame as
+ * the run artifact the docs cite.
+ */
+const liveBorderPixels: LiveScenario = {
+  ...borderLiveScenario,
+  view: borderView,
+  ready: "border-stage",
+  steps: (ctx) =>
+    borderLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-border-pixels.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -13879,6 +13901,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveThemePlatform,
   livePixelColour,
   liveShadowPixels,
+  liveBorderPixels,
   terminal,
   selectionSignal,
 ];

@@ -85,6 +85,25 @@ export const readAsync = (
   windowSize: host.windowSize,
 });
 
+/**
+ * A painted box, or a labelled failure naming the missing element.
+ *
+ * A retained-but-unpainted node reports no bounds; every pixel scenario treats
+ * that as "the fixture did not mount", never as a coordinate to sample.
+ */
+export const paintedBox = <E>(
+  ctx: Pick<Smoke.SmokeContext, "expectSome">,
+  reader: FrameReader<E>,
+  testId: string,
+): Effect.Effect<Smoke.Bounds, Smoke.SmokeAssertionError | E> =>
+  Effect.gen(function* () {
+    const bounds = yield* reader.bounds(testId);
+    return yield* ctx.expectSome(
+      `${testId} is painted`,
+      Option.fromNullishOr(bounds),
+    );
+  });
+
 const decodeFrame = (
   bytes: Uint8Array,
 ): Effect.Effect<Pixels.Pixels, Smoke.SmokeAssertionError> =>

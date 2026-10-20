@@ -13,7 +13,6 @@
  * shared capture/scale/comparison chain is `frames.ts` (plan `676`).
  */
 import { Effect } from "effect";
-import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { Pixels, Smoke } from "@gpuixui/testing";
 import { elevationShadow, focusRing } from "@gpuixui/tokens";
@@ -26,6 +25,7 @@ import {
   captureLive,
   expectColour,
   type FrameReader,
+  paintedBox,
   parseColour,
   pixelAtPoint,
   readAsync,
@@ -104,20 +104,6 @@ const ShadowProbe = () => {
 
 export const shadowView = (): ReactNode => <ShadowProbe />;
 
-/** A painted box, or a named failure. */
-const boxOf = <E,>(
-  ctx: Pick<Smoke.SmokeContext, "expectSome">,
-  reader: FrameReader<E>,
-  testId: string,
-) =>
-  Effect.gen(function* () {
-    const bounds = yield* reader.bounds(testId);
-    return yield* ctx.expectSome(
-      `${testId} is painted`,
-      Option.fromNullishOr(bounds),
-    );
-  });
-
 /**
  * The checks both hosts share.
  *
@@ -132,10 +118,10 @@ const shadowChecks = <Host, E>(
 ): Effect.Effect<void, Smoke.SmokeAssertionError | E> =>
   Effect.gen(function* () {
     const theme = palettes.dark;
-    const ring = yield* boxOf(ctx, reader, "shadow-ring");
-    const plain = yield* boxOf(ctx, reader, "shadow-plain");
-    const elevated = yield* boxOf(ctx, reader, "shadow-elevated");
-    const flat = yield* boxOf(ctx, reader, "shadow-flat");
+    const ring = yield* paintedBox(ctx, reader, "shadow-ring");
+    const plain = yield* paintedBox(ctx, reader, "shadow-plain");
+    const elevated = yield* paintedBox(ctx, reader, "shadow-elevated");
+    const flat = yield* paintedBox(ctx, reader, "shadow-flat");
     const window = yield* reader.windowSize();
     const frame = yield* capture;
 
