@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–614)
+## Docs site workstream (plans 410–499, plus 500–616)
 
-`[x]` `[██████████]` 182/182
+`[x]` `[██████████]` 183/183
+
+`[x]` **The preview strategy names only scenes that mount open (plan 616)** —
+      the tier‑L paragraph offered "a menu, a dialog, a popover or the command
+      palette starts open", but plan 522 made the palette a gesture scene: it
+      mounts closed behind `scene-palette-trigger` and a click opens it. The
+      sentence now states the derived **23** mount-open / **27** gesture split
+      and names the three examples that really do mount open; `preview-gaps`
+      fails on a named gesture scene (`expected [ 'command palette' ] to deeply
+      equal []`) and on a wrong 23 (`expected 22 to be 23`). 125 files / 1 210
+      docs tests, `check-types`, `check`, `lint` green.
 
 `[x]` **The app shell is a composed pattern on the live surface (plan 615)** —
       `MISSION.md` asks for realistic compositions and the site's two layout

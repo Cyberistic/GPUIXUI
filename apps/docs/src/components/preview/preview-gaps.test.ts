@@ -163,8 +163,50 @@ describe("preview counts", () => {
   });
 
   it("states the open and gesture split in the tier-L paragraph", () => {
-    const stated = countIn(document, /(\d+) more are opened by a real gesture/);
+    const stated = countIn(
+      document,
+      /(\d+) more are opened by\s+a\s+real gesture/,
+    );
     expect(stated).toBe(gestureCount);
+  });
+
+  /**
+   * The bug this guards: plan 522 made the command palette a gesture scene, but
+   * the tier-L paragraph still said it "starts open". The counts were derived;
+   * the examples were remembered. This derives the other half of the split and
+   * forbids naming a scene that only a gesture opens.
+   */
+  it("names only scenes that mount in the state they document", () => {
+    const clause =
+      document.match(
+        /(\d+) scenes mount in the state[\s\S]*?more are opened by\s+a\s+real gesture/,
+      )?.[0] ?? "";
+    expect(clause).not.toBe("");
+    expect(countIn(clause, /(\d+) scenes mount/)).toBe(
+      Arr.length(LIVE_SCENES) - gestureCount,
+    );
+
+    const gestureTitles = Arr.map(
+      [
+        ...Arr.map(
+          Arr.filter(
+            liveRecordScenes,
+            ({ scene }) => SCENE_GESTURE[scene] !== undefined,
+          ),
+          ({ title }) => title,
+        ),
+        ...Arr.filterMap(SCENE_LABEL, ({ scene, title }) =>
+          SCENE_GESTURE[scene] !== undefined
+            ? Result.succeed(title)
+            : Result.failVoid,
+        ),
+      ],
+      (title) => title.toLowerCase(),
+    );
+    const claimed = Arr.filter(gestureTitles, (title) =>
+      clause.toLowerCase().includes(title),
+    );
+    expect(claimed).toEqual([]);
   });
 
   it("states the gesture total the code ships, in both documents", () => {

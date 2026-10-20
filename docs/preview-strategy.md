@@ -36,9 +36,9 @@ source, the same tokens and the same GPUI layout, and it is the only tier a
 reader can interact with without leaving the page. It is not evidence that the
 desktop binary, the native window or the published native binding works — that
 is tier N/S/V. A live scene is built from the real package code:
-`@gpuixui/primitives` and `@gpuixui/components`. Some scenes mount in the state
-they document — a menu, a dialog, a popover or the command palette starts open —
-and 27 more are opened by a real gesture through the renderer's automation API;
+`@gpuixui/primitives` and `@gpuixui/components`. 23 scenes mount in the state
+they document — an open menu, dialog or popover — and 27 more are opened by a
+real gesture through the renderer's automation API;
 *Gestures are proved, not implied* below is that contract.
 `smoke:preview` proves every scene's text reached GPUI's tree in headless Chrome,
 that every scene's canvas is sized (a `ready` flag on a 1×1 frame does not
