@@ -26,7 +26,15 @@ import { alpha } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Pressable, Readout, Toolbar } from "../ui.js";
+import { palettes } from "../palettes.js";
 import type { PlaygroundScenario } from "../types.js";
+import { captureHeadless, readSync } from "./frames.js";
+import {
+  PLAYED_ALPHA,
+  mediaEnvelopeChecks,
+  mediaImageChecks,
+  mediaPlayedChecks,
+} from "./media-pixels.js";
 import {
   BAR_WIDTH,
   BARS,
@@ -271,7 +279,7 @@ const MediaProbe = () => {
                 top: 0,
                 width: xAt(pos),
                 height: STAGE.height,
-                backgroundColor: alpha(theme.colors.primary, 0.3),
+                backgroundColor: alpha(theme.colors.primary, PLAYED_ALPHA),
               }}
             />
           ) : null}
@@ -338,6 +346,7 @@ export const mediaScenario: PlaygroundScenario = {
     Effect.gen(function* () {
       const stage = yield* boxOf(ctx, "media-wave");
       const bar0 = yield* boxOf(ctx, "media-bar-0");
+      const bar32 = yield* boxOf(ctx, "media-bar-32");
       const bar63 = yield* boxOf(ctx, "media-bar-63");
 
       // 1. The stage is the coordinate space; 64 bars bottom-align in it.
@@ -389,7 +398,17 @@ export const mediaScenario: PlaygroundScenario = {
         true,
       );
 
-      // 2. A press maps a stage x onto the clip: 120 px is 30 s.
+      // 2. Pixels: the bars paint their token with a gap between them.
+      yield* mediaEnvelopeChecks(
+        ctx,
+        readSync(ctx.host),
+        yield* captureHeadless(ctx.host),
+        bar0,
+        bar32,
+        palettes.dark.colors,
+      );
+
+      // 3. A press maps a stage x onto the clip: 120 px is 30 s.
       ctx.host.clickWindow(stage.x + 120, stage.y + 48);
       ctx.host.advance(0);
       yield* ctx.expectEqual(
@@ -418,8 +437,20 @@ export const mediaScenario: PlaygroundScenario = {
         0.5,
       );
 
-      // 3. A held drag keeps scrubbing: +60 px is +15 s. The reset clears the
-      // press that step 2 logged, so this asserts one whole gesture.
+      // 4. Pixels: the wash covers the stage and the bars, and the playhead
+      // paints its own column.
+      yield* mediaPlayedChecks(
+        ctx,
+        readSync(ctx.host),
+        yield* captureHeadless(ctx.host),
+        stage,
+        bar0,
+        30,
+        palettes.dark.colors,
+      );
+
+      // 5. A held drag keeps scrubbing: +60 px is +15 s. The reset clears the
+      // press that step 3 logged, so this asserts one whole gesture.
       ctx.host.click("media-reset");
       ctx.host.advance(0);
       dragFrom(ctx, { x: stage.x + 120, y: stage.y + 48 }, 60);
@@ -448,7 +479,7 @@ export const mediaScenario: PlaygroundScenario = {
         "down:seek>move:seek>up:seek",
       );
 
-      // 4. The pointer is clamped to the clip at both ends.
+      // 6. The pointer is clamped to the clip at both ends.
       dragFrom(ctx, { x: stage.x + 120, y: stage.y + 48 }, 2000);
       yield* ctx.expectEqual(
         "a drag past the right edge clamps at the end",
@@ -462,7 +493,7 @@ export const mediaScenario: PlaygroundScenario = {
         "0",
       );
 
-      // 5. Keyboard seeking is the same scale, through native focus.
+      // 7. Keyboard seeking is the same scale, through native focus.
       ctx.host.click("media-reset");
       ctx.host.advance(0);
       ctx.host.clickWindow(stage.x + 120, stage.y + 48);
@@ -511,7 +542,7 @@ export const mediaScenario: PlaygroundScenario = {
         "0",
       );
 
-      // 6. The position is announced as a slider with an exact value.
+      // 8. The position is announced as a slider with an exact value.
       ctx.host.clickWindow(stage.x + 144, stage.y + 48);
       ctx.host.advance(0);
       const tree = yield* treeOf(ctx);
@@ -522,7 +553,7 @@ export const mediaScenario: PlaygroundScenario = {
         "36s of 120s",
       );
 
-      // 7. The transport buttons step and clamp like the keys.
+      // 9. The transport buttons step and clamp like the keys.
       ctx.host.click("media-forward");
       ctx.host.advance(0);
       yield* ctx.expectEqual("+5 s adds five seconds", field(ctx, "pos"), "41");
@@ -554,7 +585,7 @@ export const mediaScenario: PlaygroundScenario = {
         "120",
       );
 
-      // 8. The gesture's hit target: a plane under the painted layer loses it.
+      // 10. The gesture's hit target: a plane under the painted layer loses it.
       ctx.host.click("media-reset");
       ctx.host.advance(0);
       ctx.host.click("media-plane");
@@ -596,7 +627,7 @@ export const mediaScenario: PlaygroundScenario = {
         "over",
       );
 
-      // 9. The static image route is one node; the bar route is 64.
+      // 11. The static image route is one node; the bar route is 64.
       const bars = yield* ctx.expectSome(
         "the host reports retained elements",
         Option.fromNullishOr(ctx.host.retainedElements()),
@@ -648,7 +679,17 @@ export const mediaScenario: PlaygroundScenario = {
         BARS - 1,
       );
 
-      // 10. The seek is independent of the envelope's route.
+      // 12. Pixels: the image route paints the same envelope, and its
+      // transparent slot shows the stage.
+      yield* mediaImageChecks(
+        ctx,
+        readSync(ctx.host),
+        yield* captureHeadless(ctx.host),
+        image,
+        palettes.dark.colors,
+      );
+
+      // 13. The seek is independent of the envelope's route.
       ctx.host.clickWindow(stage.x + 120, stage.y + 48);
       ctx.host.advance(0);
       yield* ctx.expectEqual(

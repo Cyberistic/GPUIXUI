@@ -109,6 +109,11 @@ import {
 import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
 import { mediaScenario } from "../scenarios/media.js";
+import {
+  mediaEnvelopeChecks,
+  mediaImageChecks,
+  mediaPlayedChecks,
+} from "../scenarios/media-pixels.js";
 import { themeColorRolesView, platformThemeView } from "../scenarios/theme.js";
 import {
   pixelColourLiveScenario,
@@ -12283,6 +12288,21 @@ const media: LiveScenario = {
         1,
       );
 
+      // Pixels: the bar route paints its token with a gap between bars.
+      const bar0 = yield* boxOf(ctx, "media-bar-0");
+      const bar32 = yield* boxOf(ctx, "media-bar-32");
+      yield* mediaEnvelopeChecks(
+        ctx,
+        readAsync(ctx.host),
+        yield* captureLive(
+          ctx.host,
+          `${LIVE_ARTIFACTS}/${media.id}-envelope.png`,
+        ),
+        bar0,
+        bar32,
+        palettes.dark.colors,
+      );
+
       // 1. A real click at 120 px into the stage seeks to 30 s.
       yield* ctx.host.clickWindow(stage.x + 120, stage.y + 48);
       yield* settle;
@@ -12298,6 +12318,20 @@ const media: LiveScenario = {
         playhead.x - stage.x,
         120,
         1,
+      );
+
+      // Pixels: the wash covers the stage and bar 0, and the playhead paints.
+      yield* mediaPlayedChecks(
+        ctx,
+        readAsync(ctx.host),
+        yield* captureLive(
+          ctx.host,
+          `${LIVE_ARTIFACTS}/${media.id}-played.png`,
+        ),
+        stage,
+        bar0,
+        30,
+        palettes.dark.colors,
       );
 
       // 2. A paced drag from the centre (60 s) by 60 px reaches 75 s.
@@ -12339,6 +12373,17 @@ const media: LiveScenario = {
         480,
         1,
       );
+
+      // Pixels: the image route paints the same envelope, and its transparent
+      // slot shows the stage.
+      yield* mediaImageChecks(
+        ctx,
+        readAsync(ctx.host),
+        yield* captureLive(ctx.host, `${LIVE_ARTIFACTS}/${media.id}-image.png`),
+        image,
+        palettes.dark.colors,
+      );
+
       yield* ctx.host.clickWindow(stage.x + 120, stage.y + 48);
       yield* settle;
       yield* waitForText(ctx, "media-readout", "pos=30");
