@@ -380,6 +380,7 @@ references without buying correctness.
 | [750](./750-disabled-fill-palette-and-status-claims.md) | The disabled fill's reason in the palette doc and the status paragraph | F | 306, 737, 747, 749 | done |
 | [753](./753-dimensions-consumer-reach.md) | The dimensions promise the shipped components do not keep | F | 353, 556, 720 | done |
 | [754](./754-pair-enforcement.md) | A published pair list is enforced, not only unique | F | 071, 349, 546, 651, 737 | done |
+| [755](./755-canonical-density.md) | The canonical link writes the density it resolves | F | 380, 529, 534, 542, 688 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3863,6 +3864,18 @@ scrimmed surface and the scrim to the face for the face-on-itself composition �
 and fails unless a public check names the pair, and a planted composition no walk
 measures proves the predicate can fail. No colour, pair, floor, metric, role or
 shipped theme moves, and `contrastPairs` stays 470.
+
+Plan `755` closes the one contract the URL codec stated but did not implement:
+`themeChoiceParams` documented density as the axis always written — the
+fallback belongs to the platform, so `platform=darwin` is `compact` and the same
+link edited to `win32` would otherwise become `comfortable` — but the encoder
+wrote a density only when the row named one, so the canonical link for
+`{ platform: "darwin" }` was `platform=darwin` alone and lost its compact on the
+edit. The writer resolves the choice and always emits the preset it carries;
+the JSDoc, catalogue, design system, README and COMPONENTS row state the total
+rule, `canonicalLink` executes the platform-only row, and
+`theme-choice-params.test.ts` fails on the omission. No token value, pair,
+floor, role, metric or shipped theme moves.
 
 ## How to use a plan
 
