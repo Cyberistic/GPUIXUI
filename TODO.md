@@ -1517,6 +1517,20 @@ retired once both branches are one
       the baseline (20 → 16 = exactly those four flipped); docs,
       `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the index
       synced (owner: components)
+    - [x] A press on the toast stack's own control belongs to the stack — plan
+      823; measured 2026-10-21 with the composite suite: plan 820 registered
+      each card but not the viewport's documented `children` slot ("Dismiss
+      all"), which the same priority-2 layer paints above the veil. Pressing
+      the slot's control over an open dialog ran the control **and** dismissed
+      the dialog on mouse down (`onOpenChange [[false]]`, dialog gone). The slot
+      wrapper is now content-sized and registers its own box as a press surface,
+      so the control runs and the dialog stays open, while a press outside the
+      stack still closes it; 2 composite cases (10/10), the slot case red with
+      the registration removed and the outside pin green both ways, the toast
+      suite unchanged at 28/28. `docs/toast.mdx`'s stale "render the viewport
+      last" instruction (superseded by 820) is corrected, the example uses the
+      slot, and `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the
+      index are synced (owner: components)
     - [x] A press on a toast belongs to the toast — plan 820; measured
       2026-10-21: a toast raised from inside an open dialog was painted **under**
       the dialog's veil and its own action never ran (0 calls) while the press

@@ -36,9 +36,13 @@ toast.push({
 | `useToast()` | `{ toasts, push, dismiss, dismissAll, pause, resume, actionFor }`; throws outside the provider |
 | `ToastViewport` | the stack in `position`'s corner (bottom-right by default); `role="group"` named Notifications, with each card its own status |
 
-Render the viewport **last** in the app root: GPUix has no `zIndex`, so overlays
-stack in paint order. The viewport is `pointerEvents: "none"` and each card turns
-pointer events back on, so a toast never blocks the page underneath.
+Render the viewport **once** in the app root, before the app's dialogs: it is its
+own deferred anchored layer above every modal, so paint order no longer follows
+tree order, and this binding can drop a viewport mounted after a dialog (plan
+820 §7). The viewport is `pointerEvents: "none"` and each card turns pointer
+events back on, so a toast never blocks the page underneath. A control in the
+viewport's `children` slot belongs to the stack too: its press runs the control
+and leaves an overlay beneath open (plan 823).
 
 ## Behaviour
 
@@ -119,7 +123,7 @@ string }; tone?: "info" | "success" | "warning" | "danger"; duration?: Duration 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `ToastProvider` | provider (no host element) | `max?: number` (default `3`; a finite value truncates and floors at 1, a non-finite value is the default), `defaultDuration?: Duration.Input` (default `5 seconds`), `children?: ReactNode` |
-| `ToastViewport` | `div` (`role="group"`, `aria-label="Notifications"`, `testId="toast-viewport"`) | `position?: "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` (default `"bottom-right"`), `children?: ReactNode` (an optional element before the toasts, e.g. "Dismiss all") |
+| `ToastViewport` | `div` (`role="group"`, `aria-label="Notifications"`, `testId="toast-viewport"`) | `position?: "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` (default `"bottom-right"`), `children?: ReactNode` (an optional element before the toasts, e.g. "Dismiss all"; it owns its presses like a card — plan 823) |
 | `useToast` | hook | returns `{ toasts, push(draft, { onAction }?), dismiss(id), dismissAll(), pause(id), resume(id), actionFor(id), timingFor(id) }`; `timingFor` is `Option<ToastTiming>` and is absent for a toast with no timer |
 
 ## Motion
@@ -173,8 +177,11 @@ from its two pinned edges.
   anchored layer at the runtime's default priority `1` and would otherwise paint
   over the stack and swallow its presses. A press on a card therefore belongs to
   the toast: its action or dismiss control runs and an overlay beneath stays
-  open, while a press anywhere else still closes that overlay (plan 820). Render
-  the viewport once in the app root; paint order no longer follows tree order.
+  open, while a press anywhere else still closes that overlay (plan 820). The
+  viewport's own `children` control is part of the stack too and owns its presses
+  the same way, so "Dismiss all" above a dialog does not close the dialog (plan
+  823). Render the viewport once in the app root; paint order no longer follows
+  tree order.
   A viewport mounted **after** a dialog can be dropped from the native tree by
   this binding when that dialog closes with a picker inside (TODO.md interlock,
   plan 820 §7), so render it before the app's dialogs.

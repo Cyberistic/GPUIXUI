@@ -182,10 +182,11 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   press meant for its row, instead of closing (and losing the choice and focus)
   on mouse down (plan `816`).
   **Ownership is a property of the surface, not of the stack**: an overlay that
-  is not dismissible still owns its paints. The toast stack registers each card,
-  and it lives in its own deferred anchored layer above every modal, because a
-  dialog's veil is an anchored layer too and would otherwise paint over it and
-  take its presses (plan `820`).
+  is not dismissible still owns its paints. The toast stack registers each card
+  **and its own controls** (the viewport's `children` slot), and it lives in its
+  own deferred anchored layer above every modal, because a dialog's veil is an
+  anchored layer too and would otherwise paint over it and take its presses
+  (plans `820`, `823`).
   Composite rows and cells (`List`, menu rows, grid
   and calendar cells) keep Space as a **selection** key on key down, per ARIA's
   listbox/grid patterns.
