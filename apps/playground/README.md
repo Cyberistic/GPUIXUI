@@ -1642,6 +1642,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-states` | the declared-style probe in a window: a real hover applies `100 → 140`, hover is per element (parent `420` / child `100`, then parent `400` / child `120`), leaving reverts both, a press applies `active` `180` (and enters hover, corrected by plan `754`; the release still returns `100`), and a held pointer outside keeps `180` until release — 32 checks (plan `557`) |
 | `live-state-pixels` | declared hover and active **colours** in a window: a real hover paints `primary` and leaves its neighbours, leaving reverts, hovering the parent paints `accent` but not the child, hovering the child paints `success` and reverts the parent, a press paints `destructive`, a release-then-hover paints `primary`, and a press while hovered stays `destructive` — 50 checks (plan `754`). **The press itself enters hover**: with `active` removed the pressed box paints the hover fill, so the check is precedence, not "active without hover" |
 | `live-opacity-pixels` | declared **opacity** in a window: an opaque fill paints `primary` exactly, the 0.5 disabled fill paints the blend `#5C5F8D`, its opaque neighbour stays `card`, a `success` child inside a half-opacity parent paints `#266F4D` (the subtree is dimmed with it), and two nested halves paint the product `#383B55` rather than a single `0.5` (`#5E608F`) — 29 checks (plan `761`). The runtime composites a nested pair in 8-bit steps, so the frame is 1–2 channels lighter than the idealised `0.25` mix (`#373953`) |
+| `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
 | `live-content` | the host-element surfaces in a window: the sourced `<svg>` keeps its 48 × 48 box, a missing `src` paints `img: no src` and an undecodable one `img: load failed`, a valid PNG data URL and a ref-uploaded 2 × 2 bitmap lay out without adding a fallback, the 640 px `<diff>` paints its four patch lines, and `<canvas>` has no bounds and drops its child from the paint (the retained child still answers `text`) — 28 checks (plan `577`). An `<img>` keeps the tracker's 1 px-per-axis loss live too (`96 × 64` → `94 × 62`) |
@@ -2318,11 +2319,56 @@ observed and reverted: removing the disabled fill reads
 `expected #383b55ff, got #5e608fff`, and reversing the blend or making nesting
 additive turns three unit tests red.
 
+### Editing actions: clipboard, history and the OTP paste (plan `764`)
+
+The native editor binds `cmd-c`, `cmd-x`, `cmd-v`, `cmd-z` and `shift-cmd-z`
+(`input.rs:250-260`), and every shipped text surface inherits them. Nothing in
+the suite had pressed one: a runtime that dropped the clipboard or the undo
+stack, a cut that forgot to copy, or a paste that reported one change per
+character kept every check green. `editing-actions` (**46 checks**) and
+`live-editing-actions` (**73 checks**) close it.
+
+| Rule | Measured |
+| ---- | -------- |
+| copy | writes the selected run; a copy with **no** selection writes nothing (the previous run survives) |
+| cut | copies **then** deletes, in one change |
+| paste | one `onChange` for six characters; pasting over a selection counts once more |
+| single line | `<input>` turns `a\nb` into `a b`; `<textarea>` keeps `a\nb` |
+| `readOnly` | refuses paste, cut and undo; a refused cut leaves the clipboard alone |
+| history | contiguous typing is **one** undo step (`UNDO_COALESCE = 700 ms`), `shift-cmd-z` restores it, a new edit clears redo, a paste is its own step |
+| OTP | a pasted `123456` sets the value, fires `onComplete` **once**, focuses the last cell, and the a11y cells report `1`/`6` |
+
+**The headless renderer uses the real system pasteboard.** `VisualTestAppContext`
+delegates clipboard reads and writes to the platform
+(`visual_test_context.rs:16-18, 70-74, 344-352`); the fake in-memory clipboard
+belongs to `TestPlatform` (`platform/test/platform.rs:612-617`), which is **not**
+the visual test renderer. So the probe copies from its own read-only fields
+before every paste, never depends on prior contents, and replaces the user's
+clipboard on both hosts. `COMPONENTS.md`'s OTP row said there was no clipboard
+simulation in the `TestRenderer`; that sentence is corrected.
+
+**Two probe-level findings.** The headless clock is **virtual** —
+`Effect.sleep` does not advance `VisualTestAppContext`'s time — so an 800 ms gap
+between `a`, `b`, `c` is a null result offscreen while the same gap in the real
+window yields `u=ab`; the coalescing check is therefore only load-bearing live.
+And a value-based wait cannot observe an idempotent second paste (the text
+already matches), so the live twin waits on the `edit-target-events` readout.
+
+**A mutation that looked load-bearing and was not:** removing `readOnly` from
+`edit-locked` still passes the **value** check, because the controlled prop
+resets the native text on the next render; only the event counter catches it
+(`expected "0", got "1"`). The other failures by name: `expected "1", got "0"`
+(dropped `onChange` counter), `expected "t=a b", got "t=a<newline>b"` (a
+textarea in place of the input), `expected "o=123456", got "o=ab"` (skipped OTP
+copy), `expected "one two", got "changed"` (a rendered source value), and
+`expected "u=abc", got "u="` (a second `cmd-z` instead of redo).
+
 ## Evidence on this host
 
-The suite is **111/111 green** here (`exit 0`, 4106 checks, 65 capabilities,
-**247.2 s** at the plan `762` gate with plans `754` and `761`'s pixel probes,
-2026-10-20; plan
+The suite is **112/112 green** here (`exit 0`, 4152 checks, 65 capabilities,
+**339.8 s** on the head that adds plan `764`'s 46-check `editing-actions`,
+2026-10-20; the runs at the plan `762` gate read 111/111 · 4106 · 247.2 s with plans
+`754` and `761`'s pixel probes; plan
 `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check
 `state-pixels`, plan `745` added the 64-check
 `border-pixels`; plan `739`'s gate read 108/108 and 3963 on the shadow-pixel
@@ -2334,7 +2380,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-111/111 scenarios passed · capabilities: layout=verified root=verified text=verified
+112/112 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2357,7 +2403,11 @@ head that includes plan `761` (`05013949`; 0 behind `origin/master`), with the
 whole headless registry at **111/111** (**4106** checks, 65 capabilities,
 247.2 s) on the same code (an independent run on the same head measured
 1179.7 s live and 321.6 s headless, identical counts, differing only in
-wall-clock). Plan `762` is the current promotion gate, and the
+wall-clock). The live registry is now **101** entries with plan `764`'s
+`live-editing-actions` (73 checks, derived live total **2933** = `2860 + 73`);
+the full headless suite on that head is **112/112 · 4152 · 339.8 s**, and the
+next full live gate belongs to the promotion plan that follows. Plan `762` is
+the last run gate, and the
 gate covers every registered id: plan `761`'s `live-opacity-pixels` (29 checks)
 joins the sequence here. It includes every scenario this branch added:
 `live-theme-platform` (plan `654`),
@@ -2370,9 +2420,11 @@ checks (plan `676`), `live-pixel-colour` (22), `live-content`'s image pixels
 `live-media`'s waveform pixels (25), `live-click-routing`'s click-routing
 contract (25), `live-shadow-pixels`' ring/elevation pixels (28),
 `live-border-pixels`' border/radius pixels (64) and `live-state-pixels`'
-hover/active pixels (50) and `live-opacity-pixels`' disabled/subtree pixels (29).
+hover/active pixels (50) and `live-opacity-pixels`' disabled/subtree pixels (29)
+and `live-editing-actions`' clipboard, cut/paste, undo/redo and OTP-paste checks
+(73).
 The total is plan `755`'s 2831 plus plan `761`'s 29, and the headless registry is
-that gate's 4077 plus `opacity-pixels`' 29. A plain
+that gate's 4077 plus `opacity-pixels`' 29 plus `editing-actions`' 46 (`4152`). A plain
 `--all` wrote no frame and no `provenance.json`. Plan `762` re-ran both suites on
 this head and is the current promotion gate. This gate supersedes plan `755`'s
 99/99 (`2831`) on `7b304a1f`, plan `751`'s

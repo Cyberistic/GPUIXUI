@@ -41,6 +41,7 @@ import { inputScenario } from "./input.js";
 import { inputPayloadScenario } from "./input-payload.js";
 import { clickRoutingScenario } from "./click-routing.js";
 import { textEntryScenario } from "./text-entry.js";
+import { editingActionsScenario } from "./editing-actions.js";
 import { pointerEntryScenario } from "./pointer-entry.js";
 import { focusScenario } from "./focus.js";
 import { rovingFocusScenario } from "./roving-focus.js";
@@ -209,6 +210,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   inputPayloadScenario,
   clickRoutingScenario,
   textEntryScenario,
+  editingActionsScenario,
   pointerEntryScenario,
   focusScenario,
   rovingFocusScenario,

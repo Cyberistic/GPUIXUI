@@ -108,7 +108,33 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 135/135 plans-and-harness
+`[x]` `[██████████]` 136/136 plans-and-harness
+
+`[x]` **Prove the editor's clipboard and history, and the OTP paste path** per
+      plan `764`: the native `<input>`/`<textarea>` binds `cmd-c`/`cmd-x`/`cmd-v`/
+      `cmd-z`/`shift-cmd-z` and no scenario had ever pressed one, so a runtime
+      that dropped the clipboard or the undo stack would have stayed green; the
+      `OTPField` multi-character fill was "proven only as a pure rule". New
+      `editing-actions` (**46 checks**) and `live-editing-actions` (**73 checks**)
+      prove: a copy writes the selected run, cut copies then deletes in one
+      change, a paste is **one** `onChange` (idempotent second paste included),
+      a single-line field turns a pasted newline into a space while a textarea
+      keeps it, `readOnly` refuses paste/cut/undo and a refused cut leaves the
+      clipboard alone, contiguous typing coalesces into one undo step with
+      `shift-cmd-z` restoring it, and a six-digit paste fills the OTP with one
+      `onComplete` and focus on the last cell. **Measured corrections:** the
+      offscreen `TestRenderer` wraps the **real** platform, so the pasteboard is
+      the system one — the probe copies before every paste and both hosts
+      replace the user's clipboard (`COMPONENTS.md` said there was no clipboard
+      at all); the `700 ms` coalescing window needs a real clock, so an 800 ms
+      gap is a null result headless and fails live as `u=ab`; M1's value
+      assertion is not load-bearing for a `readOnly` paste (the controlled prop
+      resets the text), the event counter is. Five source mutations and two
+      reverse proofs observed and reverted by name (§7/§12). Focused ids run:
+      `editing-actions`, `live-editing-actions` (twice each); end-of-task full
+      headless **112/112** (**4152** checks, 65 capabilities, exit `0`; exactly
+      `4106 + 46`). The full live suite was not run (merge gate); live registry
+      **100 → 101** (derived total `2860 + 73`).
 
 `[x]` **Prove declared opacity, the disabled state and its subtree in the frame**
       per plan `761`: eleven shipped surfaces express `disabled` as nothing but

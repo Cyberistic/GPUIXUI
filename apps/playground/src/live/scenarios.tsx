@@ -163,6 +163,7 @@ import { treeReorderScenario } from "../scenarios/tree-reorder.js";
 import { tabOverflowScenario } from "../scenarios/tab-overflow.js";
 import { tabFocusScenario } from "../scenarios/tab-focus.js";
 import { textEntryScenario } from "../scenarios/text-entry.js";
+import { editingActionsScenario } from "../scenarios/editing-actions.js";
 import { virtualizedTreeScenario } from "../scenarios/virtual-tree.js";
 import { rovingFocusScenario } from "../scenarios/roving-focus.js";
 import { scaleCostScenario } from "../scenarios/scale.js";
@@ -293,6 +294,11 @@ const paintedCount = (ctx: LiveContext, needle: string) =>
     Arr.length(Arr.filter(lines, (entry) => Str.includes(needle)(entry))),
   );
 
+/** The poll used by every text wait: 50 ms for three seconds, then give up. */
+const waitSchedule = Schedule.spaced("50 millis").pipe(
+  Schedule.upTo({ duration: "3 seconds" }),
+);
+
 /** Waits up to three seconds for `testId`'s painted text to contain `needle`. */
 const waitForText = (ctx: LiveContext, testId: string, needle: string) =>
   ctx.host.text(testId).pipe(
@@ -301,11 +307,7 @@ const waitForText = (ctx: LiveContext, testId: string, needle: string) =>
         ? Effect.void
         : Effect.fail("not yet"),
     ),
-    Effect.retry(
-      Schedule.spaced("50 millis").pipe(
-        Schedule.upTo({ duration: "3 seconds" }),
-      ),
-    ),
+    Effect.retry(waitSchedule),
     Effect.orElseSucceed(() => undefined),
   );
 
@@ -315,11 +317,7 @@ const waitForTextNot = (ctx: LiveContext, testId: string, value: string) =>
     Effect.flatMap((text) =>
       text !== null && text !== value ? Effect.void : Effect.fail("not yet"),
     ),
-    Effect.retry(
-      Schedule.spaced("50 millis").pipe(
-        Schedule.upTo({ duration: "3 seconds" }),
-      ),
-    ),
+    Effect.retry(waitSchedule),
     Effect.orElseSucceed(() => undefined),
   );
 
@@ -331,11 +329,7 @@ const waitForTextLacking = (ctx: LiveContext, testId: string, needle: string) =>
         ? Effect.void
         : Effect.fail("not yet"),
     ),
-    Effect.retry(
-      Schedule.spaced("50 millis").pipe(
-        Schedule.upTo({ duration: "3 seconds" }),
-      ),
-    ),
+    Effect.retry(waitSchedule),
     Effect.orElseSucceed(() => undefined),
   );
 
@@ -1198,6 +1192,263 @@ const liveTextEntry: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTextEntry.id}.png`);
+    }),
+};
+
+/** Waits up to three seconds for `testId` to read exactly `expected`. */
+const waitForEdit = (ctx: LiveContext, testId: string, expected: string) =>
+  textOf(ctx, testId).pipe(
+    Effect.flatMap((line) =>
+      line === expected ? Effect.void : Effect.fail("not yet"),
+    ),
+    Effect.retry(waitSchedule),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/**
+ * `live-editing-actions` — the clipboard and history chords in a real window.
+ *
+ * The headless twin reads the native editor's value from the accessibility
+ * dump; the live window has no a11y value (plan `197`), so this twin reads the
+ * view's readouts. It replaces the system pasteboard on this host, exactly as
+ * the headless renderer does.
+ */
+const liveEditingActions: LiveScenario = {
+  id: "live-editing-actions",
+  title: "Live editing actions: copy, cut, paste, undo and redo",
+  capability: "input",
+  view: editingActionsScenario.view,
+  ready: "edit-source",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. Copy a known run.
+      yield* ctx.host.click("edit-source");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("cmd-c");
+      yield* settle;
+
+      // 2. Paste once.
+      yield* ctx.host.click("edit-target");
+      yield* settle;
+      yield* ctx.host.key("cmd-v");
+      yield* waitForEdit(ctx, "edit-target-value", "t=one two");
+      yield* ctx.expectEqual(
+        "a live paste writes the copied run",
+        yield* textOf(ctx, "edit-target-value"),
+        "t=one two",
+      );
+      yield* ctx.expectEqual(
+        "a live paste reports one change",
+        yield* textOf(ctx, "edit-target-events"),
+        "1",
+      );
+      yield* ctx.expectEqual(
+        "a live paste keeps focus",
+        yield* focusedOf(ctx),
+        "edit-target",
+      );
+
+      // 3. Paste over a selection. The value is unchanged, so the event counter
+      // is the only thing that can prove the second paste landed; waiting on
+      // the value would resolve on the first paste's text.
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("cmd-v");
+      yield* waitForEdit(ctx, "edit-target-events", "2");
+      yield* ctx.expectEqual(
+        "a live replacing paste keeps the run",
+        yield* textOf(ctx, "edit-target-value"),
+        "t=one two",
+      );
+      yield* ctx.expectEqual(
+        "a live replacing paste is one more change",
+        yield* textOf(ctx, "edit-target-events"),
+        "2",
+      );
+
+      // 4. Cut.
+      yield* ctx.host.click("edit-cut");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("cmd-x");
+      yield* waitForEdit(ctx, "edit-cut-value", "c=");
+      yield* ctx.expectEqual(
+        "a live cut reports one change",
+        yield* textOf(ctx, "edit-cut-events"),
+        "1",
+      );
+
+      // 5. The cut run is on the clipboard.
+      yield* ctx.host.click("edit-target");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("cmd-v");
+      yield* waitForEdit(ctx, "edit-target-value", "t=cut me");
+      yield* ctx.expectEqual(
+        "the live cut run pastes elsewhere",
+        yield* textOf(ctx, "edit-target-value"),
+        "t=cut me",
+      );
+
+      // 6. A pasted newline becomes a space in a single-line field.
+      yield* ctx.host.click("edit-area-source");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("cmd-c");
+      yield* settle;
+      yield* ctx.host.click("edit-target");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("cmd-v");
+      yield* waitForEdit(ctx, "edit-target-value", "t=a b");
+      yield* ctx.expectEqual(
+        "a live single-line field turns a pasted newline into a space",
+        yield* textOf(ctx, "edit-target-value"),
+        "t=a b",
+      );
+
+      // 7. A textarea keeps it, and one undo reverses the paste.
+      yield* ctx.host.click("edit-area");
+      yield* settle;
+      yield* ctx.host.key("cmd-v");
+      yield* waitForEdit(ctx, "edit-area-value", "a=a|b");
+      yield* ctx.expectEqual(
+        "a live textarea keeps the pasted newline",
+        yield* textOf(ctx, "edit-area-value"),
+        "a=a|b",
+      );
+      yield* ctx.host.key("cmd-z");
+      yield* waitForEdit(ctx, "edit-area-value", "a=");
+      yield* ctx.expectEqual(
+        "one live undo reverses the whole paste",
+        yield* textOf(ctx, "edit-area-value"),
+        "a=",
+      );
+
+      // 8. readOnly refuses paste and cut.
+      yield* ctx.host.click("edit-locked");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("cmd-v");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live read-only field keeps focus",
+        yield* focusedOf(ctx),
+        "edit-locked",
+      );
+      yield* ctx.expectEqual(
+        "a live read-only field refuses the paste",
+        Arr.some(yield* ctx.host.paintedText(), Str.includes("lockedno")),
+        false,
+      );
+      yield* ctx.host.key("cmd-x");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live read-only field reports no change",
+        yield* textOf(ctx, "edit-locked-events"),
+        "0",
+      );
+
+      // 9. The refused cut and a no-selection copy leave the clipboard alone.
+      yield* ctx.host.click("edit-target");
+      yield* settle;
+      yield* ctx.host.key("cmd-c");
+      yield* settle;
+      yield* ctx.host.click("edit-area");
+      yield* settle;
+      yield* ctx.host.key("cmd-v");
+      yield* waitForEdit(ctx, "edit-area-value", "a=a|b");
+      yield* ctx.expectEqual(
+        "the live clipboard survives a refused cut and an empty copy",
+        yield* textOf(ctx, "edit-area-value"),
+        "a=a|b",
+      );
+      yield* ctx.host.key("cmd-z");
+      yield* waitForEdit(ctx, "edit-area-value", "a=");
+
+      // 10. Coalescing, redo and a new edit.
+      yield* ctx.host.click("edit-undo");
+      yield* settle;
+      yield* ctx.host.key("a b c");
+      yield* waitForEdit(ctx, "edit-undo-value", "u=abc");
+      yield* ctx.host.key("cmd-z");
+      yield* waitForEdit(ctx, "edit-undo-value", "u=");
+      yield* ctx.expectEqual(
+        "one live undo reverses a coalesced run",
+        yield* textOf(ctx, "edit-undo-value"),
+        "u=",
+      );
+      yield* ctx.host.key("shift-cmd-z");
+      yield* waitForEdit(ctx, "edit-undo-value", "u=abc");
+      yield* ctx.expectEqual(
+        "live redo restores the run",
+        yield* textOf(ctx, "edit-undo-value"),
+        "u=abc",
+      );
+      yield* ctx.host.key("d");
+      yield* waitForEdit(ctx, "edit-undo-value", "u=abcd");
+      yield* ctx.host.key("cmd-z");
+      yield* waitForEdit(ctx, "edit-undo-value", "u=abc");
+
+      // 11. A paste is its own history step.
+      yield* ctx.host.key("cmd-v");
+      yield* waitForEdit(ctx, "edit-undo-value", "u=abca b");
+      yield* ctx.expectEqual(
+        "a live paste lands after the restored run",
+        yield* textOf(ctx, "edit-undo-value"),
+        "u=abca b",
+      );
+      yield* ctx.host.key("cmd-z");
+      yield* waitForEdit(ctx, "edit-undo-value", "u=abc");
+      yield* ctx.expectEqual(
+        "one live undo reverses the paste and keeps the typed run",
+        yield* textOf(ctx, "edit-undo-value"),
+        "u=abc",
+      );
+
+      // 12. The OTP paste path.
+      yield* ctx.host.click("edit-otp-source");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("cmd-c");
+      yield* settle;
+      yield* ctx.host.click("edit-otp-cell-1");
+      yield* waitForFocus(ctx, "edit-otp-cell-1");
+      yield* ctx.expectEqual(
+        "the live code cell takes focus before the paste",
+        yield* focusedOf(ctx),
+        "edit-otp-cell-1",
+      );
+      yield* ctx.host.key("cmd-v");
+      yield* waitForEdit(ctx, "edit-otp-value", "o=123456");
+      yield* ctx.expectEqual(
+        "a live pasted code fills the field",
+        yield* textOf(ctx, "edit-otp-value"),
+        "o=123456",
+      );
+      yield* ctx.expectEqual(
+        "a live pasted code completes once",
+        yield* textOf(ctx, "edit-otp-completes"),
+        "1",
+      );
+      yield* waitForFocus(ctx, "edit-otp-cell-6");
+      yield* ctx.expectEqual(
+        "live focus lands on the last pasted cell",
+        yield* focusedOf(ctx),
+        "edit-otp-cell-6",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${liveEditingActions.id}.png`,
+      );
     }),
 };
 
@@ -13863,6 +14114,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   clickRouting,
   pointerEntry,
   liveTextEntry,
+  liveEditingActions,
   liveDragTargets,
   liveDragAutoscroll,
   scroll,
