@@ -1450,6 +1450,16 @@ retired once both branches are one
       with a blank fallback. 16 native cases (13 → 16), all four red at `HEAD`;
       docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
       (owner: components)
+    - [x] A description's sentence join never doubles a stop — plan 804; measured
+      2026-10-20: the `field` example's input announced `"… e.g.
+      design-system.. Required"`. Two sources: `internal/state-description.ts`
+      joined parts with `". "` regardless of the text so far, and `FieldInput`
+      built its own `${text}. Required` before calling it. One exported
+      `sentenceJoin` now appends with a space when the accumulated text already
+      ends in `.`, `!` or `?` (an abbreviation inside the caller's text is never
+      rewritten), and both callers use it; 3 pure + 1 native field case, all four
+      red at `HEAD`; docs, `docs/field.mdx`, `COMPONENTS.md`, `PLAN.md` D30 and
+      the plan index synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
@@ -1842,7 +1852,12 @@ the docs-site workstream; the `packages/components` half is plan 337)
       changed. Plan 783 re-ran the same gates on 2026-10-20: `check`, `lint` and
       `test` exit 0 (unit 506 in 48 files) and the full native suite is **996
       passed / 20 failed of 1016** — the seven new listbox cases pass and the 20
-      failures are the pre-change run's same list.
+      failures are the pre-change run's same list. Plans 802 and 804 re-ran
+      `check`, `lint` and `test` on 2026-10-20: all exit 0 (unit **512** in 48
+      files) and the full native suite is **1022 passed / 20 failed of 1042** —
+      the four new message/field cases pass, and the 20 failures are the same
+      recorded plan-540 binding classes (position, focus and the command-menu
+      scroll), with no message or field case among them.
 
 ## Swarm-owned blockers (fix these)
 

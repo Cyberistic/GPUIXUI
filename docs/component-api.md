@@ -205,6 +205,10 @@ a description, not a disabled role: assistive technology hears that the control
 is unavailable while the host still exposes it as an ordinary control (plan
 `516`).
 
+The join is sentence-aware: when the caller's text already ends in `.`, `!` or
+`?`, the derived word is appended with a single space, so a description never
+reads `..` (plan `804`).
+
 **A derived status is described, not only painted.** A non-interactive row that
 derives a state from its position announces it through the same supported
 channel: `StepperStep` and `TimelineItem` append `Complete`, `Current` or

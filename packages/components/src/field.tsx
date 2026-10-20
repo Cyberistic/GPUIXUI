@@ -37,7 +37,10 @@ import {
   textStyle,
   useTheme,
 } from "./internal/theme.js";
-import { stateDescription } from "./internal/state-description.js";
+import {
+  sentenceJoin,
+  stateDescription,
+} from "./internal/state-description.js";
 
 /** {@link Field} props. */
 export interface FieldProps extends Props {
@@ -230,7 +233,8 @@ export const FieldInput = ({
   const message = field?.error ?? field?.description;
   const description = Option.match(Option.fromNullishOr(message), {
     onNone: () => (field?.required === true ? "Required" : undefined),
-    onSome: (text) => (field?.required === true ? `${text}. Required` : text),
+    onSome: (text) =>
+      field?.required === true ? sentenceJoin([text, "Required"]) : text,
   });
 
   return (

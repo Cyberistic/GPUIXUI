@@ -141,9 +141,10 @@ press shows the ring too; that is the runtime's limit, not a heuristic of ours.
 
 ## Verification
 
-`src/behaviour/field.test.tsx` runs in the real GPUix renderer (12 tests): label,
+`src/behaviour/field.test.tsx` runs in the real GPUix renderer (13 tests): label,
 description and control rendering; the error replacing the description with
-`role="alert"`; the required marker and clean accessible name; the destructive
+`role="alert"`; the required marker and clean accessible name; a required
+description that already ends a sentence keeping one stop; the destructive
 border in both themes; an invalid focused input keeping both the destructive
 border and the token ring in both themes, and an unfocused invalid input painting
 no ring; typed text reaching `onChange`; the disabled input leaving the tab

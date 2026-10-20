@@ -7,7 +7,10 @@
  * an invalid focused control that painted no focus ring, so focus was invisible
  * once a field was in error; an input whose typing never reached `onChange`; and
  * a ring that followed React `focus`/`blur` only, so a field focused by code
- * painted none while a seeded ring stayed after focus left (plan 748).
+ * painted none while a seeded ring stayed after focus left (plan 748); and a
+ * required field whose description already ended a sentence, announced as
+ * `"… design-system.. Required"` because the required sentence was built with a
+ * raw template instead of the shared join (plan 804).
  */
 
 import * as Option from "effect/Option";
@@ -79,6 +82,28 @@ describe("Field", () => {
     expect(form.renderer.findByTestId("email")?.customProps).toMatchObject({
       "aria-label": "Email",
       "aria-description": "We never share it. Required",
+    });
+
+    form.unmount();
+  });
+
+  it("does not double the stop of a description that ends a sentence", () => {
+    const form = renderComponent(
+      <Field
+        label="Slug"
+        description="Use a slug, e.g. design-system."
+        required
+        style={{ width: 320, padding: 40 }}
+      >
+        <FieldInput testId="slug" />
+      </Field>,
+    );
+
+    expect(form.renderer.getAllText()).toContain(
+      "Use a slug, e.g. design-system.",
+    );
+    expect(form.renderer.findByTestId("slug")?.customProps).toMatchObject({
+      "aria-description": "Use a slug, e.g. design-system. Required",
     });
 
     form.unmount();

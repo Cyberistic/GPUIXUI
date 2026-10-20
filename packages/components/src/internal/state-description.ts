@@ -5,7 +5,10 @@
  * drops its handlers and dims is otherwise announced as an ordinary control,
  * and a progress row's complete/upcoming state exists only as colour.
  * `aria-description` is supported, so a part appends its own state to whatever
- * description the caller already supplies (plans 516 and 626).
+ * description the caller already supplies (plans 516 and 626). Parts are joined
+ * as sentences: one that already ends in `.`, `!` or `?` keeps its stop, so a
+ * caller's full sentence never reads `..` and an abbreviation inside it is
+ * never rewritten (plan 804).
  */
 
 import { Match, pipe } from "effect";
@@ -30,6 +33,24 @@ const statusText = (status: ProgressStatus): string =>
     Match.exhaustive,
   );
 
+/** Whether `text` already closes a sentence, so a join adds no second stop. */
+const endsSentence = (text: string): boolean =>
+  Str.endsWith(".")(text) || Str.endsWith("!")(text) || Str.endsWith("?")(text);
+
+/**
+ * Join description parts as sentences: a part that already ends in `.`, `!` or
+ * `?` keeps its stop, so appending a state never reads `..` and an abbreviation
+ * inside the caller's text is never rewritten (plan 804).
+ */
+export const sentenceJoin = (parts: ReadonlyArray<string>): string =>
+  Arr.reduce(parts, "", (text, part) =>
+    Str.isEmpty(text)
+      ? part
+      : endsSentence(text)
+        ? `${text} ${part}`
+        : `${text}. ${part}`,
+  );
+
 /** Join the non-empty parts once, dropping a repeated phrase. */
 const joined = (
   ...authored: ReadonlyArray<string | undefined>
@@ -47,7 +68,7 @@ const joined = (
     Arr.dedupe,
     Arr.match({
       onEmpty: () => ({}),
-      onNonEmpty: (parts) => ({ "aria-description": Arr.join(parts, ". ") }),
+      onNonEmpty: (parts) => ({ "aria-description": sentenceJoin(parts) }),
     }),
   );
 
