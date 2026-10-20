@@ -68,6 +68,7 @@ import type { PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   mergeStyle,
+  paintsContent,
   useControlState,
   useFloatingFollow,
 } from "./internal.js";
@@ -76,8 +77,11 @@ import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
   /**
-   * The label. Long text wraps inside a measured cap; keep it short anyway,
-   * because a tip is a hint, not a paragraph.
+   * The tip. A string is also the trigger's description; long text wraps inside
+   * a measured cap; keep it short anyway, because a tip is a hint, not a
+   * paragraph. Content that paints nothing — a computed `null`, an empty list, a
+   * blank string — is **no tip**: the child renders unchanged instead of opening
+   * an empty layer (plans `573`, `744`).
    */
   readonly content: ReactNode;
   /**
@@ -250,8 +254,11 @@ export interface TooltipHandlers {
  *
  * A string that trims to nothing is **no tip** (plan `573`): the child renders
  * unchanged, so a computed blank translation cannot publish a blank description
- * or open an empty popover. A real string is trimmed for the accessibility tree
- * and painted exactly as the caller wrote it.
+ * or open an empty popover. Neither is any other content that paints nothing
+ * (plan `744`) — a computed `null` or an empty list would still open a layer and
+ * publish an unnamed tooltip node; an element always counts, because the
+ * component cannot know what it paints. A real string is trimmed for the
+ * accessibility tree and painted exactly as the caller wrote it.
  */
 export const renderTooltip = (
   {
@@ -270,7 +277,10 @@ export const renderTooltip = (
   handlers: TooltipHandlers = {},
 ): ReactElement => {
   const text = P.isString(content) ? ariaName(content) : undefined;
-  if (P.isString(content) && text === undefined) {
+  // A tip that paints nothing is no tip (plans 573, 744): a computed node can
+  // resolve to `null`, and a layer with no content still publishes an unnamed
+  // `Tooltip` node. An element always counts — only absent content is absent.
+  if (!paintsContent(content)) {
     return <>{children}</>;
   }
   const announced = ariaName(label) ?? text;

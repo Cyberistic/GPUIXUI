@@ -180,7 +180,7 @@ tip is closed.
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `content` | `ReactNode` | — (required) | the tip; long text wraps inside a cap set by the resolved side's room. A string that trims to nothing is **no tip**: the trigger renders unchanged |
+| `content` | `ReactNode` | — (required) | the tip; long text wraps inside a cap set by the resolved side's room. Content that paints nothing — a string that trims to nothing, a computed `null` or an empty list — is **no tip**: the trigger renders unchanged (plans `573`, `744`) |
 | `label` | `string` | a string content's text | the tip's accessible summary — the trigger's description and the tip's name. A **node** tip needs one, because the runtime cannot read text out of a node (plan 742) |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
 | `open` | `boolean` | uncontrolled | controls the tip; requests arrive through `onOpenChange` |
@@ -229,7 +229,16 @@ or, for a hovered tip, until the pointer leaves and returns.
 - **A blank string is no tip** (plan `573`). A computed missing translation must
   not publish `aria-description: "   "` or open an empty popover named with
   whitespace; the child renders without the trigger wrapper, the description and
-  the layer. A non-string node is still content and still paints.
+  the layer.
+- **Content that paints nothing is no tip** (plan `744`). The plan-`573` gate
+  covered strings only, so a computed **node** tip that resolved to `null`
+  opened an empty anchored layer and published an unnamed `tooltip` node, while
+  `false` and a blank string opened nothing — whether a blank tip appeared
+  depended on which falsy value the caller's conditional produced. The gate is
+  the same `paintsContent` rule the labelled `Checkbox`/`Switch` rows use
+  (plan `743`): absent content returns the child unchanged, and a `label` cannot
+  resurrect it. Any **element** is still content — even an empty fragment —
+  because the component cannot know what an element paints.
 - **A blank description is no description** (plan `586`). The rule is not
   tooltip-specific: every control that takes the public `aria-description` prop
   trims a real value and omits a blank one, because a computed empty translation
@@ -329,7 +338,11 @@ trigger's edges, because a clamped layer's box would sit across the trigger.
   cannot resurrect a whitespace-only string. **Blank content (573):** a
   whitespace-only string returns
   the child alone (no trigger wrapper, no tip), and a real string is trimmed for
-  the description and the tip's name. **Open state (347):** the resolved `open`,
+  the description and the tip's name. **Absent content (744):** `src/components/Tooltip.test.tsx`
+  returns the child alone for `null`, `undefined`, booleans, a blank string and
+  an empty list, keeps a real string and a real node tip, and proves a label
+  cannot resurrect absent content — the old string-only gate opened a wrapper for
+  the absent values. **Open state (347):** the resolved `open`,
   the `disableHoverableContent` flag and the `onOpenChange` handler reach the
   host root, and a closed tip still passes `open={false}` rather than leaving
   the runtime uncontrolled. **Long content (391):** a cap makes the tip wrap and
@@ -354,7 +367,9 @@ trigger's edges, because a clamped layer's box would sit across the trigger.
 - `runtime/tooltip-rich.runtime.test.tsx` — a rich (node) tip: with `label` the
   open tip is a `tooltip` node named by it and the trigger carries the same
   description; without one the tip paints and stays unnamed; a blank label
-  leaves a string tip's own text as the announcement (plan `742`).
+  leaves a string tip's own text as the announcement (plan `742`). An absent
+  computed tip (`content={null}`) paints no layer, publishes no `tooltip` node
+  and leaves the trigger with no description, even with a `label` (plan `744`).
 - `runtime/tooltip-dismiss.runtime.test.tsx` — a focus-opened tip is dismissed
   by a real click on every single-root trigger (`Button`, `IconButton`, `Toggle`,
   `Checkbox`, `Switch`, `Input`, `TextArea`, `NumberField`, `Select`, `Slider`,

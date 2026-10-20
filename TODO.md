@@ -2343,6 +2343,18 @@ retired once both branches are one
       2 runtime cases, failing against the old `children.length` gate (offline
       69 files / 955 tests, scoped live 1 file / 8; plan `743`).
 
+`[x]` `packages/primitives`: **a tip that paints nothing opened an empty layer**
+      — plan `573` gated only a **string** that trimmed to nothing, so a
+      computed node tip resolving to `null` still opened an empty anchored
+      surface and published an unnamed `Tooltip` node, while `false` and a blank
+      string opened nothing: the caller's falsy branch decided the behaviour.
+      The one `paintsContent` rule from plan `743` now gates the tip — absent
+      content returns the child unchanged with no description, while any element
+      is still content. 3 element + 1 scoped runtime case; the null/undefined/
+      blank cases and the runtime case fail against the old gate, and the real
+      node tip fails against an over-broad one (offline 70 files / 958 tests,
+      scoped live 1 file / 4; plan `744`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

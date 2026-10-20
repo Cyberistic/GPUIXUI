@@ -13,6 +13,7 @@
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
+import { Checkbox } from "../src/components/Checkbox.js";
 import { Text } from "../src/components/Text.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { a11yNode, type Runtime } from "../src/testing/index.js";
@@ -107,5 +108,40 @@ it("keeps a string tip's text when the label is blank", async () => {
   ).toBe(true);
   expect(Option.getOrUndefined(descriptionOf(runtime, "Button", "Save"))).toBe(
     "A hint",
+  );
+});
+
+it("paints no layer or tooltip node when the computed tip is absent", async () => {
+  // Plan 744: a computed node tip that resolved to `null` opened an empty
+  // anchored layer and published an unnamed `Tooltip` node — while `false` and
+  // a blank string already opened nothing. Absent content is no tip at all.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={null} label="Billing cycle" side="bottom" testId="tip">
+        <Checkbox testId="trigger" label="Alerts" />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.flush();
+  expect(Option.isNone(runtime.element("tip"))).toBe(true);
+  expect(Option.isSome(a11yNode(runtime.a11y(), { role: "Tooltip" }))).toBe(
+    false,
+  );
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "CheckBox", label: "Alerts" }),
+    ),
+  ).toBe(true);
+  // The label cannot resurrect an absent tip: no description either.
+  expect(descriptionOf(runtime, "CheckBox", "Alerts")).toStrictEqual(
+    Option.none(),
+  );
+  // A hover still paints nothing — there is no layer to open.
+  runtime.hover("trigger");
+  runtime.flush();
+  expect(runtime.allText()).toStrictEqual([]);
+  expect(Option.isSome(a11yNode(runtime.a11y(), { role: "Tooltip" }))).toBe(
+    false,
   );
 });
