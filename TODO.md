@@ -2265,6 +2265,17 @@ retired once both branches are one
       search includes the current item (plan `731`; offline 17 cases in the new
       file, scoped runtime 8/8).
 
+`[x]` `packages/primitives`: **a deferring controlled parent trapped `Select`
+      type-ahead on one option** — measured (2026-10-20): with a parent that
+      pins a value and records reports, four `e` presses reported
+      `['eu','eu','eu','eu']`, because the search origin was the rendered value
+      rather than the last match (the `RadioGroup`/`ToggleGroup`/`Rating` class
+      plan `359` fixed). The hook now owns a cursor, reset when the value moves
+      elsewhere, so a deferring parent cycles (`eu, ee, eu, ee`) and an applying
+      parent is unchanged. 2 runtime cases (file 10/10), both new directions
+      failing when reverted; offline 69 files / 940 tests, scoped live 5 files /
+      116 (plan `732`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

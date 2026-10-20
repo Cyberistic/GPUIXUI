@@ -215,7 +215,9 @@ typed prefix the way a desktop select does (plan `731`):
 
 - the next **enabled** option whose text (`label`, else `value`) starts with the
   prefix is committed through `onValueChange`; the search starts after the
-  current selection and wraps;
+  **last match**, not the accepted value — a controlled parent that defers or
+  rejects a report still advances, and a value that changes between keystrokes
+  moves the cursor with it (plan `732`) — and wraps;
 - pressing the same letter again advances to the next match — `e`, `e` on
   Europe/Estonia chooses Europe, then Estonia;
 - consecutive letters accumulate for **500 ms** after the last keystroke, so
@@ -462,6 +464,11 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   miss does not poison the next letter, `cmd-e` and a held key report nothing
   while the caller's handler still sees them, and the caller sees every key
   (plan `731`). Removing the trigger's composed handler fails four cases by name.
+  The last two cases are the cursor rule (plan `732`): a controlled parent that
+  pins a non-matching value still cycles Europe → Estonia → Europe → Estonia
+  (the value-derived origin reported the same option four times), and a value
+  changed between keystrokes moves the cursor, so the next prefix wraps from the
+  new option instead of staying on the stale one.
 - `src/components/state-style.test.tsx` — the container state payload, each
   per-item payload, and the callback winning over the component's own rules
   (plans 080, 081).

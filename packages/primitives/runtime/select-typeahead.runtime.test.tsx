@@ -15,7 +15,12 @@
  * 4. a modifier chord and a held key are not typing (the application owns the
  *    chord, and a held key repeats natively);
  * 5. the caller's `onKeyDown` still receives every key — the wrapper composes
- *    its rule instead of replacing the caller's handler.
+ *    its rule instead of replacing the caller's handler;
+ * 6. the search starts after the **last match**, not the accepted value — the
+ *    rule every roving composite follows (plan `359`). A controlled parent that
+ *    defers or rejects a report must not trap a repeated letter on one option,
+ *    and a value that changes between keystrokes must move the cursor with it
+ *    (plan `732`).
  *
  * Measured on the pinned release build: a simulated printable key arrives as
  * `{ key: "e", keyChar: undefined }`, so the rule's fallback to `key` is what
@@ -121,4 +126,76 @@ it("calls the caller's handler for every key the wrapper reads", async () => {
   type(current, "u");
   type(current, "g");
   expect(current.keys).toEqual(["e", "u", "g"]);
+});
+
+/**
+ * A controlled parent that records every report and never applies one.
+ *
+ * This is the plan-`359` scene for the keyboard cursor: the value the component
+ * reads stays where the parent put it, so a rule that searches from the value
+ * repeats one match forever.
+ */
+const deferring = async (
+  value: string,
+  options: ReadonlyArray<{ readonly value: string; readonly label: string }>,
+): Promise<{
+  readonly runtime: Awaited<ReturnType<typeof openWindow>>;
+  readonly values: ReadonlyArray<string>;
+  readonly show: (next: string) => void;
+}> => {
+  const runtime = await openWindow();
+  const values: string[] = [];
+  const show = (next: string): void => {
+    runtime.render(
+      <Surface>
+        <Select
+          testId="s"
+          label="Country"
+          options={options}
+          value={next}
+          onValueChange={(reported) => values.push(reported)}
+        />
+      </Surface>,
+    );
+  };
+  show(value);
+  return { runtime, values, show };
+};
+
+it("advances from the last match when a controlled parent defers the value", async () => {
+  // `us` is not an `e` match, so every match differs from the pinned value and
+  // each one is reported; the pinned value never moves, which is the defect.
+  const current = await deferring("us", OPTIONS);
+  const press = (): void => {
+    current.runtime.keyDown("s-trigger", "e");
+    current.runtime.flush();
+  };
+  press();
+  press();
+  press();
+  press();
+  // Europe(0) → Estonia(1) → wrap Europe(0) → Estonia(1). Searching from the
+  // unapplied value would report Europe every time.
+  expect(current.values).toEqual(["eu", "ee", "eu", "ee"]);
+});
+
+it("moves the cursor when the value changes between keystrokes", async () => {
+  const options = [
+    { value: "eu", label: "Europe" },
+    { value: "ee", label: "Estonia" },
+    { value: "ec", label: "Ecuador" },
+  ] as const;
+  const current = await deferring("eu", options);
+  const press = (): void => {
+    current.runtime.keyDown("s-trigger", "e");
+    current.runtime.flush();
+  };
+  press();
+  // The parent moved the value without reporting: the cursor follows it to
+  // Ecuador (2), so the next prefix wraps to Europe instead of landing on
+  // Ecuador again from Estonia's stale position.
+  current.show("ec");
+  current.runtime.flush();
+  press();
+  expect(current.values).toEqual(["ee", "eu"]);
 });

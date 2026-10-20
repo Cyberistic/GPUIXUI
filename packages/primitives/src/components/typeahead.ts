@@ -26,9 +26,17 @@ const monotonicNanos = (): bigint => Effect.runSync(Clock.monotonicTimeNanos);
 /**
  * Type-ahead for a list-like control.
  *
- * `from` is the current item's index, so a repeated letter advances to the next
- * match; `onMatch` receives the item and its index. A keystroke that matches
- * nothing clears the prefix, so an unmatched letter cannot poison the next one.
+ * `from` is the committed item's index; the search starts after the last match,
+ * so a repeated letter advances to the next match. `onMatch` receives the item
+ * and its index. A keystroke that matches nothing clears the prefix, so an
+ * unmatched letter cannot poison the next one.
+ *
+ * The search starts after the **last match**, not after `from` (plan `732`). A
+ * controlled parent may defer or reject a reported value, which would leave
+ * `from` pointing at the same item and trap a repeated letter on one match —
+ * the rule `RadioGroup`/`ToggleGroup`/`Rating` already follow for their keyboard
+ * cursor (plan `359`). `from` moves the cursor only when the value itself moved
+ * (an applied selection, a click, a reset).
  */
 export const useTypeahead = <Item extends TypeaheadItem>(
   items: ReadonlyArray<Item>,
@@ -38,18 +46,33 @@ export const useTypeahead = <Item extends TypeaheadItem>(
   // A ref, not state: nothing renders the buffer, and re-rendering on every
   // keystroke would be wasted work.
   const buffer = useRef<TypeaheadBuffer>(EMPTY_TYPEAHEAD);
+  const cursor = useRef<Option.Option<number>>(Option.none());
+  const origin = useRef<Option.Option<number>>(Option.none());
   return useCallback(
     (char: string) => {
+      const moved =
+        Option.getOrUndefined(origin.current) !== Option.getOrUndefined(from);
+      if (moved) cursor.current = from;
+      origin.current = from;
       const next = pressTypeahead(buffer.current, char, monotonicNanos());
-      Option.match(matchTypeahead(items, from, next.text), {
-        onNone: () => {
-          buffer.current = EMPTY_TYPEAHEAD;
+      Option.match(
+        matchTypeahead(
+          items,
+          Option.orElse(cursor.current, () => from),
+          next.text,
+        ),
+        {
+          onNone: () => {
+            buffer.current = EMPTY_TYPEAHEAD;
+            cursor.current = from;
+          },
+          onSome: (match) => {
+            buffer.current = next;
+            cursor.current = Option.some(match.index);
+            onMatch(match);
+          },
         },
-        onSome: (match) => {
-          buffer.current = next;
-          onMatch(match);
-        },
-      });
+      );
     },
     [items, from, onMatch],
   );
