@@ -97,11 +97,15 @@ its look by state exposes a public state object instead: `style` accepts a
 </TabsTrigger>
 ```
 
-The state vocabulary is fixed — `active`, `checked`, `closed`, `disabled`,
-`focused`, `highlighted`, `invalid`, `open`, `orientation`, `selected` — and a
-part's type is named after the part: `TabsTriggerState`,
-`AccordionTriggerState`, `ComboboxItemState`. Every token a style reads comes
-from the active theme; see [Theming](/docs/theming).
+The fields belong to the part; there is no single fixed vocabulary. `active`,
+`disabled`, `focused`, `highlighted` and `open` recur across parts, while
+`editing` belongs to `InlineEditState`, `pinned` and `unread` to
+`MessageScrollerState`, and `status` to `StepperStepState` and
+`TimelineItemState`. A part's type is usually named after the part
+(`TabsTriggerState`, `AccordionTriggerState`); a part built on a headless
+runtime component uses that component's state type instead, such as
+`ComboboxItemState` from `@gpuix/react`. Every token a style reads comes from the
+active theme; see [Theming](/docs/theming).
 
 ## Shared host props
 

@@ -471,7 +471,25 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–617)
 
-`[x]` `[██████████]` 188/188
+`[x]` `[█████████░]` 189/190
+
+`[x]` **The part-state contract stops claiming a fixed vocabulary (plan 622)** —
+      measured 2026-10-20 by parsing `packages/components/src`: the page claimed
+      ten fixed fields, but the package declares **25** exported `*State`
+      interfaces with **27** fields; five listed fields occur in one type each,
+      `status` occurs twice and was unlisted, and `ComboboxItemState` is imported
+      from `@gpuix/react` rather than exported here. The paragraph now states the
+      ownership rule, five recurring fields, and the real `editing`/`pinned`/
+      `unread`/`status` examples with their types; `part-states.ts` parses every
+      state interface and the page guard checks each field, frequency, pairing
+      and runtime import. 131 files / 1 359 docs tests, 107-page `smoke:build`,
+      scoped axe green; five proofs in plan 622 §8.
+
+`[ ]` **Generate a per-part state table** for `/docs/component-api` — each of
+      the 25 exported `*State` types and its fields, with a generated module, an
+      index document and a search entry (D32), so `editing`/`pinned` and the
+      state type names are findable as rows rather than prose (plan 622 §2.4);
+      owner: docs-site
 
 `[x]` **Pointer and touch input have an answer (plan 621)** — measured
       2026-10-20: `touch` reached a Preview card limitation, `touchscreen`

@@ -52,6 +52,15 @@ stylus events with the host-application consequence. `src/lib/input-capabilities
 derives the four groups from the installed `HostProps` and the page suite fails
 by handler name when the package and the prose disagree.
 
+## Part-state contract
+
+`/docs/component-api#state-aware-styles` states that state fields belong to the
+part rather than a fixed vocabulary, with the recurring fields and the
+part-specific examples (`editing`, `pinned`, `unread`, `status`) named beside
+their types. `src/lib/part-states.ts` parses every exported `*State` interface
+and `src/part-states-page.test.ts` requires each example, frequency and runtime
+import (`ComboboxItemState`) to stay true.
+
 ## Brand and document head
 
 The site's identity is generated, not retyped. `src/lib/site-head.ts` owns the
