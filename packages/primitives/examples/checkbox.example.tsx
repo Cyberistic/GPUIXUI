@@ -75,6 +75,15 @@ export const CheckboxExample = (): ReactElement => {
 
         <Separator orientation="horizontal" />
 
+        <Checkbox
+          testId="checkbox-example-approved"
+          defaultChecked
+          readOnly
+          description="Set by the release manager."
+        >
+          Publishing approved
+        </Checkbox>
+
         <Text role="caption" tone="muted" testId="checkbox-example-status">
           {`${Arr.length(selected)} of ${Arr.length(ASSETS)} selected`}
         </Text>

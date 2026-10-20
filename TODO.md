@@ -1742,6 +1742,19 @@ retired once both branches are one
       seam removed failing all 5 by name; offline 73 files / 1015 tests, scoped
       live 2 files / 58; plan `798`
 
+`[x]` `packages/primitives`: **the selection family had no read-only state** —
+      `Input`, `TextArea`, `NumberField`, `OTPField`, `Select` and `Rating` all
+      have one (plans `786`, `796`, `797`), but `Checkbox`, `Switch`,
+      `CheckboxGroup` and `RadioGroup` offered only `disabled`: faded **and** out
+      of the tab order, so a review form could not show a value it refuses to
+      change. `readOnly` keeps the tab stop, ring, name and announced state,
+      refuses click/Enter/Space and paints full contrast with a `default` cursor;
+      a read-only `RadioGroup` still moves its ring with arrows and type-ahead
+      without moving the value. 0.10.0 has no `aria-readonly`, stated on all four
+      pages. 13 element-tree + 4 core + 8 scoped runtime cases, three mutation
+      directions measured (offline 74 files / 1032 tests, the new live file 8/8,
+      17 neighbour runtime files 359/359; plan `799`)
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

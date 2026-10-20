@@ -71,6 +71,8 @@ export interface RadioOption {
 /** The public state a `RadioGroup` style callback receives. */
 export interface RadioGroupState {
   readonly disabled: boolean;
+  /** The chosen value is shown for review and refuses to change (plan `799`). */
+  readonly readOnly: boolean;
   readonly invalid: boolean;
 }
 
@@ -80,6 +82,8 @@ export interface RadioOptionState {
   readonly index: number;
   readonly checked: boolean;
   readonly disabled: boolean;
+  /** The group shows its value for review and refuses to change (plan `799`). */
+  readonly readOnly: boolean;
   readonly focused: boolean;
   readonly invalid: boolean;
 }
@@ -98,6 +102,17 @@ export interface RadioGroupProps {
   readonly accent?: SelectionAccent;
   /** Disables every option. */
   readonly disabled?: boolean;
+  /**
+   * Shows the chosen value for review.
+   *
+   * The group keeps its one tab stop, the options keep their names, announced
+   * state and focus ring, and the arrows (and type-ahead) move focus without
+   * moving the selection; Enter, Space and a click are refused. `disabled` is
+   * the stronger state: it leaves the tab order and fades each circle. 0.10.0
+   * has no `aria-readonly`, so the difference is behavioural and visual (plan
+   * `799`).
+   */
+  readonly readOnly?: boolean;
   /**
    * A failed validation paints the empty circles with the destructive border,
    * like every other field control. A checked circle keeps its accent.
@@ -173,6 +188,7 @@ export const renderRadioGroup = (
     const option = options[index];
     if (
       props.disabled === true ||
+      props.readOnly === true ||
       option === undefined ||
       option.disabled === true
     )
@@ -180,8 +196,19 @@ export const renderRadioGroup = (
     handlers.onSelect(option.value);
     return true;
   };
-  /** A keyboard move selects **and** moves focus, so the ring stays on the choice. */
+  /**
+   * A keyboard move selects **and** moves focus, so the ring stays on the
+   * choice. A read-only group still navigates: the arrows and type-ahead move
+   * the ring without moving the committed value (the platform's read-only
+   * radio behaviour, plan `799`).
+   */
   const navigate = (index: number): boolean => {
+    if (props.readOnly === true) {
+      // `disabled` is the stronger state: a group that is both must not move.
+      if (props.disabled === true || isDisabled(index)) return false;
+      handlers.onFocusMove(index);
+      return true;
+    }
     if (!select(index)) return false;
     handlers.onFocusMove(index);
     return true;
@@ -248,6 +275,7 @@ export const renderRadioGroup = (
         props.style,
         {
           disabled: groupDisabled(props.disabled === true, options),
+          readOnly: props.readOnly === true,
           invalid: props.invalid === true,
         },
       )}
@@ -267,6 +295,7 @@ export const renderRadioGroup = (
           shape: "circle",
           invalid: props.invalid === true,
           disabled,
+          readOnly: props.readOnly === true,
           focused,
         };
         return (
@@ -289,13 +318,21 @@ export const renderRadioGroup = (
             onFocus={() => focus.onFocus(index)}
             onBlur={() => focus.onBlur(index)}
             style={resolvePartStyle(
-              selectionRowStyle({ disabled, align: "center" }, theme),
+              selectionRowStyle(
+                {
+                  disabled,
+                  readOnly: props.readOnly === true,
+                  align: "center",
+                },
+                theme,
+              ),
               props.optionStyle,
               {
                 value: option.value,
                 index,
                 checked: current === "checked",
                 disabled,
+                readOnly: props.readOnly === true,
                 focused,
                 invalid: props.invalid === true,
               },
@@ -375,7 +412,9 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
     typeItems,
     Option.some(cursorIndex),
     (match) => {
-      selected.set(match.item.value);
+      // Read-only navigates by prefix like the arrows: focus moves, the value
+      // does not (plan `799`).
+      if (props.readOnly !== true) selected.set(match.item.value);
       focusOption(match.index);
     },
   );

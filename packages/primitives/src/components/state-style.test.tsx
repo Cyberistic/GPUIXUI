@@ -199,6 +199,7 @@ describe("Checkbox", () => {
       checked: true,
       indeterminate: false,
       disabled: false,
+      readOnly: false,
       focused: false,
       invalid: false,
     });
@@ -206,6 +207,7 @@ describe("Checkbox", () => {
       checked: false,
       indeterminate: true,
       disabled: false,
+      readOnly: false,
       focused: true,
       invalid: false,
     });
@@ -226,6 +228,7 @@ describe("Switch", () => {
     expect(lastState(record.seen)).toStrictEqual({
       checked: true,
       disabled: true,
+      readOnly: false,
       focused: true,
       invalid: true,
     });
@@ -347,6 +350,7 @@ describe("group roots and overlays", () => {
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: true,
+      readOnly: false,
       invalid: true,
     });
     expect(background(element)).toBe(PAINT);
@@ -375,6 +379,7 @@ describe("group roots and overlays", () => {
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: true,
+      readOnly: false,
       invalid: true,
     });
     expect(background(element)).toBe(PAINT);
@@ -422,6 +427,7 @@ describe("group roots and overlays", () => {
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: true,
+      readOnly: false,
       invalid: false,
     });
   });
@@ -446,6 +452,7 @@ describe("group roots and overlays", () => {
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: true,
+      readOnly: false,
       invalid: false,
     });
   });
@@ -647,6 +654,7 @@ describe("per-item style", () => {
         parent: true,
         selection: "indeterminate",
         disabled: false,
+        readOnly: false,
         focused: false,
         invalid: false,
       },
@@ -656,6 +664,7 @@ describe("per-item style", () => {
         parent: false,
         selection: "checked",
         disabled: false,
+        readOnly: false,
         focused: false,
         invalid: false,
       },
@@ -665,6 +674,7 @@ describe("per-item style", () => {
         parent: false,
         selection: "unchecked",
         disabled: false,
+        readOnly: false,
         focused: false,
         invalid: false,
       },
@@ -701,6 +711,7 @@ describe("per-item style", () => {
         index: 0,
         checked: true,
         disabled: false,
+        readOnly: false,
         focused: false,
         invalid: false,
       },
@@ -709,6 +720,7 @@ describe("per-item style", () => {
         index: 1,
         checked: false,
         disabled: false,
+        readOnly: false,
         focused: false,
         invalid: false,
       },

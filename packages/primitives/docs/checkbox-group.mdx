@@ -59,6 +59,7 @@ Uncontrolled, with no parent row:
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize`; each row's tick is the box's content square (12 / 14 / 18 px) |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `disabled` | `boolean` | `false` | disables every row, the parent included |
+| `readOnly` | `boolean` | `false` | shows the selection for review: keeps every row's tab stop and ring, refuses every change (plan `799`) |
 | `invalid` | `boolean` | `false` | every **empty** box takes the destructive border |
 | `label` | `string` | none | the group's accessible name |
 | `style` | `StateStyle<CheckboxGroupState>` | — | merged last on the group; an object or a state callback |
@@ -84,6 +85,12 @@ it for them. A group with no enabled option renders the parent disabled.
 The selection is an array in **selection order**: a toggle appends the newly
 selected value, and select-all appends the missing enabled values in option
 order. A press that changes nothing does not call `onValueChange`.
+
+`readOnly` is the review state: every row keeps its tab stop, name, announced
+state and focus ring, paints full contrast with a `default` cursor, and refuses
+its click, Enter and Space — the select-all parent included. `disabled` is the
+stronger state; it also leaves the tab order and fades each box. 0.10.0 has no
+`aria-readonly`, so the difference is behavioural and visual (plan `799`).
 
 ## Keyboard
 
@@ -123,6 +130,10 @@ does not move it to whatever now sits at the old index.
   can outlive the prop change — a form that disables while saving leaves the
   keyboard where it was — so a disabled row is inert to both the pointer and the
   keys and paints no focus ring (plan 332).
+- `readOnly` keeps every row's tab stop, name, `aria-valuetext` and ring, and
+  refuses every change. There is no `aria-readonly` in 0.10.0, so assistive
+  technology hears the selection but not the fact that it is locked (plan
+  `799`).
 - `option.description` is the row's `aria-description`, so the visible hint is
   announced with the name. GPUix has no `aria-describedby`, but it exposes the
   string form; a blank description is absent — neither announced nor painted
@@ -169,6 +180,7 @@ advertises the caret (plan 332).
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `disabled` | `boolean` | every row is disabled; an empty group is not |
+| `readOnly` | `boolean` | the group shows its selection for review (plan `799`) |
 | `invalid` | `boolean` | paints the empty rows' borders destructive |
 
 The callback's result merges after the component's own rules, so it wins per
@@ -197,6 +209,7 @@ the row that owns the hit area, the tab stop and the accessible name:
 | `parent` | `boolean` | true on the select-all row only |
 | `selection` | `"checked" \| "unchecked" \| "indeterminate"` | the row's own tri-state |
 | `disabled` | `boolean` | the row is disabled |
+| `readOnly` | `boolean` | the group shows its selection for review (plan `799`) |
 | `focused` | `boolean` | the row holds native focus |
 | `invalid` | `boolean` | the group's failed validation |
 
@@ -244,6 +257,12 @@ the row that owns the hit area, the tab stop and the accessible name:
   row toggles it, the parent's `mixed → checked → unchecked` cycle, a disabled
   value surviving both directions, Space-up/Enter-down/held keys, Tab skipping a
   disabled row, and the painted error border and ring.
+- `src/components/selection-read-only.test.tsx` — a read-only group reports
+  `readOnly` on the group and every row, keeps each row's tab stop, and refuses
+  the parent's and rows' click/Enter/Space (plan `799`).
+- `runtime/selection-read-only.runtime.test.tsx` — `Tab` reaches the select-all
+  parent and each row, the ring paints, and a click or key reports nothing while
+  the selection stays put (plan `799`).
 - `runtime/row-feedback.runtime.test.tsx` — every enabled `CheckboxGroup` and
   `RadioGroup` row declares the theme's hover/active wash in the real renderer,
   a disabled row declares neither, and a vertical row's painted width equals the

@@ -70,6 +70,7 @@ there is no row to paint into, so the hint is announced but not painted.
 | `onValueChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
 | `indeterminate` | `boolean` | `false` | paints a dash and announces `mixed`; overrides `checked` |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
+| `readOnly` | `boolean` | `false` | keeps the tab stop, ring and announced value; refuses every change and paints full contrast (plan `799`) |
 | `invalid` | `boolean` | `false` | the empty box takes the destructive border |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize`; the tick is the box's content square, so it scales too (12 / 14 / 18 px) |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
@@ -101,6 +102,12 @@ already all-selected while painting mixed; the press asks for the value it
 already has, so nothing is reported and the box keeps painting mixed until the
 caller drops `indeterminate`.
 
+`readOnly` is the review state: the box keeps its tab stop, name, announced
+value and focus ring, paints full contrast with a `default` cursor, and refuses
+click, Enter and Space. `disabled` is the stronger state — it also leaves the
+tab order and fades the box. 0.10.0 has no `aria-readonly`, so the difference is
+behavioural and visual (plan `799`).
+
 ## Keyboard
 
 | Key | Contract |
@@ -123,6 +130,9 @@ caller drops `indeterminate`.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
   `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
 - `disabled` removes the tab stop; there is no `aria-disabled`.
+- `readOnly` keeps the tab stop, the name, `aria-valuetext` and the ring, and
+  refuses every change. There is no `aria-readonly` in 0.10.0, so assistive
+  technology hears the value but not the fact that it is locked (plan `799`).
 - With children, the row is **one** node: role `checkbox`, the text as its name,
   one tab stop and one hit area; the box inside is decoration. A **sibling**
   `Label` beside a standalone box is still inert — GPUix has no
@@ -169,7 +179,8 @@ runtime's own `StateStyle` type:
 | ----- | ---- | ------- |
 | `checked` | `boolean` | the resolved value (controlled or its own) |
 | `indeterminate` | `boolean` | the dash state; never true together with `checked` |
-| `disabled` | `boolean` | refuses pointer and keys |
+| `disabled` | `boolean` | refuses pointer and keys, leaves the tab order |
+| `readOnly` | `boolean` | refuses pointer and keys, keeps the tab stop (plan `799`) |
 | `focused` | `boolean` | holds native focus |
 | `invalid` | `boolean` | the empty box paints the destructive border |
 
@@ -192,6 +203,11 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
   winning over the component's own rules (plan 079).
 - `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
   invalid) reaching the painted style.
+- `src/components/selection-read-only.test.tsx` — a read-only box keeps its tab
+  stop, reports `readOnly`, and refuses click/Enter/Space (plan `799`).
+- `runtime/selection-read-only.runtime.test.tsx` — `Tab` reaches the read-only
+  box, its ring paints, and a real click and both keys report nothing while a
+  writable twin reports them (plan `799`).
 
 - `src/core/selection.test.ts` — the three-state paint, mark colour and the
   mark's content square at every control size (plan `640`).

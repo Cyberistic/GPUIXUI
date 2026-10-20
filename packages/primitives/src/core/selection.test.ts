@@ -118,6 +118,36 @@ describe("selectionBoxStyle", () => {
     expect(style.hover?.borderColor).toBe(testTheme.colors.input);
   });
 
+  it("keeps a read-only box at full contrast with no feedback", () => {
+    // Plan 799: read-only is the review state, not the disabled one. It keeps
+    // the resting paint and the pointer's default, while answering neither
+    // hover nor press.
+    const empty = selectionBoxStyle(spec({ readOnly: true }), testTheme);
+    expect(empty.opacity).toBeUndefined();
+    expect(empty.cursor).toBe("default");
+    expect(empty.hover?.borderColor).toBe(testTheme.colors.input);
+    expect(empty.active).toStrictEqual({});
+    const checked = selectionBoxStyle(
+      spec({ readOnly: true, state: "checked" }),
+      testTheme,
+    );
+    expect(checked.backgroundColor).toBe(testTheme.colors.primary);
+    expect(checked.hover?.backgroundColor).toBe(testTheme.colors.primary);
+    expect(checked.active).toStrictEqual({});
+  });
+
+  it("rings a read-only control that holds focus", () => {
+    // The tab stop is deliberate: a read-only value must stay reachable.
+    expect(
+      selectionBoxStyle(spec({ readOnly: true, focused: true }), testTheme)
+        .boxShadow?.color,
+    ).toBe(testTheme.colors.ring);
+    expect(
+      switchTrackStyle(spec({ readOnly: true, focused: true }), testTheme)
+        .boxShadow?.color,
+    ).toBe(testTheme.colors.ring);
+  });
+
   it("honours a destructive accent over the brand", () => {
     const style = selectionBoxStyle(
       spec({ state: "checked", accent: "destructive" }),
@@ -195,6 +225,19 @@ describe("selectionRowStyle", () => {
     expect(style.cursor).toBe("not-allowed");
   });
 
+  it("declares no feedback on a read-only row, and keeps it full contrast", () => {
+    // Plan 799: the row owns the hit area, so it must not promise a press it
+    // refuses. Unlike disabled, it keeps the default pointer and the fade off.
+    const style = selectionRowStyle(
+      { readOnly: true, align: "center" },
+      testTheme,
+    );
+    expect(style.hover).toBeUndefined();
+    expect(style.active).toBeUndefined();
+    expect(style.cursor).toBe("default");
+    expect(style.opacity).toBeUndefined();
+  });
+
   it("leaves the fade to the box, so the two cannot multiply", () => {
     // Plan 367: the page said the row fades, but the fade belongs to the box —
     // the same painter a standalone Checkbox uses. A row opacity on top of the
@@ -239,6 +282,18 @@ describe("switch", () => {
     const thumb = switchThumbStyle(spec({ state: "checked" }), testTheme);
     expect(thumb.backgroundColor).toBe(testTheme.colors.primaryForeground);
     expect(thumb.backgroundColor).not.toBe(on.backgroundColor);
+  });
+
+  it("keeps a read-only track at full contrast with a default pointer", () => {
+    const track = switchTrackStyle(spec({ readOnly: true }), testTheme);
+    expect(track.opacity).toBeUndefined();
+    expect(track.cursor).toBe("default");
+    expect(track.active).toStrictEqual({});
+    expect(track.hover?.backgroundColor).toBe(testTheme.colors.muted);
+    expect(
+      switchTrackStyle(spec({ readOnly: true, state: "checked" }), testTheme)
+        .hover?.backgroundColor,
+    ).toBe(testTheme.colors.primary);
   });
 
   it("rests the thumb on the inset at each end of the pill", () => {

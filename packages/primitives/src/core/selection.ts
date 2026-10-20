@@ -48,6 +48,15 @@ export interface SelectionSpec {
   readonly invalid?: boolean;
   readonly disabled?: boolean;
   /**
+   * Visible and focusable, but refuses to change.
+   *
+   * The stronger `disabled` also leaves the tab order and fades the paint. A
+   * read-only control is the review state: it stays in the tab order, paints
+   * full contrast with a `default` cursor, and gives the pointer no hover or
+   * press feedback (plan `799`).
+   */
+  readonly readOnly?: boolean;
+  /**
    * Holds keyboard focus, so it paints the ring.
    *
    * Tracked by each control, not by the paint: GPUix has no `focusVisible`, so a
@@ -121,6 +130,8 @@ const selectionBorder = (
  * The side is the theme's icon size for the control size, so a checkbox lines
  * up with the icon on the label beside it without a bespoke scale. Feedback is
  * declared: the border darkens on hover and takes the ring role while pressed.
+ * A disabled box fades and refuses the pointer; a read-only one keeps full
+ * contrast and the resting paint (plan `799`).
  */
 export const selectionBoxStyle = (
   spec: SelectionSpec,
@@ -130,6 +141,7 @@ export const selectionBoxStyle = (
   const role = accentRole(spec, theme);
   const emptyBorder =
     spec.invalid === true ? theme.colors.destructive : theme.colors.input;
+  const inert = spec.disabled === true || spec.readOnly === true;
   const style: StyleDesc = {
     display: "flex",
     alignItems: "center",
@@ -142,7 +154,12 @@ export const selectionBoxStyle = (
     borderColor: filled(spec) ? role.background : emptyBorder,
     backgroundColor: filled(spec) ? role.background : undefined,
     color: selectionMarkColor(spec, theme),
-    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+    cursor:
+      spec.disabled === true
+        ? "not-allowed"
+        : spec.readOnly === true
+          ? "default"
+          : "pointer",
     hover: filled(spec)
       ? {
           backgroundColor: alpha(role.background, 0.9),
@@ -153,15 +170,16 @@ export const selectionBoxStyle = (
         },
     active: { borderColor: selectionBorder(spec, theme, theme.colors.ring) },
   };
-  if (spec.disabled === true) {
-    style.opacity = 0.5;
-    // A disabled control must not respond to the pointer at all.
+  if (inert) {
+    // An inert control must not respond to the pointer at all. Read-only keeps
+    // the resting paint; disabled fades it below.
     style.hover = {
       backgroundColor: filled(spec) ? role.background : undefined,
       borderColor: filled(spec) ? role.background : emptyBorder,
     };
     style.active = {};
   }
+  if (spec.disabled === true) style.opacity = 0.5;
   // A disabled control paints no ring: see `controlFocusStyle` (plan 332).
   if (spec.focused === true && spec.disabled !== true)
     style.boxShadow = focusRing(theme).boxShadow;
@@ -171,6 +189,8 @@ export const selectionBoxStyle = (
 /** How a data-driven selection group lays out the row it makes interactive. */
 export interface SelectionRowSpec {
   readonly disabled?: boolean;
+  /** Visible and focusable, but refuses to change (the box rule above). */
+  readonly readOnly?: boolean;
   /** `flex-start` when the row stacks a label over its description. */
   readonly align: "flex-start" | "center";
 }
@@ -182,27 +202,33 @@ export interface SelectionRowSpec {
  * handlers on the row, so the row is the control and owes the pointer the same
  * feedback every other control gives. The inner box keeps its own border
  * feedback; a wash on the row is what makes the label column — most of the hit
- * area — respond at all (plan `355`). A disabled row declares neither rule,
- * because an inert control must not respond (plan `332`).
+ * area — respond at all (plan `355`). A disabled or read-only row declares
+ * neither rule, because an inert control must not respond (plans `332`, `799`).
  */
 export const selectionRowStyle = (
   spec: SelectionRowSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
+  const inert = spec.disabled === true || spec.readOnly === true;
   const style: StyleDesc = {
     display: "flex",
     flexDirection: "row",
     alignItems: spec.align,
     gap: theme.spacing.sm,
     borderRadius: theme.radius.sm,
-    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+    cursor:
+      spec.disabled === true
+        ? "not-allowed"
+        : spec.readOnly === true
+          ? "default"
+          : "pointer",
     // A row is a flex item of the group, so it already shrinks; the automatic
     // content floor is what kept a long label at max-content and painted it
     // outside a horizontal group. Removing the floor lets the row shrink and
     // the label wrap (the D40 containment rule, measured in plan 380).
     minWidth: 0,
   };
-  if (spec.disabled !== true) {
+  if (!inert) {
     style.hover = { backgroundColor: theme.colors.hover };
     style.active = { backgroundColor: theme.colors.active };
   }
@@ -273,6 +299,7 @@ export const switchTrackStyle = (
   const role = accentRole(spec, theme);
   const emptyBorder =
     spec.invalid === true ? theme.colors.destructive : theme.colors.input;
+  const inert = spec.disabled === true || spec.readOnly === true;
   const style: StyleDesc = {
     position: "relative",
     width: switchTrackWidth(spec, theme),
@@ -282,7 +309,12 @@ export const switchTrackStyle = (
     borderWidth: theme.borderWidth.thin,
     borderColor: filled(spec) ? role.background : emptyBorder,
     backgroundColor: filled(spec) ? role.background : theme.colors.muted,
-    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+    cursor:
+      spec.disabled === true
+        ? "not-allowed"
+        : spec.readOnly === true
+          ? "default"
+          : "pointer",
     hover: filled(spec)
       ? {
           backgroundColor: alpha(role.background, 0.9),
@@ -293,14 +325,14 @@ export const switchTrackStyle = (
         },
     active: { borderColor: selectionBorder(spec, theme, theme.colors.ring) },
   };
-  if (spec.disabled === true) {
-    style.opacity = 0.5;
+  if (inert) {
     style.hover = {
       backgroundColor: filled(spec) ? role.background : theme.colors.muted,
       borderColor: filled(spec) ? role.background : emptyBorder,
     };
     style.active = {};
   }
+  if (spec.disabled === true) style.opacity = 0.5;
   if (spec.focused === true && spec.disabled !== true)
     style.boxShadow = focusRing(theme).boxShadow;
   return style;

@@ -46,6 +46,8 @@ import { useTheme } from "./ThemeProvider.js";
 export interface SwitchState {
   readonly checked: boolean;
   readonly disabled: boolean;
+  /** Visible and focusable, but refuses to change (plan `799`). */
+  readonly readOnly: boolean;
   readonly focused: boolean;
   readonly invalid: boolean;
 }
@@ -56,6 +58,16 @@ export interface SwitchProps extends TriggerHandlers {
   readonly defaultChecked?: boolean;
   readonly onValueChange?: (next: boolean) => void;
   readonly disabled?: boolean;
+  /**
+   * Shows the position as a value to review.
+   *
+   * A read-only switch keeps its tab stop, its name, its announced
+   * `aria-valuetext` and its focus ring, and paints full contrast with a
+   * `default` cursor; every activation path is refused. `disabled` is the
+   * stronger state: it leaves the tab order and fades the track. 0.10.0 has no
+   * `aria-readonly`, so the difference is behavioural and visual (plan `799`).
+   */
+  readonly readOnly?: boolean;
   readonly invalid?: boolean;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
@@ -112,13 +124,14 @@ export const renderSwitch = (
     accent: props.accent ?? "primary",
     invalid: props.invalid,
     disabled: props.disabled,
+    readOnly: props.readOnly,
     focused: focus.focused,
   };
   const thumb = switchThumbStyle(spec, theme);
   const rest = switchThumbOffset(spec, theme);
 
   const toggle = (): void => {
-    if (props.disabled === true) return;
+    if (props.disabled === true || props.readOnly === true) return;
     onValueChange(!state.current);
   };
   const onKey =
@@ -131,6 +144,7 @@ export const renderSwitch = (
   const partState: SwitchState = {
     checked: state.current,
     disabled: props.disabled === true,
+    readOnly: props.readOnly === true,
     focused: focus.focused,
     invalid: props.invalid === true,
   };
@@ -196,6 +210,7 @@ export const renderSwitch = (
         selectionRowStyle(
           {
             disabled: props.disabled === true,
+            readOnly: props.readOnly === true,
             align: caption ? "flex-start" : "center",
           },
           theme,

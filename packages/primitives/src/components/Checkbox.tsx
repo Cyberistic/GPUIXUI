@@ -50,6 +50,8 @@ export interface CheckboxState {
   /** A third state: the check is a dash. Never true together with `checked`. */
   readonly indeterminate: boolean;
   readonly disabled: boolean;
+  /** Visible and focusable, but refuses to change (plan `799`). */
+  readonly readOnly: boolean;
   readonly focused: boolean;
   readonly invalid: boolean;
 }
@@ -66,6 +68,16 @@ export interface CheckboxProps extends TriggerHandlers {
    */
   readonly indeterminate?: boolean;
   readonly disabled?: boolean;
+  /**
+   * Shows the checked state as a value to review.
+   *
+   * A read-only box keeps its tab stop, its name, its announced
+   * `aria-valuetext` and its focus ring, and paints full contrast with a
+   * `default` cursor; every activation path is refused. `disabled` is the
+   * stronger state: it leaves the tab order and fades the box. 0.10.0 has no
+   * `aria-readonly`, so the difference is behavioural and visual (plan `799`).
+   */
+  readonly readOnly?: boolean;
   readonly invalid?: boolean;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
@@ -143,10 +155,11 @@ export const renderCheckbox = (
     shape: "square",
     invalid: props.invalid,
     disabled: props.disabled,
+    readOnly: props.readOnly,
     focused: focus.focused,
   };
   const toggle = (): void => {
-    if (props.disabled === true) return;
+    if (props.disabled === true || props.readOnly === true) return;
     onValueChange(nextChecked(current));
   };
   const onKey =
@@ -161,6 +174,7 @@ export const renderCheckbox = (
     checked: current === "checked",
     indeterminate: current === "indeterminate",
     disabled: props.disabled === true,
+    readOnly: props.readOnly === true,
     focused: focus.focused,
     invalid: props.invalid === true,
   };
@@ -226,6 +240,7 @@ export const renderCheckbox = (
         selectionRowStyle(
           {
             disabled: props.disabled === true,
+            readOnly: props.readOnly === true,
             align: caption ? "flex-start" : "center",
           },
           theme,

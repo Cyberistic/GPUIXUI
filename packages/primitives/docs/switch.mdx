@@ -59,6 +59,7 @@ there is no row to paint into, so the hint is announced but not painted.
 | `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
 | `onValueChange` | `(next: boolean) => void` | none | the next boolean |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
+| `readOnly` | `boolean` | `false` | keeps the tab stop, ring and announced value; refuses every change and paints full contrast (plan `799`) |
 | `invalid` | `boolean` | `false` | the track takes the destructive role |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
@@ -68,6 +69,12 @@ there is no row to paint into, so the hint is announced but not painted.
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<SwitchState>` | — | merged last on the control surface — the track without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |
+
+`readOnly` is the review state: the switch keeps its tab stop, name, announced
+value and focus ring, paints full contrast with a `default` cursor, and refuses
+click, Enter and Space. `disabled` is the stronger state — it also leaves the
+tab order and fades the track. 0.10.0 has no `aria-readonly`, so the difference
+is behavioural and visual (plan `799`).
 
 ## Keyboard
 
@@ -91,6 +98,10 @@ there is no row to paint into, so the hint is announced but not painted.
 - State is announced through **`aria-valuetext`** (`checked` / `unchecked`);
   there is no `aria-checked` in 0.10.0.
 - `disabled` removes the tab stop; no `aria-disabled`.
+- `readOnly` keeps the tab stop, the name, `aria-valuetext` and the ring, and
+  refuses every change. There is no `aria-readonly` in 0.10.0, so assistive
+  technology hears the position but not the fact that it is locked (plan
+  `799`).
 - The name comes from the text child, else `label`; there is no
   `aria-labelledby`.
 - With children, the row is **one** node: role `switch`, the text as its name,
@@ -137,7 +148,8 @@ row in that shape.
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `checked` | `boolean` | the pill's on/off state |
-| `disabled` | `boolean` | refuses pointer and keys |
+| `disabled` | `boolean` | refuses pointer and keys, leaves the tab order |
+| `readOnly` | `boolean` | refuses pointer and keys, keeps the tab stop (plan `799`) |
 | `focused` | `boolean` | holds native focus |
 | `invalid` | `boolean` | paints the destructive border |
 
@@ -167,6 +179,11 @@ exported.
   winning over the component's own rules (plan 079).
 - `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
   invalid) reaching the painted style.
+- `src/components/selection-read-only.test.tsx` — a read-only switch keeps its
+  tab stop, reports `readOnly`, and refuses click/Enter/Space (plan `799`).
+- `runtime/selection-read-only.runtime.test.tsx` — `Tab` reaches the read-only
+  switch, its ring paints, and a real click and both keys report nothing while a
+  writable twin reports them (plan `799`).
 
 - `src/core/selection.test.ts` — track and thumb geometry across sizes and
   states; `switchThumbOffset` at both ends; the destructive border when

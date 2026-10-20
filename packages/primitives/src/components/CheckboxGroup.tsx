@@ -64,6 +64,8 @@ export type { CheckboxGroupOption };
 /** The public state a `CheckboxGroup` style callback receives. */
 export interface CheckboxGroupState {
   readonly disabled: boolean;
+  /** Every row shows a value to review and refuses to change (plan `799`). */
+  readonly readOnly: boolean;
   readonly invalid: boolean;
 }
 
@@ -77,6 +79,8 @@ export interface CheckboxRowState {
   readonly parent: boolean;
   readonly selection: SelectionState;
   readonly disabled: boolean;
+  /** This row shows a value to review and refuses to change (plan `799`). */
+  readonly readOnly: boolean;
   readonly focused: boolean;
   readonly invalid: boolean;
 }
@@ -100,6 +104,16 @@ export interface CheckboxGroupProps {
   readonly accent?: SelectionAccent;
   /** Disables every row, the select-all parent included. */
   readonly disabled?: boolean;
+  /**
+   * Shows the selection as a value to review.
+   *
+   * Every row keeps its tab stop, name, announced state and focus ring, and
+   * paints full contrast with a `default` cursor; clicking, Enter/Space and the
+   * select-all parent are refused. `disabled` is the stronger state: it leaves
+   * the tab order and fades each box. 0.10.0 has no `aria-readonly`, so the
+   * difference is behavioural and visual (plan `799`).
+   */
+  readonly readOnly?: boolean;
   /** Validation failed: every empty box takes the destructive border. */
   readonly invalid?: boolean;
   /** Accessible name for the group. */
@@ -137,6 +151,7 @@ interface RowSpec {
   readonly label: string;
   readonly description?: string;
   readonly disabled: boolean;
+  readonly readOnly: boolean;
   readonly invalid: boolean;
   readonly size: ControlSize;
   readonly accent: SelectionAccent;
@@ -158,6 +173,7 @@ const renderRow = (
     label,
     description,
     disabled,
+    readOnly,
     invalid,
     size,
     accent,
@@ -178,6 +194,7 @@ const renderRow = (
     accent,
     invalid,
     disabled,
+    readOnly,
     focused,
   };
   const partState: CheckboxRowState = {
@@ -186,15 +203,17 @@ const renderRow = (
     parent: Option.isNone(value),
     selection: state,
     disabled,
+    readOnly,
     focused,
     invalid,
   };
+  const inert = disabled || readOnly;
   const onKey =
     (phase: "down" | "up") =>
     (event: EventPayload): void => {
-      // A row can be disabled while it holds native focus (plan 332), so the
-      // key path refuses it exactly like the pointer path below.
-      if (disabled) return;
+      // A row can be disabled or made read-only while it holds native focus
+      // (plans 332, 799), so the key path refuses it like the pointer path.
+      if (inert) return;
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         onActivate();
     };
@@ -209,14 +228,14 @@ const renderRow = (
       tabIndex={disabled ? undefined : 0}
       testId={testId}
       onClick={() => {
-        if (!disabled) onActivate();
+        if (!inert) onActivate();
       }}
       onKeyDown={onKey("down")}
       onKeyUp={onKey("up")}
       onFocus={() => focus.onFocus(index)}
       onBlur={() => focus.onBlur(index)}
       style={resolvePartStyle(
-        selectionRowStyle({ disabled, align: "flex-start" }, theme),
+        selectionRowStyle({ disabled, readOnly, align: "flex-start" }, theme),
         style,
         partState,
       )}
@@ -291,6 +310,7 @@ export const renderCheckboxGroup = (
             state: parentState,
             label: selectAllLabel,
             disabled: parentDisabled,
+            readOnly: props.readOnly === true,
             invalid: props.invalid === true,
             size,
             accent,
@@ -321,6 +341,7 @@ export const renderCheckboxGroup = (
         label: optionText(option.label, option.value),
         description: option.description,
         disabled,
+        readOnly: props.readOnly === true,
         invalid: props.invalid === true,
         size,
         accent,
@@ -355,6 +376,7 @@ export const renderCheckboxGroup = (
         props.style,
         {
           disabled: groupDisabled(props.disabled === true, options),
+          readOnly: props.readOnly === true,
           invalid: props.invalid === true,
         },
       )}

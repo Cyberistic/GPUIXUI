@@ -38,6 +38,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | radio circle size |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the dot's fill |
 | `disabled` | `boolean` | `false` | disables every option |
+| `readOnly` | `boolean` | `false` | shows the choice for review: keeps the tab stop and ring, arrows move focus only, every activation is refused (plan `799`) |
 | `invalid` | `boolean` | `false` | a failed validation: the empty circles take the destructive border |
 | `label` | `string` | none | accessible name for the group |
 | `style` | `StateStyle<RadioGroupState>` | — | merged last; an object or a state callback |
@@ -58,6 +59,13 @@ unchecked (plan `502`).
 `invalid` is the same failed-validation paint as `Checkbox`, `Switch` and the
 fields: an **empty** circle's border takes `colors.destructive`; a chosen one
 keeps its accent, so the error cannot be mistaken for the selection.
+
+`readOnly` is the review state: the group keeps its one tab stop, every option
+keeps its name, announced state and focus ring, and the arrows (and type-ahead)
+move focus without moving the selection; Enter, Space and a click are refused.
+`disabled` is the stronger state — it also leaves the tab order and fades every
+circle. 0.10.0 has no `aria-readonly`, so the difference is behavioural and
+visual (plan `799`).
 
 ## Keyboard
 
@@ -96,7 +104,8 @@ way a desktop radio group does (plan `741`). The rule is the same
 `core/typeahead.ts` module `Select` uses:
 
 - the next **enabled** option whose text (`label`, else `value`) starts with the
-  prefix is selected **and** focused, exactly like an arrow;
+  prefix is selected **and** focused, exactly like an arrow — in a `readOnly`
+  group only the focus moves;
 - matching is case-insensitive, the search starts after the keyboard's cursor —
   the focused option, else the tab stop — and wraps; a repeated letter
   therefore advances (`E`, `E` on Europe/Estonia chooses Europe, then Estonia);
@@ -106,7 +115,8 @@ way a desktop radio group does (plan `741`). The rule is the same
 - a `cmd`/`ctrl`/`alt` chord, a held repeat, `space`, `enter`, the arrows and
   Home/End are not typed characters — the move, jump and activation branches
   consume their keys first;
-- a `disabled` group types nothing.
+- a `disabled` group types nothing; a `readOnly` one focuses the match without
+  selecting it, the same rule as its arrows.
 
 The buffer lives 500 ms after its last keystroke, matching `Select`. A controlled
 parent that defers or rejects the report still advances: the search starts from
@@ -132,6 +142,10 @@ rule, measured in the runtime).
   label falls back to the option's `value`, so the row is never an unnamed stop
   (plan `589`). The text beside the circle is a separate `Text`.
 - Disabled options are skipped by the arrows and are not tab stops.
+- A `readOnly` group keeps its one tab stop, name, announced state and ring,
+  and refuses activation; its arrows move the ring only. There is no
+  `aria-readonly` in 0.10.0, so assistive technology hears the value but not the
+  fact that it is locked (plan `799`).
 - The focused option paints a ring (the `ring` role, spread by
   `borderWidth.strong`), tracked per item because GPUix dispatches focus to the
   element that owns the handler — a wrapper never sees it.
@@ -169,6 +183,7 @@ circle keeps its accent (plan 356).
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `disabled` | `boolean` | every option is disabled; an empty group is not |
+| `readOnly` | `boolean` | the group shows its value for review (plan `799`) |
 | `invalid` | `boolean` | paints the empty circles destructive |
 
 The callback's result merges after the component's own rules, so it wins per
@@ -193,6 +208,7 @@ the option row:
 | `index` | `number` | position in `options` |
 | `checked` | `boolean` | this option is the selection |
 | `disabled` | `boolean` | the option is disabled |
+| `readOnly` | `boolean` | the group shows its value for review (plan `799`) |
 | `focused` | `boolean` | the option holds native focus (and paints the ring) |
 | `invalid` | `boolean` | the group's failed validation |
 
@@ -216,6 +232,13 @@ the option row:
 - `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
   select's open state, and the per-item states reaching the paint (plans 080,
   081).
+- `src/components/selection-read-only.test.tsx` — a read-only group reports
+  `readOnly` on the group and every option, keeps its one tab stop, refuses
+  click/Enter/Space, and moves focus with an arrow without selecting (plan
+  `799`).
+- `runtime/selection-read-only.runtime.test.tsx` — `Tab` reaches the checked
+  option and its ring paints; an arrow moves the ring, the announced selection
+  stays put and the callback never fires (plan `799`).
 
 - `src/core/keyboard.test.ts` — arrow movement, wrapping, skipping, and
   Home/End landing on the nearest enabled end.
