@@ -466,6 +466,50 @@ describe("Select", () => {
     ).toStrictEqual(Option.some("  Apple  "));
   });
 
+  it("forwards autoFocus to the trigger host, and never while disabled", () => {
+    // The gap guarded (plan 806): `autoFocus` is the field family's contract
+    // (plan 584) and shipped on every field but the one whose host is a `div`,
+    // so a dialog whose first control is a select could not put the keyboard
+    // there. A focusable `div` honours the host prop on a later mount too.
+    const element = renderSelect(
+      { options: [{ value: "alpha", label: "Alpha" }], autoFocus: true },
+      testTheme,
+      noSelection(),
+      false,
+      noFocus,
+      handlers,
+    );
+    expect(expectSome(elementProp(childAt(element, 0), "autoFocus"))).toBe(
+      true,
+    );
+    const plain = renderSelect(
+      { options: [{ value: "alpha", label: "Alpha" }] },
+      testTheme,
+      noSelection(),
+      false,
+      noFocus,
+      handlers,
+    );
+    expect(elementProp(childAt(plain, 0), "autoFocus")).toStrictEqual(
+      Option.none(),
+    );
+    const inert = renderSelect(
+      {
+        options: [{ value: "alpha", label: "Alpha" }],
+        autoFocus: true,
+        disabled: true,
+      },
+      testTheme,
+      noSelection(),
+      false,
+      noFocus,
+      handlers,
+    );
+    expect(elementProp(childAt(inert, 0), "autoFocus")).toStrictEqual(
+      Option.none(),
+    );
+  });
+
   it("names the trigger as a combobox and reports its expanded state", () => {
     const closed = renderSelect(
       {

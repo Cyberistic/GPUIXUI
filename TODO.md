@@ -198,7 +198,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 175/175
+`[x]` `[████████████]` 176/176
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2748,6 +2748,20 @@ retired once both branches are one
       cell. 2 element + 4 runtime + 1 example case, four mutations failing their
       named case; offline 75 files / 1062 tests, `otp` 17/17, examples 20/20
       (plan `805`).
+
+`[x]` `packages/primitives`: **`Select` could not be the first field of a
+      form** — `autoFocus` is the field family's contract (plan `584`) and
+      shipped on `Input`, `TextArea`, `NumberField` and `OTPField`, but not on
+      the one field whose host is a `div`: a settings dialog or quick-switch
+      sheet whose first control is a select had to be reached with Tab. A probe
+      measured that a focusable `div` takes the host `autoFocus` on a later
+      mount too, so the trigger now carries it — `disabled` never focuses,
+      `readOnly` still does, and the ring paints in the first frame of the
+      window's first render and at most one tracker sample late on a later
+      mount. The planned `useFocus` seed was **rejected by measurement**: all 11
+      runtime cases stayed green without it, so no seed ships. 1 element + 4
+      runtime cases, three mutations failing by name; offline 75 files / 1063
+      tests, `auto-focus` 11/11 (plan `806`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

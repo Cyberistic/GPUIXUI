@@ -21,9 +21,11 @@ import * as Option from "effect/Option";
 import { Input } from "../src/components/Input.js";
 import { NumberField } from "../src/components/NumberField.js";
 import { OTPField } from "../src/components/OTPField.js";
+import { Select } from "../src/components/Select.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Text } from "../src/components/Text.js";
-import { Surface, openWindow } from "./fixture.js";
+import { isFocusRing } from "../src/testing/index.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 /** The loading state a form shows before the field exists. */
 const Loading = (): ReactElement => <Text role="caption">Loading</Text>;
@@ -163,6 +165,103 @@ it("does not focus a disabled field that mounts later with autoFocus", async () 
   runtime.render(
     <Surface>
       <Input testId="field" label="Name" disabled autoFocus />
+    </Surface>,
+  );
+  expect(focused(runtime)).toBe("none");
+});
+
+it("rings a Select from the window's first render when autoFocus is set", async () => {
+  // The seed half of plan 806: the runtime focuses the trigger without
+  // dispatching `onFocus` (measured, plan 583), so the ring must start from the
+  // prop or the first frame is blank. Measured: the seed paints it immediately.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        options={[{ value: "apple", label: "Apple" }]}
+        autoFocus
+      />
+    </Surface>,
+  );
+  expect(focused(runtime)).toBe("sel-trigger");
+  expect(
+    Option.exists(runtime.element("sel-trigger"), (element) =>
+      isFocusRing(element.style.boxShadow),
+    ),
+  ).toBe(true);
+});
+
+it("focuses a Select that mounts after the first render, rings included", async () => {
+  // The gap guarded (plan 806): `autoFocus` is the field family's contract
+  // (plan 584), but `Select` had no prop at all — its trigger is a `div`, and
+  // the field whose host is not a native text input was left out. A focusable
+  // `div` honours the host prop on a later mount too (probed). The ring follows
+  // the tracker here, so a later mount may paint it one sample late.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Loading />
+    </Surface>,
+  );
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        options={[{ value: "apple", label: "Apple" }]}
+        autoFocus
+      />
+    </Surface>,
+  );
+  expect(focused(runtime)).toBe("sel-trigger");
+  const ringed = (): boolean =>
+    Option.exists(runtime.element("sel-trigger"), (element) =>
+      isFocusRing(element.style.boxShadow),
+    );
+  await awaitFrame(ringed, "the mounted trigger paints its focus ring");
+  expect(ringed()).toBe(true);
+});
+
+it("focuses a read-only Select, because the review state keeps its stop", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Loading />
+    </Surface>,
+  );
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        options={[{ value: "apple", label: "Apple" }]}
+        value="apple"
+        readOnly
+        autoFocus
+      />
+    </Surface>,
+  );
+  expect(focused(runtime)).toBe("sel-trigger");
+});
+
+it("does not focus a disabled Select that mounts later with autoFocus", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Loading />
+    </Surface>,
+  );
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        options={[{ value: "apple", label: "Apple" }]}
+        disabled
+        autoFocus
+      />
     </Surface>,
   );
   expect(focused(runtime)).toBe("none");

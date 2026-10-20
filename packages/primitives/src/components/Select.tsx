@@ -174,6 +174,20 @@ export interface SelectProps extends TriggerHandlers {
   readonly readOnly?: boolean;
   /** Validation failed: the trigger's border takes the destructive role. */
   readonly invalid?: boolean;
+  /**
+   * Take keyboard focus on mount, and ring while it holds that focus.
+   *
+   * A field mounted after a loading state still focuses — the trigger asks the
+   * renderer through the host's own `autoFocus`, which a focusable `div` honours
+   * on a later mount too (probed for plan `806`; the same contract as
+   * `Input`/`TextArea`/`NumberField`/`OTPField`, plan `584`). The ring follows
+   * the native-focus tracker, so it paints in the first frame of the window's
+   * first render and at most one 50 ms sample late on a later mount (plan `583`);
+   * a select that is not focused never rings. A `readOnly` select focuses the
+   * same way, because it keeps its tab stop and ring (plan `797`); a `disabled`
+   * one never does, and is out of the tab order either way.
+   */
+  readonly autoFocus?: boolean;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   readonly fullWidth?: boolean;
@@ -526,6 +540,7 @@ export const renderSelect = (
     readOnly,
     invalid,
     fullWidth,
+    autoFocus,
     label,
     style,
     triggerStyle,
@@ -651,6 +666,7 @@ export const renderSelect = (
            context.disabled`, so a read-only root's disabled context would
            otherwise remove the tab stop (plan 797). */
         disabled={disabled === true}
+        autoFocus={disabled === true ? undefined : autoFocus}
         testId={testId === undefined ? undefined : `${testId}-trigger`}
         onFocus={composeHandler(focus.onFocus, onFocus)}
         onBlur={composeHandler(focus.onBlur, onBlur)}

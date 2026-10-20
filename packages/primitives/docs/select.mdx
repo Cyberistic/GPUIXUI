@@ -145,6 +145,7 @@ state (plan `797`).
 | `disabled` | `boolean` | `false` | refuses opening, closes an open list, and leaves the tab order |
 | `readOnly` | `boolean` | `false` | visible, focusable and unchanged: refuses every open path, hides the chevron and takes the `default` cursor, but keeps the tab stop; `disabled` wins (plan `797`) |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
+| `autoFocus` | `boolean` | `false` | the trigger takes native focus on mount — including a field added after a loading state — and rings from that mount; a `readOnly` select focuses the same way, while a `disabled` one never does (plan `806`) |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: a field is one height (`h-9`, 36 px) |
 | `fullWidth` | `boolean` | `false` | the trigger takes the field recipe's `w-full`; the list matches its measured width |
 | `side` | `FloatingSide` | auto — below, flipped above when it does not fit; any requested side flips when it cannot fit | preferred side the list opens on |
@@ -319,6 +320,15 @@ announcement the runtime cannot make (plan `797`).
 Focus is **visible**: the trigger paints the field recipe's 3 px ring while
 focused or open, the same ring `Input` paints. The runtime has no `focusVisible`,
 so a mouse-opened trigger shows it too.
+
+**A select can be the first field of a form.** `autoFocus` puts native focus on
+the trigger and paints the ring from that mount, exactly as `Input` does — the
+trigger is a `div`, and a focusable `div` honours the host's `autoFocus` on a
+later mount too (probed for plan `806`), so a dialog that replaces a skeleton
+with its form can focus the select without a renderer call of its own. A
+`readOnly` select focuses the same way (it keeps its stop and ring); a
+`disabled` one never does. On a later mount the ring may follow one tracker tick
+after the focus, the latency every ring has on this runtime (plan `583`).
 
 The trigger is **chrome, not content**: it declares `userSelect: "none"` and a
 pointer cursor, because the field recipe's text cursor and selectable text
