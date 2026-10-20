@@ -29,7 +29,7 @@ import {
   classesToStyle,
   mergeTwStyle,
 } from "@gpuixui/tw";
-import type { ControlVariant } from "./style.js";
+import { interactionBorder, type ControlVariant } from "./style.js";
 import type {
   ControlSize,
   PrimitiveTheme,
@@ -102,15 +102,23 @@ const FIELD_CLASSES = [INPUT_BASE, INPUT_FOCUS, INPUT_INVALID].join(" ");
  *
  * `hover`/`active` are this package's boundary feedback: shadcn leaves them to
  * the browser's defaults, while every pointer-interactive control here declares
- * them (`runtime/pointer-feedback.runtime.test.tsx`).
+ * them (`runtime/pointer-feedback.runtime.test.tsx`). A failed field keeps the
+ * destructive boundary through both states (`interactionBorder`), because the
+ * error cue is the only thing distinguishing it from a valid field (plan 781).
  */
-const fieldPaint = (theme: PrimitiveTheme, disabled: boolean): StyleDesc => ({
+const fieldPaint = (
+  theme: PrimitiveTheme,
+  disabled: boolean,
+  invalid: boolean,
+): StyleDesc => ({
   backgroundColor: theme.colors.input,
   color: theme.colors.inputForeground,
   cursor: disabled ? "not-allowed" : "text",
   userSelect: "text",
-  hover: { borderColor: theme.colors.borderStrong },
-  active: { borderColor: theme.colors.ring },
+  hover: {
+    borderColor: interactionBorder(theme, invalid, theme.colors.borderStrong),
+  },
+  active: { borderColor: interactionBorder(theme, invalid, theme.colors.ring) },
 });
 
 /** A control that cannot act declares no pointer feedback (plan 361's rule). */
@@ -126,7 +134,7 @@ export const fieldRecipeStyle = (
   theme: PrimitiveTheme,
 ): StyleDesc => {
   const recipe = classesToStyle(FIELD_CLASSES, theme);
-  const base = mergeTwStyle(recipe.style, fieldPaint(theme, disabled));
+  const base = mergeTwStyle(recipe.style, fieldPaint(theme, disabled, invalid));
   const withFocus =
     focused && !disabled ? mergeTwStyle(base, recipe.focus) : base;
   const withInvalid = invalid

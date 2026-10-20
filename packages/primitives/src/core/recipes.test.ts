@@ -135,6 +135,24 @@ describe("the Input recipe", () => {
     expect(compilerInput.invalid.boxShadow).toBeUndefined();
   });
 
+  it("keeps the destructive boundary through hover and press", () => {
+    // The bug guarded (plan 781): the recipe migration (plan 372) kept the
+    // invalid rest border but left the healthy hover/press rules, so the only
+    // error cue disappeared for the whole gesture — the class plans 091 and 356
+    // fixed for the fields and the selection controls.
+    const invalid = fieldRecipeStyle(
+      { focused: false, invalid: true, disabled: false },
+      testTheme,
+    );
+    expect(invalid.borderColor).toBe(testTheme.colors.destructive);
+    expect(invalid.hover?.borderColor).toBe(testTheme.colors.destructive);
+    expect(invalid.active?.borderColor).toBe(testTheme.colors.destructive);
+
+    const valid = fieldRecipeStyle(resting, testTheme);
+    expect(valid.hover?.borderColor).toBe(testTheme.colors.borderStrong);
+    expect(valid.active?.borderColor).toBe(testTheme.colors.ring);
+  });
+
   it("drops no ring on a disabled field that still holds focus", () => {
     const style = fieldRecipeStyle(
       { focused: true, invalid: false, disabled: true },

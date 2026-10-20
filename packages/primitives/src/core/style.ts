@@ -148,6 +148,21 @@ export const controlStyle = (
 };
 
 /**
+ * The border an interacting surface paints.
+ *
+ * Interaction feedback is a border change, so a healthy hover/press rule would
+ * paint over a failed validation. A failed boundary keeps the destructive role
+ * through the gesture; a valid one takes the interaction role (plans 091, 356,
+ * 781). Fields and the unfilled selection paints share this one rule — a filled
+ * control keeps its accent instead (`core/selection.ts`).
+ */
+export const interactionBorder = (
+  theme: PrimitiveTheme,
+  invalid: boolean,
+  fallback: string,
+): string => (invalid ? theme.colors.destructive : fallback);
+
+/**
  * What a control adds while it holds keyboard focus.
  *
  * The geometry is `@gpuixui/tokens`' `focusRing` — a zero-offset, zero-blur

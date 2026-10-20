@@ -166,3 +166,64 @@ it("keeps the destructive boundary through hover and press on an invalid control
     ),
   ).toMatchObject({ borderColor: testTheme.colors.ring });
 });
+
+/**
+ * The five surfaces that resolve `fieldRecipeStyle` (plan 781), with the
+ * locator of the element that carries the field's chrome.
+ */
+const INVALID_FIELDS: ReadonlyArray<readonly [string, ReactElement, string]> = [
+  ["Input", <Input testId="input" label="Name" invalid />, "input"],
+  [
+    "TextArea",
+    <TextArea testId="textarea" label="Notes" invalid />,
+    "textarea",
+  ],
+  [
+    "NumberField",
+    <NumberField testId="number" label="Count" invalid />,
+    "number",
+  ],
+  [
+    "Select",
+    <Select
+      testId="select"
+      label="Pick"
+      options={[{ value: "a", label: "A" }]}
+      invalid
+    />,
+    "select-trigger",
+  ],
+  ["OTPField", <OTPField testId="otp" label="Code" invalid />, "otp-cell-1"],
+];
+
+it.each(INVALID_FIELDS)(
+  "%s keeps the destructive boundary on hover",
+  async (_name, node, locator) => {
+    // Plan 781: the recipe path (plan 372) builds the field's paint itself, so
+    // the `controlStyle` rule plan 091 added and plan 356 guarded for selection
+    // never ran: measured, an invalid field's hover border was byte-identical
+    // to a valid field's.
+    expect(await interactionOf(node, locator, "hover")).toMatchObject({
+      borderColor: testTheme.colors.destructive,
+    });
+  },
+);
+
+it.each(INVALID_FIELDS)(
+  "%s keeps the destructive boundary on press",
+  async (_name, node, locator) => {
+    expect(await interactionOf(node, locator, "active")).toMatchObject({
+      borderColor: testTheme.colors.destructive,
+    });
+  },
+);
+
+it("keeps the healthy interaction colours on a valid field", async () => {
+  // The negative direction: the fix cannot be "every field paints destructive".
+  expect(
+    await interactionOf(<Input testId="ok" label="Name" />, "ok", "hover"),
+  ).toMatchObject({ borderColor: testTheme.colors.borderStrong });
+  expect(
+    await interactionOf(<Input testId="ok" label="Name" />, "ok", "active"),
+  ).toMatchObject({ borderColor: testTheme.colors.ring });
+});

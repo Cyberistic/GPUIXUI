@@ -211,6 +211,7 @@ export {
   controlFocusStyle,
   controlLabelStyle,
   controlStyle,
+  interactionBorder,
   nativeTextTheme,
   numberInputStyle,
   numberStepperColumnStyle,

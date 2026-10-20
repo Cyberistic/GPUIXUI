@@ -2540,6 +2540,17 @@ retired once both branches are one
       mounts the shape. Core + element + AccessKit cases, both directions
       measured; offline 71 files / 994 tests, scoped live 2 files / 22
       (plan `780`).
+`[x]` `packages/primitives`: **an invalid field lost its error border under the
+      pointer** — measured (2026-10-20): the recipe migration (plan `372`) kept
+      the invalid rest border but not plan `091`'s interaction rule, so
+      `Input`/`TextArea`/`Select`'s trigger/`NumberField`/`OTPField` declared
+      the healthy `borderStrong` on hover (`#000014`) and `ring` on press
+      (`#000018`) — byte-identical to a valid field, while the rest boundary was
+      `destructive` (`#00000F`). One `interactionBorder` helper (hoisted from
+      `selection.ts`, shared with the unfilled selection paints) now keeps
+      `destructive` through both states; 1 resolver case + 10 runtime cases
+      across the five surfaces and a valid-field negative, both directions
+      measured (plan `781`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

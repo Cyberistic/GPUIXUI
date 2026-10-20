@@ -13,6 +13,7 @@ import type { StyleDesc } from "@gpuix/react";
 import { alpha, focusRing } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { interactionBorder } from "./style.js";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 
 /** The states a selectable control paints: empty, filled, or neither. */
@@ -103,16 +104,16 @@ export const selectionMarkSize = (
  *
  * Interaction feedback is a border change, so the healthy hover/press rule
  * would paint over a failed validation. Only an invalid, unfilled surface keeps
- * the destructive role; a filled one keeps its accent. This mirrors
- * `controlStyle`'s rule for fields (plan 091) and is shared by the box and the
- * switch track (plan 356).
+ * the destructive role; a filled one keeps its accent. The boundary decision is
+ * `core/style.ts`'s `interactionBorder`, shared with the field family (plans
+ * 356, 781).
  */
-const interactionBorder = (
+const selectionBorder = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
   fallback: string,
 ): string =>
-  spec.invalid === true && !filled(spec) ? theme.colors.destructive : fallback;
+  interactionBorder(theme, spec.invalid === true && !filled(spec), fallback);
 
 /**
  * The square a checkbox or radio paints.
@@ -148,13 +149,9 @@ export const selectionBoxStyle = (
           borderColor: alpha(role.background, 0.9),
         }
       : {
-          borderColor: interactionBorder(
-            spec,
-            theme,
-            theme.colors.borderStrong,
-          ),
+          borderColor: selectionBorder(spec, theme, theme.colors.borderStrong),
         },
-    active: { borderColor: interactionBorder(spec, theme, theme.colors.ring) },
+    active: { borderColor: selectionBorder(spec, theme, theme.colors.ring) },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;
@@ -292,13 +289,9 @@ export const switchTrackStyle = (
           borderColor: alpha(role.background, 0.9),
         }
       : {
-          borderColor: interactionBorder(
-            spec,
-            theme,
-            theme.colors.borderStrong,
-          ),
+          borderColor: selectionBorder(spec, theme, theme.colors.borderStrong),
         },
-    active: { borderColor: interactionBorder(spec, theme, theme.colors.ring) },
+    active: { borderColor: selectionBorder(spec, theme, theme.colors.ring) },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;

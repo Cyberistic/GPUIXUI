@@ -41,7 +41,7 @@ const email = "Contact email";
 | `readOnly` | `boolean` | `false` | accepts focus and selection, refuses edits |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, de-emphasised; no edit, submit or ring |
 | `autoFocus` | `boolean` | `false` | takes focus on every mount — including a field added after a loading state — and the ring paints from mount (the runtime focuses without dispatching a focus event; plan `584`) |
-| `invalid` | `boolean` | `false` | the border takes the destructive role and it wins over focus, so the error survives the caret |
+| `invalid` | `boolean` | `false` | the border takes the destructive role and it wins over focus, hover and press, so the error survives the caret and the whole gesture (the field family shares the rule, plan `781`) |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `370`: the recipe has one field size (`h-9`, 36 px) |
 | `fullWidth` | `boolean` | `false` | implied by the recipe's `w-full`; kept for API stability |
 | `label` | `string` | none | accessible name; pair with a visible `Label` |
