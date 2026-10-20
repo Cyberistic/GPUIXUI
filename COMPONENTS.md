@@ -36,7 +36,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | grid-layout | `layout-grid`, `live-layout-grid` | verified |
 | typography | `typography-layout`, `live-typography` | verified |
 | text | `text-native`, `live-typography` | verified |
-| input | `input-edit`, `text-entry`, `pointer-text-entry`, `input-payload`, `live-input-payload`, `live-pointer-entry`, `live-text-entry` | verified |
+| input | `input-edit`, `text-entry`, `pointer-text-entry`, `input-payload`, `click-routing`, `live-input-payload`, `live-pointer-entry`, `live-text-entry`, `live-click-routing` | verified |
 | focus | `focus-traversal`, `roving-focus`, `tab-strip-focus`, `live-focus`, `live-roving-focus` | verified |
 | overlay | `overlay-dialog`, `live-overlay` | verified |
 | modal | `modal-focus-trap`, `live-overlay`, `live-focus` | verified |
@@ -96,7 +96,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3902 checks**, 65 capabilities; **168.8 s** on 2026-10-20 at the plan-`723` gate; plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout` and plan `722` added 10 to `media-surface`). The live suite **last ran in full at 95/95**
+The suite is **107/107 green here** (exit `0`, `.artifacts/smoke-report.json`, **3920 checks**, 65 capabilities; **167.3 s** on 2026-10-20 after plan `724`; plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface` and plan `724` added the 18-check `click-routing`). The live suite **last ran in full at 95/95**
 (`live-report.json`, **2663 checks**, 61 capabilities; **1153.6 s**, exit `0`)
 on 2026-10-20, the merge/release gate (plan `723`, code head `74e27a3f` at the
 gate). That total is plan `714`'s 2638 plus **14 checks plan `715` added to

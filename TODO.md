@@ -95,7 +95,28 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 124/124 plans-and-harness
+`[x]` `[██████████]` 125/125 plans-and-harness
+
+`[x]` **Measure click routing** per plan `724`: three records disagreed (plan
+      `381`'s transparent wrapper made its painted child's click not reach it,
+      plan `376`'s `<code>` click reached the viewport, plan `193`'s "child
+      bubbling"), and a temporary wrapper counter read `0` while the bell's own
+      handler ran. `click-routing` (**18 checks**) and `live-click-routing`
+      (**13**) measure the rule in both hosts: **hit-testing follows paint** —
+      a painted child with a handler runs alone; a painted handler-less child
+      **swallows** the click; a transparent handler runs **and** the painted
+      ancestor below it also runs; a non-focusable click moves no focus; and
+      Enter/Space synthesize none. **The earlier hypothesis (nearest-handler,
+      no bubbling) was wrong and is corrected in the plan.** Four mutation
+      proofs observed and reverted (a handler on the plain child, a background
+      on the transparent box, `tabIndex` on the deep child, and a live
+      `mid=1`); both hosts agree. Headless **107/107** (**3920** checks); live
+      registry **96**;
+      `nub run check`/`lint`/`test` green (playground **481**, testing 69).
+      Focused ids run: `click-routing`, `live-click-routing` (plus four
+      mutation runs). **Not claimed:** text/`<code>` children inside a
+      clickable box (an in-flow label on a shipped Button activates it, an
+      absolutely positioned label swallowed the click) — a follow-up probe.
 
 `[x]` **Prove the media waveform in pixels** per plan `722`: the envelope,
 wash and playhead were geometry and authored style only (`media-surface`), and

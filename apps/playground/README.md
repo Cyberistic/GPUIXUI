@@ -103,7 +103,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (106/106 green); -> 2 on a host with no binding
+# -> 0 here (107/107 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -1859,6 +1859,36 @@ The negative is the important half: a grid, list or tree that wants
 "double-click to rename" cannot verify it here, and `Grid`'s existing
 second-press rule is the honest pattern.
 
+## Click routing (plan `724`)
+
+`click-routing` (headless) and `live-click-routing` (a real window) answer which
+element receives a click and what runs above it. Three earlier records
+disagreed — a transparent wrapper made the notification bell's toggle inert
+(plan `381`), a click on `<code>` reached the viewport (plan `376`), and a live
+context menu recorded "child bubbling" (plan `193`). The measured rule is
+**hit-testing follows paint**; nothing bubbles:
+
+| Case | Measured |
+| ---- | -------- |
+| a **painted** child with its own handler | its handler runs alone — no parent, no root |
+| a **painted** child with no handler | the click is swallowed: **no** handler runs |
+| a **painted** box that owns the handler | runs alone from its own empty area |
+| a **transparent** element with a handler | the painted ancestor **and** the transparent element both run (the ancestor is the hit target; the overlay's own hitbox also fires) |
+| a click on a non-focusable element | focus does not move; a `tabIndex` child takes it |
+| `Enter` / `Space` on a focused `div` | no click is synthesized |
+
+The component rules that follow: put a handler on a **painted** element (a
+transparent wrapper cannot be relied on — the plan-381 bell wrapper is inert
+when its painted child owns the handler); a decorative painted child inside a
+clickable row will swallow the click unless it owns no paint or the row is the
+hit target; and an inside press cannot be observed by an ancestor, so a
+close-on-inside-click surface must classify the press itself. Both hosts agree on
+every case (18 headless checks, 13 live). **Not measured:** a text run and a
+`<code>` surface inside a clickable box — the first read inconsistent across
+positions (in-flow text on a shipped `Button` works, an absolutely positioned
+label swallowed the click), so that needs its own probe before a component
+relies on either.
+
 ## The shipped Tier 2 catalogue (plans `330`, `344`)
 
 Five scenarios mount `@gpuixui/components` through its **published root**, the
@@ -2121,14 +2151,14 @@ pixel module; `parseColour` is the one token parser.
 
 ## Evidence on this host
 
-The suite is **106/106 green** here (`exit 0`, 3902 checks, 65 capabilities,
+The suite is **107/107 green** here (`exit 0`, 3920 checks, 65 capabilities,
 **168.6 s**, 2026-10-20; plan `722` added 10 media checks — the count was 3892
 after the plan-`715` gate; plan `713` added 8 crop-mask
 pixel checks; plan `708` added 7 QR pixel checks; plan `701` added 41 wash
 checks to `search-highlights`):
 
 ```
-106/106 scenarios passed · capabilities: layout=verified root=verified text=verified
+107/107 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2169,6 +2199,9 @@ plan `659`'s 94/94 on `d9346a9d`, plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
 gate for the promotion merge; the owner/supervisor performs that merge. The
 full live suite is a merge/release gate rather than a per-task check.
+**Superseded for one id:** plan `724` added `live-click-routing` (13 checks)
+after this gate, so the live registry is **96** ids and the next gate's total
+should be `2663 + 13 = 2676`.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2357,7 +2390,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (106/106, 3902 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (107/107, 3920 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

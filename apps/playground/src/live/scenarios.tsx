@@ -39,6 +39,7 @@ import { chartScenario } from "../scenarios/chart.js";
 import { qrScenario } from "../scenarios/qr-code.js";
 import { QR_V1 } from "../scenarios/qr-fixtures.js";
 import { inputPayloadScenario } from "../scenarios/input-payload.js";
+import { clickRoutingScenario } from "../scenarios/click-routing.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
 import { floatingScenario } from "../scenarios/floating.js";
@@ -673,6 +674,71 @@ const inputPayload: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${inputPayload.id}.png`);
+    }),
+};
+
+const clickRouting: LiveScenario = {
+  id: "live-click-routing",
+  title:
+    "Live click routing: the painted element takes it, nothing above it runs",
+  capability: "input",
+  view: clickRoutingScenario.view,
+  ready: "cr-outer",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // Every case starts from a remount; the reset control is painted.
+      const caseOf = (testId: string) =>
+        Effect.gen(function* () {
+          yield* ctx.host.click("cr-reset");
+          yield* settle;
+          yield* ctx.host.click(testId);
+          yield* settle;
+          return yield* textOf(ctx, "cr-counts");
+        });
+
+      yield* ctx.expectEqual(
+        "a live painted child handles its own click and no ancestor runs",
+        yield* caseOf("cr-deep"),
+        "outer=0 mid=0 deep=1 plainbox=0 clear=0",
+      );
+      yield* ctx.expectEqual(
+        "the live last target is the element that handled it",
+        yield* textOf(ctx, "cr-last"),
+        "deep",
+      );
+      yield* ctx.expectEqual(
+        "a live click on a non-focusable element does not move focus",
+        yield* focusedOf(ctx),
+        "cr-reset",
+      );
+
+      yield* ctx.expectEqual(
+        "a live painted handler-less child swallows the click",
+        yield* caseOf("cr-plain"),
+        "outer=0 mid=0 deep=0 plainbox=0 clear=0",
+      );
+
+      yield* ctx.expectEqual(
+        "a live painted box handles its own click and no ancestor runs",
+        yield* caseOf("cr-plainbox"),
+        "outer=0 mid=0 deep=0 plainbox=1 clear=0",
+      );
+
+      yield* ctx.expectEqual(
+        "a live transparent handler and the painted ancestor both run",
+        yield* caseOf("cr-clear"),
+        "outer=0 mid=1 deep=0 plainbox=0 clear=1",
+      );
+
+      yield* ctx.expectEqual(
+        "the live painted middle level handles its own click",
+        yield* caseOf("cr-mid"),
+        "outer=0 mid=1 deep=0 plainbox=0 clear=0",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${clickRoutingScenario.id}.png`,
+      );
     }),
 };
 
@@ -13663,6 +13729,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveFrames,
   input,
   inputPayload,
+  clickRouting,
   pointerEntry,
   liveTextEntry,
   liveDragTargets,
