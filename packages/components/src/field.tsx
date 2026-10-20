@@ -17,8 +17,12 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
-import { createContext, useCallback, useContext, useRef } from "react";
+import { useCallback, useContext, useRef } from "react";
 import { useFieldsetDisabled } from "./fieldset.js";
+import {
+  FieldContext,
+  type FieldContextValue,
+} from "./internal/field-context.js";
 import { useNativeFocusId } from "./internal/native-focus.js";
 import {
   assertParts,
@@ -34,16 +38,6 @@ import {
   useTheme,
 } from "./internal/theme.js";
 import { stateDescription } from "./internal/state-description.js";
-
-/** What a {@link FieldInput} inherits from the field around it. */
-interface FieldContextValue {
-  readonly label: string;
-  readonly description: string | undefined;
-  readonly error: string | undefined;
-  readonly required: boolean;
-}
-
-const FieldContext = createContext<FieldContextValue | undefined>(undefined);
 
 /** {@link Field} props. */
 export interface FieldProps extends Props {

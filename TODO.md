@@ -1394,6 +1394,18 @@ retired once both branches are one
       Chat 14), six mutation proofs; unit 506 in 48 files, full native suite
       1004/20 of 1024 (the same plan-540 classes); docs, `COMPONENTS.md`,
       `PLAN.md` D30 and the plan index synced (owner: components)
+    - [x] A text field carries a name, in every text field — plan 790;
+      measured 2026-10-20: `accessibility.test.tsx` listed `"textbox"` while
+      AccessKit spells an `<input>` `textinput` (the plan-783 mismatch in a
+      second role), so no text field had ever been checked, and the registry walk
+      found exactly two unnamed fields (`search-input`, `tag-input`). `SearchInput`
+      is named by the caller's `aria-label`, the wrapping `Field`'s label (the
+      field context moved to `internal/field-context.ts`) or its placeholder;
+      `TagInputField` by the caller, its placeholder or the group label; the
+      contract covers `textinput`. 6 native + 3 pure cases (Search input 21, Tag /
+      token input 22), both-direction proof (the contract reports
+      `search-input: textinput` and `tag-input: textinput` at `HEAD`); docs,
+      `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

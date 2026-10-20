@@ -36,6 +36,7 @@ import {
 import { activationHandlers } from "./internal/activate.js";
 import { useFocusState } from "./internal/focus.js";
 import { isEnter } from "./internal/key.js";
+import { controlNameFrom } from "./internal/name.js";
 import { useNativeFocusId } from "./internal/native-focus.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -63,6 +64,8 @@ interface TagInputContextValue {
   readonly tokens: ReadonlyArray<string>;
   readonly draft: string;
   readonly disabled: boolean;
+  /** The group's label, so the field inside it can be named. */
+  readonly name: string;
   readonly editDraft: (text: string) => void;
   readonly addDraft: () => void;
   readonly remove: (value: string) => void;
@@ -156,6 +159,7 @@ export const TagInput = ({
     tokens: value,
     draft,
     disabled,
+    name: label,
     editDraft: editDraftValue,
     addDraft: commit,
     remove: (token) => {
@@ -226,8 +230,21 @@ export const TagInputField = ({
   ...rest
 }: TagInputFieldProps) => {
   const theme = useTheme();
-  const { draft, disabled, editDraft, addDraft, setFocused, registerField } =
-    useTagInput();
+  const {
+    draft,
+    disabled,
+    name: groupName,
+    editDraft,
+    addDraft,
+    setFocused,
+    registerField,
+  } = useTagInput();
+  // 0.10.0 cannot name an input from a sibling `<text>`: the caller's
+  // `aria-label`, then the field's placeholder, then the group's label.
+  const name = controlNameFrom(rest["aria-label"], [
+    rest.placeholder,
+    groupName,
+  ]);
   const attach = useCallback(
     (next: PublicInstance | null) => registerField(next),
     [registerField],
@@ -246,6 +263,7 @@ export const TagInputField = ({
   return (
     <input
       {...rest}
+      aria-label={name}
       {...(disabled ? { tabIndex: -1 } : {})}
       {...stateDescription(disabled, rest["aria-description"])}
       autoFocus={autoFocus && !disabled}

@@ -72,6 +72,19 @@ export const controlName = (
   );
 
 /**
+ * The name for a control whose caller-authored label may be absent and whose
+ * visible sources are ordered: the first trimmed, non-empty source wins.
+ * `undefined` means the caller must name it.
+ */
+export const controlNameFrom = (
+  authored: string | undefined,
+  sources: ReadonlyArray<string | undefined>,
+): string | undefined =>
+  Option.getOrUndefined(
+    Option.firstSomeOf([clean(authored), ...Arr.map(sources, clean)]),
+  );
+
+/**
  * The name for a part whose visible content is several strings rather than one
  * text child — a label and the value it pairs with. The caller's `aria-label`
  * wins when it authored one; otherwise the trimmed, non-empty parts are joined

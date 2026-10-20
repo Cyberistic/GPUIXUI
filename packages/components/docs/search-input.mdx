@@ -26,8 +26,9 @@ import { SearchInput } from "@gpuixui/components/search-input";
 | the icon | a static `search` mark, not interactive |
 | the clear control | `aria-label="Clear search"`, shown only when the text is non-empty |
 
-There is no separate label part: put a **Field** around it when the search needs
-a visible label, or pass `aria-label` for a filter bar.
+There is no separate label part: the field is named by the caller's
+`aria-label`, else the `Field` it sits in, else its `placeholder`. A filter bar
+can pass `aria-label` when the placeholder is not a name.
 
 ## Keyboard
 
@@ -113,7 +114,9 @@ dispatches `onFocus`.
 Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
 `aria-disabled` semantics (plan 516).
 
-- The input carries the caller's `aria-label` (or the field's label); the clear
+- The input is named by the caller's `aria-label`, else the `Field` it sits in,
+  else its visible `placeholder`; 0.10.0 cannot name an input from a sibling
+  `<text>`, so the component supplies the name it can see (plan 790). The clear
   control is a labelled button.
 - **No debounce.** Debouncing is the consumer's: fire the query from
   `onValueChange` through your own Effect schedule. A component-level timer would
@@ -131,7 +134,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (18 tests):
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (21 tests):
 real keystrokes reaching `onValueChange`, the clear control appearing only with
 text and never on a disabled field, a disabled field ignoring Escape and Enter,
 clearing and returning focus, clearing from the keyboard on Space
@@ -140,8 +143,9 @@ open while an empty field's Escape closes it, the controlled contract, a
 caller `ref` composed with the internal one, the clear control painting the
 focus ring when it takes native focus, the ring following focus out of and
 back into the field, the ring painting on an empty field focused by code,
-clearing when an empty field loses focus, and dropping when a focused field
-becomes disabled.
+clearing when an empty field loses focus, dropping when a focused field
+becomes disabled, and the accessible name (the placeholder, the caller's
+`aria-label`, and the wrapping `Field`'s label — plan 790).
 
 The field merges its own focus ref with the caller's, so `ref` receives the same
 `<input>` instance that clearing focuses.

@@ -79,8 +79,10 @@ that leaves the tab order, ignores `autoFocus` and paints no ring (0.10.0 has no
 Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
 `aria-disabled` semantics (plan 516).
 
-- The root is a named `group`; every chip's removal control is a `button` named
-  "Remove <token>".
+- The root is a named `group`; the field inside it is named by the caller's
+  `aria-label`, else its `placeholder`, else the group's `label` (0.10.0 cannot
+  name an input from a sibling `<text>` — plan 790); every chip's removal
+  control is a `button` named "Remove <token>".
 - A chip with `testId="chip-design"` renders its removal control as
   `testId="chip-design-remove"`, so a consumer or a harness can address one
   token's control without coordinates.
@@ -113,14 +115,16 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (19 tests):
+`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (22 tests):
 rendering, Enter, comma commit, duplicates, the named removal control, removal
 by pointer and Space release, the focus the removal hands to the field (on a key
 and on a press), the chip control's focus ring, the group ring a
 field's `autoFocus` seeds, `max`, a fractional `max`, a disabled field
 (read-only, no removal controls, no Enter path, out of the tab order, ignoring
-`autoFocus` and painting no ring), a caller that refuses a change, and a refused
-duplicate, cap or empty commit reporting nothing.
+`autoFocus` and painting no ring), a caller that refuses a change, a refused
+duplicate, cap or empty commit reporting nothing, and the field's accessible name
+(its placeholder, the caller's `aria-label`, and the group label fallback — plan
+790).
 
 `src/tag-input/logic.test.ts` (16 pure tests) covers splitting, trimming,
 duplicates, the integer and fractional cap, a non-finite cap, and first-match

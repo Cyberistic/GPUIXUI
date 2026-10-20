@@ -28,7 +28,9 @@ import { useCallback, useRef } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
+import { useField } from "./internal/field-context.js";
 import { isDismiss } from "./internal/key.js";
+import { controlNameFrom } from "./internal/name.js";
 import { useNativeFocusId } from "./internal/native-focus.js";
 import { useMergedRef } from "./internal/ref.js";
 import { stateDescription } from "./internal/state-description.js";
@@ -84,6 +86,11 @@ export const SearchInput = ({
 }: SearchInputProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
+  const field = useField();
+  // 0.10.0 cannot name an input from a sibling `<text>`, so the name is supplied
+  // here: the caller's `aria-label`, then the wrapping field's label, then the
+  // visible placeholder.
+  const name = controlNameFrom(rest["aria-label"], [field?.label, placeholder]);
   const [value, setValue] = useControllableState({
     value: valueProp,
     defaultValue,
@@ -141,6 +148,7 @@ export const SearchInput = ({
       <Icon name="search" color={theme.colors.mutedForeground} size="md" />
       <input
         {...rest}
+        aria-label={name}
         {...stateDescription(disabled, rest["aria-description"])}
         ref={setInput}
         testId={rest.testId ?? "search-input"}

@@ -117,7 +117,10 @@ including while the field is invalid. `0.10.0` has no `focusVisible`, so a mouse
 press shows the ring too; that is the runtime's limit, not a heuristic of ours.
 
 - The input's accessible name is the field's label; the message is passed as
-  `aria-description`.
+  `aria-description`. A `SearchInput` inside a `Field` takes the same label as
+  its name, because 0.10.0 cannot point a control at a `<text>` elsewhere in the
+  tree (plan 790); `FieldInput` and `SearchInput` are the controls that read the
+  field's label today.
 - **No `aria-describedby`, `aria-invalid` or `aria-required`** in
   `@gpuix/native@0.10.0`: the association is a description, and the validity is
   carried by colour and the alert message. This is a real limitation for screen

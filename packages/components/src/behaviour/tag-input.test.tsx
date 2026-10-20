@@ -423,4 +423,48 @@ describe("TagInput", () => {
 
     tags.unmount();
   });
+
+  /**
+   * The bug this guards (plan 790): `accessibility.test.tsx` listed `"textbox"`,
+   * but AccessKit spells an `<input>` `textinput`, so the field was never checked
+   * and shipped unnamed. The name is the caller's `aria-label`, else the field's
+   * placeholder, else the group's label.
+   */
+  it("names the field from its placeholder", () => {
+    const tags = renderComponent(<Harness />);
+
+    expect(
+      nodesWithRole(tags.renderer, "textinput").map((node) => node.name),
+    ).toEqual(["Add a tag"]);
+
+    tags.unmount();
+  });
+
+  it("a caller aria-label wins over the placeholder", () => {
+    const tags = renderComponent(
+      <TagInput label="Tags" value={[]} onValueChange={() => {}}>
+        <TagInputField aria-label="Add tags" placeholder="Add a tag…" />
+      </TagInput>,
+    );
+
+    expect(
+      nodesWithRole(tags.renderer, "textinput").map((node) => node.name),
+    ).toEqual(["Add tags"]);
+
+    tags.unmount();
+  });
+
+  it("a field with no placeholder is named by its group", () => {
+    const tags = renderComponent(
+      <TagInput label="Tags" value={[]} onValueChange={() => {}}>
+        <TagInputField />
+      </TagInput>,
+    );
+
+    expect(
+      nodesWithRole(tags.renderer, "textinput").map((node) => node.name),
+    ).toEqual(["Tags"]);
+
+    tags.unmount();
+  });
 });

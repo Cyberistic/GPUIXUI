@@ -12,7 +12,12 @@
 import { createElement, Fragment } from "react";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { composedName, controlName, plainText } from "./name.js";
+import {
+  composedName,
+  controlName,
+  controlNameFrom,
+  plainText,
+} from "./name.js";
 
 describe("plainText", () => {
   it("reads a string child", () => {
@@ -60,6 +65,22 @@ describe("controlName", () => {
     expect(
       controlName(undefined, createElement("span", { "aria-label": "icon" })),
     ).toBeUndefined();
+  });
+});
+
+describe("controlNameFrom", () => {
+  it("keeps the caller's trimmed aria-label over every source", () => {
+    expect(controlNameFrom(" Save ", ["Placeholder"])).toBe("Save");
+  });
+
+  it("takes the first non-empty source in order", () => {
+    expect(
+      controlNameFrom(undefined, ["  ", "Field label", "Placeholder"]),
+    ).toBe("Field label");
+  });
+
+  it("has no name when the caller and every source are blank", () => {
+    expect(controlNameFrom("  ", [undefined, "   "])).toBeUndefined();
   });
 });
 

@@ -17,6 +17,8 @@ import type { PublicInstance } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { createRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
+import { Field } from "../field.js";
+import { nodesWithRole } from "../internal/a11y.js";
 import {
   clickCentreOf,
   finishMotion,
@@ -474,6 +476,50 @@ describe("SearchInput", () => {
 
     expect(ringed()).toEqual([]);
     expect(states.at(-1)).toBe(false);
+
+    search.unmount();
+  });
+
+  /**
+   * The bug this guards (plan 790): the accessibility contract listed
+   * `"textbox"`, but AccessKit spells an `<input>` `textinput`, so no text field
+   * was ever checked and every `SearchInput` shipped without a name. 0.10.0
+   * cannot name an input from a sibling `<text>`, so the component supplies one:
+   * the caller's `aria-label`, then the wrapping `Field`'s label, then the
+   * placeholder.
+   */
+  it("names the field from its placeholder", () => {
+    const search = renderComponent(<SearchInput placeholder="Filter files…" />);
+
+    expect(
+      nodesWithRole(search.renderer, "textinput").map((node) => node.name),
+    ).toEqual(["Filter files…"]);
+
+    search.unmount();
+  });
+
+  it("a caller aria-label wins over the placeholder", () => {
+    const search = renderComponent(
+      <SearchInput aria-label="Filter files" placeholder="Search…" />,
+    );
+
+    expect(
+      nodesWithRole(search.renderer, "textinput").map((node) => node.name),
+    ).toEqual(["Filter files"]);
+
+    search.unmount();
+  });
+
+  it("a Field names the search field it wraps", () => {
+    const search = renderComponent(
+      <Field label="Search the docs">
+        <SearchInput placeholder="Filter files…" />
+      </Field>,
+    );
+
+    expect(
+      nodesWithRole(search.renderer, "textinput").map((node) => node.name),
+    ).toEqual(["Search the docs"]);
 
     search.unmount();
   });

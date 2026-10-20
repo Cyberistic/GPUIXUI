@@ -15,7 +15,9 @@
  *
  * AccessKit spells an `option` as **`listboxoption`** (measured 2026-10-20), so
  * both spellings are listed: the contract must see a listbox row, or two shipped
- * listboxes can carry unnamed options while this passes (plan 783).
+ * listboxes can carry unnamed options while this passes (plan 783). An `<input>`
+ * is spelled **`textinput`** for the same reason, and the missing spelling hid
+ * two unnamed fields until plan 790.
  */
 
 import * as Arr from "effect/Array";
@@ -44,6 +46,10 @@ const INTERACTIVE_ROLES: ReadonlyArray<string> = [
   "slider",
   "switch",
   "tab",
+  // AccessKit spells an `<input>` as `textinput`, exactly as it spells an
+  // `option` as `listboxoption`; see the module note. A text field is the one
+  // control a form is mostly made of, so both spellings are covered (plan 790).
+  "textinput",
   "textbox",
 ];
 
