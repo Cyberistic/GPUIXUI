@@ -1368,6 +1368,16 @@ retired once both branches are one
       five mutation proofs; unit 504 in 47 files, full native suite 989 passed /
       20 failed of 1009 — the same plan-540 classes as the pre-change run; docs,
       `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced (owner: components)
+    - [~] A listbox option carries a name, in both listboxes — plan 783;
+      measured 2026-10-20: every row in the command palette and the combobox
+      reported `listboxoption` with an empty name (the palette had no `listbox`
+      at all and its group labels were loose `label`s), because
+      `accessibility.test.tsx` lists `"option"` while AccessKit spells the role
+      `listboxoption`, so the contract never saw a row. Rows are named by their
+      label (a create row by its create label), the palette's match column
+      becomes a named `listbox` of named groups over one hoisted `runsBy`, and
+      the contract covers `listboxoption`; 5 native + 2 pure cases with six
+      mutation proofs (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
