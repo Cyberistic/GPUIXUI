@@ -225,12 +225,13 @@ Cases:
    all `toFixed(3)` to `"1.000"`, and that is the sentence's "1.000:1 on the
    canvas at every level" — the palette's premise "a black tint cannot darken
    it", not a lower bound.
-2. **the card figure is the tightest level, and the sentence quotes it** — the
+2. **the card figure is the tightest level, and every copy quotes it** — the
    three card ratios are `1.030` / `1.049` / `1.061`, the minimum is `sm`, and
-   both copies (`source` and `header`) contain
-   `` `**1.030:1** at the tightest on the card` `` / `` `(1.030:1 at the tightest on the card)` ``,
-   derived rather than typed. The header's copy is the parenthetical, so the
-   case matches the shape each file uses.
+   all three surfaces that state it — `source`, `catalogue` and `header` —
+   contain the derived figure: `` `**1.030:1** at the tightest on the card` ``
+   in the first two and `` `(1.030:1 at the tightest on the card)` `` in the
+   header's parenthetical. The figure is derived rather than typed, so a
+   palette edit that moves the composition fails here.
 3. **the tightest level is named** — `source` contains `` `the small level at the identity's own 40%` ``
    and `sm`'s alpha is the one printed (`Math.round(painted("sm") * 100)`).
 4. **the light tint is the scrim's choice** — the AAA dark set's `shadow` and
@@ -257,16 +258,19 @@ enumeration).
 ## 7. Step 3 — `docs/tokens.md`
 
 In *Elevation*, after the sentence naming `highContrastDarkElevation` and its
-alphas (line 1286), add one clause to the AAA paragraph so the source rationale
-is discoverable:
+alphas (line 1286), replace the AAA paragraph's counterfactual with:
 
 ```
-`elevation-rationale.test.ts` derives that rationale — the counterfactual's two
-figures and the geometry and alphas the set keeps.
+the way the AAA scrim already veils with light (plan `099`). A black tint
+measured **1.000:1** at every level on that canvas, and **1.030:1** at the
+tightest on the card; `elevation-rationale.test.ts` derives both figures, the
+alphas and the geometry the set keeps from the identity dark set's own levels.
 ```
 
-The existing sentences are unchanged; `docs.test.ts` asserts them by exact
-substring and tolerates an added clause between them. Verify with
+The card figure joins the page because the guard now owns it in all three
+places: leaving it out of the catalogue would have made the guard's own
+document an exception. The remaining sentences are unchanged; `docs.test.ts`
+asserts them by exact substring and tolerates the added clause. Verify with
 `nub exec vitest run src/docs.test.ts`.
 
 ## 8. Test plan
@@ -298,6 +302,10 @@ rationale is prose, and none of them reads `elevation.ts`'s JSDoc).
    case 6 fails.
 8. `elevation-contrast.test.ts`: `1.030` → `1.032` in the header → case 2
    fails.
+9. `docs/tokens.md`: `**1.030:1** at the tightest` → `**1.032:1**` → case 2
+   fails.
+10. `elevation-contrast.test.ts`: `**1.000:1** on the canvas` → `**1.001:1**`
+    → case 1 fails.
 
 Then the workstream gates:
 
@@ -340,3 +348,20 @@ scenario is run for this plan.
 - `nub run --filter @gpuixui/tokens test` is green (216 files, 7107 tests),
   `nub run check` and `nub run lint` clean.
 - `TODO.md` ticks the row and the plan index lists `807`.
+
+## 11. Execution record
+
+Executed on 2026-10-20 on `agent/tokens-theme`.
+
+- The counterfactual derived exactly as §2 predicted: `1.000` at every level on
+  the pre-505 canvas, and `1.030` / `1.049` / `1.061` on the pre-505 card, the
+  tightest being `sm` at `1.030451…`. The shipped spelling was already right;
+  plan 505's `1.031` was the over-rounding.
+- `nub exec vitest run src/elevation-rationale.test.ts` → 6 cases green.
+- The ten mutations of §8 (including the two the plan listed for the catalogue
+  and the header's canvas copy) each failed the suite and the tree was restored
+  green after every one.
+- `nub run --filter @gpuixui/tokens test` → **216 files / 7107 tests** green;
+  `nub run check` (check-tests, lint, fmt, type-check) clean.
+- No native scenario was run: the change is a JSDoc, a catalogue clause and a
+  source-reading suite, none of which the runtime paints.
