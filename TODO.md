@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–605)
 
-`[x]` `[██████████]` 172/172
+`[~]` `[██████████]` 172/173
+
+`[~]` **Styling has a page (plan 606)** — a React reader's first move is
+      `className`, and the site never says there is no CSS: `className` and
+      `tailwind` returned nothing, while `style`, `style prop`, `css`, `sx` and
+      `media query` reached another page. `/docs/styling` renders the real
+      `StyleDesc` surface from the installed declarations, names the seven field
+      families and the absent concepts with their alternatives, and owns the
+      styling vocabulary without taking `spacing` (Theming), `fontSize`/
+      `lineHeight` (Typography) or `boxShadow`/`borderRadius` (Theming).
 
 `[x]` **Performance has an answer (plan 605)** — measured 2026-10-20:
       `performance`, `benchmark`, `fps` and `10k rows` returned nothing or the
