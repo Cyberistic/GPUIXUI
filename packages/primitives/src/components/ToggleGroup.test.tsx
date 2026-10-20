@@ -9,6 +9,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { initValueState, type ValueState } from "../core/state.js";
 import type { ToggleGroupOption } from "../core/toggle-group.js";
@@ -47,6 +48,7 @@ const handlers = (
 ): ToggleGroupHandlers => ({
   onPress,
   onFocusMove: vi.fn(),
+  onTypeahead: vi.fn(),
   registerItem: () => () => {},
 });
 
@@ -276,6 +278,64 @@ describe("ToggleGroup", () => {
     expect(onPress).toHaveBeenCalledTimes(2);
     expectSome(hostHandler(item, "onClick"))(clickEvent);
     expect(onPress).toHaveBeenCalledTimes(3);
+  });
+
+  it("hands a printable key to type-ahead and leaves every other key alone", () => {
+    // The gap guarded (plan 751): the group discarded a printable key, so a
+    // long segmented control was arrow-only. The move/jump branches must
+    // consume their own keys before the prefix rule (an arrow is not a prefix).
+    const onTypeahead = vi.fn();
+    const group = renderToggleGroup(
+      single,
+      testTheme,
+      selected(["left"]),
+      0,
+      unfocused,
+      { ...handlers(), onTypeahead },
+    );
+    const down = expectSome(hostHandler(group, "onKeyDown"));
+    down(keyEvent("e"));
+    expect(onTypeahead).toHaveBeenCalledWith("e");
+    // The letter alone presses nothing; the rule decides what it matches.
+    expect(onTypeahead).toHaveBeenCalledTimes(1);
+    Arr.forEach(["right", "home", "enter", "space", "tab"], (key) =>
+      down(keyEvent(key)),
+    );
+    expect(onTypeahead).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses a chord and a held repeat before the character rule", () => {
+    const onTypeahead = vi.fn();
+    const group = renderToggleGroup(
+      single,
+      testTheme,
+      selected(["left"]),
+      0,
+      unfocused,
+      { ...handlers(), onTypeahead },
+    );
+    const down = expectSome(hostHandler(group, "onKeyDown"));
+    down(
+      keyEvent("e", {
+        modifiers: { shift: false, ctrl: false, alt: false, cmd: true },
+      }),
+    );
+    down(keyEvent("e", { isHeld: true }));
+    expect(onTypeahead).toHaveBeenCalledTimes(0);
+  });
+
+  it("types nothing into a disabled group", () => {
+    const onTypeahead = vi.fn();
+    const group = renderToggleGroup(
+      { ...single, disabled: true },
+      testTheme,
+      selected(["left"]),
+      0,
+      unfocused,
+      { ...handlers(), onTypeahead },
+    );
+    expectSome(hostHandler(group, "onKeyDown"))(keyEvent("e"));
+    expect(onTypeahead).toHaveBeenCalledTimes(0);
   });
 
   it("derives each item's locator from the group's testId", () => {

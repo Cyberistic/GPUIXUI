@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 170/170
+`[x]` `[████████████]` 171/171
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2438,6 +2438,18 @@ retired once both branches are one
       `checked={all}` + `indeterminate={some && !all}` shape and that the shared
       value rule reports only a real change (offline 71 files / 979 tests,
       scoped live 1 file / 2; plan `750`).
+
+`[x]` `packages/primitives`: **a `ToggleGroup` discarded every printable key** —
+      a long segmented control was arrow-only while `RadioGroup` and `Select`
+      answered a typed prefix over the same option shape. The shared
+      `core/typeahead.ts` rule now selects and focuses the next enabled match in
+      `single` and only focuses it in `multiple`, starting from the keyboard
+      cursor; disabled items and blank labels are skipped, and a chord, a held
+      repeat or a disabled group types nothing. 3 element + 6 runtime cases, the
+      element printable-key case failing with zero calls and every runtime case
+      failing with focus still on the first item before the wiring (offline 71
+      files / 982 tests, scoped live 6/6 and the existing group file 12/12; plan
+      `751`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

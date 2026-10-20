@@ -19,7 +19,7 @@
  * `group`; there is no single-select semantic in AccessKit for buttons.
  */
 
-import { useState, type ReactElement } from "react";
+import { useMemo, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -32,6 +32,7 @@ import {
 } from "../core/keyboard.js";
 import { groupDisabled, initialActiveIndex } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
+import { typeaheadChar } from "../core/typeahead.js";
 import {
   isPressed,
   nextSelection,
@@ -58,6 +59,7 @@ import {
 } from "./internal.js";
 import { pressedValueText } from "./Toggle.js";
 import { useTheme } from "./ThemeProvider.js";
+import { useTypeahead } from "./typeahead.js";
 
 /** The public state a `ToggleGroup` style callback receives. */
 export interface ToggleGroupState {
@@ -127,6 +129,8 @@ export interface ToggleGroupHandlers {
   readonly onPress: (value: string) => void;
   /** Move focus (and, in `single`, also select) to an item. */
   readonly onFocusMove: (index: number) => void;
+  /** A printable character typed while the group holds focus. */
+  readonly onTypeahead: (char: string) => void;
   readonly registerItem: (
     index: number,
   ) => (instance: PublicInstance | null) => void;
@@ -174,7 +178,14 @@ export const renderToggleGroup = (
             decideMove(cursorIndex, count, key, orientation, isDisabled),
             decideAbsolute(count, key, isDisabled),
           ]),
-          { onNone: () => {}, onSome: move },
+          {
+            onNone: () =>
+              Option.match(typeaheadChar(event), {
+                onNone: () => {},
+                onSome: handlers.onTypeahead,
+              }),
+            onSome: move,
+          },
         );
       }}
       style={resolvePartStyle(
@@ -312,6 +323,17 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
           Option.getOrUndefined(Arr.get(state.value.current, 0)),
         )
       : initialActiveIndex(props.options, Option.getOrUndefined(multipleValue));
+  /** The keyboard's cursor: the focused item, else the value-derived stop. */
+  const cursorIndex = moveFrom(activeIndex, focus.focusedIndex);
+  const typeItems = useMemo(
+    () =>
+      Arr.map(props.options, (option) => ({
+        value: option.value,
+        label: optionText(option.label, option.value),
+        disabled: option.disabled === true,
+      })),
+    [props.options],
+  );
   const markFocused = (index: number): void => {
     focus.onFocus(index);
     if (props.type === "multiple")
@@ -326,6 +348,23 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
     });
     markFocused(index);
   };
+  /**
+   * A typed prefix moves the keyboard, and in `single` also the selection.
+   *
+   * `multiple` only moves focus: typing a name must not press a formatting
+   * button; activation stays the item's own Enter/Space/click (plan `751`).
+   */
+  const typeahead = useTypeahead(
+    typeItems,
+    Option.some(cursorIndex),
+    (match) => {
+      if (props.type === "single")
+        state.set(
+          nextSelection("single", state.value.current, match.item.value),
+        );
+      focusItem(match.index);
+    },
+  );
   return renderToggleGroup(
     props,
     theme,
@@ -340,6 +379,7 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
       onPress: (value) =>
         state.set(nextSelection(props.type, state.value.current, value)),
       onFocusMove: focusItem,
+      onTypeahead: typeahead,
       registerItem: focus.registerItem,
     },
   );

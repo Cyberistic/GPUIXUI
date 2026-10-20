@@ -90,6 +90,7 @@ or filtering `options` does not move it to whatever now sits at the old index.
 | `Home` / `End` | focus and select the first / last enabled item | focus the first / last enabled item |
 | `Enter` | select on key **down** | toggle on key **down** |
 | `Space` | select on key **up** | toggle on key **up** |
+| any printable character | select **and** focus the next enabled item whose text starts with the typed prefix, wrapping; a repeated letter advances | focus that item without pressing it |
 | a held key | ignored | ignored |
 
 The group answers **only its orientation's axis**: `orientation="horizontal"`
@@ -112,6 +113,18 @@ An arrow **continues from the focused item**, not from the value-derived tab sto
 in both modes. A controlled parent can defer or reject the value an arrow reports;
 the ring is the keyboard's cursor, so the next arrow moves on from the ring
 instead of repeating the first move (plan `359`).
+
+Type-ahead uses the item's resolved text (`label`, falling back to `value`) and
+the same case-insensitive, 500 ms prefix rule as `RadioGroup` and `Select`
+(plans `731`, `741`, `751`). The search starts after the keyboard's cursor — the
+focused item, else the tab stop — and then after the last match, so a repeated
+letter advances and a controlled parent that defers a report cannot pin the
+prefix on one item. A disabled item or a blank label is skipped; a prefix that
+matches nothing changes nothing and clears the buffer. `single` treats a match
+like an arrow: it selects and focuses it. `multiple` only moves focus, because a
+typed name must not toggle a formatting button — press `Enter` or `Space` to
+activate the item it reached. A `cmd`/`ctrl`/`alt` chord, a held repeat and a
+disabled group type nothing.
 
 ## Accessibility
 
@@ -242,6 +255,11 @@ the item — after its own paint and focus ring:
   220 px row it shares (measured 254 → 220), its items shrink inside it, a group
   in a 600 px row still hugs its options, the stretched-column paint is unchanged
   and a caller's `minWidth` wins (plan `747`).
+- `runtime/toggle-group-typeahead.runtime.test.tsx` — a typed prefix selects and
+  focuses the match in `single`, advances on a repeated letter, only focuses in
+  `multiple` (a following Space presses it), skips disabled and blank items,
+  leaves an unmatched letter inert, and types nothing for a held repeat or a
+  disabled group (plan `751`).
 - `src/docs-keyboard.test.ts` — the arrow rows on this page name their
   orientation and match `core/keyboard.ts`: every documented key is delivered for
   that axis, and the cross-axis pair is `None` (plan `394`).

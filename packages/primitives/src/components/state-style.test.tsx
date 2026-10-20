@@ -383,6 +383,7 @@ describe("group roots and overlays", () => {
     const handlers: ToggleGroupHandlers = {
       onPress: vi.fn(),
       onFocusMove: vi.fn(),
+      onTypeahead: vi.fn(),
       registerItem: () => () => {},
     };
     const element = renderToggleGroup(
@@ -459,7 +460,12 @@ describe("group roots and overlays", () => {
       arrayState([]),
       0,
       groupFocus,
-      { onPress: vi.fn(), onFocusMove: vi.fn(), registerItem: () => () => {} },
+      {
+        onPress: vi.fn(),
+        onFocusMove: vi.fn(),
+        onTypeahead: vi.fn(),
+        registerItem: () => () => {},
+      },
     );
     expect(lastState(record.seen)).toStrictEqual({ disabled: true });
   });
@@ -713,6 +719,7 @@ describe("per-item style", () => {
     const handlers: ToggleGroupHandlers = {
       onPress: vi.fn(),
       onFocusMove: vi.fn(),
+      onTypeahead: vi.fn(),
       registerItem: () => () => {},
     };
     const element = renderToggleGroup(

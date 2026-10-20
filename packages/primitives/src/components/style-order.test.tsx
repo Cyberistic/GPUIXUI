@@ -122,6 +122,7 @@ const radioGroupHandlers = (): RadioGroupHandlers => ({
 const toggleGroupHandlers = (): ToggleGroupHandlers => ({
   onPress: vi.fn(),
   onFocusMove: vi.fn(),
+  onTypeahead: vi.fn(),
   registerItem: () => () => {},
 });
 
