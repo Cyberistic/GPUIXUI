@@ -4,7 +4,10 @@
 **Workstream:** docs-site (`apps/docs`, `docs/preview-strategy.md`, the
 component-page template)
 **Depends on:** 410, 411, 414, 422, 466, 487, 577, 611
-**Status:** planned
+**Status:** implemented (2026-10-20) — 74 fences now compile; the guard found 81
+diagnostics after the eight structural fixes, and the prototype measured 47
+failing examples / 133 diagnostics on the shipped tree. Four two-direction
+proofs recorded in §8.
 
 ## 1. The measured defect
 
@@ -243,3 +246,52 @@ Stop and report instead of improvising if:
   `nub run --filter docs build` and `smoke:build` are green.
 - `TODO.md` records the plan and its status; `.agents/slop/plans/README.md`
   indexes it; the branch is committed and pushed.
+
+## 8. Result (2026-10-20)
+
+**The guard.** `src/lib/example-snippets.ts` extracts the fences;
+`src/example-snippets.test.ts` writes them to `apps/docs/.cache/example-snippets`
+(gitignored) and runs the repository's own `tsc` over the generated project with
+`jsxImportSource: "@gpuix/react"`, then maps each diagnostic back to the MDX
+line. The suite also rejects a fence with no module-level import/export.
+
+**Measured.** 67 component pages, **74 fenced examples** (the Toast page gained
+one when its provider and push examples were split). The prototype over the
+shipped tree measured 47 failing examples / 133 diagnostics. The guard's first
+run surfaced 4 syntax errors and 7 fragments; TypeScript suppresses semantic
+diagnostics while a syntax error exists, so fixing those exposed **81
+diagnostics across 40 fences**. All 74 compile now.
+
+**The real API defects it found and fixed:**
+
+- `Alert` usage named `title` and `onDismiss`, which `AlertProps` does not have;
+  it now composes `AlertContent`/`AlertTitle`/`AlertDescription`/`AlertDismiss`,
+  and the page's Sizes/States/Keyboard prose matches.
+- `Combobox` usage named `label`; it now composes `ComboboxTrigger`,
+  `ComboboxContent`, `ComboboxInput`, `ComboboxList` and `ComboboxEmpty`.
+- `DatePicker` usage named `label`; it now composes `DatePickerTrigger`,
+  `DatePickerContent` and `DatePickerCalendar`.
+- `Collapsible` used an undefined `<Option>`; it now nests a real `Input`.
+- `Form` used `Schema` without importing it and referenced undeclared state; it
+  is now a complete `SignupForm` component.
+- Every stateful snippet declares its state inside a named component, so a
+  copied example is runnable rather than a fragment leaning on page context.
+
+**Two-direction proofs (each edit reverted after the run):**
+
+| Proof | Edit | Guard output |
+| ----- | ---- | ------------ |
+| missing import | removed `import { Button }` from the second Buttons fence | `button.mdx:38` is both a non-module and `TS2304 Cannot find name 'Button'` |
+| wrong prop | `variant="nope"` on Badge | `badge.mdx:21 (fence 1) TS2322: '"nope"' is not assignable to 'BadgeVariant \| undefined'` |
+| fragment | removed the Separator import | `separator.mdx:30` in the module list and `TS2304 Cannot find name 'Separator'` |
+| two roots | unwrapped the Label fragment | `label.mdx:24 (fence 1) TS2657: JSX expressions must have one parent expression` |
+
+**Gates.** `nub run check` green; `nub run test` green (docs: 124 files / 1 183
+tests); `nub run --filter docs build` and `smoke:build` exit `0` over the
+105-page built site. `nub run --filter docs test` also keeps the existing
+content, search and template guards green.
+
+**The rule is published.** `/docs/component-pages` gained `## The examples`, its
+guard table names `src/example-snippets.test.ts`, and `apps/docs/README.md`'s
+"Adding a component page" says a fenced example is a standalone module checked
+by `nub run --filter docs test -- example-snippets`.

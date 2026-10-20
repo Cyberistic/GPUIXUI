@@ -471,16 +471,19 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–613)
 
-`[~]` `[█████████░]` 179/180
+`[x]` `[██████████]` 180/180
 
-`[~]` **Every component example compiles (plan 613)** — the docs call each
-      fenced `tsx` block a copyable usage example, but nothing type-checks it:
+`[x]` **Every component example compiles (plan 613)** — the docs call each
+      fenced `tsx` block a copyable usage example, but nothing type-checked it:
       measured 2026-10-20 at `cd7ecac7`, 73 examples on 66 component pages, **47
-      fail to compile with 133 diagnostics**, and three pages name props the
-      component does not have (Alert `title` + text children, Combobox `label`,
-      DatePicker `label`). The new `example-snippets` suite compiles every
-      snippet as a standalone module with the app's real options, the 47 are
-      fixed, and the template page and README state the rule.
+      failed to compile with 133 diagnostics**, and three pages named props the
+      component did not have (Alert `title` + text children, Combobox `label`,
+      DatePicker `label`). The new `example-snippets` suite compiles all **74**
+      fences as standalone modules with the app's real options and maps every
+      diagnostic back to its MDX line; the 40 failing fences were fixed, the
+      three wrong APIs now compose the real parts, and `/docs/component-pages`
+      and the README state the rule. 124 files / 1 183 docs tests, 105-page
+      `smoke:build`, root gates green; four two-direction proofs in plan 613 §8.
 
 `[x]` **The authoring, framework and performance vocabulary reaches its owner
       (plan 612)** — `add component`, `new component`, `component template`,
