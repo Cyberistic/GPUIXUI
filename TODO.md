@@ -64,6 +64,12 @@ product window and linked from `/docs/blocks/dashboard`
 identity, stacked-native deck hero, library grid, proof, attribution
 `[x]` Deploy the Fumadocs app (landing + getting started) to
 <https://gpuixui.sudokw.com> on Cloudflare Workers via the alchemy stack
+`[x]` Upgrade GPUix to **0.11.0** and land terminal support (plan 539) — both
+`@gpuix/react`/`@gpuix/native` bumped; `KeyEvent`/`boxShadow` type breakages fixed;
+the modal Tab trap calls `preventDefault`; the landing gains a "Run it in your
+terminal" section (`render(<App/>, { terminal: true })`), the README documents
+`isTerminal()` and `GPUIX_TERMINAL=1`, and `installation.mdx` gains the terminal
+subsection
 
 ### `@gpuixui/tw` migration (`tw-primitives`)
 
@@ -400,7 +406,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | ---- | ----- | ------ |
 | `@gpuixui/tokens` roles in plan 110 §6 | tokens-theme | **resolved** — the workstream is merged into `agent/components`; `internal/theme.ts` is the seam over it |
 | Serialise writers per worktree: a second live session writes `packages/components` alongside the supervisor's; root cause in plan `022` (primitives), this worktree's measurement in plan `118` | repo tooling (`scripts/`) | **resolved in this worktree** 2026-10-17 (the stale turn stood down; the tree has read one writer since); the permanent `scripts/` fix (plan 022 §5) is still pending |
-| Decide the GPUix version: stay on 0.10.0 and implement dismiss layers/focus locally, or ship a release that includes `Dialog`/`Button`/`DismissableLayer` (0.10.0 is the latest published) | owner / playground | pending |
+| Decide the GPUix version: stay on 0.10.0 and implement dismiss layers/focus locally, or ship a release that includes `Dialog`/`Button`/`DismissableLayer` (0.10.0 is the latest published) | owner / playground | **resolved** — 0.11.0 adopted (plan 539); the library keeps its styled compound Dialog rather than wrapping the headless `@gpuix/react/dialog` (documented in `dialog.tsx`) |
 | Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) | tokens-theme | **resolved** — landed on `main`; `internal/theme.ts` consumes `statusTone` (plan 157) |
 | `alpha(color, amount)` helper | tokens-theme | **resolved** — landed on `main`; the local `withAlpha` is deleted (plan 157) |
 | An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | **resolved** — `infoSoft`/`infoSoftForeground` are the tone's roles (plan 157) |

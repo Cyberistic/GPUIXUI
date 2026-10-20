@@ -893,6 +893,137 @@
   color: var(--accent-text);
 }
 
+/* ---- run it in your terminal ---- */
+.landing-terminal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  margin-top: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg-soft);
+}
+
+.landing-terminal > figure {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.landing-terminal > figure [role="region"] {
+  max-height: 340px;
+}
+
+/* The kitty/Ghostty frame is always dark — a terminal has no theme. */
+.landing-terminal-window {
+  display: flex;
+  flex-direction: column;
+  min-height: 340px;
+  border-right: 1px solid var(--line-strong);
+  background: #0d1014;
+  color: #d6dbe2;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+/* title bar — a terminal tab, and no traffic lights */
+.landing-term-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  flex: none;
+  padding: 0 12px;
+  border-bottom: 1px solid #1e242b;
+  background: #151a20;
+}
+
+.landing-term-tab {
+  font-size: 11px;
+  color: #e6ebf0;
+}
+
+.landing-term-session {
+  font-size: 10px;
+  color: #5b6673;
+}
+
+.landing-term-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.landing-term-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 132px;
+  flex: none;
+  padding: 8px 0;
+  border-right: 1px solid #1e242b;
+  background: #11151b;
+}
+
+.landing-term-nav {
+  padding: 3px 14px;
+  font-size: 11px;
+  color: #7d8794;
+}
+
+.landing-term-nav[data-active="true"] {
+  color: #c6ff3d;
+  background: rgba(198, 255, 61, 0.08);
+}
+
+.landing-term-content {
+  flex: 1;
+  margin: 0;
+  padding: 10px 14px;
+  overflow: hidden;
+  background: #0d1014;
+}
+
+.landing-term-line {
+  display: block;
+  white-space: pre;
+  color: #c6ccd4;
+}
+
+.landing-term-num {
+  display: inline-block;
+  width: 22px;
+  margin-right: 12px;
+  color: #414c59;
+  user-select: none;
+}
+
+.landing-term-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex: none;
+  padding: 6px 12px;
+  border-top: 1px solid #1e242b;
+  background: #151a20;
+  font-size: 10px;
+  color: #5b6673;
+}
+
+.landing-terminal-caption {
+  margin: 14px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--dim);
+}
+
+.landing-terminal-caption a {
+  color: var(--accent-text);
+}
+
 /* ---- lineage graph ---- */
 .landing-graph {
   margin: 40px 0 0;
@@ -1065,6 +1196,15 @@
   .landing-code-preview {
     border-left: 0;
     border-top: 1px solid var(--line-strong);
+  }
+
+  .landing-terminal {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-terminal-window {
+    border-right: 0;
+    border-bottom: 1px solid var(--line-strong);
   }
 }
 

@@ -107,6 +107,38 @@ nub run dev:docs
 nub run dev:playground
 ```
 
+## Run in a terminal
+
+GPUix can paint into **kitty or Ghostty** instead of a native window. Pass
+`terminal: true` to `render`, or set `GPUIX_TERMINAL=1` and change no code:
+
+```tsx
+import { render } from "@gpuix/react";
+
+render(<App />, { terminal: true });
+```
+
+Frames render offscreen and are shown with the **kitty graphics protocol**;
+mouse, hover, scroll, keyboard (with key-up), paste, focus and resize all reach
+the app. `ctrl-c` quits and the terminal is restored on quit, `SIGTERM`,
+`SIGINT`, panic or exit.
+
+A terminal has no titlebar, so a component that reserves macOS traffic-light
+space must drop it. `isTerminal()` tells it:
+
+```tsx
+import { isTerminal } from "@gpuix/react";
+
+// Drop the traffic-light space when there is no window chrome to sit under.
+if (!isTerminal()) {
+  // reserve space under the titlebar …
+}
+```
+
+Read `isTerminal()` while rendering — it is `false` until `init()` has run, so
+never at module scope. `Tab`/`Shift+Tab` move focus by default (cancel with
+`event.preventDefault()`); an app no longer binds `renderer.focusNext()` to Tab.
+
 ## Working with agents
 
 Each workstream runs in its own `git worktree` under `workspaces/` on branch

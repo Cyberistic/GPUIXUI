@@ -220,6 +220,7 @@ B1, so it is planned, not done.
 | [537](./537-gpui-ce.md) | `gpui-ce`: capability delta, patch-vs-switch, and the integration verdict | infra (runtime) | `020`, `524`, `525` | research complete — **do not switch**; port binding-level patches, keep renderer features unsupported |
 | [530](./530-gpuix-zindex.md) | `zIndex` in the GPUix binding: paint order and hit order | infra (runtime) | `140`, `529`, `524` | done — patch applied to the source-built `darwin-x64` binding; 27 Rust tests and 397 playground tests pass; transform/scale/rotate stay out of scope |
 | [538](./538-transform-build-fork-source.md) | Transform build plumbing: fetch the GPUix Zed fork at the pin and apply the transform patch behind `GPUIX_TRANSFORM=1` | infra (renderer) | `525`, `530`, `140` | source integration done — fetch, patch apply and flag transitions proven without a build; transform-enabled build deliberately deferred |
+| [539](./539-gpuix-011-terminal.md) | GPUix 0.11.0: terminal support and the landing example — bump both `@gpuix/*` packages, adapt to `KeyEvent`/`boxShadow`, `preventDefault` the modal Tab trap, document `isTerminal()`, and add the "Run it in your terminal" landing section | infra / docs | `112`, `524`, `436`, `434` | done |
 
 ## How to use a plan
 

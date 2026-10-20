@@ -2,6 +2,7 @@ import { useTheme } from "fumadocs-ui/provider/base";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { Hero, PlatformWindow } from "./deck";
 import { Lineage } from "./lineage";
+import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
 import { DashboardRender } from "../docs/dashboard";
 import { attribution, navLinks, platforms, repo } from "./data";
@@ -13,6 +14,7 @@ export function Landing() {
         <Nav />
         <Hero />
         <Dashboard />
+        <Terminal />
         <Lineage />
         <Licence />
         <Defaults />
