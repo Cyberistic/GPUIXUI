@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 354/430
+`[x]` `[████████░░]` 355/431
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -3076,6 +3076,18 @@ the scrim the brand keeps (1.157:1), and holds each document to every figure it
 quotes; all nine single-figure mutations and a brand-fill edit fail it. The
 suite is separate from `documentedFigures`, whose provenance names a shipped
 theme; no colour, pair, floor, metric or shipped theme moves (plan 785)
+`[x]` Give the ledger's scale ranges an owner, and correct the two that were
+wrong — the Design tokens row's closing parenthetical quotes four shipped ranges
+and no case read any of them: it said `avatars 16…40` while `avatarSize` has
+shipped `20/26/32/40` since plan `054` (the figure came from plan `725`'s
+mis-measured "16 → 24 → 32 → 40"), and it stated the density control ladder as
+two presets where `densityNames` has three, hiding the step plan `725` made the
+suite compare. `inventory.test.ts` now derives all four phrases from
+`spacingSteps`/`spacing`, `avatarSizeSteps`/`avatarSize` and the density index,
+so each of the four range mutations and a shipped `avatarSize.lg` edit fail it;
+the ledger and the plan index state the corrected ranges, plan `725`'s own file
+keeps its text as history, and no colour, pair, floor, metric, role or shipped
+theme moves (plan 787)
 
 ## Phase C — Tier 1–2 components
 

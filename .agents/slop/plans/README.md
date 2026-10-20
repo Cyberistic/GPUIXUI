@@ -395,6 +395,7 @@ references without buying correctness.
 | [780](./780-hex-guard-boundary.md) | The one boundary guard that cannot take a boundary value | F | 067, 068, 096, 371, 540, 565 | done |
 | [781](./781-platform-style-text-step.md) | The three platform headers that name the wrong readable ink | F | 063, 082, 528, 591 | done |
 | [785](./785-brand-example-figures.md) | The brand example's quoted figures have one owner | F | 098, 526, 536, 544, 698, 760 | done |
+| [787](./787-ledger-scale-ranges.md) | The ledger's scale ranges: the avatar range and the density ladder it hid | F | 054, 062, 303, 313, 664, 725, 766, 767 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3738,8 +3739,9 @@ preset whose rows shrank as density grew passed every check. The pairs now deriv
 from the indexes, each list's length is held to `index.length - 1`, the density
 ladder covers control height, padding and the row, and a synthetic inverted
 preset proves the order check can fail. Every shipped value already holds
-(spacing 2…64, avatars 16…40, controls 24/28/32 → 32/36/40, rows 28 → 32 → 36),
-so no metric moves.
+(spacing 2…64, avatars 20…40, controls 24/28/32 → 28/32/36 → 32/36/40, rows 28 →
+32 → 36), so no metric moves. (This sentence first said `avatars 16…40` and named
+two control presets; plan `787` derived all four ranges from the shipped scales.)
 
 727 closes the persistence half of the extension mechanism. `themeOverrides` is
 relative to the base it was measured against, and four consumer documents
@@ -4037,6 +4039,20 @@ from the package, and holds each document to every figure it quotes. The brand
 is an executed example rather than a shipped set, so the suite is separate from
 `documentedFigures`, whose provenance names a shipped theme. No token value,
 pair, floor, metric, role or shipped theme moves; `contrastPairs` stays **470**.
+
+Plan `787` closes the last unguarded numbers in the ledger's Design tokens row.
+Its closing parenthetical states four shipped scale ranges, and one was false:
+it read `avatars 16…40` while `avatarSize` has shipped `20/26/32/40` since plan
+`054`; the range came from plan `725`, whose §*Measured* said "16 → 24 → 32 → 40"
+— a ladder that never existed. The same parenthetical abbreviated the density
+controls to two presets (`24/28/32 → 32/36/40`) where `densityNames` has three,
+hiding the step plan `725` made the suite compare. `inventory.test.ts` now builds
+all four phrases from `spacingSteps`/`spacing`, `avatarSizeSteps`/`avatarSize`
+and the density index, so an endpoint, a step or a preset cannot move without the
+ledger; every one of the four mutations, and a shipped `avatarSize.lg` edit,
+fails the case. The row and the plan index state the corrected ranges; plan
+`725`'s own file keeps its authored text as history. No token value, pair, floor,
+metric, role or shipped theme moves; `contrastPairs` stays **470**.
 
 ## How to use a plan
 

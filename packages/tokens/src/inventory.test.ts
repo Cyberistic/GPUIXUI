@@ -22,6 +22,15 @@
  * the ledger with no owner, so an eleventh kind would leave the row quoting the
  * old size while every suite stayed green. The row is count-free where it
  * reports history and its one present-tense count is held to `themeChecks`.
+ *
+ * Plan 787 closed the same gap for the Design tokens row's range parenthetical:
+ * it quoted the avatar scale as `16…40` while the package has shipped
+ * `20/26/32/40` since plan 054 — the range came from plan 725's own mis-measured
+ * summary — and it quoted the density control ladder as two presets where
+ * `densityNames` has three. No case read any of its four endpoints, so falsifying
+ * them left the suite green. The four phrases now derive from `spacingSteps`,
+ * `avatarSizeSteps` and the density index, and the case fails for every range
+ * edit as well as for a shipped-value edit.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -53,6 +62,15 @@ import { motionLevels, motionPhases } from "./motion.js";
 import { metricGroups } from "./metrics.js";
 import { translucentRoles } from "./opacity.js";
 import { platformNames, platformTypes } from "./platforms.js";
+import {
+  avatarSize,
+  avatarSizeSteps,
+  controlSizes,
+  densityNames,
+  densityPresets,
+  spacing,
+  spacingSteps,
+} from "./scale.js";
 import { statusTones } from "./styles.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import { typefaceRules } from "./typeface.js";
@@ -141,6 +159,34 @@ describe("COMPONENTS.md design-system rows", () => {
     ].map((match) => Number(match[1]));
     expect(counts.length).toBeGreaterThan(0);
     counts.forEach((count) => expect(count).toBe(colorRoles.length));
+  });
+
+  it("states the scale ranges the indexes derive", () => {
+    const range = (values: ReadonlyArray<number>) =>
+      `${Math.min(...values)}…${Math.max(...values)}`;
+    const controlLadder = densityNames
+      .map((name) =>
+        controlSizes
+          .map((size) => densityPresets[name].controlHeight[size])
+          .join("/"),
+      )
+      .join(" → ");
+    const rowLadder = densityNames
+      .map((name) => densityPresets[name].rowHeight)
+      .join(" → ");
+
+    const tokens = row("Design tokens");
+    expect(tokens).toContain(
+      `spacing ${range(spacingSteps.map((step) => spacing[step]))}`,
+    );
+    expect(tokens).toContain(
+      `avatars ${range(avatarSizeSteps.map((step) => avatarSize[step]))}`,
+    );
+    expect(tokens).toContain(`controls ${controlLadder}`);
+    expect(tokens).toContain(`rows ${rowLadder}`);
+
+    // The stale range plan 725 copied from its own mis-measured avatar ladder.
+    expect(tokens).not.toContain("avatars 16…40");
   });
 
   it("states the contract's pair counts from the pair lists", () => {
