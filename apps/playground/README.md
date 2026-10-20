@@ -2217,9 +2217,14 @@ rendering every module fails `a light module has no node`; a no-op module click
 fails `expected "hit=r3c3", got "hit=none"`; removing `role` fails
 `the QR is an accessibility node`.
 
-Not proven: **scannability** (no decoder on this host, no pixel readback — the
-screenshot is the visual evidence), the white quiet zone as a check (a transparent
-one still paints), and any encoder. A module grid is the wrong default for a large
+Not proven: **scannability** (there is no barcode decoder on this host), and any
+encoder. **The pixels are proven since plan `708`** — `qr-pixels.ts` samples
+every module centre and reconstructs the authored 21 × 21 matrix from a decoded
+frame, so "no pixel readback" was true only of the original plan `518` probe.
+The quiet zone is sampled at four corners on both reconstructed routes (the
+module/`<svg>` routes show the container's `background` role, the `<img>` route
+bakes white into its own document), so a transparent quiet zone on the `<img>`
+route is still not asserted. A module grid is the wrong default for a large
 code: version 40 is 177 × 177, so tens of thousands of retained nodes.
 
 ## Application menu bar (plan `519`)
