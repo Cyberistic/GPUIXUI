@@ -71,6 +71,24 @@ terminal" section (`render(<App/>, { terminal: true })`), the README documents
 `isTerminal()` and `GPUIX_TERMINAL=1`, and `installation.mdx` gains the terminal
 subsection
 
+### Runtime workstream (`@gpuixui/runtime`)
+
+`[x]` `[██████████]` 3/3
+
+`[x]` Land `@gpuixui/runtime` (plan 438 §2 truth pass) — the capability matrix
+(`transform`, `gridSpan`, `canvas`, `imeComposition`, `globalShortcut`, `tray`,
+`nativeView` as `supported: false` with a reason + workaround; `terminal`,
+`headlessDialog`, `tabNavigation` as `supported: true`), the
+`UnsupportedRuntimeFeature` `Schema.TaggedError`, the `isTerminal()` re-export,
+and the compile-time guards in `src/guards.ts` that fail TS2578 the moment the
+runtime adds a key the matrix claims is absent.
+`[x]` Refuse the unrepresentable classes in `@gpuixui/tw` — `transform`,
+`rotate-*`, `scale-*`, `translate-*`, `skew-*`, `col-span-*`, `row-span-*`,
+`grid-area-*` now return a specific reason naming the gap and workaround instead
+of a generic "unknown class".
+`[x]` Document the matrix on `/docs/runtime` (table + `isTerminal()` + per-gap
+"what to do instead"), linked from the installation page and sidebar.
+
 ### `@gpuixui/tw` migration (`tw-primitives`)
 
 `[x]` `[██████████]` 3/3

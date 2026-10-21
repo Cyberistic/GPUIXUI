@@ -2,17 +2,17 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | spec / research (no implementation) |
+| Status | spec / research (no implementation) — §2 truth-passed to `@gpuix/*@0.11.0`; upstream issues deferred |
 | Phase | A (capability spec) → feeds the keyboard workstream, the updater package, and the runtime workstream |
 | Owner | research / runtime seam owner |
 | Depends on | `020` (capability map), `310` (accelerator model), `316` (hotkey recorder), `437` (foreign-surface seam), `reference-research.md` |
-| Feeds | a keymap/command package, a focus-management package, `packages/updater`, and the upstream issue set |
+| Feeds | a keymap/command package, a focus-management package, `packages/updater`, and the deferred upstream issue set |
 
 This plan answers three questions the owner posed, with evidence, and does **no**
 implementation. It is the specification the weaker executors build against:
 
 1. **FlashSpace** — how a shipping macOS utility does global hotkeys and OTA.
-2. **GPUix today** — what key/focus/update surface the pinned `@gpuix/native@0.10.0`
+2. **GPUix today** — what key/focus/update surface the pinned `@gpuix/native@0.11.0`
    actually exposes, and the exact list of what is missing.
 3. **The design** — a library-level keyboard architecture, an OTA architecture,
    and the honest *library-only / runtime change / runtime + native helper*
@@ -147,33 +147,47 @@ Every path is relative to that clone root.
 
 ## 2. GPUix capability findings
 
-The pinned runtime is `@gpuix/native@0.10.0` (npm `registry.npmjs.org`, pulled as
-`gpuix-native-0.10.0.tgz` on 2026-10-19; repository `github.com/remorses/gpuix`).
-Types cited from the tarball; Rust source cited from
-`remorses/gpuix@515df19` (`packages/native/src/`). Where `main` has since added a
-feature, that is called out explicitly — the published 0.10.0 is the contract the
-library ships against.
+The pinned runtime is now `@gpuix/native@0.11.0` / `@gpuix/react@0.11.0`
+(plan 539 landed the bump; npm `registry.npmjs.org`, repository
+`github.com/remorses/gpuix`). Types cited from the installed `.d.ts`; Rust source
+cited from `remorses/gpuix@515df19` (`packages/native/src/`). Items closed by
+0.11.0 are marked **closed**; the confirmed-absent list below is what the
+library's `@gpuixui/runtime` capability matrix encodes as `supported: false`.
+
+Closed by 0.11.0 (re-verified against the installed `.d.ts`):
+
+- **Terminal rendering** — `render(<App />, { terminal: true })` (or
+  `GPUIX_TERMINAL=1`) paints into kitty/Ghostty with the kitty graphics
+  protocol, and `isTerminal()` reports it (plan 539).
+- **Headless `Dialog`** — `@gpuix/react/dialog` ships the Base UI-shaped parts
+  (`Dialog`, `DialogTrigger`, `DialogPopup`, …) over a full-window layer, with a
+  one-per-window Escape dismissal stack (`pushDismissLayer` / `DismissableLayer`).
+- **Tab / Shift+Tab focus movement** — the default; `event.preventDefault()` in
+  an `onKeyDown` keeps one Tab (a modal trap).
+- **`preventDefault` / `stopPropagation` on key events** — `EventPayload` carries
+  `keystrokeId` (one keystroke's element `keyDown` and trailing `windowKeyDown`
+  share it) and `KeyEvent` exposes `preventDefault()`, `stopPropagation()` and
+  `defaultPrevented`. Gap 2 below is closed; plan 539 already uses it.
 
 ### 2.1 Key events
 
-Present in 0.10.0:
+Present in 0.11.0:
 
-- Per-element `onKeyDown` / `onKeyUp` on any host element (`dist/host.d.ts:290-291`).
-  The `EventPayload` carries `key` (logical name), `keyChar` (the produced
-  character, e.g. `ß` for option-s), `isHeld` (key repeat), and `modifiers`
-  `{shift, ctrl, alt, cmd}` (`index.d.ts:509-524, 583`).
+- Per-element `onKeyDown` / `onKeyUp` on any host element. The `EventPayload`
+  carries `key` (logical name), `keyChar` (the produced character, e.g. `ß` for
+  option-s), `isHeld` (key repeat), and `modifiers` `{shift, ctrl, alt, cmd}`.
+- `keystrokeId`, `preventDefault()`, `stopPropagation()` — closed in 0.11.0 (see
+  above).
 - Elements with keyboard/focus listeners get a GPUI `FocusHandle` (the
   `TestGpuixRenderer.focusElement` doc: "created by `sync_focus_handles` when the
-  element has keyDown, keyUp, focus, or blur listeners", `index.d.ts:264-267`).
-- `autoFocus` and `tabIndex` (native GPUI tab order, `0` = normal) on `HostProps`
-  (`dist/host.d.ts:316-320`).
+  element has keyDown, keyUp, focus, or blur listeners").
+- `autoFocus` and `tabIndex` (native GPUI tab order, `0` = normal) on `HostProps`.
 - **Window-level** key handlers: `setWindowKeyEvents(keyDown, keyUp, eventId)`
-  (`index.d.ts:115`) plus `WindowKeyEventHandlers.onKeyDown/onKeyUp/onSelectionChange`
-  (`dist/host.d.ts:488-495`). The native `windowKeyDown`/`windowKeyUp` events are
-  re-tagged to `keyDown`/`keyUp` with `elementId: 0` before reaching the handler
-  (`dist/renderer-state.js:58-69`).
+  plus `WindowKeyEventHandlers.onKeyDown/onKeyUp/onSelectionChange`. The native
+  `windowKeyDown`/`windowKeyUp` events are re-tagged to `keyDown`/`keyUp` with
+  `elementId: 0` before reaching the handler.
 
-Missing in 0.10.0 (each with evidence):
+Missing in 0.11.0 (each with evidence):
 
 - **No global/system hotkey API.** No `registerGlobalHotkey` / `onGlobalHotkey`
   / `unregisterHotkey` symbol anywhere in `index.d.ts` or `dist/host.d.ts`, and
@@ -181,15 +195,6 @@ Missing in 0.10.0 (each with evidence):
   `hotkey|global|register|tray` across `packages/native/src/` returns only
   unrelated matches: syntax-language registration, the internal automation
   canvas). Key events reach the app **only while the window is focused**.
-- **No `preventDefault` / `stopPropagation` on key events.** 0.10.0's
-  `EventPayload` has no `keystroke_id` (`index.d.ts:476-584` — the struct has
-  `key`, `keyChar`, `isHeld`, `modifiers` but nothing to link an element
-  `keyDown` to the trailing `windowKeyDown`), and no `preventDefault` /
-  `stopPropagation` exists in `@gpuix/react@0.10.0` (grep: zero hits). This is
-  what plan `316` §5 measured: the recorder observes, it cannot suppress. The
-  cross-event `keystroke_id` **does exist on `remorses/gpuix` `main`**
-  (`element_tree.rs:68-72` — "JS can apply `preventDefault` / `stopPropagation`
-  across them") but is **post-0.10.0** and not in the pinned release.
 - **No chords / keymap / action binding.** A keystroke handler sees a chord only
   where the pointer of attention already is. The action/keymap layer — "this
   means Save once, and the keymap decides which chord means it, in which context,
@@ -200,28 +205,34 @@ Missing in 0.10.0 (each with evidence):
 
 ### 2.2 Focus
 
-Present in 0.10.0:
+Present in 0.11.0:
 
+- **Tab / Shift+Tab** move focus through `tabIndex` elements by default; call
+  `event.preventDefault()` in an `onKeyDown` to keep one Tab (closed in 0.11.0).
+- **Headless `Dialog`** owns the modal focus contract — `DialogPopup` moves focus
+  in on open and back out on close, and the Escape layer stack is one-per-window
+  (closed in 0.11.0).
 - `focusElement(id)`, `focusNext()`, `focusPrevious()`,
   `focusNextWithin(id)`, `focusPreviousWithin(id)`, `getFocusedElementId()`,
-  `blur()` (`index.d.ts:103-116`). `focusNext`/`focusPrevious` map to GPUI's own
-  `window.focus_next` / `window.focus_prev` tab order (`renderer.rs:1855-1887`);
-  the `…Within` variants wrap inside a subtree (`renderer.rs:1916-1958`).
-- AccessKit via `role` + `aria-*` (`dist/host.d.ts:326-338`), mapped to AccessKit
-  `Role` (`accessibility.rs:17-61, 129-213`), and `getA11yTree()` (`index.d.ts:399`).
+  `blur()`. `focusNext`/`focusPrevious` map to GPUI's own
+  `window.focus_next` / `window.focus_prev` tab order; the `…Within` variants
+  wrap inside a subtree.
+- AccessKit via `role` + `aria-*`, mapped to AccessKit `Role`, and
+  `getA11yTree()`.
 
 Missing (library-buildable — the primitive exists, the composite behaviour does
 not):
 
 - **Roving focus** (arrow-key movement within a menu/list/tab set), **focus
-  traps** (dialog scoping), **focus restoration** (return to the trigger after a
-  modal closes), and **focus scopes** (modal vs. behind). None are runtime APIs;
-  each is composable from `focusElement` + `tabIndex` + `focusNextWithin`. See
-  §4.2.
+  restoration** (return to the trigger after a modal closes), and **focus
+  scopes** (modal vs. behind). None are runtime APIs; each is composable from
+  `focusElement` + `tabIndex` + `focusNextWithin`. **Focus traps are closed by
+  0.11.0** — the headless `Dialog` keeps Tab inside the popup, so §4.3 no longer
+  hand-rolls a Tab wrap.
 
 ### 2.3 Update
 
-Present in 0.10.0:
+Present in 0.11.0:
 
 - `checkUpdate(currentVersion, options)` → `AvailableUpdate | null`
   (`index.d.ts:419-441`). `CheckUpdateOptions` = `{ endpoints, pubkey, headers?,
@@ -292,16 +303,16 @@ none of these:
 
 ## 3. The missing list and the extensibility verdict
 
-Each row classifies the gap as **library-only** (buildable against 0.10.0 today),
+Each row classifies the gap as **library-only** (buildable against 0.11.0 today),
 **runtime change** (a small surface addition in `@gpuix/native`/`@gpuix/react`),
 or **runtime + native helper** (a new OS-level integration behind the runtime).
 
 | # | Capability | Class | Evidence (absence) |
 | - | ---------- | ----- | ------------------ |
 | 1 | System/global hotkey register + callback | **runtime + native helper** | no symbol in `index.d.ts`; no `hotkey`/`global` path in `packages/native/src/` |
-| 2 | Key-event `preventDefault`/`stopPropagation` (`keystroke_id`) | **runtime change** | `EventPayload` (0.10.0) lacks `keystroke_id`; exists on `main` (`element_tree.rs:68-72`) |
+| 2 | Key-event `preventDefault`/`stopPropagation` (`keystrokeId`) | ~~runtime change~~ **closed in 0.11.0** | `EventPayload` carries `keystrokeId`; `KeyEvent` has `preventDefault()`/`stopPropagation()` |
 | 3 | Keymap / chords / action binding | **library-only** | buildable on `onWindowKeyDown` + plan 310 accelerator model |
-| 4 | Roving focus / focus trap / focus restoration | **library-only** | buildable on `focusElement` + `tabIndex` + `focusNextWithin` |
+| 4 | Roving focus / focus restoration / focus scopes | **library-only** | buildable on `focusElement` + `tabIndex` + `focusNextWithin`; the focus *trap* is closed by the headless `Dialog` |
 | 5 | Relaunch after update | **runtime change** (small) | `downloadAndInstall()` documented as not relaunching |
 | 6 | Delta updates | **runtime change** | single `downloadUrl`, no delta manifest |
 | 7 | Rollback | **runtime change** | old bundle discarded (`updater.rs:985-1025`) |
@@ -311,19 +322,23 @@ or **runtime + native helper** (a new OS-level integration behind the runtime).
 | 11 | Canvas draw API | **runtime + native helper** | `canvas` is internal automation only |
 | 12 | Tray / menu-bar item | **runtime + native helper** | no tray symbol; `WindowOptions` has no menu-bar mode |
 | 13 | IME composition events | **runtime + native helper** | no composition surface; only gpui basic editors |
+| 14 | CSS transform (`rotate`/`scale`/`translate`/`skew`) | **runtime change** | `StyleDesc` has no `transform` key |
+| 15 | Grid span (`gridColumn`/`gridRow`) | **runtime change** | only `gridColumnMin`/`gridRowMin` + integer track counts |
 
 The owner's assumption, answered directly: **a library can own everything that is
 pure logic over the existing event/focus surface** — the command registry, the
-keymap, conflict detection, roving focus, traps, restoration, the cheatsheet,
-update scheduling/UI, and channels. **It cannot fake anything that needs a
-different OS object or a missing event**: a system-wide hotkey (1), key-event
-cancellation across the element/window boundary (2), relaunch (5), delta (6),
-rollback (7), a child native view (10), a real canvas (11), a tray (12), and IME
-composition (13). Those need a runtime change, and 1/10/11/12/13 additionally
+keymap, conflict detection, roving focus, restoration, the cheatsheet, update
+scheduling/UI, and channels. **It cannot fake anything that needs a
+different OS object or a missing event or style key**: a system-wide hotkey (1),
+relaunch (5), delta (6), rollback (7), a child native view (10), a real canvas
+(11), a tray (12), IME composition (13), a CSS transform (14), and grid spans
+(15). Those need a runtime change, and 1/10/11/12/13 additionally
 need a native helper (Carbon `RegisterEventHotKey`, `wry`, a real GPUI canvas, a
 status-item/tray API, and a composition surface respectively). No amount of
 library cleverness makes a GPUI-painted `<div>` become a system hotkey or a
-`WKWebView`.
+`WKWebView`. The library ships the honest half meanwhile — `@gpuixui/runtime`
+records each gap as `supported: false` with a reason and workaround, and
+`@gpuixui/tw` refuses the unrepresentable classes by name.
 
 ---
 
@@ -374,10 +389,10 @@ Pure module `shortcut/resolution.ts`, unit-tested:
   two commands in the same scope with an identical resolved chord is a hard error
   (surfaced at registration, not silently dropped), mirroring FlashSpace's
   recorder-side alert but moved to the registry.
-- **Consumption** rides on `onWindowKeyDown` (`RootEventHandlers.onKeyDown`,
-  `dist/host.d.ts:489-490`). Because 0.10.0 has no `preventDefault`, a matched
-  command cannot stop the native default — the plan records this as gap 2 and the
-  STOP condition in §4.5.
+- **Consumption** rides on `onWindowKeyDown` (`RootEventHandlers.onKeyDown`).
+  0.11.0 has `preventDefault`/`keystrokeId`, so a matched command can suppress
+  the native default (gap 2 is closed); the "observer, not suppressor" contract
+  `316` measured against 0.10.0 no longer applies.
 
 ### 4.3 Focus management (`focus/`)
 
@@ -385,14 +400,15 @@ Pure module `shortcut/resolution.ts`, unit-tested:
   arrow/Home/End/typeahead behaviour for a composite; it calls
   `renderer.focusElement(id)` on the target and updates `activeIndex`. Consumed by
   every composite (menu, list, tabs, toolbar).
-- **Focus trap** — `trapFocus(containerId, { initial })` uses
-  `focusNextWithin`/`focusPreviousWithin` (`index.d.ts:111-113`) so `Tab` wraps
-  inside the dialog, and returns an `onFocusOutside` guard for the click-outside
-  case.
+- **Focus trap** — closed in 0.11.0: Tab/Shift+Tab move focus by default and the
+  headless `Dialog` keeps Tab inside its popup, so a modal no longer hand-rolls a
+  `focusNextWithin` wrap. The remaining library piece is an `onFocusOutside`
+  guard for the click-outside case.
 - **Focus restoration** — a `focusScope` records `getFocusedElementId()` on open
   and restores it on close (`focusElement`), so a modal returns focus to its
   trigger. This is the runtime-primitive answer to plan `155` (modal focus
-  semantics).
+  semantics); the headless `Dialog`'s `finalFocus` already does this for the
+  wrapped case.
 
 ### 4.4 Shortcut discovery
 
@@ -431,10 +447,7 @@ native shape (Carbon `RegisterEventHotKey`, background firing, no permission).
 
 **STOP conditions**: stop and report if (a) `onWindowKeyDown` does not fire for a
 key that the focused element also handles (measure, don't assume — `316` already
-recorded the window/element routing nuance); (b) a matched command cannot
-suppress the native default because `preventDefault` is absent (gap 2) — then the
-first slice ships with the "observer, not suppressor" contract `316` documented,
-and the fix is pinned to the upstream issue; (c) the composite needs a chord the
+recorded the window/element routing nuance); (b) the composite needs a chord the
 runtime's `Keystroke` parser does not name (`316` §8 measured Backspace/Delete
 emit nothing) — record it and don't promise that gesture.
 
@@ -522,10 +535,14 @@ library task; ship the quit-and-relaunch-externally contract and pin issue 5.
 
 ---
 
-## 6. Draft upstream issues
+## 6. Upstream issue drafts (deferred)
 
-Filed against `remorses/gpuix` (the runtime). Written general — no product names,
-no private details.
+Drafts against `remorses/gpuix` (the runtime), written general — no product
+names, no private details. **Deferred by the owner's call: not filing for now.**
+The library ships the honest half meanwhile — `@gpuixui/runtime` records each
+gap as `supported: false` with a reason and workaround, and `@gpuixui/tw` refuses
+the unrepresentable classes by name. Issue 2 is already closed by 0.11.0 and is
+kept only as a record of what changed.
 
 1. **"Add a global/system hotkey registration API"** — The renderer exposes only
    focused-window key events; there is no way to register a system hotkey that
@@ -540,18 +557,10 @@ no private details.
    Minimal shape: a program that registers `cmd+shift+x`, minimizes the window,
    presses the chord, and observes the callback.
 
-2. **"Expose `preventDefault` / `stopPropagation` on key events (keystroke_id)"**
-   — A key handled by a focused element cannot be cancelled before the window
-   handler sees it, and an element `keyDown` cannot be linked to the trailing
-   `windowKeyDown`. Evidence: the released `EventPayload` carries `key`,
-   `keyChar`, `isHeld`, `modifiers` but no `keystroke_id`; the `main` branch
-   already models this (`element_tree.rs` `keystroke_id`, "JS can apply
-   `preventDefault`/`stopPropagation` across them") but it is not in the last
-   release. Expected: a release containing `keystroke_id` and
-   `preventDefault()`/`stopPropagation()` on the JS event, so a library keymap
-   can consume a chord and suppress the native default. Minimal shape: bind a
-   handler that calls `preventDefault()` on `cmd+s`, and assert the window
-   handler does not run.
+2. ~~**"Expose `preventDefault` / `stopPropagation` on key events (keystroke_id)"**~~ — **closed in 0.11.0.** `EventPayload` carries `keystrokeId` and `KeyEvent`
+   exposes `preventDefault()`/`stopPropagation()`/`defaultPrevented`, so a
+   library keymap can consume a chord and suppress the native default today.
+   Kept as a record; not filed.
 
 3. **"Add a `relaunch()` helper to the updater surface"** — `downloadAndInstall()`
    replaces the bundle but cannot restart the process, forcing every consumer to
@@ -600,14 +609,19 @@ no private details.
 
 ## 7. Result
 
-Spec complete (no implementation). Findings, missing list, issue drafts, and the
-two architectures are recorded above. The next executors are:
+Spec complete (no implementation). Findings, the 0.11.0 missing list, the
+deferred issue drafts, and the two architectures are recorded above. The next
+executors are:
 
 - `packages/components` — `shortcut/{command,resolution,conflict}.ts` + `focus/`
-  (§4), first slice §4.6.
+  (§4), first slice §4.6. The focus *trap* no longer needs to be hand-rolled —
+  0.11.0's Tab default and the headless `Dialog` own it (§4.3).
 - a new `packages/updater` — the Effect service (§5.2) and the update UI (§5.3),
   first slice §5.5.
-- the runtime workstream — issues 1–7 in §6.
+- the runtime workstream — **done**: `@gpuixui/runtime` ships the capability
+  matrix with typed refusals, and `@gpuixui/tw` refuses the unrepresentable
+  classes by name. The deferred issues (1, 3–7 in §6) gate only the native
+  behaviour.
 
-No runtime change is required to start either first slice; gaps 1–2, 5–7 (and
-10–13 via `437`) gate only the final, fully-native behaviour.
+No runtime change is required to start either first slice; gaps 1, 5–7 (and
+10–15 via `437`/`020`) gate only the final, fully-native behaviour.
