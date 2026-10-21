@@ -38,6 +38,13 @@
   --hover: #222730;
   --shadow: #00000080;
   --radius: 6px;
+  /* `themes.dark.density` (comfortable): a surface below no PreviewSurface. */
+  --control-height-sm: 28px;
+  --control-height-md: 32px;
+  --control-height-lg: 36px;
+  --control-padding-x-sm: 8px;
+  --control-padding-x-md: 10px;
+  --control-padding-x-lg: 12px;
 
   display: flex;
   flex-wrap: wrap;
@@ -92,8 +99,8 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 34px;
-  padding: 0 14px;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
   border: 1px solid transparent;
   border-radius: calc(var(--radius) + 2px);
   font-family: inherit;
@@ -114,14 +121,14 @@
 }
 
 .gx-btn-sm {
-  height: 28px;
-  padding: 0 10px;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
   font-size: 12px;
 }
 
 .gx-btn-lg {
-  height: 40px;
-  padding: 0 18px;
+  height: var(--control-height-lg);
+  padding: 0 var(--control-padding-x-lg);
   font-size: 14px;
 }
 
@@ -276,8 +283,8 @@
 .gx-field {
   display: flex;
   align-items: center;
-  height: 34px;
-  padding: 0 11px;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 1px);
   background: var(--input);
@@ -392,8 +399,8 @@
 }
 
 .gx-tab {
-  height: 34px;
-  padding: 0 12px;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
   border: 0;
   background: transparent;
   color: var(--muted-foreground);

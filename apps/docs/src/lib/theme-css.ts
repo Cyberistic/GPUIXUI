@@ -21,7 +21,9 @@ const toKebab = (name: string): string =>
 
 /**
  * The variables a preview reads from a theme: every colour role as
- * `--<kebab role>`, `--radius` from `radius.md`, and the two families.
+ * `--<kebab role>`, `--radius` from `radius.md`, the two families, and the
+ * control metrics of the theme's density so a platform's controls change size
+ * in a browser preview the way they do in the runtime.
  *
  * @example
  * ```tsx
@@ -33,6 +35,12 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--radius": `${theme.radius.md}px`,
   "--font-sans": cssFontStack(theme.typography.sans),
   "--font-mono": theme.typography.mono,
+  "--control-height-sm": `${theme.density.controlHeight.sm}px`,
+  "--control-height-md": `${theme.density.controlHeight.md}px`,
+  "--control-height-lg": `${theme.density.controlHeight.lg}px`,
+  "--control-padding-x-sm": `${theme.density.controlPaddingX.sm}px`,
+  "--control-padding-x-md": `${theme.density.controlPaddingX.md}px`,
+  "--control-padding-x-lg": `${theme.density.controlPaddingX.lg}px`,
   ...Object.fromEntries(
     Object.entries(theme.colors).map(([role, value]) => [
       `--${toKebab(role)}`,

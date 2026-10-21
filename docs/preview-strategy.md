@@ -70,18 +70,22 @@ platform switch.
 
 - `src/lib/theme-css.ts` is the one bridge: a `Theme` becomes CSS variables
   (`primaryForeground` → `--primary-foreground`, `radius.md` → `--radius`, both
-  families). The theme editor and every preview use it.
+  families, and the density's control heights and paddings). The theme editor
+  and every preview use it.
 - `src/components/docs/preview-surface.tsx` wraps a preview in `.gx-demo` and
   applies `toCssVars` of the **resolved platform theme** from
   `src/lib/platform.ts` (`platformTheme(themes.dark, platform)`), plus a
   `data-platform` marker.
-- `.gx-demo` in `demos.css` declares the dark theme's roles as defaults, because
-  the landing's product window renders outside a preview surface.
+- `.gx-demo` in `demos.css` declares the dark theme's roles and its comfortable
+  density as defaults, because the landing's product window renders outside a
+  preview surface.
 - `src/lib/theme-css.test.ts` holds the seam: every `var(--…)` a preview style
   sheet reads must exist in the bridge, the `.gx-demo` defaults must equal
-  `themes.dark`, and no preview rule may carry a library colour literal. A
-  preview therefore cannot drift from the tokens, and a wider platform variant
-  repaints the site with no docs change.
+  `themes.dark` (colour roles and density alike), every control-shaped preview
+  rule must take its height from a density variable, and no preview rule may
+  carry a library colour literal. A preview therefore cannot drift from the
+  tokens, and a wider platform variant — macOS compact, Linux spacious, Windows
+  comfortable — repaints and re-sizes the site with no docs change.
 
 The exception is the dashboard block: its `--dash-*` palette is its own, because
 the landing renders the same markup in a light and a dark window. It is labelled

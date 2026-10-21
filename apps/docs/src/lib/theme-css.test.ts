@@ -1,4 +1,4 @@
-import { themes } from "@gpuixui/tokens";
+import { platformTheme, themes } from "@gpuixui/tokens";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { cssFontStack } from "./fonts";
@@ -65,6 +65,16 @@ const toCamel = (name: string): string =>
 
 const darkColours = Object.fromEntries(Object.entries(themes.dark.colors));
 
+/** The density metrics `.gx-demo` declares, keyed by their CSS variable. */
+const darkDensity: Readonly<Record<string, number>> = {
+  "control-height-sm": themes.dark.density.controlHeight.sm,
+  "control-height-md": themes.dark.density.controlHeight.md,
+  "control-height-lg": themes.dark.density.controlHeight.lg,
+  "control-padding-x-sm": themes.dark.density.controlPaddingX.sm,
+  "control-padding-x-md": themes.dark.density.controlPaddingX.md,
+  "control-padding-x-lg": themes.dark.density.controlPaddingX.lg,
+};
+
 describe("theme bridge", () => {
   it("maps token roles to the shadcn variable names", () => {
     const vars = toCssVars(themes.dark);
@@ -78,6 +88,24 @@ describe("theme bridge", () => {
     );
     expect(vars["--muted-foreground"]).toBe(themes.dark.colors.mutedForeground);
     expect(vars["--radius"]).toBe(`${themes.dark.radius.md}px`);
+    expect(vars["--control-height-md"]).toBe(
+      `${themes.dark.density.controlHeight.md}px`,
+    );
+    expect(vars["--control-padding-x-sm"]).toBe(
+      `${themes.dark.density.controlPaddingX.sm}px`,
+    );
+  });
+
+  it("carries the platform density, so a preview's controls change size", () => {
+    const height = (platform: "darwin" | "linux" | "win32") =>
+      toCssVars(platformTheme(themes.dark, platform))["--control-height-md"];
+
+    // macOS compact (28), Linux spacious (36), Windows comfortable (32).
+    expect([height("darwin"), height("linux"), height("win32")]).toEqual([
+      "28px",
+      "36px",
+      "32px",
+    ]);
   });
 
   it("maps the GPUI font sentinel to a CSS stack, and leaves other families alone", () => {
@@ -124,6 +152,8 @@ describe("preview style sheets", () => {
 
     const mismatched = declared.filter(({ name, value }) => {
       const role = toCamel(name.slice(2));
+      const metric = darkDensity[name];
+      if (metric !== undefined) return value !== `${metric}px`;
       if (role === "radius") return value !== `${themes.dark.radius.md}px`;
       const expected = darkColours[role];
       // Not every declared name is a colour role; only roles are held here.
@@ -133,6 +163,21 @@ describe("preview style sheets", () => {
     // The landing's product window renders outside a PreviewSurface, so these
     // defaults are the only paint it gets: they must be the library's.
     expect(mismatched.map(({ name }) => name)).toEqual([]);
+  });
+
+  it("read a control's geometry from the theme, not a fixed height", () => {
+    const css = read("../styles/demos.css");
+    const fixed = [
+      ".gx-btn",
+      ".gx-btn-sm",
+      ".gx-btn-lg",
+      ".gx-field",
+      ".gx-tab",
+    ]
+      .filter((selector) => !block(css, selector).includes("--control-height"))
+      .map((selector) => `${selector}: no --control-height`);
+
+    expect(fixed).toEqual([]);
   });
 
   it("carry no library colour literal outside the defaults", () => {
