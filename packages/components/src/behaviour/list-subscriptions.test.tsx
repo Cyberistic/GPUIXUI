@@ -15,11 +15,7 @@ import { List, ListItem, ListItemTitle } from "../list.js";
 const values = ["one", "two", "three"] as const;
 
 /** Three rows, each recording how often its style resolves (= how often it paints). */
-const Counter = ({
-  paints,
-}: {
-  readonly paints: Record<string, number>;
-}) => (
+const Counter = ({ paints }: { readonly paints: Record<string, number> }) => (
   <List selectionMode="multiple" defaultValue={["one"]}>
     {values.map((value) => (
       <ListItem

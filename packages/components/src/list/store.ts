@@ -61,7 +61,10 @@ export const makeRowStore = (): RowStore => {
 
   const read = (value: string): RowState => {
     const next: RowState = {
-      active: Option.exists(selection.active, (candidate) => candidate === value),
+      active: Option.exists(
+        selection.active,
+        (candidate) => candidate === value,
+      ),
       selected: Arr.contains(value)(selection.selected),
       tabbable: Option.exists(
         selection.tabbable,
