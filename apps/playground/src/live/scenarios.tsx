@@ -44,6 +44,7 @@ import {
   Button,
   Checkbox,
   Input,
+  Slider,
   ThemeProvider as PrimitiveThemeProvider,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
@@ -696,6 +697,76 @@ const TabsProbe = (): ReactNode => {
         {`value=${value} changes=${changes}`}
       </text>
     </div>
+  );
+};
+
+/**
+ * The shipped `Slider` from `@gpuixui/primitives`: a controlled value, a
+ * readout, and a second disabled track beside it.
+ *
+ * The readout carries `centred` so a press in the middle of the track is an
+ * exact check without parsing a number: the hit-test has to turn the pointer's
+ * x into a value near 50, which a wrapper that never read the track's box cannot
+ * do.
+ */
+const SliderProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [value, setValue] = useState(0);
+  const [changes, setChanges] = useState(0);
+  return (
+    <PrimitiveThemeProvider theme={palettes.dark}>
+      <div
+        testId="slider-probe"
+        style={{
+          width: window.width,
+          height: window.height,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.xl,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped Slider: a press positions it, the keys step it, a disabled
+          track ignores both.
+        </text>
+        <div style={{ width: 400 }}>
+          <Slider
+            testId="slider"
+            label="Volume"
+            value={value}
+            onValueChange={(next) => {
+              setValue(next);
+              setChanges((count) => count + 1);
+            }}
+          />
+        </div>
+        <div style={{ width: 400 }}>
+          <Slider
+            testId="slider-disabled"
+            label="Locked"
+            value={value}
+            disabled
+          />
+        </div>
+        <text
+          testId="slider-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`value=${value} changes=${changes} centred=${value > 45 && value < 55}`}
+        </text>
+      </div>
+    </PrimitiveThemeProvider>
   );
 };
 
@@ -1904,6 +1975,83 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * Drives the shipped `Slider` in a window: a press in the middle of the track
+ * becomes a value there (the hit-test reads the track's box), the keys step and
+ * jump to the ends, and a disabled track ignores a press.
+ *
+ * Pointer capture is a measured runtime gap, so this probe makes no drag claim:
+ * a drag that leaves the track stops there by design and is documented, not
+ * asserted. What it does prove is the two paths that always work.
+ */
+const sliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("slider");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the slider starts at zero",
+      yield* ctx.host.text("slider-readout"),
+      "value=0 changes=0 centred=false",
+    );
+
+    yield* ctx.host.click("slider");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press in the middle of the track moves the value there",
+      yield* ctx.host.text("slider-readout"),
+      "centred=true",
+    );
+    yield* ctx.expectContains(
+      "the press reports one change",
+      yield* ctx.host.text("slider-readout"),
+      "changes=1",
+    );
+    yield* ctx.host.capture("slider-pressed");
+
+    yield* ctx.host.focusElement("slider");
+    yield* ctx.host.key("home");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Home jumps to the minimum",
+      yield* ctx.host.text("slider-readout"),
+      "value=0 changes=2 centred=false",
+    );
+
+    yield* ctx.host.key("end");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "End jumps to the maximum",
+      yield* ctx.host.text("slider-readout"),
+      "value=100 changes=3 centred=false",
+    );
+
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the left arrow steps down",
+      yield* ctx.host.text("slider-readout"),
+      "value=99 changes=4 centred=false",
+    );
+
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the right arrow steps back up",
+      yield* ctx.host.text("slider-readout"),
+      "value=100 changes=5 centred=false",
+    );
+
+    const beforeDisabled = yield* ctx.host.text("slider-readout");
+    yield* ctx.host.click("slider-disabled");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled track ignores a press",
+      yield* ctx.host.text("slider-readout"),
+      beforeDisabled,
+    );
+    yield* ctx.host.capture("slider-keys");
+  });
+
+/**
  * Opens the shipped Dialog by press, proves focus entered the surface and that
  * Escape closes it and returns focus, then closes it with its own `DialogClose`.
  *
@@ -2744,6 +2892,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "tabs-lifecycle",
     view: () => <TabsProbe />,
     steps: tabsSteps,
+  },
+  "slider-lifecycle": {
+    id: "slider-lifecycle",
+    view: () => <SliderProbe />,
+    steps: sliderSteps,
   },
   "dialog-lifecycle": {
     id: "dialog-lifecycle",

@@ -32,9 +32,10 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-fifteen probes a real window can prove, of which seven mount shipped
+sixteen probes a real window can prove, of which seven mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
-palette, the tabs, the popover and the modal focus rule) and the rest prove the
+palette, the tabs, the popover and the modal focus rule), three mount
+`@gpuixui/primitives` (the Input, Checkbox and Slider), and the rest prove the
 runtime itself (focus, paint, fonts, placement, content surfaces).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
@@ -536,6 +537,29 @@ dropping `disabled` fails `the arrow skips the disabled trigger`
 (`expected "tabs-archive", got "tabs-settings"`), and moving the expected pill
 40px fails `the pill starts on the selected trigger's left edge`
 (`expected 61 ± 2, got 21`), exit `1` each.
+
+### `slider-lifecycle` — measured on 0.11.0 here
+
+The shipped `Slider` (`@gpuixui/primitives`), controlled, with a second disabled
+track beside it. The checks are the two input paths that always work — a press
+anywhere on the track and the keyboard — because the runtime has **no pointer
+capture**: a drag that leaves the track stops there by design, and this probe
+does not claim otherwise.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `value=0 changes=0 centred=false` |
+| press the middle of the track | `centred=true changes=1` — the hit-test read the track's box and turned the pointer's x into a value near 50 |
+| `Home` | `value=0 changes=2` |
+| `End` | `value=100 changes=3` |
+| `ArrowLeft` / `ArrowRight` | `value=99 changes=4`, then `value=100 changes=5` |
+| press the disabled track | the readout does not change |
+
+10 checks. Captures: `.artifacts/live/slider-pressed.png` and
+`slider-keys.png`. Negative control, measured: making the interactive track
+`disabled` fails `a press in the middle of the track moves the value there`
+(`expected a string containing "centred=true", got "value=0 changes=0
+centred=false"`, exit `1`).
 
 ### `dialog-lifecycle` — measured on 0.11.0 here
 

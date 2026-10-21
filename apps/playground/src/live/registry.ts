@@ -85,6 +85,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "slider-lifecycle",
+    title:
+      "Input: the shipped Slider positions by press, steps by key and ignores a disabled track",
+    capability: "input",
+  },
+  {
     id: "dialog-lifecycle",
     title:
       "Modal: the shipped Dialog opens on a press, focuses its surface, and Escape returns focus",
