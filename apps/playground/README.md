@@ -33,12 +33,12 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-nineteen probes a real window can prove, of which seven mount shipped
+twenty-one probes a real window can prove, of which seven mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
 palette, the tabs, the popover and the modal focus rule), four mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), and the rest
-prove the runtime itself (focus, paint, fonts, placement, content surfaces and
-the window's own wheel).
+prove the runtime itself (focus, paint, fonts, placement, content surfaces, the
+window's own wheel, a split pane and a virtual list).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -998,6 +998,36 @@ press keeps receiving moves after the pointer leaves its box, which is what a
 6px divider needs. The Slider pages say the opposite for a drag leaving the
 track, so this probe is the evidence on the other side of that question
 (`TODO.md` interlocks).
+
+### `virtual-list-lifecycle` — measured on 0.11.0 here
+
+The Tier 3 virtualization path in a window: 5 000 fixed 32px rows in a 280px
+viewport. The retained tree holds all 5 000 children, so the probe reads
+`getPaintedText`, and it counts `onVisibleRange`'s own reports rather than
+trusting the first one.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | the first row is painted, the last of 5 000 is not, and fewer than 40 row lines exist |
+| at rest | no range has been reported yet (`first=-1 last=-1 reports=0`) |
+| wheel `-400` | the painted window moves past row 0 (the capture shows rows 13–21), one report arrives, and it still starts at row 0 |
+| wheel `-400` again | the second report has caught up to the window the first scroll reached (`first=12`, not 0) |
+| wheel past the start | clamps back to row 0 |
+
+10 checks. The measured limitation is the **lag**: a scroll's `onVisibleRange`
+carries the range from *before* that scroll, so a table that reads the event
+after a wheel paints the previous window. The headless `virtualized-table`
+already compensates by choosing rows from the painted window; this is the same
+rule measured with a capture, and the probe fails if an upgrade removes the lag
+(so the note cannot outlive it). Second measured limit: `<virtual-list>` reports
+no painted bounds of its own, so the wheel is aimed at the frame it fills and the
+hit test still lands on the list.
+
+Negative control measured: dropping the `onVisibleRange` handler fails
+`the first report still starts at the first row (measured lag)`
+(`expected true, got false`, exit `1`). Evidence:
+`.artifacts/live/vlist-scrolled.png` — rows 13–21 painted beside a readout that
+still says `first=0 last=9`.
 
 ## Release gate
 

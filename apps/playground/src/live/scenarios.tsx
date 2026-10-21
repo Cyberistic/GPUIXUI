@@ -3786,6 +3786,169 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("split-resized");
   });
 
+/** The virtual list probe's row height and count, and its viewport. */
+const VLIST_ROWS = 5000;
+const VLIST_ROW_HEIGHT = 32;
+const VLIST_VIEWPORT = 280;
+
+/**
+ * A `<virtual-list>` of 5 000 rows in a 280px viewport.
+ *
+ * The retained tree holds all 5 000 children; the runtime builds and paints only
+ * those near the viewport, so the check is the painted text, never the child
+ * count. `onVisibleRange` is the event a table needs to know where it is.
+ */
+const VirtualListProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [first, setFirst] = useState(-1);
+  const [last, setLast] = useState(-1);
+  const [reports, setReports] = useState(0);
+
+  return (
+    <div
+      testId="vlist-probe"
+      style={{
+        width: 420,
+        height: 420,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        5 000 rows, one viewport: only the painted window exists.
+      </text>
+      <div testId="vlist-frame" style={{ display: "flex", height: VLIST_VIEWPORT }}>
+        <virtual-list
+          testId="vlist"
+          style={{ flexGrow: 1, minHeight: 0 }}
+          onVisibleRange={(event) => {
+            setFirst(event.startIndex ?? -1);
+            setLast(event.endIndex ?? -1);
+            setReports((current) => current + 1);
+          }}
+        >
+          {Array.from({ length: VLIST_ROWS }, (_, index) => (
+            <div
+              key={index}
+              testId={`vlist-row-${index}`}
+              style={{ height: VLIST_ROW_HEIGHT }}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "body"),
+                  color: theme.colors.foreground,
+                }}
+              >
+                {`row ${index}`}
+              </text>
+            </div>
+          ))}
+        </virtual-list>
+      </div>
+      <text
+        testId="vlist-range"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`first=${first} last=${last} reports=${reports}`}
+      </text>
+    </div>
+  );
+};
+
+/** The `row <n>` lines the window actually painted. */
+const paintedRows = (lines: ReadonlyArray<string>): number =>
+  Arr.length(
+    Arr.filter(lines, (line) => Str.startsWith("row ")(line)),
+  );
+
+const virtualListSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("vlist");
+    yield* Effect.sleep(SETTLE);
+
+    const atRest = yield* ctx.host.paintedText();
+    yield* ctx.expectEqual(
+      "the window paints the first row",
+      Arr.contains(atRest, "row 0"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the last of 5 000 rows is not painted",
+      Arr.contains(atRest, `row ${VLIST_ROWS - 1}`),
+      false,
+    );
+    const painted = paintedRows(atRest);
+    yield* ctx.expectEqual(
+      "only a window of rows exists, not the retained 5 000",
+      painted > 0 && painted < 40,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "no visible range is reported before the first scroll",
+      yield* ctx.host.text("vlist-range"),
+      "first=-1 last=-1 reports=0",
+    );
+
+    // A `<virtual-list>` reports no painted bounds of its own, so the wheel is
+    // aimed at the frame it fills; the hit test still lands on the list.
+    yield* ctx.host.wheel("vlist-frame", 0, -400);
+    yield* Effect.sleep(Duration.millis(300));
+    const scrolled = yield* ctx.host.paintedText();
+    yield* ctx.expectEqual(
+      "the painted window moves past the first row",
+      Arr.contains(scrolled, "row 0"),
+      false,
+    );
+    const firstReport = yield* ctx.host.text("vlist-range");
+    yield* ctx.expectEqual(
+      "the first report still starts at the first row (measured lag)",
+      Str.includes("first=0 last=")(firstReport),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "one scroll reports one range",
+      Str.includes("reports=1")(firstReport),
+      true,
+    );
+    yield* ctx.host.capture("vlist-scrolled");
+
+    // A second scroll's report carries the range the first one reached: the
+    // event lags one scroll, so a table cannot read the current window from it.
+    yield* ctx.host.wheel("vlist-frame", 0, -400);
+    yield* Effect.sleep(Duration.millis(300));
+    const secondReport = yield* ctx.host.text("vlist-range");
+    yield* ctx.expectEqual(
+      "the second report has caught up to the moved window",
+      Str.includes("first=0 ")(secondReport),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "two scrolls report two ranges",
+      Str.includes("reports=2")(secondReport),
+      true,
+    );
+
+    // Past the start clamps back to the first row.
+    yield* ctx.host.wheel("vlist-frame", 0, 100000);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a wheel past the start returns to the first row",
+      Arr.contains(yield* ctx.host.paintedText(), "row 0"),
+      true,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -3888,5 +4051,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "split-pane-lifecycle",
     view: () => <SplitPaneProbe />,
     steps: splitSteps,
+  },
+  "virtual-list-lifecycle": {
+    id: "virtual-list-lifecycle",
+    view: () => <VirtualListProbe />,
+    steps: virtualListSteps,
   },
 };

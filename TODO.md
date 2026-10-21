@@ -450,7 +450,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 34/34
+`[x]` `[██████████]` 35/35
 
 `[x]` Measure the modal **Tab trap in a window** — `dialog-lifecycle` now presses
       Tab six times inside the shipped `Dialog`: the focus never names
@@ -755,6 +755,20 @@ a workaround for two live sessions sharing one worktree; see
       `--only panel-resize --only docking-nested --only workspace-tab-drag`
       green (3/3). Evidence: `apps/playground/README.md`
       §`split-pane-lifecycle`, `.artifacts/live/split-resized.png`
+`[x]` Land the `virtual-list-lifecycle` live probe — 5 000 fixed 32px rows in a
+      280px viewport, read through `getPaintedText`: the first row paints, the
+      last of 5 000 does not, fewer than 40 row lines exist, and **no** range is
+      reported before the first scroll. A wheel then moves the painted window
+      (rows 13–21 in the capture) and fires one `onVisibleRange` that still
+      carries the pre-scroll range (`first=0`); a second scroll's report catches
+      up. Measured gap: the event **lags one scroll**, so a table must read the
+      painted window (as `virtualized-table` already does). Also measured:
+      `<virtual-list>` reports no painted bounds, so the wheel is aimed at the
+      frame it fills. 10 checks, `--only virtual-list-lifecycle`, green on
+      0.11.0; negative control measured (handler dropped: `the first report
+      still starts at the first row (measured lag): expected true, got false`,
+      exit `1`). Evidence: `apps/playground/README.md`
+      §`virtual-list-lifecycle`, `.artifacts/live/vlist-scrolled.png`
 
 ## Phase C — Tier 1–2 components
 

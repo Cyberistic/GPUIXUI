@@ -156,6 +156,12 @@ export const liveRegistry = [
       "Panel: a window's divider drag resizes its pane, clamps at the caller's bounds, and ignores a drag on the pane",
     capability: "panel",
   },
+  {
+    id: "virtual-list-lifecycle",
+    title:
+      "Table: a window's <virtual-list> paints only its visible rows and reports the range it moved to",
+    capability: "virtual-list",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
