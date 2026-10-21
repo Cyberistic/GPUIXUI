@@ -37,6 +37,7 @@ export const completeSection = (
   tree: PageTree.Root,
   folderName: string,
   pages: ReadonlyArray<SectionPage>,
+  separator = "All components",
 ): PageTree.Root => {
   const known = urls(tree.children);
   const missing = pages.filter((page) => !known.has(page.url)).toSorted(byName);
@@ -44,7 +45,7 @@ export const completeSection = (
   if (missing.length === 0) return tree;
 
   const items: ReadonlyArray<PageTree.Node> = [
-    { type: "separator", name: "All components" },
+    { type: "separator", name: separator },
     ...missing.map(
       (page): PageTree.Node => ({
         type: "page",

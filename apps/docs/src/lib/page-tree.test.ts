@@ -92,6 +92,22 @@ describe("the component section", () => {
     ).toBe(true);
   });
 
+  it("names the separator for the section it completes", () => {
+    const completed = completeSection(
+      tree([folder("Primitives", [page("Box", "/docs/primitives/box")])]),
+      "Primitives",
+      [{ name: "Button", url: "/docs/primitives/button" }],
+      "All primitives",
+    );
+    const [primitives] = completed.children;
+    if (primitives?.type !== "folder") throw new Error("no primitives folder");
+
+    const separators = primitives.children.flatMap((node) =>
+      node.type === "separator" ? [node.name] : [],
+    );
+    expect(separators).toEqual(["All primitives"]);
+  });
+
   it("presses an already-listed page only once", () => {
     const completed = completeSection(
       tree([folder("Components", [page("Tabs", "/docs/components/tabs")])]),

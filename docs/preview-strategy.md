@@ -35,20 +35,31 @@ component is right and the preview is a bug.
 
 ### Pages the package writes
 
-`packages/components/docs/<name>.mdx` is the page a component ships with. The
-site mounts that directory as a second Fumadocs collection and renders the files
-as-is at `/docs/components/<name>`, so a component cannot ship a page the site
-does not show and the two cannot drift. Those pages are **strategy 4**: no
-browser rendering, the real API tables and limitations, and a note at the top
-naming the example file to run in `apps/playground`.
+Each package writes the page a component ships with. The site mounts those
+directories as Fumadocs collections and renders the files as-is, so a component
+cannot ship a page the site does not show and the two cannot drift:
+
+| Collection | Source | Route | Sidebar |
+| ---------- | ------ | ----- | ------- |
+| Primitives | `packages/primitives/docs` | `/docs/primitives` | Primitives |
+| Icons | `packages/icons/docs` | `/docs/icons` | Primitives |
+| Components | `packages/components/docs` | `/docs/components` | Components |
+
+Those pages are **strategy 4**: no browser rendering, the real API tables and
+limitations, and a note at the top naming the example file to run in
+`apps/playground`. The primitive layer is one sidebar section even though two
+packages write its pages, because a reader looks for a lane of the library, not
+for a package boundary. `src/lib/collection-routes.ts` is the single registry;
+`src/lib/package-docs.test.ts` holds it to every `packages/*/docs` directory and
+checks that the primitives index links every page in the section.
 
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source. Curated today: Button, Dialog,
 Popover, Tabs.
 
-Because the package writes Markdown and the site compiles MDX, the package's
+Because the package writes Markdown and the site compiles MDX, the packages'
 files must satisfy both: valid YAML frontmatter and no raw `<tag>` outside code.
-`src/lib/component-docs.test.ts` holds that line, and the collection fails whole
+`src/lib/package-docs.test.ts` holds that line, and a collection fails whole
 when it is crossed.
 
 ## Theming: a preview paints the library's theme, not the site's

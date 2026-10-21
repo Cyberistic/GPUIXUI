@@ -1,0 +1,98 @@
+---
+title: Primitives
+description: The Tier 1 layer — layout, type, actions, inputs and indicators, each a thin styling layer over a GPUix host element.
+---
+
+Primitives are the bottom layer of the library. Each one owns a single job, is
+built directly on a GPUix host element, and reads the theme's semantic roles
+instead of a colour. There is no composed behaviour here: a `Select` opens a
+GPUix list, a `Checkbox` paints a box and reports a boolean, a `Stack` spaces
+children along an axis.
+
+The pages come from the package itself — `packages/primitives/docs` is mounted
+at this URL, so the page you read and the file the component ships with are the
+same file. They carry the real API tables, the keyboard contract, the roles each
+component reads and the measured limitations; they do not carry browser
+previews. Run the component natively from `apps/playground` instead.
+
+<Install packageName="@gpuixui/primitives" importName="Stack" />
+
+## Layout
+
+| Primitive | What it is |
+| --------- | ---------- |
+| [Box](/docs/primitives/box) | The one container — a semantic surface and flex facts |
+| [Stack](/docs/primitives/stack) | Children along one axis, spaced by the theme scale |
+| [Grid](/docs/primitives/grid) | Equal tracks in two dimensions — the only grid GPUix draws |
+| [Separator](/docs/primitives/separator) | One theme-coloured rule, with an optional caption |
+| [Spacer](/docs/primitives/spacer) | A fixed step, or a flexible filler between siblings |
+| [ScrollArea](/docs/primitives/scroll-area) | A bounded container that scrolls on the chosen axes |
+
+## Type and icons
+
+| Primitive | What it is |
+| --------- | ---------- |
+| [Text](/docs/primitives/text) | One run of type, named by a theme role and a semantic tone |
+| [Label](/docs/primitives/label) | A control's visible name, required marker and description |
+| [Icons](/docs/icons/icon) | Forty-seven monochrome icons, their size scale and the two a11y rules |
+
+## Actions
+
+| Primitive | What it is |
+| --------- | ---------- |
+| [Button](/docs/primitives/button) | The primary action, with busy and disabled states |
+| [Button group](/docs/primitives/button-group) | A row of related actions, attached or separated |
+| [Toggle](/docs/primitives/toggle) | A button whose action has a persistent on/off state |
+
+## Text and numeric inputs
+
+| Primitive | What it is |
+| --------- | ---------- |
+| [Input](/docs/primitives/input) | A single-line text field, controlled or uncontrolled |
+| [Text area](/docs/primitives/textarea) | A multi-line text field sized in rows |
+| [Number field](/docs/primitives/number-field) | A number in a text field, with steps and optional bounds |
+| [OTP field](/docs/primitives/otp-field) | A one-time code in length cells, held as one string |
+
+## Choice
+
+| Primitive | What it is |
+| --------- | ---------- |
+| [Select](/docs/primitives/select) | One choice from a list, in a popover over GPUix's Select |
+| [Checkbox](/docs/primitives/checkbox) | An independent yes/no, optionally indeterminate |
+| [Radio group](/docs/primitives/radio-group) | One choice from a small set, with a roving tab stop |
+| [Switch](/docs/primitives/switch) | An immediate on/off, distinct from a checkbox in intent |
+| [Slider](/docs/primitives/slider) | A value on a track, by click, drag or keyboard |
+| [Range slider](/docs/primitives/range-slider) | The two ends of one interval on a single track |
+| [Rating](/docs/primitives/rating) | A whole number of stars, or none |
+
+## Value and progress
+
+| Primitive | What it is |
+| --------- | ---------- |
+| [Progress](/docs/primitives/progress) | A determinate or indeterminate progress bar |
+| [Meter](/docs/primitives/meter) | A measurement inside a range, not a task's progress |
+
+## Feedback
+
+| Primitive | What it is |
+| --------- | ---------- |
+| [Skeleton](/docs/primitives/skeleton) | A pulsing placeholder for content that has not arrived |
+| [Spinner](/docs/primitives/spinner) | Three dots, because the runtime cannot rotate |
+| [Tooltip](/docs/primitives/tooltip) | A short label on hover or keyboard focus |
+
+## The theme seam
+
+| Primitive | What it is |
+| --------- | ---------- |
+| [Theme provider](/docs/primitives/theme-provider) | Supplies the theme every primitive draws with |
+
+## How to read a page
+
+Each page follows the same order: what it is, usage, variants and sizes, API,
+keyboard, accessibility, theming, limitations, verification and related. A
+section that does not apply is omitted rather than faked. Where GPUix lacks a
+capability, the page names the gap and the alternative in use — never a promise.
+
+Composed components — dialogs, menus, tabs, pickers — sit in
+[Components](/docs/components), one tier up. The status of every row, with its
+runtime evidence, lives in the repository's `COMPONENTS.md`.

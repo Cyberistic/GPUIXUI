@@ -39,7 +39,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[x]` `[██████████░░]` 10/13
+`[x]` `[█████████░]` 14/16
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
@@ -66,8 +66,16 @@ is a second Fumadocs collection mounted at `/docs/components`, so all 39 shipped
 components have a page (curated pages win their URL), the sidebar fills them in
 after the curated four, search indexes both collections, and `/docs/components`
 indexes the section. `docs/preview-strategy.md` records the page template and the
-honesty policy; `component-docs.test.ts` guards the frontmatter and MDX rules the
+honesty policy; `package-docs.test.ts` guards the frontmatter and MDX rules the
 package's Markdown must satisfy
+`[x]` Mount the primitive and icon docs too — `packages/primitives/docs` (28
+pages) lives at `/docs/primitives` and `packages/icons/docs` at `/docs/icons`,
+filling a Primitives sidebar section before Components; the section index links
+every page, and `package-docs.test.ts` fails when a `packages/*/docs` directory
+is unmounted, when a collection shadows a page outside the curated overrides, or
+when a package page breaks the MDX rules. Verified in the dev server:
+`/docs/primitives/button`, `/docs/icons/icon`, `/docs/primitives`, and the search
+index returns `/docs/primitives/slider`
 `[x]` Land the docs platform switch (macOS · Linux · Windows · Default) — the
 sidebar switch resolves `platformTheme` from `@gpuixui/tokens`, writes
 `?platform=` and remembers the choice; every preview renders on a `PreviewSurface`
@@ -297,9 +305,11 @@ visual half
 `[x]` Cross-team: native theme gallery in `apps/playground` — `theme-color-roles`,
 `theme-type-and-shadow` and `theme-platform` read the runtime's style report;
 21/21 green on 0.11.0 (owner: `playground`)
-`[ ]` Cross-team: Fumadocs Theming page from `docs/tokens.md` and the
+`[x]` Cross-team: Fumadocs Theming page from `docs/tokens.md` and the
 docs platform toggle (macOS / Linux / Windows / Default) built on
-`platformTypes` + `platformTheme` (owner: `docs-site`); ignore the `references`
+`platformTypes` + `platformTheme` (owner: `docs-site`) — landed: the switch and
+the resolved `platformStyles` are on `/docs/theming#platform-styles`, and the
+inventory row records the guard tests; ignore the `references`
 **symlink** — a `references/` rule does not match a symlink, so every worktree
 shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `tokens`)
@@ -371,14 +381,15 @@ a workaround for two live sessions sharing one worktree; see
 
 ## Phase C — Tier 1–2 components
 
-`[~]` `[███░░░░░░░]` 2/3
+`[x]` `[██████████]` 3/3
 
-`[~]` Tier 1 foundational components (code + test + example + docs + inventory):
+`[x]` Tier 1 foundational components (code + test + example + docs + inventory):
       all 19 components have code, tests, a runtime-verified interaction, an
       in-package docs page, a mounted example and an inventory row;
-      `packages/primitives/src/inventory.test.ts` now holds the 27
+      `packages/primitives/src/inventory.test.ts` holds the 27
       `COMPONENTS.md` rows to the code, so that table cannot drift again;
-      **docs-site pages are still pending** (docs-site workstream)
+      their pages now render on the site at `/docs/primitives/<name>` (and the
+      icon page at `/docs/icons/icon`), linked from the Primitives section index
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness
@@ -629,8 +640,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Native proof that `registerFonts` paints the registered face: register a face in the theme gallery and show the fallback and the intended face | playground | pending — `@gpuixui/tokens` side is shipped and unit-tested |
 | Probe that `focusVisible` paints after Tab and not after a mouse press (and on programmatic focus in a dialog) — plan 053's STOP gate | playground | pending — decides whether the shadow ring can become an outline |
 | Adopt the keyboard-only ring (`outline*` + `focusVisible`) and delete the manual focus tracking in `Button`, `selection.ts`, `list.tsx` and the overlay parts | components, primitives | pending — plan 053, after the probe |
-| Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | **resolved for the pages** — the package's docs directory is a second Fumadocs collection at `/docs/components` (39 pages, sidebar + search); the example registry waits on the playground mounting them |
-| Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/component-docs.test.ts` fails on a regression |
+| Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | **resolved for the pages** — every package docs directory is a Fumadocs collection: `/docs/components` (39 pages), `/docs/primitives` (28) and `/docs/icons` (1), all in the sidebar and search; the example registry waits on the playground mounting them |
+| Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/package-docs.test.ts` fails on a regression |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Correct `docs/component-api.md` §2: "`onValueChange` is the only change callback name" is wrong for boolean parts — base-gpui uses `on_checked_change`, so primitives adopts `onCheckedChange` alongside `onValueChange` (plan 040 §2.1) | components | pending |
 | A `darwin-x64` binding for `@gpuix/native` **0.11.0** (B1, re-opened by the version bump; the store's local build was 0.10.0) | playground | **resolved** — rebuilt from the pinned `2e31b47` with the fixed zed checkout path; 21/21 smoke green on 0.11.0 |
@@ -659,6 +670,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` Consistency, keyboard, themes, composability pass
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
+
+### Docs information architecture (`docs-site`)
+
+`[ ]` `[░░░░░░░░░░]` 0/4
+
+`[ ]` Architecture page — the package graph, the boundaries and where a new component or token belongs
+`[ ]` Layouts, Workspace and Data display pages — the composition lanes the component inventory names, with live examples as they land
+`[ ]` Examples and API reference pages — the example registry once the playground mounts it, plus a generated public-export reference
+`[ ]` License and attribution page — rendered from `LICENSES/` once the inventory is complete
 
 ## Phase G — release readiness
 

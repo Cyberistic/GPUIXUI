@@ -1,7 +1,9 @@
 export const appName = "GPUIxUI";
 export const docsRoute = "/docs";
-/** Where the package's own component pages render. */
+/** Where each package's own pages render. */
+export const primitiveDocsRoute = "/docs/primitives";
 export const componentDocsRoute = "/docs/components";
+export const iconDocsRoute = "/docs/icons";
 export const gitConfig = {
   user: "Cyberistic",
   repo: "GPUIXUI",

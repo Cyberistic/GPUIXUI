@@ -17,31 +17,46 @@ import {
   PlatformProvider,
   PlatformToggle,
 } from "@/components/docs/platform-toggle";
-import { componentDocs, componentSource } from "./component-docs";
+import {
+  collectionByOrigin,
+  packageCollections,
+  packageSections,
+  type PackageOrigin,
+} from "./collection-routes";
 import { baseOptions } from "./layout.shared";
 import { completeSection } from "./page-tree";
+import { docsByOrigin, sectionPages, sourceByOrigin } from "./package-docs";
+import { docsRoute } from "./shared";
 import { docs, source } from "./source";
 
 /**
  * Which collection a page comes from.
  *
- * `site` is this app's own page for a component; `package` is the page the
- * component ships with in `packages/components/docs`. A curated site page wins,
- * so the site can go deeper on the components it documents first.
+ * `site` is this app's own page; the others are the page the package ships with
+ * in `packages/<pkg>/docs`. A curated site page wins its URL, so the site can go
+ * deeper on the components it documents first.
  */
-type Origin = "site" | "package";
+type Origin = "site" | PackageOrigin;
 
-/** The sidebar tree, with the package's component pages filled in. */
+/** The sidebar tree, with each package's pages filling its section. */
 const pageTree = async () =>
   source.serializePageTree(
-    completeSection(
+    packageSections.reduce(
+      (tree, section) =>
+        completeSection(
+          tree,
+          section.name,
+          sectionPages(section.origins),
+          section.separator,
+        ),
       source.getPageTree(),
-      "Components",
-      componentSource.getPages().map((page) => ({
-        name: page.data.title,
-        url: page.url,
-      })),
     ),
+  );
+
+/** The mounted collection that owns a `/docs/<segment>` route. */
+const collectionAt = (segment: string | undefined) =>
+  packageCollections.find(
+    (collection) => collection.route === `${docsRoute}/${segment}`,
   );
 
 export const loadDocsPage = createServerFn({ method: "GET" })
@@ -56,13 +71,17 @@ export const loadDocsPage = createServerFn({ method: "GET" })
       };
     }
 
-    // The package collection is mounted under `/docs/components`, so its
+    // A package collection is mounted under its own route, so the remaining
     // slugs are relative to that prefix.
-    const packaged = componentSource.getPage(slugs.slice(1));
+    const [segment, ...rest] = slugs;
+    const collection = collectionAt(segment);
+    if (!collection) throw notFound();
+
+    const packaged = sourceByOrigin[collection.origin].getPage(rest);
     if (!packaged) throw notFound();
 
     return {
-      origin: "package" as const,
+      origin: collection.origin,
       path: packaged.path,
       pageTree: await pageTree(),
     };
@@ -120,31 +139,43 @@ function SiteContent({ path }: { path: string }) {
 }
 
 /**
- * A page from the component package's collection.
+ * A page from a package's own collection.
  *
  * The page is the package's own, so it opens with the note that a native
  * preview is not available here and where to run the real component.
  */
-function PackageContent({ path }: { path: string }) {
-  const page = componentDocs.getPage(path);
-  if (!page) throw new Error(`unknown component page: ${path}`);
+function PackageContent({
+  origin,
+  path,
+}: {
+  readonly origin: PackageOrigin;
+  readonly path: string;
+}) {
+  const page = docsByOrigin[origin].getPage(path);
+  if (!page) throw new Error(`unknown ${origin} page: ${path}`);
 
   const { toc } = use(page.load());
   const MDX = page.body;
+  const collection = collectionByOrigin[origin];
 
   return (
     <PageFrame
       description={page.description}
-      origin="package"
+      origin={origin}
       path={path}
       title={page.title}
       toc={toc}
     >
-      <Callout title="This page ships with the component" type="info">
+      <Callout
+        title={`This page ships with the ${collection.kind}`}
+        type="info"
+      >
         It is rendered from{" "}
-        <code>packages/components/docs/{path.replace(/\.mdx$/, "")}.mdx</code>,
-        the page the package maintains. A browser preview is not available for
-        this component; run it natively in <code>apps/playground</code>.
+        <code>
+          {collection.dir}/{path.replace(/\.mdx$/, "")}.mdx
+        </code>
+        , the page the package maintains. A browser preview is not available for
+        this {collection.kind}; run it natively in <code>apps/playground</code>.
       </Callout>
       <MDX components={mdxComponents} />
     </PageFrame>
@@ -166,7 +197,7 @@ export function DocsView({ data }: { data: DocsPageData }) {
           {data.origin === "site" ? (
             <SiteContent path={path} />
           ) : (
-            <PackageContent path={path} />
+            <PackageContent origin={data.origin} path={path} />
           )}
         </Suspense>
       </DocsLayout>

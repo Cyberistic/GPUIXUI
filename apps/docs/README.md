@@ -17,6 +17,7 @@ content/docs/           MDX pages and their meta.json navigation
   installation.mdx      Requirements, nub, first component
   theming.mdx           Semantic roles, themes, overrides
   dark-mode.mdx         App-owned mode switching
+  primitives/           The Tier 1 section index (its pages come from the packages)
   components/           Custom pages (Button, Dialog, Popover, Tabs) and the index
   contributing.mdx      Checks, worktrees and the component checklist
 public/                 Static assets (favicon)
@@ -28,7 +29,8 @@ src/components/docs/    ComponentPreview, PreviewSurface, Install, ComponentSour
 src/components/mdx.tsx  The MDX component registry
 src/lib/docs-view.tsx   Shared docs layout and the two-collection page template
 src/lib/source.ts       Fumadocs collection for `content/docs`
-src/lib/component-docs.ts Fumadocs collection for `packages/components/docs`
+src/lib/collection-routes.ts The registry: every mounted package directory, route, section
+src/lib/package-docs.ts The Fumadocs loaders for the three package collections
 src/lib/page-tree.ts    Fills the package's pages into the Components section
 src/lib/platform.ts     The platform switch: parse, label, resolve the theme
 src/lib/theme-css.ts    Theme → CSS variables, shared with the theme editor
@@ -37,21 +39,29 @@ src/styles/app.css      Tailwind, Fumadocs presets and the GPUIxUI palette
 src/styles/demos.css    Scoped browser previews of the native components
 ```
 
-## Two collections
+## Four collections
 
-The site renders two Fumadocs collections:
+The site renders four Fumadocs collections: its own pages, plus one per package
+that ships documentation. The package pages are rendered as-is, never copied, so
+the site and the package cannot drift.
 
-- `content/docs` — this app's own pages, including the curated component pages.
-- `packages/components/docs` — the page each component ships with, mounted at
-  `/docs/components/<name>`. It is rendered as-is, never copied, so the site and
-  the package cannot drift. `src/lib/page-tree.ts` fills those pages into the
-  Components section of the sidebar, after the curated pages; a curated page
-  keeps its URL, and the search index skips the package page for that URL.
+| Collection | Route | Sidebar |
+| ---------- | ----- | ------- |
+| `content/docs` | `/docs` | the curated pages |
+| `packages/primitives/docs` | `/docs/primitives/<name>` | Primitives |
+| `packages/icons/docs` | `/docs/icons/<name>` | Primitives |
+| `packages/components/docs` | `/docs/components/<name>` | Components |
 
-The package's files are written as Markdown and compiled here as MDX, which is
+`src/lib/page-tree.ts` fills each package's pages into its section, after the
+curated pages. A curated page keeps its URL, and the search index skips the
+package page for that URL. The primitive layer is one sidebar section even
+though two packages write its pages.
+
+The packages' files are written as Markdown and compiled here as MDX, which is
 stricter: frontmatter must be valid YAML and prose may not contain a raw
-`<tag>` outside code. `src/lib/component-docs.test.ts` guards both, because a
-violation fails the collection, not just one page.
+`<tag>` outside code. `src/lib/package-docs.test.ts` guards that, that every
+`packages/*/docs` directory is mounted, and that the primitives index links every
+page it ships — a violation fails the collection, not just one page.
 
 ## The platform switch
 
