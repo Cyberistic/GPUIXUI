@@ -1407,6 +1407,7 @@ src/scenarios/search-highlights.tsx the runtime's find: query, case, word and ra
 src/scenarios/editor.tsx    a textarea that edits lines, <code> and <diff> read-only
 src/scenarios/examples.tsx  the shipped-example gallery: one page per registry id
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
+src/scenarios/registry.test.ts the README's printed total and capability list against it
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1496,6 +1497,9 @@ narrower. Each deviation is deliberate and measured:
   exit `1`).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
+- The README's printed totals follow the registry: `registry.test.ts` fails when
+  the scenario count or the capability list stops matching, so a new scenario
+  cannot leave the document claiming the previous run.
 - The resize arithmetic clamps inclusively (`resize.test.ts`).
 - The CLI's unsupported path returns `2` without evaluating the suite
   (`run.test.ts`).
