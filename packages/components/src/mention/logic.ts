@@ -2,7 +2,7 @@
  * Mention token rules: where a query starts, what replaces it and how names are
  * ranked.
  *
- * 0.10.0 exposes no caret position, so the query is derived from the text: the
+ * 0.11.0 exposes no caret position, so the query is derived from the text: the
  * last `@` that starts the text or follows whitespace, with no whitespace after
  * it. That is correct while typing at the end; mid-string editing is a recorded
  * limitation.

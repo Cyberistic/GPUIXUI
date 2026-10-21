@@ -11,8 +11,8 @@
  *
  * - a key event fired on a focused row **bubbles** to the list's `onKeyDown`, so
  *   the list can own the keys while the row owns the focus;
- * - `@gpuix/native@0.10.0` has no `focusVisible`, so the active row's ring shows
- *   for a click as well as for the keyboard.
+ * - the ring is the runtime's `focusVisible` outline, so it paints after a
+ *   keyboard focus and not after a click (measured on 0.11.0).
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
@@ -710,8 +710,8 @@ export const ListItem = ({
                 color: theme.colors.selectedForeground,
               }
             : {}),
-          // No `focusVisible` in 0.10.0: the active row is ringed whenever it
-          // is the active one, keyboard or click.
+          // The ring is the runtime's keyboard-only `focusVisible` outline: a
+          // click paints none, a Tab-driven focus paints it at rest.
           ...keyboardRing(theme),
         }),
         resolveStyle(style, state),
@@ -837,7 +837,7 @@ export const listMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
+    "no aria-multiselectable in 0.11.0, so the multiple mode is announced only per row",
     "type-ahead matches an explicit ListItem textValue, not rendered children",
     "activation is a callback on single/none lists: no href or link role, and a multiple list has no activation",
     "no drag reorder or virtualisation",

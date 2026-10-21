@@ -2,8 +2,8 @@
  * The accessibility dump, normalised once so every behaviour suite asserts on
  * one shape.
  *
- * Three facts measured against `@gpuix/native@0.10.0` on 2026-10-17, each of
- * which made an earlier Card assertion read `[]`:
+ * Three facts measured in the pinned runtime's test renderer, each of which made
+ * an earlier Card assertion read `[]`:
  *
  * - the dump describes the **last painted frame**, and `TestRoot.render`'s own
  *   flush does not populate it: a further paint is needed, which

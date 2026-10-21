@@ -1,5 +1,5 @@
 /**
- * Placement rules for GPUix's anchored layer, measured against 0.10.0.
+ * Placement rules for GPUix's anchored layer, measured against 0.11.0.
  *
  * The runtime positions `start`/`end` exactly and snaps a surface inside the
  * window, but two measured defects remain (plan 156 §8, re-measured in plan 323):

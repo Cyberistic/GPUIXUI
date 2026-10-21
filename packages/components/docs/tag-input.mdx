@@ -38,7 +38,7 @@ playground mounts.
 | Whitespace-only input | never becomes a token |
 
 Removal is the chip control. **Backspace on an empty field is not wired**: the
-installed `@gpuix/native@0.10.0` emits no `keyDown` for Backspace or Delete in
+installed `@gpuix/native@0.11.0` emits no `keyDown` for Backspace or Delete in
 the test renderer, so the component cannot promise (or test) that gesture. The
 docs and the inventory row record it rather than fake it.
 
@@ -64,7 +64,7 @@ controlled list.
 The group uses `background`, `border`, `radius.md`, `controlHeight` and
 `focusRing`; chips use `muted` / `mutedForeground` and `radius.sm`; the remove
 control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
-(0.10.0 has no `aria-disabled`). A custom theme changes all of it — see
+(0.11.0 has no `aria-disabled`). A custom theme changes all of it — see
 [Theming](/docs/theming).
 
 ## Accessibility
@@ -74,12 +74,12 @@ control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
 - The field is a real input, so typing, selection and focus are native.
 - Removing a chip by keyboard is possible by tabbing to its control and pressing
   `Enter`/`Space`.
-- The group's disabled state is visual: there is no `aria-disabled` in 0.10.0.
+- The group's disabled state is visual: there is no `aria-disabled` in 0.11.0.
 
 ## Limitations
 
 - Controlled only (see above).
-- No Backspace-on-empty removal (unobservable in 0.10.0).
+- No Backspace-on-empty removal (unobservable in 0.11.0).
 - No token autocomplete, suggestions or validation; compose with `Combobox` or a
   schema when the tokens must be constrained.
 - Commas are always separators; a token cannot contain a comma.

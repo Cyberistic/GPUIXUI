@@ -5,7 +5,7 @@
  * `validation/logic.ts` turns a schema into a message, and the caller decides
  * when to run it. A field only paints what the caller tells it.
  *
- * Measured limitation: `@gpuix/native@0.10.0` has no `aria-describedby`, so the
+ * Measured limitation: `@gpuix/native@0.11.0` has no `aria-describedby`, so the
  * message is passed to the control as `aria-description` (a description, not an
  * id reference). The input itself is the `@gpuixui/primitives` stand-in.
  */
@@ -199,7 +199,7 @@ export interface FieldInputProps extends Omit<InputProps, "style"> {
   /** Overrides the field's own error as the validity signal. */
   readonly invalid?: boolean;
   /**
-   * Leaves the tab order and ignores edits; 0.10.0 has no `aria-disabled`.
+   * Leaves the tab order and ignores edits; 0.11.0 has no `aria-disabled`.
    * Inferred from a disabled `Fieldset` as well as set directly.
    */
   readonly disabled?: boolean;
@@ -308,7 +308,7 @@ export const fieldMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no aria-describedby in 0.10.0: the message is an aria-description, not an id reference",
+    "no aria-describedby in 0.11.0: the message is an aria-description, not an id reference",
     "the control is the GPUix <input> host element until @gpuixui/primitives lands",
     "not a form library: the caller owns the value and when validation runs",
   ],

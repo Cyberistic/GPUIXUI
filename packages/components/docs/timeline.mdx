@@ -53,7 +53,7 @@ playground mounts.
 | `upcoming` | `muted` | `mutedForeground` |
 
 `status` is **passed**, not derived: a timeline has no index to count from. The
-current event also carries `aria-selected` because `@gpuix/native@0.10.0` has no
+current event also carries `aria-selected` because `@gpuix/native@0.11.0` has no
 `aria-current`.
 
 `TimelineItemState` is `{ status, last }`, so a style callback can react to
@@ -89,7 +89,7 @@ the rail with no code change — see [Theming](/docs/theming).
 - The root is a named `list` when `label` is given; every event is a `listitem`
   named by its `title`, so the timestamp and description are not repeated in the
   accessible name.
-- The current event carries `aria-selected` (no `aria-current` in 0.10.0).
+- The current event carries `aria-selected` (no `aria-current` in 0.11.0).
 - The dot is decorative; status reaches assistive technology only through that
   selected flag, not through a "complete/upcoming" announcement.
 

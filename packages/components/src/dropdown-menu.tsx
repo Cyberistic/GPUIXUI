@@ -393,7 +393,7 @@ export const dropdownMenuMeta = {
     "one level of submenus is tested; deeper nesting follows the same rule but is untested",
     'the root surface flips once when snapping would cover its trigger, and align="center" is measured from the trigger; the snap margin wins near a window edge',
     'submenus open to the right and are clamped by fit="snap"; there is no left-side flip',
-    "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
+    "no aria-haspopup in 0.11.0; a submenu trigger announces aria-expanded only",
     "type-ahead is a case-insensitive 500 ms prefix search with no fuzzy scoring; a composed label needs textValue",
     "the checkbox row uses aria-selected and a check icon because 0.11.0 has no aria-checked",
   ],

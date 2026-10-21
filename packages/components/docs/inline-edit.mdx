@@ -33,7 +33,7 @@ playground mounts.
 | Commit with an unchanged draft | nothing is called |
 | Empty text | a valid value; it clears the field (it is not "cancel") |
 
-Commit is **one rule**, and `Enter` can arrive twice in 0.10.0 (`keyDown` and
+Commit is **one rule**, and `Enter` can arrive twice in 0.11.0 (`keyDown` and
 `submit`), so the component finishes an edit once per entry.
 
 ## API
@@ -66,10 +66,10 @@ states with no code change — see [Theming](/docs/theming).
   with the same name.
 - Focus is moved with the renderer's `focusElement`; `autoFocus` alone does not
   follow a replaced element.
-- `@gpuix/native@0.10.0` has no `aria-invalid` or `aria-describedby`, so a
+- `@gpuix/native@0.11.0` has no `aria-invalid` or `aria-describedby`, so a
   rejected value needs the consumer's own message (pair it with `Field`).
 - Disabled is `tabIndex={-1}` with no handlers, plus dimming; there is no
-  `aria-disabled` in 0.10.0.
+  `aria-disabled` in 0.11.0.
 
 ## Limitations
 

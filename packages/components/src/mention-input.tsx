@@ -2,7 +2,7 @@
  * MentionInput: `@name` autocompletion in a text field.
  *
  * The token rules (where a query starts, how names rank, what replaces the
- * token) live in `mention/logic.ts`. 0.10.0 has no caret position, so the query
+ * token) live in `mention/logic.ts`. 0.11.0 has no caret position, so the query
  * comes from the text's last `@` token — correct while typing at the end, and
  * documented as the limitation it is.
  *
@@ -377,12 +377,12 @@ export const mentionInputMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "the query comes from the text, not the caret: mid-string editing is not supported (0.10.0 has no caret API)",
+    "the query comes from the text, not the caret: mid-string editing is not supported (0.11.0 has no caret API)",
     "a space typed while the floating list is mounted is consumed by the runtime before the field sees it; Escape or a selection closes the list",
-    "Tab insertion is not claimed: 0.10.0 moves focus at the platform level",
+    "Tab insertion is not claimed: 0.11.0 moves focus at the platform level",
     "Enter arrives as the input's submit event, so it is handled there",
-    "role=listbox and role=option are dropped from 0.10.0's accessibility dump, so the surface is a named group and rows are selected buttons",
-    "no aria-activedescendant in 0.10.0",
+    "role=listbox and role=option are dropped from 0.11.0's accessibility dump, so the surface is a named group and rows are selected buttons",
+    "no aria-activedescendant in 0.11.0",
   ],
   docs: "docs/mention-input.mdx",
   example: "examples/mention-input.example.tsx",

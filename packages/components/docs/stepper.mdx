@@ -88,7 +88,7 @@ A custom theme changes the whole indicator with no code change — see
 
 - The root is a named list when `label` is given; every step is a `listitem`
   named by its `label`.
-- `@gpuix/native@0.10.0` has no `aria-current`, so the current step carries
+- `@gpuix/native@0.11.0` has no `aria-current`, so the current step carries
   `aria-selected` — the same substitution Pagination uses.
 - The number marker is visual; the step's accessible name does not include it, so
   a screen reader hears "Billing", not "2 Billing".
@@ -98,7 +98,7 @@ A custom theme changes the whole indicator with no code change — see
 - Display-only: there is no step click, disabled policy or `onValueChange`.
 - No connector line between steps; the runtime has no pseudo-elements and the
   contract fixes two parts.
-- No `aria-current` in 0.10.0.
+- No `aria-current` in 0.11.0.
 
 ## Verification
 

@@ -133,7 +133,7 @@ export const confirmDialogMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "shares the dialog's 0.10.0 gaps: no aria-modal, no aria-labelledby",
+    "shares the dialog's 0.11.0 gaps: no aria-modal, no aria-labelledby",
     "the busy indicator is a text glyph until a Spinner primitive exists",
     "confirm does not close the dialog by design: the caller owns the close after its work succeeds",
   ],

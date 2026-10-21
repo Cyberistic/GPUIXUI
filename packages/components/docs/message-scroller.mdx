@@ -81,8 +81,8 @@ change — see [Theming](/docs/theming).
 - The affordance is a real focusable control with text that carries the count, so
   a screen reader reads "3 new messages" rather than an unlabelled icon.
 - `End` does not re-pin: the viewport is a plain scroll container and GPUix
-  0.10.0 gives a component no "scroll to end" key binding. Use the affordance.
-- GPUix 0.10.0 exposes no `aria-live`; new rows are not announced.
+  0.11.0 gives a component no "scroll to end" key binding. Use the affordance.
+- GPUix 0.11.0 exposes no `aria-live`; new rows are not announced.
 
 ## Limitations
 
@@ -91,7 +91,7 @@ change — see [Theming](/docs/theming).
   `MessageScrollerItem` without changing the public API. The pin decision is
   already measured from the tail, which is what a virtualized version needs.
 - **The affordance sits beneath the viewport**, not floating in its corner:
-  `position: "absolute"` resolves against the mount parent in 0.10.0, so a
+  `position: "absolute"` resolves against the mount parent in 0.11.0, so a
   corner overlay would be a window-level layer.
 - **No resize observer.** A row that grows while the scroller does not re-render
   (internal child state) is not followed; a stream that lives in the app's state

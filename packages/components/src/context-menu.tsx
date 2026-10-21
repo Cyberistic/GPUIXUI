@@ -1,7 +1,7 @@
 /**
  * ContextMenu: the shared menu rows, positioned at the pointer.
  *
- * `@gpuix/native@0.10.0` has no `onContextMenu`; a right click arrives as
+ * `@gpuix/native@0.11.0` has no `onContextMenu`; a right click arrives as
  * `onAuxClick` with `isRightClick` (`mutations.ts` maps `onAuxClick` →
  * `"auxClick"`), so the trigger records the pointer point and opens.
  *
@@ -388,10 +388,10 @@ export const contextMenuMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "right click is onAuxClick + isRightClick: 0.10.0 has no onContextMenu",
+    "right click is onAuxClick + isRightClick: 0.11.0 has no onContextMenu",
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",
     "one level of submenus is tested; deeper nesting follows the same rule but is untested",
-    "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
+    "no aria-haspopup in 0.11.0; a submenu trigger announces aria-expanded only",
   ],
   docs: "docs/context-menu.mdx",
   example: "examples/context-menu.example.tsx",

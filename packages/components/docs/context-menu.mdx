@@ -48,7 +48,7 @@ import {
 
 ## Right click
 
-`@gpuix/native@0.10.0` has no `onContextMenu`. A non-primary click arrives as
+`@gpuix/native@0.11.0` has no `onContextMenu`. A non-primary click arrives as
 `onAuxClick`, and the payload's `isRightClick` says whether it was the right
 button (`mutations.ts` maps `onAuxClick` → `"auxClick"`). The trigger stores
 `{ x, y }` from that event and opens.
@@ -56,7 +56,7 @@ button (`mutations.ts` maps `onAuxClick` → `"auxClick"`). The trigger stores
 A second right click elsewhere **on the trigger** closes the old surface and
 opens a new one at the new point; a right click outside the trigger area closes
 the menu but cannot open another, because the trigger is what listens. That is a
-deliberate scope, not a portal.
+deliberate scope rule, and the surface is not portalled.
 
 ## Positioning
 
@@ -131,13 +131,13 @@ a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`). The
 ## Accessibility and limitations
 
 - `role="menu"` on the surface, `menuitem`/`menuitemcheckbox` on rows. No
-  `aria-haspopup` on the trigger (not available in 0.10.0), so the keyboard route
+  `aria-haspopup` on the trigger (not available in 0.11.0), so the keyboard route
   is documented rather than announced.
-- There is no portal. The surface is a sibling of the trigger painted at window
+- The surface is not portalled: it is an `anchored` layer painted at window
   coordinates, so it is correct visually but not clipped by a scroll container.
 - One level of submenus is tested; deeper nesting follows the same rule but is
   not exercised by a suite. A submenu trigger announces `aria-expanded` only —
-  0.10.0 has no `aria-haspopup`.
+  0.11.0 has no `aria-haspopup`.
 - `Shift+F10` opens at the trigger's bottom-left, not at a text caret; a
   keyboard-opened menu returns focus to its trigger on Escape and activation.
 

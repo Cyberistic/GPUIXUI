@@ -85,14 +85,14 @@ see [Theming](/docs/theming).
 - Suggestion rows are buttons with `aria-selected` on the highlighted one; the
   surface is a named group.
 - `role="listbox"` and `role="option"` are **dropped** by
-  `@gpuix/native@0.10.0`'s accessibility dump (measured), so the list is not
+  `@gpuix/native@0.11.0`'s accessibility dump (measured), so the list is not
   announced as a listbox. There is no `aria-activedescendant` either.
 - Rows are focusable (`tabIndex=0`), so `Tab` then `Enter` can pick a row; the
   input's `Tab` behaviour is the platform's.
 
 ## Limitations
 
-- **The query comes from the text, not the caret.** `0.10.0` exposes no caret
+- **The query comes from the text, not the caret.** `0.11.0` exposes no caret
   position, so the component assumes typing at the end. Mid-string editing is not
   supported; an `@` inside a word is deliberately ignored.
 - **A space typed while the list is open is consumed by the runtime** before the

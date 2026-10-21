@@ -12,7 +12,7 @@ saturation/value square, and that is an honest limitation, not an omission.
 The classic square is built from two gradients: white→hue horizontally and
 transparent→black vertically.
 
-`@gpuix/native@0.10.0` supports **two-stop linear gradients only** and no radial
+`@gpuix/native@0.11.0` supports **two-stop linear gradients only** and no radial
 gradient (verified, plan 203). A square drawn without them would be a decorative
 placeholder presented as a control, which the project's rules forbid. The
 strongest honest alternative is what ships: a discrete swatch grid plus a HEX
@@ -79,9 +79,9 @@ colour), and the preview uses
 - Every swatch is a `role="button"` named by its hex value, with `aria-selected`
   on the current one; selected swatches also carry the strong border.
 - The field is a real input named `<label> hex value`; an invalid draft is
-  described through `aria-description` (`0.10.0` supports it).
+  described through `aria-description` (`0.11.0` supports it).
 - Disabled is `tabIndex={-1}` plus `readOnly` and dimming: there is no
-  `aria-disabled` in `0.10.0`.
+  `aria-disabled` in `0.11.0`.
 
 ## Limitations
 

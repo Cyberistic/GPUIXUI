@@ -112,7 +112,7 @@ palette Alert and Badge use). Width is 380px.
 
 - The viewport is `role="status"` with `aria-label="Notifications"`; each card's
   dismiss control is a labelled button.
-- **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.10.0`; a status
+- **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.11.0`; a status
   region is the supported announcement.
 - **No progress indicator** for the remaining time; the store knows the deadline
   but the card does not animate it.
@@ -120,8 +120,8 @@ palette Alert and Badge use). Width is 380px.
   controls; the clock resumes with the remaining time once both the pointer and
   focus have left. A consumer that needs a custom hold can call
   `pause`/`resume` from `useToast()`.
-- No portal: the viewport is an absolutely positioned element in its parent, so
-  put it at the app root.
+- Not portalled: the viewport is an absolutely positioned element in its parent,
+  so put it at the app root.
 - Disposal is deferred one microtask (`toast/lifecycle.ts`) so a React
   StrictMode mount/unmount/remount does not dispose the runtime the remount
   keeps using. The native test renderer does not reproduce StrictMode's double

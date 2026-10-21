@@ -3,14 +3,14 @@
  *
  * GPUix has no `button` element type — the types are `div`, `text`, `img`, `svg`,
  * `canvas`, `input`, `textarea`, `anchored`, `code`, `diff`, `markdown` and
- * `virtual-list` — and `@gpuix/react@0.10.0` ships neither `Button` nor
- * `buttonProps`. A button is therefore a `div` with `role="button"`, a tab stop
- * and Enter/Space activation, which is what a newer `@gpuix/react` does upstream.
+ * `virtual-list` — and `@gpuix/react@0.11.0` publishes a headless `Button`
+ * (`@gpuix/react/button`) but no styled one. This package's styled contract lives
+ * in `@gpuixui/primitives`' `Button`, so the stand-in stays until the Tier 2
+ * parts are migrated onto it (plan 110 §7 and `TODO.md` → Interlocks). A button
+ * is therefore a `div` with `role="button"`, a tab stop and Enter/Space
+ * activation.
  *
- * Both exports are replaced by `@gpuixui/primitives`' own the moment that package
- * lands; plan 110 §7 has the amendment and `TODO.md` → Interlocks the record.
- *
- * Known gap: `@gpuix/native@0.10.0` accepts no `aria-disabled`, so a disabled
+ * Known gap: `@gpuix/native@0.11.0` accepts no `aria-disabled`, so a disabled
  * button conveys its state by leaving the tab order, dropping its handlers and
  * dimming — assistive technology sees a button that does nothing.
  */

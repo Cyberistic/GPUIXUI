@@ -637,7 +637,7 @@ export const comboboxMeta = {
   limitations: [
     "GPUix's filter is order-preserving, so the adapter feeds it pre-ranked items and controls inputValue",
     "selection yields option values, never labels",
-    "no aria-activedescendant in 0.10.0: the highlighted row is visual while the input keeps focus",
+    "no aria-activedescendant in 0.11.0: the highlighted row is visual while the input keeps focus",
     "create-new is single-select only, is offered when the query matches no option, and reports the query — the caller adds the option and owns the selection",
     "no async options",
     'the popup placement is corrected by the component: the runtime snaps but does not flip, and align="center" is measured from the trigger',

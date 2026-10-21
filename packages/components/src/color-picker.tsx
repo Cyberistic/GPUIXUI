@@ -2,7 +2,7 @@
  * ColorPicker: discrete swatches and a HEX field.
  *
  * The classic saturation/value square needs two gradients (white→hue and
- * transparent→black). `@gpuix/native@0.10.0` supports two-stop linear gradients
+ * transparent→black). `@gpuix/native@0.11.0` supports two-stop linear gradients
  * only and no radial gradient, so the square is not honestly expressible and is
  * not faked. The strongest honest picker is a keyboard-reachable swatch grid, a
  * HEX field that normalises what it is given, and a preview of the current
@@ -203,7 +203,7 @@ export const colorPickerMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no saturation/value square: 0.10.0 supports two-stop linear gradients only and no radial gradient",
+    "no saturation/value square: 0.11.0 supports two-stop linear gradients only and no radial gradient",
     "swatches plus HEX entry only; no alpha, HSL/RGB fields or eyedropper",
     "the HEX field is validated on commit; an invalid draft is marked destructive and reverted on blur",
   ],

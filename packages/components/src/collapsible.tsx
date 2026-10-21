@@ -170,7 +170,7 @@ export const CollapsibleContent = ({
   const { open } = useCollapsibleContext();
 
   // TODO: measure the body with `onLayout` and animate to that height once a
-  // motion budget exists; 0.10.0's `motion` needs a numeric target.
+  // motion budget exists; 0.11.0's `motion` needs a numeric target.
   if (!open) return null;
 
   return (
@@ -207,7 +207,7 @@ export const collapsibleMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "mounts and unmounts instantly: 0.10.0's motion needs a numeric height, and an auto-height reveal needs a measured first paint",
+    "mounts and unmounts instantly: 0.11.0's motion needs a numeric height, and an auto-height reveal needs a measured first paint",
   ],
   docs: "docs/collapsible.mdx",
   example: "examples/collapsible.example.tsx",

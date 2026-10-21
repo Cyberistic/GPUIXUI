@@ -7,7 +7,7 @@
  * value renders the stepper from it, the same way a `Field` does not own its
  * value.
  *
- * Measured limitation: `@gpuix/native@0.10.0` has no `aria-current`, so the
+ * Measured limitation: `@gpuix/native@0.11.0` has no `aria-current`, so the
  * current step carries `aria-selected` — the substitution Pagination uses.
  * There is no connector line either: the runtime has no pseudo-elements, and a
  * connector is not one of the two parts the contract fixes.
@@ -234,7 +234,7 @@ export const stepperMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no aria-current in 0.10.0; the current step carries aria-selected",
+    "no aria-current in 0.11.0; the current step carries aria-selected",
     "display-only by design: there is no step click, disabled policy or onValueChange",
     "no connector line between steps",
   ],

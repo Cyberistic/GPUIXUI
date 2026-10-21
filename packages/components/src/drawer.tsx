@@ -1,14 +1,14 @@
 /**
  * Drawer: a modal panel anchored to a window edge.
  *
- * Positioning and dismissal are the same as Dialog's (0.10.0 ships no Dialog
- * parts and no portal, so the veil is an `<anchored position={{x:0,y:0}}>` at
- * window coordinates, plan 112 §1c). What differs is where the surface sits:
- * a full-height column on the left or right, or a full-width sheet at the
- * bottom. The shared rules — open state, dismiss layer, focus in/return, Tab
- * trap — live in `internal/modal.ts`.
+ * Positioning and dismissal are the same as Dialog's (the styled Dialog is a
+ * local overlay that does not use `@gpuix/react/dialog`'s portal, so the veil is
+ * an `<anchored position={{x:0,y:0}}>` at window coordinates, plan 112 §1c).
+ * What differs is where the surface sits: a full-height column on the left or
+ * right, or a full-width sheet at the bottom. The shared rules — open state,
+ * dismiss layer, focus in/return, Tab trap — live in `internal/modal.ts`.
  *
- * Known gaps in 0.10.0: no `aria-modal` or `aria-labelledby` (the surface is
+ * Known gaps in 0.11.0: no `aria-modal` or `aria-labelledby` (the surface is
  * named with `aria-label`), no swipe gesture (no drag host feature), and no
  * slide animation (`motion` has no transform; animating width/left would reflow
  * the content).
@@ -158,7 +158,7 @@ export interface DrawerContentProps extends Omit<Props, "children"> {
   readonly side?: DrawerSide;
   /** Default `"md"`. */
   readonly size?: DrawerSize;
-  /** The accessible name — required, because 0.10.0 has no `aria-labelledby`. */
+  /** The accessible name — required, because 0.11.0 has no `aria-labelledby`. */
   readonly label: string;
   /** Renders the top-right close control. Default `true`. */
   readonly showClose?: boolean;
@@ -441,10 +441,10 @@ export const drawerMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no swipe-to-dismiss: 0.10.0 has no drag host feature",
+    "no swipe-to-dismiss: 0.11.0 has no drag host feature",
     "no slide animation: motion has no transform, and width/left would reflow the content",
-    "no aria-modal or aria-labelledby in 0.10.0: the surface is named with aria-label",
-    "the veil is an anchored element at window coordinates because the release ships no portal",
+    "no aria-modal or aria-labelledby in 0.11.0: the surface is named with aria-label",
+    "the veil is an anchored element at window coordinates: the styled Dialog is a local overlay, not `@gpuix/react/dialog`'s portalled surface",
     "sizes are layout constants: tokens carry no drawer-size role",
   ],
   docs: "docs/drawer.mdx",

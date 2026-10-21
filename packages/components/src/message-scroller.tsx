@@ -16,7 +16,7 @@
  * `COMPONENTS.md` and the docs page.
  *
  * `JumpToLatest` is rendered beneath the viewport rather than floating over it:
- * `position: "absolute"` resolves against the mount parent in 0.10.0 (measured
+ * `position: "absolute"` resolves against the mount parent in 0.11.0 (measured
  * in plan 112), so an overlay would be a window-level layer, not a corner
  * affordance.
  */
@@ -372,9 +372,9 @@ export const messageScrollerMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the viewport renders every row: <virtual-list> takes itemCount rather than compound children, so long histories are not virtualized in v1",
-    "the jump affordance sits beneath the viewport, not floating over its corner, because position: absolute resolves against the mount parent in 0.10.0",
+    "the jump affordance sits beneath the viewport, not floating over its corner, because position: absolute resolves against the mount parent in 0.11.0",
     "a row that grows without the scroller re-rendering (internal child state) is not observed; there is no resize observer",
-    "no aria-live role in 0.10.0, so new rows are not announced",
+    "no aria-live role in 0.11.0, so new rows are not announced",
   ],
   docs: "docs/message-scroller.mdx",
   example: "examples/message-scroller.example.tsx",

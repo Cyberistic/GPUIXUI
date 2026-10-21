@@ -182,7 +182,7 @@ describe("Dialog", () => {
     dialog.unmount();
   });
 
-  it("names the dialog through aria-label, since 0.10.0 has no labelledby", () => {
+  it("names the dialog through aria-label, since 0.11.0 has no labelledby", () => {
     const dialog = renderComponent(<Workspace />);
     clickCentreOf(dialog, "open");
 

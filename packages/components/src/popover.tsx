@@ -2,7 +2,7 @@
  * Popover: a floating panel anchored to the control that opened it.
  *
  * Positioning is GPUix's own `FloatingLayer` (`<anchored>` with collision
- * handling), so this component owns only the parts 0.10.0 leaves to the library:
+ * handling), so this component owns only the parts 0.11.0 leaves to the library:
  * the open state, the dismissal rules, the trigger's re-open guard and the
  * measured placement correction (the runtime snaps but does not flip, and its
  * `center` centres on the containing block; plan 323).
@@ -19,7 +19,7 @@
  * A press outside fires before the click that follows it, so closing on the press
  * would let that same click toggle the trigger open again. The trigger therefore
  * remembers that it was pressed while open, and the close handler marks the next
- * click as already handled — the technique `@gpuix/react@0.10.0`'s Select uses.
+ * click as already handled — the technique `@gpuix/react@0.11.0`'s Select uses.
  */
 
 import type { PublicInstance } from "@gpuix/react";

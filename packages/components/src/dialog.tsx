@@ -167,7 +167,7 @@ export interface DialogContentProps extends Omit<Props, "children"> {
   readonly size?: DialogSize;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
-  /** The accessible name — required, because 0.10.0 has no `aria-labelledby`. */
+  /** The accessible name — required, because 0.11.0 has no `aria-labelledby`. */
   readonly label: string;
   /** Renders the top-right close control. Default `true`. */
   readonly showClose?: boolean;
@@ -454,8 +454,8 @@ export const dialogMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no aria-modal and no aria-labelledby in 0.10.0: the dialog is named with aria-label and its title is a heading",
-    "the veil is an anchored element at window coordinates because the release ships no portal; a dialog mounted inside a scroll container stays painted at the window origin, not inside that container",
+    "no aria-modal and no aria-labelledby in 0.11.0: the dialog is named with aria-label and its title is a heading",
+    "the veil is an anchored element at window coordinates: the styled Dialog is a local overlay, not `@gpuix/react/dialog`'s portalled surface; a dialog mounted inside a scroll container stays painted at the window origin, not inside that container",
   ],
   docs: "docs/dialog.mdx",
   example: "examples/dialog.example.tsx",

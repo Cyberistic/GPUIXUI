@@ -210,7 +210,7 @@ export const inlineEditMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no contenteditable in 0.10.0: display and input are swapped explicitly",
+    "no contenteditable in 0.11.0: display and input are swapped explicitly",
     "blur commits; Escape cancels; empty text is a valid committed value",
     "no aria-invalid or aria-describedby, so a rejected commit is the consumer's feedback",
   ],

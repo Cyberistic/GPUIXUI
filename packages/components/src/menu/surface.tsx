@@ -45,7 +45,7 @@ export const menuKeyHandler = (
   menu: MenuContextValue,
 ): ((event: EventPayload) => void) => {
   const step = (event: EventPayload): void => {
-    // A nested surface (a submenu) has already acted on this event; 0.10.0 has
+    // A nested surface (a submenu) has already acted on this event; 0.11.0 has
     // no stopPropagation, so the claim is how this menu stays out of it.
     if (isEventClaimed(event)) return;
     pipe(

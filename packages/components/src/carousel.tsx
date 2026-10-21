@@ -1,11 +1,12 @@
 /**
  * Carousel: discrete slide stepping.
  *
- * `motion` in 0.10.0 animates width, left and opacity only — there is no
- * transform/translate — and scroll snap is unavailable, so a sliding track is
- * not honestly expressible. Every slide stays mounted and only the active one is
- * displayed. That keeps each slide's component state (a form on slide two is not
- * reset by visiting slide three) and needs no positioning trick.
+ * `motion` in 0.11.0 animates box geometry (width, height, insets, radius) and
+ * opacity only — there is no transform/translate — and scroll snap is
+ * unavailable, so a sliding track is not honestly expressible. Every slide stays
+ * mounted and only the active one is displayed. That keeps each slide's
+ * component state (a form on slide two is not reset by visiting slide three) and
+ * needs no positioning trick.
  *
  * The root owns the active index; the track reports its slide count, so the
  * controls and the arrow keys share one clamp and one loop rule.

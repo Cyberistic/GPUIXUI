@@ -4,9 +4,9 @@ description: Discrete slide stepping, with every slide kept mounted.
 ---
 
 `Carousel` steps through a fixed set of slides with previous/next controls and
-the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates width,
-left and opacity only — no transform — and scroll snap is unavailable, so a
-translating track is not honestly expressible.
+the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates box
+geometry (width, height, insets, radius) and opacity only — no transform — and
+scroll snap is unavailable, so a translating track is not honestly expressible.
 
 Every slide stays mounted and only the active one is displayed, which preserves
 each slide's component state (a form on slide two is not reset by visiting slide
@@ -82,7 +82,7 @@ the frame with no code change — see [Theming](/docs/theming).
 - Inactive slides stay in the tree with `display: none`; a screen reader does not
   announce them, and their component state survives.
 - There is no `aria-roledescription="carousel"` or slide-position announcement
-  in `0.10.0`.
+  in `0.11.0`.
 
 ## Limitations
 

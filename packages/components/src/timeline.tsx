@@ -6,7 +6,7 @@
  * child whether it is the last item, which is the only fact an item needs from
  * its siblings (the rail stops there).
  *
- * `@gpuix/native@0.10.0` has no pseudo-elements, so the connector is a real
+ * `@gpuix/native@0.11.0` has no pseudo-elements, so the connector is a real
  * 1px element, and no `aria-current`, so the current event carries
  * `aria-selected` — the substitution Stepper and Pagination use.
  */
@@ -209,7 +209,7 @@ export const timelineMeta = {
   limitations: [
     "display-only: no click, selection or aria-current",
     "the last item is computed from direct children; a fragment of items shares one flag",
-    "the connector is a 1px element because 0.10.0 has no pseudo-elements",
+    "the connector is a 1px element because 0.11.0 has no pseudo-elements",
   ],
   docs: "docs/timeline.mdx",
   example: "examples/timeline.example.tsx",

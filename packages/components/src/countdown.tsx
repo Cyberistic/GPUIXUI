@@ -77,7 +77,7 @@ export const countdownMeta = {
   limitations: [
     "display-only: the application ticks with Effect Clock and passes remainingMs; the component owns no timer",
     "fixed locale-free clock format; days are 24-hour units, not calendar days",
-    "no role=timer in 0.10.0; the label names the text",
+    "the runtime announces no live region (no aria-live), so the label names the text rather than pushing changes",
   ],
   docs: "docs/countdown.mdx",
   example: "examples/countdown.example.tsx",

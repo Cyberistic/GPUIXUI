@@ -72,16 +72,17 @@ with no code change — see [Theming](/docs/theming).
 
 - The text is the value; `label` becomes the accessible name, so a screen reader
   hears "Offer ends in" rather than only "01:30".
-- There is no `role="timer"` in `@gpuix/native@0.10.0`, so no live announcement
-  is claimed. A countdown that must announce changes needs the application's
-  own announcement strategy.
+- There is no live-region announcement in `@gpuix/native@0.11.0` (no `aria-live`
+  on a host element), so changes are not pushed to a screen reader. A countdown
+  that must announce changes needs the application's own announcement strategy.
 - The expired colour is visual; the accessible name does not become "expired".
 
 ## Limitations
 
 - **No timer inside the component** — by design, not as a missing feature.
 - Fixed locale-free format; no "2 hours ago", no localised units.
-- No `role="timer"` and no live-region announcement in 0.10.0.
+- No live-region announcement in `0.11.0` (no `aria-live`), so a change is read
+  when the label is focused, not pushed.
 - No progress bar or ring; pair it with `Progress` when one exists.
 
 ## Verification

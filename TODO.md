@@ -442,7 +442,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 23/23
+`[x]` `[██████████]` 24/24
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -634,6 +634,18 @@ a workaround for two live sessions sharing one worktree; see
       centred=false"`, exit `1`). The probe claims nothing about dragging: the
       runtime has no pointer capture, so a drag that leaves the track stops
       there — recorded as a limit, not asserted as a pass.
+`[x]` Land the `drag-between-panes` live probe and the `AsyncSmokeHost.drag`
+      verb behind it — a cross-pane drag in a real window: the item records the
+      press, the **board** (a shared ancestor) receives the held moves and
+      resolves the release's side, so the gesture works without pointer capture;
+      item → right pane and back are both asserted (`drops=1`, then `drops=2`),
+      with the move count proving the ancestor saw the drag. `packages/testing`'s
+      `AsyncSmokeHost` gained `drag(testId, deltaX, deltaY)`, implemented over
+      the automation protocol's real drag (eight interpolated moves with
+      `pressedButton`). Green on 0.11.0 (`--only drag-between-panes`); negative
+      control measured (no board `onMouseUp`: `drops=0`, exit `1`). The measured
+      limit is the one already documented for `Slider`: no pointer capture, so a
+      drag must stay inside the ancestor that owns the listener.
 
 ## Phase C — Tier 1–2 components
 
@@ -959,6 +971,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | A modal that focuses a field with `autoFocus` **loses the focus when it closes**: the field takes the focus during the commit that mounts it, before the modal records who held it, so the modal's restore target is a field that is gone by the time the surface unmounts. The shipped `CommandMenu` was affected — its search field carried `autoFocus`, so closing the palette left the focus nowhere and the opener never got it back | components | **resolved for the shipped palette** — the input no longer carries `autoFocus`; the dialog's `initialFocus` focuses it after the opener is recorded, so both close paths return the focus to the opener. `src/behaviour/command-menu.test.tsx`'s `returns focus to the opener when it closes` fails without the change (`expected Some "palette-opener", got None`). The shared rule still depends on the field: a consumer's own `autoFocus` field inside a `Dialog` would lose it, so the rule is documented on `packages/components/docs/dialog.mdx` (§Accessibility and limitations) and measured by the `modal-focus-restore` probe's auto case. Evidence it replaced: the probe's measurements on 0.11.0 (`apps/playground/README.md` §`modal-focus-restore`) |
 | The shipped `Tabs` relies on React's `onFocus` to keep its `active` row, but a **real window focuses the trigger without running `onFocus`**: the `tabs-lifecycle` probe's `Tab` traversal leaves the renderer focus id on `tabs-overview` while the trigger's own `onFocus` counter stays `0`, so the first arrow re-anchors on the first enabled tab instead of moving to the next one (the `TestRenderer` fires the handler, which is why no unit suite sees it). The same gap makes any component state fed only by `onFocus` (a `focused` `StateStyle` flag, field focus styling) suspect in a window, although the `focusVisible` ring is declared at rest and still paints | components | open — **measured on 0.11.0** by the playground's `tabs-lifecycle` probe (17 checks; the two defect checks are `an arrow key moves real focus` and `a traversal delivers no onFocus to the trigger`). Fix options: seed `active` from the selected row when it is empty (in `Tabs`' `moveBy`), or track the focused row from the key event; the probe's first-arrow checks flip to `tabs-reports` / `changes=1` with it. Then audit components whose `focused` state comes from `onFocus`. Evidence: `apps/playground/README.md` §`tabs-lifecycle`; negative controls measured (`expected "tabs-archive", got "tabs-settings"`; pill `expected 61 ± 2, got 21`) |
 | The `command-palette` live probe asserts the fixed defect — its two checks read `"closing the palette leaves the focus nowhere (known gap…)"` and `"Escape leaves the focus nowhere as well (the same known gap)"`, both expecting `none` | playground | **resolved** — both checks now expect `palette-trigger` (`closing the palette returns the focus to its opener`, `Escape returns the focus to the opener too`), the probe header explains the modal rule instead of the gap, and the README's `command-palette` section records 16 checks and the fix. Green on 0.11.0 (`--only command-palette`); negative control measured (expecting `none`: `expected "none", got "palette-trigger"`, exit `1`). `modal-focus-restore`'s auto case stays as measured: it exercises a raw `autoFocus` field, not the shipped palette |
+| `COMPONENTS.md`'s **Not provided by GPUix** preamble and cross-cutting verdicts are still against the published 0.10.0 ("the version this repo pins"), while the workspace pins 0.11.0: it publishes a headless `Button` (`@gpuix/react/button`), `Dialog` parts and `createPortal`, so the rows that call those absent are false. The Tier 1 and design-system halves have their own truth passes; this map is the shared one | primitives + docs-site (capability map) | open — verified facts for the pass: 0.11.0's `HostProps` aria set is unchanged from the list the table already carries, the binding matrix adds `win32-arm64`, and a headless `Button`/`Dialog`/portal are published. The Tier 2 rows are corrected by the components pass (`packages/components/src/runtime-version.test.ts`); the preamble, the provided/not-provided tables and the Tier 1/3–5 rows still need one pass |
 
 
 ## Phase D — data and workspace components
@@ -984,7 +997,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
   - [x] `packages/primitives/docs` cites `@gpuix/native@0.10.0` 19 times across 14 pages (owner: primitives). Re-verify each claim against 0.11.0 rather than replacing the version string: this workstream has already found three closed gaps (`aria-description` on a trigger, `scrollbarColor`/`scrollbarWidth` on a scroller, `role`/`aria-level` for headings) and several still-true ones (no `aria-valuenow`, no `aria-checked`, no pointer capture). Record the version each verdict was taken on. — **landed**: every remaining verdict was re-read against the installed `@gpuix/native` 0.11.0 typings (`host.d.ts`): the aria set is still exactly label/description/id/expanded/selected/valuetext/level, so no `aria-valuenow`/`checked`/`pressed`/`labelledby`/`disabled`; `onPaste`, pointer capture, `transform`, a fade mask and `gridColumn`/`gridRow` are still absent; **two claims failed and were corrected rather than relabelled** — `StyleDesc` now accepts `borderStyle: "dashed"` and a linear-gradient `background`, so `box.mdx`/`COMPONENTS.md` no longer call those runtime absences (they are `Box` API gaps, pass them through `style`), and `@gpuix/react` 0.11.0 now publishes a headless `./button` (`Button`/`buttonProps`), so `button.mdx`/`Button.tsx` no longer say it does not exist; 13 docs pages, both `label` comments, seven source headers, the README's capability table (scrollbar tint is present, `./button` published) and `MIGRATION.md` now name 0.11.0. `src/runtime-version.test.ts` walks every docs page, source, runtime suite, example, `README.md` and `MIGRATION.md` and fails on any `@gpuix/<pkg>`/`GPUix` version that is not the workspace pin (both directions measured: a 0.10.0 in `Meter.tsx` and the README table fails by file name), with a floor so a scan that stopped matching cannot pass. The README's own runtime count was stale too and now reads the measured 15 files / 146 tests
-  - [ ] `packages/components/docs` still cites `@gpuix/native@0.10.0` 66 times (owner: components). The repo runs 0.11.0, so each claim needs re-verification, not a find-and-replace: some gaps closed (`onLayout` exists, `focusVisible` paints) and some did not (no `aria-current`, no `transform`). Re-measure against `HostProps`/`StyleDesc` and record the version each verdict was taken on.
+  - [x] `packages/components` cited the **previous runtime** in 148 places across
+    78 files (66 of them docs pages). Each claim was re-read against the
+    installed 0.11.0 typings (`HostProps`, `StyleDesc`, `MotionStyle`,
+    `ElementType`, the `@gpuix/react` exports), not find-and-replaced: the aria
+    set is still exactly label/description/id/expanded/selected/valuetext/level,
+    with no `aria-current`/`checked`/`pressed`/`disabled`/`labelledby`/
+    `describedby`/`haspopup`/`activedescendant`/`live`, and there is still no
+    transform, pointer capture, sticky position, `fieldset`, `href`, caret API or
+    `onContextMenu`. The claims that had **closed** were corrected instead of
+    relabelled: List's ring is the keyboard-only `focusVisible` outline;
+    `preventDefault` exists, so `HotkeyRecorder` now swallows a recorded key (a
+    new native test measures Tab being recorded while focus stays put, 9 in the
+    suite); Dialog/Drawer say they do not use the published portal rather than
+    claiming none exists; the local Button says `@gpuix/react/button` is
+    published while the styled contract stays in primitives; the runtime
+    publishes a `win32-arm64` binding (added to the guard's host list) and motion
+    animates box geometry and opacity (Carousel's wording); Countdown drops the
+    unverified timer-role claim for the measured `aria-live` gap. Guard:
+    `src/runtime-version.test.ts` (two cases; a planted `0.10.0` in
+    `command-menu.mdx` fails by file and line, and the floor fails a scan that
+    stops matching).
 
 ### Docs information architecture (`docs-site`)
 
@@ -1128,7 +1161,7 @@ Both are specified in ; each fix starts with a plan under .
       preview and waveform rows now carry the measurement. Evidence:
       `apps/playground/README.md` §`content-surfaces`,
       `.artifacts/live/content.png`
-`[ ]` `apps/playground`: native probe backlog — cross-element drag and file drops, drag auto-scroll, tab overflow (salvage 162, 168-169, 172, 174). **Landed since:** the shipped Tier 1 controls now have live probes (Input `text-input`, Checkbox `checkbox-toggle`, Slider `slider-lifecycle`) and tab-strip focus is measured by `tabs-lifecycle` (traversal, arrows, Home/End). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`), **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`) and **content surfaces** (`content-surfaces`, salvage 161)
+`[ ]` `apps/playground`: native probe backlog — file drops, drag auto-scroll, tab overflow (salvage 162, 168-169, 172, 174). **Landed since:** cross-element drag (`drag-between-panes`, plus `AsyncSmokeHost.drag`), the shipped Tier 1 controls (Input `text-input`, Checkbox `checkbox-toggle`, Slider `slider-lifecycle`) and tab-strip focus (`tabs-lifecycle`: traversal, arrows, Home/End). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`), **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`) and **content surfaces** (`content-surfaces`, salvage 161)
 `[x]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178) — `packages/testing/src/native.ts` exports `NativeRenderer`/`NativeElement` (method signatures only, so the package still imports no GPUix type) and `createTestHost`, which owns the `testId` → element lookup, the nearest-painted-ancestor fallback for a `<virtual-list>`/`<anchored>`, the subtree text join, the style decode and the drag synthesis. `apps/playground/src/smoke/host.ts` is deleted — a real `TestRenderer` satisfies the port structurally, so the runner calls `Native.createTestHost(root.renderer)`. 10 fake-renderer tests; both directions measured (dropping the ancestor fallback fails `aims input at the nearest ancestor that paints` and the drag case). Headless re-run green: `--only modal-focus-trap --only panel-resize --only scroll-container`
 `[x]` `packages/components`: Tier 2 behaviour gaps — both remaining rows landed (salvage 324, 339).
   - `[x]` Tier 2 icon adoption (salvage 324) — every chrome mark is an `@gpuixui/icons` glyph rather than a text stand-in: the close/dismiss controls (dialog, drawer, toast, alert, tag chip, search/time/hotkey clear), the carets (date picker, combobox), the month arrows, the carousel and pagination chevrons, the selected marks (menu, combobox), the submenu chevron, the accordion indicator and the collapsing ellipses. An ellipsis in a placeholder, a keycap chord and the confirmation dialog's busy `…` stay typography by design. `src/behaviour/icons.test.tsx` (5 native tests) measures the painted `<svg>` where the glyph used to be, the Expand/Collapse and Selected images, and sweeps the source for a returning stand-in; both directions measured (restoring `⌄`/`⌃` fails the indicator case and the sweep). The three live probes that mount these surfaces stay green on 0.11.0 (`--only dialog-lifecycle --only menu-lifecycle --only toast-lifecycle`).

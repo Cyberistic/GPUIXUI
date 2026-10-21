@@ -6,14 +6,14 @@
  * has no i18n layer; AM/PM belongs to a message catalogue, not to this control.
  *
  * The two segments are real `<input>` host elements, not an invented
- * `role="spinbutton"`: `@gpuix/native@0.10.0` has `aria-valuetext` but no
+ * `role="spinbutton"`: `@gpuix/native@0.11.0` has `aria-valuetext` but no
  * `aria-valuenow`, so a custom spinbutton would never announce its value, while
  * an input announces its value natively. Typing clamps each segment (hours
  * `00..23`, minutes `00..59`); `minuteStep` only changes the arrow-key step.
  * Arrow keys add minutes through one clock function, so hours and minutes cannot
  * disagree at the hour or midnight boundary. Emptying a segment clears the
  * whole value; blur pads both segments. Disabled is `readOnly` on both inputs
- * because 0.10.0 has no `aria-disabled`.
+ * because 0.11.0 has no `aria-disabled`.
  *
  * The root is a field, not a trigger with a popup (the reason it is a field is
  * above): `TimePickerSegment` places the two inputs, `TimePickerSeparator` the
@@ -421,9 +421,9 @@ export const timePickerMeta = {
   gpuixSupport: "yes",
   limitations: [
     "fixed 24-hour display: no AM/PM and no locale, because the repo has no i18n layer",
-    "two labelled text segments instead of a spinbutton: 0.10.0 has no aria-valuenow",
+    "two labelled text segments instead of a spinbutton: 0.11.0 has no aria-valuenow",
     "minuteStep affects the arrow keys only; typed minutes accept 00..59",
-    "disabled is readOnly plus dimming: 0.10.0 has no aria-disabled",
+    "disabled is readOnly plus dimming: 0.11.0 has no aria-disabled",
     "no seconds and no timezone: the value is a time of day, not an instant",
   ],
   docs: "docs/time-picker.mdx",

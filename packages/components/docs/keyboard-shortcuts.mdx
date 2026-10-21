@@ -107,14 +107,14 @@ every cheat sheet with no code change — see [Theming](/docs/theming).
   named `group` with a level-3 heading.
 - Keycaps are text; a screen reader reads the chord's glyphs in order. On macOS
   that is "⌘ N"; on Windows "Ctrl N".
-- There is no `aria-keyshortcuts` in `@gpuix/native@0.10.0`, so a keycap cannot
+- There is no `aria-keyshortcuts` in `@gpuix/native@0.11.0`, so a keycap cannot
   be attached to the control it activates. This is a display component; the
   binding lives in the consumer.
 
 ## Limitations
 
 - **Display-only:** no handler is registered, and no action fires.
-- No `aria-keyshortcuts` in 0.10.0.
+- No `aria-keyshortcuts` in 0.11.0.
 - Rows are separated by 1px elements rather than borders: one element has one
   `borderColor` and per-side widths only (recorded in `COMPONENTS.md`).
 

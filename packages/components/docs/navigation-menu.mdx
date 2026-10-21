@@ -91,19 +91,19 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
   focus returns to the trigger that opened it.
 - Hover is an accelerator, never the only path: every panel opens from the
   keyboard, and a press on an open trigger closes it.
-- Links are buttons with `onSelect`; `0.10.0` has no anchor element or `href`.
-- `0.10.0` has no `aria-haspopup`, so the trigger does not announce that it owns
+- Links are buttons with `onSelect`; `0.11.0` has no anchor element or `href`.
+- `0.11.0` has no `aria-haspopup`, so the trigger does not announce that it owns
   a panel.
 
 ## Limitations
 
 - **No `href`:** `NavigationMenuLink` is a button; navigation is the consumer's
   `onSelect`.
-- **Hover is a timer policy:** `0.10.0` has no pointer-type signal, so touch
+- **Hover is a timer policy:** `0.11.0` has no pointer-type signal, so touch
   opens by press and there is no "coarse pointer" variant.
 - **`ArrowDown` focuses the panel surface**, not the first link; one `Tab` then
   reaches the links.
-- No `aria-haspopup` in `0.10.0`.
+- No `aria-haspopup` in `0.11.0`.
 - No nested menus or columns inside a panel beyond whatever children you place.
 
 ## Verification

@@ -146,7 +146,7 @@ describe("Popover", () => {
     const trigger = requireBounds(popover, "trigger");
     const panel = requireBounds(popover, "panel");
 
-    // GPUix 0.10.0 centres on the trigger's containing block, not the trigger;
+    // GPUix 0.11.0 centres on the trigger's containing block, not the trigger;
     // the component maps `center` to `start` plus the measured half difference
     // (plan 323).
     expect(

@@ -1,10 +1,9 @@
 /**
  * Card example: a plan card with figures and a footer.
  *
- * The footer's two actions are **labelled text, not buttons**: neither
- * `@gpuixui/primitives` nor a `Button` in `@gpuix/react@0.10.0` exists yet, and a
- * clickable `div` shaped like a button would be a placeholder presented as a
- * working control (AGENTS.md §4). They become real buttons when primitives land.
+ * The footer's two actions are **labelled text, not buttons**: this card is a
+ * plan summary and the example demonstrates Card's parts, not a click target. A
+ * real action pairs the card with `@gpuixui/primitives`' `Button`.
  */
 
 import {

@@ -88,7 +88,7 @@ with no code change — see [Theming](/docs/theming).
 
 ## Accessibility
 
-- `DrawerContent` is a `dialog` named by the required `label`; `0.10.0` has no
+- `DrawerContent` is a `dialog` named by the required `label`; `0.11.0` has no
   `aria-modal` or `aria-labelledby`, and its title is a heading, not the dialog's
   accessible name.
 - Focus enters the surface and returns to the opener. `initialFocus` can put it
@@ -98,11 +98,11 @@ with no code change — see [Theming](/docs/theming).
 
 ## Limitations
 
-- **No swipe-to-dismiss**: `0.10.0` has no drag host feature.
+- **No swipe-to-dismiss**: `0.11.0` has no drag host feature.
 - **No slide animation**: `motion` has no transform; animating width or left
   would reflow the content, so the surface mounts in place.
-- **No portal**: the veil is an `<anchored>` element at window coordinates, as in
-  Dialog. A drawer mounted inside a scrolled container is still painted at the
+- **Not portalled**: the veil is an `<anchored>` element at window coordinates, as
+  in Dialog. A drawer mounted inside a scrolled container is still painted at the
   window origin, not inside that container.
 - Sizes are layout constants, not tokens.
 - The close control is an icon (`x`) named "Close drawer".

@@ -5,10 +5,10 @@
  * chips remove by value. The add rules live in `tag-input/logic.ts`, so the
  * keyboard wiring has nothing to decide beyond which rule to call.
  *
- * A typed comma arrives through `onChange` (0.10.0 has no `preventDefault`), so
- * the field treats any comma-containing edit as a batch: everything before the
- * last comma is committed and the remainder stays the draft. Pasting `"a,b"`
- * therefore adds two tokens, and typing `","` adds the one before it.
+ * A typed comma arrives through `onChange` (the field reports its whole text),
+ * so the field treats any comma-containing edit as a batch: everything before
+ * the last comma is committed and the remainder stays the draft. Pasting
+ * `"a,b"` therefore adds two tokens, and typing `","` adds the one before it.
  */
 
 import type { KeyEvent, InputProps, Props } from "@gpuix/react";
@@ -278,9 +278,9 @@ export const tagInputMeta = {
   gpuixSupport: "partial",
   limitations: [
     "controlled only: the caller owns the tokens and renders chips from that list",
-    "no aria-disabled in 0.10.0: disabled is a readOnly field plus dimming",
-    "a typed comma commits through onChange because the runtime has no preventDefault",
-    "Backspace on an empty field is not observable in 0.10.0 (no keyDown is emitted), so removal is the chip control",
+    "no aria-disabled in 0.11.0: disabled is a readOnly field plus dimming",
+    "a typed comma commits through onChange because the field reports the text it holds",
+    "Backspace on an empty field is not observable in 0.11.0 (no keyDown is emitted), so removal is the chip control",
   ],
   docs: "docs/tag-input.mdx",
   example: "examples/tag-input.example.tsx",

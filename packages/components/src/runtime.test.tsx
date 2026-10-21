@@ -12,9 +12,10 @@
  * - `unsupported-host` this platform/arch has no published binding
  * - `missing`          a supported host that cannot load it — a real failure
  *
- * Evidence for `unsupported-host` (2026-10-17): `@gpuix/native@0.10.0` publishes
- * `-darwin-arm64`, `-linux-x64-gnu` and `-win32-x64-msvc` only, and the failure
- * chain on this Intel Mac names `@gpuix/native-darwin-x64` and
+ * Evidence for `unsupported-host` (measured on 0.11.0, 2026-10-21):
+ * `@gpuix/native@0.11.0` publishes `-darwin-arm64`, `-linux-x64-gnu`,
+ * `-win32-x64-msvc` and `-win32-arm64-msvc` only, and the failure chain on this
+ * Intel Mac names `@gpuix/native-darwin-x64` and
  * `./gpuix-native.darwin-x64.node`. `TODO.md` → Blockers, ADR 0001/0002.
  */
 
@@ -30,6 +31,7 @@ const supportedHosts: ReadonlyArray<string> = [
   "darwin-arm64",
   "linux-x64",
   "win32-x64",
+  "win32-arm64",
 ];
 
 /** The host, in the form the list above uses. */

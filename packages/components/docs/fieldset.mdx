@@ -84,9 +84,9 @@ sizes, so a custom theme changes the group with no code change — see
 
 ## Accessibility
 
-- The group renders `role="group"` and `aria-label={legend}`. GPUix 0.10.0 has no
+- The group renders `role="group"` and `aria-label={legend}`. GPUix 0.11.0 has no
   `aria-labelledby`, so the legend text is the name; it is not referenced by id.
-- `@gpuix/native@0.10.0` has no `aria-disabled`. A disabled group is conveyed by
+- `@gpuix/native@0.11.0` has no `aria-disabled`. A disabled group is conveyed by
   its controls leaving the tab order and by the dimmed legend, not by a state
   announced on the group.
 - A disabled `FieldInput` is `readOnly`, not a disabled input: assistive
@@ -94,7 +94,7 @@ sizes, so a custom theme changes the group with no code change — see
 
 ## Limitations
 
-- No `fieldset` element and no `aria-disabled` in 0.10.0.
+- No `fieldset` element and no `aria-disabled` in 0.11.0.
 - Disabled propagation is opt-in. `FieldInput` honours it; other controls (a
   `Combobox`, a `List`) keep their own `disabled` prop.
 - The docs site cannot render this component live — it is a GPUix host tree, not

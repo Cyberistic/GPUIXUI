@@ -63,7 +63,7 @@ becomes the restore target, so the opener would be left with no focus.
 | `Tab` | follows the dialog's trap |
 
 `Enter` arrives as the input's `submit` event, not a key-down — measured in
-0.10.0 — which is also why Space types a space instead of activating a row.
+0.11.0 — which is also why Space types a space instead of activating a row.
 
 ## Filtering
 
@@ -130,7 +130,7 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 
 - The dialog is named `"Command menu"`; the input is `"Search commands"`; rows
   are `role="option"` with `aria-selected` for the highlight.
-- **No `aria-activedescendant` or `aria-controls`** in 0.10.0: the relationship
+- **No `aria-activedescendant` or `aria-controls`** in 0.11.0: the relationship
   between the input and the highlighted row is visual only for assistive
   technology.
 - The `<input>` is the host element until `@gpuixui/primitives` lands; it is the

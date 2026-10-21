@@ -7,7 +7,7 @@
  * registers a handler.
  *
  * A group is a `role="group"` named by its heading; rows are `listitem`s inside
- * the root's `role="list"`. Separators are 1px elements, not borders: 0.10.0 has
+ * the root's `role="list"`. Separators are 1px elements, not borders: 0.11.0 has
  * per-side border widths but a single `borderColor`.
  */
 
@@ -255,7 +255,7 @@ export const keyboardShortcutsMeta = {
   limitations: [
     "display-only: a row documents a chord, it does not register a handler",
     "the chord grammar is @tanstack/hotkeys; an unknown token displays verbatim rather than failing",
-    "rows are separated by 1px elements because 0.10.0 has one border colour per element",
+    "rows are separated by 1px elements because 0.11.0 has one border colour per element",
   ],
   docs: "docs/keyboard-shortcuts.mdx",
   example: "examples/keyboard-shortcuts.example.tsx",

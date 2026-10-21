@@ -281,7 +281,7 @@ describe("DropdownMenu", () => {
     clickCentreOf(menu, "trigger");
 
     expect(menu.renderer.findByTestId("menu")?.customProps?.role).toBe("menu");
-    // 0.10.0 has no `aria-haspopup`; `aria-expanded` is the whole announcement.
+    // 0.11.0 has no `aria-haspopup`; `aria-expanded` is the whole announcement.
     expect(menu.renderer.findByTestId("trigger")?.customProps).toMatchObject({
       "aria-expanded": true,
     });

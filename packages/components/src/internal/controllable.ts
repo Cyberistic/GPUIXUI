@@ -2,7 +2,7 @@
  * Controlled-and-uncontrolled state in one hook, so a component can offer
  * `value`/`defaultValue`/`onValueChange` without the consumer opting in.
  *
- * `@gpuix/react@0.10.0` has this internally for its own controls but does not
+ * `@gpuix/react@0.11.0` has this internally for its own controls but does not
  * export it from `@gpuix/react/floating` (plan 110 §2 lists this file for the
  * same reason). A controlled value is authoritative: setting it without
  * re-rendering with a new `value` leaves the visual state where it was, while

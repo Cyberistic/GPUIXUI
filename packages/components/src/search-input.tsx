@@ -3,7 +3,7 @@
  *
  * The field owns the text in uncontrolled mode and reports every edit; Enter
  * submits and Escape clears. `Enter` reaches the component as the input's
- * `submit` event — measured in 0.10.0 — while Escape arrives as `keyDown`.
+ * `submit` event — measured in 0.11.0 — while Escape arrives as `keyDown`.
  *
  * There is no debounce: the component reports keystrokes as they happen, and a
  * consumer that queries on each one debounces its own effect.
@@ -170,7 +170,7 @@ export const searchInputMeta = {
   gpuixSupport: "yes",
   limitations: [
     "no debounce: the consumer debounces its own query",
-    "Enter arrives as submit, Escape as keyDown (measured in 0.10.0)",
+    "Enter arrives as submit, Escape as keyDown (measured in 0.11.0)",
   ],
   docs: "docs/search-input.mdx",
   example: "examples/search-input.example.tsx",

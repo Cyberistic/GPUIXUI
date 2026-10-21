@@ -104,7 +104,7 @@ the picker surfaces keep their scroll/positioning in `style`.
 | `src/mention-input.tsx`, `src/mention/logic.ts` | MentionInput: ranked `@` suggestions over the anchored layer |
 | `src/message-scroller.tsx`, `src/message-scroller/logic.ts` | MessageScroller: pinned follow, no yank, unread count and jump-to-latest over a bounded scroll viewport |
 | `src/preview-card.tsx` | PreviewCard: hover/focus preview with pointer travel into the card |
-| `src/color-picker.tsx`, `src/color/hex.ts` | ColorPicker: theme swatches and a normalising HEX field (no gradients in 0.10.0) |
+| `src/color-picker.tsx`, `src/color/hex.ts` | ColorPicker: theme swatches and a normalising HEX field (no radial gradient for a saturation/value square in 0.11.0) |
 | `src/hotkey-recorder.tsx` | HotkeyRecorder: capture a chord, reusing `@gpuixui/keyboard` |
 | `src/carousel.tsx` | Carousel: discrete slide stepping with mounted, hidden slides |
 | `src/tag-input.tsx`, `src/tag-input/logic.ts` | TagInput: tokens with a pure add/remove rule set and removable chips |

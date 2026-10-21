@@ -5,7 +5,7 @@
  * (`decodeGpuixEvent`, `normalizeHotkey`, `hasNonModifierKey`, `formatSymbols`);
  * this component only owns the recording state and the display.
  *
- * 0.10.0's test renderer emits no key event for Backspace or Delete, so
+ * 0.11.0's test renderer emits no key event for Backspace or Delete, so
  * clearing is a real control next to the recorder rather than a key the docs
  * could not prove.
  */
@@ -118,6 +118,8 @@ export const HotkeyRecorder = ({
         onKeyDown?.(event);
         if (disabled) return;
         if (recording) {
+          // A recorded chord must not also reach the application or the system.
+          event.preventDefault();
           if (isDismiss(event)) {
             setRecording(false);
             return;
@@ -189,7 +191,7 @@ export const hotkeyRecorderMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "0.10.0 observes keys but cannot preventDefault, so a captured system chord still reaches the system",
+    "a recorded key is swallowed with preventDefault, so it does not also run the application's binding; a chord the operating system intercepts before the window still fires",
     "clearing is a control, not Backspace: the test renderer emits no key event for Backspace/Delete",
     "mod is the platform's primary modifier; a secondary modifier keeps its own token",
   ],

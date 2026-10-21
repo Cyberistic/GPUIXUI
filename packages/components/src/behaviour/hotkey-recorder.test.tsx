@@ -74,6 +74,22 @@ describe("HotkeyRecorder", () => {
     recorder.unmount();
   });
 
+  it("swallows the captured key so its default does not also run", () => {
+    const onChange = vi.fn();
+    const recorder = renderComponent(<Harness onChange={onChange} />);
+
+    clickCentreOf(recorder, "recorder");
+    recorder.renderer.focusElement(
+      recorder.renderer.findByTestId("recorder")?.id ?? -1,
+    );
+    recorder.renderer.simulateKeystrokes("tab");
+
+    expect(onChange).toHaveBeenCalledWith("Tab");
+    expect(focusedTestId(recorder)).toEqual(Option.some("recorder"));
+
+    recorder.unmount();
+  });
+
   it("cancels on Escape without changing the value", () => {
     const onChange = vi.fn();
     const recorder = renderComponent(

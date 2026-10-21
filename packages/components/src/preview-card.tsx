@@ -327,9 +327,9 @@ export const previewCardMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "open/close delays are component timers; 0.10.0 has no pointer-type signal, so touch has no hover and uses press",
+    "open/close delays are component timers; 0.11.0 has no pointer-type signal, so touch has no hover and uses press",
     "the card is not auto-focused on hover open (that would steal focus from typing); Tab reaches its links",
-    "no anchor arrow and no `aria-haspopup` in 0.10.0",
+    "no anchor arrow and no `aria-haspopup` in 0.11.0",
   ],
   docs: "docs/preview-card.mdx",
   example: "examples/preview-card.example.tsx",

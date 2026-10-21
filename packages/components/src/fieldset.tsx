@@ -2,7 +2,7 @@
  * Fieldset: a named group of fields.
  *
  * `Field` wraps one control; a fieldset groups several under one visible
- * heading. `@gpuix/native@0.10.0` has no `fieldset` element and no
+ * heading. `@gpuix/native@0.11.0` has no `fieldset` element and no
  * `aria-disabled`, so the group is a `div` with `role="group"` named by its
  * legend, and `disabled` reaches the controls that opt in — today `FieldInput`,
  * which leaves the tab order and paints the disabled roles.
@@ -134,7 +134,7 @@ export const fieldsetMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no fieldset element and no aria-disabled in 0.10.0: the group is role=group named by its legend, and disabled reaches only FieldInput",
+    "no fieldset element and no aria-disabled in 0.11.0: the group is role=group named by its legend, and disabled reaches only FieldInput",
     "only the legend dims with disabled; controls that do not read the context keep their own disabled prop",
   ],
   docs: "docs/fieldset.mdx",

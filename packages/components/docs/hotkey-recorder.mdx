@@ -70,14 +70,15 @@ no code change — see [Theming](/docs/theming).
 - The recorder is a `role="button"` named by `label`; the clear control is a
   separately named button, so both are reachable by keyboard.
 - Recording is visual ("Press keys…") and the field keeps focus while listening.
-- There is no `aria-keyshortcuts` and no `aria-disabled` in `0.10.0`; disabled is
+- There is no `aria-keyshortcuts` and no `aria-disabled` in `0.11.0`; disabled is
   the tab order plus dimming.
 
 ## Limitations
 
-- **No `preventDefault`.** `0.10.0` observes keys but cannot cancel them, so a
-  chord that the operating system or application already handles still fires
-  while being recorded. Prefer non-system chords in your UI.
+- **A recorded key is swallowed.** While listening the recorder calls
+  `preventDefault()`, so a captured chord does not also run the application's own
+  binding: `Tab` is recorded and focus stays on the recorder. A shortcut the
+  operating system intercepts before the window still fires.
 - **Clearing is a control, not `Backspace`.** The test renderer emits no key
   event for Backspace/Delete, so that gesture is not promised.
 - No conflict detection against already-bound chords.
@@ -90,9 +91,9 @@ The capture rules and the chord grammar live in `@gpuixui/keyboard`
 (`decodeGpuixEvent`, `normalizeHotkey`, `hasNonModifierKey`, `formatSymbols`);
 its unit suite covers platform `mod`, a secondary modifier, modifier-only
 presses, Enter/Space normalisation, and the physical-vs-produced key decode.
-`src/behaviour/hotkey-recorder.test.tsx` (8 native tests) covers the display,
-click-to-record, a real captured chord, Escape, the clear control, blur,
-disabled, and both themes.
+`src/behaviour/hotkey-recorder.test.tsx` (9 native tests) covers the display,
+click-to-record, a real captured chord, a captured key's default being swallowed,
+Escape, the clear control, blur, disabled, and both themes.
 
 ```sh
 nub run --filter @gpuixui/components test

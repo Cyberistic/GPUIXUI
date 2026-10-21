@@ -42,7 +42,7 @@ const questions: ReadonlyArray<{
   {
     id: "limits",
     q: "What does GPUix not support?",
-    a: "0.10.0 has no CSS, no aria-current, no transforms and no portal. Each component documents the limitation it hits.",
+    a: "GPUix has no CSS, no aria-current and no transforms. Each component documents the limitation it hits.",
   },
 ];
 

@@ -11,7 +11,7 @@
  * and the panel closes it after `closeDelay`. An explicit press or key wins
  * over a pending hover timer, so a panel closed by a press does not spring back.
  *
- * Measured gaps in 0.10.0: no anchor/href element, so `NavigationMenuLink` is a
+ * Measured gaps in 0.11.0: no anchor/href element, so `NavigationMenuLink` is a
  * button with `onSelect`; no `aria-haspopup`. ArrowDown opens and moves focus to
  * the panel surface, not straight to the first link.
  */
@@ -610,7 +610,7 @@ export interface NavigationMenuLinkProps extends Omit<ButtonProps, "variant"> {
   readonly className?: string;
 }
 
-/** A navigation row. 0.10.0 has no anchor/href, so this is a button. */
+/** A navigation row. 0.11.0 has no anchor/href, so this is a button. */
 export const NavigationMenuLink = ({
   onSelect,
   onClick,
@@ -688,10 +688,10 @@ export const navigationMenuMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no anchor/href in 0.10.0: NavigationMenuLink is a button with onSelect",
-    "hover opens after `openDelay` and closes after `closeDelay`; 0.10.0 has no pointer-type signal, so touch opens by press",
+    "no anchor/href in 0.11.0: NavigationMenuLink is a button with onSelect",
+    "hover opens after `openDelay` and closes after `closeDelay`; 0.11.0 has no pointer-type signal, so touch opens by press",
     "ArrowDown moves focus to the panel surface, not straight to the first link",
-    "no aria-haspopup in 0.10.0",
+    "no aria-haspopup in 0.11.0",
   ],
   docs: "docs/navigation-menu.mdx",
   example: "examples/navigation-menu.example.tsx",

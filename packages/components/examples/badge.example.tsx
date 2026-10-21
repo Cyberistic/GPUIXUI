@@ -20,7 +20,7 @@ const runs: ReadonlyArray<{
   { name: "nightly · linux-x64", status: "Running", variant: "info" },
   { name: "nightly · win32-x64", status: "Queued", variant: "neutral" },
   { name: "smoke · darwin-x64", status: "Flaky", variant: "warning" },
-  { name: "release · 0.10.0", status: "Failed", variant: "danger" },
+  { name: "release · 0.11.0", status: "Failed", variant: "danger" },
 ];
 
 /** A runs list whose status column is made of badges. */

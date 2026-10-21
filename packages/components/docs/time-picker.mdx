@@ -57,7 +57,7 @@ own their own place, so a caller can reorder them or drop the clear control. Thi
 is a **field**, not a trigger with a popup: the GPUix runtime has no spinbutton
 value to announce, so a popup would be less honest than two inputs.
 
-Two inputs rather than one `role="spinbutton"` is deliberate: 0.10.0 exposes
+Two inputs rather than one `role="spinbutton"` is deliberate: 0.11.0 exposes
 `aria-valuetext` but no `aria-valuenow`, so a custom spinbutton could not
 announce its value. A text input announces its value natively.
 
@@ -143,19 +143,19 @@ still owns the group focus ring.
 
 - The field is a labelled `group`; each input carries `aria-label="<label>
   hours"` / `"<label> minutes"` and its value natively.
-- **No `aria-valuenow` / spinbutton role** in `@gpuix/native@0.10.0`. The inputs
+- **No `aria-valuenow` / spinbutton role** in `@gpuix/native@0.11.0`. The inputs
   are text segments; the arrow-key step is an enhancement, not the only way to
   enter a time.
-- **No `aria-disabled`** in 0.10.0. `disabled` makes both inputs `readOnly`,
+- **No `aria-disabled`** in 0.11.0. `disabled` makes both inputs `readOnly`,
   removes the clear control, dims the field and takes the segments out of the
   tab order; it does not announce a disabled state.
 - **Fixed 24-hour display.** No AM/PM and no locale: the repo has no i18n layer,
   and a 12-hour toggle would need a real message catalogue. No seconds and no
   timezone either — the value is a time of day, not an instant.
 - **`minuteStep` is arrows-only.** It is not a validation rule.
-- The caret position after a programmatic clamp is the host input's; GPUix
-  0.10.0 has no `preventDefault` in key handlers, so the component cannot place
-  the caret itself.
+- The caret position after a programmatic clamp is the host input's: GPUix
+  exposes no caret or selection position, so the component cannot place the
+  caret itself.
 
 ## Verification
 

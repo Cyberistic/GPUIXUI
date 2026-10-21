@@ -1,7 +1,7 @@
 /**
  * Navigation menu example: a product nav with two panels.
  *
- * One panel is open at a time. Links are buttons because 0.10.0 has no anchor or
+ * One panel is open at a time. Links are buttons because 0.11.0 has no anchor or
  * href; `onSelect` is where the example would navigate.
  */
 
