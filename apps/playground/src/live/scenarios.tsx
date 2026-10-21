@@ -92,6 +92,82 @@ const FocusVisibleProbe = (): ReactNode => {
   );
 };
 
+/** One sample with the runtime's default focus dimming, or opted out. */
+const DimSample = ({
+  testId,
+  label,
+  keyboardFocusDim,
+}: {
+  readonly testId: string;
+  readonly label: string;
+  readonly keyboardFocusDim?: boolean;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId={testId}
+      tabIndex={0}
+      role="button"
+      style={{
+        width: 240,
+        padding: theme.spacing.lg,
+        borderRadius: theme.radius.md,
+        backgroundColor: theme.colors.muted,
+        keyboardFocusDim,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {label}
+      </text>
+    </div>
+  );
+};
+
+/**
+ * Three identical samples, one opted out of the runtime's focus dimming.
+ *
+ * The outside pair models "the rest of the window" while the keyboard focus is
+ * elsewhere; the third shows the per-element opt-out the runtime documents.
+ */
+const FocusDimProbe = (): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId="focus-dim-probe"
+      style={{
+        width: 720,
+        height: 360,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        keyboardFocusDim: the first sample dims, the third opts out.
+      </text>
+      <DimSample testId="dim-first" label="dims on Tab" />
+      <DimSample testId="dim-second" label="takes focus on Tab" />
+      <DimSample
+        testId="dim-opt-out"
+        label="opts out of dimming"
+        keyboardFocusDim={false}
+      />
+    </div>
+  );
+};
+
 /** What a probe module supplies; the registry supplies the metadata. */
 export interface LiveProbeBody {
   readonly id: LiveProbeId;
@@ -202,11 +278,75 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** How many pixels paint the theme's `muted` fill in the capture under `name`. */
+const mutedPixels = (
+  ctx: Smoke.AsyncSmokeContext,
+  name: string,
+): Effect.Effect<number, Smoke.SmokeHostError | Smoke.SmokeAssertionError> =>
+  Effect.gen(function* () {
+    const muted = yield* ctx.expectSome(
+      "the theme names a muted colour",
+      Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.muted)),
+    );
+    return yield* paintedPixels(ctx, name, muted);
+  });
+
+const focusDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("focus-dim-probe");
+
+    // A pointer press focuses a sample without entering keyboard mode, so every
+    // fill is at full strength: this is the baseline the dimming is measured
+    // against.
+    yield* ctx.host.click("dim-first");
+    yield* ctx.expectEqual(
+      "a press focuses the first sample",
+      yield* focusedAfterPaint(ctx),
+      "dim-first",
+    );
+    yield* ctx.host.capture("pointer");
+    const plain = yield* mutedPixels(ctx, "pointer");
+
+    // The same three fills after Tab: the focused sample keeps its fill, the
+    // dimmed one loses it, and the opted-out one must keep its own.
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab focuses the second sample",
+      yield* focusedAfterPaint(ctx),
+      "dim-second",
+    );
+    yield* ctx.host.capture("keyboard");
+    const dimmed = yield* mutedPixels(ctx, "keyboard");
+
+    yield* ctx.expectEqual(
+      "some fills are painted at rest",
+      plain > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the runtime dims another focusable while one has keyboard focus",
+      dimmed < plain,
+      true,
+    );
+    // One sample dims (the first) and one opts out (the third), so the drop is
+    // about a third. A whole-window dim would take far more than half.
+    yield* ctx.expectEqual(
+      "only the default sample dims, not the opted-out one",
+      dimmed > plain / 2,
+      true,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
     id: "focus-visible",
     view: () => <FocusVisibleProbe />,
     steps: focusVisibleSteps,
+  },
+  "keyboard-focus-dim": {
+    id: "keyboard-focus-dim",
+    view: () => <FocusDimProbe />,
+    steps: focusDimSteps,
   },
 };

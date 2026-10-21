@@ -18,18 +18,23 @@ export interface LiveProbeMeta {
 /**
  * The probes a real window can prove.
  *
- * `focus-visible` is plan `053`'s STOP gate: whether the runtime's declared
- * `focusVisible` state paints for keyboard focus, and whether a programmatic
- * focus or a mouse press shows it. The probe records native focus ids and
- * captures each state; the outline's *paint* is judged from the captures (a
- * renderer reports no style for a window), so this is visual evidence, not a
- * style assertion.
+ * `focus-visible` and `keyboard-focus-dim` are plan `053`'s STOP gate: whether
+ * the runtime's declared `focusVisible` state paints for keyboard focus (and
+ * not for a press or a programmatic focus), and whether `keyboardFocusDim`
+ * dims the other focusables. Each probe asserts the native focus id of every
+ * state and reads the paint out of the captured frame, so the evidence is a
+ * check, not a claim.
  */
 export const liveRegistry = [
   {
     id: "focus-visible",
     title:
       "Focus: focusVisible paints for Tab, not for a press or a programmatic focus",
+    capability: "focus",
+  },
+  {
+    id: "keyboard-focus-dim",
+    title: "Focus: the runtime dims other focusables, and one element opts out",
     capability: "focus",
   },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;

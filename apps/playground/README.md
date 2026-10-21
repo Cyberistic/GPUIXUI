@@ -260,6 +260,19 @@ Three consequences, which is what plan `053` needed:
 3. `keyboardFocusDim` is on by default and tracks the same keyboard-input state:
    it dims other focusables exactly when the ring appears.
 
+### `keyboard-focus-dim` — measured on 0.11.0 here
+
+Three identical samples, one with `keyboardFocusDim: false`. After a pointer
+press every fill is at full strength; after Tab (keyboard focus on the second),
+the first sample dims — fill **and** text — the focused one stays full, and the
+opted-out one stays full. The probe asserts this from the frame: the count of
+exact `colors.muted` pixels drops by about one sample's worth, so a runtime that
+dimmed the whole window, or ignored the opt-out, fails.
+
+That answers plan `053`'s third question: dimming is **on by default**, it is
+per-element, and an element that draws its own focus look opts out with
+`keyboardFocusDim: false`.
+
 A failed probe still writes its report and captures, so a regression is visible,
 not just red.
 
