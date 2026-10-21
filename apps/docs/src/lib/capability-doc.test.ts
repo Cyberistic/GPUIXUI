@@ -279,6 +279,50 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(capture?.[2]).toContain("onMouseMove");
   });
 
+  it("records what a chart or an image can draw, with the probe that measured it", () => {
+    // `<svg>` is in `ElementType` and `setImagePixels` is on the renderer, so the
+    // typings made both look like general-purpose drawing. `content-surfaces`
+    // measured that an SVG paints as one tint and that a pixel buffer only
+    // reaches the frame from a layout effect — the two facts a chart or an image
+    // preview is built on.
+    const svg = rowFor("Inline SVG painting");
+    expect(svg?.verdict).toBe("supported, with limits");
+    expect(svg?.evidence).toContain("content-surfaces");
+    expect(svg?.evidence).toContain("one tint");
+    expect(svg?.workaround).toContain("one `<svg>` per colour");
+
+    const image = rowFor("Image painting");
+    expect(image?.verdict).toBe("supported, with limits");
+    expect(image?.evidence).toContain("setImagePixels");
+    expect(image?.evidence).toContain("layout effect");
+
+    const canvas = rowFor("Canvas drawing");
+    expect(canvas?.evidence).toContain("content-surfaces");
+    expect(canvas?.evidence).toContain("painted bounds");
+  });
+
+  it("publishes what an SVG and an image can draw on /docs/runtime", () => {
+    const start = runtimePage.indexOf("## Measured in a window");
+    const end = runtimePage.indexOf("\n## ", start + 1);
+    const section = runtimePage.slice(start, end === -1 ? undefined : end);
+    const pageRows = section
+      .split("\n")
+      .filter((line) => line.startsWith("|") && !/^[\s:|-]+$/.test(line))
+      .map(cells);
+
+    const svg = pageRows.find((row) => (row[0] ?? "").startsWith("Inline SVG"));
+    expect(svg, "the page's measured table has no inline-SVG row").toBeDefined();
+    expect(svg?.[1]).toContain("one tint");
+    expect(svg?.[1]).toContain("content-surfaces");
+    expect(svg?.[2]).toContain("one `<svg>` per colour");
+
+    const image = pageRows.find((row) => (row[0] ?? "").startsWith("Image bytes"));
+    expect(image, "the page's measured table has no image row").toBeDefined();
+    expect(image?.[1]).toContain("layout effect");
+    expect(image?.[1]).toContain("content-surfaces");
+    expect(image?.[2]).toContain("useLayoutEffect");
+  });
+
   it("leaves the uncertain rows uncertain", () => {
     const unverified = rows.filter((row) => row.verdict === "unverified");
     expect(unverified.length).toBeGreaterThanOrEqual(3);
@@ -292,6 +336,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("tabs-lifecycle");
     expect(runtimePage).toContain("scroll-lifecycle");
     expect(runtimePage).toContain("pointer-capture");
+    expect(runtimePage).toContain("content-surfaces");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });

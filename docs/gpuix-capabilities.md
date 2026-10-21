@@ -76,12 +76,14 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Animation interruption | supported | a target change starts the next transition from the current visible value | — |
 | Reduced-motion detection | unverified | no documented media query or runtime flag | keep motion optional and short; do not claim a reduced-motion mode |
 | Custom paint | not supported | `canvas` is in `ElementType` but blank | render `svg`; there is no retained draw API |
+| Inline SVG painting | supported, with limits | `<svg source>` paints its markup, but **as one tint**: `@gpuix/native`'s `SvgElement` renders through GPUI's icon element, so the whole markup is masked in `style.color` and a shape's own `fill` never reaches the frame. **Measured** by `content-surfaces`: all five shapes painted in the one source tint, while five stacked `<svg>` elements each painted their own (bar green, bubble blue, line red, axis yellow, label orange); `<text>` inside the markup paints | stack one `<svg>` per colour — a multi-series chart is one element per series; labels can live in the markup, but a gradient or a per-shape palette inside one element is not available |
 | Container queries | not supported | no such field; `useWindowSize` is the responsive hook | measure the box (`onLayout`, on `div`/`text`) or `useWindowSize` and branch in the component |
-| Canvas drawing | not supported | as above — no 2D context | as above |
+| Canvas drawing | not supported | as above — no 2D context, and **measured** by `content-surfaces`: a `<canvas>` tracks no painted bounds and paints nothing, so the fill behind it shows through | as above |
 | IME composition | not supported | no composition events reach React | compose from `onInput`/`onKeyDown` at the application layer; live IME preview needs a runtime change |
 | Global / system shortcut | not supported | key events fire only while the window is focused | window-level `onKeyDown`; a background hotkey needs a runtime change |
 | Tray / menu bar / status item | not supported | no such host | ship an in-window menu |
 | Native view / webview / embedded browser | not supported | no child-view host | `markdown`/`code`/`diff` surfaces |
+| Image painting | supported, with limits | `<img>` paints a path, an http(s) URL and a data-URL PNG; a pixel buffer through `ref.setImagePixels(width, height, …)` paints **only from a layout effect** — from a passive `useEffect` the element keeps its `img: no src` fallback. **Measured** by `content-surfaces` in both directions | upload pixels in `useLayoutEffect`/`useEffect`-before-paint (the upstream waveform example's pattern, not a preference); a data URL needs no timing |
 | Terminal rendering | supported | `render(<App />, { terminal: true })`, `isTerminal()` | — |
 | Headless dialog | supported | `@gpuix/react/dialog` owns the Escape layer and the Tab trap | the library keeps its styled compound `Dialog` so it can theme it; the headless one is not wrapped |
 | Tab / Shift+Tab focus traversal | supported, with limits | native tab order; `focusNext`/`focusPrevious`/`focusNextWithin` move focus from code. A synthetic `"tab"` key does not traverse the offscreen `TestRenderer` | drive traversal through the renderer calls in tests |
@@ -127,8 +129,9 @@ short, never the carrier of meaning.
 - The same test holds `/docs/runtime` to this file: the site's *measured in a
   window* section must name the probes behind every gap it lists
   (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
-  `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`), because a measured
-  gap is absent from the typings rather than merely hard to find.
+  `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`, `content-surfaces`),
+  because a measured gap is absent from the typings rather than merely hard to
+  find.
 - The probe measurements themselves are asserted by the suite
   (`apps/playground`), not here: this document records the verdict and points at
   the evidence.

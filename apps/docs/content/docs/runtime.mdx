@@ -19,7 +19,7 @@ stale silently.
 | Tab / Shift+Tab focus | Supported | Default; `preventDefault()` keeps one Tab |
 | `transform` | Not supported | Animate motion with `@gpuixui/motion`; static rotation/scale is unsupported |
 | Grid span | Not supported | Size the track with `gridTemplateColumns`/`gridTemplateRows` or an explicit width |
-| Canvas drawing | Not supported | Render `svg` or compose `div`/`svg` primitives; no retained draw API |
+| Canvas drawing | Not supported | Render `svg` or compose `div`/`svg` primitives; no retained draw API — a `<canvas>` also tracks no painted bounds (`content-surfaces`) |
 | IME composition | Not supported | Compose at the application layer from `onInput`/`onKeyDown` |
 | Global shortcut | Not supported | Window-level `onKeyDown`; background hotkeys need a runtime change |
 | Tray / menu bar | Not supported | Ship an in-window menu; a system tray needs a runtime change |
@@ -38,6 +38,8 @@ does not say them, so a reader must not infer them from the table's silence.
 | Keyboard focus events | a `Tab` traversal moves the focus without running React's `onFocus`: a tooltip's trigger is focused while its tip stays closed (`tooltip-lifecycle`), and `Tabs` counts `focuses=0` for the same traversal (`tabs-lifecycle`) | read the key event's own `elementId` or `getFocusedElementId`; publish what only focus would reveal as `aria-description` |
 | Scroll event payloads | `onScroll` reports the wheel **input**, not the travel — a `-100000` wheel reports `-100000` after the offset moved 200px and clamped — while `onScrollChange` reports the clamped absolute `scrollX`/`scrollY` pair `getScrollOffset` returns (`scroll-lifecycle`) | a scrollbar, a saved position or a follow-the-tail scroller reads `onScrollChange`; `onScroll` is the gesture's own delta |
 | Pointer capture | the runtime arms capture on a left press **only** for an element that listens to both `onMouseDown` and `onMouseMove`: the paired sample kept all eight moves and its release 120px outside its box, while a move-only sample got the pre-press move and the sibling received the eight, and the shipped `Slider` followed a drag off its track (`pointer-capture`) | a drag handle, splitter or slider subscribes to **both** `onMouseDown` and `onMouseMove`; a move-only element captures nothing and the element under the pointer resolves the drag |
+| Inline SVG | `<svg source>` paints, but as **one tint** — the whole markup is masked in `style.color`, so a shape's own `fill` never reaches the frame; five stacked `<svg>` elements each paint their own tint while `<text>` inside the markup paints (`content-surfaces`) | stack one `<svg>` per colour, so a multi-series chart is one element per series; labels can live in the markup |
+| Image bytes | `<img>` paints a path, an http(s) URL and a data-URL PNG; a pixel buffer set through `ref.setImagePixels` paints **only from a layout effect** — a passive `useEffect` leaves the element's `img: no src` fallback (`content-surfaces`) | upload pixels before the frame paints (the waveform example's `useLayoutEffect` pattern); a data URL needs no timing |
 
 The durable record — every host element, every limit, its verdict, its evidence
 path and the alternative — is
