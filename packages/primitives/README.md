@@ -253,8 +253,8 @@ one that every slot handler reaches an element and calls the caller on every
 single-root trigger (plan `694`), one that every part with a `disabled` prop
 announces the state the runtime cannot express (`unavailable` / `read only`,
 plan `810`), one that every documentation table row sits inside a well-formed
-table and that two keyboard tables agree with the rules they describe (plan
-`813`),
+table and that four keyboard tables agree with the rules they describe
+(plans `813`, `814`),
 and one that fails by file name when a runtime suite has no header or is named
 like a scratch probe (plan `390`).
 

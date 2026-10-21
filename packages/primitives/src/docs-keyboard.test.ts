@@ -21,7 +21,9 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { decideActivation, decideMove } from "./core/keyboard.js";
+import { decideNumberKey } from "./core/number.js";
 import { decideRating } from "./core/rating.js";
+import { decideValueKey } from "./core/value.js";
 import { typeaheadChar } from "./core/typeahead.js";
 import { docTableBlocks, tableCells } from "./testing/index.js";
 
@@ -128,31 +130,32 @@ describe("the keyboard pages", () => {
     expect(sorted(axes)).toStrictEqual(["horizontal", "vertical"]);
   });
 
-  it("document every Rating movement key, and answer it as the rule does", async () => {
-    const page = await Effect.runPromise(readDoc("rating"));
-    const labels = documentedKeys(page);
-    Arr.forEach(RATING_MOVES, ([label, key, expected]) => {
-      expect(labels, `the page documents ${label}`).toContain(label);
-      expect(decideRating(3, 5, key), `${label} from 3 of 5`).toStrictEqual(
-        Option.some(expected),
+  it.each(KEYBOARD_CASES)(
+    "keep the $page keyboard table true to its rule",
+    async ({ page, rule, moves, notOurs }) => {
+      const labels = documentedKeys(await Effect.runPromise(readDoc(page)));
+      Arr.forEach(moves, ([label, expected]) => {
+        const key = optionOrFail(runtimeKeyOf(label), label);
+        expect(labels, `the page documents ${label}`).toContain(label);
+        expect(rule(key), `${label} on ${page}`).toStrictEqual(
+          Option.some(expected),
+        );
+      });
+      // The other direction: a key the rule answers is documented, and every
+      // documented movement row is one the rule answers. Rows that belong to
+      // another contract (activation, the host submit) are named, not guessed.
+      const documented = Arr.getSomes(
+        Arr.map(
+          Arr.filter(labels, (label) => !Arr.contains(notOurs, label)),
+          runtimeKeyOf,
+        ),
       );
-    });
-  });
-
-  it("answer no Rating key the page does not document", async () => {
-    const page = await Effect.runPromise(readDoc("rating"));
-    const documented = keyNames(documentedKeys(page));
-    const answered = Arr.filter(runtimeKeys(), (key) =>
-      Option.isSome(decideRating(3, 5, key)),
-    );
-    // Both sides exclude the two activation keys, which the page documents but
-    // `decideRating` does not answer.
-    expect(
-      sorted(Arr.filter(answered, (key) => !isActivation(key))),
-    ).toStrictEqual(
-      sorted(Arr.filter(documented, (key) => !isActivation(key))),
-    );
-  });
+      const answered = Arr.filter(runtimeKeys(), (key) =>
+        Option.isSome(rule(key)),
+      );
+      expect(sorted(answered)).toStrictEqual(sorted(documented));
+    },
+  );
 
   it("document the Rating activation keys on their own phases", async () => {
     const page = await Effect.runPromise(readDoc("rating"));
@@ -195,27 +198,82 @@ const RUNTIME_KEY: Readonly<Record<string, string>> = {
   ArrowDown: "down",
   Home: "home",
   End: "end",
+  PageUp: "pageup",
+  PageDown: "pagedown",
   Enter: "enter",
   Space: "space",
   Delete: "delete",
   Backspace: "backspace",
 };
 
-/** The Rating page's movement rows, and the value each must produce from 3. */
-const RATING_MOVES: ReadonlyArray<readonly [string, string, number]> = [
-  ["ArrowRight", "right", 4],
-  ["ArrowUp", "up", 4],
-  ["ArrowLeft", "left", 2],
-  ["ArrowDown", "down", 2],
-  ["Home", "home", 1],
-  ["End", "end", 5],
-  ["Delete", "delete", 0],
-  ["Backspace", "backspace", 0],
+/** The range the two value-control pages document their moves against. */
+const VALUE_RANGE = { min: 0, max: 100, step: 5 } as const;
+
+/** A documented keyboard table and the pure rule that answers it. */
+interface KeyboardCase {
+  /** The page's file stem. */
+  readonly page: string;
+  /** The rule at the value the page's numbers are measured from. */
+  readonly rule: (key: string) => Option.Option<number>;
+  /** A documented label, and the result the rule must give. */
+  readonly moves: ReadonlyArray<readonly [string, number]>;
+  /** Documented rows that belong to another contract (activation, submit). */
+  readonly notOurs: ReadonlyArray<string>;
+}
+
+/** The documented movement rows, and nothing the table does not promise. */
+const VALUE_MOVES: ReadonlyArray<readonly [string, number]> = [
+  ["ArrowRight", 55],
+  ["ArrowUp", 55],
+  ["ArrowLeft", 45],
+  ["ArrowDown", 45],
+  ["PageUp", 100],
+  ["PageDown", 0],
+  ["Home", 0],
+  ["End", 100],
 ];
 
-/** The keys that activate rather than move a value control. */
-const isActivation = (key: string): boolean =>
-  key === RUNTIME_KEY.Enter || key === RUNTIME_KEY.Space;
+const KEYBOARD_CASES: ReadonlyArray<KeyboardCase> = [
+  {
+    page: "rating",
+    rule: (key) => decideRating(3, 5, key),
+    moves: [
+      ["ArrowRight", 4],
+      ["ArrowUp", 4],
+      ["ArrowLeft", 2],
+      ["ArrowDown", 2],
+      ["Home", 1],
+      ["End", 5],
+      ["Delete", 0],
+      ["Backspace", 0],
+    ],
+    notOurs: ["Enter", "Space"],
+  },
+  {
+    page: "slider",
+    rule: (key) => decideValueKey(50, VALUE_RANGE, key),
+    moves: VALUE_MOVES,
+    notOurs: [],
+  },
+  {
+    page: "range-slider",
+    rule: (key) => decideValueKey(50, VALUE_RANGE, key),
+    moves: VALUE_MOVES,
+    notOurs: [],
+  },
+  {
+    page: "number-field",
+    rule: (key) => decideNumberKey(12, { step: 1 }, key),
+    moves: [
+      ["ArrowUp", 13],
+      ["ArrowDown", 11],
+      ["PageUp", 22],
+      ["PageDown", 2],
+    ],
+    // Enter reaches the field as the host's `submit` (plan 339).
+    notOurs: ["Enter"],
+  },
+];
 
 /** A keyboard table's rows, without its header and delimiter row. */
 const keyboardRows = (markdown: string): ReadonlyArray<ReadonlyArray<string>> =>

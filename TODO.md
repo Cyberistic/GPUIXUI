@@ -2858,6 +2858,16 @@ retired once both branches are one
       `decideActivation` in both directions. Offline 77 files / 1126 tests, four
       mutation directions measured (plan `813`).
 
+`[x]` `packages/primitives`: **three more keyboard tables described rules
+      nothing checked** — `Slider`, `RangeSlider` and `NumberField` document
+      `decideValueKey`/`decideNumberKey` while no guard tied a row to a rule
+      (and `Rating` kept a fourth bespoke copy of the shape). One `KeyboardCase`
+      table now holds all four pages: the documented movement labels must be
+      exactly the keys the rule answers, with the documented results, and
+      `Enter`/`Space`/the host submit are named `notOurs`. Measured: all four
+      pages already agreed, so no page or component changed; three mutations
+      fail by name (offline 77 files / 1128 tests; plan `814`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails
