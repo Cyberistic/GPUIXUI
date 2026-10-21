@@ -1,17 +1,19 @@
 /**
  * Selection example: notification preferences.
  *
- * The three selection controls in the roles they actually differ in — a
- * checkbox group with an indeterminate parent, a radio group for cadence, and a
- * switch for an immediate pause. Each is controlled by the caller, so the
- * example demonstrates the API a real settings screen uses.
+ * The selection controls in the roles they actually differ in — a checkbox
+ * group with an indeterminate parent, a checkbox with a custom mark, a radio
+ * group for cadence, and a switch for an immediate pause. Each is controlled by
+ * the caller, so the example demonstrates the API a real settings screen uses.
  */
 
 import { useState, type ReactElement } from "react";
+import * as Arr from "effect/Array";
 import { Icon } from "@gpuixui/icons";
 import {
   Box,
   Checkbox,
+  CheckboxGroup,
   RadioGroup,
   RadioGroupItem,
   Separator,
@@ -19,6 +21,7 @@ import {
   Switch,
   Text,
   useTheme,
+  type GroupOption,
 } from "../src/index.js";
 
 /** A labelled row: the control and the sentence that explains it. */
@@ -42,15 +45,28 @@ const Row = ({
   </Stack>
 );
 
-/** Notification preferences: checkboxes, a radio group and a switch. */
+/** The channels the group offers, as one list the parent can select whole. */
+const CHANNELS: ReadonlyArray<GroupOption> = [
+  {
+    value: "email",
+    label: "Email",
+    description: "A digest to your account address.",
+  },
+  {
+    value: "push",
+    label: "Push",
+    description: "Delivered by the desktop application.",
+  },
+];
+
+/** Notification preferences: checkbox groups, a radio group and a switch. */
 export const SelectionExample = (): ReactElement => {
   const theme = useTheme();
-  const [email, setEmail] = useState(true);
-  const [push, setPush] = useState(false);
+  const [channels, setChannels] = useState<ReadonlyArray<string>>(["email"]);
   const [cadence, setCadence] = useState("daily");
   const [paused, setPaused] = useState(false);
-  const all = email && push;
-  const none = !email && !push;
+  const all = Arr.length(channels) === Arr.length(CHANNELS);
+  const none = Arr.length(channels) === 0;
 
   return (
     <Box
@@ -68,8 +84,9 @@ export const SelectionExample = (): ReactElement => {
           checked={all}
           indeterminate={!all && !none}
           onCheckedChange={(next) => {
-            setEmail(next);
-            setPush(next);
+            setChannels(
+              next ? Arr.map(CHANNELS, (channel) => channel.value) : [],
+            );
           }}
           label="All channels"
         />
@@ -86,20 +103,12 @@ export const SelectionExample = (): ReactElement => {
           gap="sm"
           style={{ paddingLeft: theme.spacing.lg }}
         >
-          <Row title="Email" description="A digest to your account address.">
-            <Checkbox
-              checked={email}
-              onCheckedChange={setEmail}
-              label="Email notifications"
-            />
-          </Row>
-          <Row title="Push" description="Delivered by the desktop application.">
-            <Checkbox
-              checked={push}
-              onCheckedChange={setPush}
-              label="Push notifications"
-            />
-          </Row>
+          <CheckboxGroup
+            label="Channels"
+            value={channels}
+            onValueChange={setChannels}
+            options={CHANNELS}
+          />
           <Row
             title="Favourites"
             description="A custom mark replaces the default check."

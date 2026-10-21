@@ -61,9 +61,9 @@ the exact steps and the native-style-prop → utility-class mapping are in
 
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
 **Text** `Text` `Label`
-**Actions** `Button` `ButtonGroup` `Toggle`
+**Actions** `Button` `ButtonGroup` `Toggle` `ToggleGroup`
 **Fields** `Input` `TextArea` `NumberField` `OTPField` `Select`
-**Selection** `Checkbox` `RadioGroup` `Switch` `Rating`
+**Selection** `Checkbox` `CheckboxGroup` `RadioGroup` `Switch` `Rating`
 **Value** `Slider` `RangeSlider` `Meter`
 **Feedback** `Progress` `Spinner` `Skeleton` `Tooltip`
 **Theming** `ThemeProvider`

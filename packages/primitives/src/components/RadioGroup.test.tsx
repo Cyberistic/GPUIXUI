@@ -164,6 +164,27 @@ describe("RadioGroup", () => {
     ).toBe(1);
   });
 
+  it("moves the tab stop off a chosen option that cannot take focus", () => {
+    // The bug guarded: the stop stayed on the selected option even when it was
+    // disabled, and a disabled row has no tabIndex, so the group had no
+    // reachable stop and a keyboard user could not enter it at all.
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "alpha", label: "Alpha", disabled: true },
+          { value: "beta", label: "Beta" },
+        ],
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+
+    expect(rows(element).map(stopOf)).toEqual(["absent", 0]);
+  });
+
   it("hands a style callback the group's live state and lets its result win", () => {
     const seen: RadioGroupState[] = [];
     const element = renderRadioGroup(
@@ -243,6 +264,15 @@ const itemChildren = (
 /** The group's option rows, from the rendered tree. */
 const rows = (element: ReturnType<typeof renderRadioGroup>) =>
   elementChildren(element);
+
+/** A row's tab stop, with "absent" standing in for `undefined`. */
+const stopOf = (row: ReturnType<typeof rows>[number]): number | "absent" =>
+  Option.getOrElse(
+    Option.flatMap(hostProp(row, "tabIndex"), (value) =>
+      typeof value === "number" ? Option.some(value) : Option.none(),
+    ),
+    () => "absent",
+  );
 
 describe("RadioGroupItem", () => {
   it("reads its children into the same option list the data prop produces", () => {

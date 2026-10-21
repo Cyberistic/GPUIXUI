@@ -16,19 +16,10 @@
  * an element is the only shape that can carry rich content (an icon, a price).
  */
 
-import {
-  Children,
-  Fragment,
-  isValidElement,
-  useRef,
-  useState,
-  type ReactElement,
-  type ReactNode,
-} from "react";
+import type { ReactElement, ReactNode } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useGpuix } from "@gpuix/react";
-import type { EventPayload, KeyEvent, PublicInstance } from "@gpuix/react";
+import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import {
@@ -37,6 +28,7 @@ import {
   decideMove,
   swallowKeyDefault,
 } from "../core/keyboard.js";
+import { rovingIndex } from "../core/roving.js";
 import type {
   SelectionAccent,
   SelectionSpec,
@@ -53,6 +45,16 @@ import {
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
+  optionBody,
+  optionItems,
+  optionRowClass,
+  useRovingFocus,
+  type GroupFocus,
+  type GroupHandlers,
+  type GroupItemProps,
+  type GroupOption,
+} from "./group.js";
+import {
   composeEvent,
   composePress,
   mergeStyle,
@@ -63,30 +65,11 @@ import {
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
-import { Text } from "./Text.js";
 
-export interface RadioOption {
-  readonly value: string;
-  readonly label: string;
-  readonly description?: string;
-  readonly disabled?: boolean;
-  /**
-   * Rich content drawn in place of `label` and `description`. The name stays
-   * `label`, so the visible and announced names cannot diverge.
-   */
-  readonly content?: ReactNode;
-}
+export type RadioOption = GroupOption;
 
 /** {@link RadioGroupItem} props: one option written as an element. */
-export interface RadioGroupItemProps {
-  readonly value: string;
-  /** The accessible name, and the visible text unless `children` replaces it. */
-  readonly label: string;
-  readonly description?: string;
-  readonly disabled?: boolean;
-  /** Rich content — an icon, a price — instead of `label`/`description`. */
-  readonly children?: ReactNode;
-}
+export type RadioGroupItemProps = GroupItemProps;
 
 /**
  * One option as an element, for content the data prop cannot carry.
@@ -97,33 +80,12 @@ export interface RadioGroupItemProps {
  */
 export const RadioGroupItem = (_props: RadioGroupItemProps): null => null;
 
-/**
- * The option list a group renders: the data prop, or its item children.
- *
- * Fragments and arrays are transparent, so a caller can group items without
- * changing what the group sees.
- */
-const itemsOf = (children: ReactNode): ReadonlyArray<RadioOption> =>
-  Arr.flatMap(Children.toArray(children), (child) => {
-    if (!isValidElement<RadioGroupItemProps>(child)) return [];
-    if (child.type === Fragment) return itemsOf(child.props.children);
-    if (child.type !== RadioGroupItem) return [];
-    return [
-      {
-        value: child.props.value,
-        label: child.props.label,
-        description: child.props.description,
-        disabled: child.props.disabled,
-        content: child.props.children,
-      },
-    ];
-  });
-
 /** The option list a group renders: the data prop, or its item children. */
 export const radioItems = (props: {
   readonly options?: ReadonlyArray<RadioOption>;
   readonly children?: ReactNode;
-}): ReadonlyArray<RadioOption> => props.options ?? itemsOf(props.children);
+}): ReadonlyArray<RadioOption> =>
+  props.options ?? optionItems(props.children, RadioGroupItem);
 
 export interface RadioGroupProps
   extends ValueChangeProps<string>, InteractionProps {
@@ -168,23 +130,11 @@ export interface RadioItemState {
 }
 
 /** Which item holds native focus, and how the group learns that it moved. */
-export interface RadioGroupFocus {
-  /** The focused option, or `None` while focus is outside the group. */
-  readonly focusedIndex: Option.Option<number>;
-  readonly onFocus: (index: number) => void;
-  /** Reports the index that lost focus, so a stale blur cannot clear the ring. */
-  readonly onBlur: (index: number) => void;
-}
+export type RadioGroupFocus = GroupFocus;
 
 /** What the renderer does with the group's own state. */
-export interface RadioGroupHandlers {
+export interface RadioGroupHandlers extends GroupHandlers {
   readonly onSelect: (value: string) => void;
-  /** Move native focus to the option a keyboard move landed on. */
-  readonly onFocusMove: (index: number) => void;
-  /** Register an option's host instance, so the group can call `focusElement`. */
-  readonly registerItem: (
-    index: number,
-  ) => (instance: PublicInstance | null) => void;
 }
 
 /** The index the item at `value` sits at, or the first enabled one. */
@@ -217,7 +167,14 @@ export const renderRadioGroup = (
   const options = radioItems(props);
   const count = Arr.length(options);
   const isDisabled = (index: number): boolean =>
-    options[index]?.disabled === true;
+    props.disabled === true || options[index]?.disabled === true;
+  // The stop the group asked for may be a disabled row, which takes no focus;
+  // moving to the first option a user can reach is what keeps the group in the
+  // tab order.
+  const stopIndex = Option.getOrElse(
+    rovingIndex(count, Option.some(activeIndex), isDisabled),
+    () => activeIndex,
+  );
   const select = (index: number): boolean => {
     const option = options[index];
     if (
@@ -236,7 +193,7 @@ export const renderRadioGroup = (
     return true;
   };
   const move = (key: string): boolean =>
-    Option.match(decideMove(activeIndex, count, key, orientation, isDisabled), {
+    Option.match(decideMove(stopIndex, count, key, orientation, isDisabled), {
       onNone: () => false,
       onSome: navigate,
     });
@@ -249,13 +206,12 @@ export const renderRadioGroup = (
     const key = event.key ?? "";
     if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
-    if (decideActivation(key, "down", event.isHeld === true))
-      select(activeIndex);
+    if (decideActivation(key, "down", event.isHeld === true)) select(stopIndex);
   };
   // Space selects on the release, the way a platform radio does; Enter has
   // already selected on the press, and this handler ignores it.
   const onKeyUp = (event: KeyEvent): void => {
-    if (decideActivation(event.key ?? "", "up", false)) select(activeIndex);
+    if (decideActivation(event.key ?? "", "up", false)) select(stopIndex);
   };
   const group = mergeStyle(
     recipeTw.classesToStyle(
@@ -305,13 +261,7 @@ export const renderRadioGroup = (
           controlRing(theme, { disabled, invalid: spec.invalid }),
         );
         const row = mergeStyle(
-          recipeTw.classesToStyle(
-            cn(
-              "flex flex-row items-center gap-sm",
-              disabled ? "cursor-not-allowed" : "cursor-pointer",
-            ),
-            theme,
-          ).style,
+          recipeTw.classesToStyle(optionRowClass(disabled), theme).style,
           resolveStyle(props.itemStyle, {
             disabled,
             focused: Option.contains(focus.focusedIndex, index),
@@ -325,7 +275,7 @@ export const renderRadioGroup = (
             role="radio"
             aria-label={option.label}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
-            tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
+            tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}
             onClick={composePress(disabled, props.onClick, () => {
               select(index);
             })}
@@ -352,29 +302,7 @@ export const renderRadioGroup = (
               deepest element and does not bubble, so content that accepts the
               press takes it from the row (a `Box` does; text and icons do not).
             */}
-            <div
-              style={
-                recipeTw.classesToStyle(
-                  "flex flex-row items-center gap-sm",
-                  theme,
-                ).style
-              }
-            >
-              {option.content === undefined ? (
-                <>
-                  <Text role="label" tone={disabled ? "muted" : "default"}>
-                    {option.label}
-                  </Text>
-                  {option.description === undefined ? null : (
-                    <Text role="caption" tone="muted">
-                      {option.description}
-                    </Text>
-                  )}
-                </>
-              ) : (
-                option.content
-              )}
-            </div>
+            {optionBody(option, disabled, theme)}
           </div>
         );
       })}
@@ -385,53 +313,19 @@ export const renderRadioGroup = (
 /** A group of radio buttons. */
 export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   const theme = useTheme();
-  const { renderer } = useGpuix();
-  const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
-    Option.none(),
-  );
-  const itemIds = useRef<Map<number, number>>(new Map());
+  const focus = useRovingFocus();
   const selected = useControlState(
     props.value,
     props.defaultValue ?? "",
     valueChange(props),
   );
+  const options = radioItems(props);
   return renderRadioGroup(
     props,
     theme,
     selected.value,
-    initialActiveIndex(radioItems(props), selected.value.current),
-    {
-      focusedIndex,
-      onFocus: (index) => setFocusedIndex(Option.some(index)),
-      onBlur: (index) =>
-        setFocusedIndex((current) =>
-          Option.filter(current, (focused) => focused !== index),
-        ),
-    },
-    {
-      onSelect: selected.set,
-      onFocusMove: (index) =>
-        Option.match(
-          Option.all({
-            id: Option.fromNullishOr(itemIds.current.get(index)),
-            target: Option.fromNullishOr(renderer),
-          }),
-          {
-            onNone: () => {},
-            // Paint where focus is going in the same commit: the focus event
-            // follows the native call, and waiting for it would paint the ring
-            // a frame late. The call keeps its receiver — `focusElement` is a
-            // method on the renderer, not a free function.
-            onSome: ({ id, target }) => {
-              target.focusElement?.(id);
-              setFocusedIndex(Option.some(index));
-            },
-          },
-        ),
-      registerItem: (index) => (instance) => {
-        if (instance === null) itemIds.current.delete(index);
-        else itemIds.current.set(index, instance.id);
-      },
-    },
+    initialActiveIndex(options, selected.value.current),
+    focus,
+    { onSelect: selected.set, ...focus },
   );
 };

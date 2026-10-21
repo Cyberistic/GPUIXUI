@@ -116,6 +116,23 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     tests: ["src/components/presentational.test.tsx", layoutRuntime],
   },
   {
+    name: "Grid",
+    status: "done",
+    gpuixSupport: "yes",
+    limitations: [
+      "No auto-flow, spanning cells, named areas, minmax() or template tracks",
+      "Not focusable and no role: visual columns carry no semantics",
+    ],
+    source: [
+      "src/components/Stack.tsx",
+      "src/core/layout.ts",
+      "src/recipe/index.ts",
+    ],
+    docs: "docs/grid.mdx",
+    example: layoutExample,
+    tests: ["src/core/layout.test.ts", layoutRuntime],
+  },
+  {
     name: "Boxes / containers",
     status: "done",
     gpuixSupport: "yes",
@@ -274,6 +291,29 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     tests: [
       "src/components/Checkbox.test.tsx",
       "src/core/selection.test.ts",
+      "runtime/controls.runtime.test.tsx",
+    ],
+  },
+  {
+    name: "Checkbox group",
+    status: "done",
+    gpuixSupport: "partial",
+    limitations: [
+      "No aria-checked or aria-multiselectable: state is announced as aria-valuetext",
+      "The group is one tab stop, so an option is not reachable by Tab",
+      "No select-all, indeterminate parent, type-ahead or drag selection",
+    ],
+    source: [
+      "src/components/CheckboxGroup.tsx",
+      "src/components/group.tsx",
+      "src/core/roving.ts",
+      "src/core/selection.ts",
+    ],
+    docs: "docs/checkbox-group.mdx",
+    example: "examples/selection.example.tsx",
+    tests: [
+      "src/components/CheckboxGroup.test.tsx",
+      "src/core/roving.test.ts",
       "runtime/controls.runtime.test.tsx",
     ],
   },
@@ -509,6 +549,28 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     tests: [
       "src/components/Toggle.test.tsx",
       "runtime/toggle.runtime.test.tsx",
+    ],
+  },
+  {
+    name: "Toggle group",
+    status: "done",
+    gpuixSupport: "partial",
+    limitations: [
+      "No aria-pressed: the pressed state is announced as aria-valuetext",
+      "The group is one tab stop, so an option is not reachable by Tab",
+      "No overflow-to-menu, dividers, type-ahead or shortcut registration",
+    ],
+    source: [
+      "src/components/ToggleGroup.tsx",
+      "src/components/group.tsx",
+      "src/core/roving.ts",
+    ],
+    docs: "docs/toggle-group.mdx",
+    example: "examples/toggle.example.tsx",
+    tests: [
+      "src/components/ToggleGroup.test.tsx",
+      "src/core/roving.test.ts",
+      "runtime/controls.runtime.test.tsx",
     ],
   },
   {

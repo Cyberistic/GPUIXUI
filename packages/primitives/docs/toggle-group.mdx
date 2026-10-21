@@ -1,0 +1,159 @@
+---
+title: Toggle group
+description: A toolbar of related modes, pressed and unpressed.
+---
+
+`ToggleGroup` is a set of `Toggle`s that belong together: bold/italic/underline,
+left/centre/right alignment, grid/list view. Each option sets a **mode** for the
+next action rather than a setting that applies immediately — that is what
+separates it from a `CheckboxGroup` or a `Switch`.
+
+`type="multiple"` lets any number of modes stay on (bold **and** italic).
+`type="single"` keeps at most one (text alignment), and pressing the active mode
+again clears it, because a mode palette must be able to say "none". The group
+holds one tab stop, so a toolbar of six buttons costs one Tab press.
+
+## Usage
+
+```tsx
+import { ToggleGroup } from "@gpuixui/primitives";
+
+<ToggleGroup
+  type="multiple"
+  label="Formatting"
+  value={formats}
+  onValueChange={setFormats}
+  options={[
+    { value: "bold", label: "Bold" },
+    { value: "italic", label: "Italic" },
+  ]}
+/>;
+```
+
+A single-choice palette written as items, where an option can carry rich
+content (an `@gpuixui/icons` glyph) instead of its name pair:
+
+```tsx
+import { ToggleGroup, ToggleGroupItem } from "@gpuixui/primitives";
+
+<ToggleGroup type="single" label="Alignment" defaultValue="left">
+  <ToggleGroupItem value="left" label="Align left">
+    Left
+  </ToggleGroupItem>
+  <ToggleGroupItem value="center" label="Align centre">
+    Centre
+  </ToggleGroupItem>
+</ToggleGroup>;
+```
+
+A `single` group's `onValueChange` receives a `string` (`""` once cleared); a
+`multiple` group's receives an array. Both accept either shape as input, so
+switching `type` does not force a rewrite of the value it is given.
+
+## API
+
+### `ToggleGroup`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `type` | `"single" \| "multiple"` | `"multiple"` | at most one pressed value, or any number |
+| `options` | `ReadonlyArray<GroupOption>` | — | the choices as data; omit with item children |
+| `children` | `ReactNode` | — | `ToggleGroupItem` elements, for rich content |
+| `value` | `string \| ReadonlyArray<string>` | — | controlled pressed values; omit to let the group keep its own |
+| `defaultValue` | `string \| ReadonlyArray<string>` | `[]` | the initial pressed values |
+| `onValueChange` | `(next: string \| ReadonlyArray<string>) => void` | none | the pressed values, shaped by `type` |
+| `orientation` | `"vertical" \| "horizontal"` | `"horizontal"` | the group's stack direction and arrow pair |
+| `variant` | `"default" \| "outline"` | `"default"` | no chrome at rest, or a border |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | from the density scale |
+| `square` | `boolean` | `false` | equal width and height per option, for icon-only groups |
+| `disabled` | `boolean` | `false` | disables every option and removes the group's stop |
+| `label` | `string` | none | the group's accessible name |
+| `style` | `StateStyle<ToggleGroupState>` | — | resolved against the group's live state and merged last |
+| `itemStyle` | `StateStyle<ToggleItemState>` | — | resolved per option button and merged last |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own on every option; yours runs first |
+| `className` | `string` | — | compiled after the group's recipe, so it wins conflicts |
+| `testId` | `string` | — | stable locator for the group |
+
+### `ToggleGroupItem`
+
+The data prop's element form. The group reads its props and renders the button,
+so the roving index and the key contract stay one code path; the part draws
+nothing on its own.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `string` | — | the value this option presses |
+| `label` | `string` | — | accessible name, and the visible text unless `children` replaces it |
+| `description` | `string` | none | a caption beside the name |
+| `disabled` | `boolean` | `false` | the option cannot be pressed and takes no focus |
+| `children` | `ReactNode` | — | rich content drawn instead of the name pair |
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| Arrow keys | moves focus along `orientation`; wraps at the ends and skips disabled options |
+| `Home` / `End` | moves focus to the first / last enabled option |
+| `Space` | presses the focused option on key **up** |
+| `Enter` | presses the focused option on key **down** |
+| a held key | repeat events do nothing |
+| `Tab` | reaches the group once, then leaves it |
+
+An arrow moves focus **without** pressing: a toggle decides what the next action
+does, so walking the toolbar must not change it. A Space **press** calls
+`preventDefault()` so a scroll container does not also scroll.
+
+## Accessibility
+
+- The container is a named `group`; each option is a named button.
+- The pressed state is announced through **`aria-valuetext`** (`pressed` /
+  `not pressed`), because `@gpuix/native` 0.11.0 has no `aria-pressed`. A screen
+  reader hears a button with a value, not a pressed button.
+- `disabled` removes an option's tab stop and the group's; there is no
+  `aria-disabled`.
+- No `aria-describedby`, so an option's `description` is painted text only.
+
+## Theming
+
+Each option compiles `toggleClass` from the theme — the same recipe a `Toggle`
+uses — so the resting, hover, active and pressed paints match a standalone
+toggle exactly. Focus is the shared keyboard outline from `controlRing`,
+declared at rest and painted by the runtime after keyboard input. Disabled
+options add half opacity and drop pointer feedback.
+
+`style` receives `{ disabled, focused }` for the group; `itemStyle` receives
+`{ disabled, focused, pressed }` for one option. Both merge after every role
+decision, so a callback is the last word.
+
+## Limitations
+
+- No `aria-pressed` (above); the value text is the only announcement.
+- No roving visual indicator behind the pressed option, and no separate
+  "selected item" background — each option paints its own pressed state.
+- No overflow-to-menu for a group wider than its parent, no dividers between
+  options and no keyboard shortcut registration.
+- No type-ahead: every option is one arrow away.
+
+## Verification
+
+- `src/components/ToggleGroup.test.tsx` — `single` keeps one value and clears
+  on re-press, `multiple` adds and removes; value text and no `aria-pressed`;
+  the stop skips a disabled option; an arrow moves focus without pressing;
+  Space-up and Enter-down; a disabled option installs no press; both style
+  callbacks; item children read into one list.
+- `src/core/roving.test.ts` — the tab-stop decision a group shares with
+  `CheckboxGroup` and `RadioGroup`.
+- `runtime/controls.runtime.test.tsx` — a real click presses an option and a
+  second click moves the mode in `single`; a key delivered to the focused option
+  moves focus through GPUI's own dispatcher without changing the mode.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Toggle** — one pressed mode on its own.
+- **ButtonGroup** — related actions that fire rather than stay pressed.
+- **CheckboxGroup** — independent choices, not modes.

@@ -54,18 +54,19 @@ The owner's explicit ask: **whatever is missing and GPUix does not already
 provide** — the rows that need real implementation, not API-shape work over an
 existing host element.
 
-Verdicts are against the **published `@gpuix/react` / `@gpuix/native` 0.10.0**
-(the version this repo pins), read on 2026-10-17 from
-`workspaces/components/node_modules/@gpuix/react/dist/index.d.ts`,
-`dist/components/`, `dist/floating.d.ts`, `@gpuix/native/dist/host.d.ts` and
-`@gpuix/native/index.d.ts`. They are **not** read from `references/gpuix`, which
-is ahead of the published release — the divergence is called out below.
+Verdicts are against the **published `@gpuix/react` / `@gpuix/native` 0.11.0**
+(the version this workspace pins in its catalogue), with the measured rows
+carried by `docs/gpuix-capabilities.md` — each of those names the probe that
+measured it in a real window. The API surface is read from the pinned typings a
+consumer compiles against (`packages/primitives/node_modules/@gpuix/react/dist/`,
+`@gpuix/native/index.d.ts`), not from `references/gpuix`, which is ahead of the
+published release; the divergences that matter are called out below.
 
 ### Provided by GPUix — API-shape work only
 
 | Row | GPUix provides | Verdict |
 | --- | -------------- | ------- |
-| Text / typography | `<text>` host element | **verified** (published 0.10.0) |
+| Text / typography | `<text>` host element | **verified** (measured on 0.11.0) |
 | Icons | `<svg>` (tintable monochrome) + `<img>` | **verified** |
 | Separators, Spacers, Stack / layout primitives, Boxes / containers | `div` + flexbox / grid | **verified** |
 | Scrollable containers | `overflow: "scroll"`, `scrollbarColor`, `scrollbarWidth` | **verified** (native thumb tint and thickness measured on 0.11.0) |
@@ -82,11 +83,19 @@ is ahead of the published release — the divergence is called out below.
 **Primitives only — still needs implementation:** Popovers / Dropdown menus /
 Context menus (`floating`'s `FloatingLayer` + `<anchored>` give positioning and
 occlusion, not menu semantics); Toasts / notifications (`AnimatePresence` +
-`createPortal` + `<anchored>`); Buttons and Dialogs (**present on
-`references/gpuix` `main`, absent from published 0.10.0** — no `./button` or
-`./dialog` subpath and no `Button` / `Dialog` in `dist/index.d.ts`); `<canvas>`
-custom drawing (**unverified** — the README's Supported Elements table marks it
-"Custom drawing (planned)").
+`createPortal` + `<anchored>`); and the styled contracts of Buttons and Dialogs —
+0.11.0 publishes **headless** parts (`./button` with `Button`/`buttonProps`,
+`./dialog` with `Dialog`/`DialogPopup`/`DialogTitle`/`DialogPortal` and the rest,
+plus `createPortal`), which is a different artefact from the styled compound
+component this library ships: `components/src/dialog.tsx` records why the
+headless dialog is not wrapped (its own keyboard, focus-trap and dismissal
+contract is the one the live probes measure), and `packages/primitives` records
+what adopting `buttonProps` would cost (`TODO.md` → salvage 086 neighbours:
+`tabIndex: -1` for disabled, Space on release without the held guard, no
+`loading`). `<canvas>` measures **not supported** rather than unverified: it is
+in `ElementType` but blank — no 2D context, and a painted canvas tracks no
+bounds (`content-surfaces`) — so a chart draws with `<svg>` and an image preview
+uses `<img>`.
 
 **Cross-cutting, verified, partial:** AccessKit `role`, `aria-label`,
 `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`,
@@ -132,12 +141,12 @@ carries an evidenced limitation. The capability evidence lives in
 
 ## Tier 1 — foundational
 
-All 28 rows below live in `packages/primitives` (icons in `packages/icons`). Each
+All 31 rows below live in `packages/primitives` (icons in `packages/icons`). Each
 has: source, a unit suite, an example in `examples/` mounted by
 `runtime/examples.runtime.test.tsx`, a page in `packages/primitives/docs/`, and a
-runtime-verified interaction measured in the 0.10.0 `TestRenderer` (plan `041` §9,
-plan `055` §7 — 13 files, 119 tests). "GPUix support" is the verdict for the
-pinned runtime, not for the reference clone. Where the runtime has no API for a
+runtime-verified interaction measured in the `TestRenderer` on the pinned 0.11.0
+(plan `041` §9, plan `055` §7 — 13 files, 119 tests). "GPUix support" is the
+verdict for the pinned runtime, not for the reference clone. Where the runtime has no API for a
 capability, the row names the alternative in use — nothing here is a decorative
 placeholder.
 
@@ -158,6 +167,7 @@ placeholder.
 | Text inputs | done | partial | `Input` over the host `<input>`, with the theme's native text theme (caret, selection, placeholder, fonts), invalid state and an optional label; `style` is a `StateStyle<FieldState>` (`disabled`/`focused`/`invalid`) merged last, shared with `TextArea`. No `type`/`maxLength`/`inputMode`/`pattern`, no prefix/suffix or mask; `disabled` is emulated (read-only + out of the tab order + disabled roles) because the host has no `disabled` prop; no `aria-describedby`. |
 | Text areas | done | partial | `TextArea` over `<textarea>` with `rows`/`maxRows` (auto-grow up to the cap, then scroll) and the same `StateStyle<FieldState>` `style` contract as `Input`. No rich text, no character counter, **no submit-on-Enter by design**. Disabled is the same read-only emulation as `Input`. |
 | Checkboxes | done | partial | two parts (`Checkbox`, `CheckboxIndicator`); three states (unchecked/checked/indeterminate) over the shared selection model, click and Space-up, disabled and destructive accent; a caller's children replace the mark's glyph inside the `pointerEvents: none` guard, so a custom mark cannot swallow the press (native hit-test case in `controls.runtime.test.tsx`); `onCheckedChange` with `onChange` as a deprecated alias. **No `aria-checked`**: the state is announced through `aria-valuetext` (`mixed` for indeterminate). No label-inside composition |
+| Checkbox group | done | partial | A set of independent checkboxes with **one** tab stop: arrows/Home/End move focus and wrap over enabled options, `Space`/`Enter` toggles, and the arrows never change the value (unlike `RadioGroup`). An option arrives as data (`options`) or as a rich `CheckboxGroupItem`; both read into one list, so the stop and the key contract have one path. **The stop never sits on a disabled option** — `core/roving.ts` falls back to the first reachable one, which a group whose value was disabled previously could not do. `style` sees `{ disabled, focused }`, `itemStyle` `{ disabled, focused, checked }`, both merged last. **No `aria-checked`/`aria-multiselectable`** (`aria-valuetext` carries the state), no select-all or indeterminate parent, no type-ahead, and an option is not reachable by Tab. Unit tests: `CheckboxGroup.test.tsx` + `core/roving.test.ts`; native: `controls.runtime.test.tsx` (click, arrow moves focus without toggling) |
 | Radio groups | done | partial | `RadioGroup` + `RadioGroupItem`: the choices arrive as data (`options`) or as item children carrying rich content, and both are read into one option list, so the roving tab stop that follows the selection, wrapping arrows that skip disabled options, Home/End and the click path have a single implementation; `onValueChange` with `onChange` as a deprecated alias; a named `role="radiogroup"`. No type-ahead; an option `description` is not associated for assistive technology (no `aria-describedby`), and rich content must stay presentational because the runtime hit-tests the deepest element (a `Box` takes the press from the row, text and icons do not). |
 | Selects | done | yes | Wraps GPUix's published `Select` parts and themes the trigger, list surface and rows; the trigger declares the shared keyboard ring (destructive while invalid, none while disabled). Open state, positioning and dismissal are the runtime's. A selected row paints a check mark in the `popoverForeground` role, driven by the state the runtime reports for that row, so an uncontrolled select keeps no mirror of its value (`runtime/fields.runtime.test.tsx` measures one mark and that it moves with the selection). Options are data — no option groups, rich options, search/type-ahead or multi-select. |
 | Switches | done | partial | two parts (`Switch`, `SwitchThumb`); an immediate on/off over the same three-state paint and keyboard contract as the checkbox; the knob is an absolutely positioned child of the track, placed by its `left` inset and animated between the two positions (150 ms `easeOut`) — the runtime has no `transform` but interpolates a `left` inset, proven by `runtime/switch.runtime.test.tsx` (the paint is at rest in the click's frame and at the far edge after the motion clock advances; negative control: without `motion` the knob is at the far edge immediately); a caller's children are a glyph on the knob, kept out of the hit test by the recipe's `pointer-events-none` (native hit-test case in `controls.runtime.test.tsx`); `onCheckedChange` with `onChange` as a deprecated alias. No reduced-motion opt-out (the runtime exposes no preference), no pending state, and no `aria-checked` — the visible label carries the meaning. |
@@ -171,6 +181,7 @@ placeholder.
 | Number Field | done | partial | Four parts (`NumberField`, `NumberFieldInput`, `NumberFieldIncrement`, `NumberFieldDecrement`) over one resolved state, so a caller can drop a stepper or give it a custom glyph; the default composition is the same input-plus-spin-column it always was. Host `<input>` plus stepper buttons, typed decimal clamping, arrow/PageUp/PageDown steps and locale-free formatting; `style` is a `StateStyle<FieldState>` (`disabled`/`focused`/`invalid`) merged last. **No `type="number"`/`inputMode`**, no drag-to-scrub and no grouping separators; `autoFocus` paints no ring on mount (the runtime focuses without a focus event). |
 | OTP Field | done | partial | Two parts (`OTPField`, `OTPFieldInput index`): the group owns the one contiguous code and each cell reads its own value, name, edit/key/focus handlers and ring, so a caller can group the cells without a second value path; the group is one roving tab stop, on the cell the code has reached or the focused one. One cell per character over real `<input>`s, arrows that move between cells, digit-only input and backspace-to-previous; `style` is a `StateStyle<FieldState>` on the group. **Paste is unverified** (no `onPaste` in the runtime), arrows are handled on key up (no repeat), clearing a middle character shifts the rest, and there is no letter-casing rule. |
 | Toggle | done | partial | A momentary pressed mode distinct from `Switch`, over the shared button contract; `pressed` is caller-owned, and `style` is a `StateStyle<ToggleState>` (`disabled`/`focused`/`selected`) resolved last. **No `aria-pressed`** — the visual state is the state, so pair it with a label that reads correctly either way. No `loading` state. |
+| Toggle group | done | partial | A toolbar of related modes with **one** tab stop. `type="multiple"` keeps any number pressed; `type="single"` keeps at most one and clears it when the pressed option is pressed again. The props are discriminated by `type`, so a `single` group's `onValueChange` is `(next: string) => void` and a `multiple` group's is `(next: ReadonlyArray<string>) => void`. Arrows/Home/End move focus and **do not press** — a mode changes on `Space` (release) or `Enter` (press) only — and the stop never sits on a disabled option (`core/roving.ts`). Options are data or rich `ToggleGroupItem` children; `style` sees `{ disabled, focused }`, `itemStyle` `{ disabled, focused, pressed }`. **No `aria-pressed`** (`aria-valuetext` carries `pressed`/`not pressed`), no overflow-to-menu, dividers, type-ahead or shortcut registration, and an option is not reachable by Tab. Unit tests: `ToggleGroup.test.tsx` + `core/roving.test.ts`; native: `controls.runtime.test.tsx` (single-mode press, arrow moves focus without changing the mode) |
 | Rating | done | partial | Whole stars only (no half stars: no clipping or transform), roving focus with arrows/Home/End, `Space` (on the release) and `Enter` (on the press) choosing the focused star, explicit clearing via Delete/Backspace, read-only and disabled modes, and an `invalid` state that paints the chosen stars and the ring destructive; `src/components/activation.test.tsx` holds it to the same one-activation contract as every other control. **No hover preview** — per-star hover state would need a re-render per pointer move. |
 
 
@@ -180,7 +191,7 @@ placeholder.
 | --------- | ------ | ------------- | ------------------- |
 | Cards | done | yes | `variant` outline/elevated/plain; 5 native behaviour tests |
 | Badges | done | yes | seven variants (neutral/primary/4 status tones/outline), two sizes sized by type role; 7 native behaviour tests. Not interactive by design; no icon or dismiss slot yet |
-| Avatars | done | yes | four diameters, deterministic unicode-safe initials fallback (8 logic tests), presence dot; 7 native behaviour tests. No image loading/error state in v1 — a missing file paints nothing and does not restore the initials |
+| Avatars | done | yes | four diameters from the token `avatarSize` scale, deterministic unicode-safe initials fallback (8 logic tests), presence dot whose every state paints a role the token contract measures as a mark (`indicatorRoles`; `away` paints the `warning` tone's foreground because the solid `warning` fill is 1.89:1 as a dot on the light card); 8 native behaviour tests. No image loading/error state in v1 — a missing file paints nothing and does not restore the initials |
 | Alerts | done | yes | compound parts (`Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss`) over a tone context; four tones from the shared status palette; 11 native behaviour tests (real click, keyboard activation, alert role). Dismiss uses the local button stand-in; live-region announcement not verifiable here |
 | Lists / list items | done | yes | `selectionMode` none/single/multiple over a roving tab stop: arrow wrap over disabled rows, real focus (`focusElement`), controlled + uncontrolled; multiple adds plain/Cmd/Ctrl/Shift clicks, Shift+Arrow ranges from an anchor and Cmd/Ctrl+A select-all of enabled rows; type-ahead jumps and cycles by an explicit `ListItem` `textValue`; single/none lists also take `onActivate` (Enter or click, never Space; disabled rows never), with the multiple variant rejecting it at the type level; a caller `onClick` on an enabled row is composed before activation; each row subscribes to its own selection slice (`src/list/store.ts`), so a selection change repaints only the rows whose state moved (`list-subscriptions.test.tsx`); the title and description are clipped to one line with an ellipsis and never stretch the row (measured natively against a wrapping control); 38 native behaviour tests. No `aria-multiselectable` in 0.11.0, no href/link role on activation, no drag reorder or virtualisation |
 | Empty states | done | yes | title + optional description/action/icon, no surface of its own; 6 native behaviour tests including a real click on the action. Wrap width is a component constant (no measure token) |
@@ -261,7 +272,7 @@ placeholder.
 | Property editors | todo | ? | Fieldset + inputs. |
 | File trees | todo | ? | Tree views + `<virtual-list>`. |
 | Log viewers | todo | ? | `<virtual-list>` + `<text>`; text search/highlight hooks exist. |
-| Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
+| Terminal surfaces | todo | partial | No terminal **host element**: a pane that hosts a PTY inside a window is still unverified, and nothing in `ElementType` draws one. The runtime does render the whole app **into** a terminal — `render(<App />, { terminal: true })` with `isTerminal()`, `terminal: supported` in `@gpuixui/runtime`'s matrix and documented on `/docs/runtime` — so the honest alternative is the terminal runtime mode, not an embedded shell. |
 | Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |
 | Multi-pane editing layouts | todo | ? | Composition over split panes + editors. |
 

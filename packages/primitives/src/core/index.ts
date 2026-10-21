@@ -25,6 +25,8 @@ export type { KeyName, KeyPhase, Orientation } from "./keyboard.js";
 export { initValueState, setValue, withValue } from "./state.js";
 export type { ControlMode, ValueState } from "./state.js";
 
+export { rovingIndex } from "./roving.js";
+
 export { SCROLL_END, scrollTarget } from "./scroll.js";
 export type { ScrollMetrics, ScrollOffset } from "./scroll.js";
 
@@ -88,6 +90,7 @@ export {
   selectionMarkColor,
   switchThumbStyle,
   switchTrackStyle,
+  toggleSelection,
 } from "./selection.js";
 export type {
   SelectionAccent,

@@ -2,18 +2,34 @@
  * Toggle example: a canvas toolbar.
  *
  * Modes, not settings — grid and snapping change what the next drag does, so
- * they are toggles; the lock is a toggle that is unavailable until something is
- * selected. The panel's state is controlled and the summary is derived from it,
+ * they are toggles; the lock is a mode that is unavailable until something is
+ * selected. The group holds one tab stop and the panel's state is controlled,
  * which is the API a toolbar uses.
  */
 
 import { useState, type ReactElement } from "react";
-import { Box, Separator, Stack, Text, Toggle } from "../src/index.js";
+import * as Arr from "effect/Array";
+import {
+  Box,
+  Separator,
+  Stack,
+  Text,
+  ToggleGroup,
+  type GroupOption,
+} from "../src/index.js";
 
-/** Canvas toolbar: a pressed mode, a border variant, and a disabled mode. */
+/** The toolbar's modes; only the lock is unavailable at rest. */
+const MODES: ReadonlyArray<GroupOption> = [
+  { value: "grid", label: "Grid" },
+  { value: "snap", label: "Snap to grid" },
+  { value: "lock", label: "Lock layer", disabled: true },
+];
+
+/** Canvas toolbar: a pressed mode, a second mode, and an unavailable one. */
 export const ToggleExample = (): ReactElement => {
-  const [grid, setGrid] = useState(true);
-  const [snap, setSnap] = useState(false);
+  const [modes, setModes] = useState<ReadonlyArray<string>>(["grid"]);
+  const grid = Arr.contains(modes, "grid");
+  const snap = Arr.contains(modes, "snap");
 
   return (
     <Box
@@ -27,29 +43,15 @@ export const ToggleExample = (): ReactElement => {
       <Stack direction="column" gap="md">
         <Text role="h3">Canvas toolbar</Text>
 
-        <Stack direction="row" gap="sm">
-          <Toggle
-            testId="toggle-example-grid"
-            label="Grid"
-            pressed={grid}
-            onPressedChange={setGrid}
-            variant="outline"
-          >
-            Grid
-          </Toggle>
-          <Toggle
-            testId="toggle-example-snap"
-            label="Snap to grid"
-            pressed={snap}
-            onPressedChange={setSnap}
-            variant="outline"
-          >
-            Snap
-          </Toggle>
-          <Toggle label="Lock layer" disabled>
-            Lock
-          </Toggle>
-        </Stack>
+        <ToggleGroup
+          type="multiple"
+          label="Canvas modes"
+          variant="outline"
+          value={modes}
+          onValueChange={setModes}
+          options={MODES}
+          testId="toggle-example-modes"
+        />
 
         <Separator orientation="horizontal" />
 

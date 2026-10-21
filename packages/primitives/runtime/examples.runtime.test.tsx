@@ -22,6 +22,16 @@ import { examples } from "../examples/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme, testThemeDark } from "./fixture.js";
 
+/** An element found by its accessible name — a group row has no `testId`. */
+const byLabel = (runtime: Runtime, label: string) =>
+  Option.getOrElse(
+    Arr.findFirst(
+      runtime.all(),
+      (element) => element.customProps?.["aria-label"] === label,
+    ),
+    () => expect.fail(`the runtime retained no element labelled ${label}`),
+  );
+
 /** The root and the headline each example must paint. */
 const SCREENS = [
   { id: "layout", root: "layout-example", headline: "Inspector" },
@@ -162,7 +172,7 @@ it("flips the toggle example's snap mode and repaints its summary", async () => 
       a11yValueOf(runtime.a11y(), { label: "Snap to grid" }),
     ),
   ).toBe("not pressed");
-  runtime.click("toggle-example-snap");
+  runtime.clickElement(byLabel(runtime, "Snap to grid"));
   expect(
     Option.getOrUndefined(
       a11yValueOf(runtime.a11y(), { label: "Snap to grid" }),

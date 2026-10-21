@@ -29,11 +29,13 @@ use — never as a promise.
 | [icon-button](icon-button.mdx) | `IconButton` | [icon-button](../examples/icon-button.example.tsx) |
 | [button-group](button-group.mdx) | `ButtonGroup` | [form](../examples/form.example.tsx) |
 | [toggle](toggle.mdx) | `Toggle` | [toggle](../examples/toggle.example.tsx) |
+| [toggle-group](toggle-group.mdx) | `ToggleGroup` | [toggle](../examples/toggle.example.tsx) |
 | [input](input.mdx) | `Input` | [form](../examples/form.example.tsx) |
 | [textarea](textarea.mdx) | `TextArea` | [form](../examples/form.example.tsx) |
 | [number-field](number-field.mdx) | `NumberField` | [number-field](../examples/number-field.example.tsx) |
 | [otp-field](otp-field.mdx) | `OTPField` | [otp](../examples/otp.example.tsx) |
 | [checkbox](checkbox.mdx) | `Checkbox` | [selection](../examples/selection.example.tsx) |
+| [checkbox-group](checkbox-group.mdx) | `CheckboxGroup` | [selection](../examples/selection.example.tsx) |
 | [radio-group](radio-group.mdx) | `RadioGroup` | [selection](../examples/selection.example.tsx) |
 | [switch](switch.mdx) | `Switch` | [selection](../examples/selection.example.tsx) |
 | [rating](rating.mdx) | `Rating` | [rating](../examples/rating.example.tsx) |
@@ -75,8 +77,9 @@ Two suites hold rules no single page owns:
   stars, a slider's track and thumbs, a field's input/steppers/cells) installs
   the handler on the element that owns it, so the caller sees which one it was.
 - `src/components/focus-matrix.test.tsx` — one row per focusable control
-  (Button, IconButton, Toggle, Checkbox, Switch, RadioGroup, Rating, Slider,
-  RangeSlider, Input, TextArea, NumberField, OTPField): the tab stops it owes at
+  (Button, IconButton, Toggle, Checkbox, CheckboxGroup, ToggleGroup, Switch,
+  RadioGroup, Rating, Slider, RangeSlider, Input, TextArea, NumberField,
+  OTPField): the tab stops it owes at
   rest, and that a disabled control has no tab stop and paints no ring. `Select`
   is absent because its trigger and items are GPUix's own components, so the
   element tree never holds their host nodes; its ring and stops are pinned on its

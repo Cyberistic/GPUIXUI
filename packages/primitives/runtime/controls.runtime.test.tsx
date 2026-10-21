@@ -20,10 +20,12 @@ import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
+import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { Icon } from "@gpuixui/icons";
 import { RadioGroup, RadioGroupItem } from "../src/components/RadioGroup.js";
 import { Text } from "../src/components/Text.js";
 import { Stack } from "../src/components/Stack.js";
+import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { Switch } from "../src/components/Switch.js";
 import {
   a11yNode,
@@ -393,6 +395,106 @@ it("toggles a Checkbox through a custom mark", async () => {
   expect(announced(runtime, "Enable")).toBe("checked");
   runtime.click("cb");
   expect(announced(runtime, "Enable")).toBe("unchecked");
+});
+
+it("toggles a CheckboxGroup option on a click without clearing the others", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <CheckboxGroup
+        testId="cgroup"
+        label="Channels"
+        defaultValue={["email"]}
+        options={[
+          { value: "email", label: "Email" },
+          { value: "push", label: "Push" },
+        ]}
+      />
+    </Surface>,
+  );
+  expect(announced(runtime, "Email")).toBe("checked");
+  expect(announced(runtime, "Push")).toBe("unchecked");
+  runtime.clickElement(byLabel(runtime, "Push"));
+  expect(announced(runtime, "Email")).toBe("checked");
+  expect(announced(runtime, "Push")).toBe("checked");
+});
+
+it("moves a CheckboxGroup's focus with an arrow without toggling the value", async () => {
+  // The key goes through GPUI's dispatcher to the focused row, and the group's
+  // handler runs from the ancestor: this is the check that proves a real key
+  // path moves focus, not only the element-tree test that calls the wrapper.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Switch testId="before" label="Before" />
+      </Stack>
+      <CheckboxGroup
+        testId="cgroup"
+        label="Channels"
+        options={[
+          { value: "email", label: "Email" },
+          { value: "push", label: "Push" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.click("before");
+  runtime.focusNext();
+  expect(focusedLabel(runtime)).toBe("Email");
+  keyDownFocused(runtime, "down");
+  expect(focusedLabel(runtime)).toBe("Push");
+  expect(announced(runtime, "Email")).toBe("unchecked");
+  expect(announced(runtime, "Push")).toBe("unchecked");
+});
+
+it("toggles a ToggleGroup option on a click and announces the pressed mode", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ToggleGroup
+        testId="tgroup"
+        label="Formatting"
+        type="single"
+        options={[
+          { value: "bold", label: "Bold" },
+          { value: "italic", label: "Italic" },
+        ]}
+      />
+    </Surface>,
+  );
+  expect(announced(runtime, "Bold")).toBe("not pressed");
+  runtime.clickElement(byLabel(runtime, "Bold"));
+  expect(announced(runtime, "Bold")).toBe("pressed");
+  runtime.clickElement(byLabel(runtime, "Italic"));
+  expect(announced(runtime, "Bold")).toBe("not pressed");
+  expect(announced(runtime, "Italic")).toBe("pressed");
+});
+
+it("moves a ToggleGroup's focus with an arrow without changing the mode", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Switch testId="before" label="Before" />
+      </Stack>
+      <ToggleGroup
+        testId="tgroup"
+        label="Formatting"
+        options={[
+          { value: "bold", label: "Bold" },
+          { value: "italic", label: "Italic" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.click("before");
+  runtime.focusNext();
+  expect(focusedLabel(runtime)).toBe("Bold");
+  keyDownFocused(runtime, "right");
+  expect(focusedLabel(runtime)).toBe("Italic");
+  expect(announced(runtime, "Bold")).toBe("not pressed");
+  expect(announced(runtime, "Italic")).toBe("not pressed");
 });
 
 it("toggles a Switch through a custom glyph", async () => {

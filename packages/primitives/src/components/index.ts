@@ -39,6 +39,23 @@ export type { ButtonGroupMode, ButtonGroupProps } from "./ButtonGroup.js";
 export { pressedValueText, Toggle } from "./Toggle.js";
 export type { ToggleProps, ToggleState } from "./Toggle.js";
 
+export {
+  TOGGLE_GROUP_MODES,
+  ToggleGroup,
+  ToggleGroupItem,
+  toggleGroupItems,
+  toggleGroupValue,
+  toggleGroupValues,
+} from "./ToggleGroup.js";
+export type {
+  ToggleGroupItemProps,
+  ToggleGroupMode,
+  ToggleGroupOption,
+  ToggleGroupProps,
+  ToggleGroupState,
+  ToggleItemState,
+} from "./ToggleGroup.js";
+
 export { Input } from "./Input.js";
 export type { FieldProps, FieldState, InputProps } from "./Input.js";
 
@@ -72,6 +89,21 @@ export type {
   CheckboxProps,
   CheckboxState,
 } from "./Checkbox.js";
+
+export {
+  CheckboxGroup,
+  CheckboxGroupItem,
+  checkboxGroupItems,
+} from "./CheckboxGroup.js";
+export type {
+  CheckboxGroupItemProps,
+  CheckboxGroupOption,
+  CheckboxGroupProps,
+  CheckboxGroupState,
+  CheckboxItemState,
+} from "./CheckboxGroup.js";
+
+export type { GroupItemProps, GroupOption } from "./group.js";
 
 export { Switch, SwitchThumb } from "./Switch.js";
 export type { SwitchProps, SwitchState, SwitchThumbProps } from "./Switch.js";

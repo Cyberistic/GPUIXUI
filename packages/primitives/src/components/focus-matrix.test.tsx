@@ -25,6 +25,7 @@ import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton } from "./Button.js";
 import { renderCheckbox } from "./Checkbox.js";
+import { renderCheckboxGroup } from "./CheckboxGroup.js";
 import { renderIconButton } from "./IconButton.js";
 import { renderInput } from "./Input.js";
 import { renderNumberField } from "./NumberField.js";
@@ -35,6 +36,7 @@ import { renderRangeSlider, renderSlider } from "./Slider.js";
 import { renderSwitch } from "./Switch.js";
 import { renderTextArea } from "./TextArea.js";
 import { renderToggle } from "./Toggle.js";
+import { renderToggleGroup } from "./ToggleGroup.js";
 import type { FocusState } from "./internal.js";
 import {
   elementChildren,
@@ -110,6 +112,52 @@ const ROWS: ReadonlyArray<Row> = [
     stops: 1,
     render: (disabled) =>
       renderSwitch({ disabled }, testTheme, boolean(), focus(), noop),
+  },
+  {
+    name: "CheckboxGroup",
+    stops: 1,
+    render: (disabled) =>
+      renderCheckboxGroup(
+        {
+          disabled,
+          options: [
+            { value: "a", label: "A" },
+            { value: "b", label: "B" },
+          ],
+        },
+        testTheme,
+        [],
+        Option.none(),
+        { focusedIndex: Option.none(), onFocus: noop, onBlur: noop },
+        {
+          onToggle: noop,
+          onFocusMove: noop,
+          registerItem: () => () => {},
+        },
+      ),
+  },
+  {
+    name: "ToggleGroup",
+    stops: 1,
+    render: (disabled) =>
+      renderToggleGroup(
+        {
+          disabled,
+          options: [
+            { value: "a", label: "A" },
+            { value: "b", label: "B" },
+          ],
+        },
+        testTheme,
+        [],
+        Option.none(),
+        { focusedIndex: Option.none(), onFocus: noop, onBlur: noop },
+        {
+          onToggle: noop,
+          onFocusMove: noop,
+          registerItem: () => () => {},
+        },
+      ),
   },
   {
     name: "RadioGroup",

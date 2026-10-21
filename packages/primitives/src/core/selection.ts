@@ -9,6 +9,7 @@
  * "checked and disabled" means.
  */
 
+import * as Arr from "effect/Array";
 import type { StyleDesc } from "@gpuix/react";
 import { alpha } from "@gpuixui/tokens";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
@@ -248,3 +249,25 @@ export const radioDotStyle = (
     backgroundColor: selectionMarkColor(spec, theme),
   };
 };
+
+/**
+ * Turn one value's membership in a selection on or off.
+ *
+ * A checkbox group and a `multiple` toggle group hold the values that are on;
+ * pressing an option adds it or removes it without touching the others. A
+ * `single` group keeps at most one value, and pressing the active one clears
+ * the selection — the toggle's own semantics, unlike a radio group, which
+ * always has a value.
+ */
+export const toggleSelection = (
+  mode: "single" | "multiple",
+  current: ReadonlyArray<string>,
+  value: string,
+): ReadonlyArray<string> =>
+  mode === "single"
+    ? Arr.contains(current, value)
+      ? []
+      : [value]
+    : Arr.contains(current, value)
+      ? Arr.filter(current, (item) => item !== value)
+      : [...current, value];
