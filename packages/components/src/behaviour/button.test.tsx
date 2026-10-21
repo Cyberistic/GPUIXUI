@@ -6,12 +6,15 @@
  * click that fires twice (once from the pointer, once from a synthesised key); a
  * disabled control that still runs its handler or still takes a tab stop; a
  * keyboard activation that works for Enter but not Space; an icon-only
- * control with no accessible name; and a filled action whose hover was a
- * half-alpha fill, so the same button read two colours on two surfaces.
+ * control with no accessible name; a filled action whose hover was a
+ * half-alpha fill, so the same button read two colours on two surfaces; and an
+ * outlined action that drew its edge in the decorative `border` role — the same
+ * value as the fill it outlined — so the control had no outline at all.
  */
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button, IconButton } from "../internal/button.js";
@@ -26,6 +29,7 @@ import {
   darkTheme,
   filledHover,
   filledPressed,
+  lightTheme,
 } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
@@ -171,6 +175,50 @@ describe("Button", () => {
     });
 
     button.unmount();
+  });
+
+  it("draws an outlined action's edge in the measured boundary role", () => {
+    Arr.forEach(
+      [
+        ["dark", darkTheme],
+        ["light", lightTheme],
+      ] as const,
+      ([mode, theme]) => {
+        const button = renderComponent(
+          <Button testId="button" variant="secondary">
+            Save
+          </Button>,
+          mode,
+        );
+
+        expect(button.renderer.findByTestId("button")?.style.borderColor).toBe(
+          theme.colors.borderStrong,
+        );
+
+        // The decorative role this replaced sits under the boundary floor on
+        // the fill it outlines; in the dark theme it is that fill's own value,
+        // so the outline was not painted at all.
+        const decorative = contrastRatio(
+          theme.colors.border,
+          theme.colors.secondary,
+        );
+        expect(decorative ?? Infinity).toBeLessThan(contrastFloors.boundary);
+
+        // A control's edge is measured on every strip an outline button sits on.
+        Arr.forEach(
+          ["background", "card", "muted", "secondary"] as const,
+          (surface) => {
+            const ratio = contrastRatio(
+              theme.colors.borderStrong,
+              theme.colors[surface],
+            );
+            expect(ratio ?? 0).toBeGreaterThanOrEqual(contrastFloors.boundary);
+          },
+        );
+
+        button.unmount();
+      },
+    );
   });
 });
 

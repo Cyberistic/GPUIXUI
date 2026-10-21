@@ -76,7 +76,10 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
       backgroundColor: theme.colors.secondary,
       color: theme.colors.secondaryForeground,
       borderWidth: theme.borderWidth.thin,
-      borderColor: theme.colors.border,
+      // A control is recognised by its edge, so it paints the measured boundary
+      // role: `border` is decorative and is also the `secondary` fill in both
+      // shipped themes, so an outline control drew its outline in its own fill.
+      borderColor: theme.colors.borderStrong,
       hover: { backgroundColor: theme.colors.hover },
       active: { backgroundColor: theme.colors.active },
     })),
