@@ -15,6 +15,7 @@
 import type { EventPayload } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { Match } from "effect";
+import * as Option from "effect/Option";
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { useControllableState } from "./controllable.js";
 import {
@@ -23,6 +24,7 @@ import {
   pushDismissLayer,
 } from "./dismiss-layer.js";
 import { claimEvent, isEventClaimed } from "./event-claim.js";
+import { focusSuccessor } from "./focus-successor.js";
 import { isDismiss, isTab } from "./key.js";
 import { ownsSurface } from "./pointer.js";
 import { useOverlayHost, type OverlayHost } from "./overlay-host.js";
@@ -99,10 +101,15 @@ export const useModalFocus = (
   // The surface mounts in the same commit that opens the modal, before the
   // renderer applies any native focus change — including a child's `autoFocus`.
   // Capture the opener at render time; the effect below waits for `contentId`,
-  // by which point that focus has already moved (plan 638).
-  const [previousFocus] = useState<number | null>(
-    () => renderer?.getFocusedElementId?.() ?? null,
-  );
+  // by which point that focus has already moved (plan 638). A row that opened
+  // this modal unmounted with its menu before this render, and the menu named
+  // its trigger as that row's successor (plan 826).
+  const [previousFocus] = useState<number | null>(() => {
+    const focused = renderer?.getFocusedElementId?.() ?? null;
+    return focused === null
+      ? null
+      : Option.getOrElse(focusSuccessor(focused), () => focused);
+  });
   const host = useOverlayHost();
   const hostRef = useRef<OverlayHost>(host);
   useLayoutEffect(() => {

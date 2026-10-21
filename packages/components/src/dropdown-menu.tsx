@@ -36,6 +36,7 @@ import {
   useOverlayHost,
 } from "./internal/overlay-host.js";
 import { isEventClaimed } from "./internal/event-claim.js";
+import { markFocusSuccessor } from "./internal/focus-successor.js";
 import { isDown, isEnter, isSpaceRelease, isUp } from "./internal/key.js";
 import {
   assertParts,
@@ -136,11 +137,22 @@ export const DropdownMenu = ({
     setOpenRef.current = setOpen;
   });
 
-  const close = useCallback((reason: MenuCloseReason) => {
-    restoreFocus.current = reason === "activate" || reason === "dismiss";
-    leaveFocus.current = null;
-    setOpenRef.current(false);
-  }, []);
+  const close = useCallback(
+    (reason: MenuCloseReason) => {
+      restoreFocus.current = reason === "activate" || reason === "dismiss";
+      leaveFocus.current = null;
+      // The row that activated is unmounted by this close, before a modal opened
+      // from its `onSelect` captures its opener. The trigger is where the user
+      // was, so it becomes that row's focus successor (plan 826).
+      const target = trigger.current;
+      const focused = renderer?.getFocusedElementId?.() ?? null;
+      if (reason === "activate" && target !== null && focused !== null) {
+        markFocusSuccessor(focused, target.id);
+      }
+      setOpenRef.current(false);
+    },
+    [renderer],
+  );
 
   const leave = useCallback((direction: LeaveDirection) => {
     leaveFocus.current = direction;

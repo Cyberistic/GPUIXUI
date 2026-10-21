@@ -365,6 +365,28 @@ const ToastUnderMenuPage = ({
   </ToastProvider>
 );
 
+/** A menu row that opens a dialog: where does the dialog give focus back? */
+const DialogFromMenu = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <DropdownMenu>
+        <DropdownMenuTrigger testId="menu-trigger">Actions</DropdownMenuTrigger>
+        <DropdownMenuContent testId="menu-panel">
+          <DropdownMenuItem testId="menu-edit" onSelect={() => setOpen(true)}>
+            Edit
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Edit" testId="edit-dialog" size="sm">
+          <DialogTitle>Edit</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 /** The toast store updates through its runtime: let the microtasks drain. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
@@ -622,6 +644,23 @@ describe("composition", () => {
 
     expect(isShown(scene, "slot-editor")).toBe(false);
     expect(onDismissAll).not.toHaveBeenCalled();
+
+    scene.unmount();
+  });
+
+  it("returns focus to the menu trigger when a dialog opened from a row closes", () => {
+    const scene = renderComponent(<DialogFromMenu />);
+    clickCentreOf(scene, "menu-trigger");
+    finishMotion(scene);
+    clickCentreOf(scene, "menu-edit");
+    finishMotion(scene);
+    expect(isShown(scene, "edit-dialog")).toBe(true);
+
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "edit-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("menu-trigger"));
 
     scene.unmount();
   });

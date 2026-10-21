@@ -29,6 +29,7 @@ import {
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { markFocusSuccessor } from "./internal/focus-successor.js";
 import { ownsSurface } from "./internal/pointer.js";
 import {
   OverlayHostProvider,
@@ -154,10 +155,17 @@ export const ContextMenu = ({
     (reason: MenuCloseReason) => {
       const restore =
         restoreFocus.current && (reason === "activate" || reason === "dismiss");
+      // A row that opens a modal unmounts with this menu before the modal
+      // captures its opener; the pressed region is where the user was (plan 826).
+      const target = triggerId.current;
+      const focused = renderer?.getFocusedElementId?.() ?? null;
+      if (reason === "activate" && target !== undefined && focused !== null) {
+        markFocusSuccessor(focused, target);
+      }
       requestClose(restore ? "trigger" : "none");
       restoreFocus.current = false;
     },
-    [requestClose],
+    [renderer, requestClose],
   );
 
   const leave = useCallback(
