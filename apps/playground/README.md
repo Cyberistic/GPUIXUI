@@ -966,6 +966,39 @@ reports `-100000`, not the distance actually travelled), while
 renderer holds — which is what `ScrollArea`'s `onScrollChange` forwards.
 Evidence: `.artifacts/live/scroll-end.png`.
 
+### `split-pane-lifecycle` — measured on 0.11.0 here
+
+The Tier 4 resize interaction in a real window. The split is the playground's
+`SplitPane` — the fixture the headless `panel-resize`, `docking-nested` and
+`workspace-tab-drag` scenarios drive — at 320px inside a 500px container, with
+`min=80` and `max=520`.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | `split=320`; pane A paints 320px and the divider's left edge is pane A's right edge |
+| drag the divider `+80` | `split=400`, and the painted pane is 400px, so state and paint agree |
+| ...and the same drag's moves | all eight reached the divider, although it is 6px wide and the pointer ends 80px past it |
+| drag `-320` | clamps at the 80px minimum |
+| drag `+600` | clamps at the caller's 520px maximum |
+| drag **pane A** itself `+40` | nothing resizes: only the divider is a handle |
+
+Every drag stays inside the window on purpose: a drag that leaves the frame
+would measure the OS's pointer delivery as well as the split.
+
+12 checks. The window found the defect this probe now guards: the press was
+React state, and a window delivers the press and all eight moves before React
+commits the press's render, so the first move read no press and the pane never
+followed. `SplitPane` holds the press in a ref now — the same finding as
+`drag-between-panes`. Negative control measured: reverting the press to state
+fails `a drag grows the pane by its travel` with the readout still `split=320`
+(exit `1`). Evidence: `.artifacts/live/split-resized.png`.
+
+The `moves=8` row is the pointer-capture measurement: the element that took the
+press keeps receiving moves after the pointer leaves its box, which is what a
+6px divider needs. The Slider pages say the opposite for a drag leaving the
+track, so this probe is the evidence on the other side of that question
+(`TODO.md` interlocks).
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session

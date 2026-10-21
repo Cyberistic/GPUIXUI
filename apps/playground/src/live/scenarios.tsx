@@ -56,6 +56,7 @@ import type { ImgInstance, PublicInstance } from "@gpuix/react";
 import { FloatingLayer } from "@gpuix/react/floating";
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
+import { SplitPane } from "../panels/split-pane.js";
 import type { LiveProbeId } from "./registry.js";
 import {
   BUFFER_COLOUR,
@@ -3635,6 +3636,156 @@ const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("scroll-end");
   });
 
+/** The split probe's container width, inside the window. */
+const SPLIT_CONTAINER = 500;
+
+/**
+ * A two-pane split whose divider is the resize handle.
+ *
+ * The pane widths are the split's own state; the readout is the caller's copy of
+ * each `onResize`, so a drag that repaints the pane but never reaches the caller
+ * fails separately from one that does not move at all.
+ */
+const SplitPaneProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [size, setSize] = useState(320);
+  const [moves, setMoves] = useState(0);
+
+  return (
+    <div
+      testId="split-probe"
+      style={{
+        width: 720,
+        height: 460,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Drag the divider: pane A takes the width it is dragged to, and the
+        container stays put.
+      </text>
+      <div style={{ width: SPLIT_CONTAINER, height: 160 }}>
+        <SplitPane
+          id="split"
+          initial={320}
+          min={80}
+          max={520}
+          onResize={(next) => {
+            setSize(next);
+            setMoves((current) => current + 1);
+          }}
+          primary={
+            <div
+              testId="split-left"
+              style={{
+                height: "100%",
+                backgroundColor: theme.colors.muted,
+              }}
+            />
+          }
+          secondary={
+            <div
+              testId="split-right"
+              style={{ height: "100%", backgroundColor: theme.colors.card }}
+            />
+          }
+        />
+      </div>
+      <text
+        testId="split-readout"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`split=${size}`}
+      </text>
+      <text
+        testId="split-moves"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`moves=${moves}`}
+      </text>
+    </div>
+  );
+};
+
+const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("split-divider");
+    yield* Effect.sleep(SETTLE);
+
+    yield* ctx.expectEqual(
+      "the split starts at its initial width",
+      yield* ctx.host.text("split-readout"),
+      "split=320",
+    );
+    const start = yield* paintedBox(ctx, "split-pane-a");
+    yield* ctx.expectNear("pane A paints the initial width", start.width, 320, 1);
+    const divider = yield* paintedBox(ctx, "split-divider");
+    yield* ctx.expectNear(
+      "the divider sits on pane A's right edge",
+      divider.x,
+      start.x + start.width,
+      1,
+    );
+
+    // Every drag stays inside the window: a pointer that leaves it stops
+    // delivering moves, which would measure the OS rather than the split.
+    yield* ctx.host.drag("split-divider", 80, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a drag grows the pane by its travel",
+      yield* ctx.host.text("split-readout"),
+      "split=400",
+    );
+    const grown = yield* paintedBox(ctx, "split-pane-a");
+    yield* ctx.expectNear("the painted pane follows the resize", grown.width, 400, 1);
+    yield* ctx.expectEqual(
+      "every move of the drag reached the divider, 6px wide and left behind",
+      yield* ctx.host.text("split-moves"),
+      "moves=8",
+    );
+
+    yield* ctx.host.drag("split-divider", -320, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a drag past the minimum clamps",
+      yield* ctx.host.text("split-readout"),
+      "split=80",
+    );
+
+    yield* ctx.host.drag("split-divider", 600, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a drag past the maximum clamps",
+      yield* ctx.host.text("split-readout"),
+      "split=520",
+    );
+
+    yield* ctx.host.drag("split-pane-a", 40, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a drag on the pane itself resizes nothing",
+      yield* ctx.host.text("split-readout"),
+      "split=520",
+    );
+
+    yield* ctx.host.capture("split-resized");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -3732,5 +3883,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "scroll-lifecycle",
     view: () => <ScrollProbe />,
     steps: scrollSteps,
+  },
+  "split-pane-lifecycle": {
+    id: "split-pane-lifecycle",
+    view: () => <SplitPaneProbe />,
+    steps: splitSteps,
   },
 };

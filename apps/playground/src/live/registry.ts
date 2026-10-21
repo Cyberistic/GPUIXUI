@@ -150,6 +150,12 @@ export const liveRegistry = [
       "Scroll: a window's wheel is hit-tested, onScroll and onScrollChange report the move, and the offset clamps at both ends",
     capability: "scroll",
   },
+  {
+    id: "split-pane-lifecycle",
+    title:
+      "Panel: a window's divider drag resizes its pane, clamps at the caller's bounds, and ignores a drag on the pane",
+    capability: "panel",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

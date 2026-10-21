@@ -449,7 +449,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 33/33
+`[x]` `[██████████]` 34/34
 
 `[x]` Measure the modal **Tab trap in a window** — `dialog-lifecycle` now presses
       Tab six times inside the shipped `Dialog`: the focus never names
@@ -740,6 +740,20 @@ a workaround for two live sessions sharing one worktree; see
       measured split between `onScroll`'s input delta and `onScrollChange`'s
       clamped pair. Evidence: `apps/playground/README.md` §`scroll-lifecycle`,
       `.artifacts/live/scroll-end.png`
+`[x]` Land the `split-pane-lifecycle` live probe and fix the window-only resize
+      defect it found — the playground's `SplitPane` in a real window: a press on
+      the divider, `+80` grows the pane to 400 (state and painted width agree),
+      all 8 drag moves reach the divider although it is 6px wide, `-320` clamps
+      at 80, `+600` clamps at the caller's 520, and a drag on the pane itself
+      resizes nothing. The press was React state, so a window's press + 8 moves
+      all arrived before the press's commit and the pane never followed;
+      `SplitPane` holds it in a ref (the `drag-between-panes` rule). 12 checks,
+      `--only split-pane-lifecycle`, green on 0.11.0; negative control measured
+      (press back in state: `a drag grows the pane by its travel: expected
+      "split=400", got "split=320"`, exit `1`). Headless re-run
+      `--only panel-resize --only docking-nested --only workspace-tab-drag`
+      green (3/3). Evidence: `apps/playground/README.md`
+      §`split-pane-lifecycle`, `.artifacts/live/split-resized.png`
 
 ## Phase C — Tier 1–2 components
 
@@ -1083,6 +1097,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | A tooltip does not open on **keyboard focus** in a window — the `tooltip-lifecycle` live probe's `Tab` traversal focuses `tooltip-trigger` (`getFocusedElementId` reports it) but React's `onFocus` never runs, so the GPUix tooltip (which opens on `onFocus`) stays closed; hover opens it, leaving closes it and Escape dismisses it. The tip's text still reaches a screen reader as the trigger's `aria-description` | primitives (and `docs-site` for `docs/gpuix-capabilities.md`) | **primitives half landed (documented, not fixed)** — no focus signal exists for a trigger with no key event, so the measured behaviour is now the documented contract: `docs/tooltip.mdx` §Keyboard/§Limitations says a `Tab` traversal does not open the tip and hover is the only open path, the `COMPONENTS.md` Tooltips row carries the same verdict with `partial` support, and `src/docs.test.ts`'s prose guard fails when the page re-claims keyboard open or drops the probe (`keyboard: false` measured). **The docs half landed too** — the capability record no longer calls focus events plainly `supported`: §3's row reads `supported, with limits` carrying both probes' evidence and the workaround, §4 states the rule once, `/docs/runtime#measured-in-a-window` publishes it as a measured gap (its intro prints no count to fall behind), and `capability-doc.test.ts` fails when the row's verdict or either probe citation is dropped. **Row resolved by documenting**: the runtime still delivers no focus event on a traversal, so `aria-description` stays the assistive-technology path. Measured evidence: `apps/playground/README.md` §`tooltip-lifecycle`, 12 checks green on 0.11.0, with the hover path as the negative control (`expected true, got false` without the wrapper) |
 
 | Record the measured difference between the two scroll events — `onScroll`'s `deltaY` is the **input** the window received (a `-100000` wheel reports `-100000` even though the offset moved 200px and clamped), while `onScrollChange` carries the clamped absolute `scrollX`/`scrollY` pair `getScrollOffset` returns; a scrollbar or a "follow the tail" scroller needs the second. `docs/gpuix-capabilities.md`'s event row names both listeners without saying which reports what | docs-site | **resolved** — the events row is now *Pointer, keyboard and focus events*, and a new **Scroll events** row carries the distinction: `onScroll`'s `deltaX`/`deltaY` is the wheel input the window received (a `-100000` wheel reports `-100000` after the offset travelled 200px and clamped), `onScrollChange`'s `scrollX`/`scrollY` is the clamped absolute pair `getScrollOffset` returns, and the workaround names `onScrollChange` for a scrollbar, a saved position or a follow-the-tail scroller. `/docs/runtime`'s *Measured in a window* table gains the same row and `scroll-lifecycle` joins §5's owed-probe list. `capability-doc.test.ts` gained two cases — the doc row (verdict, both listeners, `getScrollOffset`, the workaround) and the page's own row parsed out of its table — and the page-probe case now names `scroll-lifecycle`. Both directions measured: deleting the doc row fails `records what each scroll event reports…` (`expected "supported, with limits", received undefined`), deleting the page row fails `the page's measured table has no scroll-event row` plus the probe case. `nub run --filter @gpuixui/docs test` green (42 files / 341 tests), `check-types` and `build` green |
+
+| Reconcile the two pointer-drag claims — the `split-pane-lifecycle` probe dragged a 6px divider by 80px and the divider's own `onMouseMove` received all eight moves (`moves=8`), 80px outside its box, while `packages/primitives/docs/slider.mdx` and `range-slider.mdx` say a drag that leaves the track stops updating ("no pointer capture") and the capability record has no pointer-capture row. Either the runtime delivers a drag to the element that took the press (and the Slider's own handler/geometry is why it stops) or the slider claim is stale | primitives + docs-site | open — the split measurement is `apps/playground/README.md` §`split-pane-lifecycle`; the headless `panel-resize` uses the same press/move/up path |
 
 ## Phase D — data and workspace components
 

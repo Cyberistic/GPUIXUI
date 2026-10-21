@@ -6,16 +6,20 @@
  * `onMouseMove` to it. The pane width is `nextSize(start, delta)` clamped to the
  * caller's bounds.
  *
+ * The press is a **ref**, not state. A window's automation delivers the press and
+ * every move before React commits the press's render, so a drag gated on state
+ * reads no press on the first move and the pane never follows — the same rule the
+ * `drag-between-panes` probe measured.
+ *
  * `size` makes the width the caller's: a layout that collapses a sidebar to zero
  * or restores a saved arrangement cannot reach internal state, so it passes the
  * width and takes every change through `onResize`. Without it the split owns the
  * width and `initial` is the starting point.
  *
- * `max` is a prop, not measured at runtime: GPUix 0.10.0 has no `onLayout`
- * event, so the total width cannot be observed from the tree (see the app
- * README). The app knows its window width and passes it.
+ * `max` is a prop, not measured: the split's container is the caller's layout,
+ * so the caller passes the width it must not exceed.
  */
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import { nextSize } from "./resize.js";
@@ -54,7 +58,7 @@ export const SplitPane = ({
 }: SplitPaneProps) => {
   const theme = useTheme();
   const [owned, setOwned] = useState(initial);
-  const [press, setPress] = useState<Option.Option<Press>>(Option.none());
+  const press = useRef<Option.Option<Press>>(Option.none());
   const size = sizeProp ?? owned;
 
   const resize = (next: number) => {
@@ -82,10 +86,10 @@ export const SplitPane = ({
           hover: { backgroundColor: theme.colors.primary },
         }}
         onMouseDown={(event) =>
-          setPress(Option.some({ x: event.x ?? 0, size }))
+          (press.current = Option.some({ x: event.x ?? 0, size }))
         }
         onMouseMove={(event) =>
-          Option.match(press, {
+          Option.match(press.current, {
             onNone: () => {},
             onSome: (start) =>
               resize(
@@ -98,7 +102,7 @@ export const SplitPane = ({
               ),
           })
         }
-        onMouseUp={() => setPress(Option.none())}
+        onMouseUp={() => (press.current = Option.none())}
       />
       <div
         testId={`${id}-pane-b`}
