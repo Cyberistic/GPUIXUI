@@ -25,6 +25,8 @@ export type LiveRenderer = Pick<
   | "focusElement"
   | "focusNext"
   | "getPaintedText"
+  | "getSelectedText"
+  | "clearSelection"
   | "simulateKeyUp"
   | "registerFont"
 >;
@@ -180,6 +182,16 @@ export const createLiveHost = ({
     key: (keystroke) =>
       call(`key ${keystroke}`, () =>
         app.call("keystrokes", { keys: keystroke }),
+      ),
+    selectedText: () =>
+      named(
+        "getSelectedText",
+        sync(() => renderer.getSelectedText()),
+      ),
+    clearSelection: () =>
+      named(
+        "clearSelection",
+        sync(() => renderer.clearSelection()),
       ),
     keyUp: (keystroke) =>
       named(

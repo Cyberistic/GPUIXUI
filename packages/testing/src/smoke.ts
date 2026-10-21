@@ -398,6 +398,16 @@ export interface AsyncSmokeHost {
   ) => Effect.Effect<Offset | null, SmokeHostError>;
   readonly key: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
   /**
+   * The text the window currently has selected, or `null` for no selection.
+   *
+   * A window reports selection from its renderer (`getSelectedText`), which is
+   * the only way to tell a drag that selected from a drag that hit the element:
+   * the painted text is the same either way.
+   */
+  readonly selectedText: () => Effect.Effect<string | null, SmokeHostError>;
+  /** Drops the window's selection, so a probe can prove an element selects nothing. */
+  readonly clearSelection: () => Effect.Effect<void, SmokeHostError>;
+  /**
    * Releases a key the window is holding.
    *
    * Measured: a window's automation `keystrokes` delivers the key **down** and

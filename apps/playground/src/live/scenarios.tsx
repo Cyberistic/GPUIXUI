@@ -12,7 +12,12 @@ import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
-import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
+import {
+  extendTheme,
+  keyboardFocusRing,
+  textStyle,
+  type FontSource,
+} from "@gpuixui/tokens";
 import {
   CommandMenu,
   CommandMenuEmpty,
@@ -52,6 +57,7 @@ import {
   Input,
   RangeSlider,
   Slider,
+  Text,
   ThemeProvider as PrimitiveThemeProvider,
   Tooltip,
 } from "@gpuixui/primitives";
@@ -5467,6 +5473,176 @@ const clipboardSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** The line the selection probe selects: a word a failure can name. */
+const SELECTION_LINE = "hello live selection world";
+
+/** The chrome line: the default `Text` must keep a drag from selecting it. */
+const SELECTION_CHROME = "chrome must not select";
+
+/**
+ * The wash the probe asks for, in a colour no role paints.
+ *
+ * A capture is device-scaled, so the probe counts a colour rather than reading a
+ * point: an opaque green behind the selected run is the one pixel value the drag
+ * can produce and nothing else can.
+ */
+const SELECTION_WASH = "#00FF00FF";
+
+/** The probe's theme: the base palette with a measurable selection wash. */
+const selectionTheme = extendTheme(palettes.dark, {
+  colors: { selection: SELECTION_WASH },
+});
+
+/**
+ * Selection in a window, on its **paint** and on what the renderer reports.
+ *
+ * The headless `text-selection` scenario drives the renderer's own
+ * `dragSelect`, because the offscreen renderer registers selection listeners
+ * during paint — so "a drag selects" was never measured with a pointer. This
+ * probe drags with the automation protocol (a real press, eight moves and a
+ * release) and asks two separate questions: does the wash paint, and does
+ * `getSelectedText` report the run? A component that copies a selected log line
+ * needs both answers, and they turn out to differ.
+ */
+const SelectionProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [copied, setCopied] = useState("");
+  return (
+    <PrimitiveThemeProvider theme={selectionTheme}>
+      <div
+        testId="selection-live-probe"
+        style={{
+          width: window.width,
+          height: window.height,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <Text
+          testId="live-selectable-line"
+          selectable
+          style={{ alignSelf: "start" }}
+        >
+          {SELECTION_LINE}
+        </Text>
+        <Text testId="live-chrome-line" style={{ alignSelf: "start" }}>
+          {SELECTION_CHROME}
+        </Text>
+        <Input
+          testId="live-selection-field"
+          label="Paste target"
+          value={copied}
+          onChange={setCopied}
+        />
+        <text
+          testId="live-selection-readout"
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`copied=${copied}`}
+        </text>
+      </div>
+    </PrimitiveThemeProvider>
+  );
+};
+
+const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** How many pixels of the capture under `name` paint the probe's wash. */
+    const washPixels = (
+      name: string,
+      wash: Pixels.Rgba,
+    ): Effect.Effect<number, Smoke.SmokeHostError> =>
+      Effect.map(ctx.host.pixels(name), (frame) =>
+        Pixels.countColour(frame, wash),
+      );
+
+    yield* ctx.host.waitFor("live-selectable-line");
+    const wash = yield* ctx.expectSome(
+      "the probe's wash colour parses",
+      Option.fromNullishOr(Pixels.hexToRgba(SELECTION_WASH)),
+    );
+    yield* ctx.expectContains(
+      "the selectable line paints its text",
+      Arr.join(yield* ctx.host.paintedText(), "\n"),
+      SELECTION_LINE,
+    );
+    yield* ctx.host.clearSelection();
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("selection-before");
+    yield* ctx.expectEqual(
+      "nothing paints the selection wash before a drag",
+      yield* washPixels("selection-before", wash),
+      0,
+    );
+
+    // A real pointer drag from the middle of the line past its right edge.
+    yield* ctx.host.drag("live-selectable-line", 240, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("selection-dragged");
+    yield* ctx.expectEqual(
+      "a pointer drag paints the selection wash",
+      (yield* washPixels("selection-dragged", wash)) > 0,
+      true,
+    );
+    const selected = yield* ctx.expectSome(
+      "the renderer reports the text the drag selected",
+      Option.fromNullishOr(yield* ctx.host.selectedText()),
+    );
+    yield* ctx.expectContains(
+      "the reported selection reaches the end of the line",
+      selected,
+      "world",
+    );
+
+    // Can a user take the selection with them? `cmd-c` from a selected text run
+    // is the copy path a log viewer or a code block would need.
+    yield* ctx.host.key("cmd-c");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click("live-selection-field");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("cmd-v");
+    yield* Effect.sleep(SETTLE);
+    const pasted = yield* ctx.host.text("live-selection-readout");
+    yield* ctx.expectContains(
+      "Cmd+C over the selected run copies it to the clipboard",
+      pasted,
+      selected,
+    );
+    yield* ctx.expectContains(
+      "the pasted text is the run the drag selected",
+      selected,
+      "world",
+    );
+
+    // Clearing unpaints it, which is the third direction: the same capture,
+    // after one call.
+    yield* ctx.host.clearSelection();
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("selection-cleared");
+    yield* ctx.expectEqual(
+      "clearing unpaints the selection wash",
+      yield* washPixels("selection-cleared", wash),
+      0,
+    );
+
+    // The opt-out: the same drag over the default node paints no wash.
+    yield* ctx.host.drag("live-chrome-line", 240, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("selection-chrome");
+    yield* ctx.expectEqual(
+      "a drag over the chrome line paints no selection wash",
+      yield* washPixels("selection-chrome", wash),
+      0,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -5604,5 +5780,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "select-lifecycle",
     view: () => <SelectProbe />,
     steps: selectSteps,
+  },
+  "selection-lifecycle": {
+    id: "selection-lifecycle",
+    view: () => <SelectionProbe />,
+    steps: selectionSteps,
   },
 };

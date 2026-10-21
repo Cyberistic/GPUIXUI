@@ -193,6 +193,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "selection-lifecycle",
+    title:
+      "Text: a real pointer drag over the shipped Text paints the selection, getSelectedText reports it, Cmd+C copies it, and a default node opts out",
+    capability: "text",
+  },
+  {
     id: "select-lifecycle",
     title:
       "Overlay: the runtime's Select opens its list below the trigger, selects by press and by key, skips a disabled row and dismisses on Escape or an outside press",

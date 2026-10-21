@@ -33,13 +33,13 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-seven probes a real window can prove, of which eight mount shipped
+twenty-eight probes a real window can prove, of which eight mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
-the command palette, the tabs, the popover and the modal focus rule), four mount
-`@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), one more mounts
-the runtime's own `Select` parts, and the rest prove the runtime itself (focus,
-paint, fonts, placement, content surfaces, pointer capture, the window's own
-wheel, a split pane, a virtual list and the app-level key handler).
+the command palette, the tabs, the popover and the modal focus rule), five mount
+`@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
+mounts the runtime's own `Select` parts, and the rest prove the runtime itself
+(focus, paint, fonts, placement, content surfaces, pointer capture, the window's
+own wheel, a split pane, a virtual list and the app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -1233,15 +1233,54 @@ run's marker (`expected "gpuix clipboard q6uuii", got "gpuix clipboard
 pt6c88"`, exit `1`); restored, green twice in a row. Evidence:
 `.artifacts/live/clipboard-pasted.png`.
 
-The consequence for Tier 3/4, and the reason this is a limitation rather than a
-pass: the platform's action belongs to the focused field, so an application
-cannot hand over the text of a **selected** `<text>`, a table row or a `<code>`
-block — there is no write to the clipboard to call, and `cmd-c` from such a
-surface never reaches the window handler. The honest workaround is a read-only
-`<input>` holding the text to copy (a selectable field whose own clipboard
-action works, as measured above) or a selectable text area; a "copy" button that
-promised the OS clipboard would be a fake. The probe writes only its own marker
-to the system clipboard and never reads what was there.
+The consequence for Tier 3/4: the platform's action belongs to the target, not
+to the application. `selection-lifecycle` measured the other half — `Cmd+C` over
+a **selected** `<text>` run reaches the clipboard too (the run a drag selected
+pasted into a field intact) — so a user can copy a log line, a table's cell text
+or a code block by selecting it. What an application cannot do is *initiate* a
+copy: there is no write to the clipboard to call, and while a field has focus
+none of the clipboard keys reach the window handler, so a "copy" button that
+promised the OS clipboard would be a fake. The honest alternatives are the
+user's own gesture on a selectable surface, or a read-only field holding the
+text. The probe writes only its own marker to the system clipboard and never
+reads what was there.
+
+### `selection-lifecycle` — measured on 0.11.0 here
+
+Text selection had one proof, and it was synthetic: the headless
+`text-selection` scenario drives the renderer's own `dragSelect`, because the
+offscreen renderer registers selection listeners during paint. So "a drag
+selects" had never been produced by a **pointer** in a window. This probe drags
+with the automation protocol — a real press, eight moves, a release — over the
+shipped `Text` and asks two questions separately: does the wash paint, and what
+does the renderer report?
+
+The wash is the probe's own: the theme's `selection` role overridden to an
+opaque `#00FF00` (`extendTheme`), because a capture is device-scaled and a count
+of one exact colour is honest where a coordinate would depend on the scale. The
+line's box hugs its text (`alignSelf: "start"`); with a stretched box the press
+lands past the last glyph and selects nothing — measured while building the
+probe, and the reason the first three runs reported no selection at all.
+
+| State | Measured |
+| ----- | -------- |
+| before any drag | the wash paints `0` pixels |
+| a drag from the line's middle past its right edge | the wash paints (`4 764` pixels of it), and `getSelectedText()` reports `ection world` |
+| `Cmd+C` over that selection, pasted into a field | the field's `onChange` receives the same run — the platform's copy works for a selected `<text>`, not only a field |
+| `clearSelection()` | the wash is back to `0` pixels |
+| the same drag over the default `Text` | no wash: the chrome node opts out |
+
+Nine checks. Negative control measured: dropping `selectable` from the line
+fails `a pointer drag paints the selection wash` (`expected true, got false`,
+exit `1`); restored, green. Evidence:
+`.artifacts/live/selection-dragged.png` (the green run) and
+`.artifacts/live/selection-before.png`.
+
+What it means: a log viewer, code block or message row can really be copied by
+dragging in the window, and an application can read the selected run with
+`getSelectedText()`. Copying is the platform's own action — the app has no
+clipboard write (see `clipboard-lifecycle`), so a component may offer "select
+and copy" but cannot put arbitrary text on the clipboard from a button.
 
 ### `select-lifecycle` — measured on 0.11.0 here
 
