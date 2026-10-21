@@ -128,6 +128,11 @@ export const registry = [
     capability: "theme",
   },
   {
+    id: "theme-platform",
+    title: "Theme: each platform's mono family reaches the runtime",
+    capability: "theme",
+  },
+  {
     id: "shell-navigation",
     title: "Playground shell: the scenario list scrolls",
     capability: "layout",

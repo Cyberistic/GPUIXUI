@@ -10,6 +10,10 @@
  * `textStyle`, plus `focusRing` and an `md` elevation. The ring check is a
  * **style** proof, not a focus-behaviour proof: `focus-traversal` owns that.
  *
+ * `theme-platform` paints one mono sample per platform through
+ * `platformTheme` and asserts the runtime reports each platform's family, so
+ * the platform styles are real theme values rather than a docs-only toggle.
+ *
  * The role lists are derived from `colorRoles` and `typography`, never copied,
  * so a new token cannot go untested. The panel rows are explicit flex rows
  * because `flexWrap` is not a verified GPUix capability.
@@ -24,8 +28,10 @@ import {
   colorRoles,
   elevationShadow,
   focusRing,
+  platformTheme,
   textStyle,
   typography,
+  type PlatformName,
   type TextRole,
   type Theme,
 } from "@gpuixui/tokens";
@@ -371,6 +377,85 @@ export const themeTypeAndShadowScenario: ScenarioBody = {
         (snapshot) =>
           Option.map(snapshot.boxShadow, (shadow) => shadow.offsetY),
         md.offsetY,
+      );
+    }),
+};
+
+/** The platforms whose type styles the gallery proves. */
+const platformNames: ReadonlyArray<Exclude<PlatformName, "default">> = [
+  "darwin",
+  "linux",
+  "win32",
+];
+
+/**
+ * One mono sample per platform, styled through `platformTheme`.
+ *
+ * The sans face is GPUI's `.SystemUIFont` sentinel on every platform, so the
+ * family that distinguishes them is the mono one; a theme that lost the
+ * platform's mono family would paint the same string three times.
+ */
+const PlatformTypeProbe = () => {
+  const base = palettes.dark;
+
+  return (
+    <ThemeProvider theme={base}>
+      <Surface>
+        {Arr.map(platformNames, (platform) => {
+          const themed = platformTheme(base, platform);
+          return (
+            <text
+              key={platform}
+              testId={`platform-${platform}`}
+              style={{
+                ...textStyle(themed, "code"),
+                color: base.colors.foreground,
+              }}
+            >
+              {`${platform}: ${themed.typography.mono}`}
+            </text>
+          );
+        })}
+      </Surface>
+    </ThemeProvider>
+  );
+};
+
+export const themePlatformScenario: ScenarioBody = {
+  view: () => <PlatformTypeProbe />,
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const families = yield* Effect.forEach(
+        platformNames,
+        (platform) =>
+          Effect.gen(function* () {
+            const themed = platformTheme(palettes.dark, platform);
+            yield* expectStyle(
+              ctx,
+              `${platform} mono family`,
+              `platform-${platform}`,
+              (snapshot) => snapshot.fontFamily,
+              themed.typography.mono,
+            );
+            return {
+              platform,
+              mono: themed.typography.mono,
+              sans: themed.typography.sans,
+            };
+          }),
+        { concurrency: 1 },
+      );
+
+      const sans = Arr.map(families, (family) => family.sans);
+      yield* ctx.expectEqual(
+        "every platform keeps the system UI sentinel",
+        Arr.every(sans, (family) => family === palettes.dark.typography.sans),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the three platforms name three different mono families",
+        Arr.length(Arr.dedupe(Arr.map(families, (family) => family.mono))),
+        3,
       );
     }),
 };
