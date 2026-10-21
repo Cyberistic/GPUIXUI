@@ -229,6 +229,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | secondary text on background/card/muted/popover | 4.5:1 | 7:1 |
 | on-colour text, placeholder | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
+| status text on `background`/`card` (a field error, an inline warning) | 7:1 | 7:1 |
 | focus ring and essential boundaries | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |

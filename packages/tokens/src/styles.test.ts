@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { filledActionStyles } from "./action-states.example.js";
 import { alpha } from "./color.js";
+import { contrastFloors, contrastRatio } from "./contrast.js";
 import { statusToneStyles } from "./status-tone.example.js";
 import {
   controlHeight,
@@ -131,6 +132,24 @@ describe("statusTone", () => {
       expect(style.background).not.toBe(
         statusTone(lightTheme, tone).background,
       );
+    });
+  });
+
+  it("gives a status message text the page floor measures", () => {
+    // The same role a component paints on the soft surface is the one it paints
+    // as page text (a field error, an inline warning), so both surfaces are
+    // measured. The solid status fill would read 4.4:1 here, below the body
+    // floor — which is why the soft foreground is the text role.
+    toneThemes.forEach(([label, theme]) => {
+      tones.forEach((tone) => {
+        const ratio = contrastRatio(
+          statusTone(theme, tone).foreground,
+          theme.colors.background,
+        );
+        expect(ratio, `${label} ${tone}`).toBeGreaterThanOrEqual(
+          contrastFloors.body,
+        );
+      });
     });
   });
 });

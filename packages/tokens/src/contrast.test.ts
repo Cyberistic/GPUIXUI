@@ -15,6 +15,7 @@ import {
   highContrastFloors,
 } from "./contrast.js";
 import { lightColors } from "./color.js";
+import { statusTones } from "./styles.js";
 import {
   darkTheme,
   highContrastDarkTheme,
@@ -81,6 +82,32 @@ describe("contrast floors", () => {
       ({ foreground, background }) => `${foreground}/${background}`,
     );
     expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+/**
+ * Guards the pair set a status message needs when it is written as text on the
+ * page rather than on its own tinted surface — a field error or an inline
+ * warning. The bug this holds: `FieldError` painted the solid `destructive`
+ * fill role as text, and no pair measured it, so a status message could ship
+ * below the body floor in silence.
+ */
+describe("status text on the page", () => {
+  it("measures every tone's readable text on background and card", () => {
+    const missing = statusTones.flatMap((tone) =>
+      ["background", "card"]
+        .filter(
+          (background) =>
+            !contrastPairs.some(
+              (pair) =>
+                pair.foreground === `${tone}SoftForeground` &&
+                pair.background === background,
+            ),
+        )
+        .map((background) => `${tone}SoftForeground/${background}`),
+    );
+
+    expect(missing).toEqual([]);
   });
 });
 

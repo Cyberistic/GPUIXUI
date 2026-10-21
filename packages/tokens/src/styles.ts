@@ -79,20 +79,26 @@ export type StatusTone = (typeof statusTones)[number];
 export const isStatusTone = (value: unknown): value is StatusTone =>
   statusTones.some((tone) => tone === value);
 
-/** The soft status roles an Alert, Badge or Toast spreads. */
+/** The readable text and soft surface roles of a status tone. */
 export interface StatusToneStyle {
   /** The tone's soft surface (`xSoft`). */
   readonly background: string;
-  /** Readable text and icons for that surface (`xSoftForeground`). */
+  /**
+   * The tone's readable text (`xSoftForeground`): on that soft surface, and as
+   * page text on `background` or `card`. Both are measured at the body floor, so
+   * a field error or inline warning needs no colour of its own.
+   */
   readonly foreground: string;
   /** The tone's solid colour at 30% alpha, for the surface edge. */
   readonly border: string;
 }
 
 /**
- * Resolve a status tone to the roles a soft status surface needs. The soft
- * foreground is designed per theme, so no component has to mix a readable text
- * colour from the solid status colour.
+ * Resolve a status tone to the roles a status message needs. The readable
+ * colour is designed per theme, so no component has to mix a readable text
+ * colour from the solid status colour — and it is the same role whether the
+ * message sits on its soft tint or directly on the page (a field error, an
+ * inline warning), with both surfaces held to the body contrast floor.
  *
  * @example
  * ```tsx

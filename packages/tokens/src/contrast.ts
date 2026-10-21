@@ -160,6 +160,33 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "destructiveSoft",
     floor: "body",
   },
+  // A status message written as text on the page rather than on its own tinted
+  // surface: a field error or an inline warning. The same role carries it, so
+  // the page it sits on is measured too.
+  { foreground: "infoSoftForeground", background: "background", floor: "body" },
+  { foreground: "infoSoftForeground", background: "card", floor: "body" },
+  {
+    foreground: "successSoftForeground",
+    background: "background",
+    floor: "body",
+  },
+  { foreground: "successSoftForeground", background: "card", floor: "body" },
+  {
+    foreground: "warningSoftForeground",
+    background: "background",
+    floor: "body",
+  },
+  { foreground: "warningSoftForeground", background: "card", floor: "body" },
+  {
+    foreground: "destructiveSoftForeground",
+    background: "background",
+    floor: "body",
+  },
+  {
+    foreground: "destructiveSoftForeground",
+    background: "card",
+    floor: "body",
+  },
   {
     foreground: "accentForeground",
     background: "accent",

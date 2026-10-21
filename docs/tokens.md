@@ -223,6 +223,12 @@ tone.foreground; // theme.colors.infoSoftForeground
 tone.border; // alpha(theme.colors.info, 0.3)
 ```
 
+`foreground` is the role to paint a status message **as text**, whether it sits
+on the tone's soft surface (an Alert) or directly on `background`/`card` (a field
+error, an inline warning). Both surfaces are in the contrast contract, so the
+message never borrows the solid fill role — which reads as a fill, not as text,
+and is measured for the on-colour it carries, not for the page behind it.
+
 A runnable example spreads the result onto a container and its text; see
 [`src/status-tone.example.ts`](../packages/tokens/src/status-tone.example.ts).
 
@@ -509,13 +515,15 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 28 pairs cover the text role
+— an empty array means the theme is readable. The 36 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted` and `popover`, every
-status and soft-status pair, accent and selected, the placeholder, and the
-essential boundaries and focus ring. `contrastFloors` and `highContrastFloors`
-are the floors the shipped themes meet, and `contrastPairs` is the pair table
-they apply to. A brand theme runs the same check the built-in themes pass:
+status and soft-status pair, each status tone's readable text as **page** text on
+`background` and `card` (a field error or an inline warning is not on the tone's
+own tinted surface), accent and selected, the placeholder, and the essential
+boundaries and focus ring. `contrastFloors` and `highContrastFloors` are the
+floors the shipped themes meet, and `contrastPairs` is the pair table they apply
+to. A brand theme runs the same check the built-in themes pass:
 
 ```ts
 import { contrastFailures, invalidColorRoles, type Theme } from "@gpuixui/tokens";
