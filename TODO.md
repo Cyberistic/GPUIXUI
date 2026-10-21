@@ -39,7 +39,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[x]` `[█████████░░░]` 9/13
+`[x]` `[██████████░░]` 10/13
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
@@ -54,7 +54,7 @@ cancelled: `@gpuixui/tokens` ships `avatarSize` as a fixed scale, not a `Theme`
 group, so a hand-built theme needs no change (an avatar diameter is content-sized,
 like an image; a new theme group would be a breaking change for every theme
 literal)
-`[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
+`[x]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix — 21/21 scenarios, all 15 capabilities verified on 0.11.0 (see `apps/playground/README.md`)
 `[ ]` Land one fully working component running in GPUix
 `[x]` Land the docs shell and the component page pattern in Fumadocs — the
 sectioned sidebar (Getting Started / Components / Contributing), the reusable
@@ -273,8 +273,10 @@ rejected file, and returns the families a theme may name; 6 tests, docs and a
 README example. No family is bundled, so there is no licence review yet
 `[ ]` Native proof that a registered face paints — needs a window; owner:
 playground (interlock row), so plan 052 stays `blocked` on the visual half
-`[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
-`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
+`[x]` Cross-team: native theme gallery in `apps/playground` — `theme-color-roles`,
+`theme-type-and-shadow` and `theme-platform` read the runtime's style report;
+21/21 green on 0.11.0 (owner: `playground`)
+`[ ]` Cross-team: Fumadocs Theming page from `docs/tokens.md` and the
 docs platform toggle (macOS / Linux / Windows / Default) built on
 `platformTypes` + `platformTheme` (owner: `docs-site`); ignore the `references`
 **symlink** — a `references/` rule does not match a symlink, so every worktree
@@ -570,7 +572,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/component-docs.test.ts` fails on a regression |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Correct `docs/component-api.md` §2: "`onValueChange` is the only change callback name" is wrong for boolean parts — base-gpui uses `on_checked_change`, so primitives adopts `onCheckedChange` alongside `onValueChange` (plan 040 §2.1) | components | pending |
-| A `darwin-x64` binding for `@gpuix/native` **0.11.0** (B1, re-opened by the version bump; the store's local build is 0.10.0) — five `packages/primitives` unit suites and every `test:runtime` suite fail at import until it lands | playground | in progress (`apps/playground/scripts/build-native-binding.sh`) |
+| A `darwin-x64` binding for `@gpuix/native` **0.11.0** (B1, re-opened by the version bump; the store's local build was 0.10.0) | playground | **resolved** — rebuilt from the pinned `2e31b47` with the fixed zed checkout path; 21/21 smoke green on 0.11.0 |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source. The Message Scroller behaviour port (MIT) needs its own `provenance.md` row (plan 206 credits it on the docs page) | licensing | pending |
 

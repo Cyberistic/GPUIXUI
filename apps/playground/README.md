@@ -60,7 +60,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (20/20 green); -> 2 on a host with no binding
+# -> 0 here (21/21 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -109,12 +109,13 @@ an Apple Silicon CI runner is the gold standard, tracked in `TODO.md`.
 ## The theme gallery (plan `150`)
 
 `tokens-theme` proves the token layer on a plain host; this app proves it **in
-the runtime**. Two scenarios:
+the runtime**. Three scenarios:
 
 | Scenario | What it asserts |
 | -------- | --------------- |
 | `theme-color-roles` | every one of the 47 roles in `colorRoles` paints its exact value; the palette switch (dark → light → high contrast) re-paints every swatch and the three colour sets differ |
 | `theme-type-and-shadow` | every type role in `typography` reaches the runtime through `textStyle` (size and family, with `code` on the mono family); `focusRing` paints the zero-blur spread ring; `elevationShadow(theme, "md")` paints its blur, offset and colour |
+| `theme-platform` | one mono sample per platform through `platformTheme`; the runtime reports `Menlo`, `DejaVu Sans Mono` and `Consolas`, three distinct families, while every platform keeps `.SystemUIFont` for UI text |
 
 The checks read the **runtime's own style report** (`SmokeHost.paintedStyle`,
 decoded at the adapter boundary), not a screenshot, so a token that never
@@ -125,8 +126,9 @@ preview source for the docs' Theming page.
 Two honest notes:
 
 - The ring check is a **style** proof. Focus delivery itself is
-  `focus-traversal`; GPUix 0.10.0 has no `:focus-visible`, so a component owns
-  the state.
+  `focus-traversal`; 0.10.0 had no `:focus-visible`, so a component owned the
+  state. 0.11.0 declares `focusVisible`, and plan 053 owns the outline
+  migration; this gallery keeps asserting the shadow the library ships today.
 - `tsconfig.check.json` and `tsconfig.build.json` map
   `@gpuix/react/jsx-runtime` for type-checking. `@gpuixui/tokens/react` is
   React-only, so its JSX must resolve against React's runtime types, and it
@@ -166,10 +168,10 @@ renders. Three facts, two of them defects to design around:
 
 ## Evidence on this host
 
-The suite is **20/20 green** here (`exit 0`):
+The suite is **21/21 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-20/20 scenarios passed · capabilities: layout=verified text=verified
+21/21 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -250,8 +252,8 @@ narrower. Each deviation is deliberate and measured:
 
 - The eleven core capabilities (including the token gallery, the modal contract
   and floating placement), the Tier 3/4 probes
-  and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
-  (20/20), with a written report and screenshots.
+  and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
+  (21/21), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
