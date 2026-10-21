@@ -133,12 +133,15 @@ palette Alert and Badge use). Width is 380px.
   `TestClock` auto-dismiss, the stale-timer regression, custom durations,
   rejected input, pause/resume with the remaining time, and action decoding
   (present, absent, empty label).
-- `src/behaviour/toast.test.tsx` — 14 tests in the real GPUix renderer: push,
+- `src/behaviour/toast.test.tsx` — 16 tests in the real GPUix renderer: push,
   stacking order, dismissing one card, `dismissAll`, the page staying clickable
   through the viewport, both themes, the queue still working after a dismiss,
   hover pausing a card's auto-dismiss, focus pausing it, focus holding through
   the pointer leaving, the action running once and dismissing, no control for an
-  unhandled label, no control without an action, and the action holding focus.
+  unhandled label, no control without an action, the action holding focus, and a
+  timer that fires while the motion clock is frozen (with its negative control:
+  a 30 s toast still there after the same wait) — proving the timer is Effect
+  `Clock` time, not animation frames.
 
 ```sh
 nub run --filter @gpuixui/components test

@@ -386,4 +386,40 @@ describe("Toast", () => {
 
     page.unmount();
   });
+
+  it("dismisses on its own while the motion clock is frozen", async () => {
+    const page = renderComponent(<Harness duration={Duration.millis(120)} />);
+
+    // A toast timer driven by animation frames would be frozen with this clock
+    // and the card would stay forever; the store's timer is Effect `Clock` time.
+    page.renderer.clockPause();
+
+    clickCentreOf(page, "push");
+    await settle();
+    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+
+    page.renderer.clockResume();
+    page.unmount();
+  });
+
+  it("keeps a toast whose duration has not elapsed on a frozen motion clock", async () => {
+    const page = renderComponent(<Harness duration={Duration.seconds(30)} />);
+
+    page.renderer.clockPause();
+
+    clickCentreOf(page, "push");
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+
+    page.renderer.clockResume();
+    page.unmount();
+  });
 });
