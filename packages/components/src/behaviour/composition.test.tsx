@@ -24,6 +24,12 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerContent,
+  DatePickerTrigger,
+} from "../date-picker.js";
+import {
   Combobox,
   ComboboxContent,
   ComboboxEmpty,
@@ -538,6 +544,32 @@ const DialogFromNav = () => {
   );
 };
 
+/** A date picker whose selection opens a dialog; the picker closes in the same commit. */
+const DialogFromDatePicker = () => {
+  const [open, setOpen] = useState(false);
+  const [dialog, setDialog] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <DatePicker
+        today="2026-10-21"
+        open={open}
+        onOpenChange={setOpen}
+        onValueChange={() => setDialog(true)}
+      >
+        <DatePickerTrigger label="Due date" testId="date-trigger" />
+        <DatePickerContent>
+          <DatePickerCalendar />
+        </DatePickerContent>
+      </DatePicker>
+      <Dialog open={dialog} onOpenChange={setDialog}>
+        <DialogContent label="Booked" testId="booked-dialog" size="sm">
+          <DialogTitle>Booked</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 /** A card control that opens a dialog, with the card closed in the same commit. */
 const DialogFromPreviewCard = () => {
   const [card, setCard] = useState(true);
@@ -989,6 +1021,26 @@ describe("composition", () => {
 
     expect(isShown(scene, "combo-dialog")).toBe(false);
     expect(focusedTestId(scene)).toEqual(Option.some("role-trigger"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the date trigger when a chosen day's dialog closes", async () => {
+    const scene = renderComponent(<DialogFromDatePicker />);
+    clickCentreOf(scene, "date-trigger");
+    finishMotion(scene);
+    expect(isShown(scene, "date-picker-content")).toBe(true);
+
+    clickCentreOf(scene, "date-day-2026-10-22");
+    finishMotion(scene);
+    expect(isShown(scene, "booked-dialog")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "booked-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("date-trigger"));
 
     scene.unmount();
   });

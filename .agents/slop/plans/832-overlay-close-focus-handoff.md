@@ -388,9 +388,13 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/components/packages/components`.
   of 50 across the two files including the three pre-existing plan-540 position
   cases. The two pins (panel stays open; outside press keeps its control) passed
   at `HEAD`, which is what makes them pins rather than fixes.
-- **After the fix.** Composition **19/19**, Popover **32/32** except its three
+- **After the fix.** Composition **20/20**, Popover **32/32** except its three
   recorded plan-540 position cases (29/32 on this host); the preview card
-  composite case was added last and is the fourth mark-dependent case.
+  composite case was added last and is the fourth mark-dependent case. A fifth
+  composite case pins the **DatePicker**, which composes `Popover` and therefore
+  inherits the rule: a chosen day whose `onValueChange` opens a dialog left focus
+  on `None` at `HEAD` (measured separately against `a9f478d3`) and now returns to
+  `date-trigger`.
 - **Both directions proven.** Removing `markFocusSuccessor` fails the four
   composite cases (`popover`, `nav`, `combobox`, `preview card`) and leaves the
   popover hand-off case green; removing the hand-off (`focus: false` at the
@@ -398,9 +402,9 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/components/packages/components`.
   four new cases. **The pending-request gate is hygiene, not separately
   observable**: handing off on requested closes too still leaves every pin green
   (the restore that follows moves focus to the same place), so no test claims it.
-- **Full native suite.** **1062 passed / 20 failed of 1082** — the 20 recorded
+- **Full native suite.** **1063 passed / 20 failed of 1083** — the 20 recorded
   plan-540 classes (position, native focus signals and the command-menu scroll),
-  diffed against the pre-change run's list; no new failure. Composition 19,
+  diffed against the pre-change run's list; no new failure. Composition 20,
   Popover 32, Toast 28, Dialog 21, Confirmation 13, Navigation menu 34,
   Combobox 70, Preview card 21, Notification centre 33, Context menu 25.
 - **Gates.** `nub run check`, `nub run lint`, `nub run test` exit 0; unit
