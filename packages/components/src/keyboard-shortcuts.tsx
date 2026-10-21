@@ -1,10 +1,10 @@
 /**
  * Keyboard shortcuts: a cheat sheet of chords, rendered as keycaps.
  *
- * The chord grammar and the platform glyphs live in `shortcut/accelerator.ts`,
- * which the hotkey recorder (plan 316) reuses. This component is display-only:
- * a shortcut row is documentation, not a key binding, so it never registers a
- * handler.
+ * The chord grammar and the platform glyphs come from `@gpuixui/keyboard`
+ * (`formatSymbols`), which the hotkey recorder reuses. This component is
+ * display-only: a shortcut row is documentation, not a key binding, so it never
+ * registers a handler.
  *
  * A group is a `role="group"` named by its heading; rows are `listitem`s inside
  * the root's `role="list"`. Separators are 1px elements, not borders: 0.10.0 has
@@ -17,6 +17,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { formatSymbols, type Platform } from "@gpuixui/keyboard";
 import {
   cn,
   KEYBOARD_SHORTCUT,
@@ -37,12 +38,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import {
-  formatAccelerator,
-  type AcceleratorPlatform,
-} from "./shortcut/accelerator.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { useTheme } from "./internal/theme.js";
+import { currentPlatform, useTheme } from "./internal/theme.js";
 
 /** {@link KeyboardShortcuts} props. */
 export interface KeyboardShortcutsProps extends Omit<Props, "children"> {
@@ -184,7 +181,7 @@ export interface KeyboardShortcutProps extends Omit<
   /** The chord, in the accelerator grammar: `"mod+shift+p"`. */
   readonly accelerator: string;
   /** Render the chord with another platform's glyphs. Default: the host. */
-  readonly platform?: AcceleratorPlatform;
+  readonly platform?: Platform;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   /** A style, or a function of the formatted keycaps. */
@@ -206,7 +203,7 @@ export const KeyboardShortcut = ({
   ...rest
 }: KeyboardShortcutProps) => {
   const theme = useTheme();
-  const keys = formatAccelerator(accelerator, platform);
+  const keys = formatSymbols(accelerator, platform ?? currentPlatform);
 
   return (
     <div

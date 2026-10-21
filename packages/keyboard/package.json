@@ -1,0 +1,41 @@
+{
+  "name": "@gpuixui/keyboard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The keyboard/command layer: accelerator grammar, keymaps with scopes, event matching and a command registry.",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./react": {
+      "types": "./src/react.tsx",
+      "default": "./src/react.tsx"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@gpuixui/config": "workspace:*",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

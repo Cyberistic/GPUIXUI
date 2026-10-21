@@ -91,13 +91,13 @@ the picker surfaces keep their scroll/positioning in `style`.
 | `src/message-scroller.tsx`, `src/message-scroller/logic.ts` | MessageScroller: pinned follow, no yank, unread count and jump-to-latest over a bounded scroll viewport |
 | `src/preview-card.tsx` | PreviewCard: hover/focus preview with pointer travel into the card |
 | `src/color-picker.tsx`, `src/color/hex.ts` | ColorPicker: theme swatches and a normalising HEX field (no gradients in 0.10.0) |
-| `src/hotkey-recorder.tsx`, `src/hotkey/logic.ts` | HotkeyRecorder: capture a chord, reusing the accelerator model |
+| `src/hotkey-recorder.tsx` | HotkeyRecorder: capture a chord, reusing `@gpuixui/keyboard` |
 | `src/carousel.tsx` | Carousel: discrete slide stepping with mounted, hidden slides |
 | `src/tag-input.tsx`, `src/tag-input/logic.ts` | TagInput: tokens with a pure add/remove rule set and removable chips |
 | `src/inline-edit.tsx` | InlineEdit: display/input swap with one commit contract |
 | `src/countdown.tsx`, `src/countdown/logic.ts` | Countdown: clock text for a remaining duration; the app owns the tick |
 | `src/timeline.tsx` | Timeline: an event rail whose last item ends the connector |
-| `src/keyboard-shortcuts.tsx`, `src/shortcut/accelerator.ts` | KeyboardShortcuts over the shared accelerator model: platform-correct keycaps, named groups |
+| `src/keyboard-shortcuts.tsx` | KeyboardShortcuts over the `@gpuixui/keyboard` accelerator model: platform-correct keycaps, named groups |
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
 | `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |
 | `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover, with bounded selection and a clear action (the day half) |

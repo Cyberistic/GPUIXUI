@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@gpuix/react": "catalog:",
+    "@gpuixui/keyboard": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*",
     "effect": "catalog:"

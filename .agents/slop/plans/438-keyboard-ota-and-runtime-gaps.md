@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | spec / research (no implementation) — §2 truth-passed to `@gpuix/*@0.11.0`; upstream issues deferred |
+| Status | keyboard half **landed** (`packages/keyboard`, §4) — OTA/updater (§5) and the native-gated gaps still open |
 | Phase | A (capability spec) → feeds the keyboard workstream, the updater package, and the runtime workstream |
 | Owner | research / runtime seam owner |
 | Depends on | `020` (capability map), `310` (accelerator model), `316` (hotkey recorder), `437` (foreign-surface seam), `reference-research.md` |
@@ -345,10 +345,13 @@ records each gap as `supported: false` with a reason and workaround, and
 ## 4. The keyboard architecture (library)
 
 Builds on plan `310` (accelerator model: `parseAccelerator`, `formatAccelerator`)
-and `316` (`HotkeyRecorder`, `hotkey/logic.ts`). All new logic lives in
-`packages/components/src/shortcut/` and `packages/components/src/focus/`; nothing
-here needs a runtime change, and gaps 3 and 4 from §3 are the only ones it
-consumes.
+and `316` (`HotkeyRecorder`, `hotkey/logic.ts`). **Landed** as `packages/keyboard`
+(`@gpuixui/keyboard`) — the accelerator grammar, keymaps with scopes, exact event
+matching and the command registry (§4.1, §4.2, §4.6). The `focus/` traversal
+half (§4.3) is **not** needed: 0.11.0 owns Tab/Shift+Tab and the headless
+`Dialog` owns the Escape layer stack, so the library supplies accelerators,
+scopes and commands, not focus traversal. Nothing here needs a runtime change,
+and gaps 3 and 4 from §3 are the only ones it consumes.
 
 ### 4.1 Typed command / action registry
 
@@ -609,19 +612,25 @@ kept only as a record of what changed.
 
 ## 7. Result
 
-Spec complete (no implementation). Findings, the 0.11.0 missing list, the
-deferred issue drafts, and the two architectures are recorded above. The next
-executors are:
+The keyboard half of the architecture **landed** as `packages/keyboard`
+(`@gpuixui/keyboard`): the strict `Accelerator` grammar (parse/format/serialize,
+canonical order, typed `AcceleratorParseError`), the `Keymap` with scope-stack
+precedence, exact `match`, the `CommandRegistry` `Context.Service` and the
+React provider, plus the `formatSymbols`/`formatText` display surface. The two
+consumers (`HotkeyRecorder`, `KeyboardShortcuts`) now reuse it; the
+`shortcut/accelerator.ts` and `hotkey/logic.ts` modules were lifted into the
+package and removed. Focus traversal is **not** in the package — 0.11.0 owns
+Tab/Shift+Tab and the headless `Dialog` owns the Escape layer stack (§4.3).
 
-- `packages/components` — `shortcut/{command,resolution,conflict}.ts` + `focus/`
-  (§4), first slice §4.6. The focus *trap* no longer needs to be hand-rolled —
-  0.11.0's Tab default and the headless `Dialog` own it (§4.3).
-- a new `packages/updater` — the Effect service (§5.2) and the update UI (§5.3),
-  first slice §5.5.
-- the runtime workstream — **done**: `@gpuixui/runtime` ships the capability
+Still open:
+
+- **OTA/updater** (§5) — `packages/updater` with the `Schema`-decoded feed
+  shapes, version comparison and the `check`/`install` service, first slice
+  §5.5. Needs no runtime change to start.
+- the **runtime workstream — done**: `@gpuixui/runtime` ships the capability
   matrix with typed refusals, and `@gpuixui/tw` refuses the unrepresentable
   classes by name. The deferred issues (1, 3–7 in §6) gate only the native
   behaviour.
 
-No runtime change is required to start either first slice; gaps 1, 5–7 (and
-10–15 via `437`/`020`) gate only the final, fully-native behaviour.
+Gaps 1, 5–7 (and 10–15 via `437`/`020`) gate only the final, fully-native
+behaviour.

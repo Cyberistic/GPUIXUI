@@ -89,6 +89,25 @@ of a generic "unknown class".
 `[x]` Document the matrix on `/docs/runtime` (table + `isTerminal()` + per-gap
 "what to do instead"), linked from the installation page and sidebar.
 
+### Keyboard workstream (`@gpuixui/keyboard`)
+
+`[x]` `[██████████]` 3/3
+
+`[x]` Land `@gpuixui/keyboard` (plan 438 §4) — the strict `Accelerator` grammar
+(`parse`/`format`/`formatSymbols`/`serialize` with canonical order, `mod`
+platform resolution, and a typed `AcceleratorParseError` naming the offending
+token), `fromEvent` capture, exact `match`, the `Keymap` with scope-stack
+precedence, the `CommandRegistry` `Context.Service` and `Layer`, and the React
+`CommandRegistryProvider`/`useCommandRegistry`. Dependency-light (`effect` +
+`@gpuix/react`), schema-first.
+`[x]` Lift the accelerator/capture logic out of `packages/components`
+(`shortcut/accelerator.ts`, `hotkey/logic.ts`) into the package; `HotkeyRecorder`
+and `KeyboardShortcuts` now reuse `@gpuixui/keyboard` with their public APIs
+unchanged.
+`[x]` Test it: 29 unit tests (parse/format round-trips + exact error text,
+modifier exactness, scope precedence with pop-restore, platform formatting,
+negative controls); `@gpuixui/components` unit + behaviour suites stay green.
+
 ### `@gpuixui/tw` migration (`tw-primitives`)
 
 `[x]` `[██████████]` 3/3

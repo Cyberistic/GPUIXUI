@@ -1,10 +1,9 @@
 /**
  * HotkeyRecorder: bind a keyboard chord to an action.
  *
- * The accelerator grammar and the platform glyphs are shared with
- * `KeyboardShortcuts` (`shortcut/accelerator.ts`); capture is
- * `hotkey/logic.ts`. This component only owns the recording state and the
- * display.
+ * The accelerator grammar and the platform glyphs come from `@gpuixui/keyboard`
+ * (`fromEvent`, `serialize`, `formatSymbols`); this component only owns the
+ * recording state and the display.
  *
  * 0.10.0's test renderer emits no key event for Backspace or Delete, so
  * clearing is a real control next to the recorder rather than a key the docs
@@ -24,12 +23,11 @@ import {
   HOTKEY_RECORDER_KEYS,
   HOTKEY_RECORDER_TEXT,
 } from "@gpuixui/tw";
+import { formatSymbols, fromEvent, serialize } from "@gpuixui/keyboard";
 import * as Option from "effect/Option";
 import { useRef, useState } from "react";
-import { acceleratorOf } from "./hotkey/logic.js";
 import { isActivation, isDismiss } from "./internal/key.js";
 import { Keycap } from "./keyboard-shortcuts.js";
-import { formatAccelerator } from "./shortcut/accelerator.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
@@ -119,10 +117,10 @@ export const HotkeyRecorder = ({
             setRecording(false);
             return;
           }
-          Option.match(acceleratorOf(event, currentPlatform), {
+          Option.match(fromEvent(event, currentPlatform), {
             onNone: () => undefined,
-            onSome: (chord) => {
-              onChange(chord);
+            onSome: (accelerator) => {
+              onChange(serialize(accelerator));
               setRecording(false);
             },
           });
@@ -158,7 +156,7 @@ export const HotkeyRecorder = ({
         </text>
       ) : (
         <div style={recipeStyle(HOTKEY_RECORDER_KEYS, theme)}>
-          {formatAccelerator(value, currentPlatform).map((key, index) => (
+          {formatSymbols(value, currentPlatform).map((key, index) => (
             <Keycap key={index}>{key}</Keycap>
           ))}
         </div>
