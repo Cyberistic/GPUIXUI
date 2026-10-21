@@ -94,10 +94,12 @@ Every part takes the GPUix host props and merges `style` last.
   reaches the user verbatim.
 - One submit reports every failing field (`validateAll` uses `errors: "all"`), in
   schema order, with duplicate messages removed.
-- There is no validate-on-blur or validate-on-keystroke. `Field` still paints a
+- There is no validate-on-blur or validate-per-field. `Field` still paints a
   per-field message you pass; that is the caller's separate decision.
-- Errors persist until the next submit. Clearing them on an edit would need an
-  identity comparison that an inline `value` object cannot support.
+- A form that has never been submitted shows nothing, however the value changes.
+  After a failed submit the messages are **derived from the live value**, so
+  fixing a field clears its message (and breaking another adds one) without a
+  second submit — the state is the "a submit failed" flag, never a copied list.
 
 ## Theming
 
@@ -119,17 +121,18 @@ The form's layout uses `spacing.lg`; the summary uses `caption` type in
 - Owned-value: the caller passes the value; there is no field registration.
 - `validateAll` returns messages, not paths, so Form cannot attach a message to a
   particular `Field`. Per-field messages stay the `Field` API.
-- No automatic re-validation on edit.
 - The docs site cannot render this component live — it is a GPUix host tree, not
   DOM. The code above is the real source.
 
 ## Verification
 
-`src/behaviour/form.test.tsx` runs in the real GPUix renderer (7 tests): idle
+`src/behaviour/form.test.tsx` runs in the real GPUix renderer (9 tests): idle
 state, a valid submit delivering the decoded instance, an invalid submit showing
 every message and never submitting, one alert with separate message nodes,
-`pending` blocking a submit, a consumer `style` winning while the summary paints
-destructively in both themes, and the named form landmark.
+revalidation on an edit after a failed submit (a fixed field clears, a still-bad
+one updates), no messages before the first submit, `pending` blocking a submit, a
+consumer `style` winning while the summary paints destructively in both themes,
+and the named form landmark.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

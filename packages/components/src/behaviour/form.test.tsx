@@ -157,6 +157,53 @@ describe("Form", () => {
     form.unmount();
   });
 
+  it("revalidates on an edit after a failed submit, and clears when fixed", () => {
+    const onSubmit = vi.fn();
+    const form = renderComponent(
+      <Harness value={invalid} onSubmit={onSubmit} />,
+    );
+
+    clickCentreOf(form, "submit");
+    expect(form.renderer.getAllText()).toEqual(
+      expect.arrayContaining([...expectedMessages]),
+    );
+
+    const partial = { email: "nope", name: "Ada" };
+    const partialMessages = Effect.runSync(validateAll(Signup)(partial));
+    form.rerender(<Harness value={partial} onSubmit={onSubmit} />);
+
+    expect(form.renderer.getAllText()).toEqual(
+      expect.arrayContaining([...partialMessages]),
+    );
+    expect(form.renderer.getAllText()).not.toContain(expectedMessages[1]);
+
+    form.rerender(<Harness value={valid} onSubmit={onSubmit} />);
+
+    expect(nodesWithRole(form.renderer, "alert")).toHaveLength(0);
+    expect(form.renderer.getAllText()).toContain("0:false");
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    form.unmount();
+  });
+
+  it("shows nothing before the first submit, however the value changes", () => {
+    const form = renderComponent(
+      <Harness value={invalid} onSubmit={() => undefined} />,
+    );
+
+    form.rerender(
+      <Harness
+        value={{ email: "still-wrong", name: "Ada" }}
+        onSubmit={() => undefined}
+      />,
+    );
+
+    expect(nodesWithRole(form.renderer, "alert")).toHaveLength(0);
+    expect(form.renderer.getAllText()).toContain("0:false");
+
+    form.unmount();
+  });
+
   it("lets a consumer's style win and paints the summary destructively in both themes", () => {
     const assertTheme = (theme: TestTheme, destructive: string): void => {
       const form = renderComponent(

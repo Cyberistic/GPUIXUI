@@ -9,8 +9,11 @@
  *
  * The submit handler is the runtime boundary: `validation/logic.ts` and the
  * decoder are pure, non-failing effects with no requirements, so they run with
- * `Effect.runSync` there. Errors persist until the next submit because an inline
- * object identity cannot tell an edit from a re-render.
+ * `Effect.runSync` there. A failed submit turns messages on, and they are then
+ * derived from the caller's live value — fixing a field clears (or replaces) its
+ * message without a second submit, while a form that has never been submitted
+ * never nags. The flag is the state; the messages are not, so an edit cannot
+ * leave a stale list behind.
  *
  * `Form` has no compound parts (`docs/component-api.md` §8), so its children are
  * a render prop: that is how the consumer reaches `submit` without a part the
@@ -71,18 +74,24 @@ export const Form = <T,>({
   ...rest
 }: FormProps<T>) => {
   const theme = useTheme();
-  const [errors, setErrors] = useState<ReadonlyArray<string>>([]);
+  // The one piece of state: whether a submit has failed. The messages themselves
+  // are derived from the caller's current value, so an edit cannot leave a
+  // stale list on screen.
+  const [showErrors, setShowErrors] = useState(false);
+  // `validateAll` is a non-failing `Effect.succeed`; running it here reads a
+  // value at the render boundary rather than starting anything.
+  const errors = showErrors ? Effect.runSync(validateAll(schema)(value)) : [];
 
   const submit = useCallback((): void => {
     if (pending) return;
 
     const decoded = Schema.decodeUnknownResult(schema)(value);
     if (Result.isFailure(decoded)) {
-      setErrors(Effect.runSync(validateAll(schema)(value)));
+      setShowErrors(true);
       return;
     }
 
-    setErrors([]);
+    setShowErrors(false);
     onSubmit(decoded.success);
   }, [onSubmit, pending, schema, value]);
 
@@ -118,7 +127,7 @@ export const formMeta = {
   limitations: [
     "owned-value: the caller passes the value and receives the decoded one; there is no runtime form element",
     "a render-prop child is the only way to reach submit, because the contract fixes Form as one part",
-    "no automatic re-validation on edit and no field-to-message mapping: validateAll returns messages, not paths",
+    "messages are derived from the live value after a failed submit; there is no field-to-message mapping, because validateAll returns messages, not paths",
   ],
   docs: "docs/form.mdx",
   example: "examples/form.example.tsx",
