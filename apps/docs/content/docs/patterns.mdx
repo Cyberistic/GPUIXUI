@@ -1,0 +1,70 @@
+---
+title: Patterns
+description: The workflows that cross components — who owns the state, what runs first, and what each one prevents.
+---
+
+A [component page](/docs/components) answers *what is a Dialog*. This page
+answers the next question: **how do the parts work together when the screen has
+a job to do**. A pattern is not a component and not a block — it is the contract
+between several shipped parts, written down once so every screen assembles them
+the same way.
+
+Every pattern below names the real parts it composes, links the page that
+documents each one, and says who owns the state. The parts table and the steps
+come from one data module, and a guard holds every reference to a page that
+exists and actually documents the part — so this page cannot recommend a
+component the library does not ship.
+
+## Choosing between components
+
+Most "which component?" questions are decided by what the reader is doing, not
+by which one looks right. The table is the short answer; each page has the long
+one.
+
+<PatternChoices />
+
+## Confirm something irreversible
+
+<Pattern id="destructive-confirmation" />
+
+## Validate a form and submit it once
+
+<Pattern id="settings-form" />
+
+## Search a list the reader already has
+
+<Pattern id="search-and-filter" />
+
+## Run an action from anywhere
+
+<Pattern id="command-palette" />
+
+## Show a save that finishes later
+
+<Pattern id="async-feedback" />
+
+## Follow a stream without yanking the reader
+
+<Pattern id="streaming-conversation" />
+
+## Where a pattern belongs
+
+A pattern is a page, not a package: nothing here is exported, because a
+composition belongs to the screen that needs it. When a pattern is reused
+unchanged by a second screen, it is worth one of three promotions, in this order:
+
+- **A block** — a page-level recipe, like [Settings](/docs/blocks/settings). One
+  file to copy, still yours to edit.
+- **A component** — when the behaviour, not the layout, is the reuse: a new
+  package export with its own API, tests, example and page in
+  `packages/components`. The [API reference](/docs/reference) then lists it
+  without a docs change.
+- **A primitive** — only when it needs a host element the runtime does not
+  expose, which is `packages/primitives`' business.
+
+The evidence rule does not change with the promotion: a pattern's claims about
+the runtime are the ones the component's own page records, and where the runtime
+cannot support an interaction, the pattern says what to do instead rather than
+drawing it. The [examples registry](/docs/examples) lists the runnable build of
+every pattern above, and [Contributing](/docs/contributing) says where a new one
+goes.

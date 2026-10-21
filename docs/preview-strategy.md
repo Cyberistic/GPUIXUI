@@ -154,6 +154,39 @@ composition of native parts, not a new component"). A docking layout, a table or
 a chart is described in prose and its gap is recorded — never drawn as if it
 were shipped.
 
+## The patterns page
+
+[Patterns](/docs/patterns) is the one page that describes a **workflow** rather
+than a component or a lane. A reader who knows what a Dialog is still has to
+decide who owns `open`, what happens to the focus, and what they see when the
+save fails; those answers cross components, so they cannot live on any single
+component page. Each pattern is a section with:
+
+| Part | Contents |
+| ---- | -------- |
+| heading | the pattern's title, in the page so the "On this page" list reaches it |
+| `<Pattern>` | the situation, a parts table, the state owner, the ordered steps, the failure it prevents, and the runnable example |
+
+**The parts table is generated from `src/lib/patterns.ts`**, and the guard is
+what keeps it true: `patterns.test.ts` walks `content/docs` and every
+`packages/*/docs` directory, requires each linked URL to be a page that exists,
+and requires the named part to appear in that page's own text. A renamed part or
+a moved page therefore fails the docs suite instead of leaving a confident link
+to nothing. The example each pattern names must be a file the example registry
+publishes (`packages/*/examples/*.example.tsx`), so "run this" cannot point at a
+file that is gone.
+
+**The chooser is data too.** `patternChoices` answers "which component?" with the
+one to use and **when it is the wrong answer**, checked by the same guard, so the
+table cannot recommend a component the library does not ship. It is the one place
+the site compares components instead of documenting each in isolation.
+
+**No workflow preview.** A pattern is native behaviour with state, timing and
+failure paths, and the site has no native surface — so a pattern shows the real
+source file and the component pages' limitations rather than a drawing of a
+conversation that only works in the browser. That is strategy 4 from the top of
+this file, chosen for the same reason the package pages use it.
+
 ## Examples: source, never a rendering
 
 Every package ships a worked example beside its components — a screen that owns

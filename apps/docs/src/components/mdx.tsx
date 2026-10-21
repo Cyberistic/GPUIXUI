@@ -8,6 +8,7 @@ import { ExamplesIndex } from "./docs/examples-index";
 import { Install } from "./docs/install";
 import { LaneTable } from "./docs/lane-table";
 import { LicenseInventory } from "./docs/license-table";
+import { Pattern, PatternChoices } from "./docs/patterns";
 import { ThemeEditor } from "./docs/theme-editor";
 import { TokenScales } from "./docs/token-scales";
 import { TypeScale } from "./docs/type-scale";
@@ -30,6 +31,8 @@ export const mdxComponents = {
   Install,
   LaneTable,
   LicenseInventory,
+  Pattern,
+  PatternChoices,
   ThemeEditor,
   TokenScales,
   TypeScale,
