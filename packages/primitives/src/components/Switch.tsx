@@ -3,8 +3,9 @@
  *
  * A switch and a checkbox differ in intent, not in state model: both are the
  * three-state paint from `core/selection.ts`, and the switch draws it as a pill
- * and a thumb. The thumb is positioned by the track's `justifyContent`, so it
- * cannot drift out of the pill.
+ * and a thumb. The thumb is an absolutely positioned child of the track, placed
+ * by its `left` inset, so it cannot drift out of the pill and the runtime can
+ * animate that one value when the state changes.
  *
  * Two parts (`docs/component-api.md` §8): the track, and `SwitchThumb`. A
  * caller's children are the thumb's content, drawn inside the part's
@@ -17,12 +18,23 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import type { EventPayload, KeyEvent, StyleDesc } from "@gpuix/react";
+import { motion } from "@gpuix/react";
+import type {
+  EventPayload,
+  KeyEvent,
+  MotionTransition,
+  StyleDesc,
+} from "@gpuix/react";
+import * as P from "effect/Predicate";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
-import type { SelectionAccent, SelectionSpec } from "../core/selection.js";
+import {
+  switchThumbInset,
+  type SelectionAccent,
+  type SelectionSpec,
+} from "../core/selection.js";
 import { controlRing } from "../core/focus.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -91,12 +103,21 @@ export interface SwitchState {
   readonly invalid: boolean;
 }
 
+/** The slide between the thumb's two positions: short, and never bouncy. */
+const THUMB_SLIDE: MotionTransition = { duration: 0.15, ease: "easeOut" };
+
 /**
  * The knob a switch slides.
  *
  * The part centres its children, so a glyph lands on the knob rather than beside
  * it. The recipe's `pointer-events-none` is load-bearing (plan 041 §9), not
  * decoration: a caller's glyph must not take the press that toggles the switch.
+ *
+ * The knob is an absolutely positioned child of the track, so its `left` is the
+ * whole of its position. `motion` animates that inset: the runtime has no
+ * transform, and a `left` inset is one of the box values it can interpolate, so
+ * the thumb slides instead of jumping. `initial: false` keeps the first paint
+ * at rest — only a state change animates.
  */
 export const renderSwitchThumb = (
   props: SwitchThumbProps,
@@ -107,20 +128,25 @@ export const renderSwitchThumb = (
     cn(switchThumbClass(spec), props.className),
     theme,
   ).style;
+  const style = mergeStyle(
+    {
+      ...thumb,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    props.style,
+  );
+  const left = P.isNumber(style.left) ? style.left : switchThumbInset(theme);
   return (
-    <div
-      style={mergeStyle(
-        {
-          ...thumb,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        },
-        props.style,
-      )}
+    <motion.div
+      initial={false}
+      animate={{ left }}
+      transition={THUMB_SLIDE}
+      style={style}
     >
       {props.children}
-    </div>
+    </motion.div>
   );
 };
 

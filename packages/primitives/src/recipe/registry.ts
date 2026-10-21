@@ -14,6 +14,7 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ControlSize, TextRole, Theme } from "@gpuixui/tokens";
 import { createTw } from "@gpuixui/tw";
+import { switchThumbOffset } from "../core/selection.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
 
 /** A class-string step name → the theme key it resolves to. */
@@ -205,6 +206,14 @@ export const recipeTw = createTw({
         ? undefined
         : { marginBottom: theme.spacing[step] };
     },
+    top: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined ? undefined : { top: theme.spacing[step] };
+    },
+    left: (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined ? undefined : { left: theme.spacing[step] };
+    },
     h: (theme, value) => {
       const size = value === undefined ? undefined : CONTROL_SIZE[value];
       return size === undefined
@@ -259,6 +268,17 @@ export const recipeTw = createTw({
       return side === undefined
         ? undefined
         : { width: Math.round(side * 1.75), height: side };
+    },
+    "switch-thumb-on": (theme, value) => {
+      const size = controlSize(value);
+      return size === undefined
+        ? undefined
+        : {
+            left: switchThumbOffset(
+              { state: "checked", size, accent: "primary" },
+              theme,
+            ),
+          };
     },
     "slider-thumb": (theme, value) => {
       const side = iconSide(theme, value);

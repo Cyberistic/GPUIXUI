@@ -1478,7 +1478,20 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     caller style or handler surface — GPUix's `TooltipContent` exists only while
     open and the trigger is the caller's own element, so there is nothing to
     compose onto.
-  - `[ ]` The switch thumb's motion
+  - `[x]` The switch thumb's motion — the knob was positioned by the track's
+    `justifyContent`, which the runtime cannot animate, so it jumped. It is now
+    an absolutely positioned child placed by its `left` inset (`core/selection.ts`
+    owns the geometry, the registry's `switch-thumb-on-<size>` resolves the far
+    position) and the component hands that same value to `motion`'s `motion.div`
+    (150 ms `easeOut`, `initial: false` so the first paint is at rest). The
+    runtime test samples the frames on the motion clock: the paint is still at
+    the resting offset in the click's frame and at the far offset after
+    `clockFastForward(300)`, and the knob stays inside the pill in both states.
+    Both directions measured: without `motion`, the knob is at the far edge in
+    the click's frame (`expected 27 to be 15`, exit `1`); with it,
+    `--only`-less `runtime/switch.runtime.test.tsx` is 3/3. Docs, inventory row
+    and `MIGRATION.md` name the slide and its one measured gap (no reduced-motion
+    opt-out: the runtime exposes no preference)
   - `[ ]` The native field's hint and selection reach
 `[x]` `apps/docs`: docs truth — stated native-test counts and the complete public type index (salvage 310, 324, 326, 330, 333, 335; the example registry page and the copy-and-own platform example contract have landed) — **complete, re-verified 2026-10-22**: `nub run --filter @gpuixui/docs test` is green (42 files / 341 tests) with `public-symbols.test.ts` holding the index to the workspace's exports, and `nub run --filter @gpuixui/components test src/docs-counts.test.ts` is 3/3, so no stated `(N tests)` claim in the 39 package pages is unheld
   - `[x]` **The complete public type index** (salvage 324) — `/docs/reference` now

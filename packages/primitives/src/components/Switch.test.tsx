@@ -13,6 +13,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { Icon } from "@gpuixui/icons";
+import { switchThumbInset, switchThumbTravel } from "../core/selection.js";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderSwitch, type SwitchState } from "./Switch.js";
@@ -24,7 +25,6 @@ import {
   expectSome,
   hostHandler,
   hostProp,
-  hostStyle,
   hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
@@ -43,12 +43,31 @@ const thumbOf = (element: ReactElement): ReactElement => {
   );
 };
 
-const numberAt = (element: ReactElement, name: string): number =>
+/**
+ * The thumb is a `motion.div`, so its props are the component's rather than a
+ * host's: read the `style` it passes down, which is what the runtime paints.
+ */
+const styleOf = (element: ReactElement): Record<string, unknown> =>
   expectSome(
-    Schema.decodeUnknownOption(Schema.Number)(
-      expectSome(hostStyle(element, name)),
+    Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(
+      expectSome(elementProp(element, "style")),
     ),
   );
+
+const numberAt = (element: ReactElement, name: string): number =>
+  expectSome(
+    Option.fromNullishOr(styleOf(element)[name]).pipe(
+      Option.flatMap(Schema.decodeUnknownOption(Schema.Number)),
+    ),
+  );
+
+/** The `left` the thumb animates to, from the motion description. */
+const animatedLeft = (element: ReactElement): number =>
+  expectSome(
+    Schema.decodeUnknownOption(Schema.Struct({ left: Schema.Number }))(
+      expectSome(elementProp(element, "animate")),
+    ),
+  ).left;
 
 describe("Switch", () => {
   it("announces itself as a switch and toggles on Space key up", () => {
@@ -110,6 +129,40 @@ describe("SwitchThumb", () => {
     expect(elementChildren(thumb)).toStrictEqual([]);
   });
 
+  it("declares the slide: one left inset, animated between the two positions", () => {
+    // The bug this guards: the thumb was positioned by the track's
+    // `justifyContent`, which the runtime cannot animate, so the knob jumped.
+    // Its position is now a `left` inset, and the motion target is that same
+    // number — a target that drifted from the paint would land the knob off the
+    // track's edge.
+    const off = thumbOf(
+      renderSwitch({}, testTheme, checked(false), idle, vi.fn()),
+    );
+    const on = thumbOf(
+      renderSwitch({ checked: true }, testTheme, checked(true), idle, vi.fn()),
+    );
+    expect(numberAt(off, "left")).toBe(switchThumbInset(testTheme));
+    expect(animatedLeft(off)).toBe(numberAt(off, "left"));
+    expect(animatedLeft(on)).toBe(numberAt(on, "left"));
+    expect(animatedLeft(on) - animatedLeft(off)).toBe(
+      switchThumbTravel(
+        {
+          state: "checked",
+          size: "md",
+          accent: "primary",
+        },
+        testTheme,
+      ),
+    );
+    expect(
+      expectSome(
+        Schema.decodeUnknownOption(Schema.Struct({ duration: Schema.Number }))(
+          expectSome(elementProp(on, "transition")),
+        ),
+      ).duration,
+    ).toBeGreaterThan(0);
+  });
+
   it("draws the caller's glyph inside the knob", () => {
     const thumb = thumbOf(
       renderSwitch(
@@ -134,6 +187,6 @@ describe("SwitchThumb", () => {
         vi.fn(),
       ),
     );
-    expect(expectSome(hostStyleString(thumb, "pointerEvents"))).toBe("none");
+    expect(styleOf(thumb)["pointerEvents"]).toBe("none");
   });
 });

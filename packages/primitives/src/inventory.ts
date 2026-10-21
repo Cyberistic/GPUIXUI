@@ -321,7 +321,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No aria-checked: pair it with a visible label",
-      "No slide animation: the thumb jumps between two justifyContent values",
+      "The slide always runs: the runtime exposes no reduced-motion preference",
       "No loading or pending state",
     ],
     source: [
@@ -334,6 +334,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     tests: [
       "src/components/Switch.test.tsx",
       "runtime/controls.runtime.test.tsx",
+      "runtime/switch.runtime.test.tsx",
     ],
   },
   {

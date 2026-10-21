@@ -511,16 +511,18 @@ export const switchTrackClass = ({
   const filled = state !== "unchecked";
   const { bg } = SELECTION_ROLE[accent];
   return cn(
-    "flex flex-row items-center shrink-0 rounded-full border p-2xs cursor-pointer",
+    // The thumb is absolutely positioned inside this pill, so it is the
+    // positioning context and its own size comes from the derived token.
+    "relative flex flex-row items-center shrink-0 rounded-full border cursor-pointer",
     `switch-track-${size}`,
     "disabled:opacity-50 disabled:cursor-not-allowed",
     filled
       ? cn(
-          `bg-${bg} border-${bg} justify-end`,
+          `bg-${bg} border-${bg}`,
           `hover:bg-${bg}/90 hover:border-${bg}/90 active:border-ring`,
         )
       : cn(
-          "bg-muted justify-start",
+          "bg-muted",
           invalid === true ? "border-destructive" : "border-input",
           "hover:border-border-strong active:border-ring",
         ),
@@ -535,8 +537,11 @@ export const switchThumbClass = ({
 }: SelectionRecipeInput): string => {
   const filled = state !== "unchecked";
   return cn(
-    "shrink-0 rounded-full pointer-events-none",
+    // `left` is the slide: the checked utility replaces the resting inset with
+    // the far position, and the component animates between the two.
+    "absolute shrink-0 rounded-full pointer-events-none top-2xs left-2xs",
     `size-thumb-${size}`,
+    filled ? `switch-thumb-on-${size}` : undefined,
     filled ? `bg-${SELECTION_ROLE[accent].fg}` : "bg-foreground",
   );
 };

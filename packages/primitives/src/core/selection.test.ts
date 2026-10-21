@@ -4,7 +4,9 @@ import {
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
+  switchThumbInset,
   switchThumbStyle,
+  switchThumbTravel,
   switchTrackStyle,
   type SelectionSpec,
 } from "./selection.js";
@@ -134,13 +136,17 @@ describe("switch", () => {
     expect(thumb.backgroundColor).not.toBe(on.backgroundColor);
   });
 
-  it("moves the thumb across the pill without measuring it", () => {
-    expect(switchTrackStyle(spec(), testTheme).justifyContent).toBe(
-      "flex-start",
+  it("moves the thumb across the pill by the travel it can animate", () => {
+    // The bug guarded: the thumb was positioned by the track's `justifyContent`,
+    // which the runtime cannot animate, so the knob jumped. Both positions are
+    // now a `left` inset, and the slide is the difference between them.
+    const off = switchThumbStyle(spec(), testTheme);
+    const on = switchThumbStyle(spec({ state: "checked" }), testTheme);
+    expect(Number(on.left) - Number(off.left)).toBe(
+      switchThumbTravel(spec(), testTheme),
     );
-    expect(
-      switchTrackStyle(spec({ state: "checked" }), testTheme).justifyContent,
-    ).toBe("flex-end");
+    expect(off.left).toBe(switchThumbInset(testTheme));
+    expect(on.top).toBe(off.top);
   });
 
   it("keeps the thumb a whole pixel inside the track", () => {

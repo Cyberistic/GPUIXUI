@@ -93,12 +93,15 @@ runtime's own event and the switch still toggles. A disabled switch installs no
 ## Theming
 
 `switchTrackClass` and `switchThumbClass` compile both parts from the same
-selection spec. The thumb is positioned by the track's `justifyContent`, not a
-pixel offset, because the runtime has no `transform` — so it cannot drift out of
-the pill. Disabled adds half opacity and removes feedback. `invalid` gives an
-off-switch the destructive border, the same role a checkbox uses, and focus
-declares the shared keyboard outline at rest (`controlRing`), which the runtime
-paints after keyboard focus only; a disabled switch declares none.
+selection spec. The track is the thumb's positioning context and the knob is an
+absolutely positioned child, placed by its `left` inset — the resting inset when
+off, the inset plus the travel when on. The runtime has no `transform`, but it
+can interpolate a `left` inset, so the component hands that same value to
+`motion` and the thumb slides (150 ms, `easeOut`) instead of jumping. Disabled
+adds half opacity and removes feedback. `invalid` gives an off-switch the
+destructive border, the same role a checkbox uses, and focus declares the shared
+keyboard outline at rest (`controlRing`), which the runtime paints after keyboard
+focus only; a disabled switch declares none.
 
 `style` takes a `StateStyle<SwitchState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, checked, invalid }` and returns one. The result
@@ -111,18 +114,27 @@ the recipe also sets.
   is visible text only — it does not name the switch — so pass the same string
   as the switch's own `label` prop, or spread `labelledBy(name)`. A glyph on the
   knob is decoration, not a state label.
-- No slide animation: the thumb jumps between the two `justifyContent` values.
+- The slide is 150 ms and always runs: the runtime exposes no reduced-motion
+  preference, so there is no opt-out.
 - No loading or pending state; disable it while a request is in flight.
 
 ## Verification
 
 - `src/core/selection.test.ts` — track and thumb geometry across sizes and
-  states; the destructive border when `invalid`; the keyboard ring.
-- `src/components/Switch.test.tsx` — the knob's geometry from the theme scale, a
-  custom glyph inside it, the pointer guard that keeps the glyph from taking the
-  press, and a `style` callback receiving the live state and winning.
+  states, the two thumb positions and the travel between them; the destructive
+  border when `invalid`; the keyboard ring.
+- `src/components/Switch.test.tsx` — the knob's geometry from the theme scale,
+  the declared slide (the `left` inset and the motion target agree, and the two
+  targets differ by the travel), a custom glyph inside it, the pointer guard that
+  keeps the glyph from taking the press, and a `style` callback receiving the
+  live state and winning.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus are
   composed with the switch's own, and a disabled switch installs none.
+- `runtime/switch.runtime.test.tsx` — the knob's paint is still at the resting
+  offset in the frame the click commits and at the far offset once the motion
+  clock advances, the knob stays inside the pill in both states, and the track
+  paints its checked fill. Negative control measured: rendering the thumb
+  without `motion` paints it at the far edge immediately (`expected 27 to be 15`).
 - `runtime/controls.runtime.test.tsx` — a click toggles; the role is `Switch`;
   a custom glyph still toggles on a real hit test; the announced value flips;
   Space and Enter both toggle.

@@ -62,6 +62,7 @@ The derived tokens the primitives register (all read `theme.iconSize` /
 | `size-dot-<size>` | `round(iconSize[size] / 2)` (square) | radio dot |
 | `size-thumb-<size>` | `iconSize[size] − 2·spacing["2xs"]` (square) | switch thumb |
 | `switch-track-<size>` | `round(iconSize[size] × 1.75)` × `iconSize[size]` | switch track |
+| `switch-thumb-on-<size>` | `spacing["2xs"] + round(iconSize[size] × 1.75) − iconSize[size] − 2·borderWidth.thin` (`left`) | switch thumb, checked |
 | `slider-thumb-<size>` | `iconSize[size]` square, `∓round(iconSize/2)` margins, strong border | slider thumb |
 | `px-inset-<size>` | `round(iconSize[size] / 2)` horizontal padding | slider track inset |
 | `w-stepper-column` | `iconSize.md + spacing.sm` | number-field stepper column |
@@ -196,6 +197,7 @@ Geometry, colour and type map to the classes below. Columns are the
 | `padding` (spacing step) | `p-<step>` | registry family → `theme.spacing` |
 | `paddingLeft`/`Right`/`Top`/`Bottom` (spacing step) | `pl-` `pr-` `pt-` `pb-` | registry family → `theme.spacing` |
 | `marginLeft`/`Right`/`Top`/`Bottom` (spacing step) | `ml-` `mr-` `mt-` `mb-` (`-0` exact) | registry family → `theme.spacing` |
+| `top`/`left` (spacing step) | `top-<step>` `left-<step>` | registry family → `theme.spacing` |
 | `borderRadius` | `rounded-<step>` | registry family → `theme.radius` |
 | `borderWidth: 1` | `border` | built-in |
 | `borderWidth: 0` | `border-0` | built-in |

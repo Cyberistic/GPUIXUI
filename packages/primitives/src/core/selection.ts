@@ -110,12 +110,48 @@ export const selectionBoxStyle = (
   return style;
 };
 
+/** The gap a switch thumb keeps from the track's edge, on every side. */
+export const switchThumbInset = (theme: PrimitiveTheme): number =>
+  theme.spacing["2xs"];
+
+/**
+ * How far a switch thumb travels between its two positions.
+ *
+ * The track is a fixed ratio of the icon side, so the travel is the track's
+ * width less one thumb and both included borders: the same number a measured
+ * drag would produce, without the measurement. It keeps the knob's gap to each
+ * edge equal in the two states.
+ */
+export const switchThumbTravel = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+): number =>
+  Math.round(theme.iconSize[spec.size] * 1.75) -
+  theme.iconSize[spec.size] -
+  theme.borderWidth.thin * 2;
+
+/**
+ * A switch thumb's offset from the track's left edge.
+ *
+ * The resting offset is {@link switchThumbInset}; a filled track adds the whole
+ * travel, so the two positions differ by exactly the distance between them and
+ * the thumb never drifts out of the pill. It is an offset rather than
+ * `justifyContent` because the runtime can animate a `left` inset (it cannot
+ * animate a flex alignment), which is what makes the knob slide.
+ */
+export const switchThumbOffset = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+): number =>
+  switchThumbInset(theme) + (filled(spec) ? switchThumbTravel(spec, theme) : 0);
+
 /**
  * The pill a switch slides in.
  *
  * Height is the box side, width a fixed ratio of it, so a switch is the same
- * "size" as the checkbox on the label beside it. The thumb is positioned by
- * `justifyContent`, not by a pixel offset, so it cannot drift out of the pill.
+ * "size" as the checkbox on the label beside it. It is the thumb's positioning
+ * context: the thumb is an absolutely positioned child, so only its `left`
+ * decides where it sits.
  */
 export const switchTrackStyle = (
   spec: SelectionSpec,
@@ -129,15 +165,14 @@ export const switchTrackStyle = (
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+    position: "relative",
     width: Math.round(height * 1.75),
     height,
     flexShrink: 0,
     borderRadius: theme.radius.full,
-    padding: theme.spacing["2xs"],
     borderWidth: theme.borderWidth.thin,
     borderColor: filled(spec) ? role.background : emptyBorder,
     backgroundColor: filled(spec) ? role.background : theme.colors.muted,
-    justifyContent: filled(spec) ? "flex-end" : "flex-start",
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
     hover: filled(spec)
       ? {
@@ -163,7 +198,9 @@ export const switchTrackStyle = (
  *
  * The foreground role rather than a literal white, so it contrasts with the
  * track in both modes; the accent foreground once checked, so the knob always
- * reads against the pill it sits on.
+ * reads against the pill it sits on. It is an absolutely positioned child of
+ * the track at {@link switchThumbOffset}, which is the one value the slide
+ * animates.
  *
  * `pointerEvents: "none"` is load-bearing, not decoration: GPUI hit-tests to the
  * deepest element under the point and does not bubble an unhandled click to the
@@ -175,9 +212,12 @@ export const switchThumbStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const inset = theme.spacing["2xs"] * 2;
-  const side = theme.iconSize[spec.size] - inset;
+  const inset = switchThumbInset(theme);
+  const side = theme.iconSize[spec.size] - inset * 2;
   return {
+    position: "absolute",
+    top: inset,
+    left: switchThumbOffset(spec, theme),
     width: side,
     height: side,
     flexShrink: 0,
