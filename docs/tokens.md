@@ -1323,9 +1323,12 @@ held to the table the package ships.
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. No component consumes it yet.
 - The derived action fills are shipped and documented, but the component
-  packages still paint a half-alpha hover (`packages/components/src/internal/button.tsx`
-  and `packages/primitives/src/core/variants.ts`); adopting `filledHover` /
-  `filledPressed` is their workstream's, recorded in `TODO.md` → Interlocks.
+  packages still paint a translucent hover: `alpha(primary, 0.5)` in
+  `packages/components/src/internal/button.tsx`, the `hover:bg-primary/90` and
+  `active:bg-primary/80` classes in `packages/primitives/src/recipe/index.ts`,
+  and the selection role at 0.9 alpha in `packages/primitives/src/core/selection.ts`
+  for a filled checkbox or radio. Adopting `filledHover` / `filledPressed` is
+  their workstream's, recorded in `TODO.md` → Interlocks.
 - `avatarSize` is a fixed scale, not a theme group. Adding a group to `Theme` is a
   breaking change for a hand-built theme literal, so a brand-specific diameter
   stays a component decision for now.
