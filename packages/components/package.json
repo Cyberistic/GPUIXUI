@@ -14,7 +14,8 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "test": "vitest run",
-    "test:behaviour": "vitest run --config vitest.behaviour.config.ts"
+    "test:behaviour": "vitest run --config vitest.behaviour.config.ts",
+    "measure:surface": "nub scripts/surface.ts"
   },
   "dependencies": {
     "@gpuix/react": "catalog:",

@@ -1,0 +1,25 @@
+/**
+ * The recorded surface of `@gpuixui/components`, held as a budget.
+ *
+ * The module count is exact: the entry's graph is the package's import cost, and
+ * a new family, a moved module or a deleted one must be a deliberate change to
+ * this record rather than an accident of a commit. The byte ceiling carries
+ * ~9% over the measured 561,459 bytes so prose edits do not need a bump while a
+ * bulk addition does.
+ *
+ * `packages` is every package the package's **own** modules import. A new name
+ * here is a new thing every consumer of the entry loads, so it needs the same
+ * deliberate change.
+ *
+ * Measured 2026-10-22 on `master` with `nub scripts/surface.ts` (and
+ * `--import` for the cold load, recorded in the package README). Regenerate with
+ * the same command and state what moved in the commit.
+ */
+export const surfaceBudget = {
+  /** Modules in the entry's own package — `src/index.ts` and everything it reaches. */
+  modules: 85,
+  /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
+  bytes: 600 * 1024,
+  /** Packages the entry's own modules import. */
+  packages: ["@gpuix/react", "effect", "react"],
+} as const;

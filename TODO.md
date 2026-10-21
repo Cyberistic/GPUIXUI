@@ -1399,7 +1399,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 47/47
+`[x]` `[██████████]` 48/48
+
+`[x]` The introduction names exactly the runtime's host elements — the page a
+reader meets first listed eleven `<tag>` names and nothing held the list to the
+runtime, so an element added to `@gpuix` or removed from it would leave the page
+describing a different runtime than the library uses. `introduction-page.test.ts`
+reads the union from `docs/gpuix-capabilities.md` and the sentence from
+`content/docs/index.mdx` and compares them in both directions, plus resolves the
+page's `@gpuixui/*` imports through the shared snippet helper. Directions
+measured: deleting `virtual-list` **and** adding `fieldset` both fail the set case.
+The same pass hoisted the snippet parse and symbol index out of
+`getting-started.test.ts` and `installation-page.test.ts` into
+`src/lib/doc-snippets.test-util.ts`, so a third consumer did not copy a fourth
+parser
 
 `[x]` The installation page's commands are held to the workspace — it is the
 first page a reader follows and nothing read it: `src/lib/installation-page.test.ts`
@@ -1847,7 +1860,28 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
 `[x]` `packages/tokens`: `createTheme` starts from the requested contrast variant (`createTheme({ mode, contrast })`) instead of silently ignoring it, every group merge inherits an explicit `undefined` instead of erasing a role, and each platform style declares the `contrast` variant its palette is designed for — `platformTheme` applies a palette only where that matches the base's. `theme.test.ts` (contrast route, the `undefined` rule per group, one brand over both palettes via `high-contrast.example.ts`) and `platforms.test.ts` (the declaration, no `undefined` role) fail in the corrected direction, each measured; docs in `docs/tokens.md` §Theme API and §Platform styles, `docs/design-system.md` §5, the package README and the two inventory rows (salvage 301, 304, 321, 323)
 `[x]` `packages/tokens`: the suite has a time budget — `vitest.config.ts` (the package had none, so it ran on vitest's defaults) states a two-second `testTimeout` and `hookTimeout` and the includes it already ran; `src/suite.test.ts` reads the file and fails when the budget or an include is removed. It is effective, not decorative: with the budget lowered to 50 ms for a probe, a 200 ms test fails with `Test timed out in 50ms` (the guard failed in the same run). Honest limit recorded in the config and docs: a synchronous infinite loop cannot be interrupted by any timeout (salvage 333)
 `[x]` `packages/components`: the paint path's cost model — one recipe compile measures ~0.25 ms and the package has 154 recipe sites, so a full repaint re-parsed every part's appearance. `internal/recipe.ts` now compiles once per recipe per theme: a `WeakMap` keyed by the theme object, up to 512 recipes, and the compiled `StyleDesc` frozen because every later render shares it; a recipe past the limit compiles but is not stored, so a caller's dynamic `className` cannot grow the cache. `src/internal/recipe.test.ts` (5 cases) holds it and 4 fail without the cache (`expected "vi.fn()" to be called 1 times, but got 2 times`). The same pass removed the suite's load-sensitivity: `internal/interaction.ts` gained `waitFor` (poll to a deadline, rethrow the check's own failure) and the timer-driven assertions in `navigation-menu`/`preview-card` use it instead of a fixed 40 ms sleep — measured 2026-10-22, one full behaviour run failed 8 navigation-menu timer cases that passed in isolation on a busy box. `waitFor` has its own 3-case suite, which fails when the helper swallows the deadline (`promise resolved "undefined" instead of rejecting`). Docs: the package README §What a repaint costs, and a live re-check after the cache (`--only dialog-lifecycle --only toast-lifecycle`, 2/2 on 0.11.0). Still open: no wall-clock baseline for the package surface (import cost, module graph) — the row below
-`[ ]` `packages/components`: no package-surface performance baseline — the import cost and module-graph size of `@gpuixui/components` are unmeasured, so "this package is heavy to load" has no number behind it
+`[x]` `packages/components`: the package surface has a baseline — the entry
+reaches **85 modules / 548 KiB** of its own source, **129 modules / ≈817 KiB**
+with the workspace packages it pulls (`@gpuixui/tokens` 22, `@gpuixui/tw` 9,
+`@gpuixui/keyboard` 8, `@gpuixui/icons` 5), and its own modules import exactly
+`@gpuix/react`, `effect` and `react`. Cold import, three fresh processes each:
+the runtime alone 168 ms, one family through its subpath
+(`@gpuixui/components/badge`) 528 ms, the barrel 876 ms — so the barrel costs
+~350 ms more than the one family a consumer asked for (one shared-machine run
+measured 1.96 s, so the README states the shape, not the digit). `src/surface.ts`
+is the pure walk (runtime specifiers only; `import type` is erased),
+`scripts/surface-io.ts` the workspace resolver the report and the gate share,
+`src/surface.budget.ts` the record (85 modules exact, 600 KiB, the three
+packages) and `src/surface.test.ts` the guard (14 cases, including the scanner's
+own rules: a multi-line clause, a type-only statement, an exported string that is
+not an import). Directions measured: the budget at 84 fails `keeps the entry
+graph at the recorded module count`; dropping `react` fails `imports only the
+packages the budget records`; a planted `import "node:fs"` fails the same case
+naming the extra package; a planted `import "./does-not-exist.js"` fails `reaches
+every module it imports`. Docs: `packages/components/README.md` §What the entry
+costs to load; the command is
+`nub run --filter @gpuixui/components measure:surface` (`--import` for the cold
+numbers).
 `[x]` `packages/components`: one key dispatch dismissed two nested overlays (salvage 366, 398) — the dismiss stack identified an event by payload object, but GPUix hands every enclosing handler its own payload for one keystroke, so Escape with a combobox or popover open inside a dialog closed **both**. The stack now identifies a key dispatch by the runtime's `keystrokeId` (a pointer event stays one shared object, so the `WeakSet` is kept), and clears it when the stack empties because a renderer numbers keystrokes from its own start. The combobox also joins the stack while open — it pushed no layer, so its popup had no claim above the dialog. Proof: `src/internal/dismiss-layer.test.ts` (3 new cases: one dispatch across payloads, the next dispatch counted separately, the id forgotten when the stack empties), the native `src/behaviour/combobox.test.tsx` case `closes only its own popup on Escape inside a dialog` and `src/behaviour/overlay-layering.test.tsx`'s `dismisses a popover opened inside a dialog one layer at a time`. Both native cases measured failing in both directions (reverting the layer: the popup never closed for the dialog to survive; reverting the id guard: `dialog-panel` was `undefined` after one Escape). Combobox 20 → 21 native tests (unit 364, behaviour 491); docs and the inventory row updated
 `[x]` `packages/components`: two overlays **open in the first render** pushed child-first, because React runs a child's layout effect before its parent's, so the parent was topmost and took the first Escape — the dialog closed while the popover inside it stayed open. The stack now orders surfaces by **containment depth**, not by push: `internal/dismiss-scope.tsx` gives each open surface's children its depth, `pushDismissLayer` takes that depth, and equal depths keep push order (the later one is above). Proof: `src/internal/dismiss-layer.test.ts` (3 new cases: the deeper surface wins although it pushed first, its container is reached once it closes, equal depths keep push order) and the native `src/behaviour/overlay-layering.test.tsx` case `puts a popover declared open inside a dialog above it in the first render`. Both directions measured — with the stack ordered by push again, the native case failed with the dialog gone (`expected undefined to be defined`, exit `1`) and 3 unit cases failed. Live re-check on 0.11.0: `--only dialog-lifecycle --only popover-lifecycle --only menu-lifecycle --only context-menu-lifecycle --only command-palette` (5/5). Docs: the Dialog page's §Dismissal, the package README and the Dialog inventory row; behaviour 498, unit 367
 `[x]` `packages/components`: disabled triggers were not inert (salvage 393, 394) — `CollapsibleTrigger` had no `disabled` at all, `DropdownMenuTrigger` kept a raw `onKeyDown` (the local button deliberately leaves keys observable so a wrapper sees them, and the trigger opened on ArrowDown/Enter), and `PreviewCardTrigger`/`NavigationMenuTrigger` still opened on hover and on a programmatic focus. Each trigger now refuses its own open paths while `disabled`, leaves the tab order, dims, drops its hover/press styling and its focus ring; the Collapsible trigger's `StateStyle` gained `disabled` (`{ open, closed, focused, disabled }`). Proof: one native case per component (`keeps a disabled trigger out of the tab order and closed`, `stays closed from a disabled trigger on hover, focus or press`, `keeps a disabled trigger from opening on hover, press or key`, `keeps a disabled trigger out of the tab order and closed`) — all four measured failing against the previous sources. Counts: collapsible 4 → 5, dropdown 35 → 36, navigation menu 17 → 18, preview card 8 → 9 (behaviour 495); docs pages and the four inventory rows updated

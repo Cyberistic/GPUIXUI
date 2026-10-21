@@ -51,6 +51,39 @@ A component that re-renders its whole family on a state change is the remaining
 cost, which is why `List` subscribes each row to its own slice
 (`src/list/store.ts`).
 
+### What the entry costs to load
+
+`@gpuixui/components` resolves to `src/index.ts`, and that barrel re-exports all
+39 families, so importing any one component from the package root reads all of
+them. Measured 2026-10-22 with
+`nub run --filter @gpuixui/components measure:surface`:
+
+| Surface | Modules | Source |
+| ------- | ------: | -----: |
+| the package's own graph | 85 | 548 KiB |
+| `@gpuixui/tokens` it reaches | 22 | 146 KiB |
+| `@gpuixui/tw` | 9 | 99 KiB |
+| `@gpuixui/keyboard` | 8 | 12 KiB |
+| `@gpuixui/icons` | 5 | 11 KiB |
+| **total** | **129** | **≈817 KiB** |
+
+The package's own modules import exactly three packages: `@gpuix/react` (64
+sites), `effect` (153) and `react` (45). Cold import through the repo's loader,
+three fresh processes each (`nub scripts/surface.ts --import`): the runtime
+alone 168 ms, one family through its subpath (`@gpuixui/components/badge`)
+528 ms, the barrel 876 ms. The digit belongs to a shared machine — one run
+measured 1.96 s while other agents were building — but the shape is the point:
+the barrel costs about 350 ms more than the one family a consumer asked for,
+because it loads the other 38 too. A consumer that needs one or two components
+should import the subpath; one that wants the package's shared vocabulary can
+keep the root.
+
+`src/surface.test.ts` holds the graph: the module count is exact, the byte
+ceiling is 600 KiB and the package list is exact, so a family that reaches a new
+dependency fails by name instead of quietly adding load time to every consumer.
+`src/surface.budget.ts` is the record; regenerate it with the command above and
+state what moved.
+
 ## Chrome marks
 
 Every mark a control paints — close, caret, chevron, check, ellipsis, tone — is
@@ -147,6 +180,7 @@ the picker surfaces keep their scroll/positioning in `style`.
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
+| `src/surface.ts`, `src/surface.budget.ts`, `scripts/surface*.ts` | the entry's import graph: the walker, the recorded budget and the report command |
 
 ## Commands
 
@@ -155,8 +189,13 @@ nub install
 nub run --filter @gpuixui/components check-types
 nub run --filter @gpuixui/components test            # logic suites + the guard
 nub run --filter @gpuixui/components test:behaviour  # needs a supported host
+nub run --filter @gpuixui/components measure:surface # the entry's import cost
 nub run check            # the repo gate, from the worktree root
 ```
+
+`measure:surface` prints the entry's module graph; add `--import` to it (from
+this directory: `nub scripts/surface.ts --import`) for the cold import numbers,
+which need the native binding.
 
 Two suites, deliberately split. `test` runs everywhere: pure logic and the guard
 in `src/runtime.test.tsx`. `test:behaviour` renders a real GPUix tree, so it needs
