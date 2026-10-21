@@ -356,7 +356,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
   {
     name: "Tooltips",
     status: "done",
-    gpuixSupport: "partial (hover opens in a window; a Tab traversal focuses the trigger but runs no `onFocus`)",
+    gpuixSupport: "partial",
     limitations: [
       "The trigger must be a focusable host element",
       "No arrow, no aria-describedby and no wrapping content",
