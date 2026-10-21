@@ -145,6 +145,38 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 155/155 plans-and-harness
 
+`[x]` **Prove the positioning contract in the frame** per plan `839`: `position`
+      is in **146** shipped and scenario call sites and it is the basis of every
+      overlay, and the three rules written in prose — that `absolute`/`fixed`
+      resolve against the mount parent, that the scroll rail needs a
+      `position: "relative"` wrapper, and that `fixed` lays out like `absolute` —
+      were asserted **nowhere**. `containing-block` / `live-containing-block`
+      (**75 checks each**) mount fifteen fixtures in three 300 px columns: the
+      containing block is the **direct parent's padding box** (a `relative`
+      parent changes nothing; a static mid's child sits at **+44** from a
+      positioned grandparent where the CSS rule answers **+4**), the border is
+      excluded (**+9**, not the content-box **17**), a declared size beats the
+      opposing inset on both axes, both insets with no size **stretch**
+      (**180 × 80**), no inset keeps the **static position**, `right`/`bottom`
+      place from the far edge, a negative inset paints **outside**, an absolute
+      box is **out of flow** while `relative` keeps its slot, it **scrolls with
+      its containing block** (−100), and **paint order is tree order** — a press
+      at the overlap reaches the later in-flow sibling. **`fixed` is `absolute`**:
+      the twin offsets match (9, 7), both are out of flow, and a clipping
+      ancestor refuses a press below its edge for both — so a "fixed" veil cannot
+      cover a window on this pin. Twelve runtime and two unit mutations failed by
+      name; **M10's `fixed`→`relative` swap was a null control** (a first child
+      lands at the same offset either way) until a flow sibling made it
+      load-bearing, and the model's static-start branch needed a non-zero test
+      the U2 mutation exposed. 15 model tests. The full headless suite exposed
+      and this unit fixed a **`shell-selection` race**: a native click commits on
+      a later task and the probe read the title straight after it, so it now
+      reveals `nav-window-layout` (its own precondition) and waits with
+      `awaitReadout`; without the wait the full run failed `clicking an entry
+      switches the stage`. Focused ids run: `containing-block`,
+      `live-containing-block` (×3), `shell-navigation`, `shell-selection`. Plan:
+      `.agents/slop/plans/839-positioning-contract.md`.
+
 `[x]` **Prove the box model in the frame** per plan `835`: `padding` is in **144**
       shipped call sites, `margin` in 8 component sites (plus every separator
       inset and the slider thumb's **negative** margins) and a percentage size in
@@ -169,9 +201,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       was replaced. Ten runtime and two unit mutations failed by name; 16 model
       tests. The extra registry row also exposed that `shell-selection` clicked
       `text-native`, which the growth pushed below the sidebar fold; the probe
-      now drives the first four rows (removing a row's `onClick` still fails it
-      by name). Focused ids run: `box-inset`, `live-box-inset` (×3),
-      `shell-selection`. Plan: `.agents/slop/plans/835-box-model-insets.md`.
+      now drives the first four rows). End-of-task full headless **128/128**, exit
+      `0`. Focused ids run: `box-inset`, `live-box-inset` (×3), `shell-selection`,
+      `shell-navigation`. Plan: `.agents/slop/plans/835-box-model-insets.md`.
 
 `[x]` **Prove flex distribution in the frame** per plan `833`: `flexGrow` is in
 **64** shipped call sites, `alignItems: "center"` in **163** and
@@ -227,6 +259,21 @@ exactly, 67 capabilities, **408.3 s**, exit `0`). Live registry **112 → 115**
 counting plans `823`/`825`, of which this plan adds one; no full live gate
 (merge gate). `check`/`lint`/`test` green (playground **688** tests). Plan:
 `.agents/slop/plans/829-line-clamp-pixels.md`.
+
+`[ ]` **Cross-team (defect):** an overlay's draw order and its "fixed" veil.
+      Plan `839` measured that **paint order is tree order** — a later in-flow
+      sibling paints *and hits* over an earlier absolute box, positioned or not —
+      so a surface must be the **last** child of its containing block (plan
+      `184`'s float tab found the same by reversing it). It also measured that
+      `fixed` is **`absolute`**: no viewport-fixed position exists, the box is
+      contained by its **direct parent's padding box**, and a clipping ancestor
+      refuses a press below its edge for both — so the Dialog/Drawer veil cannot
+      be fixed-positioned out of a scrolling pane and needs the app-root slot
+      plan `791` recorded. The scroll rail's `position: "relative"` wrapper works
+      because it is the **direct parent**, not because it is `relative`; the
+      stated reason in `ScrollArea`'s comment and `core/style.ts` is loose (the
+      recipe is right). Owner: `components` / `primitives`; evidence: plan `839`
+      §2, `containing-block` / `live-containing-block`.
 
 `[ ]` **Cross-team:** `@gpuixui/primitives`' `Stack`/`Card` may rely on
       `alignItems: "stretch"` to fill a cross-axis child, but the runtime only

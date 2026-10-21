@@ -297,7 +297,7 @@ native input:
 
 | Fact | Measured |
 | ---- | -------- |
-| selection | clicking `nav-layout-flex` mounts that scenario's real view (`layout-root`), paints the entry with `colors.accent` and `nav-frame-stats` with `colors.background`. The probe drives the **first four rows** on purpose: the registry is the sidebar and it grows, and a row below the list's fold cannot be clicked (a press outside the clip never reaches a clipped child, plan `820`). Plan `835`'s extra row pushed the old `text-native` target below the fold and failed this check — the target moved, the contract did not |
+| selection | clicking `nav-layout-flex` mounts that scenario's real view (`layout-root`), paints the entry with `colors.accent` and `nav-frame-stats` with `colors.background`. The probe drives the **first four rows** on purpose: the registry is the sidebar and it grows, and a row below the list's fold cannot be clicked (a press outside the clip never reaches a clipped child, plan `820`). Plan `835`'s extra row pushed the old `text-native` target below the fold — the target moved, the contract did not. **The full run still failed once (2026-10-21)** on the first-four targeting, because a native click commits on a later task and the probe read the title straight after it: the probe now reveals `nav-window-layout` first (its own precondition, since `shell-navigation` leaves the list scrolled) and waits for the title with `awaitReadout` |
 | keyboard | Enter on key **down** switches; Space on key **up** switches; Space on the down alone does nothing. The nav uses the shipped `Button`'s `decideActivation`, not a second copy |
 | palette | `theme-mode-light` repaints `app-shell` from `#11141A` to the light `#F6F8FA`, keeps the selected scenario and leaves its view mounted |
 | isolation | the full suite mounts every scenario under a `Fragment` keyed by id: without it React kept the previous `<App>`'s Shell state and native scroll offset, and a click landed outside the viewport (found by this probe; `--only` passed, the full run did not) |
@@ -448,6 +448,51 @@ fixture uses 4 / 6 and the mutation now reads `expected 19, got 4`.
 `contentOffset`, `paintedBox`, `percentOf`, `marginRow`, `stackedStart`,
 `centreOffset`, `stretchHeight`, `reportedRight`). 16 unit tests; ten runtime
 mutations and two unit mutations failed by name (plan `835` §9).
+
+## The positioning contract (plan `839`)
+
+`position` appears in **146** shipped and scenario call sites and it is the
+basis of every overlay — the dialogs and drawers, the toast viewport, the menus,
+the docking drop bar, the scrollbar rail, the notification panel. Three rules
+were written in prose and **asserted nowhere**: that `absolute`/`fixed` resolve
+against the mount parent, that the rail needs a `position: "relative"` wrapper,
+and that `fixed` lays out exactly like `absolute`. `containing-block` /
+`live-containing-block` (**75 checks each**) mount fifteen fixtures in three
+300 px columns and measure the whole contract:
+
+| Fact | Measured |
+| ---- | -------- |
+| the containing block | an absolute child starts **+5** from its **direct parent's padding box** — a `position: "relative"` parent changes nothing |
+| a positioned ancestor | with the child inside a **static** mid (padding 6) of a `relative` grandparent, it sits at the mid's origin **+4** (**44** from the grandparent), where the CSS "nearest positioned ancestor" rule would put it at **4** — a **40 px** difference |
+| the border | a 4 px border and 8 px padding put the child at **+9** from the painted origin: the padding box excludes the border (a content-box answer would be **17**) |
+| no insets | the box keeps its **static position**: the parent's content origin (+12 with `padding: 12`) |
+| one axis | `left: 30` is measured from the padding box; the undeclared `top` keeps the **static** position (**34** after a 24 px flow child) |
+| stretch | `left/right/top/bottom: 10` with no size → **180 × 80** |
+| a declared size | `left 10 right 10 width 40` → **x = 10, w = 40**; `top 10 bottom 10 height 20` → **y = 10, h = 20** — the **leading** inset wins on both axes |
+| trailing edges | `right: 10 bottom: 10`, 30 × 30 → **160, 60** in a 200 × 100 parent |
+| a negative inset | `top: -10 left: -10` paints **outside** the parent and the bounds report it |
+| out of flow | a static sibling after an absolute box starts at the parent's content origin |
+| `relative` | paints at **+10/+15** and the **following sibling keeps its flow slot** |
+| paint order | a press at the overlap reaches the **later in-flow** sibling; the absolute box answers only on its exposed part |
+| `fixed` | the fixed and absolute twins sit at the **same offset** (**9, 7**), both inside their parent and out of flow — `fixed` is **`absolute`** |
+| scrolling | an absolute box moves with its containing block: a `-100` wheel moves the box **-100** |
+| clipping | an absolute box **110 px** below a 100 px `overflow: "hidden"` parent refuses the press; a **fixed** box is refused below the clip and takes the press inside it |
+
+**Three consequences for the library** (cross-team rows, not playground edits):
+
+1. the rail's `position: "relative"` wrapper works because it is the **direct
+   parent**, not because it is `relative` — the stated reason is loose, the
+   recipe is right;
+2. a "fixed" veil cannot cover a window on this pin and is **clipped by any
+   scrolling or `overflow: "hidden"` ancestor**, so the dialog veil needs an
+   app-root slot (plan `791`'s row);
+3. an overlay must be the **last** child of its containing block, or a later
+   sibling paints and hits on top of it.
+
+`position-model.ts` owns the arithmetic (`paddingBoxOrigin`, `placeAxis`,
+`placeIn`, `relativePaint`, `flowNext`, `outsideOf`) over plan `835`'s inset
+vocabulary. 15 unit tests; twelve runtime mutations and two unit mutations
+failed by name (plan `839` §9).
 
 ## Layout and typography in a real window (plan `591`)
 
@@ -1902,8 +1947,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 128-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 117 scenarios. `smoke:live` opens
+The 129-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 118 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a

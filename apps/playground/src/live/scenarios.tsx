@@ -174,6 +174,10 @@ import {
 } from "../scenarios/flex-layout.js";
 import { boxInsetLiveScenario, boxInsetView } from "../scenarios/box-inset.js";
 import {
+  containingBlockLiveScenario,
+  containingBlockView,
+} from "../scenarios/containing-block.js";
+import {
   captureLive,
   expectColour,
   expectPixel,
@@ -13417,6 +13421,19 @@ const liveBoxInset: LiveScenario = {
 };
 
 /**
+ * The positioning contract in a real window (plan `839`).
+ *
+ * The headless pass reads the offscreen layout's boxes and hit tests; this twin
+ * proves the same containing block, inset rules and paint order through a
+ * window's own layout pass.
+ */
+const liveContainingBlock: LiveScenario = {
+  ...containingBlockLiveScenario,
+  view: containingBlockView,
+  ready: "pos-stage",
+};
+
+/**
  * The content-surface theme in a real window (plan `784`).
  *
  * The headless pass proves the A/B pair in one offscreen paint; this twin
@@ -14613,6 +14630,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveLineClamp,
   liveFlexLayout,
   liveBoxInset,
+  liveContainingBlock,
   liveSurfaceTheme,
   liveDialogScrim,
   terminal,
