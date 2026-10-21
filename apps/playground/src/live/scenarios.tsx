@@ -5024,7 +5024,9 @@ const SelectProbe = (): ReactNode => {
       >
         {`value=${value} changes=${changes}`}
       </text>
-      <div style={{ display: "flex", flexDirection: "row", gap: theme.spacing.xl }}>
+      <div
+        style={{ display: "flex", flexDirection: "row", gap: theme.spacing.xl }}
+      >
         <ProbeSelect
           testId="select-disabled"
           disabled
