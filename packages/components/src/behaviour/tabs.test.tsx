@@ -164,6 +164,37 @@ describe("Tabs", () => {
     tabs.unmount();
   });
 
+  it("lets a press on the surface reach the trigger under it", () => {
+    const onProfileClick = vi.fn();
+    const tabs = renderComponent(
+      <Tabs defaultValue="profile">
+        <TabsList testId="list">
+          <TabsTrigger
+            testId="tab-profile"
+            value="profile"
+            onClick={onProfileClick}
+          >
+            Profile
+          </TabsTrigger>
+          <TabsTrigger testId="tab-danger" value="danger">
+            Danger
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+    settle(tabs);
+
+    const surface = requireBounds(tabs, "tabs-indicator");
+    tabs.renderer.nativeSimulateClick(
+      surface.x + surface.width / 2,
+      surface.y + surface.height / 2,
+    );
+
+    expect(onProfileClick).toHaveBeenCalledTimes(1);
+
+    tabs.unmount();
+  });
+
   it("moves the surface with the selection, not with focus", () => {
     const tabs = renderComponent(<Settings />);
     settle(tabs);

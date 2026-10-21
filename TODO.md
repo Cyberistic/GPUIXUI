@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 26/30
+`[x]` `[█████████░]` 29/30
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -288,6 +288,19 @@ high-contrast base keeps its palette (families/radii/density only), recorded by
 (which reports every missed pair, including one it cannot measure); the colour and
 platform tests read the same table, so a brand can run the check its theme must
 pass. 9 contract tests + docs
+`[x]` Complete the contrast pair table — 24 → 28 pairs: the text typed into an
+`input` (a field's fill can differ from the surface it sits on, and no pair
+measured it), and `mutedForeground` on `background`, `card` and `popover` so
+secondary text is measured on every surface it can sit on. `contrast.test.ts`
+proves a break to either is reported by name; all shipped and platform themes
+already met the floors
+`[x]` Ship `invalidColorRoles(theme)` and audit the documented brand themes — a
+value the renderer cannot parse is ignored, so a typo painted black in silence.
+The audit over `brand-theme.example.ts` found the documented brand pairing a
+violet fill (`#7C5CFF`) with the dark theme's on-colour at 4.24:1: the brand now
+owns its white label (`#6A45F0`), the house platform theme carries a
+mode-appropriate ring, and `theme.test.ts`/`platforms.test.ts` assert both checks.
+Docs in `docs/tokens.md` §Checking your own theme and `docs/design-system.md` §9
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Add `avatarSize` (20/26/32/40) so the Avatar component drops its local
 diameter table; a fixed scale, not a theme group
@@ -649,6 +662,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Adopt `filledHover` / `filledPressed` and delete the half-alpha hover fills: `components/src/internal/button.tsx`, `primitives/src/core/variants.ts` (`filled`), and the checkbox/radio hover fills in `primitives/src/core/selection.ts` (via `blend`, whose role there is not one of the three actions) | components, primitives | pending — **blocked on `@gpuixui/tw`**: the resting appearance of every migrated primitive is a class recipe, and the hover is still `hover:bg-primary/90` in `packages/tw/src/recipes.ts`, so changing the core resolver alone breaks `src/recipe/recipe.test.ts` and `src/recipe/geometry.test.ts` (measured: 4 failures). The adoptable order is (1) a derived opaque-fill utility in `@gpuixui/tw` — `hover:fill-primary`/`active:fill-primary` resolving through `filledHover`/`filledPressed` — (2) the recipes, (3) the core resolvers and their tests, all in one change; `Toggle`'s pressed accent also needs a general-role helper (accent is not one of the three `FilledAction` roles) |
 | The docs theme editor (`/docs/themes`) could show a live contrast readout while a reader edits a role — `contrastRatio` / `contrastFailures` are public and cover the 24 pairs the library itself is tested on | docs-site | **resolved** — `contrastReport`/`formatContrastFailure` in `theme-editor-logic.ts` run `contrastFailures` on the resolved edit; the editor shows a `role="status"` readout under the preview naming each failing pair with its measured ratio and floor, and reporting an unmeasurable (translucent) pair instead of counting it as passed. 3 tests: built-ins pass, a broken primary pair reads `1.00:1 (needs 4.5:1)`, a translucent ring reads `unmeasurable`. Documented on `/docs/themes#contrast` |
 | The docs previews should show a platform's control geometry too — `toCssVars` publishes `--radius`, the families and every colour role, but not density, so the `compact`/`spacious` half of `platformTheme` is invisible in a browser preview | docs-site | **resolved** — `toCssVars` now publishes `--control-height-{sm,md,lg}` and `--control-padding-x-{sm,md,lg}`, `.gx-demo` defaults them to `themes.dark`'s comfortable density, and `.gx-btn*`, `.gx-field` and `.gx-tab` take their geometry from them. `theme-css.test.ts` holds the bridge, the defaults and the consumed rules, and asserts macOS 28 / Linux 36 / Windows 32px for `--control-height-md`. Verified in the dev server on `/docs/components/button?platform=`; no `--row-height` until a list/table preview exists |
+| The Theming page's prose carries a hardcoded contract count ("`contrastFailures` checks 24 role pairs"), which is now 28, and its brand snippet still uses the unreadable `#7C5CFF` fill | docs-site | pending — `apps/docs/content/docs/themes.mdx` should derive the number from `contrastPairs.length` (or drop it) and take the corrected brand snippet from `docs/tokens.md` §Theme API, where the brand owns `primaryForeground`. The editor itself needs no change: it calls `contrastFailures`, so it checks all 28 pairs already |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
 | Native proof that `registerFonts` paints the registered face: register a face in the theme gallery and show the fallback and the intended face | playground | pending — `@gpuixui/tokens` side is shipped and unit-tested |
 | Probe that `focusVisible` paints after Tab and not after a mouse press (and on programmatic focus in a dialog) — plan 053's STOP gate | playground | **resolved** — the `focus-visible` live probe measured all five states on 0.11.0 (`apps/playground/README.md` §`focus-visible`): Tab paints the outline and dims other focusables; a mouse press, a native traversal and a programmatic focus before any key paint nothing; a programmatic focus after a Tab paints it. The tokens half shipped `keyboardFocusRing`; adoption is the row below |
@@ -712,4 +726,4 @@ Both are specified in ; each fix starts with a plan under .
 
 - [x] **Docs: platform toggle (macOS / Linux / Windows / Default)** — landed: every preview renders through the resolved `platformTheme`, the switch writes the URL and remembers the choice, and the preview style sheets carry no colour literal. The variants now carry the families, radii, density and the platform's colour roles, and the previews follow because they read the resolved theme.
 
-- [x] Tabs: a measured shared indicator on the **native** component — the rail renders one `tabs-indicator` surface instead of a card background per trigger; each trigger reports its painted box through `onLayout` and a 1×1 `tabs-origin` probe reports where the rail's absolute children start, so the pill's box is exactly the selected trigger's (asserted in both orientations and both themes; 18 native behaviour tests + an `indicator.ts` unit suite). No `transform`, so it jumps rather than slides — the docs demo's slide stays a browser illustration.
+- [x] Tabs: a measured shared indicator on the **native** component — the rail renders one `tabs-indicator` surface instead of a card background per trigger; each trigger reports its painted box through `onLayout` and a 1×1 `tabs-origin` probe reports where the rail's absolute children start, so the pill's box is exactly the selected trigger's (asserted in both orientations and both themes; 19 native behaviour tests + an `indicator.ts` unit suite). No `transform`, so it jumps rather than slides — the docs demo's slide stays a browser illustration.
