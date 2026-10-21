@@ -351,7 +351,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████░░░░]` 6/9
+`[x]` `[███████░░░]` 7/9
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -380,8 +380,13 @@ a workaround for two live sessions sharing one worktree; see
       the probe asserts no ring for the press/traversal/programmatic states and
       a ring after Tab. Negative control: a wrong ring colour fails
       `Tab paints the focus ring` with exit `1`. 8 decoder tests.
-`[ ]` Probe 053's remaining question: `keyboardFocusDim` with a modal open —
-      is the rest of the window dimmed, and should a component opt out?
+`[x]` Probe 053's remaining question — `keyboard-focus-dim` (live) measured that
+      `keyboardFocusDim` is on by default, dims every other focusable (fill and
+      text) while one has keyboard focus, and that `keyboardFocusDim: false`
+      opts an element out; the probe asserts the fill-pixel count drops by one
+      sample, so a whole-window dim fails. Evidence: `.artifacts/live/keyboard.png`
+      + README table. No component needs to undo it; one that draws its own
+      ring opts out per element.
 `[ ]` Port the modal/menu/toast Tier 2 examples into live probes (the headless
       scenarios already cover the primitives)
 `[ ]` Frame the live runner as a release gate before release
@@ -649,6 +654,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Adopt the keyboard-only ring and delete the manual focus tracking: `components/src/{inline-edit,time-picker,search-input,tabs,date-picker,field,list,accordion,breadcrumb,tag-input,color-picker,mention-input,hotkey-recorder,collapsible,context-menu}.tsx`, `components/src/internal/button.tsx`, `primitives/src/core/{selection,style}.ts`, `primitives/src/components/internal.ts` | components, primitives | **tokens side shipped** — `keyboardFocusRing(theme)` is the `focusVisible` outline, applied at rest; keep `focusRing` only for a mouse-opened overlay's programmatic focus (the probe's measured gap). `focus.test.ts` guards both |
 | The `focus-visible` live probe carries its own copy of the outline (`apps/playground/src/live/scenarios.tsx` `focusVisibleRing`) | playground | pending — replace it with `keyboardFocusRing` from `@gpuixui/tokens` so the probe paints the shipped helper, not a local duplicate |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | **resolved for the pages** — every package docs directory is a Fumadocs collection: `/docs/components` (39 pages), `/docs/primitives` (28) and `/docs/icons` (1), all in the sidebar and search; the example registry waits on the playground mounting them |
+| Seven primitives pages carry no `## API` section although the package's own page contract (`packages/primitives/docs/README.md` §Page contract) requires one: `meter.mdx`, `number-field.mdx`, `otp-field.mdx`, `range-slider.mdx`, `rating.mdx`, `slider.mdx`, `toggle.mdx`. Found while mounting the collection; docs-site cannot add the prop tables because the pages are the primitives workstream's source of truth | primitives | open — add the real prop/type/default/consequence table to each; every other primitive page has one |
 | Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/package-docs.test.ts` fails on a regression |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Correct `docs/component-api.md` §2: "`onValueChange` is the only change callback name" is wrong for boolean parts — base-gpui uses `on_checked_change`, so primitives adopts `onCheckedChange` alongside `onValueChange` (plan 040 §2.1) | components | pending |
