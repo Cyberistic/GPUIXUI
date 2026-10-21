@@ -790,7 +790,7 @@ Both are specified in ; each fix starts with a plan under .
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
 
-`[ ]` `[█░░░░░░░░░]` 1/28
+`[ ]` `[█░░░░░░░░░]` 1/36
 
 `[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, a `Button`/`Toggle` named by its text child must publish that text, and `Text` must carry heading/code semantics (salvage 026, 058, 059)
 `[ ]` `packages/primitives`: `Tooltip` content is not published as an accessible description on its trigger (salvage 071)
