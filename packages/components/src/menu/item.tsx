@@ -92,8 +92,9 @@ export const menuRowStyle = (
   const color = disabled
     ? theme.colors.disabledForeground
     : Match.value(tone).pipe(
-        Match.when("destructive", () =>
-          statusTone(theme, "destructive").foreground,
+        Match.when(
+          "destructive",
+          () => statusTone(theme, "destructive").foreground,
         ),
         Match.when("default", () => undefined),
         Match.exhaustive,

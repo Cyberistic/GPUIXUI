@@ -94,7 +94,11 @@ const scanned = (): ReadonlyArray<Source> => [
     file,
     label: `packages/components/${file}`,
   })),
-  ...Arr.map(sharedSources(), (file) => ({ base: repoRoot, file, label: file })),
+  ...Arr.map(sharedSources(), (file) => ({
+    base: repoRoot,
+    file,
+    label: file,
+  })),
 ];
 
 /**

@@ -41,15 +41,15 @@ const sorted = (ids: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.sort(ids, Order.String);
 
 /** The id a file name stands for: `date-picker.example.tsx` → `date-picker`. */
-const idOf = (file: string): string =>
-  Str.replace(/\.example\.tsx$/, "")(file);
+const idOf = (file: string): string => Str.replace(/\.example\.tsx$/, "")(file);
 
 const lines = registry.split("\n");
 
 /** `import { CardExample } from "./card.example.js";` */
 const imported: ReadonlyArray<Row> = Arr.filterMap(lines, (line) => {
-  const match =
-    /^import \{ (\w+) \} from "\.\/([\w-]+)\.example\.js";$/.exec(line);
+  const match = /^import \{ (\w+) \} from "\.\/([\w-]+)\.example\.js";$/.exec(
+    line,
+  );
   if (match === null) return Result.failVoid;
   const [, symbol, id] = match;
   return symbol === undefined || id === undefined
@@ -67,7 +67,10 @@ const registered: ReadonlyArray<Row> = Arr.filterMap(lines, (line) => {
     : Result.succeed({ id, symbol });
 });
 
-const files = Arr.filter(readdirSync(examplesDir), Str.endsWith(".example.tsx"));
+const files = Arr.filter(
+  readdirSync(examplesDir),
+  Str.endsWith(".example.tsx"),
+);
 const ids = Arr.map(registered, (row) => row.id);
 
 describe("the example registry", () => {
@@ -91,9 +94,10 @@ describe("the example registry", () => {
         fileURLToPath(new URL(`${id}.example.tsx`, examplesDir)),
         "utf8",
       );
-      expect({ id, exports: source.includes(`export const ${symbol}`) }).toEqual(
-        { id, exports: true },
-      );
+      expect({
+        id,
+        exports: source.includes(`export const ${symbol}`),
+      }).toEqual({ id, exports: true });
     });
   });
 
