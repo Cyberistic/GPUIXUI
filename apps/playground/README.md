@@ -727,11 +727,22 @@ the automation protocol, not the test harness, delivers the press and the key.
 | Step | Check |
 | ---- | ----- |
 | mount | `opens=0 closes=0`, and `dialog-content` has no bounds — a closed dialog paints nothing |
+| `Tab` with the dialog closed | focus lands on `dialog-trigger` — the control for the trap check below: a leaked focus would be named |
 | press the trigger | the surface paints with a non-zero box, focus is `dialog-content`, the readout reads `opens=1` |
+| `Tab` × 6 | the focus never names `dialog-trigger`, reaches both fields inside the surface and cycles back to the first one (the surface itself is `tabIndex: -1`, so the wrap is the first stop) |
+| `Shift-Tab` | stays inside the surface too |
 | `Escape` | the surface has no bounds again, focus returns to `dialog-trigger`, the readout reads `closes=1` |
 | press the trigger, then the dialog's own `DialogClose` | the surface paints again and closes, `opens=2 closes=2`, focus is back on the trigger |
 
-13 checks. Negative control, measured: `dismissible={false}` (an
+19 checks. The Tab half is the window-only claim: `DialogContent` handles Tab
+itself (`focusNextWithin` + `preventDefault`), so a window that delivered the key
+to its default traversal instead would move the focus out. Two focusable stops
+are the probe's own (`dialog-field-a`, `dialog-field-b`), and the dialog's
+built-in top-right close control is deliberately left unnamed: it is a stop with
+no `testId`, so one reading is `none` — which is why the assertion is that the
+trigger is *never* reached, not that every reading is a known id.
+
+Negative control, measured: `dismissible={false}` (an
 uninterruptible dialog) fails `Escape unpaints the dialog surface`
 (`expected true, got false`, exit `1`), which is the check's real subject — the
 dismiss stack, not the paint. Captures: `.artifacts/live/dialog-open.png` (the

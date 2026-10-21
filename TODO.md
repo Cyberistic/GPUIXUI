@@ -446,8 +446,18 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 31/31
+`[x]` `[██████████]` 32/32
 
+`[x]` Measure the modal **Tab trap in a window** — `dialog-lifecycle` now presses
+      Tab six times inside the shipped `Dialog`: the focus never names
+      `dialog-trigger`, reaches the probe's two fields and cycles back to the
+      first (the surface is `tabIndex: -1`, so it is not a stop itself);
+      Shift-Tab stays inside too. A control run with the dialog closed proves the
+      same focused-id read names the trigger, so a leak could not hide. 19
+      checks, `--only dialog-lifecycle`, green on 0.11.0. The built-in top-right
+      close control is left unnamed, so one reading is `none` — the assertion is
+      that the trigger is never reached. Evidence: `apps/playground/README.md`
+      §`dialog-lifecycle`.
 `[x]` Land the `tooltip-lifecycle` live probe and the `hover` verb behind it —
       the shipped `Tooltip` measured in a window: hover opens it above its
       trigger (`side="top"`, overlapping horizontally), leaving closes it after

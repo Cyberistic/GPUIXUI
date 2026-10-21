@@ -9,6 +9,7 @@
 import type { ReactNode } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Duration, Effect } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
@@ -945,6 +946,46 @@ const DialogProbe = (): ReactNode => {
                   The sample project cannot be restored.
                 </DialogDescription>
               </DialogHeader>
+              {/* Two focusable stops of our own, so the Tab trap's cycle is
+                  addressable by testId. */}
+              <div
+                testId="dialog-field-a"
+                tabIndex={0}
+                aria-label="Project name"
+                style={{
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.radius.sm,
+                  backgroundColor: theme.colors.muted,
+                }}
+              >
+                <text
+                  style={{
+                    ...textStyle(theme, "body"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  Project name
+                </text>
+              </div>
+              <div
+                testId="dialog-field-b"
+                tabIndex={0}
+                aria-label="Owner"
+                style={{
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.radius.sm,
+                  backgroundColor: theme.colors.muted,
+                }}
+              >
+                <text
+                  style={{
+                    ...textStyle(theme, "body"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  Owner
+                </text>
+              </div>
               <DialogFooter>
                 <DialogClose testId="dialog-confirm">Delete</DialogClose>
               </DialogFooter>
@@ -2438,6 +2479,17 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
+    // Control for the trap check below: with the dialog closed the trigger is the
+    // page's first stop, so the same focused-id read reports it. A focus that
+    // leaked out of an open dialog would therefore be named, not hidden.
+    yield* ctx.host.key("tab");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "outside the dialog a traversal reaches the trigger",
+      yield* focusedId(ctx),
+      "dialog-trigger",
+    );
+
     yield* ctx.host.click("dialog-trigger");
     yield* Effect.sleep(SETTLE);
     const content = yield* paintedBox(ctx, "dialog-content");
@@ -2457,6 +2509,57 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "opens=1 closes=0",
     );
     yield* ctx.host.capture("dialog-open");
+
+    // The Tab trap in a window, which no headless suite can prove: the surface
+    // handles Tab itself (`focusNextWithin` + `preventDefault`), so a window
+    // that delivered the key to the default traversal instead would leak the
+    // focus to `dialog-trigger`. Six presses must cycle every stop, come back
+    // to the surface, and never name the trigger.
+    const stops = yield* Effect.forEach(
+      Arr.range(0, 5),
+      () =>
+        Effect.flatMap(ctx.host.key("tab"), () =>
+          Effect.flatMap(Effect.sleep(SETTLE), () => focusedId(ctx)),
+        ),
+      { concurrency: 1 },
+    );
+    yield* ctx.expectEqual(
+      "Tab never leaves the dialog surface",
+      Arr.contains(stops, "dialog-trigger"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "Tab reaches the dialog's first field",
+      Arr.contains(stops, "dialog-field-a"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Tab reaches the dialog's second field",
+      Arr.contains(stops, "dialog-field-b"),
+      true,
+    );
+    // The surface itself is not in the tab order (`tabIndex: -1`), so the wrap
+    // goes to the first stop again rather than back to `dialog-content`.
+    yield* ctx.expectEqual(
+      "the trap cycles through the surface's stops",
+      Arr.length(Arr.filter(stops, (id) => id === "dialog-field-a")) >= 2,
+      true,
+    );
+    yield* ctx.host.key("shift-tab");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Shift-Tab stays inside too",
+      Arr.contains(
+        [
+          "dialog-content",
+          "dialog-field-a",
+          "dialog-field-b",
+          "dialog-confirm",
+        ],
+        yield* focusedId(ctx),
+      ),
+      true,
+    );
 
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
