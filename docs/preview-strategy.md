@@ -144,6 +144,16 @@ still print the identity's roles; `theme-editor-logic.test.ts` holds the pins to
 the base in both directions and keeps the persistence boundary (`parseState`)
 rejecting a pinned value the renderer cannot paint.
 
+The readout under the preview is the whole audit, not a contrast check: all nine
+`auditTheme` reports are flattened into one list (`auditFindings`), each worded
+for a reader, because a theme that paints a divider into itself, drops a `NaN`
+radius, erases a disabled label or hides a chart series is still broken and none
+of those is a text pair. The page prints the number as a word derived from the
+gate's own keys, so a tenth report cannot land while `/docs/themes` promises
+nine, and every report has a case in `theme-editor-logic.test.ts` — the cases for
+the reports no contrast pair covers also prove the colour reports stay silent on
+that brand, so only the new line can fail the gate.
+
 ## The component page template
 
 Every page in `content/docs/components/` follows this order. Sections that do not

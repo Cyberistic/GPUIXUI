@@ -342,6 +342,52 @@ describe("theme-editor audit readout", () => {
     expect(audit.passed).toBe(false);
   });
 
+  it("reports a number the renderer cannot lay out, which no colour report sees", () => {
+    // A style batch crosses a JSON boundary on its way to native, so `NaN`
+    // arrives as `null` and the property is dropped: the theme paints, just not
+    // the one the reader described. Only the number report can see it.
+    const audit = auditTheme(
+      extendTheme(themes.dark, { radius: { md: Number.NaN } }),
+    );
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "number",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      "radius md — NaN cannot be laid out (needs a length of zero or more)",
+    ]);
+    expect([
+      ...audit.invalidRoles,
+      ...audit.invalidShadows,
+      ...audit.contrast,
+      ...audit.decorative,
+      ...audit.selection,
+      ...audit.indicators,
+      ...audit.disabledFade,
+    ]).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("reports a faded label the disabled state erases, which the enabled pair passes", () => {
+    // `primaryForeground` on `primary` clears 4.5:1 enabled, so the contrast
+    // table is silent; `disabledOpacity` composites the label into its own faded
+    // fill at 1.04:1, and only the fade report can see that.
+    const brand = extendTheme(themes.light, {
+      colors: { primary: "#101010", primaryForeground: "#7E7E7E" },
+    });
+    const audit = auditTheme(brand);
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "disabled",
+    );
+
+    expect(findings.map((finding) => finding.text)).toContain(
+      "primary disabled on background — 1.04:1 (needs 1.5:1)",
+    );
+    expect(audit.contrast).toEqual([]);
+    expect(audit.indicators).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
   it("reports a wash the reader cannot find at all", () => {
     // A selection at zero opacity paints the surface itself: the reader cannot
     // see what they selected, and the body floor never comes into it.

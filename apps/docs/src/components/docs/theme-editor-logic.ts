@@ -4,9 +4,12 @@ import {
   themes,
   type ContrastFailure,
   type DecorativeFailure,
+  type DisabledFadeFailure,
   type IndicatorFailure,
   type InvalidColorRole,
+  type InvalidNumber,
   type InvalidShadowColor,
+  type NumberRule,
   type SelectionFailure,
   type SeriesDistinctnessFailure,
   type SeriesSurfaceFailure,
@@ -122,14 +125,16 @@ export const themeConfig = (
 
 /**
  * The whole theme contract for an edit, as the library's own gate reports it: a
- * role or an elevation shadow the renderer cannot paint, a text pair below its
- * floor, a decorative surface too close to what it sits on, a data-series colour
- * too close to its plot or to its neighbour (or two that collapse once a
- * colour-vision deficiency is simulated), a selection wash that hides itself or
- * the text it covers, and an indicator mark a reader cannot find on the strip it
- * is drawn on. `auditTheme` reads all seven in one call, so the editor cannot
- * show some reports and leave the others silent. The base is the platform style
- * the preview is painted over, so the audit measures what the reader sees.
+ * role or an elevation shadow the renderer cannot paint, a numeric token it
+ * cannot lay out, a text pair below its floor, a decorative surface too close to
+ * what it sits on, a data-series colour too close to its plot or to its
+ * neighbour (or two that collapse once a colour-vision deficiency is simulated),
+ * a selection wash that hides itself or the text it covers, an indicator mark a
+ * reader cannot find on the strip it is drawn on, and a disabled control whose
+ * faded label vanishes into its faded fill. `auditTheme` reads all nine in one
+ * call, so the editor cannot show some reports and leave the others silent. The
+ * base is the platform style the preview is painted over, so the audit measures
+ * what the reader sees.
  */
 export const auditReport = (
   mode: ThemeMode,
@@ -137,16 +142,18 @@ export const auditReport = (
   base: Theme = themes[mode],
 ): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
-/** Which of the audit's seven reports a finding came from. */
+/** Which of the audit's nine reports a finding came from. */
 export type AuditKind =
   | "role"
   | "shadow"
+  | "number"
   | "contrast"
   | "decorative"
   | "series"
   | "deficiency"
   | "selection"
-  | "indicator";
+  | "indicator"
+  | "disabled";
 
 /** One audit finding, already worded for the readout. */
 export interface AuditFinding {
@@ -191,6 +198,29 @@ export const formatInvalidShadow = ({
   color,
 }: InvalidShadowColor): string =>
   `elevation ${level} (shadow ${index + 1}) — ${JSON.stringify(color)} is not a colour GPUix can paint`;
+
+/** What a number has to be, in the reader's terms rather than the rule's name. */
+const numberRequirement: Record<NumberRule, string> = {
+  finite: "a finite number",
+  nonNegative: "a length of zero or more",
+  positive: "a size greater than zero",
+};
+
+/**
+ * A numeric token the renderer cannot lay out, e.g. `radius md — NaN cannot be
+ * laid out (needs a length of zero or more)`. A style batch crosses a JSON
+ * boundary on its way to native, so `NaN` and `Infinity` arrive as `null` and
+ * the property is dropped in silence; a negative or zero size is accepted and
+ * lays an element out at no height. Either way the reader sees a theme that is
+ * not the one they described.
+ */
+export const formatInvalidNumber = ({
+  group,
+  path,
+  value,
+  rule,
+}: InvalidNumber): string =>
+  `${group} ${path} — ${String(value)} cannot be laid out (needs ${numberRequirement[rule]})`;
 
 /** A series colour too close to a plot surface, e.g. `card: series 2 — 1.14:1 (needs 3:1)`. */
 export const formatSeriesSurfaceFailure = ({
@@ -258,6 +288,21 @@ export const formatIndicatorFailure = ({
 }: IndicatorFailure): string =>
   `mark ${role} on ${surface} — ${measured(ratio, floor)}`;
 
+/**
+ * A disabled control whose label disappears into its faded fill, e.g. `primary
+ * disabled on background — 1.04:1 (needs 1.5:1)`. The fade is a mechanism, not
+ * a readability claim: WCAG exempts an inactive component, but a reader still
+ * has to see that there is one, and the label is composited over the faded fill
+ * rather than the page, which is why a pair that passes enabled can fail here.
+ */
+export const formatDisabledFade = ({
+  fill,
+  over,
+  ratio,
+  floor,
+}: DisabledFadeFailure): string =>
+  `${fill} disabled on ${over} — ${measured(ratio, floor)}`;
+
 /** Every finding the audit reports, in the one list the readout prints. */
 export const auditFindings = (
   report: ThemeAudit,
@@ -269,6 +314,10 @@ export const auditFindings = (
   ...report.invalidShadows.map((failure) => ({
     kind: "shadow" as const,
     text: formatInvalidShadow(failure),
+  })),
+  ...report.invalidNumbers.map((failure) => ({
+    kind: "number" as const,
+    text: formatInvalidNumber(failure),
   })),
   ...report.contrast.map((failure) => ({
     kind: "contrast" as const,
@@ -297,6 +346,10 @@ export const auditFindings = (
   ...report.indicators.map((failure) => ({
     kind: "indicator" as const,
     text: formatIndicatorFailure(failure),
+  })),
+  ...report.disabledFade.map((failure) => ({
+    kind: "disabled" as const,
+    text: formatDisabledFade(failure),
   })),
 ];
 

@@ -35,6 +35,23 @@ import { lookLabel, lookOrder, resolvePlatformTheme } from "./platform";
 const page = (name: string): string =>
   readFileSync(new URL(`../../content/docs/${name}`, import.meta.url), "utf8");
 
+/** The page prints a word, not a digit, so the count reads as prose. */
+const numberWords = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+];
+
 /** The `## Contrast` section of a page, without its following siblings. */
 const section = (body: string, heading: string): string => {
   const start = body.indexOf(`## ${heading}`);
@@ -101,8 +118,14 @@ describe("the theme page", () => {
     // black read a passing line. The page has to describe the readout it has.
     const audit = section(page("themes.mdx"), "The theme audit");
 
-    expect(audit).toContain("seven independent failures");
+    // The printed word is derived from the gate's own keys, so a tenth report
+    // cannot land while the page still promises nine.
+    const reports = Object.keys(auditTheme(themes.light)).filter(
+      (key) => key !== "passed",
+    );
+    expect(audit).toContain(`${numberWords[reports.length]} independent failures`);
     expect(audit).toContain("auditTheme");
+    expect(audit).toContain("invalidNumbers");
     expect(audit).toContain("invalidShadowColors");
     expect(audit).toContain("decorativeFailures");
     expect(audit).toContain("seriesFailures");
@@ -115,6 +138,7 @@ describe("the theme page", () => {
     ).toEqual([]);
     expect(audit).toContain("selectionFailures");
     expect(audit).toContain("indicatorFailures");
+    expect(audit).toContain("disabledFadeFailures");
     expect(audit).toContain("cannot paint");
     expect(audit).toContain("localStorage");
   });
@@ -148,11 +172,13 @@ describe("the theme page's copy-theme note", () => {
         "auditTheme",
         "invalidColorRoles",
         "invalidShadowColors",
+        "invalidNumbers",
         "contrastFailures",
         "decorativeFailures",
         "seriesFailures",
         "selectionFailures",
         "indicatorFailures",
+        "disabledFadeFailures",
       ].filter((name) => !note.includes(name)),
     ).toEqual([]);
   });
