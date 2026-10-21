@@ -54,7 +54,17 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 379/454
+`[x]` `[████████░░]` 380/455
+
+`[x]` Own the three live cross-team rows' figures — the `message.tsx` status
+word, the `destructiveText` error signal and the ColorPicker ring each quote a
+figure the palette stopped producing when plans `366`, `528`, `574`, `582` and
+`737` moved a role; `ledger-status-figures.test.ts` derives the three status
+inks on the identity light card (8.60 / 8.42 / 8.70), the solid `destructive`
+fill on the two washes (3.81–4.50 and 3.36–4.04), `destructiveText`'s floor
+(≥6.37), the ColorPicker's three ranges and its two under-3:1 counts (21 and 18
+of 24) and the `contrastRing` tightest figure (3.70); no colour, pair, floor,
+metric, role or shipped theme moves (plan 831)
 
 `[x]` Own the unread dot's two row fills — the Notification centre paints its
 6px `primary` dot on a row that fills `accent` while current, `hover` under the
@@ -772,10 +782,11 @@ auditing plan 389)
 ring — `color-picker.tsx:161` paints the selection ring in `theme.colors.foreground`
 on the swatch's own fill, and the six default swatches are `primary`, `secondary`,
 `accent`, `muted`, `destructive` and `foreground`, so the ring measures
-**1.000:1** on the `foreground` swatch in every theme and 1.56–2.98:1 on
-`primary`/`destructive` in most sets, under the 3:1 mark floor. Paint the two
-tones from `contrastRing(theme)` — the `background` inner tone as the border and
-the `foreground` outer tone as a zero-blur spread shadow, as
+**1.000:1** on the `foreground` swatch in every theme, 1.57–3.59:1 on `primary`
+(under the 3:1 mark floor in 21 of the 24 shipped sets) and 1.97–3.48:1 on
+`destructive` (18 of 24). Paint the two tones from `contrastRing(theme)` — the
+`background` inner tone as the border and the
+`foreground` outer tone as a zero-blur spread shadow, as
 `packages/tokens/src/contrast-ring.example.ts` does — which guarantees
 `sqrt(contrast(foreground, background))` against any swatch (3.70:1 at the
 tightest shipped set) and is held by `themeRingFailures` — or a
@@ -936,15 +947,16 @@ reads the solid `success`/`warning` fills as text (plan 057; owner: `components`
 measures 4.540:1, clearing the 4.5:1 floor by 0.04, so an edited theme or a
 copied platform style can erase a "done" label while `themeContrastFailures`
 returns `[]`. `successText`/`infoText`/`destructiveText` are the roles held on
-`card` (6.63:1, 8.42:1 and 7.21:1 in the identity light set).
+`card` (8.60:1, 8.42:1 and 8.70:1 in the identity light set).
 `[ ]` Cross-team: `components` uses `destructiveText` for every error signal it
 paints as text — the `FieldError` and `FieldLabel`'s required asterisk
 (`field.tsx`), the shared `ErrorSummary` block (`internal/error-summary.tsx`,
 painted by both `form.tsx` and `multi-step-form.tsx`), and the destructive Menu
-item label (`menu/item.tsx`). The solid `destructive` is a fill: it measures 4.04–4.28:1
-on the hover wash and 3.29–3.86:1 on the active wash across the shipped light
-sets, under the 4.5:1 secondary floor, while `destructiveText` clears every
-wash (≥5.28:1). The token contract checks `destructiveText` on
+item label (`menu/item.tsx`). The solid `destructive` is a fill: it measures 3.81–4.50:1
+on the hover wash — only the identity light set reaches the floor, at 4.502:1 —
+and 3.36–4.04:1 on the active wash, under the 4.5:1 secondary floor in all six
+default light sets, while `destructiveText` clears every wash (≥6.37:1). The
+token contract checks `destructiveText` on
 `background`/`card`/`popover` and, since plan 083, on the `hover`/`active`
 washes the menu item paints. `primitives` paints the same fill as text through
 `TEXT_TONES.destructive` (`src/core/style.ts`), so its `Text tone="destructive"`
