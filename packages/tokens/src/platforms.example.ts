@@ -33,7 +33,11 @@ export const resolveDensePlatformTheme = (
  * values you want to own, and ship the result. Nothing here is opaque — the
  * accent, the corner radius and the control density are the same roles every
  * component reads. A brand that changes a fill owns its on-colour too, or the
- * base theme's foreground was designed for a fill the brand no longer paints.
+ * base theme's foreground was designed for a fill the brand no longer paints —
+ * and it owns the accent **family**, because `accent`, `selected` and
+ * `selection` are surfaces derived from the accent: leaving them on the
+ * platform's blue paints a violet button inside a blue popover and a blue-tinted
+ * selection.
  */
 export const resolveHouseTheme = (mode: ThemeMode): Theme =>
   extendTheme(platformTheme(themes[mode], "win32"), {
@@ -42,6 +46,21 @@ export const resolveHouseTheme = (mode: ThemeMode): Theme =>
       primary: "#6A45F0",
       primaryForeground: "#FFFFFF",
       ring: mode === "dark" ? "#8A6EFF" : "#6A45F0",
+      ...(mode === "dark"
+        ? {
+            accent: "#241C4D",
+            accentForeground: "#D5CBFF",
+            selected: "#2E2366",
+            selectedForeground: "#DDD3FF",
+            selection: "#8A6EFF3D",
+          }
+        : {
+            accent: "#F2EEFF",
+            accentForeground: "#3E2E9E",
+            selected: "#ECE6FF",
+            selectedForeground: "#372680",
+            selection: "#6A45F03D",
+          }),
     },
     radius: { md: 6, lg: 10 },
   });

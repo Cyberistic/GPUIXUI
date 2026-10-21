@@ -18,6 +18,7 @@ import {
   contrastPairs,
   contrastRatio,
 } from "./contrast.js";
+import { decorativeFailures } from "./decorative.js";
 import {
   currentPlatform,
   platformNames,
@@ -258,6 +259,28 @@ describe("editing a platform style", () => {
     expect(invalidColorRoles(resolveHouseTheme("dark"))).toEqual([]);
     expect(contrastFailures(resolveHouseTheme("light"))).toEqual([]);
     expect(contrastFailures(resolveHouseTheme("dark"))).toEqual([]);
+  });
+
+  it("finishes the accent family instead of leaving the platform's blue", () => {
+    // `accent`, `selected` and `selection` are surfaces derived from the accent,
+    // so a brand that owns `primary` and stops there paints its violet action in
+    // a blue popover and a blue-tinted selection.
+    const light = resolveHouseTheme("light");
+    const dark = resolveHouseTheme("dark");
+    const platform = platformTheme(lightTheme, "win32");
+
+    expect(light.colors.accent).not.toBe(platform.colors.accent);
+    expect(dark.colors.accent).not.toBe(
+      platformTheme(darkTheme, "win32").colors.accent,
+    );
+    expect(light.colors.selection).toBe("#6A45F03D");
+    expect(dark.colors.selection).toBe("#8A6EFF3D");
+    // The accent surface is a surface its text is measured on.
+    expect(
+      contrastFailures(light).some(({ background }) => background === "accent"),
+    ).toBe(false);
+    expect(decorativeFailures(light)).toEqual([]);
+    expect(decorativeFailures(dark)).toEqual([]);
   });
 
   it("layers density over the platform's own preset", () => {

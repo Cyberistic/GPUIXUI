@@ -510,12 +510,24 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
     primary: "#6A45F0",
     primaryForeground: "#FFFFFF",
     ring: "#8A6EFF",
+    // The accent family too: `accent`, `selected` and `selection` are surfaces
+    // derived from the accent, so leaving them on the platform's blue paints a
+    // violet button inside a blue popover and a blue-tinted selection.
+    accent: "#241C4D",
+    accentForeground: "#D5CBFF",
+    selected: "#2E2366",
+    selectedForeground: "#DDD3FF",
+    selection: "#8A6EFF3D",
   },
   radius: { md: 6, lg: 10 },
 });
 ```
 
-`platformTheme` never mutates its base, so it is safe to call on every render.
+The runnable version is `resolveHouseTheme` in
+[`src/platforms.example.ts`](../packages/tokens/src/platforms.example.ts); it
+resolves both modes, and `platforms.test.ts` holds it to the contrast and
+decorative contracts. `platformTheme` never mutates its base, so it is safe to
+call on every render.
 
 ## Checking your own theme
 
