@@ -15,6 +15,7 @@
 import type { StyleDesc } from "@gpuix/react";
 import {
   alpha,
+  avatarSize,
   controlHeight,
   controlPaddingX,
   currentPlatform,
@@ -32,6 +33,7 @@ import {
 
 export {
   alpha,
+  avatarSize,
   controlHeight,
   controlPaddingX,
   currentPlatform,

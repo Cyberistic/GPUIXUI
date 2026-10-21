@@ -112,10 +112,7 @@ interface TabsContextValue {
   readonly select: (value: string) => void;
   readonly noteFocus: (value: string) => void;
   readonly focusRow: (row: TabRow, select: boolean) => void;
-  readonly moveBy: (
-    delta: 1 | -1,
-    keyOrigin?: Option.Option<string>,
-  ) => void;
+  readonly moveBy: (delta: 1 | -1, keyOrigin?: Option.Option<string>) => void;
   readonly jumpTo: (edge: "first" | "last") => void;
   readonly selectActive: () => void;
 }

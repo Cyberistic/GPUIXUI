@@ -41,8 +41,11 @@ The fallback is a pure function (`src/avatar/logic.ts`) with these rules:
 | `md` (default) | 32px | 13px |
 | `lg` | 40px | 16px |
 
-The initials size is 40% of the diameter, so the letter keeps its proportion at
-every size.
+The four diameters are the token scale `avatarSize`, read through the package's
+theme seam. It is a fixed scale rather than a `Theme` group, because a diameter
+is content-sized like an image: a brand restyles the colours around it, not the
+person chip's size. The initials size is 40% of the diameter, so the letter keeps
+its proportion at every size.
 
 ## Presence
 
@@ -51,9 +54,14 @@ every size.
 | `status` | Fill |
 | -------- | ---- |
 | `online` | `success` |
-| `away` | `warning` |
+| `away` | the `warning` tone's foreground (`statusTone(theme, "warning").foreground`) |
 | `busy` | `destructive` |
 | `offline` | `mutedForeground` |
+
+A dot is a **mark**, not text, so every one of those is a role the token contract
+measures at the mark floor (`indicatorRoles`). `warning`'s solid fill is designed
+to carry near-black text and measures 1.89:1 as a dot on the light card, so
+`away` paints the tone's readable role instead.
 
 The dot sits on the avatar's outer box — which is deliberately **not** clipped —
 while an inner disc clips the picture into a circle. A clipped root would cut the
@@ -84,9 +92,10 @@ without forking the component.
 
 ## Theming
 
-The disc uses `colors.muted`, the initials `colors.foreground`, the dot the four
-status roles, and the dot's rim `colors.card` (the surface it sits on) at
-`borderWidth.strong`. No literal colours. See `docs/tokens.md`.
+The disc uses `colors.muted`, the initials `colors.foreground`, the dot the
+measured mark roles (`success`, `destructive`, `mutedForeground` and the `warning`
+tone's foreground), and the dot's rim `colors.card` (the surface it sits on) at
+`borderWidth.strong`. No literal colours. See `docs/tokens.md` §Indicator marks.
 
 ## Limitations
 
@@ -94,14 +103,12 @@ status roles, and the dot's rim `colors.card` (the surface it sits on) at
   runtime paints nothing inside the disc until the image arrives; the initials are
   not restored, because the runtime reports no image-load failure to React. Pass
   the picture only when you can rely on it, or omit `src` and use initials.
-- The four diameters are component constants, not tokens: `@gpuixui/tokens` ships
-  no avatar scale (`TODO.md` → Interlocks).
 - The docs site cannot render this component live — it is a GPUix host tree, not
   DOM. The code above is the real source.
 
 ## Verification
 
-`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (7 tests) plus
+`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (8 tests) plus
 `src/avatar/logic.test.ts` (8 tests) for the initials rules.
 
 ```sh

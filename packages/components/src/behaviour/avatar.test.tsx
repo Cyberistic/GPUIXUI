@@ -3,17 +3,21 @@
  *
  * The bugs these guard: a fallback that renders nothing instead of the
  * initials; a `src` that never reaches an image; a presence dot painted from a
- * constant, missing entirely, or clipped away by the avatar's own disc; the four
- * sizes collapsing to one diameter; and a lost accessible name.
+ * constant, missing entirely, clipped away by the avatar's own disc, **or
+ * painted in a role the token contract does not measure as a mark** (`warning`'s
+ * solid fill is designed to carry near-black text and is 1.89:1 as a 10px dot on
+ * the light card); a diameter that drifts from the token scale; and a lost
+ * accessible name.
  */
 
+import { indicatorRoles } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { Avatar, type AvatarSize, type AvatarStatus } from "../avatar.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { sizeOf } from "../internal/interaction.js";
-import { darkTheme } from "../internal/theme.js";
+import { avatarSize, darkTheme, statusTone } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -22,18 +26,16 @@ import {
 /** Every presence state with the theme role its dot must paint. */
 const statusFills: ReadonlyArray<readonly [AvatarStatus, string]> = [
   ["online", darkTheme.colors.success],
-  ["away", darkTheme.colors.warning],
+  ["away", statusTone(darkTheme, "warning").foreground],
   ["busy", darkTheme.colors.destructive],
   ["offline", darkTheme.colors.mutedForeground],
 ];
 
-/** Every size with its diameter in pixels. */
-const diameters: ReadonlyArray<readonly [AvatarSize, number]> = [
-  ["xs", 20],
-  ["sm", 26],
-  ["md", 32],
-  ["lg", 40],
-];
+/** Every size with its diameter, read from the same token scale as the component. */
+const diameters: ReadonlyArray<readonly [AvatarSize, number]> = Arr.map(
+  ["xs", "sm", "md", "lg"] as const,
+  (size) => [size, avatarSize[size]] as const,
+);
 
 /** The fill of every `div` in the tree, in tree order. */
 const backgrounds = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
@@ -103,6 +105,26 @@ describe("Avatar", () => {
     expect(backgrounds(avatar)).toEqual([undefined, darkTheme.colors.muted]);
 
     avatar.unmount();
+  });
+
+  it("paints every dot in a role the token contract measures as a mark", () => {
+    // `warning`'s solid fill is a text surface, not a mark: it is absent from
+    // `indicatorRoles`, so a dot painted in it has no measured floor at all.
+    const markColours = Arr.map(
+      indicatorRoles,
+      (role) => darkTheme.colors[role],
+    );
+
+    Arr.forEach(statusFills, ([status]) => {
+      const avatar = renderComponent(
+        <Avatar testId="avatar" name="Ada" status={status} />,
+      );
+      const dot = Option.getOrUndefined(Arr.last(backgrounds(avatar)));
+
+      expect(markColours, status).toContain(dot);
+
+      avatar.unmount();
+    });
   });
 
   it("measures each size's diameter", () => {

@@ -18,10 +18,15 @@ import { AVATAR_DISC, AVATAR_FALLBACK, AVATAR_ROOT, cn } from "@gpuixui/tw";
 import { Match } from "effect";
 import { initials } from "./avatar/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { useTheme, type Theme } from "./internal/theme.js";
+import {
+  avatarSize,
+  statusTone,
+  useTheme,
+  type Theme,
+} from "./internal/theme.js";
 
 /** The four diameters, in pixels. */
-export type AvatarSize = "xs" | "sm" | "md" | "lg";
+export type AvatarSize = keyof typeof avatarSize;
 
 /** The presence dot's state. */
 export type AvatarStatus = "online" | "away" | "busy" | "offline";
@@ -40,26 +45,21 @@ export interface AvatarProps extends Props {
   readonly className?: string;
 }
 
-/**
- * Diameters in pixels. Tokens ship no avatar scale — the control heights are
- * wider than a person chip wants — so the scale lives here and is recorded as
- * an interlock in `TODO.md`.
- */
-const DIAMETER: Readonly<Record<AvatarSize, number>> = {
-  xs: 20,
-  sm: 26,
-  md: 32,
-  lg: 40,
-};
-
 /** The presence dot's diameter and its outline against the surface behind it. */
 const DOT = 10;
 
-/** The dot's fill for one presence state. */
+/**
+ * The role each presence state's dot paints.
+ *
+ * A dot is a **mark**, not text, so it paints a role the token contract holds to
+ * its mark floor (`indicatorRoles`). `warning`'s solid fill is designed to carry
+ * near-black text and measures 1.89:1 as a dot on the light card, so `away`
+ * paints the tone's readable role instead.
+ */
 const statusFill = (theme: Theme, status: AvatarStatus): string =>
   Match.value(status).pipe(
     Match.when("online", () => theme.colors.success),
-    Match.when("away", () => theme.colors.warning),
+    Match.when("away", () => statusTone(theme, "warning").foreground),
     Match.when("busy", () => theme.colors.destructive),
     Match.when("offline", () => theme.colors.mutedForeground),
     Match.exhaustive,
@@ -76,7 +76,7 @@ export const Avatar = ({
   ...rest
 }: AvatarProps) => {
   const theme = useTheme();
-  const diameter = DIAMETER[size];
+  const diameter = avatarSize[size];
 
   return (
     <div
