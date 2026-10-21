@@ -183,6 +183,7 @@ export const DropdownMenuTrigger = ({
   onClick,
   onKeyDown,
   ref,
+  disabled = false,
   ...rest
 }: ButtonProps) => {
   const { open, setOpen, trigger, dismissedByOutsidePress, pendingFocus } =
@@ -198,11 +199,12 @@ export const DropdownMenuTrigger = ({
     <Button
       {...rest}
       ref={setTrigger}
+      disabled={disabled}
       aria-expanded={open}
       onKeyDown={(event) => {
-        // The local Button runs its activation click before this handler, so a
-        // keyboard toggle has already opened the menu; record the edge anyway.
-        if (!open) {
+        // The local Button keeps a disabled control's key handler observable, so
+        // the trigger refuses the open itself rather than relying on the press.
+        if (!disabled && !open) {
           if (isDown(event)) openAt("first");
           else if (isUp(event)) openAt("last");
           else if (isActivation(event)) openAt("first");

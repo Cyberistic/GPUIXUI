@@ -48,7 +48,7 @@ timers at the UI boundary — not domain time.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `PreviewCard` | a positioning root; owns open state and the timers | `open?`, `defaultOpen?`, `onOpenChange?`, `openDelay?`, `closeDelay?`, children |
-| `PreviewCardTrigger` | button, `aria-expanded` | button props |
+| `PreviewCardTrigger` | button, `aria-expanded`; `disabled` leaves the tab order and opens nothing on hover, focus or press | button props |
 | `PreviewCardContent` | anchored `FloatingLayer`, `role="group"` named by `label` | `label` (required), `side?`, `align?`, `sideOffset?`, `collisionPadding?`, children |
 
 `PreviewCardContent` renders nothing while closed.
@@ -78,17 +78,19 @@ glance. A custom theme changes it with no code change — see
 - **No pointer-type signal**: touch has no hover, so the press-to-toggle path is
   the honest touch interaction.
 - Not auto-focused on hover; a purely hover-driven user never focuses the card.
+- A `disabled` trigger stays out of the tab order and opens nothing from its
+  hover, focus or press paths.
 - No anchor arrow, no `aria-haspopup`, no follow-cursor positioning.
 - The card closes on an outside press but does not restore focus (the press gave
   focus to whatever was pressed) — the same rule as Popover.
 
 ## Verification
 
-`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (9 tests):
 closed by default, delayed hover open and immediate focus open, staying open
 while the pointer is inside, closing after leaving both, Escape with focus
-return, outside-press dismissal, surface naming and `aria-expanded`, and a
-controlled card that stays closed. Timers are real but sized to 20 ms by the
+return, outside-press dismissal, surface naming and `aria-expanded`, a disabled
+trigger that opens nothing, and a controlled card that stays closed. Timers are real but sized to 20 ms by the
 props. One measured fact shaped both the tests and the component: the runtime
 delivers the new element's `mouseEnter` **before** the previous element's
 `mouseLeave`, so the close policy tracks whether either surface still holds the

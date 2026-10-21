@@ -21,12 +21,16 @@ import {
 const Advanced = ({
   open,
   onOpenChange,
+  disabled,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
+  readonly disabled?: boolean;
 }) => (
   <Collapsible open={open} defaultOpen={false} onOpenChange={onOpenChange}>
-    <CollapsibleTrigger testId="trigger">Advanced options</CollapsibleTrigger>
+    <CollapsibleTrigger testId="trigger" disabled={disabled}>
+      Advanced options
+    </CollapsibleTrigger>
     <CollapsibleContent testId="content">
       <text>Retry budget</text>
     </CollapsibleContent>
@@ -74,6 +78,22 @@ describe("Collapsible", () => {
     expect(section.renderer.findByTestId("content")).toBeDefined();
 
     section.renderer.simulateKeystrokes("space");
+    expect(section.renderer.findByTestId("content")).toBeUndefined();
+
+    section.unmount();
+  });
+
+  it("keeps a disabled trigger out of the tab order and closed", () => {
+    const section = renderComponent(<Advanced disabled />);
+    const trigger = section.renderer.findByTestId("trigger");
+
+    expect(trigger?.customProps?.tabIndex).toBe(-1);
+
+    clickCentreOf(section, "trigger");
+    section.renderer.focusElement(trigger?.id ?? -1);
+    section.renderer.simulateKeystrokes("enter");
+    section.renderer.simulateKeystrokes("space");
+
     expect(section.renderer.findByTestId("content")).toBeUndefined();
 
     section.unmount();

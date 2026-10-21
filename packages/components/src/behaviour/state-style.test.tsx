@@ -142,6 +142,7 @@ describe("state-aware style", () => {
       open: true,
       closed: false,
       focused: false,
+      disabled: false,
     });
     root.unmount();
   });

@@ -36,7 +36,7 @@ import {
 | Part | Responsibility |
 | ---- | -------------- |
 | `DropdownMenu` | open state, the dismiss layer, the positioning root |
-| `DropdownMenuTrigger` | a button that toggles the menu, `aria-expanded` included |
+| `DropdownMenuTrigger` | a button that toggles the menu, `aria-expanded` included; `disabled` leaves the tab order, dims and refuses every open path |
 | `DropdownMenuContent` | the floating `role="menu"` surface, rendered while open |
 | `DropdownMenuItem` | one action; `onSelect` runs, then the menu closes |
 | `DropdownMenuCheckboxItem` | an on/off row that stays open after toggling |
@@ -235,8 +235,10 @@ focus is on.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (35
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (36
 tests): the `menu` role, keyboard opening on the first/last enabled row, a
+disabled trigger that stays out of the tab order and refuses ArrowDown, Enter and
+a press, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press

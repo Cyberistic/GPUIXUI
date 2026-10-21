@@ -168,7 +168,12 @@ export const PreviewCard = ({
 };
 
 /** Opens the card on hover, focus or press. */
-export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
+export const PreviewCardTrigger = ({
+  onClick,
+  ref,
+  disabled = false,
+  ...rest
+}: ButtonProps) => {
   const {
     open,
     setOpen,
@@ -184,21 +189,25 @@ export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
     <Button
       {...rest}
       ref={setTrigger}
+      disabled={disabled}
       aria-expanded={open}
       onMouseEnter={(event) => {
+        rest.onMouseEnter?.(event);
+        if (disabled) return;
         setInside("trigger", true);
         scheduleOpen();
-        rest.onMouseEnter?.(event);
       }}
       onMouseLeave={(event) => {
+        rest.onMouseLeave?.(event);
+        if (disabled) return;
         setInside("trigger", false);
         scheduleClose();
-        rest.onMouseLeave?.(event);
       }}
       onFocus={(event) => {
+        rest.onFocus?.(event);
+        if (disabled) return;
         cancelTimers();
         setOpen(true);
-        rest.onFocus?.(event);
       }}
       onClick={(event) => {
         onClick?.(event);

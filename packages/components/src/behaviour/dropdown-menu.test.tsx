@@ -56,9 +56,11 @@ import {
 const FileActions = ({
   onSelect,
   onCheckedChange,
+  triggerDisabled,
 }: {
   readonly onSelect: (action: string) => void;
   readonly onCheckedChange?: (checked: boolean) => void;
+  readonly triggerDisabled?: boolean;
 }) => {
   const [checked, setChecked] = useState(false);
   return (
@@ -66,7 +68,9 @@ const FileActions = ({
       style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
     >
       <DropdownMenu>
-        <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+        <DropdownMenuTrigger testId="trigger" disabled={triggerDisabled}>
+          Actions
+        </DropdownMenuTrigger>
         <DropdownMenuContent testId="menu" label="File actions">
           <DropdownMenuItem testId="rename" onSelect={() => onSelect("rename")}>
             Rename
@@ -230,6 +234,27 @@ describe("DropdownMenu", () => {
 
     expect(menu.renderer.findByTestId("menu")?.customProps?.role).toBe("menu");
     expect(focusedTestId(menu)).toEqual(Option.some("rename"));
+
+    menu.unmount();
+  });
+
+  it("keeps a disabled trigger out of the tab order and closed", () => {
+    const menu = renderComponent(
+      <FileActions onSelect={vi.fn()} triggerDisabled />,
+    );
+
+    expect(menu.renderer.findByTestId("trigger")?.customProps?.tabIndex).toBe(
+      -1,
+    );
+
+    // A disabled control keeps its key handler observable, so the trigger must
+    // refuse every open path itself rather than relying on the press being gone.
+    focusTrigger(menu);
+    menu.renderer.simulateKeystrokes("down");
+    menu.renderer.simulateKeystrokes("enter");
+    clickCentreOf(menu, "trigger");
+
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
 
     menu.unmount();
   });

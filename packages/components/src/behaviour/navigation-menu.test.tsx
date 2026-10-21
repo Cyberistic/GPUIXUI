@@ -110,6 +110,38 @@ const Workspace = ({
 );
 
 describe("NavigationMenu", () => {
+  it("keeps a disabled trigger from opening on hover, press or key", async () => {
+    const nav = renderComponent(
+      <NavigationMenu label="Product" openDelay={20} closeDelay={20}>
+        <NavigationMenuList>
+          <NavigationMenuItem value="platform">
+            <NavigationMenuTrigger testId="trigger-platform" disabled>
+              Platform
+            </NavigationMenuTrigger>
+            <NavigationMenuContent testId="panel-platform">
+              <NavigationMenuLink testId="link-overview">
+                Overview
+              </NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>,
+    );
+    const trigger = nav.renderer.findByTestId("trigger-platform");
+
+    expect(trigger?.customProps?.tabIndex).toBe(-1);
+
+    hoverCentreOf(nav, "trigger-platform");
+    await after(40);
+    clickCentreOf(nav, "trigger-platform");
+    nav.renderer.focusElement(trigger?.id ?? -1);
+    nav.renderer.simulateKeystrokes("down");
+
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
   it("renders the triggers in order and no panel until one opens", () => {
     const nav = renderComponent(<Workspace />);
 

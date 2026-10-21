@@ -88,13 +88,16 @@ export interface CollapsibleTriggerProps extends Omit<Props, "style"> {
   readonly className?: string;
   /** A style, or a function of the trigger's state. */
   readonly style?: StateStyle<CollapsibleTriggerState>;
+  /** A section that cannot open: out of the tab order, no handlers, dimmed. */
+  readonly disabled?: boolean;
 }
 
-/** What the trigger draws: the section's open state and its own focus. */
+/** What the trigger draws: the section's open state, its focus and its disabled state. */
 export interface CollapsibleTriggerState {
   readonly open: boolean;
   readonly closed: boolean;
   readonly focused: boolean;
+  readonly disabled: boolean;
 }
 
 /** A button that opens and closes its section. */
@@ -105,6 +108,7 @@ export const CollapsibleTrigger = ({
   onBlur,
   className,
   style,
+  disabled = false,
   ...rest
 }: CollapsibleTriggerProps) => {
   const theme = useTheme();
@@ -114,16 +118,19 @@ export const CollapsibleTrigger = ({
     open,
     closed: !open,
     focused,
+    disabled,
   };
 
-  const toggle = (): void => setOpen(!open);
+  const toggle = (): void => {
+    if (!disabled) setOpen(!open);
+  };
 
   return (
     <div
       role="button"
       aria-expanded={open}
       {...rest}
-      tabIndex={0}
+      tabIndex={disabled ? -1 : 0}
       onClick={(event) => {
         onClick?.(event);
         toggle();
@@ -142,10 +149,13 @@ export const CollapsibleTrigger = ({
       }}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(COLLAPSIBLE_TRIGGER, className), theme), {
-          cursor: "pointer",
-          hover: { backgroundColor: theme.colors.hover },
-          active: { backgroundColor: theme.colors.active },
-          ...keyboardRing(theme),
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
+          hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
+          active: disabled
+            ? undefined
+            : { backgroundColor: theme.colors.active },
+          ...(disabled ? {} : keyboardRing(theme)),
         }),
         resolveStyle(style, state),
       )}

@@ -37,9 +37,11 @@ const after = (ms: number): Promise<void> =>
 const Workspace = ({
   open,
   onOpenChange,
+  disabled,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
+  readonly disabled?: boolean;
 }) => (
   <div
     style={{
@@ -56,7 +58,9 @@ const Workspace = ({
       openDelay={20}
       closeDelay={20}
     >
-      <PreviewCardTrigger testId="trigger">design-system.md</PreviewCardTrigger>
+      <PreviewCardTrigger testId="trigger" disabled={disabled}>
+        design-system.md
+      </PreviewCardTrigger>
       <PreviewCardContent label="Design system" testId="preview">
         <text>Tokens, roles and themes.</text>
         <Button testId="inside">Open file</Button>
@@ -93,6 +97,22 @@ describe("PreviewCard", () => {
     );
     expect(focused.renderer.findByTestId("preview")).toBeDefined();
     focused.unmount();
+  });
+
+  it("stays closed from a disabled trigger on hover, focus or press", async () => {
+    const card = renderComponent(<Workspace disabled />);
+    const trigger = card.renderer.findByTestId("trigger");
+
+    expect(trigger?.customProps?.tabIndex).toBe(-1);
+
+    hoverCentreOf(card, "trigger");
+    await after(40);
+    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+    card.renderer.focusElement(trigger?.id ?? -1);
+    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+    card.unmount();
   });
 
   it("stays open while the pointer is inside the card", async () => {

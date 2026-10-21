@@ -476,6 +476,7 @@ export const NavigationMenuTrigger = ({
   onKeyDown,
   onMouseEnter,
   onMouseLeave,
+  disabled = false,
   ...rest
 }: ButtonProps) => {
   const {
@@ -500,22 +501,25 @@ export const NavigationMenuTrigger = ({
     <Button
       {...rest}
       ref={setTrigger}
+      disabled={disabled}
       aria-expanded={expanded}
       onMouseEnter={(event) => {
-        hoverOpen(value);
         onMouseEnter?.(event);
+        if (!disabled) hoverOpen(value);
       }}
       onMouseLeave={(event) => {
-        hoverClose(value);
         onMouseLeave?.(event);
+        if (!disabled) hoverClose(value);
       }}
       onClick={(event) => {
         onClick?.(event);
+        if (disabled) return;
         stopHover();
         setOpen(expanded ? null : value);
       }}
       onKeyDown={(event: KeyEvent) => {
         onKeyDown?.(event);
+        if (disabled) return;
         if (isDown(event)) {
           stopHover();
           setOpen(value);

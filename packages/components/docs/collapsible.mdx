@@ -27,7 +27,7 @@ import {
 | Part | Responsibility |
 | ---- | -------------- |
 | `Collapsible` | open state and the column that holds the parts |
-| `CollapsibleTrigger` | a button with `aria-expanded`; click, Enter and Space toggle |
+| `CollapsibleTrigger` | a button with `aria-expanded`; click, Enter and Space toggle; `disabled` leaves the tab order and the section closed |
 | `CollapsibleContent` | the body; **unmounts** while closed |
 
 Unmounting is deliberate: a closed body holds no focus, no subscriptions and no
@@ -54,7 +54,7 @@ of its own, so it inherits the card or panel around it.
 ## Style by state
 
 `CollapsibleTrigger` takes a `StyleDesc` or a function of
-`CollapsibleTriggerState` (`{ open, closed, focused }`).
+`CollapsibleTriggerState` (`{ open, closed, focused, disabled }`).
 
 ```tsx
 <CollapsibleTrigger
@@ -72,12 +72,16 @@ of its own, so it inherits the card or panel around it.
   promised in this page.
 - No `aria-controls` in 0.11.0 (`HostProps`), so the trigger→body relationship
   is positional.
+- A `disabled` trigger leaves the tab order, dims, drops its hover and press
+  styles, and refuses the click, Enter and Space paths — so a section cannot be
+  opened from a control that reads as unavailable.
 
 ## Verification
 
-`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (4 tests):
+`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (5 tests):
 click toggling with the body unmounted while closed, `aria-expanded` following
-the body, Enter/Space activation on the focused trigger, and the controlled
+the body, Enter/Space activation on the focused trigger, the disabled trigger
+staying out of the tab order and closed on every path, and the controlled
 contract in both directions.
 
 ```sh
