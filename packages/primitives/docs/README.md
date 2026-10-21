@@ -26,6 +26,7 @@ never as a promise.
 | [text](text.mdx) | `Text` | [typography](../examples/typography.example.tsx) |
 | [label](label.mdx) | `Label`, `labelledBy` | [form](../examples/form.example.tsx) |
 | [button](button.mdx) | `Button` | [form](../examples/form.example.tsx) |
+| [icon-button](icon-button.mdx) | `IconButton` | [icon-button](../examples/icon-button.example.tsx) |
 | [button-group](button-group.mdx) | `ButtonGroup` | [form](../examples/form.example.tsx) |
 | [toggle](toggle.mdx) | `Toggle` | [toggle](../examples/toggle.example.tsx) |
 | [input](input.mdx) | `Input` | [form](../examples/form.example.tsx) |

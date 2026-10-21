@@ -164,6 +164,23 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     ],
   },
   {
+    name: "Icon buttons",
+    status: "done",
+    gpuixSupport: "partial",
+    limitations: [
+      "No aria-disabled and no aria-pressed: use Toggle for a pressed mode",
+      "No built-in tooltip, and the glyph is not resized by size",
+      "A blank label is treated as absent, so the required prop is the only guard",
+    ],
+    source: ["src/components/IconButton.tsx", "src/components/Button.tsx"],
+    docs: "docs/icon-button.mdx",
+    example: "examples/icon-button.example.tsx",
+    tests: [
+      "src/components/IconButton.test.tsx",
+      "runtime/icon-button.runtime.test.tsx",
+    ],
+  },
+  {
     name: "Button groups",
     status: "done",
     gpuixSupport: "partial",

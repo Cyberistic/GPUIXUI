@@ -30,6 +30,11 @@ const SCREENS = [
   { id: "selection", root: "selection-example", headline: "Notifications" },
   { id: "feedback", root: "feedback-example", headline: "Revenue" },
   { id: "icons", root: "icons-example", headline: "Icon set" },
+  {
+    id: "iconButton",
+    root: "icon-button-example",
+    headline: "Layer toolbar",
+  },
   { id: "value", root: "value-example", headline: "Render settings" },
   {
     id: "numberField",

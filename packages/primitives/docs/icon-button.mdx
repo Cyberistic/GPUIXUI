@@ -1,0 +1,138 @@
+---
+title: IconButton
+description: A square, icon-only action that carries a required accessible name.
+---
+
+`IconButton` is `Button` for the one case `Button` cannot guard: an action whose
+only visible content is a glyph. The name is a required prop, so the unnamed
+icon-only button that `Button` allowed — a `role="button"` div with nothing for
+assistive technology to read — cannot be written.
+
+It is not a toggle (that is `Toggle`), not a switch, and not a toolbar container:
+compose several of these inside a `Stack`.
+
+## Usage
+
+```tsx
+import { IconButton, Stack } from "@gpuixui/primitives";
+import { Icon } from "@gpuixui/icons";
+
+<Stack direction="row" gap="2xs">
+  <IconButton
+    label="Delete layer"
+    icon={<Icon name="trash" color="#000000" />}
+    variant="destructive"
+    onActivate={removeLayer}
+  />
+  <IconButton
+    label="Layer settings"
+    icon={<Icon name="settings" color="#000000" />}
+    onActivate={openSettings}
+  />
+</Stack>;
+```
+
+The glyph's `color` is the caller's: an `Icon` paints one monochrome tint, so it
+takes a theme role rather than inheriting the button's text colour.
+
+## Variants and sizes
+
+`variant` is every `ButtonVariant` (`primary`, `secondary`, `outline`, `ghost`,
+`destructive`, `link`) and defaults to **`ghost`**: a toolbar of icon actions
+reads as chrome, not as a row of filled buttons. `size` is `sm` / `md` / `lg` and
+sets both sides of the square from `density.controlHeight`.
+
+- `disabled` — refuses a press and both keys, and leaves the tab order.
+- `loading` — paints a spinner, announces `Loading`, refuses activation, and
+  **stays focusable** so a keyboard user is not dropped mid-action.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `label` | `string` | required | the accessible name; never derived from the glyph |
+| `icon` | `ReactNode` | required | the glyph painted inside the button |
+| `variant` | `ButtonVariant` | `"ghost"` | the paint from `core/variants.ts` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | square side from `density.controlHeight` |
+| `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
+| `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
+| `onActivate` | `() => void` | none | click or activating key; not called while busy |
+| `onClick` | `(event) => void` | none | the raw click, called before `onActivate` |
+| `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }` and merged last |
+| `className` | `string` | — | a Tailwind string joined after the recipe |
+| `testId` | `string` | — | stable locator |
+
+## Keyboard
+
+`IconButton` reuses `Button`'s contract; there is no second key path:
+
+| Key | Contract |
+| --- | -------- |
+| Enter | activates on key **down** |
+| Space | activates on key **up** |
+| held key | repeat events never activate |
+
+## Accessibility
+
+- Role: `button`, named by `label`. The glyph is passed through `icon` rather
+  than as a child, so it is never mistaken for the name — and an unlabelled
+  `Icon` stays `role="presentation"`.
+- `loading` sets `aria-description="Loading"`; this runtime has no `aria-busy`.
+- There is no `aria-disabled`: a disabled action leaves the tab order instead.
+- Focus is the keyboard-only outline `Button` declares at rest
+  (`keyboardRing` → `focusVisible`), so a Tab paints it and a mouse press does
+  not.
+- A blank `label` is treated as absent, exactly as `Button` treats a blank
+  `label` — the control would then be unnamed, which the required prop is there
+  to prevent.
+
+## Theming
+
+The paint is `Button`'s recipe (`recipe/buttonClass` with `square`), so every
+variant maps to colour **roles**, never literals, and the square side comes from
+`density`. Ghost is the resting look: the button paints no fill until hover.
+
+`style` takes a `StateStyle<ButtonState>` (`{ disabled, focused }`) and merges
+after the recipe, so a callback is the last word:
+
+```tsx
+<IconButton
+  label="Delete layer"
+  icon={<Icon name="trash" color="#000000" />}
+  style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+/>
+```
+
+## Limitations
+
+- No `aria-disabled` and no `aria-pressed` — use `Toggle` when the action has a
+  pressed state.
+- No built-in tooltip: pair it with `Tooltip` when the glyph alone is ambiguous.
+- The glyph is not sized by `size`; pass `icon={<Icon size="sm" … />}` to match a
+  smaller button.
+- No native button element: the runtime exposes a `div` with role and handlers.
+
+## Verification
+
+- `src/components/IconButton.test.tsx` — the label is the name, the box is
+  square at the density height, ghost is the default, the activation contract
+  and busy/disabled refusals hold, and the caller's `style` wins.
+- `runtime/icon-button.runtime.test.tsx` — the accessibility tree names the
+  action with no image node, the painted box is a 32px square at `md`, a press
+  and Enter each activate once, disabled refuses and leaves the tab order, and a
+  busy action stays focusable.
+- `runtime/examples.runtime.test.tsx` — the layer-toolbar example paints.
+- Both directions measured: dropping `square` fails the square case in both
+  suites (`expected 1256 to be 32`), and blanking the label fails the name case.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Button** — the same control with a visible label.
+- **Toggle** — an icon-only action with a pressed state.
+- **Tooltip** — names an icon-only action on hover.
+- **ButtonGroup** — related actions as one control.

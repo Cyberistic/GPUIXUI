@@ -10,6 +10,7 @@
 import type { ComponentType } from "react";
 import { FeedbackExample } from "./feedback.example.js";
 import { FormExample } from "./form.example.js";
+import { IconButtonExample } from "./icon-button.example.js";
 import { IconsExample } from "./icons.example.js";
 import { LayoutExample } from "./layout.example.js";
 import { NumberFieldExample } from "./number-field.example.js";
@@ -25,6 +26,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   feedback: FeedbackExample,
   form: FormExample,
   icons: IconsExample,
+  iconButton: IconButtonExample,
   layout: LayoutExample,
   numberField: NumberFieldExample,
   otp: OtpExample,
