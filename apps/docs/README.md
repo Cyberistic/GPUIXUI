@@ -264,7 +264,10 @@ description from the loader, so both collections — the site's pages and the
 package's — get real metadata without a copy. The landing page is a route rather
 than a collection document, so it contributes its own `landingMeta` (title,
 description, Open Graph, Twitter card and the absolute URL with the same
-no-double-slash rule) from the same module.
+no-double-slash rule) from the same module. Both publish one share image,
+`socialImage`: the site's 512px mark in `public/logo.png`, with its type, size
+and alt text, so a shared link is a card and not a blank rectangle;
+`page-meta.test.ts` holds the URL to the file that ships.
 
 `src/lib/site.ts` holds the one origin (`https://gpuixui.sudokw.com`), and
 `site.test.ts` holds it to `DOCS_DOMAIN` in the deploy stack.

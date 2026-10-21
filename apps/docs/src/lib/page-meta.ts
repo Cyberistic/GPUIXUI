@@ -27,6 +27,33 @@ const fallbackDescription = `Documentation for ${appName}, the native UI compone
 export const pageTitle = (title: string): string => `${title} · ${appName}`;
 
 /**
+ * The one share image.
+ *
+ * Every page published `og:title` and `og:description` but no image, so a link
+ * to the docs or the landing rendered as a bare card. The image is the site's
+ * own 512px mark, served from `public/`; the test holds the URL to the file so
+ * renaming the asset cannot leave a broken card behind.
+ */
+export const socialImage = {
+  url: absoluteUrl("/logo.png"),
+  type: "image/png",
+  width: 512,
+  height: 512,
+  alt: `${appName} mark`,
+} as const;
+
+/** The tags both page types publish for a share card. */
+const socialMeta = [
+  { property: "og:image", content: socialImage.url },
+  { property: "og:image:type", content: socialImage.type },
+  { property: "og:image:width", content: String(socialImage.width) },
+  { property: "og:image:height", content: String(socialImage.height) },
+  { property: "og:image:alt", content: socialImage.alt },
+  { name: "twitter:image", content: socialImage.url },
+  { name: "twitter:image:alt", content: socialImage.alt },
+];
+
+/**
  * The landing page's document metadata.
  *
  * The landing is a route, not a collection document, so it never went through
@@ -53,6 +80,7 @@ export const landingMeta = () => {
       { property: "og:title", content: landingTitle },
       { property: "og:description", content: landingDescription },
       { property: "og:url", content: url },
+      ...socialMeta,
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: landingTitle },
       { name: "twitter:description", content: landingDescription },
@@ -84,6 +112,7 @@ export const docsMetadata = ({
       { property: "og:title", content: pageTitle(title) },
       { property: "og:description", content: summary },
       { property: "og:url", content: url },
+      ...socialMeta,
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: pageTitle(title) },
       { name: "twitter:description", content: summary },

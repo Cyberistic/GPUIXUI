@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   docsMetadata,
@@ -6,6 +6,7 @@ import {
   landingMeta,
   landingTitle,
   pageTitle,
+  socialImage,
 } from "./page-meta";
 import { absoluteUrl, siteOrigin } from "./site";
 import { appName } from "./shared";
@@ -30,23 +31,25 @@ const head = (path: string, title: string, description?: string): Head =>
 const read = (name: string): string =>
   readFileSync(new URL(`../routes/${name}`, import.meta.url), "utf8");
 
-const named = (result: Head, name: string) =>
-  result.meta.find((tag) => "name" in tag && tag.name === name);
+/** The content of the first `name="…"` tag, if the head publishes one. */
+const named = (result: Head, name: string): string | undefined =>
+  result.meta.flatMap((tag) =>
+    "name" in tag && tag.name === name && "content" in tag ? [tag.content] : [],
+  )[0];
 
-const property = (result: Head, name: string) =>
-  result.meta.find((tag) => "property" in tag && tag.property === name);
-
-const contentOf = (result: Head, name: string): string | undefined => {
-  const tag = named(result, name);
-
-  return tag && "content" in tag ? tag.content : undefined;
-};
+/** The content of the first `property="…"` tag, if the head publishes one. */
+const property = (result: Head, name: string): string | undefined =>
+  result.meta.flatMap((tag) =>
+    "property" in tag && tag.property === name && "content" in tag
+      ? [tag.content]
+      : [],
+  )[0];
 
 const descriptionOf = (result: Head): string => {
-  const tag = named(result, "description");
+  const description = named(result, "description");
 
-  expect(tag, "no description meta tag").toBeDefined();
-  return tag && "content" in tag ? (tag.content ?? "") : "";
+  expect(description, "no description meta tag").toBeDefined();
+  return description ?? "";
 };
 
 const canonicalOf = (result: Head): string | undefined =>
@@ -70,7 +73,7 @@ describe("a docs page's head", () => {
     const url = `${siteOrigin}/docs/primitives/button`;
 
     expect(canonicalOf(result)).toBe(url);
-    expect(property(result, "og:url")?.content).toBe(url);
+    expect(property(result, "og:url")).toBe(url);
   });
 
   it("keeps the platform switch out of the canonical URL", () => {
@@ -122,6 +125,41 @@ describe("a docs page's head", () => {
   });
 });
 
+describe("the share card", () => {
+  const pages = [head("/docs/patterns", "Patterns"), landingMeta()];
+
+  it("is published by a docs page and by the landing page", () => {
+    const missing = pages.filter(
+      (result) =>
+        property(result, "og:image") !== socialImage.url ||
+        named(result, "twitter:image") !== socialImage.url,
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("declares the image's type, size and alternative text", () => {
+    const result = head("/docs/patterns", "Patterns");
+
+    expect(property(result, "og:image:type")).toBe("image/png");
+    expect(property(result, "og:image:width")).toBe(String(socialImage.width));
+    expect(property(result, "og:image:height")).toBe(
+      String(socialImage.height),
+    );
+    expect(property(result, "og:image:alt")).toBe(`${appName} mark`);
+    expect(named(result, "twitter:image:alt")).toBe(socialImage.alt);
+  });
+
+  it("points at a file that ships in public/", () => {
+    expect(socialImage.url).toBe(`${siteOrigin}/logo.png`);
+    expect(existsSync(new URL("../../public/logo.png", import.meta.url))).toBe(
+      true,
+    );
+    // A share URL is absolute; a relative path renders as a broken card.
+    expect(socialImage.url.startsWith("https://")).toBe(true);
+  });
+});
+
 describe("the landing page's head", () => {
   const result = landingMeta();
 
@@ -129,18 +167,16 @@ describe("the landing page's head", () => {
     // The landing is a route, not a collection document, so it skipped
     // `docsMetadata` entirely: a shared link showed a title and no description.
     expect(result.meta[0]).toEqual({ title: landingTitle });
-    expect(contentOf(result, "description")).toBe(landingDescription);
-    expect(contentOf(result, "twitter:card")).toBe("summary");
-    expect(property(result, "og:title")?.content).toBe(landingTitle);
-    expect(property(result, "og:description")?.content).toBe(
-      landingDescription,
-    );
+    expect(named(result, "description")).toBe(landingDescription);
+    expect(named(result, "twitter:card")).toBe("summary");
+    expect(property(result, "og:title")).toBe(landingTitle);
+    expect(property(result, "og:description")).toBe(landingDescription);
   });
 
   it("publishes its absolute URL without a doubled slash", () => {
     const url = `${siteOrigin}/`;
 
     expect(canonicalOf(result)).toBe(url);
-    expect(property(result, "og:url")?.content).toBe(url);
+    expect(property(result, "og:url")).toBe(url);
   });
 });
