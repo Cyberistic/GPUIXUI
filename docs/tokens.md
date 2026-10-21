@@ -524,11 +524,16 @@ is that install step: it takes the renderer, hands it each file's **bytes**, and
 returns the families a theme may now name.
 
 ```ts
-import { registerFonts, type FontRegistrar } from "@gpuixui/tokens";
+import { registerFonts } from "@gpuixui/tokens";
+import { createRenderer, render } from "@gpuix/react";
+import { extendTheme, lightTheme } from "@gpuixui/tokens";
 
-declare const renderer: FontRegistrar;
+const renderer = createRenderer();
 const families = registerFonts(renderer, [{ family: "Inter", data }]);
 // ["Inter"]
+
+const theme = extendTheme(lightTheme, { typography: { sans: "Inter" } });
+render(<App theme={theme} />, { renderer }); // the first text to name Inter
 ```
 
 Three facts shape the API:
@@ -540,10 +545,15 @@ Three facts shape the API:
   mount installs each file once; a second call still returns the families. A file
   the runtime rejects throws and is not remembered, so a corrected file can be
   retried.
-- **Boundary, not render.** The React renderer exposes `registerFont` optionally
-  (the browser renderer has none), so call it where the renderer exists and
-  guard for its absence. Rendering before registration is fine: GPUix re-shapes
-  text that already named the family.
+- **Before the first layout that names the family.** Register, then render.
+  GPUix lays text out against the faces it has: a family that did not exist when
+  the text naming it was first laid out has already fallen back to another font
+  (the `registerFont` doc in the pinned `@gpuix/native` 0.11.0), and switching
+  the theme to the face afterwards does not re-shape that text. The renderer
+  exists before the first render, so this is an ordering rule, not a lifecycle
+  hook: installing from a mount effect runs after the children that paint the
+  text. The React renderer exposes `registerFont` optionally (the browser
+  renderer has none), so guard for its absence at that boundary.
 
 The face reaches components through the theme rather than through the runtime:
 
@@ -556,8 +566,14 @@ textStyle(theme, "body").fontFamily; // "Inter"
 
 The library ships no bundled family yet, so there is no font licence obligation
 today; a consumer's own typeface travels the same route. The runnable example is
-in [`src/fonts.test.ts`](../packages/tokens/src/fonts.test.ts) (there is no
-window here to shape text in, so the native proof is a `TODO.md` interlock).
+in [`src/fonts.test.ts`](../packages/tokens/src/fonts.test.ts), and the native
+proof is the playground's `register-font` probe: a registered face lays the
+sample word out at its own advances while an unknown family paints the
+fallback's, so the paint is the file
+([`apps/playground/README.md`](../apps/playground/README.md)).
+That probe registers before its first paint — the order above. The failure the
+order avoids, text already laid out in the fallback, is not yet measured in a
+window; it is recorded in `TODO.md`.
 
 ## Spacing
 

@@ -263,25 +263,26 @@ its own.
 
 ```tsx
 import { registerFonts } from "@gpuixui/tokens";
-import { useGpuixRequired } from "@gpuix/react";
-import { useEffect } from "react";
+import { createRenderer, render } from "@gpuix/react";
 
-function Fonts({ data }: { data: Uint8Array }) {
-  const renderer = useGpuixRequired();
-  useEffect(() => {
-    if (renderer.registerFont === undefined) {
-      return; // the browser renderer installs no fonts
-    }
-    registerFonts(renderer, [{ family: "Inter", data }]);
-  }, [renderer, data]);
-  return null;
-}
+const renderer = createRenderer();
+const families = registerFonts(renderer, [{ family: "Inter", data }]);
+// ["Inter"] — the families a theme may now name.
+
+render(<App />, { renderer }); // the first text that names Inter
 ```
 
 Registration is **idempotent per renderer and per file**: calling it on every
 mount installs the bytes once. A file the runtime rejects throws and is not
-remembered, so a corrected file can be retried. Rendering before registration is
-fine — GPUix re-shapes text that already named the family.
+remembered, so a corrected file can be retried.
+
+Order matters: install the files **before the first render that names the
+family**. A family that did not exist when text naming it was first laid out has
+already fallen back to another font, so registering from a mount effect — after
+the children that paint the text — leaves the fallback on screen. Create the
+renderer, register, then render. `registerFont` is optional on a renderer (the
+browser renderer installs none), so guard for its absence where the same code
+can also run in a browser.
 
 The face reaches components through the theme, not through the runtime:
 

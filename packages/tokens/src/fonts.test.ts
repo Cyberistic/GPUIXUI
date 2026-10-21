@@ -7,10 +7,25 @@
  * and a rejected file being remembered as installed, which would make a fixed
  * file look broken for the rest of the session.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { registerFonts, type FontRegistrar, type FontSource } from "./fonts.js";
 import { textStyle } from "./styles.js";
 import { extendTheme, lightTheme } from "./theme.js";
+
+/**
+ * The three places a consumer learns how to install a face. `node:fs` is
+ * deliberate, as in `docs.test.ts`: this checks the repository's own prose, and
+ * the package keeps zero runtime dependencies.
+ */
+const surfaces = {
+  "src/fonts.ts": readFileSync(new URL("./fonts.ts", import.meta.url), "utf8"),
+  "docs/tokens.md": readFileSync(
+    new URL("../../../docs/tokens.md", import.meta.url),
+    "utf8",
+  ),
+  "README.md": readFileSync(new URL("../README.md", import.meta.url), "utf8"),
+} as const;
 
 /** A renderer that records the bytes it was handed. */
 const recordingRegistrar = () => {
@@ -88,5 +103,70 @@ describe("registerFonts", () => {
     });
     expect(textStyle(theme, "body").fontFamily).toBe("Inter");
     expect(textStyle(lightTheme, "body").fontFamily).not.toBe("Inter");
+  });
+
+  it("names one family once when a family ships several files", () => {
+    const { calls, registrar } = recordingRegistrar();
+    const bold: FontSource = {
+      family: "Inter",
+      data: new Uint8Array([8, 9]),
+    };
+    expect(registerFonts(registrar, [inter, bold])).toEqual(["Inter"]);
+    expect(calls).toHaveLength(2);
+  });
+});
+
+/**
+ * Guards the registration-order contract.
+ *
+ * The bug this holds: `fonts.ts` and both docs told consumers that "rendering
+ * before registration is fine — GPUix re-shapes text that already named the
+ * family", and the README installed the face from a mount effect. The pinned
+ * `@gpuix/native` 0.11.0 declares the opposite on `registerFont` — a family that
+ * did not exist when the text naming it was first laid out "has already fallen
+ * back to another font" — so the library was teaching the one order that
+ * silently paints the fallback. A surface that returns to that claim, or stops
+ * naming the order, fails here.
+ */
+describe("registration order", () => {
+  /** The retracted advice, in the words each surface used. */
+  const retracted = [
+    "re-shapes text",
+    "Rendering before registration is fine",
+    "before or after the first render",
+  ];
+
+  it("no longer promises that text is re-shaped after registration", () => {
+    const offenders = Object.entries(surfaces).flatMap(([name, text]) =>
+      retracted
+        .filter((claim) => text.includes(claim))
+        .map((claim) => `${name}: "${claim}"`),
+    );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("states the order in every place a consumer reads it", () => {
+    const silent = Object.entries(surfaces)
+      .filter(([, text]) => !text.includes("first laid out"))
+      .map(([name]) => name);
+
+    expect(silent).toEqual([]);
+  });
+
+  it("shows registration before the first render in the README", () => {
+    const fonts = surfaces["README.md"];
+    const section = fonts.slice(
+      fonts.indexOf("## Fonts"),
+      fonts.indexOf("\n## ", fonts.indexOf("## Fonts") + 1),
+    );
+    // The snippet, not the prose: the intro names `registerFonts(` too.
+    const opening = section.indexOf("```tsx");
+    const snippet = section.slice(opening, section.indexOf("```", opening + 6));
+
+    expect(section).not.toContain("useEffect");
+    expect(snippet.indexOf("registerFonts(")).toBeLessThan(
+      snippet.indexOf("render(<App"),
+    );
   });
 });
