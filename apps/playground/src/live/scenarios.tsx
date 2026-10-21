@@ -12,6 +12,24 @@ import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  ToastProvider,
+  ToastViewport,
+  useToast,
+} from "@gpuixui/components";
+import {
+  Button,
   Checkbox,
   Input,
   ThemeProvider as PrimitiveThemeProvider,
@@ -539,6 +557,248 @@ const CheckboxProbe = (): ReactNode => {
   );
 };
 
+/**
+ * The shipped `Dialog` from `@gpuixui/components`, with a readout of what its
+ * `onOpenChange` reported.
+ *
+ * The readout is the proof the probe is not just seeing a painted box: React has
+ * to have received both transitions, and the trigger has to be the opener that
+ * gets focus back. The dialog is uncontrolled, so the component owns the state a
+ * consumer would otherwise wire by hand.
+ */
+const DialogProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [opens, setOpens] = useState(0);
+  const [closes, setCloses] = useState(0);
+  return (
+    <div
+      testId="dialog-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped Dialog: a press opens it, Escape and Close dismiss it.
+        </text>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <Dialog
+            onOpenChange={(open) => {
+              if (open) setOpens((count) => count + 1);
+              else setCloses((count) => count + 1);
+            }}
+          >
+            <DialogTrigger testId="dialog-trigger">Open dialog</DialogTrigger>
+            <DialogContent label="Delete project" testId="dialog-content">
+              <DialogHeader>
+                <DialogTitle>Delete this project?</DialogTitle>
+                <DialogDescription>
+                  The sample project cannot be restored.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose testId="dialog-confirm">Delete</DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <text
+          testId="dialog-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`opens=${opens} closes=${closes}`}
+        </text>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The shipped `DropdownMenu`: opened from the keyboard at its first row, moved
+ * with the arrow keys, activated with Enter, and closed by a pointer press.
+ *
+ * A menu's highlight is real focus, so every step reads the renderer's focus id
+ * rather than a painted colour: an arrow key that moves a highlight without
+ * moving focus would fail here.
+ */
+const MenuProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [last, setLast] = useState("none");
+  return (
+    <div
+      testId="menu-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped DropdownMenu: keyboard open, arrows, Enter and a press.
+        </text>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <DropdownMenu>
+            <DropdownMenuTrigger testId="menu-trigger">
+              Actions
+            </DropdownMenuTrigger>
+            <DropdownMenuContent label="File actions" testId="menu-content">
+              <DropdownMenuItem
+                testId="menu-rename"
+                onSelect={() => setLast("rename")}
+              >
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                testId="menu-delete"
+                tone="destructive"
+                onSelect={() => setLast("delete")}
+              >
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <text
+          testId="menu-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`last=${last}`}
+        </text>
+      </div>
+    </div>
+  );
+};
+
+/** The panel a `useToast` caller lives in: one push control and a queue count. */
+const ToastPanel = (): ReactNode => {
+  const theme = useTheme();
+  const toast = useToast();
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <PrimitiveThemeProvider theme={palettes.dark}>
+          <Button
+            testId="toast-push"
+            onActivate={() =>
+              toast.push({
+                title: "Changes published",
+                description: "The site rebuilds in about a minute.",
+                tone: "success",
+              })
+            }
+          >
+            Publish
+          </Button>
+        </PrimitiveThemeProvider>
+      </div>
+      <text
+        testId="toast-readout"
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`queued=${toast.toasts.length}`}
+      </text>
+    </div>
+  );
+};
+
+/**
+ * The shipped toast system: a press queues a toast into the viewport, and its
+ * dismiss control removes it.
+ *
+ * The provider owns the store and its own `ManagedRuntime`, so this probe also
+ * proves that an Effect-backed store runs inside a real window rather than only
+ * under the test clock. The viewport is the last child, as its paint-order
+ * contract requires.
+ */
+const ToastProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  return (
+    <div
+      testId="toast-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <ToastProvider>
+        <div
+          style={{
+            width: 720,
+            height: 360,
+            padding: theme.spacing.xl,
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.lg,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            The shipped Toasts: a press queues one, its dismiss control removes
+            it.
+          </text>
+          <ToastPanel />
+        </div>
+        <ToastViewport />
+      </ToastProvider>
+    </div>
+  );
+};
+
 /** What a probe module supplies; the registry supplies the metadata. */
 export interface LiveProbeBody {
   readonly id: LiveProbeId;
@@ -953,6 +1213,234 @@ const checkboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("toggled");
   });
 
+/**
+ * Opens the shipped Dialog by press, proves focus entered the surface and that
+ * Escape closes it and returns focus, then closes it with its own `DialogClose`.
+ *
+ * Every step is measured through the window: `bounds` is `null` for an element
+ * the runtime never painted (the closed state), the focus id is the renderer's,
+ * and the readout is React's own report of the two transitions.
+ */
+const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("dialog-trigger");
+    yield* ctx.expectContains(
+      "the dialog starts closed",
+      yield* ctx.host.text("dialog-readout"),
+      "opens=0 closes=0",
+    );
+    yield* ctx.expectEqual(
+      "a closed dialog paints no surface",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds("dialog-content")),
+      ),
+      true,
+    );
+
+    yield* ctx.host.click("dialog-trigger");
+    yield* Effect.sleep(SETTLE);
+    const content = yield* paintedBox(ctx, "dialog-content");
+    yield* ctx.expectEqual(
+      "a press opens the dialog surface",
+      content.width > 0 && content.height > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "focus enters the dialog surface",
+      yield* focusedId(ctx),
+      "dialog-content",
+    );
+    yield* ctx.expectContains(
+      "the open reaches onOpenChange",
+      yield* ctx.host.text("dialog-readout"),
+      "opens=1 closes=0",
+    );
+    yield* ctx.host.capture("dialog-open");
+
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape unpaints the dialog surface",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds("dialog-content")),
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "closing returns focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      "dialog-trigger",
+    );
+    yield* ctx.expectContains(
+      "the close reaches onOpenChange",
+      yield* ctx.host.text("dialog-readout"),
+      "opens=1 closes=1",
+    );
+
+    yield* ctx.host.click("dialog-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the dialog reopens after a dismissal",
+      (yield* paintedBox(ctx, "dialog-content")).height > 0,
+      true,
+    );
+    yield* ctx.host.click("dialog-confirm");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the dialog's own close control dismisses it",
+      yield* ctx.host.text("dialog-readout"),
+      "opens=2 closes=2",
+    );
+    yield* ctx.expectEqual(
+      "the close control returns focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      "dialog-trigger",
+    );
+    yield* ctx.host.capture("dialog-closed");
+  });
+
+/**
+ * Drives the shipped `DropdownMenu` through the paths a menu has to survive in a
+ * window: a press opens it, Escape dismisses it and returns focus, a keyboard
+ * open lands on the first row, arrows move real focus, Enter activates the row,
+ * and a press activates one too.
+ */
+const menuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    const unpainted = Effect.map(ctx.host.bounds("menu-content"), (bounds) =>
+      Option.isNone(Option.fromNullishOr(bounds)),
+    );
+
+    yield* ctx.host.waitFor("menu-trigger");
+    yield* ctx.expectContains(
+      "the menu starts with no action taken",
+      yield* ctx.host.text("menu-readout"),
+      "last=none",
+    );
+    yield* ctx.expectEqual(
+      "a closed menu paints no surface",
+      yield* unpainted,
+      true,
+    );
+
+    yield* ctx.host.click("menu-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press opens the menu surface",
+      (yield* paintedBox(ctx, "menu-content")).width > 0,
+      true,
+    );
+    yield* ctx.host.capture("menu-open");
+
+    // Escape is delivered to the trigger, which holds focus after a pointer
+    // open: the menu's dismiss layer is what hears it, not the surface.
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape unpaints the menu surface",
+      yield* unpainted,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Escape returns focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      "menu-trigger",
+    );
+
+    // A keyboard open lands on the first row, so the highlight is real focus.
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a keyboard open lands on the first row",
+      yield* focusedId(ctx),
+      "menu-rename",
+    );
+
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow key moves focus to the next row",
+      yield* focusedId(ctx),
+      "menu-delete",
+    );
+
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Enter activates the focused row",
+      yield* ctx.host.text("menu-readout"),
+      "last=delete",
+    );
+    yield* ctx.expectEqual(
+      "activation unpaints the menu surface",
+      yield* unpainted,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "activation returns focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      "menu-trigger",
+    );
+
+    yield* ctx.host.click("menu-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click("menu-rename");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press activates the pressed row",
+      yield* ctx.host.text("menu-readout"),
+      "last=rename",
+    );
+    yield* ctx.expectEqual(
+      "a pressed row unpaints the menu surface",
+      yield* unpainted,
+      true,
+    );
+    yield* ctx.host.capture("menu-closed");
+  });
+
+/**
+ * Queues a toast from the shipped `ToastProvider` and dismisses it with the
+ * card's own control.
+ *
+ * The queue count is read from `useToast()`, so a toast that never entered the
+ * store would not count, and the viewport's text is read separately because the
+ * store and the paint are different claims.
+ */
+const toastSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("toast-probe");
+    yield* ctx.host.waitFor("toast-push");
+    yield* ctx.expectContains(
+      "the queue starts empty",
+      yield* ctx.host.text("toast-readout"),
+      "queued=0",
+    );
+
+    yield* ctx.host.click("toast-push");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press queues one toast",
+      yield* ctx.host.text("toast-readout"),
+      "queued=1",
+    );
+    yield* ctx.expectContains(
+      "the viewport paints the queued toast",
+      yield* ctx.host.text("toast-viewport"),
+      "Changes published",
+    );
+    yield* ctx.host.capture("toast-queued");
+
+    yield* ctx.host.click("toast-dismiss");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the card's dismiss control empties the queue",
+      yield* ctx.host.text("toast-readout"),
+      "queued=0",
+    );
+    yield* ctx.host.capture("toast-dismissed");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -990,5 +1478,20 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "checkbox-toggle",
     view: () => <CheckboxProbe />,
     steps: checkboxSteps,
+  },
+  "dialog-lifecycle": {
+    id: "dialog-lifecycle",
+    view: () => <DialogProbe />,
+    steps: dialogSteps,
+  },
+  "menu-lifecycle": {
+    id: "menu-lifecycle",
+    view: () => <MenuProbe />,
+    steps: menuSteps,
+  },
+  "toast-lifecycle": {
+    id: "toast-lifecycle",
+    view: () => <ToastProbe />,
+    steps: toastSteps,
   },
 };

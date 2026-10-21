@@ -78,6 +78,24 @@ export const liveRegistry = [
       "Input: the shipped Checkbox toggles on a press and on Space in a window",
     capability: "input",
   },
+  {
+    id: "dialog-lifecycle",
+    title:
+      "Modal: the shipped Dialog opens on a press, focuses its surface, and Escape returns focus",
+    capability: "modal",
+  },
+  {
+    id: "menu-lifecycle",
+    title:
+      "Overlay: the shipped DropdownMenu opens, moves real focus, activates and dismisses",
+    capability: "overlay",
+  },
+  {
+    id: "toast-lifecycle",
+    title:
+      "Overlay: the shipped toast system queues a toast and dismisses it from its own control",
+    capability: "overlay",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -29,6 +29,12 @@ the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
+The **live** registry (`src/live/registry.ts`) is separate and shorter: the eight
+probes a real window can prove, of which the last three mount shipped
+`@gpuixui/components` (`dialog`, `menu`, `toast`) and the rest prove the runtime
+itself (focus, paint, fonts, placement). `apps/playground` depends on
+`@gpuixui/components` for exactly that.
+
 ## Run it
 
 ```sh
@@ -342,8 +348,8 @@ anchor's on the axis the prop controls:
 That last row is the quirk the overlay components compensate for with a measured
 `start` offset (plan `323`); the probe pins the runtime behaviour so an upstream
 fix fails here instead of silently moving every menu. The components' own
-compensation is their native behaviour suites' job — the runner still cannot
-import `@gpuixui/components` (TODO → Interlocks).
+compensation is their native behaviour suites' job; the live `dialog-lifecycle`
+and `menu-lifecycle` probes mount those components themselves.
 
 Negative control, measured: mapping the left layer to `side="right"` fails
 `side=left ends one gap left of its anchor: expected 254 ± 1, got 546`,
@@ -453,10 +459,10 @@ never reports it) fails `typing reaches the component's onChange`
 (`expected a string containing "value=hi", got "value= submits=0"`, exit `1`).
 
 That is the first native proof that a library component — not a primitive host
-element — takes real typed input in a window. The Tier 2 probes (dialog, menu,
-toast) wait on a `packages/components` module-load issue recorded in `TODO.md`
-→ Interlocks: its `tsconfig.json` maps `@gpuix/react/jsx-runtime` to a `.d.ts`,
-which the runner's loader resolves at runtime and Node refuses to type-strip.
+element — takes real typed input in a window. The Tier 2 probes that followed
+(`dialog-lifecycle`, `menu-lifecycle`, `toast-lifecycle`) mount
+`@gpuixui/components`; they were blocked until the package's `jsx-runtime` path
+mapping was deleted (TODO → Interlocks) and now run here.
 
 ### `checkbox-toggle` — measured on 0.11.0 here
 
@@ -479,6 +485,81 @@ The host therefore gained `keyUp(keystroke)`, released through the renderer's
 measured: pressing Space without releasing it leaves the readout at
 `checked=true changes=1` and fails `Space toggles the focused checkbox` (exit
 `1`).
+
+### `dialog-lifecycle` — measured on 0.11.0 here
+
+The first live probe of the **Tier 2 components** rather than a primitive: the
+shipped `Dialog` (`@gpuixui/components`), uncontrolled, with a readout of what its
+`onOpenChange` reported. A unit suite can press a synthetic key into the
+`TestRenderer`; this probe asks whether the same contract holds in a window where
+the automation protocol, not the test harness, delivers the press and the key.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `opens=0 closes=0`, and `dialog-content` has no bounds — a closed dialog paints nothing |
+| press the trigger | the surface paints with a non-zero box, focus is `dialog-content`, the readout reads `opens=1` |
+| `Escape` | the surface has no bounds again, focus returns to `dialog-trigger`, the readout reads `closes=1` |
+| press the trigger, then the dialog's own `DialogClose` | the surface paints again and closes, `opens=2 closes=2`, focus is back on the trigger |
+
+13 checks. Negative control, measured: `dismissible={false}` (an
+uninterruptible dialog) fails `Escape unpaints the dialog surface`
+(`expected true, got false`, exit `1`), which is the check's real subject — the
+dismiss stack, not the paint. Captures: `.artifacts/live/dialog-open.png` (the
+veil over the whole window, the surface centred) and `dialog-closed.png`.
+
+The veil is an `anchored` element sized from the window, so the probe's root has
+to **fill** the window: mounted inside a 720px column the veil covered only that
+column, which is the documented "dim only its parent's box" behaviour rather than
+a defect.
+
+### `menu-lifecycle` — measured on 0.11.0 here
+
+The shipped `DropdownMenu`. A menu's highlight is real focus, so every step reads
+the renderer's focused testId rather than a painted colour: an arrow key that
+moved a highlight without moving focus would fail here.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `last=none`, no menu surface |
+| press the trigger | the surface paints |
+| `Escape` | the surface unpaints and focus returns to `menu-trigger` |
+| `ArrowDown` on the trigger | the menu opens **from the keyboard** and focus lands on `menu-rename` |
+| `ArrowDown` again | focus moves to `menu-delete` |
+| `Enter` | `last=delete`, the surface unpaints, focus returns to the trigger |
+| press the trigger, press `menu-rename` | `last=rename`, the surface unpaints |
+
+13 checks. Negative control, measured: dropping the second `ArrowDown` fails
+`an arrow key moves focus to the next row`
+(`expected "menu-delete", got "menu-rename"`, exit `1`). Captures:
+`.artifacts/live/menu-open.png`, `menu-closed.png`.
+
+### `toast-lifecycle` — measured on 0.11.0 here
+
+The shipped toast system in a window. `ToastProvider` owns a `ManagedRuntime` and
+an Effect store, so this probe also proves that an Effect-backed store runs off
+the test clock: the queue is pushed, painted and dismissed through the real
+window, with the store's timers live.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `queued=0` |
+| press Publish | `queued=1` (read from `useToast()`) and the viewport's text contains `Changes published` |
+| press the card's dismiss control | `queued=0` and the card leaves the viewport |
+
+4 checks. Negative control, measured: dropping `<ToastViewport />` — a provider
+with no viewport — fails `text toast-viewport: Locator did not match any element`
+(exit `1`), so the viewport check is not reading the store's own state. Captures:
+`.artifacts/live/toast-queued.png` (the bottom-right stack over the page) and
+`toast-dismissed.png`.
+
+**A root-level fragment paints one child.** The toast probe first mounted
+`ToastProvider` as its root, whose children are two siblings (the panel and the
+viewport). The window painted only the second: the automation tree listed just the
+viewport and `getPaintedText()` was empty for the panel. Two sibling host elements
+*inside* a host element paint normally (measured), so the rule is about the render
+root: every probe here mounts exactly one wrapper element, and the toast provider
+is mounted inside it. This is a runtime quirk, not a probe workaround — record it
+before nesting a provider at a window's root.
 
 ## Release gate
 
@@ -587,7 +668,13 @@ narrower. Each deviation is deliberate and measured:
   the content line fails `a drag over the selectable line produces a selection`
   (`expected a value, got none`) — exit `1` each. In `scroll-horizontal`,
   dropping `overflowX` fails `the strip reports a scroll offset`
-  (`expected a value, got none`, exit `1`).
+  (`expected a value, got none`, exit `1`). In `dialog-lifecycle`,
+  `dismissible={false}` fails `Escape unpaints the dialog surface`
+  (`expected true, got false`); in `menu-lifecycle`, dropping one `ArrowDown`
+  fails `an arrow key moves focus to the next row`
+  (`expected "menu-delete", got "menu-rename"`); in `toast-lifecycle`, dropping
+  the viewport fails `text toast-viewport: Locator did not match any element` —
+  each exit `1`.
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).
