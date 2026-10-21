@@ -262,6 +262,55 @@ export const joinDescription = (
   });
 
 /**
+ * A control state the runtime cannot put in the accessibility tree.
+ *
+ * GPUix 0.10.0 publishes no `aria-disabled` and no `aria-readonly` (plan `020`
+ * §1.4), and an emulated state is invisible: measured, a disabled `Button` and
+ * its enabled twin are byte-identical in the accessibility tree, `Click` action
+ * included (plan `810`). The runtime does publish `aria-description`, which is
+ * the workaround `docs/gpuix-capabilities.md` names and the channel a busy
+ * `Button` already uses for `Loading` — so the state is announced there.
+ */
+export interface AnnouncedState {
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly loading?: boolean;
+}
+
+/**
+ * The words a control's unexpressible state adds to its announcement.
+ *
+ * `disabled` wins over `readOnly`, the rule the paint, handlers and tab stop of
+ * every control follow; `loading` leads because it is an activity. The words
+ * are fixed English, like `Loading` and a required label's `required`.
+ */
+export const stateWords = (state: AnnouncedState): string =>
+  Arr.join(
+    Arr.getSomes([
+      state.loading === true ? Option.some("Loading") : Option.none(),
+      state.disabled === true
+        ? Option.some("unavailable")
+        : state.readOnly === true
+          ? Option.some("read only")
+          : Option.none(),
+    ]),
+    ". ",
+  );
+
+/**
+ * A control's description with its state words in front of it.
+ *
+ * One rule for every inert surface, so the announcement cannot drift from the
+ * behaviour: a disabled control says `unavailable`, a read-only one says
+ * `read only`, and a caller's description or slot tip still composes after it
+ * with one sentence boundary (plans `586`, `810`).
+ */
+export const describeState = (
+  description: string | undefined,
+  state: AnnouncedState,
+): string | undefined => joinDescription(stateWords(state), description);
+
+/**
  * Whether a string says something: non-blank after trimming.
  *
  * The caption rule for a visible description or a separator's label. A caller

@@ -111,7 +111,8 @@ caller drops `indeterminate`.
 value and focus ring, paints full contrast with a `default` cursor, and refuses
 click, Enter and Space. `disabled` is the stronger state — it also leaves the
 tab order and fades the box. 0.10.0 has no `aria-readonly`, so the difference is
-behavioural and visual (plan `799`).
+behavioural and visual; the state itself is announced in the description
+(`read only` / `unavailable`, plan `810`).
 
 ## Keyboard
 
@@ -140,10 +141,11 @@ one never does, and a read-only one still does (plan `807`).
 - Role: `CheckBox` in the runtime's accessibility tree.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
   `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
-- `disabled` removes the tab stop; there is no `aria-disabled`.
+- `disabled` removes the tab stop and announces `unavailable` in the control's
+  description; there is no `aria-disabled` (plan `810`).
 - `readOnly` keeps the tab stop, the name, `aria-valuetext` and the ring, and
-  refuses every change. There is no `aria-readonly` in 0.10.0, so assistive
-  technology hears the value but not the fact that it is locked (plan `799`).
+  refuses every change; it announces `read only`. There is no `aria-readonly` in
+  0.10.0, so the description is the channel (plans `799`, `810`).
 - With children, the row is **one** node: role `checkbox`, the text as its name,
   one tab stop and one hit area; the box inside is decoration. A **sibling**
   `Label` beside a standalone box is still inert — GPUix has no

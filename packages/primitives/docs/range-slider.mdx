@@ -58,9 +58,10 @@ nothing. The track paints at full contrast with a `default` cursor and no
 hover/press wash. `disabled` is the stronger state (half opacity, no tab stops)
 and wins when both are passed.
 
-GPUix 0.10.0 has no `aria-readonly`, so the two values are announced but the
-state is not; the difference from `disabled` is behavioural and visual, the same
-rule `Select`, `Rating` and the selection family follow.
+GPUix 0.10.0 has no `aria-readonly`, so each thumb announces `read only` in its
+description beside its value (`unavailable` while disabled); the rest of the
+difference from `disabled` is behavioural and visual, the same rule `Select`,
+`Rating` and the selection family follow (plan `810`).
 
 ```tsx
 <RangeSlider label="Budget" defaultValue={[20, 80]} readOnly />
@@ -129,8 +130,8 @@ entry point; a disabled slider never focuses, and a read-only one still does
 - The default names — `"Budget minimum"`, `"Budget maximum"` — are derived from
   `label`, so a group with one name is never two unnamed sliders.
 - A **read-only** range keeps both tab stops, names and announced values and
-  stays reachable; 0.10.0 has no `aria-readonly`, so the state itself is not
-  announced (plan `802`).
+  stays reachable; it announces `read only` on each thumb, because 0.10.0 has no
+  `aria-readonly` (plans `802`, `810`).
 
 ## Theming
 

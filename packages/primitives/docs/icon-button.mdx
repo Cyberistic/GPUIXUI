@@ -103,8 +103,9 @@ state stays visible on a filled `primary` button (plan `754`).
 - One `button` node named `label`. The icon is decorative (`presentation`), so
   the tree has no second node for it — measured in the runtime: a `Button` named
   `"Close"` and **no** `Image` node.
-- No `aria-disabled`: a disabled button leaves the tab order instead.
-- `loading` sets `aria-description="Loading"`; GPUix has no `aria-busy`. The
+- No `aria-disabled`: a disabled button leaves the tab order and announces
+  `unavailable` in its description (plan `810`).
+- `loading` writes `Loading` into the description; GPUix has no `aria-busy`. The
   spinner is decorative, so the button publishes one node instead of a nested
   `Status` saying the same thing (plan `785`).
 - The icon's visual tint is `style.color`, so contrast follows the button's

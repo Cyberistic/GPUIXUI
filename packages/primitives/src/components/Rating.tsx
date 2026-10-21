@@ -32,6 +32,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   resolvePartStyle,
+  stateWords,
   useControlState,
   useRovingFocus,
   type StateStyle,
@@ -167,6 +168,7 @@ export const renderRating = (
         ref={handlers.registerItem(index)}
         role="radio"
         aria-label={`${index} of ${max}`}
+        aria-description={stateWords(props)}
         aria-valuetext={index <= value ? "checked" : "unchecked"}
         tabIndex={focusable ? (index === tabStop ? 0 : -1) : undefined}
         autoFocus={focusable && index === tabStop ? props.autoFocus : undefined}

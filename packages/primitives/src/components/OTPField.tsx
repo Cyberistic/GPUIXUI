@@ -54,6 +54,7 @@ import {
   ariaName,
   ariaNameOr,
   resolvePartStyle,
+  stateWords,
   trackedFocusIndex,
   useControlState,
   useNativeFocusId,
@@ -193,6 +194,7 @@ export const renderOtpField = (
     <div
       role="group"
       aria-label={ariaName(props.label)}
+      aria-description={stateWords({ disabled, readOnly: props.readOnly })}
       testId={props.testId}
       style={resolvePartStyle(otpGroupStyle(theme), props.style, {
         disabled,

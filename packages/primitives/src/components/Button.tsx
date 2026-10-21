@@ -47,10 +47,10 @@ import { buttonVariants, type ButtonVariant } from "../core/variants.js";
 import { hasOpaqueContent, labelParts } from "./content.js";
 import { useGroupShape, type GroupShape } from "./group-shape.js";
 import {
-  ariaName,
   composeHandler,
   composeRef,
   controlName,
+  describeState,
   mergeStyle,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -147,13 +147,12 @@ export const renderButton = (
     focused: focus.focused,
     loading: props.loading === true,
   };
-  const announced = ariaName(props["aria-description"]);
-  const description =
-    props.loading !== true
-      ? announced
-      : announced === undefined
-        ? "Loading"
-        : `Loading. ${announced}`;
+  /**
+   * The busy and disabled states through one rule (plan `810`): this line used
+   * to announce `Loading` and nothing for `disabled`, so a screen reader saw a
+   * busy or disabled button as a working one.
+   */
+  const description = describeState(props["aria-description"], props);
   const onKey =
     (phase: "down" | "up", handler?: (event: EventPayload) => void) =>
     (event: EventPayload): void => {

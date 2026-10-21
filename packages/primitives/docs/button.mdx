@@ -146,11 +146,15 @@ button reports nothing, while hover still opens its tip.
   `label=""` — or whitespace — is **not** a name and does not erase the content's
   (plan `396`). An element child with no text (a bare icon) contributes nothing,
   so it yields no name; pass `label` then (plan `746`).
-- `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`
-  — and its spinner is decorative, so the control publishes one node, not a
-  `Status` child saying the same thing (plan `785`).
-- There is no `aria-disabled`: a disabled button is removed from the tab order
-  instead, which is the strongest truthful alternative.
+- `loading` writes `Loading` into the trigger's description — this runtime has
+  no `aria-busy` — and its spinner is decorative, so the control publishes one
+  node, not a `Status` child saying the same thing (plan `785`).
+- There is no `aria-disabled`, so a disabled button is removed from the tab order
+  **and** announces `unavailable` in its description (`"unavailable. Net of
+  refunds."` when a tip or `aria-description` is present, `"Loading.
+  unavailable"` when it is also busy) — the channel the runtime does publish
+  (plan `810`). It still advertises its `Click` action in the tree, exactly as
+  an `aria-disabled` control does; the guard inside it refuses the press.
 - The label is **chrome, not content**: the control declares `userSelect: "none"`,
   so a drag across a button cannot select its text (measured before plan `386`:
   the drag selected `"Save changes"`). A caller who wants it selectable passes
@@ -194,7 +198,8 @@ look. `ButtonState` is exported.
 ## Limitations
 
 - No `focusVisible`: the ring cannot distinguish pointer from keyboard focus.
-- No `aria-disabled` and no `aria-pressed`/toggle-button state.
+- No `aria-disabled` (the state is announced in the description instead, plan
+  `810`) and no `aria-pressed`/toggle-button state — use `Toggle`.
 - An icon-only button (or one whose children are elements) must pass `label`;
   the component cannot infer a name and will not invent one.
 - A label longer than a bounded button is clipped to **one line with an

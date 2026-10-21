@@ -33,7 +33,7 @@ import { renderSwitch } from "./Switch.js";
 import { renderTextArea } from "./TextArea.js";
 import { renderToggle } from "./Toggle.js";
 import { elementChildren, elementProp } from "./testing/element.js";
-import type { FocusState } from "./internal.js";
+import { describeState, stateWords, type FocusState } from "./internal.js";
 
 const DESCRIPTION = "Net of refunds.";
 const PADDED = "  Net of refunds.  ";
@@ -242,12 +242,221 @@ describe("a busy Button", () => {
   });
 });
 
+/**
+ * The state words, as a pure rule (plan `810`).
+ *
+ * `disabled` wins over `readOnly` — the rule every control's paint, handlers and
+ * tab stop follow — and `loading` leads because it is an activity.
+ */
+describe("the state words", () => {
+  it("says nothing for a working control", () => {
+    expect(stateWords({})).toBe("");
+    expect(describeState(DESCRIPTION, {})).toBe(DESCRIPTION);
+    expect(describeState(undefined, {})).toBeUndefined();
+  });
+
+  it("announces a disabled control as unavailable", () => {
+    expect(stateWords({ disabled: true })).toBe("unavailable");
+  });
+
+  it("announces a read-only control as read only", () => {
+    expect(stateWords({ readOnly: true })).toBe("read only");
+  });
+
+  it("lets disabled win over read only", () => {
+    expect(stateWords({ disabled: true, readOnly: true })).toBe("unavailable");
+  });
+
+  it("leads with the activity, then the state", () => {
+    expect(stateWords({ disabled: true, loading: true })).toBe(
+      "Loading. unavailable",
+    );
+  });
+
+  it("composes a description after the state, and ignores a blank one", () => {
+    expect(describeState(DESCRIPTION, { disabled: true })).toBe(
+      `unavailable. ${DESCRIPTION}`,
+    );
+    expect(describeState(BLANK, { readOnly: true })).toBe("read only");
+  });
+});
+
+/** One part that can be disabled (and, where it has the prop, read-only). */
+interface InertSurface {
+  readonly name: string;
+  readonly readOnly: boolean;
+  readonly render: (state: {
+    readonly disabled?: boolean;
+    readonly readOnly?: boolean;
+  }) => ReactElement;
+}
+
+const INERT: ReadonlyArray<InertSurface> = [
+  {
+    name: "Button",
+    readOnly: false,
+    render: (state) =>
+      renderButton({ ...state, children: "Save" }, testTheme, {
+        focused: false,
+      }),
+  },
+  {
+    name: "Toggle",
+    readOnly: true,
+    render: (state) =>
+      renderToggle(
+        { ...state, children: "Bold" },
+        testTheme,
+        booleanState(false),
+        idle,
+        vi.fn(),
+      ),
+  },
+  {
+    name: "Checkbox",
+    readOnly: true,
+    render: (state) =>
+      renderCheckbox(
+        { ...state, label: "Accept" },
+        testTheme,
+        booleanState(false),
+        idle,
+        vi.fn(),
+      ),
+  },
+  {
+    name: "Switch",
+    readOnly: true,
+    render: (state) =>
+      renderSwitch(
+        { ...state, label: "Dark" },
+        testTheme,
+        booleanState(false),
+        idle,
+        vi.fn(),
+      ),
+  },
+  {
+    name: "Input",
+    readOnly: true,
+    render: (state) =>
+      renderInput(
+        { ...state, label: "Name" },
+        testTheme,
+        textState(""),
+        idle,
+        vi.fn(),
+      ),
+  },
+  {
+    name: "TextArea",
+    readOnly: true,
+    render: (state) =>
+      renderTextArea(
+        { ...state, label: "Notes" },
+        testTheme,
+        textState(""),
+        idle,
+        vi.fn(),
+      ),
+  },
+  {
+    name: "NumberField",
+    readOnly: true,
+    render: (state) =>
+      renderNumberField(
+        { ...state, label: "Count" },
+        testTheme,
+        numberState(2),
+        "2",
+        idle,
+        numberHandlers(),
+      ),
+  },
+  {
+    name: "Select",
+    readOnly: true,
+    render: (state) =>
+      renderSelect(
+        {
+          ...state,
+          label: "Fruit",
+          placeholder: "Pick",
+          options: [{ value: "apple", label: "Apple" }],
+        },
+        testTheme,
+        textState(""),
+        false,
+        idle,
+        selectHandlers(),
+      ),
+  },
+  {
+    name: "Slider",
+    readOnly: true,
+    render: (state) =>
+      renderSlider(
+        { ...state, label: "Volume" },
+        testTheme,
+        numberState(50),
+        idle,
+        sliderHandlers(),
+      ),
+  },
+];
+
+/**
+ * The wiring: a state the runtime cannot express must reach the host prop.
+ *
+ * Element-level, so a part that forgets the rule fails by name here rather than
+ * in a native suite that cannot say which part lost it.
+ */
+describe("an inert control announces its state", () => {
+  it.each(INERT)("$name says nothing while it works", (surface) => {
+    expect(descriptions(surface.render({}))).toStrictEqual([]);
+  });
+
+  it.each(INERT)("$name says unavailable while disabled", (surface) => {
+    expect(descriptions(surface.render({ disabled: true }))).toStrictEqual([
+      "unavailable",
+    ]);
+  });
+
+  it.each(Arr.filter(INERT, (surface) => surface.readOnly))(
+    "$name says read only while read-only",
+    (surface) => {
+      expect(descriptions(surface.render({ readOnly: true }))).toStrictEqual([
+        "read only",
+      ]);
+    },
+  );
+
+  it("composes the state before a caller's description", () => {
+    const element = renderButton(
+      { disabled: true, "aria-description": DESCRIPTION, children: "Save" },
+      testTheme,
+      { focused: false },
+    );
+    expect(descriptions(element)).toStrictEqual([
+      `unavailable. ${DESCRIPTION}`,
+    ]);
+  });
+
+  it("folds a busy button's Loading into the same rule", () => {
+    const element = renderButton(
+      { loading: true, disabled: true, children: "Save" },
+      testTheme,
+      { focused: false },
+    );
+    expect(descriptions(element)).toStrictEqual(["Loading. unavailable"]);
+  });
+});
+
 const at = (segments: ReadonlyArray<string>) =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
     return path.join(import.meta.dirname, ...segments);
   }).pipe(Effect.provide(NodePath.layer));
-
 const scan = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const dir = yield* at([]);
@@ -266,18 +475,26 @@ const scan = Effect.gen(function* () {
       ),
     { concurrency: 1 },
   );
-  return Arr.filter(sources, (source) =>
-    Str.includes('readonly "aria-description"?: string;')(source.body),
-  );
+  return sources;
 }).pipe(Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer));
 
+/** The component sources that declare an `aria-description` prop. */
+const declaresDescription = (source: { readonly body: string }): boolean =>
+  Str.includes('readonly "aria-description"?: string;')(source.body);
+
 describe("every surface that declares the prop applies the rule", () => {
-  it("forwards it through ariaName, by file", async () => {
-    const sources = await Effect.runPromise(scan);
+  it("forwards it through ariaName or the state rule, by file", async () => {
+    const sources = Arr.filter(
+      await Effect.runPromise(scan),
+      declaresDescription,
+    );
     expect(Arr.length(sources)).toBeGreaterThan(0);
     const raw = Arr.filter(
       sources,
       (source) =>
+        // A part with an inert state announces it here (plan 810), and
+        // `describeState` trims the description it carries.
+        !Str.includes("describeState(")(source.body) &&
         !Str.includes("aria-description={ariaName(")(source.body) &&
         !Str.includes('"aria-description": ariaName(')(source.body) &&
         !Str.includes('ariaName(props["aria-description"])')(source.body) &&
@@ -289,5 +506,27 @@ describe("every surface that declares the prop applies the rule", () => {
         ),
     );
     expect(Arr.map(raw, (source) => source.file)).toStrictEqual([]);
+  });
+
+  /**
+   * The cross-control wiring guard (plan `810`).
+   *
+   * The unit cases above prove the rule; this proves every part that *has* an
+   * inert state calls it, so a new control cannot ship its disabled state
+   * unannounced — the class the probe measured on all thirteen parts.
+   */
+  it("every part with a disabled prop announces the state, by file", async () => {
+    const sources = await Effect.runPromise(scan);
+    const inert = Arr.filter(sources, (source) =>
+      Str.includes("readonly disabled?: boolean;")(source.body),
+    );
+    expect(Arr.length(inert)).toBeGreaterThan(10);
+    const unwired = Arr.filter(
+      inert,
+      (source) =>
+        !Str.includes("describeState(")(source.body) &&
+        !Str.includes("stateWords(")(source.body),
+    );
+    expect(Arr.map(unwired, (source) => source.file)).toStrictEqual([]);
   });
 });

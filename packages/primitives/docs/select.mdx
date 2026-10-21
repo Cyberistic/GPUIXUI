@@ -117,9 +117,9 @@ field chrome with a `default` cursor and no chevron, and every open path is
 refused: pointer, `Enter`/`Space`, arrows, type-ahead, and a controlled
 `open={true}` (the parent is asked to close once, never to open). `onValueChange`
 never fires. `disabled` is the stronger state: it also leaves the tab order and
-fades the field. 0.10.0 has no `aria-readonly`, so a screen reader hears a normal
-combobox with its value; read-only is behavioural and visual, not an announced
-state (plan `797`).
+fades the field. 0.10.0 has no `aria-readonly`, so the trigger announces
+`read only` in its description beside the ordinary combobox name and value;
+`disabled` announces `unavailable` (plans `797`, `810`).
 
 ```tsx
 <Select
@@ -311,11 +311,11 @@ honest claim. The value is announced through `aria-valuetext` — the runtime
 exposes no other value channel — and the visible text inside the trigger is not
 itself the accessible value.
 
-`HostProps` also has **no `aria-readonly`**. A read-only select therefore keeps
-the ordinary `combobox` node, name and `aria-valuetext`; it announces no state
-difference, and its disabled/read-only distinction is visual and behavioural
-(no list, no value change). The page says so rather than claiming an
-announcement the runtime cannot make (plan `797`).
+`HostProps` also has **no `aria-readonly`**. A read-only select keeps the
+ordinary `combobox` node, name and `aria-valuetext`, and adds `read only` to its
+description — the runtime's one channel for a state it cannot express (plan
+`810`); a disabled one adds `unavailable`. The behavioural half (no list, no
+value change) is unchanged (plan `797`).
 
 Focus is **visible**: the trigger paints the field recipe's 3 px ring while
 focused or open, the same ring `Input` paints. The runtime has no `focusVisible`,

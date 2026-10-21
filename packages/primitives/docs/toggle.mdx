@@ -37,7 +37,8 @@ it. It keeps the tab stop, the focus ring, the accessible name and the announced
 pressed state, and refuses every press (click, `Enter`, `Space`). The control
 paints the normal accent fill at full contrast with a `default` cursor; only
 `disabled` fades it and leaves the tab order, and `disabled` wins when both are
-passed. 0.10.0 has no `aria-readonly`, so the state is behavioural and visual.
+passed. 0.10.0 has no `aria-readonly`, so the state is behavioural and visual —
+and announced in the description (`read only` / `unavailable`, plan `810`).
 
 ```tsx
 <Toggle pressed readOnly label="Snap to grid">
@@ -120,8 +121,8 @@ one never does, and a read-only one still does (plan `807`).
   (plan `746`).
 - A **read-only** toggle announces the same name and `"pressed"`/`"not pressed"`
   value: the state refuses changing the mode, not reading it. 0.10.0 has no
-  `aria-readonly`, so assistive technology cannot be told the difference between
-  a writable and a read-only toggle (plan `804`).
+  `aria-readonly`, so the description carries `read only` and a reader can tell
+  it from a writable toggle (plans `804`, `810`).
 - The label is **chrome, not content**: `userSelect: "none"` on the control, so
   a drag across a toggle cannot select its text (measured before plan `386`:
   the drag selected `"Grid view"`). A caller's `style` still merges last and can
@@ -159,8 +160,9 @@ property; returning `{}` keeps the default look. `ToggleState` is exported.
 ## Limitations
 
 - No `aria-pressed` (above).
-- No `aria-readonly`: a read-only toggle keeps its tab stop and announced state,
-  but assistive technology is not told that it refuses a press (plan `804`).
+- No `aria-readonly`: a read-only toggle keeps its tab stop and announced state
+  and announces `read only` in its description, so the refusal is heard but the
+  attribute itself is absent (plans `804`, `810`).
 - No `loading` state: a toggle sets a mode instantly; a toggle that waits for a
   request should disable itself and show the result elsewhere.
 - `square` sizes the button; it does not size the icon — pass an icon whose size

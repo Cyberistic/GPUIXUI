@@ -68,7 +68,8 @@ keeps its name, announced state and focus ring, and the arrows (and type-ahead)
 move focus without moving the selection; Enter, Space and a click are refused.
 `disabled` is the stronger state — it also leaves the tab order and fades every
 circle. 0.10.0 has no `aria-readonly`, so the difference is behavioural and
-visual (plan `799`).
+visual; each option announces its state in the description (`read only` /
+`unavailable`, plan `810`).
 
 ## Keyboard
 
@@ -151,8 +152,8 @@ rule, measured in the runtime).
 - Disabled options are skipped by the arrows and are not tab stops.
 - A `readOnly` group keeps its one tab stop, name, announced state and ring,
   and refuses activation; its arrows move the ring only. There is no
-  `aria-readonly` in 0.10.0, so assistive technology hears the value but not the
-  fact that it is locked (plan `799`).
+  `aria-readonly` in 0.10.0; every option announces `read only` in its
+  description, so the locked state is heard (plans `799`, `810`).
 - The focused option paints a ring (the `ring` role, spread by
   `borderWidth.strong`), tracked per item because GPUix dispatches focus to the
   element that owns the handler — a wrapper never sees it.

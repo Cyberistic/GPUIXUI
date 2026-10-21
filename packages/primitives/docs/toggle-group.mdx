@@ -146,7 +146,8 @@ the committed value does not move, and the group's one tab stop follows the ring
 so Tab leaves from where the reader is. The paint is full contrast with a
 `default` cursor and no hover/press wash; only `disabled` fades the group and
 leaves the tab order, and `disabled` wins when both are passed. 0.10.0 has no
-`aria-readonly`, so the state is behavioural and visual.
+`aria-readonly`, so the state is behavioural and visual — each item announces it
+in the description (`read only` / `unavailable`, plan `810`).
 
 ```tsx
 <ToggleGroup
@@ -181,8 +182,9 @@ leaves the tab order, and `disabled` wins when both are passed. 0.10.0 has no
 - There is no `aria-labelledby`, so a visible heading cannot name the group by
   reference: put its words in `label`.
 - A **read-only** group announces the same names and `"pressed"`/`"not pressed"`
-  values as a writable one. 0.10.0 has no `aria-readonly`, so assistive
-  technology cannot be told that a press is refused (plan `804`).
+  values as a writable one, and each item adds `read only` to its description.
+  0.10.0 has no `aria-readonly`, so the description is the channel (plans `804`,
+  `810`).
 - Each item's label is **chrome, not content**: `userSelect: "none"`, so a drag
   across an item cannot select its text (measured before plan `386`: the drag
   selected `"Align left"`). A caller's `itemStyle` still merges last.
@@ -244,8 +246,9 @@ the item — after its own paint and focus ring:
 
 
 - No `aria-pressed` (above); the value text is the honest channel.
-- No `aria-readonly`: a read-only group keeps its stop and announced states, but
-  assistive technology is not told that a press is refused (plan `804`).
+- No `aria-readonly`: a read-only group keeps its stop and announced states and
+  announces `read only` per item, so the refusal is heard but the attribute
+  itself is absent (plans `804`, `810`).
 - The group has no container chrome: it is a flex row of buttons. Wrap it in a
   `Box` when you want a rounded segmented container, as `ButtonGroup` does for
   attached buttons.

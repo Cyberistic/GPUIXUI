@@ -58,7 +58,9 @@ import {
   ariaName,
   composeHandler,
   composeRef,
+  describeState,
   resolvePartStyle,
+  stateWords,
   useControlState,
   useFocus,
   useRovingFocus,
@@ -249,7 +251,7 @@ export const renderSlider = (
       ref={composeRef(props.ref, handlers.registerTrack)}
       role="slider"
       aria-label={ariaName(props.label)}
-      aria-description={ariaName(props["aria-description"])}
+      aria-description={describeState(props["aria-description"], props)}
       aria-valuetext={sliderValueText(value, props.formatValue)}
       tabIndex={props.disabled === true ? undefined : 0}
       autoFocus={props.disabled === true ? undefined : props.autoFocus}
@@ -377,6 +379,7 @@ export const renderRangeSlider = (
         ref={handlers.registerThumb(index)}
         role="slider"
         aria-label={labels[index]}
+        aria-description={stateWords(props)}
         aria-valuetext={sliderValueText(value, props.formatValue)}
         tabIndex={props.disabled === true ? undefined : 0}
         autoFocus={

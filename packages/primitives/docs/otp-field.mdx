@@ -154,9 +154,11 @@ and does not delete a second character.
 - There is no `aria-labelledby` in 0.10.0, so each cell carries its own
   `aria-label` written from the group's `label`; a `Label` beside the field is
   the visible name.
-- A disabled field is `readOnly` and every cell is out of the tab order. A
-  **read-only** field keeps one tab stop (cell 1) and the normal chrome, and
-  refuses every edit at the component as well as the host (plan `786`).
+- A disabled field is `readOnly` and every cell is out of the tab order; its
+  `group` node announces `unavailable` in the description, and a read-only one
+  announces `read only` (plan `810`). A **read-only** field keeps one tab stop
+  (cell 1) and the normal chrome, and refuses every edit at the component as
+  well as the host (plan `786`).
 - The code is one tab stop, so assistive technology and the Tab order see one
   control with `length` named inputs inside it.
 - The code itself is the native input text; there is no `aria-valuetext` on a

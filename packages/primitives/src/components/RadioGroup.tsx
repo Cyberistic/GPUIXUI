@@ -48,6 +48,7 @@ import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
+  describeState,
   optionText,
   resolvePartStyle,
   useControlState,
@@ -318,7 +319,10 @@ export const renderRadioGroup = (
             ref={handlers.registerItem(index)}
             role="radio"
             aria-label={ariaName(text)}
-            aria-description={ariaName(option.description)}
+            aria-description={describeState(option.description, {
+              disabled,
+              readOnly: props.readOnly,
+            })}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
             autoFocus={

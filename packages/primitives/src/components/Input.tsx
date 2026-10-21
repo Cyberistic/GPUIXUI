@@ -17,6 +17,7 @@ import {
   ariaName,
   composeHandler,
   composeRef,
+  describeState,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -148,7 +149,7 @@ export const fieldHostProps = (
   theme: nativeTextTheme(theme),
   testId: props.testId,
   "aria-label": ariaName(props.label),
-  "aria-description": ariaName(props["aria-description"]),
+  "aria-description": describeState(props["aria-description"], props),
   onChange: (event: EventPayload) => {
     if (!fieldInert(props)) onValueChange(event.value ?? "");
   },

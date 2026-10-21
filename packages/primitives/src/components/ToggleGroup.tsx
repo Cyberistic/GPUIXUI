@@ -57,6 +57,7 @@ import {
   mergeStyle,
   optionText,
   resolvePartStyle,
+  stateWords,
   useControlState,
   useRovingFocus,
   type FocusState,
@@ -274,6 +275,7 @@ export const renderToggleGroup = (
             ref={handlers.registerItem(index)}
             role="button"
             aria-label={ariaName(text)}
+            aria-description={stateWords({ disabled, readOnly })}
             aria-valuetext={pressedValueText(pressed)}
             tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}
             autoFocus={

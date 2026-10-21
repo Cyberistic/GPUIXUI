@@ -79,7 +79,8 @@ there is no row to paint into, so the hint is announced but not painted.
 value and focus ring, paints full contrast with a `default` cursor, and refuses
 click, Enter and Space. `disabled` is the stronger state — it also leaves the
 tab order and fades the track. 0.10.0 has no `aria-readonly`, so the difference
-is behavioural and visual (plan `799`).
+is behavioural and visual; the control announces `read only` / `unavailable` in
+its description (plan `810`).
 
 ## Keyboard
 
@@ -108,11 +109,11 @@ one never does, and a read-only one still does (plan `807`).
 - Role: `Switch`.
 - State is announced through **`aria-valuetext`** (`checked` / `unchecked`);
   there is no `aria-checked` in 0.10.0.
-- `disabled` removes the tab stop; no `aria-disabled`.
+- `disabled` removes the tab stop and announces `unavailable`; no `aria-disabled`
+  (plan `810`).
 - `readOnly` keeps the tab stop, the name, `aria-valuetext` and the ring, and
-  refuses every change. There is no `aria-readonly` in 0.10.0, so assistive
-  technology hears the position but not the fact that it is locked (plan
-  `799`).
+  refuses every change; it announces `read only`. There is no `aria-readonly` in
+  0.10.0, so the description is the channel (plans `799`, `810`).
 - The name comes from the text child, else `label`; there is no
   `aria-labelledby`.
 - With children, the row is **one** node: role `switch`, the text as its name,

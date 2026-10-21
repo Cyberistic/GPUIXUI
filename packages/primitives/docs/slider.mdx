@@ -65,9 +65,10 @@ contrast with a `default` cursor and no hover/press wash, because the wash would
 promise a gesture it refuses. `disabled` is the stronger state (half opacity and
 no tab stop); passing both paints disabled and removes the tab stop.
 
-GPUix 0.10.0 has no `aria-readonly`, so a screen reader is told the value, not
-the state; the difference from `disabled` is behavioural and visual, the same
-rule `Select`, `Rating` and the selection family follow.
+GPUix 0.10.0 has no `aria-readonly`, so the track announces `read only` in its
+description beside the value; `disabled` announces `unavailable`. The rest of the
+difference from `disabled` is behavioural and visual, the same rule `Select`,
+`Rating` and the selection family follow (plan `810`).
 
 ```tsx
 <Slider label="Volume" defaultValue={62} readOnly />
@@ -127,10 +128,10 @@ read-only one still does (plan `808`).
   `aria-valuenow`, `aria-valuemin` or `aria-valuemax`, so a screen reader hears
   the value but not the range. Give the slider a `label`, and a `formatValue`
   when the number alone is ambiguous (`"62%"`, `"$40"`).
-- A disabled slider has no tab stop, so it is skipped rather than announced as
-  a control that cannot be used. A **read-only** slider keeps its tab stop, name
-  and announced value: it is reachable and unchanged. 0.10.0 has no
-  `aria-readonly`, so the state is not announced (plan `802`).
+- A disabled slider has no tab stop and announces `unavailable` in its
+  description. A **read-only** slider keeps its tab stop, name and announced
+  value: it is reachable and unchanged, and announces `read only`. 0.10.0 has no
+  `aria-readonly`, so the description is the channel (plans `802`, `810`).
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
   tip opens on hover and on keyboard focus. The track is always 100 % wide, so a
   `Tooltip` around it needs `style={{ width: … }}` on the tooltip root — the root

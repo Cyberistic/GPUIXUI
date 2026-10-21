@@ -112,8 +112,8 @@ field still derives its height from `rows`. `FieldState` is exported from
 - No rich text, no markdown preview, no character counter.
 - No auto-grow beyond `maxRows`: past it the field scrolls.
 - `disabled` is read-only at the host plus tab-order and handler guards, because
-  GPUix has no `disabled` prop (plan 025); assistive technology hears a
-  read-only field.
+  GPUix has no `disabled` prop (plan 025); the field announces `unavailable` in
+  its description (plan `810`).
 
 ## Verification
 

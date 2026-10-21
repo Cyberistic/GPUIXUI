@@ -160,8 +160,8 @@ the caller's handler.
 - The value is the native input's text, which the runtime exposes to AccessKit.
   There is no `aria-valuenow`/`min`/`max` in GPUix 0.10.0.
 - A disabled field is `readOnly`, out of the tab order and paints the disabled
-  chrome; it commits no pending draft on blur; assistive technology hears
-  read-only, which is the honest state (the host has no `disabled` prop). A
+  chrome; it commits no pending draft on blur, and announces `unavailable` in its
+  description because the host has no `disabled` prop (plan `810`). A
   **read-only** field is a different state: it keeps its tab stop and the normal
   chrome and refuses edits at the component as well as the host (plan `786`).
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description` to

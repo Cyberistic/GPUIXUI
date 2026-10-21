@@ -48,6 +48,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { selectionValueText } from "./Checkbox.js";
 import {
   ariaName,
+  describeState,
   hasText,
   optionText,
   resolvePartStyle,
@@ -235,7 +236,7 @@ const renderRow = (
       ref={registerRow}
       role="checkbox"
       aria-label={ariaName(label)}
-      aria-description={ariaName(description)}
+      aria-description={describeState(description, { disabled, readOnly })}
       aria-valuetext={selectionValueText(state)}
       tabIndex={disabled ? undefined : 0}
       autoFocus={disabled ? undefined : autoFocus}

@@ -32,6 +32,7 @@ import {
   composeHandler,
   composeRef,
   controlName,
+  describeState,
   hasText,
   joinDescription,
   passiveTriggerHandlers,
@@ -215,9 +216,9 @@ export const renderCheckbox = (
     "aria-label": Option.getOrUndefined(
       controlName(props.label, props.children),
     ),
-    "aria-description": joinDescription(
-      props.description,
-      props["aria-description"],
+    "aria-description": describeState(
+      joinDescription(props.description, props["aria-description"]),
+      props,
     ),
     "aria-valuetext": selectionValueText(current),
     autoFocus: props.disabled === true ? undefined : props.autoFocus,

@@ -81,7 +81,8 @@ handler, not to a field.
   the field.
 - `readOnly` remains focusable and selectable, which is the platform contract.
 - A `disabled` field is read-only at the host (GPUix has no `disabled` prop), so
-  assistive technology hears a read-only field, not a disabled one. It is out of
+  its node is still a `TextInput`; it announces `unavailable` in its description
+  (plan `810`), which is how the missing `aria-disabled` is filled. It is out of
   the tab order and its handlers are guarded, so keyboard and pointer users
   cannot edit or submit it.
 

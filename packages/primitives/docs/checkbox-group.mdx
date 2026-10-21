@@ -91,7 +91,8 @@ order. A press that changes nothing does not call `onValueChange`.
 state and focus ring, paints full contrast with a `default` cursor, and refuses
 its click, Enter and Space — the select-all parent included. `disabled` is the
 stronger state; it also leaves the tab order and fades each box. 0.10.0 has no
-`aria-readonly`, so the difference is behavioural and visual (plan `799`).
+`aria-readonly`, so the difference is behavioural and visual; each row announces
+its state in the description (`read only` / `unavailable`, plan `810`).
 
 ## Keyboard
 
@@ -133,14 +134,14 @@ does not move it to whatever now sits at the old index.
   so a separate `Text` beside a control is inert to the pointer and to assistive
   technology. Nesting a focusable box inside a clickable row would be two
   interactive elements in one.
-- `disabled` removes the row's tab stop; there is no `aria-disabled`. Native focus
-  can outlive the prop change — a form that disables while saving leaves the
-  keyboard where it was — so a disabled row is inert to both the pointer and the
-  keys and paints no focus ring (plan 332).
+- `disabled` removes the row's tab stop and announces `unavailable`; there is no
+  `aria-disabled` (plan `810`). Native focus can outlive the prop change — a form
+  that disables while saving leaves the keyboard where it was — so a disabled row
+  is inert to both the pointer and the keys and paints no focus ring (plan 332).
 - `readOnly` keeps every row's tab stop, name, `aria-valuetext` and ring, and
-  refuses every change. There is no `aria-readonly` in 0.10.0, so assistive
-  technology hears the selection but not the fact that it is locked (plan
-  `799`).
+  refuses every change. There is no `aria-readonly` in 0.10.0; the row announces
+  `read only` in its description, so the locked state is heard (plans `799`,
+  `810`).
 - `option.description` is the row's `aria-description`, so the visible hint is
   announced with the name. GPUix has no `aria-describedby`, but it exposes the
   string form; a blank description is absent — neither announced nor painted

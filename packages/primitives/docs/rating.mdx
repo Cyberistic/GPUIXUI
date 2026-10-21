@@ -130,8 +130,9 @@ read-only one is `default` and a disabled one `not-allowed` (plan `796`).
   value's star, or star 1 when unrated — so a keyboard user can hear the value,
   and the focused star paints the ring. It takes no input: no click, no
   `Enter`/`Space`, no arrows, no preview. GPUix 0.10.0 has no `aria-readonly`,
-  so that reachable star's `"N of max"` and `checked`/`unchecked` are the only
-  announcement. `disabled` is the blocked state: it leaves the tab order, paints
+  so every star adds `read only` to its description beside its `"N of max"` and
+  `checked`/`unchecked`. `disabled` is the blocked state: it leaves the tab
+  order, paints
   muted, `not-allowed` and no ring. Only `disabled` drops out of the tab order
   (plan `800`).
 

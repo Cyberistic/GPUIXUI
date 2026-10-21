@@ -36,10 +36,10 @@ import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
 import { hasOpaqueContent, labelParts } from "./content.js";
 import {
-  ariaName,
   composeHandler,
   composeRef,
   controlName,
+  describeState,
   mergeStyle,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -152,7 +152,7 @@ export const renderToggle = (
       aria-label={Option.getOrUndefined(
         controlName(props.label, props.children),
       )}
-      aria-description={ariaName(props["aria-description"])}
+      aria-description={describeState(props["aria-description"], props)}
       aria-valuetext={pressedValueText(state.current)}
       autoFocus={props.disabled === true ? undefined : props.autoFocus}
       tabIndex={props.disabled === true ? undefined : 0}

@@ -103,6 +103,7 @@ import {
   ariaName,
   composeHandler,
   composeRef,
+  describeState,
   optionText,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -659,7 +660,7 @@ export const renderSelect = (
         ref={composeRef(ref, handlers.registerTrigger)}
         role="combobox"
         aria-label={ariaName(label)}
-        aria-description={ariaName(description)}
+        aria-description={describeState(description, { disabled, readOnly })}
         aria-expanded={open}
         aria-valuetext={selectValueText(selectedLabel, placeholder)}
         /* Explicit, not `undefined`: GPUix resolves `disabledProp ??
