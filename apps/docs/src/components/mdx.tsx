@@ -6,6 +6,7 @@ import { ComponentPreview } from "./docs/component-preview";
 import { ComponentSource } from "./docs/component-source";
 import { Install } from "./docs/install";
 import { LaneTable } from "./docs/lane-table";
+import { LicenseInventory } from "./docs/license-table";
 import { ThemeEditor } from "./docs/theme-editor";
 import { TypeScale } from "./docs/type-scale";
 
@@ -19,6 +20,7 @@ export const mdxComponents = {
   ComponentSource,
   Install,
   LaneTable,
+  LicenseInventory,
   ThemeEditor,
   TypeScale,
 };

@@ -1,0 +1,100 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import {
+  missingReleaseArtifacts,
+  parseLicense,
+  releaseArtifacts,
+} from "./licenses";
+import { sidebarPages } from "./sidebar-pages.test-util";
+
+/**
+ * The licence inventory.
+ *
+ * `LICENSES/<reference>.md` is a release requirement, so the site reads it
+ * rather than restating it — and a record the parser cannot read would vanish
+ * from `/docs/license` with no other symptom, which is the one outcome a
+ * licence page may not have. A record therefore has to name where it came from,
+ * its licence, what we take and what we leave out; each is checked here.
+ */
+
+const dir = new URL("../../../../LICENSES/", import.meta.url);
+
+const recordFiles = readdirSync(dir).filter(
+  (name) => name.endsWith(".md") && name !== "README.md",
+);
+
+const read = (name: string): string => readFileSync(new URL(name, dir), "utf8");
+
+/** A record with every required part, for the tests that remove one. */
+const record = `# \`example\` — design reference
+
+- Repository: <https://example.com/example>
+- Licence: MIT — \`Copyright (c) 2026 Example\`
+
+## What we use
+
+The API shape.
+
+## What we do not use
+
+No source is copied.
+`;
+
+describe("the licence records", () => {
+  it("every file in LICENSES/ parses, so none is dropped from the page", () => {
+    const unreadable = recordFiles.filter(
+      (name) => parseLicense(name, read(name)) === undefined,
+    );
+
+    expect(unreadable).toEqual([]);
+    expect(recordFiles.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("reads the reference, its licence and both provenance sections", () => {
+    const parsed = parseLicense("example.md", record);
+
+    expect(parsed?.title).toBe("example — design reference");
+    expect(parsed?.source).toBe("https://example.com/example");
+    expect(parsed?.licence).toBe("MIT — Copyright (c) 2026 Example");
+    expect(parsed?.uses).toBe("The API shape.");
+    expect(parsed?.exclusions).toBe("No source is copied.");
+  });
+
+  it.each([
+    ["a licence line", /^- Licence: .*$/m],
+    ["what we take", /^## What we use/m],
+    ["what we do not take", /^## What we do not use/m],
+  ])("refuses a record without %s", (_part, marker) => {
+    expect(parseLicense("example.md", record.replace(marker, ""))).toBe(
+      undefined,
+    );
+  });
+
+  it("names the release artefacts the directory still lacks", () => {
+    expect(missingReleaseArtifacts(["inventory.md", "NOTICE"])).toEqual([
+      "provenance.md",
+    ]);
+    expect(missingReleaseArtifacts(releaseArtifacts)).toEqual([]);
+  });
+});
+
+describe("the license page", () => {
+  const page = readFileSync(
+    new URL("../../content/docs/license.mdx", import.meta.url),
+    "utf8",
+  );
+
+  it("renders the records instead of restating them", () => {
+    expect(page).toContain("<LicenseInventory />");
+    expect(page).toContain("LICENSES/");
+  });
+
+  it("sits in the sidebar after Contributing", () => {
+    const pages = sidebarPages(new URL("../../", import.meta.url));
+
+    expect(pages).toContain("license");
+    expect(pages.indexOf("license")).toBeGreaterThan(
+      pages.indexOf("contributing"),
+    );
+  });
+});
