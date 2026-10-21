@@ -937,6 +937,52 @@ The report is part of `auditTheme`, as `audit.disabledFade`, so a brand's gate
 catches a label that fades into its own fill even though every enabled pair
 passes.
 
+#### The dim a control paints while Tab is elsewhere
+
+`@gpuix/native` fades **every other focusable element** while one control has
+keyboard focus, so a keyboard user can see where Tab can go. The element keeps
+40% of itself and shows the surface behind it; the runtime's `keyboardFocusDim`
+field is on by default, is per element, and an element that draws its own focus
+look opts out with `keyboardFocusDim: false`. `contrastRatio` refuses the
+result, so the one paint every focused state in the library triggers was
+measured by nothing. `keyboardFocusDimOpacity` is that share (`0.4`) and
+`keyboardDimFailures(theme, floor?)` measures it by compositing.
+
+The share is measured, not assumed: the `keyboard-focus-dim` window capture on
+0.11.0 paints the dark theme's `muted` fill `#222730` as `#181C23` over the
+page, and its `foreground` text `#EEF1F5` as `#6E7177` over *that fill*. Both are
+`blend(colour, behind, 1 - 0.4)`, and the text lands on the dimmed fill rather
+than on the page — the same composite the disabled fade uses
+(§The fade a disabled control paints), because the runtime dims each element's
+own paint. A `KeyboardDimPair` names a placement and a `KeyboardDimFailure`
+carries it with the composited `ratio` (or `undefined` for a role it cannot
+composite) and the floor.
+
+`keyboardFocusDimOpacity` is a runtime constant rather than a `Theme` group:
+every element the runtime dims gets this share, so a brand that set its own
+would describe a paint the library does not have. `keyboardDimPairs` is the 32
+placements the three filled actions, a field's value and placeholder, a
+focusable row's own text and a selected row sit on across `background`, `card`,
+`popover` and `muted`; a row with no fill of its own names the surface as its
+fill, which is that composite.
+
+The floor is `decorativeFloor` (1.05:1), deliberately **not** a readability
+floor: the dim is a where-can-Tab-go cue whose job is to keep the control
+recognisable, not readable. Dimming a saturated fill toward a light page closes
+it on its label — the tightest shipped placement is Linux light's `primary` over
+`card` at 1.27:1 (`#C8DDF5` on `#A4C6EF`) — so a control whose text must stay
+readable while the focus is elsewhere opts out of the dim rather than asking the
+palette for a contrast the mechanism cannot keep. That adoption, and folding the
+report into `auditTheme`, are interlock rows in `TODO.md`. `focus-dim.test.ts`
+holds the measured values, every shipped, high-contrast, platform and authored
+theme, the erased label, the unmeasurable role and a caller's stricter floor.
+
+```ts
+import { keyboardDimFailures, lightTheme } from "@gpuixui/tokens";
+
+keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
+```
+
 ### Decorative surfaces
 
 Seven surfaces carry no text and are not an essential boundary, so WCAG's floors

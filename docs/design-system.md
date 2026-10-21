@@ -247,6 +247,7 @@ it. It is held instead to one shadow per level, tinted by the `shadow` role (see
 | invalid | the `destructive` role as the field's edge and as its `focusVisible` line; the fill and text roles do not change, so the value and placeholder stay readable |
 | loading | a mark — `primary`, or a status tone's readable role — never the disabled fade: a busy control keeps its label, its tab stop and its announcement |
 | focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
+| dimmed | `keyboardFocusDimOpacity` — every other focusable keeps 40% of itself while one control has keyboard focus; a control whose text must stay readable opts out with `keyboardFocusDim: false` |
 | text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
@@ -301,6 +302,22 @@ is recorded in `TODO.md` → Interlocks. The fade is measured by the gate as
 whose label composites into its own faded fill fails by name even while every
 enabled pair passes.
 
+**Keyboard focus dims every other control, and that is a paint too.** While one
+element has keyboard focus, `@gpuix/native` multiplies every other focusable
+element's opacity by `keyboardFocusDimOpacity` (`0.4`, on by default and per
+element; `keyboardFocusDim: false` opts out). It is a where-can-Tab-go cue, not
+a reading mode: dimming a saturated fill toward a light page closes it on its
+label, and the tightest shipped placement is Linux light's `primary` over a card
+at 1.27:1 (`#C8DDF5` on `#A4C6EF`). So the contract is the same one the disabled
+state carries — the label is still seen — at `decorativeFloor` (1.05:1), not a
+readability floor, and a control whose text must stay readable while the focus
+is elsewhere opts out of the dim. `keyboardDimFailures` measures the 32
+placements the three filled actions, a field, a focusable row and a selected row
+sit on; the composite is the disabled fade's, with the label over the *dimmed*
+fill — measured in the `keyboard-focus-dim` window capture, which paints the
+dark `muted` fill `#222730` as `#181C23` and the `foreground` text `#EEF1F5` as
+`#6E7177`.
+
 **Busy is a state of its own, and it is not faded.** A control that is working
 keeps its label at its resting contrast and stays in the tab order — a keyboard
 user is not dropped from the page mid-action — while it refuses activation on
@@ -351,6 +368,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text on `background`/`card`/`popover` (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own fill and on `background`/`card`/`popover` (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
+| the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips and the field | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |

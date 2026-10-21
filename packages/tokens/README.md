@@ -249,6 +249,24 @@ paints the outline and dims the other focusables, a mouse press paints neither,
 and a programmatic focus after a Tab paints it. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
+## Keyboard focus dim
+
+While one element has keyboard focus, GPUix multiplies **every other focusable
+element's** opacity by `keyboardFocusDimOpacity` (`0.4`); the field is on by
+default, per element, and an element that draws its own focus look opts out with
+`keyboardFocusDim: false`. The share is measured, not assumed: the
+`keyboard-focus-dim` window capture paints the dark theme's `muted` fill
+`#222730` as `#181C23` and its `foreground` text `#EEF1F5` as `#6E7177` over that
+fill, which is `blend(colour, behind, 1 - 0.4)`.
+
+`keyboardDimPairs` is the 32 placements the three filled actions, a field's value
+and placeholder, a focusable row's own text and a selected row sit on, and
+`keyboardDimFailures(theme, floor?)` composites each one. The floor is
+`decorativeFloor` (1.05:1) rather than a readability floor — the dim is a
+where-can-Tab-go cue — and the tightest shipped placement is Linux light's
+`primary` over a card at 1.27:1, so a control whose text must stay readable while
+the focus is elsewhere opts out of the dim.
+
 ## Text selection
 
 `selection` is the translucent wash behind a run the reader selected. GPUix
@@ -400,6 +418,11 @@ audit.indicators; // [] — every progress fill, spinner dot and presence mark i
 audit.disabledFade; // [] — every faded disabled label still reads against its faded fill
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
+
+`keyboardDimFailures(theme, floor?)` is the one contract the gate does not run
+yet: it measures the dim the runtime paints on every other focusable while one
+has keyboard focus, at `decorativeFloor` (see §Keyboard focus dim). Folding it
+into `auditTheme` is recorded in `TODO.md` → Interlocks.
 
 Each report is also a function of its own:
 

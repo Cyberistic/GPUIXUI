@@ -21,6 +21,8 @@ import {
   contrastRatio,
   highContrastFloors,
 } from "./contrast.js";
+import { decorativeFloor } from "./decorative.js";
+import { keyboardDimPairs, keyboardFocusDimOpacity } from "./focus-dim.js";
 import { platformNames, platformStyles } from "./platforms.js";
 import {
   avatarSize,
@@ -245,5 +247,32 @@ describe("docs/design-system.md", () => {
       "**Busy is a state of its own, and it is not faded.**",
     );
     expect(doc).toContain("`disabledOpacity` is never the busy");
+  });
+
+  it("prints the keyboard dim's measured share, floor and opt-out", () => {
+    const row =
+      /the dim another focusable[^\n|]*\| ([\d.]+):1 \| ([\d.]+):1 \|/.exec(
+        doc,
+      );
+
+    expect(
+      row,
+      "docs/design-system.md no longer states the keyboard dim's floor",
+    ).toBeDefined();
+    expect(Number(row?.[1])).toBe(decorativeFloor);
+    expect(Number(row?.[2])).toBe(decorativeFloor);
+
+    // §8 names the runtime constant and the per-element escape hatch, and states
+    // the measured reason a control opts out rather than asking for a floor the
+    // mechanism cannot keep.
+    expect(doc).toContain("`keyboardFocusDimOpacity`");
+    expect(doc).toContain("`keyboardFocusDim: false`");
+    expect(doc).toContain(
+      `the tightest shipped placement is Linux light's \`primary\` over a card`,
+    );
+
+    // The measured share is the page's number, not an assumption.
+    expect(doc).toContain(`(\`${keyboardFocusDimOpacity}\`, on by default`);
+    expect(doc).toMatch(new RegExp(`${keyboardDimPairs.length}\\s+placements`));
   });
 });

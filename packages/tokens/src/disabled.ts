@@ -17,8 +17,9 @@
  * not have. That gap is the argument for the role pair, not a second floor.
  */
 
-import { blend, type ThemeColors } from "./color.js";
+import { type ThemeColors } from "./color.js";
 import { contrastFloors, contrastRatio } from "./contrast.js";
+import { fadedPair, type FadeFailure, type FadePair } from "./fade.js";
 
 /**
  * The share of itself a control keeps while disabled.
@@ -30,14 +31,7 @@ import { contrastFloors, contrastRatio } from "./contrast.js";
 export const disabledOpacity = 0.5;
 
 /** One control the fade is measured on: its fill, its label and its surface. */
-export interface DisabledFadePair {
-  /** The role the control is filled with while it is enabled. */
-  readonly fill: keyof ThemeColors;
-  /** The role its text is painted in while it is enabled. */
-  readonly label: keyof ThemeColors;
-  /** The surface the control sits on, which the fade lets through. */
-  readonly over: keyof ThemeColors;
-}
+export type DisabledFadePair = FadePair;
 
 /**
  * The controls that fade rather than swap roles: the three filled actions and a
@@ -54,41 +48,7 @@ export const disabledFadePairs: readonly DisabledFadePair[] = [
 ];
 
 /** One faded control whose label is too close to the faded fill it sits on. */
-export interface DisabledFadeFailure {
-  /** The fill role, before the fade. */
-  readonly fill: keyof ThemeColors;
-  /** The label role, before the fade. */
-  readonly label: keyof ThemeColors;
-  /** The surface the control sits on. */
-  readonly over: keyof ThemeColors;
-  /**
-   * The composited label against the composited fill, or `undefined` when a
-   * role is not an opaque hex colour and the result cannot be measured.
-   */
-  readonly ratio: number | undefined;
-  /** The floor it had to reach. */
-  readonly floor: number;
-}
-
-/**
- * The composited label a reader sees on a disabled control.
- *
- * A control at `disabledOpacity` shows that share of its fill over the surface,
- * and its label is faded the same way over the faded fill — that second
- * composite is the one a hand calculation usually forgets, and it is why the
- * label falls so much further than the fill.
- */
-const fadedLabelOnFill = (
-  colors: ThemeColors,
-  { fill, label, over }: DisabledFadePair,
-): { readonly label: string; readonly fill: string } => {
-  const behind = colors[over];
-  const fadedFill = blend(colors[fill], behind, 1 - disabledOpacity);
-  return {
-    label: blend(colors[label], fadedFill, 1 - disabledOpacity),
-    fill: fadedFill,
-  };
-};
+export type DisabledFadeFailure = FadeFailure;
 
 /**
  * Every faded control in a theme whose label misses the disabled floor.
@@ -109,7 +69,7 @@ export function disabledFadeFailures(
   floor: number = contrastFloors.disabled,
 ): readonly DisabledFadeFailure[] {
   return disabledFadePairs.flatMap((pair) => {
-    const faded = fadedLabelOnFill(theme.colors, pair);
+    const faded = fadedPair(theme.colors, pair, disabledOpacity);
     const ratio = contrastRatio(faded.label, faded.fill);
     return ratio !== undefined && ratio >= floor
       ? []
