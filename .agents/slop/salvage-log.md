@@ -186,7 +186,7 @@
 170-platform-styles-native.md | discarded | the theme-platform scenario already reads the platform faces in the runtime
 171-native-search-highlights.md | queued | real gap: no native search-highlight probe; folded into the playground probe row
 172-drag-autoscroll.md | queued | real gap: drag edge auto-scroll is unprobed; folded into the playground probe row
-173-horizontal-scroll.md | queued | real gap: horizontal scroll and tab overflow are unprobed; folded into the playground probe row
+173-horizontal-scroll.md | landed | the `scroll-horizontal` scenario drives an `overflowX` strip: deltaX moves x, y stays 0, onScroll reports, clamps at -1120; tab overflow still open
 174-tab-strip-focus.md | queued | real gap: no tab-strip focus probe; folded into the playground probe row
 175-nested-panels.md | queued | real gap: no nested-panel probe; folded into the playground probe row
 176-command-palette.md | queued | real gap: no command-palette probe; folded into the playground probe row

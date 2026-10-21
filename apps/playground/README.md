@@ -19,7 +19,7 @@ owns each id, title and capability and imports nothing native, so `--list` and
 the argument guard run on a host with no binding; `src/scenarios/index.ts` owns
 the one `view`/`steps` implementation per id and is imported only after the
 preflight. `Record<ScenarioId, ScenarioBody>` makes a missing implementation a
-compile error. Each scenario is one capability, one view, one `steps` effect: the twelve
+compile error. Each scenario is one capability, one view, one `steps` effect: the thirteen
 core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
@@ -68,7 +68,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (22/22 green); -> 2 on a host with no binding
+# -> 0 here (23/23 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -207,12 +207,30 @@ measured: marking the chrome line `selectable` fails
 first line fails `a drag over the selectable line produces a selection`
 (`expected a value, got none`) — both exit `1`, restored green.
 
+## Horizontal scroll
+
+`scroll-horizontal` mounts an `overflowX: "scroll"` strip (18 columns of 80px in a
+320px viewport) and drives it with `deltaX` wheels. It is the scroller a wide
+table, a tab strip or a code block sits in, and no scenario had measured one.
+
+| Step | Check |
+| ---- | ----- |
+| mount | the strip reports an offset and starts at `x = 0` |
+| wheel `deltaX = -160` | `x < 0` — negative scrolls right, like `deltaY` scrolls down |
+| the same wheel | `y` stays `0`: a horizontal gesture does not move the vertical axis |
+| `onScroll` | reports a non-zero `deltaX` |
+| wheel `deltaX = -4000` | clamps exactly at `-(18 × 80 − 320) = -1120` |
+
+Negative control, measured: dropping `overflowX` from the strip fails
+`the strip reports a scroll offset` (`expected a value, got none`), exit `1`;
+restored, green.
+
 ## Evidence on this host
 
-The suite is **22/22 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **23/23 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-22/22 scenarios passed · capabilities: layout=verified text=verified
+23/23 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -228,7 +246,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
-| scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
+| scroll | the wheel **works**; `deltaY` is negative to scroll down and `deltaX` negative to scroll right (the opposite of the DOM); an `overflowX` strip clamps exactly at `contentWidth − viewportWidth` |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
@@ -544,10 +562,10 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The twelve core capabilities (including the token gallery, the modal contract,
+- The thirteen core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (22/22), with a written report and screenshots.
+  (23/23), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
@@ -567,7 +585,9 @@ narrower. Each deviation is deliberate and measured:
   (exit `1`). In `text-selection`, marking the chrome line `selectable` fails
   `a drag over the chrome line selects nothing`, and dropping `selectable` from
   the content line fails `a drag over the selectable line produces a selection`
-  (`expected a value, got none`) — exit `1` each.
+  (`expected a value, got none`) — exit `1` each. In `scroll-horizontal`,
+  dropping `overflowX` fails `the strip reports a scroll offset`
+  (`expected a value, got none`, exit `1`).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

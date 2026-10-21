@@ -92,6 +92,11 @@ export const registry = [
     capability: "scroll",
   },
   {
+    id: "scroll-horizontal",
+    title: "Scroll: an overflowX strip moves on the X axis and clamps",
+    capability: "scroll",
+  },
+  {
     id: "panel-resize",
     title: "Panel resize: pointer capture and clamping",
     capability: "panel",

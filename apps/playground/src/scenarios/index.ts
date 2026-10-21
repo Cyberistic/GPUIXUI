@@ -20,6 +20,7 @@ import { inputScenario } from "./input.js";
 import { focusScenario } from "./focus.js";
 import { overlayScenario } from "./overlay.js";
 import { scrollScenario } from "./scroll.js";
+import { scrollHorizontalScenario } from "./scroll-horizontal.js";
 import { panelScenario } from "./panel.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
@@ -48,6 +49,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "modal-focus-trap": modalScenario,
   "floating-placement": floatingScenario,
   "scroll-container": scrollScenario,
+  "scroll-horizontal": scrollHorizontalScenario,
   "panel-resize": panelScenario,
   "virtual-list-window": virtualListScenario,
   "table-select-sort": tableSelectSortScenario,
