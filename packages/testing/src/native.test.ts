@@ -59,6 +59,8 @@ const fake = (focusedId: number | null = 6) => {
     nativeSimulateMouseUp: (x, y) => calls.push(`up ${x},${y}`),
     nativeSimulateScrollWheel: (x, y, deltaX, deltaY) =>
       calls.push(`wheel ${x},${y} ${deltaX},${deltaY}`),
+    nativeSimulateFileDrop: (x, y, paths) =>
+      calls.push(`drop ${x},${y} ${paths.join(",")}`),
     simulateKeystrokes: (keystrokes) => calls.push(`key ${keystrokes}`),
     focusNext: () => calls.push("focusNext"),
     focusPrevious: () => calls.push("focusPrevious"),
@@ -116,6 +118,20 @@ describe("createTestHost", () => {
     host.click("row");
     host.wheel("row", 0, -40);
     expect(calls).toEqual(["click 100,50", "wheel 100,50 0,-40"]);
+  });
+
+  it("drops files at the nearest painted ancestor with every path", () => {
+    const { host, calls } = fake();
+    host.fileDrop("row", ["/tmp/alpha.txt", "/tmp/beta.txt"]);
+    // Flush first: the drop hit-tests the painted layout, which a scenario that
+    // just replaced the view has not painted yet. Dispatch and flush after: the
+    // raw native call queues its event.
+    expect(calls).toEqual([
+      "flush",
+      "drop 100,50 /tmp/alpha.txt,/tmp/beta.txt",
+      "dispatch",
+      "flush",
+    ]);
   });
 
   it("does nothing when the target is not painted", () => {

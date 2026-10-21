@@ -219,6 +219,15 @@ export interface SmokeHost {
     deltaY: number,
     steps?: number,
   ) => void;
+  /**
+   * Simulates a Finder-style file drop at the centre of `testId`.
+   *
+   * The runtime dispatches the OS drop path (`FileDrop::Entered` then `Submit`),
+   * so a scenario can prove `onFileDrop` receives absolute paths — and that a
+   * drop elsewhere reaches no handler — without a human dragging a file from
+   * Finder. The offscreen renderer is the only renderer that exposes this.
+   */
+  readonly fileDrop: (testId: string, paths: ReadonlyArray<string>) => void;
   readonly scrollOffset: (testId: string) => Offset | null;
   /**
    * Every highlight wash the renderer painted in the last frame.

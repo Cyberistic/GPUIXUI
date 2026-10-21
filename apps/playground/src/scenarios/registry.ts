@@ -68,6 +68,11 @@ export const registry = [
     capability: "input",
   },
   {
+    id: "file-drop",
+    title: "File drop: onFileDrop receives absolute paths, only over the zone",
+    capability: "input",
+  },
+  {
     id: "focus-traversal",
     title: "Focus: autoFocus, click-to-focus and native traversal",
     capability: "focus",

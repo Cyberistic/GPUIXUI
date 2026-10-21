@@ -17,6 +17,7 @@ import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { textSelectionScenario } from "./selection.js";
 import { inputScenario } from "./input.js";
+import { fileDropScenario } from "./file-drop.js";
 import { focusScenario } from "./focus.js";
 import { overlayScenario } from "./overlay.js";
 import { scrollScenario } from "./scroll.js";
@@ -49,6 +50,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "text-native": textScenario,
   "text-selection": textSelectionScenario,
   "input-edit": inputScenario,
+  "file-drop": fileDropScenario,
   "focus-traversal": focusScenario,
   "overlay-dialog": overlayScenario,
   "modal-focus-trap": modalScenario,

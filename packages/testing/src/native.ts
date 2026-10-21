@@ -58,6 +58,11 @@ export interface NativeRenderer {
     deltaX: number,
     deltaY: number,
   ) => void;
+  readonly nativeSimulateFileDrop: (
+    x: number,
+    y: number,
+    paths: Array<string>,
+  ) => void;
   readonly simulateKeystrokes: (keystrokes: string) => void;
   readonly focusNext: () => void;
   readonly focusPrevious: () => void;
@@ -236,6 +241,24 @@ export const createTestHost = (renderer: NativeRenderer): SmokeHost => ({
       );
       renderer.nativeSimulateMouseUp(point.x + deltaX, point.y + deltaY);
     }),
+  fileDrop: (testId, paths) => {
+    // The native drop hit-tests the last painted layout, and a scenario's view
+    // replaces the previous one without an implicit paint. Flush before reading
+    // the centre, or a drop right after a mount lands on the scenario that just
+    // unmounted.
+    renderer.flush();
+    atCenter(renderer, testId, (point) => {
+      renderer.nativeSimulateFileDrop(
+        point.x,
+        point.y,
+        Arr.fromIterable(paths),
+      );
+      // A raw native call, like `focusNext`: the event is queued, so a scenario
+      // would read the old readout unless it is dispatched and painted here.
+      renderer.dispatchNativeEvents();
+      renderer.flush();
+    });
+  },
   // The wash's rects are already the shape `Bounds` names; copying them keeps
   // the port's value independent of the renderer's array, which it reuses.
   highlights: (): ReadonlyArray<HighlightWash> =>

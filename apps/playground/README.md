@@ -78,7 +78,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (28/28 green); -> 2 on a host with no binding
+# -> 0 here (29/29 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -243,12 +243,41 @@ Negative control, measured: dropping `overflowX` from the strip fails
 `the strip reports a scroll offset` (`expected a value, got none`), exit `1`;
 restored, green.
 
+## File drops
+
+`file-drop` mounts a drop zone and drives the renderer's own
+`nativeSimulateFileDrop`, which dispatches the same `FileDrop::Entered` then
+`Submit` pair a Finder drag produces. The payload is therefore measured rather
+than assumed, and the second drop proves a target is a real region rather than
+the whole window.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `drops=0 paths=` |
+| drop `/tmp/alpha.txt` and `/tmp/beta.txt` on the zone | `drops=1 paths=/tmp/alpha.txt,/tmp/beta.txt` — absolute paths, in order |
+| drop a file on a sibling element | the readout does not change |
+
+`SmokeHost` gained `fileDrop(testId, paths)`, which flushes the painted layout
+before the raw native call (a view that just replaced the previous scenario has
+not painted), aims at the centre of the nearest painted ancestor, then dispatches
+and flushes the queued event. `packages/testing`'s fake-renderer suite holds that
+sequence (`flush`, `drop 100,50 /tmp/alpha.txt,/tmp/beta.txt`, `dispatch`,
+`flush`; 47 tests). Negative control, measured: pointing the outside drop at the
+zone fails `a drop outside the zone reaches no handler` (`expected "drops=1
+paths=…", got "drops=2 …"`, exit `1`).
+
+Measured ordering fact: when the scenario before it had left a **text field**
+focused (`--only input-edit --only file-drop`), the simulated drop did not reach
+the zone (`drops=0`) until the probe pressed the sibling element first; the press
+ends the platform's text-input session. The probe keeps that press so it is
+independent of what ran before it.
+
 ## Evidence on this host
 
-The suite is **28/28 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **29/29 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-28/28 scenarios passed · capabilities: layout=verified text=verified
+29/29 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -896,7 +925,7 @@ narrower. Each deviation is deliberate and measured:
 - The thirteen core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (28/28), with a written report and screenshots.
+  (29/29), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
