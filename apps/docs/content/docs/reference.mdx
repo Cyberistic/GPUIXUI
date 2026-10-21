@@ -1,0 +1,56 @@
+---
+title: API reference
+description: Every import specifier the workspace publishes, read from each package's exports map — and where the signatures live.
+---
+
+The library's public API is its **entry points**, not its files. A package
+declares what a consumer may import in its `exports` map; an import outside
+those subpaths is internal and may move without a major version. This page is
+generated from those maps, so it cannot advertise a subpath a package does not
+publish.
+
+<ApiReference />
+
+## How to read it
+
+- **Import** is the exact specifier. `@gpuixui/components/card` resolves through
+  the `./*` pattern to one file per component; `@gpuixui/primitives/core` is a
+  named module.
+- **Resolves to** is the file the subpath maps to. Most packages resolve to
+  workspace source, so a reader can open the file directly; a package that ships
+  a build resolves to `dist/`, and its row says **built module**.
+- **Kind** distinguishes a single module from a pattern: for a pattern, the
+  specifier is the directory plus the file's base name (`accordion.tsx` →
+  `@gpuixui/components/accordion`).
+- A **pattern exposes files, not components.** A `.test.tsx` sitting beside the
+  sources matches the same `./*` rule; importing one is not a supported use and
+  nothing in the library does it.
+
+## Where the signatures live
+
+This page answers *what can I import*; the per-component page answers *what does
+this part accept*:
+
+| Question | Where |
+| -------- | ----- |
+| The props, defaults and consequences of a part | The component's page under Components or Primitives |
+| The compound-part contract every component follows | [Architecture](/docs/architecture) and `docs/component-api.md` |
+| Colour, type, spacing, radius, density and the platform styles | [Theming](/docs/theming) |
+| What the runtime provides, and what it refuses | [Runtime](/docs/runtime) |
+| Where a new export belongs | [Architecture](/docs/architecture) §Where a change goes |
+
+`@gpuixui/config` and `@gpuixui/deploy` are workspace packages with no runtime
+entry point: one is the shared TypeScript and format configuration, the other is
+the Worker that publishes this site. Neither is imported by a component.
+`@gpuixui/testing` is the harness the native suites run on; it publishes a build
+rather than source, which is why its row resolves to `dist/`.
+
+## How this page stays true
+
+`src/lib/public-api.ts` reads each manifest, keeps only entries that resolve to
+a `.ts`/`.tsx` file and derives the specifier from the package name and subpath.
+`public-api.test.ts` re-reads every manifest from disk and fails when a declared
+entry is missing from this page, when an entry's target file does not exist, when
+a pattern matches no file, when a specifier is duplicated, or when a workspace
+package is neither published here nor listed as not published. The page
+therefore follows the manifests instead of a copy of them.

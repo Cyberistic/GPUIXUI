@@ -1,4 +1,5 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
+import { ApiReference } from "./docs/api-reference";
 import { BlockIndex } from "./docs/block-index";
 import { BlockPreview } from "./docs/block-preview";
 import { ComponentPreview } from "./docs/component-preview";
@@ -10,6 +11,7 @@ import { ThemeEditor } from "./docs/theme-editor";
 /** The MDX surface shared by every docs page. */
 export const mdxComponents = {
   ...defaultMdxComponents,
+  ApiReference,
   BlockIndex,
   BlockPreview,
   ComponentPreview,

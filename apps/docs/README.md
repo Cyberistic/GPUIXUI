@@ -23,6 +23,7 @@ content/docs/           MDX pages and their meta.json navigation
   layouts.mdx           The layout lane: primitives, the window frame, runtime rules
   workspace.mdx         The desktop-shell lane: what composes a window, split-pane gate
   data-display.mdx      The data lane: what ships, the table gate, runtime gaps
+  reference.mdx         The public entry points, generated from each package manifest
   contributing.mdx      Checks, worktrees and the component checklist
 public/                 Static assets (favicon)
 src/routes/index.tsx    The landing page at `/`
@@ -35,6 +36,8 @@ src/lib/docs-view.tsx   Shared docs layout and the two-collection page template
 src/lib/source.ts       Fumadocs collection for `content/docs`
 src/lib/inventory.ts    Parses the tier tables of COMPONENTS.md into lane rows
 src/lib/lane-page.test.ts Holds the lane pages to their template and sidebar place
+src/lib/public-api.ts   Derives the public entry points from each package's exports map
+src/components/docs/api-reference.tsx The generated entry-point table
 src/lib/collection-routes.ts The registry: every mounted package directory, route, section
 src/lib/package-docs.ts The Fumadocs loaders for the three package collections
 src/lib/page-tree.ts    Fills the package's pages into the Components section
