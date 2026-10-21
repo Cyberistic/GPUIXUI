@@ -38,6 +38,9 @@ describe("the theme editor", () => {
       "every data-series colour separates from its plot and from its neighbours under every colour-vision deficiency",
     );
     expect(builtIn).toContain("every selection wash stays visible");
+    expect(builtIn).toContain(
+      "every indicator mark is findable on the strip it is drawn on",
+    );
   });
 
   it("renders one control per editable role", () => {

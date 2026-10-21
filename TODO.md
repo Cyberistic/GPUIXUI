@@ -460,7 +460,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 37/37
+`[x]` `[██████████]` 38/38
 
 `[x]` Land the `pointer-capture` live probe and settle what a drag control may
       rely on — GPUix arms pointer capture on left mouse down **only** for an
@@ -809,6 +809,25 @@ a workaround for two live sessions sharing one worktree; see
       window handler: expected "open=true last=cmd-k", got "open=false
       last=none"`, exit `1`). Evidence: `apps/playground/README.md`
       §`window-shortcut-lifecycle`, `.artifacts/live/shortcut-open.png`
+
+`[x]` Land the `context-menu-lifecycle` live probe and the `rightClick` host verb
+      behind it — the one overlay whose opening input is a **right press**, which
+      no window probe had produced (the headless suites synthesise the aux click
+      themselves). Measured on 0.11.0: a primary press opens nothing; a right
+      press on the trigger opens the shipped `ContextMenu` at the **press point**
+      on both axes and the surface takes the focus; arrows move real focus row by
+      row and `Enter` runs the row; `Escape`, an outside press and activation all
+      unpaint it; a pointer-opened menu leaves the focus `none`, while the
+      `Shift+F10` route places the surface at the trigger's own bounds and hands
+      the focus back on dismiss; a right press on a sibling opens nothing and
+      dismisses an open menu without opening a second one. 24 checks,
+      `--only context-menu-lifecycle`, green; negative control measured (primary
+      press: `expected a string containing "opens=1", got "opens=0 closes=0
+      last=none"`, exit `1`). `AsyncSmokeHost` gained `rightClick` over the
+      protocol's button-2 press (`host.ts`'s `rightPress`), held by a unit test
+      so a primary-button regression cannot turn the probe into a no-op. Evidence:
+      `apps/playground/README.md` §`context-menu-lifecycle`,
+      `.artifacts/live/context-open.png`
 
 ## Phase C — Tier 1–2 components
 
@@ -1213,7 +1232,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ### Docs information architecture (`docs-site`)
 
-`[x]` `[██████████]` 34/34
+`[x]` `[██████████]` 35/35
 
 `[x]` The component index searches the API metadata a page already carries —
 the filter matched a page's name, description, lane, parts and limitations, so a
@@ -1285,6 +1304,8 @@ column fails 6, and `nub run --filter @gpuixui/docs test` is green (39 files /
 `[x]` The package-page note names the **command**, not the app — 68 mounted pages said "run it natively in `apps/playground`", which tells a reader the app but not how to open it, and `docs/preview-strategy.md` claimed the note named the example file (it named nothing). `src/components/docs/native-run-note.tsx` is now the one note the page frame mounts: it quotes the root manifest's `dev:playground` script as `nub run dev:playground` (exported, never retyped), links `/docs/installation#run-the-playground`, and still says a browser preview is not available for the collection's kind. `native-run-note.test.ts` (4 cases) reads the root manifest and the installation page from disk — so a renamed script, a changed command string or a moved heading fails — and holds `docs-view.tsx` to mounting the note instead of writing one inline. Directions measured: the command changed to `nub run playground` failed the manifest and installation cases (`expected 'nub run playground' to be 'nub run dev:playground'`; the page case names the missing string); dropping the `<NativeRunNote>` mount failed the mount case. The new module also tripped `readme-ledger.test.ts`, whose `apps/docs/README.md` line was added in the same change. `nub run --filter @gpuixui/docs test` green (42 files / 339 tests), `check-types` and `build` green
 
 `[x]` A share card for every page — docs pages and the landing published `og:title`/`og:description` and no image, so a shared link rendered as a blank card. Both now publish `socialImage` (the site's 512px mark in `public/logo.png`) with its type, width/height and alt text, plus `twitter:image`/`twitter:image:alt`; `page-meta.test.ts` holds the URL to the file that ships and to the absolute origin (proven: dropping the tags fails both image cases). `nub run --filter @gpuixui/docs test`: 41 files / 335 tests green
+
+`[x]` The theme editor reads the audit's **seventh** report — `auditTheme` gained `indicators` when the mark contract landed, and `auditFindings` flattened six, so `/docs/themes` called its readout "the whole audit" while a progress bar or spinner dot painted into the page had no line. `AuditKind` gains `indicator` and `formatIndicatorFailure` words the finding (`mark primary on background — 1.00:1 (needs 3:1)`), the pass sentence names the mark, and `/docs/themes` §The theme audit says seven reports with the `indicatorFailures` bullet (roles, the four strips, the non-text floor, and why a status mark paints `statusTone(...).foreground` rather than the solid fill) while the copy-theme note names the export. `/docs/theming` gains §Indicator marks, held by a new `theming-page.test.ts` case to `indicatorRoles`/`indicatorSurfaces`/`indicatorFailures`, `contrastFloors.boundary` and `statusTone`. Directions measured: dropping the `indicators` map fails `reports an indicator mark that vanishes into the strip it is drawn on` (the brand paints `primary` as the page, so only the mark line can see it), and renaming the theming section fails the page case
 
 `[x]` The theme editor follows the platform switch — the editor copied the built-in theme into its state at mount, so a reader who chose Windows still saw the identity's roles and `/docs/themes` was the one preview the site's "every preview changes" promise did not cover. Its state is now the **pins** a reader set (`ThemePins` — only the roles they touched, plus an optional radius and family), resolved by `resolveTheme(mode, pins, base)` over `platformThemes(platform, look)`; the switch therefore re-bases the preview, the colour inputs and the audit while the edits stay, `Copy theme` prints the resolved values (what a reader copies is what they saw), and `Reset` clears the pins back to the selected style. The persistence boundary reads the pin set (`parseState`/`decodeState`), rejecting an unpaintable value, an unknown role, a NaN radius or a non-string family, and the `usePlatformOptional` hook lets the editor render standalone (tests, SSR) on the built-in identity while a preview still refuses to render without a switch. Docs: `/docs/themes` §Starting from a platform/§How it works/§Copy theme, `/docs/theming#the-switch-on-this-site`, `docs/preview-strategy.md` §Theming. Verified in the dev server: `/docs/themes` prints `background #F6F8FA`, `?platform=win32` prints `#F3F3F3`. Both directions measured: `resolveTheme` pinned to the built-in base fails `takes the base theme as the whole of every role the reader did not pin` and `prints the resolved platform values`; `ThemeEditorSurface` using `themes[mode]` fails `starts from the base theme it is handed, not a copy of the identity` (`expected … to contain 'value="#F3F3F3"'`). `nub run --filter @gpuixui/docs test` green (42 files / 345 tests), `check-types` and `build` green
 

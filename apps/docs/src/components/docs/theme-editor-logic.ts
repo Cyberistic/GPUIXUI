@@ -4,6 +4,7 @@ import {
   themes,
   type ContrastFailure,
   type DecorativeFailure,
+  type IndicatorFailure,
   type InvalidColorRole,
   type InvalidShadowColor,
   type SelectionFailure,
@@ -124,10 +125,11 @@ export const themeConfig = (
  * role or an elevation shadow the renderer cannot paint, a text pair below its
  * floor, a decorative surface too close to what it sits on, a data-series colour
  * too close to its plot or to its neighbour (or two that collapse once a
- * colour-vision deficiency is simulated), and a selection wash that hides itself
- * or the text it covers. `auditTheme` reads all six in one call, so the editor
- * cannot show some reports and leave the others silent. The base is the platform
- * style the preview is painted over, so the audit measures what the reader sees.
+ * colour-vision deficiency is simulated), a selection wash that hides itself or
+ * the text it covers, and an indicator mark a reader cannot find on the strip it
+ * is drawn on. `auditTheme` reads all seven in one call, so the editor cannot
+ * show some reports and leave the others silent. The base is the platform style
+ * the preview is painted over, so the audit measures what the reader sees.
  */
 export const auditReport = (
   mode: ThemeMode,
@@ -135,7 +137,7 @@ export const auditReport = (
   base: Theme = themes[mode],
 ): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
-/** Which of the audit's six reports a finding came from. */
+/** Which of the audit's seven reports a finding came from. */
 export type AuditKind =
   | "role"
   | "shadow"
@@ -143,7 +145,8 @@ export type AuditKind =
   | "decorative"
   | "series"
   | "deficiency"
-  | "selection";
+  | "selection"
+  | "indicator";
 
 /** One audit finding, already worded for the readout. */
 export interface AuditFinding {
@@ -242,6 +245,19 @@ export const formatSelectionFailure = ({
     ? `selection wash over ${background} — ${measured(ratio, floor)}`
     : `${foreground} on the selection wash over ${background} — ${measured(ratio, floor)}`;
 
+/**
+ * An indicator mark as a line, e.g. `mark primary on muted — 1.20:1 (needs
+ * 3:1)`. A bar, dot or filled slider span is neither text nor a boundary, so no
+ * contrast pair covers it: the mark has to be *findable* from across a panel.
+ */
+export const formatIndicatorFailure = ({
+  role,
+  surface,
+  ratio,
+  floor,
+}: IndicatorFailure): string =>
+  `mark ${role} on ${surface} — ${measured(ratio, floor)}`;
+
 /** Every finding the audit reports, in the one list the readout prints. */
 export const auditFindings = (
   report: ThemeAudit,
@@ -277,6 +293,10 @@ export const auditFindings = (
   ...report.selection.map((failure) => ({
     kind: "selection" as const,
     text: formatSelectionFailure(failure),
+  })),
+  ...report.indicators.map((failure) => ({
+    kind: "indicator" as const,
+    text: formatIndicatorFailure(failure),
   })),
 ];
 

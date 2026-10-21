@@ -246,8 +246,9 @@ export function ThemeEditorSurface({
             paints its colour, every text pair clears its floor, every
             decorative surface stays visible, every data-series colour separates
             from its plot and from its neighbours under every colour-vision
-            deficiency, and every selection wash stays visible with readable
-            text inside it.
+            deficiency, every selection wash stays visible with readable text
+            inside it, and every indicator mark is findable on the strip it is
+            drawn on.
           </p>
         ) : (
           <>

@@ -98,6 +98,25 @@ mode and contrast. The browser bridge publishes it as `--series-1` to
 `seriesFailures(theme)` reports a broken scale, and `auditTheme` runs it beside
 the contrast and decorative reports.
 
+## Indicator marks
+
+A component that **shows** rather than says something — a progress fill, a
+spinner's lit dot, a slider's filled span, a switch's on-state, an avatar's
+presence dot — paints a mark. A mark is neither text nor a boundary, so no
+contrast pair covers it: `primary` was only ever measured against its own
+on-colour, and a bar painted in a role that matches the page passed every other
+report. `indicatorRoles` is the closed set a mark may use, and
+`indicatorFailures(theme)` holds every one of them to the 3:1 non-text floor
+(`4.5:1` in a high-contrast theme) on the four strips a mark is drawn on —
+`indicatorSurfaces`: the page, a card, a popover and a muted toolbar.
+
+A **status** mark does not paint the tone's solid fill. That role is a surface
+designed to carry text — light `warning` is a pale amber with near-black text and
+measures 1.78:1 on the page — so a dot or bar painted in it would be the one mark
+nobody can find. A status mark paints the tone's readable role instead,
+`statusTone(theme, tone).foreground`, which is the role a soft status surface and
+a field error already paint.
+
 ## Built-in themes
 
 Four themes ship, and `getTheme` selects one by mode and contrast:

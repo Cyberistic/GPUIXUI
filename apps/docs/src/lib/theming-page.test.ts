@@ -79,7 +79,7 @@ describe("the theme page", () => {
     // black read a passing line. The page has to describe the readout it has.
     const audit = section(page("themes.mdx"), "The theme audit");
 
-    expect(audit).toContain("six independent failures");
+    expect(audit).toContain("seven independent failures");
     expect(audit).toContain("auditTheme");
     expect(audit).toContain("invalidShadowColors");
     expect(audit).toContain("decorativeFailures");
@@ -92,16 +92,33 @@ describe("the theme page", () => {
       ),
     ).toEqual([]);
     expect(audit).toContain("selectionFailures");
+    expect(audit).toContain("indicatorFailures");
     expect(audit).toContain("cannot paint");
     expect(audit).toContain("localStorage");
+  });
+});
+
+describe("the theming page's indicator marks", () => {
+  it("describes the contract a mark is held to, not only its colours", () => {
+    // A mark is neither text nor a boundary, so the page has to name the report
+    // and the floor that measure it — otherwise a reader painting a bar in
+    // `primary` has only the contrast table to reason about, and it is silent.
+    const marks = section(page("theming.mdx"), "Indicator marks");
+
+    expect(marks).toContain("indicatorRoles");
+    expect(marks).toContain("indicatorSurfaces");
+    expect(marks).toContain("indicatorFailures");
+    expect(marks).toContain(`${contrastFloors.boundary}:1`);
+    expect(marks).toContain("statusTone");
   });
 });
 
 describe("the theme page's copy-theme note", () => {
   it("names every report the audit folds, so a consumer can run one of them alone", () => {
     // The note is the list a consumer starts from. `auditTheme` returned six
-    // reports while the note named four helpers, so a reader looking for the
-    // role or shadow check had to find it in the package.
+    // reports while the note named four helpers, and the indicator report then
+    // arrived without a name here; a reader looking for the role, shadow or
+    // mark check had to find it in the package.
     const note = section(page("themes.mdx"), "Copy theme");
 
     expect(
@@ -113,6 +130,7 @@ describe("the theme page's copy-theme note", () => {
         "decorativeFailures",
         "seriesFailures",
         "selectionFailures",
+        "indicatorFailures",
       ].filter((name) => !note.includes(name)),
     ).toEqual([]);
   });

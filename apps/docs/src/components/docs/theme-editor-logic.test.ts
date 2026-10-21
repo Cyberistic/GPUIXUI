@@ -323,6 +323,25 @@ describe("theme-editor audit readout", () => {
     expect(audit.passed).toBe(false);
   });
 
+  it("reports an indicator mark that vanishes into the strip it is drawn on", () => {
+    // A bar, dot or filled slider span is neither text nor a boundary, so no
+    // contrast pair covers it — `primary` was only ever measured against its own
+    // on-colour. This brand paints the page's own colour as its action mark, so
+    // a progress bar disappears; only `indicatorFailures` words that as a mark.
+    const brand = extendTheme(themes.dark, {
+      colors: { primary: themes.dark.colors.background },
+    });
+    const audit = auditTheme(brand);
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "indicator",
+    );
+
+    expect(findings.map((finding) => finding.text)).toContain(
+      "mark primary on background — 1.00:1 (needs 3:1)",
+    );
+    expect(audit.passed).toBe(false);
+  });
+
   it("reports a wash the reader cannot find at all", () => {
     // A selection at zero opacity paints the surface itself: the reader cannot
     // see what they selected, and the body floor never comes into it.
