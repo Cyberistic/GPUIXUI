@@ -18,6 +18,10 @@ import { repoRoot } from "./public-symbols-source";
  * the rest of the site's snippets were unchecked. This walks the site's pages
  * and resolves every `@gpuixui/*` import against the package source, so the
  * three page tests can focus on what makes their page unique.
+ *
+ * The package pages are not walked: they belong to their packages, and the one
+ * import they get wrong (primitives' tooltip) is recorded as a task rather than
+ * fixed from this workstream.
  */
 
 const sitePages = (dir: string): ReadonlyArray<string> =>
