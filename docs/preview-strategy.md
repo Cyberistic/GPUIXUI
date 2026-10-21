@@ -25,8 +25,9 @@ this site uses **3 for the paint and geometry, and 2 for the runtime**:
 - The same page shows the **copyable source** (`<ComponentSource>`), so the
   reader can run the real component in `apps/playground` — the companion native
   playground — rather than trust the drawing.
-- Where the runtime lacks a capability (no `focusVisible`, no `aria-checked`, no
-  `transform`), the page says so in **Accessibility and limitations** instead of
+- Where the runtime lacks a capability (no `aria-checked`, no `transform`, no
+  caret position), the page says so in **Accessibility and limitations**
+  instead of
   drawing behaviour that does not exist. `COMPONENTS.md` carries the same
   evidence per row.
 

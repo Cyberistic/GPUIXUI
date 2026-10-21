@@ -25,6 +25,23 @@ stale silently.
 | Tray / menu bar | Not supported | Ship an in-window menu; a system tray needs a runtime change |
 | Native view / webview | Not supported | Use `markdown`/`code`/`diff` surfaces |
 
+## Measured in a window
+
+Two limits are not in the matrix above, because the matrix is built from the
+runtime's own typings and these were measured by a probe that paints: the type
+does not say them, so a reader must not infer them from the table's silence.
+
+| Gap | What a window measured | Use instead |
+| --- | ---------------------- | ----------- |
+| Sticky positioning | `position: "sticky"` paints nothing — a sticky sample inside its scroller moves by exactly the scroll amount, so it behaves like `relative` (`data-grid-fixed-header`) | put the header **outside** the row scroller as a sibling, and wrap header and rows in one `overflowX` scroller so both move together |
+| Caret position, selection ranges and code decoration | the arrow keys move the native caret and `getSelectedText()` returns the selected text, but nothing reports *where* the caret is or what range is selected, and `<code>` takes `language`/`showLineNumbers` with no decoration layer (`editor-surface`) | edit in a `<textarea>`, display in `<code>`; a highlighted *editable* surface is not buildable |
+
+The durable record — every host element, every limit, its verdict, its evidence
+path and the alternative — is
+[`docs/gpuix-capabilities.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/gpuix-capabilities.md).
+This page publishes the subset a reader of the docs needs; that document is what
+a component plan cites.
+
 ## What to do instead
 
 The unsupported rows are not decorative placeholders — each has a named gap and a
