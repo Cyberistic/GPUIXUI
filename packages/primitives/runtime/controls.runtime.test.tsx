@@ -683,7 +683,7 @@ const focusedLabel = (runtime: Runtime): string =>
     () => "nothing",
   );
 
-/** The circle a radio option paints — the ring lands on it, not on the row. */
+/** The circle a radio option paints — decoration inside the row that is the control. */
 const circleOf = (runtime: Runtime, label: string) =>
   Option.getOrElse(
     Option.flatMap(
@@ -710,7 +710,7 @@ const shadowed = (element: {
   readonly style: { readonly boxShadow?: unknown };
 }): boolean => Option.isSome(Option.fromNullishOr(element.style.boxShadow));
 
-it("declares the keyboard ring on every radio and paints no shadow on a press", async () => {
+it("paints no shadow ring on an option box, before or after a press", async () => {
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -735,11 +735,11 @@ it("declares the keyboard ring on every radio and paints no shadow on a press", 
   runtime.focusNext();
   runtime.flush();
   expect(focusedLabel(runtime)).toBe("Alpha");
-  // Every radio declares the same outline; native focus decides which one the
-  // runtime paints, and a click must not add the old shadow ring.
-  expect(ringed(circleOf(runtime, "Alpha"))).toBe(true);
-  expect(ringed(circleOf(runtime, "Beta"))).toBe(true);
+  // The ring is the focused row's `focusVisible` outline (measured by
+  // `groups.runtime.test.tsx`); the box never carried a shadow workaround, and a
+  // click must not start painting one.
   expect(shadowed(circleOf(runtime, "Alpha"))).toBe(false);
+  expect(shadowed(circleOf(runtime, "Beta"))).toBe(false);
   runtime.click("rg");
   runtime.flush();
   expect(shadowed(circleOf(runtime, "Alpha"))).toBe(false);

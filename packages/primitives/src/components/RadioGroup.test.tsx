@@ -12,6 +12,7 @@
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
+import { targetSize } from "@gpuixui/tokens";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -32,6 +33,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleString,
   hostTag,
 } from "./testing/element.js";
@@ -247,6 +249,28 @@ describe("RadioGroup", () => {
       testTheme.colors.muted,
       testTheme.colors.card,
     ]);
+  });
+
+  it("puts the ring, the floor and the press on the row, not its circle", () => {
+    // The bugs these guard: `focusVisible` on the circle never painted (the
+    // runtime applies a focus refinement only to an element it tracks focus
+    // for), the circle's fill owns a mouse-blocking hitbox so it swallowed the
+    // row's press, and a single-line row measured 17px tall — under the floor.
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const row = expectSome(Option.fromNullishOr(rows(element)[0]));
+    const circle = expectSome(Option.fromNullishOr(elementChildren(row)[0]));
+
+    expect(Option.isSome(hostStyle(row, "focusVisible"))).toBe(true);
+    expect(Option.isSome(hostStyle(circle, "focusVisible"))).toBe(false);
+    expect(expectSome(hostStyleString(circle, "pointerEvents"))).toBe("none");
+    expect(expectSome(hostStyle(row, "minHeight"))).toBe(targetSize.minimum);
   });
 });
 

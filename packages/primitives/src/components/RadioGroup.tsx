@@ -35,7 +35,6 @@ import type {
   SelectionState,
 } from "../core/selection.js";
 import { accessibleName } from "../core/a11y.js";
-import { controlRing } from "../core/focus.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
@@ -46,8 +45,9 @@ import {
 import { recipeTw } from "../recipe/registry.js";
 import {
   optionBody,
+  optionBoxStyle,
   optionItems,
-  optionRowClass,
+  optionRowStyle,
   useRovingFocus,
   type GroupFocus,
   type GroupHandlers,
@@ -252,16 +252,15 @@ export const renderRadioGroup = (
           selectionBoxClass(spec),
           theme,
         );
-        let box = resolved.style;
-        if (disabled) {
-          box = suppressSelectionFeedback(mergeStyle(box, resolved.disabled));
-        }
-        box = mergeStyle(
-          box,
-          controlRing(theme, { disabled, invalid: spec.invalid }),
+        const box = optionBoxStyle(
+          disabled
+            ? suppressSelectionFeedback(
+                mergeStyle(resolved.style, resolved.disabled),
+              )
+            : resolved.style,
         );
         const row = mergeStyle(
-          recipeTw.classesToStyle(optionRowClass(disabled), theme).style,
+          optionRowStyle({ disabled, invalid: spec.invalid }, theme),
           resolveStyle(props.itemStyle, {
             disabled,
             focused: Option.contains(focus.focusedIndex, index),
@@ -298,9 +297,10 @@ export const renderRadioGroup = (
             </div>
             {/*
               One body per row: the name pair, or a `RadioGroupItem`'s rich
-              content. Keep the content non-interactive — GPUix hit-tests the
-              deepest element and does not bubble, so content that accepts the
-              press takes it from the row (a `Box` does; text and icons do not).
+              content. Keep the content non-interactive: a painted element owns
+              a mouse-blocking hitbox in this runtime, so content that accepts
+              the press takes it from the row (a `Box` does; text and icons do
+              not).
             */}
             {optionBody(option, disabled, theme)}
           </div>

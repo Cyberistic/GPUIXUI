@@ -23,7 +23,6 @@ import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
-import { controlRing } from "../core/focus.js";
 import {
   decideAbsolute,
   decideActivation,
@@ -43,8 +42,9 @@ import { recipeTw } from "../recipe/registry.js";
 import { renderCheckboxIndicator, selectionValueText } from "./Checkbox.js";
 import {
   optionBody,
+  optionBoxStyle,
   optionItems,
-  optionRowClass,
+  optionRowStyle,
   useRovingFocus,
   type GroupFocus,
   type GroupHandlers,
@@ -229,16 +229,15 @@ export const renderCheckboxGroup = (
           selectionBoxClass(spec),
           theme,
         );
-        let box = resolved.style;
-        if (disabled) {
-          box = suppressSelectionFeedback(mergeStyle(box, resolved.disabled));
-        }
-        box = mergeStyle(
-          box,
-          controlRing(theme, { disabled, invalid: spec.invalid }),
+        const box = optionBoxStyle(
+          disabled
+            ? suppressSelectionFeedback(
+                mergeStyle(resolved.style, resolved.disabled),
+              )
+            : resolved.style,
         );
         const row = mergeStyle(
-          recipeTw.classesToStyle(optionRowClass(disabled), theme).style,
+          optionRowStyle({ disabled, invalid: spec.invalid }, theme),
           resolveStyle(props.itemStyle, {
             disabled,
             focused: Option.contains(focus.focusedIndex, index),

@@ -13,6 +13,12 @@ The group holds **one** tab stop. Tab reaches the group, the arrow keys walk its
 options, and Tab leaves — instead of a form with eight checkboxes taking eight
 Tab presses to pass.
 
+The **row** is the control, at least 24px tall even when its one line of text is
+shorter: it is what a pointer presses and what the runtime gives focus to. The box
+is decoration with `pointerEvents: "none"`, so a checked box's fill cannot swallow
+the press that belongs to the row — measured: without it, a checked option could
+be unchecked by clicking beside its box but not on it.
+
 ## Usage
 
 ```tsx
@@ -123,9 +129,16 @@ value: unlike a radio group, a checkbox group has no "selection follows focus".
 
 Each box compiles `selectionBoxClass` — side from `iconSize`, radius from
 `radius.sm`, border from `input`/`destructive`, fill from the accent role — and
-takes the shared keyboard ring from `controlRing`, declared at rest. The row
-body uses the label and caption type roles, muted while the row is disabled.
-Disabled rows add half opacity and drop pointer feedback.
+is kept out of the press by `optionBoxStyle`. The **row** is the control: it
+takes the shared keyboard ring from `controlRing` and reserves the 24px
+pressable floor, both from `group.tsx`'s `optionRowStyle`, so radio and checkbox
+rows cannot disagree. The row body uses the label and caption type roles, muted
+while the row is disabled. Disabled rows add half opacity and drop pointer
+feedback.
+
+A `focusVisible` declaration only paints on the element the runtime tracks focus
+for, which is the row — a ring declared on the box was a declaration nothing
+painted.
 
 `style` receives `{ disabled, focused }` for the group; `itemStyle` receives
 `{ disabled, focused, checked }` for one row. Both merge after every role
@@ -152,6 +165,9 @@ decision, so a callback is the last word on a property the recipe also sets.
 - `runtime/controls.runtime.test.tsx` — a real hit-tested click turns one option
   on without clearing another, and a key delivered to the focused row moves focus
   through GPUI's own dispatcher without changing any value.
+- `runtime/groups.runtime.test.tsx` — pressing the box a checked option draws
+  unchecks it (the fill used to swallow the press), the ring is declared on the
+  row that holds focus, and every option row is at least 24px tall.
 
 ```sh
 nub run --filter @gpuixui/primitives test

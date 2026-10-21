@@ -13,6 +13,7 @@
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
+import { targetSize } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   CheckboxGroupItem,
@@ -31,6 +32,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleString,
   hostTag,
 } from "./testing/element.js";
@@ -277,6 +279,27 @@ describe("CheckboxGroup", () => {
       testTheme.colors.muted,
       testTheme.colors.card,
     ]);
+  });
+
+  it("puts the ring, the floor and the press on the row, not its box", () => {
+    // The bugs these guard: `focusVisible` on the box never painted (the
+    // runtime applies a focus refinement only to an element it tracks focus
+    // for), the checked box's fill owns a mouse-blocking hitbox so it swallowed
+    // the row's press, and a single-line row measured 17px tall — under the
+    // floor.
+    const element = render(
+      { options },
+      ["email"],
+      Option.some(0),
+      handlers(vi.fn()),
+    );
+    const row = expectSome(Option.fromNullishOr(rows(element)[0]));
+    const box = expectSome(Option.fromNullishOr(elementChildren(row)[0]));
+
+    expect(Option.isSome(hostStyle(row, "focusVisible"))).toBe(true);
+    expect(Option.isSome(hostStyle(box, "focusVisible"))).toBe(false);
+    expect(expectSome(hostStyleString(box, "pointerEvents"))).toBe("none");
+    expect(expectSome(hostStyle(row, "minHeight"))).toBe(targetSize.minimum);
   });
 });
 

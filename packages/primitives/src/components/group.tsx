@@ -22,9 +22,12 @@ import {
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
-import type { PublicInstance } from "@gpuix/react";
+import type { PublicInstance, StyleDesc } from "@gpuix/react";
+import { targetSize } from "@gpuixui/tokens";
+import { controlRing } from "../core/focus.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { recipeTw } from "../recipe/registry.js";
+import { mergeStyle } from "./internal.js";
 import { Text } from "./Text.js";
 
 /** One option in a group control. */
@@ -111,6 +114,43 @@ export const optionBody = (
 /** The row container a group paints: one line, and the press cursor it earns. */
 export const optionRowClass = (disabled: boolean): string =>
   `flex flex-row items-center gap-sm ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`;
+
+/**
+ * The style every group option row paints.
+ *
+ * The row is the control, so it owns the two things a child cannot: the
+ * pressable floor — a single-line option row measured 17px tall on 0.11.0, under
+ * WCAG 2.2 SC 2.5.8's 24px — and the keyboard ring, because `focusVisible` is a
+ * refinement the runtime applies only to an element it tracks focus for, so a
+ * ring declared on the box a row draws never painted.
+ */
+export const optionRowStyle = (
+  state: { readonly disabled: boolean; readonly invalid?: boolean },
+  theme: PrimitiveTheme,
+): StyleDesc =>
+  mergeStyle(
+    mergeStyle(
+      recipeTw.classesToStyle(optionRowClass(state.disabled), theme).style,
+      controlRing(theme, {
+        disabled: state.disabled,
+        invalid: state.invalid,
+      }),
+    ),
+    { minHeight: targetSize.minimum },
+  );
+
+/**
+ * A box a row draws inside itself: painted, hoverable, and never the press
+ * target.
+ *
+ * A painted element owns a mouse-blocking hitbox in this runtime
+ * (`should_occlude`), so a filled box swallowed the press before the row's
+ * handler ran — measured: a checked option could not be unchecked by pressing
+ * its own box. `pointerEvents: "none"` leaves it painted while the press falls
+ * through to the row.
+ */
+export const optionBoxStyle = (style: StyleDesc): StyleDesc =>
+  mergeStyle(style, { pointerEvents: "none" });
 
 /** Which option holds native focus, and how the group learns that it moved. */
 export interface GroupFocus {
