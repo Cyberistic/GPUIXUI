@@ -24,7 +24,7 @@ const [code, setCode] = useState("");
   <OTPField
     label="Verification code"
     value={code}
-    onChange={setCode}
+    onValueChange={setCode}
     onComplete={(complete) => verify(complete)}
   />
 </Stack>;
@@ -52,7 +52,7 @@ import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
   label="Verification code"
   length={6}
   value={code}
-  onChange={setCode}
+  onValueChange={setCode}
 >
   <Stack direction="row" gap="sm">
     <OTPFieldInput index={0} />
@@ -69,7 +69,7 @@ import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
 ```
 
 `OTPFieldInput` takes `index`, `style`, `className` and `testId`; it has no
-`value` or `onChange` of its own, because every cell reads the field's one code.
+`value` or `onValueChange` of its own, because every cell reads the field's one code.
 
 ## API
 
@@ -78,7 +78,8 @@ import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
 | `length` | `number` | `6` | number of cells; a nonsense value resolves to at least one |
 | `value` | `string` | — | controlled code, normalised to letters/digits |
 | `defaultValue` | `string` | — | initial code when uncontrolled |
-| `onChange` | `(value: string) => void` | — | the code after every edit that changed it |
+| `onChange` | `(value: string) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
+| `onValueChange` | `(value: string) => void` | — | the code after every edit that changed it |
 | `onComplete` | `(value: string) => void` | — | fires when an edit makes the code full |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | cell height and width, from the density scale |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
@@ -114,7 +115,7 @@ The key contract runs on **key up**. GPUix's text editor consumes
 Left/Right/Home/End/Backspace/Delete on key down, so those keys never reach the
 element's key-down handler (measured 2026-10-17, plan 054 §9). A held arrow
 therefore moves one cell rather than repeating. Backspace on a filled cell is
-the native edit and arrives through `onChange`; the key-up handler knows this
+the native edit and arrives through `onValueChange`; the key-up handler knows this
 and does not delete a second character.
 
 ## Accessibility
@@ -142,7 +143,7 @@ No literal colour, size or radius is named.
 ## Limitations
 
 - **Paste is unverified.** `@gpuix/native` 0.11.0 has no `onPaste` and the
-  `TestRenderer` has no clipboard simulation. A multi-character `onChange`
+  `TestRenderer` has no clipboard simulation. A multi-character `onValueChange`
   fills forward from the receiving cell — proven as a pure rule — but the real
   clipboard path has not been observed; it is documented as unverified rather
   than claimed.
@@ -155,7 +156,7 @@ No literal colour, size or radius is named.
   dispatching a focus event (the same limitation as `Input`); the ring appears
   at the next focus change.
 - **No letter casing rule.** Letters are kept as typed; a caller that needs
-  uppercase normalises in `onChange`.
+  uppercase normalises in `onValueChange`.
 
 ## Verification
 

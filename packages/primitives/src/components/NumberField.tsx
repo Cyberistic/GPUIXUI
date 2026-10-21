@@ -62,16 +62,16 @@ import {
   suppressFeedback,
   useControlState,
   useFocus,
+  valueChange,
   type FocusState,
+  type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface NumberFieldProps {
+export interface NumberFieldProps extends ValueChangeProps<number> {
   /** Controlled value. Omit to let the field hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
-  /** Called with the clamped value after a valid edit or a step. */
-  readonly onChange?: (value: number) => void;
   /** No lower bound when omitted. */
   readonly min?: number;
   /** No upper bound when omitted. */
@@ -367,7 +367,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   const state = useControlState(
     props.value,
     clampNumeric(props.defaultValue ?? 0, range),
-    props.onChange,
+    valueChange(props),
   );
   const display = (value: number): string =>
     props.formatValue?.(value) ?? formatNumber(value, props.precision ?? 0);

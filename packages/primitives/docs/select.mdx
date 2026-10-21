@@ -16,7 +16,7 @@ import { Label, Select } from "@gpuixui/primitives";
 <Label>Region</Label>
 <Select
   value={region}
-  onChange={setRegion}
+  onValueChange={setRegion}
   label="Region"
   fullWidth
   options={[
@@ -34,7 +34,8 @@ import { Label, Select } from "@gpuixui/primitives";
 | `options` | `ReadonlyArray<SelectOption>` | — (required) | `{ value, label, disabled? }` items |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | — | initial selection when uncontrolled |
-| `onChange` | `(value: string) => void` | none | committed value |
+| `onChange` | `(value: string) => void` | none | deprecated alias for `onValueChange`; the new name runs when both are passed |
+| `onValueChange` | `(value: string) => void` | none | the committed value |
 | `placeholder` | `string` | none | shown before a choice |
 | `disabled` | `boolean` | `false` | refuses opening |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |

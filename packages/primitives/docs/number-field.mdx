@@ -18,7 +18,7 @@ const [copies, setCopies] = useState(1);
 
 <Stack direction="column" gap="xs">
   <Label description="1–99">Copies</Label>
-  <NumberField label="Copies" value={copies} onChange={setCopies} min={1} max={99} />
+  <NumberField label="Copies" value={copies} onValueChange={setCopies} min={1} max={99} />
 </Stack>;
 ```
 
@@ -49,7 +49,7 @@ import {
   Stack,
 } from "@gpuixui/primitives";
 
-<NumberField label="Copies" value={copies} onChange={setCopies} min={1} max={99}>
+<NumberField label="Copies" value={copies} onValueChange={setCopies} min={1} max={99}>
   <NumberFieldInput />
   <Stack direction="column" justify="between" style={{ height: "100%" }}>
     <NumberFieldIncrement>
@@ -68,7 +68,8 @@ import {
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | controlled value |
 | `defaultValue` | `number` | none | start value; the field shows empty without one |
-| `onChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
+| `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
+| `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
 | `min` / `max` | `number` | none | bound the value; absent means unbounded |
 | `step` | `number` | `1` | arrow step |
 | `precision` | `number` | `0` | decimals shown on commit |
@@ -85,12 +86,12 @@ import {
 
 `NumberFieldInput` and both steppers accept `style`, `className` and `testId`;
 the steppers also take `children` as a custom glyph. `NumberFieldInput` has no
-`value`/`onChange` of its own: the parts read the field's state, so there is one
+`value`/`onValueChange` of its own: the parts read the field's state, so there is one
 source of truth.
 
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
 the caret never jumps. Every edit that parses reports the clamped number
-through `onChange`; on blur or `Enter` the draft is reformatted to `precision`.
+through `onValueChange`; on blur or `Enter` the draft is reformatted to `precision`.
 
 A step is exact at decimal precision: stepping `0.2` by `0.1` reports `0.3`, not
 the binary `0.30000000000000004`, because the move is rounded to the finer of

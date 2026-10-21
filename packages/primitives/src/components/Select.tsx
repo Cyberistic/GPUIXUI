@@ -40,7 +40,12 @@ import {
   selectTriggerClass,
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle, suppressFeedback } from "./internal.js";
+import {
+  mergeStyle,
+  suppressFeedback,
+  valueChange,
+  type ValueChangeProps,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface SelectOption {
@@ -49,12 +54,11 @@ export interface SelectOption {
   readonly disabled?: boolean;
 }
 
-export interface SelectProps {
+export interface SelectProps extends ValueChangeProps<string> {
   readonly options: ReadonlyArray<SelectOption>;
   /** Controlled selection. Omit to let the select hold its own. */
   readonly value?: string;
   readonly defaultValue?: string;
-  readonly onChange?: (value: string) => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   /** Validation failed: the trigger's border takes the destructive role. */
@@ -111,6 +115,7 @@ export const renderSelect = (
     options,
     value,
     defaultValue,
+    onValueChange,
     onChange,
     placeholder,
     disabled,
@@ -136,7 +141,7 @@ export const renderSelect = (
       items={items}
       value={value}
       defaultValue={defaultValue}
-      onValueChange={onChange}
+      onValueChange={valueChange({ onValueChange, onChange })}
       disabled={disabled}
       aria-label={accessibleName(label)}
       testId={testId}

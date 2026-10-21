@@ -19,7 +19,7 @@ const notes = "Description";
 <TextArea
   {...labelledBy(notes)}
   value={value}
-  onChange={setValue}
+  onValueChange={setValue}
   minRows={3}
   maxRows={8}
   fullWidth
@@ -35,7 +35,7 @@ const notes = "Description";
 | `minRows` | `number` | runtime default | minimum visible rows |
 | `maxRows` | `number` | runtime default | rows after which the field scrolls |
 
-Shared props: `value`, `defaultValue`, `onChange`, `placeholder`, `readOnly`,
+Shared props: `value`, `defaultValue`, `onValueChange`, `placeholder`, `readOnly`,
 `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `style`,
 `testId`.
 
@@ -46,7 +46,7 @@ padding to the density's horizontal padding step to keep the text inset square.
 
 | Key | Contract |
 | --- | -------- |
-| typing | native editing; changes reach `onChange` |
+| typing | native editing; changes reach `onValueChange` |
 | Enter | inserts a newline — never submits |
 
 Submit-on-Enter is a single-line interaction: use `Input` when that is what you

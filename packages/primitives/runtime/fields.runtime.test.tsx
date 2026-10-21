@@ -86,6 +86,28 @@ it("edits an Input through the runtime's own text handling", async () => {
   expect(lastValue(field.values)).toBe("hello");
 });
 
+it("runs onValueChange and not the deprecated alias when both are passed", async () => {
+  const runtime = await openWindow();
+  const field = recorder();
+  let aliased = 0;
+  runtime.render(
+    <Surface>
+      <Input
+        testId="field"
+        label="Name"
+        autoFocus
+        onValueChange={field.onChange}
+        onChange={() => {
+          aliased += 1;
+        }}
+      />
+    </Surface>,
+  );
+  runtime.type("a");
+  expect(lastValue(field.values)).toBe("a");
+  expect(aliased).toBe(0);
+});
+
 it("reports an Input's Enter through onSubmit", async () => {
   const runtime = await openWindow();
   const field = recorder();

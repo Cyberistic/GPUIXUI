@@ -4,7 +4,7 @@ description: A single-line text field, controlled or uncontrolled.
 ---
 
 `Input` is the runtime's native `<input>` with the shared field chrome. The
-native element holds the text; `onChange` reports every edit and `value` pushes an
+native element holds the text; `onValueChange` reports every edit and `value` pushes an
 external value back in. The controlled/uncontrolled decision is
 `core/state.ts`'s, so an input and a checkbox cannot disagree about which value
 wins.
@@ -20,7 +20,7 @@ const email = "Contact email";
 <Input
   {...labelledBy(email)}
   value={value}
-  onChange={setValue}
+  onValueChange={setValue}
   placeholder="you@example.com"
   fullWidth
 />;
@@ -32,7 +32,8 @@ const email = "Contact email";
 | ---- | ---- | ------- | ----------- |
 | `value` | `string` | — | controlled text; omit to let the field keep its own draft |
 | `defaultValue` | `string` | `""` | initial text when uncontrolled |
-| `onChange` | `(value: string) => void` | none | called after each edit that changed the value |
+| `onChange` | `(value: string) => void` | none | deprecated alias for `onValueChange`; the new name runs when both are passed |
+| `onValueChange` | `(value: string) => void` | none | called after each edit that changed the value |
 | `onSubmit` | `(event) => void` | none | Enter; the raw runtime event |
 | `placeholder` | `string` | none | empty-state text |
 | `readOnly` | `boolean` | `false` | accepts focus and selection, refuses edits |
@@ -49,7 +50,7 @@ const email = "Contact email";
 
 | Key | Contract |
 | --- | -------- |
-| typing | native editing; every change reaches `onChange` |
+| typing | native editing; every change reaches `onValueChange` |
 | Enter | reaches `onSubmit` with the runtime event |
 | Tab | moves focus with the runtime's own order |
 
@@ -96,7 +97,7 @@ last word on a property the recipe also sets).
 
 - `src/core/state.test.ts` — controlled/uncontrolled transitions.
 - `src/components/fields.test.tsx` — chrome, invalid state and host props.
-- `runtime/fields.runtime.test.tsx` — runtime keystrokes reach `onChange` with
+- `runtime/fields.runtime.test.tsx` — runtime keystrokes reach `onValueChange` with
   the accumulated text; Enter reaches `onSubmit`; a controlled field reports each
   edit.
 

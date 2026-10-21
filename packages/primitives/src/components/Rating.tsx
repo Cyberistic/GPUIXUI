@@ -32,14 +32,18 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { ratingGroupClass, ratingStarClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { controlRing } from "../core/focus.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import {
+  mergeStyle,
+  useControlState,
+  valueChange,
+  type ValueChangeProps,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface RatingProps {
+export interface RatingProps extends ValueChangeProps<number> {
   /** Controlled rating, `0..max` (0 is unrated). */
   readonly value?: number;
   readonly defaultValue?: number;
-  readonly onChange?: (value: number) => void;
   /** Defaults to 5. */
   readonly max?: number;
   /** Defaults to `md`. */
@@ -173,7 +177,7 @@ export const Rating = (props: RatingProps): ReactElement => {
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
-    props.onChange,
+    valueChange(props),
   );
   return renderRating(
     props,

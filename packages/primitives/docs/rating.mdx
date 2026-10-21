@@ -19,7 +19,7 @@ import { useState } from "react";
 const [score, setScore] = useState(0);
 
 <Stack direction="column" gap="xs">
-  <Rating label="Quality" value={score} onChange={setScore} />
+  <Rating label="Quality" value={score} onValueChange={setScore} />
   <Text role="caption" tone="muted">
     {score === 0 ? "Not rated" : `${score} of 5`}
   </Text>
@@ -28,7 +28,7 @@ const [score, setScore] = useState(0);
 
 Omit `value` to let the rating own its state; `defaultValue` sets the start
 (`0` is unrated). Clicking the selected star keeps it — clearing is a deliberate
-key (`Delete`/`Backspace`) or the app calling `onChange(0)`.
+key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 
 ## API
 
@@ -36,7 +36,8 @@ key (`Delete`/`Backspace`) or the app calling `onChange(0)`.
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | controlled rating, `0..max` |
 | `defaultValue` | `number` | `0` | uncontrolled start |
-| `onChange` | `(value: number) => void` | — | the new rating; `0` means cleared |
+| `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
+| `onValueChange` | `(value: number) => void` | — | the new rating; `0` means cleared |
 | `max` | `number` | `5` | how many stars to paint |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |

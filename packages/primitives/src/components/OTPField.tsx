@@ -56,17 +56,21 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldSquareClass, otpGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
-import { mergeStyle, suppressFeedback, useControlState } from "./internal.js";
+import {
+  mergeStyle,
+  suppressFeedback,
+  useControlState,
+  valueChange,
+  type ValueChangeProps,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface OTPFieldProps {
+export interface OTPFieldProps extends ValueChangeProps<string> {
   /** Number of cells. Defaults to 6. */
   readonly length?: number;
   /** Controlled code. Omit to let the field hold its own. */
   readonly value?: string;
   readonly defaultValue?: string;
-  /** Called with the code after every edit, only when it actually changed. */
-  readonly onChange?: (value: string) => void;
   /** Called once when an edit makes the code complete. */
   readonly onComplete?: (value: string) => void;
   /** Defaults to `md`. */
@@ -293,7 +297,7 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
   const state = useControlState(
     props.value,
     normalizeOtp(props.defaultValue ?? "", limit),
-    props.onChange,
+    valueChange(props),
   );
   const focusCell = (index: number): void => {
     setFocusedIndex(Option.some(index));
