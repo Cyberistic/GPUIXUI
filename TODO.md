@@ -473,7 +473,23 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 201/201
+`[x]` `[██████████]` 202/202
+
+`[x]` **Events and input have a page (plan 635)** — the runtime sends one
+      `EventPayload` to all 23 host handlers and the site documented none of it:
+      measured 2026-10-21, `event payload`, `event object` and `event target`
+      reached a Separator limitation, `click count` Countdown, `deltaY`
+      Auto-update, `key repeat` and `key event` Keycap, `drop files` Dropdown
+      menu, and `e.key`, `stopPropagation`, `onWindowKeyDown` and `startIndex`
+      returned nothing. `/docs/events` renders every declared payload field and
+      handler row from `src/lib/events.ts`, the four modifier booleans, the
+      mouse/keyboard/scroll/file-drop meaning of each field, the three window
+      render options plus the every-event tap, and twelve absences; the
+      declaration/dispatcher guard fails in both directions; a compiled drop
+      target reads `paths`, `key` and `modifiers`. 40 aliases; Component API and
+      Accessibility link the payload; two production queries; 116-page
+      `smoke:build`, scoped axe (2 schemes) and all gates green. Forced defects
+      measured in plan 635 §7.
 
 `[x]` **Driver automation has a page (plan 634)** — `@gpuix/native/automation`
       and the app-side `enableAutomation`/`installBrowserAutomation` had no owner,

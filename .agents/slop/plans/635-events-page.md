@@ -2,7 +2,7 @@
 
 **Phase:** F (documentation completeness; a measured documentation gap)
 **Depends on:** 410, 411, 412, 419, 431, 561, 566, 568, 587, 598, 601, 606, 621, 624, 626, 628, 629, 630
-**Status:** planned
+**Status:** implemented — see §9
 **Owner:** docs-site workstream (`apps/docs`, `docs/preview-strategy.md`, the component-page template)
 
 ---
@@ -451,3 +451,51 @@ prove the new page did not take `right click`, `pointer event`, `keyboard`,
 - `check`, `lint`, `fmt`, docs tests, `check-types`, `smoke:build` and the axe
   sweep are green; the scenario ids this change ran are recorded in the commit
   (none — no playground scenario is touched).
+
+---
+
+## 9. Measured results
+
+Implemented on 2026-10-21 in `workspaces/docs-site`.
+
+- **Surface.** 25 declared `EventPayload` fields and 23 `HostProps` handlers
+  rendered from `src/lib/events.ts`; `EVENT_PROPS` supplies every runtime event
+  type; the four `EventModifiers` booleans; three window handlers plus
+  `onEvent`; twelve absences. The guard reads `index.d.ts`, `dist/host.d.ts`,
+  `dist/mutations.d.ts` and `dist/renderer-state.js` in both directions.
+- **Page.** `/docs/events` in the sidebar after Accessibility (the Accessibility
+  guard pins it directly after Component API), the MDX registry, the sitemap,
+  `llms.txt` and per-page Markdown; two compiled examples; cross-links from
+  Component API's shared host props and Accessibility's pointer section.
+- **Search.** 40 exact aliases, one generated document with promoted payload
+  names only, listed in Site search's generated-document index, and two
+  production queries in `smoke:build`.
+- **Measured runs.**
+  - `nub run --filter docs test` → 153 files / 1 856 tests, exit `0`.
+  - `nub run --filter docs check-types`, `nub run lint`, `nub run fmt` → exit
+    `0`.
+  - `nub run --filter docs smoke:build` → 116 pages / 253 links / 1 499 anchors,
+    exit `0`, both new queries answered.
+  - `nub scripts/smoke-a11y.ts --only /docs/events --no-build` → 1 page × 2
+    schemes, 0 violations, exit `0`.
+  - No playground scenario is touched, so no `--only` native run was required.
+- **Forced directions.**
+  - Removed `<EventPayloadTables />` from the page → the registry/section guard
+    failed by tag name; restored, passed.
+  - Removed `eventsSearchEntry` from `generatedSearchEntries` → the generated
+    document test failed; restored, passed.
+  - Made the example read `event.modifiers.shift` (required) instead of
+    `event.modifiers?.shift` → `example-snippets.test.ts` failed; restored,
+    passed (45 tests across the two files).
+  - The suite's own mutated-copy cases cover a new payload field, a removed
+    field, a forbidden field, a forbidden handler, a changed `EVENT_PROPS`
+    tuple, a fourth window handler and a stripped dispatcher rewrite.
+- **Ranking regressions kept.** `onClick`/`onKeyDown`/`testId` →
+  `/docs/component-api#shared-host-props`; `right click` → Context menu;
+  `pointer event` → Accessibility; `keycap` → Keycap; `keyboard` → Component
+  API; `scrollbar` → Scrollable containers; `cursor` →
+  `/docs/styling#the-supported-surface`.
+- **Corrections.** The sidebar first placed Events directly after Component API,
+  which `accessibility-page.test.ts` rejects (Accessibility is pinned there);
+  Events moved after Accessibility. `cursor`'s recorded owner was the Styling
+  page's `#the-supported-surface` section, not the bare page.

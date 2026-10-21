@@ -121,7 +121,9 @@ Every part is a host element, so its props type extends `Props` from
 `@gpuix/react`: the runtime's host props plus React's `key`, `children` and
 `ref`. Each component page's generated table repeats those inherited rows; they
 are defined once here. `testId` is the stable locator the native suites drive,
-and the `style` row is the same merge contract described above.
+and the `style` row is the same merge contract described above. Every handler
+row receives the same [`EventPayload`](/docs/events), and Events documents its
+fields and the event types behind each prop.
 
 The accessibility surface — `aria-*`, `role`, `tabIndex` and `autoFocus` —
 belongs to the runtime's tree and has its own table on

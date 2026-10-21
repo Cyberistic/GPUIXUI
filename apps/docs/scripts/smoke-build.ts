@@ -1516,6 +1516,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a locator name, which returned nothing before plan 634",
     },
+    {
+      query: "event payload",
+      expected: "/docs/events",
+      first: true,
+      what: "the payload every handler receives, which reached a Separator limitation before plan 635",
+    },
+    {
+      query: "click count",
+      expected: "/docs/events",
+      first: true,
+      what: "the element-defined pointer field, which reached Countdown before plan 635",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

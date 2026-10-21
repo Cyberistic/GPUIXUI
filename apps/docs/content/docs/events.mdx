@@ -1,0 +1,216 @@
+---
+title: Events
+description: The event payload every handler receives — pointer, keyboard, scroll, file-drop and element-defined fields, modifiers, window-level keys, and what is not in the object.
+---
+
+Every host element accepts the same event handlers, and all of them receive one
+object: `EventPayload`. The handler prop chooses **which** events arrive; it
+never changes the object's shape. This page is that object, and the boundary of
+what it does not carry.
+
+The handlers themselves are listed with every other shared host prop on
+[Component API](/docs/component-api#shared-host-props). The keyboard decisions
+built on top of them — Enter on key down, Space on key up, roving tab stops —
+are on [Component API](/docs/component-api#keyboard). Pointer and touch
+absences are on [Accessibility](/docs/accessibility#pointer-and-touch-input).
+
+## Every handler gets the same payload
+
+Read the fields you need; ignore the rest. A drop target needs `paths` and
+`key`; a list row needs `clickCount` and `modifiers`.
+
+```tsx
+import { useState } from "react";
+
+export function DropTarget() {
+  const [paths, setPaths] = useState<readonly string[]>([]);
+
+  return (
+    <div
+      tabIndex={0}
+      onFileDrop={(event) => setPaths(event.paths ?? [])}
+      onKeyDown={(event) => {
+        if (event.key === "escape" && event.modifiers?.shift === true) {
+          setPaths([]);
+        }
+      }}
+      style={{ padding: 16, gap: 8, borderWidth: 1, borderRadius: 8 }}
+    >
+      <text style={{ fontSize: 14, fontWeight: "medium" }}>
+        {paths.length === 0 ? "Drop files here" : "Dropped files"}
+      </text>
+      {paths.map((path) => (
+        <text key={path} style={{ fontSize: 13 }}>
+          {path}
+        </text>
+      ))}
+      <text style={{ fontSize: 12 }}>
+        Shift-Escape clears the list.
+      </text>
+    </div>
+  );
+}
+```
+
+`event.key` is the GPUI key name (`"escape"`), and `event.modifiers.shift` is
+the modifier state — not the driver's `"cmd-shift"` string. The handler runs for
+this element only; to tell a parent, call a callback passed down as a prop.
+
+<EventHandlerTable />
+
+## The payload
+
+Every field below belongs to `EventPayload`. An optional field is present only
+for the event types its **Populated for** column names.
+
+<EventPayloadTables />
+
+`elementId` is the runtime's numeric id, assigned when React created the
+element. It is stable for the life of that element and meaningless across a
+remount, so it is not a locator: use `testId` and the
+[automation client](/docs/automation) to find an element from a test.
+`eventType` is the runtime's string, not the React prop name — `onClick`
+receives `click`, `onKeyDown` receives `keyDown`.
+
+## Modifiers
+
+`EventModifiers` is four booleans on `event.modifiers`: `shift`, `ctrl`, `alt`
+and `cmd`. A shift-click is `event.modifiers.shift`; a command-click is
+`event.modifiers.cmd`. Keyboard and scroll events carry them.
+
+The test driver spells modifiers differently: `App.mouse.click` and
+`Locator.press` take `"cmd"`, `"cmd-shift"` or `"alt"`. That string is an input
+to the driver, not a value in the payload.
+
+## Mouse input
+
+`onClick` is the **primary** button only. A middle or right press arrives on
+`onAuxClick`; `button` says which (`0` left, `1` middle, `2` right) and
+`isRightClick` is the convenience flag for the right one. A right press also
+arrives as `onMouseDown`/`onMouseUp`, so a component that opens a context menu
+listens once, on the aux click.
+
+There is no double-click handler. `clickCount` is the evidence: `2` for a
+double click, `3` for a triple. `pressedButton` is the button held during a
+`mouseMove`, which is how a drag reads its gesture between press and release.
+
+`x` and `y` are **window** coordinates, not element-local ones. To turn them
+into a position inside an element, ask the renderer for its bounds through the
+[automation client](/docs/automation) or keep the element's own layout in your
+state.
+
+`onMouseDownOutside` is the outside-press signal. It is what a dismissable
+surface listens to; the paint order and topmost-dismiss rule are on
+[Component API](/docs/component-api#layering).
+
+## Keyboard input
+
+`key` is the key name GPUI reports: `"enter"`, `"escape"`, `"a"`, `"down"`,
+`"f1"`. `keyChar` is the character the press produced and can differ from `key`
+when a modifier is held. `isHeld` marks the repeats of a held key on
+`keyDown`, so a repeat can be ignored without a timer.
+
+Focus arrives through `onFocus` and `onBlur`. One measured detail matters:
+`autoFocus` sets native focus **without** dispatching `onFocus`, so do not run
+mount-time work from that handler — see
+[Accessibility](/docs/accessibility#pointer-and-touch-input).
+
+## Scroll input
+
+There is no wheel handler. A wheel or trackpad gesture arrives as `onScroll` on
+a scroll container, with `deltaX` and `deltaY`, `precise` and `touchPhase`.
+
+- `precise: true` — pixel-precise trackpad input; deltas are pixels.
+- `precise: false` — a line-based mouse wheel; deltas are lines.
+- `touchPhase` — `"started"`, `"moved"` or `"ended"` for a trackpad gesture.
+- The sign is GPUI's: a negative `deltaY` scrolls **down**, the opposite of the
+  DOM. The driver's `wheel` takes the same sign.
+
+The component that owns the scroll container and its measured limits is
+[Scrollable containers](/docs/components/scroll-area); the driver's `wheel`
+is on [Automation](/docs/automation).
+
+## Element-defined values
+
+Some fields are only meaningful for the element that emits them. The element
+catalogue is on [Native elements](/docs/native-elements).
+
+| Field | Emitted by | Meaning |
+| ----- | ---------- | ------- |
+| `value` | `<input>`/`<textarea>` change, `<diff>` toggle/show-more/line, `<markdown>` link, window selection | The input's text, the diff file path or hidden count or line text, the link URL, or the joined selected text |
+| `oldLine`, `newLine` | `<diff>` line click | The line number on the pre- and post-change side |
+| `startIndex`, `endIndex` | `<virtual-list>` visible range | The first visible logical row and the exclusive end |
+| `matchCount` | An element with `highlight` | Every retained match, counted once even across painted runs |
+| `motionGeneration` | A native motion track | The logical target that completed |
+| `paths` | An OS file drop | Absolute filesystem paths |
+
+`value` is why the library's `Input` is a thin wrapper: it reads
+`event.value` and pushes the text back through its `value` prop. Selection,
+highlighting and the find controller are on
+[Selection and find](/docs/selection); virtualized rows are on
+[Data display](/docs/data-display).
+
+## Window-level events
+
+Three handlers are **render options**, not props. They are passed where the app
+is mounted, once:
+
+```tsx
+import { render } from "@gpuix/react";
+
+const App = () => <text>Ready</text>;
+
+render(<App />, {
+  onKeyDown: (event, renderer) => {
+    if (event.key === "escape") renderer.blur?.();
+  },
+  onSelectionChange: (event) => {
+    // `event.value` is the joined selection, absent when empty.
+  },
+  onEvent: (event) => {
+    // Every dispatched event, for instrumentation.
+  },
+});
+```
+
+<WindowEventTable />
+
+A window key event is rewritten before it reaches the handler: `elementId` is
+`0` and `eventType` is `"keyDown"` or `"keyUp"`. A key action can consume the
+event before this listener runs, so a window shortcut is not a guarantee that
+the focused field did not see the key first.
+
+## What is not in the payload
+
+<EventAbsences />
+
+The two consequences worth repeating: a payload has no `target` to read and no
+cancel channel, and the registry stores one handler per element and event type
+rather than a bubbling tree. Model the interaction on one element, and pass its
+result to the parent through state or a callback prop.
+
+## Evidence on this site
+
+The rows above are authored data. Their names, types and event-type strings are
+re-derived from the installed `@gpuix/native@0.10.0` declarations and its
+installed dispatcher by `src/events.test.ts`, which fails when the runtime adds,
+renames or removes a member. The page quotes no measured capture/bubble
+behaviour: the payload and the registry expose no phase, and no probe on this
+site has measured one. The [live previews](/docs/previews) prove individual
+interactions; they do not audit the event stream.
+
+## Related
+
+- [Component API](/docs/component-api#shared-host-props) — the handler props
+  themselves, the keyboard decisions and the dismiss stack.
+- [Accessibility](/docs/accessibility#pointer-and-touch-input) — the absent
+  pointer, touch and stylus events and the focus ring.
+- [Native elements](/docs/native-elements) — which element emits which
+  element-defined value.
+- [Selection and find](/docs/selection) — `selectionChange`, `highlight` and
+  the find controller.
+- [Automation](/docs/automation) — driving these events from a test.
+- [Testing your components](/docs/testing) — the offscreen renderer and its
+  `simulate*` methods.
+- [Window](/docs/window) — the size, inset and window-action surface that is not
+  an event.

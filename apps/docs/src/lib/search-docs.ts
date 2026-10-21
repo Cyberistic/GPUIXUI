@@ -92,6 +92,11 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     what: "the element instance a ref receives and the focus recipe",
   },
   {
+    title: "Events",
+    url: "/docs/events",
+    what: "every handler, every `EventPayload` field and what the payload does not carry",
+  },
+  {
     title: "Part states",
     url: "/docs/component-api#every-state-type",
     what: "every exported state type and the fields it declares",

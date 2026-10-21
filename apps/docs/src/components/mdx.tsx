@@ -86,6 +86,12 @@ import {
   AutomationProtocolTable,
   AutomationTreeNode,
 } from "./automation-tables";
+import {
+  EventAbsences,
+  EventHandlerTable,
+  EventPayloadTables,
+  WindowEventTable,
+} from "./event-tables";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -167,6 +173,10 @@ export function getMDXComponents(components?: MDXComponents) {
     AutomationProtocolErrors,
     AutomationTreeNode,
     AutomationAbsences,
+    EventHandlerTable,
+    EventPayloadTables,
+    WindowEventTable,
+    EventAbsences,
     ...components,
   } satisfies MDXComponents;
 }

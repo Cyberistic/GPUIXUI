@@ -171,6 +171,17 @@
  * driver. `screenshot` stays on Previews, `test id` and `testid` stay on
  * Component API, `playwright`/`webdriver` stay on Testing, `selection` stays on
  * Selection and find, and `tree` stays on Data display.
+ *
+ * Plan 635 adds the event vocabulary, the last interaction surface without an
+ * owner: `event`, `event payload`, `event object`, `event target`, `event
+ * type`, `event handler`, `click event`, `click count`, `double click`, `middle
+ * click`, `mouse button`, `file drop`, `drop files`, `scroll delta`, `delta y`,
+ * `key event`, `key held`, `key repeat`, `stop propagation`, `event bubbling`,
+ * `window key` and `window key events` name Events. `right click` stays on
+ * Context menu, `pointer event`/`mouse event`/`touch` on Accessibility,
+ * `keyboard`/`enter key`/`arrow keys` on Component API, `cursor` on Styling,
+ * `hotkey` on Keycap, and the `on*` prop names on Component API's shared host
+ * props table — the Events page explains the object those props receive.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -633,6 +644,51 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "outside click",
       "click outside",
       "close on outside click",
+    ],
+  ],
+  [
+    "/docs/events",
+    [
+      "event",
+      "event payload",
+      "event object",
+      "event type",
+      "event handler",
+      "event handlers",
+      "event handling",
+      "event stream",
+      "click event",
+      "key event",
+      "keyboard event",
+      "key events",
+      "key held",
+      "key repeat",
+      "keyboard repeat",
+      "modifier keys",
+      "shift click",
+      "cmd click",
+      "command click",
+      "double click",
+      "triple click",
+      "click count",
+      "middle click",
+      "aux click",
+      "mouse button",
+      "mouse buttons",
+      "file drop",
+      "drop files",
+      "drop a file",
+      "drag and drop files",
+      "scroll delta",
+      "scroll event",
+      "delta y",
+      "e.key",
+      "event target",
+      "event bubbling",
+      "stop propagation",
+      "window key",
+      "window keys",
+      "window key events",
     ],
   ],
   [

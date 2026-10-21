@@ -10,6 +10,7 @@
     "architecture",
     "component-api",
     "accessibility",
+    "events",
     "async-data",
     "capabilities",
     "performance",
