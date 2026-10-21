@@ -16,7 +16,7 @@
  * `@gpuixui/tw`.
  */
 
-import type { ReactElement } from "react";
+import { Fragment, type ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import {
   resolveStyle,
@@ -27,7 +27,10 @@ import * as Arr from "effect/Array";
 import {
   Select as GpuixSelect,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
   type SelectItemState,
@@ -43,6 +46,8 @@ import {
   selectContentClass,
   selectItemClass,
   selectItemRowClass,
+  selectLabelClass,
+  selectSeparatorClass,
   selectTriggerClass,
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -63,8 +68,34 @@ export interface SelectOption {
   readonly disabled?: boolean;
 }
 
-export interface SelectProps extends ValueChangeProps<string> {
+/** A named run of options, painted under a caption and a rule. */
+export interface SelectOptionGroup {
+  readonly label: string;
   readonly options: ReadonlyArray<SelectOption>;
+}
+
+/** One entry in the list: an option, or a named group of them. */
+export type SelectEntry = SelectOption | SelectOptionGroup;
+
+/** Whether an entry is a named group rather than one option. */
+export const isSelectGroup = (entry: SelectEntry): entry is SelectOptionGroup =>
+  "options" in entry;
+
+/** Every option in render order, with the groups flattened. */
+export const selectOptions = (
+  entries: ReadonlyArray<SelectEntry>,
+): ReadonlyArray<SelectOption> =>
+  Arr.flatMap(entries, (entry) =>
+    isSelectGroup(entry) ? entry.options : [entry],
+  );
+
+export interface SelectProps extends ValueChangeProps<string> {
+  /**
+   * The list: options, or named groups of them. A group's caption is a visual
+   * heading — 0.11.0's `SelectGroup` has no role to announce it — so keep the
+   * names short and unique.
+   */
+  readonly options: ReadonlyArray<SelectEntry>;
   /** Controlled selection. Omit to let the select hold its own. */
   readonly value?: string;
   readonly defaultValue?: string;
@@ -118,6 +149,14 @@ export const selectTriggerStyle = (
 export const selectContentStyle = (theme: PrimitiveTheme): StyleDesc =>
   recipeTw.classesToStyle(selectContentClass, theme).style;
 
+/** A group caption: the caption role, muted, above its rows. */
+export const selectLabelStyle = (theme: PrimitiveTheme): StyleDesc =>
+  recipeTw.classesToStyle(selectLabelClass, theme).style;
+
+/** The rule between two groups. */
+export const selectSeparatorStyle = (theme: PrimitiveTheme): StyleDesc =>
+  recipeTw.classesToStyle(selectSeparatorClass, theme).style;
+
 /** An item's paint, from the three states the runtime reports. */
 export const selectItemStyle =
   (
@@ -153,12 +192,38 @@ export const renderSelect = (
   theme: PrimitiveTheme,
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
-  const items = Arr.map(options, (option) => ({
+  const items = Arr.map(selectOptions(options), (option) => ({
     value: option.value,
     label: option.label,
     textValue: option.label,
     disabled: option.disabled === true,
   }));
+  const renderItem = (option: SelectOption): ReactElement => (
+    <SelectItem
+      key={option.value}
+      value={option.value}
+      disabled={option.disabled}
+      style={selectItemStyle(theme, itemStyle)}
+    >
+      {(state) => (
+        <div style={recipeTw.classesToStyle(selectItemRowClass, theme).style}>
+          {option.label}
+          {/*
+            The selected mark comes from the state GPUix reports for this row,
+            so an uncontrolled Select needs no mirror of its value. It is
+            decorative: the row is already `aria-selected`.
+          */}
+          {state.selected ? (
+            <Icon
+              name="check"
+              size="sm"
+              color={theme.colors.popoverForeground}
+            />
+          ) : null}
+        </div>
+      )}
+    </SelectItem>
+  );
   return (
     <GpuixSelect
       items={items}
@@ -180,34 +245,29 @@ export const renderSelect = (
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent side={side} style={selectContentStyle(theme)}>
-        {Arr.map(options, (option) => (
-          <SelectItem
-            key={option.value}
-            value={option.value}
-            disabled={option.disabled}
-            style={selectItemStyle(theme, itemStyle)}
-          >
-            {(state) => (
-              <div
-                style={recipeTw.classesToStyle(selectItemRowClass, theme).style}
-              >
-                {option.label}
+        {Arr.map(options, (entry, index) =>
+          isSelectGroup(entry) ? (
+            <Fragment key={`group-${index}`}>
+              {index === 0 ? null : (
+                <SelectSeparator style={selectSeparatorStyle(theme)} />
+              )}
+              <SelectGroup>
+                <SelectLabel style={selectLabelStyle(theme)}>
+                  {entry.label}
+                </SelectLabel>
                 {/*
-                  The selected mark comes from the state GPUix reports for this
-                  row, so an uncontrolled Select needs no mirror of its value.
-                  It is decorative: the row is already `aria-selected`.
+                  Spread, not nested: the parts helper walks a component's
+                  children and flattens fragments, so an array left as one child
+                  would hide every row of the group from a test (and from a
+                  caller composing an item list).
                 */}
-                {state.selected ? (
-                  <Icon
-                    name="check"
-                    size="sm"
-                    color={theme.colors.popoverForeground}
-                  />
-                ) : null}
-              </div>
-            )}
-          </SelectItem>
-        ))}
+                {...Arr.map(entry.options, renderItem)}
+              </SelectGroup>
+            </Fragment>
+          ) : (
+            renderItem(entry)
+          ),
+        )}
       </SelectContent>
     </GpuixSelect>
   );

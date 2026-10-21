@@ -27,11 +27,38 @@ import { Label, Select } from "@gpuixui/primitives";
 />;
 ```
 
+Options can be grouped under a caption. Groups are **presentational**:
+`SelectGroup`/`SelectLabel` are plain elements in 0.11.0 with no role, so the
+caption is visible text and each row keeps its own accessible name. The runtime
+still receives one flat list in render order, so keyboard navigation crosses a
+group boundary exactly as it crosses any other row.
+
+```tsx
+import { Select } from "@gpuixui/primitives";
+
+<Select
+  label="Density"
+  options={[
+    {
+      label: "Comfortable",
+      options: [
+        { value: "compact", label: "Compact" },
+        { value: "cozy", label: "Cosy" },
+      ],
+    },
+    {
+      label: "Spacious",
+      options: [{ value: "roomy", label: "Roomy" }],
+    },
+  ]}
+/>;
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `options` | `ReadonlyArray<SelectOption>` | — (required) | `{ value, label, disabled? }` items |
+| `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | `{ value, label, disabled? }` items, or `{ label, options }` groups painted under a caption and a rule |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | — | initial selection when uncontrolled |
 | `onChange` | `(value: string) => void` | none | deprecated alias for `onValueChange`; the new name runs when both are passed |
@@ -88,8 +115,12 @@ state of its own.
 
 ## Limitations
 
-- **Options are data.** No option groups, no rich option content, no compound
-  escape hatch in the public API; use `RadioGroup` for rich options.
+- **Options are data.** No rich option content and no compound escape hatch in
+  the public API; use `RadioGroup` for rich options. Group captions are painted,
+  not announced: 0.11.0's `SelectGroup`/`SelectLabel` carry no role, so a reader
+  who hears a row does not hear which group it belongs to.
+- A group's name has no semantic effect on the keyboard; the arrows walk the
+  flat list in render order.
 - The list's dismissal and positioning are GPUix's; this package cannot change
   the open animation or the outside-click rules. **Measured on 0.11.0:** the
   layer snaps into the window (`fit: "snap"` with an 8px margin), so a trigger at
@@ -109,7 +140,10 @@ state of its own.
 - `src/components/Select.test.tsx` — trigger chrome, the keyboard ring (ring
   role, destructive while invalid, absent while disabled), list surface and item
   states, both state-aware callbacks receiving their live state and winning, and
-  the selected row's mark coming from the state the runtime reports.
+  the selected row's mark coming from the state the runtime reports. Four group
+  cases: the flat list in render order, the caption's muted role and one-pixel
+  rule, the group/rule/group tree, and a grouped row still being a real item with
+  its own state function.
 - `runtime/fields.runtime.test.tsx` — opens, paints its options and commits a
   clicked option in the real renderer; exactly one row paints the mark, and the
   mark moves to the row that becomes selected (negative control measured:
@@ -117,7 +151,8 @@ state of its own.
   state and dismissal are GPUix's. Two placement cases measure the limits above:
   a bottom-edge trigger's list is painted inside the window in order, and a
   40-option list's last row sits past the window edge with no scroll offset in
-  any ancestor.
+  any ancestor. A grouped list paints both captions and commits a row clicked
+  inside a group.
 
 ```sh
 nub run --filter @gpuixui/primitives test

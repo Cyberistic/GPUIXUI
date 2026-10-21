@@ -181,8 +181,10 @@ export type { SpinnerProps } from "./Spinner.js";
 
 export { Select } from "./Select.js";
 export type {
+  SelectEntry,
   SelectItemState,
   SelectOption,
+  SelectOptionGroup,
   SelectProps,
   SelectTriggerState,
 } from "./Select.js";

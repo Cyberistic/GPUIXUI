@@ -394,6 +394,13 @@ export const selectContentClass =
 export const selectItemRowClass =
   "flex flex-row items-center justify-between w-full";
 
+/** A group's name: the caption role, quieter than the rows it heads. */
+export const selectLabelClass =
+  "flex flex-row items-center pl-sm pr-sm py-2xs type-size-caption text-muted-foreground";
+
+/** The rule between two option groups, spanning the list. */
+export const selectSeparatorClass = "h-px w-full bg-border";
+
 /** The three states a select item paints, reported by GPUix's own Select. */
 export interface SelectItemPaint {
   readonly selected: boolean;

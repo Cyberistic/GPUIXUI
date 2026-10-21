@@ -291,6 +291,49 @@ const ancestorsOf = (
   });
 };
 
+it("paints a grouped list's captions and selects a row inside a group", async () => {
+  const runtime = await openWindow();
+  const field = recorder();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Food"
+        placeholder="Pick one"
+        onChange={field.onChange}
+        options={[
+          {
+            label: "Fruit",
+            options: [{ value: "apple", label: "Apple" }],
+          },
+          {
+            label: "Vegetables",
+            options: [{ value: "leek", label: "Leek" }],
+          },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+
+  // Both captions paint, in order, above their rows; the runtime still receives
+  // one flat list, so a row inside a group is addressable exactly like any other.
+  expect(runtime.allText()).toEqual(
+    expect.arrayContaining(["Fruit", "Vegetables", "Apple", "Leek"]),
+  );
+  const leekRow = Option.getOrElse(
+    Option.fromNullishOr(textElement(runtime, "Leek").parentId),
+    () => expect.fail("the Leek option has no row"),
+  );
+  runtime.clickElement(
+    Option.getOrElse(
+      Option.fromNullishOr(runtime.renderer.getElement(leekRow)),
+      () => expect.fail("the Leek row vanished"),
+    ),
+  );
+  expect(lastValue(field.values)).toBe("leek");
+});
+
 it("keeps an open list inside the window when its trigger sits at the bottom", async () => {
   // GPUix's `<anchored>` snaps the layer into the window (`fit: "snap"`,
   // `snapMargin` 8). The old docs said the list "neither flips off a window

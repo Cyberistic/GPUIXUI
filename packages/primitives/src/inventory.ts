@@ -343,7 +343,8 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "yes",
     limitations: [
-      "Options are data: no groups, rich options or compound escape hatch",
+      "Options are data: grouped, but no rich options or compound escape hatch",
+      "Group captions are painted, not announced (SelectGroup has no role)",
       "No search or type-ahead and no multi-select",
       "A list taller than the window does not scroll (measured)",
       "Open animation, positioning and dismissal are the runtime's",

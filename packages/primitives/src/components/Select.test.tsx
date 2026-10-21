@@ -17,10 +17,15 @@ import * as Schema from "effect/Schema";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { fieldVariant } from "../core/variants.js";
 import {
+  isSelectGroup,
   renderSelect,
   selectContentStyle,
   selectItemStyle,
+  selectLabelStyle,
+  selectOptions,
+  selectSeparatorStyle,
   selectTriggerStyle,
+  type SelectEntry,
   type SelectItemState,
   type SelectTriggerState,
 } from "./Select.js";
@@ -68,6 +73,93 @@ const rowChildren = (
 /** The row a selected or resting item paints. */
 const rowOf = (item: ReactElement, state: SelectItemState): ReactElement =>
   expectSome(Schema.decodeUnknownOption(ElementNode)(rowChildren(item)(state)));
+
+/** Two named groups, the second with a disabled row. */
+const grouped: ReadonlyArray<SelectEntry> = [
+  {
+    label: "Fruit",
+    options: [
+      { value: "apple", label: "Apple" },
+      { value: "pear", label: "Pear" },
+    ],
+  },
+  {
+    label: "Vegetables",
+    options: [
+      { value: "leek", label: "Leek" },
+      { value: "yam", label: "Yam", disabled: true },
+    ],
+  },
+];
+
+describe("Select groups", () => {
+  it("paints the caption in the muted role and the rule one pixel tall", () => {
+    expect(selectLabelStyle(testTheme).color).toBe(
+      testTheme.colors.mutedForeground,
+    );
+    expect(selectSeparatorStyle(testTheme).height).toBe(1);
+  });
+
+  it("flattens the groups into one list in render order", () => {
+    expect(selectOptions(grouped).map((option) => option.value)).toEqual([
+      "apple",
+      "pear",
+      "leek",
+      "yam",
+    ]);
+    expect(isSelectGroup(grouped[0] ?? { value: "", label: "" })).toBe(true);
+    expect(isSelectGroup({ value: "apple", label: "Apple" })).toBe(false);
+  });
+
+  it("paints a caption and a rule around each group, and the flat list to the runtime", () => {
+    const element = renderSelect({ options: grouped }, testTheme);
+
+    // The trigger still needs every label, so the runtime receives one flat list
+    // in the same order the rows paint.
+    expect(itemsOf(element).map((item) => item["value"])).toEqual([
+      "apple",
+      "pear",
+      "leek",
+      "yam",
+    ]);
+
+    const content =
+      elementChildren(element)[1] ??
+      expect.fail("the select rendered no content part");
+    const parts = elementChildren(content);
+
+    // Two groups with a rule between them: group, separator, group.
+    expect(parts).toHaveLength(3);
+    expect(
+      elementChildren(parts[0] ?? expect.fail("no first group")),
+    ).toHaveLength(3);
+    expect(
+      elementChildren(parts[1] ?? expect.fail("no separator")),
+    ).toHaveLength(0);
+    expect(
+      elementChildren(parts[2] ?? expect.fail("no second group")),
+    ).toHaveLength(3);
+  });
+
+  it("keeps every grouped row a real item with its own state function", () => {
+    const element = renderSelect({ options: grouped }, testTheme);
+    const content =
+      elementChildren(element)[1] ??
+      expect.fail("the select rendered no content part");
+    const firstGroup = elementChildren(content)[0] ?? expect.fail("no group");
+    const [label, apple] = elementChildren(firstGroup);
+
+    expect(
+      expectSome(elementProp(label ?? expect.fail("no label"), "children")),
+    ).toBe("Fruit");
+    expect(
+      expectSome(elementProp(apple ?? expect.fail("no item"), "value")),
+    ).toBe("apple");
+    expect(
+      rowOf(apple ?? expect.fail("no item"), { ...rest, selected: true }),
+    ).toBeDefined();
+  });
+});
 
 describe("Select", () => {
   it("paints a selected item differently from a hovered or resting one", () => {
