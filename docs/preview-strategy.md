@@ -57,6 +57,24 @@ A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source. Curated today: Button, Dialog,
 Popover, Tabs.
 
+### The status strip is generated, not written
+
+A package page describes its component but does not decide whether that
+component is shipped. `src/components/docs/status-strip.tsx` prints the
+`COMPONENTS.md` row — its status and its GPUix support verdict — above the page,
+joined by the page title: `src/lib/inventory-status.ts` normalises punctuation
+and a trailing plural, and names the few titles whose row reads differently
+(`Text` → `Text / typography`, `Toast` → `Toasts / notifications`). The strip
+reads the inventory, so a row that moves to `done` moves on the page in the same
+commit with no docs change.
+
+A page the inventory has no row for renders no strip rather than a guess. The two
+are argued in the module — `ThemeProvider` is a provider, not a component, and
+the Tier 1 table has no `Grid` row (recorded in `TODO.md` → Interlocks) —
+and `inventory-status.test.ts` fails when a new page needs an entry, when an
+alias names a row that is gone, when an exemption outlives its page, or when a
+title two rows could answer would report the wrong verdict.
+
 Because the package writes Markdown and the site compiles MDX, the packages'
 files must satisfy both: valid YAML frontmatter and no raw `<tag>` outside code.
 `src/lib/package-docs.test.ts` holds that line, and a collection fails whole

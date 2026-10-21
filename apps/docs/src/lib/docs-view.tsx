@@ -17,6 +17,7 @@ import {
   PlatformProvider,
   PlatformToggle,
 } from "@/components/docs/platform-toggle";
+import { StatusStrip } from "@/components/docs/status-strip";
 import {
   collectionByOrigin,
   packageCollections,
@@ -172,6 +173,7 @@ function PackageContent({
       title={page.title}
       toc={toc}
     >
+      <StatusStrip title={page.title} />
       <Callout
         title={`This page ships with the ${collection.kind}`}
         type="info"
