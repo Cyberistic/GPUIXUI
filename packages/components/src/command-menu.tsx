@@ -291,6 +291,10 @@ export interface CommandMenuInputProps {
 /**
  * The search field: it keeps focus while the highlight moves. Enter runs the
  * active action; Escape is offered to the topmost dismiss layer.
+ *
+ * Focused by the dialog's `initialFocus`, never by `autoFocus`: a field that
+ * focuses itself first becomes the modal's restore target, and the opener loses
+ * the focus when the palette closes.
  */
 export const CommandMenuInput = ({
   placeholder = "Type a command…",
@@ -307,7 +311,6 @@ export const CommandMenuInput = ({
       testId="command-input"
       aria-label={label}
       placeholder={placeholder}
-      autoFocus
       value={query}
       onChange={(event) => setQuery(event.value ?? "")}
       onSubmit={runActive}

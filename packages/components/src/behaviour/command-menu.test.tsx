@@ -12,6 +12,7 @@
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { Button } from "../internal/button.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
@@ -92,7 +93,33 @@ const Palette = ({
   );
 };
 
+/** A palette with a trigger, so the close can be measured against its opener. */
+const OpenedPalette = ({
+  perform,
+}: {
+  readonly perform: (id: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <Button testId="palette-opener" onClick={() => setOpen(true)}>
+        Open palette
+      </Button>
+      <CommandMenu
+        open={open}
+        onOpenChange={setOpen}
+        actions={actions(perform)}
+      >
+        <CommandMenuInput />
+        <CommandMenuList />
+        <CommandMenuEmpty />
+      </CommandMenu>
+    </div>
+  );
+};
+
 /** Type one character into whatever holds focus. */
+
 const type = (root: ReturnType<typeof renderComponent>, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
@@ -154,6 +181,23 @@ describe("CommandMenu", () => {
     const palette = renderComponent(<Palette perform={vi.fn()} />);
 
     expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
+
+    palette.unmount();
+  });
+
+  it("returns focus to the opener when it closes", () => {
+    const palette = renderComponent(<OpenedPalette perform={vi.fn()} />);
+
+    palette.renderer.focusElement(
+      palette.renderer.findByTestId("palette-opener")?.id ?? -1,
+    );
+    clickCentreOf(palette, "palette-opener");
+    expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
+
+    palette.renderer.simulateKeystrokes("escape");
+
+    expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
+    expect(focusedTestId(palette)).toEqual(Option.some("palette-opener"));
 
     palette.unmount();
   });

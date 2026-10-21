@@ -48,6 +48,11 @@ not focused**: focusing a row would take typing away from the input after the
 first arrow key. That is why this palette does not reuse the menu registry, only
 the pure `menu/logic.ts` arithmetic.
 
+The dialog focuses the input through its `initialFocus`, and closing returns the
+focus to whatever opened the palette. The input deliberately carries no
+`autoFocus`: a field that focuses itself before the modal records the opener
+becomes the restore target, so the opener would be left with no focus.
+
 | Key | Result |
 | ---- | ------ |
 | type | filters; the highlight resets to the first enabled match |
@@ -139,10 +144,11 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (18 tests):
-focus landing on the input, typing filtering the list while focus stays put,
-ArrowDown + Enter running the second match and closing, a clicked row, the empty
-label, a custom filter, a disabled action refusing to run, Escape closing, a
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (19 tests):
+focus landing on the input, focus returning to the opener when the palette closes,
+typing filtering the list while focus stays put, ArrowDown + Enter running the
+second match and closing, a clicked row, the empty label, a custom filter, a
+disabled action refusing to run, Escape closing, a
 non-contiguous query matching initials, ranking deciding the default `Enter`
 target, group order surviving ranking, an empty query keeping declaration order,
 recents shown first under one heading with the first one highlighted, unknown and
