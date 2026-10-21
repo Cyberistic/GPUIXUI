@@ -61,10 +61,15 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `() => void` | none | click or activating key; not called while busy |
-| `onClick` | `(event) => void` | none | the raw click, called before `onActivate` |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
 | `style` | `StateStyle<ButtonState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |
+
+The five host handlers are `InteractionProps`. They are **composed**, never
+substituted: your handler runs first with the runtime's own event and the button
+still activates. A busy or disabled button installs no `onClick` at all, so
+neither your handler nor `onActivate` runs; keys and focus stay observable.
 
 ## Keyboard
 
@@ -131,6 +136,8 @@ refuses activation.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
   loading description, and a `style` callback receiving the live state and
   winning over the recipe.
+- `src/components/handlers.test.tsx` — a caller's click, keys and focus run
+  before the button's own action, and a busy button installs no press handler.
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name.

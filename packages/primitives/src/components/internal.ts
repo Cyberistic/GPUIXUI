@@ -9,7 +9,7 @@
 
 import { Children, useEffect, useState, type ReactNode } from "react";
 import * as Option from "effect/Option";
-import type { StyleDesc } from "@gpuix/react";
+import type { EventPayload, KeyEvent, StyleDesc } from "@gpuix/react";
 import {
   initValueState,
   setValue,
@@ -41,6 +41,64 @@ export const mergeStyle = (
   base: StyleDesc,
   override: StyleDesc | undefined,
 ): StyleDesc => (override === undefined ? base : { ...base, ...override });
+
+/**
+ * The host events an interactive part accepts.
+ *
+ * A part owns behaviour a caller must not be able to replace — activation,
+ * focus tracking, the key contract — so these handlers are **composed** with it
+ * rather than handed the element: the caller sees the event first and the part
+ * still acts afterwards. A consumer that needs to stop the runtime's own
+ * default (a Tab, a text edit) calls `preventDefault()` on the event it is
+ * given; that flag is the runtime's, not this package's.
+ */
+export interface InteractionProps {
+  readonly onClick?: (event: EventPayload) => void;
+  readonly onKeyDown?: (event: KeyEvent) => void;
+  readonly onKeyUp?: (event: KeyEvent) => void;
+  readonly onFocus?: (event: EventPayload) => void;
+  readonly onBlur?: (event: EventPayload) => void;
+}
+
+/**
+ * Compose a caller's handler with a part's own.
+ *
+ * The caller runs first, then the part. Either may be absent: with no caller
+ * the part's handler is returned unchanged (no extra closure per render), and
+ * with neither the host gets no handler at all.
+ */
+export const composeEvent = <Event>(
+  caller: ((event: Event) => void) | undefined,
+  internal: ((event: Event) => void) | undefined,
+): ((event: Event) => void) | undefined =>
+  caller === undefined
+    ? internal
+    : internal === undefined
+      ? caller
+      : (event) => {
+          caller(event);
+          internal(event);
+        };
+
+/**
+ * A press a blocked part refuses entirely.
+ *
+ * A disabled control installs no press handler at all, so neither the caller's
+ * `onClick` nor the action runs — the same rule the components package's list
+ * rows use. Keys and focus stay observable: a control disabled while focused
+ * must still report the focus it holds.
+ */
+export const composePress = (
+  blocked: boolean,
+  caller: ((event: EventPayload) => void) | undefined,
+  action: () => void,
+): ((event: EventPayload) => void) | undefined =>
+  blocked
+    ? undefined
+    : (event) => {
+        caller?.(event);
+        action();
+      };
 
 /** A disabled control keeps its resting fill and drops hover/active feedback. */
 export const suppressFeedback = (style: StyleDesc): StyleDesc => ({

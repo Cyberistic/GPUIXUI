@@ -636,16 +636,18 @@ a workaround for two live sessions sharing one worktree; see
       there — recorded as a limit, not asserted as a pass.
 `[x]` Land the `drag-between-panes` live probe and the `AsyncSmokeHost.drag`
       verb behind it — a cross-pane drag in a real window: the item records the
-      press, the **board** (a shared ancestor) receives the held moves and
-      resolves the release's side, so the gesture works without pointer capture;
-      item → right pane and back are both asserted (`drops=1`, then `drops=2`),
-      with the move count proving the ancestor saw the drag. `packages/testing`'s
-      `AsyncSmokeHost` gained `drag(testId, deltaX, deltaY)`, implemented over
-      the automation protocol's real drag (eight interpolated moves with
-      `pressedButton`). Green on 0.11.0 (`--only drag-between-panes`); negative
-      control measured (no board `onMouseUp`: `drops=0`, exit `1`). The measured
-      limit is the one already documented for `Slider`: no pointer capture, so a
-      drag must stay inside the ancestor that owns the listener.
+      press, the pane under the pointer counts the travel and resolves the
+      release, and item → right pane and back are both asserted (`drops=1`, then
+      `drops=2`). Measuring it found a window-only **timing** rule: the protocol
+      delivers press, eight moves and release before React commits the press's
+      render, so a drag gated on `dragging` state never starts — the flag must be
+      a ref. `packages/testing`'s `AsyncSmokeHost` gained `drag(testId, deltaX,
+      deltaY)` over the automation protocol's real drag (`pressedButton` set on
+      each move). Green on 0.11.0 (`--only drag-between-panes`); negative control
+      measured (forcing the release's side to `left`: `expected a string
+      containing "zone=right", got "zone=left leftMoves=3 rightMoves=4 drops=1
+      dragging=false"`, exit `1`). The pointer-capture limit documented on
+      `Slider` applies: the drop target needs its own listeners.
 
 ## Phase C — Tier 1–2 components
 
@@ -1233,7 +1235,19 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     re-enables it and sees the ring and the toggle return. Both directions
     measured: dropping `disabled` from the checkbox's ring call fails the native
     case
-  - `[ ]` Caller handler composition across the interactive parts
+  - `[~]` Caller handler composition across the interactive parts — the
+    **controls and fields landed**: `InteractionProps` (`onClick`,
+    `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`) is composed with each part's own
+    handler through `composeEvent`, never substituted, so the caller's runs
+    first and the part still acts; a disabled/blocked control installs **no**
+    `onClick` at all (`composePress`, matching the components package's list
+    rows) while its keys and focus stay observable. Adopted by `Button`,
+    `IconButton`, `Toggle`, `Checkbox`, `Switch`, `Input` and `TextArea`;
+    `handlers.test.tsx` (22 cases: click order, one activation, no press while
+    disabled, keys and focus through each part) is the guard, both directions
+    measured (a Checkbox with the composition removed fails 6 cases). The
+    remaining parts are the group roots (`RadioGroup`, `Rating`), the sliders,
+    `NumberField`/`OTPField` and the overlays
   - `[ ]` The switch thumb's motion
   - `[ ]` The native field's hint and selection reach
 `[~]` `apps/docs`: docs truth — stated native-test counts and the complete public type index (salvage 310, 324, 326, 330, 333, 335; the example registry page and the copy-and-own platform example contract have landed)

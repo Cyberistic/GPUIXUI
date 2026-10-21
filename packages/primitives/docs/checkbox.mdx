@@ -78,6 +78,7 @@ press that toggles the box.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the box's own; yours runs first |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
@@ -95,6 +96,10 @@ its props (a `style`, a `className`) in addition to `Checkbox`'s children.
 `indeterminate` is a **paint override**: activation still toggles the underlying
 boolean, so an indeterminate parent becomes checked on the next click rather than
 clearing.
+
+The five host handlers are `InteractionProps`: your handler runs first with the
+runtime's own event and the box still toggles. A disabled box installs no
+`onClick` at all; its keys and focus stay observable.
 
 ## Keyboard
 
@@ -143,6 +148,8 @@ since disabling the focused box does not take the runtime's focus away.
 - `src/components/Checkbox.test.tsx` — toggle, indeterminate and disabled
   wiring; the mark's state flows into its colour; a custom glyph replaces the
   default; the mark keeps the pointer guard; the callback name and its alias.
+- `src/components/handlers.test.tsx` — a caller's click, keys and focus are
+  composed with the box's own, and a disabled box installs no press handler.
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
   value flips `unchecked → checked`; a custom mark still toggles on a real hit
   test; indeterminate reads `mixed`; the AccessKit role is `CheckBox`; focus

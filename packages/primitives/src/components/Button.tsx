@@ -19,6 +19,10 @@
  * The resting appearance is a Tailwind recipe (`recipe/buttonClass`), compiled
  * through `@gpuixui/tw`; the caller's `className` is joined last so it wins
  * conflicts exactly as `cn` resolves them.
+ *
+ * Host handlers arrive through `InteractionProps` and are composed with the
+ * button's own, never handed the element: `onClick` observes a press the button
+ * accepts, and a busy or disabled button takes no press at all.
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
@@ -31,12 +35,19 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
 import { buttonClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { childrenName, mergeStyle, suppressFeedback } from "./internal.js";
+import {
+  childrenName,
+  composeEvent,
+  composePress,
+  mergeStyle,
+  suppressFeedback,
+  type InteractionProps,
+} from "./internal.js";
 import { controlRing } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface ButtonProps {
+export interface ButtonProps extends InteractionProps {
   /** Defaults to `primary`. */
   readonly variant?: ButtonVariant;
   /** Defaults to `md`. */
@@ -53,7 +64,6 @@ export interface ButtonProps {
   readonly label?: string;
   /** Called for a click or an activating key. Not called while busy or disabled. */
   readonly onActivate?: () => void;
-  readonly onClick?: (event: EventPayload) => void;
   /**
    * Extra style, resolved against the button's live state and merged last.
    *
@@ -139,15 +149,11 @@ export const renderButton = (
         props.disabled === true && props.loading !== true ? undefined : 0
       }
       testId={props.testId}
-      onClick={(event) => {
-        if (busy) return;
-        props.onClick?.(event);
-        props.onActivate?.();
-      }}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
-      onKeyDown={onKey("down")}
-      onKeyUp={onKey("up")}
+      onClick={composePress(busy, props.onClick, activate)}
+      onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
+      onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
+      onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}
+      onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}
       style={style}
     >
       {props.loading === true ? (

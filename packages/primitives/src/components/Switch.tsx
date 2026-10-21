@@ -17,7 +17,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import type { KeyEvent, StyleDesc } from "@gpuix/react";
+import type { EventPayload, KeyEvent, StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
@@ -29,12 +29,15 @@ import { switchThumbClass, switchTrackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
   checkedChange,
+  composeEvent,
+  composePress,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
   useFocus,
   type CheckedChangeProps,
   type FocusState,
+  type InteractionProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -54,7 +57,7 @@ export interface SwitchThumbProps {
   readonly className?: string;
 }
 
-export interface SwitchProps extends CheckedChangeProps {
+export interface SwitchProps extends CheckedChangeProps, InteractionProps {
   /** Controlled. Omit to let the switch hold its own state. */
   readonly checked?: boolean;
   readonly defaultChecked?: boolean;
@@ -165,11 +168,11 @@ export const renderSwitch = (
       aria-valuetext={state.current ? "checked" : "unchecked"}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
-      onClick={toggle}
-      onKeyDown={onKey("down")}
-      onKeyUp={onKey("up")}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
+      onClick={composePress(props.disabled === true, props.onClick, toggle)}
+      onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}
+      onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}
+      onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
+      onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
       style={track}
     >
       <SwitchContext.Provider value={{ spec, theme }}>

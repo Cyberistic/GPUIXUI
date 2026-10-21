@@ -37,7 +37,9 @@ const notes = "Description";
 
 Shared props: `value`, `defaultValue`, `onValueChange`, `placeholder`, `readOnly`,
 `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `style`,
-`testId`.
+`testId`, and the five composed host handlers from `InteractionProps`
+(`onClick`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`): yours runs first and
+the field still tracks focus and edits.
 
 Its height is rows, not a control height, so the component re-bases vertical
 padding to the density's horizontal padding step to keep the text inset square.
@@ -78,6 +80,8 @@ changes — and the same `StateStyle<FieldState>` (`{ disabled, focused, invalid
 
 - `src/components/fields.test.tsx` — rows, chrome and the absence of `onSubmit`
   in the public props.
+- `src/components/handlers.test.tsx` — a caller's click, keys and focus run
+  before the textarea's own tracking.
 - `runtime/fields.runtime.test.tsx` — height follows `rows`; a newline is
   accepted; the probe in plan 046 measured that adding `onSubmit` costs the
   newline, which is why it is not in the type.

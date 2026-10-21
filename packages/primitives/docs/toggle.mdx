@@ -36,9 +36,14 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
 | `label` | `string` | none | accessible name; required when icon-only |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the toggle's own; yours runs first |
 | `style` | `StateStyle<ToggleState>` | — | resolved against the live state and merged last |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |
+
+The five host handlers are `InteractionProps`: your handler runs first with the
+runtime's own event and the toggle still changes. A disabled toggle installs no
+`onClick` at all; its keys and focus stay observable.
 
 Pressing paints `colors.accent` with `colors.accentForeground` — the role the
 theme reserves for a selected surface — so pressed, hover and focus are three
@@ -94,6 +99,8 @@ decision, so a callback is the last word on a property the recipe also sets.
   the pressed paint from the accent role, the outline border, click/Enter/Space
   activation, held keys, disabled, the focus ring, and a `style` callback that
   receives the live state and wins over the recipe.
+- `src/components/handlers.test.tsx` — a caller's click, keys and focus run
+  before the toggle's own action, once each.
 - `runtime/toggle.runtime.test.tsx` — a real click flips the announced state and
   repaints the accent fill; Enter down and Space up each activate once; a
   disabled toggle leaves the tab order; the ring follows focus. Measured

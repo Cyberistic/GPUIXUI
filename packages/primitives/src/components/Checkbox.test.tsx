@@ -118,7 +118,8 @@ describe("Checkbox", () => {
       idle,
       onValueChange,
     );
-    expectSome(hostHandler(element, "onClick"))(keyEvent("space"));
+    // A disabled control installs no press handler at all, so nothing can run.
+    expect(hostHandler(element, "onClick")).toStrictEqual(Option.none());
     expect(onValueChange).toHaveBeenCalledTimes(0);
   });
 });

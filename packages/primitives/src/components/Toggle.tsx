@@ -20,7 +20,7 @@
  */
 
 import type { ReactElement, ReactNode } from "react";
-import type { KeyEvent } from "@gpuix/react";
+import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
@@ -33,15 +33,18 @@ import { toggleClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
   childrenName,
+  composeEvent,
+  composePress,
   mergeStyle,
   suppressFeedback,
   useControlState,
   useFocus,
   type FocusState,
+  type InteractionProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface ToggleProps {
+export interface ToggleProps extends InteractionProps {
   /** Controlled pressed state. Omit to let the toggle own it. */
   readonly pressed?: boolean;
   readonly defaultPressed?: boolean;
@@ -123,11 +126,11 @@ export const renderToggle = (
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
-      onClick={toggle}
-      onKeyDown={onKey("down")}
-      onKeyUp={onKey("up")}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
+      onClick={composePress(props.disabled === true, props.onClick, toggle)}
+      onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}
+      onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}
+      onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
+      onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
       style={style}
     >
       {props.leading}

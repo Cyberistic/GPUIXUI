@@ -23,12 +23,14 @@ import { controlRing } from "../core/focus.js";
 import { fieldClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
+  composeEvent,
   mergeStyle,
   suppressFeedback,
   useControlState,
   useFocus,
   valueChange,
   type FocusState,
+  type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -41,7 +43,7 @@ export interface FieldState {
 }
 
 /** Props shared by `Input` and `TextArea`. */
-export interface FieldProps extends ValueChangeProps<string> {
+export interface FieldProps extends ValueChangeProps<string>, InteractionProps {
   /** Controlled text. Omit it to let the field hold its own draft. */
   readonly value?: string;
   /** Initial text when uncontrolled. */
@@ -123,8 +125,11 @@ export const fieldHostProps = (
     if (props.disabled !== true) onValueChange(event.value ?? "");
   },
   onSubmit: props.disabled === true ? undefined : props.onSubmit,
-  onFocus: focus.onFocus,
-  onBlur: focus.onBlur,
+  onClick: props.onClick,
+  onKeyDown: props.onKeyDown,
+  onKeyUp: props.onKeyUp,
+  onFocus: composeEvent<EventPayload>(props.onFocus, focus.onFocus),
+  onBlur: composeEvent<EventPayload>(props.onBlur, focus.onBlur),
 });
 
 export const renderInput = (

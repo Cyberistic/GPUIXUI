@@ -52,6 +52,7 @@ const theme = useTheme();
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the switch's own; yours runs first |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
@@ -85,6 +86,10 @@ also scroll while the control waits for the release.
 - `disabled` removes the tab stop; no `aria-disabled`.
 - The name comes from `label`; there is no `aria-labelledby`.
 
+The five host handlers are `InteractionProps`: your handler runs first with the
+runtime's own event and the switch still toggles. A disabled switch installs no
+`onClick` at all; its keys and focus stay observable.
+
 ## Theming
 
 `switchTrackClass` and `switchThumbClass` compile both parts from the same
@@ -111,6 +116,8 @@ paints after keyboard focus only; a disabled switch declares none.
 - `src/components/Switch.test.tsx` — the knob's geometry from the theme scale, a
   custom glyph inside it, and the pointer guard that keeps the glyph from taking
   the press.
+- `src/components/handlers.test.tsx` — a caller's click, keys and focus are
+  composed with the switch's own, and a disabled switch installs none.
 - `runtime/controls.runtime.test.tsx` — a click toggles; the role is `Switch`;
   a custom glyph still toggles on a real hit test; the announced value flips;
   Space and Enter both toggle.

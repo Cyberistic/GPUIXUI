@@ -20,7 +20,6 @@
  */
 
 import type { ReactElement, ReactNode } from "react";
-import type { EventPayload } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
@@ -30,10 +29,10 @@ import {
   type ButtonProps,
   type ButtonState,
 } from "./Button.js";
-import { useFocus } from "./internal.js";
+import { useFocus, type InteractionProps } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface IconButtonProps {
+export interface IconButtonProps extends InteractionProps {
   /** The accessible name. An icon-only control has no text to read. */
   readonly label: string;
   /** The glyph. It paints inside the button and never becomes its name. */
@@ -47,7 +46,6 @@ export interface IconButtonProps {
   readonly loading?: boolean;
   /** Called for a click or an activating key. Not called while busy or disabled. */
   readonly onActivate?: () => void;
-  readonly onClick?: (event: EventPayload) => void;
   /** Extra style, resolved against the button's live state and merged last. */
   readonly style?: StateStyle<ButtonState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -71,6 +69,10 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => ({
   leading: props.icon,
   onActivate: props.onActivate,
   onClick: props.onClick,
+  onKeyDown: props.onKeyDown,
+  onKeyUp: props.onKeyUp,
+  onFocus: props.onFocus,
+  onBlur: props.onBlur,
   style: props.style,
   className: props.className,
   testId: props.testId,

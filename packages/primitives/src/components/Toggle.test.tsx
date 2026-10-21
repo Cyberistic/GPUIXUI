@@ -148,7 +148,9 @@ describe("Toggle", () => {
       onPressedChange,
     );
     expect(hostProp(element, "tabIndex")).toStrictEqual(Option.none());
-    expectSome(hostHandler(element, "onClick"))(keyEvent("click"));
+    // No press handler is installed while disabled; the keys stay observable
+    // but their activation is refused.
+    expect(hostHandler(element, "onClick")).toStrictEqual(Option.none());
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("enter"));
     expect(onPressedChange).toHaveBeenCalledTimes(0);
   });
