@@ -46,9 +46,11 @@ export const BUTTON_VARIANTS = {
   link: "text-primary underline-offset-4 hover:underline",
 } as const;
 
-/** `dialog.tsx` + `style-luma.css` — the overlay. */
+/** `dialog.tsx` + `style-luma.css` — the overlay. shadcn's `bg-black/30`
+ * scrim maps to the theme's `overlay` role (`bg-overlay`) so the veil respects
+ * light, dark and high-contrast themes instead of a fixed literal. */
 export const DIALOG_OVERLAY =
-  "fixed inset-0 isolate z-50 data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-black/30 duration-100 supports-backdrop-filter:backdrop-blur-sm";
+  "fixed inset-0 isolate z-50 data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-overlay duration-100 supports-backdrop-filter:backdrop-blur-sm";
 
 /** `dialog.tsx` + `style-luma.css` — the content surface. */
 export const DIALOG_CONTENT =
@@ -298,3 +300,73 @@ export const TIMELINE_CONTENT = "flex flex-col gap-0.5 flex-grow";
 export const TIMELINE_TIMESTAMP = "text-xs font-sans text-muted-foreground";
 export const TIMELINE_TITLE = "text-sm font-medium font-sans";
 export const TIMELINE_DESCRIPTION = "text-sm font-sans text-muted-foreground";
+
+// ── Overlay components (fixed metrics) ────────────────────────────────
+//
+// The overlay wave converted the floating/modal surfaces onto the shared
+// recipes below. Each is the resting appearance in shadcn's class vocabulary;
+// density-driven control geometry (row heights), state (highlight, destructive
+// tone) and the anchored positioning stay in the component's `style`, exactly
+// as the non-overlay components did. `DIALOG_OVERLAY`, `DIALOG_CONTENT` and
+// `POPOVER_CONTENT` above keep their full shadcn string (positioning and motion
+// included) for provenance; the components compile them and override the
+// positioning the renderer already owns.
+
+/** `dialog.tsx` — the heading block. The close-control clearance stays in
+ * `style` (it is the only shadcn deviation the library needs). */
+export const DIALOG_HEADER = "flex flex-col gap-2";
+
+/** `dialog.tsx` — the surface's title. `leading-none` is dropped because the
+ * native `lineHeight` is absolute pixels, where Tailwind's unitless `1` is a
+ * ratio; `text-base` already carries the right leading. The colour is explicit:
+ * native text does not inherit `color` from the surface. */
+export const DIALOG_TITLE = "text-base font-medium text-popover-foreground";
+
+/** `dialog.tsx` — the supporting copy. */
+export const DIALOG_DESCRIPTION = "text-sm text-muted-foreground";
+
+/** `dialog.tsx` — the right-aligned actions row. */
+export const DIALOG_FOOTER = "flex flex-row items-center justify-end gap-2";
+
+/** `menu/surface.tsx` — the floating menu box, shared verbatim by DropdownMenu,
+ * ContextMenu and their submenus (`cn-dropdown-menu-content`,
+ * `cn-context-menu-content` and `cn-*-sub-content` agree). The `gap-0.5` is
+ * the library's own: the rows keep density height (ADR 0006) with no vertical
+ * padding, so the surface carries the 2px separation shadcn gets from `py-2`. */
+export const MENU_CONTENT =
+  "bg-popover text-popover-foreground min-w-48 rounded-3xl p-1.5 gap-0.5 shadow-lg ring-1 ring-foreground/5";
+
+/** `menu/item.tsx` — the resting row. The accent bar (`borderLeftWidth`), the
+ * highlight/destructive colours and the density height stay in `style`; the
+ * geometry, radius and type are fixed shadcn metrics. */
+export const MENU_ITEM =
+  "flex flex-row items-center gap-2 rounded-2xl pl-1.5 pr-2 text-sm font-medium text-popover-foreground";
+
+/** `menu/item.tsx` — the group heading. */
+export const MENU_LABEL =
+  "text-muted-foreground px-3 py-2.5 text-xs select-none";
+
+/** `menu/item.tsx` — the hairline between rows. `-mx-1.5` is dropped because
+ * the native renderer has no negative margin; the separator stays inside the
+ * surface's padding. */
+export const MENU_SEPARATOR = "bg-border/50 my-1.5 h-px";
+
+/** `menu/item.tsx` — the labelled group of rows. */
+export const MENU_GROUP = "flex flex-col gap-0.5";
+
+/** `command-menu.tsx` — the search field. The density height and the field
+ * chrome (fill, border, radius) stay in `style`; the width and type are shadcn. */
+export const COMMAND_INPUT = "w-full text-sm";
+
+/** `command-menu.tsx` — the match column. */
+export const COMMAND_LIST = "flex flex-col gap-2";
+
+/** `command-menu.tsx` — the no-match message. */
+export const COMMAND_EMPTY = "py-6 text-center text-sm text-muted-foreground";
+
+/** `command-menu.tsx` — the trailing key hint (`text-xs`; `tracking-widest`
+ * and `ml-auto` are dropped — the native renderer has neither). */
+export const COMMAND_SHORTCUT = "text-xs text-muted-foreground";
+
+/** `command-menu.tsx` — the keyboard hint under the list. */
+export const COMMAND_HINT = "text-xs text-muted-foreground";
