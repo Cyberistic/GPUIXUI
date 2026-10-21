@@ -1107,6 +1107,11 @@ Contrast is enforced by `packages/tokens/src/color.test.ts`:
 nub run --filter @gpuixui/tokens test
 ```
 
+The suite runs under a two-second per-test and per-hook budget
+(`packages/tokens/vitest.config.ts`), held in place by `src/suite.test.ts`: a
+case that waits on a promise which never settles fails instead of holding the
+gate. A synchronous infinite loop cannot be interrupted by any timeout.
+
 The test covers every shipped colour set — light, dark and both high-contrast
 variants — over every pair in `contrastPairs`, and fails if a pair drops below its
 floor (7:1 for primary body pairs, soft status text and all high-contrast text;
