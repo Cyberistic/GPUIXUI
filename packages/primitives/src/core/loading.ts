@@ -11,6 +11,7 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
 
@@ -158,6 +159,16 @@ export const indeterminateOffset = (step: number, segment = 40): number => {
     ((step % SPINNER_SEGMENTS) + SPINNER_SEGMENTS) % SPINNER_SEGMENTS;
   return (phase / SPINNER_SEGMENTS) * travel;
 };
+
+/**
+ * Whether a progress bar animates.
+ *
+ * A bar with a value draws a fixed fill, so the timer behind the moving
+ * segment would wake the tree every interval for a segment it never paints.
+ * Only a bar without a value — an indeterminate one — has something to move.
+ */
+export const progressAnimates = (value: Option.Option<number>): boolean =>
+  Option.isNone(value);
 
 /** The moving segment of an indeterminate bar: a percentage-width fill. */
 export const indeterminateFillStyle = (

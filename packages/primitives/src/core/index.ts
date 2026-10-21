@@ -96,6 +96,7 @@ export {
   indeterminateFillStyle,
   indeterminateLeadStyle,
   indeterminateOffset,
+  progressAnimates,
   PULSE_STEPS,
   pulseOpacity,
   skeletonSize,

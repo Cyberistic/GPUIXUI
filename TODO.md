@@ -920,8 +920,11 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     slider at 9, so the end of the track was a place the control could not go;
     the range's ends are stops now (`core/value.ts`), proven by a unit case and
     a native key-and-press test
-  - `[ ]` Progress tone while indeterminate, and the timer a determinate bar
-    runs for nothing
+  - `[x]` Progress tone while indeterminate, and the timer a determinate bar
+    runs for nothing — the moving segment now paints the bar's own tone, and
+    only a bar without a value runs the step timer (`core/loading.ts`'s
+    `progressAnimates`), proven by a unit case, a tree-level fill colour and
+    two native tests
   - `[ ]` NumberField controlled sync (an external value change, a value that
     arrives after mount) and the caret keys it advertises
   - `[ ]` Activation once / Space on release across the remaining parts

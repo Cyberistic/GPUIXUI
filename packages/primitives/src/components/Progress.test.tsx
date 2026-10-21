@@ -161,6 +161,28 @@ describe("Progress", () => {
     expect(leadWidth(0)).not.toBe(leadWidth(1));
   });
 
+  it("paints its tone on the fill, determinate or not", () => {
+    // The bug guarded: the indeterminate bar ignored the tone and painted the
+    // primary role, so a destructive task and a successful one looked the same
+    // until the value arrived.
+    const determinate = renderProgress(
+      { value: 42, tone: "success" },
+      testTheme,
+      0,
+    );
+    expect(
+      expectSome(hostStyleString(fillOf(determinate), "backgroundColor")),
+    ).toBe(testTheme.colors.success);
+    const indeterminate = renderProgress({ tone: "success" }, testTheme, 0);
+    // The indeterminate track holds a lead segment and then the fill.
+    const fill =
+      elementChildren(trackOf(indeterminate))[1] ??
+      expect.fail("the indeterminate bar painted no fill");
+    expect(expectSome(hostStyleString(fill, "backgroundColor"))).toBe(
+      testTheme.colors.success,
+    );
+  });
+
   it("lets a caller replace the composition with the parts", () => {
     const element = renderProgress(
       {

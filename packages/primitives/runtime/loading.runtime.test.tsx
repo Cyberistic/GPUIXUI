@@ -25,6 +25,8 @@ import {
 import { Skeleton } from "../src/components/Skeleton.js";
 import { Spinner } from "../src/components/Spinner.js";
 import { Stack } from "../src/components/Stack.js";
+import { Text } from "../src/components/Text.js";
+import { useStep } from "../src/components/internal.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
@@ -206,6 +208,65 @@ it("moves an indeterminate Progress's segment over time", async () => {
     6,
   );
   expect(new Set(offsets).size).toBeGreaterThan(1);
+});
+
+it("paints an indeterminate Progress in its own tone", async () => {
+  // The bug guarded: the moving segment ignored the tone and painted the
+  // primary role, so a destructive task looked like a neutral one until the
+  // value arrived.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" label="Uploading" tone="destructive" />
+    </Surface>,
+  );
+  const track = Option.getOrElse(Arr.head(childrenOf(runtime, "pg")), () =>
+    expect.fail("the Progress painted no track"),
+  );
+  // The indeterminate track holds a lead segment and then the fill.
+  const fill = childrenOfId(runtime, track)[1];
+  expect(fill).toBeDefined();
+  expect(styleOf(runtime, fill ?? -1)["backgroundColor"]).toBe(
+    testTheme.colors.destructive,
+  );
+});
+
+/** Shows the step a counter is on, so a running timer is visible. */
+const StepProbe = ({ running }: { readonly running: boolean }) => {
+  const step = useStep(4, 60, running);
+  return <Text testId="probe">{String(step)}</Text>;
+};
+
+it("keeps a step counter still while it is not running", async () => {
+  // The bug guarded: the determinate bar ran the step timer for a segment it
+  // never paints, waking the tree every interval for nothing.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <StepProbe running={false} />
+    </Surface>,
+  );
+  const steps = await sample(
+    runtime,
+    () => Option.getOrElse(runtime.text("probe"), () => ""),
+    5,
+  );
+  expect(new Set(steps)).toStrictEqual(new Set(["0"]));
+});
+
+it("advances a step counter while it is running", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <StepProbe running={true} />
+    </Surface>,
+  );
+  const steps = await sample(
+    runtime,
+    () => Option.getOrElse(runtime.text("probe"), () => ""),
+    6,
+  );
+  expect(new Set(steps).size).toBeGreaterThan(1);
 });
 
 it("pulses a Skeleton's opacity between both of its states", async () => {

@@ -19,9 +19,14 @@ import {
   type ReactNode,
 } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
-import { indeterminateOffset, SPINNER_SEGMENTS } from "../core/loading.js";
+import {
+  indeterminateOffset,
+  progressAnimates,
+  SPINNER_SEGMENTS,
+} from "../core/loading.js";
 import {
   progressPercent,
   type ProgressSpec,
@@ -151,7 +156,9 @@ export interface ProgressIndicatorProps {
  *
  * Determinate, it is one fill at the clamped percentage. Indeterminate, it is
  * the moving segment: a spacer and the fill, so a caller who composes their own
- * track still gets the motion instead of a fill pinned to the start.
+ * track still gets the motion instead of a fill pinned to the start. The tone
+ * paints both — a bar that changes colour when it learns its value would be a
+ * bar whose colour means nothing.
  */
 export const renderProgressIndicator = (
   { className, style, testId }: ProgressIndicatorProps,
@@ -159,10 +166,7 @@ export const renderProgressIndicator = (
 ): ReactElement => {
   const fill = mergeStyle(
     mergeStyle(
-      recipeTw.classesToStyle(
-        progressFillClass(part.determinate ? part.tone : "primary"),
-        part.theme,
-      ).style,
+      recipeTw.classesToStyle(progressFillClass(part.tone), part.theme).style,
       { width: `${part.determinate ? part.percent : SEGMENT}%` },
     ),
     className === undefined
@@ -260,6 +264,20 @@ export const renderProgress = (
   );
 };
 
-/** A progress bar. */
+/**
+ * A progress bar.
+ *
+ * Only an indeterminate bar animates, so only an indeterminate bar runs the
+ * step timer: a determinate bar draws a fixed fill, and a timer that wakes the
+ * tree for a segment it never paints is cost with nothing to show for it.
+ */
 export const Progress = (props: ProgressProps): ReactElement =>
-  renderProgress(props, useTheme(), useStep(SPINNER_SEGMENTS, 120));
+  renderProgress(
+    props,
+    useTheme(),
+    useStep(
+      SPINNER_SEGMENTS,
+      120,
+      progressAnimates(Option.fromNullishOr(props.value)),
+    ),
+  );

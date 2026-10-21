@@ -5,6 +5,7 @@ import {
   indeterminateFillStyle,
   indeterminateLeadStyle,
   indeterminateOffset,
+  progressAnimates,
   PULSE_STEPS,
   pulseOpacity,
   skeletonSize,
@@ -178,5 +179,15 @@ describe("indeterminateOffset", () => {
       indeterminateFillStyle(segment, testTheme.colors.primary, testTheme)
         .width,
     ).toBe(`${segment}%`);
+  });
+});
+
+describe("progressAnimates", () => {
+  it("animates only a bar that has no value to draw", () => {
+    // The bug guarded: a determinate bar ran the step timer for a segment it
+    // never paints, waking the tree every interval for nothing.
+    expect(progressAnimates(Option.none())).toBe(true);
+    expect(progressAnimates(Option.some(42))).toBe(false);
+    expect(progressAnimates(Option.some(0))).toBe(false);
   });
 });

@@ -179,15 +179,24 @@ export const useControlState = <Value>(
  * the indicator unmounts — so a `useState`/`useEffect` pair is the right tool;
  * an Atom would make a private frame counter shared, global state. The step
  * *maths* stays in `core/loading.ts` where it is provable.
+ *
+ * `running` is false for a control that has nothing to animate: a determinate
+ * progress bar draws a fixed fill, so its timer would wake the tree every
+ * interval for a segment it never paints.
  */
-export const useStep = (steps: number, intervalMs: number): number => {
+export const useStep = (
+  steps: number,
+  intervalMs: number,
+  running = true,
+): number => {
   const [step, setStep] = useState(0);
   useEffect(() => {
+    if (!running) return undefined;
     const id = setInterval(
       () => setStep((current) => (current + 1) % steps),
       intervalMs,
     );
     return () => clearInterval(id);
-  }, [steps, intervalMs]);
+  }, [steps, intervalMs, running]);
   return step;
 };
