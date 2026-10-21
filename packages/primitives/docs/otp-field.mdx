@@ -48,7 +48,7 @@ leaving a hole.
 | `invalid` | `boolean` | `false` | destructive border on every cell |
 | `label` | `string` | none | group name; each cell is named `<label> digit N` |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount |
-| `style` | `StyleDesc` | — | merged last on the group |
+| `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc` on the group; resolved against the live state and merged last |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
 
 Only letters and digits are kept. A pasted `123-456` becomes `123456`, and a

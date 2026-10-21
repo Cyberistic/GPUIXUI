@@ -29,6 +29,7 @@
 import { useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
@@ -45,6 +46,7 @@ import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldSquareClass, otpGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
+import type { FieldState } from "./Input.js";
 import {
   focusRingStyle,
   mergeStyle,
@@ -73,7 +75,8 @@ export interface OTPFieldProps {
   readonly label?: string;
   /** Focus the first cell on mount. */
   readonly autoFocus?: boolean;
-  readonly style?: StyleDesc;
+  /** Extra style on the group, resolved against its live state and merged last. */
+  readonly style?: StateStyle<FieldState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly testId?: string;
@@ -142,7 +145,14 @@ export const renderOtpField = (
       role="group"
       aria-label={props.label}
       testId={props.testId}
-      style={mergeStyle(group, props.style)}
+      style={mergeStyle(
+        group,
+        resolveStyle(props.style, {
+          disabled,
+          focused: !disabled && Option.isSome(focus.focusedIndex),
+          invalid: props.invalid === true,
+        }),
+      )}
     >
       {Arr.map(cells, (cell, index) => (
         <input

@@ -42,7 +42,7 @@ way a native number field does — it does not start with a zero to delete.
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc`; resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator on the field's chrome |
 
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so

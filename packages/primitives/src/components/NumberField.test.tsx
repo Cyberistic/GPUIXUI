@@ -18,6 +18,7 @@ import {
   type NumberFieldHandlers,
   type NumberFieldProps,
 } from "./NumberField.js";
+import type { FieldState } from "./Input.js";
 import type { FocusState } from "./internal.js";
 import { changeEvent, keyEvent } from "./testing/event.js";
 import {
@@ -25,6 +26,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
@@ -184,5 +186,28 @@ describe("NumberField styles", () => {
     expect(
       Option.getOrUndefined(hostStyleRecord(input))?.["boxShadow"],
     ).toBeUndefined();
+  });
+
+  it("resolves a style callback against the live field state, last", () => {
+    // The bug: a field that reported a stale state to a `style` callback (or
+    // merged its result before the chrome) would paint the wrong state and the
+    // caller could never override it.
+    const seen: Array<FieldState> = [];
+    const element = render(
+      {
+        invalid: true,
+        style: (state) => {
+          seen.push(state);
+          return { opacity: 0.42 };
+        },
+      },
+      50,
+      "50",
+      focused,
+    );
+    expect(seen).toStrictEqual([
+      { disabled: false, focused: true, invalid: true },
+    ]);
+    expect(expectSome(hostStyle(element, "opacity"))).toBe(0.42);
   });
 });

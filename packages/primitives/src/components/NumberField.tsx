@@ -13,7 +13,8 @@
  */
 
 import { useRef, useState, type ReactElement } from "react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
@@ -36,6 +37,7 @@ import {
   numberStepperColumnClass,
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
+import type { FieldState } from "./Input.js";
 import {
   focusRingStyle,
   mergeStyle,
@@ -70,7 +72,8 @@ export interface NumberFieldProps {
   readonly autoFocus?: boolean;
   /** Overrides the display text; the value still parses with `core/number.ts`. */
   readonly formatValue?: (value: number) => string;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the field's live state and merged last. */
+  readonly style?: StateStyle<FieldState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly testId?: string;
@@ -117,7 +120,14 @@ export const renderNumberField = (
   if (disabled)
     chrome = suppressFeedback(mergeStyle(chrome, resolved.disabled));
   const ring = focus.focused && !disabled ? focusRingStyle(theme, invalid) : {};
-  chrome = mergeStyle(mergeStyle(chrome, ring), props.style);
+  chrome = mergeStyle(
+    mergeStyle(chrome, ring),
+    resolveStyle(props.style, {
+      disabled,
+      focused: focus.focused,
+      invalid,
+    }),
+  );
   const atMin = props.min !== undefined && state.current <= props.min;
   const atMax = props.max !== undefined && state.current >= props.max;
   const stepButton = (

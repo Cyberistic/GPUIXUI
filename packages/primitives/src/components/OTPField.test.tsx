@@ -22,12 +22,14 @@ import {
   type OTPFieldHandlers,
   type OTPFieldProps,
 } from "./OTPField.js";
+import type { FieldState } from "./Input.js";
 import { changeEvent, keyUpEvent, clickEvent } from "./testing/event.js";
 import {
   elementChildren,
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
@@ -135,6 +137,29 @@ describe("OTPField", () => {
         testTheme.colors.destructive,
       );
     });
+  });
+
+  it("resolves a group style callback against the live field state, last", () => {
+    const seen: Array<FieldState> = [];
+    const focusedField: OTPFieldFocus = {
+      ...idle,
+      focusedIndex: Option.some(0),
+    };
+    const element = render(
+      {
+        length: 3,
+        style: (state) => {
+          seen.push(state);
+          return { opacity: 0.25 };
+        },
+      },
+      "1",
+      focusedField,
+    );
+    expect(seen).toStrictEqual([
+      { disabled: false, focused: true, invalid: false },
+    ]);
+    expect(expectSome(hostStyle(element, "opacity"))).toBe(0.25);
   });
 
   it("is a row of equal square cells at the size's control height", () => {
