@@ -127,6 +127,15 @@ data-dense desktop surfaces; `comfortable` is the default.
 const compact = createTheme({ mode: "dark", density: "compact" });
 ```
 
+## Scales
+
+The geometry is data too: spacing, radii, borders, icon sizes and the density
+presets. These specimens read them from the theme the platform switch resolves,
+so macOS, Linux and Windows show their own radii and control heights. Values are
+pixels at the surface; a component names the token, never the number.
+
+<TokenScales />
+
 ## Platform styles
 
 GPUIxUI ships one theme per platform. `platformTheme` keeps the base theme's

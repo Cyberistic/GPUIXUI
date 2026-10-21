@@ -41,6 +41,7 @@ src/lib/public-api.ts   Derives the public entry points from each package's expo
 src/components/docs/api-reference.tsx The generated entry-point table
 src/components/docs/type-scale.tsx The typography specimen, generated from the theme
 src/components/docs/component-index.tsx The filterable index on /docs/components
+src/components/docs/token-scales.tsx The spacing/radius/density specimens on /docs/theming
 src/lib/collection-routes.ts The registry: every mounted package directory, route, section
 src/lib/package-docs.ts The Fumadocs loaders for the three package collections
 src/lib/page-tree.ts    Fills the package's pages into the Components section

@@ -162,9 +162,14 @@ page's `<TypeScale>` enumerates the theme's text roles, prints each resolved
 `PreviewSurface`, so the platform switch changes the families while the sizes
 stay the theme's. `type-scale.test.tsx` holds the role list to
 `themes.dark.typography` and checks every row's metrics against the theme, so a
-role added to `@gpuixui/tokens` fails the docs until the page describes it. The
-same rule applies to any future specimen page (spacing, radius, elevation):
-generate from the token package, and test the page against it.
+role added to `@gpuixui/tokens` fails the docs until the page describes it.
+
+`<TokenScales>` on [Theming](/docs/theming#scales) follows the same rule for the
+geometry: the spacing, radius, border, icon and density rows are read from the
+theme the platform switch resolves, and `token-scales.test.tsx` holds every step
+and its printed pixel value to the theme, the elevation list to the theme's
+levels, and the density table to the presets. A step added to the token package
+therefore appears without a docs change, and a step removed fails the suite.
 
 ## Adding a preview
 

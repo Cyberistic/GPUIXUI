@@ -9,6 +9,7 @@ import { Install } from "./docs/install";
 import { LaneTable } from "./docs/lane-table";
 import { LicenseInventory } from "./docs/license-table";
 import { ThemeEditor } from "./docs/theme-editor";
+import { TokenScales } from "./docs/token-scales";
 import { TypeScale } from "./docs/type-scale";
 
 /** The MDX surface shared by every docs page. */
@@ -24,5 +25,6 @@ export const mdxComponents = {
   LaneTable,
   LicenseInventory,
   ThemeEditor,
+  TokenScales,
   TypeScale,
 };
