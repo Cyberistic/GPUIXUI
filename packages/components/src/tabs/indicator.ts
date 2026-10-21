@@ -1,0 +1,61 @@
+/**
+ * Where the shared selected surface sits inside the rail.
+ *
+ * The pill is one element for the whole tab set, not a background on each
+ * trigger, so its box comes from measurement: the rail reports the origin of the
+ * box its absolute children resolve against, each trigger reports its painted
+ * border box, and this module turns the pair into the pill's offsets.
+ *
+ * Taking the origin from the runtime rather than from the rail's box is the
+ * point: an absolute child resolves against the rail's padding box, so
+ * subtracting the rail's border box would leave the pill short by the border
+ * width. Measured 2026-10-21 in the behaviour suite: with the rail's 1px border
+ * and 4px padding, a `left: 0, top: 0` child paints 1px inside the rail box, and
+ * the probe's box plus this delta lands the pill exactly on the trigger.
+ */
+
+import type { EventPayload } from "@gpuix/react";
+import * as Option from "effect/Option";
+
+/** A border box in window coordinates, as an `onLayout` event reports it. */
+export interface TabBox {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** The pill's offsets inside the rail's containing block. */
+export interface IndicatorBox {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * The box an `onLayout` event carries, `None` for any other event or a payload
+ * missing one of the four numbers.
+ */
+export const measuredBox = (event: EventPayload): Option.Option<TabBox> =>
+  Option.all({
+    x: Option.fromNullishOr(event.x),
+    y: Option.fromNullishOr(event.y),
+    width: Option.fromNullishOr(event.width),
+    height: Option.fromNullishOr(event.height),
+  });
+
+/**
+ * The pill's box: the selected trigger's painted box, re-expressed against the
+ * origin its absolute children start from. Both arguments are window boxes taken
+ * from the same paint, so the subtraction is exact.
+ */
+export const indicatorBox = (
+  origin: TabBox,
+  selected: TabBox,
+): IndicatorBox => ({
+  left: selected.x - origin.x,
+  top: selected.y - origin.y,
+  width: selected.width,
+  height: selected.height,
+});

@@ -262,10 +262,11 @@ The probe measured that `focusVisible` does **not** paint for a programmatic
 focus before any keyboard input, so `focusRing(theme)` stays the unconditional
 shadow for a mouse-opened overlay; both are documented with the evidence, and
 `focus.test.ts` guards the split. Component adoption is the interlock row below
-`[ ]` Truth pass on the remaining `0.10.0` claims outside this workstream — the
-component packages' comments and inventory rows still say the runtime lacks
-`focusVisible`/`outline*` and paints one shadow (owner: components, primitives;
-plan 053 §Why lists the evidence)
+`[~]` Truth pass on the remaining `0.10.0` claims outside this workstream —
+**primitives half done**: every ring claim in `packages/primitives/docs` and its
+inventory rows now names `focusVisible`, and `COMPONENTS.md`'s Tier 1 rows no
+longer say a press paints the ring; the components package's comments and rows
+still claim the old absence (owner: components; plan 053 §Why lists the evidence)
 `[x]` Drop `BoxShadow.inset`, document the one-shadow rule and hoist
 `elevationShadow(theme, level)` (plan 018)
 `[x]` Write `docs/tokens.md` (every token + extension API)
@@ -651,7 +652,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
 | Native proof that `registerFonts` paints the registered face: register a face in the theme gallery and show the fallback and the intended face | playground | pending — `@gpuixui/tokens` side is shipped and unit-tested |
 | Probe that `focusVisible` paints after Tab and not after a mouse press (and on programmatic focus in a dialog) — plan 053's STOP gate | playground | **resolved** — the `focus-visible` live probe measured all five states on 0.11.0 (`apps/playground/README.md` §`focus-visible`): Tab paints the outline and dims other focusables; a mouse press, a native traversal and a programmatic focus before any key paint nothing; a programmatic focus after a Tab paints it. The tokens half shipped `keyboardFocusRing`; adoption is the row below |
-| Adopt the keyboard-only ring and delete the manual focus tracking: `components/src/{inline-edit,time-picker,search-input,tabs,date-picker,field,list,accordion,breadcrumb,tag-input,color-picker,mention-input,hotkey-recorder,collapsible,context-menu}.tsx`, `components/src/internal/button.tsx`, `primitives/src/core/{selection,style}.ts`, `primitives/src/components/internal.ts` | components, primitives | **tokens side shipped** — `keyboardFocusRing(theme)` is the `focusVisible` outline, applied at rest; keep `focusRing` only for a mouse-opened overlay's programmatic focus (the probe's measured gap). `focus.test.ts` guards both |
+| Adopt the keyboard-only ring and delete the manual focus tracking: `components/src/{inline-edit,time-picker,search-input,tabs,date-picker,field,list,accordion,breadcrumb,tag-input,color-picker,mention-input,hotkey-recorder,collapsible,context-menu}.tsx`, `components/src/internal/button.tsx`, `primitives/src/core/{selection,style}.ts`, `primitives/src/components/internal.ts` | components, primitives | **primitives half shipped; components pending** — `core/focus.ts` (`keyboardRing`) declares the `focusVisible` outline at rest and every primitive uses it: Button, Toggle, Checkbox, Switch, RadioGroup, Input/TextArea (`fieldChrome`), NumberField, OTPField, Slider's track, RangeSlider's thumbs and Rating's stars. No primitive merges a shadow ring on focus any more; `internal.ts`'s `focusRingStyle` is deleted. The components package still paints the shadow while focused. Keep tokens' `focusRing` only for a mouse-opened overlay's programmatic focus (the probe's measured gap) |
 | The `focus-visible` live probe carries its own copy of the outline (`apps/playground/src/live/scenarios.tsx` `focusVisibleRing`) | playground | pending — replace it with `keyboardFocusRing` from `@gpuixui/tokens` so the probe paints the shipped helper, not a local duplicate |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | **resolved for the pages** — every package docs directory is a Fumadocs collection: `/docs/components` (39 pages), `/docs/primitives` (28) and `/docs/icons` (1), all in the sidebar and search; the example registry waits on the playground mounting them |
 | Seven primitives pages carry no `## API` section although the package's own page contract (`packages/primitives/docs/README.md` §Page contract) requires one: `meter.mdx`, `number-field.mdx`, `otp-field.mdx`, `range-slider.mdx`, `rating.mdx`, `slider.mdx`, `toggle.mdx`. Found while mounting the collection; docs-site cannot add the prop tables because the pages are the primitives workstream's source of truth | primitives | open — add the real prop/type/default/consequence table to each; every other primitive page has one |
@@ -711,4 +712,4 @@ Both are specified in ; each fix starts with a plan under .
 
 - [x] **Docs: platform toggle (macOS / Linux / Windows / Default)** — landed: every preview renders through the resolved `platformTheme`, the switch writes the URL and remembers the choice, and the preview style sheets carry no colour literal. The variants now carry the families, radii, density and the platform's colour roles, and the previews follow because they read the resolved theme.
 
-- [ ] Tabs: a measured shared indicator on the **native** component (the docs demo now slides; the native side still styles the selected trigger per-trigger).
+- [x] Tabs: a measured shared indicator on the **native** component — the rail renders one `tabs-indicator` surface instead of a card background per trigger; each trigger reports its painted box through `onLayout` and a 1×1 `tabs-origin` probe reports where the rail's absolute children start, so the pill's box is exactly the selected trigger's (asserted in both orientations and both themes; 18 native behaviour tests + an `indicator.ts` unit suite). No `transform`, so it jumps rather than slides — the docs demo's slide stays a browser illustration.

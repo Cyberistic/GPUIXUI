@@ -75,3 +75,14 @@ export const focusedTestId = (root: ComponentTestRoot): Option.Option<string> =>
     Option.fromNullishOr(root.renderer.getFocusedElementId()),
     (id) => Option.fromNullishOr(root.renderer.getElement(id)?.testId),
   );
+
+/**
+ * Deliver the paint-driven events a render queued (`onLayout`) and paint what
+ * they changed. `renderComponent` flushes the tree but never dispatches those
+ * events, because most parts do not listen for them; a part that measures itself
+ * needs one round of settle before its measured children exist in the tree.
+ */
+export const settle = (root: ComponentTestRoot): void => {
+  root.renderer.dispatchNativeEvents();
+  root.renderer.flush();
+};

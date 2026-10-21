@@ -85,9 +85,24 @@ the consumer re-renders with the new `value` — the classic contract, tested.
 ## Theming
 
 The rail paints `colors.background`, a `borderWidth.thin` border in `colors.border`
-and `radius.md`. The selected trigger takes `colors.card` with
-`colors.foreground`; unselected triggers use `colors.mutedForeground` and hover
-with `colors.hover`. Trigger height is `controlHeight(theme, "md")`.
+and `radius.md`. One element — `tabs-indicator` — paints the selected surface in
+`colors.card` behind the selected trigger; unselected triggers are transparent
+with `colors.mutedForeground` and hover with `colors.hover`, and the selected
+label takes `colors.foreground`. Trigger height is `controlHeight(theme, "md")`.
+
+The selected surface is **measured, not styled per trigger**. Every trigger
+reports its painted box through `onLayout`, and a 1×1 `tabs-origin` swatch
+reports where the rail's absolutely positioned children start — the rail's
+border and padding move that origin, so the component cannot assume it. The pill
+is the trigger's box re-expressed against that origin, which means a trigger that
+grows (a longer label, another font) carries the pill with it and a caller's rail
+`className` padding cannot leave it short. The behaviour suite asserts the pill's
+painted box is exactly the selected trigger's box, in both orientations.
+
+GPUix has no `transform` and no position animation, so the pill **jumps** between
+tabs instead of sliding; the docs demo's slide is a browser-only illustration.
+There is also no `zIndex`, so the pill stays behind the triggers by being their
+earlier sibling.
 
 ## Style by state
 
@@ -119,15 +134,24 @@ after the trigger's own rules.
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (14 tests): click
-switching, the active theme role in both themes, arrow wrap with a disabled tab,
-manual activation waiting for Enter, Home/End, the controlled contract, a panel
-whose value matches nothing, a caller `ref`, a caller `onBlur` composed with the
-focus ring, and four vertical-axis cases — Down/Up movement with wrap, Left/Right
-ignored, the row/column layout, and manual activation. The vertical guard is
-proven in both directions: inverting the axis mapping fails the movement and
-axis-isolation tests, inverting the layout fails the layout test, and forcing
-`selectsOnFocus` to `true` fails the manual test.
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer: click switching,
+the shared selected surface's theme role in both themes, its painted box against
+the selected trigger's, its move with the selection, its placement on a vertical
+rail, arrow wrap with a disabled tab, manual activation waiting for Enter,
+Home/End, the controlled contract, a panel whose value matches nothing, a caller
+`ref`, a caller `onBlur` composed with the focus ring, and four vertical-axis
+cases — Down/Up movement with wrap, Left/Right ignored, the row/column layout,
+and manual activation. The vertical guard is proven in both directions:
+inverting the axis mapping fails the movement and axis-isolation tests, inverting
+the layout fails the layout test, and forcing `selectsOnFocus` to `true` fails
+the manual test.
+
+The surface's geometry has its own pure suite (`src/tabs/indicator.test.ts`) and
+two behaviour guards that can fail: subtracting the rail's box instead of the
+absolute origin puts the pill off its trigger, and dropping the pill's
+`pointerEvents: "none"` makes the trigger unclickable. The behaviour suite reads
+the measurement through the `settle` helper, which delivers the `onLayout` events
+a render queued.
 
 A trigger forwards `onBlur` after clearing its focus ring, so the caller's handler
 runs exactly once.

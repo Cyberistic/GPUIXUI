@@ -9,13 +9,24 @@
  * caller `ref` on a trigger was discarded in favour of the internal one, and so
  * was a caller `onBlur`. A vertical tab set could move along the wrong axis,
  * stay laid out horizontally, react to Left/Right, or bypass manual activation.
+ *
+ * The shared selected surface is measured, so these also guard its geometry: the
+ * set used to paint the selected background on each trigger separately, which no
+ * single element could move; a wrong origin (the rail's box instead of the box
+ * its absolute children resolve against) or a stale box leaves the pill off its
+ * trigger, and a pill that swallows the pointer makes the trigger unclickable.
  */
 
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  requireBounds,
+  settle,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -116,15 +127,16 @@ describe("Tabs", () => {
     tabs.unmount();
   });
 
-  it("paints the selected tab from whichever theme is active", () => {
+  it("paints the shared selected surface from whichever theme is active", () => {
     const assertTheme = (theme: TestTheme, card: string): void => {
       const tabs = renderComponent(<Settings />, theme);
+      settle(tabs);
 
       expect(
-        tabs.renderer.findByTestId("tab-profile")?.style.backgroundColor,
+        tabs.renderer.findByTestId("tabs-indicator")?.style.backgroundColor,
       ).toBe(card);
       expect(
-        tabs.renderer.findByTestId("tab-danger")?.style.backgroundColor,
+        tabs.renderer.findByTestId("tab-profile")?.style.backgroundColor,
       ).toBeUndefined();
 
       tabs.unmount();
@@ -132,6 +144,50 @@ describe("Tabs", () => {
 
     assertTheme("dark", darkTheme.colors.card);
     assertTheme("light", lightTheme.colors.card);
+  });
+
+  it("draws one selected surface exactly behind the selected trigger", () => {
+    const tabs = renderComponent(<Settings />);
+    settle(tabs);
+
+    expect(requireBounds(tabs, "tabs-indicator")).toEqual(
+      requireBounds(tabs, "tab-profile"),
+    );
+    // The surface takes no input: the trigger underneath keeps the click.
+    expect(
+      tabs.renderer.findByTestId("tabs-indicator")?.style.pointerEvents,
+    ).toBe("none");
+    expect(tabs.renderer.findByTestId("tabs-origin")?.style.pointerEvents).toBe(
+      "none",
+    );
+
+    tabs.unmount();
+  });
+
+  it("moves the surface with the selection, not with focus", () => {
+    const tabs = renderComponent(<Settings />);
+    settle(tabs);
+    const before = requireBounds(tabs, "tabs-indicator");
+
+    clickCentreOf(tabs, "tab-danger");
+    settle(tabs);
+
+    const after = requireBounds(tabs, "tabs-indicator");
+    expect(after).toEqual(requireBounds(tabs, "tab-danger"));
+    expect(after.x).toBeGreaterThan(before.x);
+
+    tabs.unmount();
+  });
+
+  it("puts the surface on a vertical rail's trigger too", () => {
+    const tabs = renderComponent(<VerticalSettings />);
+    settle(tabs);
+
+    expect(requireBounds(tabs, "tabs-indicator")).toEqual(
+      requireBounds(tabs, "tab-profile"),
+    );
+
+    tabs.unmount();
   });
 
   it("moves focus and the selection with the arrow keys, wrapping", () => {
@@ -236,8 +292,31 @@ describe("Tabs", () => {
         </TabsContent>
       </Tabs>,
     );
+    settle(tabs);
 
     expect(tabs.renderer.findByTestId("panel-other")).toBeUndefined();
+
+    tabs.unmount();
+  });
+
+  it("draws no surface for a value no trigger carries", () => {
+    const tabs = renderComponent(
+      <Tabs defaultValue="ghost">
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-profile" value="profile">
+            Profile
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent testId="panel-ghost" value="ghost">
+          <text>Ghost</text>
+        </TabsContent>
+      </Tabs>,
+    );
+    settle(tabs);
+
+    // The panel follows the value; the pill needs a measured trigger box.
+    expect(tabs.renderer.findByTestId("panel-ghost")).toBeDefined();
+    expect(tabs.renderer.findByTestId("tabs-indicator")).toBeUndefined();
 
     tabs.unmount();
   });

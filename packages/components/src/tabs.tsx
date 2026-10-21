@@ -7,9 +7,18 @@
  * disabled tabs are skipped and wrap-around agrees with every other collection
  * in the package.
  *
- * Measured limitation: `@gpuix/native@0.10.0` has no `aria-orientation`,
- * `aria-controls` or `aria-labelledby` (`HostProps`), so the panel is named by
- * its value and the trigger/panel relationship is positional.
+ * The selected surface is **one** element for the whole set (`tabs-indicator`),
+ * not a background on each trigger. It is measured rather than assumed: each
+ * trigger reports its painted box through `onLayout`, the rail reports where its
+ * absolute children start from (`tabs-origin`), and `tabs/indicator.ts` turns the
+ * pair into the pill's offsets. So the pill follows a trigger that resizes, and
+ * a caller's rail padding or border cannot leave it short.
+ *
+ * Measured limitations: `@gpuix/native@0.11.0` has no `transform`, so the pill
+ * jumps between triggers instead of sliding, and no `zIndex`, so it stays behind
+ * the triggers by being their earlier sibling. It has no `aria-orientation`,
+ * `aria-controls` or `aria-labelledby` either (`HostProps`), so the panel is
+ * named by its value and the trigger/panel relationship is positional.
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
@@ -64,6 +73,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
+import { indicatorBox, measuredBox, type TabBox } from "./tabs/indicator.js";
 import { selectsOnFocus, type TabsActivation } from "./tabs/logic.js";
 
 /** The two axes a tab list can run along. */
@@ -76,6 +86,11 @@ interface TabRow {
   readonly disabled: boolean;
 }
 
+/** A trigger's painted box, kept by the set for the shared selected surface. */
+interface MeasuredTab extends TabBox {
+  readonly value: string;
+}
+
 /** The rules a tab part follows; throws outside a {@link Tabs} root. */
 interface TabsContextValue {
   readonly selected: string;
@@ -84,7 +99,9 @@ interface TabsContextValue {
   readonly orientation: TabsOrientation;
   readonly activation: TabsActivation;
   readonly rows: ReadonlyArray<TabRow>;
+  readonly boxes: ReadonlyArray<MeasuredTab>;
   readonly register: (row: TabRow) => () => void;
+  readonly reportBox: (value: string, box: TabBox) => void;
   readonly select: (value: string) => void;
   readonly noteFocus: (value: string) => void;
   readonly focusRow: (row: TabRow, select: boolean) => void;
@@ -118,6 +135,34 @@ const upsert = (
           ? rows
           : Arr.map(rows, (candidate) =>
               candidate.value === row.value ? row : candidate,
+            ),
+    },
+  );
+
+/** Whether two painted boxes are the same box, to the nearest subpixel. */
+const sameBox = (a: TabBox, b: TabBox): boolean =>
+  Math.abs(a.x - b.x) < 0.5 &&
+  Math.abs(a.y - b.y) < 0.5 &&
+  Math.abs(a.width - b.width) < 0.5 &&
+  Math.abs(a.height - b.height) < 0.5;
+
+/**
+ * Take a trigger's latest painted box. An unmoved box keeps the previous array,
+ * so a paint that reports the same geometry costs no render.
+ */
+const upsertBox = (
+  boxes: ReadonlyArray<MeasuredTab>,
+  box: MeasuredTab,
+): ReadonlyArray<MeasuredTab> =>
+  Option.match(
+    Arr.findFirst(boxes, (candidate) => candidate.value === box.value),
+    {
+      onNone: () => Arr.append(boxes, box),
+      onSome: (current) =>
+        sameBox(current, box)
+          ? boxes
+          : Arr.map(boxes, (candidate) =>
+              candidate.value === box.value ? box : candidate,
             ),
     },
   );
@@ -173,13 +218,22 @@ export const Tabs = ({
   });
   const [active, setActive] = useState<Option.Option<string>>(Option.none());
   const [rows, setRows] = useState<ReadonlyArray<TabRow>>([]);
+  const [boxes, setBoxes] = useState<ReadonlyArray<MeasuredTab>>([]);
+
+  const reportBox = useCallback((value: string, box: TabBox) => {
+    setBoxes((current) => upsertBox(current, { value, ...box }));
+  }, []);
 
   const register = useCallback((row: TabRow) => {
     setRows((current) => upsert(current, row));
-    return () =>
+    return () => {
       setRows((current) =>
         Arr.filter(current, (candidate) => candidate.value !== row.value),
       );
+      setBoxes((current) =>
+        Arr.filter(current, (box) => box.value !== row.value),
+      );
+    };
   }, []);
 
   const noteFocus = useCallback((value: string) => {
@@ -279,7 +333,9 @@ export const Tabs = ({
       orientation,
       activation,
       rows,
+      boxes,
       register,
+      reportBox,
       select,
       noteFocus,
       focusRow,
@@ -290,12 +346,14 @@ export const Tabs = ({
     [
       activation,
       active,
+      boxes,
       focusRow,
       jumpTo,
       moveBy,
       noteFocus,
       orientation,
       register,
+      reportBox,
       rows,
       select,
       selectActive,
@@ -333,7 +391,16 @@ export interface TabsListProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
-/** The row of triggers. Owns the arrow, Home and End keys. */
+/**
+ * The row of triggers. Owns the arrow, Home and End keys, and the shared
+ * selected surface every trigger paints over.
+ *
+ * The surface is placed from two measurements rather than guessed: the
+ * `tabs-origin` probe is a 1×1 swatch at the rail's absolute origin (whatever
+ * box the runtime resolves that against, borders and padding included), and each
+ * trigger reports its own painted box. Together they give the pill's offsets
+ * exactly, so a caller's rail padding cannot leave it short.
+ */
 export const TabsList = ({
   label,
   className,
@@ -343,7 +410,9 @@ export const TabsList = ({
   ...rest
 }: TabsListProps) => {
   const theme = useTheme();
-  const { orientation, moveBy, jumpTo, selectActive } = useTabsContext();
+  const { orientation, moveBy, jumpTo, selectActive, selected, boxes } =
+    useTabsContext();
+  const [origin, setOrigin] = useState<Option.Option<TabBox>>(Option.none());
   assertParts(tabsList, children);
 
   const direction = (event: EventPayload): Option.Option<1 | -1> =>
@@ -373,6 +442,24 @@ export const TabsList = ({
     );
   };
 
+  /** The origin is a property of the rail's containing block: take it once. */
+  const noteOrigin = (event: EventPayload): void =>
+    pipe(
+      measuredBox(event),
+      Option.match({
+        onNone: () => undefined,
+        onSome: (box) =>
+          setOrigin((current) =>
+            Option.isNone(current) ? Option.some(box) : current,
+          ),
+      }),
+    );
+
+  const surface = Option.all({
+    origin,
+    selected: Arr.findFirst(boxes, (box) => box.value === selected),
+  });
+
   return (
     <div
       role="tablist"
@@ -383,13 +470,46 @@ export const TabsList = ({
         onKeyDown?.(event);
       }}
       style={mergeStyles(
-        recipeStyle(
-          cn(TABS_LIST, TABS_LIST_ORIENTATION[orientation], className),
-          theme,
+        mergeStyles(
+          recipeStyle(
+            cn(TABS_LIST, TABS_LIST_ORIENTATION[orientation], className),
+            theme,
+          ),
+          // The pill's containing block: it must be the rail, and its absolute
+          // children are what the probe measures.
+          { position: "relative" },
         ),
         style,
       )}
     >
+      <div
+        testId="tabs-origin"
+        onLayout={noteOrigin}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: 1,
+          height: 1,
+          backgroundColor: theme.colors.background,
+          pointerEvents: "none",
+        }}
+      />
+      {Option.match(surface, {
+        onNone: () => null,
+        onSome: ({ origin: anchoredAt, selected: box }) => (
+          <div
+            testId="tabs-indicator"
+            style={{
+              position: "absolute",
+              ...indicatorBox(anchoredAt, box),
+              backgroundColor: theme.colors.card,
+              borderRadius: theme.radius.sm,
+              pointerEvents: "none",
+            }}
+          />
+        ),
+      })}
       {children}
     </div>
   );
@@ -425,6 +545,7 @@ export const TabsTrigger = ({
   onClick,
   onFocus,
   onBlur,
+  onLayout,
   style,
   ref,
   ...rest
@@ -436,6 +557,7 @@ export const TabsTrigger = ({
     orientation,
     tabbable,
     register,
+    reportBox,
     select,
     noteFocus,
   } = useTabsContext();
@@ -480,6 +602,16 @@ export const TabsTrigger = ({
         setFocused(false);
         onBlur?.(event);
       }}
+      onLayout={(event) => {
+        pipe(
+          measuredBox(event),
+          Option.match({
+            onNone: () => undefined,
+            onSome: (box) => reportBox(value, box),
+          }),
+        );
+        onLayout?.(event);
+      }}
       onClick={
         disabled
           ? undefined
@@ -491,7 +623,6 @@ export const TabsTrigger = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TABS_TRIGGER, className), theme), {
           height: controlHeight(theme, "md"),
-          backgroundColor: isSelected ? theme.colors.card : undefined,
           color: isSelected
             ? theme.colors.foreground
             : theme.colors.mutedForeground,
@@ -500,9 +631,7 @@ export const TabsTrigger = ({
           hover: disabled
             ? undefined
             : {
-                backgroundColor: isSelected
-                  ? theme.colors.card
-                  : theme.colors.hover,
+                backgroundColor: isSelected ? undefined : theme.colors.hover,
                 color: theme.colors.foreground,
               },
           ...(focused ? focusRing(theme) : {}),
@@ -574,8 +703,10 @@ export const tabsMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no aria-orientation, aria-controls or aria-labelledby in 0.10.0; the panel is named by its value",
+    "no aria-orientation, aria-controls or aria-labelledby in 0.11.0; the panel is named by its value",
     "the trigger/panel relationship is positional, not semantic",
+    "the shared selected surface is measured through onLayout, but the runtime has no transform: it jumps between tabs instead of sliding",
+    "no zIndex: the surface stays behind the triggers by being their earlier sibling",
   ],
   docs: "docs/tabs.mdx",
   example: "examples/tabs.example.tsx",
