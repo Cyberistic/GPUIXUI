@@ -38,9 +38,11 @@ import { controlRing } from "../core/focus.js";
 import type { ControlSpec } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
+import { Icon } from "@gpuixui/icons";
 import {
   selectContentClass,
   selectItemClass,
+  selectItemRowClass,
   selectTriggerClass,
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -185,7 +187,25 @@ export const renderSelect = (
             disabled={option.disabled}
             style={selectItemStyle(theme, itemStyle)}
           >
-            {option.label}
+            {(state) => (
+              <div
+                style={recipeTw.classesToStyle(selectItemRowClass, theme).style}
+              >
+                {option.label}
+                {/*
+                  The selected mark comes from the state GPUix reports for this
+                  row, so an uncontrolled Select needs no mirror of its value.
+                  It is decorative: the row is already `aria-selected`.
+                */}
+                {state.selected ? (
+                  <Icon
+                    name="check"
+                    size="sm"
+                    color={theme.colors.popoverForeground}
+                  />
+                ) : null}
+              </div>
+            )}
           </SelectItem>
         ))}
       </SelectContent>

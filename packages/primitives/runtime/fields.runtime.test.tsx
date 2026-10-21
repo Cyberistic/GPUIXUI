@@ -288,6 +288,52 @@ it("selects a Select option by clicking it", async () => {
   expect(lastValue(field.values)).toBe("pear");
 });
 
+it("marks the selected row in the list and moves the mark with the selection", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        placeholder="Pick one"
+        defaultValue="apple"
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+          { value: "plum", label: "Plum" },
+        ]}
+      />
+    </Surface>,
+  );
+  const marks = (): ReadonlyArray<{ readonly id: number }> =>
+    Arr.filter(runtime.all(), (element) => element.type === "svg");
+  const markY = (): number => {
+    const [mark] = marks();
+    return Option.getOrElse(
+      mark === undefined ? Option.none() : runtime.boundsOfId(mark.id),
+      () => expect.fail("the selected row painted no mark"),
+    ).y;
+  };
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  // Exactly one row is selected, so exactly one mark is painted.
+  expect(marks()).toHaveLength(1);
+  const appleMark = markY();
+  const pearRow = Option.getOrElse(
+    Option.fromNullishOr(textElement(runtime, "Pear").parentId),
+    () => expect.fail("the Pear option has no row"),
+  );
+  runtime.clickElement(
+    Option.getOrElse(
+      Option.fromNullishOr(runtime.renderer.getElement(pearRow)),
+      () => expect.fail("the Pear row vanished"),
+    ),
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  expect(marks()).toHaveLength(1);
+  // The mark follows the runtime's reported selection, not a stale default.
+  expect(markY()).toBeGreaterThan(appleMark);
+});
+
 it("opens a Tooltip on hover and dismisses it on click", async () => {
   const runtime = await openWindow();
   runtime.render(

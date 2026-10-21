@@ -68,10 +68,15 @@ key.
 `selectTriggerStyle`, `selectContentStyle` and `selectItemStyle` resolve the
 trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
 `radius.md` + `elevation.overlay`) and the item states (`selected`, `hover`,
-`disabledForeground`). The trigger declares the shared keyboard outline at rest
-(`keyboardRing`, destructive while `invalid`), so the runtime paints it after
-Tab and not after a mouse press; a disabled trigger declares none. The list is
-one spacing step inset, full trigger width.
+`disabledForeground`). A selected row also paints a **check mark** in the
+`popoverForeground` role at its end: the row's children are a function of the
+state GPUix reports, so an uncontrolled select needs no mirror of its value and
+the mark cannot disagree with the selection. It is decorative — the row is
+already `aria-selected`, and the mark is `role="presentation"`. The trigger
+declares the shared keyboard outline at rest (`keyboardRing`, destructive while
+`invalid`), so the runtime paints it after Tab and not after a mouse press; a
+disabled trigger declares none. The list is one spacing step inset, full trigger
+width.
 
 `triggerStyle` and `itemStyle` are the state-aware hooks. The trigger callback
 receives GPUix's own `{ open, disabled, placeholder }`, so a caller can paint the
@@ -94,9 +99,13 @@ state of its own.
 
 - `src/components/Select.test.tsx` — trigger chrome, the keyboard ring (ring
   role, destructive while invalid, absent while disabled), list surface and item
-  states, and both state-aware callbacks receiving their live state and winning.
+  states, both state-aware callbacks receiving their live state and winning, and
+  the selected row's mark coming from the state the runtime reports.
 - `runtime/fields.runtime.test.tsx` — opens, paints its options and commits a
-  clicked option in the real renderer; open state and dismissal are GPUix's.
+  clicked option in the real renderer; exactly one row paints the mark, and the
+  mark moves to the row that becomes selected (negative control measured:
+  rendering the label alone fails `expected [] to have a length of 1`). Open
+  state and dismissal are GPUix's.
 
 ```sh
 nub run --filter @gpuixui/primitives test

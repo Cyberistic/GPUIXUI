@@ -390,6 +390,10 @@ export const selectTriggerClass = (options: {
 export const selectContentClass =
   "flex flex-col bg-popover rounded-md border border-border p-xs gap-2xs min-w-full";
 
+/** The row inside a select item: the label, then the selected mark at the end. */
+export const selectItemRowClass =
+  "flex flex-row items-center justify-between w-full";
+
 /** The three states a select item paints, reported by GPUix's own Select. */
 export interface SelectItemPaint {
   readonly selected: boolean;
