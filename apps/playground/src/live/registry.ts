@@ -115,6 +115,12 @@ export const liveRegistry = [
     capability: "overlay",
   },
   {
+    id: "context-menu-lifecycle",
+    title:
+      "Overlay: the shipped ContextMenu opens at a right press, places from the trigger on Shift+F10 and returns focus on dismiss",
+    capability: "overlay",
+  },
+  {
     id: "toast-lifecycle",
     title:
       "Overlay: the shipped toast system queues a toast and dismisses it from its own control",

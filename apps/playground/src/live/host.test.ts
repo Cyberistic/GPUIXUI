@@ -1,16 +1,23 @@
 /**
- * Guards the live host's font verb.
+ * Guards the live host's font verb and its right-button verb.
  *
  * The bug these catch: `fontInstaller` dropping or reshaping the probe's bytes
- * (the late-registration probe would then measure a face nobody installed), and
- * a rejected font file surfacing as an unlabelled failure — the probe report
- * must name `registerFont`, not `unknown error`, so a run is diagnosable.
+ * (the late-registration probe would then measure a face nobody installed), a
+ * rejected font file surfacing as an unlabelled failure — the probe report must
+ * name `registerFont`, not `unknown error` — and a context-menu probe pressing
+ * the primary button, which fires `onClick` and never `onAuxClick`, so the menu
+ * stays shut and the probe measures nothing.
  */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import { Smoke } from "@gpuixui/testing";
-import { fontInstaller, type LiveFontRegistrar } from "./host.js";
+import {
+  fontInstaller,
+  rightPress,
+  type LiveFontRegistrar,
+  type PressableLocator,
+} from "./host.js";
 
 const recorder = (): {
   readonly registrar: LiveFontRegistrar;
@@ -26,6 +33,26 @@ const recorder = (): {
     installed: () => Arr.flatten(files),
   };
 };
+
+describe("rightPress", () => {
+  it.effect("presses the right button, which is the aux-click path", () => {
+    const buttons: Array<number> = [];
+    const locator: PressableLocator = {
+      click: (options) => {
+        buttons.push(options.button);
+        return Promise.resolve();
+      },
+    };
+    return Effect.gen(function* () {
+      yield* Effect.tryPromise({
+        try: () => rightPress(locator),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "rightPress", cause }),
+      });
+      expect(buttons).toEqual([2]);
+    });
+  });
+});
 
 describe("fontInstaller", () => {
   it.effect("forwards the probe's bytes to the renderer unchanged", () => {

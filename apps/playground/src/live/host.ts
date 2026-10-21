@@ -94,6 +94,24 @@ export const fontInstaller =
       sync(() => registrar.registerFont(Buffer.from(bytes))),
     );
 
+/**
+ * The locator surface a right press needs, named so a fake can stand in for the
+ * automation protocol in a unit test.
+ */
+export interface PressableLocator {
+  readonly click: (options: { readonly button: number }) => Promise<void>;
+}
+
+/**
+ * Presses a locator's element with the right button.
+ *
+ * The button number is the whole contract: a primary press (0) fires `onClick`
+ * and never `onAuxClick`, so a context menu would silently never open — the
+ * failure mode this verb exists to make measurable.
+ */
+export const rightPress = (locator: PressableLocator): Promise<void> =>
+  locator.click({ button: 2 });
+
 /** An `AsyncSmokeHost` over a connected window. */
 export const createLiveHost = ({
   app,
@@ -132,6 +150,8 @@ export const createLiveHost = ({
         );
       }),
     click: (testId) => call(`click ${testId}`, () => at(testId).click()),
+    rightClick: (testId) =>
+      call(`rightClick ${testId}`, () => rightPress(at(testId))),
     hover: (testId) => call(`hover ${testId}`, () => at(testId).hover()),
     drag: (testId, deltaX, deltaY) =>
       call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY)),

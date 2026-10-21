@@ -18,6 +18,10 @@ import {
   CommandMenuEmpty,
   CommandMenuInput,
   CommandMenuList,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
   Dialog,
   DialogClose,
   DialogContent,
@@ -823,7 +827,11 @@ const PointerCaptureProbe = (): ReactNode => {
         <div style={{ display: "flex", height: 24 }}>
           <div
             testId="capture-both"
-            style={{ width: 24, height: 24, backgroundColor: theme.colors.primary }}
+            style={{
+              width: 24,
+              height: 24,
+              backgroundColor: theme.colors.primary,
+            }}
             onMouseDown={() => {
               setBothMoves(0);
               setBothUp(0);
@@ -833,19 +841,31 @@ const PointerCaptureProbe = (): ReactNode => {
           />
           <div
             testId="capture-both-under"
-            style={{ width: 400, height: 24, backgroundColor: theme.colors.muted }}
+            style={{
+              width: 400,
+              height: 24,
+              backgroundColor: theme.colors.muted,
+            }}
             onMouseMove={() => setBothUnder((count) => count + 1)}
           />
         </div>
         <div style={{ display: "flex", height: 24 }}>
           <div
             testId="capture-move-only"
-            style={{ width: 24, height: 24, backgroundColor: theme.colors.primary }}
+            style={{
+              width: 24,
+              height: 24,
+              backgroundColor: theme.colors.primary,
+            }}
             onMouseMove={() => setMoveMoves((count) => count + 1)}
           />
           <div
             testId="capture-move-under"
-            style={{ width: 400, height: 24, backgroundColor: theme.colors.muted }}
+            style={{
+              width: 400,
+              height: 24,
+              backgroundColor: theme.colors.muted,
+            }}
             onMouseMove={() => setMoveUnder((count) => count + 1)}
           />
         </div>
@@ -1348,6 +1368,122 @@ const MenuProbe = (): ReactNode => {
           }}
         >
           {`last=${last}`}
+        </text>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The shipped `ContextMenu`, with a sibling that is **not** its trigger.
+ *
+ * The context menu is the only overlay opened by a right press, so the probe
+ * also mounts a neighbouring target: a right press there must open nothing, and
+ * while the menu is open it must close it (the menu is scoped to its trigger).
+ */
+const ContextMenuProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [state, setState] = useState({
+    opens: 0,
+    closes: 0,
+    last: "none",
+  });
+  return (
+    <div
+      testId="context-menu-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped ContextMenu: right-press the card, or press Shift+F10 on
+          it.
+        </text>
+        <ContextMenu
+          onOpenChange={(open) =>
+            setState((current) => ({
+              ...current,
+              opens: current.opens + (open ? 1 : 0),
+              closes: current.closes + (open ? 0 : 1),
+            }))
+          }
+        >
+          <ContextMenuTrigger
+            testId="context-trigger"
+            style={{ width: 320, height: 160 }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: theme.colors.cardForeground,
+              }}
+            >
+              Right-press this card
+            </text>
+          </ContextMenuTrigger>
+          <ContextMenuContent testId="context-menu" label="Item actions">
+            <ContextMenuItem
+              testId="context-rename"
+              onSelect={() =>
+                setState((current) => ({ ...current, last: "rename" }))
+              }
+            >
+              Rename
+            </ContextMenuItem>
+            <ContextMenuItem
+              testId="context-delete"
+              onSelect={() =>
+                setState((current) => ({ ...current, last: "delete" }))
+              }
+            >
+              Delete
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+        <div
+          testId="context-sibling"
+          style={{
+            width: 320,
+            padding: theme.spacing.md,
+            borderRadius: theme.radius.md,
+            backgroundColor: theme.colors.muted,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            A sibling, not the trigger
+          </text>
+        </div>
+        <text
+          testId="context-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`opens=${state.opens} closes=${state.closes} last=${state.last}`}
         </text>
       </div>
     </div>
@@ -2950,6 +3086,180 @@ const menuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * Drives the shipped `ContextMenu` in a window.
+ *
+ * This is the one overlay whose opening input is a **right press**, and no
+ * window probe had produced one: the headless suites synthesise the aux click
+ * themselves. The checks are the two opening paths and their different close
+ * rules — a pointer-opened menu keeps its origin at the pointer and leaves the
+ * focus where the close put it, while Shift+F10 places the surface from the
+ * trigger's own bounds and hands the focus back.
+ */
+const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    const unpainted = Effect.map(ctx.host.bounds("context-menu"), (bounds) =>
+      Option.isNone(Option.fromNullishOr(bounds)),
+    );
+
+    yield* ctx.host.waitFor("context-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the menu starts closed",
+      yield* ctx.host.text("context-readout"),
+      "opens=0 closes=0 last=none",
+    );
+    yield* ctx.expectEqual(
+      "a closed context menu paints no surface",
+      yield* unpainted,
+      true,
+    );
+
+    // A primary press is not an aux click, so it must open nothing.
+    yield* ctx.host.click("context-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a left press does not open a context menu",
+      yield* unpainted,
+      true,
+    );
+
+    const trigger = yield* paintedBox(ctx, "context-trigger");
+    yield* ctx.host.rightClick("context-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a right press opens the menu",
+      yield* ctx.host.text("context-readout"),
+      "opens=1",
+    );
+    const atPointer = yield* paintedBox(ctx, "context-menu");
+    yield* ctx.expectNear(
+      "the surface starts at the press point's x",
+      atPointer.x,
+      trigger.x + trigger.width / 2,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the surface starts at the press point's y",
+      atPointer.y,
+      trigger.y + trigger.height / 2,
+      1,
+    );
+    yield* ctx.host.capture("context-open");
+    yield* ctx.expectEqual(
+      "the open surface holds the focus",
+      yield* focusedId(ctx),
+      "context-menu",
+    );
+
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow key moves real focus to the first row",
+      yield* focusedId(ctx),
+      "context-rename",
+    );
+
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the next arrow moves focus to the second row",
+      yield* focusedId(ctx),
+      "context-delete",
+    );
+
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Enter runs the focused row",
+      yield* ctx.host.text("context-readout"),
+      "last=delete",
+    );
+    yield* ctx.expectEqual(
+      "activation unpaints the surface",
+      yield* unpainted,
+      true,
+    );
+
+    // The keyboard route: Shift+F10 places the surface under the trigger and
+    // Escape returns the focus, which a pointer-opened menu does not.
+    yield* ctx.host.rightClick("context-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape dismisses a pointer-opened menu",
+      yield* unpainted,
+      true,
+    );
+    yield* ctx.expectContains(
+      "the dismiss is reported to the caller",
+      yield* ctx.host.text("context-readout"),
+      "closes=2",
+    );
+    yield* ctx.expectEqual(
+      "a pointer-opened menu leaves the focus where the close put it",
+      yield* focusedAfterPaint(ctx),
+      "none",
+    );
+
+    yield* ctx.host.focusElement("context-trigger");
+    yield* ctx.host.key("shift-f10");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Shift+F10 opens the menu from the keyboard",
+      yield* ctx.host.text("context-readout"),
+      "opens=3",
+    );
+    const fromKeyboard = yield* paintedBox(ctx, "context-menu");
+    yield* ctx.expectNear(
+      "the keyboard surface starts at the trigger's left edge",
+      fromKeyboard.x,
+      trigger.x,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the keyboard surface starts under the trigger",
+      fromKeyboard.y,
+      trigger.y + trigger.height,
+      1,
+    );
+
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape from the keyboard route returns the focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      "context-trigger",
+    );
+
+    // The scope rule: a right press on a sibling opens nothing, and while the
+    // menu is open the same press dismisses it rather than opening another.
+    yield* ctx.host.rightClick("context-sibling");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a right press on a sibling opens nothing",
+      yield* unpainted,
+      true,
+    );
+
+    yield* ctx.host.rightClick("context-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.rightClick("context-sibling");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a right press outside the open menu dismisses it",
+      yield* unpainted,
+      true,
+    );
+    yield* ctx.expectContains(
+      "the outside press opens no second menu",
+      yield* ctx.host.text("context-readout"),
+      "opens=4",
+    );
+    yield* ctx.host.capture("context-closed");
+  });
+
+/**
  * Queues a toast from the shipped `ToastProvider` and dismisses it with the
  * card's own control.
  *
@@ -3604,7 +3914,8 @@ const ScrollProbe = (): ReactNode => {
           color: theme.colors.mutedForeground,
         }}
       >
-        A wheel is hit-tested: only the strip scrolls, and it clamps at both ends.
+        A wheel is hit-tested: only the strip scrolls, and it clamps at both
+        ends.
       </text>
       <div
         testId="scroll-jump"
@@ -3879,7 +4190,12 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "split=320",
     );
     const start = yield* paintedBox(ctx, "split-pane-a");
-    yield* ctx.expectNear("pane A paints the initial width", start.width, 320, 1);
+    yield* ctx.expectNear(
+      "pane A paints the initial width",
+      start.width,
+      320,
+      1,
+    );
     const divider = yield* paintedBox(ctx, "split-divider");
     yield* ctx.expectNear(
       "the divider sits on pane A's right edge",
@@ -3898,7 +4214,12 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "split=400",
     );
     const grown = yield* paintedBox(ctx, "split-pane-a");
-    yield* ctx.expectNear("the painted pane follows the resize", grown.width, 400, 1);
+    yield* ctx.expectNear(
+      "the painted pane follows the resize",
+      grown.width,
+      400,
+      1,
+    );
     yield* ctx.expectEqual(
       "every move of the drag reached the divider, 6px wide and left behind",
       yield* ctx.host.text("split-moves"),
@@ -3971,7 +4292,10 @@ const VirtualListProbe = (): ReactNode => {
       >
         5 000 rows, one viewport: only the painted window exists.
       </text>
-      <div testId="vlist-frame" style={{ display: "flex", height: VLIST_VIEWPORT }}>
+      <div
+        testId="vlist-frame"
+        style={{ display: "flex", height: VLIST_VIEWPORT }}
+      >
         <virtual-list
           testId="vlist"
           style={{ flexGrow: 1, minHeight: 0 }}
@@ -4014,9 +4338,7 @@ const VirtualListProbe = (): ReactNode => {
 
 /** The `row <n>` lines the window actually painted. */
 const paintedRows = (lines: ReadonlyArray<string>): number =>
-  Arr.length(
-    Arr.filter(lines, (line) => Str.startsWith("row ")(line)),
-  );
+  Arr.length(Arr.filter(lines, (line) => Str.startsWith("row ")(line)));
 
 const virtualListSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
@@ -4311,6 +4633,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "menu-lifecycle",
     view: () => <MenuProbe />,
     steps: menuSteps,
+  },
+  "context-menu-lifecycle": {
+    id: "context-menu-lifecycle",
+    view: () => <ContextMenuProbe />,
+    steps: contextMenuSteps,
   },
   "toast-lifecycle": {
     id: "toast-lifecycle",

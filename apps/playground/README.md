@@ -33,9 +33,9 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-three probes a real window can prove, of which seven mount shipped
-`@gpuixui/components` (the dialog, the menu, the toast system, the command
-palette, the tabs, the popover and the modal focus rule), four mount
+twenty-four probes a real window can prove, of which eight mount shipped
+`@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
+the command palette, the tabs, the popover and the modal focus rule), four mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), and the rest
 prove the runtime itself (focus, paint, fonts, placement, content surfaces,
 pointer capture, the window's own wheel, a split pane, a virtual list and the
@@ -778,6 +778,55 @@ moved a highlight without moving focus would fail here.
 `an arrow key moves focus to the next row`
 (`expected "menu-delete", got "menu-rename"`, exit `1`). Captures:
 `.artifacts/live/menu-open.png`, `menu-closed.png`.
+
+### `context-menu-lifecycle` — measured on 0.11.0 here
+
+The shipped `ContextMenu` (`@gpuixui/components`) — the one overlay whose opening
+input is a **right press**. The headless suites synthesise the aux click
+themselves, so a window had never delivered one: the trigger opens on
+`onAuxClick` with `isRightClick`, and a primary press carries neither field. The
+probe also mounts a sibling that is **not** the trigger, because the menu is
+scoped to its trigger.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `opens=0 closes=0 last=none`, and no menu surface paints |
+| left press the trigger | still no surface — a primary click is not an aux click |
+| right press the trigger | the surface paints, `opens=1`, and its own box starts at the **press point** on both axes (the locator presses the painted centre) |
+| the same open | the surface itself holds the focus (`autoFocus`), so the keys reach the menu |
+| `ArrowDown` ×2 | focus moves row by row: `context-rename`, then `context-delete` |
+| `Enter` | `last=delete`, the surface unpaints, `closes=1` |
+| right press, then `Escape` | unpainted and `closes=2`, and the focus reads **`none`** |
+| `Shift+F10` on the focused trigger | `opens=3`; the surface's left edge is the trigger's, its top the trigger's bottom — the keyboard route places from the trigger's own bounds, not the pointer |
+| `Escape` | focus is back on `context-trigger` — the keyboard route restores it |
+| right press a sibling (menu closed) | nothing opens |
+| right press the trigger, then the sibling | the open surface dismisses; `opens` stays 4, so the outside press opened no second menu |
+
+24 checks, `--only context-menu-lifecycle`, green on 0.11.0. The probe needed a
+new host verb: `AsyncSmokeHost.rightClick(testId)` presses the element's centre
+with button 2 through the protocol's locator (`host.ts`'s `rightPress`), and its
+unit test holds the button number — a primary press would silently turn the
+probe into a no-op.
+
+Negative control, measured: pressing the trigger with the primary button
+(`rightClick` → `click`) fails `a right press opens the menu`
+(`expected a string containing "opens=1", got "opens=0 closes=0 last=none"`,
+exit `1`). Captures: `.artifacts/live/context-open.png` (the surface over the
+card at the pointer) and `context-closed.png`.
+
+Two measured consequences:
+
+1. **A pointer-opened context menu leaves the focus nowhere when it dismisses.**
+   The pointer open records no restore target (the pointer is already where the
+   reader put it), so Escape and an outside press leave the native focus `none`;
+   the keyboard route is the one that hands it back. Measured above in both
+   directions, and the behaviour is deliberate in `ContextMenu`'s state — a
+   consumer that opens the menu from its own shortcut should go through
+   `Shift+F10` or a controlled `open` if it wants focus restored.
+2. **A right press outside the trigger closes the open menu and opens nothing.**
+   The trigger is the only element with an aux-click handler, which is the
+   documented scope: another target's context menu is a second `ContextMenu`
+   mount, not a repositioned one.
 
 ### `toast-lifecycle` — measured on 0.11.0 here
 

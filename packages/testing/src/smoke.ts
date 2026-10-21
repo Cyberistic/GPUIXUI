@@ -340,6 +340,15 @@ export interface AsyncSmokeHost {
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /**
+   * Presses `testId` with the **right** button.
+   *
+   * A context menu is opened by the runtime's aux click, which a primary press
+   * cannot produce: `onAuxClick` carries `isRightClick` and the pointer point,
+   * and a left click delivers neither. The automation protocol's locator takes
+   * the button, so this is the same hit-tested path a pointer takes.
+   */
+  readonly rightClick: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  /**
    * Moves the pointer onto `testId` and leaves it there, pressing nothing.
    *
    * Hover is its own input path: a tooltip opens on a pointer entering its
