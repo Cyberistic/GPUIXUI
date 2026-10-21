@@ -782,3 +782,12 @@ Both are specified in ; each fix starts with a plan under .
 - [x] **Docs: platform toggle (macOS / Linux / Windows / Default)** — landed: every preview renders through the resolved `platformTheme`, the switch writes the URL and remembers the choice, and the preview style sheets carry no colour literal. The variants now carry the families, radii, density and the platform's colour roles, and the previews follow because they read the resolved theme.
 
 - [x] Tabs: a measured shared indicator on the **native** component — the rail renders one `tabs-indicator` surface instead of a card background per trigger; each trigger reports its painted box through `onLayout` and a 1×1 `tabs-origin` probe reports where the rail's absolute children start, so the pill's box is exactly the selected trigger's (asserted in both orientations and both themes; 19 native behaviour tests + an `indicator.ts` unit suite). No `transform`, so it jumps rather than slides — the docs demo's slide stays a browser illustration.
+
+## Salvage gaps (from `.agents/slop/salvage-queue/`)
+
+`[ ]` `[░░░░░░░░░░]` 0/4
+
+`[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, and a `Button`/`Toggle` whose name is its text child must publish that text (salvage plans 026, 058)
+`[ ]` `packages/primitives`: `Skeleton circle` paints an ellipse when only one of `width`/`height` is explicit; the circle must keep a square box (salvage plan 028)
+`[ ]` `packages/primitives`: no `ToggleGroup` segmented control; disabled options also need a roving tab stop (salvage plan 056)
+`[ ]` `packages/tokens`: no `infoText`/`successText`/`warningText`/`destructiveText` roles for status text and indicators on `background`/`card`, and `statusTone` exposes no `text` (salvage plan 057)
