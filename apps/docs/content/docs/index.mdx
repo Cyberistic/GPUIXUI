@@ -18,13 +18,13 @@ It is built around five principles:
   contract.
 - **Semantic tokens** — colour, type, spacing, radius, elevation and density
   come from the theme; no component carries a colour literal.
-- **Honest limits** — where GPUix 0.10.0 lacks a capability, the docs say so and
-  give the strongest working alternative.
+- **Honest limits** — where the pinned runtime (GPUix 0.11.0) lacks a capability,
+  the docs say so and give the strongest working alternative.
 - **Open code** — the implementation is in the workspace, typed and readable.
 
 ## Native by construction
 
-The published `@gpuix/react` 0.10.0 exposes a small set of host elements —
+The published `@gpuix/react` 0.11.0 exposes a small set of host elements —
 `div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`, `anchored`, `code`,
 `diff`, `markdown` and `virtual-list`. GPUIxUI builds its components from those,
 so a button is a `div` with the button role and its own Enter/Space contract, and
@@ -82,6 +82,9 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 <Cards>
   <Card title="Installation" href="/docs/installation">
     Clone the workspace, add a package and render the first component.
+  </Card>
+  <Card title="Runtime capabilities" href="/docs/runtime">
+    What the pinned runtime provides, what it does not, and what to do instead.
   </Card>
   <Card title="Components" href="/docs/components/button">
     Button, Dialog, Popover and Tabs — the page pattern for the rest.

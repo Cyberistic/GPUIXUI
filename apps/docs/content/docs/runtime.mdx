@@ -1,0 +1,116 @@
+---
+title: Runtime capabilities
+description: What the pinned GPUix runtime provides, what it does not, and the honest workaround for each gap.
+---
+
+The library pins `@gpuix/react` / `@gpuix/native` at **0.11.0**. This page records
+what that runtime provides, what it does not, and the strongest honest alternative
+for each gap. `@gpuixui/runtime` encodes the same matrix in code — `capabilities`
+and `unsupportedFeature` — and its compile-time guards fail the build the moment
+the runtime adds a key the matrix claims is absent, so the table below cannot go
+stale silently.
+
+## The matrix
+
+| Capability | Status | Workaround |
+| ---------- | ------ | ---------- |
+| Terminal rendering | Supported | `render(<App />, { terminal: true })`, or set `GPUIX_TERMINAL=1` |
+| Headless `Dialog` | Supported | `@gpuix/react/dialog` owns the Escape layer and the Tab trap |
+| Tab / Shift+Tab focus | Supported | Default; `preventDefault()` keeps one Tab |
+| `transform` | Not supported | Animate motion with `@gpuixui/motion`; static rotation/scale is unsupported |
+| Grid span | Not supported | Size the track with `gridTemplateColumns`/`gridTemplateRows` or an explicit width |
+| Canvas drawing | Not supported | Render `svg` or compose `div`/`svg` primitives; no retained draw API |
+| IME composition | Not supported | Compose at the application layer from `onInput`/`onKeyDown` |
+| Global shortcut | Not supported | Window-level `onKeyDown`; background hotkeys need a runtime change |
+| Tray / menu bar | Not supported | Ship an in-window menu; a system tray needs a runtime change |
+| Native view / webview | Not supported | Use `markdown`/`code`/`diff` surfaces |
+
+## What to do instead
+
+The unsupported rows are not decorative placeholders — each has a named gap and a
+working alternative.
+
+### `transform`
+
+`StyleDesc` has no `transform`, nor `transformOrigin`, `rotate`, `scale`,
+`translate` or `skew`. You cannot statically rotate or scale an element.
+
+```tsx
+import { motion } from "@gpuix/react";
+import { useSpring, layoutSpring } from "@gpuixui/motion/react";
+
+function Grow({ open }: { open: boolean }) {
+  const { value } = useSpring(open ? 100 : 0, layoutSpring);
+  return <motion.div animate={{ width: value }} transition={{ duration: 0 }} />;
+}
+```
+
+`@gpuixui/motion` drives the numeric `MotionStyle` fields the runtime *does* have
+— `width`, `height`, `top`, `right`, `bottom`, `left`, `opacity`, `borderRadius`.
+Static rotation/scale stays unsupported until the runtime grows a `transform` key.
+
+### Grid span
+
+The grid exposes only `gridColumnMin`/`gridRowMin` and integer
+`gridTemplateColumns`/`gridTemplateRows`. `col-span-*` / `row-span-*` /
+`grid-area-*` are unrepresentable — `@gpuixui/tw` refuses them by name rather than
+dropping them.
+
+Size the track to do the spanning instead of asking an item to cross tracks:
+
+```tsx
+<div style={{ display: "grid", gridTemplateColumns: 2, gridTemplateRows: 1 }} />
+```
+
+### Canvas drawing
+
+`canvas` is a blank host element — it appears in `ElementType` but has no
+2D-context or draw props. Compose the shape from `svg` / `div` primitives, which
+are first-class.
+
+### IME composition
+
+No composition events reach the React surface. Compose at the application layer
+from `onInput`/`onKeyDown`; live IME preview needs a runtime change.
+
+### Global shortcut
+
+Key events fire only while the window is focused; there is no system-wide hotkey
+registration. Bind window-level `onKeyDown` via `render`'s key handlers.
+Background hotkeys need a runtime change.
+
+### Tray / menu bar
+
+There is no tray, menu-bar or status-item host. Ship the menu inside the window;
+a system tray needs a runtime change.
+
+### Native view / webview
+
+There is no webview or native child-view host. Use the `markdown`/`code`/`diff`
+surfaces for rich content; embedded web content needs a runtime change.
+
+## `isTerminal()`
+
+`isTerminal()` is re-exported from `@gpuixui/runtime`. It is `false` until
+`init()` runs, so read it while rendering, not at module scope:
+
+```tsx
+import { isTerminal } from "@gpuixui/runtime";
+
+// A terminal has no titlebar: drop the macOS traffic-light space.
+if (isTerminal()) {
+  // …render without the window chrome…
+}
+```
+
+## Read the matrix from code
+
+```ts
+import { capabilities, unsupportedFeature } from "@gpuixui/runtime";
+
+capabilities.transform.supported; // false
+capabilities.transform.workaround; // "Animate motion with @gpuixui/motion; …"
+
+const refusal = unsupportedFeature("gridSpan");
+// UnsupportedRuntimeFeature { feature: "gridSpan", reason, workaround }
+```
