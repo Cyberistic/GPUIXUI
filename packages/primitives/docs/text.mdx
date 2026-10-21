@@ -45,8 +45,14 @@ a font size.
 | `default` | `foreground` | body and headings |
 | `muted` | `mutedForeground` | metadata, help, disabled-adjacent copy |
 | `primary` | `primary` | a link-like non-interactive emphasis |
-| `destructive` | `destructive` | an error or a breaking change |
+| `destructive` | `destructiveSoftForeground` | an error or a breaking change |
 | `inherit` | none | text on a coloured surface, taking its parent's colour |
+
+`destructive` is the **status text** role, not the solid `destructive` fill:
+that fill is a background whose own label clears the secondary floor, and
+written as body text on the page it does not. `destructiveSoftForeground` is the
+role tokens measure as page text on `background` and `card`, so an error message
+stays legible in every shipped theme.
 
 ## API
 

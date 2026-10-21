@@ -310,6 +310,20 @@ describe("type", () => {
     expect(stringIn(truncated, "lineClamp")).toStrictEqual(Option.none());
   });
 
+  it("paints an error in the measured status text role, not the solid fill", () => {
+    // The bug: `destructive` is a *background* whose own label clears the
+    // secondary floor; written as body text on the page it measured 3:1. Tokens
+    // measure `destructiveSoftForeground` as page text on background and card,
+    // so that is what an error message and an invalid label paint.
+    const element = renderText({ tone: "destructive" }, testTheme);
+    expect(stringIn(element, "color")).toStrictEqual(
+      Option.some(testTheme.colors.destructiveSoftForeground),
+    );
+    expect(stringIn(element, "color")).not.toStrictEqual(
+      Option.some(testTheme.colors.destructive),
+    );
+  });
+
   it("hands a control its name, because GPUix has no aria-labelledby", () => {
     // The helper is only useful if a control can consume it: every control
     // takes `label` and writes the host's `aria-label` itself.

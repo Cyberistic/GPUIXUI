@@ -200,7 +200,8 @@ const tones: Record<TextTone, Paint> = {
   default: (theme) => theme.colors.foreground,
   muted: (theme) => theme.colors.mutedForeground,
   primary: (theme) => theme.colors.primary,
-  destructive: (theme) => theme.colors.destructive,
+  /** The status text role tokens measure as page text, not the solid fill. */
+  destructive: (theme) => theme.colors.destructiveSoftForeground,
   /** Take the colour already in effect — for text on a coloured surface. */
   inherit: undefined,
 };

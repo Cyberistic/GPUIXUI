@@ -119,7 +119,10 @@ const TONE_CLASS: Readonly<Record<TextTone, string | undefined>> = {
   default: "text-foreground",
   muted: "text-muted-foreground",
   primary: "text-primary",
-  destructive: "text-destructive",
+  // The status text role, not the solid fill: `destructive` is a background a
+  // white label sits on, and reads at 3:1 as body text. `destructiveSoftForeground`
+  // is the role tokens measure as page text, so an error is legible.
+  destructive: "text-destructiveSoftForeground",
   inherit: undefined,
 };
 
