@@ -1552,10 +1552,10 @@ retired once both branches are one
       the vanishing element's **focus successor** (`internal/focus-successor.ts`,
       a one-task mark like the event claim), and `useModalFocus` substitutes it
       when it captures; the Dropdown and Context menu roots mark in `close`, so a
-      submenu row is covered by the root's chain. 3 helper cases + 1 composite
-      case red at `HEAD` (`None`), 12/12 after, both halves proven necessary;
-      unit 524 in 49 files; menu/dialog suites unchanged (the same plan-540
-      position cases), `check`/`lint`/`test` exit 0, scoped smoke
+      submenu row is covered by the root's chain. 3 helper cases (new code) + 1
+      composite case red at `HEAD` (`None`), 12/12 after, both halves proven
+      necessary; unit 524 in 49 files; menu/dialog suites unchanged (the same
+      plan-540 position cases), `check`/`lint`/`test` exit 0, scoped smoke
       `overlay-dialog` + `modal-focus-trap` green; docs, `docs/component-api.md`,
       both menu pages, `COMPONENTS.md`, `PLAN.md` D30 and the index synced
       (owner: components)
