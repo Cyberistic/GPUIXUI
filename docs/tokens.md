@@ -16,6 +16,9 @@ import {
   alpha,
   blend,
   colorRoles,
+  contrastFloors,
+  contrastPairs,
+  contrastRatio,
   createTheme,
   currentPlatform,
   darkTheme,
@@ -29,6 +32,7 @@ import {
   highContrastLightTheme,
   highContrastThemes,
   lightTheme,
+  platformStyles,
   platformTheme,
   platformTypes,
   registerFonts,
@@ -39,7 +43,10 @@ import {
   type FocusRing,
   type FontRegistrar,
   type FontSource,
+  type ContrastFloors,
+  type ContrastPair,
   type PlatformName,
+  type PlatformStyle,
   type StatusTone,
   type Theme,
   type ThemeContrast,
@@ -323,24 +330,63 @@ import { textStyle } from "@gpuixui/tokens";
 </text>;
 ```
 
-### Platform type
+### Platform styles
 
-`platformTypes` is the one place a family per platform is decided, and
-`platformTheme(base, platform)` turns it into a real theme — same colours, scales,
-mode and density; the families and the name change. The docs platform toggle and a
-native build use the same table, so a preview cannot show type the runtime cannot
-produce.
+`platformStyles` is the one place a platform is decided, and
+`platformTheme(base, platform)` turns it into a real theme: that platform's
+families, corner radii, control density and chrome colours, over the base theme's
+mode and elevation. The docs platform toggle and a native build use the same
+table, so a preview cannot show a look the library does not ship.
 
-| Platform | `sans` | `mono` |
-| -------- | ------ | ------ |
-| `darwin` (macOS) | `.SystemUIFont` | `Menlo` |
-| `linux` | `.SystemUIFont` | `DejaVu Sans Mono` |
-| `win32` (Windows) | `.SystemUIFont` | `Consolas` |
-| `default` | `.SystemUIFont` | `Menlo` |
+| Platform | `sans` | `mono` | `radius.md` | density |
+| -------- | ------ | ------ | ----------- | ------- |
+| `darwin` (macOS) | `.SystemUIFont` | `Menlo` | 6 | `compact` (28px) |
+| `linux` | `.SystemUIFont` | `DejaVu Sans Mono` | 6 | `spacious` (36px) |
+| `win32` (Windows) | `.SystemUIFont` | `Consolas` | 4 | `comfortable` (32px) |
+| `default` | `.SystemUIFont` | `Menlo` | 6 | `comfortable` (32px) |
 
-`currentPlatform` is one of those names — `default` when `process.platform` is
-not one the library knows, such as a browser — and `systemMonoFamily` is
-`platformTypes[currentPlatform].mono`, which is what the default typography uses.
+Each styled platform repaints the roles that give it its identity. Every other
+role — the status families, the soft tones, `foreground`, `mutedForeground`,
+`inputForeground` — keeps the base theme's value.
+
+| Role | macOS light | macOS dark | Linux light | Linux dark | Windows light | Windows dark |
+| ---- | ----------- | ---------- | ----------- | ---------- | ------------- | ------------ |
+| `background` | `#F2F2F7` | `#1C1C1E` | `#F6F5F4` | `#242424` | `#F3F3F3` | `#202020` |
+| `card` | `#FFFFFF` | `#26262A` | `#FFFFFF` | `#303030` | `#FFFFFF` | `#2B2B2B` |
+| `popover` | `#FFFFFF` | `#2C2C30` | `#FFFFFF` | `#383838` | `#FFFFFF` | `#2D2D2D` |
+| `input` | `#FFFFFF` | `#1F1F22` | `#FFFFFF` | `#212121` | `#FFFFFF` | `#1F1F1F` |
+| `muted` | `#E9E9EF` | `#2A2A2E` | `#ECEBE9` | `#2A2A2A` | `#EBEBEB` | `#2A2A2A` |
+| `hover` | `#E9E9EF` | `#2E2E33` | `#E7E6E4` | `#333333` | `#E8E8E8` | `#333333` |
+| `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#DEDEDE` | `#3A3A3A` |
+| `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
+| `borderStrong` | `#7C7C82` | `#8A8A90` | `#8A8884` | `#A0A0A0` | `#757575` | `#9A9A9A` |
+| `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
+| `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
+| `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
+| `accent` | `#E1EBFA` | `#13304F` | `#E4EFFB` | `#1B3B5C` | `#E5F1FB` | `#1B3A50` |
+| `accentForeground` | `#0A4A8F` | `#A9CCF7` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
+| `selected` | `#D3E5FB` | `#0D3A66` | `#CFE3F9` | `#1E4468` | `#CCE4F7` | `#123C57` |
+| `selectedForeground` | `#0B3D6B` | `#C7E0FF` | `#0F3E74` | `#CFE4FA` | `#093A5C` | `#CDEBFF` |
+| `placeholder` | base | `#8A93A3` | base | `#8A93A3` | base | `#8A93A3` |
+
+`platformStyles[platform].colors[mode]` is that table: a partial `ThemeColors`, so
+a value you leave out is the base theme's. The dark sets carry a lighter
+`placeholder` because their field surfaces are lighter than the base canvas.
+
+Four rules the mechanism keeps:
+
+- **A high-contrast theme keeps its colours.** `platformTheme` applies the
+  families, radii and density but not the palette, so accessibility outranks the
+  platform look. `Theme.contrast` records the variant a theme carries — `"high"`
+  on the high-contrast pair, `"default"` on the ordinary pair, absent on a
+  hand-built theme, which is treated as default.
+- **A platform style is an ordinary theme.** Nothing is a preset you cannot edit:
+  read `platformStyles`, or layer `extendTheme` on a resolved theme.
+- **`default` is the library's own identity.** It changes the name and nothing
+  else, so a platform the library does not know still gets a real theme.
+- **Every platform palette is measured on the same role pairs as the built-in
+  themes.** `platforms.test.ts` holds all six platform themes to the contrast
+  floors, so a platform cannot ship unreadable text.
 
 ```tsx
 import { platformTheme, themes } from "@gpuixui/tokens";
@@ -355,14 +401,75 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 the operating system's own UI font — GPUI documents the name as "the system UI
 font, which varies based on platform" and uses it as its default font — so a
 theme never names a face the machine may not have. The table still exists for the
-two things a component cannot infer: the platform's monospace family, and which
-platform a preview is showing.
+things a component cannot infer: the platform's monospace family, its radii and
+control metrics, and which platform a preview is showing.
+
+`currentPlatform` is one of those names — `default` when `process.platform` is
+not one the library knows, such as a browser — and `systemMonoFamily` is
+`platformTypes[currentPlatform].mono`, which is what the default typography uses.
+`platformTypes` is the families-and-label view of the same table, for a caller
+that does not need the palette.
 
 **Two runtime facts the table respects.** GPUix's `StyleDesc.fontFamily` is a
 **single** string, not a CSS stack, so an entry never contains a comma; and a
 family the machine does not have falls back silently, so the platform table only
-names families each platform installs. This table changes no colours, sizes or
-spacing: a platform style is a theme, not a second design system.
+names families each platform installs.
+
+**The radii and densities are design decisions, not runtime measurements.** They
+follow each platform's own guidelines — macOS controls at 28px, Windows at 32,
+GNOME at 36 — so a platform style reads as native before any component is styled.
+An application whose own window differs layers `extendTheme` on top.
+
+#### Editing a platform style
+
+The table is the source, not a copy of it:
+
+```ts
+import {
+  extendTheme,
+  platformStyles,
+  platformTheme,
+  themes,
+} from "@gpuixui/tokens";
+
+// What the macOS style ships, visible and copyable.
+platformStyles.darwin.colors.dark.primary; // "#0A84FF"
+
+// Take the platform look and own the parts you change.
+const house = extendTheme(platformTheme(themes.dark, "win32"), {
+  name: "House",
+  colors: { primary: "#7C5CFF", ring: "#7C5CFF" },
+  radius: { md: 6, lg: 10 },
+});
+```
+
+`platformTheme` never mutates its base, so it is safe to call on every render.
+
+## Checking your own theme
+
+`contrastRatio(foreground, background)` is the WCAG 2.1 ratio between two opaque
+`#RRGGBB` colours, and it returns `undefined` rather than a number when either
+value is translucent or not hex — a translucent colour's ratio depends on the
+surface behind it, so a single number would be a guess.
+
+`contrastFloors` and `highContrastFloors` are the floors the shipped themes meet,
+and `contrastPairs` is the role pairs they apply to. A brand theme can run the
+same check the built-in themes pass:
+
+```ts
+import {
+  contrastFloors,
+  contrastPairs,
+  contrastRatio,
+  type Theme,
+} from "@gpuixui/tokens";
+
+export const meetsFloors = (theme: Theme): boolean =>
+  contrastPairs.every(({ foreground, background, floor }) => {
+    const ratio = contrastRatio(theme.colors[foreground], theme.colors[background]);
+    return ratio !== undefined && ratio >= contrastFloors[floor];
+  });
+```
 
 ## Fonts
 
@@ -433,6 +540,10 @@ window here to shape text in, so the native proof is a `TODO.md` interlock).
 | `xl` | 12 | dialogs and large surfaces |
 | `full` | 9999 | pills and avatars |
 
+This is the default theme's scale. A platform style replaces it —
+macOS 4/6/10/14, Linux 4/6/9/12, Windows 2/4/8/8 — so a Windows control reads
+squarer than a macOS one. `full` stays rounded everywhere.
+
 ## Density
 
 Density changes control height, horizontal padding and row height only. Type
@@ -443,6 +554,10 @@ and spacing are unaffected.
 | `compact` | 24 / 28 / 32 | 6 / 8 / 10 | 28 |
 | `comfortable` (default) | 28 / 32 / 36 | 8 / 10 / 12 | 32 |
 | `spacious` | 32 / 36 / 40 | 10 / 12 / 14 | 36 |
+
+A platform style picks the preset its native controls sit at — macOS `compact`,
+Windows `comfortable`, Linux `spacious` — so `platformTheme` carries a density
+too. Layer `extendTheme` to change it without losing the platform's look.
 
 ```ts
 import { controlHeight, controlPaddingX } from "@gpuixui/tokens";
@@ -544,6 +659,7 @@ type ThemeMode = "light" | "dark";
 interface Theme {
   name: string;
   mode: ThemeMode;
+  contrast?: ThemeContrast; // "default" | "high"; absent on a hand-built theme
   colors: ThemeColors;
   typography: Typography;
   spacing: Spacing;
@@ -556,6 +672,8 @@ interface Theme {
 ```
 
 `lightTheme`, `darkTheme`, `themes` and `getTheme(mode)` are the built-ins.
+`Theme.contrast` records which contrast variant a theme carries, so a caller can
+branch on it — `platformTheme` uses it to keep a high-contrast theme's colours.
 Each mode also has a high-contrast variant (`highContrastLightTheme`,
 `highContrastDarkTheme`, `highContrastThemes`) reachable through
 `getTheme(mode, "high")`. `createTheme(config)` starts from `themes[config.mode]`;
@@ -689,18 +807,28 @@ nub run --filter @gpuixui/tokens test
 ```
 
 The test covers every shipped colour set — light, dark and both high-contrast
-variants — and fails if a semantic text/surface pair drops below its floor (7:1
-for primary body pairs, soft status text and all high-contrast text; 4.5:1 for
-secondary and on-colour text in the default themes; 3:1 for focus and essential
-boundaries in the default themes; 4.5:1 for them in the high-contrast variants).
-It also fails if a soft status surface is indistinguishable from `background` or
-`card` (floor 1.05:1), and if a filled action's derived hover or press fill drops
-its own label below the on-colour floor. Palette edits must keep it green.
+variants — over every pair in `contrastPairs`, and fails if a pair drops below its
+floor (7:1 for primary body pairs, soft status text and all high-contrast text;
+4.5:1 for secondary and on-colour text in the default themes; 3:1 for focus and
+essential boundaries in the default themes; 4.5:1 for them in the high-contrast
+variants). It also fails if a soft status surface is indistinguishable from
+`background` or `card` (floor 1.05:1), and if a filled action's derived hover or
+press fill drops its own label below the on-colour floor. Palette edits must keep
+it green.
+
+`packages/tokens/src/contrast.test.ts` covers the contract itself: the ratio maths
+(21:1 at the extremes, 1:1 for identical colours, symmetry), the refusal to
+measure a translucent or unparseable colour, and the two floor sets.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
-has a label and both families, `sans` is the GPUI sentinel, no family is a comma
-stack, `systemMonoFamily` and the default typography follow `currentPlatform`, and
-`platformTheme` changes only the families and the name without mutating its base.
+has a label, both families, a density preset and a full radius scale; `sans` is
+the GPUI sentinel; no family is a comma stack; `platformTheme` repaints, re-shapes
+and re-types a styled platform without mutating its base, picks the chrome for the
+base's mode, keeps a high-contrast theme's colours, and leaves `default` as the
+library identity. All six platform themes are held to every pair in
+`contrastPairs`. Editing one is covered through `platforms.example.ts`:
+`extendTheme` over a resolved platform keeps the platform's other values, density
+layers on top, and a role a platform omits falls back to the base theme.
 
 `packages/tokens/src/styles.test.ts` covers the derived action fills: both are
 opaque hex, each channel moves from the action's role toward the theme's
@@ -714,9 +842,13 @@ its own hover.
 - No `letterSpacing` in the runtime.
 - No OS appearance detection; the application selects the mode and contrast, and
   also which platform style to render.
-- No per-platform control metrics: `platformTheme` changes families only, because
-  there is no runtime evidence for platform-specific control heights. Layer
-  `density` with `extendTheme` when a platform needs it.
+- The platform radii and densities are taken from each platform's own guidelines,
+  not measured in this runtime: macOS 28px controls, Windows 32, GNOME 36. A
+  window that differs layers `extendTheme` on the resolved theme.
+- A high-contrast theme takes a platform style's families, radii and density but
+  not its palette, because no platform palette is designed for the AAA floors.
+  A consumer who wants both starts from `platformStyles` and checks the result
+  with `contrastRatio`.
 - `.SystemUIFont` is verified by GPUI's own documentation of the name, not yet
   visually in a native window; the playground's platform gallery is the proof
   (the cross-team row in `TODO.md`).

@@ -6,7 +6,7 @@ import {
   type ThemeColors,
 } from "./color.js";
 import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
-import { platformTypes, type PlatformName } from "./platforms.js";
+import { platformStyles, type PlatformName } from "./platforms.js";
 import {
   borderWidth,
   defaultDensity,
@@ -26,6 +26,9 @@ import { typography, type TextStyle, type Typography } from "./typography.js";
 /** Theme modes the library ships. */
 export type ThemeMode = "light" | "dark";
 
+/** Contrast variants the library ships, independent of light/dark mode. */
+export type ThemeContrast = "default" | "high";
+
 /**
  * A complete, resolved design theme. Every field is plain data, so a theme can
  * be passed through React context, stored, or built at startup.
@@ -35,6 +38,12 @@ export interface Theme {
   readonly name: string;
   /** The mode this theme was built for. Never changed by an override. */
   readonly mode: ThemeMode;
+  /**
+   * The contrast variant this theme carries. Absent on a hand-built theme, so
+   * a caller can tell a high-contrast theme from an ordinary one — which is how
+   * {@link platformTheme} knows to keep its colours.
+   */
+  readonly contrast?: ThemeContrast;
   /** Semantic colour roles. */
   readonly colors: ThemeColors;
   /** Font families and type roles. */
@@ -154,6 +163,7 @@ const mergeDensity = (
 export const lightTheme: Theme = {
   name: "Light",
   mode: "light",
+  contrast: "default",
   colors: lightColors,
   typography,
   spacing,
@@ -168,6 +178,7 @@ export const lightTheme: Theme = {
 export const darkTheme: Theme = {
   name: "Dark",
   mode: "dark",
+  contrast: "default",
   colors: darkColors,
   typography,
   spacing,
@@ -184,13 +195,11 @@ export const themes: Readonly<Record<ThemeMode, Theme>> = {
   dark: darkTheme,
 };
 
-/** Contrast variants the library ships, independent of light/dark mode. */
-export type ThemeContrast = "default" | "high";
-
 /** The high-contrast light theme. */
 export const highContrastLightTheme: Theme = {
   name: "High contrast light",
   mode: "light",
+  contrast: "high",
   colors: highContrastLightColors,
   typography,
   spacing,
@@ -205,6 +214,7 @@ export const highContrastLightTheme: Theme = {
 export const highContrastDarkTheme: Theme = {
   name: "High contrast dark",
   mode: "dark",
+  contrast: "high",
   colors: highContrastDarkColors,
   typography,
   spacing,
@@ -252,6 +262,7 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
   return {
     name: overrides.name ?? base.name,
     mode: base.mode,
+    contrast: base.contrast,
     colors: { ...base.colors, ...overrides.colors },
     typography: mergeTypography(base.typography, overrides.typography),
     spacing: { ...base.spacing, ...overrides.spacing },
@@ -282,9 +293,14 @@ export function createTheme(config: ThemeConfig): Theme {
 }
 
 /**
- * A theme for one platform: the base theme's colours, scales, mode and density,
- * with that platform's font families. `extendTheme` does the merge, so the base
- * is never mutated and the mode is preserved.
+ * A theme for one platform: the base theme's mode and elevation, with that
+ * platform's families, radii, density and chrome colours. A high-contrast base
+ * keeps its own colours — accessibility outranks the platform look — and takes
+ * only the families, radii and density.
+ *
+ * `extendTheme` does the merge, so the base is never mutated. The result is an
+ * ordinary theme: layer `extendTheme` on top to keep the platform's look but
+ * change a value.
  *
  * @example
  * ```tsx
@@ -294,9 +310,19 @@ export function createTheme(config: ThemeConfig): Theme {
  * ```
  */
 export function platformTheme(base: Theme, platform: PlatformName): Theme {
-  const { label, sans, mono } = platformTypes[platform];
+  const {
+    label,
+    sans,
+    mono,
+    radius: platformRadius,
+    density,
+    colors,
+  } = platformStyles[platform];
   return extendTheme(base, {
     name: `${base.name} · ${label}`,
     typography: { sans, mono },
+    radius: platformRadius,
+    density,
+    colors: base.contrast === "high" ? undefined : colors[base.mode],
   });
 }

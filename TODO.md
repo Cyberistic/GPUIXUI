@@ -232,7 +232,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 21/28
+`[x]` `[████████░░]` 23/30
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -260,6 +260,20 @@ plan 053 §Why lists the evidence)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
 platform toggle (plan 051)
+`[x]` Widen the platform styles past type: `platformStyles` carries a radius
+scale, a density preset and per-mode chrome roles (background, surfaces, borders,
+primary, ring, accent, selected, placeholder) per macOS / Linux / Windows, and
+`platformTheme` applies them, so the docs switch repaints, re-shapes and re-types
+rather than only re-typing. `default` stays the library identity; a
+high-contrast base keeps its palette (families/radii/density only), recorded by
+`Theme.contrast`. All six platform themes run the contrast contract
+`platforms.test.ts`, and `platforms.example.ts` shows editing one. Docs in
+`docs/tokens.md` §Platform styles and `docs/design-system.md` §5
+`[x]` Ship the contrast contract as public API — `contrastRatio` (WCAG 2.1,
+`undefined` rather than a guess for a translucent colour), `contrastFloors`,
+`highContrastFloors` and `contrastPairs`; `color.test.ts` and
+`platforms.test.ts` read the same table, so a brand can run the check its theme
+must pass. 5 contract tests + docs
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Add `avatarSize` (20/26/32/40) so the Avatar component drops its local
 diameter table; a fixed scale, not a theme group

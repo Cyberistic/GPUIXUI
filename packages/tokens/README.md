@@ -157,23 +157,29 @@ Apply it while the control is focused. A mouse press shows the ring too, because
 the runtime has no `:focus-visible` equivalent. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
-## Platform type
+## Platform styles
 
-`platformTypes` decides each platform's families once; `platformTheme` turns one
-into a real theme by deriving it with `extendTheme`, so nothing about the base
-theme changes except the two families.
+`platformStyles` decides each platform once — its families, corner radii, control
+density and per-mode chrome colours — and `platformTheme` turns one into a real
+theme by deriving it with `extendTheme`. `platformTypes` is the
+families-and-label view of the same table.
 
-| Platform | `sans` | `mono` |
-| -------- | ------ | ------ |
-| macOS (`darwin`) | `.SystemUIFont` | `Menlo` |
-| Linux (`linux`) | `.SystemUIFont` | `DejaVu Sans Mono` |
-| Windows (`win32`) | `.SystemUIFont` | `Consolas` |
-| `default` | `.SystemUIFont` | `Menlo` |
+| Platform | `sans` | `mono` | `radius.md` | density |
+| -------- | ------ | ------ | ----------- | ------- |
+| macOS (`darwin`) | `.SystemUIFont` | `Menlo` | 6 | `compact` |
+| Linux (`linux`) | `.SystemUIFont` | `DejaVu Sans Mono` | 6 | `spacious` |
+| Windows (`win32`) | `.SystemUIFont` | `Consolas` | 4 | `comfortable` |
+| `default` | `.SystemUIFont` | `Menlo` | 6 | `comfortable` |
 
 `sans` is GPUI's system UI font sentinel on every platform — GPUI resolves it to
 the operating system's own UI font. `currentPlatform` is the platform this code
 runs on (`default` in a browser or on an OS the library does not know) and
 `systemMonoFamily` is its mono family.
+
+The colour table is a partial `ThemeColors` per mode, held to the same contrast
+floors as the built-in themes. `default` is the library's own identity and
+changes only the name. A high-contrast base keeps its palette and takes only the
+families, radii and density, because accessibility outranks the platform look.
 
 ```tsx
 import { platformTheme, themes } from "@gpuixui/tokens";
@@ -182,8 +188,38 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 <ThemeProvider theme={platformTheme(themes.dark, "win32")} />;
 ```
 
+Each platform's values are editable, not a preset you are stuck with:
+
+```ts
+import { extendTheme, platformStyles, platformTheme, themes } from "@gpuixui/tokens";
+
+platformStyles.darwin.colors.dark.primary; // "#0A84FF"
+
+const house = extendTheme(platformTheme(themes.dark, "win32"), {
+  colors: { primary: "#7C5CFF" },
+  radius: { md: 6 },
+});
+```
+
 A runnable example lives in
 [`src/platforms.example.ts`](./src/platforms.example.ts).
+
+## Checking contrast
+
+`contrastRatio(foreground, background)` is the WCAG 2.1 ratio for two opaque
+`#RRGGBB` colours, and `undefined` when either is translucent or not hex — a
+translucent colour's ratio depends on what is behind it. `contrastFloors`,
+`highContrastFloors` and `contrastPairs` are the contract the shipped themes meet,
+so a brand can run the same check.
+
+```ts
+import { contrastFloors, contrastPairs, contrastRatio } from "@gpuixui/tokens";
+
+const passes = contrastPairs.every(({ foreground, background, floor }) => {
+  const ratio = contrastRatio(theme.colors[foreground], theme.colors[background]);
+  return ratio !== undefined && ratio >= contrastFloors[floor];
+});
+```
 
 ## Fonts
 
@@ -264,8 +300,11 @@ persisted theme at its own boundary, where `Schema` belongs.
 ## Limitations
 
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
-- A platform style changes font families only. Per-platform control metrics have
-  no runtime evidence, so a consumer layers `density` with `extendTheme` instead.
+- A platform style's radii and density follow each platform's own guidelines
+  (macOS 28px controls, Windows 32, GNOME 36), not measurements of this runtime;
+  a window that differs layers `extendTheme` on the resolved theme.
+- A high-contrast theme takes a platform style's families, radii and density but
+  not its palette, because no platform palette is designed for the AAA floors.
 - `.SystemUIFont` is verified against GPUI's documentation of the name, not yet
   visually in the native runtime (B1 blocks the playground gallery).
 - There is no runtime theme schema; theme objects authored in TypeScript are

@@ -1,0 +1,172 @@
+/**
+ * The accessibility contract a theme is held to, as data plus one function.
+ *
+ * A brand that edits a role needs the same check the built-in themes pass, so
+ * the floors and the pairs they apply to are exported rather than hidden in the
+ * test suite.
+ */
+
+import type { ThemeColors } from "./color.js";
+
+const opaqueHex = /^#[0-9A-Fa-f]{6}$/;
+
+const channel = (color: string, at: number): number => {
+  const srgb = Number.parseInt(color.slice(at, at + 2), 16) / 255;
+  return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+};
+
+/** WCAG 2.1 relative luminance of an opaque `#RRGGBB` colour. */
+const relativeLuminance = (color: string): number | undefined =>
+  opaqueHex.test(color)
+    ? 0.2126 * channel(color, 1) +
+      0.7152 * channel(color, 3) +
+      0.0722 * channel(color, 5)
+    : undefined;
+
+/**
+ * The WCAG 2.1 contrast ratio between two opaque `#RRGGBB` colours: 1 for
+ * identical colours, 21 for black on white.
+ *
+ * Returns `undefined` when either value is not an opaque hex colour. A
+ * translucent colour's contrast depends on the surface painted behind it, so a
+ * single ratio would be a guess; composite it first if it needs measuring.
+ *
+ * @example
+ * ```ts
+ * import { contrastFloors, contrastRatio, type Theme } from "@gpuixui/tokens";
+ *
+ * const ratio = contrastRatio(
+ *   brand.colors.mutedForeground,
+ *   brand.colors.muted,
+ * );
+ * const readable = ratio !== undefined && ratio >= contrastFloors.secondary;
+ * ```
+ */
+export function contrastRatio(
+  foreground: string,
+  background: string,
+): number | undefined {
+  const first = relativeLuminance(foreground);
+  const second = relativeLuminance(background);
+  if (first === undefined || second === undefined) {
+    return undefined;
+  }
+  const high = Math.max(first, second);
+  const low = Math.min(first, second);
+  return (high + 0.05) / (low + 0.05);
+}
+
+/** The contrast floors every shipped theme meets. */
+export interface ContrastFloors {
+  /** Body text. AAA. */
+  readonly body: number;
+  /** Secondary text, and text on a coloured fill. AA. */
+  readonly secondary: number;
+  /** Essential boundaries and focus rings. AA for non-text. */
+  readonly boundary: number;
+}
+
+/** The floors of a default-contrast theme. */
+export const contrastFloors: ContrastFloors = {
+  body: 7,
+  secondary: 4.5,
+  boundary: 3,
+};
+
+/**
+ * The floors of a high-contrast theme: every text pair reaches AAA and every
+ * boundary AA, so a high-contrast theme is a real accessibility mode rather
+ * than a darker palette.
+ */
+export const highContrastFloors: ContrastFloors = {
+  body: 7,
+  secondary: 7,
+  boundary: 4.5,
+};
+
+/** One role pair a theme is measured on, and the floor it must reach. */
+export interface ContrastPair {
+  /** The role carrying text, an icon or a boundary. */
+  readonly foreground: keyof ThemeColors;
+  /** The role painted behind it. */
+  readonly background: keyof ThemeColors;
+  /** Which floor applies to this pair. */
+  readonly floor: keyof ContrastFloors;
+}
+
+/**
+ * The role pairs the floors apply to. Every theme the library ships — both
+ * modes, both contrast variants and every platform style — is measured on all
+ * of them, so a palette edit that makes text unreadable fails a test rather
+ * than shipping.
+ */
+export const contrastPairs: readonly ContrastPair[] = [
+  { foreground: "foreground", background: "background", floor: "body" },
+  { foreground: "foreground", background: "card", floor: "body" },
+  { foreground: "cardForeground", background: "card", floor: "body" },
+  { foreground: "popoverForeground", background: "popover", floor: "body" },
+  {
+    foreground: "mutedForeground",
+    background: "muted",
+    floor: "secondary",
+  },
+  {
+    foreground: "secondaryForeground",
+    background: "secondary",
+    floor: "secondary",
+  },
+  {
+    foreground: "primaryForeground",
+    background: "primary",
+    floor: "secondary",
+  },
+  {
+    foreground: "destructiveForeground",
+    background: "destructive",
+    floor: "secondary",
+  },
+  {
+    foreground: "successForeground",
+    background: "success",
+    floor: "secondary",
+  },
+  {
+    foreground: "warningForeground",
+    background: "warning",
+    floor: "secondary",
+  },
+  { foreground: "infoForeground", background: "info", floor: "secondary" },
+  { foreground: "infoSoftForeground", background: "infoSoft", floor: "body" },
+  {
+    foreground: "successSoftForeground",
+    background: "successSoft",
+    floor: "body",
+  },
+  {
+    foreground: "warningSoftForeground",
+    background: "warningSoft",
+    floor: "body",
+  },
+  {
+    foreground: "destructiveSoftForeground",
+    background: "destructiveSoft",
+    floor: "body",
+  },
+  {
+    foreground: "accentForeground",
+    background: "accent",
+    floor: "secondary",
+  },
+  {
+    foreground: "selectedForeground",
+    background: "selected",
+    floor: "secondary",
+  },
+  { foreground: "placeholder", background: "input", floor: "secondary" },
+  { foreground: "borderStrong", background: "background", floor: "boundary" },
+  { foreground: "borderStrong", background: "card", floor: "boundary" },
+  { foreground: "borderStrong", background: "input", floor: "boundary" },
+  { foreground: "ring", background: "background", floor: "boundary" },
+  { foreground: "ring", background: "card", floor: "boundary" },
+  { foreground: "ring", background: "popover", floor: "boundary" },
+];

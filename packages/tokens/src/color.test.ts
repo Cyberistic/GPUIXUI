@@ -18,6 +18,13 @@ import {
   palette,
   type ThemeColors,
 } from "./color.js";
+import {
+  contrastFloors,
+  contrastPairs,
+  contrastRatio,
+  highContrastFloors,
+  type ContrastFloors,
+} from "./contrast.js";
 import { filledHover, filledPressed, type FilledAction } from "./styles.js";
 import {
   darkTheme,
@@ -27,95 +34,43 @@ import {
   type Theme,
 } from "./theme.js";
 
-const channel = (hex: string, at: number): number =>
-  Number.parseInt(hex.slice(at, at + 2), 16) / 255;
-
-const linear = (value: number): number =>
-  value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-
-const luminance = (color: string): number => {
-  const hex = color.slice(1);
-  const red = linear(channel(hex, 0));
-  const green = linear(channel(hex, 2));
-  const blue = linear(channel(hex, 4));
-  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-};
-
-const contrast = (foreground: string, background: string): number => {
-  const high = Math.max(luminance(foreground), luminance(background));
-  const low = Math.min(luminance(foreground), luminance(background));
-  return (high + 0.05) / (low + 0.05);
-};
-
-/** The contrast floor a pair is held to, by the class of text it carries. */
-type PairClass = "body" | "secondary" | "boundary";
-
-type Pair = readonly [keyof ThemeColors, keyof ThemeColors, PairClass];
-
-const pairs: readonly Pair[] = [
-  ["foreground", "background", "body"],
-  ["foreground", "card", "body"],
-  ["cardForeground", "card", "body"],
-  ["popoverForeground", "popover", "body"],
-  ["mutedForeground", "muted", "secondary"],
-  ["secondaryForeground", "secondary", "secondary"],
-  ["primaryForeground", "primary", "secondary"],
-  ["destructiveForeground", "destructive", "secondary"],
-  ["successForeground", "success", "secondary"],
-  ["warningForeground", "warning", "secondary"],
-  ["infoForeground", "info", "secondary"],
-  ["infoSoftForeground", "infoSoft", "body"],
-  ["successSoftForeground", "successSoft", "body"],
-  ["warningSoftForeground", "warningSoft", "body"],
-  ["destructiveSoftForeground", "destructiveSoft", "body"],
-  ["accentForeground", "accent", "secondary"],
-  ["selectedForeground", "selected", "secondary"],
-  ["placeholder", "input", "secondary"],
-  ["borderStrong", "background", "boundary"],
-  ["borderStrong", "card", "boundary"],
-  ["borderStrong", "input", "boundary"],
-  ["ring", "background", "boundary"],
-  ["ring", "card", "boundary"],
-  ["ring", "popover", "boundary"],
-];
-
 interface ColourSet {
   readonly label: string;
   readonly colors: ThemeColors;
-  readonly floors: Readonly<Record<PairClass, number>>;
+  readonly floors: ContrastFloors;
 }
 
 const colourSets: readonly ColourSet[] = [
   {
     label: "light",
     colors: lightColors,
-    floors: { body: 7, secondary: 4.5, boundary: 3 },
+    floors: contrastFloors,
   },
   {
     label: "dark",
     colors: darkColors,
-    floors: { body: 7, secondary: 4.5, boundary: 3 },
+    floors: contrastFloors,
   },
   {
     label: "high-contrast light",
     colors: highContrastLightColors,
-    floors: { body: 7, secondary: 7, boundary: 4.5 },
+    floors: highContrastFloors,
   },
   {
     label: "high-contrast dark",
     colors: highContrastDarkColors,
-    floors: { body: 7, secondary: 7, boundary: 4.5 },
+    floors: highContrastFloors,
   },
 ];
 
 describe("semantic colour contrast", () => {
   colourSets.forEach(({ label, colors, floors }) => {
-    pairs.forEach(([foreground, background, pairClass]) => {
-      it(`${label}: ${foreground} on ${background} meets ${floors[pairClass]}:1`, () => {
+    contrastPairs.forEach(({ foreground, background, floor }) => {
+      it(`${label}: ${foreground} on ${background} meets ${floors[floor]}:1`, () => {
         expect(
-          contrast(colors[foreground], colors[background]),
+          contrastRatio(colors[foreground], colors[background]),
           `${label} ${foreground} on ${background}`,
-        ).toBeGreaterThanOrEqual(floors[pairClass]);
+        ).toBeGreaterThanOrEqual(floors[floor]);
       });
     });
   });
@@ -129,9 +84,9 @@ describe("high-contrast boundaries", () => {
 
   sets.forEach(([label, colors]) => {
     it(`${label}: decorative border on background meets 3:1`, () => {
-      expect(contrast(colors.border, colors.background)).toBeGreaterThanOrEqual(
-        3,
-      );
+      expect(
+        contrastRatio(colors.border, colors.background),
+      ).toBeGreaterThanOrEqual(3);
     });
   });
 });
@@ -148,11 +103,11 @@ describe("soft status surfaces", () => {
     softRoles.forEach((role) => {
       it(`${label}: ${role} is perceivable on both surfaces`, () => {
         expect(
-          contrast(colors[role], colors.background),
+          contrastRatio(colors[role], colors.background),
           `${label} ${role} on background`,
         ).toBeGreaterThanOrEqual(1.05);
         expect(
-          contrast(colors[role], colors.card),
+          contrastRatio(colors[role], colors.card),
           `${label} ${role} on card`,
         ).toBeGreaterThanOrEqual(1.05);
       });
@@ -317,7 +272,7 @@ describe("filled action state fills", () => {
         };
         Object.entries(fills).forEach(([state, fill]) => {
           expect(
-            contrast(foreground, fill),
+            contrastRatio(foreground, fill),
             `${label} ${action} ${state}`,
           ).toBeGreaterThanOrEqual(floor);
         });

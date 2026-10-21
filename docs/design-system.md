@@ -108,15 +108,25 @@ Labels are one step smaller because controls are scanned, not read.
 Sans is GPUI's `.SystemUIFont` sentinel, which GPUI resolves to the operating
 system's own UI font, so the reading face follows the platform without the
 library naming a face the machine may not have. Mono comes from the platform
-table (`platformTypes`): `Menlo` on macOS, `DejaVu Sans Mono` on Linux,
+table (`platformStyles`): `Menlo` on macOS, `DejaVu Sans Mono` on Linux,
 `Consolas` on Windows, `Menlo` for a platform the library does not know. The type
 scale is shared by both themes and is not changed by density.
 
 A platform style is a **real theme**, not a docs-only style sheet:
-`platformTheme(theme, platform)` derives one with `extendTheme`, keeping the
-colours, scales, mode and density of its base and changing only the two
-families, so the docs platform toggle previews exactly what a native build
-renders. A platform is a font decision here, never a second design system.
+`platformTheme(theme, platform)` derives one with `extendTheme` — that platform's
+families, corner radii, control density and chrome colours over the base's mode
+and elevation. The docs platform toggle previews exactly what a native build
+renders, because both read the same `platformStyles` table: a macOS window is
+cooler and tighter than a Windows one, and a Linux one sits on warmer greys at a
+larger control size. A platform style never replaces the identity — `default` is
+the library's own look, and the three platform variants are edits of it.
+
+A high-contrast theme is the one combination that keeps its own palette: it takes
+the families, radii and density but no platform colour, because accessibility
+outranks the platform look. `Theme.contrast` records which variant a theme
+carries, so a consumer can branch on it. Every platform palette is measured on
+the same contrast floors as the built-in themes, so "looks native" never means
+"reads worse".
 
 **Limitation.** GPUix has no `letterSpacing`. Tight display tracking and
 all-caps label tracking are therefore impossible without per-glyph layout. The
@@ -133,6 +143,11 @@ Density is a **theme** property, not a component prop:
 - `compact` — 24/28/32 controls, 28px rows. Dense workspaces, data grids.
 - `comfortable` — 28/32/36 controls, 32px rows. Default.
 - `spacious` — 32/36/40 controls, 36px rows. Touch-leaning and presentation.
+
+The default is `comfortable`; a platform style carries the preset its native
+windows use — macOS `compact`, Windows `comfortable`, GNOME `spacious`. Radius
+scales follow the same rule: macOS 4/6/10/14, Linux 4/6/9/12, Windows 2/4/8/8,
+against the default 4/6/8/12.
 
 It changes control height, horizontal padding and row height only. Type sizes
 and the spacing scale stay fixed, so a density switch cannot reflow text

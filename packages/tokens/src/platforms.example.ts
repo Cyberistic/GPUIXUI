@@ -1,5 +1,6 @@
 import {
   extendTheme,
+  platformStyles,
   platformTheme,
   type PlatformName,
   type Theme,
@@ -26,3 +27,23 @@ export const resolveDensePlatformTheme = (
   platform: PlatformName,
 ): Theme =>
   extendTheme(resolvePlatformTheme(mode, platform), { density: "compact" });
+
+/**
+ * Take one platform's look and make it your own: read the table, override the
+ * values you want to own, and ship the result. Nothing here is opaque — the
+ * accent, the corner radius and the control density are the same roles every
+ * component reads.
+ */
+export const resolveHouseTheme = (mode: ThemeMode): Theme =>
+  extendTheme(platformTheme(themes[mode], "win32"), {
+    name: "House",
+    colors: { primary: "#7C5CFF", ring: "#7C5CFF" },
+    radius: { md: 6, lg: 10 },
+  });
+
+/** The accent each platform style paints a primary action with. */
+export const platformAccent = (
+  platform: PlatformName,
+  mode: ThemeMode,
+): string =>
+  platformStyles[platform].colors[mode].primary ?? themes[mode].colors.primary;
