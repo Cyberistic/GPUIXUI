@@ -3,7 +3,7 @@ title: Theme
 description: A live editor for the library's semantic tokens — preview, copy and share.
 ---
 
-import { contrastPairs } from "@gpuixui/tokens";
+import { contrastPairs, targetSize } from "@gpuixui/tokens";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
 real time. The editor reads its defaults from `@gpuixui/tokens` — the base is
@@ -63,7 +63,9 @@ call reports nine independent failures:
   boundary on its way to native, so `NaN` and `Infinity` arrive as `null` and the
   property is dropped, while a negative or zero size is accepted and lays an
   element out at no height: a theme that is not the one the reader described,
-  with nothing painted wrong enough to notice.
+  with nothing painted wrong enough to notice. A control height is also the box a
+  pointer presses, so it is held to the library's {targetSize.minimum}px target
+  floor — a shorter control lays out, but a reader cannot reliably hit it.
 - **Contrast**: `contrastFailures` checks {contrastPairs.length} role pairs — body
   text at 7:1, secondary text at 4.5:1, boundaries and focus rings at 3:1 — and
   the readout names every pair an edit breaks, with its measured ratio. A

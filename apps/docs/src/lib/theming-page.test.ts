@@ -107,9 +107,17 @@ describe("the theme page", () => {
   });
 
   it("imports the count it derives", () => {
-    expect(page("themes.mdx")).toContain(
-      'import { contrastPairs } from "@gpuixui/tokens";',
-    );
+    const tokensImport = page("themes.mdx")
+      .split("\n")
+      .find(
+        (line) =>
+          line.startsWith("import ") && line.includes("@gpuixui/tokens"),
+      );
+
+    expect(tokensImport).toContain("contrastPairs");
+    // The pressable rule's floor is read from the token, never printed.
+    expect(tokensImport).toContain("targetSize");
+    expect(page("themes.mdx")).toContain("{targetSize.minimum}");
   });
 
   it("describes the whole audit the readout runs, not only its contrast half", () => {

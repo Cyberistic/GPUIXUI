@@ -1,4 +1,10 @@
-import { auditTheme, createTheme, extendTheme, themes } from "@gpuixui/tokens";
+import {
+  auditTheme,
+  createTheme,
+  extendTheme,
+  targetSize,
+  themes,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { platformThemes } from "../../lib/platform";
 import {
@@ -365,6 +371,27 @@ describe("theme-editor audit readout", () => {
       ...audit.indicators,
       ...audit.disabledFade,
     ]).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("words a control height that misses the press floor", () => {
+    // A control height is also the box a pointer presses, so it is held to the
+    // target floor — the token package's fourth number rule. The editor's
+    // readout has to say that in the reader's terms, not print the rule's name.
+    const density = themes.dark.density;
+    const audit = auditTheme(
+      extendTheme(themes.dark, {
+        density: { controlHeight: { ...density.controlHeight, md: 20 } },
+      }),
+    );
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "number",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      `density controlHeight.md — 20 cannot be laid out (needs a pressable height of ${targetSize.minimum} or more)`,
+    ]);
+    expect(audit.contrast).toEqual([]);
     expect(audit.passed).toBe(false);
   });
 

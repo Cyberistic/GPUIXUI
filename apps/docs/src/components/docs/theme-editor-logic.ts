@@ -1,6 +1,7 @@
 import {
   auditTheme,
   extendTheme,
+  targetSize,
   themes,
   type ContrastFailure,
   type DecorativeFailure,
@@ -204,6 +205,7 @@ const numberRequirement: Record<NumberRule, string> = {
   finite: "a finite number",
   nonNegative: "a length of zero or more",
   positive: "a size greater than zero",
+  pressable: `a pressable height of ${targetSize.minimum} or more`,
 };
 
 /**
