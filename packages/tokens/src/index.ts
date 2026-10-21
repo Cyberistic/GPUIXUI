@@ -4,6 +4,7 @@ export * from "./decorative.js";
 export * from "./elevation.js";
 export * from "./fonts.js";
 export * from "./platforms.js";
+export * from "./retro.js";
 export * from "./scale.js";
 export * from "./styles.js";
 export * from "./theme.js";

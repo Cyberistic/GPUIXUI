@@ -6,7 +6,8 @@
  * with no index and no guard. A preference restored from storage is `unknown`,
  * so a settings row or a URL parameter had to retype the union or cast the value
  * (`AGENTS.md` §2 forbids the cast), and a suite that looped over `["light",
- * "dark"]` kept testing two variants after a third shipped.
+ * "dark"]` kept testing two variants after a third shipped. The authored looks
+ * added a seventh axis — a stored look — on the same contract.
  *
  * Two directions fail here: a guard that accepts something outside its index,
  * and an index that no longer matches the records it selects (a mode added to
@@ -14,6 +15,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { isPlatformName, platformNames, platformStyles } from "./platforms.js";
+import { isRetroName, retroNames, retroStyles } from "./retro.js";
 import {
   controlSizes,
   densityNames,
@@ -34,6 +36,7 @@ import {
 import {
   controlSizeFromStoredChoice,
   densityFromStoredChoice,
+  lookFromStoredChoice,
   platformFromStoredChoice,
   themeFromStoredChoice,
   toneFromStoredChoice,
@@ -53,6 +56,7 @@ const guardCases: ReadonlyArray<GuardCase> = [
   { name: "isDensityName", guard: isDensityName, index: densityNames },
   { name: "isControlSize", guard: isControlSize, index: controlSizes },
   { name: "isStatusTone", guard: isStatusTone, index: statusTones },
+  { name: "isRetroName", guard: isRetroName, index: retroNames },
 ];
 
 /** Values no guard may accept, whatever its index holds. */
@@ -113,6 +117,10 @@ describe("indexes match the data they select", () => {
     );
   });
 
+  it("names every authored look", () => {
+    expect(new Set(retroNames)).toEqual(new Set(Object.keys(retroStyles)));
+  });
+
   it("gives every density preset a metric for every control size", () => {
     densityNames.forEach((preset) => {
       expect(
@@ -153,6 +161,8 @@ describe("a stored choice resolves without a cast", () => {
     expect(densityFromStoredChoice("compact").name).toBe("compact");
     expect(controlSizeFromStoredChoice(11)).toBe("md");
     expect(platformFromStoredChoice("beos")).toBe("default");
+    expect(lookFromStoredChoice("luna")).toBe("luna");
+    expect(lookFromStoredChoice("aqua")).toBe("aero");
     expect(toneFromStoredChoice(getTheme("dark"), "purple").background).toBe(
       statusTone(getTheme("dark"), "info").background,
     );

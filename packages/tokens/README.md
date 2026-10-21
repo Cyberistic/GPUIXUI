@@ -109,7 +109,7 @@ A complete, executed example lives in
 
 ## Persisted choices
 
-Six axes are choices a consumer stores, and each has an ordered index beside a
+Seven axes are choices a consumer stores, and each has an ordered index beside a
 guard that takes `unknown`:
 
 | Axis | Index | Guard |
@@ -117,6 +117,7 @@ guard that takes `unknown`:
 | theme mode | `themeModes` | `isThemeMode` |
 | contrast variant | `themeContrasts` | `isThemeContrast` |
 | platform | `platformNames` | `isPlatformName` |
+| authored look | `retroNames` | `isRetroName` |
 | density preset | `densityNames` | `isDensityName` |
 | control size | `controlSizes` | `isControlSize` |
 | status tone | `statusTones` | `isStatusTone` |
@@ -124,10 +125,10 @@ guard that takes `unknown`:
 The unions derive from the indexes, so a settings row iterates the axis and a
 restored preference narrows without retyping the union or casting. Each index is
 held to the data it selects — every mode has both contrast variants, every
-platform a style, every preset a metric per size — by
+platform a style, every look a style, every preset a metric per size — by
 [`src/guards.test.ts`](./src/guards.test.ts), and
 [`src/persisted-choices.example.ts`](./src/persisted-choices.example.ts) resolves
-all six.
+all seven.
 
 ```ts
 import { getTheme, isThemeMode } from "@gpuixui/tokens";
@@ -272,6 +273,40 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
 
 A runnable example lives in
 [`src/platforms.example.ts`](./src/platforms.example.ts).
+
+## Authored looks
+
+A platform style is not the only look a theme can wear. `retroStyles` ships two
+more in the same shape — Windows XP's Luna and Windows 7's Aero — and
+`retroTheme(base, name)` resolves one for the base's mode. A look is **not a
+platform name**: `platformNames` stays the persisted key and the docs toggle's
+four choices, and a look is applied by name. `retroNames` / `isRetroName` are its
+ordered index and guard, and `applyStyle(base, style)` is the merge rule both
+tables go through (`platformTheme` is `applyStyle` over `platformStyles`).
+
+| Look | `sans` | `mono` | `radius.md` | density |
+| ---- | ------ | ------ | ----------- | ------- |
+| `luna` (Windows XP) | `.SystemUIFont` | `Lucida Console` | 2 | `compact` |
+| `aero` (Windows 7) | `.SystemUIFont` | `Consolas` | 4 | `comfortable` |
+
+The chrome values are the era's own and carry no Microsoft artwork, gradient,
+icon or logo. Neither era had a dark mode, so both dark editions are authored for
+this library — invented, not reconstructions — and all four themes are held to
+`contrastFailures` and `decorativeFailures` in `retro.test.ts`. The UI face stays
+the sentinel because no font is bundled; the era is carried by colour, radius and
+density.
+
+```ts
+import { extendTheme, retroStyles, retroTheme, themes } from "@gpuixui/tokens";
+
+retroStyles.aero.colors.dark.primary; // "#5FB6F2"
+const brand = extendTheme(retroTheme(themes.dark, "aero"), {
+  name: "Aero brand",
+  colors: { primary: "#0F5E8C", primaryForeground: "#FFFFFF" },
+});
+```
+
+A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 
 ## Checking a theme
 

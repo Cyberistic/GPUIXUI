@@ -126,6 +126,19 @@ platform through `platformTheme` and reads the family, `primary` fill, `lg`
 radius and `md` control height back from the runtime (28 / 36 / 32px), with the
 base radius as its negative control (`expected 10, got 8`).
 
+**A look is not a platform.** The four platform names are the operating systems a
+window runs on, and the persisted choice the docs toggle offers; a look is a
+`PlatformStyle` applied by name, and the package ships two more of them —
+Windows XP's Luna and Windows 7's Aero — in `retroStyles`, resolved with
+`retroTheme`. Both read the same way a platform style does: the era is carried
+by colour, radius and density, while `sans` stays the sentinel and the mono
+family is the era's own. Neither era had a dark mode, so both dark editions are
+authored for this library (invented, not reconstructed), and all four themes run
+`contrastFailures` and `decorativeFailures` in `retro.test.ts` like every other
+shipped theme. `applyStyle(base, style)` is the single merge rule behind both,
+so a brand can author a third look as data rather than forking a component or
+adding a platform name.
+
 A high-contrast theme is the one combination that keeps its own palette: it takes
 the families, radii and density but no platform colour, because accessibility
 outranks the platform look. Each platform style declares the `contrast` variant
@@ -323,12 +336,14 @@ The extension mechanism is deliberately small:
 - `createTheme({ mode, ...overrides })` — start from a built-in theme.
 - `extendTheme(base, overrides)` — derive from any theme, including another
   brand theme or a high-contrast theme.
+- `applyStyle(base, style)` — apply a whole look (`PlatformStyle`) at once;
+  `platformTheme` and `retroTheme` are the two tables it reads.
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
-- Every choice a consumer can persist — mode, contrast, platform, density,
-  control size, status tone — has an ordered index beside a guard that takes
-  `unknown` (`themeModes`/`isThemeMode`, `platformNames`/`isPlatformName`, …),
-  so a settings row or a docs toggle iterates the axis and a restored value
+- Every choice a consumer can persist — mode, contrast, platform, look,
+  density, control size, status tone — has an ordered index beside a guard that
+  takes `unknown` (`themeModes`/`isThemeMode`, `platformNames`/`isPlatformName`,
+  …), so a settings row or a docs toggle iterates the axis and a restored value
   narrows without a cast.
 
 Overrides merge by group; typography merges field by field; elevation levels are

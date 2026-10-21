@@ -13,7 +13,11 @@ import {
   lightElevation,
   type Elevation,
 } from "./elevation.js";
-import { platformStyles, type PlatformName } from "./platforms.js";
+import {
+  platformStyles,
+  type PlatformName,
+  type PlatformStyle,
+} from "./platforms.js";
 import {
   borderWidth,
   defaultDensity,
@@ -350,24 +354,27 @@ export function createTheme(config: ThemeConfig): Theme {
 }
 
 /**
- * A theme for one platform: the base theme's mode and elevation, with that
- * platform's families, radii, density and chrome colours. A high-contrast base
- * keeps its own colours — accessibility outranks the platform look — and takes
- * only the families, radii and density.
+ * A theme wearing one style: the base theme's mode and elevation, with the
+ * style's families, radii, density and chrome colours. A high-contrast base
+ * keeps its own colours — accessibility outranks the look — and takes only the
+ * families, radii and density.
+ *
+ * This is the whole mechanism behind {@link platformTheme}. A consumer who
+ * authored a style of their own in the {@link PlatformStyle} shape applies it
+ * the same way; no registry is involved.
  *
  * `extendTheme` does the merge, so the base is never mutated. The result is an
- * ordinary theme: layer `extendTheme` on top to keep the platform's look but
- * change a value.
+ * ordinary theme: layer `extendTheme` on top to keep the look but change a
+ * value.
  *
  * @example
  * ```tsx
- * import { platformTheme, themes } from "@gpuixui/tokens";
+ * import { applyStyle, platformStyles, themes } from "@gpuixui/tokens";
  *
- * <ThemeProvider theme={platformTheme(themes.dark, "win32")} />
+ * <ThemeProvider theme={applyStyle(themes.dark, platformStyles.darwin)} />
  * ```
  */
-export function platformTheme(base: Theme, platform: PlatformName): Theme {
-  const style = platformStyles[platform];
+export function applyStyle(base: Theme, style: PlatformStyle): Theme {
   const contrast = base.contrast ?? "default";
   return extendTheme(base, {
     name: `${base.name} · ${style.label}`,
@@ -378,4 +385,19 @@ export function platformTheme(base: Theme, platform: PlatformName): Theme {
     // that needs more keeps its own colours.
     colors: contrast === style.contrast ? style.colors[base.mode] : undefined,
   });
+}
+
+/**
+ * A theme for one platform, by name — `applyStyle` over
+ * {@link platformStyles}.
+ *
+ * @example
+ * ```tsx
+ * import { platformTheme, themes } from "@gpuixui/tokens";
+ *
+ * <ThemeProvider theme={platformTheme(themes.dark, "win32")} />
+ * ```
+ */
+export function platformTheme(base: Theme, platform: PlatformName): Theme {
+  return applyStyle(base, platformStyles[platform]);
 }

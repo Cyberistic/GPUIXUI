@@ -3,15 +3,16 @@
  *
  * A preference restored from storage is `unknown`: a settings row, a URL
  * parameter or a persisted workspace can carry a mode, a contrast variant, a
- * platform, a density, a control size or a status tone that this build no longer
- * ships. Each axis has an ordered index beside its guard, so a consumer narrows
- * the stored value and falls back to a readable default instead of retyping the
- * union or casting the value.
+ * platform, a look, a density, a control size or a status tone that this build
+ * no longer ships. Each axis has an ordered index beside its guard, so a
+ * consumer narrows the stored value and falls back to a readable default
+ * instead of retyping the union or casting the value.
  *
  * The example is executed in [`guards.test.ts`](./guards.test.ts).
  */
 
 import { isPlatformName, type PlatformName } from "./platforms.js";
+import { isRetroName, type RetroName } from "./retro.js";
 import {
   isControlSize,
   isDensityName,
@@ -56,3 +57,7 @@ export const toneFromStoredChoice = (
 /** Resolve a stored platform to one this library styles. */
 export const platformFromStoredChoice = (value: unknown): PlatformName =>
   orDefault(isPlatformName, "default", value);
+
+/** Resolve a stored look to one this library ships. */
+export const lookFromStoredChoice = (value: unknown): RetroName =>
+  orDefault(isRetroName, "aero", value);

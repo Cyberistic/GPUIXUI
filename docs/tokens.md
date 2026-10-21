@@ -14,6 +14,7 @@ with a different `Theme` object.
 ```ts
 import {
   alpha,
+  applyStyle,
   blend,
   colorRoles,
   contrastFailures,
@@ -41,6 +42,7 @@ import {
   isControlSize,
   isDensityName,
   isPlatformName,
+  isRetroName,
   isStatusTone,
   isThemeContrast,
   isThemeMode,
@@ -50,6 +52,9 @@ import {
   platformTheme,
   platformTypes,
   registerFonts,
+  retroNames,
+  retroStyles,
+  retroTheme,
   statusTone,
   statusTones,
   statusEdgeAlpha,
@@ -70,6 +75,7 @@ import {
   type ContrastPair,
   type PlatformName,
   type PlatformStyle,
+  type RetroName,
   type StatusTone,
   type Theme,
   type ThemeContrast,
@@ -529,6 +535,69 @@ resolves both modes, and `platforms.test.ts` holds it to the contrast and
 decorative contracts. `platformTheme` never mutates its base, so it is safe to
 call on every render.
 
+### Authored looks
+
+A look does not have to be a platform. `platformNames` is the persisted key a
+consumer stores and the docs toggle offers, so it names the operating systems an
+application runs on today; another look is **not a platform name** — it is data
+in the same `PlatformStyle` shape, applied by name:
+
+```ts
+import { retroStyles, retroTheme, themes } from "@gpuixui/tokens";
+
+retroTheme(themes.light, "luna"); // "Light · Windows XP (Luna)"
+retroStyles.aero.colors.dark.primary; // "#5FB6F2", visible and copyable
+```
+
+Two looks ship: Windows XP's Luna and Windows 7's Aero.
+
+| Look | `sans` | `mono` | `radius.md` | density |
+| ---- | ------ | ------ | ----------- | ------- |
+| `luna` (Windows XP) | `.SystemUIFont` | `Lucida Console` | radius.md 2 | `compact` (24px) |
+| `aero` (Windows 7) | `.SystemUIFont` | `Consolas` | radius.md 4 | `comfortable` (32px) |
+
+`retroStyles` is the table and `retroTheme(base, name)` resolves one for the
+base's mode. `retroNames` is the ordered index and `isRetroName` narrows a
+stored `unknown` to a look, the same pattern every persisted axis follows.
+`applyStyle(base, style)` is the one merge rule underneath — `platformTheme` is
+`applyStyle` over `platformStyles` — so a consumer who authors a style of their
+own applies it with no registry and no new platform name.
+
+Four facts about these two:
+
+- **The chrome is the era's; the artwork is not.** Luna's `#ECE9D8` face, its
+  blue title-bar accent, the `#7F9DB9` field edge and the `#316AC5` selection,
+  and Aero's glass-blue greys and `#3399FF` highlight, are colour values. No
+  gradient, bitmap, icon, cursor or logo is copied, so there is no
+  redistributable asset and no trademark in the library's identity.
+- **Neither era had a dark mode.** Both dark editions are authored for this
+  library — invented, not reconstructions — and are held to the same measured
+  floors as every other theme.
+- **`sans` stays the sentinel.** The package bundles no font, so naming Tahoma
+  or Segoe UI would silently fall back on a machine that lacks the face. The
+  era is carried by colour, radius and density; the monospace family is the
+  era's own.
+- **They obey the same accessibility and decorative contracts.** All four
+  themes run every pair in `contrastPairs` through `contrastFailures` and every
+  decorative placement through `decorativeFailures`, in `retro.test.ts`; a
+  high-contrast base keeps its own palette and takes only the families, radii
+  and density, exactly as a platform style does.
+
+```ts
+import { extendTheme, retroTheme, themes } from "@gpuixui/tokens";
+
+const brand = extendTheme(retroTheme(themes.dark, "aero"), {
+  name: "Aero brand",
+  colors: { primary: "#0F5E8C", primaryForeground: "#FFFFFF" },
+  radius: { md: 6, lg: 8 },
+});
+```
+
+The runnable version is `resolveRetroBrand` in
+[`src/retro.example.ts`](../packages/tokens/src/retro.example.ts); it owns the
+accent family too — `accent`, `selected` and `selection` are derived from the
+accent — and `retro.test.ts` holds the result to the same contracts.
+
 ## Checking your own theme
 
 Two checks cover the two ways a theme fails silently, and a third covers the
@@ -970,7 +1039,7 @@ application that owns that boundary.
 
 ### Persisted choices
 
-Six unions are choices a consumer stores — a settings row, a URL parameter, a
+Seven unions are choices a consumer stores — a settings row, a URL parameter, a
 saved workspace. Each has an **ordered index** and a guard that takes `unknown`,
 so a restored value neither needs the union retyped nor a cast:
 
@@ -979,6 +1048,7 @@ so a restored value neither needs the union retyped nor a cast:
 | theme mode | `themeModes` | `isThemeMode` |
 | contrast variant | `themeContrasts` | `isThemeContrast` |
 | platform | `platformNames` | `isPlatformName` |
+| authored look | `retroNames` | `isRetroName` |
 | density preset | `densityNames` | `isDensityName` |
 | control size | `controlSizes` | `isControlSize` |
 | status tone | `statusTones` | `isStatusTone` |
@@ -986,9 +1056,9 @@ so a restored value neither needs the union retyped nor a cast:
 The unions derive from the indexes, so adding a mode, platform or tone is one
 edit at the owner and every consumer loop — including this package's own tests —
 covers it. The indexes are held to the data they select: every mode has both
-contrast variants, every platform has a style, every density preset has a metric
-for every control size, and every tone has its own soft roles
-(`guards.test.ts`).
+contrast variants, every platform has a style, every look has a style, every
+density preset has a metric for every control size, and every tone has its own
+soft roles (`guards.test.ts`).
 
 ```ts
 import { getTheme, isThemeContrast, isThemeMode } from "@gpuixui/tokens";
@@ -1003,7 +1073,7 @@ const themeFromStored = (stored: {
   );
 ```
 
-`src/persisted-choices.example.ts` resolves all six axes the same way, and
+`src/persisted-choices.example.ts` resolves all seven axes the same way, and
 `guards.test.ts` runs it: a stored `dark`/`high` pair returns the AAA dark theme,
 an unknown pair keeps the light one.
 
