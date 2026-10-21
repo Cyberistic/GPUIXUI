@@ -1,10 +1,13 @@
 /**
- * Guards two defects fixed in plan 017.
+ * Guards two defects fixed in plan 017, against the shape the library ships
+ * today.
  *
- * 1. GPUix 0.10.0 has no `outline*` properties and no `focusVisible` state, so a
- *    focus ring built from them paints nothing. The ring must be the one shape
- *    the runtime can draw without taking layout space: a zero-offset, zero-blur
- *    `boxShadow` with a spread.
+ * 1. The published runtime at the time (0.10.0) had no `outline*` properties and
+ *    no `focusVisible` state, so a ring built from them painted nothing. The ring
+ *    is the shape that takes no layout space without them: a zero-offset,
+ *    zero-blur `boxShadow` with a spread. `@gpuix/native@0.11.0` now declares the
+ *    outline fields and `focusVisible`; plan 053 replaces this ring once a native
+ *    probe proves the paint, and this suite is rewritten with it.
  * 2. The spread must come from the theme's `borderWidth.strong`, never a
  *    literal, so a brand that changes the border scale gets the matching ring.
  */

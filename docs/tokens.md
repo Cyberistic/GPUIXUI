@@ -455,8 +455,9 @@ controlPaddingX(theme, "md");
 
 Shadows are structured objects (`offsetX`, `offsetY`, `blurRadius`,
 `spreadRadius`, `color`) — the exact five fields of GPUix's
-`StyleDesc.boxShadow`. There is no `inset` and no shadow list: **the runtime
-paints one shadow per element.**
+`StyleDesc.boxShadow`. There is no `inset`. `boxShadow` accepts one shadow or a
+list; the elevation scale deliberately ships **one** shadow per level, so a level
+cannot render half of itself.
 
 | Level | Light | Dark | Use |
 | ----- | ----- | ---- | --- |
@@ -506,10 +507,13 @@ element's short side, so an avatar pairs `avatarSize[step]` with `radius.full`.
 
 ## Focus
 
-GPUix 0.10.0's `StyleDesc` has **no `outline*` properties and no `focusVisible`
-state** — a nested style only offers `hover` and `active` — and `boxShadow` is a
-single shadow. The focus ring is therefore a shadow that takes no layout space: a
-zero-offset, zero-blur ring spread by `borderWidth.strong`.
+The library's ring is a **shadow** that takes no layout space: a zero-offset,
+zero-blur ring spread by `borderWidth.strong`. That was the only shape 0.10.0
+could draw. The pinned `@gpuix/native@0.11.0` declares `outlineWidth`,
+`outlineColor`, `outlineOffset` and a `focusVisible` state — "while focused after
+keyboard input (Tab), like CSS `:focus-visible`" — so the shadow is now a
+workaround, and plan 053 replaces it with the outline once a native probe proves
+`focusVisible` paints here. Until that lands a mouse press still shows the ring.
 
 ```tsx
 import { focusRing, type Theme } from "@gpuixui/tokens";
@@ -525,9 +529,9 @@ const ringStyle = (theme: Theme, focused: boolean) =>
 ```
 
 A control applies the ring **while it is focused**, so a mouse press shows it
-too: the published runtime has no `:focus-visible` equivalent. The ring never
-changes an element's size or position, because a shadow is painted outside the
-border box and takes no space in layout.
+too. The ring never changes an element's size or position, because a shadow is
+painted outside the border box and takes no space in layout — the same property
+`outline*` has.
 
 A runnable example lives in
 [`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts).
@@ -710,14 +714,14 @@ its own hover.
 - No OS appearance detection; the application selects the mode and contrast, and
   also which platform style to render.
 - No per-platform control metrics: `platformTheme` changes families only, because
-  GPUix 0.10.0 gives no evidence for platform-specific control heights. Layer
+  there is no runtime evidence for platform-specific control heights. Layer
   `density` with `extendTheme` when a platform needs it.
 - `.SystemUIFont` is verified by GPUI's own documentation of the name, not yet
-  visually in the native runtime: the playground's platform gallery is blocked by
-  B1. See `COMPONENTS.md` and `TODO.md`.
-- No `outline*` and no `focusVisible` in the runtime (GPUix 0.10.0): the focus
-  ring is a spread shadow, so it cannot tell a Tab from a click, and it follows
-  `borderRadius` only because a shadow does.
+  visually in a native window; the playground's platform gallery is the proof
+  (the cross-team row in `TODO.md`).
+- `@gpuix/native@0.11.0` declares `outline*` and `focusVisible`, but the ring is
+  still a spread shadow until plan 053's native probe replaces it, so a mouse
+  press and a Tab look the same today.
 - No motion tokens yet; no component consumes them.
 - The derived action fills are shipped and documented, but the component
   packages still paint a half-alpha hover (`packages/components/src/internal/button.tsx`

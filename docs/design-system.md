@@ -154,12 +154,12 @@ Two border roles:
   against the canvas so a control is perceivable without relying on fill alone.
 
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
-`md` for menus and popovers, `lg` for dialogs and the command palette. The
-runtime paints one shadow per element — no `inset`, no shadow list — so a level
-is exactly one shadow, read with `elevationShadow(theme, level)`. Overlay
-layering uses the `overlay` scrim colour; `elevation.overlay` is reserved and
-empty so the shape stays stable. Dark shadows are darker and more opaque because
-contrast between surfaces is lower.
+`md` for menus and popovers, `lg` for dialogs and the command palette. A level is
+designed as **one** shadow, read with `elevationShadow(theme, level)`; the
+runtime also accepts a shadow list, but the scale does not use one, so a level
+cannot render half of itself. Overlay layering uses the `overlay` scrim colour;
+`elevation.overlay` is reserved and empty so the shape stays stable. Dark shadows
+are darker and more opaque because contrast between surfaces is lower.
 
 ## 8. Interaction states
 
@@ -181,13 +181,12 @@ automatically carry a hover that belongs to it. The derivation is held to the
 same contrast floors as a role pair, for the label colour on both fills.
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
-so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
-no `focusVisible` state** — a nested style offers only `hover` and `active`, and
-`boxShadow` is a single shadow — so `focusRing(theme)` is the one shape the
-runtime can draw. The component applies it while it holds focus, which means a
-mouse press shows the ring too: there is no `:focus-visible` to distinguish a Tab
-from a click. A design that needs that distinction must keep a press from
-focusing the control (that limitation is real and is not worked around).
+so gaining focus reflows nothing. The library paints it while the control holds
+focus, which means a mouse press shows the ring too. `@gpuix/native@0.11.0`
+declares `outline*` and a `focusVisible` state ("while focused after keyboard
+input, like `:focus-visible`"), so the shadow is now a workaround rather than a
+constraint; plan 053's native probe decides when the ring moves to the outline, at
+which point a Tab and a click will look different for the first time.
 
 Selection never relies on colour alone for meaning: selected rows also carry
 `aria-selected` where the runtime exposes it.
@@ -233,9 +232,10 @@ design system cannot compensate for a missing role.
 | ---------- | ----------- |
 | no CSS variables or cascade | tokens are inline values; theme switch re-renders |
 | no inherited `color` | every `<text>` sets `color` explicitly |
-| no `letterSpacing` | no display tracking or all-caps tracking |
+| focus ring is a spread shadow | 0.11.0 declares `outline*` and `focusVisible`; the ring moves once plan 053's probe proves the paint |
+| elevation is one shadow per level by design | `boxShadow` accepts a list, but a level is designed as one shadow |
+| `letterSpacing` absent | no display tracking or all-caps tracking |
 | no OS appearance query | the app owns the mode |
-| no `outline*`, no `focusVisible`, one `boxShadow` | the focus ring is a spread shadow; overlays and menus cannot animate |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are objects, not CSS strings |
 | invalid colour strings are ignored per property | a typo paints the previous/black value; tests restrict roles to hex |

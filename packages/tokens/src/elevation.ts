@@ -35,9 +35,10 @@ export interface Elevation {
 export type ElevationLevel = keyof Elevation;
 
 /**
- * The shadow an elevation level paints. The runtime paints one shadow per
- * element, so a level resolves to its first entry; a reserved empty level paints
- * nothing and returns `undefined`, which `boxShadow` accepts.
+ * The shadow an elevation level paints. A level is designed as one shadow, so it
+ * resolves to its first entry; a reserved empty level paints nothing and returns
+ * `undefined`, which `boxShadow` accepts. The runtime also accepts a shadow list;
+ * the scale does not use one, so a level cannot render half of itself.
  *
  * @example
  * ```tsx

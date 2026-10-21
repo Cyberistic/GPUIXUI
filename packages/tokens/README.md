@@ -60,9 +60,10 @@ subtree.
 
 ## Shadows
 
-The runtime paints one shadow per element and its `BoxShadow` has five fields —
-no `inset`, no list. `elevationShadow(theme, level)` returns the shadow a level
-paints (`undefined` for the reserved empty `overlay` level).
+The `BoxShadow` the runtime paints has five fields — no `inset`. The runtime also
+accepts a shadow list; the elevation scale ships one shadow per level by design,
+and `elevationShadow(theme, level)` returns it (`undefined` for the reserved empty
+`overlay` level).
 
 ```tsx
 const shadow = elevationShadow(theme, "md");
@@ -141,8 +142,10 @@ Ghost and subtle surfaces keep the `hover` / `active` washes.
 
 ## Focus
 
-GPUix 0.10.0 has no `outline*` properties and no `focusVisible` state, so a focus
-ring is a shadow: zero offset, zero blur, spread by `borderWidth.strong`.
+The ring is a shadow: zero offset, zero blur, spread by `borderWidth.strong`.
+That is what the library ships while the ring still cannot use `outline*`;
+`@gpuix/native@0.11.0` declares the outline fields and a `focusVisible` state, and
+plan 053 moves the ring there once a native probe proves the paint.
 
 ```tsx
 import { focusRing } from "@gpuixui/tokens";
@@ -262,8 +265,7 @@ persisted theme at its own boundary, where `Schema` belongs.
 
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
 - A platform style changes font families only. Per-platform control metrics have
-  no evidence in GPUix 0.10.0, so a consumer layers `density` with
-  `extendTheme` instead.
+  no runtime evidence, so a consumer layers `density` with `extendTheme` instead.
 - `.SystemUIFont` is verified against GPUI's documentation of the name, not yet
   visually in the native runtime (B1 blocks the playground gallery).
 - There is no runtime theme schema; theme objects authored in TypeScript are

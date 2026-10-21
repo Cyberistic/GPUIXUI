@@ -104,12 +104,12 @@ export interface FocusRing {
 /**
  * The keyboard-focus ring.
  *
- * The published runtime has no `outline*` properties and no `focusVisible`
- * state, and `StyleDesc.boxShadow` is one shadow, so the ring is a zero-offset,
- * zero-blur shadow spread by the theme's `borderWidth.strong`. It draws outside
- * the border box and takes no layout space, which is what an outline would do.
- * Apply it while the control is focused: there is no way to tell a Tab from a
- * click.
+ * A zero-offset, zero-blur shadow spread by the theme's `borderWidth.strong`: it
+ * draws outside the border box and takes no layout space, which is what an
+ * outline does. The library paints it while the control holds focus, so a mouse
+ * press shows it too. The published runtime at the time had no `outline*` and no
+ * `focusVisible`; `@gpuix/native@0.11.0` declares both, and plan 053 replaces
+ * this shape once a native probe proves the paint.
  *
  * @example
  * ```tsx
