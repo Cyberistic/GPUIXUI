@@ -49,6 +49,26 @@ export const takeFocusSuccessor = (from: number): Option.Option<number> => {
 };
 
 /**
+ * The element a late reader should focus: `from` while it still exists,
+ * otherwise the successor the surface that removed it named — provided that
+ * target is live too.
+ *
+ * `from` normally still does. When it does not, the surface that removed it may
+ * have named where its focus went (plans 826/827/832), and the reader arrives
+ * later than the modal that would have taken the mark: a toast raised from a menu
+ * row, a popover control or a palette action is exactly that reader. A mark is
+ * keyed by the id of a vanished element, which cannot recur in one renderer, so
+ * following it here cannot retarget a different control.
+ */
+export const resolveFocusTarget = (
+  from: number,
+  exists: (id: number) => boolean,
+): Option.Option<number> =>
+  exists(from)
+    ? Option.some(from)
+    : Option.filter(takeFocusSuccessor(from), exists);
+
+/**
  * Forget every mark. The behaviour harness calls this between tests: native host
  * ids restart with each renderer, so a mark left behind by one scene is readable
  * by a modal in the next (plan 830).

@@ -479,6 +479,165 @@ const DialogFromToastPage = () => (
   </ToastProvider>
 );
 
+/** A menu row that raises a toast: the row leaves with its menu (plan 837). */
+const ToastFromMenuRow = () => {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <ToastViewport />
+      <DropdownMenu>
+        <DropdownMenuTrigger testId="menu-trigger">Actions</DropdownMenuTrigger>
+        <DropdownMenuContent testId="menu-panel">
+          <DropdownMenuItem
+            testId="menu-delete"
+            onSelect={() =>
+              toast.push(
+                { title: "Deleted", tone: "danger", action: { label: "Undo" } },
+                { onAction: () => setOpen(true) },
+              )
+            }
+          >
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Undo" testId="menu-undo-dialog" size="sm">
+          <DialogTitle>Undo</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const ToastFromMenuRowPage = () => (
+  <ToastProvider>
+    <ToastFromMenuRow />
+  </ToastProvider>
+);
+
+/** A popover control that raises a toast and closes the panel in one handler. */
+const ToastFromPopover = () => {
+  const toast = useToast();
+  const [panel, setPanel] = useState(false);
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <ToastViewport />
+      <Popover open={panel} onOpenChange={setPanel}>
+        <PopoverTrigger testId="filter-trigger">Filter</PopoverTrigger>
+        <PopoverContent testId="filter-panel">
+          <Button
+            testId="filter-save"
+            onClick={() => {
+              setPanel(false);
+              toast.push(
+                { title: "Saved", tone: "success", action: { label: "Undo" } },
+                { onAction: () => setOpen(true) },
+              );
+            }}
+          >
+            Save
+          </Button>
+        </PopoverContent>
+      </Popover>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Undo" testId="popover-undo-dialog" size="sm">
+          <DialogTitle>Undo</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const ToastFromPopoverPage = () => (
+  <ToastProvider>
+    <ToastFromPopover />
+  </ToastProvider>
+);
+
+/** A palette action that raises a toast; the palette closes in the same commit. */
+const ToastFromCommand = () => {
+  const toast = useToast();
+  const [palette, setPalette] = useState(false);
+  const [open, setOpen] = useState(false);
+  const actions: ReadonlyArray<CommandAction> = [
+    {
+      id: "archive",
+      label: "Archive item",
+      perform: () =>
+        toast.push(
+          { title: "Archived", tone: "success", action: { label: "Undo" } },
+          { onAction: () => setOpen(true) },
+        ),
+    },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <ToastViewport />
+      <Button testId="open-palette" onClick={() => setPalette(true)}>
+        Commands
+      </Button>
+      <CommandMenu open={palette} onOpenChange={setPalette} actions={actions}>
+        <CommandMenuInput />
+        <CommandMenuList />
+      </CommandMenu>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Undo" testId="palette-undo-dialog" size="sm">
+          <DialogTitle>Undo</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const ToastFromCommandPage = () => (
+  <ToastProvider>
+    <ToastFromCommand />
+  </ToastProvider>
+);
+
+/**
+ * A toast raised from a control that removes itself and names no successor, so
+ * there is no target to return to: the limit of the plan-837 rule.
+ */
+const ToastWithoutOrigin = () => {
+  const toast = useToast();
+  const [there, setThere] = useState(true);
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <ToastViewport />
+      {there ? (
+        <Button
+          testId="raise"
+          onClick={() => {
+            setThere(false);
+            toast.push(
+              { title: "Saved", tone: "success", action: { label: "Undo" } },
+              { onAction: () => setOpen(true) },
+            );
+          }}
+        >
+          Raise
+        </Button>
+      ) : null}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Undo" testId="orphan-dialog" size="sm">
+          <DialogTitle>Undo</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const ToastWithoutOriginPage = () => (
+  <ToastProvider>
+    <ToastWithoutOrigin />
+  </ToastProvider>
+);
+
 /**
  * A popover control that opens a dialog. With `close` the app also closes the
  * popover in the same handler, which is what a menu-shaped popover does; without
@@ -1093,6 +1252,100 @@ describe("composition", () => {
 
     expect(isShown(scene, "booked-dialog")).toBe(false);
     expect(focusedTestId(scene)).toEqual(Option.some("date-trigger"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the menu trigger when a toast action's dialog closes", async () => {
+    const scene = renderComponent(<ToastFromMenuRowPage />);
+    clickCentreOf(scene, "menu-trigger");
+    finishMotion(scene);
+    clickCentreOf(scene, "menu-delete");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "toast-1")).toBe(true);
+
+    clickCentreOf(scene, "toast-1-action");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "menu-undo-dialog")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "menu-undo-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("menu-trigger"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the popover trigger when a toast action's dialog closes", async () => {
+    const scene = renderComponent(<ToastFromPopoverPage />);
+    clickCentreOf(scene, "filter-trigger");
+    finishMotion(scene);
+    clickCentreOf(scene, "filter-save");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "toast-1")).toBe(true);
+
+    clickCentreOf(scene, "toast-1-action");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "popover-undo-dialog")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "popover-undo-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("filter-trigger"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the palette's opener when a toast action's dialog closes", async () => {
+    const scene = renderComponent(<ToastFromCommandPage />);
+    clickCentreOf(scene, "open-palette");
+    finishMotion(scene);
+    scene.renderer.simulateKeystrokes("enter");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "toast-1")).toBe(true);
+
+    clickCentreOf(scene, "toast-1-action");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "palette-undo-dialog")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "palette-undo-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("open-palette"));
+
+    scene.unmount();
+  });
+
+  it("leaves focus alone when a toast had no origin to return to", async () => {
+    const scene = renderComponent(<ToastWithoutOriginPage />);
+    clickCentreOf(scene, "raise");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "toast-1")).toBe(true);
+
+    clickCentreOf(scene, "toast-1-action");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "orphan-dialog")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "orphan-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.none());
 
     scene.unmount();
   });

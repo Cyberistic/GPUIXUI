@@ -30,7 +30,10 @@ import {
 } from "react";
 import { Button, IconButton } from "../internal/button.js";
 import { registerPressSurface } from "../internal/dismiss-layer.js";
-import { markFocusSuccessor } from "../internal/focus-successor.js";
+import {
+  markFocusSuccessor,
+  resolveFocusTarget,
+} from "../internal/focus-successor.js";
 import { HoverGroupContext, type HoverGroup } from "../internal/hover-group.js";
 import { MotionSurface, motionProps } from "../internal/motion.js";
 import { useNativeFocusId } from "../internal/native-focus.js";
@@ -294,13 +297,25 @@ const ToastCard = ({
                   const leaving =
                     actionHost !== null &&
                     renderer?.getFocusedElementId?.() === actionHost;
+                  // The control that raised this toast may have left with its
+                  // own surface (a menu row, a palette action); that surface
+                  // named where focus went when it closed, so follow the chain
+                  // instead of requiring the origin to still exist (plan 837).
+                  const liveOrigin = Option.flatMap(
+                    Option.fromNullishOr(origin),
+                    (id) =>
+                      resolveFocusTarget(
+                        id,
+                        (target) =>
+                          renderer?.getElementBounds?.(target) !== null,
+                      ),
+                  );
                   if (
                     leaving &&
-                    origin !== null &&
-                    origin !== actionHost &&
-                    renderer?.getElementBounds?.(origin) !== null
+                    Option.isSome(liveOrigin) &&
+                    liveOrigin.value !== actionHost
                   ) {
-                    markFocusSuccessor(actionHost, origin);
+                    markFocusSuccessor(actionHost, liveOrigin.value);
                   }
                   onSelect();
                   dismiss(toast.id);

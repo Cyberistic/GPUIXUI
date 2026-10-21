@@ -17,6 +17,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   clearFocusSuccessors,
   markFocusSuccessor,
+  resolveFocusTarget,
   takeFocusSuccessor,
 } from "./focus-successor.js";
 
@@ -69,5 +70,38 @@ describe("focus successor", () => {
     markFocusSuccessor(4, 9);
     clearFocusSuccessors();
     expect(takeFocusSuccessor(4)).toEqual(Option.none());
+  });
+});
+
+/**
+ * The resolution a late reader needs (plan 837): a toast raised from a menu row,
+ * a popover control or a palette action resolves to the surface's own target even
+ * though the raising control left with that surface.
+ */
+describe("focus successor resolution", () => {
+  beforeEach(clearFocusSuccessors);
+  const only =
+    (...live: ReadonlyArray<number>) =>
+    (id: number): boolean =>
+      Arr.contains(live, id);
+
+  it("keeps an existing element and leaves its mark unread", () => {
+    markFocusSuccessor(4, 9);
+    expect(resolveFocusTarget(4, only(4))).toEqual(Option.some(4));
+    expect(takeFocusSuccessor(4)).toEqual(Option.some(9));
+  });
+
+  it("follows the mark when the element is gone", () => {
+    markFocusSuccessor(4, 9);
+    expect(resolveFocusTarget(4, only(9))).toEqual(Option.some(9));
+  });
+
+  it("reports nothing when the marked target is gone too", () => {
+    markFocusSuccessor(4, 9);
+    expect(resolveFocusTarget(4, only(12))).toEqual(Option.none());
+  });
+
+  it("reports nothing for a gone element that was never marked", () => {
+    expect(resolveFocusTarget(4, only(9))).toEqual(Option.none());
   });
 });
