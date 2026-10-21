@@ -193,3 +193,10 @@ holds each claim to its source — the workspace catalogue's pinned
 — so a page cannot quietly contradict the code it documents. A version bump
 therefore fails the docs suite until the pages are re-read against the new
 release, which is the truth pass, not a nuisance.
+
+`src/lib/runtime-version.test.ts` applies the same rule to **every** page under
+`content/docs`, not only the curated four: it reads the pin from the workspace
+catalogue and fails any page that names another version, in prose or in a code
+block. That is how the three pages still saying `0.10.0` were found — the claim
+"the runtime exposes no appearance API" was still true, but the version it was
+measured on was not.
