@@ -162,6 +162,7 @@ export const fieldTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
   fontWeight: theme.typography.body.fontWeight,
   cursor: "text",
   userSelect: "text",
+  selectionColor: theme.colors.selection,
 });
 
 /**
@@ -244,6 +245,9 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     userSelect: spec.selectable === true ? "text" : "none",
   };
   if (spec.align !== undefined) style.textAlign = spec.align;
+  // A selectable run paints the design system's wash, not the runtime's
+  // accent-at-35% default: `selection` is the role the token contract measures.
+  if (spec.selectable === true) style.selectionColor = theme.colors.selection;
   if (spec.truncate === true) {
     style.whiteSpace = "nowrap";
     style.textOverflow = "ellipsis";

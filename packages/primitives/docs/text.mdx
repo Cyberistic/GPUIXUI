@@ -63,7 +63,7 @@ stays legible in every shipped theme.
 | `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
 | `clamp` | `number` | none | clip after N lines |
-| `selectable` | `boolean` | `false` | `userSelect: "text"`; off for chrome, on for content |
+| `selectable` | `boolean` | `false` | `userSelect: "text"` plus the theme's `selection` wash; off for chrome, on for content |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the string (or inline nodes) |
@@ -90,7 +90,10 @@ visual size, not a heading; if the document outline matters, use `h1`–`h3`.
 
 `textStyle` reads `typography[role]`, the mono/sans family and the tone's colour
 role. `userSelect` defaults to `"none"` so chrome does not accept a text
-selection by accident; turn it on for content.
+selection by accident; turn it on for content. A selectable run also declares
+`selectionColor: theme.colors.selection` — the wash the token contract measures
+for visibility and for the text it carries — instead of the runtime's default of
+the theme accent at 35%, a colour no pair measures.
 
 ## Limitations
 

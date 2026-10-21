@@ -5,6 +5,7 @@ import * as Option from "effect/Option";
 import {
   controlFocusStyle,
   controlStyle,
+  fieldTextStyle,
   progressFillStyle,
   progressPercent,
   progressTrackStyle,
@@ -284,6 +285,24 @@ describe("textStyle", () => {
     expect(
       text({ role: "body", tone: "default", selectable: true }).userSelect,
     ).toBe("text");
+  });
+
+  it("paints the design system's selection wash behind a selectable run", () => {
+    // GPUix defaults `selectionColor` to the theme accent at 35%, which no
+    // contrast pair measures; the `selection` role is the one the token
+    // contract composites and holds to both floors.
+    const selectable = text({
+      role: "body",
+      tone: "default",
+      selectable: true,
+    });
+    expect(selectable.selectionColor).toBe(testTheme.colors.selection);
+    expect(
+      text({ role: "body", tone: "default" }).selectionColor,
+    ).toBeUndefined();
+    expect(fieldTextStyle(testTheme).selectionColor).toBe(
+      testTheme.colors.selection,
+    );
   });
 });
 

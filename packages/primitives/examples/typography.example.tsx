@@ -41,7 +41,7 @@ export const TypographyExample = (): ReactElement => {
           GPUIxUI now draws every Tier 1 primitive in the real GPUix runtime.
         </Text>
 
-        <Text role="body">
+        <Text role="body" selectable>
           Layout, fields, selection controls, progress and tooltips share one
           theme and one keyboard contract. The docs site documents behaviour it
           has actually measured, and the playground runs the same components

@@ -79,8 +79,11 @@ handler, not to a field.
 
 `fieldChrome` uses `fieldVariant` (the `input` role) and the density metrics;
 `fieldTextStyle` and `nativeTextTheme` set the font, caret and selection colours
-the native element paints with. Focus is the shared keyboard outline
-(`keyboardRing`), declared at rest and painted after Tab, not after a click.
+the native element paints with — the `select-text` recipe utility declares
+`selectionColor: theme.colors.selection`, the wash the token contract measures,
+rather than the runtime's accent-at-35% default. Focus is the shared keyboard
+outline (`keyboardRing`), declared at rest and painted after Tab, not after a
+click.
 
 `style` takes a `StateStyle<FieldState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, invalid }`. `TextArea` and `Input` share the type,

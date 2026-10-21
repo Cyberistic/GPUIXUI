@@ -120,7 +120,13 @@ export const recipeTw = createTw({
     "flex-wrap": () => ({ flexWrap: "wrap" }),
     "flex-grow": () => ({ flexGrow: 1 }),
     "cursor-text": () => ({ cursor: "text" }),
-    "select-text": () => ({ userSelect: "text" }),
+    // A selectable run paints the design system's own wash. GPUix defaults to
+    // the theme accent at 35%, a colour no contrast pair measures; `selection`
+    // is composited and held to both floors by `@gpuixui/tokens`.
+    "select-text": (theme) => ({
+      userSelect: "text",
+      selectionColor: theme.colors.selection,
+    }),
     "text-start": () => ({ textAlign: "start" }),
     "text-end": () => ({ textAlign: "end" }),
     "text-ellipsis": () => ({ textOverflow: "ellipsis" }),

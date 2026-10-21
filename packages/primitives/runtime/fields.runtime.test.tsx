@@ -370,3 +370,35 @@ it("keeps the Tooltip's content inside the frame it is anchored to", async () =>
   expect(tip.x).toBeGreaterThanOrEqual(frame.x);
   expect(tip.x + tip.width).toBeLessThanOrEqual(frame.x + frame.width);
 });
+
+it("paints the design system's selection wash on what a reader can select", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Text testId="prose" selectable>
+          Selectable prose
+        </Text>
+        <Text testId="chrome">Chrome text</Text>
+        <Input testId="field" label="Project name" />
+      </Stack>
+    </Surface>,
+  );
+  // GPUix's own default is the theme accent at 35%, which no contrast pair in
+  // `@gpuixui/tokens` measures. The declared style is the reach this suite can
+  // prove: the `selection` role is what the runtime is handed.
+  const washOf = (testId: string) =>
+    Option.flatMap(runtime.element(testId), (element) =>
+      Option.fromNullishOr(element.style.selectionColor),
+    );
+  expect(Option.getOrUndefined(washOf("prose"))).toBe(
+    testTheme.colors.selection,
+  );
+  expect(Option.getOrUndefined(washOf("field"))).toBe(
+    testTheme.colors.selection,
+  );
+  expect(Option.isNone(washOf("chrome"))).toBe(true);
+  // The anti-tautology guard: an accent default would pass a test that only
+  // compared the two hosts with each other.
+  expect(testTheme.colors.selection).not.toBe(testTheme.colors.primary);
+});
