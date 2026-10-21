@@ -1659,6 +1659,14 @@ simulated. It reports the red/green pair a deuteranope sees 0.024 apart, a
 swatch that is the card it is drawn on, a repeated pair and a translucent
 swatch, and it executes the example's legend and reported lines.
 
+`packages/tokens/src/indicator.test.ts` covers the marks a component paints: the
+eight roles on the four strips are held to the theme's non-text floor in all 16
+shipped, platform and authored themes, the tightest placement is named (Luna
+light's `success` on its muted strip at 3.30:1), the solid `warning` role is
+measured as 1.78:1 on the page so the reason a status mark paints the tone's
+readable role is a measurement rather than an opinion, a translucent mark and a
+caller's stricter floor are reported, and each status tone must have a mark role.
+
 `packages/tokens/src/elevation.test.ts` covers the shadow scale: one shadow per
 level with exactly the runtime's five fields, the role's hue and strength per
 level and per shipped theme, a brand's retint reaching every inherited level while

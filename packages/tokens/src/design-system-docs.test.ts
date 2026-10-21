@@ -16,7 +16,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { colorRoles, darkColors, lightColors } from "./color.js";
-import { contrastFloors, highContrastFloors } from "./contrast.js";
+import {
+  contrastFloors,
+  contrastRatio,
+  highContrastFloors,
+} from "./contrast.js";
 import { platformNames, platformStyles } from "./platforms.js";
 import {
   avatarSize,
@@ -215,5 +219,31 @@ describe("docs/design-system.md", () => {
     // The §8 interaction-state table points at the floor by its export name, so
     // a reader who lands there rather than in §9 still finds it.
     expect(doc).toContain("`contrastFloors.disabled`");
+  });
+
+  it("prints the indicator-mark floors and why a status mark is not its fill", () => {
+    const row = /an indicator mark[^\n|]*\| ([\d.]+):1 \| ([\d.]+):1 \|/.exec(
+      doc,
+    );
+
+    expect(
+      row,
+      "docs/design-system.md no longer states the indicator-mark floor",
+    ).toBeDefined();
+    expect(Number(row?.[1])).toBe(contrastFloors.boundary);
+    expect(Number(row?.[2])).toBe(highContrastFloors.boundary);
+
+    // The page's reason is a measurement, not an opinion: the solid status role
+    // is a surface that carries text, so it is below the mark floor.
+    const warning = contrastRatio(lightColors.warning, lightColors.background);
+    expect(warning).toBeDefined();
+    expect(doc).toContain(`\`warning\` is ${warning?.toFixed(2)}:1`);
+
+    // §8 states the busy state the mission asks for, and that it is not the
+    // disabled fade: a faded control says "unavailable", a busy one "wait".
+    expect(doc).toContain(
+      "**Busy is a state of its own, and it is not faded.**",
+    );
+    expect(doc).toContain("`disabledOpacity` is never the busy");
   });
 });
