@@ -96,7 +96,7 @@ it("refuses activation when disabled and stays out of the tab order", async () =
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
 });
 
-it("rings the toggle while it holds focus and clears it when focus leaves", async () => {
+it("declares the keyboard ring and paints no shadow on a press", async () => {
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -106,18 +106,15 @@ it("rings the toggle while it holds focus and clears it when focus leaves", asyn
       </Stack>
     </Surface>,
   );
-  const ringed = (): boolean =>
-    Option.isSome(
-      Option.fromNullishOr(
-        Option.getOrElse(runtime.element("t"), () =>
-          expect.fail("the runtime retained no toggle"),
-        ).style["boxShadow"],
-      ),
-    );
+  const style = (): Record<string, unknown> =>
+    Option.getOrElse(runtime.element("t"), () =>
+      expect.fail("the runtime retained no toggle"),
+    ).style;
+  expect(style()["focusVisible"]).toBeDefined();
   runtime.click("t");
   runtime.flush();
-  expect(ringed()).toBe(true);
+  expect(style()["boxShadow"]).toBeUndefined();
   runtime.click("b");
   runtime.flush();
-  expect(ringed()).toBe(false);
+  expect(style()["boxShadow"]).toBeUndefined();
 });

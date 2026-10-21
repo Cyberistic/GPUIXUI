@@ -120,8 +120,9 @@ clearing.
 `iconSize`, radius from `radius.sm`, border from `input`/`destructive`, fill from
 the accent role, and the mark colour from `selectionMarkColor`. Hover and press
 are declared in `style.hover`/`style.active`, not scripted. Disabled adds half
-opacity and removes pointer feedback. Focus paints the selection ring
-(`colors.ring`, spread by `borderWidth.strong`).
+opacity and removes pointer feedback. Focus is the keyboard outline declared at
+rest (`keyboardRing`, `colors.ring` at `borderWidth.strong`), painted by the
+runtime after Tab and never after a mouse press.
 
 ## Limitations
 
@@ -139,7 +140,7 @@ opacity and removes pointer feedback. Focus paints the selection ring
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
   value flips `unchecked → checked`; a custom mark still toggles on a real hit
   test; indeterminate reads `mixed`; the AccessKit role is `CheckBox`; focus
-  paints the ring and moves it with focus.
+  declares the keyboard ring and moves native focus with the selection.
 
 ```sh
 nub run --filter @gpuixui/primitives test

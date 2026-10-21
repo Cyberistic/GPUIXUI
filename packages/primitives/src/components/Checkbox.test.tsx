@@ -29,6 +29,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
 
@@ -89,6 +90,23 @@ describe("Checkbox", () => {
     );
     expectSome(hostHandler(element, "onClick"))(keyEvent("space"));
     expect(onValueChange).toHaveBeenCalledWith(true);
+  });
+
+  it("declares the keyboard ring at rest and never a shadow ring", () => {
+    // The bug: the ring was merged only while focused, so a mouse press looked
+    // like a Tab. The runtime paints `focusVisible` after keyboard input only.
+    const element = renderCheckbox(
+      {},
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    const style = expectSome(hostStyleRecord(element));
+    expect(style["focusVisible"]).toBeDefined();
+    expect(Option.fromNullishOr(style["boxShadow"])).toStrictEqual(
+      Option.none(),
+    );
   });
 
   it("does not toggle while disabled", () => {

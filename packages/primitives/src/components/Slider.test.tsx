@@ -31,15 +31,11 @@ import {
   hostHandler,
   hostProp,
   hostStyle,
+  hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
-const focused: FocusState = {
-  focused: true,
-  onFocus: vi.fn(),
-  onBlur: vi.fn(),
-};
 
 /** A thumb's focus ring, if it paints one. */
 const ringOf = (
@@ -154,15 +150,25 @@ describe("Slider", () => {
     expect(expectSome(hostStyleString(fill, "width"))).toBe("50%");
   });
 
-  it("rings the thumb only while the slider holds focus", () => {
-    const render = (state: FocusState): ReactElement =>
-      renderSlider({}, testTheme, valueOf(42), state, sliderHandlers(vi.fn()));
-    const thumb = (element: ReactElement): ReactElement =>
-      partsOf(element)[1] ?? expect.fail("no thumb");
-    expect(ringOf(thumb(render(idle)))).toStrictEqual(Option.none());
+  it("declares the keyboard ring on the track, which is the tab stop", () => {
+    // The thumb cannot be focused, so a ring declared there would never paint;
+    // the outline belongs on the element that holds focus.
+    const element = renderSlider(
+      {},
+      testTheme,
+      valueOf(42),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
     expect(
-      Option.map(ringOf(thumb(render(focused))), (ring) => ring["color"]),
-    ).toStrictEqual(Option.some(testTheme.colors.ring));
+      Option.isSome(
+        Option.fromNullishOr(
+          expectSome(hostStyleRecord(element))["focusVisible"],
+        ),
+      ),
+    ).toBe(true);
+    const thumb = partsOf(element)[1] ?? expect.fail("no thumb");
+    expect(ringOf(thumb)).toStrictEqual(Option.none());
   });
 
   it("paints the destructive role when invalid", () => {
@@ -242,12 +248,18 @@ describe("RangeSlider", () => {
     expect(onSpanChange).toHaveBeenCalledWith([60, 60]);
   });
 
-  it("rings the focused thumb only", () => {
+  it("declares the keyboard ring on both thumbs, never a shadow", () => {
+    // Each range thumb is its own tab stop, so both declare the outline; the
+    // runtime paints it on the thumb holding keyboard focus.
     const [, start, , end] = partsOf(render());
-    expect(ringOf(start ?? expect.fail("no thumb"))).toStrictEqual(
-      Option.none(),
-    );
-    expect(Option.isSome(ringOf(end ?? expect.fail("no thumb")))).toBe(true);
+    for (const thumb of [start, end]) {
+      const element = thumb ?? expect.fail("no thumb");
+      const style = expectSome(hostStyleRecord(element));
+      expect(style["focusVisible"]).toBeDefined();
+      expect(Option.fromNullishOr(style["boxShadow"])).toStrictEqual(
+        Option.none(),
+      );
+    }
   });
 
   it("drops both tab stops while disabled", () => {

@@ -150,7 +150,7 @@ it("steps from a hit-tested click on the spin column and refocuses the input", a
   expect(focused.type).toBe("input");
 });
 
-it("paints the ring on the field's chrome when the input has focus", async () => {
+it("declares the keyboard ring on the field's chrome, never a shadow", async () => {
   const runtime = await mount(<NumberField testId="nf" label="Quantity" />);
   const input = inputOf(runtime, "nf");
   const box = Option.getOrElse(runtime.boundsOfId(input.id), () =>
@@ -161,9 +161,8 @@ it("paints the ring on the field's chrome when the input has focus", async () =>
   const field = Option.getOrElse(runtime.element("nf"), () =>
     expect.fail("the runtime retained no field"),
   );
-  expect(Option.isSome(Option.fromNullishOr(field.style["boxShadow"]))).toBe(
-    true,
-  );
+  expect(field.style["focusVisible"]).toBeDefined();
+  expect(field.style["boxShadow"]).toBeUndefined();
 });
 
 it("refuses edits, keys and steps while disabled", async () => {

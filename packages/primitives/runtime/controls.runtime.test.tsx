@@ -461,11 +461,24 @@ const circleOf = (runtime: Runtime, label: string) =>
     () => expect.fail(`the ${label} radio has no circle`),
   );
 
-/** Whether a radio option paints the focus ring. */
-const ringed = (runtime: Runtime, label: string): boolean =>
-  Option.isSome(Option.fromNullishOr(circleOf(runtime, label).style.boxShadow));
+/**
+ * Whether an element declares the runtime's keyboard ring.
+ *
+ * The paint itself is the playground's `focus-visible` probe (plan 053): the test
+ * renderer reports the declared style, not pixels. What is asserted here is the
+ * contract — the ring is declared at rest as `focusVisible`, so the runtime
+ * decides when to paint it, and nothing paints a shadow ring on a press.
+ */
+const ringed = (element: {
+  readonly style: { readonly focusVisible?: unknown };
+}): boolean => Option.isSome(Option.fromNullishOr(element.style.focusVisible));
 
-it("rings the radio that holds focus, and only that one", async () => {
+/** The old workaround: a shadow merged while a control held focus. */
+const shadowed = (element: {
+  readonly style: { readonly boxShadow?: unknown };
+}): boolean => Option.isSome(Option.fromNullishOr(element.style.boxShadow));
+
+it("declares the keyboard ring on every radio and paints no shadow on a press", async () => {
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -490,14 +503,21 @@ it("rings the radio that holds focus, and only that one", async () => {
   runtime.focusNext();
   runtime.flush();
   expect(focusedLabel(runtime)).toBe("Alpha");
-  expect(ringed(runtime, "Alpha")).toBe(true);
-  expect(ringed(runtime, "Beta")).toBe(false);
-  runtime.focusNext();
+  // Every radio declares the same outline; native focus decides which one the
+  // runtime paints, and a click must not add the old shadow ring.
+  expect(ringed(circleOf(runtime, "Alpha"))).toBe(true);
+  expect(ringed(circleOf(runtime, "Beta"))).toBe(true);
+  expect(shadowed(circleOf(runtime, "Alpha"))).toBe(false);
+  runtime.click("rg");
   runtime.flush();
-  expect(ringed(runtime, "Alpha")).toBe(false);
+  expect(shadowed(circleOf(runtime, "Alpha"))).toBe(false);
+  expect(shadowed(circleOf(runtime, "Beta"))).toBe(false);
 });
 
-it("rings a focused Checkbox and Switch, and clears it when focus leaves", async () => {
+it("declares the keyboard ring on a Checkbox and a Switch, and never a shadow", async () => {
+  // The bug this guards: a ring merged while `focused` made a mouse press paint
+  // exactly what a Tab paints. The ring is now declared at rest and the runtime
+  // paints it only after keyboard input (plan 053's probe).
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -507,18 +527,16 @@ it("rings a focused Checkbox and Switch, and clears it when focus leaves", async
       </Stack>
     </Surface>,
   );
-  const shadow = (label: string): boolean =>
-    Option.isSome(
-      Option.fromNullishOr(byLabel(runtime, label).style.boxShadow),
-    );
+  const box = (label: string) => byLabel(runtime, label);
+  expect(ringed(box("Agree"))).toBe(true);
+  expect(ringed(box("Dark mode"))).toBe(true);
   runtime.click("cb");
   runtime.flush();
-  expect(shadow("Agree")).toBe(true);
+  expect(shadowed(box("Agree"))).toBe(false);
   runtime.click("sw");
   runtime.flush();
-  // The ring moved with focus: a stale one would leave both painted.
-  expect(shadow("Agree")).toBe(false);
-  expect(shadow("Dark mode")).toBe(true);
+  expect(shadowed(box("Agree"))).toBe(false);
+  expect(shadowed(box("Dark mode"))).toBe(false);
 });
 
 it("moves native focus with the selection when an arrow moves it", async () => {
@@ -548,8 +566,8 @@ it("moves native focus with the selection when an arrow moves it", async () => {
   // stayed on Alpha, so the ring would have sat on the wrong option.
   expect(announced(runtime, "Beta")).toBe("checked");
   expect(focusedLabel(runtime)).toBe("Beta");
-  expect(ringed(runtime, "Alpha")).toBe(false);
-  expect(ringed(runtime, "Beta")).toBe(true);
+  expect(shadowed(circleOf(runtime, "Alpha"))).toBe(false);
+  expect(shadowed(circleOf(runtime, "Beta"))).toBe(false);
 });
 
 it("follows a controlled value change with the tab stop", async () => {

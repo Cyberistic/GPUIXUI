@@ -33,6 +33,7 @@ import type {
   SelectionSpec,
   SelectionState,
 } from "../core/selection.js";
+import { keyboardRing } from "../core/focus.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
@@ -42,7 +43,6 @@ import {
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
-  focusRingStyle,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
@@ -197,10 +197,6 @@ export const renderRadioGroup = (
           accent,
           shape: "circle",
           disabled,
-          focused: Option.exists(
-            focus.focusedIndex,
-            (focused) => focused === index,
-          ),
         };
         const resolved = recipeTw.classesToStyle(
           selectionBoxClass(spec),
@@ -210,9 +206,7 @@ export const renderRadioGroup = (
         if (disabled) {
           box = suppressSelectionFeedback(mergeStyle(box, resolved.disabled));
         }
-        if (spec.focused === true) {
-          box = mergeStyle(box, focusRingStyle(theme));
-        }
+        box = mergeStyle(box, keyboardRing(theme, spec.invalid));
         return (
           <div
             key={option.value}

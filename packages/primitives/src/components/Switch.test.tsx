@@ -25,6 +25,7 @@ import {
   hostHandler,
   hostProp,
   hostStyle,
+  hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
 
@@ -65,6 +66,13 @@ describe("Switch", () => {
     expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
     expect(onValueChange).toHaveBeenCalledWith(true);
   });
+});
+
+it("declares the keyboard ring on the track, never a shadow", () => {
+  const element = renderSwitch({}, testTheme, checked(false), idle, vi.fn());
+  const style = expectSome(hostStyleRecord(element));
+  expect(style["focusVisible"]).toBeDefined();
+  expect(Option.fromNullishOr(style["boxShadow"])).toStrictEqual(Option.none());
 });
 
 describe("SwitchThumb", () => {

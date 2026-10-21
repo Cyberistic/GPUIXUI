@@ -179,12 +179,16 @@ describe("NumberField", () => {
 });
 
 describe("NumberField styles", () => {
-  it("rings the field's own chrome, not the input inside it", () => {
+  it("declares the keyboard ring on the field's own chrome, not the input", () => {
     const element = render({}, 50, "50", focused);
-    expect(expectSome(hostStyleRecord(element))["boxShadow"]).toBeDefined();
+    const chrome = expectSome(hostStyleRecord(element));
+    expect(chrome["focusVisible"]).toBeDefined();
+    expect(Option.fromNullishOr(chrome["boxShadow"])).toStrictEqual(
+      Option.none(),
+    );
     const { input } = partsOf(element);
     expect(
-      Option.getOrUndefined(hostStyleRecord(input))?.["boxShadow"],
+      Option.getOrUndefined(hostStyleRecord(input))?.["focusVisible"],
     ).toBeUndefined();
   });
 

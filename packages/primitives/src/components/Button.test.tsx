@@ -84,14 +84,18 @@ describe("Button", () => {
     );
   });
 
-  it("resolves a different chrome while it holds focus", () => {
-    const idle = hostProp(resting({}), "style");
-    const focused = hostProp(
-      renderButton({}, testTheme, { focused: true }),
-      "style",
+  it("declares the keyboard ring once, so focus does not repaint the chrome", () => {
+    // The bug: focus merged a shadow ring, so a mouse press looked like a Tab and
+    // the resting style changed when focus moved.
+    const idle = expectSome(hostStyleRecord(resting({})));
+    const focused = expectSome(
+      hostStyleRecord(renderButton({}, testTheme, { focused: true })),
     );
-    expect(Option.isSome(idle) && Option.isSome(focused)).toBe(true);
-    expect(focused).not.toStrictEqual(idle);
+    expect(focused).toStrictEqual(idle);
+    expect(idle["focusVisible"]).toBeDefined();
+    expect(Option.fromNullishOr(idle["boxShadow"])).toStrictEqual(
+      Option.none(),
+    );
   });
 
   it("hands a style callback the live state and lets its result win", () => {

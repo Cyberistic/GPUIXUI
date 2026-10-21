@@ -28,13 +28,13 @@ import {
   type SelectionSpec,
   type SelectionState,
 } from "../core/selection.js";
+import { keyboardRing } from "../core/focus.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
 import { selectionBoxClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
   checkedChange,
-  focusRingStyle,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
@@ -169,7 +169,6 @@ export const renderCheckbox = (
     shape: "square",
     invalid: props.invalid,
     disabled: props.disabled,
-    focused: focus.focused,
   };
   const toggle = (): void => {
     if (props.disabled === true) return;
@@ -189,7 +188,7 @@ export const renderCheckbox = (
   if (spec.disabled === true) {
     box = suppressSelectionFeedback(mergeStyle(box, resolved.disabled));
   }
-  if (spec.focused === true) box = mergeStyle(box, focusRingStyle(theme));
+  box = mergeStyle(box, keyboardRing(theme, spec.invalid));
   box = mergeStyle(box, props.style);
   return (
     <div

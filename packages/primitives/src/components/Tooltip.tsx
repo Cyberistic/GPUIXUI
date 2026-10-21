@@ -9,8 +9,8 @@
  * whatever element it wraps rather than introducing one of its own.
  *
  * **Limitation:** the trigger must be a focusable element for the keyboard
- * behaviour to work, and GPUix has no `focusVisible` (plan 020 §1.2), so a
- * tooltip opened by a mouse press looks the same as one opened by Tab.
+ * behaviour to work, and the runtime reports focus without saying how it arrived,
+ * so a tooltip opened by a mouse press looks the same as one opened by Tab.
  *
  * The resting appearance is a Tailwind recipe (`recipe/tooltipClass`), compiled
  * through `@gpuixui/tw`.

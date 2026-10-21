@@ -28,7 +28,8 @@ import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { ratingGroupClass, ratingStarClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { focusRingStyle, mergeStyle, useControlState } from "./internal.js";
+import { keyboardRing } from "../core/focus.js";
+import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface RatingProps {
@@ -82,18 +83,16 @@ export const renderRating = (
   const value = clampRating(state.current, max);
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
-  const starStyle = (index: number): StyleDesc => {
-    const resolved = recipeTw.classesToStyle(
-      ratingStarClass({ disabled: props.disabled, readOnly: props.readOnly }),
-      theme,
-    );
-    let style = resolved.style;
-    if (props.disabled === true) style = mergeStyle(style, resolved.disabled);
-    if (Option.exists(focus.focusedIndex, (focused) => focused === index)) {
-      style = mergeStyle(style, focusRingStyle(theme));
-    }
-    return style;
-  };
+  const resolved = recipeTw.classesToStyle(
+    ratingStarClass({ disabled: props.disabled, readOnly: props.readOnly }),
+    theme,
+  );
+  let starStyle = resolved.style;
+  if (props.disabled === true) {
+    starStyle = mergeStyle(starStyle, resolved.disabled);
+  } else if (interactive) {
+    starStyle = mergeStyle(starStyle, keyboardRing(theme));
+  }
   const star = (index: number): ReactElement => (
     <div
       key={index}
@@ -107,7 +106,7 @@ export const renderRating = (
       }}
       onFocus={() => focus.onFocus(index)}
       onBlur={() => focus.onBlur(index)}
-      style={starStyle(index)}
+      style={starStyle}
     >
       <Icon
         name={index <= value ? "star-filled" : "star"}

@@ -48,13 +48,9 @@ const spec = (over: Partial<ControlSpec> = {}): ControlSpec => ({
   ...over,
 });
 
-/** The spread of a focused control's ring, if it has one. */
-const spreadOf = (style: ReturnType<typeof controlFocusStyle>): number => {
-  const shadow = style.boxShadow;
-  return shadow !== undefined && !Array.isArray(shadow)
-    ? shadow.spreadRadius
-    : 0;
-};
+/** The outline width a control declares, if it declares one. */
+const outlineWidthOf = (style: ReturnType<typeof controlFocusStyle>): number =>
+  style.focusVisible?.outlineWidth ?? 0;
 
 /**
  * The paint a variant declares for an interaction: a change of fill, of border
@@ -139,8 +135,8 @@ describe("controlStyle", () => {
       testTheme.colors.destructive,
     );
     expect(
-      controlFocusStyle(spec({ invalid: true }), testTheme).boxShadow,
-    ).toMatchObject({ color: testTheme.colors.destructive });
+      controlFocusStyle(spec({ invalid: true }), testTheme).focusVisible,
+    ).toMatchObject({ outlineColor: testTheme.colors.destructive });
   });
 
   it("gives every variant a distinct resting appearance", () => {
@@ -164,24 +160,26 @@ describe("controlStyle", () => {
     expect(silent).toEqual([]);
   });
 
-  it("rings a focused control, without moving anything", () => {
-    const focused = controlFocusStyle(spec(), testTheme);
-    expect(focused.boxShadow).toMatchObject({
-      color: testTheme.colors.ring,
-      offsetX: 0,
-      offsetY: 0,
-      blurRadius: 0,
+  it("declares the keyboard ring at rest, without moving anything", () => {
+    const ring = controlFocusStyle(spec(), testTheme);
+    expect(ring.focusVisible).toEqual({
+      outlineWidth: testTheme.borderWidth.strong,
+      outlineColor: testTheme.colors.ring,
+      outlineOffset: 0,
     });
-    expect(spreadOf(focused)).toBeGreaterThan(0);
+    // An outline takes no layout space; a shadow ring would have had to be
+    // merged on focus, which is what this removes.
+    expect(ring.boxShadow).toBeUndefined();
   });
 
-  it("warns the eye at rest for a field, and rings it when focused", () => {
+  it("warns the eye at rest for a field, and declares the keyboard ring", () => {
     expect(
       controlStyle(spec({ variant: fieldVariant }), testTheme).borderColor,
     ).toBe(testTheme.colors.border);
     expect(
-      controlFocusStyle(spec({ variant: fieldVariant }), testTheme).boxShadow,
-    ).toMatchObject({ color: testTheme.colors.ring });
+      controlFocusStyle(spec({ variant: fieldVariant }), testTheme)
+        .focusVisible,
+    ).toMatchObject({ outlineColor: testTheme.colors.ring });
   });
 });
 
@@ -192,17 +190,17 @@ describe("the tokens package owns the theme", () => {
     borderWidth: { thin: testTheme.borderWidth.thin, strong: 5 },
   };
 
-  it("takes the ring's spread from borderWidth.strong, not a local constant", () => {
-    const focused = controlFocusStyle(spec(), widened);
-    expect(spreadOf(focused)).toBe(widened.borderWidth.strong);
-    expect(spreadOf(focused)).not.toBe(testTheme.borderWidth.strong);
+  it("takes the outline's width from borderWidth.strong, not a local constant", () => {
+    const ring = controlFocusStyle(spec(), widened);
+    expect(outlineWidthOf(ring)).toBe(widened.borderWidth.strong);
+    expect(outlineWidthOf(ring)).not.toBe(testTheme.borderWidth.strong);
   });
 
   it("recolours an invalid ring without changing its geometry", () => {
     const invalid = controlFocusStyle(spec({ invalid: true }), widened);
-    expect(invalid.boxShadow).toMatchObject({
-      spreadRadius: widened.borderWidth.strong,
-      color: widened.colors.destructive,
+    expect(invalid.focusVisible).toMatchObject({
+      outlineWidth: widened.borderWidth.strong,
+      outlineColor: widened.colors.destructive,
     });
   });
 
@@ -445,15 +443,10 @@ describe("value controls", () => {
     );
   });
 
-  it("paints a ring on a focused thumb, at the token ring colour", () => {
-    const focused = sliderThumbStyle({ ...spec, focused: true }, testTheme);
-    expect(focused.boxShadow).toEqual({
-      offsetX: 0,
-      offsetY: 0,
-      blurRadius: 0,
-      spreadRadius: testTheme.borderWidth.strong,
-      color: testTheme.colors.ring,
-    });
+  it("leaves the ring to the track, which is the slider's focus target", () => {
+    // A thumb is not focusable, so a ring declared on it would never paint; the
+    // single slider rings its track and the range slider rings each thumb.
+    expect(sliderThumbStyle(spec, testTheme).focusVisible).toBeUndefined();
     expect(sliderThumbStyle(spec, testTheme).boxShadow).toBeUndefined();
   });
 });

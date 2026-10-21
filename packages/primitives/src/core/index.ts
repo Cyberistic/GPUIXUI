@@ -110,6 +110,8 @@ export type {
   SpinnerSpec,
 } from "./loading.js";
 
+export { keyboardRing } from "./focus.js";
+
 export {
   controlFocusStyle,
   controlStyle,

@@ -27,6 +27,7 @@ import {
   stepNumber,
   type NumberRange,
 } from "../core/number.js";
+import { keyboardRing } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -39,7 +40,6 @@ import {
 import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
 import {
-  focusRingStyle,
   mergeStyle,
   suppressFeedback,
   useControlState,
@@ -119,7 +119,7 @@ export const renderNumberField = (
   if (invalid) chrome = mergeStyle(chrome, resolved.invalid);
   if (disabled)
     chrome = suppressFeedback(mergeStyle(chrome, resolved.disabled));
-  const ring = focus.focused && !disabled ? focusRingStyle(theme, invalid) : {};
+  const ring = disabled ? {} : keyboardRing(theme, invalid);
   chrome = mergeStyle(
     mergeStyle(chrome, ring),
     resolveStyle(props.style, {

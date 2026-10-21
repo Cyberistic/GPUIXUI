@@ -146,7 +146,10 @@ it("paints the brand role on filled stars and the muted role on empty ones", asy
   expect(colorOf("5 of 5")).toBe(testTheme.colors.mutedForeground);
 });
 
-it("rings the star that holds focus", async () => {
+it("declares the keyboard ring on every star and paints no shadow on a press", async () => {
+  // The bug: the ring was merged on the focused star, so a click looked like a
+  // Tab. Every star is a tab-stop candidate, so every star declares the outline
+  // and the runtime paints it on the one that holds keyboard focus.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -157,10 +160,16 @@ it("rings the star that holds focus", async () => {
   runtime.flush();
   const ringed = (label: string): boolean =>
     Option.isSome(
+      Option.fromNullishOr(byLabel(runtime, label).style["focusVisible"]),
+    );
+  const shadowed = (label: string): boolean =>
+    Option.isSome(
       Option.fromNullishOr(byLabel(runtime, label).style["boxShadow"]),
     );
   expect(ringed("3 of 5")).toBe(true);
-  expect(ringed("2 of 5")).toBe(false);
+  expect(ringed("2 of 5")).toBe(true);
+  expect(shadowed("3 of 5")).toBe(false);
+  expect(shadowed("2 of 5")).toBe(false);
 });
 
 it("is one tab stop: Tab enters the rating and the next Tab leaves it", async () => {

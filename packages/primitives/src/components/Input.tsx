@@ -18,10 +18,10 @@ import { cn } from "@gpuixui/tw";
 import type { ValueState } from "../core/state.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
+import { keyboardRing } from "../core/focus.js";
 import { fieldClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
-  focusRingStyle,
   mergeStyle,
   suppressFeedback,
   useControlState,
@@ -90,8 +90,7 @@ export const fieldChrome = (
     base = mergeStyle(base, resolved.disabled);
     base = suppressFeedback(base);
   }
-  const ring =
-    focused && disabled !== true ? focusRingStyle(theme, invalid) : {};
+  const ring = disabled === true ? {} : keyboardRing(theme, invalid);
   return mergeStyle(
     mergeStyle(base, ring),
     resolveStyle(style, {

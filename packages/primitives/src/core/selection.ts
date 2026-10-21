@@ -10,7 +10,7 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import { alpha, focusRing } from "@gpuixui/tokens";
+import { alpha } from "@gpuixui/tokens";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 
 export const SELECTION_STATES = [
@@ -32,16 +32,6 @@ export interface SelectionSpec {
   readonly shape?: "square" | "circle";
   readonly invalid?: boolean;
   readonly disabled?: boolean;
-  /**
-   * Holds keyboard focus, so it paints the ring.
-   *
-   * Tracked by each control, not by the paint: GPUix has no `focusVisible`, so a
-   * control learns it is focused from its own `onFocus`/`onBlur` and asks for
-   * this. A focused control gets the one outline shape a `boxShadow` can draw —
-   * `@gpuixui/tokens`' `focusRing`, the same geometry every other control paints,
-   * so a selection control cannot drift from the rest of the system.
-   */
-  readonly focused?: boolean;
 }
 
 const filled = (spec: SelectionSpec): boolean => spec.state !== "unchecked";
@@ -117,7 +107,6 @@ export const selectionBoxStyle = (
     };
     style.active = {};
   }
-  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 
@@ -166,7 +155,6 @@ export const switchTrackStyle = (
     };
     style.active = {};
   }
-  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 

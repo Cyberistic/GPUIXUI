@@ -80,14 +80,15 @@ import { Button, Stack } from "@gpuixui/primitives";
 - `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.
-- Focus is drawn as a zero-offset shadow ring (`controlFocusStyle`), because the
-  runtime has no `focusVisible`. A mouse click therefore shows the same ring as
-  Tab.
+- Focus is a **keyboard-only outline**: the button declares `focusVisible`
+  (`keyboardRing` from `core/focus.ts`, `colors.ring` at `borderWidth.strong`)
+  at rest, and the runtime paints it after keyboard input only. A mouse click
+  shows no ring, which is the native contract (measured in plan 053).
 
 ## Theming
 
-`controlStyle` resolves fill, text, border, hover, active, disabled and focus
-from the theme; `buttonVariants` maps each variant to colour **roles**, never
+`controlStyle` resolves fill, text, border, hover, active and disabled from the
+theme, and the keyboard ring is `controlFocusStyle` (`keyboardRing`); `buttonVariants` maps each variant to colour **roles**, never
 colours. Size and padding come from `density`.
 
 `style` takes a `StateStyle<ButtonState>` — a `StyleDesc`, or a callback that
@@ -103,7 +104,9 @@ refuses activation.
 
 ## Limitations
 
-- No `focusVisible`: the ring cannot distinguish pointer from keyboard focus.
+- The ring's paint is the runtime's: the unit and runtime suites assert the
+  declaration, and the playground's `focus-visible` probe holds the paint
+  (plan 053).
 - No `aria-disabled` and no `aria-pressed`/toggle-button state.
 - An icon-only button must pass `label`; the component cannot infer one.
 - No native button element: the runtime exposes a `div` with role and handlers.

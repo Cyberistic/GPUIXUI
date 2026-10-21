@@ -167,17 +167,24 @@ it("paints the destructive border on every cell when invalid", async () => {
   });
 });
 
-it("rings only the cell the caret is in", async () => {
+it("declares the keyboard ring on every cell and paints no shadow ring", async () => {
+  // The runtime paints `focusVisible` only on the cell holding the caret; a
+  // shadow ring merged per focused cell is the workaround this replaced.
   const runtime = await mount(
     <OTPField testId="otp" label="Verification code" defaultValue="12" />,
   );
   runtime.click("otp-cell-2");
   runtime.flush();
-  const ringed = Arr.filter(
+  const painted = Arr.filter(
     cells(runtime),
     (cell) => cell.style["boxShadow"] !== undefined,
   );
-  expect(ringed).toHaveLength(1);
+  expect(painted).toHaveLength(0);
+  const declared = Arr.filter(
+    cells(runtime),
+    (cell) => cell.style["focusVisible"] !== undefined,
+  );
+  expect(declared.length).toBe(cells(runtime).length);
 });
 
 it("refuses input and leaves the tab order while disabled", async () => {

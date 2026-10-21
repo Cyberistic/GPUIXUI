@@ -89,7 +89,8 @@ selection spec. The thumb is positioned by the track's `justifyContent`, not a
 pixel offset, because the runtime has no `transform` — so it cannot drift out of
 the pill. Disabled adds half opacity and removes feedback. `invalid` gives an
 off-switch the destructive border, the same role a checkbox uses, and focus
-paints the shared selection ring.
+declares the shared keyboard outline at rest (`keyboardRing`), which the runtime
+paints after keyboard focus only.
 
 ## Limitations
 
@@ -101,7 +102,7 @@ paints the shared selection ring.
 ## Verification
 
 - `src/core/selection.test.ts` — track and thumb geometry across sizes and
-  states; the destructive border when `invalid`; the focus ring.
+  states; the destructive border when `invalid`; the keyboard ring.
 - `src/components/Switch.test.tsx` — the knob's geometry from the theme scale, a
   custom glyph inside it, and the pointer guard that keeps the glyph from taking
   the press.

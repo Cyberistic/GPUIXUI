@@ -116,18 +116,17 @@ describe("OTPField", () => {
     );
   });
 
-  it("rings only the cell the caret is in", () => {
-    const focused: OTPFieldFocus = {
-      ...idle,
-      focusedIndex: Option.some(1),
-    };
-    const element = render({ length: 3 }, "12", focused);
-    expect(
-      Option.getOrUndefined(hostStyleRecord(cell(element, 0)))?.["boxShadow"],
-    ).toBeUndefined();
-    expect(
-      Option.getOrUndefined(hostStyleRecord(cell(element, 1)))?.["boxShadow"],
-    ).toBeDefined();
+  it("declares the keyboard ring on every cell, and lets the runtime pick one", () => {
+    // The runtime paints `focusVisible` only on the cell holding the caret, so
+    // every cell declares the same outline and no cell paints a shadow ring.
+    const element = render({ length: 3 }, "12");
+    cellsOf(element).forEach((input) => {
+      const style = expectSome(hostStyleRecord(input));
+      expect(style["focusVisible"]).toBeDefined();
+      expect(Option.fromNullishOr(style["boxShadow"])).toStrictEqual(
+        Option.none(),
+      );
+    });
   });
 
   it("paints the destructive border on every cell when invalid", () => {

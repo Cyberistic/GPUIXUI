@@ -27,6 +27,7 @@ import type {
   StyleDesc,
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
+import { keyboardRing } from "../core/focus.js";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import {
@@ -52,7 +53,6 @@ import {
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
-  focusRingStyle,
   mergeStyle,
   useControlState,
   useFocus,
@@ -144,21 +144,13 @@ const fillStyle = (
     width: `${fraction * 100}%`,
   });
 
-/** The resolved thumb, ringed when it holds focus. */
+/** The resolved thumb. The track is the focus target, so it declares the ring. */
 const thumbStyle = (
   size: ControlSize,
   invalid: boolean,
-  focused: boolean,
   theme: PrimitiveTheme,
-): StyleDesc => {
-  const resolved = recipeTw.classesToStyle(
-    sliderThumbClass(size, invalid),
-    theme,
-  );
-  return focused
-    ? mergeStyle(resolved.style, focusRingStyle(theme))
-    : resolved.style;
-};
+): StyleDesc =>
+  recipeTw.classesToStyle(sliderThumbClass(size, invalid), theme).style;
 
 export const renderSlider = (
   props: SliderProps,
@@ -177,6 +169,7 @@ export const renderSlider = (
   );
   let track = resolved.style;
   if (props.disabled === true) track = mergeStyle(track, resolved.disabled);
+  else track = mergeStyle(track, keyboardRing(theme, invalid));
   track = mergeStyle(track, props.style);
   return (
     <div
@@ -202,7 +195,7 @@ export const renderSlider = (
     >
       <div style={recipeTw.classesToStyle(sliderRailClass, theme).style}>
         <div style={fillStyle(valueFraction(value, range), invalid, theme)} />
-        <div style={thumbStyle(size, invalid, focus.focused, theme)} />
+        <div style={thumbStyle(size, invalid, theme)} />
       </div>
     </div>
   );
@@ -254,10 +247,6 @@ export const renderRangeSlider = (
       : ([`${props.label} minimum`, `${props.label} maximum`] as const);
   const thumb = (index: 0 | 1): ReactElement => {
     const value = index === 0 ? span.start : span.end;
-    const focused = Option.exists(
-      focus.focusedIndex,
-      (focused) => focused === index,
-    );
     return (
       <div
         ref={handlers.registerThumb(index)}
@@ -278,7 +267,10 @@ export const renderRangeSlider = (
               ),
           });
         }}
-        style={thumbStyle(size, invalid, focused, theme)}
+        style={mergeStyle(
+          thumbStyle(size, invalid, theme),
+          props.disabled === true ? {} : keyboardRing(theme, invalid),
+        )}
       />
     );
   };

@@ -6,12 +6,12 @@
  * wired here exactly the way the platform behaves (Enter on key down, Space on
  * key up, a held key ignored).
  *
- * Focus is the one interaction state the runtime forces on us — there is no
- * `focusVisible` (plan 020 §1.2) — so the component tracks focus and merges
- * tokens' `focusRing` while it holds it. A mouse press therefore shows the ring
- * too; that limitation is recorded in `COMPONENTS.md`. The `focused` flag is
- * React-local render state with no other reader, so `useState` is the right
- * tool; an Atom would make one button's highlight global state.
+ * Focus is a keyboard-only outline: the button declares `keyboardRing`
+ * (tokens' `focusVisible`) at rest and the runtime paints it after Tab, never
+ * after a mouse press (plan 053's probe). The `focused` flag is still tracked
+ * because it is public `ButtonState` — a `style` callback may branch on it —
+ * and it is React-local render state with no other reader, so `useState` is the
+ * right tool; an Atom would make one button's highlight global state.
  *
  * The resting appearance is a Tailwind recipe (`recipe/buttonClass`), compiled
  * through `@gpuixui/tw`; the caller's `className` is joined last so it wins
@@ -27,7 +27,8 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
 import { buttonClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { focusRingStyle, mergeStyle, suppressFeedback } from "./internal.js";
+import { mergeStyle, suppressFeedback } from "./internal.js";
+import { keyboardRing } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -112,7 +113,7 @@ export const renderButton = (
     props.disabled === true
       ? suppressFeedback(mergeStyle(resolved.style, resolved.disabled))
       : resolved.style;
-  const own = focus.focused ? mergeStyle(base, focusRingStyle(theme)) : base;
+  const own = mergeStyle(base, keyboardRing(theme));
   const style = mergeStyle(
     own,
     resolveStyle(props.style, {

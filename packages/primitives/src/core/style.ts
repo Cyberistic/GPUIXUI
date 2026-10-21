@@ -13,7 +13,7 @@
  */
 
 import type { GpuixTheme, StyleDesc } from "@gpuix/react";
-import { elevationShadow, focusRing } from "@gpuixui/tokens";
+import { elevationShadow } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type {
@@ -25,6 +25,7 @@ import type {
   SpaceStep,
   TextRole,
 } from "./theme.js";
+import { keyboardRing } from "./focus.js";
 import { fieldVariant } from "./variants.js";
 
 /**
@@ -133,25 +134,18 @@ export const controlStyle = (
 };
 
 /**
- * What a control adds while it holds keyboard focus.
+ * The keyboard ring a control declares at rest.
  *
- * The geometry is `@gpuixui/tokens`' `focusRing` — a zero-offset, zero-blur
- * shadow spread by `borderWidth.strong`, the one shape GPUix 0.10.0's
- * `boxShadow` can draw that behaves like an outline and takes no layout space.
- * Only the colour changes for an invalid control. There is no `focusVisible`
- * state, so a component tracks focus itself (`onFocus`/`onBlur`) and merges
- * this over the resting style; a mouse press shows the ring too, which
- * `COMPONENTS.md` records.
+ * `@gpuixui/tokens`' `keyboardFocusRing` is the runtime's `focusVisible` outline:
+ * painted after keyboard input, never after a mouse press, and it takes no
+ * layout space. Only the colour changes for an invalid control. It is merged by
+ * the component, after the recipe, because the ring is state the paint declares
+ * once and the resting style is what the recipe oracle compares.
  */
 export const controlFocusStyle = (
   spec: ControlSpec,
   theme: PrimitiveTheme,
-): StyleDesc => {
-  const ring = focusRing(theme);
-  return spec.invalid === true
-    ? { boxShadow: { ...ring.boxShadow, color: theme.colors.destructive } }
-    : ring;
-};
+): StyleDesc => keyboardRing(theme, spec.invalid);
 
 /**
  * What a text field adds over the shared control chrome.
@@ -432,7 +426,6 @@ export interface SliderSpec {
   readonly size: ControlSize;
   readonly invalid?: boolean;
   readonly disabled?: boolean;
-  readonly focused?: boolean;
 }
 
 /**
@@ -526,7 +519,6 @@ export const sliderThumbStyle = (
     marginRight: -half,
     pointerEvents: "none",
   };
-  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 
@@ -587,7 +579,6 @@ export interface RatingStarSpec {
   readonly size: ControlSize;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
-  readonly focused?: boolean;
 }
 
 /** One star's hit area: the icon plus a hairline of padding for the ring. */
@@ -605,7 +596,6 @@ export const ratingStarStyle = (
     cursor: interactive ? "pointer" : "not-allowed",
   };
   if (spec.disabled === true) style.opacity = 0.5;
-  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 
@@ -629,7 +619,6 @@ export interface OtpCellSpec {
   readonly size: ControlSize;
   readonly invalid?: boolean;
   readonly disabled?: boolean;
-  readonly focused?: boolean;
 }
 
 /**
@@ -637,8 +626,8 @@ export interface OtpCellSpec {
  *
  * It is a real `<input>`, so the cell's own surface is the field: the shared
  * control chrome resolves to one square per cell (equal width and height from
- * the density scale), the body type centres the character, and the focus ring
- * lands on the cell the caret is in rather than on the wrapper.
+ * the density scale), the body type centres the character, and the keyboard ring
+ * is declared on every cell — the runtime paints it on the one holding the caret.
  */
 export const otpCellStyle = (
   spec: OtpCellSpec,
@@ -662,11 +651,5 @@ export const otpCellStyle = (
     lineHeight: theme.typography.body.lineHeight,
     fontWeight: theme.typography.body.fontWeight,
     cursor: spec.disabled === true ? "not-allowed" : "text",
-    ...(spec.focused === true && spec.disabled !== true
-      ? controlFocusStyle(
-          { variant: fieldVariant, size: spec.size, invalid: spec.invalid },
-          theme,
-        )
-      : {}),
   };
 };

@@ -157,15 +157,17 @@ describe("Rating", () => {
     });
   });
 
-  it("rings only the star that holds focus", () => {
+  it("declares the keyboard ring on every interactive star, never a shadow", () => {
+    // Every star is a tab stop candidate, so every star declares the outline;
+    // the runtime paints it on the one that holds keyboard focus.
     const element = render({}, 3, 2);
-    const starred = starsOf(element).map((star) =>
-      Option.isSome(
-        Option.flatMap(hostStyleRecord(star), (style) =>
-          Option.fromNullishOr(style["boxShadow"]),
-        ),
-      ),
-    );
-    expect(starred).toStrictEqual([false, true, false, false, false]);
+    const ringed = starsOf(element).map((star) => {
+      const style = expectSome(hostStyleRecord(star));
+      return [
+        style["focusVisible"] !== undefined,
+        style["boxShadow"] !== undefined,
+      ];
+    });
+    expect(ringed).toStrictEqual(Arr.map(Arr.range(0, 4), () => [true, false]));
   });
 });

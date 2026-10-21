@@ -28,7 +28,7 @@
 
 import { useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -41,18 +41,14 @@ import {
   otpLength,
   type OtpEdit,
 } from "../core/otp.js";
+import { keyboardRing } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldSquareClass, otpGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
-import {
-  focusRingStyle,
-  mergeStyle,
-  suppressFeedback,
-  useControlState,
-} from "./internal.js";
+import { mergeStyle, suppressFeedback, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface OTPFieldProps {
@@ -122,24 +118,18 @@ export const renderOtpField = (
     cn(otpGroupClass, props.className),
     theme,
   ).style;
-  const cellStyle = (index: number): StyleDesc => {
-    const resolved = recipeTw.classesToStyle(
-      fieldSquareClass({ size: props.size ?? "md", invalid: props.invalid }),
-      theme,
-    );
-    let style = resolved.style;
-    if (props.invalid === true) style = mergeStyle(style, resolved.invalid);
-    if (disabled) {
-      style = suppressFeedback(mergeStyle(style, resolved.disabled));
-    }
-    if (
-      !disabled &&
-      Option.exists(focus.focusedIndex, (focused) => focused === index)
-    ) {
-      style = mergeStyle(style, focusRingStyle(theme, props.invalid));
-    }
-    return style;
-  };
+  const resolved = recipeTw.classesToStyle(
+    fieldSquareClass({ size: props.size ?? "md", invalid: props.invalid }),
+    theme,
+  );
+  let cellStyle = resolved.style;
+  if (props.invalid === true)
+    cellStyle = mergeStyle(cellStyle, resolved.invalid);
+  if (disabled) {
+    cellStyle = suppressFeedback(mergeStyle(cellStyle, resolved.disabled));
+  } else {
+    cellStyle = mergeStyle(cellStyle, keyboardRing(theme, props.invalid));
+  }
   return (
     <div
       role="group"
@@ -169,7 +159,7 @@ export const renderOtpField = (
           tabIndex={disabled ? -1 : 0}
           theme={nativeTextTheme(theme)}
           aria-label={otpCellLabel(props.label, index)}
-          style={cellStyle(index)}
+          style={cellStyle}
           onChange={(event: EventPayload) => {
             if (disabled) return;
             handlers.onEdit(index, event.value ?? "");

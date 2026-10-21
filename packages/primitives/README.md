@@ -25,8 +25,8 @@ import { darkTheme } from "@gpuixui/tokens";
 `PrimitiveTheme` is `@gpuixui/tokens`' `Theme`, re-exported from
 `src/core/theme.ts` under the name the components import. The tokens package
 owns the values **and** the runtime-shaped helpers (`focusRing`,
-`elevationShadow`); primitives owns only the resolution from a semantic spec to a
-`StyleDesc`. There is one declaration of the theme in the library (plan 021) —
+`keyboardFocusRing`, `elevationShadow`); primitives owns only the resolution from
+a semantic spec to a `StyleDesc`. There is one declaration of the theme in the library (plan 021) —
 a second copy would drift silently.
 
 There is deliberately **no default theme**: a primitive rendered without a
@@ -77,7 +77,7 @@ none paints a literal and none scripts hover or press
 
 | Capability | GPUix 0.10.0 | Here |
 | ---------- | ------------ | ---- |
-| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too |
+| `focusVisible` / `outline*` | **present** | every control declares the keyboard outline at rest (`keyboardRing` → `focusVisible`); the runtime paints it after Tab and never after a mouse press |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | absent | a slider drag only tracks while the pointer is over the track; click-to-position and the keyboard are the precise paths |
@@ -146,8 +146,8 @@ the two-direction proof are in
 
 - the binding is the **locally-built** `darwin-x64` artifact (plan 140), not a
   published binary — no `darwin-x64` release exists;
-- `focusVisible` cannot be observed: the runtime has no such state, so a
-  mouse-opened and a keyboard-opened focus ring look the same;
+- the ring's **paint** is the playground's `focus-visible` probe (plan 053): the
+  test renderer reports the declared `focusVisible` style, not pixels;
 - scrollbar tint, rotation and colour interpolation are absent from 0.10.0, so
   the alternatives listed above are the honest ones, not a placeholder.
 

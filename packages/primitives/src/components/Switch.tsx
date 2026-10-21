@@ -21,13 +21,13 @@ import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import { decideActivation } from "../core/keyboard.js";
 import type { SelectionAccent, SelectionSpec } from "../core/selection.js";
+import { keyboardRing } from "../core/focus.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { switchThumbClass, switchTrackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
   checkedChange,
-  focusRingStyle,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
@@ -128,7 +128,6 @@ export const renderSwitch = (
     accent: props.accent ?? "primary",
     invalid: props.invalid,
     disabled: props.disabled,
-    focused: focus.focused,
   };
   const toggle = (): void => {
     if (props.disabled === true) return;
@@ -148,7 +147,7 @@ export const renderSwitch = (
   if (spec.disabled === true) {
     track = suppressSelectionFeedback(mergeStyle(track, resolved.disabled));
   }
-  if (spec.focused === true) track = mergeStyle(track, focusRingStyle(theme));
+  track = mergeStyle(track, keyboardRing(theme, spec.invalid));
   track = mergeStyle(track, props.style);
   return (
     <div

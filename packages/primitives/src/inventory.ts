@@ -148,7 +148,6 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No focusVisible: a mouse press paints the same ring as a Tab",
       "No aria-disabled and no aria-pressed",
       "No native button element: a div with a role and handlers",
     ],

@@ -3,9 +3,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
-import { focusRing } from "@gpuixui/tokens";
+import { keyboardFocusRing } from "@gpuixui/tokens";
 import { controlStyle } from "./style.js";
-import { selectionBoxStyle, switchTrackStyle } from "./selection.js";
+import { keyboardRing } from "./focus.js";
 import { buttonVariants } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
 import type { PrimitiveTheme } from "./theme.js";
@@ -53,8 +53,8 @@ const walk = (dir: string): ReadonlyArray<string> =>
 
 const COLOUR_LITERAL = /#[0-9a-fA-F]{3,8}\b/g;
 
-/** The one property only `@gpuixui/tokens`' `focusRing` may set. */
-const SPREAD_RADIUS = /spreadRadius\s*:/;
+/** The one property only `@gpuixui/tokens`' `keyboardFocusRing` may set. */
+const OUTLINE_WIDTH = /outlineWidth\s*:/;
 
 /** The theme with every density number changed, and nothing else. */
 const spacious: PrimitiveTheme = {
@@ -98,23 +98,16 @@ describe("the focus ring has one definition", () => {
       true,
     );
     const offenders = Arr.filter(scanned, (path) =>
-      SPREAD_RADIUS.test(readFileSync(path, "utf8")),
+      OUTLINE_WIDTH.test(readFileSync(path, "utf8")),
     );
     expect(offenders).toEqual([]);
   });
 
-  it("paints the shared ring on a focused selection control", () => {
-    const spec = {
-      state: "checked",
-      size: "md",
-      accent: "primary",
-      focused: true,
-    } as const;
-    expect(selectionBoxStyle(spec, testTheme).boxShadow).toEqual(
-      focusRing(testTheme).boxShadow,
-    );
-    expect(switchTrackStyle(spec, testTheme).boxShadow).toEqual(
-      focusRing(testTheme).boxShadow,
+  it("declares the shared keyboard ring once, from the tokens helper", () => {
+    // `core/focus.ts` is the one place a package control asks for the ring;
+    // `focus.test.ts` holds its geometry, and this holds the source of truth.
+    expect(keyboardRing(testTheme).focusVisible).toEqual(
+      keyboardFocusRing(testTheme).focusVisible,
     );
   });
 });

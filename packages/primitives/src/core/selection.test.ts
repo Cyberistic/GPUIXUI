@@ -74,16 +74,13 @@ describe("selectionBoxStyle", () => {
     ).toBe(testTheme.colors.destructive);
   });
 
-  it("paints the focus ring on a focused box, and only then", () => {
-    const focused = selectionBoxStyle(spec({ focused: true }), testTheme);
-    expect(focused.boxShadow).toEqual({
-      offsetX: 0,
-      offsetY: 0,
-      blurRadius: 0,
-      spreadRadius: testTheme.borderWidth.strong,
-      color: testTheme.colors.ring,
-    });
-    expect(selectionBoxStyle(spec(), testTheme).boxShadow).toBeUndefined();
+  it("paints no ring of its own: the component declares the keyboard ring", () => {
+    // The resting paint is what the recipe oracle compares, so the ring is a
+    // component-level declaration (`core/focus.ts`), not part of the box's
+    // geometry — and it must never be a shadow again.
+    const style = selectionBoxStyle(spec(), testTheme);
+    expect(style.focusVisible).toBeUndefined();
+    expect(style.boxShadow).toBeUndefined();
   });
 
   it("gives a filled box pointer feedback that is not its resting fill", () => {
@@ -164,16 +161,9 @@ describe("switch", () => {
     );
   });
 
-  it("paints the focus ring on a focused track, and only then", () => {
-    expect(
-      switchTrackStyle(spec({ focused: true }), testTheme).boxShadow,
-    ).toEqual({
-      offsetX: 0,
-      offsetY: 0,
-      blurRadius: 0,
-      spreadRadius: testTheme.borderWidth.strong,
-      color: testTheme.colors.ring,
-    });
-    expect(switchTrackStyle(spec(), testTheme).boxShadow).toBeUndefined();
+  it("paints no ring of its own: the component declares the keyboard ring", () => {
+    const style = switchTrackStyle(spec(), testTheme);
+    expect(style.focusVisible).toBeUndefined();
+    expect(style.boxShadow).toBeUndefined();
   });
 });

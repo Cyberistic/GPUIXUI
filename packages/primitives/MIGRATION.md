@@ -157,11 +157,12 @@ primitives use the same compiler with a theme-scale registry.
      style = suppressFeedback(style);                    // hover/active → resting fill
    }
    if (invalid) style = mergeStyle(style, resolved.invalid);
-   if (focused) style = mergeStyle(style, focusRingStyle(theme, invalid));
+   style = mergeStyle(style, keyboardRing(theme, invalid)); // keyboard-only ring
    style = mergeStyle(style, props.style);               // caller's style wins
    ```
 
-   `suppressFeedback` and `focusRingStyle` live in `src/components/internal.ts`.
+   `suppressFeedback` lives in `src/components/internal.ts`; `keyboardRing` lives
+   in `src/core/focus.ts` and is merged at rest — never while focused.
 5. **Add an equivalence test** (see below) asserting the compiled output equals
    the pre-migration resolver's output.
 6. **Run** `nub run --filter @gpuixui/primitives check-types` and `test`.
@@ -217,7 +218,7 @@ Geometry, colour and type map to the classes below. Columns are the
 | `flexShrink: 1` | `shrink-1` | registry |
 | `minWidth: "100%"` | `min-w-full` | registry |
 | `boxShadow` (elevation) | `shadow-<level>` (`sm`/`md`/`lg`) | built-in; `overlay` is empty |
-| `boxShadow` (focus ring) | not a class — `focusRingStyle(theme, invalid)` | registry of `internal.ts` |
+| `focusVisible` outline (keyboard ring) | not a class — `keyboardRing(theme, invalid)` | `core/focus.ts` |
 
 Interaction state is expressed with the same prefixes `@gpuixui/tw` already
 routes to buckets: `hover:` → `style.hover`, `active:` → `style.active`,

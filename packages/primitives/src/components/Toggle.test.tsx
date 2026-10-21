@@ -142,13 +142,20 @@ describe("Toggle", () => {
     expect(onPressedChange).toHaveBeenCalledTimes(0);
   });
 
-  it("rings the button while it holds focus", () => {
-    const ring = renderToggle({}, testTheme, state(false), focused, vi.fn());
-    expect(expectSome(hostStyleRecord(ring))["boxShadow"]).toBeDefined();
+  it("declares the keyboard ring at rest, and never a focus-painted shadow", () => {
+    // The bug: the ring was merged only while `focused`, so a click looked
+    // exactly like a Tab. The outline is declared once and the runtime paints it
+    // after keyboard input (`focusVisible`).
     const rest = renderToggle({}, testTheme, state(false), idle, vi.fn());
-    expect(
-      Option.getOrUndefined(hostStyleRecord(rest))?.["boxShadow"],
-    ).toBeUndefined();
+    const style = expectSome(hostStyleRecord(rest));
+    expect(style["focusVisible"]).toBeDefined();
+    expect(Option.fromNullishOr(style["boxShadow"])).toStrictEqual(
+      Option.none(),
+    );
+    const held = renderToggle({}, testTheme, state(false), focused, vi.fn());
+    expect(expectSome(hostStyleRecord(held))["focusVisible"]).toEqual(
+      style["focusVisible"],
+    );
   });
 
   it("hands a style callback the live state and lets its result win", () => {

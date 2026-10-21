@@ -10,7 +10,6 @@
 import { useEffect, useState } from "react";
 import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
-import { focusRing } from "@gpuixui/tokens";
 import {
   initValueState,
   setValue,
@@ -47,17 +46,6 @@ export const suppressSelectionFeedback = (style: StyleDesc): StyleDesc => ({
   active: {},
 });
 
-/** The focus ring, destructive-coloured when the field is invalid. */
-export const focusRingStyle = (
-  theme: PrimitiveTheme,
-  invalid?: boolean,
-): StyleDesc => {
-  const ring = focusRing(theme);
-  return invalid === true
-    ? { boxShadow: { ...ring.boxShadow, color: theme.colors.destructive } }
-    : ring;
-};
-
 /**
  * The theme a provider hands down.
  *
@@ -80,9 +68,11 @@ export interface FocusState {
 /**
  * Track focus for a control.
  *
- * The runtime has no `focusVisible` state (plan 020 §1.2), so a focus ring has
- * to be drawn by the component; this is where it learns it should be. React-local
- * render state with no other reader, so a hook — not a shared Atom — is right.
+ * The ring is no longer painted from this state — it is `keyboardRing`, declared
+ * at rest and painted by the runtime after keyboard input (`core/focus.ts`). What
+ * remains is the public `focused` flag a `StateStyle` callback may branch on.
+ * React-local render state with no other reader, so a hook — not a shared Atom —
+ * is right.
  */
 export const useFocus = (): FocusState => {
   const [focused, setFocused] = useState(false);

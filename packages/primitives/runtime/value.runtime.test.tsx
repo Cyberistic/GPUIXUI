@@ -178,21 +178,30 @@ it("paints the thumb centred on the value it represents", async () => {
   });
 });
 
-it("rings the focused thumb and clears it when focus leaves", async () => {
+it("declares the keyboard ring on the slider's track, not its thumb", async () => {
+  // The bug: the ring was merged on the thumb while the track held focus, so a
+  // press painted a shadow ring. The track is the tab stop, so it declares the
+  // keyboard outline at rest and the runtime decides when to paint it.
   const runtime = await mount(
     <Stack direction="row">
       <Button testId="b">Elsewhere</Button>
       <Slider testId="s" label="Volume" />
     </Stack>,
   );
-  const ringed = (): boolean =>
-    Option.isSome(Option.fromNullishOr(thumbOf(runtime, "s").style.boxShadow));
+  const track = Option.getOrElse(runtime.element("s"), () =>
+    expect.fail("the slider painted no track"),
+  );
+  expect(track.style.focusVisible).toBeDefined();
   runtime.click("s");
   runtime.flush();
-  expect(ringed()).toBe(true);
+  expect(
+    Option.fromNullishOr(thumbOf(runtime, "s").style.boxShadow),
+  ).toStrictEqual(Option.none());
   runtime.click("b");
   runtime.flush();
-  expect(ringed()).toBe(false);
+  expect(
+    Option.fromNullishOr(thumbOf(runtime, "s").style.boxShadow),
+  ).toStrictEqual(Option.none());
 });
 
 it("moves the nearer end of a range when its track is pressed", async () => {
