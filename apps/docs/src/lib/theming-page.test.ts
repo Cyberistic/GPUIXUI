@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
-import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
+import { contrastFloors, contrastRatio, retroStyles } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
+import { lookLabel, lookOrder, resolvePlatformTheme } from "./platform";
 
 /**
  * The two theming pages state facts about `@gpuixui/tokens` that the package
@@ -93,5 +94,37 @@ describe("the theming page's brand snippet", () => {
 
     expect(measured).toBeDefined();
     expect(measured ?? 0).toBeGreaterThanOrEqual(contrastFloors.secondary);
+  });
+});
+
+describe("the theming page's look picker", () => {
+  const picker = section(page("theming.mdx"), "The look picker");
+
+  /** The prose with its line wrapping flattened: a label is one sentence, not two lines. */
+  const flat = (text: string): string => text.replace(/\s+/g, " ");
+
+  it("offers every look the switch offers, by the library's label", () => {
+    // The page names the control the reader sees; a look added to the library
+    // without a sentence here would be a switch position the docs never
+    // explain.
+    expect(
+      lookOrder.filter((look) => !flat(picker).includes(lookLabel(look))),
+    ).toEqual([]);
+  });
+
+  it("writes the look to the URL and says it is not a platform", () => {
+    expect(picker).toContain("look=luna");
+    expect(flat(picker)).toContain("not a fifth platform");
+    expect(picker).toContain("retroStyles");
+    expect(picker).toContain("applyStyle");
+  });
+
+  it("describes the styles the library ships, not ones the site invented", () => {
+    // The look's label comes from `retroStyles`; quoting a different name here
+    // would document a style that does not exist.
+    expect(resolvePlatformTheme("default", "dark", "luna").name).toContain(
+      retroStyles.luna.label,
+    );
+    expect(flat(page("theming.mdx"))).toContain(retroStyles.aero.label);
   });
 });

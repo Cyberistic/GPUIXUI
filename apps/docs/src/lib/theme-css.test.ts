@@ -1,7 +1,8 @@
-import { platformTheme, themes } from "@gpuixui/tokens";
+import { platformTheme, retroStyles, themes } from "@gpuixui/tokens";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { cssFontStack } from "./fonts";
+import { resolvePlatformTheme } from "./platform";
 import { toCssVars } from "./theme-css";
 
 /**
@@ -106,6 +107,17 @@ describe("theme bridge", () => {
       "36px",
       "32px",
     ]);
+  });
+
+  it("carries an authored look's palette, radius and family", () => {
+    const vars = toCssVars(resolvePlatformTheme("default", "light", "luna"));
+
+    // The look picker is only honest if the browser bridge paints the look's
+    // own values; a preview that kept the base palette would show a theme the
+    // library does not ship.
+    expect(vars["--background"]).toBe(retroStyles.luna.colors.light.background);
+    expect(vars["--radius"]).toBe(`${retroStyles.luna.radius.md}px`);
+    expect(vars["--font-mono"]).toBe(retroStyles.luna.mono);
   });
 
   it("maps the GPUI font sentinel to a CSS stack, and leaves other families alone", () => {

@@ -1,8 +1,12 @@
 import {
+  applyStyle,
   platformTheme,
   platformTypes,
+  retroNames,
+  retroStyles,
   themes,
   type PlatformName,
+  type RetroName,
   type Theme,
   type ThemeMode,
 } from "@gpuixui/tokens";
@@ -49,12 +53,54 @@ export const platformSearch = (platform: PlatformName): string =>
   `?${platformParam}=${platform}`;
 
 /**
- * The theme a platform shows: the library's own platform variant over one of
- * its built-in modes. Today `platformTheme` swaps the type families and names
- * the platform; the colours, scales and density are the base theme's, so the
- * preview follows the library the moment those variants widen.
+ * The authored look a preview paints, or `native` for the platform's own style.
+ *
+ * A look is not a platform: `platformNames` is the persisted key for the
+ * operating systems an application runs on, and `luna`/`aero` are styles of the
+ * same shape (`retroStyles`). Offering them here is the extension mechanism in
+ * practice, not a fifth platform — the mission's toggle stays macOS · Linux ·
+ * Windows · Default.
+ */
+export type LookName = "native" | RetroName;
+
+/** The query parameter that carries a look. */
+export const lookParam = "look";
+
+/** The looks the switch offers, in order: the platform's own style first. */
+export const lookOrder = [
+  "native",
+  ...retroNames,
+] as const satisfies readonly LookName[];
+
+/** The label a look shows: `Platform` for the native style, the style's own name otherwise. */
+export const lookLabel = (look: LookName): string =>
+  look === "native" ? "Platform" : retroStyles[look].label;
+
+/** Parse a raw look. A name the library does not ship is rejected, not guessed. */
+export const parseLook = (
+  raw: string | null | undefined,
+): LookName | undefined => lookOrder.find((look) => look === raw);
+
+/** Read a look out of a query string (`?look=luna`). */
+export const lookFromSearch = (search: string): LookName | undefined =>
+  parseLook(new URLSearchParams(search).get(lookParam));
+
+/** The query value a look writes (`luna`), or nothing for the platform style. */
+export const lookSearch = (look: LookName): string => look;
+
+/**
+ * The theme a preview shows: the library's platform variant over one of its
+ * built-in modes, then the authored look over that when one is chosen.
+ *
+ * `applyStyle` keeps the base's contrast: a high-contrast base takes a look's
+ * families, radii and density but keeps its own palette, so the look cannot
+ * undo the floors the base was chosen for.
  */
 export const resolvePlatformTheme = (
   platform: PlatformName,
   mode: ThemeMode = "dark",
-): Theme => platformTheme(themes[mode], platform);
+  look: LookName = "native",
+): Theme => {
+  const base = platformTheme(themes[mode], platform);
+  return look === "native" ? base : applyStyle(base, retroStyles[look]);
+};

@@ -85,7 +85,11 @@ when it is crossed.
 
 The site has its own identity (Hunter License green); the components have the
 library's tokens (iris). A preview must show the latter, and it must follow the
-platform switch.
+platform switch and the look picker. Both are library values: the platform names
+come from `platformStyles`, and the looks are the authored `retroStyles` — Luna
+and Aero — which are styles of the same shape, not a fifth platform (the
+mission's toggle stays macOS · Linux · Windows · Default). Each is written to the
+URL (`?platform=…&look=…`) so a link carries what the reader saw.
 
 - `src/lib/theme-css.ts` is the one bridge: a `Theme` becomes CSS variables
   (`primaryForeground` → `--primary-foreground`, `radius.md` → `--radius`, both
@@ -93,8 +97,9 @@ platform switch.
   and every preview use it.
 - `src/components/docs/preview-surface.tsx` wraps a preview in `.gx-demo` and
   applies `toCssVars` of the **resolved platform theme** from
-  `src/lib/platform.ts` (`platformTheme(themes.dark, platform)`), plus a
-  `data-platform` marker.
+  `src/lib/platform.ts` (`platformTheme(themes.dark, platform)`, then the
+  authored look over it when one is chosen), plus `data-platform` and
+  `data-look` markers.
 - `.gx-demo` in `demos.css` declares the dark theme's roles and its comfortable
   density as defaults, because the landing's product window renders outside a
   preview surface.

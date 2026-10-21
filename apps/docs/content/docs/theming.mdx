@@ -167,8 +167,27 @@ https://gpuixui.sudokw.com/docs/components/button?platform=win32
 
 and it is remembered between visits, so navigating does not reset it.
 
-A preview surface receives the resolved theme's colour roles, radius and
-families as CSS variables from the same bridge the theme editor uses. Nothing
+### The look picker
+
+Beside it, **Look** applies one of the authored styles `@gpuixui/tokens` ships —
+**Platform** (the platform's own style), **Windows XP (Luna)** or **Windows 7
+(Aero)** — over whatever the platform switch resolved. A look is data of the
+same shape as a platform style (`retroStyles`), applied with `applyStyle`, so
+the preview paints the look's palette, radii, density and monospace family
+rather than a docs-only skin. It is remembered the same way and written to the
+URL as a second parameter:
+
+```text
+https://gpuixui.sudokw.com/docs/components/button?platform=win32&look=luna
+```
+
+A look is **not a fifth platform**: `platformNames` stays the persisted key for
+the operating systems an application runs on, and the mission's toggle stays
+macOS · Linux · Windows · Default. A look is the extension mechanism in
+practice — the same table a consumer can edit to ship their own style.
+
+Both axes resolve through one theme, and the surface a preview renders on
+carries it as CSS variables from the same bridge the theme editor uses. Nothing
 is a docs-only style sheet: the variables are `@gpuixui/tokens` values, and a
 preview cannot paint a colour the library does not have (a test holds the
 preview style sheets to that).

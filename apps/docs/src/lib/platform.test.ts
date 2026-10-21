@@ -1,6 +1,16 @@
-import { platformTypes, themes } from "@gpuixui/tokens";
+import {
+  platformTypes,
+  retroNames,
+  retroStyles,
+  themes,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
+  lookFromSearch,
+  lookLabel,
+  lookOrder,
+  lookSearch,
+  parseLook,
   parsePlatform,
   platformFromSearch,
   platformLabel,
@@ -105,5 +115,75 @@ describe("the platform theme", () => {
     expect(new Set(names).size).toBe(platformOrder.length);
     expect(names[0]).toContain(platformLabel("darwin"));
     expect(names[2]).toContain(platformLabel("win32"));
+  });
+});
+
+describe("the authored look", () => {
+  it("offers every look the library ships, and the platform's own style", () => {
+    // A look added to `@gpuixui/tokens` without a switch entry would be a style
+    // a reader cannot see; the list is the library's, not a copy of it.
+    expect(lookOrder).toEqual(["native", ...retroNames]);
+    expect(lookOrder.map((look) => parseLook(look))).toEqual([...lookOrder]);
+  });
+
+  it("rejects a look the library does not ship", () => {
+    expect(parseLook("classic")).toBeUndefined();
+    expect(parseLook("luna ")).toBeUndefined();
+    expect(parseLook(null)).toBeUndefined();
+    expect(parseLook(undefined)).toBeUndefined();
+  });
+
+  it("reads and writes the look as its own query parameter", () => {
+    expect(lookFromSearch("?look=luna")).toBe("luna");
+    expect(lookFromSearch("?platform=win32&look=aero")).toBe("aero");
+    expect(lookFromSearch("?look=platform")).toBeUndefined();
+    expect(lookFromSearch("")).toBeUndefined();
+    expect(lookFromSearch(`?look=${lookSearch("aero")}`)).toBe("aero");
+  });
+
+  it("labels a look without inventing a name", () => {
+    expect(lookLabel("native")).toBe("Platform");
+    expect(lookLabel("luna")).toBe(retroStyles.luna.label);
+    expect(lookLabel("aero")).toBe(retroStyles.aero.label);
+  });
+
+  it("paints the look's palette, radii and families over the platform", () => {
+    const luna = resolvePlatformTheme("darwin", "dark", "luna");
+
+    expect(luna.colors.background).toBe(
+      retroStyles.luna.colors.dark.background,
+    );
+    expect(luna.radius).toEqual(retroStyles.luna.radius);
+    expect(luna.typography.mono).toBe(retroStyles.luna.mono);
+    expect(luna.name).toContain(retroStyles.luna.label);
+  });
+
+  it("keeps the platform's own style when no look is chosen", () => {
+    const native = resolvePlatformTheme("win32");
+
+    expect(native.name).toBe(
+      resolvePlatformTheme("win32", "dark", "native").name,
+    );
+    expect(native.name).toContain(platformTypes.win32.label);
+    expect(native.name).not.toContain(retroStyles.luna.label);
+  });
+
+  it("keeps every role the preview bridge publishes", () => {
+    const luna = resolvePlatformTheme("linux", "light", "luna");
+
+    // A bridge iterates the roles; a look that dropped one would paint an
+    // unstyled preview without failing anywhere else.
+    expect(Object.keys(luna.colors).toSorted()).toEqual(
+      Object.keys(themes.light.colors).toSorted(),
+    );
+    expect(luna.mode).toBe("light");
+  });
+
+  it("distinguishes the two looks, so the picker's positions differ", () => {
+    const luna = resolvePlatformTheme("default", "dark", "luna");
+    const aero = resolvePlatformTheme("default", "dark", "aero");
+
+    expect(luna.colors.background).not.toBe(aero.colors.background);
+    expect(luna.name).not.toBe(aero.name);
   });
 });

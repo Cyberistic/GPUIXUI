@@ -20,11 +20,12 @@ export function PreviewSurface({
   readonly children: ReactNode;
   readonly className?: string;
 }) {
-  const { platform, theme } = usePlatform();
+  const { look, platform, theme } = usePlatform();
 
   return (
     <div
       className={className === undefined ? "gx-demo" : `gx-demo ${className}`}
+      data-look={look}
       data-platform={platform}
       style={toCssVars(theme)}
     >

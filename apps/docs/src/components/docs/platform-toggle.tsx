@@ -10,49 +10,71 @@ import {
 } from "react";
 import type { PlatformName, Theme } from "@gpuixui/tokens";
 import {
+  lookFromSearch,
+  lookLabel,
+  lookOrder,
+  lookParam,
+  parseLook,
   parsePlatform,
   platformFromSearch,
   platformLabel,
   platformOrder,
   platformParam,
   resolvePlatformTheme,
+  type LookName,
 } from "../../lib/platform";
 
 /**
- * The platform switch.
+ * The platform switch and the look picker.
  *
  * The platform is a library token decision, not a docs style: the switch
  * resolves `platformTheme` from `@gpuixui/tokens`, and every preview reads the
- * families that theme names. The choice lives in the URL, so a link carries it,
- * and in local storage, so it survives a navigation.
+ * families that theme names. The look is the second axis — the authored Luna
+ * and Aero styles `retroStyles` ships — applied over the platform's theme, so
+ * the picker shows a real library style rather than a docs-only skin. Both
+ * choices live in the URL, so a link carries them, and in local storage, so a
+ * navigation does not reset them.
  */
 
 /** Where the chosen platform is remembered between visits. */
-const STORAGE_KEY = "gpuixui-platform";
+const PLATFORM_KEY = "gpuixui-platform";
+
+/** Where the chosen look is remembered between visits. */
+const LOOK_KEY = "gpuixui-look";
 
 interface PlatformState {
   /** The platform every preview shows. */
   readonly platform: PlatformName;
-  /** The library theme that platform resolves to. */
+  /** The look painted over that platform. */
+  readonly look: LookName;
+  /** The library theme the two resolve to. */
   readonly theme: Theme;
   /** Choose a platform. */
   readonly setPlatform: (platform: PlatformName) => void;
+  /** Choose a look; `native` keeps the platform's own style. */
+  readonly setLook: (look: LookName) => void;
 }
 
 const PlatformContext = createContext<PlatformState | null>(null);
 
 /** The platform the reader chose last, or the default. */
-const remembered = (): PlatformName =>
-  parsePlatform(window.localStorage.getItem(STORAGE_KEY)) ?? "default";
+const rememberedPlatform = (): PlatformName =>
+  parsePlatform(window.localStorage.getItem(PLATFORM_KEY)) ?? "default";
 
-/** Put the platform in the address bar without navigating. */
-const writeUrl = (platform: PlatformName): void => {
+/** The look the reader chose last, or the platform's own style. */
+const rememberedLook = (): LookName =>
+  parseLook(window.localStorage.getItem(LOOK_KEY)) ?? "native";
+
+/** Put both choices in the address bar without navigating. */
+const writeUrl = (platform: PlatformName, look: LookName): void => {
   const url = new URL(window.location.href);
   url.searchParams.set(platformParam, platform);
+  if (look === "native") url.searchParams.delete(lookParam);
+  else url.searchParams.set(lookParam, look);
   window.history.replaceState(null, "", url.toString());
 };
 
-/** Provides the platform every preview on the page renders. */
+/** Provides the platform and look every preview on the page renders. */
 export function PlatformProvider({ children }: { children: ReactNode }) {
   const search = useRouterState({
     select: (state) => state.location.searchStr,
@@ -60,28 +82,58 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   const [platform, setPlatform] = useState<PlatformName>(
     () => platformFromSearch(search) ?? "default",
   );
+  const [look, setLook] = useState<LookName>(
+    () => lookFromSearch(search) ?? "native",
+  );
 
-  // The URL is the source of truth: a shared link carries a platform, and a
-  // navigation that drops the parameter restores the remembered one and puts it
-  // back, so the address bar always says which platform is showing.
+  // The URL is the source of truth: a shared link carries both choices, and a
+  // navigation that drops a parameter restores the remembered one and puts it
+  // back, so the address bar always says what is showing.
   useEffect(() => {
-    const fromUrl = platformFromSearch(search);
-    const next = fromUrl ?? remembered();
-    setPlatform(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
-    if (fromUrl === undefined) writeUrl(next);
+    const platformInUrl = platformFromSearch(search);
+    const lookInUrl = lookFromSearch(search);
+    const nextPlatform = platformInUrl ?? rememberedPlatform();
+    const nextLook = lookInUrl ?? rememberedLook();
+
+    setPlatform(nextPlatform);
+    setLook(nextLook);
+    window.localStorage.setItem(PLATFORM_KEY, nextPlatform);
+    window.localStorage.setItem(LOOK_KEY, nextLook);
+    if (platformInUrl === undefined || lookInUrl === undefined)
+      writeUrl(nextPlatform, nextLook);
   }, [search]);
 
-  const choose = useCallback((next: PlatformName) => {
-    setPlatform(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
-    writeUrl(next);
-  }, []);
+  const choosePlatform = useCallback(
+    (next: PlatformName) => {
+      setPlatform(next);
+      window.localStorage.setItem(PLATFORM_KEY, next);
+      writeUrl(next, look);
+    },
+    [look],
+  );
 
-  const theme = useMemo(() => resolvePlatformTheme(platform), [platform]);
+  const chooseLook = useCallback(
+    (next: LookName) => {
+      setLook(next);
+      window.localStorage.setItem(LOOK_KEY, next);
+      writeUrl(platform, next);
+    },
+    [platform],
+  );
+
+  const theme = useMemo(
+    () => resolvePlatformTheme(platform, "dark", look),
+    [platform, look],
+  );
   const value = useMemo<PlatformState>(
-    () => ({ platform, theme, setPlatform: choose }),
-    [platform, theme, choose],
+    () => ({
+      platform,
+      look,
+      theme,
+      setPlatform: choosePlatform,
+      setLook: chooseLook,
+    }),
+    [platform, look, theme, choosePlatform, chooseLook],
   );
 
   return (
@@ -91,7 +143,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** The platform the page is showing. */
+/** The platform and look the page is showing. */
 export function usePlatform(): PlatformState {
   const value = useContext(PlatformContext);
   if (value === null) {
@@ -100,35 +152,69 @@ export function usePlatform(): PlatformState {
   return value;
 }
 
+/** One group of pressed buttons: the same look for both axes. */
+function ChoiceGroup<T extends string>({
+  label,
+  choices,
+  selected,
+  onSelect,
+}: {
+  readonly label: string;
+  readonly choices: ReadonlyArray<{
+    readonly value: T;
+    readonly label: string;
+  }>;
+  readonly selected: T;
+  readonly onSelect: (value: T) => void;
+}) {
+  return (
+    <div aria-label={label} className="gx-platform-group" role="group">
+      {choices.map((choice) => (
+        <button
+          aria-pressed={selected === choice.value}
+          className="gx-platform-option"
+          key={choice.value}
+          onClick={() => onSelect(choice.value)}
+          type="button"
+        >
+          {choice.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /**
- * The switch itself: the platforms the library names, and the theme the
- * current one resolves to.
+ * The switch itself: the platforms the library names, the authored looks, and
+ * the theme the two resolve to.
  */
 export function PlatformToggle() {
-  const { platform, theme, setPlatform } = usePlatform();
+  const { platform, look, theme, setPlatform, setLook } = usePlatform();
 
   return (
     <div className="gx-platform not-prose">
       <p className="gx-platform-title">Platform</p>
-      <div
-        aria-label="Platform style"
-        className="gx-platform-group"
-        role="group"
-      >
-        {platformOrder.map((option) => (
-          <button
-            aria-pressed={platform === option}
-            className="gx-platform-option"
-            key={option}
-            onClick={() => setPlatform(option)}
-            type="button"
-          >
-            {platformLabel(option)}
-          </button>
-        ))}
-      </div>
+      <ChoiceGroup
+        choices={platformOrder.map((option) => ({
+          value: option,
+          label: platformLabel(option),
+        }))}
+        label="Platform style"
+        onSelect={setPlatform}
+        selected={platform}
+      />
+      <p className="gx-platform-title">Look</p>
+      <ChoiceGroup
+        choices={lookOrder.map((option) => ({
+          value: option,
+          label: lookLabel(option),
+        }))}
+        label="Authored look"
+        onSelect={setLook}
+        selected={look}
+      />
       <p className="gx-platform-meta">
-        {platformLabel(platform)} · {theme.typography.mono}
+        {theme.name} · {theme.typography.mono}
       </p>
     </div>
   );
