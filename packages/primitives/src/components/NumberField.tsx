@@ -33,10 +33,15 @@ import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import {
   clampNumeric,
+  commitNumberDraft,
   decideNumberKey,
   formatNumber,
+  initNumberDraft,
+  numberDraftText,
   parseNumericText,
   stepNumber,
+  syncNumberDraft,
+  withNumberDraftText,
   type NumberRange,
 } from "../core/number.js";
 import { accessibleName } from "../core/a11y.js";
@@ -352,9 +357,12 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   const focus = useFocus();
   const range = numberRange(props);
   const inputId = useRef<number | null>(null);
-  const [draft, setDraft] = useState<Option.Option<string>>(Option.none());
-  const [touched, setTouched] = useState(
-    props.value !== undefined || props.defaultValue !== undefined,
+  const incoming = Option.fromNullishOr(props.value);
+  const [draft, setDraft] = useState(() =>
+    initNumberDraft(
+      incoming,
+      Option.isSome(Option.fromNullishOr(props.defaultValue)),
+    ),
   );
   const state = useControlState(
     props.value,
@@ -363,12 +371,13 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   );
   const display = (value: number): string =>
     props.formatValue?.(value) ?? formatNumber(value, props.precision ?? 0);
-  // An untouched field with no value is empty, like a native number field; it is
-  // not a field that starts with a zero the user has to delete.
-  const text =
-    !touched && Option.isNone(draft)
-      ? ""
-      : Option.getOrElse(draft, () => display(state.value.current));
+  // The owner's value moved: fold it into the draft, so a controlled field
+  // shows what its owner says — a value that arrives after mount included —
+  // while the text being typed survives only while it still means that value.
+  const folded = syncNumberDraft(draft, incoming, range);
+  if (Option.isSome(folded)) setDraft(folded.value);
+  const effective = Option.getOrElse(folded, () => draft);
+  const text = numberDraftText(effective, state.value.current, display);
   const focusInput = (): void =>
     Option.match(Option.fromNullishOr(inputId.current), {
       onNone: () => {},
@@ -379,8 +388,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       inputId.current = instance?.id ?? null;
     },
     onTextChange: (next) => {
-      setTouched(true);
-      setDraft(Option.some(next));
+      setDraft((current) => withNumberDraftText(current, next));
       Option.match(parseNumericText(next), {
         onNone: () => {},
         onSome: (parsed) => state.set(clampNumeric(parsed, range)),
@@ -388,16 +396,15 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     },
     onCommit: () =>
       Option.match(parseNumericText(text), {
-        onNone: () => setDraft(Option.none()),
+        onNone: () => setDraft((current) => commitNumberDraft(current)),
         onSome: (parsed) => {
           state.set(clampNumeric(parsed, range));
-          setDraft(Option.none());
+          setDraft((current) => commitNumberDraft(current));
         },
       }),
     onValue: (next) => {
-      setTouched(true);
       state.set(clampNumeric(next, range));
-      setDraft(Option.none());
+      setDraft((current) => commitNumberDraft(current));
       focusInput();
     },
   });

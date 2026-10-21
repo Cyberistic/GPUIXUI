@@ -9,10 +9,11 @@
  * real keys and hit-tested button presses.
  */
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { Button } from "../src/components/Button.js";
 import {
   NumberField,
   NumberFieldDecrement,
@@ -20,7 +21,7 @@ import {
   NumberFieldInput,
 } from "../src/components/NumberField.js";
 import { Stack } from "../src/components/Stack.js";
-import { a11yNode, type Bounds, type Runtime } from "./harness.js";
+import { a11yNode, a11yValueOf, type Bounds, type Runtime } from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
@@ -63,6 +64,34 @@ const mount = async (node: ReactNode): Promise<Runtime> => {
   const runtime = await openWindow();
   runtime.render(<Surface>{node}</Surface>);
   return runtime;
+};
+
+/** The text the field's input holds, as assistive technology reads it. */
+const textOf = (runtime: Runtime, label: string): string => {
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "TextInput", label }),
+    () => expect.fail(`the field ${label} announced nothing`),
+  );
+  // An empty field announces no value at all, which is an empty field.
+  return Option.getOrElse(Option.fromNullishOr(node.aria?.value), () => "");
+};
+
+/** A controlled field whose owner pushes a value into it. */
+const Owner = () => {
+  const [value, setValue] = useState<number | undefined>(undefined);
+  return (
+    <Stack direction="column">
+      <Button testId="push" onActivate={() => setValue(42)}>
+        Push
+      </Button>
+      <NumberField
+        testId="nf"
+        label="Quantity"
+        value={value}
+        onChange={setValue}
+      />
+    </Stack>
+  );
 };
 
 it("edits through the runtime's text pipeline and reports the number", async () => {
@@ -208,4 +237,57 @@ it("paints a caller's composition from the field's own state", async () => {
   expect(lastValue(field.values)).toBe(6);
   runtime.click("nf-down");
   expect(lastValue(field.values)).toBe(5);
+});
+
+it("leaves the caret keys to the host's text field", async () => {
+  // The bug guarded: left and right moved the caret in the host's field, and
+  // the field changed its value while the caret moved — a number a user could
+  // not edit, because the caret could never cross a digit. The runtime's text
+  // field takes those two keys for the caret, so the field never sees them:
+  // the contrast with the up arrow, which does arrive, is the measurement.
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Quantity"
+      autoFocus
+      defaultValue={50}
+      onChange={field.onChange}
+    />,
+  );
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "left");
+  runtime.renderer.nativeSimulateKeyUp(input.id, "left");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "right");
+  runtime.renderer.nativeSimulateKeyUp(input.id, "right");
+  expect(field.values).toStrictEqual([]);
+  expect(textOf(runtime, "Quantity")).toBe("50");
+  // The up arrow does arrive, so the field above was not simply deaf.
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(lastValue(field.values)).toBe(51);
+});
+
+it("shows the value its owner pushes", async () => {
+  // The bug guarded: a controlled field kept the text it was given, so a value
+  // the owner pushed was never seen by the user.
+  const runtime = await mount(<Owner />);
+  expect(textOf(runtime, "Quantity")).toBe("");
+  runtime.click("push");
+  runtime.flush();
+  expect(textOf(runtime, "Quantity")).toBe("42");
+});
+
+it("shows a value that arrives after the field was mounted", async () => {
+  // The bug guarded: a field that mounted empty and was given a value later
+  // kept showing nothing — the value was dropped on the floor.
+  const runtime = await mount(
+    <NumberField testId="nf" label="Quantity" defaultValue={50} />,
+  );
+  runtime.render(
+    <Surface>
+      <NumberField testId="nf" label="Quantity" value={5} />
+    </Surface>,
+  );
+  runtime.flush();
+  expect(textOf(runtime, "Quantity")).toBe("5");
 });

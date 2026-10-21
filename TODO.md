@@ -936,8 +936,17 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     only a bar without a value runs the step timer (`core/loading.ts`'s
     `progressAnimates`), proven by a unit case, a tree-level fill colour and
     two native tests
-  - `[ ]` NumberField controlled sync (an external value change, a value that
-    arrives after mount) and the caret keys it advertises
+  - `[x]` NumberField controlled sync (an external value change, a value that
+    arrives after mount) and the caret keys it advertises — the field keeps a
+    `NumberDraft` (`core/number.ts`) instead of a bare "touched" flag, so an
+    owner's value folds in on the render it moves and the raw text being typed
+    survives only while it still means that value; `withValue` decides the mode
+    per render, so a value that arrives after mount is no longer dropped. Left
+    and right leave `ARROW_STEPS`, since the host's text field owns the caret.
+    Proof: 8 draft unit cases, 4 runtime cases (both directions measured —
+    reverting `withValue` fails `shows the value its owner pushes`, `0` vs `42`;
+    restoring the caret keys fails `leaves the caret keys to the host's text
+    field`)
   - `[ ]` Activation once / Space on release across the remaining parts
   - `[ ]` Disabled-after-focus: a control disabled while focused keeps acting
     and keeps its ring

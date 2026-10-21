@@ -68,15 +68,22 @@ export const setValue = <Value>(
  *
  * A controlled control follows its `value`; an uncontrolled one keeps whatever
  * it last produced, so a re-render never resets user input.
+ *
+ * **The mode is decided per render, not once at mount.** A control that is
+ * given a value after it mounted is controlled from that moment: the value its
+ * owner pushed reaches the user instead of being dropped, which is what a
+ * field loaded from a server needs. A control that keeps no value prop keeps
+ * its own copy, so a re-render never resets what the user typed.
  */
 export const withValue = <Value>(
   state: ValueState<Value>,
   value: Option.Option<Value>,
 ): ValueState<Value> =>
-  state.mode === "controlled"
-    ? {
-        mode: "controlled",
-        current: Option.getOrElse(value, () => state.internal),
-        internal: state.internal,
-      }
-    : state;
+  Option.match(value, {
+    onSome: (incoming) => ({
+      mode: "controlled",
+      current: incoming,
+      internal: state.internal,
+    }),
+    onNone: () => state,
+  });

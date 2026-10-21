@@ -61,12 +61,21 @@ describe("withValue", () => {
     expect(next.current).toBe("second");
   });
 
+  it("follows a value that arrives after the control was mounted", () => {
+    // The bug guarded: a control that mounted without a value dropped the one
+    // its owner pushed later, so a field loaded from a server stayed empty.
+    const state = initValueState(Option.none(), "default");
+    const next = withValue(state, Option.some("from parent"));
+    expect(next.mode).toBe("controlled");
+    expect(next.current).toBe("from parent");
+  });
+
   it("never reverts an uncontrolled control's own input on a re-render", () => {
     const { state } = setValue(
       initValueState<string>(Option.none(), ""),
       "typed",
     );
-    const next = withValue(state, Option.some("ignored"));
+    const next = withValue(state, Option.none());
     expect(next.mode).toBe("uncontrolled");
     expect(next.current).toBe("typed");
   });

@@ -12,10 +12,15 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   clampNumeric,
+  commitNumberDraft,
   decideNumberKey,
   formatNumber,
+  initNumberDraft,
+  numberDraftText,
   parseNumericText,
   stepNumber,
+  syncNumberDraft,
+  withNumberDraftText,
   type NumberRange,
 } from "./number.js";
 
@@ -104,13 +109,19 @@ describe("stepNumber", () => {
 describe("decideNumberKey", () => {
   it("steps with the arrows and pages with PageUp/PageDown", () => {
     expect(decideNumberKey(50, RANGE, "up")).toStrictEqual(Option.some(51));
-    expect(decideNumberKey(50, RANGE, "right")).toStrictEqual(Option.some(51));
     expect(decideNumberKey(50, RANGE, "down")).toStrictEqual(Option.some(49));
-    expect(decideNumberKey(50, RANGE, "left")).toStrictEqual(Option.some(49));
     expect(decideNumberKey(50, RANGE, "pageup")).toStrictEqual(Option.some(60));
     expect(decideNumberKey(50, RANGE, "pagedown")).toStrictEqual(
       Option.some(40),
     );
+  });
+
+  it("leaves the caret keys to the host's text field", () => {
+    // The bug guarded: left and right moved the caret in the host's field, and
+    // the field changed its value while the caret moved — a number a user
+    // could not edit, because the caret could never cross a digit.
+    expect(decideNumberKey(50, RANGE, "right")).toStrictEqual(Option.none());
+    expect(decideNumberKey(50, RANGE, "left")).toStrictEqual(Option.none());
   });
 
   it("jumps only to a bound the field actually has", () => {
@@ -129,5 +140,80 @@ describe("decideNumberKey", () => {
   it("leaves an unrelated key alone", () => {
     expect(decideNumberKey(50, RANGE, "a")).toStrictEqual(Option.none());
     expect(decideNumberKey(50, RANGE, "enter")).toStrictEqual(Option.none());
+  });
+});
+
+describe("the draft a number field keeps", () => {
+  const display = (value: number): string => String(value);
+
+  it("shows nothing until the field has a value or the user types", () => {
+    const empty = initNumberDraft(Option.none(), false);
+    expect(numberDraftText(empty, 0, display)).toBe("");
+    const withDefault = initNumberDraft(Option.none(), true);
+    expect(numberDraftText(withDefault, 5, display)).toBe("5");
+    const controlled = initNumberDraft(Option.some(7), false);
+    expect(numberDraftText(controlled, 7, display)).toBe("7");
+  });
+
+  it("keeps the raw text of an edit in progress", () => {
+    const draft = withNumberDraftText(initNumberDraft(Option.none(), false), "1.");
+    expect(numberDraftText(draft, 1, display)).toBe("1.");
+  });
+
+  it("shows the value again once the edit is committed", () => {
+    const draft = withNumberDraftText(initNumberDraft(Option.none(), false), "1.");
+    expect(numberDraftText(commitNumberDraft(draft), 1, display)).toBe("1");
+  });
+
+  it("keeps the draft while the owner's value does not move", () => {
+    // The owner's value is the user's to type into; a re-render must not take
+    // the text away.
+    const draft = withNumberDraftText(
+      initNumberDraft(Option.some(0), true),
+      "1.",
+    );
+    expect(syncNumberDraft(draft, Option.some(0), RANGE)).toStrictEqual(
+      Option.none(),
+    );
+  });
+
+  it("keeps the draft while it still means the value the owner pushed", () => {
+    // The bug guarded: the owner's echo of the user's own edit used to throw
+    // the draft away, so `1.` became `1` under the caret.
+    const draft = withNumberDraftText(
+      initNumberDraft(Option.some(0), true),
+      "1.",
+    );
+    const folded = syncNumberDraft(draft, Option.some(1), RANGE);
+    expect(Option.getOrElse(folded, () => draft).text).toStrictEqual(
+      Option.some("1."),
+    );
+  });
+
+  it("drops the draft when the owner pushes a value it does not mean", () => {
+    const draft = withNumberDraftText(
+      initNumberDraft(Option.some(0), true),
+      "12",
+    );
+    const folded = syncNumberDraft(draft, Option.some(99), RANGE);
+    const next = Option.getOrElse(folded, () => draft);
+    expect(next.text).toStrictEqual(Option.none());
+    expect(numberDraftText(next, 99, display)).toBe("99");
+  });
+
+  it("shows a value that arrives after the field was mounted", () => {
+    // The bug guarded: a field that mounted empty and was given a value later
+    // kept showing nothing — the value was dropped on the floor.
+    const draft = initNumberDraft(Option.none(), false);
+    const folded = syncNumberDraft(draft, Option.some(5), RANGE);
+    const next = Option.getOrElse(folded, () => draft);
+    expect(numberDraftText(next, 5, display)).toBe("5");
+  });
+
+  it("never folds an owner's value that did not move into the draft", () => {
+    const draft = initNumberDraft(Option.none(), false);
+    expect(syncNumberDraft(draft, Option.none(), RANGE)).toStrictEqual(
+      Option.none(),
+    );
   });
 });
