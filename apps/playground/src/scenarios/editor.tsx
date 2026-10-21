@@ -54,7 +54,9 @@ const EditorProbe = () => {
   const [value, setValue] = useState("");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 620 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 8, width: 620 }}
+    >
       <Readout testId="editor-readout">
         {`value=${value.replace(/\n/g, "\\n")}`}
       </Readout>
@@ -69,10 +71,7 @@ const EditorProbe = () => {
           padding: 8,
         }}
       />
-      <div
-        testId="editor-code-view"
-        style={{ height: 80, overflow: "scroll" }}
-      >
+      <div testId="editor-code-view" style={{ height: 80, overflow: "scroll" }}>
         <code
           testId="editor-code"
           code={SOURCE}

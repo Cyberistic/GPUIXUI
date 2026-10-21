@@ -37,12 +37,16 @@ const Row = ({ index }: { readonly index: number }) => {
         height: 24,
         display: "flex",
         flexDirection: "row",
-        backgroundColor: index % 2 === 0 ? theme.colors.background : theme.colors.card,
+        backgroundColor:
+          index % 2 === 0 ? theme.colors.background : theme.colors.card,
       }}
     >
       {COLUMNS.map((column) => (
         <div key={column} style={{ width: COLUMN_WIDTH }}>
-          <text testId={`grid-cell-${index}-${column}`} style={{ color: theme.colors.foreground }}>
+          <text
+            testId={`grid-cell-${index}-${column}`}
+            style={{ color: theme.colors.foreground }}
+          >
             {`${column} ${index}`}
           </text>
         </div>
@@ -56,7 +60,9 @@ const GridProbe = () => {
   const [scrolls, setScrolls] = useState(0);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 640 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 8, width: 640 }}
+    >
       <Readout testId="grid-readout">{`scrolls=${scrolls}`}</Readout>
       <div
         testId="grid-frame"

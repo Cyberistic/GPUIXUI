@@ -52,7 +52,9 @@ const SearchProbe = () => {
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 480 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 8, width: 480 }}
+    >
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         {button("search-alpha", "alpha", () => update({ query: "alpha" }))}
         {button("search-beta", "beta", () => update({ query: "beta" }))}
@@ -65,7 +67,9 @@ const SearchProbe = () => {
           update({ wholeWord: !spec.wholeWord }),
         )}
         {button("search-active", "active", () =>
-          update({ activeIndex: spec.activeIndex === undefined ? 1 : undefined }),
+          update({
+            activeIndex: spec.activeIndex === undefined ? 1 : undefined,
+          }),
         )}
         {button("search-range", "range", () => update({ ranges: [[0, 5]] }))}
       </div>
@@ -106,12 +110,8 @@ const SearchProbe = () => {
 };
 
 /** Every wash's matched text, in paint order. */
-const matches = (
-  ctx: Smoke.SmokeContext,
-): ReadonlyArray<string> =>
-  ctx.host
-    .highlights()
-    .map((wash) => wash.text.slice(wash.start, wash.end));
+const matches = (ctx: Smoke.SmokeContext): ReadonlyArray<string> =>
+  ctx.host.highlights().map((wash) => wash.text.slice(wash.start, wash.end));
 
 /** Fails unless every wash marked `expected`. */
 const expectMatches = (
@@ -195,7 +195,9 @@ export const searchHighlightsScenario: ScenarioBody = {
       // Explicit ranges index the same content with a newline between lines:
       // `[0, 5)` is the first `alpha`.
       ctx.host.click("search-range");
-      yield* expectMatches(ctx, "an explicit range marks one region", ["alpha"]);
+      yield* expectMatches(ctx, "an explicit range marks one region", [
+        "alpha",
+      ]);
       yield* ctx.expectEqual(
         "the range is the one the offsets name",
         CONTENT.slice(0, 5),

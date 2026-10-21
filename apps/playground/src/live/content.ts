@@ -43,13 +43,7 @@ export const SURFACE_COLOURS = {
 } as const;
 
 /** Every layer, in the order a chart stacks them. */
-export const LAYER_SHAPES = [
-  "bar",
-  "bubble",
-  "line",
-  "axis",
-  "label",
-] as const;
+export const LAYER_SHAPES = ["bar", "bubble", "line", "axis", "label"] as const;
 
 /** One layer's shape. */
 export type LayerShape = (typeof LAYER_SHAPES)[number];

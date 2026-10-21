@@ -154,7 +154,10 @@ const DockingProbe = () => {
                 backgroundColor: theme.colors.muted,
               }}
             >
-              <text testId="dock-sidebar" style={{ color: theme.colors.mutedForeground }}>
+              <text
+                testId="dock-sidebar"
+                style={{ color: theme.colors.mutedForeground }}
+              >
                 explorer
               </text>
             </div>
@@ -234,7 +237,12 @@ export const dockingScenario: ScenarioBody = {
 
       const sidebar = yield* box(ctx, "dock-pane-a");
       const inner = yield* box(ctx, "dock-inner-pane-a");
-      yield* ctx.expectNear("the sidebar is its own width", sidebar.width, 140, 1);
+      yield* ctx.expectNear(
+        "the sidebar is its own width",
+        sidebar.width,
+        140,
+        1,
+      );
       yield* ctx.expectNear(
         "the nested split starts after the sidebar and its divider",
         inner.x,
@@ -278,12 +286,7 @@ export const dockingScenario: ScenarioBody = {
         "sidebar=200 editor=340",
       );
       const outer = yield* box(ctx, "dock-pane-a");
-      yield* ctx.expectNear(
-        "the sidebar keeps its width",
-        outer.width,
-        200,
-        1,
-      );
+      yield* ctx.expectNear("the sidebar keeps its width", outer.width, 200, 1);
 
       // Collapsing is the layout's decision, not a drag: the width goes to the
       // nested split, and the inner split state is untouched.
