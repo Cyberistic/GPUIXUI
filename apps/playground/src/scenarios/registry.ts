@@ -210,6 +210,11 @@ export const registry = [
       "Editor: a textarea edits lines and caret, <code> and <diff> paint a read-only view",
     capability: "editor",
   },
+  {
+    id: "examples-mount",
+    title: "Every shipped example mounts, lays out and paints its own content",
+    capability: "layout",
+  },
 ] as const satisfies ReadonlyArray<ScenarioMeta>;
 
 /** The id of a registered scenario. */

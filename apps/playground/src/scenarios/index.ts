@@ -36,6 +36,7 @@ import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
 import { logViewerScenario } from "./log-viewer.js";
 import { editorScenario } from "./editor.js";
+import { examplesMountScenario } from "./examples.js";
 import { searchHighlightsScenario } from "./search-highlights.js";
 import { modalScenario } from "./modal.js";
 import { floatingScenario } from "./floating.js";
@@ -79,6 +80,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "log-viewer": logViewerScenario,
   "search-highlights": searchHighlightsScenario,
   "editor-surface": editorScenario,
+  "examples-mount": examplesMountScenario,
 };
 
 /** The full scenarios, in registry order. */

@@ -30,7 +30,8 @@ shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
-unreachable entry would be a scenario the app cannot open.
+unreachable entry would be a scenario the app cannot open — and
+`examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
 twenty-eight probes a real window can prove, of which eight mount shipped
@@ -81,7 +82,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (31/31 green); -> 2 on a host with no binding
+# -> 0 here (32/32 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -330,12 +331,40 @@ the zone (`drops=0`) until the probe pressed the sibling element first; the pres
 ends the platform's text-input session. The probe keeps that press so it is
 independent of what ran before it.
 
+## The example gallery
+
+`packages/components/examples/index.ts` is the registry of the 39 screens the
+component docs quote, and this app is its only consumer. Nothing proved those
+screens *mount*: a component's behaviour suite proves its parts, not a
+composition of parts with caller-owned state. `examples-mount` pages through the
+registry in sorted id order — one screen mounted at a time, because 39 screens at
+once lay out a very tall tree and leave a screen's timer or `Effect` fiber running
+behind the next one — and asserts, from the renderer:
+
+| Step | Check |
+| ---- | ----- |
+| each page | the readout names the next id (`example=<id> page=<n> of=39`) |
+| each page | the example's wrapper paints (`bounds` is a value) and lays out a height of its own |
+| each page | the wrapper's own subtree carries text, so the screen painted content rather than merely existing |
+| after the last press | the readout reads `example=none …` — the plan ends where the registry does, and the last screen unmounts with its timers |
+
+The wrapper holds the example and nothing else (the id label and the readout sit
+above it), so its text is the screen's own. That is what lets the run also assert
+that no two pages paint the same screen: a registry row pointing at a component
+another row already mounts would show the reader one example under two names.
+
+158 checks, `--only examples-mount`, green on 0.11.0. Negative controls
+measured: adding an id the registry has no entry for fails
+`no-such-example lays out a height of its own` (`expected true, got false`);
+mounting every page from one component fails
+`no two examples paint the same screen` (`expected 39, got 1`) — exit `1` each.
+
 ## Evidence on this host
 
-The suite is **31/31 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **32/32 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-31/31 scenarios passed · capabilities: layout=verified text=verified
+32/32 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -1376,6 +1405,7 @@ src/scenarios/docking.tsx   nested splits, a caller-owned sidebar and a tabbed p
 src/scenarios/data-grid.tsx a fixed header over a vertical scroller, one shared x offset
 src/scenarios/search-highlights.tsx the runtime's find: query, case, word and ranges
 src/scenarios/editor.tsx    a textarea that edits lines, <code> and <diff> read-only
+src/scenarios/examples.tsx  the shipped-example gallery: one page per registry id
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -1416,7 +1446,11 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (31/31), with a written report and screenshots.
+  (32/32), with a written report and screenshots.
+- Every shipped example the docs quote mounts and paints: `examples-mount`
+  pages through the components' registry (39 screens, 158 checks) and fails when
+  a page paints nothing or two ids show one screen. Its two negative controls
+  are named in §The example gallery.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
