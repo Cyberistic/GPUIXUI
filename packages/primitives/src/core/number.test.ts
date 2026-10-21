@@ -156,12 +156,18 @@ describe("the draft a number field keeps", () => {
   });
 
   it("keeps the raw text of an edit in progress", () => {
-    const draft = withNumberDraftText(initNumberDraft(Option.none(), false), "1.");
+    const draft = withNumberDraftText(
+      initNumberDraft(Option.none(), false),
+      "1.",
+    );
     expect(numberDraftText(draft, 1, display)).toBe("1.");
   });
 
   it("shows the value again once the edit is committed", () => {
-    const draft = withNumberDraftText(initNumberDraft(Option.none(), false), "1.");
+    const draft = withNumberDraftText(
+      initNumberDraft(Option.none(), false),
+      "1.",
+    );
     expect(numberDraftText(commitNumberDraft(draft), 1, display)).toBe("1");
   });
 

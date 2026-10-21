@@ -178,10 +178,7 @@ export const commitNumberDraft = (draft: NumberDraft): NumberDraft => ({
 });
 
 /** The value a piece of text means, once it is clamped into the range. */
-const meansValue = (
-  text: string,
-  range: NumberRange,
-): Option.Option<number> =>
+const meansValue = (text: string, range: NumberRange): Option.Option<number> =>
   Option.map(parseNumericText(text), (parsed) => clampNumeric(parsed, range));
 
 /**

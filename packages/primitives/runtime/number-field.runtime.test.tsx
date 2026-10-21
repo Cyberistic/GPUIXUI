@@ -21,7 +21,7 @@ import {
   NumberFieldInput,
 } from "../src/components/NumberField.js";
 import { Stack } from "../src/components/Stack.js";
-import { a11yNode, a11yValueOf, type Bounds, type Runtime } from "./harness.js";
+import { a11yNode, type Bounds, type Runtime } from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
