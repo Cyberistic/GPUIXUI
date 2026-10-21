@@ -141,6 +141,15 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        claimed plan `786` (the live promotion gate) while this session finished
        the headless total; there is one ledger text and no source conflict.
 
+       **Update 2026-10-21 ~06:18:** recurred again during plan `839`. A second
+       live `swarm:playground` session committed `1f1ab976` (plan `835`'s files,
+       which this session had finished and verified but not committed) "from a
+       temporary index" and explicitly excluded the then-untracked `839` files,
+       so no work was lost and the commit is the coherent 835 unit. It also
+       swept this session's `shell.tsx` race fix into it, which is why that fix
+       appears in the 835 commit. Only one `swarm:playground` process has been
+       live since; the `scripts/` fix is still the only durable remedy.
+
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 155/155 plans-and-harness
@@ -173,8 +182,10 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       a later task and the probe read the title straight after it, so it now
       reveals `nav-window-layout` (its own precondition) and waits with
       `awaitReadout`; without the wait the full run failed `clicking an entry
-      switches the stage`. Focused ids run: `containing-block`,
-      `live-containing-block` (×3), `shell-navigation`, `shell-selection`. Plan:
+      switches the stage`. End-of-task full headless **129/129** (**5173** checks,
+      67 capabilities, 425.2 s, exit `0`; exactly the 128-scenario 5098 + 75).
+      Focused ids run: `containing-block`, `live-containing-block` (×3),
+      `shell-navigation`, `shell-selection`. Plan:
       `.agents/slop/plans/839-positioning-contract.md`.
 
 `[x]` **Prove the box model in the frame** per plan `835`: `padding` is in **144**
