@@ -34,6 +34,43 @@ const [code, setCode] = useState("");
 typing into a cell beyond the current code appends at the end rather than
 leaving a hole.
 
+## Parts
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `OTPField` | the named group, the code, focus and the per-cell context |
+| `OTPFieldInput` | one cell: its value, name, edit/key/focus handlers and ring |
+
+The default composition is `length` cells painted by the same function the part
+calls. A caller who supplies `children` places their own `OTPFieldInput`s — for
+example, to group a six-digit code as three and three:
+
+```tsx
+import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
+
+<OTPField
+  label="Verification code"
+  length={6}
+  value={code}
+  onChange={setCode}
+>
+  <Stack direction="row" gap="sm">
+    <OTPFieldInput index={0} />
+    <OTPFieldInput index={1} />
+    <OTPFieldInput index={2} />
+  </Stack>
+  <Separator orientation="vertical" style={{ height: 24 }} />
+  <Stack direction="row" gap="sm">
+    <OTPFieldInput index={3} />
+    <OTPFieldInput index={4} />
+    <OTPFieldInput index={5} />
+  </Stack>
+</OTPField>;
+```
+
+`OTPFieldInput` takes `index`, `style`, `className` and `testId`; it has no
+`value` or `onChange` of its own, because every cell reads the field's one code.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -49,7 +86,11 @@ leaving a hole.
 | `label` | `string` | none | group name; each cell is named `<label> digit N` |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount |
 | `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc` on the group; resolved against the live state and merged last |
+| `children` | `ReactNode` | `length` cells | the cell parts to draw |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
+
+`OTPFieldInput` accepts `index` (zero-based, required), `style`, `className` and
+`testId`; its `testId` defaults to `<group testId>-cell-<index + 1>`.
 
 Only letters and digits are kept. A pasted `123-456` becomes `123456`, and a
 code longer than `length` is truncated rather than partially applied.
@@ -116,12 +157,14 @@ No literal colour, size or radius is named.
   range clamping, Backspace and navigation rules.
 - `src/components/OTPField.test.tsx` — `length` named inputs, per-cell handlers,
   click-to-pick, autoFocus on the first cell, one ring, destructive borders,
-  square geometry, disabled guards.
+  square geometry, disabled guards, a composed cell carrying its index's value,
+  name and handlers, and a caller composing the cells.
 - `runtime/otp.runtime.test.tsx` — six digits **typed one at a time** fill six
   cells and complete once; focus advances and moves back with the arrow keys;
   Backspace clears backwards on an empty cell and only one character on a
   filled one; the a11y tree has a `Group` and six `TextInput`s; invalid paints
-  every cell; one ring; disabled refuses input and leaves the tab order.
+  every cell; one ring; disabled refuses input and leaves the tab order; a
+  caller's cell composition still types, distributes and reports the code.
   Measured 2026-10-17 (plan 054 §9).
 
 ```sh

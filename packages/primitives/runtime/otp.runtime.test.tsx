@@ -19,7 +19,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { TestElement } from "@gpuix/react/testing";
 import { Button } from "../src/components/Button.js";
-import { OTPField } from "../src/components/OTPField.js";
+import { OTPField, OTPFieldInput } from "../src/components/OTPField.js";
 import { Stack } from "../src/components/Stack.js";
 import { a11yNode, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
@@ -210,4 +210,23 @@ it("refuses input and leaves the tab order while disabled", async () => {
   expect(
     Option.exists(runtime.focused(), (id) => id.startsWith("otp-cell")),
   ).toBe(false);
+});
+
+it("paints a caller's cell composition from the field's own code", async () => {
+  const field = recorder();
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      length={2}
+      label="Verification code"
+      autoFocus
+      onChange={field.onChange}
+    >
+      <OTPFieldInput index={0} />
+      <OTPFieldInput index={1} />
+    </OTPField>,
+  );
+  Arr.forEach(["1", "2"], (digit) => runtime.type(digit));
+  expect(lastValue(field.values)).toBe("12");
+  expect(cells(runtime)).toHaveLength(2);
 });

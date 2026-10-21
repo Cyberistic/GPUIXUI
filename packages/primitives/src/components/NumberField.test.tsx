@@ -14,8 +14,14 @@ import * as Option from "effect/Option";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
+  numberFieldPart,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
   renderNumberField,
+  renderNumberFieldInput,
   type NumberFieldHandlers,
+  type NumberFieldPart,
   type NumberFieldProps,
 } from "./NumberField.js";
 import type { FieldState } from "./Input.js";
@@ -64,9 +70,13 @@ const render = (
     handlers(over),
   );
 
+/** The field's body: a context provider draws nothing in the runtime. */
+const bodyOf = (element: ReactElement): ReactElement =>
+  elementChildren(element)[0] ?? expect.fail("the number field drew nothing");
+
 /** The native input, the spin column, and the two step buttons. */
 const partsOf = (element: ReactElement) => {
-  const [input, column] = elementChildren(element);
+  const [input, column] = elementChildren(bodyOf(element));
   const [up, down] = column === undefined ? [] : elementChildren(column);
   return {
     input: input ?? expect.fail("the number field has no input"),
@@ -74,6 +84,19 @@ const partsOf = (element: ReactElement) => {
     down: down ?? expect.fail("the number field has no decrement"),
   };
 };
+
+const partOf = (
+  props: NumberFieldProps,
+  over: Partial<NumberFieldHandlers> = {},
+): NumberFieldPart =>
+  numberFieldPart(
+    props,
+    testTheme,
+    initValueState(Option.some(50), 0),
+    "50",
+    idle,
+    handlers(over),
+  );
 
 describe("NumberField", () => {
   it("is a named text input showing the draft it was given", () => {
@@ -175,6 +198,42 @@ describe("NumberField", () => {
     expectSome(hostHandler(input, "onChange"))(changeEvent("99"));
     expect(onValue).toHaveBeenCalledTimes(0);
     expect(onTextChange).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe("NumberField parts", () => {
+  it("lets a caller replace the composition with the parts", () => {
+    const element = render(
+      {
+        children: (
+          <>
+            <NumberFieldInput />
+            <NumberFieldIncrement />
+            <NumberFieldDecrement />
+          </>
+        ),
+      },
+      5,
+      "5",
+    );
+    expect(elementChildren(bodyOf(element)).map((part) => part.type)).toEqual([
+      NumberFieldInput,
+      NumberFieldIncrement,
+      NumberFieldDecrement,
+    ]);
+  });
+
+  it("gives the input part the field's draft, name and keys", () => {
+    const onValue = vi.fn();
+    const input = renderNumberFieldInput(
+      { testId: "qty" },
+      partOf({ label: "Quantity", min: 0, max: 100 }, { onValue }),
+    );
+    expect(expectSome(hostProp(input, "value"))).toBe("50");
+    expect(expectSome(hostProp(input, "aria-label"))).toBe("Quantity");
+    expect(expectSome(hostProp(input, "testId"))).toBe("qty");
+    expectSome(hostHandler(input, "onKeyDown"))(keyEvent("up"));
+    expect(onValue).toHaveBeenCalledWith(51);
   });
 });
 

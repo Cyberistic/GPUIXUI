@@ -13,7 +13,7 @@ after the binding landed); Step 3 landed (Checkbox/Switch parts); Step 4 landed
 glyph, `onValueChange`); Step 6 landed (`Progress`/`Meter` track, indicator,
 label and value parts, with a composed composition painted in the renderer).
 The `darwin-x64` binding for 0.11.0 landed on this host on 2026-10-21, so the
-unit suites (394) and the runtime suites (125) both run here again — runtime
+unit suites (398) and the runtime suites (127) both run here again — runtime
 verification is no longer pending.
 
 ---
@@ -318,7 +318,26 @@ the commit body of every later step; it must never go down.
 - Test: padding on the root does not appear on the viewport; the implicit
   viewport keeps the old element's overflow axes and `onScroll`.
 
-### Step 8 — `NumberField` and `OTPField` parts
+### Step 8 — `NumberField` and `OTPField` parts — **landed**
+
+> Landed 2026-10-21. `NumberField` exports `NumberFieldInput`,
+> `NumberFieldIncrement` and `NumberFieldDecrement`; `OTPField` exports
+> `OTPFieldInput index`. Each component resolves one part object (theme, live
+> value, range/limit, focus, handlers) and the default composition calls the
+> same paint functions directly, so the element tree and every existing test are
+> unchanged. A stepper accepts a custom glyph and each part takes
+> `style`/`className`/`testId`, merged last. `NumberFieldInput` steps from the
+> committed value through the part's `current`/`range` — the first draft of the
+> split dropped them and a composed field would have stepped from 0, which the
+> input-part test now guards. The steppers stay `role="presentation"` with no
+> `tabIndex`, and the decrement at `min` is still inert — both through the same
+> render function the default composition uses.
+>
+> Both-direction proofs measured: removing the two context providers fails the
+> composed native tests (`NumberFieldInput must be used inside NumberField`,
+> `OTPFieldInput must be used inside OTPField`). Unit suite 394 → 398, runtime
+> 125 → 127. Docs list the parts and a composition; the inventory and
+> `COMPONENTS.md` rows name them.
 
 - Files: `NumberField.tsx`, `OTPField.tsx`, unit tests, docs, examples.
 - `NumberFieldInput`, `NumberFieldIncrement`, `NumberFieldDecrement`;

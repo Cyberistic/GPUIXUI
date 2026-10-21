@@ -17,7 +17,10 @@ import { testTheme } from "../core/testing/theme.fixture.js";
 import type { ControlSize } from "../core/theme.js";
 import {
   otpCellLabel,
+  otpFieldPart,
+  OTPFieldInput,
   renderOtpField,
+  renderOtpFieldInput,
   type OTPFieldFocus,
   type OTPFieldHandlers,
   type OTPFieldProps,
@@ -62,9 +65,12 @@ const render = (
     handlers(over),
   );
 
-/** The inputs, one per cell. */
-const cellsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
-  elementChildren(element);
+/** The inputs, one per cell. A context provider draws nothing. */
+const cellsOf = (element: ReactElement): ReadonlyArray<ReactElement> => {
+  const body =
+    elementChildren(element)[0] ?? expect.fail("the field drew no body");
+  return elementChildren(body);
+};
 
 const cell = (element: ReactElement, index: number): ReactElement =>
   cellsOf(element)[index] ?? expect.fail(`the field has no cell ${index + 1}`);
@@ -189,5 +195,48 @@ describe("OTPField", () => {
     expect(onEdit).toHaveBeenCalledTimes(0);
     expect(onKey).toHaveBeenCalledTimes(0);
     expect(onPick).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe("OTPField parts", () => {
+  it("renders one cell from the part with its index's value and name", () => {
+    const onEdit = vi.fn();
+    const onKey = vi.fn();
+    const part = otpFieldPart(
+      { length: 4, label: "Verification code", testId: "otp" },
+      testTheme,
+      initValueState(Option.some("1234"), ""),
+      idle,
+      handlers({ onEdit, onKey }),
+    );
+    const cell2 = renderOtpFieldInput({ index: 2 }, part);
+    expect(expectSome(hostProp(cell2, "value"))).toBe("3");
+    expect(expectSome(hostProp(cell2, "aria-label"))).toBe(
+      "Verification code digit 3",
+    );
+    expect(expectSome(hostProp(cell2, "testId"))).toBe("otp-cell-3");
+    expectSome(hostHandler(cell2, "onChange"))(changeEvent("9"));
+    expect(onEdit).toHaveBeenCalledWith(2, "9");
+    expectSome(hostHandler(cell2, "onKeyUp"))(keyUpEvent("backspace"));
+    expect(onKey).toHaveBeenCalledWith(2, "backspace");
+  });
+
+  it("lets a caller compose the cells", () => {
+    const element = render(
+      {
+        length: 2,
+        children: (
+          <>
+            <OTPFieldInput index={0} />
+            <OTPFieldInput index={1} />
+          </>
+        ),
+      },
+      "12",
+    );
+    expect(cellsOf(element).map((part) => part.type)).toEqual([
+      OTPFieldInput,
+      OTPFieldInput,
+    ]);
   });
 });

@@ -13,7 +13,12 @@ import type { ReactNode } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { NumberField } from "../src/components/NumberField.js";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "../src/components/NumberField.js";
 import { Stack } from "../src/components/Stack.js";
 import { a11yNode, type Bounds, type Runtime } from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
@@ -183,4 +188,24 @@ it("refuses edits, keys and steps while disabled", async () => {
   runtime.type("1 2");
   runtime.clickAt(box.x + box.width - 8, box.y + box.height * 0.25);
   expect(field.values).toStrictEqual([]);
+});
+
+it("paints a caller's composition from the field's own state", async () => {
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Quantity"
+      defaultValue={5}
+      onChange={field.onChange}
+    >
+      <NumberFieldInput testId="nf-input" />
+      <NumberFieldIncrement testId="nf-up" />
+      <NumberFieldDecrement testId="nf-down" />
+    </NumberField>,
+  );
+  runtime.click("nf-up");
+  expect(lastValue(field.values)).toBe(6);
+  runtime.click("nf-down");
+  expect(lastValue(field.values)).toBe(5);
 });

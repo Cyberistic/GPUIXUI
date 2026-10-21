@@ -26,9 +26,16 @@
  * `className` is joined last so it wins conflicts exactly as `cn` resolves them.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { useGpuix } from "@gpuix/react";
-import type { EventPayload, PublicInstance } from "@gpuix/react";
+import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -75,6 +82,8 @@ export interface OTPFieldProps {
   readonly style?: StateStyle<FieldState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
+  /** The parts to draw. Omit for `length` cells. */
+  readonly children?: ReactNode;
   readonly testId?: string;
 }
 
@@ -104,20 +113,30 @@ export const otpCellLabel = (
   index: number,
 ): string => `${label ?? "Code"} digit ${index + 1}`;
 
-export const renderOtpField = (
+/** What every cell part reads from the OTP field that owns it. */
+export interface OTPFieldPart {
+  readonly theme: PrimitiveTheme;
+  readonly disabled: boolean;
+  readonly label: string | undefined;
+  readonly testId: string | undefined;
+  readonly autoFocus: boolean | undefined;
+  /** The code split into one entry per cell, already normalised. */
+  readonly cells: ReadonlyArray<string>;
+  readonly cellStyle: StyleDesc;
+  readonly focus: OTPFieldFocus;
+  readonly handlers: OTPFieldHandlers;
+}
+
+/** Resolve a field's shared state once, for its root and every cell. */
+export const otpFieldPart = (
   props: OTPFieldProps,
   theme: PrimitiveTheme,
   state: ValueState<string>,
   focus: OTPFieldFocus,
   handlers: OTPFieldHandlers,
-): ReactElement => {
+): OTPFieldPart => {
   const limit = otpLength(props.length ?? 6);
   const disabled = props.disabled === true;
-  const cells = otpCells(state.current, limit);
-  const group = recipeTw.classesToStyle(
-    cn(otpGroupClass, props.className),
-    theme,
-  ).style;
   const resolved = recipeTw.classesToStyle(
     fieldSquareClass({ size: props.size ?? "md", invalid: props.invalid }),
     theme,
@@ -130,6 +149,102 @@ export const renderOtpField = (
   } else {
     cellStyle = mergeStyle(cellStyle, keyboardRing(theme, props.invalid));
   }
+  return {
+    theme,
+    disabled,
+    label: props.label,
+    testId: props.testId,
+    autoFocus: disabled ? undefined : props.autoFocus,
+    cells: otpCells(state.current, limit),
+    cellStyle,
+    focus,
+    handlers,
+  };
+};
+
+const OtpFieldPartContext = createContext<OTPFieldPart | null>(null);
+
+const useOtpFieldPart = (name: string): OTPFieldPart => {
+  const part = useContext(OtpFieldPartContext);
+  if (part === null) {
+    throw new Error(`${name} must be used inside OTPField`);
+  }
+  return part;
+};
+
+/** {@link OTPFieldInput} props. */
+export interface OTPFieldInputProps {
+  /** Which cell this input is. Zero-based. */
+  readonly index: number;
+  readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+  readonly testId?: string;
+}
+
+/** One cell of a code. */
+export const renderOtpFieldInput = (
+  { index, className, style, testId }: OTPFieldInputProps,
+  part: OTPFieldPart,
+): ReactElement => {
+  const { disabled, focus, handlers } = part;
+  return (
+    <input
+      ref={handlers.registerCell(index)}
+      testId={
+        testId ??
+        (part.testId === undefined
+          ? undefined
+          : `${part.testId}-cell-${index + 1}`)
+      }
+      value={part.cells[index] ?? ""}
+      readOnly={disabled}
+      autoFocus={index === 0 ? part.autoFocus : undefined}
+      tabIndex={disabled ? -1 : 0}
+      theme={nativeTextTheme(part.theme)}
+      aria-label={otpCellLabel(part.label, index)}
+      style={mergeStyle(
+        mergeStyle(
+          part.cellStyle,
+          recipeTw.classesToStyle(className, part.theme).style,
+        ),
+        style,
+      )}
+      onChange={(event: EventPayload) => {
+        if (disabled) return;
+        handlers.onEdit(index, event.value ?? "");
+      }}
+      onKeyUp={(event: EventPayload) => {
+        if (disabled) return;
+        handlers.onKey(index, event.key ?? "");
+      }}
+      onClick={() => {
+        if (disabled) return;
+        handlers.onPick(index);
+      }}
+      onFocus={() => focus.onFocus(index)}
+      onBlur={() => focus.onBlur(index)}
+    />
+  );
+};
+
+/** One cell of a code, inside an `OTPField`. */
+export const OTPFieldInput = (props: OTPFieldInputProps): ReactElement =>
+  renderOtpFieldInput(props, useOtpFieldPart("OTPFieldInput"));
+
+export const renderOtpField = (
+  props: OTPFieldProps,
+  theme: PrimitiveTheme,
+  state: ValueState<string>,
+  focus: OTPFieldFocus,
+  handlers: OTPFieldHandlers,
+): ReactElement => {
+  const part = otpFieldPart(props, theme, state, focus, handlers);
+  const disabled = part.disabled;
+  const group = recipeTw.classesToStyle(
+    cn(otpGroupClass, props.className),
+    theme,
+  ).style;
   return (
     <div
       role="group"
@@ -144,38 +259,12 @@ export const renderOtpField = (
         }),
       )}
     >
-      {Arr.map(cells, (cell, index) => (
-        <input
-          key={index}
-          ref={handlers.registerCell(index)}
-          testId={
-            props.testId === undefined
-              ? undefined
-              : `${props.testId}-cell-${index + 1}`
-          }
-          value={cell}
-          readOnly={disabled}
-          autoFocus={!disabled && index === 0 ? props.autoFocus : undefined}
-          tabIndex={disabled ? -1 : 0}
-          theme={nativeTextTheme(theme)}
-          aria-label={otpCellLabel(props.label, index)}
-          style={cellStyle}
-          onChange={(event: EventPayload) => {
-            if (disabled) return;
-            handlers.onEdit(index, event.value ?? "");
-          }}
-          onKeyUp={(event: EventPayload) => {
-            if (disabled) return;
-            handlers.onKey(index, event.key ?? "");
-          }}
-          onClick={() => {
-            if (disabled) return;
-            handlers.onPick(index);
-          }}
-          onFocus={() => focus.onFocus(index)}
-          onBlur={() => focus.onBlur(index)}
-        />
-      ))}
+      <OtpFieldPartContext.Provider value={part}>
+        {props.children ??
+          Arr.map(part.cells, (_cell, index) =>
+            renderOtpFieldInput({ index }, part),
+          )}
+      </OtpFieldPartContext.Provider>
     </div>
   );
 };

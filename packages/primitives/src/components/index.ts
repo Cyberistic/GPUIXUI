@@ -37,11 +37,21 @@ export type { ToggleProps, ToggleState } from "./Toggle.js";
 export { Input } from "./Input.js";
 export type { FieldProps, FieldState, InputProps } from "./Input.js";
 
-export { NumberField, numberRange } from "./NumberField.js";
-export type { NumberFieldProps } from "./NumberField.js";
+export {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
+  numberRange,
+} from "./NumberField.js";
+export type {
+  NumberFieldInputProps,
+  NumberFieldProps,
+  NumberFieldStepperProps,
+} from "./NumberField.js";
 
-export { OTPField, otpCellLabel } from "./OTPField.js";
-export type { OTPFieldProps } from "./OTPField.js";
+export { OTPField, OTPFieldInput, otpCellLabel } from "./OTPField.js";
+export type { OTPFieldInputProps, OTPFieldProps } from "./OTPField.js";
 
 export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";

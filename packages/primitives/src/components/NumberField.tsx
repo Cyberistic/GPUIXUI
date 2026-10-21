@@ -10,10 +10,22 @@
  * The steppers are pointer affordances, not tab stops: a keyboard user presses
  * Up/Down on the field itself, which is what a native spinner does and keeps the
  * tab order to one stop per field.
+ *
+ * The parts (`NumberFieldInput`, `NumberFieldIncrement`, `NumberFieldDecrement`)
+ * read one resolved state, so a caller can drop or restyle a stepper without a
+ * second render path. The default composition calls the same paint functions
+ * directly and stays the input plus its spin column.
  */
 
-import { useRef, useState, type ReactElement } from "react";
-import type { EventPayload, PublicInstance } from "@gpuix/react";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
+import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
@@ -76,6 +88,8 @@ export interface NumberFieldProps {
   readonly style?: StateStyle<FieldState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
+  /** The parts to draw. Omit for the input and its two steppers. */
+  readonly children?: ReactNode;
   readonly testId?: string;
 }
 
@@ -98,6 +112,184 @@ export interface NumberFieldHandlers {
   readonly registerInput: (instance: PublicInstance | null) => void;
 }
 
+/** What every part reads from the number field that owns it. */
+export interface NumberFieldPart {
+  readonly theme: PrimitiveTheme;
+  readonly size: ControlSize;
+  readonly invalid: boolean;
+  readonly disabled: boolean;
+  readonly text: string;
+  readonly placeholder: string | undefined;
+  readonly label: string | undefined;
+  readonly autoFocus: boolean | undefined;
+  /** The committed value, which the arrow keys step from. */
+  readonly current: number;
+  readonly range: NumberRange;
+  readonly focus: FocusState;
+  readonly handlers: NumberFieldHandlers;
+  readonly atMin: boolean;
+  readonly atMax: boolean;
+}
+
+/** Resolve a field's shared state once, for its root and every part. */
+export const numberFieldPart = (
+  props: NumberFieldProps,
+  theme: PrimitiveTheme,
+  state: ValueState<number>,
+  text: string,
+  focus: FocusState,
+  handlers: NumberFieldHandlers,
+): NumberFieldPart => {
+  const disabled = props.disabled === true;
+  return {
+    theme,
+    size: props.size ?? "md",
+    invalid: props.invalid === true,
+    disabled,
+    text,
+    placeholder: props.placeholder,
+    label: props.label,
+    autoFocus: disabled ? undefined : props.autoFocus,
+    current: state.current,
+    range: numberRange(props),
+    focus,
+    handlers,
+    atMin: props.min !== undefined && state.current <= props.min,
+    atMax: props.max !== undefined && state.current >= props.max,
+  };
+};
+
+const NumberFieldPartContext = createContext<NumberFieldPart | null>(null);
+
+const useNumberFieldPart = (name: string): NumberFieldPart => {
+  const part = useContext(NumberFieldPartContext);
+  if (part === null) {
+    throw new Error(`${name} must be used inside NumberField`);
+  }
+  return part;
+};
+
+/** {@link NumberFieldInput} props. */
+export interface NumberFieldInputProps {
+  readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+  readonly testId?: string;
+}
+
+/** The field's text box. */
+export const renderNumberFieldInput = (
+  { className, style, testId }: NumberFieldInputProps,
+  part: NumberFieldPart,
+): ReactElement => {
+  const { disabled, focus, handlers } = part;
+  return (
+    <input
+      ref={handlers.registerInput}
+      testId={testId}
+      value={part.text}
+      placeholder={part.placeholder}
+      readOnly={disabled}
+      autoFocus={part.autoFocus}
+      tabIndex={disabled ? -1 : undefined}
+      theme={nativeTextTheme(part.theme)}
+      aria-label={part.label}
+      style={mergeStyle(
+        mergeStyle(
+          recipeTw.classesToStyle(numberInputClass, part.theme).style,
+          recipeTw.classesToStyle(className, part.theme).style,
+        ),
+        style,
+      )}
+      onChange={(event: EventPayload) => {
+        if (disabled) return;
+        handlers.onTextChange(event.value ?? "");
+      }}
+      onKeyDown={(event: EventPayload) => {
+        if (disabled) return;
+        const key = event.key ?? "";
+        if (key === "enter") {
+          handlers.onCommit();
+          return;
+        }
+        Option.match(decideNumberKey(part.current, part.range, key), {
+          onNone: () => {},
+          onSome: handlers.onValue,
+        });
+      }}
+      onFocus={focus.onFocus}
+      onBlur={() => {
+        focus.onBlur();
+        handlers.onCommit();
+      }}
+    />
+  );
+};
+
+/** The field's text box, inside a number field. */
+export const NumberFieldInput = (props: NumberFieldInputProps): ReactElement =>
+  renderNumberFieldInput(props, useNumberFieldPart("NumberFieldInput"));
+
+/** {@link NumberFieldIncrement} and {@link NumberFieldDecrement} props. */
+export interface NumberFieldStepperProps {
+  /** A custom glyph, drawn instead of the chevron. */
+  readonly children?: ReactNode;
+  readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+  readonly testId?: string;
+}
+
+const renderStepper = (
+  { children, className, style, testId }: NumberFieldStepperProps,
+  part: NumberFieldPart,
+  direction: 1 | -1,
+): ReactElement => {
+  const blocked = direction === 1 ? part.atMax : part.atMin;
+  const inert = part.disabled || blocked;
+  return (
+    <div
+      role="presentation"
+      testId={testId}
+      onClick={() => {
+        if (inert) return;
+        part.handlers.onValue(stepNumber(part.current, part.range, direction));
+      }}
+      style={mergeStyle(
+        mergeStyle(
+          recipeTw.classesToStyle(numberStepperClass(inert), part.theme).style,
+          recipeTw.classesToStyle(className, part.theme).style,
+        ),
+        style,
+      )}
+    >
+      {children ?? (
+        <Icon
+          name={direction === 1 ? "chevron-up" : "chevron-down"}
+          size="xs"
+          color={
+            inert
+              ? part.theme.colors.placeholder
+              : part.theme.colors.mutedForeground
+          }
+        />
+      )}
+    </div>
+  );
+};
+
+/** The step-up affordance. */
+export const NumberFieldIncrement = (
+  props: NumberFieldStepperProps,
+): ReactElement =>
+  renderStepper(props, useNumberFieldPart("NumberFieldIncrement"), 1);
+
+/** The step-down affordance. */
+export const NumberFieldDecrement = (
+  props: NumberFieldStepperProps,
+): ReactElement =>
+  renderStepper(props, useNumberFieldPart("NumberFieldDecrement"), -1);
+
 /** The element a number field renders. Pure in its arguments. */
 export const renderNumberField = (
   props: NumberFieldProps,
@@ -107,96 +299,47 @@ export const renderNumberField = (
   focus: FocusState,
   handlers: NumberFieldHandlers,
 ): ReactElement => {
-  const range = numberRange(props);
-  const disabled = props.disabled === true;
-  const size = props.size ?? "md";
-  const invalid = props.invalid === true;
+  const part = numberFieldPart(props, theme, state, text, focus, handlers);
   const resolved = recipeTw.classesToStyle(
-    cn(numberFieldClass({ size, invalid }), props.className),
+    cn(
+      numberFieldClass({ size: part.size, invalid: part.invalid }),
+      props.className,
+    ),
     theme,
   );
   let chrome = resolved.style;
-  if (invalid) chrome = mergeStyle(chrome, resolved.invalid);
-  if (disabled)
+  if (part.invalid) chrome = mergeStyle(chrome, resolved.invalid);
+  if (part.disabled)
     chrome = suppressFeedback(mergeStyle(chrome, resolved.disabled));
-  const ring = disabled ? {} : keyboardRing(theme, invalid);
   chrome = mergeStyle(
-    mergeStyle(chrome, ring),
-    resolveStyle(props.style, {
-      disabled,
-      focused: focus.focused,
-      invalid,
-    }),
+    chrome,
+    part.disabled ? {} : keyboardRing(theme, part.invalid),
   );
-  const atMin = props.min !== undefined && state.current <= props.min;
-  const atMax = props.max !== undefined && state.current >= props.max;
-  const stepButton = (
-    direction: 1 | -1,
-    name: "chevron-up" | "chevron-down",
-    blocked: boolean,
-  ): ReactElement => (
-    <div
-      role="presentation"
-      onClick={() => {
-        if (disabled || blocked) return;
-        handlers.onValue(stepNumber(state.current, range, direction));
-      }}
-      style={
-        recipeTw.classesToStyle(numberStepperClass(disabled || blocked), theme)
-          .style
-      }
-    >
-      <Icon
-        name={name}
-        size="xs"
-        color={
-          disabled || blocked
-            ? theme.colors.placeholder
-            : theme.colors.mutedForeground
-        }
-      />
-    </div>
+  chrome = mergeStyle(
+    chrome,
+    resolveStyle(props.style, {
+      disabled: part.disabled,
+      focused: focus.focused,
+      invalid: part.invalid,
+    }),
   );
   return (
     <div testId={props.testId} style={chrome}>
-      <input
-        ref={handlers.registerInput}
-        value={text}
-        placeholder={props.placeholder}
-        readOnly={disabled}
-        autoFocus={disabled ? undefined : props.autoFocus}
-        tabIndex={disabled ? -1 : undefined}
-        theme={nativeTextTheme(theme)}
-        aria-label={props.label}
-        style={recipeTw.classesToStyle(numberInputClass, theme).style}
-        onChange={(event: EventPayload) => {
-          if (disabled) return;
-          handlers.onTextChange(event.value ?? "");
-        }}
-        onKeyDown={(event: EventPayload) => {
-          if (disabled) return;
-          const key = event.key ?? "";
-          if (key === "enter") {
-            handlers.onCommit();
-            return;
-          }
-          Option.match(decideNumberKey(state.current, range, key), {
-            onNone: () => {},
-            onSome: handlers.onValue,
-          });
-        }}
-        onFocus={focus.onFocus}
-        onBlur={() => {
-          focus.onBlur();
-          handlers.onCommit();
-        }}
-      />
-      <div
-        style={recipeTw.classesToStyle(numberStepperColumnClass, theme).style}
-      >
-        {stepButton(1, "chevron-up", atMax)}
-        {stepButton(-1, "chevron-down", atMin)}
-      </div>
+      <NumberFieldPartContext.Provider value={part}>
+        {props.children ?? (
+          <>
+            {renderNumberFieldInput({}, part)}
+            <div
+              style={
+                recipeTw.classesToStyle(numberStepperColumnClass, theme).style
+              }
+            >
+              {renderStepper({}, part, 1)}
+              {renderStepper({}, part, -1)}
+            </div>
+          </>
+        )}
+      </NumberFieldPartContext.Provider>
     </div>
   );
 };

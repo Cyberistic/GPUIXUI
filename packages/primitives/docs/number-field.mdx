@@ -25,6 +25,43 @@ const [copies, setCopies] = useState(1);
 An untouched field with neither `value` nor `defaultValue` renders empty, the
 way a native number field does — it does not start with a zero to delete.
 
+## Parts
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `NumberField` | the chrome, focus ring, state and the accessible name |
+| `NumberFieldInput` | the native `<input>`: draft text, keys, focus and blur |
+| `NumberFieldIncrement` | the step-up hit target (pointer only, never a tab stop) |
+| `NumberFieldDecrement` | the step-down hit target |
+
+The default composition is the input and a column of both steppers, painted by
+the same functions the parts call. A caller who supplies `children` composes
+the field themselves; each stepper accepts a custom glyph as its children, and
+every part accepts `style`, `className` and `testId`, merged last.
+
+```tsx
+import { Icon } from "@gpuixui/icons";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
+  Stack,
+} from "@gpuixui/primitives";
+
+<NumberField label="Copies" value={copies} onChange={setCopies} min={1} max={99}>
+  <NumberFieldInput />
+  <Stack direction="column" justify="between" style={{ height: "100%" }}>
+    <NumberFieldIncrement>
+      <Icon name="plus" size="xs" />
+    </NumberFieldIncrement>
+    <NumberFieldDecrement>
+      <Icon name="minus" size="xs" />
+    </NumberFieldDecrement>
+  </Stack>
+</NumberField>;
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -43,7 +80,13 @@ way a native number field does — it does not start with a zero to delete.
 | `autoFocus` | `boolean` | `false` | focus on mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
 | `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc`; resolved against the live state and merged last |
+| `children` | `ReactNode` | input + steppers | the parts to draw |
 | `testId` | `string` | — | stable locator on the field's chrome |
+
+`NumberFieldInput` and both steppers accept `style`, `className` and `testId`;
+the steppers also take `children` as a custom glyph. `NumberFieldInput` has no
+`value`/`onChange` of its own: the parts read the field's state, so there is one
+source of truth.
 
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
 the caret never jumps. Every edit that parses reports the clamped number
@@ -100,12 +143,15 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
 - `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
   stepping, Home/End only with a bound.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
-  raw edit report, steppers as presentation, one tab stop, disabled/invalid.
+  raw edit report, steppers as presentation, one tab stop, disabled/invalid,
+  the four part names in a caller's composition, and the input part carrying
+  the draft, name and keys.
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
   `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;
   the chrome declares the keyboard ring and a press paints none; a disabled
-  field refuses text, keys and clicks.
+  field refuses text, keys and clicks; a caller's composition of the input and
+  both steppers reads the field's live value (a real press on each steps it).
   Measured 2026-10-17 (plan 054 §9).
 
 ```sh
