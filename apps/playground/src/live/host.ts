@@ -21,7 +21,11 @@ import { testIdOf, type LiveNode } from "./tree.js";
 /** The renderer surface a live host reads; nothing else is needed. */
 export type LiveRenderer = Pick<
   GpuixRenderer,
-  "getFocusedElementId" | "focusElement" | "focusNext" | "getPaintedText"
+  | "getFocusedElementId"
+  | "focusElement"
+  | "focusNext"
+  | "getPaintedText"
+  | "simulateKeyUp"
 >;
 
 /** What the host needs from the runner. */
@@ -110,6 +114,11 @@ export const createLiveHost = ({
     key: (keystroke) =>
       call(`key ${keystroke}`, () =>
         app.call("keystrokes", { keys: keystroke }),
+      ),
+    keyUp: (keystroke) =>
+      named(
+        `keyUp ${keystroke}`,
+        sync(() => renderer.simulateKeyUp(keystroke)),
       ),
     focusNext: () =>
       named(

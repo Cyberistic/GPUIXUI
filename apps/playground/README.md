@@ -347,6 +347,28 @@ toast) wait on a `packages/components` module-load issue recorded in `TODO.md`
 → Interlocks: its `tsconfig.json` maps `@gpuix/react/jsx-runtime` to a `.d.ts`,
 which the runner's loader resolves at runtime and Node refuses to type-strip.
 
+### `checkbox-toggle` — measured on 0.11.0 here
+
+The shipped `Checkbox` from `@gpuixui/primitives`, controlled, with a readout of
+`checked` and the number of changes. Two activation paths, because they prove
+different layers:
+
+| Step | Check |
+| ---- | ----- |
+| mount | `checked=false changes=0` |
+| press the box | `checked=true changes=1` — the painted box is hit-testable and the press reaches `onCheckedChange` |
+| `Space` press + release | `checked=false changes=2` — the runtime routes the key to the focused `div role="checkbox"` |
+
+The second path is the component's **own** keyboard contract, and measuring it
+found a gap in the live harness: a window's automation `keystrokes` delivers the
+key **down** and no `keyUp` (the probe's listener read `keys=D:space `), so
+`onKeyUp` — where Space activates, the way a browser button does — never fired.
+The host therefore gained `keyUp(keystroke)`, released through the renderer's
+`simulateKeyUp`, and `AsyncSmokeHost` documents the split. Negative control,
+measured: pressing Space without releasing it leaves the readout at
+`checked=true changes=1` and fails `Space toggles the focused checkbox` (exit
+`1`).
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session

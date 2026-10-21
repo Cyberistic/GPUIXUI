@@ -12,6 +12,7 @@ import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
 import {
+  Checkbox,
   Input,
   ThemeProvider as PrimitiveThemeProvider,
 } from "@gpuixui/primitives";
@@ -290,6 +291,64 @@ const TextInputProbe = (): ReactNode => {
   );
 };
 
+/**
+ * The library's own `Checkbox`: a press and a Space key each toggle it, with a
+ * readout that prints the state React received.
+ *
+ * Both paths matter in a window rather than in the offscreen renderer: the press
+ * proves the painted box is hit-testable, and Space proves the runtime routes the
+ * key to a focused `div role="checkbox"` — the component's own keyboard
+ * contract, not a host element's.
+ */
+const CheckboxProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [checked, setChecked] = useState(false);
+  const [changes, setChanges] = useState(0);
+  return (
+    <PrimitiveThemeProvider theme={palettes.dark}>
+      <div
+        testId="checkbox-probe"
+        style={{
+          width: 480,
+          height: 240,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped Checkbox: a press and Space each report a change.
+        </text>
+        <Checkbox
+          testId="checkbox-field"
+          label="Enable telemetry"
+          checked={checked}
+          onCheckedChange={(next) => {
+            setChecked(next);
+            setChanges((count) => count + 1);
+          }}
+        />
+        <text
+          testId="checkbox-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`checked=${checked} changes=${changes}`}
+        </text>
+      </div>
+    </PrimitiveThemeProvider>
+  );
+};
+
 /** What a probe module supplies; the registry supplies the metadata. */
 export interface LiveProbeBody {
   readonly id: LiveProbeId;
@@ -536,6 +595,38 @@ const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("typed");
   });
 
+const checkboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("checkbox-field");
+
+    yield* ctx.expectContains(
+      "the shipped Checkbox starts unchecked",
+      yield* ctx.host.text("checkbox-readout"),
+      "checked=false changes=0",
+    );
+
+    yield* ctx.host.click("checkbox-field");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press toggles the checkbox and reports it once",
+      yield* ctx.host.text("checkbox-readout"),
+      "checked=true changes=1",
+    );
+
+    // Space is the component's own keyboard contract: a focused `div
+    // role="checkbox"` has to see the key from the window. The release is a
+    // separate verb because a window's `keystrokes` delivers only the press.
+    yield* ctx.host.key("space");
+    yield* ctx.host.keyUp("space");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Space toggles the focused checkbox",
+      yield* ctx.host.text("checkbox-readout"),
+      "checked=false changes=2",
+    );
+    yield* ctx.host.capture("toggled");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -558,5 +649,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "text-input",
     view: () => <TextInputProbe />,
     steps: textInputSteps,
+  },
+  "checkbox-toggle": {
+    id: "checkbox-toggle",
+    view: () => <CheckboxProbe />,
+    steps: checkboxSteps,
   },
 };

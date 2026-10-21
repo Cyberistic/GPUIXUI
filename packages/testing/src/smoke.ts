@@ -291,6 +291,15 @@ export interface AsyncSmokeHost {
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
   readonly key: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Releases a key the window is holding.
+   *
+   * Measured: a window's automation `keystrokes` delivers the key **down** and
+   * no `keyUp` (a probe read `keys=D:space`), so a control that activates on
+   * release — Space on a button, checkbox or switch, the platform's own rule —
+   * is only provable by releasing through the renderer.
+   */
+  readonly keyUp: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
   readonly focusNext: () => Effect.Effect<void, SmokeHostError>;
   /** Native focus from component code (`renderer.focusElement`). */
   readonly focusElement: (

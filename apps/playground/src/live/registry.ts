@@ -54,6 +54,12 @@ export const liveRegistry = [
       "Input: the shipped Input takes typed keys through onChange and Enter through onSubmit",
     capability: "input",
   },
+  {
+    id: "checkbox-toggle",
+    title:
+      "Input: the shipped Checkbox toggles on a press and on Space in a window",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

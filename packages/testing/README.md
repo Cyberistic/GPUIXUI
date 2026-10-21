@@ -56,6 +56,13 @@ it, and a probe counts exact colours with `Pixels.countColour`. The inflate
 function is injected by the runner, so this package still imports no platform
 or GPUix module.
 
+Keys are two verbs on purpose. `key(keystroke)` presses through the automation
+protocol, which a window delivers as a **key down only** (measured: a probe
+listening on `onKeyDown`/`onKeyUp` saw `space` arrive once, as a press). A
+control that activates on release — Space on a button, checkbox or switch,
+which is the platform's own rule — is therefore driven with `keyUp(keystroke)`,
+which releases through the renderer's `simulateKeyUp`.
+
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and
 fails with a label naming the id via `ctx.expectSome`.

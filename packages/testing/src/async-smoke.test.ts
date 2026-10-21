@@ -28,6 +28,7 @@ const inertHost: AsyncSmokeHost = {
   focused: () => Effect.succeed(null),
   click: () => Effect.void,
   key: () => Effect.void,
+  keyUp: () => Effect.void,
   focusNext: () => Effect.void,
   focusElement: () => Effect.void,
   waitFor: () => Effect.void,
