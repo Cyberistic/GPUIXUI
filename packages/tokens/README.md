@@ -76,6 +76,15 @@ changes, and a brand retints the library's shadows by changing that one role.
 `elevationWithTint(elevation, tint)` is the same rule on its own, for a theme
 composed by hand.
 
+## Layering
+
+There is no stacking token — the published `StyleDesc` has no `zIndex`, so a
+surface paints above the page by being **mounted after** it. The model is
+`docs/tokens.md` §Layering: five mount layers (inline, anchored, tip, modal,
+notice), the toast viewport last in the app root, and Escape/outside presses
+offered to the topmost overlay only. The `overlay` **colour role** is the modal
+scrim; `elevation.overlay` is a reserved, empty level that lifts nothing.
+
 ## Extending a theme
 
 `createTheme` starts from the built-in theme of the requested `mode` and
@@ -457,6 +466,11 @@ persisted theme at its own boundary, where `Schema` belongs.
 ## Limitations
 
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
+- No `zIndex` in the published API, so there is no `z` token: layering is paint
+  order (`docs/tokens.md` §Layering). The repo's source-built binding carries a
+  local `zIndex` patch for a probe; library code never writes against it.
+- No responsive breakpoints: the runtime has no media queries, so a layout
+  responds to window size in the application.
 - A platform style's radii and density follow each platform's own guidelines
   (macOS 28px controls, Windows 32, GNOME 36). They are measured as painted — the
   playground's `theme-platform` probe reads the `lg` radius, the `primary` fill
