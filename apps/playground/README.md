@@ -261,8 +261,10 @@ narrower. Each deviation is deliberate and measured:
   the Tab trap makes `modal-focus-trap` fail with
   `Tab moved focus [modal-content,modal-content,…]`, and removing the focus
   return fails with `expected "modal-trigger", got "none"` — both exit `1`
-  (plan `155` §8). Hard-coding `side="bottom"` in the floating layer fails
-  `side=right sits one gap right of the anchor: expected 326 ± 1, got 200`
+  (plan `155` §8). Hard-coding `theme-platform`'s expected family to `Menlo`
+  fails with `linux mono family: expected "Menlo", got "DejaVu Sans Mono"`,
+  exit `1`; restored, green. Hard-coding `side="bottom"` in the floating layer
+  fails `side=right sits one gap right of the anchor: expected 326 ± 1, got 200`
   (plan `156` §8).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
