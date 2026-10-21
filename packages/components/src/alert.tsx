@@ -11,16 +11,19 @@
  * duplicated `tone` prop.
  */
 
-import type { Props } from "@gpuix/react";
+import type { Props, PublicInstance } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import {
   createContext,
   useContext,
   useLayoutEffect,
+  useRef,
   type ReactNode,
 } from "react";
 import { IconButton } from "./internal/button.js";
+import { useMergedRef } from "./internal/ref.js";
 import { controlName } from "./internal/name.js";
 import {
   assertParts,
@@ -243,18 +246,32 @@ export const AlertDismiss = ({
   label = "Dismiss",
   testId = "alert-dismiss",
   onClick,
+  ref,
   ...rest
 }: AlertDismissProps) => {
   const { foreground } = useAlert();
+  const renderer = useGpuix().renderer;
+  const control = useRef<PublicInstance | null>(null);
+  const attach = useMergedRef(control, ref);
 
   return (
     <IconButton
       {...rest}
+      ref={attach}
       size="sm"
       label={label}
       testId={testId}
       onClick={(event) => {
         onClick?.(event);
+        // This control leaves with its alert, so hand the keyboard to the next
+        // stop while it still exists: the renderer keeps the traversal inside the
+        // active surface, measured in a modal and on the page (plan 839).
+        if (
+          control.current !== null &&
+          renderer?.getFocusedElementId?.() === control.current.id
+        ) {
+          renderer?.focusNext?.();
+        }
         onDismiss();
       }}
     >

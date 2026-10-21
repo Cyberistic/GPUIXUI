@@ -292,8 +292,10 @@ recorder's clear control to the recorder itself (plan 769), and a dismissed toas
 card hands to the next live card's dismiss control — below, else above
 (plan 770). When nothing survives to receive it, focus is left alone rather than
 invented: the last toast card has no trigger to return to, and its page says so.
-The handover lives in the activation handler, so a value change the app made
-itself never moves focus.
+A control whose **whole container** leaves — an alert's dismiss control — hands
+the keyboard to the next stop in the active surface before the container goes
+(plan 839). The handover lives in the activation handler, so a value change the app
+made itself never moves focus.
 
 **A surface that closes under the user hands the keyboard on.** An app can set
 `open` false while one of a non-modal surface's own controls holds focus, with no

@@ -11,6 +11,8 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   Alert,
@@ -23,7 +25,13 @@ import {
 } from "../alert.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
-import { clickCentreOf } from "../internal/interaction.js";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
+import {
+  clickCentreOf,
+  finishMotion,
+  focusedTestId,
+  isShown,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme, tone } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
@@ -34,6 +42,79 @@ const tones: ReadonlyArray<AlertTone> = [
   "warning",
   "danger",
 ];
+
+/** An alert whose dismiss control removes it, inside a modal. */
+const AlertInDialog = ({ after }: { readonly after: boolean }) => {
+  const [shown, setShown] = useState(true);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <Dialog open onOpenChange={() => undefined}>
+        <DialogContent label="Editor" testId="editor" size="sm">
+          <DialogTitle>Editor</DialogTitle>
+          {shown ? (
+            <Alert testId="alert">
+              <AlertContent>
+                <AlertTitle>Sync paused</AlertTitle>
+              </AlertContent>
+              <AlertDismiss
+                testId="alert-dismiss"
+                onDismiss={() => setShown(false)}
+              />
+            </Alert>
+          ) : null}
+          {after ? <Button testId="after-alert">After</Button> : null}
+        </DialogContent>
+      </Dialog>
+      {/* A control after the dialog, so a window-wide `focusNext` from the
+          dialog's last control visibly leaves the modal (plan 839). */}
+      <Button testId="outside">Outside</Button>
+    </div>
+  );
+};
+
+/** An alert whose dismiss control removes it on the page. */
+const AlertOnPage = () => {
+  const [shown, setShown] = useState(true);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {shown ? (
+        <Alert testId="alert">
+          <AlertContent>
+            <AlertTitle>Sync paused</AlertTitle>
+          </AlertContent>
+          <AlertDismiss
+            testId="alert-dismiss"
+            onDismiss={() => setShown(false)}
+          />
+        </Alert>
+      ) : null}
+      <Button testId="after-alert">After</Button>
+    </div>
+  );
+};
+
+/** An app-driven removal: the alert leaves without its control being pressed. */
+const AlertDismissedByApp = () => {
+  const [shown, setShown] = useState(true);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {shown ? (
+        <Alert testId="alert">
+          <AlertContent>
+            <AlertTitle>Sync paused</AlertTitle>
+          </AlertContent>
+          <AlertDismiss
+            testId="alert-dismiss"
+            onDismiss={() => setShown(false)}
+          />
+        </Alert>
+      ) : null}
+      <Button testId="dismiss-all" onClick={() => setShown(false)}>
+        Dismiss all
+      </Button>
+    </div>
+  );
+};
 
 describe("Alert", () => {
   it("is a live region that renders its parts in order", () => {
@@ -381,5 +462,64 @@ describe("Alert", () => {
     ).toEqual(["Card declined"]);
 
     alert.unmount();
+  });
+  it("hands the keyboard to the next control after dismissing inside a modal", () => {
+    const scene = renderComponent(<AlertInDialog after />);
+    finishMotion(scene);
+    const dismiss = scene.renderer.findByTestId("alert-dismiss");
+    if (dismiss === undefined) throw new Error("no dismiss control");
+    scene.renderer.focusElement(dismiss.id);
+
+    scene.renderer.simulateKeystrokes("enter");
+    finishMotion(scene);
+
+    expect(isShown(scene, "alert")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("after-alert"));
+
+    scene.renderer.simulateKeystrokes("tab");
+    finishMotion(scene);
+    expect(focusedTestId(scene)).not.toEqual(Option.none());
+
+    scene.unmount();
+  });
+
+  it("wraps inside the surface when the alert was its last control", () => {
+    const scene = renderComponent(<AlertInDialog after={false} />);
+    finishMotion(scene);
+    const dismiss = scene.renderer.findByTestId("alert-dismiss");
+    if (dismiss === undefined) throw new Error("no dismiss control");
+    scene.renderer.focusElement(dismiss.id);
+
+    scene.renderer.simulateKeystrokes("enter");
+    finishMotion(scene);
+
+    expect(isShown(scene, "alert")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("dialog-close"));
+
+    scene.unmount();
+  });
+
+  it("hands the keyboard to the next control after dismissing on the page", () => {
+    const scene = renderComponent(<AlertOnPage />);
+    const dismiss = scene.renderer.findByTestId("alert-dismiss");
+    if (dismiss === undefined) throw new Error("no dismiss control");
+    scene.renderer.focusElement(dismiss.id);
+
+    scene.renderer.simulateKeystrokes("enter");
+
+    expect(isShown(scene, "alert")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("after-alert"));
+
+    scene.unmount();
+  });
+
+  it("does not move focus when the app removes the alert itself", () => {
+    const scene = renderComponent(<AlertDismissedByApp />);
+    clickCentreOf(scene, "dismiss-all");
+
+    expect(isShown(scene, "alert")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("dismiss-all"));
+
+    scene.unmount();
   });
 });

@@ -1671,6 +1671,19 @@ retired once both branches are one
       the queue), the mount case red on the old source and the prune case red with
       the prune removed; docs, `COMPONENTS.md`, `PLAN.md` D30 and the index synced
       (owner: components)
+    - [x] A dismissed alert hands the keyboard on — plan 839; measured 2026-10-21
+      at `HEAD` `13ac34f3`: `AlertDismiss` removed the whole alert with the
+      focused control inside it, so the native focused host became `None` — and
+      inside a dialog even `Tab` did nothing, because the surface's key handler
+      needs a focused element. `AlertDismiss` now moves to the next stop via the
+      renderer's traversal before calling `onDismiss`, only while it holds native
+      focus (the traversal stays inside the active surface, measured both in a
+      modal and on the page). 3 native cases + 1 pin (Alert 18 → 22: the next
+      control in a dialog, the surface's wrap when the alert was last, the page,
+      and an app-driven removal that must not move focus), the three hand-off
+      cases red on the old source and the pin red under an unmount-time
+      hand-off; docs, `docs/component-api.md` §5, `COMPONENTS.md`, `PLAN.md` D30
+      and the index synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

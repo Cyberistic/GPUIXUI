@@ -122,6 +122,13 @@ this is a code guarantee rather than a behaviour-suite assertion.)
   accessible name, activated by Enter or Space as well as a click. Its `testId`
   defaults to `alert-dismiss`; pass your own when more than one alert can be on
   screen, so each control has its own handle (plan 675).
+- Activating the dismiss control **hands the keyboard to the next control before
+  the alert leaves**, so a keyboard user is not stranded: inside a dialog the
+  next stop stays inside the dialog, and on the page it continues with the next
+  control after the alert (plan 839). The move happens only when the control
+  itself holds native focus, so an alert the app removes some other way never
+  steals it. If the app keeps the alert on `onDismiss`, focus has still moved on —
+  the control said "dismiss" and should not be relied on afterwards.
 - `AlertIcon` is decorative: it is not announced, so the title must say what the
   state is.
 - Colour is never the only signal — every alert has an `AlertTitle`.
@@ -148,7 +155,7 @@ this is a code guarantee rather than a behaviour-suite assertion.)
 
 ## Verification
 
-`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (18 tests): the
+`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (22 tests): the
 parts render in order inside one alert region, every tone paints its root surface
 and title colour, the description keeps the page foreground, the icon takes the
 tone colour and is optional, the theme is read rather than a constant, there is no
@@ -158,6 +165,9 @@ handle (and two alerts' controls stay distinct), an action in the description
 receives its click, a consumer `style` wins, a caller `onClick` composes with
 `onDismiss`, and the region is named by its title, by its description when
 untitled, follows a rename or a removed title, and keeps a caller's `aria-label`.
+Three cases cover the dismiss hand-off (the next control inside a dialog, the
+surface's own wrap when the alert was its last control, and the page), and one
+pins that an app-driven removal never moves focus (plan 839).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
