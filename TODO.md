@@ -271,9 +271,10 @@ high-contrast base keeps its palette (families/radii/density only), recorded by
 `docs/tokens.md` §Platform styles and `docs/design-system.md` §5
 `[x]` Ship the contrast contract as public API — `contrastRatio` (WCAG 2.1,
 `undefined` rather than a guess for a translucent colour), `contrastFloors`,
-`highContrastFloors` and `contrastPairs`; `color.test.ts` and
-`platforms.test.ts` read the same table, so a brand can run the check its theme
-must pass. 5 contract tests + docs
+`highContrastFloors`, `contrastPairs` and `contrastFailures(theme, floors?)`
+(which reports every missed pair, including one it cannot measure); the colour and
+platform tests read the same table, so a brand can run the check its theme must
+pass. 9 contract tests + docs
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Add `avatarSize` (20/26/32/40) so the Avatar component drops its local
 diameter table; a fixed scale, not a theme group
