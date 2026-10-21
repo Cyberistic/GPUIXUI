@@ -51,6 +51,12 @@ export const mergeStyle = (
  * still acts afterwards. A consumer that needs to stop the runtime's own
  * default (a Tab, a text edit) calls `preventDefault()` on the event it is
  * given; that flag is the runtime's, not this package's.
+ *
+ * A part with more than one interactive element installs the caller's handler
+ * on every element it gives that handler to — each option row, each cell — so
+ * the caller observes the interaction wherever it landed. A blocked press (a
+ * disabled option, a stepper at its bound) installs no handler on that element
+ * at all; a field's disabled state is an observation surface and keeps them.
  */
 export interface InteractionProps {
   readonly onClick?: (event: EventPayload) => void;

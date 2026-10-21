@@ -69,6 +69,7 @@ Fragments and arrays are transparent, so items can be grouped freely.
 | `label` | `string` | none | accessible name for the group |
 | `style` | `StateStyle<RadioGroupState>` | — | resolved against the live state, merged last on the group |
 | `itemStyle` | `StateStyle<RadioItemState>` | — | resolved per option row against that row's state, merged last |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own, on the element that owns each: keys on the root, the press and focus on the option row |
 | `testId` | `string` | — | stable locator |
 
 `RadioOption` is `{ value, label, description?, disabled?, content? }`.
@@ -78,6 +79,10 @@ Fragments and arrays are transparent, so items can be grouped freely.
 `RadioGroupItem` takes `value`, `label`, `description?`, `disabled?` and
 `children` (the rich content). It draws nothing itself: the group reads its props
 and renders the row, which is why the two paths cannot diverge.
+
+Your host handlers (`InteractionProps`) are composed with the group's, never
+substituted: yours runs first and the row still selects. A disabled option
+installs no `onClick` at all, so neither handler runs.
 
 ## Keyboard
 

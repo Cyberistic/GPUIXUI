@@ -54,6 +54,7 @@ cannot be selected away.
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `children` | `ReactNode` | — | the parts to draw; omit for the default two-thumb composition |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the range's own; keys and focus land on a thumb, the press on the track or the thumb it hit |
 | `testId` | `string` | — | stable locator for the track |
 
 The parts are the same three `Slider` exports: `SliderTrack` holds
@@ -62,6 +63,11 @@ The parts are the same three `Slider` exports: `SliderTrack` holds
 `role="slider"`, name and tab stop; `index` is what tells the parts which end
 they paint. A custom composition may reorder or restyle them, but each thumb is
 still a tab stop and the root still owns the pointer handling.
+
+Your host handlers are composed with the range's, never substituted. A key and a
+focus event arrive from the thumb they landed on; a press arrives from the track
+— or from the thumb the runtime hit, since `<div>`s do not bubble. A disabled
+range installs no `onClick` and keeps every key and focus observable.
 
 ## Keyboard
 

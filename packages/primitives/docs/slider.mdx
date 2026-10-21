@@ -66,10 +66,17 @@ const theme = useTheme();
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `children` | `ReactNode` | — | the parts to draw; omit for `SliderTrack` with an indicator and a thumb |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the slider's own; the press and keys reach the track, and a disabled slider installs no `onClick` |
 | `testId` | `string` | — | stable locator for the track |
 
 Out-of-range values are clamped, and a value between steps snaps to the step
 measured from `min`. `NaN` reads as `min`, never as a full track.
+
+Your host handlers are composed with the slider's, never substituted: the press
+and the keys reach the track (the element that owns them), and a disabled slider
+installs no `onClick` while its keys and focus stay observable. The press is
+delivered as the runtime's `click` — the pointer drag itself is `onMouseDown`,
+which is not part of `InteractionProps`.
 
 **The ends are stops.** A step that does not divide the span must not make the
 maximum unreachable: with `min: 0`, `max: 10` and `step: 3` the steps are 0, 3,

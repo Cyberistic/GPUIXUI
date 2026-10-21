@@ -29,6 +29,7 @@ import {
 } from "react";
 import type {
   EventPayload,
+  KeyEvent,
   NativeRenderer,
   PublicInstance,
   StyleDesc,
@@ -62,17 +63,20 @@ import {
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
+  composeEvent,
   mergeStyle,
   useControlState,
   useFocus,
   valueChange,
   type FocusState,
+  type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** A single value on a track. */
-export interface SliderProps extends ValueChangeProps<number> {
+export interface SliderProps
+  extends ValueChangeProps<number>, InteractionProps {
   /** Controlled value. Omit to let the slider hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
@@ -101,9 +105,8 @@ export interface SliderProps extends ValueChangeProps<number> {
 }
 
 /** Two values on one track. */
-export interface RangeSliderProps extends ValueChangeProps<
-  readonly [number, number]
-> {
+export interface RangeSliderProps
+  extends ValueChangeProps<readonly [number, number]>, InteractionProps {
   readonly value?: readonly [number, number];
   readonly defaultValue?: readonly [number, number];
   readonly min?: number;
@@ -198,9 +201,10 @@ interface ThumbPart {
   readonly tabIndex: number | undefined;
   readonly ring: boolean;
   readonly ref: (instance: PublicInstance | null) => void;
-  readonly onFocus: () => void;
-  readonly onBlur: () => void;
-  readonly onKeyDown: (event: EventPayload) => void;
+  readonly onClick: ((event: EventPayload) => void) | undefined;
+  readonly onFocus: ((event: EventPayload) => void) | undefined;
+  readonly onBlur: ((event: EventPayload) => void) | undefined;
+  readonly onKeyDown: ((event: KeyEvent) => void) | undefined;
 }
 
 /** What a slider's parts read from the slider that owns them. */
@@ -212,6 +216,8 @@ interface SliderPart {
   readonly fractions: ReadonlyArray<number>;
   /** Per-thumb interaction; `null` where the root owns it (a single slider). */
   readonly thumbs: ReadonlyArray<ThumbPart | null>;
+  /** The caller's press, installed where a press inside the control lands. */
+  readonly press: ((event: EventPayload) => void) | undefined;
 }
 
 const SliderPartContext = createContext<SliderPart | null>(null);
@@ -318,7 +324,11 @@ export const renderSliderThumb = (
   );
   resolved = mergeStyle(resolved, style);
   if (thumb === null) {
-    return <div style={resolved}>{children}</div>;
+    return (
+      <div onClick={part.press} style={resolved}>
+        {children}
+      </div>
+    );
   }
   return (
     <div
@@ -327,6 +337,7 @@ export const renderSliderThumb = (
       aria-label={thumb.label}
       aria-valuetext={thumb.valueText}
       tabIndex={thumb.tabIndex}
+      onClick={thumb.onClick}
       onFocus={thumb.onFocus}
       onBlur={thumb.onBlur}
       onKeyDown={thumb.onKeyDown}
@@ -372,6 +383,7 @@ export const renderSlider = (
     invalid,
     fractions: [valueFraction(value, range)],
     thumbs: [null],
+    press: props.disabled === true ? undefined : props.onClick,
   };
   return (
     <div
@@ -381,18 +393,20 @@ export const renderSlider = (
       aria-valuetext={sliderValueText(value, props.formatValue)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
+      onClick={props.disabled === true ? undefined : props.onClick}
       onMouseDown={handlers.onPointerDown}
       onMouseMove={handlers.onPointerMove}
       onMouseUp={handlers.onPointerUp}
-      onKeyDown={(event) => {
+      onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, (event) => {
         if (props.disabled === true) return;
         Option.match(decideValueKey(value, range, event.key ?? ""), {
           onNone: () => {},
           onSome: handlers.onValueChange,
         });
-      }}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
+      })}
+      onKeyUp={props.onKeyUp}
+      onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
+      onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
       style={track}
     >
       <SliderPartContext.Provider value={part}>
@@ -465,9 +479,14 @@ export const renderRangeSlider = (
       tabIndex: props.disabled === true ? undefined : 0,
       ring: props.disabled !== true,
       ref: handlers.registerThumb(index),
-      onFocus: () => focus.onFocus(index),
-      onBlur: () => focus.onBlur(index),
-      onKeyDown: (event) => {
+      onClick: props.disabled === true ? undefined : props.onClick,
+      onFocus: composeEvent<EventPayload>(props.onFocus, () =>
+        focus.onFocus(index),
+      ),
+      onBlur: composeEvent<EventPayload>(props.onBlur, () =>
+        focus.onBlur(index),
+      ),
+      onKeyDown: composeEvent<KeyEvent>(props.onKeyDown, (event) => {
         if (props.disabled === true) return;
         const end = index === 0 ? "start" : "end";
         Option.match(decideValueKey(value, range, event.key ?? ""), {
@@ -477,7 +496,7 @@ export const renderRangeSlider = (
               spanTuple(moveSpanEnd(span, end, next, range)),
             ),
         });
-      },
+      }),
     };
   };
   const resolved = recipeTw.classesToStyle(
@@ -502,6 +521,7 @@ export const renderRangeSlider = (
       valueFraction(span.end, range),
     ],
     thumbs: [thumbPart(0), thumbPart(1)],
+    press: props.disabled === true ? undefined : props.onClick,
   };
   return (
     <div
@@ -509,6 +529,7 @@ export const renderRangeSlider = (
       role="group"
       aria-label={accessibleName(props.label)}
       testId={props.testId}
+      onClick={props.disabled === true ? undefined : props.onClick}
       onMouseDown={handlers.onPointerDown}
       onMouseMove={handlers.onPointerMove}
       onMouseUp={handlers.onPointerUp}

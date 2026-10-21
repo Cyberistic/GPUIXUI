@@ -1382,22 +1382,32 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     re-enables it and sees the ring and the toggle return. Both directions
     measured: dropping `disabled` from the checkbox's ring call fails the native
     case
-  - `[~]` Caller handler composition across the interactive parts — the
-    **controls and fields landed**: `InteractionProps` (`onClick`,
-    `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`) is composed with each part's own
-    handler through `composeEvent`, never substituted, so the caller's runs
-    first and the part still acts; a disabled/blocked control installs **no**
-    `onClick` at all (`composePress`, matching the components package's list
-    rows) while its keys and focus stay observable. Adopted by `Button`,
-    `IconButton`, `Toggle`, `Checkbox`, `Switch`, `Input` and `TextArea`;
-    `handlers.test.tsx` (22 cases: click order, one activation, no press while
-    disabled, keys and focus through each part) is the guard, both directions
-    measured (a Checkbox with the composition removed fails 6 cases), and
-    `runtime/controls.runtime.test.tsx` proves GPUI's own focus, pointer and key
-    dispatch reaches both handlers (without the composition: `expected [] to
-    strictly equal [ 'focus' ]`). The remaining parts are the group roots
-    (`RadioGroup`, `Rating`), the sliders, `NumberField`/`OTPField` and the
-    overlays
+  - `[x]` Caller handler composition across the interactive parts — every
+    interactive part now accepts `InteractionProps` (`onClick`, `onKeyDown`,
+    `onKeyUp`, `onFocus`, `onBlur`) and composes it with its own handler through
+    `composeEvent`, never substituting it: the caller's runs first and the part
+    still acts. A disabled/blocked control installs **no** `onClick` at all
+    (`composePress`, matching the components package's list rows) while its keys
+    and focus stay observable; a field is an observation surface and keeps them.
+    Adopted by `Button`, `IconButton`, `Toggle`, `Checkbox`, `Switch`, `Input`
+    and `TextArea` first, then by the parts that compose several elements —
+    `RadioGroup` (keys on the root, press and focus per option row), `Rating`
+    (keys on the root, press and focus per star), `Slider` and `RangeSlider`
+    (the track's press and keys; a range's keys and focus per thumb),
+    `NumberField` (the input's press, keys and focus, and both steppers' press)
+    and `OTPField` (every cell) — so the caller observes the interaction
+    wherever it landed. `handlers.test.tsx` is the guard (50 cases: click order,
+    one activation, no press while blocked, keys and focus through every part,
+    disabled-field observability); both directions measured per part (dropping a
+    part's composition fails its cases by name). `runtime/controls.runtime.test.tsx`
+    proves GPUI's own focus, pointer and key dispatch reaches both handlers
+    (without the composition: `expected [] to strictly equal [ 'focus' ]`), and
+    `runtime/value.runtime.test.tsx` measures a real press and a real key on a
+    `Slider` reaching the caller (without the track's `onClick`:
+    `expected [] to strictly equal [ 'click' ]`). `Tooltip` stays out: it has no
+    caller style or handler surface — GPUix's `TooltipContent` exists only while
+    open and the trigger is the caller's own element, so there is nothing to
+    compose onto.
   - `[ ]` The switch thumb's motion
   - `[ ]` The native field's hint and selection reach
 `[x]` `apps/docs`: docs truth — stated native-test counts and the complete public type index (salvage 310, 324, 326, 330, 333, 335; the example registry page and the copy-and-own platform example contract have landed) — **complete, re-verified 2026-10-22**: `nub run --filter @gpuixui/docs test` is green (42 files / 341 tests) with `public-symbols.test.ts` holding the index to the workspace's exports, and `nub run --filter @gpuixui/components test src/docs-counts.test.ts` is 3/3, so no stated `(N tests)` claim in the 39 package pages is unheld

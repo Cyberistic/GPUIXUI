@@ -25,7 +25,12 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type {
+  EventPayload,
+  KeyEvent,
+  PublicInstance,
+  StyleDesc,
+} from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
@@ -58,17 +63,20 @@ import {
 import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
 import {
+  composeEvent,
   mergeStyle,
   suppressFeedback,
   useControlState,
   useFocus,
   valueChange,
   type FocusState,
+  type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface NumberFieldProps extends ValueChangeProps<number> {
+export interface NumberFieldProps
+  extends ValueChangeProps<number>, InteractionProps {
   /** Controlled value. Omit to let the field hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
@@ -133,6 +141,8 @@ export interface NumberFieldPart {
   readonly range: NumberRange;
   readonly focus: FocusState;
   readonly handlers: NumberFieldHandlers;
+  /** The caller's host handlers, installed on the input and the steppers. */
+  readonly interaction: InteractionProps;
   readonly atMin: boolean;
   readonly atMax: boolean;
 }
@@ -160,6 +170,7 @@ export const numberFieldPart = (
     range: numberRange(props),
     focus,
     handlers,
+    interaction: props,
     atMin: props.min !== undefined && state.current <= props.min,
     atMax: props.max !== undefined && state.current >= props.max,
   };
@@ -211,7 +222,8 @@ export const renderNumberFieldInput = (
         if (disabled) return;
         handlers.onTextChange(event.value ?? "");
       }}
-      onKeyDown={(event: EventPayload) => {
+      onClick={part.interaction.onClick}
+      onKeyDown={composeEvent<KeyEvent>(part.interaction.onKeyDown, (event) => {
         if (disabled) return;
         const key = event.key ?? "";
         if (key === "enter") {
@@ -222,12 +234,16 @@ export const renderNumberFieldInput = (
           onNone: () => {},
           onSome: handlers.onValue,
         });
-      }}
-      onFocus={focus.onFocus}
-      onBlur={() => {
+      })}
+      onKeyUp={part.interaction.onKeyUp}
+      onFocus={composeEvent<EventPayload>(
+        part.interaction.onFocus,
+        focus.onFocus,
+      )}
+      onBlur={composeEvent<EventPayload>(part.interaction.onBlur, () => {
         focus.onBlur();
         handlers.onCommit();
-      }}
+      })}
     />
   );
 };
@@ -257,10 +273,10 @@ const renderStepper = (
     <div
       role="presentation"
       testId={testId}
-      onClick={() => {
+      onClick={composeEvent<EventPayload>(part.interaction.onClick, () => {
         if (inert) return;
         part.handlers.onValue(stepNumber(part.current, part.range, direction));
-      }}
+      })}
       style={mergeStyle(
         mergeStyle(
           recipeTw.classesToStyle(numberStepperClass(inert), part.theme).style,

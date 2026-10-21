@@ -71,6 +71,9 @@ Two suites hold rules no single page owns:
 
 - `src/components/handlers.test.tsx` — a caller's host handlers are **composed**
   with each part's own, never substituted, and a blocked control installs none.
+  A part with several interactive elements (a group's option rows, a rating's
+  stars, a slider's track and thumbs, a field's input/steppers/cells) installs
+  the handler on the element that owns it, so the caller sees which one it was.
 - `src/components/focus-matrix.test.tsx` — one row per focusable control
   (Button, IconButton, Toggle, Checkbox, Switch, RadioGroup, Rating, Slider,
   RangeSlider, Input, TextArea, NumberField, OTPField): the tab stops it owes at

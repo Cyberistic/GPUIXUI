@@ -114,6 +114,49 @@ it("maps a real click to the value under the pointer", async () => {
   expect(announced(runtime, "Volume")).toBe("25");
 });
 
+it("delivers a caller's press and keys through the track", async () => {
+  // The host-handler contract measured where it matters: the tree suite can see
+  // that the track carries the caller's `onClick`, but only the renderer can say
+  // that a press on a slider's div actually reaches it — the pointer path is a
+  // `mousedown` drag, so a consumer observing a press has no other channel.
+  const events: Array<string> = [];
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={50}
+      onValueChange={onChange}
+      onClick={() => events.push("click")}
+      onKeyDown={() => events.push("key")}
+    />,
+  );
+  const point = pointAt(runtime, "s", 0.25);
+  runtime.clickAt(point.x, point.y);
+  expect(seen.at(-1)).toBe(25);
+  expect(events).toStrictEqual(["click"]);
+  runtime.keyDown("s", "right");
+  expect(seen.at(-1)).toBe(26);
+  expect(events).toStrictEqual(["click", "key"]);
+});
+
+it("installs no press for a caller on a disabled slider but still delivers its keys", async () => {
+  const events: Array<string> = [];
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      disabled
+      onClick={() => events.push("click")}
+      onKeyDown={() => events.push("key")}
+    />,
+  );
+  const point = pointAt(runtime, "s", 0.5);
+  runtime.clickAt(point.x, point.y);
+  runtime.keyDown("s", "end");
+  expect(events).toStrictEqual(["key"]);
+});
+
 it("keeps the press and the mapping when the caller composes the parts", async () => {
   // The bug this guards: a part split that leaves the custom tree without the
   // root's pointer handling — a composed slider that looks right and answers

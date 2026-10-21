@@ -35,7 +35,12 @@ import {
   type ReactNode,
 } from "react";
 import { useGpuix } from "@gpuix/react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type {
+  EventPayload,
+  KeyEvent,
+  PublicInstance,
+  StyleDesc,
+} from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -57,15 +62,18 @@ import { fieldSquareClass, otpGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
 import {
+  composeEvent,
   mergeStyle,
   suppressFeedback,
   useControlState,
   valueChange,
+  type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface OTPFieldProps extends ValueChangeProps<string> {
+export interface OTPFieldProps
+  extends ValueChangeProps<string>, InteractionProps {
   /** Number of cells. Defaults to 6. */
   readonly length?: number;
   /** Controlled code. Omit to let the field hold its own. */
@@ -132,6 +140,8 @@ export interface OTPFieldPart {
   readonly cellStyle: StyleDesc;
   readonly focus: OTPFieldFocus;
   readonly handlers: OTPFieldHandlers;
+  /** The caller's host handlers, installed on every cell. */
+  readonly interaction: InteractionProps;
 }
 
 /** Resolve a field's shared state once, for its root and every cell. */
@@ -173,6 +183,7 @@ export const otpFieldPart = (
     cellStyle,
     focus,
     handlers,
+    interaction: props,
   };
 };
 
@@ -228,16 +239,21 @@ export const renderOtpFieldInput = (
         if (disabled) return;
         handlers.onEdit(index, event.value ?? "");
       }}
-      onKeyUp={(event: EventPayload) => {
+      onKeyUp={composeEvent<KeyEvent>(part.interaction.onKeyUp, (event) => {
         if (disabled) return;
         handlers.onKey(index, event.key ?? "");
-      }}
-      onClick={() => {
+      })}
+      onClick={composeEvent<EventPayload>(part.interaction.onClick, () => {
         if (disabled) return;
         handlers.onPick(index);
-      }}
-      onFocus={() => focus.onFocus(index)}
-      onBlur={() => focus.onBlur(index)}
+      })}
+      onKeyDown={part.interaction.onKeyDown}
+      onFocus={composeEvent<EventPayload>(part.interaction.onFocus, () =>
+        focus.onFocus(index),
+      )}
+      onBlur={composeEvent<EventPayload>(part.interaction.onBlur, () =>
+        focus.onBlur(index),
+      )}
     />
   );
 };

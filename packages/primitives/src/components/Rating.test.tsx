@@ -162,17 +162,17 @@ describe("Rating", () => {
     expect(onSelect).toHaveBeenCalledWith(3);
   });
 
-  it("drops every tab stop and every input when disabled or read-only", () => {
+  it("drops every tab stop and installs no press when disabled or read-only", () => {
     Arr.forEach([{ disabled: true }, { readOnly: true }] as const, (props) => {
       const element = render(props, 3);
       const star = starsOf(element)[0] ?? expect.fail("no star");
       expect(hostProp(star, "tabIndex")).toStrictEqual(Option.none());
       const onSelect = vi.fn();
       const clicked = render(props, 3, undefined, { onSelect });
-      expectSome(
-        hostHandler(starsOf(clicked)[1] ?? expect.fail("no star"), "onClick"),
-      )(keyEvent("click"));
-      expect(onSelect).toHaveBeenCalledTimes(0);
+      const target = starsOf(clicked)[1] ?? expect.fail("no star");
+      // A control that refuses input installs no press handler at all, so a
+      // caller's `onClick` is not installed either (the `composePress` rule).
+      expect(hostHandler(target, "onClick")).toStrictEqual(Option.none());
     });
   });
 

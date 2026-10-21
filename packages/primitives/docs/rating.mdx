@@ -45,10 +45,15 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
 | `invalid` | `boolean` | `false` | failed validation: chosen stars paint destructive and the ring turns destructive |
 | `style` | `StateStyle<RatingState>` | — | resolved against the live state, merged last |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the rating's own: the press and focus on the star it landed on, keys on the group root |
 | `testId` | `string` | — | stable locator on the group |
 
 Values are truncated to whole stars and clamped to `0..max`; a value that is not
 a number reads as unrated.
+
+Your host handlers are composed with the rating's, never substituted: the press
+and focus arrive from the star they landed on, the keys from the group root. A
+disabled or read-only rating installs no `onClick`, and its keys stay observable.
 
 ## Keyboard
 

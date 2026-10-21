@@ -376,6 +376,7 @@ describe("the slider parts", () => {
     invalid: false,
     fractions,
     thumbs,
+    press: undefined,
   });
 
   it("puts the thumb's centre on the value's fraction at 0, 50 and 100", () => {

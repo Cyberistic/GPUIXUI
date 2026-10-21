@@ -18,7 +18,7 @@
 
 import { useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
-import type { PublicInstance } from "@gpuix/react";
+import type { EventPayload, KeyEvent, PublicInstance } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -34,14 +34,18 @@ import { ratingGroupClass, ratingStarClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { controlRing } from "../core/focus.js";
 import {
+  composeEvent,
+  composePress,
   mergeStyle,
   useControlState,
   valueChange,
+  type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface RatingProps extends ValueChangeProps<number> {
+export interface RatingProps
+  extends ValueChangeProps<number>, InteractionProps {
   /** Controlled rating, `0..max` (0 is unrated). */
   readonly value?: number;
   readonly defaultValue?: number;
@@ -132,11 +136,15 @@ export const renderRating = (
       aria-label={`${index} of ${max}`}
       aria-valuetext={index <= value ? "checked" : "unchecked"}
       tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
-      onClick={() => {
-        if (interactive) handlers.onSelect(index);
-      }}
-      onFocus={() => focus.onFocus(index)}
-      onBlur={() => focus.onBlur(index)}
+      onClick={composePress(!interactive, props.onClick, () => {
+        handlers.onSelect(index);
+      })}
+      onFocus={composeEvent<EventPayload>(props.onFocus, () =>
+        focus.onFocus(index),
+      )}
+      onBlur={composeEvent<EventPayload>(props.onBlur, () =>
+        focus.onBlur(index),
+      )}
       style={starStyle}
     >
       <Icon
@@ -151,7 +159,7 @@ export const renderRating = (
       role="radiogroup"
       aria-label={accessibleName(props.label)}
       testId={props.testId}
-      onKeyDown={(event) => {
+      onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, (event) => {
         if (!interactive) return;
         const key = event.key ?? "";
         if (swallowKeyDefault(key, "down")) event.preventDefault();
@@ -161,11 +169,11 @@ export const renderRating = (
         });
         if (decideActivation(key, "down", event.isHeld === true))
           selectFocused();
-      }}
-      onKeyUp={(event) => {
+      })}
+      onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, (event) => {
         if (!interactive) return;
         if (decideActivation(event.key ?? "", "up", false)) selectFocused();
-      }}
+      })}
       style={mergeStyle(
         recipeTw.classesToStyle(cn(ratingGroupClass, props.className), theme)
           .style,

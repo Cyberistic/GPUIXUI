@@ -28,7 +28,7 @@ import {
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
-import type { KeyEvent, PublicInstance } from "@gpuix/react";
+import type { EventPayload, KeyEvent, PublicInstance } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import {
@@ -53,10 +53,13 @@ import {
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
+  composeEvent,
+  composePress,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
   valueChange,
+  type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -122,7 +125,8 @@ export const radioItems = (props: {
   readonly children?: ReactNode;
 }): ReadonlyArray<RadioOption> => props.options ?? itemsOf(props.children);
 
-export interface RadioGroupProps extends ValueChangeProps<string> {
+export interface RadioGroupProps
+  extends ValueChangeProps<string>, InteractionProps {
   /** The choices as data. Omit when the options are `RadioGroupItem` children. */
   readonly options?: ReadonlyArray<RadioOption>;
   /** The choices as items, when they carry rich content. */
@@ -274,8 +278,8 @@ export const renderRadioGroup = (
       role="radiogroup"
       aria-label={accessibleName(props.label)}
       testId={props.testId}
-      onKeyDown={onKeyDown}
-      onKeyUp={onKeyUp}
+      onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKeyDown)}
+      onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKeyUp)}
       style={group}
     >
       {Arr.map(options, (option, index) => {
@@ -322,11 +326,15 @@ export const renderRadioGroup = (
             aria-label={option.label}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
-            onClick={() => {
-              if (!disabled) select(index);
-            }}
-            onFocus={() => focus.onFocus(index)}
-            onBlur={() => focus.onBlur(index)}
+            onClick={composePress(disabled, props.onClick, () => {
+              select(index);
+            })}
+            onFocus={composeEvent<EventPayload>(props.onFocus, () =>
+              focus.onFocus(index),
+            )}
+            onBlur={composeEvent<EventPayload>(props.onBlur, () =>
+              focus.onBlur(index),
+            )}
             style={row}
           >
             <div style={box}>
