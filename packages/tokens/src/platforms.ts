@@ -165,7 +165,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         hover: "#E3E2DF",
         active: "#DCDBD8",
         border: "#D4D2CF",
-        borderStrong: "#84827E",
+        borderStrong: "#7E7C79",
         primary: "#1C71D8",
         primaryForeground: "#FFFFFF",
         ring: "#1C71D8",

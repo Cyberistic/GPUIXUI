@@ -157,7 +157,7 @@ tool never has to copy the palette out of this page.
 | `destructiveSoft` | `#FFE0E0` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
-| `borderStrong` | `#75808F` | `#748091` | essential control boundaries |
+| `borderStrong` | `#727D8C` | `#788494` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#66707F` | `#7C8595` | placeholder text |
@@ -496,7 +496,7 @@ getTheme("light"); // the default light theme, unchanged
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#6E7683` | `#7A7A7A` | dividers and decorative borders |
-| `borderStrong` | `#4A4F58` | `#A0A0A0` | essential control boundaries |
+| `borderStrong` | `#4A4F58` | `#A7A7A7` | essential control boundaries |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
@@ -576,7 +576,7 @@ role — the status families, the soft tones, `foreground`, `mutedForeground`,
 | `hover` | `#E2E2E8` | `#35353B` | `#E3E2DF` | `#343434` | `#E0E0E0` | `#333333` |
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
-| `borderStrong` | `#7C7C82` | `#8A8A90` | `#84827E` | `#A0A0A0` | `#757575` | `#9A9A9A` |
+| `borderStrong` | `#7C7C82` | `#8A8A90` | `#7E7C79` | `#A0A0A0` | `#757575` | `#9A9A9A` |
 | `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
@@ -885,7 +885,7 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 57 pairs cover the text role
+— an empty array means the theme is readable. The 59 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
 selected row, every status and soft-status pair, each status tone's readable text
@@ -895,12 +895,20 @@ the unavailable label on the fill that disables it and on the three page
 surfaces, accent and selected, the state washes,
 the placeholder, and the essential boundaries and focus ring — the ring and the
 strong boundary on every surface a focused control can sit on, including a
-toolbar strip (`muted`) and a segmented group (`secondary`), plus the invalid
+toolbar strip (`muted`), a segmented group (`secondary`) and the `hover`/`active`
+wash a bordered control tints while it is hovered or pressed, plus the invalid
 edge below. A wash — `hover`,
 `active`, `accent` — is a surface too: a ghost button or a menu row tints it and
 leaves its label in the
 resting `foreground`, and secondary text keeps `mutedForeground`, so both
-roles are measured on all three. `contrastFloors` and `highContrastFloors` are the
+roles are measured on all three. A **bordered** control is the third case: the
+secondary action paints `borderStrong` and keeps that edge while the same
+element's fill moves to the wash, so the edge is measured there too. It found
+four shipped misses — the base light theme's pressed secondary button at
+2.88:1, the base dark theme's at 2.86:1, high-contrast dark at 4.15:1 against
+its 4.5 floor, and Linux light at 2.96:1 hovered and 2.77:1 pressed — so those
+four `borderStrong` values moved to `#727D8C`, `#788494`, `#A7A7A7` and
+`#7E7C79`, and every other pair they carry still clears its floor. `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
 to. `contrastFloorsFor(theme)` is the variant rule on its own, which is the floor
 set `auditTheme` uses unless one is passed. A brand theme runs the same check the
@@ -1108,7 +1116,7 @@ muted toolbar a label with no button around it; macOS light's window sat
 dark platform and look palettes landed at 1.021–1.049:1 on their lighter
 popovers. The base light `secondary` is now `#E1E5EC` (one neutral step above
 `muted`), its `active` wash moved to `#D6DBE4` so a resting control is not the
-same value as a pressed ghost, `borderStrong` darkened to `#75808F` to keep its
+same value as a pressed ghost, `borderStrong` darkened to `#727D8C` to keep its
 3:1 on the new fill, and each affected platform style and authored look carries
 its own control face.
 

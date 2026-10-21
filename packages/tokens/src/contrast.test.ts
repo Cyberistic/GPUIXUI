@@ -14,7 +14,7 @@ import {
   contrastRatio,
   highContrastFloors,
 } from "./contrast.js";
-import { lightColors } from "./color.js";
+import { highContrastDarkColors, lightColors } from "./color.js";
 import { indicatorRoles, indicatorSurfaces } from "./indicator.js";
 import { statusTones } from "./styles.js";
 import {
@@ -316,7 +316,17 @@ describe("ring and selection surfaces", () => {
  */
 describe("a control boundary on the strip it sits on", () => {
   it("measures the strong boundary on every surface a control sits in", () => {
-    const missing = ["background", "card", "input", "muted", "secondary"]
+    const missing = [
+      "background",
+      "card",
+      "input",
+      "muted",
+      "secondary",
+      // A bordered control tints its own surface while hovered or pressed and
+      // keeps its edge, so the wash is a strip the edge is painted on too.
+      "hover",
+      "active",
+    ]
       .filter(
         (background) =>
           !contrastPairs.some(
@@ -353,6 +363,48 @@ describe("a control boundary on the strip it sits on", () => {
       contrastFailures(broken).find(
         ({ foreground, background }) =>
           foreground === "borderStrong" && background === "secondary",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+
+  it("reports the pressed edge the secondary action painted before this pair", () => {
+    // The warning that found the wash half: the secondary action paints
+    // `borderStrong` and hands the same element to `active`, so its edge sits on
+    // the pressed wash. The base light value was under the floor there while the
+    // resting strips all passed.
+    const pressed = contrastFailures({
+      colors: { ...lightColors, borderStrong: "#75808F" },
+    }).find(
+      ({ foreground, background }) =>
+        foreground === "borderStrong" && background === "active",
+    );
+
+    expect(pressed?.floor).toBe(contrastFloors.boundary);
+    expect(pressed?.ratio).toBeCloseTo(2.88, 2);
+
+    // The high-contrast variant has to clear its own 4.5 floor, and the old
+    // value did not: the default floors would have called it a pass.
+    const strict = contrastFailures(
+      { colors: { ...highContrastDarkColors, borderStrong: "#A0A0A0" } },
+      highContrastFloors,
+    ).find(
+      ({ foreground, background }) =>
+        foreground === "borderStrong" && background === "active",
+    );
+
+    expect(strict?.floor).toBe(highContrastFloors.boundary);
+    expect(strict?.ratio).toBeCloseTo(4.15, 2);
+  });
+
+  it("reports an edge painted in the wash it tints", () => {
+    const broken = {
+      colors: { ...lightColors, borderStrong: lightColors.hover },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "borderStrong" && background === "hover",
       ),
     ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
   });

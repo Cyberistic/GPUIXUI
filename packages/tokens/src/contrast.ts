@@ -252,6 +252,12 @@ export const contrastPairs: readonly ContrastPair[] = [
   // on `secondary`. The edge must stay findable there for the same reason.
   { foreground: "borderStrong", background: "muted", floor: "boundary" },
   { foreground: "borderStrong", background: "secondary", floor: "boundary" },
+  // A bordered control tints its own surface while it is hovered or pressed and
+  // keeps its edge — the secondary action paints `borderStrong` and hands the
+  // same element to the `hover` and `active` washes — so those washes are strips
+  // the edge must stay findable on, not just the resting surface.
+  { foreground: "borderStrong", background: "hover", floor: "boundary" },
+  { foreground: "borderStrong", background: "active", floor: "boundary" },
   // A failed validation swaps a control's edge — and the focus line it paints
   // while invalid — to the `destructive` role, so that role is a boundary on
   // every strip a control sits on. The page, card, popover and `muted` strips

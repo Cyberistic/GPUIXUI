@@ -219,8 +219,11 @@ Two border roles:
 - `border` is decorative — dividers and card edges. It is intentionally subtle.
 - `borderStrong` is functional — input and control boundaries. It meets 3:1
   against every surface a control can sit on — the canvas, a card, a field, a
-  toolbar strip and a secondary fill — so a control is perceivable without
-  relying on fill alone.
+  toolbar strip and a secondary fill — and on the `hover`/`active` wash a
+  bordered control tints while it is hovered or pressed, because the secondary
+  action keeps that edge while its fill moves. That last strip found four
+  shipped misses (both base themes, high-contrast dark and Linux light), so the
+  edge is perceivable in every state without relying on fill alone.
 
 A control with **no** border — the `secondary` variant paints `border-0` — is
 carried by its fill instead, so that fill is measured: `secondary` is held to the
@@ -230,8 +233,8 @@ control over, and it found the shipped alias: light `secondary` *was* `muted`, s
 a secondary button in a toolbar was a label with no button around it, and each
 platform window was 1.015–1.049:1 from it. The base light fill is now `#E1E5EC`,
 its pressed wash `#D6DBE4` (so a resting control is not the value of a pressed
-ghost) and `borderStrong` `#75808F` (so the boundary keeps its 3:1 on the new
-fill); each affected platform style and look owns its control face. §9 lists the
+ghost) and `borderStrong` `#727D8C` (so the boundary keeps its 3:1 on the new
+fill and on the pressed wash); each affected platform style and look owns its control face. §9 lists the
 placement, `docs/tokens.md` §Decorative surfaces the measurements.
 
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
@@ -388,7 +391,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card`/`popover` (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own fill and on `background`/`card`/`popover` (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
-| focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips and the field | 3:1 | 4.5:1 |
+| focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips, on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
@@ -428,7 +431,11 @@ over: `secondary` paints no border, so its fill is the whole button, and light
 `secondary` was the `muted` value exactly (1.00:1) while macOS light, Linux
 light, Windows light and the dark platform/look popovers sat 1.004–1.049:1 from
 it. The base fill, its pressed wash, `borderStrong` and every affected style's
-own control face moved with the contract.
+own control face moved with the contract. The boundary half of the same table
+found the state the fill changes into: a bordered control keeps `borderStrong`
+while its fill moves to the wash, and both base themes, high-contrast dark and
+Linux light were under the floor there — the four values moved to `#727D8C`,
+`#788494`, `#A7A7A7` and `#7E7C79`.
 
 Also not measured, deliberately: the elevation tint. A shadow is a blurred
 geometry, so a flat ratio overstates what the eye receives; its contract is the
