@@ -460,7 +460,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 38/38
+`[x]` `[██████████]` 39/39
 
 `[x]` Land the `pointer-capture` live probe and settle what a drag control may
       rely on — GPUix arms pointer capture on left mouse down **only** for an
@@ -827,6 +827,26 @@ a workaround for two live sessions sharing one worktree; see
       so a primary-button regression cannot turn the probe into a no-op. Evidence:
       `apps/playground/README.md` §`context-menu-lifecycle`,
       `.artifacts/live/context-open.png`
+`[x]` Land the `motion-geometry` live probe — the runtime's `motion` measured on
+      **painted geometry**, which no window probe had done although Tier 3's
+      "expandable rows" (`motion` height) and Tier 4's "collapsible sidebars"
+      (`motion` width as an outer clipping box) both name it. A 120×40 box tweens
+      to 240×240 over 0.6s `easeInOut`: six heights ~40ms apart read
+      `40, 41.5, 47, 57, 71.5, 89.5` (a tween, not a jump), the box lands exactly
+      on 240×240, `onMotionComplete` fires once, the reverse run tweens too
+      (`240, 238.5, 232.5, 222.5, 208.5, 190`) and lands back on 40 with
+      `completes=2`. A fixed 320×200 child keeps its size while the box is
+      120×40 and while it is 240×240, so a collapse animates the **outer** box
+      and clips instead of reflowing the content — the Tier 4 claim, now
+      measured. 31 checks, `--only motion-geometry`, green three runs in a row;
+      negative control measured (`transition={{ duration: 0 }}` fails
+      `the growth paints a frame between the two sizes`, exit `1`). Measuring it
+      found a probe rule now recorded in the README and the steps' header: a
+      screenshot stalls the animation clock, so a capture between the press and
+      the samples made the box read `240, 238, 40, 40` instead of tweening —
+      captures sit after each run's sampling. Evidence:
+      `apps/playground/README.md` §`motion-geometry`,
+      `.artifacts/live/motion-grown.png`
 
 ## Phase C — Tier 1–2 components
 

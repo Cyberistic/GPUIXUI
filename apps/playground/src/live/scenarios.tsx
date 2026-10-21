@@ -55,7 +55,7 @@ import {
   Tooltip,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
-import { useWindowSize } from "@gpuix/react";
+import { useWindowSize, motion } from "@gpuix/react";
 import type { ImgInstance, PublicInstance } from "@gpuix/react";
 import { FloatingLayer } from "@gpuix/react/floating";
 import { Pixels, type Smoke } from "@gpuixui/testing";
@@ -1486,6 +1486,105 @@ const ContextMenuProbe = (): ReactNode => {
           {`opens=${state.opens} closes=${state.closes} last=${state.last}`}
         </text>
       </div>
+    </div>
+  );
+};
+
+/**
+ * The runtime's `motion` measured on painted geometry.
+ *
+ * `motion` is the only animation the library has, and two inventory rows name
+ * it — Tier 3's "expandable rows" (`motion` height) and Tier 4's "collapsible
+ * sidebars" (`motion` width, an **outer clipping container** rather than an
+ * inner reflow). Neither had been measured in a window: a `TestRenderer` frame
+ * is not a run. The box animates height (and width, if the wrapper shrink-wraps
+ * it), and holds a fixed-size child that must not be reflowed while the box is
+ * smaller than the child.
+ *
+ * `testId` is not part of `MotionDivProps`, so the measured node is the plain
+ * wrapper that shrink-wraps the animated box.
+ */
+const MotionProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [grown, setGrown] = useState(false);
+  const [completes, setCompletes] = useState(0);
+  return (
+    <div
+      testId="motion-probe"
+      style={{
+        width: 720,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: theme.spacing.lg,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        motion: the box animates its height, and the child inside it keeps its
+        own size.
+      </text>
+      <div
+        testId="motion-toggle"
+        role="button"
+        tabIndex={0}
+        onClick={() => setGrown((current) => !current)}
+        style={{
+          padding: theme.spacing.sm,
+          borderRadius: theme.radius.md,
+          backgroundColor: theme.colors.muted,
+          ...keyboardFocusRing(theme),
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {grown ? "shrink" : "grow"}
+        </text>
+      </div>
+      <div
+        testId="motion-box"
+        style={{ display: "flex", flexDirection: "column" }}
+      >
+        <motion.div
+          initial={{ width: 120, height: 40 }}
+          animate={{ width: grown ? 240 : 120, height: grown ? 240 : 40 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          onMotionComplete={() => setCompletes((current) => current + 1)}
+          style={{
+            overflow: "hidden",
+            backgroundColor: theme.colors.primary,
+          }}
+        >
+          <div
+            testId="motion-child"
+            style={{
+              width: 320,
+              height: 200,
+              flexShrink: 0,
+              backgroundColor: theme.colors.card,
+            }}
+          />
+        </motion.div>
+      </div>
+      <text
+        testId="motion-readout"
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`grown=${grown} completes=${completes}`}
+      </text>
     </div>
   );
 };
@@ -3259,6 +3358,152 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("context-closed");
   });
 
+/** A geometry sample the animation is still travelling between. */
+const isTravelling = (height: number, from: number, to: number): boolean =>
+  height > from + 2 && height < to - 2;
+
+/**
+ * Six painted heights of the animated box, sampled about 40ms apart.
+ *
+ * A 0.6s `easeInOut` tween moves slowly at both ends, so one sample is not
+ * enough to tell a tween from a jump: the run's first 240ms only reaches ~90px.
+ * Five samples straddle the slow start and the sample after the last one is the
+ * settled value.
+ */
+const motionSamples = (
+  ctx: Smoke.AsyncSmokeContext,
+): Effect.Effect<
+  ReadonlyArray<number>,
+  Smoke.SmokeAssertionError | Smoke.SmokeHostError
+> =>
+  Effect.forEach(
+    [1, 2, 3, 4, 5, 6],
+    () =>
+      Effect.gen(function* () {
+        const box = yield* paintedBox(ctx, "motion-box");
+        yield* Effect.sleep(Duration.millis(40));
+        return box.height;
+      }),
+    { concurrency: 1 },
+  );
+
+/**
+ * Measures whether `motion` animates **in a window**, and what it does to the
+ * content inside a shrinking box.
+ *
+ * The box tweens 0.6s between 120x40 and 240x240, so intermediate samples are
+ * the proof that it animates rather than jumping — the negative control is
+ * `transition={{ duration: 0 }}`, which lands on the target with no frame in
+ * between. The fixed 320x200 child must keep its own size the whole way: a
+ * collapsible sidebar animates its **outer** box and clips, rather than
+ * flex-shrinking the content inside it.
+ *
+ * Measured caveat for the probe itself: a screenshot stalls the animation clock,
+ * and the run then completes early once frames resume (a capture taken just
+ * before the reverse press made it snap from 238 to 40 in one sample). Captures
+ * therefore sit after each run's sampling, with a settle between them.
+ */
+const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("motion-box");
+    yield* Effect.sleep(Duration.millis(150));
+    const small = yield* paintedBox(ctx, "motion-box");
+    yield* ctx.expectNear(
+      "the box starts at its initial height",
+      small.height,
+      40,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the box starts at its initial width",
+      small.width,
+      120,
+      1,
+    );
+
+    const narrow = yield* paintedBox(ctx, "motion-child");
+    yield* ctx.expectNear(
+      "the fixed child keeps its width inside the narrow box",
+      narrow.width,
+      320,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the fixed child keeps its height inside the short box",
+      narrow.height,
+      200,
+      1,
+    );
+
+    yield* ctx.host.click("motion-toggle");
+    const growSamples = yield* motionSamples(ctx);
+    yield* Effect.sleep(Duration.millis(600));
+    const grown = yield* paintedBox(ctx, "motion-box");
+
+    yield* ctx.expectEqual(
+      "the growth paints a frame between the two sizes",
+      Arr.some(growSamples, (height) => isTravelling(height, 40, 240)),
+      true,
+    );
+    yield* ctx.expectNear(
+      "the box lands on the animated target height",
+      grown.height,
+      240,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the box lands on the animated target width",
+      grown.width,
+      240,
+      1,
+    );
+    yield* ctx.expectContains(
+      "onMotionComplete reports the end of the run",
+      yield* ctx.host.text("motion-readout"),
+      "completes=1",
+    );
+
+    const wide = yield* paintedBox(ctx, "motion-child");
+    yield* ctx.expectNear(
+      "the child is not reflowed by the larger box",
+      wide.width,
+      320,
+      1,
+    );
+    yield* ctx.host.capture("motion-grown");
+    yield* Effect.sleep(Duration.millis(400));
+
+    yield* ctx.host.click("motion-toggle");
+    const shrinkSamples = yield* motionSamples(ctx);
+    yield* Effect.sleep(Duration.millis(600));
+    const back = yield* paintedBox(ctx, "motion-box");
+    yield* ctx.expectEqual(
+      "the reverse run paints an intermediate frame too",
+      Arr.some(shrinkSamples, (height) => isTravelling(height, 40, 240)),
+      true,
+    );
+    yield* ctx.expectNear(
+      "the reverse run lands back on the initial height",
+      back.height,
+      40,
+      1,
+    );
+    yield* ctx.expectContains(
+      "each run reports one completion",
+      yield* ctx.host.text("motion-readout"),
+      "completes=2",
+    );
+
+    const clipped = yield* paintedBox(ctx, "motion-child");
+    yield* ctx.expectNear(
+      "the child keeps its size once the box is small again",
+      clipped.height,
+      200,
+      1,
+    );
+    yield* ctx.host.capture("motion-shrunk");
+  });
+
 /**
  * Queues a toast from the shipped `ToastProvider` and dismisses it with the
  * card's own control.
@@ -4638,6 +4883,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "context-menu-lifecycle",
     view: () => <ContextMenuProbe />,
     steps: contextMenuSteps,
+  },
+  "motion-geometry": {
+    id: "motion-geometry",
+    view: () => <MotionProbe />,
+    steps: motionSteps,
   },
   "toast-lifecycle": {
     id: "toast-lifecycle",

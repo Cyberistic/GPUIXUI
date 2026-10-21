@@ -33,7 +33,7 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-four probes a real window can prove, of which eight mount shipped
+twenty-five probes a real window can prove, of which eight mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the popover and the modal focus rule), four mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), and the rest
@@ -827,6 +827,52 @@ Two measured consequences:
    The trigger is the only element with an aux-click handler, which is the
    documented scope: another target's context menu is a second `ContextMenu`
    mount, not a repositioned one.
+
+### `motion-geometry` — measured on 0.11.0 here
+
+The runtime's `motion` measured on **painted geometry**. Two inventory rows name
+it — Tier 3's "expandable rows" (`motion` height) and Tier 4's "collapsible
+sidebars" (`motion` width, as an outer clipping box) — and neither had a window
+measurement: a `TestRenderer` frame is not a run. A 120×40 box tweens to 240×240
+over 0.6s `easeInOut` and holds a fixed 320×200 child.
+
+| Step | Check |
+| ---- | ----- |
+| mount | the box is 120×40 |
+| the child inside it | 320×200 although the box is 120×40 — the box **clips**, it does not reflow the content |
+| grow press, six heights ~40ms apart | `40, 41.5, 47, 57, 71.5, 89.5` — a tween, not a jump (an `easeInOut` run is slow at both ends, which is why one sample cannot tell them apart) |
+| settled | 240×240, and `onMotionComplete` fired once |
+| the child again | still 320×200 — the larger box did not stretch it |
+| shrink press, six samples | `240, 238.5, 232.5, 222.5, 208.5, 190` — the reverse run tweens too |
+| settled | 40 high again, `completes=2`, the child still 200 tall |
+
+31 checks, `--only motion-geometry`, green (three consecutive runs). The
+negative control is `transition={{ duration: 0 }}`: it fails
+`the growth paints a frame between the two sizes` (exit `1`), so the check
+really is observing the run rather than the two target sizes. Captures:
+`.artifacts/live/motion-grown.png`, `motion-shrunk.png`.
+
+**A measured probe caveat.** A screenshot stalls the animation clock, and the run
+then completes early once frames resume: with a capture taken between the
+reverse press and its samples the box read `240, 238, 40, 40`, while the same run
+without that capture read `240, 238.5, 232.5, 222.5, 208.5, 190`. A probe that
+measures motion therefore keeps its captures **after** the sampling, with a
+settle between them — otherwise it measures the stall, not the animation.
+
+What it settles:
+
+1. **`motion` animates in a window and lands exactly on a numeric target**, so an
+   expandable row or a collapsing sidebar can animate height/width — and
+   `onMotionComplete` fires once per run (measured twice), which is what an
+   "animate, then unmount or unlock" step needs.
+2. **The animated box clips its content.** The 320×200 child keeps its size while
+   the box is 120×40 and while it is 240×240, so a width collapse does not
+   re-layout the panel inside it: a collapsible sidebar animates its **outer**
+   box with `overflow: "hidden"` and the content stands still. That is the Tier 4
+   row's claim, now measured.
+3. **What it does not provide:** no `transform`, so nothing slides (the
+   carousel's documented limitation stands), and the animation is a box-geometry
+   tween, not a spring. `animate` is required — `motion` is not Framer Motion.
 
 ### `toast-lifecycle` — measured on 0.11.0 here
 

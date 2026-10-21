@@ -121,6 +121,12 @@ export const liveRegistry = [
     capability: "overlay",
   },
   {
+    id: "motion-geometry",
+    title:
+      "Layout: motion animates a box's painted geometry over frames, and the content inside it is clipped rather than reflowed",
+    capability: "layout",
+  },
+  {
     id: "toast-lifecycle",
     title:
       "Overlay: the shipped toast system queues a toast and dismisses it from its own control",
