@@ -122,6 +122,22 @@ export interface Offset {
   readonly y: number;
 }
 
+/**
+ * One highlight wash the renderer painted in the last frame.
+ *
+ * `text.slice(start, end)` is the match, because the runtime reports the run's
+ * full string — a match that soft-wraps is one wash with several rects, and an
+ * `active` wash is the one a find bar marks differently. None of this reaches
+ * `getAllText`/`getPaintedText`: a wash is a quad, not a glyph run.
+ */
+export interface HighlightWash {
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+  readonly active: boolean;
+  readonly rects: ReadonlyArray<Bounds>;
+}
+
 /** A shadow the runtime reports, shaped like GPUix's `StyleDesc.boxShadow`. */
 export class BoxShadowSnapshot extends Schema.Class<BoxShadowSnapshot>(
   "BoxShadowSnapshot",
@@ -203,6 +219,14 @@ export interface SmokeHost {
     steps?: number,
   ) => void;
   readonly scrollOffset: (testId: string) => Offset | null;
+  /**
+   * Every highlight wash the renderer painted in the last frame.
+   *
+   * The only channel that sees a `highlight` at all: the wash is a quad behind
+   * the text, so `text` and `paintedText` report the same string with or
+   * without it. A search UI asserts on this rather than on a screenshot.
+   */
+  readonly highlights: () => ReadonlyArray<HighlightWash>;
   readonly screenshot: (absolutePath: string) => void;
   readonly advance: (ms: number) => void;
 }

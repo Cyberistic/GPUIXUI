@@ -35,6 +35,7 @@ export const nullHost: SmokeHost = {
   clearSelection: () => {},
   drag: () => {},
   scrollOffset: () => null,
+  highlights: () => [],
   screenshot: () => {},
   advance: () => {},
 };

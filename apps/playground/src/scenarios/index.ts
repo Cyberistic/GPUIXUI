@@ -33,6 +33,7 @@ import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
 import { logViewerScenario } from "./log-viewer.js";
 import { editorScenario } from "./editor.js";
+import { searchHighlightsScenario } from "./search-highlights.js";
 import { modalScenario } from "./modal.js";
 import { floatingScenario } from "./floating.js";
 import {
@@ -68,6 +69,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "virtualized-table": virtualizedTableScenario,
   "tree-view": treeScenario,
   "log-viewer": logViewerScenario,
+  "search-highlights": searchHighlightsScenario,
   "editor-surface": editorScenario,
 };
 

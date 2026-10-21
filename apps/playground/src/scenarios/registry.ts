@@ -176,6 +176,12 @@ export const registry = [
     capability: "log",
   },
   {
+    id: "search-highlights",
+    title:
+      "Search: the runtime counts matches by query, case and whole word, and by explicit ranges",
+    capability: "table",
+  },
+  {
     id: "editor-surface",
     title:
       "Editor: a textarea edits lines and caret, <code> and <diff> paint a read-only view",

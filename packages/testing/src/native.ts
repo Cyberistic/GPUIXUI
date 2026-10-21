@@ -17,7 +17,13 @@ import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import type { Bounds, Offset, SmokeHost, StyleSnapshot } from "./smoke.js";
+import type {
+  Bounds,
+  HighlightWash,
+  Offset,
+  SmokeHost,
+  StyleSnapshot,
+} from "./smoke.js";
 import { StyleSnapshot as Snapshot } from "./smoke.js";
 
 /** One element in the renderer's retained tree, as this port reads it. */
@@ -63,8 +69,18 @@ export interface NativeRenderer {
   readonly getSelectedText: () => string | null;
   readonly clearSelection: () => void;
   readonly getScrollOffset: (id: number) => readonly [number, number] | null;
+  readonly getPaintedHighlights: () => ReadonlyArray<RawHighlight>;
   readonly captureScreenshot: (absolutePath: string) => void;
   readonly advanceTime: (milliseconds: number) => void;
+}
+
+/** One wash as the renderer reports it, before this port narrows it. */
+export interface RawHighlight {
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+  readonly active: boolean;
+  readonly rects: ReadonlyArray<Bounds>;
 }
 
 /** A point, or `None` when the `testId` is not in the painted tree. */
@@ -220,6 +236,21 @@ export const createTestHost = (renderer: NativeRenderer): SmokeHost => ({
       );
       renderer.nativeSimulateMouseUp(point.x + deltaX, point.y + deltaY);
     }),
+  // The wash's rects are already the shape `Bounds` names; copying them keeps
+  // the port's value independent of the renderer's array, which it reuses.
+  highlights: (): ReadonlyArray<HighlightWash> =>
+    Arr.map(renderer.getPaintedHighlights(), (wash) => ({
+      text: wash.text,
+      start: wash.start,
+      end: wash.end,
+      active: wash.active,
+      rects: Arr.map(wash.rects, (rect) => ({
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      })),
+    })),
   scrollOffset: (testId): Offset | null =>
     Option.match(elementId(renderer, testId), {
       onNone: () => null,

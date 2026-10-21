@@ -69,6 +69,15 @@ const fake = (focusedId: number | null = 6) => {
     getSelectedText: () => "selected",
     clearSelection: () => calls.push("clear"),
     getScrollOffset: (id) => (id === 2 ? [-10, -20] : null),
+    getPaintedHighlights: () => [
+      {
+        text: "alpha beta",
+        start: 0,
+        end: 5,
+        active: true,
+        rects: [{ x: 1, y: 2, width: 3, height: 4 }],
+      },
+    ],
     captureScreenshot: (absolutePath) => calls.push(`shot ${absolutePath}`),
     advanceTime: (milliseconds) => calls.push(`advance ${milliseconds}`),
   };
@@ -76,6 +85,19 @@ const fake = (focusedId: number | null = 6) => {
 };
 
 describe("createTestHost", () => {
+  it("reports a highlight wash with the run and the boxes it painted", () => {
+    const { host } = fake();
+    expect(host.highlights()).toEqual([
+      {
+        text: "alpha beta",
+        start: 0,
+        end: 5,
+        active: true,
+        rects: [{ x: 1, y: 2, width: 3, height: 4 }],
+      },
+    ]);
+  });
+
   it("joins a subtree's text and reports an unknown id as null", () => {
     const { host } = fake();
     expect(host.text("row")).toBe("row text");

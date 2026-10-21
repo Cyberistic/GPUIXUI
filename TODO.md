@@ -399,7 +399,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 19/19
+`[x]` `[██████████]` 20/20
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -553,6 +553,16 @@ a workaround for two live sessions sharing one worktree; see
       layer over `<code>`, so an editor is edit-then-display. 8 assertions / 9
       checks; two negative controls measured (an `onSubmit` listener turns Enter
       into a submit, `value=abcd`; no arrow keys, `value=ab\ncdX`).
+`[x]` Land the `search-highlights` Tier 3 probe and the `SmokeHost.highlights`
+      verb behind it — the runtime's find-in-content API measured on its paint:
+      `getPaintedHighlights` reports each wash's run, `[start, end)`, `active`
+      and boxes, so the probe asserts three washes for `alpha`, two for `beta`,
+      none for a case-sensitive `ALPHA` or a whole-word `alp`, exactly one
+      `active` for `activeIndex: 1`, and one for `ranges: [[0, 5)]`. 14
+      assertions; two negative controls measured (dropping `activeIndex`: `expected
+      1, got 0`; dropping `wholeWord`: `alp,alp,alp`). `packages/testing` gained
+      `HighlightWash` + `highlights()` with a fake-renderer test (46 pass).
+      `--only search-highlights`, green on 0.11.0.
 
 ## Phase C — Tier 1–2 components
 
@@ -990,7 +1000,7 @@ Both are specified in ; each fix starts with a plan under .
       negative controls measured (adding `onSubmit`: `value=abcd`; dropping the
       lefts: `value=ab\ncdX`, exit `1` each). `--only editor-surface`, green on
       0.11.0.
-`[ ]` `apps/playground`: native probe backlog — content surfaces (svg/img/diff/canvas), cross-element drag and file drops, the shipped Tier 1 controls in the suite, search highlights, drag auto-scroll, horizontal scroll and tab overflow, tab-strip focus, nested panels, command palette, tabbed workspace panes (salvage 161-163, 168-177). **Text selection landed** (`text-selection`, salvage 163)
+`[ ]` `apps/playground`: native probe backlog — content surfaces (svg/img/canvas), cross-element drag and file drops, the shipped Tier 1 controls in the suite, drag auto-scroll, tab overflow, tab-strip focus (salvage 161-163, 168-177). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`) and **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`)
 `[x]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178) — `packages/testing/src/native.ts` exports `NativeRenderer`/`NativeElement` (method signatures only, so the package still imports no GPUix type) and `createTestHost`, which owns the `testId` → element lookup, the nearest-painted-ancestor fallback for a `<virtual-list>`/`<anchored>`, the subtree text join, the style decode and the drag synthesis. `apps/playground/src/smoke/host.ts` is deleted — a real `TestRenderer` satisfies the port structurally, so the runner calls `Native.createTestHost(root.renderer)`. 10 fake-renderer tests; both directions measured (dropping the ancestor fallback fails `aims input at the nearest ancestor that paints` and the drag case). Headless re-run green: `--only modal-focus-trap --only panel-resize --only scroll-container`
 `[ ]` `packages/components`: Tier 2 behaviour gaps — remaining: List row subscriptions and icon adoption (salvage 324, 339).
   - `[x]` Deterministic toast exits (salvage 337) — a native test freezes the renderer's motion clock, pushes a 120 ms toast and asserts it leaves after a real wait, with a 30 s negative control that stays: the timer is Effect `Clock` time, not animation frames. 2 native tests.
@@ -1061,5 +1071,5 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     `apps/docs/src/lib/component-page-truth.test.ts`.
 `[ ]` `packages/tokens`: platform recipe styles for Windows XP (Luna) and Windows 7 (Aero), plus dark editions, and the authored example that finishes its accent family (salvage 311, 328, 329, 330, 331)
 `[x]` `packages/tokens`: `createTheme` starts from the requested contrast variant (`createTheme({ mode, contrast })`) instead of silently ignoring it, every group merge inherits an explicit `undefined` instead of erasing a role, and each platform style declares the `contrast` variant its palette is designed for — `platformTheme` applies a palette only where that matches the base's. `theme.test.ts` (contrast route, the `undefined` rule per group, one brand over both palettes via `high-contrast.example.ts`) and `platforms.test.ts` (the declaration, no `undefined` role) fail in the corrected direction, each measured; docs in `docs/tokens.md` §Theme API and §Platform styles, `docs/design-system.md` §5, the package README and the two inventory rows (salvage 301, 304, 321, 323)
-`[ ]` `packages/tokens`: the suite still has no time budget (salvage 333) — no per-file cap, so a hung test blocks the gate instead of failing it
+`[x]` `packages/tokens`: the suite has a time budget — `vitest.config.ts` (the package had none, so it ran on vitest's defaults) states a two-second `testTimeout` and `hookTimeout` and the includes it already ran; `src/suite.test.ts` reads the file and fails when the budget or an include is removed. It is effective, not decorative: with the budget lowered to 50 ms for a probe, a 200 ms test fails with `Test timed out in 50ms` (the guard failed in the same run). Honest limit recorded in the config and docs: a synchronous infinite loop cannot be interrupted by any timeout (salvage 333)
 `[ ]` `packages/components`: no native cost model or package-surface performance baseline (salvage 302, 338)
