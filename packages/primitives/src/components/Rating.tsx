@@ -2,9 +2,10 @@
  * `Rating` — a whole number of stars, or none.
  *
  * A rating is shaped like a radio group: one tab stop, arrows move the
- * selection and native focus with it. It is **not** a radio group in one
- * respect: the arrows clamp at the ends instead of wrapping, and Delete clears
- * it back to zero (`core/rating.ts` owns both rules).
+ * selection and native focus with it, and Space selects the star holding focus
+ * on the **release** (Enter on the press), the way a platform radio does. It is
+ * **not** a radio group in one respect: the arrows clamp at the ends instead of
+ * wrapping, and Delete clears it back to zero (`core/rating.ts` owns both rules).
  *
  * The paint uses two icons of the same geometry — an outline star and a filled
  * one — tinted with the brand and muted roles, because GPUix's `<svg>` is
@@ -23,6 +24,7 @@ import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { accessibleName } from "../core/a11y.js";
+import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import { clampRating, decideRating, ratingTabStop } from "../core/rating.js";
 import { ratingStarColor } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
@@ -86,6 +88,14 @@ export const renderRating = (
   const value = clampRating(state.current, max);
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
+  /** The star an activating key chooses: the one holding focus, else the tab stop. */
+  const focusedStar = clampRating(
+    Option.getOrElse(focus.focusedIndex, () => tabStop),
+    max,
+  );
+  const selectFocused = (): void => {
+    handlers.onSelect(focusedStar);
+  };
   const resolved = recipeTw.classesToStyle(
     ratingStarClass({ disabled: props.disabled, readOnly: props.readOnly }),
     theme,
@@ -125,10 +135,18 @@ export const renderRating = (
       testId={props.testId}
       onKeyDown={(event) => {
         if (!interactive) return;
-        Option.match(decideRating(value, max, event.key ?? ""), {
+        const key = event.key ?? "";
+        if (swallowKeyDefault(key, "down")) event.preventDefault();
+        Option.match(decideRating(value, max, key), {
           onNone: () => {},
           onSome: handlers.onMove,
         });
+        if (decideActivation(key, "down", event.isHeld === true))
+          selectFocused();
+      }}
+      onKeyUp={(event) => {
+        if (!interactive) return;
+        if (decideActivation(event.key ?? "", "up", false)) selectFocused();
       }}
       style={mergeStyle(
         recipeTw.classesToStyle(cn(ratingGroupClass, props.className), theme)

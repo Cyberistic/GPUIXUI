@@ -4,7 +4,8 @@ description: A whole number of stars, or none.
 ---
 
 `Rating` is a radio group shaped input: one tab stop, arrows move the selection
-and native focus with it. It differs from `RadioGroup` in two ways a rating
+and native focus with it, and `Space` or `Enter` chooses the star holding focus
+the way a platform radio does. It differs from `RadioGroup` in two ways a rating
 needs — the arrows **clamp** at the ends instead of wrapping, and `Delete`
 clears it back to zero. It is not a slider: the value is a small whole number,
 not a position.
@@ -52,6 +53,8 @@ a number reads as unrated.
 
 | Key | Effect |
 | --- | ------ |
+| `Space` | chooses the focused star, on the **release** (the press is swallowed so it cannot scroll a container) |
+| `Enter` | chooses the focused star, on the press |
 | `ArrowRight` / `ArrowUp` | + one star, clamped at `max` |
 | `ArrowLeft` / `ArrowDown` | − one star, clamped at `0` |
 | `Home` / `End` | one star / `max` |
@@ -59,7 +62,10 @@ a number reads as unrated.
 
 The group holds **one tab stop** — on the current rating, or on the first star
 when unrated — and an arrow moves the selection and native focus together, so
-the ring is always on the star the value came from.
+the ring is always on the star the value came from. An activating key chooses
+the star that holds focus (falling back to the tab stop if no star reported
+focus), so `Space` on an unrated rating selects the first star instead of
+nothing.
 
 ## Accessibility
 
@@ -98,12 +104,16 @@ retints — so a theme change repaints both states. The star size is
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
   single tab stop, filled vs outline icons, the destructive paint and muted
   empty stars while invalid, keys, click, disabled/readOnly, ring.
+- `src/components/activation.test.tsx` — the activation contract every control
+  shares: `Enter` on the press, `Space` on the release, a held key ignored and
+  exactly one activation. `Rating` failed it (a focused star could not be
+  chosen with either key); the matrix names the part that regresses.
 - `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; an
   arrow moves the checked star and native focus; Right at five stays at five;
-  Delete clears; filled stars paint `colors.primary` (destructive while invalid,
-  with the empty stars still muted); Tab enters on the rating and the next Tab
-  leaves the group; disabled refuses input. Measured
-  2026-10-17 (plan 054 §9).
+  `Space` chooses the focused star on the release and not on the press; Delete
+  clears; filled stars paint `colors.primary` (destructive while invalid, with
+  the empty stars still muted); Tab enters on the rating and the next Tab leaves
+  the group; disabled refuses input.
 
 ```sh
 nub run --filter @gpuixui/primitives test

@@ -9,8 +9,10 @@
  * a scroll container.
  *
  * Each case below is the wiring, not the decision: `core/keyboard.test.ts`
- * proves `swallowKeyDefault`, and these prove every focusable control actually
- * calls it. A component that forgets fails here by name.
+ * proves `swallowKeyDefault`, and these prove the controls that share `Button`'s
+ * handler wiring call it. `activation.test.tsx` covers the same rule over the
+ * full part list (it adds `RadioGroup` and `Rating`, whose handlers sit on a
+ * group root), so a component that forgets fails in one matrix or the other.
  */
 
 import type { ReactElement } from "react";

@@ -106,6 +106,34 @@ it("moves with the arrows and takes native focus with it", async () => {
   expect(checkedStars(runtime)[4]).toBe("checked");
 });
 
+it("activates the focused star with Space on the release", async () => {
+  // The bug: a star is a `role="radio"` tab stop, but only the arrows moved the
+  // value — Space did nothing on the star a keyboard user had landed on.
+  const runtime = await openWindow();
+  const seen: number[] = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="b">Before</Button>
+        <Rating
+          testId="ra"
+          label="Quality"
+          onChange={(value) => seen.push(value)}
+        />
+      </Stack>
+    </Surface>,
+  );
+  runtime.click("b");
+  runtime.focusNext();
+  expect(focusLabel(runtime)).toBe("1 of 5");
+  runtime.keyDown("ra", "space");
+  expect(checkedStars(runtime)[0]).toBe("unchecked");
+  expect(seen).toStrictEqual([]);
+  runtime.keyUp("ra", "space");
+  expect(checkedStars(runtime)[0]).toBe("checked");
+  expect(seen).toStrictEqual([1]);
+});
+
 it("clears the rating with Delete", async () => {
   const runtime = await openWindow();
   runtime.render(

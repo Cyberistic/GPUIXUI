@@ -1054,7 +1054,17 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     call from `Toggle` fails `is swallowed by Toggle`, and a dead helper fails
     six cases. The controls runtime suites stay green, so the real event carries
     the method
-  - `[ ]` Activation once / Space on release across the remaining parts
+  - `[x]` Activation once / Space on release across the remaining parts — the
+    last part was `Rating`: its stars are `role="radio"` tab stops but only the
+    arrows moved the value, so a focused star could not be chosen with `Space`
+    or `Enter`. It now follows the shared contract (`Enter` on the press,
+    `Space` on the release, a held key ignored, the star holding focus chosen),
+    and `src/components/activation.test.tsx` holds Button, IconButton, Toggle,
+    Checkbox, Switch, RadioGroup and Rating to **exactly one** activation per
+    interaction (the pair must not fire twice). Both directions measured: with
+    the Rating branch reverted, 5 cases fail (`expected +0 to be 1`, and the
+    native `expected 'unchecked' to be 'checked'`); with it, unit 483 and
+    runtime 147 are green
   - `[ ]` Disabled-after-focus: a control disabled while focused keeps acting
     and keeps its ring
   - `[ ]` Caller handler composition across the interactive parts
