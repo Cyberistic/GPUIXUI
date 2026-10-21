@@ -153,7 +153,9 @@ since disabling the focused box does not take the runtime's focus away.
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
   value flips `unchecked → checked`; a custom mark still toggles on a real hit
   test; indeterminate reads `mixed`; the AccessKit role is `CheckBox`; focus
-  declares the keyboard ring and moves native focus with the selection.
+  declares the keyboard ring and moves native focus with the selection; a
+  caller's `onFocus`/`onClick`/`onKeyUp`/`onBlur` are delivered by GPUI's own
+  dispatch alongside the toggle, and a disabled box delivers no press.
 - `runtime/labelling.runtime.test.tsx` — a `Label` beside the box paints its
   text but does not name the box; the same string through `labelledBy` does.
 

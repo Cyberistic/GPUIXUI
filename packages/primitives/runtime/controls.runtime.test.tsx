@@ -10,7 +10,8 @@
  *
  * Each test names the bug it guards: Enter firing on key up, Space on key down,
  * a held key activating, a disabled control activating, the roving tab stop
- * staying behind the selection.
+ * staying behind the selection, and a caller's host handler being dropped
+ * instead of composed with the control's own.
  */
 
 import { expect, it } from "vitest";
@@ -171,6 +172,70 @@ it("drops a focused control's ring and keys when it becomes disabled", async () 
   runtime.keyDown("cb", "space");
   runtime.keyUp("cb", "space");
   expect(changes).toBe(2);
+});
+
+it("delivers a caller's handlers through the runtime, and still acts on the event", async () => {
+  const runtime = await openWindow();
+  const seen: string[] = [];
+  const changes: boolean[] = [];
+  runtime.render(
+    <Surface>
+      <Checkbox
+        label="Pick"
+        testId="cb"
+        onCheckedChange={(next) => changes.push(next)}
+        onFocus={() => seen.push("focus")}
+        onBlur={() => seen.push("blur")}
+        onClick={() => seen.push("click")}
+        onKeyDown={() => seen.push("keydown")}
+        onKeyUp={() => seen.push("keyup")}
+      />
+      <Button testId="after">After</Button>
+    </Surface>,
+  );
+
+  // The bug: the control owned every host event and a consumer could not
+  // observe one. Here GPUI's own focus, pointer and key dispatch reach both.
+  runtime.focusNext();
+  expect(runtime.focused()).toStrictEqual(Option.some("cb"));
+  expect(seen).toStrictEqual(["focus"]);
+
+  runtime.click("cb");
+  expect(seen.at(-1)).toBe("click");
+  expect(changes).toStrictEqual([true]);
+
+  runtime.keyDown("cb", "space");
+  runtime.keyUp("cb", "space");
+  expect(seen.slice(-2)).toStrictEqual(["keydown", "keyup"]);
+  expect(changes).toStrictEqual([true, false]);
+
+  runtime.focusNext();
+  expect(runtime.focused()).toStrictEqual(Option.some("after"));
+  expect(seen.at(-1)).toBe("blur");
+});
+
+it("does not deliver a press to a caller's handler while the control is disabled", async () => {
+  const runtime = await openWindow();
+  let clicks = 0;
+  let changes = 0;
+  runtime.render(
+    <Surface>
+      <Checkbox
+        label="Pick"
+        testId="cb"
+        disabled
+        onClick={() => {
+          clicks += 1;
+        }}
+        onCheckedChange={() => {
+          changes += 1;
+        }}
+      />
+    </Surface>,
+  );
+  runtime.click("cb");
+  expect(clicks).toBe(0);
+  expect(changes).toBe(0);
 });
 
 it("refuses to activate a loading Button, and still announces itself busy", async () => {
