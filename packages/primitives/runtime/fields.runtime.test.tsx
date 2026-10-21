@@ -307,6 +307,30 @@ it("opens a Tooltip when its trigger takes keyboard focus", async () => {
   expect(runtime.allText()).toContain("A hint");
 });
 
+it("publishes a Tooltip's text as the trigger's accessible description", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="Booked revenue, net of refunds.">
+        <div
+          testId="target"
+          role="button"
+          aria-label="Revenue definition"
+          tabIndex={0}
+          style={{ display: "flex" }}
+        >
+          <Text>?</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { label: "Revenue definition" }),
+    () => expect.fail("the trigger has no accessibility node"),
+  );
+  expect(node.aria?.description).toBe("Booked revenue, net of refunds.");
+});
+
 it("keeps the Tooltip's content inside the frame it is anchored to", async () => {
   const runtime = await openWindow();
   runtime.render(

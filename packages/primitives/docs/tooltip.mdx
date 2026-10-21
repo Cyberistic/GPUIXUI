@@ -24,13 +24,15 @@ import { Icon, Tooltip } from "@gpuixui/primitives";
 
 The child must be a single **focusable host element**. `Tooltip`'s trigger clones
 its child with the hover and focus handlers, so a component that does not forward
-those props (including this package's `Box`) will not open the tip.
+those props (including this package's `Box`) will not open the tip. A host
+trigger also carries the tip as its `aria-description`.
 
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
+| `description` | `string` | `content` when it is a string | the trigger's accessible description |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
 | `side` | `FloatingSide` | `"top"` | preferred placement |
 | `align` | `FloatingAlign` | GPUix's default | alignment against the trigger |
@@ -44,9 +46,13 @@ dismisses it. A click dismisses it.
 
 ## Accessibility
 
-- The tip is painted text, not an associated description: the runtime has no
-  `aria-describedby`. A button whose only name is inside a tooltip is unnamed to
-  assistive technology, so give the control its own `label`.
+- The tip is the trigger's **`aria-description`** when `content` is a string (or
+  `description` is set): GPUix 0.11.0 has `aria-description` but no
+  `aria-describedby`, so the wrapper clones the host trigger with it. A
+  component trigger cannot carry the prop.
+- The description is supplementary, not a name. A button whose only name is
+  inside a tooltip is unnamed to assistive technology, so give the control its
+  own `label`.
 - A tooltip is **supplementary**: the same information must be reachable without
   hovering (visible text, or the control's name).
 - A mouse-opened and a keyboard-opened tip look identical: the runtime reports
@@ -60,7 +66,8 @@ dismisses it. A click dismisses it.
 ## Limitations
 
 - The trigger must be a focusable host element (above).
-- No `aria-describedby` association.
+- No `aria-describedby`: a non-string tip has no description unless `description`
+  is passed, and a component trigger cannot carry one.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
 - Open/close timing is GPUix's; this wrapper only sets the delay.
@@ -69,9 +76,13 @@ dismisses it. A click dismisses it.
 
 - `src/components/Select.test.tsx` / `fields.test.tsx` — the wrapper's theme
   spec at the render seam.
+- `src/components/Tooltip.test.tsx` — a string tip and an explicit `description`
+  reach the host trigger, a non-text tip without one invents nothing, and a
+  component trigger is not cloned with a prop it may ignore.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
-  dismisses on click, keeps its content inside the anchoring frame, and paints
-  the popover role.
+  dismisses on click, keeps its content inside the anchoring frame, paints the
+  popover role, and the a11y tree reports the tip as the trigger's
+  `description`.
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
   hover.
 

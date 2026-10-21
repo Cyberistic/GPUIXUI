@@ -340,7 +340,10 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     source: ["src/components/Tooltip.tsx"],
     docs: "docs/tooltip.mdx",
     example: "examples/feedback.example.tsx",
-    tests: ["runtime/fields.runtime.test.tsx"],
+    tests: [
+      "src/components/Tooltip.test.tsx",
+      "runtime/fields.runtime.test.tsx",
+    ],
   },
   {
     name: "Skeletons",

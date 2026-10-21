@@ -853,10 +853,10 @@ Both are specified in ; each fix starts with a plan under .
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
 
-`[ ]` `[█░░░░░░░░░]` 4/36
+`[ ]` `[█░░░░░░░░░]` 5/36
 
 `[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, a `Button`/`Toggle` named by its text child must publish that text, and `Text` must carry heading/code semantics (salvage 026, 058, 059)
-`[ ]` `packages/primitives`: `Tooltip` content is not published as an accessible description on its trigger (salvage 071)
+`[x]` `packages/primitives`: `Tooltip` content was painted but never announced; a string tip (or explicit `description`) is now cloned onto the host trigger as `aria-description`, proven in the native a11y tree (salvage 071)
 `[x]` `packages/primitives`: `Skeleton circle` mirrored its one explicit side — `skeletonSize` keeps a width-only or height-only circle round (both explicit sides stay the caller's), with the component and `skeletonStyle` reading the same rule; both new tests fail on the old fallback (salvage 028)
 `[ ]` `packages/primitives`: no `ToggleGroup` or `CheckboxGroup` control, and disabled options need a roving tab stop (salvage 056, 065)
 `[ ]` `packages/primitives`: `Select` has no option groups, its list neither flips off a window edge nor scrolls past the window, its keyboard highlight cannot be revealed, and its trigger paints no ring (salvage 066, 068, 069, 075, 083)
