@@ -193,6 +193,12 @@ are darker and more opaque because contrast between surfaces is lower.
 | text selection | `selection` translucent wash |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
+A state wash is a surface with text on it, so it is measured like one: the
+resting `foreground` clears the body floor on `hover`, `active` and `accent`,
+and `mutedForeground` clears the secondary floor on all three. A ghost button or
+a menu row tints its surface and leaves its label in its resting role, so a wash
+that drifted toward its text would be unreadable with nothing else noticing.
+
 A filled action's hover and press are **derived, not stored roles**: each moves
 the fill a step toward the theme's foreground, so it darkens in a light theme
 and lightens in a dark one. Deriving keeps the state opaque — a half-alpha fill

@@ -111,6 +111,49 @@ describe("status text on the page", () => {
   });
 });
 
+describe("text on the state washes", () => {
+  /**
+   * A hover, press or accent wash is painted under a control's existing text,
+   * which keeps its resting role — a ghost button's label, a list row's second
+   * line. Nothing else measured those surfaces, so a wash that drifted toward
+   * its own text could ship unreadable.
+   */
+  it("measures both resting text roles on every wash", () => {
+    const missing = ["hover", "active", "accent"].flatMap((background) =>
+      [
+        { foreground: "foreground", floor: "body" },
+        { foreground: "mutedForeground", floor: "secondary" },
+      ]
+        .filter(
+          ({ foreground, floor }) =>
+            !contrastPairs.some(
+              (pair) =>
+                pair.foreground === foreground &&
+                pair.background === background &&
+                pair.floor === floor,
+            ),
+        )
+        .map(({ foreground }) => `${foreground}/${background}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reports a wash that matches the text it has to carry beneath", () => {
+    const broken = {
+      colors: { ...lightColors, active: lightColors.mutedForeground },
+    };
+    const failures = contrastFailures(broken);
+
+    expect(
+      failures.find(
+        ({ foreground, background }) =>
+          foreground === "mutedForeground" && background === "active",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.secondary });
+  });
+});
+
 describe("contrastFailures", () => {
   it("passes every shipped theme", () => {
     expect(contrastFailures(lightTheme)).toEqual([]);

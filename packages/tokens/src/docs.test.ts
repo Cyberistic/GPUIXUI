@@ -11,6 +11,10 @@
  * name imported from `@gpuixui/tokens` in either document must be a real runtime
  * or type export.
  *
+ * The third is a claim about other packages: the catalogue states which focus
+ * ring the component packages paint, and it kept stating the old answer after
+ * both adopted the new one. The page is held to the sources that decide it.
+ *
  * `node:fs` is deliberate, as in `exports.test.ts`: this is a check over the
  * repository's own Markdown, and the package keeps zero runtime dependencies by
  * design.
@@ -100,6 +104,54 @@ describe("token catalogue", () => {
     expect(catalogue).toContain(
       `The ${Tokens.contrastPairs.length} pairs cover`,
     );
+  });
+});
+
+/**
+ * Guards the catalogue's claim about which ring the component packages paint.
+ * That claim went stale once: the page said they still painted the shadow on
+ * every focus path long after both adopted `keyboardFocusRing` at rest. The
+ * page is the only place a consumer reads it, so it is held to the sources that
+ * decide it — and if a package ever paints the shadow again, this fails and
+ * asks for the page to move with it.
+ */
+describe("focus adoption claim", () => {
+  const packageSources = (directory: string): ReadonlyArray<string> =>
+    readdirSync(new URL(directory, import.meta.url), {
+      withFileTypes: true,
+    }).flatMap((entry) => {
+      const path = `${directory}${entry.name}`;
+      if (entry.isDirectory()) {
+        return packageSources(`${path}/`);
+      }
+      const isSource =
+        (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) &&
+        !entry.name.includes(".test.");
+      return isSource ? [read(path)] : [];
+    });
+
+  const componentSources: ReadonlyArray<string> = [
+    "../../../packages/primitives/src/",
+    "../../../packages/components/src/",
+  ].flatMap(packageSources);
+
+  it("no longer says the packages paint the shadow ring on every focus path", () => {
+    expect(catalogue).not.toContain(
+      "still paint that shadow on every focus path",
+    );
+  });
+
+  it("names both seams the adoption went through", () => {
+    expect(catalogue).toContain("packages/primitives/src/core/focus.ts");
+    expect(catalogue).toContain("packages/components/src/internal/theme.ts");
+  });
+
+  it("matches the sources: neither package paints the shadow ring itself", () => {
+    const callers = componentSources.filter((source) =>
+      source.includes("focusRing("),
+    );
+
+    expect(callers).toEqual([]);
   });
 });
 

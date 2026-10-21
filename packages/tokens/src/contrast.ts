@@ -197,6 +197,16 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "selected",
     floor: "secondary",
   },
+  // A state wash is painted under a control's existing text, which keeps its
+  // resting role: hovering a ghost button or a menu row tints the surface and
+  // leaves the label `foreground`, and secondary text keeps `mutedForeground`.
+  // So the wash is a surface those roles are measured on.
+  { foreground: "foreground", background: "hover", floor: "body" },
+  { foreground: "foreground", background: "active", floor: "body" },
+  { foreground: "foreground", background: "accent", floor: "body" },
+  { foreground: "mutedForeground", background: "hover", floor: "secondary" },
+  { foreground: "mutedForeground", background: "active", floor: "secondary" },
+  { foreground: "mutedForeground", background: "accent", floor: "secondary" },
   { foreground: "placeholder", background: "input", floor: "secondary" },
   { foreground: "borderStrong", background: "background", floor: "boundary" },
   { foreground: "borderStrong", background: "card", floor: "boundary" },

@@ -515,13 +515,16 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 36 pairs cover the text role
+— an empty array means the theme is readable. The 42 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted` and `popover`, every
 status and soft-status pair, each status tone's readable text as **page** text on
 `background` and `card` (a field error or an inline warning is not on the tone's
-own tinted surface), accent and selected, the placeholder, and the essential
-boundaries and focus ring. `contrastFloors` and `highContrastFloors` are the
+own tinted surface), accent and selected, the state washes, the placeholder, and
+the essential boundaries and focus ring. A wash — `hover`, `active`, `accent` —
+is a surface too: a ghost button or a menu row tints it and leaves its label in
+the resting `foreground`, and secondary text keeps `mutedForeground`, so both
+roles are measured on all three. `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
 to. A brand theme runs the same check the built-in themes pass:
 
@@ -1062,9 +1065,11 @@ its own hover.
 - `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
   for a programmatic focus **after** a Tab, but not for a programmatic focus
   before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s
-  shadow; the component packages still paint that shadow on every focus path
-  until they adopt `keyboardFocusRing` (their workstream, in `TODO.md` →
-  Interlocks).
+  shadow — that is the one path the shadow is for. Every shipped control
+  declares `keyboardFocusRing` at rest, through
+  `packages/primitives/src/core/focus.ts` and
+  `packages/components/src/internal/theme.ts`, and the playground's theme
+  gallery paints `focusRing` only to measure the shadow.
 - Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. No component consumes it yet.
