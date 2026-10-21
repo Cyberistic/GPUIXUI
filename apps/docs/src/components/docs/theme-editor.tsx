@@ -243,10 +243,11 @@ export function ThemeEditorSurface({
         {findings.length === 0 ? (
           <p>
             Passes the library audit: every role paints, every shadow level
-            paints its colour, every text pair clears its floor, every decorative
-            surface stays visible, every data-series colour separates from its
-            plot and from its neighbours under every colour-vision deficiency,
-            and every selection wash stays visible with readable text inside it.
+            paints its colour, every text pair clears its floor, every
+            decorative surface stays visible, every data-series colour separates
+            from its plot and from its neighbours under every colour-vision
+            deficiency, and every selection wash stays visible with readable
+            text inside it.
           </p>
         ) : (
           <>

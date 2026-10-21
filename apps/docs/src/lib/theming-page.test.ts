@@ -87,7 +87,9 @@ describe("the theme page", () => {
     expect(audit).toContain("seriesDeficiencyFloor");
     expect(audit).toContain("colorVisionDeficiencies");
     expect(
-      colorVisionDeficiencies.filter((deficiency) => !audit.includes(deficiency)),
+      colorVisionDeficiencies.filter(
+        (deficiency) => !audit.includes(deficiency),
+      ),
     ).toEqual([]);
     expect(audit).toContain("selectionFailures");
     expect(audit).toContain("cannot paint");

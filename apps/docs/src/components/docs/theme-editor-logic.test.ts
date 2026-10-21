@@ -241,13 +241,7 @@ describe("theme-editor audit readout", () => {
     // so neither of the other two series contracts sees it. The readout claims
     // the whole audit, so the deficiency line has to exist.
     const brand = extendTheme(themes.dark, {
-      series: [
-        "#A7A9FF",
-        "#D94B4B",
-        "#3E9E5C",
-        "#FFDE8A",
-        "#FF9E9E",
-      ],
+      series: ["#A7A9FF", "#D94B4B", "#3E9E5C", "#FFDE8A", "#FF9E9E"],
     });
     const audit = auditTheme(brand);
     const findings = auditFindings(audit).filter(
