@@ -14,12 +14,15 @@ with a different `Theme` object.
 ```ts
 import {
   alpha,
+  blend,
   colorRoles,
   createTheme,
   currentPlatform,
   darkTheme,
   elevationShadow,
   extendTheme,
+  filledHover,
+  filledPressed,
   focusRing,
   getTheme,
   highContrastDarkTheme,
@@ -31,6 +34,7 @@ import {
   statusTone,
   systemUiFont,
   textStyle,
+  type FilledAction,
   type FocusRing,
   type PlatformName,
   type StatusTone,
@@ -142,6 +146,25 @@ alpha("#2559D6", 0.3); // "#2559D64D"
 alpha("transparent", 0.3); // "transparent"
 ```
 
+### `blend`
+
+`blend(color, toward, amount)` moves each channel of `color` `amount` of the way
+to `toward`, rounding to the nearest byte. `amount` is clamped to `0…1`. The
+result keeps `color`'s alpha byte when it has one and is opaque when it does not,
+which is the point: an opaque mix never lets the surface behind an element show
+through. A colour the parser does not recognise is returned unchanged, like
+`alpha`.
+
+```ts
+import { blend } from "@gpuixui/tokens";
+
+blend("#5F4BDB", "#191D25", 0.12); // "#5745C5"
+blend("#5F4BDB4D", "#FFFFFF", 0.5); // "#AFA5ED4D"
+```
+
+`blend` is the rule behind the [action fills](#action-fills); components rarely
+call it directly.
+
 ## Status tones
 
 Alert, Badge and Toast share four status families. Each has a solid role, a
@@ -169,6 +192,36 @@ tone.border; // alpha(theme.colors.info, 0.3)
 
 A runnable example spreads the result onto a container and its text; see
 [`src/status-tone.example.ts`](../packages/tokens/src/status-tone.example.ts).
+
+## Action fills
+
+A filled action — `primary`, `secondary` or `destructive` — needs a hover and a
+press fill. Neither is a stored role. `filledHover(theme, action)` and
+`filledPressed(theme, action)` derive an **opaque** fill by moving the action's
+role toward the theme's `foreground`: a step darker in a light theme, a step
+lighter in a dark one, so the fill always moves away from the canvas. Hover
+moves 12% of the way, press 18%.
+
+```ts
+import { filledHover, filledPressed, type FilledAction } from "@gpuixui/tokens";
+
+const action: FilledAction = "primary";
+filledHover(theme, action); // the hover fill
+filledPressed(theme, action); // a further step
+```
+
+Derived rather than six more roles for two reasons: a brand that overrides
+`primary` gets a hover that belongs to it with no second edit, and the fill
+stays opaque — a half-alpha hover (`alpha(primary, 0.5)`) showed whatever
+surface was behind the button, so the same action read as two colours on a card
+and on a dialog. The derivation is checked like a role pair: the on-colour text
+keeps its contrast floor on both fills in every shipped theme (4.5:1 default,
+7:1 high contrast), and both fills are opaque and move toward the foreground.
+
+Ghost and subtle surfaces are the other case: they paint no fill at rest and
+take the `hover` / `active` washes instead. A runnable example spreads the three
+fills onto a control; see
+[`src/action-states.example.ts`](../packages/tokens/src/action-states.example.ts).
 
 ## High contrast
 
@@ -381,7 +434,7 @@ the reserved empty `overlay` level (which `boxShadow` accepts). A shipped level
 with two entries would silently render only the first, so
 `packages/tokens/src/elevation.test.ts` fails if one appears.
 
-## Borders and icons
+## Borders, icons and identity marks
 
 | Token | Pixels |
 | ----- | ------ |
@@ -392,6 +445,18 @@ with two entries would silently render only the first, so
 | `iconSize.md` | 16 |
 | `iconSize.lg` | 20 |
 | `iconSize.xl` | 24 |
+| `avatarSize.xs` | 20 |
+| `avatarSize.sm` | 26 |
+| `avatarSize.md` | 32 (default) |
+| `avatarSize.lg` | 40 |
+
+Icons and avatars are separate scales. `iconSize` is a theme group, so a brand
+can change a step with `extendTheme(theme, { iconSize: { md: 18 } })`.
+`avatarSize` is fixed: its four steps are the contract between a component's
+`size` prop and the layouts an avatar sits in, and an identity mark is content
+rather than chrome. Neither follows density — a control's height changes with
+the workspace preset, an identity mark does not. A circle's diameter is the
+element's short side, so an avatar pairs `avatarSize[step]` with `radius.full`.
 
 ## Focus
 
@@ -518,6 +583,9 @@ Rules:
 5. Focus is `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by
    `borderWidth.strong`. The runtime has no `outline*` and no `focusVisible`, so
    the ring is never a border and never changes layout. See [Focus](#focus).
+6. A filled action's hover and press are `filledHover(theme, action)` and
+   `filledPressed(theme, action)`; never `alpha(role, …)` on a fill, which lets
+   the surface behind the control show through.
 
 ```tsx
 const theme = useTheme();
@@ -575,12 +643,19 @@ for primary body pairs, soft status text and all high-contrast text; 4.5:1 for
 secondary and on-colour text in the default themes; 3:1 for focus and essential
 boundaries in the default themes; 4.5:1 for them in the high-contrast variants).
 It also fails if a soft status surface is indistinguishable from `background` or
-`card` (floor 1.05:1). Palette edits must keep it green.
+`card` (floor 1.05:1), and if a filled action's derived hover or press fill drops
+its own label below the on-colour floor. Palette edits must keep it green.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label and both families, `sans` is the GPUI sentinel, no family is a comma
 stack, `systemMonoFamily` and the default typography follow `currentPlatform`, and
 `platformTheme` changes only the families and the name without mutating its base.
+
+`packages/tokens/src/styles.test.ts` covers the derived action fills: both are
+opaque hex, each channel moves from the action's role toward the theme's
+foreground, the press moves further than the hover and stops short of the
+foreground, the three actions stay distinct, and a brand's own `primary` carries
+its own hover.
 
 ## Limitations and future work
 
@@ -598,5 +673,12 @@ stack, `systemMonoFamily` and the default typography follow `currentPlatform`, a
   ring is a spread shadow, so it cannot tell a Tab from a click, and it follows
   `borderRadius` only because a shadow does.
 - No motion tokens yet; no component consumes them.
+- The derived action fills are shipped and documented, but the component
+  packages still paint a half-alpha hover (`packages/components/src/internal/button.tsx`
+  and `packages/primitives/src/core/variants.ts`); adopting `filledHover` /
+  `filledPressed` is their workstream's, recorded in `TODO.md` → Interlocks.
+- `avatarSize` is a fixed scale, not a theme group. Adding a group to `Theme` is a
+  breaking change for a hand-built theme literal, so a brand-specific diameter
+  stays a component decision for now.
 - Native visual proof is the playground's theme gallery, not this document. See
   `TODO.md`.

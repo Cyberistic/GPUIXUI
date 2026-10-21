@@ -49,9 +49,11 @@ variants (plan 524)
 components plus `core/`, `recipe/`, docs, examples and the runtime suites) and
 `packages/icons`; the Tier 1 inventory rows in `COMPONENTS.md` now record the real
 status, support verdict and limitations instead of `todo`
-`[ ]` Give `packages/primitives`' test theme fixture the `avatarSize` group once
-`@gpuixui/tokens` lands the avatar diameter scale (the fixture is a `Theme`, so a
-new required group is a compile error here) — owner: primitives
+`[-]` Give `packages/primitives`' test theme fixture the `avatarSize` group —
+cancelled: `@gpuixui/tokens` ships `avatarSize` as a fixed scale, not a `Theme`
+group, so a hand-built theme needs no change (an avatar diameter is content-sized,
+like an image; a new theme group would be a breaking change for every theme
+literal)
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix
 `[x]` Land the docs shell and the component page pattern in Fumadocs — the

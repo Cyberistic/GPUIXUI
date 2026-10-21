@@ -90,6 +90,28 @@ export interface IconSize {
 /** Default icon sizes. */
 export const iconSize: IconSize = { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 };
 
+/** Diameters for identity marks (avatars), in pixels. */
+export interface AvatarSize {
+  /** 20px — inline with a dense row. */
+  readonly xs: number;
+  /** 26px — inline with body text. */
+  readonly sm: number;
+  /** 32px — the default. */
+  readonly md: number;
+  /** 40px — profile headers and detail panes. */
+  readonly lg: number;
+}
+
+/**
+ * Default avatar diameters.
+ *
+ * A fixed scale, not a theme group: the four steps are the contract between a
+ * component's `size` prop and the layouts an avatar sits in, and an identity
+ * mark is content — like an image — rather than chrome, so it follows neither
+ * the theme nor density.
+ */
+export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
+
 /** Named control density presets. */
 export type DensityName = "compact" | "comfortable" | "spacious";
 

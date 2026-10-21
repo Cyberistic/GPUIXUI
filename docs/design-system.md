@@ -143,6 +143,9 @@ unexpectedly. Components read `controlHeight(theme, size)` and
 
 Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12.
 Pills and avatars use `full` (clamped by the renderer to half the short side).
+Identity marks use their own diameter scale — 20, 26, 32, 40 — with 32 as the
+default. It is fixed rather than theme-driven, and never follows density: a
+circle is content, not a control.
 
 Two border roles:
 
@@ -162,13 +165,20 @@ contrast between surfaces is lower.
 
 | State | Role / mechanism |
 | ----- | ---------------- |
-| hover | `hover` wash on ghost and subtle surfaces |
-| pressed | `active` wash |
+| hover | `hover` wash on ghost and subtle surfaces; a filled action moves to `filledHover(theme, action)` |
+| pressed | `active` wash; a filled action moves to `filledPressed(theme, action)` |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` translucent wash |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
+
+A filled action's hover and press are **derived, not stored roles**: each moves
+the fill a step toward the theme's foreground, so it darkens in a light theme
+and lightens in a dark one. Deriving keeps the state opaque — a half-alpha fill
+would show the surface behind the control — and makes a brand's `primary`
+automatically carry a hover that belongs to it. The derivation is held to the
+same contrast floors as a role pair, for the label colour on both fills.
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
 so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
@@ -197,6 +207,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | focus ring and essential boundaries | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
+| filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 
 The test runs for every shipped colour set and is part of the normal test suite.
 It can fail: a palette edit that reduces contrast fails the gate.

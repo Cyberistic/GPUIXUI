@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  avatarSize,
   densityPresets,
   spacing,
   type ControlSize,
@@ -73,5 +74,28 @@ describe("density presets", () => {
       );
       expect(densityPresets[preset].rowHeight).toBeGreaterThan(0);
     });
+  });
+});
+
+describe("avatar sizes", () => {
+  it("increases strictly from xs to lg", () => {
+    expect(avatarSize.xs).toBeLessThan(avatarSize.sm);
+    expect(avatarSize.sm).toBeLessThan(avatarSize.md);
+    expect(avatarSize.md).toBeLessThan(avatarSize.lg);
+  });
+
+  it("uses whole pixels", () => {
+    Object.values(avatarSize).forEach((value) => {
+      expect(Number.isInteger(value)).toBe(true);
+    });
+  });
+
+  it("aligns the inline sizes with the text and row scales", () => {
+    // 20px is the large icon, so an avatar sits optically level with a toolbar;
+    // 26px is a 20px body line plus 3px of breathing room either side.
+    expect(avatarSize.xs).toBe(20);
+    expect(avatarSize.sm).toBe(26);
+    expect(avatarSize.md).toBe(densityPresets.comfortable.controlHeight.md);
+    expect(avatarSize.lg).toBe(densityPresets.spacious.controlHeight.lg);
   });
 });

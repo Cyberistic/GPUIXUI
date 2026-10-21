@@ -1,9 +1,9 @@
 # `@gpuixui/tokens`
 
 The single source of truth for colour, typography, spacing, radii, density,
-elevation, border widths and icon sizes in GPUIXUI. Light and dark themes are
-designed, not inverted — each with a high-contrast variant — and every component
-reads semantic roles from here.
+elevation, border widths, icon sizes and avatar diameters in GPUIXUI. Light and
+dark themes are designed, not inverted — each with a high-contrast variant — and
+every component reads semantic roles from here.
 
 - Core entry `@gpuixui/tokens` — pure data and pure functions, no runtime
   dependencies.
@@ -121,6 +121,23 @@ tone.border; // alpha(theme.colors.info, 0.3)
 
 A runnable example lives in
 [`src/status-tone.example.ts`](./src/status-tone.example.ts).
+
+## Action fills
+
+A filled action's hover and press are derived, not stored roles:
+`filledHover(theme, action)` and `filledPressed(theme, action)` move the role a
+step toward the theme's `foreground`, so the fill darkens in a light theme,
+lightens in a dark one, and stays opaque — it never shows the surface behind the
+control. A brand's `primary` carries its own states with no second edit.
+
+```ts
+import { filledHover, filledPressed } from "@gpuixui/tokens";
+
+const hover = filledHover(theme, "primary");
+const pressed = filledPressed(theme, "primary");
+```
+
+Ghost and subtle surfaces keep the `hover` / `active` washes.
 
 ## Focus
 

@@ -399,7 +399,7 @@ export const highContrastDarkColors = {
   shadow: "#000000B3",
 } satisfies ThemeColors;
 
-const hexColor = /^#([0-9A-Fa-f]{6})(?:[0-9A-Fa-f]{2})?$/;
+const hexColor = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
 
 /**
  * Return `color` with an alpha channel, as an 8-digit hex colour.
@@ -422,6 +422,43 @@ export function alpha(color: string, amount: number): string {
   const byte = Math.round(Math.min(Math.max(amount, 0), 1) * 255);
   const hex = byte.toString(16).padStart(2, "0");
   return `#${match[1]}${hex}`.toUpperCase();
+}
+
+/**
+ * Blend `amount` of `toward` into `color`, channel by channel.
+ *
+ * `amount` is clamped to `0…1`. The result keeps `color`'s alpha byte when it
+ * has one and is opaque when it does not, so a blend of two opaque colours is
+ * an opaque colour — the point of the rule: a fill that changes with the
+ * pointer does not let the surface behind it through. A colour the parser does
+ * not recognise is returned unchanged, like {@link alpha}.
+ *
+ * @example
+ * ```ts
+ * blend("#5F4BDB", "#191D25", 0.12); // "#5745C5"
+ * ```
+ */
+export function blend(color: string, toward: string, amount: number): string {
+  const base = hexColor.exec(color);
+  const target = hexColor.exec(toward);
+  if (base === null || target === null) {
+    return color;
+  }
+  const from = base[1];
+  const to = target[1];
+  if (from === undefined || to === undefined) {
+    return color;
+  }
+  const ratio = Math.min(Math.max(amount, 0), 1);
+  const channel = (at: number): string => {
+    const start = Number.parseInt(from.slice(at, at + 2), 16);
+    const end = Number.parseInt(to.slice(at, at + 2), 16);
+    return Math.round(start + (end - start) * ratio)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  const rgb = [0, 2, 4].map(channel).join("");
+  return `#${rgb}${base[2] ?? ""}`.toUpperCase();
 }
 
 /**

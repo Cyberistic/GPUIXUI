@@ -1,11 +1,15 @@
 /**
- * Guards the WCAG contrast floors of every semantic text/surface pair in every
- * shipped theme, including the high-contrast variants. A palette edit that makes
- * text unreadable fails here rather than shipping.
+ * Guards two things in the colour maths. First the WCAG contrast floors of
+ * every semantic text/surface pair in every shipped theme, including the
+ * high-contrast variants: a palette edit that makes text unreadable fails here
+ * rather than shipping. Second the derived fills a filled action paints while
+ * it is hovered or pressed — a hover that costs its label legibility fails the
+ * same way a bad role pair does.
  */
 import { describe, expect, it } from "vitest";
 import {
   alpha,
+  blend,
   colorRoles,
   darkColors,
   highContrastDarkColors,
@@ -14,6 +18,14 @@ import {
   palette,
   type ThemeColors,
 } from "./color.js";
+import { filledHover, filledPressed, type FilledAction } from "./styles.js";
+import {
+  darkTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
+  lightTheme,
+  type Theme,
+} from "./theme.js";
 
 const channel = (hex: string, at: number): number =>
   Number.parseInt(hex.slice(at, at + 2), 16) / 255;
@@ -233,5 +245,83 @@ describe("alpha", () => {
 
   it("composes: a full-alpha result is opaque", () => {
     expect(alpha(alpha("#2559D6", 0.3), 1)).toBe("#2559D6FF");
+  });
+});
+
+describe("blend", () => {
+  it("moves every channel the given share of the way to the target", () => {
+    expect(blend("#5F4BDB", "#191D25", 0.12)).toBe("#5745C5");
+  });
+
+  it("rounds a channel to the nearest byte", () => {
+    // 127.5 would truncate to #7F7F7F; a half step must round up.
+    expect(blend("#000000", "#FFFFFF", 0.5)).toBe("#808080");
+  });
+
+  it("returns the base at 0 and the target's channels at 1", () => {
+    expect(blend("#5F4BDB", "#191D25", 0)).toBe("#5F4BDB");
+    expect(blend("#5F4BDB", "#191D25", 1)).toBe("#191D25");
+  });
+
+  it("clamps an out-of-range amount", () => {
+    expect(blend("#000000", "#FFFFFF", 2)).toBe("#FFFFFF");
+    expect(blend("#000000", "#FFFFFF", -1)).toBe("#000000");
+  });
+
+  it("keeps the base colour's alpha byte", () => {
+    expect(blend("#5F4BDB4D", "#FFFFFF", 0.5)).toBe("#AFA5ED4D");
+    expect(blend("#5F4BDB00", "#FFFFFF", 1)).toBe("#FFFFFF00");
+  });
+
+  it("leaves an opaque base opaque", () => {
+    expect(blend("#000000", "#FFFFFF", 0.1)).toMatch(/^#[0-9A-F]{6}$/);
+  });
+
+  it("returns a colour it cannot parse unchanged", () => {
+    expect(blend("transparent", "#FFFFFF", 0.5)).toBe("transparent");
+    expect(blend("#000000", "rgb(0, 0, 0)", 0.5)).toBe("#000000");
+    expect(blend("#000000", "#FFF", 0.5)).toBe("#000000");
+  });
+
+  it("normalises the result to upper case", () => {
+    expect(blend("#5f4bdb", "#191d25", 0.12)).toBe("#5745C5");
+  });
+});
+
+/** The action families that paint a solid fill, and their shared hover rule. */
+const filledActions: readonly FilledAction[] = [
+  "primary",
+  "secondary",
+  "destructive",
+];
+
+const actionThemes: ReadonlyArray<{
+  readonly label: string;
+  readonly theme: Theme;
+  readonly floor: number;
+}> = [
+  { label: "light", theme: lightTheme, floor: 4.5 },
+  { label: "dark", theme: darkTheme, floor: 4.5 },
+  { label: "high-contrast light", theme: highContrastLightTheme, floor: 7 },
+  { label: "high-contrast dark", theme: highContrastDarkTheme, floor: 7 },
+];
+
+describe("filled action state fills", () => {
+  actionThemes.forEach(({ label, theme, floor }) => {
+    filledActions.forEach((action) => {
+      it(`${label}: ${action} keeps its label at ${floor}:1 while hovered and pressed`, () => {
+        const foreground = theme.colors[`${action}Foreground`];
+        const fills = {
+          hover: filledHover(theme, action),
+          pressed: filledPressed(theme, action),
+        };
+        Object.entries(fills).forEach(([state, fill]) => {
+          expect(
+            contrast(foreground, fill),
+            `${label} ${action} ${state}`,
+          ).toBeGreaterThanOrEqual(floor);
+        });
+      });
+    });
   });
 });
