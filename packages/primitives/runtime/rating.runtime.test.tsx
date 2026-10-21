@@ -146,6 +146,29 @@ it("paints the brand role on filled stars and the muted role on empty ones", asy
   expect(colorOf("5 of 5")).toBe(testTheme.colors.mutedForeground);
 });
 
+it("paints the destructive role on chosen stars when invalid", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={2} invalid />
+    </Surface>,
+  );
+  const colorOf = (label: string): unknown => {
+    const star = byLabel(runtime, label);
+    return Option.getOrElse(
+      Option.flatMap(Option.fromNullishOr(star.children[0]), (id) =>
+        Option.map(
+          Option.fromNullishOr(runtime.renderer.getElement(id)),
+          (svg) => svg.style["color"],
+        ),
+      ),
+      () => expect.fail(`${label} painted no icon`),
+    );
+  };
+  expect(colorOf("1 of 5")).toBe(testTheme.colors.destructive);
+  expect(colorOf("5 of 5")).toBe(testTheme.colors.mutedForeground);
+});
+
 it("declares the keyboard ring on every star and paints no shadow on a press", async () => {
   // The bug: the ring was merged on the focused star, so a click looked like a
   // Tab. Every star is a tab-stop candidate, so every star declares the outline

@@ -599,11 +599,22 @@ export const ratingStarStyle = (
   return style;
 };
 
-/** A filled star takes the brand role; an empty one the muted text role. */
+/**
+ * A filled star takes the brand role; an empty one the muted text role.
+ *
+ * A failed validation keeps the empty stars muted but paints the chosen ones
+ * destructive, so the rating's state reads at a glance.
+ */
 export const ratingStarColor = (
   filled: boolean,
   theme: PrimitiveTheme,
-): string => (filled ? theme.colors.primary : theme.colors.mutedForeground);
+  invalid?: boolean,
+): string =>
+  filled
+    ? invalid === true
+      ? theme.colors.destructive
+      : theme.colors.primary
+    : theme.colors.mutedForeground;
 
 // ── One-time-code fields ─────────────────────────────────────────────
 

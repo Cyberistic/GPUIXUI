@@ -110,6 +110,23 @@ describe("Rating", () => {
     ).toBe(0);
   });
 
+  it("paints the destructive role when validation failed", () => {
+    const stars = starsOf(render({ invalid: true }, 2));
+    const iconColor = (star: ReactElement): unknown =>
+      expectSome(
+        elementProp(
+          elementChildren(star)[0] ?? expect.fail("no icon"),
+          "color",
+        ),
+      );
+    expect(iconColor(stars[0] ?? expect.fail("no star"))).toBe(
+      testTheme.colors.destructive,
+    );
+    expect(iconColor(stars[4] ?? expect.fail("no star"))).toBe(
+      testTheme.colors.mutedForeground,
+    );
+  });
+
   it("paints a filled icon for the selected stars and an outline for the rest", () => {
     const stars = starsOf(render({}, 2));
     const iconName = (star: ReactElement): unknown =>

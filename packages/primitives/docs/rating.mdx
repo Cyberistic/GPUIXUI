@@ -41,6 +41,7 @@ key (`Delete`/`Backspace`) or the app calling `onChange(0)`.
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
 | `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
+| `invalid` | `boolean` | `false` | failed validation: chosen stars paint destructive and the ring turns destructive |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator on the group |
 
@@ -72,9 +73,10 @@ the ring is always on the star the value came from.
 
 ## Theming
 
-A selected star paints `colors.primary`, an empty one
-`colors.mutedForeground`, using two icons of the same geometry: `star-filled`
-and `star`. The filled icon is still monochrome — its `#000` fill is what GPUix
+A selected star paints `colors.primary` (`colors.destructive` when `invalid`),
+an empty one `colors.mutedForeground`, using two icons of the same geometry:
+`star-filled` and `star`. The ring declares the destructive colour too while
+invalid. The filled icon is still monochrome — its `#000` fill is what GPUix
 retints — so a theme change repaints both states. The star size is
 `theme.iconSize[size]` and the focus ring is the shared `focusRing`.
 
@@ -94,11 +96,13 @@ retints — so a theme change repaints both states. The star size is
 - `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
   the tab-stop choice, a zero or fractional `max`.
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
-  single tab stop, filled vs outline icons, keys, click, disabled/readOnly, ring.
+  single tab stop, filled vs outline icons, the destructive paint and muted
+  empty stars while invalid, keys, click, disabled/readOnly, ring.
 - `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; an
   arrow moves the checked star and native focus; Right at five stays at five;
-  Delete clears; filled stars paint `colors.primary`; Tab enters on the rating
-  and the next Tab leaves the group; disabled refuses input. Measured
+  Delete clears; filled stars paint `colors.primary` (destructive while invalid,
+  with the empty stars still muted); Tab enters on the rating and the next Tab
+  leaves the group; disabled refuses input. Measured
   2026-10-17 (plan 054 §9).
 
 ```sh

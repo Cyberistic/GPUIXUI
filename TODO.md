@@ -853,14 +853,14 @@ Both are specified in ; each fix starts with a plan under .
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
 
-`[ ]` `[█░░░░░░░░░]` 5/36
+`[ ]` `[█░░░░░░░░░]` 6/36
 
 `[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, a `Button`/`Toggle` named by its text child must publish that text, and `Text` must carry heading/code semantics (salvage 026, 058, 059)
 `[x]` `packages/primitives`: `Tooltip` content was painted but never announced; a string tip (or explicit `description`) is now cloned onto the host trigger as `aria-description`, proven in the native a11y tree (salvage 071)
 `[x]` `packages/primitives`: `Skeleton circle` mirrored its one explicit side — `skeletonSize` keeps a width-only or height-only circle round (both explicit sides stay the caller's), with the component and `skeletonStyle` reading the same rule; both new tests fail on the old fallback (salvage 028)
 `[ ]` `packages/primitives`: no `ToggleGroup` or `CheckboxGroup` control, and disabled options need a roving tab stop (salvage 056, 065)
 `[ ]` `packages/primitives`: `Select` has no option groups, its list neither flips off a window edge nor scrolls past the window, its keyboard highlight cannot be revealed, and its trigger paints no ring (salvage 066, 068, 069, 075, 083)
-`[ ]` `packages/primitives`: `Rating` cannot show a failed validation (salvage 070)
+`[x]` `packages/primitives`: `Rating` can show a failed validation — `invalid` paints the chosen stars and the focus ring destructive while empty stars stay muted (salvage 070)
 `[ ]` `packages/primitives`: `ScrollArea` is not focusable and has no keyboard scrolling (salvage 072)
 `[x]` `packages/primitives`: every `OTPField` cell was a tab stop; the group now has one roving stop on the cell the code has reached (or the focused cell), proven natively as Tab-in/Tab-out (salvage 076)
 `[x]` `packages/primitives`: `stepNumber` added raw floats, so a 0.1 step reported `0.30000000000000004`; the move is now rounded to the finer of the value's and step's decimal places, with an integer step left exact at 1e15 (salvage 077)

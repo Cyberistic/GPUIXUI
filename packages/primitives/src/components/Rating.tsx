@@ -46,6 +46,8 @@ export interface RatingProps {
   readonly readOnly?: boolean;
   /** The group's name; each star is announced as "N of max". */
   readonly label?: string;
+  /** A failed validation: the chosen stars paint the destructive role. */
+  readonly invalid?: boolean;
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -91,7 +93,7 @@ export const renderRating = (
   if (props.disabled === true) {
     starStyle = mergeStyle(starStyle, resolved.disabled);
   } else if (interactive) {
-    starStyle = mergeStyle(starStyle, keyboardRing(theme));
+    starStyle = mergeStyle(starStyle, keyboardRing(theme, props.invalid));
   }
   const star = (index: number): ReactElement => (
     <div
@@ -111,7 +113,7 @@ export const renderRating = (
       <Icon
         name={index <= value ? "star-filled" : "star"}
         size={props.size ?? "md"}
-        color={ratingStarColor(index <= value, theme)}
+        color={ratingStarColor(index <= value, theme, props.invalid)}
       />
     </div>
   );
