@@ -20,8 +20,22 @@ import type { ThemeMode } from "./theme.js";
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
 export const systemUiFont = ".SystemUIFont";
 
+/**
+ * Platforms the library knows, in documentation order. `PlatformName` derives
+ * from this list, so a new platform must also gain a style in `platformStyles`.
+ */
+export const platformNames = ["darwin", "linux", "win32", "default"] as const;
+
 /** A platform a GPUIXUI application runs on. */
-export type PlatformName = "darwin" | "linux" | "win32" | "default";
+export type PlatformName = (typeof platformNames)[number];
+
+/**
+ * Narrow unknown input — a stored preference or a URL parameter — to a
+ * platform. A consumer iterates {@link platformNames} instead of retyping the
+ * four names.
+ */
+export const isPlatformName = (value: unknown): value is PlatformName =>
+  platformNames.some((name) => name === value);
 
 /** The families one platform's type resolves to. */
 export interface PlatformType {

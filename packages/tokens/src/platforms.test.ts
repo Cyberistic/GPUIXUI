@@ -19,11 +19,11 @@ import {
 } from "./contrast.js";
 import {
   currentPlatform,
+  platformNames,
   platformStyles,
   platformTypes,
   systemMonoFamily,
   systemUiFont,
-  type PlatformName,
 } from "./platforms.js";
 import {
   platformAccent,
@@ -38,20 +38,17 @@ import {
   highContrastLightTheme,
   lightTheme,
   platformTheme,
+  themeModes,
   themes,
 } from "./theme.js";
 
-const platforms: ReadonlyArray<PlatformName> = [
-  "darwin",
-  "linux",
-  "win32",
-  "default",
-];
+const platforms = platformNames;
 
-const styled: ReadonlyArray<PlatformName> = ["darwin", "linux", "win32"];
+/** The three real platforms: `default` is the library's own identity. */
+const styled = platformNames.filter((name) => name !== "default");
 
 const themedPlatforms = styled.flatMap((platform) =>
-  (["light", "dark"] as const).map((mode) => ({
+  themeModes.map((mode) => ({
     label: `${platform} ${mode}`,
     platform,
     theme: platformTheme(themes[mode], platform),

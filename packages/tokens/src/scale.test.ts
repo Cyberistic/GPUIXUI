@@ -1,14 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   avatarSize,
+  controlSizes,
+  densityNames,
   densityPresets,
   spacing,
-  type ControlSize,
   type DensityName,
 } from "./scale.js";
-
-const sizes: readonly ControlSize[] = ["sm", "md", "lg"];
-const presetNames = ["compact", "comfortable", "spacious"] as const;
 
 const ascendingSpacing = [
   [spacing["2xs"], spacing.xs],
@@ -44,7 +42,7 @@ describe("spacing scale", () => {
 describe("density presets", () => {
   it("orders control heights from compact to spacious", () => {
     ascendingDensities.forEach(([smaller, larger]) => {
-      sizes.forEach((size) => {
+      controlSizes.forEach((size) => {
         expect(
           densityPresets[smaller].controlHeight[size],
           `${smaller} < ${larger} (${size})`,
@@ -55,7 +53,7 @@ describe("density presets", () => {
 
   it("orders horizontal padding from compact to spacious", () => {
     ascendingDensities.forEach(([smaller, larger]) => {
-      sizes.forEach((size) => {
+      controlSizes.forEach((size) => {
         expect(
           densityPresets[smaller].controlPaddingX[size],
           `${smaller} < ${larger} (${size})`,
@@ -65,7 +63,7 @@ describe("density presets", () => {
   });
 
   it("orders sizes within every preset", () => {
-    presetNames.forEach((preset) => {
+    densityNames.forEach((preset) => {
       expect(densityPresets[preset].controlHeight.sm).toBeLessThan(
         densityPresets[preset].controlHeight.md,
       );

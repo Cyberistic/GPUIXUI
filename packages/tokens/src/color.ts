@@ -407,7 +407,9 @@ const hexColor = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
  * `amount` is clamped to `0…1` and rounded to the nearest byte. A 6-digit
  * `#RRGGBB` gains an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced.
  * A colour the parser does not recognise is returned unchanged, so a non-hex
- * value stays solid rather than becoming transparent.
+ * value stays solid rather than becoming transparent — and so is a
+ * non-finite `amount`, which has no alpha byte to produce and would otherwise
+ * emit a string the renderer cannot parse.
  *
  * @example
  * ```ts
@@ -416,7 +418,7 @@ const hexColor = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
  */
 export function alpha(color: string, amount: number): string {
   const match = hexColor.exec(color);
-  if (match === null) {
+  if (match === null || !Number.isFinite(amount)) {
     return color;
   }
   const byte = Math.round(Math.min(Math.max(amount, 0), 1) * 255);
@@ -431,7 +433,8 @@ export function alpha(color: string, amount: number): string {
  * has one and is opaque when it does not, so a blend of two opaque colours is
  * an opaque colour — the point of the rule: a fill that changes with the
  * pointer does not let the surface behind it through. A colour the parser does
- * not recognise is returned unchanged, like {@link alpha}.
+ * not recognise — or a non-finite `amount`, as in {@link alpha} — is returned
+ * unchanged.
  *
  * @example
  * ```ts
@@ -441,7 +444,7 @@ export function alpha(color: string, amount: number): string {
 export function blend(color: string, toward: string, amount: number): string {
   const base = hexColor.exec(color);
   const target = hexColor.exec(toward);
-  if (base === null || target === null) {
+  if (base === null || target === null || !Number.isFinite(amount)) {
     return color;
   }
   const from = base[1];

@@ -23,11 +23,40 @@ import {
 } from "./scale.js";
 import { typography, type TextStyle, type Typography } from "./typography.js";
 
+/**
+ * Theme modes the library ships, in documentation order. `ThemeMode` derives
+ * from this list, so a new mode must also gain a value in `themes` and
+ * `highContrastThemes`.
+ */
+export const themeModes = ["light", "dark"] as const;
+
 /** Theme modes the library ships. */
-export type ThemeMode = "light" | "dark";
+export type ThemeMode = (typeof themeModes)[number];
+
+/**
+ * Contrast variants the library ships, in documentation order. `ThemeContrast`
+ * derives from this list, so a new variant must also gain a set of floors and a
+ * theme per mode.
+ */
+export const themeContrasts = ["default", "high"] as const;
 
 /** Contrast variants the library ships, independent of light/dark mode. */
-export type ThemeContrast = "default" | "high";
+export type ThemeContrast = (typeof themeContrasts)[number];
+
+/**
+ * Narrow unknown input — a stored preference — to a theme mode. This is not a
+ * theme decoder: it checks the axis only, and a consumer iterates
+ * {@link themeModes} instead of retyping the modes.
+ */
+export const isThemeMode = (value: unknown): value is ThemeMode =>
+  themeModes.some((mode) => mode === value);
+
+/**
+ * Narrow unknown input to a contrast variant. Not a theme decoder, and a
+ * consumer iterates {@link themeContrasts} rather than retyping them.
+ */
+export const isThemeContrast = (value: unknown): value is ThemeContrast =>
+  themeContrasts.some((contrast) => contrast === value);
 
 /**
  * A complete, resolved design theme. Every field is plain data, so a theme can
@@ -142,10 +171,6 @@ const mergeTypography = (
   };
 };
 
-const isDensityName = (
-  value: DensityName | Partial<Omit<Density, "name">>,
-): value is DensityName => typeof value === "string";
-
 const mergeDensity = (
   base: Density,
   override: DensityName | Partial<Omit<Density, "name">> | undefined,
@@ -153,10 +178,9 @@ const mergeDensity = (
   if (override === undefined) {
     return base;
   }
-  if (isDensityName(override)) {
-    return densityPresets[override];
-  }
-  return { ...base, ...override, name: base.name };
+  return typeof override === "string"
+    ? densityPresets[override]
+    : { ...base, ...override, name: base.name };
 };
 
 /** The default light theme. */

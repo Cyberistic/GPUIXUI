@@ -112,11 +112,38 @@ export interface AvatarSize {
  */
 export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
 
+/**
+ * Named control density presets, in documentation order. `DensityName` derives
+ * from this list, so a new preset must also gain metrics in `densityPresets`.
+ */
+export const densityNames = ["compact", "comfortable", "spacious"] as const;
+
 /** Named control density presets. */
-export type DensityName = "compact" | "comfortable" | "spacious";
+export type DensityName = (typeof densityNames)[number];
+
+/**
+ * Narrow unknown input — a stored preference or a URL parameter — to a density
+ * preset. A consumer iterates {@link densityNames} instead of retyping them.
+ */
+export const isDensityName = (value: unknown): value is DensityName =>
+  densityNames.some((name) => name === value);
+
+/**
+ * Control sizes every interactive component supports, in documentation order.
+ * `ControlSize` derives from this list, so a new size must also gain a metric in
+ * every density preset.
+ */
+export const controlSizes = ["sm", "md", "lg"] as const;
 
 /** Control sizes every interactive component supports. */
-export type ControlSize = "sm" | "md" | "lg";
+export type ControlSize = (typeof controlSizes)[number];
+
+/**
+ * Narrow unknown input — a stored preference or a URL parameter — to a control
+ * size. A consumer iterates {@link controlSizes} instead of retyping them.
+ */
+export const isControlSize = (value: unknown): value is ControlSize =>
+  controlSizes.some((size) => size === value);
 
 /** Density-dependent control metrics. Spacing and type are unaffected. */
 export interface Density {

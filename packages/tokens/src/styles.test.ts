@@ -8,9 +8,9 @@ import {
   filledHover,
   filledPressed,
   statusTone,
+  statusTones,
   textStyle,
   type FilledAction,
-  type StatusTone,
 } from "./styles.js";
 import {
   darkTheme,
@@ -19,16 +19,9 @@ import {
   highContrastLightTheme,
   lightTheme,
 } from "./theme.js";
-import type { ControlSize } from "./scale.js";
+import { controlSizes } from "./scale.js";
 
-const sizes: readonly ControlSize[] = ["sm", "md", "lg"];
-
-const tones: readonly StatusTone[] = [
-  "info",
-  "success",
-  "warning",
-  "destructive",
-];
+const tones = statusTones;
 
 describe("textStyle", () => {
   it("uses the sans family for prose roles", () => {
@@ -77,7 +70,7 @@ describe("textStyle", () => {
 
 describe("control metrics", () => {
   it("delegates to the active density for every size", () => {
-    sizes.forEach((size) => {
+    controlSizes.forEach((size) => {
       expect(controlHeight(lightTheme, size)).toBe(
         lightTheme.density.controlHeight[size],
       );

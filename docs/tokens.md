@@ -20,9 +20,11 @@ import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
+  controlSizes,
   createTheme,
   currentPlatform,
   darkTheme,
+  densityNames,
   elevationShadow,
   extendTheme,
   filledHover,
@@ -33,14 +35,26 @@ import {
   highContrastLightTheme,
   highContrastThemes,
   invalidColorRoles,
+  isControlSize,
+  isDensityName,
+  isPlatformName,
+  isStatusTone,
+  isThemeContrast,
+  isThemeMode,
   lightTheme,
+  platformNames,
   platformStyles,
   platformTheme,
   platformTypes,
   registerFonts,
   statusTone,
+  statusTones,
   systemUiFont,
   textStyle,
+  themeContrasts,
+  themeModes,
+  type ControlSize,
+  type DensityName,
   type FilledAction,
   type FocusRing,
   type FontRegistrar,
@@ -746,7 +760,8 @@ A runnable example lives in
 ## Theme API
 
 ```ts
-type ThemeMode = "light" | "dark";
+const themeModes = ["light", "dark"] as const;
+type ThemeMode = (typeof themeModes)[number];
 
 interface Theme {
   name: string;
@@ -813,6 +828,45 @@ Merge rules:
 No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
 application that owns that boundary.
+
+### Persisted choices
+
+Six unions are choices a consumer stores — a settings row, a URL parameter, a
+saved workspace. Each has an **ordered index** and a guard that takes `unknown`,
+so a restored value neither needs the union retyped nor a cast:
+
+| Axis | Index | Guard |
+| ---- | ----- | ----- |
+| theme mode | `themeModes` | `isThemeMode` |
+| contrast variant | `themeContrasts` | `isThemeContrast` |
+| platform | `platformNames` | `isPlatformName` |
+| density preset | `densityNames` | `isDensityName` |
+| control size | `controlSizes` | `isControlSize` |
+| status tone | `statusTones` | `isStatusTone` |
+
+The unions derive from the indexes, so adding a mode, platform or tone is one
+edit at the owner and every consumer loop — including this package's own tests —
+covers it. The indexes are held to the data they select: every mode has both
+contrast variants, every platform has a style, every density preset has a metric
+for every control size, and every tone has its own soft roles
+(`guards.test.ts`).
+
+```ts
+import { getTheme, isThemeContrast, isThemeMode } from "@gpuixui/tokens";
+
+const themeFromStored = (stored: {
+  readonly mode: unknown;
+  readonly contrast: unknown;
+}) =>
+  getTheme(
+    isThemeMode(stored.mode) ? stored.mode : "light",
+    isThemeContrast(stored.contrast) ? stored.contrast : "default",
+  );
+```
+
+`src/persisted-choices.example.ts` resolves all six axes the same way, and
+`guards.test.ts` runs it: a stored `dark`/`high` pair returns the AAA dark theme,
+an unknown pair keeps the light one.
 
 ## React binding
 

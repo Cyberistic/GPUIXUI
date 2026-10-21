@@ -234,6 +234,15 @@ describe("alpha", () => {
     expect(alpha("#2559d6", 0.3)).toBe("#2559D64D");
   });
 
+  it("returns the colour unchanged for a non-finite amount", () => {
+    // `NaN.toString(16)` is "NaN", so an unguarded amount emitted "#2559D6NaN"
+    // — a string the renderer ignores, painting black in silence.
+    expect(alpha("#2559D6", Number.NaN)).toBe("#2559D6");
+    expect(alpha("#2559D64D", Number.NaN)).toBe("#2559D64D");
+    expect(alpha("#2559D6", Number.POSITIVE_INFINITY)).toBe("#2559D6");
+    expect(alpha("#2559D6", Number.NEGATIVE_INFINITY)).toBe("#2559D6");
+  });
+
   it("composes: a full-alpha result is opaque", () => {
     expect(alpha(alpha("#2559D6", 0.3), 1)).toBe("#2559D6FF");
   });
@@ -276,6 +285,13 @@ describe("blend", () => {
 
   it("normalises the result to upper case", () => {
     expect(blend("#5f4bdb", "#191d25", 0.12)).toBe("#5745C5");
+  });
+
+  it("returns the base unchanged for a non-finite amount", () => {
+    expect(blend("#5F4BDB", "#FFFFFF", Number.NaN)).toBe("#5F4BDB");
+    expect(blend("#5F4BDB", "#FFFFFF", Number.POSITIVE_INFINITY)).toBe(
+      "#5F4BDB",
+    );
   });
 });
 

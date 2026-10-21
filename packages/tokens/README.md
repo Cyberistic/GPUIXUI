@@ -98,6 +98,35 @@ export const brandTheme = createTheme({
 A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts).
 
+## Persisted choices
+
+Six axes are choices a consumer stores, and each has an ordered index beside a
+guard that takes `unknown`:
+
+| Axis | Index | Guard |
+| ---- | ----- | ----- |
+| theme mode | `themeModes` | `isThemeMode` |
+| contrast variant | `themeContrasts` | `isThemeContrast` |
+| platform | `platformNames` | `isPlatformName` |
+| density preset | `densityNames` | `isDensityName` |
+| control size | `controlSizes` | `isControlSize` |
+| status tone | `statusTones` | `isStatusTone` |
+
+The unions derive from the indexes, so a settings row iterates the axis and a
+restored preference narrows without retyping the union or casting. Each index is
+held to the data it selects — every mode has both contrast variants, every
+platform a style, every preset a metric per size — by
+[`src/guards.test.ts`](./src/guards.test.ts), and
+[`src/persisted-choices.example.ts`](./src/persisted-choices.example.ts) resolves
+all six.
+
+```ts
+import { getTheme, isThemeMode } from "@gpuixui/tokens";
+
+const mode = isThemeMode(stored.mode) ? stored.mode : "light";
+const theme = getTheme(mode);
+```
+
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1

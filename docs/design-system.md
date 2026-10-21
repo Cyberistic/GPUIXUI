@@ -283,6 +283,11 @@ The extension mechanism is deliberately small:
   brand theme or a high-contrast theme.
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
+- Every choice a consumer can persist — mode, contrast, platform, density,
+  control size, status tone — has an ordered index beside a guard that takes
+  `unknown` (`themeModes`/`isThemeMode`, `platformNames`/`isPlatformName`, …),
+  so a settings row or a docs toggle iterates the axis and a restored value
+  narrows without a cast.
 
 Overrides merge by group; typography merges field by field; elevation levels are
 replaced as whole arrays; the mode is immutable. Nothing mutates the base, so a
