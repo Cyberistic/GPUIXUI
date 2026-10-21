@@ -207,6 +207,14 @@ against a control that wraps, in `list.test.tsx`.
 `ListItem` used outside `List` throws — a programming error at the boundary, not a
 runtime state to recover from.
 
+## Repaints
+
+Each row subscribes to its own slice of the selection (`src/list/store.ts`): a
+row's `style` resolves again only when that row's `active`, `selected` or
+`tabbable` state moves. Selecting one row therefore does not repaint the rest of
+a long list. `list-subscriptions.test.tsx` counts the resolutions and fails when
+an untouched row repaints.
+
 ## Sizing
 
 A row is `density.rowHeight + spacing.md` tall (40px on the default comfortable

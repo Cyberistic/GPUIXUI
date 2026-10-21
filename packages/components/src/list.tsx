@@ -38,7 +38,9 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -68,6 +70,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import { keyboardRing, useTheme } from "./internal/theme.js";
 import { useTypeahead } from "./internal/typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
+import { makeRowStore, type RowStore } from "./list/store.js";
 
 /** Whether the list only presents rows, or also tracks a selection. */
 export type ListSelectionMode = "none" | "single" | "multiple";
@@ -85,9 +88,8 @@ interface Row {
 interface ListContextValue {
   readonly selectable: boolean;
   readonly dense: boolean;
-  readonly selected: ReadonlyArray<string>;
-  readonly active: Option.Option<string>;
-  readonly tabbable: Option.Option<string>;
+  /** The row's slice of the selection; a row subscribes to its own. */
+  readonly store: RowStore;
   /** Focus and select `value` if it is enabled — what a click does. */
   readonly activate: (value: string, event: EventPayload) => void;
   /** Note that `value` now holds focus, so keys move on from it. */
@@ -302,6 +304,7 @@ export const List = (props: ListProps) => {
   const [anchor, setAnchor] = useState<Option.Option<string>>(Option.none());
   const [active, setActive] = useState<Option.Option<string>>(Option.none());
   const [rows, setRows] = useState<ReadonlyArray<Row>>([]);
+  const [store] = useState(makeRowStore);
 
   const commit = useCallback(
     (next: ReadonlyArray<string>) => {
@@ -533,18 +536,36 @@ export const List = (props: ListProps) => {
     );
   };
 
+  const tabbable = useMemo(
+    () => tabbableValue(rows, active, selected, selectable),
+    [active, rows, selectable, selected],
+  );
+
+  // The row handlers are context values, so their identity must not change when
+  // the selection does; each reads the current render's implementation.
+  const latest = useRef(activate);
+  useLayoutEffect(() => {
+    latest.current = activate;
+  });
+  const stableActivate = useCallback(
+    (value: string, event: EventPayload) => latest.current(value, event),
+    [],
+  );
+
+  useLayoutEffect(() => {
+    store.write({ active, selected, tabbable });
+  }, [active, selected, store, tabbable]);
+
   const context = useMemo<ListContextValue>(
     () => ({
       selectable,
       dense,
-      selected,
-      active,
-      tabbable: tabbableValue(rows, active, selected, selectable),
-      activate,
+      store,
+      activate: stableActivate,
       noteFocus,
       register,
     }),
-    [activate, active, dense, noteFocus, register, rows, selectable, selected],
+    [dense, noteFocus, register, selectable, stableActivate, store],
   );
 
   assertParts(listRoot, children);
@@ -614,16 +635,9 @@ export const ListItem = ({
   ...rest
 }: ListItemProps) => {
   const theme = useTheme();
-  const {
-    selectable,
-    dense,
-    selected,
-    active,
-    tabbable,
-    activate,
-    noteFocus,
-    register,
-  } = useListContext();
+  const { selectable, dense, store, activate, noteFocus, register } =
+    useListContext();
+  const row = useSyncExternalStore(store.subscribe, () => store.read(value));
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -648,12 +662,9 @@ export const ListItem = ({
     });
   }, [disabled, instance, register, textValue, value]);
 
-  const isSelected = selectable && Arr.contains(value)(selected);
-  const isActive = Option.exists(active, (candidate) => candidate === value);
-  const isTabbable = Option.exists(
-    tabbable,
-    (candidate) => candidate === value,
-  );
+  const isSelected = selectable && row.selected;
+  const isActive = row.active;
+  const isTabbable = row.tabbable;
   const state: ListItemState = {
     active: isActive,
     disabled,
