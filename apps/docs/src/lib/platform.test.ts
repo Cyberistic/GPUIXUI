@@ -58,12 +58,16 @@ describe("the platform theme", () => {
     );
   });
 
-  it("keeps the base theme's colours, scales and density", () => {
+  it("keeps the base theme every role a component reads", () => {
     const themed = resolvePlatformTheme("win32");
 
-    expect(themed.colors).toEqual(themes.dark.colors);
-    expect(themed.density).toEqual(themes.dark.density);
-    expect(themed.radius).toEqual(themes.dark.radius);
+    // A platform variant may change a role's value, never drop the role.
+    expect(Object.keys(themed.colors).toSorted()).toEqual(
+      Object.keys(themes.dark.colors).toSorted(),
+    );
+    expect(Object.keys(themed.radius).toSorted()).toEqual(
+      Object.keys(themes.dark.radius).toSorted(),
+    );
     // The name carries the platform, so a preview can say which one it shows.
     expect(themed.name).toContain(platformTypes.win32.label);
   });
@@ -71,9 +75,19 @@ describe("the platform theme", () => {
   it("follows the requested mode", () => {
     const light = resolvePlatformTheme("linux", "light");
 
-    expect(light.colors).toEqual(themes.light.colors);
     expect(light.mode).toBe("light");
     expect(light.typography.mono).toBe(platformTypes.linux.mono);
+  });
+
+  it("resolves the platform's own paint, not the docs'", () => {
+    // Whatever the library styles per platform — families today, and the
+    // palette, radius and density as the platform variants land — the preview
+    // reads it from here rather than carrying values of its own.
+    const mac = resolvePlatformTheme("darwin");
+    const windows = resolvePlatformTheme("win32");
+
+    expect(mac.typography.mono).not.toBe(windows.typography.mono);
+    expect(mac.name).not.toBe(windows.name);
   });
 
   it("labels the platforms the way the library does", () => {

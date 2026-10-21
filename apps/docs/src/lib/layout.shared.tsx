@@ -18,7 +18,7 @@ export function baseOptions(): BaseLayoutProps {
       ),
     },
     links: [
-      { type: "main", text: "Components", url: "/docs/components/button" },
+      { type: "main", text: "Components", url: "/docs/components" },
       { type: "main", text: "Landing", url: "/" },
     ],
     githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,

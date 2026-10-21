@@ -78,10 +78,10 @@ const theme = platformTheme(getTheme(mode), "win32");
 ```
 
 The UI face stays GPUI's `.SystemUIFont` sentinel, which resolves to the
-operating system's own font at render time. Only the monospace family and the
-documentation label differ per platform today; the [Theming
-page](/docs/theming#platform-styles) shows the platform switch this site uses
-and what a wider variant will change.
+operating system's own font at render time. The variant also carries the
+platform's radii, density and colour roles; a high-contrast base keeps its own
+colours. The [Theming page](/docs/theming#platform-styles) shows the platform
+switch this site uses.
 
 ## Tokens and contrast
 
