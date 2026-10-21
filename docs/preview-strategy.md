@@ -185,6 +185,36 @@ therefore appears without a docs change, and a step removed fails the suite.
 5. Run `nub run --filter @gpuixui/docs build` before pushing: an SSR-only error
    in a preview (a missing provider) shows up here, not in `vitest`.
 
+## The examples page
+
+`/docs/examples` is the registry of the worked examples the packages ship. It is
+generated from `packages/*/examples/*.example.tsx` — one row per file — so it
+cannot advertise an example that does not exist, and a new file appears with no
+docs change.
+
+Three rules keep the rows honest:
+
+- **The summary is the file's own.** Every example opens with a
+  `<Name> example: <what it shows>.` header; the row prints the half after the
+  colon. A page therefore cannot describe an example differently from the file
+  it links. `examples.test.ts` holds each summary to its file, and fails on an
+  unmounted file, a dead link or a grouped row sent to a guessed page.
+- **A row links to the page that owns it, or to the lane.** An exact page name
+  wins; a sole page that extends the id is accepted (`otp` → `otp-field`); an
+  ambiguous match is not guessed, it points at the lane index and says the
+  example is grouped.
+- **The source is read, never rendered.** These are GPUix modules. The page
+  shows the source behind a labelled toggle and says so in prose; a browser
+  rendering would be the fake preview this file opens by ruling out. The source
+  is absent from the first paint (`examples-index.test.tsx`), because a reader
+  should not pay for fifty code blocks to scan the list.
+
+The page also names how the examples are run today: the primitives package
+mounts all of its examples in `runtime/examples.runtime.test.tsx`. The
+components' examples are the copy-target for their pages and have no runtime
+registry yet — that is a tracked task, and the page says so instead of implying
+they run.
+
 ## A page's claims about the runtime
 
 A curated page names the runtime version its gaps were measured on, how many

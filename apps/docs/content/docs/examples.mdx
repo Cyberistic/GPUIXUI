@@ -1,0 +1,48 @@
+---
+title: Examples
+description: Every worked example a package ships — a real screen with caller-owned state, and the file to copy.
+---
+
+Each package keeps a worked example beside its components: a screen that
+composes several parts, owns its state and handles the failure path, rather than
+a gallery of one-off props. This page is generated from
+`packages/*/examples/*.example.tsx`, so a new example appears here with no docs
+change, and a removed one cannot leave a dead row.
+
+<ExamplesIndex />
+
+## What an example is
+
+An example is the thing a reader actually copies. It is where the composition is
+tested: a dialog page can show the right parts and still get the busy state
+wrong, and a form can validate every field and still submit the wrong value.
+Each file exports one component and states its own purpose in its header — the
+summary on every row above is read from that header, not restated here.
+
+They are **GPUix modules, not browser components**. The site shows the source;
+it does not render the example, because a DOM rendering of a native screen would
+be exactly the fake preview [the preview strategy](/docs/components#previews-are-browser-renderings)
+rules out.
+
+## Running one
+
+The primitives package mounts all of its examples in the native runtime, so a
+broken composition fails there:
+
+```bash
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+The components' examples are the copy-target for their pages and are not mounted
+in the playground yet — that registry is a tracked task in `TODO.md`. Until it
+lands, each component page's Code tab is the runnable usage, and the example's
+file is the fuller composition to compare it against.
+
+## Where a change goes
+
+A new example is `packages/<package>/examples/<id>.example.tsx`, exporting one
+component with a `<Name> example: …` header, added to that package's
+`examples/index.ts`. This page reads the file, links it to the page whose id it
+matches (`otp` finds `otp-field` when that is the only candidate), and points a
+grouped example at its lane index instead of guessing which page owns it. No
+list on this page is hand-maintained.
