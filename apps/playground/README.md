@@ -32,11 +32,11 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-fourteen probes a real window can prove, of which six mount shipped
+fifteen probes a real window can prove, of which seven mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
-palette and the modal focus rule) and the rest prove the runtime itself (focus,
-paint, fonts, placement, content surfaces). `apps/playground` depends on `@gpuixui/components` for
-exactly that.
+palette, the tabs, the popover and the modal focus rule) and the rest prove the
+runtime itself (focus, paint, fonts, placement, content surfaces).
+`apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
 
@@ -77,7 +77,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (27/27 green); -> 2 on a host with no binding
+# -> 0 here (28/28 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -244,13 +244,14 @@ restored, green.
 
 ## Evidence on this host
 
-The suite is **27/27 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **28/28 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-27/27 scenarios passed · capabilities: layout=verified text=verified
+28/28 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
+editor=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -501,6 +502,40 @@ The host therefore gained `keyUp(keystroke)`, released through the renderer's
 measured: pressing Space without releasing it leaves the readout at
 `checked=true changes=1` and fails `Space toggles the focused checkbox` (exit
 `1`).
+
+### `tabs-lifecycle` — measured on 0.11.0 here
+
+The shipped `Tabs` (`@gpuixui/components`), four triggers with `settings`
+disabled and a controlled value the readout prints. The measured selected
+surface (`tabs-indicator`) is what makes this a window probe: `bounds` reads the
+runtime's own geometry for the pill and the trigger, so the assertion is that
+the pill covers the selected trigger, not that a screenshot looks right.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `value=overview changes=0`; the pill is within 2px of the trigger's `x`, `width` and `height`; `tabs-panel-reports` has no bounds |
+| `Tab` | focus is `tabs-overview`; the trigger's own `onFocus` counter is **0** |
+| first `right` | focus re-anchors on `tabs-overview` and the selection stays `overview` — the measured defect below |
+| second `right` | focus is `tabs-reports`, `value=reports changes=1`, the reports panel paints and the overview panel has no bounds; the pill moved to the reports trigger |
+| third `right` | focus is `tabs-archive` — the disabled `settings` is skipped — `value=archive` |
+| `Home` / `End` | focus and selection land on the first and last enabled triggers |
+| press `tabs-reports` | `value=reports changes=5`, the pill follows the pressed trigger |
+| press `tabs-settings` | the readout does not change — a disabled tab ignores a press |
+
+**Measured defect, recorded as an interlock for `@gpuixui/components`:** a
+window focuses the trigger on a `Tab` traversal (the renderer's focus id is
+`tabs-overview`) but does not run React's `onFocus` (the probe's counter stays
+`0`). `Tabs` seeds its `active` row from `onFocus`, so after a traversal the row
+is empty and the **first** arrow re-anchors at the first enabled tab instead of
+moving to the next one; from then on the arrows move correctly. A unit suite
+cannot see this: the `TestRenderer`'s `focusElement` does fire `onFocus`. The
+fix is the component's (seed `active` from the selected row, or track the
+focused row from the key event); the probe's two checks then become
+`tabs-reports`/`changes=1` on the first arrow. Negative controls measured:
+dropping `disabled` fails `the arrow skips the disabled trigger`
+(`expected "tabs-archive", got "tabs-settings"`), and moving the expected pill
+40px fails `the pill starts on the selected trigger's left edge`
+(`expected 61 ± 2, got 21`), exit `1` each.
 
 ### `dialog-lifecycle` — measured on 0.11.0 here
 
@@ -804,7 +839,7 @@ narrower. Each deviation is deliberate and measured:
 - The thirteen core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (27/27), with a written report and screenshots.
+  (28/28), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

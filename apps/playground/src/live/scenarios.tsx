@@ -31,6 +31,10 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
   ToastProvider,
   ToastViewport,
   useToast,
@@ -579,6 +583,119 @@ const CheckboxProbe = (): ReactNode => {
         </text>
       </div>
     </PrimitiveThemeProvider>
+  );
+};
+
+/**
+ * The shipped `Tabs` from `@gpuixui/components`: four triggers (the third
+ * disabled) and a controlled value the readout prints.
+ *
+ * The readout is the proof the selection is React's own state, and the
+ * `tabs-indicator` element is the component's measured selected surface — a
+ * window reports it in `bounds`, so the probe can assert the pill actually
+ * covers the selected trigger rather than trusting the renderer's layout.
+ */
+const TabsProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [value, setValue] = useState("overview");
+  const [changes, setChanges] = useState(0);
+  const [focuses, setFocuses] = useState(0);
+  return (
+    <div
+      testId="tabs-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <Tabs
+        value={value}
+        onValueChange={(next) => {
+          setValue(next);
+          setChanges((count) => count + 1);
+        }}
+      >
+        <TabsList testId="tabs-list" label="Workspace tabs">
+          <TabsTrigger
+            testId="tabs-overview"
+            value="overview"
+            onFocus={() => setFocuses((count) => count + 1)}
+          >
+            Overview
+          </TabsTrigger>
+          <TabsTrigger testId="tabs-reports" value="reports">
+            Reports
+          </TabsTrigger>
+          <TabsTrigger testId="tabs-settings" value="settings" disabled>
+            Settings
+          </TabsTrigger>
+          <TabsTrigger testId="tabs-archive" value="archive">
+            Archive
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent testId="tabs-panel-overview" value="overview">
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            overview panel
+          </text>
+        </TabsContent>
+        <TabsContent testId="tabs-panel-reports" value="reports">
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            reports panel
+          </text>
+        </TabsContent>
+        <TabsContent testId="tabs-panel-settings" value="settings">
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            settings panel
+          </text>
+        </TabsContent>
+        <TabsContent testId="tabs-panel-archive" value="archive">
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            archive panel
+          </text>
+        </TabsContent>
+      </Tabs>
+      <text
+        testId="tabs-focus-readout"
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`focuses=${focuses}`}
+      </text>
+      <text
+        testId="tabs-readout"
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`value=${value} changes=${changes}`}
+      </text>
+    </div>
   );
 };
 
@@ -1602,6 +1719,191 @@ const checkboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * Drives the shipped `Tabs` through the paths a tab set has to survive in a
+ * window: the selected pill covers the selected trigger, a press moves both, an
+ * arrow moves **real focus** and selects (skipping the disabled tab), Home/End
+ * jump to the ends, and a disabled tab ignores a press.
+ *
+ * The pill's geometry is the point: `tabs-indicator` is the component's one
+ * measured selected surface, so the assertion is the runtime's own `bounds`
+ * against the selected trigger's box rather than a colour read off a frame.
+ */
+const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("tabs-overview");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the first tab starts selected",
+      yield* ctx.host.text("tabs-readout"),
+      "value=overview changes=0",
+    );
+    yield* ctx.expectEqual(
+      "an unselected panel paints nothing",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds("tabs-panel-reports")),
+      ),
+      true,
+    );
+
+    const overview = yield* paintedBox(ctx, "tabs-overview");
+    const first = yield* paintedBox(ctx, "tabs-indicator");
+    yield* ctx.expectNear(
+      "the pill starts on the selected trigger's left edge",
+      first.x,
+      overview.x,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the pill is the selected trigger's width",
+      first.width,
+      overview.width,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the pill is the selected trigger's height",
+      first.height,
+      overview.height,
+      2,
+    );
+    yield* ctx.host.capture("tabs-overview");
+
+    // Keyboard first, from the window's own traversal: Tab enters the list on
+    // the roving tab stop.
+    yield* ctx.host.key("tab");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Tab stops on the selected trigger",
+      yield* focusedId(ctx),
+      "tabs-overview",
+    );
+    // Measured on 0.11.0: the window focuses the element but delivers no React
+    // `onFocus`, so the list's `active` row stays empty after a traversal. The
+    // first arrow therefore re-anchors at the first enabled tab instead of
+    // moving to the next one. Recorded as an interlock for `@gpuixui/components`
+    // (see README §`tabs-lifecycle`); the second arrow moves relative to it.
+    yield* ctx.expectEqual(
+      "a traversal delivers no onFocus to the trigger",
+      yield* ctx.host.text("tabs-focus-readout"),
+      "focuses=0",
+    );
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the first arrow re-anchors on the first tab",
+      yield* focusedId(ctx),
+      "tabs-overview",
+    );
+    yield* ctx.expectContains(
+      "the re-anchor leaves the selection alone",
+      yield* ctx.host.text("tabs-readout"),
+      "value=overview changes=0",
+    );
+
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow key moves real focus",
+      yield* focusedId(ctx),
+      "tabs-reports",
+    );
+    yield* ctx.expectContains(
+      "automatic activation follows the focused tab",
+      yield* ctx.host.text("tabs-readout"),
+      "value=reports changes=1",
+    );
+    yield* ctx.expectContains(
+      "the selected panel paints",
+      yield* ctx.host.text("tabs-panel-reports"),
+      "reports panel",
+    );
+    yield* ctx.expectEqual(
+      "the previous panel unpaints",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds("tabs-panel-overview")),
+      ),
+      true,
+    );
+    const reports = yield* paintedBox(ctx, "tabs-reports");
+    const second = yield* paintedBox(ctx, "tabs-indicator");
+    yield* ctx.expectNear(
+      "the pill follows the selected trigger",
+      second.x,
+      reports.x,
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the pill moved with the selection",
+      second.x === first.x,
+      false,
+    );
+    yield* ctx.host.capture("tabs-reports");
+
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the arrow skips the disabled trigger",
+      yield* focusedId(ctx),
+      "tabs-archive",
+    );
+    yield* ctx.expectContains(
+      "the skipped selection lands on the last tab",
+      yield* ctx.host.text("tabs-readout"),
+      "value=archive changes=2",
+    );
+
+    yield* ctx.host.key("home");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Home lands on the first trigger",
+      yield* focusedId(ctx),
+      "tabs-overview",
+    );
+    yield* ctx.expectContains(
+      "Home selects the first tab",
+      yield* ctx.host.text("tabs-readout"),
+      "value=overview changes=3",
+    );
+
+    yield* ctx.host.key("end");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "End skips the disabled trigger",
+      yield* focusedId(ctx),
+      "tabs-archive",
+    );
+    yield* ctx.expectContains(
+      "End selects the last enabled tab",
+      yield* ctx.host.text("tabs-readout"),
+      "value=archive changes=4",
+    );
+
+    // A press is the pointer path: it selects without moving through the list.
+    yield* ctx.host.click("tabs-reports");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press selects the tab",
+      yield* ctx.host.text("tabs-readout"),
+      "value=reports changes=5",
+    );
+    const pressed = yield* paintedBox(ctx, "tabs-indicator");
+    yield* ctx.expectNear(
+      "the pill follows a pressed trigger",
+      pressed.x,
+      reports.x,
+      2,
+    );
+
+    const beforeDisabled = yield* ctx.host.text("tabs-readout");
+    yield* ctx.host.click("tabs-settings");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled tab ignores a press",
+      yield* ctx.host.text("tabs-readout"),
+      beforeDisabled,
+    );
+  });
+
+/**
  * Opens the shipped Dialog by press, proves focus entered the surface and that
  * Escape closes it and returns focus, then closes it with its own `DialogClose`.
  *
@@ -2442,6 +2744,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "checkbox-toggle",
     view: () => <CheckboxProbe />,
     steps: checkboxSteps,
+  },
+  "tabs-lifecycle": {
+    id: "tabs-lifecycle",
+    view: () => <TabsProbe />,
+    steps: tabsSteps,
   },
   "dialog-lifecycle": {
     id: "dialog-lifecycle",

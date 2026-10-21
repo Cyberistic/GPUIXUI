@@ -79,6 +79,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "tabs-lifecycle",
+    title:
+      "Input: the shipped Tabs selects by press and by arrow, skips a disabled tab, and the measured pill follows",
+    capability: "input",
+  },
+  {
     id: "dialog-lifecycle",
     title:
       "Modal: the shipped Dialog opens on a press, focuses its surface, and Escape returns focus",
