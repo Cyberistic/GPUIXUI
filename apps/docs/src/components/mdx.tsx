@@ -2,6 +2,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import { ApiReference } from "./docs/api-reference";
 import { BlockIndex } from "./docs/block-index";
 import { BlockPreview } from "./docs/block-preview";
+import { ComponentIndex } from "./docs/component-index";
 import { ComponentPreview } from "./docs/component-preview";
 import { ComponentSource } from "./docs/component-source";
 import { Install } from "./docs/install";
@@ -16,6 +17,7 @@ export const mdxComponents = {
   ApiReference,
   BlockIndex,
   BlockPreview,
+  ComponentIndex,
   ComponentPreview,
   ComponentSource,
   Install,

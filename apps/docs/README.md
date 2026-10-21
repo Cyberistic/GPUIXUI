@@ -40,9 +40,12 @@ src/lib/lane-page.test.ts Holds the lane pages to their template and sidebar pla
 src/lib/public-api.ts   Derives the public entry points from each package's exports map
 src/components/docs/api-reference.tsx The generated entry-point table
 src/components/docs/type-scale.tsx The typography specimen, generated from the theme
+src/components/docs/component-index.tsx The filterable index on /docs/components
 src/lib/collection-routes.ts The registry: every mounted package directory, route, section
 src/lib/package-docs.ts The Fumadocs loaders for the three package collections
 src/lib/page-tree.ts    Fills the package's pages into the Components section
+src/lib/component-index.ts The component index: URL mapping, curated shadowing, filter
+src/lib/component-index-data.ts The index, read from every docs collection at build time
 src/lib/platform.ts     The platform switch: parse, label, resolve the theme
 src/lib/theme-css.ts    Theme → CSS variables, shared with the theme editor
 src/lib/page-markdown.ts Server function for the "Copy page" action
@@ -116,6 +119,13 @@ A component page uses three MDX blocks:
 Demo renderings and their source strings live in
 `src/components/docs/demos.tsx`. Add a registry entry there, then point a page at
 it.
+
+The Components index (`/docs/components`) mounts `<ComponentIndex />`, which
+lists every page in the Primitives and Components lanes with its description and
+a filter box. The rows come from the pages' frontmatter at build time
+(`src/lib/component-index.ts` and `component-index-data.ts`), so a page added to
+any collection appears without a docs change, a curated page shadows its package
+page, and the index cannot advertise a page that does not exist.
 
 ## Commands
 
