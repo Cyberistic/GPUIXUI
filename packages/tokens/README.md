@@ -296,7 +296,7 @@ import {
 
 invalidColorRoles(brandTheme); // [] — every role is paint-ready
 contrastFailures(brandTheme); // [] — every measured pair meets its floor
-decorativeFailures(brandTheme); // [] — every divider, skeleton and veil is visible
+decorativeFailures(brandTheme); // [] — every divider, skeleton, veil and status edge is visible
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 
@@ -306,8 +306,9 @@ check — `undefined` for a translucent or non-hex value rather than a guess.
 shipped themes meet, so a brand is held to the same pairs rather than a second
 set. The decorative surfaces use `decorativeFloor` (1.05:1, the same
 perceptibility floor the soft status surfaces use), and `decorativeSurfaces`
-names the eight placements measured. See
-[`src/theme-audit.example.ts`](./src/theme-audit.example.ts).
+names the placements measured — dividers, skeleton fills, the modal veil and each
+status tone's edge, which is read at the share `statusEdgeAlpha` that `statusTone`
+paints. See [`src/theme-audit.example.ts`](./src/theme-audit.example.ts).
 
 ## Fonts
 
