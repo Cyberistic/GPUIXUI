@@ -219,9 +219,10 @@ surface: it carries `primaryForeground`, and it is measured as one — a fill on
 also a **mark**: a progress segment, a slider fill or thumb ring, a rating star,
 a combobox check and a timeline dot paint it, so the same role is held at the
 mark floor — 3:1, 4.5:1 at AAA — on `background`, `card`, `popover`, `muted`,
-the field's `input` fill, the `track` groove and the
-`hover`/`selected`/`selectedActive` fills a chosen option marks (`markPairs`,
-`trackMarkPairs`). It is not text.
+the field's `input` fill, the `track` groove, the
+`hover`/`selected`/`selectedActive` fills a chosen option marks and the
+`accent`/`active` fills the Notification centre's unread dot sits on
+(`markPairs`, `trackMarkPairs`). It is not text.
 Brand-toned text — a link, a label, an icon — reads `primaryText`, held to
 4.5:1 on `background`, `card`, `popover` and `muted`, on the `hover` and
 `active` washes the Link variant paints behind its own label, on the
@@ -3872,9 +3873,11 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair (**8.204:1** at the tightest, `Light`), so
 no colour moves; taking it from
-396 to **470** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
-`671`, `698`, `700`, `733` and `737`, the last of which measures the disabled
-fill on the five surfaces a control is placed on (`disabledFillPairs`).
+396 to **472** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
+`671`, `698`, `700`, `733`, `737` and `828`: `737` measures the disabled
+fill on the five surfaces a control is placed on (`disabledFillPairs`), and
+`828` measures the Notification centre's unread dot on the `accent` and
+`active` row fills beside the chosen option's check (`rowMarkPairs`).
 Plan `659` adds the field's typed text and hint inside a tone-tinted status
 panel — `softFieldPairs`, eight pairs — and the typed text on a pressed selected
 row, and moves the identity and AAA light hints one half-step that already
@@ -4027,7 +4030,9 @@ progress segment and a slider fill sit on the `track` groove, a slider thumb rin
 its own `input` fill, and a rating star, combobox check or timeline dot sits on
 the panel it paints on — a selected combobox option's check sits on the
 `hover` wash the row highlights with and on the `selected`/`selectedActive`
-fills the chosen option marks, so all three are measured — `markRoles`
+fills the chosen option marks, and the Notification centre's unread dot sits on
+the `accent` fill its current row paints and the `active` wash a pressed row
+paints, so all five row fills are measured — `markRoles`
 is the solid role list and `markPairs` the whole class. The native field's caret
 is a mark too, but it is the accent's ink rather than a fill: `primaryText` on
 the field's own `input` fill is `caretPairs`, published inside `markPairs`, while

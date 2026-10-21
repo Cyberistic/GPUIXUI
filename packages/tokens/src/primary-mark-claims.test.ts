@@ -1,7 +1,7 @@
 /**
  * Guards the three places that describe what `primary` is measured as.
  *
- * Plan 332 split a solid role into a fill and a mark, so `primary` carries nine
+ * Plan 332 split a solid role into a fill and a mark, so `primary` carries eleven
  * `mark` pairs beside its five `surface` pairs, its on-colour pair and its
  * step. `docs/tokens.md` and the package README still said the role was
  * "measured only as a fill", and neither sentence was read by a suite: the same
@@ -89,7 +89,7 @@ const markFloor = `${contrastFloors.default.mark}:1`;
 const highMarkFloor = `${contrastFloors.high.mark}:1`;
 
 describe("primary is a fill and a mark", () => {
-  it("is measured as four classes and nine marks", () => {
+  it("is measured as four classes and eleven marks", () => {
     expect(classesOf("primary")).toEqual([
       "secondary",
       "mark",
@@ -103,6 +103,8 @@ describe("primary is a fill and a mark", () => {
       "muted",
       "input",
       "hover",
+      "accent",
+      "active",
       "selected",
       "selectedActive",
       "track",
@@ -115,11 +117,7 @@ describe("primary is a fill and a mark", () => {
       "The same fill-versus-text split applies to the brand action.",
       "A runnable example lives in",
     );
-    const marks = between(
-      paragraph,
-      "It is also a **mark**",
-      "a chosen option marks",
-    );
+    const marks = between(paragraph, "It is also a **mark**", "`markPairs`");
     primaryMarks.forEach((surface) =>
       expect(marks, surface).toContain(`\`${surface}\``),
     );
@@ -138,11 +136,7 @@ describe("primary is a fill and a mark", () => {
       "`primary` is a fill:",
       "A runnable example lives in",
     );
-    const marks = between(
-      paragraph,
-      "It is also a mark",
-      "a chosen option marks",
-    );
+    const marks = between(paragraph, "It is also a mark", "`markPairs`");
     primaryMarks.forEach((surface) =>
       expect(marks, surface).toContain(`\`${surface}\``),
     );

@@ -418,6 +418,7 @@ references without buying correctness.
 | [822](./822-disabled-label-tier-figures.md) | The disabled label's tier figures, and the one attributed to the wrong set | F | 392, 500, 510, 520, 537, 623, 729 | done |
 | [823](./823-wrong-role-mark-figures.md) | The wrong-role marks' five figures, and the two that put the canvas number on a card | F | 075, 309, 332, 342, 369, 818 | done |
 | [825](./825-document-anchors.md) | The anchors the three documents link to, and the heading rename nothing notices | F | 355, 356, 616, 670 | done |
+| [828](./828-row-mark-fills.md) | The unread dot's two row fills, and the ledger rows plan 698 left behind | F | 332, 341, 351, 511, 557, 619, 651, 698, 705, 806, 823 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4322,6 +4323,25 @@ the guarded sibling it names, and reports an orphaned one; the slug decision, it
 two observable headings and the un-implemented duplicate suffix are stated in the
 helper. No anchor, heading, colour, pair, floor, metric, role or shipped theme
 moves.
+
+828 finishes plan `332`'s mark class where the ledger already says a glyph sits:
+the Notification centre draws its unread dot with `primary` on the `accent` fill
+its current row paints, the `hover` wash under the pointer and the `active` wash
+while pressed, and only the `hover` fill had a pair (plan `341`, one state over
+for the combobox check). `comboboxCheckPairs` becomes `rowMarkPairs` over all
+five fills a row paints, so an edited theme whose accent collapses into the dot's
+fill is reported instead of returning `[]` with the dot gone; every shipped set
+already clears the floor (**3.214:1** at the tightest, macOS dark on `selected`,
+with `accent` at 3.757:1 and `active` at 3.317:1), so no colour moves and the
+contract grows 470 → **472**. The same audit found the two live `TODO.md` rows
+quoting figures the palette has not produced since plan `698` moved that accent:
+the unread-dot row still said the fill measured 2.836:1 on `active` and 2.748:1
+on `selected`, "so a pressed or selected unread notification loses its dot", and
+the accordion row quoted plan `332`'s tightest *mark* (3.82:1) beside the
+accordion's *card*, which measures 4.697:1. Both rows now state today's figures
+and the reason the role move still stands, and `row-mark-claims.test.ts` derives
+all of it from `markPairs`, `shippedThemes`, `contrastFloors` and the resolved
+macOS themes, with a planted collapse proving the guard can fail.
 
 ## How to use a plan
 

@@ -55,6 +55,8 @@ describe("the mark contract", () => {
         (role) => `${role} on input`,
       ),
       "primary on hover",
+      "primary on accent",
+      "primary on active",
       "primary on selected",
       "primary on selectedActive",
       "primaryText on input",
@@ -120,6 +122,8 @@ describe("the mark contract", () => {
       ({ pairClass }) => pairClass === "mark",
     );
     expect(failures.map(({ background }) => background).toSorted()).toEqual([
+      "accent",
+      "active",
       "background",
       "card",
       "hover",
@@ -144,6 +148,8 @@ describe("the mark contract", () => {
         .map(({ background }) => background)
         .toSorted(),
     ).toEqual([
+      "accent",
+      "active",
       "background",
       "card",
       "hover",

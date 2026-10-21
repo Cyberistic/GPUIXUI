@@ -54,7 +54,23 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 378/453
+`[x]` `[████████░░]` 379/454
+
+`[x]` Own the unread dot's two row fills — the Notification centre paints its
+6px `primary` dot on a row that fills `accent` while current, `hover` under the
+pointer and `active` while pressed, and `markPairs` held only the `hover` fill
+(plan 341) plus the combobox check's `selected`/`selectedActive` (plan 698), so
+an edited theme whose accent collapsed into the dot's fill returned `[]` while
+the dot vanished; `comboboxCheckPairs` becomes `rowMarkPairs` over the five fills
+a row paints (470 → **472** pairs), every shipped set clears the floor (3.214:1
+at the tightest, macOS dark on `selected`; `accent` 3.757:1, `active` 3.317:1),
+and the same audit corrected the two live `TODO.md` rows that plan 698 and plan
+332 left arguing from pre-698 figures — the unread dot's 2.836/2.748 on
+`active`/`selected` (now 3.317/3.214) and the accordion's 3.82:1 "on a card"
+(the card measures 4.697:1; the canvas 4.209 and the quiet panel 4.392 are under
+the floor) — with `row-mark-claims.test.ts` deriving both rows and proving a
+planted collapse is reported; no colour, floor, metric, role or shipped theme
+moves (plan 828)
 
 `[x]` Own the anchors the catalogue and the design system link to — the three
 documents write 21 anchors (19 distinct, in-page and cross-document) and
@@ -731,14 +747,16 @@ use `borderStrong`, the 3:1 functional boundary, or `mutedForeground` for the
 secondary floor (plan 332; owner: `components`)
 `[ ]` Cross-team: `components` paints the Notification centre's unread dot with
 the accent ink, not the fill — `notification-centre.tsx:833` marks an unread row
-with a 6px `primary` dot, and the row's own states take the dot onto the
-`active` pressed wash and the `accent` fill: macOS dark's `primary` measures
-**2.836:1** on `active` and **2.748:1** on `selected`, under the 3:1 mark floor,
-so a pressed or selected unread notification loses its dot. `primaryText` — the
-accent's readable ink — clears the same surfaces at 5.587:1 and 5.675:1 at the
-tightest, and the text contract already holds it on all four row washes; this is
-the care plan 557 applied to the native field, one glyph over (plan 332's mark
-list; owner: `components`; found while auditing plan 585)
+with a 6px `primary` dot, and its row paints `accent` while it is the current
+row, `hover` under the pointer and `active` while pressed. The fill clears the
+mark floor on all five row fills in every shipped set — **3.214:1** at the
+tightest, macOS dark on `selected`, with 3.317:1 on `active` and 3.757:1 on
+`accent` since plan 698 moved that accent one designed step — and `rowMarkPairs`
+measures all five, so no shipped dot is invisible today. The ink is still the
+designed role for a mark on a row and carries 5.587:1 on `active` (Dark ·
+Windows) to 7.102:1 on `accent` (XP light) at the tightest, plus the AAA margin;
+this is the care plan 557 applied to the native field, one glyph over (plans 332
+and 828; owner: `components`; found while auditing plan 585)
 `[ ]` Cross-team: `components` moves the menu checkbox item's check glyph off
 `accent` — `menu/item.tsx:286` paints `theme.colors.accent` on the menu's
 `popover` (1.11–1.39:1) and on the `hover`/`active` row fill (1.00–1.08:1),
@@ -766,9 +784,10 @@ single palette role can guarantee contrast with a user-supplied colour (plan 389
 audit; token half shipped in plan 611; owner: `components`)
 `[ ]` Cross-team: `components` uses `primaryText` for the Accordion trigger's
 hover label — `accordion.tsx:474` sets `color: primary` on hover, and the fill
-role measures 4.21:1 on the macOS light canvas and 3.82:1 on a card, under the
-4.5:1 secondary floor; `primaryText` is held on the six surfaces a link paints
-(plan 332; owner: `components`)
+role measures 4.21:1 on the macOS light canvas and 4.39:1 on its quiet panel,
+under the 4.5:1 secondary floor, while the same fill clears 4.70:1 on its card;
+`primaryText` is held on the six surfaces a link paints (plans 332 and 828;
+owner: `components`)
 `[ ]` Cross-team: `components` moves the Toast icon and 3px tone bar off
 `xSoftForeground` — `toast/viewport.tsx` paints `palette.fg`, the soft-surface
 foreground designed for its own tint, on the `popover` card; use

@@ -486,9 +486,10 @@ export const selectionPressPairs: readonly ContrastPair[] = [
  * the same role; a rating star and a combobox check are glyphs on the surface
  * they sit on — a selected option's check also sits on the `hover` wash the row
  * paints while highlighted, and on the `selected`/`selectedActive` fills the
- * chosen option marks; a timeline's current dot is a `primary` dot on the
- * canvas, card, popover or quiet panel. A mark is the information, so a fill
- * that matches its surface is a failed state, not a subtle one.
+ * chosen option marks, as the unread dot sits on the `accent` and `active`
+ * washes a notification row paints; a timeline's current dot is a `primary` dot
+ * on the canvas, card, popover or quiet panel. A mark is the information, so a
+ * fill that matches its surface is a failed state, not a subtle one.
  */
 const markSurfaces = ["background", "card", "popover", "muted"] as const;
 
@@ -516,27 +517,35 @@ export const caretPairs: readonly ContrastPair[] = [
 ];
 
 /**
- * A selected option's check glyph on the fills it marks. `ComboboxItem` paints
- * the check with `primary`; `rowStyle` paints `hover` behind a highlighted row,
- * `selected` behind a chosen one, and `selectedActive` while the chosen row is
- * pressed. Plan 341 measured only the highlighted surface, so a selected option
- * at rest painted its check on `selected` with no pair behind it — the shipped
- * macOS dark set measured **2.748:1** there, under the 3:1 mark floor, while
- * every check returned `[]` (plan 698). The selected and pressed fills join the
- * list; all three are published inside {@link markPairs}.
+ * A `primary` mark painted directly on a row fill. Two shipped glyphs do:
+ * `ComboboxItem` draws its check on the `hover` wash a highlighted row paints,
+ * on the `selected` fill a chosen one keeps and on the `selectedActive` fill it
+ * presses to; the Notification centre draws its unread dot on the same `hover`
+ * wash, on the `accent` fill the current row paints and on the `active` wash a
+ * pressed row paints.
+ *
+ * Plan 341 measured only the highlighted combobox surface, so a selected option
+ * at rest painted its check with no pair behind it — macOS dark measured
+ * **2.748:1** on `selected` while every check returned `[]` (plan 698); that
+ * plan added the chosen and pressed fills and moved the macOS dark accent one
+ * designed step (`#0A84FF` → `#2E93FF`). The unread dot's own two fills were
+ * never added, so a theme whose accent collapsed into the dot's fill returned
+ * `[]` with the dot gone. All five are published inside {@link markPairs}.
  */
-const comboboxCheckPairs: readonly ContrastPair[] = [
+const rowMarkPairs: readonly ContrastPair[] = [
   ["primary", "hover", "mark"],
+  ["primary", "accent", "mark"],
+  ["primary", "active", "mark"],
   ["primary", "selected", "mark"],
   ["primary", "selectedActive", "mark"],
 ];
 
 /**
  * Every mark on every surface it can sit on: the three solid roles on the four
- * plain surfaces, the slider thumb's ring on its own `input` fill, the combobox
- * check on the wash a highlighted option paints and on the `selected` and
- * `selectedActive` fills a chosen option marks, and the native field's caret
- * ink (`primaryText`, {@link caretPairs}) on the fill it edits.
+ * plain surfaces, the slider thumb's ring on its own `input` fill, a `primary`
+ * glyph on the five fills a row paints — the combobox check and the
+ * Notification centre's unread dot ({@link rowMarkPairs}) — and the native
+ * field's caret ink (`primaryText`, {@link caretPairs}) on the fill it edits.
  */
 export const markPairs: readonly ContrastPair[] = [
   ...markRoles.flatMap((role) =>
@@ -544,7 +553,7 @@ export const markPairs: readonly ContrastPair[] = [
   ),
   ["primary", "input", "mark"],
   ["destructive", "input", "mark"],
-  ...comboboxCheckPairs,
+  ...rowMarkPairs,
   ...caretPairs,
 ];
 

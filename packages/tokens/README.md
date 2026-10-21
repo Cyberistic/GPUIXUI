@@ -75,10 +75,11 @@ five panels it fills — `background`, `card`, `popover`, `muted` and the field'
 `input` fill — and as the label on it. It is also a mark: a progress segment, a
 slider fill or thumb ring, a rating star, a combobox check and a timeline dot
 paint it, so the same role is held at the 3:1 mark floor (4.5:1 at AAA) on
-`background`, `card`, `popover`, `muted`, the field's `input` fill, `track` and
-the `hover`/`selected`/`selectedActive` fills a chosen option marks (`markPairs`,
-`trackMarkPairs`). Brand-toned text — a link, a label, an icon — reads
-`primaryText`, which is held to the text floor on the plain surfaces, the
+`background`, `card`, `popover`, `muted`, the field's `input` fill, `track`, the
+`hover`/`selected`/`selectedActive` fills a chosen option marks and the
+`accent`/`active` fills the Notification centre's unread dot sits on
+(`markPairs`, `trackMarkPairs`). Brand-toned text — a link, a label, an icon —
+reads `primaryText`, which is held to the text floor on the plain surfaces, the
 `hover`/`active` washes a link paints, the
 `accent`/`selected`/`selectedActive` fills a link sits on inside
 a row (plan 314) and the four soft status fills a link in a status panel sits on
