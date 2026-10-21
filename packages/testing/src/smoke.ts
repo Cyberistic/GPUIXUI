@@ -363,6 +363,29 @@ export interface AsyncSmokeHost {
     deltaX: number,
     deltaY: number,
   ) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Sends one wheel event over `testId`'s painted centre.
+   *
+   * The wheel is a hit-tested input, so it names an element rather than a pair
+   * of coordinates: an event aimed at empty space proves nothing about the
+   * scroller a reader would actually roll. Deltas are pixels and the sign is
+   * GPUI's — a negative `deltaY` scrolls down, the opposite of the DOM.
+   */
+  readonly wheel: (
+    testId: string,
+    deltaX: number,
+    deltaY: number,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * The scroll offset the window's renderer holds for `testId`.
+   *
+   * `null` means the element has no scroll handle — the same absence the
+   * headless host reports — so a probe can prove an element that is not a
+   * scroller does not scroll instead of reading `0` for both.
+   */
+  readonly scrollOffset: (
+    testId: string,
+  ) => Effect.Effect<Offset | null, SmokeHostError>;
   readonly key: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
   /**
    * Releases a key the window is holding.

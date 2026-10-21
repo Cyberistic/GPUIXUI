@@ -135,6 +135,28 @@ export const createLiveHost = ({
     hover: (testId) => call(`hover ${testId}`, () => at(testId).hover()),
     drag: (testId, deltaX, deltaY) =>
       call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY)),
+    /**
+     * The protocol's locator aims one wheel event at the element's painted
+     * centre, which is the hit-tested path a pointer takes. `app.call` would
+     * need window coordinates the probe does not know; the locator resolves
+     * them from the last frame.
+     */
+    wheel: (testId, deltaX, deltaY) =>
+      call(`wheel ${testId}`, () => at(testId).wheel(deltaX, deltaY)),
+    /** The renderer's scroll pair for the element the locator names, or `null`. */
+    scrollOffset: (testId) =>
+      Effect.gen(function* () {
+        const node = yield* call(`scrollOffset ${testId}`, () =>
+          at(testId).element(),
+        );
+        const result = yield* call(`scrollOffset ${testId}`, () =>
+          app.call("getScrollOffset", { elementId: node.id }),
+        );
+        return Option.match(Option.fromNullishOr(result.offset), {
+          onNone: () => null,
+          onSome: ([x, y]) => ({ x, y }),
+        });
+      }),
     key: (keystroke) =>
       call(`key ${keystroke}`, () =>
         app.call("keystrokes", { keys: keystroke }),

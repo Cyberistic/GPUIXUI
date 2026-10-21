@@ -144,6 +144,12 @@ export const liveRegistry = [
       "Content: svg markup, an image buffer and a data URL paint; a canvas paints nothing",
     capability: "content",
   },
+  {
+    id: "scroll-lifecycle",
+    title:
+      "Scroll: a window's wheel is hit-tested, onScroll and onScrollChange report the move, and the offset clamps at both ends",
+    capability: "scroll",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

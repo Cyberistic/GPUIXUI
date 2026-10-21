@@ -33,11 +33,12 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-eighteen probes a real window can prove, of which seven mount shipped
+nineteen probes a real window can prove, of which seven mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
 palette, the tabs, the popover and the modal focus rule), four mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), and the rest
-prove the runtime itself (focus, paint, fonts, placement, content surfaces).
+prove the runtime itself (focus, paint, fonts, placement, content surfaces and
+the window's own wheel).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -934,6 +935,36 @@ The consequences for the component inventory:
 
 Evidence: `.artifacts/live/content.png`; the fixtures and their guard live in
 `src/live/content.ts` and `src/live/content.test.ts`.
+
+### `scroll-lifecycle` — measured on 0.11.0 here
+
+The window's own scroll path, which the headless `scroll-container` cannot
+prove: the wheel is a **hit-tested** input here, both scroll events arrive, and
+the offset clamps instead of overscrolling. The strip is 320×200 over 24 fixed
+40px rows, so the content is exactly 960px and the end is exactly `-760`.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | `getScrollOffset` is `(0, 0)` and `onScrollChange` has reported `x=0 y=0` |
+| wheel `-200` over a **sibling** | the strip has not moved and `onScroll` did not fire — the wheel reaches only the element under the pointer |
+| wheel `-200` over the strip | the offset is the wheel's own delta (within 1px), `onScroll` fires once with `delta=-200`, and `onScrollChange`'s pair equals `getScrollOffset`'s |
+| wheel `+100000` | clamps at `0`; no overscroll past the start |
+| press "jump to end" | the last row's `scrollIntoView` lands the offset at `-760`, and the last row's painted box is wholly inside the viewport |
+| wheel `-100000` | clamps at `-760`; no overscroll past the end |
+
+20 checks (six of them the repeated `getScrollOffset` read). Two negative
+controls measured, each exit `1`: removing `overflow: "scroll"` fails
+`the scroller reports a scroll offset` (`expected a value, got none`), because
+an element without a scroll handle has no offset at all; setting the expected
+end to `-700` fails `scrollIntoView reaches the end of the content`
+(`expected -700 ± 1, got -760`) — the clamp is the value, not a guess.
+
+The two events report different things, and a scrollbar component needs both:
+`onScroll`'s `deltaY` is the **input** the runtime received (the huge wheel
+reports `-100000`, not the distance actually travelled), while
+`onScrollChange`'s `scrollX`/`scrollY` is the clamped absolute pair the
+renderer holds — which is what `ScrollArea`'s `onScrollChange` forwards.
+Evidence: `.artifacts/live/scroll-end.png`.
 
 ## Release gate
 

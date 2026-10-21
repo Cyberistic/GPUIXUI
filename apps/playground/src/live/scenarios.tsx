@@ -52,7 +52,7 @@ import {
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
 import { useWindowSize } from "@gpuix/react";
-import type { ImgInstance } from "@gpuix/react";
+import type { ImgInstance, PublicInstance } from "@gpuix/react";
 import { FloatingLayer } from "@gpuix/react/floating";
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
@@ -3415,6 +3415,226 @@ const contentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** The wheel probe's content: 24 rows of 40px in a 320×200 viewport. */
+const SCROLL_ROWS = 24;
+const SCROLL_ROW_HEIGHT = 40;
+const SCROLL_VIEWPORT = { width: 320, height: 200 } as const;
+/** Where the offset stops at the end: the viewport minus the content. */
+const SCROLL_MAX = SCROLL_VIEWPORT.height - SCROLL_ROWS * SCROLL_ROW_HEIGHT;
+
+/**
+ * A vertical strip and the two scroll events, plus a jump control that calls the
+ * last row's own `scrollIntoView`.
+ *
+ * The strip has no padding: the content height is exactly `rows × height`, so
+ * the probe can name the clamp a wheel has to stop at instead of only checking
+ * that the offset moved. Every row is a fixed height, so the text cannot grow
+ * it.
+ */
+const ScrollProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [events, setEvents] = useState(0);
+  const [delta, setDelta] = useState(0);
+  const [offset, setOffset] = useState<Smoke.Offset>({ x: 0, y: 0 });
+  const end = useRef<PublicInstance | null>(null);
+
+  return (
+    <div
+      testId="scroll-probe"
+      style={{
+        width: 720,
+        height: 460,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A wheel is hit-tested: only the strip scrolls, and it clamps at both ends.
+      </text>
+      <div
+        testId="scroll-jump"
+        role="button"
+        onClick={() => end.current?.scrollIntoView?.()}
+        style={{
+          width: 120,
+          padding: theme.spacing.sm,
+          borderRadius: theme.radius.sm,
+          backgroundColor: theme.colors.muted,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          jump to end
+        </text>
+      </div>
+      <div
+        testId="scroll-view"
+        style={{
+          ...SCROLL_VIEWPORT,
+          overflow: "scroll",
+          backgroundColor: theme.colors.card,
+        }}
+        onScroll={(event) => {
+          setEvents((current) => current + 1);
+          setDelta(event.deltaY ?? 0);
+        }}
+        onScrollChange={(event) =>
+          setOffset({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+        }
+      >
+        {Array.from({ length: SCROLL_ROWS }, (_, index) => (
+          <div
+            key={index}
+            testId={`scroll-row-${index}`}
+            ref={index === SCROLL_ROWS - 1 ? end : undefined}
+            style={{ height: SCROLL_ROW_HEIGHT }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: theme.colors.foreground,
+              }}
+            >
+              {`row ${index}`}
+            </text>
+          </div>
+        ))}
+      </div>
+      <div
+        testId="scroll-outside"
+        style={{
+          width: 200,
+          height: 60,
+          backgroundColor: theme.colors.muted,
+        }}
+      />
+      <text
+        testId="scroll-events"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`events=${events} delta=${delta}`}
+      </text>
+      <text
+        testId="scroll-offset"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`x=${offset.x} y=${offset.y}`}
+      </text>
+    </div>
+  );
+};
+
+const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("scroll-view");
+    yield* Effect.sleep(SETTLE);
+
+    const offsetOf = Effect.gen(function* () {
+      return yield* ctx.expectSome(
+        "the scroller reports a scroll offset",
+        Option.fromNullishOr(yield* ctx.host.scrollOffset("scroll-view")),
+      );
+    });
+
+    const atRest = yield* offsetOf;
+    yield* ctx.expectEqual("the strip starts at the top", atRest.y, 0);
+    yield* ctx.expectEqual("the strip starts on the X origin", atRest.x, 0);
+    yield* ctx.expectEqual(
+      "the scroll-change readout starts at the origin",
+      yield* ctx.host.text("scroll-offset"),
+      "x=0 y=0",
+    );
+
+    // The wheel is hit-tested, so an event over a sibling reaches no scroller.
+    yield* ctx.host.wheel("scroll-outside", 0, -200);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a wheel outside the strip does not move it",
+      (yield* offsetOf).y,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "onScroll does not fire for a wheel outside",
+      yield* ctx.host.text("scroll-events"),
+      "events=0 delta=0",
+    );
+
+    // GPUI's sign convention: a negative delta scrolls down.
+    yield* ctx.host.wheel("scroll-view", 0, -200);
+    yield* Effect.sleep(SETTLE);
+    const scrolled = yield* offsetOf;
+    yield* ctx.expectNear(
+      "the wheel moves the strip by its own delta",
+      scrolled.y,
+      -200,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "onScroll reports one wheel event and its delta",
+      yield* ctx.host.text("scroll-events"),
+      "events=1 delta=-200",
+    );
+    yield* ctx.expectEqual(
+      "onScrollChange reports the pair the renderer holds",
+      yield* ctx.host.text("scroll-offset"),
+      `x=${scrolled.x} y=${scrolled.y}`,
+    );
+
+    yield* ctx.host.wheel("scroll-view", 0, 100000);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a wheel past the start clamps at zero",
+      (yield* offsetOf).y,
+      0,
+    );
+
+    // The row's own `scrollIntoView`, with no wheel involved.
+    yield* ctx.host.click("scroll-jump");
+    yield* Effect.sleep(Duration.millis(300));
+    const jumped = yield* offsetOf;
+    yield* ctx.expectNear(
+      "scrollIntoView reaches the end of the content",
+      jumped.y,
+      SCROLL_MAX,
+      1,
+    );
+    const view = yield* paintedBox(ctx, "scroll-view");
+    const last = yield* paintedBox(ctx, `scroll-row-${SCROLL_ROWS - 1}`);
+    yield* ctx.expectEqual(
+      "the last row is wholly inside the viewport after the reveal",
+      last.y >= view.y && last.y + last.height <= view.y + view.height,
+      true,
+    );
+
+    yield* ctx.host.wheel("scroll-view", 0, -100000);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "a wheel past the end clamps at the content's end",
+      (yield* offsetOf).y,
+      SCROLL_MAX,
+      1,
+    );
+    yield* ctx.host.capture("scroll-end");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -3507,5 +3727,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "content-surfaces",
     view: () => <ContentSurfacesProbe />,
     steps: contentSteps,
+  },
+  "scroll-lifecycle": {
+    id: "scroll-lifecycle",
+    view: () => <ScrollProbe />,
+    steps: scrollSteps,
   },
 };

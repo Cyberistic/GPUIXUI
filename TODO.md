@@ -448,7 +448,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 32/32
+`[x]` `[██████████]` 33/33
 
 `[x]` Measure the modal **Tab trap in a window** — `dialog-lifecycle` now presses
       Tab six times inside the shipped `Dialog`: the focus never names
@@ -724,6 +724,21 @@ a workaround for two live sessions sharing one worktree; see
       measured (handler off: `moves=0`; the plain rail given the handler:
       `expected 0, got -128`, exit `1` each). Evidence:
       `apps/playground/README.md` §Drag auto-scroll
+`[x]` Land the `scroll-lifecycle` live probe — the window's own scroll path,
+      which no probe covered: the wheel is **hit-tested** (a wheel over a
+      sibling leaves the strip at 0 and fires no `onScroll`), `-200` moves the
+      strip by its own delta and both events report it, a huge positive wheel
+      clamps at 0, the last row's `scrollIntoView` lands at the content's end
+      (`-760`, and the row is wholly inside the viewport), and a huge negative
+      wheel clamps there. 20 checks, `--only scroll-lifecycle`, green on
+      0.11.0; two negative controls measured (no `overflow: "scroll"`:
+      `the scroller reports a scroll offset: expected a value, got none`;
+      expected end `-700`: `expected -700 ± 1, got -760`, exit `1` each).
+      `AsyncSmokeHost` gained `wheel(testId, dx, dy)` (the protocol locator aims
+      at the painted centre) and `scrollOffset(testId)`; the README records the
+      measured split between `onScroll`'s input delta and `onScrollChange`'s
+      clamped pair. Evidence: `apps/playground/README.md` §`scroll-lifecycle`,
+      `.artifacts/live/scroll-end.png`
 
 ## Phase C — Tier 1–2 components
 
@@ -1065,6 +1080,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | The docs theme editor's readout shows four of the audit's five reports — `auditTheme` now returns `selection` beside `invalidRoles`/`contrast`/`decorative`/`series`, so a reader who edits `selection` sees no line for a wash that hides the text it selects, although `/docs/themes` calls the readout "the whole audit" | docs-site | **resolved** — `AuditKind` gained `selection` and `formatSelectionFailure` words both jobs (`selection wash over background — 1.00:1 (needs 1.05:1)` for a wash nobody can see, `foreground on the selection wash over background — 1.06:1 (needs 7:1)` for text it buries), `auditFindings` flattens the report, and the editor's pass sentence and `/docs/themes#the-theme-audit` say five (the page lists the two floors and adds `selectionFailures` to the copy-theme note). `theme-editor-logic.test.ts` holds two brand themes — an opaque white wash and a zero-opacity one — proves the other four reports are empty on the first, so only the new line can fail `auditTheme(...).passed`, and fails on the old four-report mapping (`expected [] to have a length of 1`-style, measured); removing the selection map fails both cases, printing four → three fails `theming-page.test.ts`, and dropping the pass sentence fails `theme-editor.test.tsx` (all measured). `nub run --filter @gpuixui/docs test` green (41 files / 330 tests) |
 | A tooltip does not open on **keyboard focus** in a window — the `tooltip-lifecycle` live probe's `Tab` traversal focuses `tooltip-trigger` (`getFocusedElementId` reports it) but React's `onFocus` never runs, so the GPUix tooltip (which opens on `onFocus`) stays closed; hover opens it, leaving closes it and Escape dismisses it. The tip's text still reaches a screen reader as the trigger's `aria-description` | primitives (and `docs-site` for `docs/gpuix-capabilities.md`) | **primitives half landed (documented, not fixed)** — no focus signal exists for a trigger with no key event, so the measured behaviour is now the documented contract: `docs/tooltip.mdx` §Keyboard/§Limitations says a `Tab` traversal does not open the tip and hover is the only open path, the `COMPONENTS.md` Tooltips row carries the same verdict with `partial` support, and `src/docs.test.ts`'s prose guard fails when the page re-claims keyboard open or drops the probe (`keyboard: false` measured). **The docs half landed too** — the capability record no longer calls focus events plainly `supported`: §3's row reads `supported, with limits` carrying both probes' evidence and the workaround, §4 states the rule once, `/docs/runtime#measured-in-a-window` publishes it as a measured gap (its intro prints no count to fall behind), and `capability-doc.test.ts` fails when the row's verdict or either probe citation is dropped. **Row resolved by documenting**: the runtime still delivers no focus event on a traversal, so `aria-description` stays the assistive-technology path. Measured evidence: `apps/playground/README.md` §`tooltip-lifecycle`, 12 checks green on 0.11.0, with the hover path as the negative control (`expected true, got false` without the wrapper) |
 
+| Record the measured difference between the two scroll events — `onScroll`'s `deltaY` is the **input** the window received (a `-100000` wheel reports `-100000` even though the offset moved 200px and clamped), while `onScrollChange` carries the clamped absolute `scrollX`/`scrollY` pair `getScrollOffset` returns; a scrollbar or a "follow the tail" scroller needs the second. `docs/gpuix-capabilities.md`'s event row names both listeners without saying which reports what | docs-site | open — the probe and its numbers are `apps/playground/README.md` §`scroll-lifecycle` (20 checks, both events read back in a window) |
 
 ## Phase D — data and workspace components
 
