@@ -1,0 +1,160 @@
+---
+title: Overlay placement
+description: How floating surfaces are placed — the five placement props, what the React layer asks GPUix for, which components correct the measured centre and snap defects, and what is not possible.
+---
+
+Every floating surface in the library — popover, dropdown menu, combobox, select,
+tooltip, preview card, navigation menu, mention list, context menu — is placed by
+GPUix's `<anchored>` element through `@gpuix/react/floating`'s `FloatingLayer`.
+This page is the placement model: the props, the translation, the two measured
+defects and the components that compensate for them.
+
+Paint order, the dismiss stack and focus are not placement. They are on
+[Component API](/docs/component-api#layering). The `<anchored>` element itself,
+with its own props, is on [Native elements](/docs/native-elements).
+
+## The placement props
+
+The five fields below belong to `@gpuix/react/floating`'s
+`FloatingContentProps`, not to this library. Every floating surface accepts them,
+because every surface renders `FloatingLayer`.
+
+<PlacementProps />
+
+`sideOffset` is a gap, not a margin: it is the empty space between the trigger's
+box and the surface's box. `collisionPadding` is a different margin — the one the
+surface keeps from the **window** edge when the runtime snaps it back inside.
+
+## What the layer asks the runtime for
+
+`FloatingLayer` renders exactly one `<anchored>` element. It translates the
+React props and adds four fixed values:
+
+<LayerMapping />
+
+`alignOffset` is applied on one axis only: `{ x }` when the surface opens above
+or below, `{ y }` when it opens to a side. That is why the measured centre
+correction can be added to a caller's own offset without a second prop.
+
+## Which components correct it
+
+The runtime positions `start` and `end` exactly, but its `align="center"` and its
+window-edge snap are both wrong (next section). Three components measure and
+correct both; the rest pass placement through or choose it themselves.
+
+<PlacementMatrix />
+
+The last row is the one to read before adopting a tooltip: the runtime defaults a
+tip to `align="center"`, and nothing in this library corrects it, so a tip is
+half its own width to the left of the trigger's centre.
+
+## The two measured defects
+
+### The centre line
+
+`align="center"` puts the surface's **end** on the anchor's centre line, so the
+surface is short by half its own width (or height) on the cross axis. The rule
+below measures the trigger and the surface, asks for `start` instead, and adds
+the half-size difference as the offset the host applies after positioning:
+
+<include lang="ts" meta='title="packages/components/src/internal/placement.ts"'>
+  ../../../../packages/components/src/internal/placement.ts
+</include>
+
+### The window edge
+
+`fit="snap"` clamps a surface inside the window; it does not flip to the opposite
+side. A bottom surface near the bottom edge is therefore moved **up over its own
+trigger**. `resolveSide` detects the overlap with the trigger's bounds and flips
+once, when the opposite side has room:
+
+The measurement itself runs in the hook, once per open, after the surface's first
+commit. Both corrected components share it, so the one-shot rule exists once:
+
+<include lang="ts" meta='title="packages/components/src/internal/use-placement.ts"'>
+  ../../../../packages/components/src/internal/use-placement.ts
+</include>
+
+A flip is applied once per open. If neither side has room, the surface stays
+where the snap put it — it never oscillates between two positions.
+
+## Choosing a side
+
+- Choose the side with room. Near the bottom of the window, ask for
+  `side="top"` yourself: the pass-through surfaces do not flip, and even a
+  corrected surface keeps the snapped position when neither side fits.
+- `align="center"` is safe on `PopoverContent`, `DropdownMenuContent` and
+  `ComboboxContent`. On the pass-through surfaces it is half a surface short, so
+  prefer `start` or `end` there.
+- `collisionPadding` is the margin from the window edge, not from the trigger.
+  Raise it for a surface that must not touch the edge; the default is 8 pixels.
+- A surface that opened over its trigger after a window resize should be closed
+  and reopened — placement is measured once, not tracked.
+
+```tsx
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@gpuixui/components/popover";
+
+export function PlacementExample() {
+  return (
+    <Popover>
+      <PopoverTrigger>Filters</PopoverTrigger>
+      <PopoverContent side="top" align="center" collisionPadding={12}>
+        <text style={{ fontSize: 13 }}>
+          Opens above the trigger, centred by measurement.
+        </text>
+      </PopoverContent>
+    </Popover>
+  );
+}
+```
+
+## One-shot measurement
+
+`usePlacement` measures the trigger, the surface and the window after the
+surface's first commit and resolves once per open. It measures again only when
+`side`, `align` or `collisionPadding` changes — not when the window resizes, the
+page scrolls or the trigger moves. Closing resets the measurement, so the next
+open decides from fresh bounds.
+
+The pass-through surfaces never measure at all: the runtime's snap is the only
+correction they receive.
+
+## What is not supported
+
+<PlacementAbsences />
+
+## Evidence on this site
+
+The rows above are authored data. Their names, types, defaults and the
+`<anchored>` translation are re-derived from the installed
+`@gpuix/react@0.10.0` declarations and implementation by
+`src/overlay-placement.test.ts`, which also checks that every component file that
+places a surface is a row and still uses the mechanism its row claims. The two
+defects were measured by the headless `floating-placement` scenario on the real
+`TestRenderer` (plan 156 §8, re-measured in plan 323); the scenario is the
+measurement, not this page. No screenshot is offered as placement evidence.
+
+## Related
+
+- [Popovers](/docs/components/popover) — the corrected surface, with the
+  measured centre and the single flip.
+- [Dropdown menu](/docs/components/dropdown-menu) and
+  [Combobox](/docs/components/combobox) — the other two corrected surfaces.
+- [Select](/docs/components/select) and [Tooltip](/docs/components/tooltip) —
+  runtime-owned placement, passed through.
+- [Preview card](/docs/components/preview-card) — a floating surface that does
+  not correct the runtime's centre.
+- [Context menu](/docs/components/context-menu) and
+  [Navigation menu](/docs/components/navigation-menu) — pointer-anchored and
+  fixed placement.
+- [Component API](/docs/component-api#layering) — paint order, the dismiss stack
+  and the no-portal rule.
+- [Native elements](/docs/native-elements) — `<anchored>` and its own props.
+- [Window](/docs/window) — `getWindowSize`, the box placement is measured
+  against.
+- [Automation](/docs/automation) — `getElementBounds`, the measurement the
+  component uses.

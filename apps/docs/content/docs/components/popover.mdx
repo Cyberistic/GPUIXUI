@@ -93,6 +93,9 @@ The surface paints `colors.popover`/`popoverForeground`, `radius.lg`, a thin
   link between trigger and surface is positional, not semantic.
 - No arrow, custom anchor or backdrop. Keep the content short; a blocking form
   belongs in `Dialog`.
+- `align="center"` is measured from the trigger and the surface flips once when
+  snapping would cover it; the limits of both rules are on
+  [Overlay placement](/docs/overlay-placement).
 - A press outside hands focus to whatever was pressed, so focus is not restored to
   the trigger on that path. Escape is the keyboard path that restores it.
 

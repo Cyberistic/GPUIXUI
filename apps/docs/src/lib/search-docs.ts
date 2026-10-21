@@ -201,4 +201,9 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     url: "/docs/updates",
     what: "every updater member, the feed contract and the unverified install path",
   },
+  {
+    title: "Overlay placement",
+    url: "/docs/overlay-placement",
+    what: "the five placement props, the anchored mapping and the measured corrections",
+  },
 ];

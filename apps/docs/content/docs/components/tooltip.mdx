@@ -79,6 +79,9 @@ or a click dismisses it.
 - The trigger must be a focusable host element that forwards hover and focus.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
+- The tip's default `align="center"` is GPUix's own centre, which is half the
+  tip's width left of the trigger's centre; this wrapper does not correct it. See
+  [Overlay placement](/docs/overlay-placement).
 - Open and close timing are GPUix's; this wrapper only sets the delay.
 
 ## Dependencies

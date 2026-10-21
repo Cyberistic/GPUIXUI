@@ -226,7 +226,8 @@ App-level surfaces such as the [Toast](/docs/components/toast) viewport are
 ordinary elements rendered last at the app root. A dialog or drawer veil is
 anchored at window coordinates, so a dialog mounted inside a scroll container
 still paints at the window origin — a runtime limitation, not a positioning
-choice.
+choice. Where a layer sits once painted — `side`, `align`, the offsets and the
+measured corrections — is [Overlay placement](/docs/overlay-placement).
 
 Open overlays push one dismiss stack. Escape or an outside press reaches only
 the topmost layer, so a popover inside a dialog closes first; a modal adds the

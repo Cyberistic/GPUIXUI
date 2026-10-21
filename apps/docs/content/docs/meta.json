@@ -10,6 +10,7 @@
     "architecture",
     "component-api",
     "accessibility",
+    "overlay-placement",
     "events",
     "async-data",
     "capabilities",

@@ -182,6 +182,20 @@
  * `keyboard`/`enter key`/`arrow keys` on Component API, `cursor` on Styling,
  * `hotkey` on Keycap, and the `on*` prop names on Component API's shared host
  * props table — the Events page explains the object those props receive.
+ *
+ * Plan 636 adds the placement vocabulary: `placement`, `positioning`, `side`,
+ * `align`, the four offset and collision spellings, `flip`, `snap`, `fit`,
+ * `off screen`, `near the edge`, `anchor point`, `reposition` and
+ * `repositioning` name Overlay placement, which explains what every floating
+ * surface's `side`/`align` rows mean. `placement` and `positioning` are the
+ * words no page owned; the rest reached another page's prose. `position` stays
+ * on Styling (the CSS concept that does not exist), `anchored`/`anchor` on
+ * Native elements, `popover placement`/`tooltip placement` on their component
+ * pages, `layering`/`z-index`/`dismiss`/`outside click`/`overlay` on Component
+ * API, and `window edge` on Window. The page's own title `overlay placement` is
+ * not an alias: an alias may not shadow a page title, and the title already
+ * wins. `position` and `overlay` are pinned as exact aliases on their owners
+ * because the new page's title and its included source carry both tokens.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -451,6 +465,10 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "window resize",
       "resize window",
       "window size",
+      // The CSS concept the page documents as a `StyleDesc` field. Pinned
+      // because the placement page includes the layer source, which uses the
+      // word constantly; plan 636 keeps the exact query with the CSS owner.
+      "position",
     ],
   ],
   [
@@ -644,6 +662,34 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "outside click",
       "click outside",
       "close on outside click",
+      // The layering subject's plain word. Pinned because the Overlay placement
+      // title carries the same token (plan 636): paint order is this page's.
+      "overlay",
+    ],
+  ],
+  [
+    "/docs/overlay-placement",
+    [
+      "placement",
+      "positioning",
+      "overlay position",
+      "side",
+      "align",
+      "side offset",
+      "sideoffset",
+      "align offset",
+      "alignoffset",
+      "collision",
+      "collision padding",
+      "flip",
+      "snap",
+      "fit",
+      "off screen",
+      "offscreen",
+      "near the edge",
+      "anchor point",
+      "reposition",
+      "repositioning",
     ],
   ],
   [

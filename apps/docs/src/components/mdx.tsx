@@ -92,6 +92,12 @@ import {
   EventPayloadTables,
   WindowEventTable,
 } from "./event-tables";
+import {
+  LayerMapping,
+  PlacementAbsences,
+  PlacementMatrix,
+  PlacementProps,
+} from "./placement-tables";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -177,6 +183,10 @@ export function getMDXComponents(components?: MDXComponents) {
     EventPayloadTables,
     WindowEventTable,
     EventAbsences,
+    PlacementProps,
+    LayerMapping,
+    PlacementMatrix,
+    PlacementAbsences,
     ...components,
   } satisfies MDXComponents;
 }

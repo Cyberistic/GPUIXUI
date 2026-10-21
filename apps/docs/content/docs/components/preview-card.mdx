@@ -104,6 +104,10 @@ medium elevation. A custom theme changes it with no code change.
 - Open and close delays are the component's UI timers, not domain time or motion
   tokens; pass `0` for tests or a dense UI.
 - An outside press closes the card but does not restore focus, matching Popover.
+- Placement is passed straight to GPUix's layer: `align="center"` is half a card
+  short of the trigger's centre and the card does not flip away from a window
+  edge. [Overlay placement](/docs/overlay-placement) explains both defects and
+  which components correct them.
 
 ## Dependencies
 

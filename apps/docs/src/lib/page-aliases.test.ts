@@ -87,6 +87,13 @@ import { source } from "./source";
  * on Component API, `managed runtime` on Architecture, `fetch` on Security and
  * `debounce` on Testing's clock section, because the async page links those
  * owners rather than claiming their words.
+ *
+ * Plan 636 adds the placement vocabulary: `placement`, `positioning`, `side`,
+ * `align`, the offset and collision spellings, `flip`, `snap`, `fit`,
+ * `off screen`, `near the edge`, `anchor point` and `reposition` name Overlay
+ * placement. The regression rows pin `position` to Styling, `anchored`/`anchor`
+ * to Native elements, the per-component placement phrases to their pages and
+ * the layering words to Component API, so the new table cannot steal them.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -694,6 +701,30 @@ const owned = [
   ["window key", "/docs/events"],
   ["window keys", "/docs/events"],
   ["window key events", "/docs/events"],
+  // Plan 636: the placement model. The regression rows below keep the CSS
+  // concept, the anchored element and the per-component phrases with their
+  // owners; the page's title covers `overlay placement` and is not an alias.
+  ["placement", "/docs/overlay-placement"],
+  ["positioning", "/docs/overlay-placement"],
+  ["overlay placement", "/docs/overlay-placement"],
+  ["overlay position", "/docs/overlay-placement"],
+  ["side", "/docs/overlay-placement"],
+  ["align", "/docs/overlay-placement"],
+  ["side offset", "/docs/overlay-placement"],
+  ["sideoffset", "/docs/overlay-placement"],
+  ["align offset", "/docs/overlay-placement"],
+  ["alignoffset", "/docs/overlay-placement"],
+  ["collision", "/docs/overlay-placement"],
+  ["collision padding", "/docs/overlay-placement"],
+  ["flip", "/docs/overlay-placement"],
+  ["snap", "/docs/overlay-placement"],
+  ["fit", "/docs/overlay-placement"],
+  ["off screen", "/docs/overlay-placement"],
+  ["offscreen", "/docs/overlay-placement"],
+  ["near the edge", "/docs/overlay-placement"],
+  ["anchor point", "/docs/overlay-placement"],
+  ["reposition", "/docs/overlay-placement"],
+  ["repositioning", "/docs/overlay-placement"],
 ] as const;
 
 const regressions = [
@@ -786,6 +817,18 @@ const regressions = [
   ["onClick", "/docs/component-api#shared-host-props"],
   ["onKeyDown", "/docs/component-api#shared-host-props"],
   ["scrollbar", "/docs/components/scroll-area"],
+  // Plan 636: the placement page explains side/align, not the CSS concept, the
+  // anchored element, a component's own placement phrase or the paint order.
+  ["position", "/docs/styling"],
+  ["anchored", "/docs/native-elements"],
+  ["anchor", "/docs/native-elements"],
+  ["popover placement", "/docs/components/popover"],
+  ["tooltip placement", "/docs/components/tooltip"],
+  ["layering", "/docs/component-api#layering"],
+  ["z-index", "/docs/component-api#layering"],
+  ["overlay", "/docs/component-api"],
+  ["drawer", "/docs/components/drawer"],
+  ["window edge", "/docs/window"],
 ] as const;
 
 describe(

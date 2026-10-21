@@ -1528,6 +1528,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the element-defined pointer field, which reached Countdown before plan 635",
     },
+    {
+      query: "sideOffset",
+      expected: "/docs/overlay-placement",
+      first: true,
+      what: "the placement prop every floating surface accepts, which reached Preview card before plan 636",
+    },
+    {
+      query: "flip",
+      expected: "/docs/overlay-placement",
+      first: true,
+      what: "the placement correction, which reached Context menu's limitations before plan 636",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(
