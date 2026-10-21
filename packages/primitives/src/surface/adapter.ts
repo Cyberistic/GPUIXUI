@@ -41,6 +41,7 @@ const SurfaceOperation = Schema.Literals([
   "create",
   "resize",
   "focus",
+  "blur",
   "setVisible",
   "setTheme",
   "destroy",
@@ -85,12 +86,19 @@ export const surfaceError = (
  *
  * `create` receives the leaf once; every later call may arrive only after it
  * resolved. `destroy` is idempotent and must be safe after a failed `create`.
+ *
+ * Focus is a pair: `focus` says the host took native focus and `blur` says the
+ * host lost the focus `focus` reported. A surface that never took focus is
+ * never blurred.
  */
 export interface SurfaceAdapter {
   readonly kind: string;
   readonly create: (host: SurfaceHost) => Effect.Effect<void, SurfaceError>;
   readonly resize: (bounds: SurfaceBounds) => Effect.Effect<void, SurfaceError>;
+  /** The host took native focus (plan `696`). */
   readonly focus: () => Effect.Effect<void, SurfaceError>;
+  /** The host lost the native focus `focus` reported (plan `811`). */
+  readonly blur: () => Effect.Effect<void, SurfaceError>;
   readonly setVisible: (visible: boolean) => Effect.Effect<void, SurfaceError>;
   readonly setTheme: (mode: ThemeMode) => Effect.Effect<void, SurfaceError>;
   readonly destroy: () => Effect.Effect<void, SurfaceError>;

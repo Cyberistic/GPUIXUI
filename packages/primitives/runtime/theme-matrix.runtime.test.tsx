@@ -77,6 +77,7 @@ const NO_PIXELS: SurfaceAdapter = {
   create: () => Effect.void,
   resize: () => Effect.void,
   focus: () => Effect.void,
+  blur: () => Effect.void,
   setVisible: () => Effect.void,
   setTheme: () => Effect.void,
   destroy: () => Effect.void,

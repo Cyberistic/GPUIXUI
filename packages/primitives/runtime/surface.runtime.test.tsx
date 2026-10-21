@@ -9,13 +9,16 @@
  *
  * A session swap has its own case: a new adapter must not create its session
  * until the old one's `destroy` has finished, because both target the same host
- * element (plan `699`).
+ * element (plan `699`). The focus contract is a pair — the adapter is told when
+ * the host gains native focus and when it loses the focus it was given, so an
+ * embedded view can release it (plan `811`).
  */
 
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
+  Input,
   Surface as SurfacePrimitive,
   SurfaceError,
   rasterSurface,
@@ -47,6 +50,7 @@ const recorder = (): Recorded => {
     resize: (bounds: SurfaceBounds) =>
       Effect.sync(() => calls.push(`resize:${bounds.width}x${bounds.height}`)),
     focus: () => Effect.sync(() => calls.push("focus")),
+    blur: () => Effect.sync(() => calls.push("blur")),
     setVisible: (visible: boolean) =>
       Effect.sync(() => calls.push(`visible:${visible}`)),
     setTheme: (mode) => Effect.sync(() => calls.push(`theme:${mode}`)),
@@ -164,6 +168,68 @@ describe("Surface", () => {
     expect(Option.isSome(shadow)).toBe(true);
 
     expect(calls).toContain("focus");
+  });
+
+  it("tells the adapter when the host loses the focus it was given", async () => {
+    const runtime = await openWindow();
+    const { calls, adapter } = recorder();
+    const still = recorder();
+    runtime.render(
+      <Frame>
+        <SurfacePrimitive
+          adapter={adapter}
+          width={120}
+          height={80}
+          label="Focusable"
+          tabIndex={0}
+          testId="raster"
+        />
+        <SurfacePrimitive
+          adapter={still.adapter}
+          width={40}
+          height={20}
+          label="Static"
+          testId="static"
+        />
+        <Input label="After" testId="after" />
+      </Frame>,
+    );
+    await awaitFrame(
+      () => calls.includes("theme:light"),
+      "the surface session",
+    );
+    runtime.focusNext();
+    await awaitFrame(() => calls.includes("focus"), "the adapter focus");
+    expect(Option.getOrUndefined(runtime.focused())).toBe("raster");
+
+    runtime.focusNext();
+    await awaitFrame(
+      () => Option.getOrUndefined(runtime.focused()) === "after",
+      "focus on the next control",
+    );
+    await awaitFrame(() => calls.includes("blur"), "the adapter blur");
+    const ring = Option.flatMap(runtime.element("raster"), (found) =>
+      Option.fromNullishOr(found.style.boxShadow),
+    );
+    expect(Option.isNone(ring)).toBe(true);
+    expect(calls.slice(-1)).toStrictEqual(["blur"]);
+
+    runtime.focusNext();
+    await awaitFrame(
+      () => Option.getOrUndefined(runtime.focused()) === "raster",
+      "focus back on the surface",
+    );
+    await awaitFrame(
+      () => calls.lastIndexOf("focus") > calls.lastIndexOf("blur"),
+      "a second adapter focus",
+    );
+
+    expect(still.calls).toStrictEqual([
+      "create",
+      "resize:40x20",
+      "visible:true",
+      "theme:light",
+    ]);
   });
 
   it("resizes and re-themes a live session", async () => {
@@ -463,6 +529,7 @@ describe("Surface", () => {
       create: () => Effect.sync(() => calls.push(`${name}:create`)),
       resize: () => Effect.sync(() => calls.push(`${name}:resize`)),
       focus: () => Effect.void,
+      blur: () => Effect.void,
       setVisible: () => Effect.void,
       setTheme: () => Effect.void,
       destroy: () =>

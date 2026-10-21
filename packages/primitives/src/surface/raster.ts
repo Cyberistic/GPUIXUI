@@ -137,6 +137,9 @@ export const rasterSurface = (
         bounds = Option.some(nextBounds);
       }),
     focus: () => Effect.void,
+    // A frame has no focus state: the pair exists so a raster adapter is a
+    // complete implementation of the contract (plan `811`).
+    blur: () => Effect.void,
     setVisible: () => Effect.void,
     setTheme: (nextMode) =>
       Effect.gen(function* () {

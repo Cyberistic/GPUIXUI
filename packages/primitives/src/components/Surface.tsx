@@ -160,7 +160,10 @@ export const renderSurface = ({
  * `setVisible(false) → destroy`. A later bounds change resizes, a theme-mode
  * change re-themes (a raster adapter repaints), and a new adapter destroys the
  * old session first — the next `create` waits for that `destroy` to finish, so
- * two sessions never own the one host element at the same time. The authored
+ * two sessions never own the one host element at the same time. Focus is a pair:
+ * the adapter hears `focus` when the host takes native focus and `blur` when it
+ * loses the focus it was given, so a view that owns the inside of the box can
+ * release it (plan `811`). The authored
  * size is normalised to whole, non-negative logical pixels — the box the host
  * paints and the bounds every adapter call receives (plan `697`). The surface is
  * presentational: a static surface exposes one named image node; a `tabIndex`
@@ -185,6 +188,8 @@ export const Surface = ({
   const focus = useFocus();
   const focusRef = useRef(false);
   const live = useRef(false);
+  /** Whether the adapter was told the host is focused, so `blur` is earned. */
+  const adapterFocused = useRef(false);
   const bounds = surfaceBounds({ width, height });
   const boundsRef = useRef<SurfaceBounds>(bounds);
   const modeRef = useRef(theme.mode);
@@ -246,6 +251,7 @@ export const Surface = ({
     gate.current = Option.some(completed);
 
     live.current = false;
+    adapterFocused.current = false;
     const session = Option.match(previous, {
       onNone: () => Effect.void,
       onSome: (pending) => Deferred.await(pending),
@@ -256,7 +262,15 @@ export const Surface = ({
       Effect.andThen(Effect.suspend(() => adapter.setTheme(modeRef.current))),
       Effect.andThen(
         Effect.suspend(() =>
-          focusRef.current ? adapter.focus() : Effect.void,
+          focusRef.current
+            ? adapter.focus().pipe(
+                Effect.tap(() =>
+                  Effect.sync(() => {
+                    adapterFocused.current = true;
+                  }),
+                ),
+              )
+            : Effect.void,
         ),
       ),
       Effect.tap(() =>
@@ -272,6 +286,7 @@ export const Surface = ({
 
     return () => {
       live.current = false;
+      adapterFocused.current = false;
       appliedBounds.current = Option.none();
       appliedMode.current = Option.none();
       Effect.runFork(Fiber.interrupt(fiber));
@@ -310,8 +325,10 @@ export const Surface = ({
   }, [adapter, revision]);
 
   useEffect(() => {
-    if (!focus.focused || !live.current) return;
-    run(adapter.focus());
+    if (!live.current) return;
+    if (focus.focused === adapterFocused.current) return;
+    adapterFocused.current = focus.focused;
+    run(focus.focused ? adapter.focus() : adapter.blur());
   }, [adapter, focus.focused]);
 
   useEffect(() => {

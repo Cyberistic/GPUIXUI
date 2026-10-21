@@ -198,7 +198,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 178/178
+`[x]` `[████████████]` 179/179
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1819,6 +1819,19 @@ retired once both branches are one
       offline + a 50-case native matrix, three mutation directions failing
       20 / 2 / 14 cases by name; the 27 "not announced" doc lines corrected
       (offline 75 files / 1110 tests, runtime 78 → 79 files / 1081 tests).
+
+`[x]` `packages/primitives`: **a surface adapter was told when the host gained
+      focus and never when it lost it** — measured: after `Tab` moved off a
+      focusable `Surface` its ring was gone (`focus.focused` false) while the
+      adapter's last recorded operation was still `focus`, so a view that owns
+      the inside of the box could never release a caret, an IME session or a
+      repaint loop. `SurfaceAdapter` gains a required `blur`, `SurfaceOperation`
+      names it, `rasterSurface` implements it as `Effect.void`, and the component
+      sends it on the one focus edge it already tracks — never to a session that
+      was not given focus, and never before `create`; unmount is `destroy`.
+      1 native case (the old one-way edge times out at "the adapter blur") and
+      the compile direction (`check-types` rejects a missing member); plan `811`;
+      offline unchanged at 75 files / 1110 tests, `surface` 10/10.
 
 `[x]` `packages/primitives` + `packages/icons`: **a blank icon label created an
       unnamed image** — `Icon` promoted any present `label` to `role="img"`, so

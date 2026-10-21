@@ -35,6 +35,7 @@ const adapter = (): SurfaceAdapter => ({
   create: () => Effect.void,
   resize: (_bounds: SurfaceBounds) => Effect.void,
   focus: () => Effect.void,
+  blur: () => Effect.void,
   setVisible: (_visible: boolean) => Effect.void,
   setTheme: (_mode) => Effect.void,
   destroy: () => Effect.void,

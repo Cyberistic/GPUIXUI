@@ -87,7 +87,7 @@ A timer still belongs to the consumer: drive `revision` from your own state.
 
 ## The adapter contract
 
-An adapter is six effectful methods. Every failure is a typed `SurfaceError`
+An adapter is seven effectful methods. Every failure is a typed `SurfaceError`
 naming the operation that failed.
 
 | Member | Purpose |
@@ -96,16 +96,22 @@ naming the operation that failed.
 | `create(host)` | Take the leaf once; `host.setPixels` is the raster path |
 | `resize(bounds)` | Repaint or reflow for a new logical box |
 | `focus()` | Route host focus into the surface |
+| `blur()` | Release the focus `focus()` was given (plan `811`) |
 | `setVisible(visible)` | Occlusion, not unmount |
 | `setTheme(mode)` | Hand over the named mode; never a token colour |
 | `destroy()` | Idempotent; safe after a failed `create` |
 
 The component drives `create → resize → setVisible(true) → setTheme` on mount,
 `resize` on a bounds change, `setTheme` on a mode change, and
-`setVisible(false) → destroy` on unmount. A new adapter destroys the old session
-first, and the next `create` waits for that `destroy` to finish: both sessions
-target the same host element, so a teardown that landed inside the new session
-could release a resource the new adapter had just acquired (plan `699`).
+`setVisible(false) → destroy` on unmount. Focus is a pair: `focus()` runs when
+the host takes native focus and `blur()` when it loses the focus it was given,
+so an embedded view can release a caret, an IME session or a repaint loop. A
+surface that never took focus is never blurred; `destroy()` is the terminal
+state, so unmounting while focused does not blur first. A new adapter destroys
+the old session first, and the next `create` waits for that `destroy` to finish:
+both sessions target the same host element, so a teardown that landed inside the
+new session could release a resource the new adapter had just acquired (plan
+`699`).
 
 `rasterSurface` calls `paint(bounds, { mode })` on every resize and on a real
 mode change. A frame whose dimensions or byte count do not match the box fails
@@ -162,11 +168,11 @@ between the painted box and the adapter's bounds.
 ## Keyboard
 
 Not focusable by default. `tabIndex` makes the root a named `group` tab stop
-(the image inside becomes decorative), routes native focus to `adapter.focus()`,
-and paints the theme's focus ring — the release runtime dispatches no focus
-events, so the tracker drives it too. There is no interior keyboard contract:
-the raster surface is a picture, and a future native view owns its own input
-routing.
+(the image inside becomes decorative), routes native focus to `adapter.focus()`
+and losing it to `adapter.blur()`, and paints the theme's focus ring — the
+release runtime dispatches no focus events, so the tracker drives it too. There
+is no interior keyboard contract: the raster surface is a picture, and a future
+native view owns its own input routing.
 
 A focusable surface is also a **`Tooltip` trigger** (above): it forwards the
 slot's pointer and key handlers, and the tip becomes the group's
@@ -216,7 +222,7 @@ consumer and closes over them.
 ## Verification
 
 The lifecycle and the real raster path are proven in
-`runtime/surface.runtime.test.tsx` (9 cases):
+`runtime/surface.runtime.test.tsx` (10 cases):
 
 - `creates, sizes, shows and themes one session, then destroys it`
 - `resizes and re-themes a live session`
@@ -226,6 +232,7 @@ The lifecycle and the real raster path are proven in
 - `repaints on a revision without rebuilding the session`
 - `finishes the old adapter's teardown before creating the next session`
 - `routes native focus into the adapter when the host is a tab stop`
+- `tells the adapter when the host loses the focus it was given`
 - `reports a typed failure without unmounting the host`
 
 The box rule is unit-tested in `src/surface/bounds.test.ts`; the frame-shape and
