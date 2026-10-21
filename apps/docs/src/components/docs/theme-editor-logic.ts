@@ -5,6 +5,8 @@ import {
   type ContrastFailure,
   type DecorativeFailure,
   type InvalidColorRole,
+  type SeriesDistinctnessFailure,
+  type SeriesSurfaceFailure,
   type Theme,
   type ThemeAudit,
   type ThemeMode,
@@ -95,14 +97,15 @@ export const resolveTheme = (mode: ThemeMode, edits: TokenEdits): Theme =>
 /**
  * The whole theme contract for an edit, as the library's own gate reports it: a
  * role the renderer cannot paint, a text pair below its floor, a decorative
- * surface too close to what it sits on. `auditTheme` reads all three in one
- * call, so the editor cannot show one report and leave the other two silent.
+ * surface too close to what it sits on, a data-series colour too close to its
+ * plot or to its neighbour. `auditTheme` reads all four in one call, so the
+ * editor cannot show some reports and leave the others silent.
  */
 export const auditReport = (mode: ThemeMode, edits: TokenEdits): ThemeAudit =>
   auditTheme(resolveTheme(mode, edits));
 
-/** Which of the audit's three reports a finding came from. */
-export type AuditKind = "role" | "contrast" | "decorative";
+/** Which of the audit's four reports a finding came from. */
+export type AuditKind = "role" | "contrast" | "decorative" | "series";
 
 /** One audit finding, already worded for the readout. */
 export interface AuditFinding {
@@ -136,6 +139,26 @@ export const formatDecorativeFailure = ({
 export const formatInvalidRole = ({ role, value }: InvalidColorRole): string =>
   `${role} — ${JSON.stringify(value)} is not a colour GPUix can paint`;
 
+/** A series colour too close to a plot surface, e.g. `card: series 2 — 1.14:1 (needs 3:1)`. */
+export const formatSeriesSurfaceFailure = ({
+  index,
+  surface,
+  ratio,
+  floor,
+}: SeriesSurfaceFailure): string =>
+  `${surface}: series ${index + 1} — ${measured(ratio, floor)}`;
+
+/** Two series colours a reader cannot tell apart. */
+export const formatSeriesDistinctnessFailure = ({
+  index,
+  other,
+  distance,
+  floor,
+}: SeriesDistinctnessFailure): string =>
+  `series ${index + 1} and series ${other + 1} — ${
+    distance === undefined ? "unmeasurable" : distance.toFixed(3)
+  } apart (needs ${floor})`;
+
 /** Every finding the audit reports, in the one list the readout prints. */
 export const auditFindings = (
   report: ThemeAudit,
@@ -151,6 +174,14 @@ export const auditFindings = (
   ...report.decorative.map((failure) => ({
     kind: "decorative" as const,
     text: formatDecorativeFailure(failure),
+  })),
+  ...report.series.surfaces.map((failure) => ({
+    kind: "series" as const,
+    text: formatSeriesSurfaceFailure(failure),
+  })),
+  ...report.series.distinctness.map((failure) => ({
+    kind: "series" as const,
+    text: formatSeriesDistinctnessFailure(failure),
   })),
 ];
 

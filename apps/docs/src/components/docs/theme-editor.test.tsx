@@ -22,6 +22,7 @@ describe("the theme editor", () => {
   it("says the built-in themes pass the whole audit, not only contrast", () => {
     expect(markup).toContain("every role paints");
     expect(markup).toContain("every decorative surface stays visible");
+    expect(markup).toContain("every data-series colour separates");
   });
 
   it("renders one control per editable role", () => {

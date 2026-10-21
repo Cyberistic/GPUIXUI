@@ -73,6 +73,7 @@ describe("the theme page", () => {
 
     expect(audit).toContain("auditTheme");
     expect(audit).toContain("decorativeFailures");
+    expect(audit).toContain("seriesFailures");
     expect(audit).toContain("cannot paint");
     expect(audit).toContain("localStorage");
   });

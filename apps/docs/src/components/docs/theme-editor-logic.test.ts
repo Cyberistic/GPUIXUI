@@ -1,4 +1,4 @@
-import { createTheme, themes } from "@gpuixui/tokens";
+import { auditTheme, createTheme, extendTheme, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
   auditFindings,
@@ -182,5 +182,30 @@ describe("theme-editor audit readout", () => {
     expect(findings.map((finding) => finding.text)).toEqual([
       'primary — "#12345" is not a colour GPUix can paint',
     ]);
+  });
+
+  it("reports a data series an edit breaks, which neither contrast nor decorative sees", () => {
+    // The editor does not edit the scale, so this arrives through the theme the
+    // audit resolves — a brand theme can carry one. The readout claims the whole
+    // audit, so a series line it dropped would make a pass mean less than it says.
+    const brand = extendTheme(themes.dark, {
+      series: ["#11141A", "#11141A", "#67D4E8", "#6FE0A3", "#FFC94D"],
+    });
+    const findings = auditFindings(auditTheme(brand)).filter(
+      (finding) => finding.kind === "series",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual(
+      expect.arrayContaining([
+        "background: series 1 — 1.00:1 (needs 3:1)",
+        "series 1 and series 2 — 0.000 apart (needs 0.06)",
+      ]),
+    );
+
+    // The other two colour reports are silent on the same theme, so only the
+    // series line can fail the gate — and it does.
+    const audit = auditTheme(brand);
+    expect([...audit.contrast, ...audit.decorative]).toEqual([]);
+    expect(audit.passed).toBe(false);
   });
 });

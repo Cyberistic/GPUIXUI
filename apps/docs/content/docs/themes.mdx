@@ -33,7 +33,7 @@ cannot. The bridge exists only for this preview.
 The readout under the preview runs `auditTheme` on the theme the edits resolve to
 — the same gate `@gpuixui/tokens` tells a theme author to run before shipping, so
 an edit is measured against exactly the contract the library holds itself to. One
-call reports three independent failures:
+call reports four independent failures:
 
 - **Roles** the renderer cannot paint. GPUix ignores a colour string it cannot
   parse and keeps the previous value or paints black, so the editor names the role
@@ -47,16 +47,23 @@ call reports three independent failures:
   edges carry no text, so WCAG gives them no floor at all. `decorativeFailures`
   holds them to 1.05:1 against the surface they sit on — editing `border` towards
   `background` is how a card loses its edge, and no contrast pair would see it.
+- **Data series**: `seriesFailures` measures the five categorical colours a chart
+  paints against the three surfaces a plot is drawn on (`background`, `card`,
+  `popover`) at the boundary floor, and each pair against `seriesDistinctnessFloor`
+  in OKLab — a blue and a violet of one lightness pass contrast and still read as
+  one series. The editor does not edit the scale, so an edit cannot break it; the
+  readout reports it because `auditTheme` does, and a line that only appears for
+  some themes would make a passing readout mean less than it says.
 
 The same role check guards the URL and `localStorage`: a persisted state that
 carries a value the renderer cannot paint is rejected, and the editor falls back to
 the built-in themes instead of restoring an edit that would paint black in
-silence. A theme that merely misses a contrast or decorative floor is a design
-choice the readout reports, not a malformed state.
+silence. A theme that merely misses a contrast, decorative or series floor is a
+design choice the readout reports, not a malformed state.
 
 ## Copy theme
 
 **Copy theme** emits a `createTheme` module — one theme per mode — in the exact
 format `@gpuixui/tokens` consumes, plus a one-line usage note. Running the same
-audit on the result is up to the consumer; `auditTheme`, `contrastFailures` and
-`decorativeFailures` are public for exactly that.
+audit on the result is up to the consumer; `auditTheme`, `contrastFailures`,
+`decorativeFailures` and `seriesFailures` are public for exactly that.

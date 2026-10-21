@@ -212,7 +212,8 @@ export function ThemeEditor() {
         {findings.length === 0 ? (
           <p>
             Passes the library audit: every role paints, every text pair clears
-            its floor, every decorative surface stays visible.
+            its floor, every decorative surface stays visible, and every
+            data-series colour separates from its plot and its neighbours.
           </p>
         ) : (
           <>
