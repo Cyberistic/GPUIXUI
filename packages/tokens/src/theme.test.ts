@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
+import { auditTheme, almostBrandTheme } from "./theme-audit.example.js";
 import { resolveTheme } from "./high-contrast.example.js";
 import { densityPresets, type BoxShadow } from "./index.js";
 import {
@@ -164,7 +165,7 @@ describe("brand example", () => {
   it("extends the dark theme with a brand palette and compact density", () => {
     expect(brandTheme.mode).toBe("dark");
     expect(brandTheme.name).toBe("Acme");
-    expect(brandTheme.colors.primary).toBe("#7C5CFF");
+    expect(brandTheme.colors.primary).toBe("#6A45F0");
     expect(brandTheme.colors.background).toBe(darkTheme.colors.background);
     expect(brandTheme.radius.md).toBe(8);
     expect(brandTheme.radius.lg).toBe(lightTheme.radius.lg);
@@ -175,5 +176,24 @@ describe("brand example", () => {
     expect(brandLightTheme.mode).toBe("light");
     expect(brandLightTheme.name).toBe("Acme Light");
     expect(brandLightTheme.colors.primary).toBe("#6A45F0");
+  });
+});
+
+describe("theme audit example", () => {
+  it("passes both checks for the documented brand theme", () => {
+    expect(auditTheme(brandTheme)).toEqual({
+      invalidRoles: [],
+      contrastFailures: [],
+    });
+    expect(auditTheme(brandLightTheme)).toEqual({
+      invalidRoles: [],
+      contrastFailures: [],
+    });
+  });
+
+  it("names a misspelt fill rather than letting it paint black", () => {
+    expect(auditTheme(almostBrandTheme).invalidRoles).toEqual([
+      { role: "primary", value: "#7C5CF" },
+    ]);
   });
 });

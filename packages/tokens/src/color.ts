@@ -526,3 +526,38 @@ export const colorRoles = [
   "scrollbar",
   "shadow",
 ] as const satisfies readonly (keyof ThemeColors)[];
+
+/** A semantic role whose value is not a colour GPUix can paint. */
+export interface InvalidColorRole {
+  /** The role, in documentation order. */
+  readonly role: keyof ThemeColors;
+  /** The value the theme carries. */
+  readonly value: string;
+}
+
+/**
+ * Every semantic role whose value is not a colour GPUix can paint.
+ *
+ * The runtime ignores a colour string it cannot parse: the property keeps its
+ * previous value or paints black, so a typo in a brand theme fails silently.
+ * This is the check that makes it visible. Six- and eight-digit hex are both
+ * valid — the alpha byte is how `selection` and `overlay` are translucent — and
+ * a role that is missing from a hand-built theme literal is reported too,
+ * because the runtime cannot paint what is not there.
+ *
+ * @example
+ * ```ts
+ * import { invalidColorRoles } from "@gpuixui/tokens";
+ *
+ * invalidColorRoles({ colors: { ...lightColors, primary: "#7C5CF" } });
+ * // [{ role: "primary", value: "#7C5CF" }]
+ * ```
+ */
+export function invalidColorRoles(theme: {
+  readonly colors: ThemeColors;
+}): readonly InvalidColorRole[] {
+  return colorRoles.flatMap((role) => {
+    const value = theme.colors[role];
+    return hexColor.test(value) ? [] : [{ role, value }];
+  });
+}

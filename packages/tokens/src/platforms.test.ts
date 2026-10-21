@@ -10,7 +10,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { contrastFloors, contrastPairs, contrastRatio } from "./contrast.js";
+import { invalidColorRoles } from "./color.js";
+import {
+  contrastFailures,
+  contrastFloors,
+  contrastPairs,
+  contrastRatio,
+} from "./contrast.js";
 import {
   currentPlatform,
   platformStyles,
@@ -213,12 +219,20 @@ describe("editing a platform style", () => {
   it("keeps the platform look and overrides only what it names", () => {
     const house = resolveHouseTheme("light");
     expect(house.name).toBe("House");
-    expect(house.colors.primary).toBe("#7C5CFF");
+    expect(house.colors.primary).toBe("#6A45F0");
     expect(house.colors.card).toBe(
       platformTheme(lightTheme, "win32").colors.card,
     );
     expect(house.radius.md).toBe(6);
     expect(house.radius.sm).toBe(platformStyles.win32.radius.sm);
+  });
+
+  it("keeps the edited theme readable in both modes", () => {
+    // A brand fill arrives with its own on-colour; the platform's base
+    // foreground was designed for a fill the house theme no longer paints.
+    expect(invalidColorRoles(resolveHouseTheme("dark"))).toEqual([]);
+    expect(contrastFailures(resolveHouseTheme("light"))).toEqual([]);
+    expect(contrastFailures(resolveHouseTheme("dark"))).toEqual([]);
   });
 
   it("layers density over the platform's own preset", () => {

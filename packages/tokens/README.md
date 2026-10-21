@@ -76,13 +76,20 @@ const shadow = elevationShadow(theme, "md");
 theme. Neither mutates its base. Typography merges field by field, elevation
 levels replace whole arrays, and the mode is not overridable.
 
+A brand that changes a fill owns its **on-colour** too: the dark base pairs a
+light fill with dark text, so a saturated brand violet needs a white label.
+
 ```ts
 import { createTheme } from "@gpuixui/tokens";
 
 export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
-  colors: { primary: "#7C5CFF", ring: "#9B8CFF" },
+  colors: {
+    primary: "#6A45F0",
+    primaryForeground: "#FFFFFF",
+    ring: "#9B8CFF",
+  },
   radius: { md: 8 },
   density: "compact",
 });
@@ -209,7 +216,11 @@ import { extendTheme, platformStyles, platformTheme, themes } from "@gpuixui/tok
 platformStyles.darwin.colors.dark.primary; // "#0A84FF"
 
 const house = extendTheme(platformTheme(themes.dark, "win32"), {
-  colors: { primary: "#7C5CFF" },
+  colors: {
+    primary: "#6A45F0",
+    primaryForeground: "#FFFFFF",
+    ring: "#8A6EFF",
+  },
   radius: { md: 6 },
 });
 ```
@@ -217,22 +228,30 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
 A runnable example lives in
 [`src/platforms.example.ts`](./src/platforms.example.ts).
 
-## Checking contrast
+## Checking a theme
 
-`contrastRatio(foreground, background)` is the WCAG 2.1 ratio for two opaque
-`#RRGGBB` colours, and `undefined` when either is translucent or not hex — a
-translucent colour's ratio depends on what is behind it. `contrastFloors`,
-`highContrastFloors` and `contrastPairs` are the contract the shipped themes meet,
-so a brand can run the same check.
+Two public checks cover what a browser build gets from CSS validation and lint:
+
+- `invalidColorRoles(theme)` lists every role whose value is not a hex colour
+  GPUix can paint. The runtime **ignores** a value it cannot parse, so a typo
+  paints black instead of failing — this is the warning that makes it visible.
+- `contrastFailures(theme, floors?)` lists every text-on-surface pair that
+  misses its floor, including one it cannot measure because a value is
+  translucent.
 
 ```ts
-import { contrastFailures, createTheme } from "@gpuixui/tokens";
+import { contrastFailures, invalidColorRoles } from "@gpuixui/tokens";
 
-const brand = createTheme({ mode: "dark", colors: { primary: "#7C5CFF" } });
-const failures = contrastFailures(brand);
-// [] — the theme is readable. Otherwise each entry names both roles, the
-// measured ratio and the floor it missed.
+invalidColorRoles(brandTheme); // [] — every role is paint-ready
+contrastFailures(brandTheme); // [] — every measured pair meets its floor
+// Otherwise each entry names both roles, the measured ratio and the floor.
 ```
+
+`contrastRatio(foreground, background)` is the WCAG 2.1 ratio behind the second
+check — `undefined` for a translucent or non-hex value rather than a guess.
+`contrastFloors` / `highContrastFloors` and `contrastPairs` are the contract the
+shipped themes meet, so a brand is held to the same pairs rather than a second
+set. See [`src/theme-audit.example.ts`](./src/theme-audit.example.ts).
 
 ## Fonts
 

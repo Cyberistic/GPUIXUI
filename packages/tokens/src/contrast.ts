@@ -105,9 +105,17 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "foreground", background: "card", floor: "body" },
   { foreground: "cardForeground", background: "card", floor: "body" },
   { foreground: "popoverForeground", background: "popover", floor: "body" },
+  { foreground: "inputForeground", background: "input", floor: "body" },
   {
     foreground: "mutedForeground",
-    background: "muted",
+    background: "background",
+    floor: "secondary",
+  },
+  { foreground: "mutedForeground", background: "card", floor: "secondary" },
+  { foreground: "mutedForeground", background: "muted", floor: "secondary" },
+  {
+    foreground: "mutedForeground",
+    background: "popover",
     floor: "secondary",
   },
   {

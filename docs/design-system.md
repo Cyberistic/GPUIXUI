@@ -220,7 +220,9 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
 | body text on background/card/popover | 7:1 | 7:1 |
-| secondary text, on-colour text, placeholder | 4.5:1 | 7:1 |
+| text typed into an input, on `input` | 7:1 | 7:1 |
+| secondary text on background/card/muted/popover | 4.5:1 | 7:1 |
+| on-colour text, placeholder | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | focus ring and essential boundaries | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
@@ -230,7 +232,15 @@ The test runs for every shipped colour set — light, dark, both high-contrast
 variants and all six platform themes — and is part of the normal test suite. It
 can fail: a palette edit that reduces contrast fails the gate.
 
-The contract is public, so a brand theme runs the same check:
+A value the renderer cannot paint is the other silent failure: GPUix ignores a
+colour string it cannot parse, so a typo keeps the property's previous value or
+paints black. `invalidColorRoles(theme)` reports every role that is not a 6- or
+8-digit hex colour, and it is what found the documented brand example pairing a
+saturated violet with the dark theme's near-black on-colour — 4.24:1, below the
+floor. The example now ships a white label with its violet, and the audit runs
+over it in `theme.test.ts`.
+
+The contract is public, so a brand theme runs the same checks:
 `contrastRatio(foreground, background)` measures two opaque roles, and
 `contrastPairs` with `contrastFloors` / `highContrastFloors` names the pairs and
 the floors. Nothing about the requirement is private to this repo.
@@ -262,7 +272,7 @@ design system cannot compensate for a missing role.
 | no OS appearance query | the app owns the mode |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are objects, not CSS strings |
-| invalid colour strings are ignored per property | a typo paints the previous/black value; tests restrict roles to hex |
+| invalid colour strings are ignored per property | a typo paints the previous/black value; `invalidColorRoles` reports it, and the shipped themes are held to the hex grammar by test |
 
 ## 11. Extension
 
@@ -281,6 +291,11 @@ theme can be created once at startup and shared.
 A brand may change any value but should not remove roles: every component
 expects the full role set. A brand that needs a different structure should add
 roles in the tokens package, not fork components.
+
+Overrides are plain data, so `extendTheme` cannot reject a colour the renderer
+would ignore. The audit is the gate: `invalidColorRoles` for paint-readiness and
+`contrastFailures` for readability, run over the resolved theme before it ships
+and asserted in the package's own tests.
 
 ## 12. Non-goals
 

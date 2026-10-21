@@ -14,6 +14,7 @@ import {
   darkColors,
   highContrastDarkColors,
   highContrastLightColors,
+  invalidColorRoles,
   lightColors,
   palette,
   type ThemeColors,
@@ -157,6 +158,41 @@ describe("colour roles", () => {
         expect(colors[role], `${label}.${role}`).toBeDefined();
       });
     });
+  });
+});
+
+describe("invalidColorRoles", () => {
+  it("accepts every shipped colour set", () => {
+    colourSets.forEach(({ label, colors }) => {
+      expect(invalidColorRoles({ colors }), label).toEqual([]);
+    });
+  });
+
+  it("reports a misspelt hex with its role, instead of letting it paint black", () => {
+    const typo = { colors: { ...lightColors, primary: "#7C5CF" } };
+
+    expect(invalidColorRoles(typo)).toEqual([
+      { role: "primary", value: "#7C5CF" },
+    ]);
+  });
+
+  it("reports a named colour and a short hex in role order", () => {
+    const unparseable = {
+      colors: { ...lightColors, ring: "rebeccapurple", selection: "#FFF" },
+    };
+
+    expect(invalidColorRoles(unparseable).map(({ role }) => role)).toEqual([
+      "ring",
+      "selection",
+    ]);
+  });
+
+  it("accepts a translucent value, which the renderer does paint", () => {
+    const translucent = {
+      colors: { ...lightColors, hover: "#191D2580" },
+    };
+
+    expect(invalidColorRoles(translucent)).toEqual([]);
   });
 });
 

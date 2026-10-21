@@ -32,6 +32,7 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   highContrastThemes,
+  invalidColorRoles,
   lightTheme,
   platformStyles,
   platformTheme,
@@ -44,6 +45,7 @@ import {
   type FocusRing,
   type FontRegistrar,
   type FontSource,
+  type InvalidColorRole,
   type ContrastFloors,
   type ContrastPair,
   type PlatformName,
@@ -436,10 +438,16 @@ import {
 // What the macOS style ships, visible and copyable.
 platformStyles.darwin.colors.dark.primary; // "#0A84FF"
 
-// Take the platform look and own the parts you change.
+// Take the platform look and own the parts you change. A brand that changes a
+// fill owns its on-colour too, or the platform's foreground is designed for a
+// colour it no longer paints.
 const house = extendTheme(platformTheme(themes.dark, "win32"), {
   name: "House",
-  colors: { primary: "#7C5CFF", ring: "#7C5CFF" },
+  colors: {
+    primary: "#6A45F0",
+    primaryForeground: "#FFFFFF",
+    ring: "#8A6EFF",
+  },
   radius: { md: 6, lg: 10 },
 });
 ```
@@ -448,21 +456,46 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
 
 ## Checking your own theme
 
+Two checks cover the two ways a theme fails silently. The runtime **ignores** a
+colour string it cannot parse and keeps the property's previous value or paints
+black, and nothing measures text against the surface behind it.
+
+### Paint-ready values
+
+`invalidColorRoles(theme)` returns every semantic role whose value is not a
+6- or 8-digit hex colour — the grammar GPUix can paint. An 8-digit value is
+valid: the alpha byte is how `selection` and `overlay` are translucent. A role
+missing from a hand-built theme literal is reported too, because the runtime
+cannot paint what is not there.
+
+```ts
+import { invalidColorRoles } from "@gpuixui/tokens";
+
+invalidColorRoles({ colors: { ...lightColors, primary: "#7C5CF" } });
+// [{ role: "primary", value: "#7C5CF" }]
+```
+
+### Contrast
+
 `contrastRatio(foreground, background)` is the WCAG 2.1 ratio between two opaque
 `#RRGGBB` colours, and it returns `undefined` rather than a number when either
 value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. `contrastFloors` and
-`highContrastFloors` are the floors the shipped themes meet, and `contrastPairs`
-is the role pairs they apply to. A brand theme runs the same check the built-in
-themes pass:
+— an empty array means the theme is readable. The 28 pairs cover the text role
+on each surface it can sit on: body and popover text, the text typed into an
+`input`, secondary text on `background`, `card`, `muted` and `popover`, every
+status and soft-status pair, accent and selected, the placeholder, and the
+essential boundaries and focus ring. `contrastFloors` and `highContrastFloors`
+are the floors the shipped themes meet, and `contrastPairs` is the pair table
+they apply to. A brand theme runs the same check the built-in themes pass:
 
 ```ts
-import { contrastFailures, type Theme } from "@gpuixui/tokens";
+import { contrastFailures, invalidColorRoles, type Theme } from "@gpuixui/tokens";
 
-export const isReadable = (theme: Theme): boolean =>
+export const isShippable = (theme: Theme): boolean =>
+  invalidColorRoles(theme).length === 0 &&
   contrastFailures(theme).length === 0;
 
 // A pair failure names both roles, the measured ratio and the floor:
@@ -472,6 +505,10 @@ export const isReadable = (theme: Theme): boolean =>
 A pair whose values are translucent or not hex is reported with `ratio:
 undefined` rather than skipped, because an unverifiable pair is not a pass. To
 measure one by hand, composite it first and use `contrastRatio`.
+
+`src/theme-audit.example.ts` runs both checks over a brand theme, and
+`theme.test.ts` asserts the result, so the documented brand theme is proven
+readable rather than assumed to be.
 
 ## Fonts
 
@@ -713,7 +750,11 @@ import { createTheme, extendTheme, darkTheme } from "@gpuixui/tokens";
 export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
-  colors: { primary: "#7C5CFF", ring: "#9B8CFF" },
+  colors: {
+    primary: "#6A45F0",
+    primaryForeground: "#FFFFFF",
+    ring: "#9B8CFF",
+  },
   radius: { md: 8 },
   density: "compact",
 });
@@ -722,6 +763,11 @@ export const scoped = extendTheme(darkTheme, {
   typography: { body: { fontSize: 15 } },
 });
 ```
+
+A brand that overrides a fill should override its on-colour as well. The dark
+theme pairs a light fill with dark text, so a saturated violet with the base's
+`primaryForeground` reaches only 4.24:1 — below the floor. `invalidColorRoles`
+and `contrastFailures` (below) are how that is caught before it ships.
 
 Merge rules:
 
@@ -859,12 +905,18 @@ floor (7:1 for primary body pairs, soft status text and all high-contrast text;
 essential boundaries in the default themes; 4.5:1 for them in the high-contrast
 variants). It also fails if a soft status surface is indistinguishable from
 `background` or `card` (floor 1.05:1), and if a filled action's derived hover or
-press fill drops its own label below the on-colour floor. Palette edits must keep
-it green.
+press fill drops its own label below the on-colour floor. `invalidColorRoles` is
+held to an empty result for every shipped set and to a reported role for a
+misspelt and a named value, so the audit cannot pass a value the runtime would
+ignore. Palette edits must keep all of it green.
 
 `packages/tokens/src/contrast.test.ts` covers the contract itself: the ratio maths
 (21:1 at the extremes, 1:1 for identical colours, symmetry), the refusal to
-measure a translucent or unparseable colour, and the two floor sets.
+measure a translucent or unparseable colour, the two floor sets, and that a
+break to the text inside an input or to secondary text on `background`, `card`
+or `popover` is reported by name. `theme.test.ts` runs the audit over the
+documented brand theme, so a documented brand that loses its on-colour fails the
+suite.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label, both families, a density preset and a full radius scale; `sans` is
@@ -874,7 +926,8 @@ base's mode, keeps a high-contrast theme's colours, and leaves `default` as the
 library identity. All six platform themes are held to every pair in
 `contrastPairs`. Editing one is covered through `platforms.example.ts`:
 `extendTheme` over a resolved platform keeps the platform's other values, density
-layers on top, and a role a platform omits falls back to the base theme.
+layers on top, a role a platform omits falls back to the base theme, and the
+edited theme passes the audit in both modes.
 
 `packages/tokens/src/styles.test.ts` covers the derived action fills: both are
 opaque hex, each channel moves from the action's role toward the theme's

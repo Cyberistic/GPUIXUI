@@ -102,12 +102,39 @@ describe("contrastFailures", () => {
     };
     const failures = contrastFailures(broken);
     const muted = failures.find(
-      ({ foreground }) => foreground === "mutedForeground",
+      ({ foreground, background }) =>
+        foreground === "mutedForeground" && background === "muted",
     );
 
     expect(muted?.background).toBe("muted");
     expect(muted?.floor).toBe(contrastFloors.secondary);
     expect(muted?.ratio).toBeCloseTo(1, 5);
+  });
+
+  it("measures the text typed into an input against its field", () => {
+    // An input's own foreground and fill are a pair in their own right: the
+    // field is often lighter or darker than the surface the control sits on.
+    const broken = {
+      colors: { ...lightColors, inputForeground: lightColors.input },
+    };
+    const failures = contrastFailures(broken);
+
+    expect(
+      failures.find(({ foreground }) => foreground === "inputForeground"),
+    ).toMatchObject({ background: "input", floor: contrastFloors.body });
+  });
+
+  it("measures secondary text on every surface it can sit on", () => {
+    const broken = {
+      colors: { ...lightColors, mutedForeground: lightColors.background },
+    };
+    const measured = contrastFailures(broken).map(
+      ({ foreground, background }) => `${foreground}/${background}`,
+    );
+
+    expect(measured).toContain("mutedForeground/background");
+    expect(measured).toContain("mutedForeground/card");
+    expect(measured).toContain("mutedForeground/popover");
   });
 
   it("reports an unmeasurable pair instead of skipping it", () => {

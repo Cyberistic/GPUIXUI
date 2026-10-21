@@ -32,12 +32,17 @@ export const resolveDensePlatformTheme = (
  * Take one platform's look and make it your own: read the table, override the
  * values you want to own, and ship the result. Nothing here is opaque — the
  * accent, the corner radius and the control density are the same roles every
- * component reads.
+ * component reads. A brand that changes a fill owns its on-colour too, or the
+ * base theme's foreground was designed for a fill the brand no longer paints.
  */
 export const resolveHouseTheme = (mode: ThemeMode): Theme =>
   extendTheme(platformTheme(themes[mode], "win32"), {
     name: "House",
-    colors: { primary: "#7C5CFF", ring: "#7C5CFF" },
+    colors: {
+      primary: "#6A45F0",
+      primaryForeground: "#FFFFFF",
+      ring: mode === "dark" ? "#8A6EFF" : "#6A45F0",
+    },
     radius: { md: 6, lg: 10 },
   });
 
