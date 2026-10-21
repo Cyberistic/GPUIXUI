@@ -19,7 +19,7 @@ owns each id, title and capability and imports nothing native, so `--list` and
 the argument guard run on a host with no binding; `src/scenarios/index.ts` owns
 the one `view`/`steps` implementation per id and is imported only after the
 preflight. `Record<ScenarioId, ScenarioBody>` makes a missing implementation a
-compile error. Each scenario is one capability, one view, one `steps` effect: the thirteen
+compile error. Each scenario is one capability, one view, one `steps` effect: the eleven
 core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `data-grid-fixed-header`,
@@ -922,7 +922,7 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The thirteen core capabilities (including the token gallery, the modal contract,
+- The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
   (29/29), with a written report and screenshots.
