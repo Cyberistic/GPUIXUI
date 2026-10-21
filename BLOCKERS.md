@@ -22,6 +22,14 @@ minimal reproduction; and record the outcome in `.agents/slop/plans/` either as 
 setup or as a precise, evidenced limitation with the affected components listed.
 Evidence lives in the worktree that hit it — find it there first.
 
+**Status: resolved on this box.** `@gpuix/native@0.11.0` publishes no `darwin-x64`
+binary, so `apps/playground/scripts/build-native-binding.sh` builds it from the pinned
+release commit (the binding's napi surface is version-specific) and installs it into
+`node_modules/@gpuix/native/`; it is idempotent and `GPUIX_REV` overrides the pin. The
+playground's headless suite runs **32/32** and the live suite opens a real window against
+that binding. Recipe, commands and evidence: `apps/playground/README.md` §The binding on
+this host, ADR 0003. B1 re-opens on every `@gpuix/native` bump — rerun the script.
+
 ## B2 — the swarm has no durable scheduler (it runs on a detached daemon)
 
 `scripts/swarm-supervisor.sh` + `scripts/swarm-daemon.sh` tick every 30 minutes, and
