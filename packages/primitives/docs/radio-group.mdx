@@ -3,11 +3,12 @@ title: RadioGroup
 description: One choice from a small set, with a roving tab stop and arrow navigation.
 ---
 
-`RadioGroup` is a data-driven radio group. The group owns the roving index and
-the arrow contract, so options arrive as `RadioOption[]` rather than compound
-children — a deviation from shadcn's shape recorded as decision D13 in
-`PLAN.md`. It follows the platform contract: the arrows **select and move focus
-together**, and the option that holds keyboard focus paints the ring.
+`RadioGroup` is a radio group whose options can arrive two ways: as data
+(`options: RadioOption[]`) or as `<RadioGroupItem>` children. Both are read into
+one option list, so the roving index and the arrow contract have a single path;
+the data prop is sugar for an option that carries only text. It follows the
+platform contract: the arrows **select and move focus together**, and the option
+that holds keyboard focus paints the ring.
 
 ## Usage
 
@@ -17,7 +18,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 <RadioGroup
   label="Digest cadence"
   value={cadence}
-  onChange={setCadence}
+  onValueChange={setCadence}
   options={[
     { value: "daily", label: "Daily" },
     { value: "weekly", label: "Weekly", description: "Every Monday." },
@@ -26,14 +27,40 @@ import { RadioGroup } from "@gpuixui/primitives";
 />;
 ```
 
+An option that needs more than a name and a caption is an item:
+
+```tsx
+import { Icon } from "@gpuixui/icons";
+import { RadioGroup, RadioGroupItem, Text, useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+<RadioGroup label="Shipping" value={shipping} onValueChange={setShipping}>
+  <RadioGroupItem value="standard" label="Standard">
+    <Text role="label">Standard</Text>
+    <Text role="caption" tone="muted">4–6 days</Text>
+  </RadioGroupItem>
+  <RadioGroupItem value="express" label="Express">
+    <Icon name="clock" size={theme.iconSize.sm} color={theme.colors.primary} />
+    <Text role="label">Express</Text>
+    <Text role="caption" tone="muted">Tomorrow · $12</Text>
+  </RadioGroupItem>
+</RadioGroup>;
+```
+
+An item's `label` is the accessible name; its children are what the row draws.
+Fragments and arrays are transparent, so items can be grouped freely.
+
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `options` | `ReadonlyArray<RadioOption>` | — (required) | the choices, in order |
+| `options` | `ReadonlyArray<RadioOption>` | — | the choices as data; omit when the items are children |
+| `children` | `ReactNode` | — | `<RadioGroupItem>` elements, for rich content |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | `""` | initial selection when uncontrolled |
-| `onChange` | `(value: string) => void` | none | the selected option's value |
+| `onValueChange` | `(value: string) => void` | none | the selected item's value |
+| `onChange` | `(value: string) => void` | none | deprecated alias for `onValueChange` |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | layout and the arrow axis |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | radio circle size |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the dot's fill |
@@ -42,8 +69,13 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
-`RadioOption` is `{ value, label, description?, disabled? }`. `description` is a
-caption beside the name, not an accessible description.
+`RadioOption` is `{ value, label, description?, disabled?, content? }`.
+`description` is a caption beside the name, not an accessible description;
+`content` replaces both with rich content.
+
+`RadioGroupItem` takes `value`, `label`, `description?`, `disabled?` and
+`children` (the rich content). It draws nothing itself: the group reads its props
+and renders the row, which is why the two paths cannot diverge.
 
 ## Keyboard
 
@@ -66,7 +98,7 @@ the platform radio contract. The tab stop is the selection: a controlled
 - Each option announces its selected state through **`aria-valuetext`**
   (`checked` / `unchecked`); there is no `aria-checked`.
 - An option's own `label` is its accessible name; the visible text beside the
-  circle is a separate `Text`.
+  circle is a separate `Text` (or a `RadioGroupItem`'s children).
 - Disabled options are skipped by the arrows and are not tab stops.
 - Every option declares the keyboard outline (the `ring` role, at
   `borderWidth.strong`), tracked per item because GPUix dispatches focus to the
@@ -80,9 +112,15 @@ same size are the same square/circle family. Gaps use `spacing.sm`.
 
 ## Limitations
 
-- Options are data: no compound `RadioGroupItem`, no rich child content.
 - No type-ahead selection.
 - A `description` is not associated with the option for assistive technology.
+- An item's `label` must be passed even when the children already show the same
+  text: the runtime has no `aria-labelledby`, so the two cannot be tied together
+  automatically.
+- **Item content must stay presentational.** GPUix hit-tests the deepest element
+  and does not bubble, so a `Box` (or anything with its own background) inside a
+  `RadioGroupItem` takes the press that would select the row; text and icons do
+  not. Measured on 0.11.0.
 
 ## Verification
 
@@ -90,8 +128,10 @@ same size are the same square/circle family. Gaps use `spacing.sm`.
   Home/End landing on the nearest enabled end.
 - `src/core/selection.test.ts` — circle and dot paint; the ring is not part of
   the resting paint, so the recipe oracle stays comparable.
-- `src/components/selection.test.tsx` — roving index and data options; an arrow
-  asks the group to move focus to the option it landed on.
+- `src/components/RadioGroup.test.tsx` — roving index and data options; an arrow
+  asks the group to move focus to the option it landed on; item children produce
+  the same option list as `options`, the arrow path skips a disabled item, and an
+  item's rich content reaches its row.
 - `runtime/controls.runtime.test.tsx` — arrows move, wrap and skip disabled
   options (plan 044); Home/End jump to the enabled ends (plan 048); the focused
   option declares the ring; arrows move native focus with the

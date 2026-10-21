@@ -20,7 +20,8 @@ import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { Icon } from "@gpuixui/icons";
-import { RadioGroup } from "../src/components/RadioGroup.js";
+import { RadioGroup, RadioGroupItem } from "../src/components/RadioGroup.js";
+import { Text } from "../src/components/Text.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import {
@@ -581,7 +582,7 @@ it("follows a controlled value change with the tab stop", async () => {
         testId="rg"
         label="Pick"
         value={value}
-        onChange={() => {}}
+        onValueChange={() => {}}
         options={[
           { value: "a", label: "Alpha" },
           { value: "b", label: "Beta" },
@@ -596,6 +597,41 @@ it("follows a controlled value change with the tab stop", async () => {
   // The bug guarded: the roving index was state initialised at mount, so a
   // parent that set the value left the tab stop on the old option.
   expect(focusedLabel(runtime)).toBe("Beta");
+});
+
+it("selects a RadioGroupItem when its rich content is pressed", async () => {
+  // The bug this guards: GPUix hit-tests the deepest element and does not
+  // bubble, so a row whose content took the press would be selectable only on
+  // its circle. The item path must keep the row the hit target.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        defaultValue="a"
+        onValueChange={() => {}}
+      >
+        <RadioGroupItem value="a" label="Alpha">
+          <Text role="label">Alpha</Text>
+        </RadioGroupItem>
+        <RadioGroupItem value="b" label="Beta">
+          <Text role="label">Beta</Text>
+          <Text role="caption" tone="muted">
+            Tomorrow
+          </Text>
+        </RadioGroupItem>
+      </RadioGroup>
+    </Surface>,
+  );
+  const row = byLabel(runtime, "Beta");
+  const box = Option.getOrElse(runtime.boundsOfId(row.id), () =>
+    expect.fail("the Beta row painted no box"),
+  );
+  // The row's centre is over its content, not its circle.
+  runtime.clickAt(box.x + box.width / 2, box.y + box.height / 2);
+  expect(announced(runtime, "Beta")).toBe("checked");
+  expect(announced(runtime, "Alpha")).toBe("unchecked");
 });
 
 it("selects a RadioGroup option when its own circle is clicked", async () => {

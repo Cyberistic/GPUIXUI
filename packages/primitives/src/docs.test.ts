@@ -74,7 +74,8 @@ const REQUIRED = [
 const problemsFor = (
   page: string,
   check: (source: string) => ReadonlyArray<string>,
-): ReadonlyArray<string> => Arr.map(check(read(page)), (problem) => `${page}: ${problem}`);
+): ReadonlyArray<string> =>
+  Arr.map(check(read(page)), (problem) => `${page}: ${problem}`);
 
 /** The contract items as plain predicates over one page's source. */
 const contract: ReadonlyArray<{
@@ -156,10 +157,13 @@ describe("the primitives docs page contract", () => {
     const linked = Arr.filterMap(
       Arr.filter(index.split("\n"), Str.startsWith("| [")),
       (line) =>
-        Option.match(Option.fromNullishOr(/\]\(([^)]+\.mdx)\)/.exec(line)?.[1]), {
-          onNone: () => Result.failVoid,
-          onSome: Result.succeed,
-        }),
+        Option.match(
+          Option.fromNullishOr(/\]\(([^)]+\.mdx)\)/.exec(line)?.[1]),
+          {
+            onNone: () => Result.failVoid,
+            onSome: Result.succeed,
+          },
+        ),
     );
 
     expect([

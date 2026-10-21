@@ -57,8 +57,17 @@ export type { CheckboxIndicatorProps, CheckboxProps } from "./Checkbox.js";
 export { Switch, SwitchThumb } from "./Switch.js";
 export type { SwitchProps, SwitchThumbProps } from "./Switch.js";
 
-export { initialActiveIndex, RadioGroup } from "./RadioGroup.js";
-export type { RadioGroupProps, RadioOption } from "./RadioGroup.js";
+export {
+  initialActiveIndex,
+  radioItems,
+  RadioGroup,
+  RadioGroupItem,
+} from "./RadioGroup.js";
+export type {
+  RadioGroupItemProps,
+  RadioGroupProps,
+  RadioOption,
+} from "./RadioGroup.js";
 
 export { Progress } from "./Progress.js";
 export type { ProgressProps } from "./Progress.js";

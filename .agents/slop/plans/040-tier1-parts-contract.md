@@ -8,8 +8,9 @@ Tier 1"; components' `internal/button.tsx` stand-in can only be retired once
 `Button` is exported from this package.
 **Status:** in progress. Step 1 landed (commit `26f96a5c`); Step 2 landed for all
 four fields (`Input` + `TextArea` in `dd6d1d51`, `NumberField` + `OTPField`
-after the binding landed); Step 3 landed (Checkbox/Switch parts). The `darwin-x64` binding for 0.11.0 landed
-on this host on 2026-10-21, so the unit suites (355) and the runtime suites (121)
+after the binding landed); Step 3 landed (Checkbox/Switch parts); Step 4 landed
+(`RadioGroupItem` + `onValueChange`). The `darwin-x64` binding for 0.11.0 landed
+on this host on 2026-10-21, so the unit suites (373) and the runtime suites (122)
 both run here again — runtime verification is no longer pending.
 
 ---
@@ -201,9 +202,26 @@ the commit body of every later step; it must never go down.
   switch's thumb cannot swallow a click (the `pointerEvents: "none"` rule measured
   in plan `041` §9 must survive when the caller passes children).
 
-### Step 4 — `RadioGroupItem`
+### Step 4 — `RadioGroupItem` — **landed**
 
-- Files: `RadioGroup.tsx`, `selection.test.tsx`, docs, `examples/selection.example.tsx`.
+> Landed 2026-10-21. `RadioGroup` accepts item children as well as the `options`
+> data, and `radioItems` reads both into one option list, so the roving index,
+> arrow wrap, disabled skipping and Home/End keep a single code path; fragments
+> are transparent. `RadioGroupItem` is a declarative part (the group reads its
+> props, it draws nothing), a rich item's children reach the row, and the
+> callback is `onValueChange` with `onChange` as the deprecated alias. Five new
+> unit tests (mapping, arrow path, announced state, rich content, names) plus one
+> native test: a hit-tested press on a row's content selects it. Both-direction
+> proofs: `radioItems` returning `[]` fails the five unit tests, dropping
+> `content` fails two, and an unread `children` prop fails the native test.
+> Recorded limitation: content must stay presentational — a `Box` takes the press
+> from the row (measured on 0.11.0). Unit suite 373, runtime 122. The
+> `elementChildren` test helper now drops `null` children instead of failing the
+> whole array. `examples/basic-app` still calls `onChange`; the alias keeps it
+> working and its migration is a TODO row for that owner.
+
+- Files: `RadioGroup.tsx`, `RadioGroup.test.tsx`, docs, `examples/selection.example.tsx`.
+
 - `RadioGroup` keeps `options` (sugar) and gains children
   `<RadioGroupItem value="…">` with rich content; the roving tab stop, arrow
   wrap, Home/End and disabled skipping are the **same** code path.

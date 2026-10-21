@@ -10,14 +10,21 @@
  * to the element that owns the handler, so a wrapper never sees a child's
  * focus. The focused item paints the ring, exactly like a Checkbox.
  *
- * The options are data rather than children because the group owns the roving
- * index and the arrow contract over them; a compound API would move that logic
- * into a context each child reads, which is strictly more code for the same
- * behaviour. This deviation from shadcn's compound shape is recorded in
- * `COMPONENTS.md`.
+ * Options arrive either as data (`options`) or as `<RadioGroupItem>` children;
+ * both are read into one option list by `radioItems`, so the roving index and
+ * the arrow contract have a single path. The data prop is sugar for the part —
+ * an element is the only shape that can carry rich content (an icon, a price).
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import {
+  Children,
+  Fragment,
+  isValidElement,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
@@ -46,6 +53,8 @@ import {
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
+  valueChange,
+  type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
@@ -55,14 +64,69 @@ export interface RadioOption {
   readonly label: string;
   readonly description?: string;
   readonly disabled?: boolean;
+  /**
+   * Rich content drawn in place of `label` and `description`. The name stays
+   * `label`, so the visible and announced names cannot diverge.
+   */
+  readonly content?: ReactNode;
 }
 
-export interface RadioGroupProps {
+/** {@link RadioGroupItem} props: one option written as an element. */
+export interface RadioGroupItemProps {
+  readonly value: string;
+  /** The accessible name, and the visible text unless `children` replaces it. */
+  readonly label: string;
+  readonly description?: string;
+  readonly disabled?: boolean;
+  /** Rich content — an icon, a price — instead of `label`/`description`. */
+  readonly children?: ReactNode;
+}
+
+/**
+ * One option as an element, for content the data prop cannot carry.
+ *
+ * `RadioGroup` reads this part's props and renders the item itself, so the
+ * roving index and the arrow contract stay one code path. The part draws
+ * nothing on its own.
+ */
+export const RadioGroupItem = (_props: RadioGroupItemProps): null => null;
+
+/**
+ * The option list a group renders: the data prop, or its item children.
+ *
+ * Fragments and arrays are transparent, so a caller can group items without
+ * changing what the group sees.
+ */
+const itemsOf = (children: ReactNode): ReadonlyArray<RadioOption> =>
+  Arr.flatMap(Children.toArray(children), (child) => {
+    if (!isValidElement<RadioGroupItemProps>(child)) return [];
+    if (child.type === Fragment) return itemsOf(child.props.children);
+    if (child.type !== RadioGroupItem) return [];
+    return [
+      {
+        value: child.props.value,
+        label: child.props.label,
+        description: child.props.description,
+        disabled: child.props.disabled,
+        content: child.props.children,
+      },
+    ];
+  });
+
+/** The option list a group renders: the data prop, or its item children. */
+export const radioItems = (props: {
+  readonly options?: ReadonlyArray<RadioOption>;
+  readonly children?: ReactNode;
+}): ReadonlyArray<RadioOption> => props.options ?? itemsOf(props.children);
+
+export interface RadioGroupProps extends ValueChangeProps<string> {
+  /** The choices as data. Omit when the options are `RadioGroupItem` children. */
+  readonly options?: ReadonlyArray<RadioOption>;
+  /** The choices as items, when they carry rich content. */
+  readonly children?: ReactNode;
   /** Controlled selection. Omit to let the group hold its own. */
   readonly value?: string;
   readonly defaultValue?: string;
-  readonly onChange?: (value: string) => void;
-  readonly options: ReadonlyArray<RadioOption>;
   /** Arrow-key axis. Defaults to `vertical`. */
   readonly orientation?: "vertical" | "horizontal";
   /** Defaults to `md`. */
@@ -125,12 +189,8 @@ export const renderRadioGroup = (
   focus: RadioGroupFocus,
   handlers: RadioGroupHandlers,
 ): ReactElement => {
-  const {
-    options,
-    orientation = "vertical",
-    size = "md",
-    accent = "primary",
-  } = props;
+  const { orientation = "vertical", size = "md", accent = "primary" } = props;
+  const options = radioItems(props);
   const count = Arr.length(options);
   const isDisabled = (index: number): boolean =>
     options[index]?.disabled === true;
@@ -239,14 +299,35 @@ export const renderRadioGroup = (
                 />
               ) : null}
             </div>
-            <Text role="label" tone={disabled ? "muted" : "default"}>
-              {option.label}
-            </Text>
-            {option.description === undefined ? null : (
-              <Text role="caption" tone="muted">
-                {option.description}
-              </Text>
-            )}
+            {/*
+              One body per row: the name pair, or a `RadioGroupItem`'s rich
+              content. Keep the content non-interactive — GPUix hit-tests the
+              deepest element and does not bubble, so content that accepts the
+              press takes it from the row (a `Box` does; text and icons do not).
+            */}
+            <div
+              style={
+                recipeTw.classesToStyle(
+                  "flex flex-row items-center gap-sm",
+                  theme,
+                ).style
+              }
+            >
+              {option.content === undefined ? (
+                <>
+                  <Text role="label" tone={disabled ? "muted" : "default"}>
+                    {option.label}
+                  </Text>
+                  {option.description === undefined ? null : (
+                    <Text role="caption" tone="muted">
+                      {option.description}
+                    </Text>
+                  )}
+                </>
+              ) : (
+                option.content
+              )}
+            </div>
           </div>
         );
       })}
@@ -265,13 +346,13 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   const selected = useControlState(
     props.value,
     props.defaultValue ?? "",
-    props.onChange,
+    valueChange(props),
   );
   return renderRadioGroup(
     props,
     theme,
     selected.value,
-    initialActiveIndex(props.options, selected.value.current),
+    initialActiveIndex(radioItems(props), selected.value.current),
     {
       focusedIndex,
       onFocus: (index) => setFocusedIndex(Option.some(index)),

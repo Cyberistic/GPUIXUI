@@ -103,6 +103,24 @@ export const checkedChange = (
 ): ((next: boolean) => void) | undefined =>
   props.onCheckedChange ?? props.onChange;
 
+/**
+ * The change props a value control accepts.
+ *
+ * `onValueChange` is the contract's name (`docs/component-api.md` §2). `onChange`
+ * is the deprecated alias kept for one release; when a caller passes both, the
+ * new name runs, so migrating cannot double-fire a handler.
+ */
+export interface ValueChangeProps<Value> {
+  readonly onValueChange?: (next: Value) => void;
+  /** @deprecated use `onValueChange`; removed in the next release. */
+  readonly onChange?: (next: Value) => void;
+}
+
+/** The one change callback a value control calls. */
+export const valueChange = <Value>(
+  props: ValueChangeProps<Value>,
+): ((next: Value) => void) | undefined => props.onValueChange ?? props.onChange;
+
 /** A control's controlled/uncontrolled value, and the setter that respects it. */
 export interface ControlState<Value> {
   readonly value: ValueState<Value>;

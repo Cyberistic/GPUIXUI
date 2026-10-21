@@ -13,6 +13,7 @@ import {
   Box,
   Checkbox,
   RadioGroup,
+  RadioGroupItem,
   Separator,
   Stack,
   Switch,
@@ -124,17 +125,29 @@ export const SelectionExample = (): ReactElement => {
           <RadioGroup
             label="Digest cadence"
             value={cadence}
-            onChange={setCadence}
-            options={[
-              { value: "daily", label: "Daily" },
-              {
-                value: "weekly",
-                label: "Weekly",
-                description: "Every Monday.",
-              },
-              { value: "never", label: "Never" },
-            ]}
-          />
+            onValueChange={setCadence}
+          >
+            <RadioGroupItem value="daily" label="Daily">
+              <Text role="label">Daily</Text>
+              <Text role="caption" tone="muted">
+                One email each morning.
+              </Text>
+            </RadioGroupItem>
+            <RadioGroupItem value="weekly" label="Weekly">
+              <Text role="label">Weekly</Text>
+              <Text role="caption" tone="muted">
+                Every Monday.
+              </Text>
+            </RadioGroupItem>
+            <RadioGroupItem value="never" label="Never">
+              <Icon
+                name="x"
+                size={theme.iconSize.sm}
+                color={theme.colors.mutedForeground}
+              />
+              <Text role="label">Never</Text>
+            </RadioGroupItem>
+          </RadioGroup>
         </Stack>
 
         <Separator orientation="horizontal" />

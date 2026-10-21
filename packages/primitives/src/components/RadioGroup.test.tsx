@@ -11,10 +11,13 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
+import { Icon } from "@gpuixui/icons";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   initialActiveIndex,
+  radioItems,
+  RadioGroupItem,
   renderRadioGroup,
   type RadioGroupHandlers,
   type RadioGroupFocus,
@@ -22,6 +25,8 @@ import {
 } from "./RadioGroup.js";
 import { keyEvent } from "./testing/event.js";
 import {
+  elementChildren,
+  elementProp,
   expectSome,
   hostHandler,
   hostProp,
@@ -134,6 +139,105 @@ describe("RadioGroup", () => {
         "",
       ),
     ).toBe(1);
+  });
+});
+
+/** Three items written as elements, the middle one disabled and rich. */
+const itemChildren = (
+  <>
+    <RadioGroupItem value="alpha" label="Alpha" />
+    <RadioGroupItem value="beta" label="Beta" disabled>
+      <Icon name="check" color="red" size={8} />
+    </RadioGroupItem>
+    <RadioGroupItem value="gamma" label="Gamma" description="Last" />
+  </>
+);
+
+/** The group's option rows, from the rendered tree. */
+const rows = (element: ReturnType<typeof renderRadioGroup>) =>
+  elementChildren(element);
+
+describe("RadioGroupItem", () => {
+  it("reads its children into the same option list the data prop produces", () => {
+    const items = radioItems({ children: itemChildren });
+
+    expect(items.map((item) => item.value)).toEqual(["alpha", "beta", "gamma"]);
+    expect(items.map((item) => item.disabled)).toEqual([
+      undefined,
+      true,
+      undefined,
+    ]);
+    // Rich content is carried through, and the name stays the label.
+    expect(items[1]?.content).toBeDefined();
+    expect(items[1]?.label).toBe("Beta");
+  });
+
+  it("moves the selection and focus with an arrow, exactly as data options do", () => {
+    const onSelect = vi.fn();
+    const handlers = radioHandlers(onSelect);
+    const element = renderRadioGroup(
+      { children: itemChildren },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      handlers,
+    );
+
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
+
+    // `beta` is disabled, so the arrow lands on `gamma` — the same skip the
+    // data path performs.
+    expect(onSelect).toHaveBeenCalledWith("gamma");
+    expect(handlers.onFocusMove).toHaveBeenCalledWith(2);
+  });
+
+  it("announces the selected state of the item whose value matches", () => {
+    const element = renderRadioGroup(
+      { children: itemChildren },
+      testTheme,
+      text("gamma"),
+      2,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const states = rows(element).map((row) =>
+      expectSome(hostProp(row, "aria-valuetext")),
+    );
+
+    expect(states).toEqual(["unchecked", "unchecked", "checked"]);
+  });
+
+  it("draws the item's rich content in the row", () => {
+    const element = renderRadioGroup(
+      { children: itemChildren },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const beta = rows(element)[1] ?? expect.fail("no second row");
+    // The row draws its box, then the body that holds the item's content.
+    const body = elementChildren(beta)[1] ?? expect.fail("no item body");
+    const glyph = elementChildren(body)[0] ?? expect.fail("no rich content");
+
+    expect(expectSome(elementProp(glyph, "name"))).toBe("check");
+  });
+
+  it("still names every row for assistive technology", () => {
+    const element = renderRadioGroup(
+      { children: itemChildren },
+      testTheme,
+      text(""),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+
+    expect(
+      rows(element).map((row) => expectSome(hostProp(row, "aria-label"))),
+    ).toEqual(["Alpha", "Beta", "Gamma"]);
   });
 });
 
