@@ -871,10 +871,11 @@ invalidNumbers(extendTheme(lightTheme, { radius: { md: Number.NaN } }));
 // [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
 ```
 
-`src/numbers.example.ts` is a brand whose corner radius came from a scale factor
-nobody set; `numbers.test.ts` runs its audit, proves none of the colour reports
-can see the defect, and holds all 16 shipped, platform and authored themes to an
-empty report.
+`src/numbers.example.ts` holds two brands: one whose corner radius came from a
+scale factor nobody set, and one whose "dense" preset shaves two control heights
+under the pressable floor. `numbers.test.ts` runs both audits, proves none of the
+colour reports can see either defect, and holds all 16 shipped, platform and
+authored themes to an empty report.
 
 ### Contrast
 

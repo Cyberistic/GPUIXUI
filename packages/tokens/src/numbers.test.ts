@@ -28,6 +28,7 @@ import {
   type ThemeOverrides,
 } from "./index.js";
 import {
+  squatDensityAudit,
   unmeasuredBrandAudit,
   unmeasuredBrandTheme,
 } from "./numbers.example.js";
@@ -311,5 +312,14 @@ describe("the audit gates on the numbers", () => {
 
     expect(auditTheme(square).invalidNumbers).toEqual([]);
     expect(auditTheme(square).passed).toBe(true);
+  });
+
+  it("executes the documented short-density example", () => {
+    expect(squatDensityAudit.invalidNumbers.map(({ path }) => path)).toEqual([
+      "controlHeight.sm",
+      "controlHeight.md",
+    ]);
+    expect(squatDensityAudit.contrast).toEqual([]);
+    expect(squatDensityAudit.passed).toBe(false);
   });
 });
