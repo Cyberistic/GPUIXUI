@@ -1,15 +1,19 @@
 import {
-  contrastFailures,
+  auditTheme,
   extendTheme,
   themes,
   type ContrastFailure,
+  type DecorativeFailure,
+  type InvalidColorRole,
   type Theme,
+  type ThemeAudit,
   type ThemeMode,
 } from "@gpuixui/tokens";
 
 /**
- * The theme editor's pure core: the editable role subset and the `createTheme`
- * serialiser for "Copy theme". No React, no DOM — unit-testable and reusable.
+ * The theme editor's pure core: the editable role subset, the `createTheme`
+ * serialiser for "Copy theme", and the audit the readout prints. No React, no
+ * DOM — unit-testable and reusable.
  *
  * The theme→CSS-variable bridge every browser preview reads is
  * `src/lib/theme-css.ts`: the editor and the platform switch share it.
@@ -89,16 +93,25 @@ export const resolveTheme = (mode: ThemeMode, edits: TokenEdits): Theme =>
   });
 
 /**
- * The contrast pairs an edited theme misses, measured against the same floors
- * the library's own themes are tested on. An unmeasurable pair (a translucent
- * or non-hex value) is reported, not skipped: a pair nobody can verify has not
- * passed.
+ * The whole theme contract for an edit, as the library's own gate reports it: a
+ * role the renderer cannot paint, a text pair below its floor, a decorative
+ * surface too close to what it sits on. `auditTheme` reads all three in one
+ * call, so the editor cannot show one report and leave the other two silent.
  */
-export const contrastReport = (
-  mode: ThemeMode,
-  edits: TokenEdits,
-): ReadonlyArray<ContrastFailure> =>
-  contrastFailures(resolveTheme(mode, edits));
+export const auditReport = (mode: ThemeMode, edits: TokenEdits): ThemeAudit =>
+  auditTheme(resolveTheme(mode, edits));
+
+/** Which of the audit's three reports a finding came from. */
+export type AuditKind = "role" | "contrast" | "decorative";
+
+/** One audit finding, already worded for the readout. */
+export interface AuditFinding {
+  readonly kind: AuditKind;
+  readonly text: string;
+}
+
+const measured = (ratio: number | undefined, floor: number): string =>
+  `${ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1`} (needs ${floor}:1)`;
 
 /** One failure as an editable line, e.g. `mutedForeground on muted — 3.9:1 (needs 4.5:1)`. */
 export const formatContrastFailure = ({
@@ -107,11 +120,48 @@ export const formatContrastFailure = ({
   ratio,
   floor,
 }: ContrastFailure): string =>
-  `${foreground} on ${background} — ${
-    ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1`
-  } (needs ${floor}:1)`;
+  `${foreground} on ${background} — ${measured(ratio, floor)}`;
 
-const HEX_COLOR = /^#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?$/;
+/** A decorative surface as a line, e.g. `divider: border on background — 1.00:1 (needs 1.05:1)`. */
+export const formatDecorativeFailure = ({
+  surface,
+  role,
+  over,
+  ratio,
+  floor,
+}: DecorativeFailure): string =>
+  `${surface}: ${role} on ${over} — ${measured(ratio, floor)}`;
+
+/** A role the renderer would ignore, with the value it was given. */
+export const formatInvalidRole = ({ role, value }: InvalidColorRole): string =>
+  `${role} — ${JSON.stringify(value)} is not a colour GPUix can paint`;
+
+/** Every finding the audit reports, in the one list the readout prints. */
+export const auditFindings = (
+  report: ThemeAudit,
+): ReadonlyArray<AuditFinding> => [
+  ...report.invalidRoles.map((failure) => ({
+    kind: "role" as const,
+    text: formatInvalidRole(failure),
+  })),
+  ...report.contrast.map((failure) => ({
+    kind: "contrast" as const,
+    text: formatContrastFailure(failure),
+  })),
+  ...report.decorative.map((failure) => ({
+    kind: "decorative" as const,
+    text: formatDecorativeFailure(failure),
+  })),
+];
+
+/**
+ * True when every editable role is a colour GPUix can paint — the audit's own
+ * role check, read at the persistence boundary. A stored edit that carries a
+ * value the runtime ignores would paint the previous colour or black in
+ * silence, so it is rejected instead of restored.
+ */
+export const paintsEveryRole = (mode: ThemeMode, edits: TokenEdits): boolean =>
+  auditTheme(resolveTheme(mode, edits)).invalidRoles.length === 0;
 
 const isTokenEdits = (value: unknown): value is TokenEdits => {
   if (typeof value !== "object" || value === null) return false;
@@ -127,24 +177,30 @@ const isTokenEdits = (value: unknown): value is TokenEdits => {
   }
   if (typeof record.colors !== "object" || record.colors === null) return false;
   const colors = record.colors as Record<string, unknown>;
-  return editableRoles.every(
-    (role) =>
-      typeof colors[role] === "string" &&
-      HEX_COLOR.test(colors[role] as string),
-  );
+  return editableRoles.every((role) => typeof colors[role] === "string");
 };
+
+const isPaintableEdits = (
+  mode: ThemeMode,
+  value: unknown,
+): value is TokenEdits => isTokenEdits(value) && paintsEveryRole(mode, value);
 
 /**
  * Decode a persisted editor state (from the URL or localStorage) at the
  * boundary. Returns `undefined` for anything that is not a complete, valid
  * `EditorState`, so a malformed value falls back to the defaults instead of
- * poisoning the preview.
+ * poisoning the preview. A theme that merely misses a contrast or decorative
+ * floor is a design choice the editor reports, not a malformed state.
  */
 export const parseState = (value: unknown): EditorState | undefined => {
   if (typeof value !== "object" || value === null) return undefined;
   const record = value as Record<string, unknown>;
-  if (!isTokenEdits(record.light) || !isTokenEdits(record.dark))
+  if (
+    !isPaintableEdits("light", record.light) ||
+    !isPaintableEdits("dark", record.dark)
+  ) {
     return undefined;
+  }
   return { light: record.light, dark: record.dark };
 };
 

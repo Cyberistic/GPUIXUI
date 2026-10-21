@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import type { Theme, ThemeMode } from "@gpuixui/tokens";
 import { toCssVars } from "../../lib/theme-css";
 import {
-  contrastReport,
+  auditFindings,
+  auditReport,
   decodeState,
   defaultState,
   editableRoles,
-  formatContrastFailure,
   resolveTheme,
   themeSource,
   type EditableRole,
@@ -107,7 +107,7 @@ export function ThemeEditor() {
   };
 
   const resolved = resolveTheme(mode, edits);
-  const failures = contrastReport(mode, edits);
+  const findings = auditFindings(auditReport(mode, edits));
 
   return (
     <div className="gx-theme-editor not-prose">
@@ -206,22 +206,27 @@ export function ThemeEditor() {
 
       <div
         aria-live="polite"
-        className={`gx-te-contrast ${failures.length === 0 ? "gx-te-contrast-pass" : "gx-te-contrast-fail"}`}
+        className={`gx-te-audit ${findings.length === 0 ? "gx-te-audit-pass" : "gx-te-audit-fail"}`}
         role="status"
       >
-        {failures.length === 0 ? (
-          <p>Contrast: every pair passes the library's floors.</p>
+        {findings.length === 0 ? (
+          <p>
+            Passes the library audit: every role paints, every text pair clears
+            its floor, every decorative surface stays visible.
+          </p>
         ) : (
           <>
             <p>
-              Contrast: {failures.length}{" "}
-              {failures.length === 1 ? "pair is" : "pairs are"} below the floor
-              — the library tests these same pairs.
+              {findings.length} {findings.length === 1 ? "finding" : "findings"}{" "}
+              from the library&apos;s <code>auditTheme</code>:
             </p>
             <ul>
-              {failures.map((failure) => (
-                <li key={`${failure.foreground}-${failure.background}`}>
-                  {formatContrastFailure(failure)}
+              {findings.map((finding) => (
+                <li
+                  data-kind={finding.kind}
+                  key={`${finding.kind}-${finding.text}`}
+                >
+                  {finding.text}
                 </li>
               ))}
             </ul>

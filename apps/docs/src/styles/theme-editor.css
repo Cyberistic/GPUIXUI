@@ -316,27 +316,27 @@
 }
 
 /* The live contrast readout: the same pairs `contrastFailures` checks. */
-.gx-te-contrast {
+.gx-te-audit {
   padding: 10px 14px;
   border-top: 1px solid var(--border);
   font-size: 12.5px;
   line-height: 1.5;
 }
 
-.gx-te-contrast p {
+.gx-te-audit p {
   margin: 0;
 }
 
-.gx-te-contrast ul {
+.gx-te-audit ul {
   margin: 6px 0 0;
   padding-left: 18px;
 }
 
-.gx-te-contrast-pass {
+.gx-te-audit-pass {
   color: var(--muted-foreground);
 }
 
-.gx-te-contrast-fail {
+.gx-te-audit-fail {
   color: var(--destructive);
 }
 

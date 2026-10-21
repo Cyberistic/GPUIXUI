@@ -1,12 +1,13 @@
 import { createTheme, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
-  contrastReport,
+  auditFindings,
+  auditReport,
   decodeState,
   defaultState,
   editableRoles,
   editsFromTheme,
-  formatContrastFailure,
+  paintsEveryRole,
   parseState,
   resolveTheme,
   themeConfig,
@@ -81,12 +82,33 @@ describe("theme-editor persistence boundary", () => {
     expect(decodeState("not json")).toBeUndefined();
     expect(decodeState('{"light":{}}')).toBeUndefined();
   });
+
+  it.each(editableRoles)(
+    "rejects a stored edit that makes %s unpaintable",
+    (role) => {
+      // The boundary and the audit read one rule, so a stored theme can never
+      // carry a value the preview would paint black in silence.
+      const base = defaultState();
+      const candidate: EditorState = {
+        ...base,
+        light: {
+          ...base.light,
+          colors: { ...base.light.colors, [role]: "not-a-colour" },
+        },
+      };
+
+      expect(paintsEveryRole("light", candidate.light)).toBe(false);
+      expect(parseState(candidate)).toBeUndefined();
+    },
+  );
 });
 
-describe("theme-editor contrast readout", () => {
+describe("theme-editor audit readout", () => {
   it("passes both built-in themes", () => {
-    expect(contrastReport("light", defaultState().light)).toEqual([]);
-    expect(contrastReport("dark", defaultState().dark)).toEqual([]);
+    expect(auditFindings(auditReport("light", defaultState().light))).toEqual(
+      [],
+    );
+    expect(auditFindings(auditReport("dark", defaultState().dark))).toEqual([]);
   });
 
   it("names a pair an edit breaks, with the measured ratio and the floor", () => {
@@ -100,13 +122,13 @@ describe("theme-editor contrast readout", () => {
       },
     };
 
-    const primary = contrastReport("dark", broken).filter(
-      (failure) =>
-        failure.foreground === "primaryForeground" &&
-        failure.background === "primary",
+    const primary = auditFindings(auditReport("dark", broken)).filter(
+      (finding) =>
+        finding.kind === "contrast" &&
+        finding.text.startsWith("primaryForeground on primary — "),
     );
 
-    expect(primary.map(formatContrastFailure)).toEqual([
+    expect(primary.map((finding) => finding.text)).toEqual([
       "primaryForeground on primary — 1.00:1 (needs 4.5:1)",
     ]);
   });
@@ -118,16 +140,47 @@ describe("theme-editor contrast readout", () => {
       colors: { ...edits.colors, ring: "#00000080" },
     };
 
-    const ring = contrastReport("dark", translucent).filter(
-      (failure) => failure.foreground === "ring",
+    const ring = auditFindings(auditReport("dark", translucent)).filter(
+      (finding) =>
+        finding.kind === "contrast" && finding.text.startsWith("ring on "),
     );
 
     expect(ring.length).toBeGreaterThan(0);
-    expect(ring.every((failure) => failure.ratio === undefined)).toBe(true);
+    expect(ring.every((finding) => finding.text.includes("unmeasurable"))).toBe(
+      true,
+    );
+  });
+
+  it("reports a divider an edit makes invisible, which no contrast pair covers", () => {
+    const edits = defaultState().light;
+    const broken = {
+      ...edits,
+      colors: { ...edits.colors, border: themes.light.colors.background },
+    };
+    const findings = auditFindings(auditReport("light", broken));
+
+    // `border` is a decorative role, not a contrast pair, so only the audit's
+    // third report can see this edit.
+    expect(findings.filter((finding) => finding.kind === "contrast")).toEqual(
+      [],
+    );
     expect(
-      ring
-        .map(formatContrastFailure)
-        .every((line) => line.includes("unmeasurable")),
-    ).toBe(true);
+      findings
+        .filter((finding) => finding.kind === "decorative")
+        .map((finding) => finding.text),
+    ).toContain("divider: border on background — 1.00:1 (needs 1.05:1)");
+  });
+
+  it("reports a role the renderer cannot paint, instead of painting it black in silence", () => {
+    const edits = defaultState().dark;
+    const typo = { ...edits, colors: { ...edits.colors, primary: "#12345" } };
+
+    const findings = auditFindings(auditReport("dark", typo)).filter(
+      (finding) => finding.kind === "role",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      'primary — "#12345" is not a colour GPUix can paint',
+    ]);
   });
 });

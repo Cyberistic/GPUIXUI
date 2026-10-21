@@ -53,16 +53,28 @@ const snippetColours = (body: string): Readonly<Record<string, string>> => {
 
 describe("the theme page", () => {
   it("derives the contrast pair count instead of printing one", () => {
-    const contrast = section(page("themes.mdx"), "Contrast");
+    const audit = section(page("themes.mdx"), "The theme audit");
 
-    expect(contrast).toContain("contrastPairs.length");
-    expect(contrast).not.toMatch(/\b\d+ role pairs\b/);
+    expect(audit).toContain("contrastPairs.length");
+    expect(audit).not.toMatch(/\b\d+ role pairs\b/);
   });
 
   it("imports the count it derives", () => {
     expect(page("themes.mdx")).toContain(
       'import { contrastPairs } from "@gpuixui/tokens";',
     );
+  });
+
+  it("describes the whole audit the readout runs, not only its contrast half", () => {
+    // The editor printed `contrastFailures` alone while `auditTheme` reported
+    // three failures, so a reader whose divider vanished or whose role painted
+    // black read a passing line. The page has to describe the readout it has.
+    const audit = section(page("themes.mdx"), "The theme audit");
+
+    expect(audit).toContain("auditTheme");
+    expect(audit).toContain("decorativeFailures");
+    expect(audit).toContain("cannot paint");
+    expect(audit).toContain("localStorage");
   });
 });
 

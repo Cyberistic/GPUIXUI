@@ -261,9 +261,9 @@ describe("docs/gpuix-capabilities.md", () => {
 
     const wrong = matrix.flatMap((entry) => {
       const label = pageLabels.find(([key]) => key === entry.key)?.[1];
-      const row = rows.find((cells) => (cells[0] ?? "").startsWith(label));
       if (label === undefined)
         return [`matrix key \`${entry.key}\` has no page label`];
+      const row = rows.find((cells) => (cells[0] ?? "").startsWith(label));
       if (row === undefined) return [`the page has no "${label}" row`];
 
       const expected = entry.supported ? "Supported" : "Not supported";

@@ -28,19 +28,35 @@ element, maps `radius.md` to `--radius`, and maps `.SystemUIFont` to a CSS
 system stack because GPUI resolves that sentinel natively and the browser
 cannot. The bridge exists only for this preview.
 
-## Contrast
+## The theme audit
 
-The editor measures the theme against the same contract `@gpuixui/tokens` tests
-its own themes on: `contrastFailures` checks {contrastPairs.length} role pairs —
-body text at 7:1, secondary text at 4.5:1, boundaries and focus rings at 3:1 —
-and the readout
-under the preview names every pair an edit breaks, with its measured ratio. A
-translucent value is reported as **unmeasurable** rather than counted as a pass,
-because its contrast depends on the surface behind it. Copy theme carries the
-edited values; running the same check on the result is up to the consumer, and
-`contrastFailures` is public for exactly that.
+The readout under the preview runs `auditTheme` on the theme the edits resolve to
+— the same gate `@gpuixui/tokens` tells a theme author to run before shipping, so
+an edit is measured against exactly the contract the library holds itself to. One
+call reports three independent failures:
+
+- **Roles** the renderer cannot paint. GPUix ignores a colour string it cannot
+  parse and keeps the previous value or paints black, so the editor names the role
+  and the value instead of failing in silence.
+- **Contrast**: `contrastFailures` checks {contrastPairs.length} role pairs — body
+  text at 7:1, secondary text at 4.5:1, boundaries and focus rings at 3:1 — and
+  the readout names every pair an edit breaks, with its measured ratio. A
+  translucent value is reported as **unmeasurable** rather than counted as a pass,
+  because its contrast depends on the surface behind it.
+- **Decorative surfaces**: dividers, skeleton fills, the modal veil and status
+  edges carry no text, so WCAG gives them no floor at all. `decorativeFailures`
+  holds them to 1.05:1 against the surface they sit on — editing `border` towards
+  `background` is how a card loses its edge, and no contrast pair would see it.
+
+The same role check guards the URL and `localStorage`: a persisted state that
+carries a value the renderer cannot paint is rejected, and the editor falls back to
+the built-in themes instead of restoring an edit that would paint black in
+silence. A theme that merely misses a contrast or decorative floor is a design
+choice the readout reports, not a malformed state.
 
 ## Copy theme
 
 **Copy theme** emits a `createTheme` module — one theme per mode — in the exact
-format `@gpuixui/tokens` consumes, plus a one-line usage note.
+format `@gpuixui/tokens` consumes, plus a one-line usage note. Running the same
+audit on the result is up to the consumer; `auditTheme`, `contrastFailures` and
+`decorativeFailures` are public for exactly that.
