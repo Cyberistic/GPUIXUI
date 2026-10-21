@@ -1,12 +1,14 @@
 /**
  * Guards the extension contract: overrides merge without mutating the base,
- * typography merges field by field, elevation replaces whole levels, and a
- * theme can never change its mode through an override.
+ * typography merges field by field, elevation replaces whole levels, a theme can
+ * never change its mode through an override, and `createTheme` starts from the
+ * contrast variant the caller asked for — every group's `undefined` inherits
+ * rather than erasing a role.
  */
 import { describe, expect, it } from "vitest";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
 import { auditTheme, almostBrandTheme } from "./theme-audit.example.js";
-import { resolveTheme } from "./high-contrast.example.js";
+import { resolveBrandTheme, resolveTheme } from "./high-contrast.example.js";
 import { densityPresets, type BoxShadow } from "./index.js";
 import {
   createTheme,
@@ -70,6 +72,18 @@ describe("high-contrast themes", () => {
     expect(resolveTheme("dark", true)).toBe(highContrastDarkTheme);
     expect(resolveTheme("dark", false)).toBe(darkTheme);
     expect(resolveTheme("light", true)).toBe(highContrastLightTheme);
+  });
+
+  it("carries a brand's overrides onto the palette the preference selects", () => {
+    const high = resolveBrandTheme("dark", true, { primary: "#9FBEFF" });
+    expect(high.contrast).toBe("high");
+    expect(high.colors.primary).toBe("#9FBEFF");
+    expect(high.colors.background).toBe(
+      highContrastDarkTheme.colors.background,
+    );
+    const ordinary = resolveBrandTheme("dark", false, { primary: "#9FBEFF" });
+    expect(ordinary.contrast).toBe("default");
+    expect(ordinary.colors.background).toBe(darkTheme.colors.background);
   });
 });
 
@@ -158,6 +172,78 @@ describe("createTheme", () => {
   it("applies the name override", () => {
     expect(createTheme({ mode: "dark", name: "Acme" }).name).toBe("Acme");
     expect(createTheme({ mode: "light" }).name).toBe("Light");
+  });
+
+  it("starts from the requested contrast variant", () => {
+    const high = createTheme({ mode: "dark", contrast: "high" });
+    expect(high).toEqual(highContrastDarkTheme);
+    expect(high.contrast).toBe("high");
+    expect(high.colors.background).not.toBe(darkTheme.colors.background);
+  });
+
+  it("applies overrides over the requested high-contrast base", () => {
+    const custom = createTheme({
+      mode: "light",
+      contrast: "high",
+      colors: { primary: "#123456" },
+    });
+    expect(custom.contrast).toBe("high");
+    expect(custom.colors.primary).toBe("#123456");
+    expect(custom.colors.background).toBe(
+      highContrastLightTheme.colors.background,
+    );
+  });
+
+  it("defaults to the default-contrast palette", () => {
+    expect(createTheme({ mode: "light" }).contrast).toBe("default");
+  });
+});
+
+/**
+ * Guards the merge defect this suite found: an override carrying an explicit
+ * `undefined` — an optional value a caller forwarded unchanged, which the
+ * compiler allows because the groups are optional properties — overwrote a
+ * complete role with nothing. The theme still type-checked, so a brand that
+ * forwarded a missing colour shipped a palette with a role the renderer could
+ * not paint. Omitted and `undefined` now both inherit.
+ */
+describe("an override that names a value as absent", () => {
+  it("keeps the base colour rather than erasing the role", () => {
+    const custom = extendTheme(darkTheme, { colors: { primary: undefined } });
+    expect(custom.colors.primary).toBe(darkTheme.colors.primary);
+    expect(custom.colors.primary).toBeDefined();
+  });
+
+  it("inherits in every group a theme carries", () => {
+    const custom = extendTheme(darkTheme, {
+      colors: { background: undefined },
+      spacing: { md: undefined },
+      radius: { md: undefined },
+      borderWidth: { thin: undefined },
+      iconSize: { md: undefined },
+      typography: { body: { fontSize: undefined } },
+      density: { rowHeight: undefined },
+    });
+    expect(custom.colors.background).toBe(darkTheme.colors.background);
+    expect(custom.spacing.md).toBe(darkTheme.spacing.md);
+    expect(custom.radius.md).toBe(darkTheme.radius.md);
+    expect(custom.borderWidth.thin).toBe(darkTheme.borderWidth.thin);
+    expect(custom.iconSize.md).toBe(darkTheme.iconSize.md);
+    expect(custom.typography.body.fontSize).toBe(
+      darkTheme.typography.body.fontSize,
+    );
+    expect(custom.density.rowHeight).toBe(darkTheme.density.rowHeight);
+  });
+
+  it("keeps a defined override beside an absent one", () => {
+    const custom = extendTheme(darkTheme, {
+      colors: { primary: "#123456", background: undefined },
+      radius: { md: 2, lg: undefined },
+    });
+    expect(custom.colors.primary).toBe("#123456");
+    expect(custom.colors.background).toBe(darkTheme.colors.background);
+    expect(custom.radius.md).toBe(2);
+    expect(custom.radius.lg).toBe(darkTheme.radius.lg);
   });
 });
 

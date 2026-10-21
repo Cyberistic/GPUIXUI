@@ -401,14 +401,18 @@ role — the status families, the soft tones, `foreground`, `mutedForeground`,
 `platformStyles[platform].colors[mode]` is that table: a partial `ThemeColors`, so
 a value you leave out is the base theme's. The dark sets carry a lighter
 `placeholder` because their field surfaces are lighter than the base canvas.
+Each style also declares the `contrast` variant its palette is designed for
+(`"default"` today), and `platformTheme` applies a palette only where that
+matches the base theme's variant.
 
 Four rules the mechanism keeps:
 
-- **A high-contrast theme keeps its colours.** `platformTheme` applies the
-  families, radii and density but not the palette, so accessibility outranks the
-  platform look. `Theme.contrast` records the variant a theme carries — `"high"`
-  on the high-contrast pair, `"default"` on the ordinary pair, absent on a
-  hand-built theme, which is treated as default.
+- **A high-contrast theme keeps its colours.** A palette is designed against one
+  variant's floors, so `platformTheme` applies the families, radii and density
+  but not a palette whose declared `contrast` is not the base's. Accessibility
+  outranks the platform look. `Theme.contrast` records the variant a theme
+  carries — `"high"` on the high-contrast pair, `"default"` on the ordinary
+  pair, absent on a hand-built theme, which is treated as default.
 - **A platform style is an ordinary theme.** Nothing is a preset you cannot edit:
   read `platformStyles`, or layer `extendTheme` on a resolved theme.
 - **`default` is the library's own identity.** It changes the name and nothing
@@ -803,9 +807,11 @@ interface Theme {
 branch on it — `platformTheme` uses it to keep a high-contrast theme's colours.
 Each mode also has a high-contrast variant (`highContrastLightTheme`,
 `highContrastDarkTheme`, `highContrastThemes`) reachable through
-`getTheme(mode, "high")`. `createTheme(config)` starts from `themes[config.mode]`;
-`extendTheme(base, overrides)` derives from any theme, including a high-contrast
-one.
+`getTheme(mode, "high")`. `createTheme(config)` starts from the built-in theme of
+`config.mode` and `config.contrast` (default contrast when it is not named), so
+`createTheme({ mode: "dark", contrast: "high" })` is the high-contrast dark
+theme; `extendTheme(base, overrides)` derives from any theme, including a
+high-contrast one.
 
 ```ts
 import { createTheme, extendTheme, darkTheme } from "@gpuixui/tokens";
@@ -835,6 +841,8 @@ and `contrastFailures` (below) are how that is caught before it ships.
 Merge rules:
 
 - groups are partial: omitted values inherit from the base;
+- a group key written as `undefined` — an optional value a caller passed through
+  unchanged — inherits too, so it cannot erase a role the group must carry;
 - colour, spacing, radius, border width and icon overrides merge key by key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight;

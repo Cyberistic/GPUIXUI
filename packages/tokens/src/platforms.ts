@@ -15,7 +15,7 @@ import {
   type DensityName,
   type Radius,
 } from "./scale.js";
-import type { ThemeMode } from "./theme.js";
+import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
 export const systemUiFont = ".SystemUIFont";
@@ -62,6 +62,12 @@ export interface PlatformStyle extends PlatformType {
   readonly density: DensityName;
   /** The roles the platform repaints, in each mode. */
   readonly colors: PlatformColors;
+  /**
+   * The contrast variant the palette is designed for. A base theme that needs
+   * more keeps its own colours — accessibility outranks the platform look — so
+   * `platformTheme` applies a palette only where this matches the base.
+   */
+  readonly contrast: ThemeContrast;
 }
 
 /**
@@ -72,9 +78,10 @@ export interface PlatformStyle extends PlatformType {
  *
  * The colours are ordinary semantic roles, so a consumer edits a value here and
  * every component follows. Each set is held to the contrast floors in
- * `contrast.ts` by `platforms.test.ts`. The dark sets carry a lighter
- * `placeholder` than the base theme because their field surfaces are lighter
- * than its canvas. A role a set omits keeps the base theme's value.
+ * `contrast.ts` by `platforms.test.ts`; `contrast` names the variant those
+ * floors are, so a high-contrast base keeps its own palette. The dark sets carry
+ * a lighter `placeholder` than the base theme because their field surfaces are
+ * lighter than its canvas. A role a set omits keeps the base theme's value.
  */
 export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   darwin: {
@@ -83,6 +90,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     mono: "Menlo",
     radius: { none: 0, sm: 4, md: 6, lg: 10, xl: 14, full: 9999 },
     density: "compact",
+    contrast: "default",
     colors: {
       light: {
         background: "#F2F2F7",
@@ -131,6 +139,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     mono: "DejaVu Sans Mono",
     radius: { none: 0, sm: 4, md: 6, lg: 9, xl: 12, full: 9999 },
     density: "spacious",
+    contrast: "default",
     colors: {
       light: {
         background: "#F6F5F4",
@@ -179,6 +188,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     mono: "Consolas",
     radius: { none: 0, sm: 2, md: 4, lg: 8, xl: 8, full: 9999 },
     density: "comfortable",
+    contrast: "default",
     colors: {
       light: {
         background: "#F3F3F3",
@@ -227,6 +237,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     mono: "Menlo",
     radius: defaultRadius,
     density: "comfortable",
+    contrast: "default",
     colors: { light: {}, dark: {} },
   },
 };

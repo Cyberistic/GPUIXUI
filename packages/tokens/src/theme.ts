@@ -138,15 +138,31 @@ export interface ThemeOverrides {
   readonly iconSize?: Partial<IconSize>;
 }
 
-/** Input to {@link createTheme}: a mode plus overrides. */
+/** Input to {@link createTheme}: a mode, a contrast variant and overrides. */
 export interface ThemeConfig extends ThemeOverrides {
   readonly mode: ThemeMode;
+  /** Contrast variant to start from; the default palette when absent. */
+  readonly contrast?: ThemeContrast;
 }
 
-const mergeTextStyle = (
-  base: TextStyle,
-  override: Partial<TextStyle> | undefined,
-): TextStyle => (override === undefined ? base : { ...base, ...override });
+/**
+ * Overlay a group's defined overrides on a base group. A key present with
+ * `undefined` — an optional value a caller forwarded unchanged — inherits
+ * instead of erasing, because a theme's groups are complete and an erased role
+ * paints nothing.
+ */
+const overlay = <T extends object>(
+  base: T,
+  overrides: Partial<T> | undefined,
+): T => {
+  if (overrides === undefined) {
+    return base;
+  }
+  const defined = Object.entries(overrides).filter(
+    ([, value]) => value !== undefined,
+  );
+  return { ...base, ...Object.fromEntries(defined) };
+};
 
 const mergeTypography = (
   base: Typography,
@@ -158,16 +174,16 @@ const mergeTypography = (
   return {
     sans: override.sans ?? base.sans,
     mono: override.mono ?? base.mono,
-    display: mergeTextStyle(base.display, override.display),
-    h1: mergeTextStyle(base.h1, override.h1),
-    h2: mergeTextStyle(base.h2, override.h2),
-    h3: mergeTextStyle(base.h3, override.h3),
-    body: mergeTextStyle(base.body, override.body),
-    bodyStrong: mergeTextStyle(base.bodyStrong, override.bodyStrong),
-    label: mergeTextStyle(base.label, override.label),
-    caption: mergeTextStyle(base.caption, override.caption),
-    code: mergeTextStyle(base.code, override.code),
-    codeBlock: mergeTextStyle(base.codeBlock, override.codeBlock),
+    display: overlay(base.display, override.display),
+    h1: overlay(base.h1, override.h1),
+    h2: overlay(base.h2, override.h2),
+    h3: overlay(base.h3, override.h3),
+    body: overlay(base.body, override.body),
+    bodyStrong: overlay(base.bodyStrong, override.bodyStrong),
+    label: overlay(base.label, override.label),
+    caption: overlay(base.caption, override.caption),
+    code: overlay(base.code, override.code),
+    codeBlock: overlay(base.codeBlock, override.codeBlock),
   };
 };
 
@@ -180,7 +196,7 @@ const mergeDensity = (
   }
   return typeof override === "string"
     ? densityPresets[override]
-    : { ...base, ...override, name: base.name };
+    : { ...overlay(base, override), name: base.name };
 };
 
 /** The default light theme. */
@@ -287,24 +303,26 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     name: overrides.name ?? base.name,
     mode: base.mode,
     contrast: base.contrast,
-    colors: { ...base.colors, ...overrides.colors },
+    colors: overlay(base.colors, overrides.colors),
     typography: mergeTypography(base.typography, overrides.typography),
-    spacing: { ...base.spacing, ...overrides.spacing },
-    radius: { ...base.radius, ...overrides.radius },
+    spacing: overlay(base.spacing, overrides.spacing),
+    radius: overlay(base.radius, overrides.radius),
     density: mergeDensity(base.density, overrides.density),
-    elevation: { ...base.elevation, ...overrides.elevation },
-    borderWidth: { ...base.borderWidth, ...overrides.borderWidth },
-    iconSize: { ...base.iconSize, ...overrides.iconSize },
+    elevation: overlay(base.elevation, overrides.elevation),
+    borderWidth: overlay(base.borderWidth, overrides.borderWidth),
+    iconSize: overlay(base.iconSize, overrides.iconSize),
   };
 }
 
 /**
- * Build a theme for a mode, starting from the built-in light or dark theme.
+ * Build a theme for a mode, starting from the built-in theme of the requested
+ * contrast variant.
  *
  * @example
  * ```ts
  * const brand = createTheme({
  *   mode: "dark",
+ *   contrast: "high",
  *   name: "Acme",
  *   colors: { primary: "#6A45F0", primaryForeground: "#FFFFFF" },
  *   density: "compact",
@@ -312,8 +330,8 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
  * ```
  */
 export function createTheme(config: ThemeConfig): Theme {
-  const { mode, ...overrides } = config;
-  return extendTheme(themes[mode], overrides);
+  const { mode, contrast = "default", ...overrides } = config;
+  return extendTheme(getTheme(mode, contrast), overrides);
 }
 
 /**
@@ -334,19 +352,15 @@ export function createTheme(config: ThemeConfig): Theme {
  * ```
  */
 export function platformTheme(base: Theme, platform: PlatformName): Theme {
-  const {
-    label,
-    sans,
-    mono,
-    radius: platformRadius,
-    density,
-    colors,
-  } = platformStyles[platform];
+  const style = platformStyles[platform];
+  const contrast = base.contrast ?? "default";
   return extendTheme(base, {
-    name: `${base.name} · ${label}`,
-    typography: { sans, mono },
-    radius: platformRadius,
-    density,
-    colors: base.contrast === "high" ? undefined : colors[base.mode],
+    name: `${base.name} · ${style.label}`,
+    typography: { sans: style.sans, mono: style.mono },
+    radius: style.radius,
+    density: style.density,
+    // A palette is designed against the floors of one contrast variant; a base
+    // that needs more keeps its own colours.
+    colors: contrast === style.contrast ? style.colors[base.mode] : undefined,
   });
 }

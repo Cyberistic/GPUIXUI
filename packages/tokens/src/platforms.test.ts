@@ -39,6 +39,7 @@ import {
   highContrastLightTheme,
   lightTheme,
   platformTheme,
+  themeContrasts,
   themeModes,
   themes,
 } from "./theme.js";
@@ -91,6 +92,32 @@ describe("platformStyles", () => {
     platforms.forEach((platform) => {
       expect(densityPresets[platformStyles[platform].density]).toBeDefined();
     });
+  });
+
+  it("declares the contrast variant its palette is designed for", () => {
+    platforms.forEach((platform) => {
+      expect(themeContrasts, platform).toContain(
+        platformStyles[platform].contrast,
+      );
+    });
+    // Every shipped palette is designed against the default floors; a base that
+    // needs more keeps its own colours, which the next suite proves.
+    expect(
+      platforms.map((platform) => platformStyles[platform].contrast),
+    ).toEqual(platforms.map(() => "default"));
+  });
+
+  it("names no role as undefined", () => {
+    // A partial palette may omit a role, but an explicit `undefined` would
+    // overwrite the base value with nothing.
+    const empty = platforms.flatMap((platform) =>
+      themeModes.flatMap((mode) =>
+        Object.entries(platformStyles[platform].colors[mode])
+          .filter(([, value]) => value === undefined)
+          .map(([role]) => `${platform} ${mode} ${role}`),
+      ),
+    );
+    expect(empty).toEqual([]);
   });
 
   it("keeps the default variant as the library's own identity", () => {

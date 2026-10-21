@@ -72,9 +72,12 @@ const shadow = elevationShadow(theme, "md");
 
 ## Extending a theme
 
-`createTheme` starts from a built-in theme; `extendTheme` derives from any
-theme. Neither mutates its base. Typography merges field by field, elevation
-levels replace whole arrays, and the mode is not overridable.
+`createTheme` starts from the built-in theme of the requested `mode` and
+`contrast` (default contrast when it is not named); `extendTheme` derives from
+any theme. Neither mutates its base. Groups merge key by key — a key written as
+`undefined` inherits instead of erasing a role the group must carry. Typography
+merges field by field, elevation levels replace whole arrays, and the mode is not
+overridable.
 
 A brand that changes a fill owns its **on-colour** too: the dark base pairs a
 light fill with dark text, so a saturated brand violet needs a white label.
@@ -226,8 +229,10 @@ runs on (`default` in a browser or on an OS the library does not know) and
 `systemMonoFamily` is its mono family.
 
 The colour table is a partial `ThemeColors` per mode, held to the same contrast
-floors as the built-in themes. `default` is the library's own identity and
-changes only the name. A high-contrast base keeps its palette and takes only the
+floors as the built-in themes. Each style declares the `contrast` variant its
+palette is designed for, and `platformTheme` applies it only where that matches
+the base theme's own variant. `default` is the library's own identity and changes
+only the name. A high-contrast base keeps its palette and takes only the
 families, radii and density, because accessibility outranks the platform look.
 
 All three axes are measured as painted: the playground's `theme-platform` probe

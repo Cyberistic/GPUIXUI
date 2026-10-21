@@ -128,10 +128,13 @@ base radius as its negative control (`expected 10, got 8`).
 
 A high-contrast theme is the one combination that keeps its own palette: it takes
 the families, radii and density but no platform colour, because accessibility
-outranks the platform look. `Theme.contrast` records which variant a theme
-carries, so a consumer can branch on it. Every platform palette is measured on
-the same contrast floors as the built-in themes, so "looks native" never means
-"reads worse".
+outranks the platform look. Each platform style declares the `contrast` variant
+its palette is designed for, and `platformTheme` applies a palette only where
+that matches the base's, so the rule is a declaration rather than a special case
+for `"high"`. `Theme.contrast` records which variant a theme carries, so a
+consumer can branch on it. Every platform palette is measured on the same
+contrast floors as the built-in themes, so "looks native" never means "reads
+worse".
 
 **Limitation.** GPUix has no `letterSpacing`. Tight display tracking and
 all-caps label tracking are therefore impossible without per-glyph layout. The
