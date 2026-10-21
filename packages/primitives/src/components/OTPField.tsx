@@ -122,6 +122,8 @@ export interface OTPFieldPart {
   readonly autoFocus: boolean | undefined;
   /** The code split into one entry per cell, already normalised. */
   readonly cells: ReadonlyArray<string>;
+  /** The one cell in the tab order: where the code has got to, or the focus. */
+  readonly rovingIndex: number;
   readonly cellStyle: StyleDesc;
   readonly focus: OTPFieldFocus;
   readonly handlers: OTPFieldHandlers;
@@ -149,13 +151,17 @@ export const otpFieldPart = (
   } else {
     cellStyle = mergeStyle(cellStyle, keyboardRing(theme, props.invalid));
   }
+  const code = normalizeOtp(state.current, limit);
   return {
     theme,
     disabled,
     label: props.label,
     testId: props.testId,
     autoFocus: disabled ? undefined : props.autoFocus,
-    cells: otpCells(state.current, limit),
+    cells: otpCells(code, limit),
+    rovingIndex: Option.getOrElse(focus.focusedIndex, () =>
+      Math.min(code.length, Math.max(0, limit - 1)),
+    ),
     cellStyle,
     focus,
     handlers,
@@ -200,7 +206,7 @@ export const renderOtpFieldInput = (
       value={part.cells[index] ?? ""}
       readOnly={disabled}
       autoFocus={index === 0 ? part.autoFocus : undefined}
-      tabIndex={disabled ? -1 : 0}
+      tabIndex={disabled ? -1 : index === part.rovingIndex ? 0 : -1}
       theme={nativeTextTheme(part.theme)}
       aria-label={otpCellLabel(part.label, index)}
       style={mergeStyle(

@@ -93,6 +93,29 @@ describe("OTPField", () => {
     expect(otpCellLabel(undefined, 0)).toBe("Code digit 1");
   });
 
+  it("keeps one cell in the tab order: the one the code has reached", () => {
+    // The bug: every cell was tabIndex=0, so Tab walked through all six.
+    const tabStops = (value: string, length = 4) =>
+      [0, 1, 2, 3].map((index) =>
+        expectSome(
+          hostProp(cell(render({ length }, value), index), "tabIndex"),
+        ),
+      );
+    expect(tabStops("12")).toStrictEqual([-1, -1, 0, -1]);
+    expect(tabStops("1234")).toStrictEqual([-1, -1, -1, 0]);
+    expect(tabStops("")).toStrictEqual([0, -1, -1, -1]);
+  });
+
+  it("moves the tab stop to the cell that holds focus", () => {
+    const focused = render({ length: 4 }, "12", {
+      focusedIndex: Option.some(1),
+      onFocus: vi.fn(),
+      onBlur: vi.fn(),
+    });
+    expect(expectSome(hostProp(cell(focused, 1), "tabIndex"))).toBe(0);
+    expect(expectSome(hostProp(cell(focused, 2), "tabIndex"))).toBe(-1);
+  });
+
   it("reports the index and the raw edit of the cell that changed", () => {
     const onEdit = vi.fn();
     const element = render({ length: 4 }, "12", idle, { onEdit });

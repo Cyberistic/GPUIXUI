@@ -230,3 +230,24 @@ it("paints a caller's cell composition from the field's own code", async () => {
   expect(lastValue(field.values)).toBe("12");
   expect(cells(runtime)).toHaveLength(2);
 });
+
+it("is one tab stop, on the cell the code has reached", async () => {
+  const runtime = await mount(
+    <Stack direction="row">
+      <Button testId="before">Before</Button>
+      <OTPField
+        testId="otp"
+        length={4}
+        label="Verification code"
+        defaultValue="12"
+      />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  runtime.click("before");
+  runtime.focusNext();
+  expect(focusedId(runtime)).toBe("otp-cell-3");
+  // The next Tab leaves the group instead of walking the other three cells.
+  runtime.focusNext();
+  expect(focusedId(runtime)).toBe("after");
+});
