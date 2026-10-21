@@ -273,6 +273,7 @@ describe("theme audit example", () => {
       expect(auditTheme(theme)).toEqual({
         invalidRoles: [],
         invalidShadows: [],
+        invalidNumbers: [],
         contrast: [],
         decorative: [],
         series: { surfaces: [], distinctness: [], deficiencies: [] },

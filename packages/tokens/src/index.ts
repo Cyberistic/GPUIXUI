@@ -6,6 +6,7 @@ export * from "./disabled.js";
 export * from "./elevation.js";
 export * from "./fonts.js";
 export * from "./indicator.js";
+export * from "./numbers.js";
 export * from "./platforms.js";
 export * from "./retro.js";
 export * from "./scale.js";

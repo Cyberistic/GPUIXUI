@@ -366,7 +366,7 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all seven reports are
+CSS validation and lint, and `passed` is true only when all eight reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
@@ -389,6 +389,7 @@ const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
+audit.invalidNumbers; // [] — every size, length and shadow the renderer can lay out
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status edge and thumb is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
@@ -406,6 +407,12 @@ Each report is also a function of its own:
   elevation scale, which the role report cannot see: a level a brand supplies
   replaces the array whole, and a colour the runtime ignores paints no shadow at
   all. `isPaintableColor(value)` is the grammar on its own.
+- `invalidNumbers(theme)` lists every numeric token the renderer cannot lay out.
+  A style batch is JSON, so `NaN` and `Infinity` reach native as `null` and the
+  property is dropped — the element paints as if the value were never set — while
+  a negative size is accepted and paints nothing usable. Each failure names its
+  group, path, value and the rule it missed; a shadow offset may be negative, but
+  a control height or type size must be positive.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
   translucent.

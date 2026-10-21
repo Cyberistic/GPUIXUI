@@ -359,9 +359,20 @@ over it in `theme.test.ts`. An elevation level a brand supplies is outside that
 report — it reads `colors` — and an unpaintable shadow colour paints no shadow,
 so `invalidShadowColors(theme)` names the level and position (§7).
 
+A value it cannot **lay out** is the third: a style batch is JSON, so `NaN` and
+`Infinity` arrive as `null`, the property is dropped, and the element paints as
+if the value were never set. Measured in the runtime's test renderer, a `NaN`
+radius beside a valid border, type size and fill left those three on the element
+and dropped only the radius; a negative size is accepted instead and paints
+nothing usable (`fontSize: -4` laid text out at height 0). `invalidNumbers(theme)`
+names the group, path, value and rule for every numeric token that cannot be
+laid out — a shadow offset may be negative, but a control height or type size
+must be positive (§10, `docs/tokens.md` §Numbers).
+
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all seven in one call — `invalidRoles`, `invalidShadows`, `contrast`,
-`decorative`, `series`, `selection` and `indicators` — and `passed` is true only
+reports all eight in one call — `invalidRoles`, `invalidShadows`,
+`invalidNumbers`, `contrast`, `decorative`, `series`, `selection` and
+`indicators` — and `passed` is true only
 when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
@@ -422,6 +433,7 @@ design system cannot compensate for a missing role.
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are objects, not CSS strings |
 | invalid colour strings are ignored per property | a typo paints the previous/black value; `invalidColorRoles` reports it, and the shipped themes are held to the hex grammar by test |
+| a style batch is JSON, so a non-finite number is dropped | the property is never set and the element paints its default; `invalidNumbers` reports the token, its group, path, value and rule |
 
 ## 11. Extension
 
@@ -449,11 +461,12 @@ expects the full role set. A brand that needs a different structure should add
 roles in the tokens package, not fork components.
 
 Overrides are plain data, so `extendTheme` cannot reject a colour the renderer
-would ignore. The audit is the gate: `auditTheme(theme)` reports an unpaintable
-role, an unpaintable shadow in a level the brand supplied, every pair below the
+would ignore or a number it cannot lay out. The audit is the gate: `auditTheme(theme)`
+reports an unpaintable role, an unpaintable shadow in a level the brand supplied,
+a size, length or shadow geometry the renderer would drop, every pair below the
 floor its variant asks for, and every decorative surface too close to its
-background; run it over the resolved theme before it ships and assert `passed`
-in the package's own tests.
+background; run it over the resolved theme before it ships and assert `passed` in
+the package's own tests.
 
 ## 12. Non-goals
 

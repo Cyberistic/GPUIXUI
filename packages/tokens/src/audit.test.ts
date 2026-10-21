@@ -89,6 +89,7 @@ describe("the floors follow the theme's contrast variant", () => {
     expect(auditTheme(faintPlaceholder, contrastFloors)).toEqual({
       invalidRoles: [],
       invalidShadows: [],
+      invalidNumbers: [],
       contrast: [],
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },
@@ -191,6 +192,7 @@ describe("every report is part of the gate", () => {
     expect(auditTheme(raisedShadows)).toEqual({
       invalidRoles: [],
       invalidShadows: [],
+      invalidNumbers: [],
       contrast: [],
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },

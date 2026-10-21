@@ -684,8 +684,8 @@ accent — and `retro.test.ts` holds the result to the same contracts.
 
 ## Checking your own theme
 
-A theme fails silently in seven independent ways, and `auditTheme(theme)` is the
-one call that reports all seven:
+A theme fails silently in eight independent ways, and `auditTheme(theme)` is the
+one call that reports all eight:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -693,9 +693,10 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all seven reports below are empty
+audit.passed; // true only when all eight reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.invalidShadows; // elevation shadow colours the renderer cannot paint
+audit.invalidNumbers; // sizes, lengths and shadows the renderer cannot lay out
 audit.contrast; // text, icon and boundary pairs below their floor
 audit.decorative; // dividers, skeleton fills, veils and status edges too subtle to see
 audit.series; // data-series colours lost on their plot, against each other, or for a colour-blind reader
@@ -703,7 +704,7 @@ audit.selection; // a selection wash the reader cannot see, or that hides its te
 audit.indicators; // a progress fill, spinner dot or presence mark lost on its strip
 ```
 
-`passed` is computed from the seven reports, so it cannot drift from them. The
+`passed` is computed from the eight reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -737,6 +738,50 @@ invalidColorRoles({ colors: { ...lightColors, primary: "#7C5CF" } });
 value — a theme editor's hex field, a persisted brand colour — before it reaches
 a style. `invalidShadowColors(theme)` applies it to an elevation level a brand
 supplies, which the role report cannot see (§Elevation).
+
+### Numbers
+
+A colour the renderer cannot parse is not the only silent failure. A style batch
+is serialised with `JSON.stringify` before it reaches native
+(`@gpuix/native@0.11.0`, `dist/mutations.js`), so `NaN` and `Infinity` arrive as
+`null`: the property is dropped and the element paints as if the theme never set
+it. Measured in the runtime's test renderer, `borderRadius: NaN` beside a valid
+`borderWidth`, `fontSize` and `backgroundColor` left those three on the element
+and dropped only the radius. A negative size is accepted rather than dropped and
+paints nothing usable — `fontSize: -4` laid a text element out at height 0.
+
+`invalidNumbers(theme)` reports every numeric token the renderer cannot lay out,
+by group, path, value and the rule it missed:
+
+| Group | Numbers | Rule |
+| ----- | ------- | ---- |
+| `spacing` | every step | finite, `>= 0` |
+| `radius` | every step | finite, `>= 0` (`none` is 0) |
+| `borderWidth` | `thin`, `strong` | finite, `>= 0` |
+| `iconSize` | `xs`…`xl` | finite, `> 0` |
+| `typography` | every role's size and leading | finite, `> 0` |
+| `density` | `controlHeight` per size, `rowHeight` | finite, `> 0` |
+| `density` | `controlPaddingX` per size | finite, `>= 0` |
+| `elevation` | every shadow's `offsetX`, `offsetY`, `spreadRadius` | finite |
+| `elevation` | every shadow's `blurRadius` | finite, `>= 0` |
+
+The rule follows the design, not a blanket "must be positive". A shadow may be
+offset up and in, so a negative offset or spread is a decision; a zero radius, a
+zero border and a zero-blur shadow are how a square, borderless or flat surface
+is stated. A size a reader has to see is the one place zero is not allowed: a
+zero height or type size is a control that paints nothing.
+
+```ts
+import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
+
+invalidNumbers(extendTheme(lightTheme, { radius: { md: Number.NaN } }));
+// [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
+```
+
+`src/numbers.example.ts` is a brand whose corner radius came from a scale factor
+nobody set; `numbers.test.ts` runs its audit, proves none of the colour reports
+can see the defect, and holds all 16 shipped, platform and authored themes to an
+empty report.
 
 ### Contrast
 
@@ -1673,6 +1718,15 @@ level and per shipped theme, a brand's retint reaching every inherited level whi
 an explicit one survives, and the colour an explicit level carries —
 `invalidShadowColors` names the level, position and value, so a shadow the
 runtime would silently not paint is reported instead of shipped.
+
+`packages/tokens/src/numbers.test.ts` covers the numbers a theme carries: every
+shipped, high-contrast, platform and authored theme reports nothing, each of the
+seven groups is proven by a deliberately broken value — a non-finite spacing
+step, radius, border width, icon size, type size or leading, density metric and
+shadow entry — and the rule's precision is proven both ways: a zero radius and
+border pass, a negative shadow offset and spread pass, a negative radius fails. A
+shadow's second entry is reported rather than hidden behind its first, and the
+audit fails a brand whose radius is `NaN` while every colour report stays empty.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label, both families, a density preset and a full radius scale; `sans` is

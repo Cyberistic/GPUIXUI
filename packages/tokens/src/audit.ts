@@ -2,14 +2,15 @@
  * The one check a theme runs before it ships.
  *
  * A theme fails silently in independent ways: a role the renderer cannot parse
- * paints black, a shadow colour it cannot parse paints no shadow at all, a text
- * pair below its floor is unreadable, a decorative surface close to its
- * background is invisible, a data series is lost on its plot, the selection
- * wash hides the text it selects, and an indicator mark disappears into the
- * strip it is drawn on. Each has its own report, and a consumer who forgets one
- * ships the failure it would have caught — which is what the documented gate
- * did, running two of the three and holding every theme to the default floors
- * even when the theme declares the high-contrast variant.
+ * paints black, a shadow colour it cannot parse paints no shadow at all, a
+ * number it cannot lay out is dropped, a text pair below its floor is
+ * unreadable, a decorative surface close to its background is invisible, a data
+ * series is lost on its plot, the selection wash hides the text it selects, and
+ * an indicator mark disappears into the strip it is drawn on. Each has its own
+ * report, and a consumer who forgets one ships the failure it would have caught
+ * — which is what the documented gate did, running two of the three and holding
+ * every theme to the default floors even when the theme declares the
+ * high-contrast variant.
  */
 
 import {
@@ -31,6 +32,11 @@ import {
   type InvalidShadowColor,
 } from "./elevation.js";
 import { indicatorFailures, type IndicatorFailure } from "./indicator.js";
+import {
+  invalidNumbers,
+  type InvalidNumber,
+  type NumberSource,
+} from "./numbers.js";
 import { selectionFailures, type SelectionFailure } from "./selection.js";
 import {
   seriesFailures,
@@ -76,6 +82,8 @@ export interface ThemeAudit {
   readonly invalidRoles: readonly InvalidColorRole[];
   /** Elevation shadows whose colour GPUix cannot paint, by level and position. */
   readonly invalidShadows: readonly InvalidShadowColor[];
+  /** Numeric tokens the renderer cannot lay out — a dropped or invisible size. */
+  readonly invalidNumbers: readonly InvalidNumber[];
   /** Text, icon and boundary pairs that miss their floor, or cannot be measured. */
   readonly contrast: readonly ContrastFailure[];
   /** Dividers, skeleton fills, veils and status edges too close to their surface. */
@@ -86,12 +94,12 @@ export interface ThemeAudit {
   readonly selection: readonly SelectionFailure[];
   /** Indicator marks that cannot be found on the strip they are drawn on. */
   readonly indicators: readonly IndicatorFailure[];
-  /** True only when all seven reports are empty. */
+  /** True only when all eight reports are empty. */
   readonly passed: boolean;
 }
 
 /**
- * Audit a theme against the seven contracts the library holds itself to.
+ * Audit a theme against the eight contracts the library holds itself to.
  *
  * The contrast floors come from the theme's own `contrast` variant, so a
  * high-contrast brand is measured at AAA without the caller naming a floor set;
@@ -107,11 +115,16 @@ export interface ThemeAudit {
  * ```
  */
 export function auditTheme(
-  theme: ColourSource & ContrastSource & SeriesSource & ShadowSource,
+  theme: ColourSource &
+    ContrastSource &
+    SeriesSource &
+    ShadowSource &
+    NumberSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): ThemeAudit {
   const invalidRoles = invalidColorRoles(theme);
   const invalidShadows = invalidShadowColors(theme);
+  const numbers = invalidNumbers(theme);
   const contrast = contrastFailures(theme, floors);
   const decorative = decorativeFailures(theme);
   const series = seriesFailures(theme);
@@ -120,6 +133,7 @@ export function auditTheme(
   return {
     invalidRoles,
     invalidShadows,
+    invalidNumbers: numbers,
     contrast,
     decorative,
     series,
@@ -128,6 +142,7 @@ export function auditTheme(
     passed:
       invalidRoles.length === 0 &&
       invalidShadows.length === 0 &&
+      numbers.length === 0 &&
       contrast.length === 0 &&
       decorative.length === 0 &&
       series.surfaces.length === 0 &&
