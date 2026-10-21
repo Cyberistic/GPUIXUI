@@ -84,3 +84,18 @@ export const exportedOverlayOverrides = themeOverrides(
   exportedBase,
   exportedOverlayTheme,
 );
+
+/**
+ * A bezier easing is a value, not a member set: the shipped phase is a name and
+ * the edit is a tuple, and the diff carries it like any other value. The stored
+ * pair is the shape an editor persists, so this is the path plan `834` fixed.
+ */
+export const exportedBezierTheme = extendTheme(exportedBase, {
+  motion: { ease: { enter: [0.4, 0, 0.2, 1] } },
+});
+
+/** The one-phase diff that rebuilds {@link exportedBezierTheme}. */
+export const exportedBezierOverrides = themeOverrides(
+  exportedBase,
+  exportedBezierTheme,
+);

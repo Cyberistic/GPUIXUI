@@ -107,7 +107,7 @@ missing here is not public.
 | `MetricGroup` | A group of theme metrics from `metricGroups`. |
 | `MetricRule` | One of `metricRules`: `positive`, `non-negative`, `zero`, `finite`, `increasing`, `non-decreasing`, `at-least`, `at-most` or `within`. |
 | `Motion` | Six timing levels and four easing phases. |
-| `MotionEasing` | A cubic-bezier control-point tuple. |
+| `MotionEasing` | A named easing (`linear`, `ease`, `easeIn`, `easeOut`, `easeInOut`) or a cubic-bezier control-point tuple. |
 | `MotionEasings` | The `standard`, `enter`, `exit` and `linear` curves. |
 | `MotionLevel` | A timing level from `motionLevels`, `none` to `pulse`. |
 | `MotionOverrides` | Partial timings and easings for `extendTheme` or a platform style's `structure.motion`. |
@@ -1396,8 +1396,11 @@ easing phases, so a table or a settings row iterates the index instead of
 Easings are named per phase: `standard` (`easeInOut`), `enter` (`easeOut`),
 `exit` (`easeIn`) and `linear`. The runtime also takes a cubic-bezier tuple, so
 `extendTheme(base, { motion: { ease: { enter: [0.4, 0, 0.2, 1] } } })` works
-without a cast. A copied platform style may name the same curves in
-`structure.motion`; each omitted phase inherits the identity's. The tuple is four
+without a cast. A tuple is also a value the diff carries: `themeOverrides(base,
+edited)` returns `{ motion: { ease: { enter: [...] } } }` like any other change,
+so a theme editor can store a bezier easing (plan 834). A copied platform style
+may name the same curves in `structure.motion`; each omitted phase inherits the
+identity's. The tuple is four
 finite control points whose two x values must
 lie inside `0…1`: the runtime's `validate_ease` rejects the whole transition
 otherwise, and a curve outside that range has no progress function. A y value may
@@ -2316,7 +2319,9 @@ metrics — and an elevation level is replaced whole, matching the documented me
 rule. Because a level is replaced whole, its entries travel in the diff: a brand
 that defines the reserved `overlay` — empty in every shipped theme and governed
 once defined — stores as `{ elevation: { overlay: [...] } }`. The member
-boundary is a group's named members, not a level's list. `undefined` means the
+boundary is a group's named members, not a level's list, and a value is not a
+member: an easing phase may be a name in the base and a cubic-bezier tuple in
+the edit, and the tuple travels in the overrides. `undefined` means the
 pair cannot be expressed, for one of two reasons: a different `mode`, because
 `extendTheme` cannot change the mode, or a group whose member set differs from
 the base's — the extra step a brand spreads into a scale

@@ -22,6 +22,8 @@ import {
 } from "./index.js";
 import {
   exportedBase,
+  exportedBezierOverrides,
+  exportedBezierTheme,
   exportedOverrides,
   exportedTheme,
 } from "./theme-diff.example.js";
@@ -94,7 +96,10 @@ describe("every shipped theme round-trips over the identity of its mode", () => 
           },
         ],
       },
-      motion: { fast: 150, ease: { enter: "linear" } },
+      motion: {
+        fast: 150,
+        ease: { enter: "linear", standard: [0.4, 0, 0.2, 1] },
+      },
       borderWidth: { thin: 1.5 },
       iconSize: { md: 18 },
       avatarSize: { md: 34 },
@@ -138,6 +143,30 @@ describe("the diff is minimal", () => {
 
     expect(themeOverrides(lightTheme, target)).toEqual({
       typography: { body: { lineHeight: 22 } },
+    });
+  });
+});
+
+describe("a value is not a member set", () => {
+  it("carries a cubic-bezier easing, whose shipped value is a name", () => {
+    // The base's phase is `"easeOut"` and the edit's is a tuple: one member
+    // whose value kind changed. Refusing it made a documented edit unstorable.
+    expect(exportedBase.motion.ease.enter).toBe("easeOut");
+    expect(exportedBezierOverrides).toEqual({
+      motion: { ease: { enter: [0.4, 0, 0.2, 1] } },
+    });
+    expect(extendTheme(exportedBase, exportedBezierOverrides ?? {})).toEqual(
+      exportedBezierTheme,
+    );
+  });
+
+  it("still carries a named easing", () => {
+    const named = extendTheme(exportedBase, {
+      motion: { ease: { enter: "linear" } },
+    });
+
+    expect(overridesOf(exportedBase, named)).toEqual({
+      motion: { ease: { enter: "linear" } },
     });
   });
 });

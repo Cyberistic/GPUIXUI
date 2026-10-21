@@ -53,16 +53,14 @@ const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
  * added step back; refusing the pair is what keeps a returned set able to
  * rebuild the theme it was measured against.
  *
- * An array is a value, not a member map: `extendTheme` replaces an elevation
- * level whole, so a defined `overlay` — a level the identity ships empty and
- * the metric contract governs — travels in the diff instead of being refused.
- * The member boundary is the named members of a record; a level's entries are
- * carried by `changedElevation`.
+ * The member boundary is the named members of a **record**. Everything else is a
+ * value, whatever its kind: an elevation level is a list `extendTheme` replaces
+ * whole — so a defined `overlay`, which the identity ships empty, travels in the
+ * diff — and an easing phase is a name in the shipped themes and a
+ * cubic-bezier tuple in an edited one, which `changedMotion` compares. Reading
+ * either as a member map refuses an edit the merge accepts.
  */
 const sameMembers = (base: unknown, theme: unknown): boolean => {
-  if (Array.isArray(base) || Array.isArray(theme)) {
-    return Array.isArray(base) && Array.isArray(theme);
-  }
   if (isRecord(base) && isRecord(theme)) {
     const members = Object.keys(base);
     return (

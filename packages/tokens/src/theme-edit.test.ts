@@ -151,6 +151,38 @@ describe("a stored edit records its base", () => {
     expect(stored.base).toEqual(exportedBaseChoice);
     expect(applyThemeEdit(stored)).toEqual(exportedPlatformTheme);
   });
+
+  // Plan 834: an easing phase is a name in the base and a bezier tuple in the
+  // edit, so the member walk refused the pair and the editor could not store an
+  // easing the catalogue teaches to author.
+  it("carries a bezier easing through storage", () => {
+    const choice = { mode: "light" } as const;
+    const base = resolveThemeChoice(choice);
+    const edited = extendTheme(base, {
+      motion: { ease: { enter: [0.4, 0, 0.2, 1] } },
+    });
+
+    const stored = editOf(choice, edited);
+    // A settings screen persists the pair as text; a tuple must survive it.
+    const parsed: unknown = JSON.parse(JSON.stringify(stored));
+
+    expect(parsed).toEqual(stored);
+    expect(applyThemeEdit(stored)).toEqual(edited);
+  });
+
+  it("states that the diff carries a bezier easing", () => {
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    // The two sentences the fix added: the authoring path stores, and a value
+    // is not a member. Both were silent while `sameMembers` refused the pair.
+    expect(catalogue).toContain("so a theme editor can store a bezier easing");
+    expect(catalogue).toContain(
+      "an easing phase may be a name in the base and a cubic-bezier tuple in the edit",
+    );
+  });
 });
 
 /**

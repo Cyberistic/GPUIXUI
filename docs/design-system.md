@@ -1048,7 +1048,9 @@ The extension mechanism is deliberately small:
   differs from the base's — a scale a brand widened with an extra step, which
   the checks accept and a `ThemeOverrides` cannot name. An elevation level is
   not such a set: it is replaced whole, so a defined `overlay` travels in the
-  overrides. The overrides are relative to the exact base, not its mode, so the
+  overrides. Neither is a value: a phase may be a named easing in the base and a
+  cubic-bezier tuple in the edit, and the diff carries the tuple. The overrides
+  are relative to the exact base, not its mode, so the
   stored artifact is a `ThemeEdit`: `themeEdit(choice, edited)` records the
   base's `ThemeChoice` and `applyThemeEdit(edit)` resolves it back.
 

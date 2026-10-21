@@ -54,7 +54,15 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 381/456
+`[x]` `[████████░░]` 382/457
+
+`[x]` Carry a cubic-bezier easing through the edit artifact — `sameMembers`
+refused the pair because the shipped phase is a name and an edited one is a
+tuple, so `themeOverrides`/`themeEdit` returned `undefined` for the easing the
+catalogue teaches to author; a non-record is a value, not a member map, the
+widened-scale refusal is unchanged, and `theme-diff.example.ts` +
+`theme-edit.test.ts` hold the diff and the stored pair; the `MotionEasing` type
+row now names both forms (plan 834)
 
 `[x]` Own every remaining figure in a live cross-team row — the pressed
 selection control's ring set and range (16 of 24, 1.02–1.61), the message

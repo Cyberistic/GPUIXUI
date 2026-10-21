@@ -421,6 +421,7 @@ references without buying correctness.
 | [828](./828-row-mark-fills.md) | The unread dot's two row fills, and the ledger rows plan 698 left behind | F | 332, 341, 351, 511, 557, 619, 651, 698, 705, 806, 823 | done |
 | [831](./831-ledger-status-figures.md) | The live cross-team rows quote figures the palette no longer produces | F | 079, 366, 528, 574, 582, 611, 737, 828 | done |
 | [833](./833-live-row-figures.md) | Every remaining figure in a live cross-team row, and the ring row's set | F | 057, 079, 311, 332, 343, 344, 347, 348, 394, 603, 611, 737, 831 | done |
+| [834](./834-bezier-easing-storage.md) | The cubic-bezier easing a stored edit cannot carry | F | 685, 713, 727, 744, 758, 794 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4377,6 +4378,23 @@ Toast countdown's six equal `muted`/`popover` sets and 1.069 groove, the
 unchecked control's six `#FFFFFF` field fills (XP's beige card is the documented
 exception), and the native field's 3.23 runtime grey. No colour, pair, floor,
 metric or shipped theme moves.
+
+834 closes the one class of edit the artifact could not carry, and it was a
+value kind rather than a member: `sameMembers` refused a pair when one side was
+an array and the other was not, a branch written for an elevation level that
+also fired for the one member whose value is a union — an easing phase is a name
+in the shipped themes and a cubic-bezier tuple in an edited one. So
+`themeOverrides(base, edited)` returned `undefined` for the exact edit
+`docs/tokens.md` teaches to author, `themeEdit` returned `undefined` with it, and
+both documents listed two `undefined` reasons for a function that had three. The
+walk now compares the named members of **records** only, so a non-record is a
+value on both sides — matching the function's own comment and
+`changedMotion`'s `easingEquals` — while the widened-scale refusal is unchanged
+(`theme-overrides-members` stays green on all five groups). The executed
+`theme-diff.example.ts` carries a tuple, `theme-diff.test.ts` proves the diff and
+a new `theme-edit.test.ts` case stores the pair through JSON, and the
+`MotionEasing` type row now names both forms. No colour, pair, floor, metric,
+role or shipped theme moves.
 
 ## How to use a plan
 

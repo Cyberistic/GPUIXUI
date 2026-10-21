@@ -217,7 +217,8 @@ the theme it was measured against. The overrides are relative to the exact base,
 not merely its mode, so a stored edit is a `ThemeEdit` — the base's
 `ThemeChoice` plus the overrides: `themeEdit(choice, edited)` resolves the choice
 before it diffs, so the pair cannot name another base, and `applyThemeEdit(edit)`
-replays it. A runnable example lives in
+replays it. A cubic-bezier easing is a value the diff carries, so an editor that
+stores an edit keeps a tuple. A runnable example lives in
 [`src/theme-diff.example.ts`](./src/theme-diff.example.ts).
 
 A filled control reads its states from `filledControl(theme, family)` — the
