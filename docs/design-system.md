@@ -186,7 +186,10 @@ so retinting that one role retints every shadow a theme inherits. The high-contr
 themes carry the same geometry in their own role's tint.
 Overlay layering uses the `overlay` scrim colour; `elevation.overlay` is reserved
 and empty so the shape stays stable. Dark shadows are stronger because contrast
-between surfaces is lower.
+between surfaces is lower. A shadow is not measured by the contrast contract: it
+is a blurred geometry whose visible contribution depends on its offset and blur,
+so a flat composite would overstate it. It is held instead to one shadow per
+level, tinted by the `shadow` role (see §9 for the surfaces that *are* measured).
 
 ## 8. Interaction states
 
@@ -245,11 +248,28 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card` (a field error, an inline warning) | 7:1 | 7:1 |
 | focus ring (on background, card, popover, muted and secondary) and essential boundaries | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
+| decorative surfaces: divider, skeleton fill, modal veil | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 
 The test runs for every shipped colour set — light, dark, both high-contrast
 variants and all six platform themes — and is part of the normal test suite. It
 can fail: a palette edit that reduces contrast fails the gate.
+
+The surfaces that carry no text are measured too, because "subtle" is not
+"invisible": a divider, a skeleton fill and the modal veil are held to 1.05:1
+against what they are painted on — the same perceptibility floor the soft status
+surfaces use. The veil is composited over its surface rather than rejected as
+translucent, and the two places it is measured are the content surfaces a modal
+covers; a black page cannot be darkened, and a high-contrast theme separates its
+dialog with a border instead. `decorativeFailures(theme, floor?)` runs the check,
+and `decorative.test.ts` holds every shipped and platform theme to it. It found
+two platform styles whose inherited skeleton matched their own surfaces — macOS
+light's on a muted strip (1.045:1) and Linux dark's on its card (1.004:1) — which
+now carry a `skeleton` of their own.
+
+Also not measured, deliberately: the elevation tint. A shadow is a blurred
+geometry, so a flat ratio overstates what the eye receives; its contract is the
+one-shadow rule and the role-owned tint, guarded by `elevation.test.ts`.
 
 A value the renderer cannot paint is the other silent failure: GPUix ignores a
 colour string it cannot parse, so a typo keeps the property's previous value or
@@ -260,9 +280,10 @@ floor. The example now ships a white label with its violet, and the audit runs
 over it in `theme.test.ts`.
 
 The contract is public, so a brand theme runs the same checks:
-`contrastRatio(foreground, background)` measures two opaque roles, and
-`contrastPairs` with `contrastFloors` / `highContrastFloors` names the pairs and
-the floors. Nothing about the requirement is private to this repo.
+`contrastRatio(foreground, background)` measures two opaque roles,
+`contrastPairs` with `contrastFloors` / `highContrastFloors` names the text and
+boundary pairs and their floors, and `decorativeFailures(theme, floor?)` measures
+the subtle surfaces. Nothing about the requirement is private to this repo.
 
 Not covered, deliberately:
 

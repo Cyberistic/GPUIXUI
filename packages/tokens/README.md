@@ -275,7 +275,7 @@ A runnable example lives in
 
 ## Checking a theme
 
-Two public checks cover what a browser build gets from CSS validation and lint:
+Three public checks cover what a browser build gets from CSS validation and lint:
 
 - `invalidColorRoles(theme)` lists every role whose value is not a hex colour
   GPUix can paint. The runtime **ignores** a value it cannot parse, so a typo
@@ -283,12 +283,20 @@ Two public checks cover what a browser build gets from CSS validation and lint:
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
   translucent.
+- `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
+  skeleton fill, the modal veil — that is too close to what it is painted on to
+  be seen, compositing a translucent role first.
 
 ```ts
-import { contrastFailures, invalidColorRoles } from "@gpuixui/tokens";
+import {
+  contrastFailures,
+  decorativeFailures,
+  invalidColorRoles,
+} from "@gpuixui/tokens";
 
 invalidColorRoles(brandTheme); // [] — every role is paint-ready
 contrastFailures(brandTheme); // [] — every measured pair meets its floor
+decorativeFailures(brandTheme); // [] — every divider, skeleton and veil is visible
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 
@@ -296,7 +304,10 @@ contrastFailures(brandTheme); // [] — every measured pair meets its floor
 check — `undefined` for a translucent or non-hex value rather than a guess.
 `contrastFloors` / `highContrastFloors` and `contrastPairs` are the contract the
 shipped themes meet, so a brand is held to the same pairs rather than a second
-set. See [`src/theme-audit.example.ts`](./src/theme-audit.example.ts).
+set. The decorative surfaces use `decorativeFloor` (1.05:1, the same
+perceptibility floor the soft status surfaces use), and `decorativeSurfaces`
+names the eight placements measured. See
+[`src/theme-audit.example.ts`](./src/theme-audit.example.ts).
 
 ## Fonts
 

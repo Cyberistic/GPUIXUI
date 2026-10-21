@@ -81,7 +81,10 @@ export interface PlatformStyle extends PlatformType {
  * `contrast.ts` by `platforms.test.ts`; `contrast` names the variant those
  * floors are, so a high-contrast base keeps its own palette. The dark sets carry
  * a lighter `placeholder` than the base theme because their field surfaces are
- * lighter than its canvas. A role a set omits keeps the base theme's value.
+ * lighter than its canvas. Two styles also carry their own `skeleton`, because
+ * a placeholder fill is measured against the card and the muted strip it stands
+ * in (`decorative.ts`) and the inherited fill matched theirs. A role a set omits
+ * keeps the base theme's value.
  */
 export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   darwin: {
@@ -98,6 +101,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         popover: "#FFFFFF",
         input: "#FFFFFF",
         muted: "#E9E9EF",
+        skeleton: "#DCDFE7",
         hover: "#E9E9EF",
         active: "#DEDEE6",
         border: "#D9D9E0",
@@ -166,6 +170,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         popover: "#383838",
         input: "#212121",
         muted: "#2A2A2A",
+        skeleton: "#3A3A3A",
         hover: "#333333",
         active: "#3D3D3D",
         border: "#464646",

@@ -24,6 +24,9 @@ import {
   createTheme,
   currentPlatform,
   darkTheme,
+  decorativeFailures,
+  decorativeFloor,
+  decorativeSurfaces,
   densityNames,
   elevationShadow,
   extendTheme,
@@ -54,6 +57,8 @@ import {
   themeContrasts,
   themeModes,
   type ControlSize,
+  type DecorativeFailure,
+  type DecorativeSurface,
   type DensityName,
   type FilledAction,
   type FocusRing,
@@ -506,9 +511,10 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
 
 ## Checking your own theme
 
-Two checks cover the two ways a theme fails silently. The runtime **ignores** a
-colour string it cannot parse and keeps the property's previous value or paints
-black, and nothing measures text against the surface behind it.
+Two checks cover the two ways a theme fails silently, and a third covers the
+surfaces that are allowed to be subtle but not invisible. The runtime
+**ignores** a colour string it cannot parse and keeps the property's previous
+value or paints black, and nothing measures text against the surface behind it.
 
 ### Paint-ready values
 
@@ -566,6 +572,47 @@ measure one by hand, composite it first and use `contrastRatio`.
 `src/theme-audit.example.ts` runs both checks over a brand theme, and
 `theme.test.ts` asserts the result, so the documented brand theme is proven
 readable rather than assumed to be.
+
+### Decorative surfaces
+
+Three surfaces carry no text and are not a boundary, so WCAG's floors do not
+apply to them: the dividers (`border`), the skeleton fill, and the modal veil
+(`overlay`). They still have one job — be seen — so they get one floor of their
+own, `decorativeFloor = 1.05:1`, the same perceptibility threshold the soft
+status surfaces are held to. Below it a surface reads as the fill it is painted
+on: a card without an edge, a skeleton that looks like an empty row, a dialog
+with no layer behind it.
+
+`decorativeFailures(theme, floor?)` measures the eight placements the system
+paints, compositing a translucent role over its surface first, so the veil —
+translucent in every theme by design — is measured by the result a reader sees
+rather than rejected as unmeasurable:
+
+| Surface | Role | Measured over |
+| ------- | ---- | ------------- |
+| divider | `border` | `background`, `card`, `popover`, `muted` |
+| skeleton | `skeleton` | `background`, `card`, `muted` |
+| scrim | `overlay` | `card`, `popover` |
+
+A veiled page's **void** is not measured: a black page cannot be darkened by any
+scrim, and a high-contrast theme separates its dialog with a border instead. A
+surface that cannot be measured at all — a translucent page — is reported with
+`ratio: undefined`, exactly as a text pair is.
+
+The elevation tint is **not** in the table. A shadow is a blurred geometry, not a
+fill: its visible contribution depends on its offset and blur, so a flat
+composite would overstate it. Its contract is the one-shadow-per-level rule with
+the tint owned by the `shadow` role, in
+[`src/elevation.ts`](../packages/tokens/src/elevation.ts) and guarded by
+`elevation.test.ts`.
+
+```ts
+import { decorativeFailures } from "@gpuixui/tokens";
+
+decorativeFailures(theme);
+// [{ surface: "divider", role: "border", over: "card", ratio: 1, floor: 1.05 }]
+decorativeFailures(theme, 1.2); // a brand that needs stronger decoration
+```
 
 ## Fonts
 
@@ -1069,6 +1116,14 @@ break to the text inside an input or to secondary text on `background`, `card`
 or `popover` is reported by name. `theme.test.ts` runs the audit over the
 documented brand theme, so a documented brand that loses its on-colour fails the
 suite.
+
+`packages/tokens/src/decorative.test.ts` covers the surfaces that carry no text:
+the eight divider, skeleton and veil placements are measured, the veil is
+composited rather than skipped, a surface that matches its page or cannot be
+measured is reported, and every shipped and every platform theme clears the
+1.05:1 floor. It found two platform styles whose inherited skeleton matched
+their own surfaces — macOS light on `muted` at 1.045:1, Linux dark on `card` at
+1.004:1 — which now carry a `skeleton` of their own.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label, both families, a density preset and a full radius scale; `sans` is
