@@ -9,6 +9,7 @@
  * per platform, and every one of those themes is held to the contrast contract.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { invalidColorRoles } from "./color.js";
 import {
@@ -255,5 +256,82 @@ describe("currentPlatform", () => {
 
   it("resolves the monospace family the process should use", () => {
     expect(systemMonoFamily).toBe(platformTypes[currentPlatform].mono);
+  });
+});
+
+/**
+ * Guards the prose the platform table's evidence lives in.
+ *
+ * The bug this holds: the docs, the package README and the design-system
+ * inventory said the platform palette, radii and density were "pure values, not
+ * yet painted in a window", and that the native gallery measured families only.
+ * `theme-platform` then painted all three axes — 28 / 36 / 32px densities and a
+ * platform `lg` radius — with the base radius as its negative control, so the
+ * limitation was stale. A surface that returns to it, or stops naming the probe,
+ * the measured control heights or that negative control, fails here.
+ *
+ * `node:fs` is deliberate, as in `fonts.test.ts` and `inventory.test.ts`: this
+ * checks the repository's own Markdown, and the package keeps zero runtime
+ * dependencies.
+ */
+describe("platform documentation", () => {
+  const read = (path: string): string =>
+    readFileSync(new URL(path, import.meta.url), "utf8");
+
+  /** The inventory records the capability in one table row. */
+  const inventoryRow = (): Record<string, string> => {
+    const row = read("../../../COMPONENTS.md")
+      .split("\n")
+      .find((line) => line.startsWith("| Platform styles |"));
+    return row === undefined ? {} : { "COMPONENTS.md": row };
+  };
+
+  const surfaces = (): Record<string, string> => ({
+    "docs/tokens.md": read("../../../docs/tokens.md"),
+    "docs/design-system.md": read("../../../docs/design-system.md"),
+    "README.md": read("../README.md"),
+    ...inventoryRow(),
+  });
+
+  /** The claim the probe replaced. */
+  const retracted = [
+    "not measured in this runtime",
+    "not yet painted in a window",
+    "measures families only",
+    "pure values",
+  ];
+
+  it("records the capability in the inventory", () => {
+    expect(Object.keys(inventoryRow())).toEqual(["COMPONENTS.md"]);
+  });
+
+  it("no longer calls the platform palette, radii or density unmeasured", () => {
+    const offenders = Object.entries(surfaces()).flatMap(([name, text]) =>
+      retracted
+        .filter((claim) => text.includes(claim))
+        .map((claim) => `${name}: "${claim}"`),
+    );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("names the native probe in every surface", () => {
+    const silent = Object.entries(surfaces())
+      .filter(([, text]) => !text.includes("theme-platform"))
+      .map(([name]) => name);
+
+    expect(silent).toEqual([]);
+  });
+
+  it("cites the measured control heights and their negative control", () => {
+    const vague = Object.entries(surfaces())
+      .filter(
+        ([, text]) =>
+          !["28", "36", "32"].every((height) => text.includes(height)) ||
+          !text.includes("expected 10, got 8"),
+      )
+      .map(([name]) => name);
+
+    expect(vague).toEqual([]);
   });
 });

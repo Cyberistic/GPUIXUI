@@ -121,6 +121,11 @@ cooler and tighter than a Windows one, and a Linux one sits on warmer greys at a
 larger control size. A platform style never replaces the identity — `default` is
 the library's own look, and the three platform variants are edits of it.
 
+That is measured rather than asserted: `theme-platform` paints one row per
+platform through `platformTheme` and reads the family, `primary` fill, `lg`
+radius and `md` control height back from the runtime (28 / 36 / 32px), with the
+base radius as its negative control (`expected 10, got 8`).
+
 A high-contrast theme is the one combination that keeps its own palette: it takes
 the families, radii and density but no platform colour, because accessibility
 outranks the platform look. `Theme.contrast` records which variant a theme

@@ -230,6 +230,11 @@ floors as the built-in themes. `default` is the library's own identity and
 changes only the name. A high-contrast base keeps its palette and takes only the
 families, radii and density, because accessibility outranks the platform look.
 
+All three axes are measured as painted: the playground's `theme-platform` probe
+reads each platform's mono family, `primary` fill, `lg` radius and `md` control
+height back from the runtime (macOS 28 / Linux 36 / Windows 32px). Its negative
+control paints the base `radius.lg` instead and fails `expected 10, got 8`.
+
 ```tsx
 import { platformTheme, themes } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -372,8 +377,11 @@ persisted theme at its own boundary, where `Schema` belongs.
 
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
 - A platform style's radii and density follow each platform's own guidelines
-  (macOS 28px controls, Windows 32, GNOME 36), not measurements of this runtime;
-  a window that differs layers `extendTheme` on the resolved theme.
+  (macOS 28px controls, Windows 32, GNOME 36). They are measured as painted — the
+  playground's `theme-platform` probe reads the `lg` radius, the `primary` fill
+  and the control height per platform — but whether they suit a given window is
+  the consumer's call, and one that differs layers `extendTheme` on the resolved
+  theme.
 - A high-contrast theme takes a platform style's families, radii and density but
   not its palette, because no platform palette is designed for the AAA floors.
 - `.SystemUIFont` is a name GPUI documents and the theme asserts it; what face the

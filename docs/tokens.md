@@ -438,10 +438,16 @@ that does not need the palette.
 family the machine does not have falls back silently, so the platform table only
 names families each platform installs.
 
-**The radii and densities are design decisions, not runtime measurements.** They
-follow each platform's own guidelines — macOS controls at 28px, Windows at 32,
-GNOME at 36 — so a platform style reads as native before any component is styled.
-An application whose own window differs layers `extendTheme` on top.
+**The radii and densities are design decisions, measured as painted.** The
+values follow each platform's own guidelines — macOS controls at 28px, Windows at
+32, GNOME at 36 — so a platform style reads as native before any component is
+styled. The playground's `theme-platform` probe then paints one row per platform
+through `platformTheme` and reads the runtime's style report and `bounds`: the
+`lg` radius, the `primary` fill and an `md` control at the platform's own density
+(macOS 28, Linux 36, Windows 32). Its negative control — painting the base
+`radius.lg` instead — reads `expected 10, got 8`, so the shape is the platform's
+and not the base theme's. An application whose own window differs layers
+`extendTheme` on top.
 
 #### Editing a platform style
 
@@ -1026,9 +1032,11 @@ its own hover.
 - No `letterSpacing` in the runtime.
 - No OS appearance detection; the application selects the mode and contrast, and
   also which platform style to render.
-- The platform radii and densities are taken from each platform's own guidelines,
-  not measured in this runtime: macOS 28px controls, Windows 32, GNOME 36. A
-  window that differs layers `extendTheme` on the resolved theme.
+- The platform radii and densities follow each platform's own guidelines (macOS
+  28px controls, Windows 32, GNOME 36) and are measured as painted by the
+  playground's `theme-platform` probe; whether they suit a specific window is
+  still the consumer's call, and a window that differs layers `extendTheme` on
+  the resolved theme.
 - A high-contrast theme takes a platform style's families, radii and density but
   not its palette, because no platform palette is designed for the AAA floors.
   A consumer who wants both starts from `platformStyles` and checks the result
