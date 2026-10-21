@@ -4,8 +4,10 @@
  * The bugs these guard: two panels open at once, a panel that does not report
  * `aria-expanded`, ArrowDown that opens without taking focus into the panel,
  * Left/Right that open instead of moving, Escape that closes the nav without
- * returning focus, an outside press that does nothing, and a controlled nav that
- * opens on its own.
+ * returning focus, an outside press that does nothing, a controlled nav that
+ * opens on its own, and a hover policy that opens instantly, never closes, drops
+ * the panel while the pointer crosses into it, or springs a pressed-closed panel
+ * back open from a stale timer.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -19,8 +21,26 @@ import {
   NavigationMenuTrigger,
 } from "../navigation-menu.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  hoverCentreOf,
+  requireBounds,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
+
+/** Wait for a component timer (real timers, kept short by the props). */
+const after = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Move the pointer into the open panel's padding, not onto a child. */
+const hoverPanel = (
+  root: ReturnType<typeof renderComponent>,
+  testId: string,
+): void => {
+  const bounds = requireBounds(root, testId);
+  root.renderer.nativeSimulateMouseMove(bounds.x + 10, bounds.y + 10);
+};
 
 /** A two-item product nav, with an inert target far to the right. */
 const Workspace = ({
@@ -41,7 +61,13 @@ const Workspace = ({
       padding: 40,
     }}
   >
-    <NavigationMenu label="Product" value={value} onValueChange={onValueChange}>
+    <NavigationMenu
+      label="Product"
+      value={value}
+      onValueChange={onValueChange}
+      openDelay={20}
+      closeDelay={20}
+    >
       <NavigationMenuList>
         <NavigationMenuItem value="platform">
           <NavigationMenuTrigger testId="trigger-platform">
@@ -211,6 +237,110 @@ describe("NavigationMenu", () => {
     );
 
     clickCentreOf(nav, "trigger-platform");
+
+    expect(onValueChange).toHaveBeenCalledWith("platform");
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
+  it("opens on hover only after the delay", async () => {
+    const nav = renderComponent(<Workspace />);
+
+    hoverCentreOf(nav, "trigger-platform");
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    await after(40);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+
+    nav.unmount();
+  });
+
+  it("keeps the panel open while the pointer crosses into it, and closes after leaving both", async () => {
+    const nav = renderComponent(<Workspace />);
+
+    hoverCentreOf(nav, "trigger-platform");
+    await after(40);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+
+    hoverPanel(nav, "panel-platform");
+    await after(60);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+
+    hoverCentreOf(nav, "elsewhere");
+    await after(60);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
+  it("switches panels when the pointer moves between triggers", async () => {
+    const nav = renderComponent(<Workspace />);
+
+    hoverCentreOf(nav, "trigger-platform");
+    await after(40);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+
+    hoverCentreOf(nav, "trigger-pricing");
+    await after(40);
+
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+    expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
+
+    nav.unmount();
+  });
+
+  it("lets an explicit key win over a pending hover open", async () => {
+    const nav = renderComponent(<Workspace />);
+
+    hoverCentreOf(nav, "trigger-platform");
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-pricing")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("down");
+    await after(40);
+
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+    expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
+
+    nav.unmount();
+  });
+
+  it("does not reopen a panel a press closed", async () => {
+    const nav = renderComponent(<Workspace />);
+
+    hoverCentreOf(nav, "trigger-platform");
+    await after(40);
+    clickCentreOf(nav, "trigger-platform");
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    await after(60);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
+  it("stays closed after Escape even while the pointer rests on the trigger", async () => {
+    const nav = renderComponent(<Workspace />);
+
+    hoverCentreOf(nav, "trigger-platform");
+    await after(40);
+    nav.renderer.simulateKeystrokes("escape");
+    await after(60);
+
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
+  it("reports a hover open and lets a controlled nav stay closed", async () => {
+    const onValueChange = vi.fn();
+    const nav = renderComponent(
+      <Workspace value={null} onValueChange={onValueChange} />,
+    );
+
+    hoverCentreOf(nav, "trigger-platform");
+    await after(40);
 
     expect(onValueChange).toHaveBeenCalledWith("platform");
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();

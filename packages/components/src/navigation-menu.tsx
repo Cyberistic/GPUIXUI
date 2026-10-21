@@ -6,10 +6,14 @@
  * Escape closes the topmost overlay (the shared dismiss stack) and returns focus
  * to the trigger; an outside press closes.
  *
+ * The pointer is a second way in: resting on a trigger opens its panel after
+ * `openDelay`, moving across the row switches panels, and leaving the trigger
+ * and the panel closes it after `closeDelay`. An explicit press or key wins
+ * over a pending hover timer, so a panel closed by a press does not spring back.
+ *
  * Measured gaps in 0.10.0: no anchor/href element, so `NavigationMenuLink` is a
- * button with `onSelect`; no `aria-haspopup`; hover does not open (a second,
- * untested policy). ArrowDown opens and moves focus to the panel surface, not
- * straight to the first link.
+ * button with `onSelect`; no `aria-haspopup`. ArrowDown opens and moves focus to
+ * the panel surface, not straight to the first link.
  */
 
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
@@ -27,6 +31,7 @@ import {
   NAVIGATION_MENU_LIST,
   NAVIGATION_MENU_ROOT,
 } from "@gpuixui/tw";
+import * as Option from "effect/Option";
 import {
   createContext,
   useCallback,
@@ -71,6 +76,19 @@ interface NavigationMenuContextValue {
   readonly panelFocus: string | null;
   readonly requestPanelFocus: (value: string) => void;
   readonly clearPanelFocus: () => void;
+  /** The pointer entered a trigger: open it once `openDelay` passes. */
+  readonly hoverOpen: (value: string) => void;
+  /** The pointer left a trigger: close once both surfaces are left. */
+  readonly hoverClose: (value: string) => void;
+  /** The pointer entered or left the open panel. */
+  readonly hoverPanel: (inside: boolean) => void;
+  /** An explicit press or key wins: drop pending hover timers and forget the pointer. */
+  readonly stopHover: () => void;
+  /** Whether a window point falls on one of this nav's triggers. */
+  readonly isTriggerPoint: (
+    x: number | undefined,
+    y: number | undefined,
+  ) => boolean;
 }
 
 const NavigationMenuContext = createContext<
@@ -108,6 +126,10 @@ export interface NavigationMenuProps extends Omit<Props, "children"> {
   readonly value?: string | null;
   readonly defaultValue?: string | null;
   readonly onValueChange?: (value: string | null) => void;
+  /** Milliseconds of rest on a trigger before its panel opens. Default `150`. */
+  readonly openDelay?: number;
+  /** Milliseconds after leaving the trigger and panel before closing. Default `150`. */
+  readonly closeDelay?: number;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
@@ -119,6 +141,8 @@ export const NavigationMenu = ({
   value: valueProp,
   defaultValue = null,
   onValueChange,
+  openDelay = 150,
+  closeDelay = 150,
   className,
   children,
   style,
@@ -135,7 +159,106 @@ export const NavigationMenu = ({
   const triggers = useRef(new Map<string, PublicInstance>());
   const [order, setOrder] = useState<ReadonlyArray<string>>([]);
   const [panelFocus, setPanelFocus] = useState<string | null>(null);
+  const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  // The pointer policy is two refs, not state: mouse events must not re-render
+  // the panel, and the timers read the latest position when they fire.
+  const hovered = useRef<string | null>(null);
+  const panelHovered = useRef(false);
+  // An explicit press, key or Escape suspends the pointer policy until the
+  // pointer next enters a trigger or panel: the runtime delivers the leave for
+  // the trigger it was resting on *after* the key that opened another panel, and
+  // that stale leave must not close the panel the caller just opened.
+  const suspended = useRef(false);
   assertParts(navigationMenuRoot, children);
+
+  const clearOpenTimer = useCallback(() => {
+    if (openTimer.current !== undefined) {
+      clearTimeout(openTimer.current);
+      openTimer.current = undefined;
+    }
+  }, []);
+
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimer.current !== undefined) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = undefined;
+    }
+  }, []);
+
+  const stopHover = useCallback(() => {
+    clearOpenTimer();
+    clearCloseTimer();
+    hovered.current = null;
+    panelHovered.current = false;
+    suspended.current = true;
+  }, [clearCloseTimer, clearOpenTimer]);
+
+  useLayoutEffect(() => stopHover, [stopHover]);
+
+  // A closed nav owns no panel, so the pointer cannot be inside one: drop a
+  // stale flag from a panel that unmounted under the pointer (a chosen link).
+  useLayoutEffect(() => {
+    if (open === null) panelHovered.current = false;
+  }, [open]);
+
+  const hoverOpen = useCallback(
+    (value: string) => {
+      suspended.current = false;
+      hovered.current = value;
+      clearOpenTimer();
+      clearCloseTimer();
+      if (open === value) return;
+      const show = () => {
+        openTimer.current = undefined;
+        setOpen(value);
+      };
+      if (openDelay <= 0) show();
+      else openTimer.current = setTimeout(show, openDelay);
+    },
+    [clearCloseTimer, clearOpenTimer, open, openDelay, setOpen],
+  );
+
+  const scheduleClose = useCallback(() => {
+    if (hovered.current !== null || panelHovered.current) return;
+    if (open === null) return;
+    clearCloseTimer();
+    const hide = () => {
+      closeTimer.current = undefined;
+      setOpen(null);
+    };
+    if (closeDelay <= 0) hide();
+    else closeTimer.current = setTimeout(hide, closeDelay);
+  }, [clearCloseTimer, closeDelay, open, setOpen]);
+
+  const hoverClose = useCallback(
+    (value: string) => {
+      if (suspended.current) return;
+      if (hovered.current !== value) return;
+      hovered.current = null;
+      scheduleClose();
+    },
+    [scheduleClose],
+  );
+
+  const hoverPanel = useCallback(
+    (inside: boolean) => {
+      if (inside) {
+        suspended.current = false;
+        panelHovered.current = true;
+        clearCloseTimer();
+        return;
+      }
+      if (suspended.current) return;
+      panelHovered.current = false;
+      scheduleClose();
+    },
+    [clearCloseTimer, scheduleClose],
+  );
 
   const registerTrigger = useCallback(
     (value: string, instance: PublicInstance | null) => {
@@ -163,6 +286,30 @@ export const NavigationMenu = ({
     [renderer],
   );
 
+  // A press on a trigger is a mouse-down outside the open panel, but it is the
+  // nav's own press: treating it as a dismissal closes the panel on mouse-down
+  // and the trigger's click then reopens it, so an open panel could never be
+  // toggled shut by pressing its trigger again.
+  const isTriggerPoint = useCallback(
+    (x: number | undefined, y: number | undefined): boolean => {
+      if (x === undefined || y === undefined) return false;
+      return Array.from(triggers.current.values()).some((instance) =>
+        Option.match(
+          Option.fromNullishOr(renderer?.getElementBounds?.(instance.id)),
+          {
+            onNone: () => false,
+            onSome: (bounds) =>
+              x >= bounds.x &&
+              x <= bounds.x + bounds.width &&
+              y >= bounds.y &&
+              y <= bounds.y + bounds.height,
+          },
+        ),
+      );
+    },
+    [renderer],
+  );
+
   const moveFocus = useCallback(
     (value: string, delta: 1 | -1 | "first" | "last") => {
       if (order.length === 0) return;
@@ -185,6 +332,7 @@ export const NavigationMenu = ({
   useLayoutEffect(() => {
     dismiss.current = () => {
       const current = open;
+      stopHover();
       setOpen(null);
       if (current !== null) focusTrigger(current);
     };
@@ -196,9 +344,10 @@ export const NavigationMenu = ({
         dismiss.current();
         return;
       }
+      stopHover();
       setOpen(null);
     });
-  }, [open, setOpen]);
+  }, [open, setOpen, stopHover]);
 
   const context = useMemo<NavigationMenuContextValue>(
     () => ({
@@ -210,8 +359,25 @@ export const NavigationMenu = ({
       panelFocus,
       requestPanelFocus: setPanelFocus,
       clearPanelFocus: () => setPanelFocus(null),
+      hoverOpen,
+      hoverClose,
+      hoverPanel,
+      stopHover,
+      isTriggerPoint,
     }),
-    [focusTrigger, moveFocus, open, panelFocus, registerTrigger, setOpen],
+    [
+      focusTrigger,
+      hoverClose,
+      hoverOpen,
+      hoverPanel,
+      isTriggerPoint,
+      moveFocus,
+      open,
+      panelFocus,
+      registerTrigger,
+      setOpen,
+      stopHover,
+    ],
   );
 
   return (
@@ -308,10 +474,20 @@ export const NavigationMenuTrigger = ({
   onClick,
   ref,
   onKeyDown,
+  onMouseEnter,
+  onMouseLeave,
   ...rest
 }: ButtonProps) => {
-  const { open, setOpen, registerTrigger, moveFocus, requestPanelFocus } =
-    useNavigationMenu();
+  const {
+    open,
+    setOpen,
+    registerTrigger,
+    moveFocus,
+    requestPanelFocus,
+    hoverOpen,
+    hoverClose,
+    stopHover,
+  } = useNavigationMenu();
   const { value } = useNavItem();
   const expanded = open === value;
   const register = useCallback(
@@ -325,13 +501,23 @@ export const NavigationMenuTrigger = ({
       {...rest}
       ref={setTrigger}
       aria-expanded={expanded}
+      onMouseEnter={(event) => {
+        hoverOpen(value);
+        onMouseEnter?.(event);
+      }}
+      onMouseLeave={(event) => {
+        hoverClose(value);
+        onMouseLeave?.(event);
+      }}
       onClick={(event) => {
         onClick?.(event);
+        stopHover();
         setOpen(expanded ? null : value);
       }}
       onKeyDown={(event: KeyEvent) => {
         onKeyDown?.(event);
         if (isDown(event)) {
+          stopHover();
           setOpen(value);
           requestPanelFocus(value);
         } else if (isLeft(event)) {
@@ -361,12 +547,15 @@ export const NavigationMenuContent = ({
   className,
   style,
   onMouseDownOutside,
+  onMouseEnter,
+  onMouseLeave,
   ...rest
 }: NavigationMenuContentProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const { value, open } = useNavItem();
-  const { panelFocus, clearPanelFocus } = useNavigationMenu();
+  const { panelFocus, clearPanelFocus, hoverPanel, isTriggerPoint } =
+    useNavigationMenu();
   const [panel, setPanel] = useState<PublicInstance | undefined>(undefined);
   const panelId = panel?.id;
   assertParts(navigationMenuContent, children);
@@ -390,8 +579,17 @@ export const NavigationMenuContent = ({
       tabIndex={-1}
       {...rest}
       ref={(instance) => setPanel(instance ?? undefined)}
+      onMouseEnter={(event) => {
+        hoverPanel(true);
+        onMouseEnter?.(event);
+      }}
+      onMouseLeave={(event) => {
+        hoverPanel(false);
+        onMouseLeave?.(event);
+      }}
       onMouseDownOutside={(event) => {
         onMouseDownOutside?.(event);
+        if (isTriggerPoint(event.x, event.y)) return;
         dismissTopLayer(event);
       }}
       style={mergeStyles(
@@ -421,7 +619,7 @@ export const NavigationMenuLink = ({
   ...rest
 }: NavigationMenuLinkProps) => {
   const theme = useTheme();
-  const { setOpen } = useNavigationMenu();
+  const { setOpen, stopHover } = useNavigationMenu();
   return (
     <Button
       {...rest}
@@ -429,6 +627,7 @@ export const NavigationMenuLink = ({
       onClick={(event) => {
         onClick?.(event);
         onSelect?.();
+        stopHover();
         setOpen(null);
       }}
       style={mergeStyles(
@@ -490,7 +689,7 @@ export const navigationMenuMeta = {
   gpuixSupport: "partial",
   limitations: [
     "no anchor/href in 0.10.0: NavigationMenuLink is a button with onSelect",
-    "hover does not open (a second untested policy); press, Enter/Space or ArrowDown do",
+    "hover opens after `openDelay` and closes after `closeDelay`; 0.10.0 has no pointer-type signal, so touch opens by press",
     "ArrowDown moves focus to the panel surface, not straight to the first link",
     "no aria-haspopup in 0.10.0",
   ],

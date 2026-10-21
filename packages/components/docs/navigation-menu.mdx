@@ -40,6 +40,9 @@ playground mounts.
 
 | Action | Result |
 | ------ | ------ |
+| Resting on a trigger | opens that item's panel after `openDelay` (default 150 ms) |
+| Moving between triggers | switches the open panel; the first closes |
+| Leaving the trigger and panel | closes after `closeDelay` (default 150 ms) |
 | Press or `Enter`/`Space` on a trigger | toggles that item's panel |
 | `ArrowDown` on a trigger | opens its panel and moves focus to the panel surface |
 | `ArrowLeft` / `ArrowRight` on a trigger | moves focus between triggers; does not open |
@@ -52,6 +55,12 @@ playground mounts.
 The open item is `value` (`string | null`, `null` = closed), controllable with
 `onValueChange`. A controlled nav that ignores the change stays closed.
 
+Hover is one policy, not two: an explicit press or key cancels a pending hover
+timer, and a panel closed by a press does not spring back open while the pointer
+rests on its trigger. A pointer that crosses the 4 px gap between trigger and
+panel is inside both surfaces for the purpose of the close timer, so the panel
+does not flicker shut on the way in.
+
 ## API
 
 Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
@@ -59,7 +68,7 @@ merges `style` last.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `NavigationMenu` | `role="navigation"` named by `label`, the dismiss layer | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, children |
+| `NavigationMenu` | `role="navigation"` named by `label`, the dismiss layer | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, `openDelay?`, `closeDelay?`, children |
 | `NavigationMenuList` | `role="list"` row | children |
 | `NavigationMenuItem` | `role="listitem"`; owns its value | `value` (required), children |
 | `NavigationMenuTrigger` | button with `aria-expanded` | button props |
@@ -80,6 +89,8 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
   cannot both claim to be open.
 - `Escape` uses the shared dismiss stack: a nav inside a dialog closes first, and
   focus returns to the trigger that opened it.
+- Hover is an accelerator, never the only path: every panel opens from the
+  keyboard, and a press on an open trigger closes it.
 - Links are buttons with `onSelect`; `0.10.0` has no anchor element or `href`.
 - `0.10.0` has no `aria-haspopup`, so the trigger does not announce that it owns
   a panel.
@@ -88,8 +99,8 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 
 - **No `href`:** `NavigationMenuLink` is a button; navigation is the consumer's
   `onSelect`.
-- **Hover does not open.** Press, `Enter`/`Space` or `ArrowDown` open; hover-open
-  is a second policy that would need its own tests, so it is not claimed.
+- **Hover is a timer policy:** `0.10.0` has no pointer-type signal, so touch
+  opens by press and there is no "coarse pointer" variant.
 - **`ArrowDown` focuses the panel surface**, not the first link; one `Tab` then
   reaches the links.
 - No `aria-haspopup` in `0.10.0`.
@@ -98,14 +109,23 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 ## Verification
 
 `src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer
-(10 tests): declaration order, press-to-open with `aria-expanded`, one panel at a
+(17 tests): declaration order, press-to-open with `aria-expanded`, one panel at a
 time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
 Escape with focus return, outside-press dismissal, a link running once and
-closing, a controlled nav staying closed, and both themes.
+closing, a controlled nav staying closed, both themes, and the pointer policy —
+open only after the delay, survival across the trigger-to-panel gap, switching
+panels by moving between triggers, an explicit key beating a pending hover open,
+and a pressed-closed panel staying shut.
 
 One measured implementation fact: the trigger registry updates its ordered key
 list only when the key sequence changes. An always-new array (or a ref callback
 that detaches on every render) caused React's update-depth error.
+
+A second measured fact: the runtime delivers a press on the open trigger as a
+mouse-down *outside* the panel, and then the trigger's click. Treating that
+mouse-down as a dismissal closes the panel and the click reopens it, so a
+pressed-open panel could never be toggled shut. The panel therefore ignores an
+outside press that lands on one of the nav's own triggers (`isTriggerPoint`).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
