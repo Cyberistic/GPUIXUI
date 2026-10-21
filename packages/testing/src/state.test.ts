@@ -25,29 +25,26 @@ interface TabState {
   readonly highlighted: boolean;
 }
 
-const tabs: ReplayRuntime<
-  TabsState,
-  TabsCommand,
-  (value: string) => TabState
-> = {
-  initial: { selected: "first", highlighted: "first" },
-  reduce: (state, command) =>
-    Match.value(command).pipe(
-      Match.when({ _tag: "select" }, (selected) => ({
-        selected: selected.value,
-        highlighted: selected.value,
-      })),
-      Match.when({ _tag: "highlight" }, (highlighted) => ({
-        ...state,
-        highlighted: highlighted.value,
-      })),
-      Match.exhaustive,
-    ),
-  query: (state) => (value) => ({
-    active: state.selected === value,
-    highlighted: state.highlighted === value,
-  }),
-};
+const tabs: ReplayRuntime<TabsState, TabsCommand, (value: string) => TabState> =
+  {
+    initial: { selected: "first", highlighted: "first" },
+    reduce: (state, command) =>
+      Match.value(command).pipe(
+        Match.when({ _tag: "select" }, (selected) => ({
+          selected: selected.value,
+          highlighted: selected.value,
+        })),
+        Match.when({ _tag: "highlight" }, (highlighted) => ({
+          ...state,
+          highlighted: highlighted.value,
+        })),
+        Match.exhaustive,
+      ),
+    query: (state) => (value) => ({
+      active: state.selected === value,
+      highlighted: state.highlighted === value,
+    }),
+  };
 
 describe("runCommands", () => {
   it("folds every command and queries the final state", () => {

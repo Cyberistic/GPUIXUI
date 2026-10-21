@@ -37,7 +37,8 @@ const program = Effect.gen(function* () {
     catch: (cause) => cause,
   }).pipe(Effect.orDie);
   const [{ App }, { scenarios }] = yield* Effect.tryPromise({
-    try: () => Promise.all([import("./app.js"), import("./scenarios/index.js")]),
+    try: () =>
+      Promise.all([import("./app.js"), import("./scenarios/index.js")]),
     catch: (cause) => cause,
   }).pipe(Effect.orDie);
 

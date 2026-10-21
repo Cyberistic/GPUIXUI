@@ -15,11 +15,7 @@ export interface Command {
 }
 
 /** The three members a runtime must expose to be replayed. */
-export interface ReplayRuntime<
-  State,
-  In extends Command,
-  Queries,
-> {
+export interface ReplayRuntime<State, In extends Command, Queries> {
   /** The state before any command runs. */
   readonly initial: State;
   /** Apply one command. Pure. */
