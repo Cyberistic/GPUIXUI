@@ -86,3 +86,30 @@ export const settle = (root: ComponentTestRoot): void => {
   root.renderer.dispatchNativeEvents();
   root.renderer.flush();
 };
+
+/** Let real time pass, for a claim that something has *not* happened yet. */
+export const after = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Poll `check` until it passes or the deadline elapses. */
+const poll = async (check: () => void, deadline: number): Promise<void> => {
+  try {
+    check();
+  } catch (error) {
+    if (performance.now() >= deadline) throw error;
+    await after(5);
+    return poll(check, deadline);
+  }
+};
+
+/**
+ * Wait until `check` passes, rethrowing its last failure when it never does.
+ *
+ * A component timer is real time, so a fixed sleep that is barely longer than
+ * the delay passes or fails on how busy the machine is. Polling keeps the claim
+ * — the state must arrive — while a state that never arrives still fails with
+ * the check's own message. Use {@link after} only to prove something did *not*
+ * happen within a window.
+ */
+export const waitFor = (check: () => void, timeoutMs = 2_000): Promise<void> =>
+  poll(check, performance.now() + timeoutMs);

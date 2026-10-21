@@ -31,6 +31,26 @@ overlay-only slice of that seam (it joins the caller `className` for the
 floating/modal surfaces). No other file imports `@gpuixui/tw`'s compiler
 directly.
 
+### What a repaint costs
+
+A compile is the expensive half of a render: expanding, alias-resolving, merging
+and parsing a card recipe measures ~0.25 ms, and the package has 154 recipe
+sites, so re-parsing every part on every render was the largest avoidable cost
+in a repaint. `recipeStyle(recipe, theme)` therefore compiles once per recipe per
+theme: the cache is a `WeakMap` keyed by the theme object (entries die with it)
+and holds up to 512 recipes per theme, and the compiled `StyleDesc` is frozen
+because every later render shares it. A recipe past the limit is compiled but
+not stored, so a caller's dynamic `className` pays what it paid before without
+growing the cache. `src/internal/recipe.test.ts` holds the contract — a second
+render compiles nothing and gets the same object, two themes get their own
+entries, and the overflow recipe is not stored.
+
+The rest of the model is the runtime's: one style resolution per painted
+element, and paint order rather than a `z` scale (`docs/tokens.md` §Layering).
+A component that re-renders its whole family on a state change is the remaining
+cost, which is why `List` subscribes each row to its own slice
+(`src/list/store.ts`).
+
 ## Chrome marks
 
 Every mark a control paints — close, caret, chevron, check, ellipsis, tone — is

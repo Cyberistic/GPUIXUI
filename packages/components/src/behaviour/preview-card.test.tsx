@@ -17,9 +17,11 @@ import {
 } from "../preview-card.js";
 import { Button } from "../internal/button.js";
 import {
+  after,
   focusedTestId,
   hoverCentreOf,
   requireBounds,
+  waitFor,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
@@ -28,10 +30,6 @@ const hoverCard = (root: ReturnType<typeof renderComponent>): void => {
   const bounds = requireBounds(root, "preview");
   root.renderer.nativeSimulateMouseMove(bounds.x + 10, bounds.y + 10);
 };
-
-/** Wait for a component timer (real timers, kept short by the props). */
-const after = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
 
 /** A document link with a hoverable preview card. */
 const Workspace = ({
@@ -87,8 +85,9 @@ describe("PreviewCard", () => {
 
     hoverCentreOf(card, "trigger");
     expect(card.renderer.findByTestId("preview")).toBeUndefined();
-    await after(40);
-    expect(card.renderer.findByTestId("preview")).toBeDefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeDefined(),
+    );
     card.unmount();
 
     const focused = renderComponent(<Workspace />);
@@ -119,7 +118,9 @@ describe("PreviewCard", () => {
     const card = renderComponent(<Workspace />);
 
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeDefined(),
+    );
     hoverCard(card);
     await after(40);
 
@@ -132,7 +133,9 @@ describe("PreviewCard", () => {
     const card = renderComponent(<Workspace />);
 
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeDefined(),
+    );
     hoverCard(card);
     hoverCentreOf(card, "elsewhere");
     await after(40);
@@ -158,7 +161,9 @@ describe("PreviewCard", () => {
   it("closes on an outside press", async () => {
     const card = renderComponent(<Workspace />);
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeDefined(),
+    );
 
     card.renderer.nativeSimulateClick(12, 12);
 
@@ -170,7 +175,9 @@ describe("PreviewCard", () => {
   it("names the surface and reports the trigger's expanded state", async () => {
     const card = renderComponent(<Workspace />);
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeDefined(),
+    );
 
     expect(card.renderer.findByTestId("preview")?.customProps).toMatchObject({
       role: "group",
@@ -190,9 +197,7 @@ describe("PreviewCard", () => {
     );
 
     hoverCentreOf(card, "trigger");
-    await after(40);
-
-    expect(onOpenChange).toHaveBeenCalledWith(true);
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(true));
     expect(card.renderer.findByTestId("preview")).toBeUndefined();
 
     card.unmount();

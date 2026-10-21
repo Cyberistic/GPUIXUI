@@ -22,16 +22,14 @@ import {
 } from "../navigation-menu.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
+  after,
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
   requireBounds,
+  waitFor,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
-
-/** Wait for a component timer (real timers, kept short by the props). */
-const after = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Move the pointer into the open panel's padding, not onto a child. */
 const hoverPanel = (
@@ -282,8 +280,9 @@ describe("NavigationMenu", () => {
     hoverCentreOf(nav, "trigger-platform");
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
-    await after(40);
-    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+    await waitFor(() =>
+      expect(nav.renderer.findByTestId("panel-platform")).toBeDefined(),
+    );
 
     nav.unmount();
   });
@@ -292,8 +291,9 @@ describe("NavigationMenu", () => {
     const nav = renderComponent(<Workspace />);
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(40);
-    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+    await waitFor(() =>
+      expect(nav.renderer.findByTestId("panel-platform")).toBeDefined(),
+    );
 
     hoverPanel(nav, "panel-platform");
     await after(60);
@@ -310,14 +310,15 @@ describe("NavigationMenu", () => {
     const nav = renderComponent(<Workspace />);
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(40);
-    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+    await waitFor(() =>
+      expect(nav.renderer.findByTestId("panel-platform")).toBeDefined(),
+    );
 
     hoverCentreOf(nav, "trigger-pricing");
-    await after(40);
-
-    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
-    expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
+    await waitFor(() => {
+      expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+      expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
+    });
 
     nav.unmount();
   });
@@ -342,7 +343,9 @@ describe("NavigationMenu", () => {
     const nav = renderComponent(<Workspace />);
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(40);
+    await waitFor(() =>
+      expect(nav.renderer.findByTestId("panel-platform")).toBeDefined(),
+    );
     clickCentreOf(nav, "trigger-platform");
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
@@ -356,7 +359,9 @@ describe("NavigationMenu", () => {
     const nav = renderComponent(<Workspace />);
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(40);
+    await waitFor(() =>
+      expect(nav.renderer.findByTestId("panel-platform")).toBeDefined(),
+    );
     nav.renderer.simulateKeystrokes("escape");
     await after(60);
 
@@ -372,9 +377,7 @@ describe("NavigationMenu", () => {
     );
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(40);
-
-    expect(onValueChange).toHaveBeenCalledWith("platform");
+    await waitFor(() => expect(onValueChange).toHaveBeenCalledWith("platform"));
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
     nav.unmount();
