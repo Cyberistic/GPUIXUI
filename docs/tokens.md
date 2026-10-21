@@ -775,10 +775,12 @@ Rules:
 3. Spread `textStyle` rather than repeating the family rule.
 4. Use `borderStrong` for essential control boundaries and `border` for
    dividers.
-5. Focus is `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by
-   `borderWidth.strong`. The ring is never a border and never changes layout; plan
-   053 moves it to an `outline` once the runtime's `focusVisible` paint is proven.
-   See [Focus](#focus).
+5. Keyboard focus is `keyboardFocusRing(theme)`, applied at rest: a `focusVisible`
+   outline spread by `borderWidth.strong`, which the runtime paints after a Tab
+   and not after a click. A control whose focus is moved programmatically — a
+   dialog or menu opened by a mouse — paints `focusRing(theme)`'s shadow while
+   it holds focus. Neither is ever a border and neither changes layout. See
+   [Focus](#focus).
 6. A filled action's hover and press are `filledHover(theme, action)` and
    `filledPressed(theme, action)`; never `alpha(role, …)` on a fill, which lets
    the surface behind the control show through.
@@ -896,10 +898,15 @@ its own hover.
 - `.SystemUIFont` is verified by GPUI's own documentation of the name, not yet
   visually in a native window; the playground's platform gallery is the proof
   (the cross-team row in `TODO.md`).
-- `@gpuix/native@0.11.0` declares `outline*` and `focusVisible`, but the ring is
-  still a spread shadow until plan 053's native probe replaces it, so a mouse
-  press and a Tab look the same today.
-- No motion tokens yet; no component consumes them.
+- `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
+  for a programmatic focus **after** a Tab, but not for a programmatic focus
+  before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s
+  shadow; the component packages still paint that shadow on every focus path
+  until they adopt `keyboardFocusRing` (their workstream, in `TODO.md` →
+  Interlocks).
+- Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
+  not here: a second copy would duplicate the package that owns reduced-motion
+  policy. No component consumes it yet.
 - The derived action fills are shipped and documented, but the component
   packages still paint a half-alpha hover (`packages/components/src/internal/button.tsx`
   and `packages/primitives/src/core/variants.ts`); adopting `filledHover` /

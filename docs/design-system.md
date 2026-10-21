@@ -256,7 +256,7 @@ design system cannot compensate for a missing role.
 | ---------- | ----------- |
 | no CSS variables or cascade | tokens are inline values; theme switch re-renders |
 | no inherited `color` | every `<text>` sets `color` explicitly |
-| focus ring is a spread shadow | 0.11.0 declares `outline*` and `focusVisible`; the ring moves once plan 053's probe proves the paint |
+| focus has two paint paths | `keyboardFocusRing` is the `focusVisible` outline the runtime paints after Tab; a programmatic focus before any key (a mouse-opened overlay) does not paint it, so that path keeps `focusRing`'s shadow |
 | elevation is one shadow per level by design | `boxShadow` accepts a list, but a level is designed as one shadow |
 | `letterSpacing` absent | no display tracking or all-caps tracking |
 | no OS appearance query | the app owns the mode |
@@ -286,7 +286,8 @@ roles in the tokens package, not fork components.
 
 - No component-level token catalogue. Semantic roles plus scales are enough; a
   per-component token file would duplicate the same decisions.
-- No theme editor or theme marketplace.
-- No motion tokens yet. Motion is a component concern until a second consumer
-  needs shared durations/easings.
+- No theme-authoring UI in the library. The docs site's `/docs/themes` editor is a
+  consumer of the same `Theme` shape; the library ships the API, not the editor.
+- No motion tokens here. `@gpuixui/motion` owns durations, easings, springs and
+  inertia; this package stays colour, type, space, radius and elevation.
 - No web preview pretending to be native. The playground is the visual proof.

@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 24/30
+`[x]` `[█████████░]` 26/30
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -644,6 +644,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Native proof that `registerFonts` paints the registered face: register a face in the theme gallery and show the fallback and the intended face | playground | pending — `@gpuixui/tokens` side is shipped and unit-tested |
 | Probe that `focusVisible` paints after Tab and not after a mouse press (and on programmatic focus in a dialog) — plan 053's STOP gate | playground | **resolved** — the `focus-visible` live probe measured all five states on 0.11.0 (`apps/playground/README.md` §`focus-visible`): Tab paints the outline and dims other focusables; a mouse press, a native traversal and a programmatic focus before any key paint nothing; a programmatic focus after a Tab paints it. The tokens half shipped `keyboardFocusRing`; adoption is the row below |
 | Adopt the keyboard-only ring and delete the manual focus tracking: `components/src/{inline-edit,time-picker,search-input,tabs,date-picker,field,list,accordion,breadcrumb,tag-input,color-picker,mention-input,hotkey-recorder,collapsible,context-menu}.tsx`, `components/src/internal/button.tsx`, `primitives/src/core/{selection,style}.ts`, `primitives/src/components/internal.ts` | components, primitives | **tokens side shipped** — `keyboardFocusRing(theme)` is the `focusVisible` outline, applied at rest; keep `focusRing` only for a mouse-opened overlay's programmatic focus (the probe's measured gap). `focus.test.ts` guards both |
+| The `focus-visible` live probe carries its own copy of the outline (`apps/playground/src/live/scenarios.tsx` `focusVisibleRing`) | playground | pending — replace it with `keyboardFocusRing` from `@gpuixui/tokens` so the probe paints the shipped helper, not a local duplicate |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | **resolved for the pages** — every package docs directory is a Fumadocs collection: `/docs/components` (39 pages), `/docs/primitives` (28) and `/docs/icons` (1), all in the sidebar and search; the example registry waits on the playground mounting them |
 | Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/package-docs.test.ts` fails on a regression |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
