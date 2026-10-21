@@ -1408,7 +1408,7 @@ Both are specified in ; each fix starts with a plan under .
   - `[x]` Combobox create-new (salvage 328) — a single-select `Create "…"` row, offered only when the query matches no option; `onCreate` receives the trimmed query, the popup closes and returns focus, and the selection stays the caller's (no ghost value). 3 native tests + 3 logic tests, both-direction measured.
   - `[x]` NavigationMenu hover-open (salvage 325) — the pointer policy opens after `openDelay`, switches panels across the row, keeps the panel across the 4 px trigger-to-panel gap and closes after leaving both; an explicit press/key cancels a pending hover open, and the panel ignores a press on its own triggers so a press can toggle an open panel shut. 7 new native tests (17 in the suite), both-direction measured for the toggle fix.
   - `[x]` Public subpath load checks (salvage 336) — `src/exports.test.ts` resolves every `@gpuixui/components/...` specifier a docs page shows through the package's real `exports` map, loads the file and asserts each imported name is exported; it caught `docs/field.mdx`'s `validation/logic` import resolving to a `.tsx` that never existed, fixed with an exact `./validation/logic` export
-`[~]` `packages/primitives`: Tier 1 behaviour truth — one defect per line below,
+`[x]` `packages/primitives`: Tier 1 behaviour truth — one defect per line below,
 each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
 334, 337, 338)
   - `[x]` Slider maximum as a stop — the snap stranded a `max: 10` / `step: 3`
@@ -1508,7 +1508,17 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     `--only`-less `runtime/switch.runtime.test.tsx` is 3/3. Docs, inventory row
     and `MIGRATION.md` name the slide and its one measured gap (no reduced-motion
     opt-out: the runtime exposes no preference)
-  - `[ ]` The native field's hint and selection reach
+  - `[x]` The native field's hint and selection reach — the empty-state hint and
+    the selected text were the two things a field asks the runtime to paint, and
+    neither was measured. `runtime/fields.runtime.test.tsx` now mounts an empty
+    field beside a filled one: the hint paints once, the value replaces it (and
+    typing clears the last hint), and the host `<input>` carries the whole text
+    theme back — `text` = `inputForeground`, `textFaint` = the `placeholder`
+    role, `bg` = `input` — plus the `selection` wash on both a selectable `Text`
+    and the field. Both directions measured: dropping the field's `theme` prop
+    fails with `hint handed the runtime no text theme` (exit `1`); with it,
+    `runtime/fields.runtime.test.tsx` is 17/17. `docs/input.mdx` §Theming names
+    the hint role and §Verification the measurement
 `[x]` `apps/docs`: docs truth — stated native-test counts and the complete public type index (salvage 310, 324, 326, 330, 333, 335; the example registry page and the copy-and-own platform example contract have landed) — **complete, re-verified 2026-10-22**: `nub run --filter @gpuixui/docs test` is green (42 files / 341 tests) with `public-symbols.test.ts` holding the index to the workspace's exports, and `nub run --filter @gpuixui/components test src/docs-counts.test.ts` is 3/3, so no stated `(N tests)` claim in the 39 package pages is unheld
   - `[x]` **The complete public type index** (salvage 324) — `/docs/reference` now
     publishes every symbol the workspace exposes: 1085 names across 9 packages,

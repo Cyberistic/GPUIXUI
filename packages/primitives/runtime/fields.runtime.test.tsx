@@ -16,6 +16,7 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { Select } from "../src/components/Select.js";
@@ -369,6 +370,67 @@ it("keeps the Tooltip's content inside the frame it is anchored to", async () =>
   const tip = boundsOf(runtime, "tip");
   expect(tip.x).toBeGreaterThanOrEqual(frame.x);
   expect(tip.x + tip.width).toBeLessThanOrEqual(frame.x + frame.width);
+});
+
+it("paints the theme's hint for an empty field and replaces it with the value", async () => {
+  // The claim this measures: the native field's hint is the theme's
+  // `placeholder` role, not the runtime's default, and it is a hint — the
+  // value replaces it once there is one.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Input
+          testId="hint"
+          label="Project name"
+          placeholder="Find a project"
+        />
+        <Input
+          testId="filled"
+          label="Project slug"
+          placeholder="Find a project"
+          value="atlas"
+        />
+      </Stack>
+    </Surface>,
+  );
+  const hostOf = (testId: string) =>
+    Option.getOrElse(runtime.element(testId), () =>
+      expect.fail(`the runtime retained no ${testId}`),
+    );
+  const themeOf = (testId: string) => {
+    const theme = Option.getOrElse(
+      Option.flatMap(
+        Option.fromNullishOr(hostOf(testId).customProps?.theme),
+        Schema.decodeUnknownOption(
+          Schema.Record(Schema.String, Schema.Unknown),
+        ),
+      ),
+      () => expect.fail(`${testId} handed the runtime no text theme`),
+    );
+    return {
+      text: theme["text"],
+      textFaint: theme["textFaint"],
+      bg: theme["bg"],
+    };
+  };
+  expect(hostOf("hint").customProps?.placeholder).toBe("Find a project");
+  expect(themeOf("hint")).toEqual({
+    text: testTheme.colors.inputForeground,
+    textFaint: testTheme.colors.placeholder,
+    bg: testTheme.colors.input,
+  });
+  const hints = (): number =>
+    Arr.length(
+      Arr.filter(runtime.paintedText(), (line) => line === "Find a project"),
+    );
+  // Only the empty field paints the hint; the filled one paints its value.
+  expect(hints()).toBe(1);
+  expect(runtime.paintedText()).toContain("atlas");
+  runtime.click("hint");
+  runtime.type("beta");
+  expect(runtime.paintedText()).toContain("beta");
+  expect(hints()).toBe(0);
 });
 
 it("paints the design system's selection wash on what a reader can select", async () => {

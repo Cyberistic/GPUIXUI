@@ -78,12 +78,13 @@ handler, not to a field.
 ## Theming
 
 `fieldChrome` uses `fieldVariant` (the `input` role) and the density metrics;
-`fieldTextStyle` and `nativeTextTheme` set the font, caret and selection colours
-the native element paints with — the `select-text` recipe utility declares
-`selectionColor: theme.colors.selection`, the wash the token contract measures,
-rather than the runtime's accent-at-35% default. Focus is the shared keyboard
-outline (`keyboardRing`), declared at rest and painted after Tab, not after a
-click.
+`fieldTextStyle` and `nativeTextTheme` set the font, caret, selection and hint
+colours the native element paints with — `text` is the `inputForeground` role,
+`textFaint` is the `placeholder` role the empty-state hint paints in, and the
+`select-text` recipe utility declares `selectionColor: theme.colors.selection`,
+the wash the token contract measures, rather than the runtime's accent-at-35%
+default. Focus is the shared keyboard outline (`keyboardRing`), declared at rest
+and painted after Tab, not after a click.
 
 `style` takes a `StateStyle<FieldState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, invalid }`. `TextArea` and `Input` share the type,
@@ -109,7 +110,11 @@ last word on a property the recipe also sets).
   before the field's own tracking, on both fields.
 - `runtime/fields.runtime.test.tsx` — runtime keystrokes reach `onValueChange` with
   the accumulated text; Enter reaches `onSubmit`; a controlled field reports each
-  edit.
+  edit; an empty field paints its hint in the theme's `placeholder` role and a
+  value replaces it, with the whole text theme (`text`, `textFaint`, `bg`) read
+  back off the host input (negative control measured: dropping the `theme` prop
+  fails with `hint handed the runtime no text theme`), and the `selection` wash
+  reaches both a selectable `Text` and the field.
 
 ```sh
 nub run --filter @gpuixui/primitives test
