@@ -33,6 +33,24 @@ this site uses **3 for the paint and geometry, and 2 for the runtime**:
 A preview is never the authority. If a preview and the component disagree, the
 component is right and the preview is a bug.
 
+### Pages the package writes
+
+`packages/components/docs/<name>.mdx` is the page a component ships with. The
+site mounts that directory as a second Fumadocs collection and renders the files
+as-is at `/docs/components/<name>`, so a component cannot ship a page the site
+does not show and the two cannot drift. Those pages are **strategy 4**: no
+browser rendering, the real API tables and limitations, and a note at the top
+naming the example file to run in `apps/playground`.
+
+A curated page in `content/docs/components/` wins its URL and adds the previews,
+the install block and the copyable source. Curated today: Button, Dialog,
+Popover, Tabs.
+
+Because the package writes Markdown and the site compiles MDX, the package's
+files must satisfy both: valid YAML frontmatter and no raw `<tag>` outside code.
+`src/lib/component-docs.test.ts` holds that line, and the collection fails whole
+when it is crossed.
+
 ## Theming: a preview paints the library's theme, not the site's
 
 The site has its own identity (Hunter License green); the components have the

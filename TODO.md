@@ -61,6 +61,18 @@ sectioned sidebar (Getting Started / Components / Contributing), the reusable
 Preview/Code template, the `nub` install block, the "On this page" TOC, the
 previous/next pager, and the Button, Dialog, Popover and Tabs pages are deployed
 under <https://gpuixui.sudokw.com/docs>
+`[x]` Render the package's component docs on the site — `packages/components/docs`
+is a second Fumadocs collection mounted at `/docs/components`, so all 39 shipped
+components have a page (curated pages win their URL), the sidebar fills them in
+after the curated four, search indexes both collections, and `/docs/components`
+indexes the section. `docs/preview-strategy.md` records the page template and the
+honesty policy; `component-docs.test.ts` guards the frontmatter and MDX rules the
+package's Markdown must satisfy
+`[x]` Land the docs platform switch (macOS · Linux · Windows · Default) — the
+sidebar switch resolves `platformTheme` from `@gpuixui/tokens`, writes
+`?platform=` and remembers the choice; every preview renders on a `PreviewSurface`
+that carries the theme's roles, radius and families, and a guard test holds the
+preview style sheets to the tokens. `/docs/theming#platform-styles` documents it
 `[x]` Land the Blocks and Theme Editor docs surfaces (plan 436) — the
 `/docs/blocks` index with Login/Settings recipes and the `/docs/themes` live
 token editor, deployed under <https://gpuixui.sudokw.com/docs>
@@ -220,7 +232,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 17/23
+`[x]` `[███████░░░]` 17/25
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -233,8 +245,15 @@ the `@gpuixui/tokens/react` provider
 `[x]` Make `@gpuixui/tokens` resolvable from source so a clean checkout needs no
 prebuilt `dist` (plan 016)
 `[x]` Ship `focusRing(theme)` and correct the focus claims in `docs/tokens.md` and
-`docs/design-system.md` — GPUix 0.10.0 has no `outline*` and no `focusVisible`
-(plan 017)
+`docs/design-system.md` — GPUix 0.10.0 (then pinned) had no `outline*` and no
+`focusVisible` (plan 017)
+`[ ]` Replace the shadow ring with `outline*` + `focusVisible` — plan 053, probe
+first: `@gpuix/native@0.11.0` declares both (`host.d.ts:119-124,157`), so the
+ring can tell a Tab from a click and no control needs to track focus to paint it
+`[ ]` Truth pass on the remaining `0.10.0` claims outside this workstream — the
+component packages' comments and inventory rows still say the runtime lacks
+`focusVisible`/`outline*` and paints one shadow (owner: components, primitives;
+plan 053 §Why lists the evidence)
 `[x]` Drop `BoxShadow.inset`, document the one-shadow rule and hoist
 `elevationShadow(theme, level)` (plan 018)
 `[x]` Write `docs/tokens.md` (every token + extension API)
@@ -539,12 +558,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | **resolved** — `State.runCommands` replays a runtime's commands and queries the final state (3 tests) |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | **resolved** — `avatarSize` is exported from `@gpuixui/tokens`; fixed, not a `Theme` group (a new group breaks hand-built theme literals). Avatar can drop `DIAMETER` |
+| Platform style variants wider than typography (colour, radius, density per macOS/Linux/Windows) so the docs switch visibly repaints, not only re-types | tokens-theme | pending — the site reads the whole theme (roles, radius, families) through one bridge, so a wider `platformTheme` needs no docs change |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | **resolved without the pair** — `filledHover(theme, action)` / `filledPressed(theme, action)` derive an opaque fill from the action role and the theme's `foreground`, so a brand override follows automatically and the six roles are unnecessary; adoption is the row below |
 | Adopt `filledHover` / `filledPressed` and delete the half-alpha hover fills: `components/src/internal/button.tsx`, `primitives/src/core/variants.ts` (`filled`), and the checkbox/radio hover fills in `primitives/src/core/selection.ts` (via `blend`, whose role there is not one of the three actions) | components, primitives | pending — tokens side is shipped and tested |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
 | Native proof that `registerFonts` paints the registered face: register a face in the theme gallery and show the fallback and the intended face | playground | pending — `@gpuixui/tokens` side is shipped and unit-tested |
-| Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
+| Probe that `focusVisible` paints after Tab and not after a mouse press (and on programmatic focus in a dialog) — plan 053's STOP gate | playground | pending — decides whether the shadow ring can become an outline |
+| Adopt the keyboard-only ring (`outline*` + `focusVisible`) and delete the manual focus tracking in `Button`, `selection.ts`, `list.tsx` and the overlay parts | components, primitives | pending — plan 053, after the probe |
+| Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | **resolved for the pages** — the package's docs directory is a second Fumadocs collection at `/docs/components` (39 pages, sidebar + search); the example registry waits on the playground mounting them |
+| Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/component-docs.test.ts` fails on a regression |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Correct `docs/component-api.md` §2: "`onValueChange` is the only change callback name" is wrong for boolean parts — base-gpui uses `on_checked_change`, so primitives adopts `onCheckedChange` alongside `onValueChange` (plan 040 §2.1) | components | pending |
 | A `darwin-x64` binding for `@gpuix/native` **0.11.0** (B1, re-opened by the version bump; the store's local build is 0.10.0) — five `packages/primitives` unit suites and every `test:runtime` suite fail at import until it lands | playground | in progress (`apps/playground/scripts/build-native-binding.sh`) |
@@ -589,6 +612,6 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in ; each fix starts with a plan under .
 
-- **Docs: platform toggle (macOS / Linux / Windows / Default)** — every component preview switches platform style; the styles are real editable token themes in packages/tokens, not docs-only CSS (see MISSION.md).
+- [x] **Docs: platform toggle (macOS / Linux / Windows / Default)** — landed: every preview renders through the resolved `platformTheme`, the switch writes the URL and remembers the choice, and the preview style sheets carry no colour literal. What the variants change today is the type families; the colour/radius/density variants are the tokens workstream's next step, and the previews will follow with no docs change.
 
 - [ ] Tabs: a measured shared indicator on the **native** component (the docs demo now slides; the native side still styles the selected trigger per-trigger).

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { readPageMarkdown } from "@/lib/page-markdown";
+import { readPageMarkdown, type PageOrigin } from "@/lib/page-markdown";
 
 const label = {
   idle: "Copy page",
@@ -13,11 +13,17 @@ type State = keyof typeof label;
  * Copy the page's Markdown, the way shadcn/ui offers a page-level copy action.
  * The Markdown comes from the docs collection, not from scraping the DOM.
  */
-export function CopyPage({ path }: { path: string }) {
+export function CopyPage({
+  origin,
+  path,
+}: {
+  readonly origin: PageOrigin;
+  readonly path: string;
+}) {
   const [state, setState] = useState<State>("idle");
 
   const copy = () => {
-    readPageMarkdown({ data: path })
+    readPageMarkdown({ data: { origin, path } })
       .then((markdown) => navigator.clipboard.writeText(markdown))
       .then(() => setState("copied"))
       .catch(() => setState("error"));
