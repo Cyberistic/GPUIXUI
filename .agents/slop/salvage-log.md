@@ -1305,22 +1305,22 @@
 839-positioning-contract.md | queued | live components gap; folded into the components salvage backlog row
 840-status-selection-figures.md | queued | live tokens gap; folded into the tokens salvage backlog row
 841-flex-axes.md | queued | live components gap; folded into the components salvage backlog row
-components__041-tier1-runtime-verification.md | queued | live primitives gap; folded into the primitives salvage backlog row
+components__041-tier1-runtime-verification.md | discarded | duplicate of 041-tier1-runtime-verification.md, already discarded
 components__100-package-testing.md | discarded | duplicate of 100-package-testing.md, already discarded
 components__110-package-components.md | discarded | duplicate of 110-package-components.md, already discarded
 components__118-single-writer-components.md | discarded | duplicate of 118-single-writer-components.md, already discarded
 components__140-gpuix-native-darwin-x64-build.md | discarded | duplicate of 140-gpuix-native-darwin-x64-build.md, already discarded
 components__207-ai-chat-and-message.md | discarded | duplicate of 207-ai-chat-and-message.md, an active master plan
 components__434-landing-page.md | discarded | duplicate of 434-landing-page.md, an active master plan
-gpui-ce__524-shadcn-tailwind-conformance.md | queued | live components gap; folded into the components salvage backlog row
-gpui-ce__525-gpui-transform.md | queued | live components gap; folded into the components salvage backlog row
+gpui-ce__524-shadcn-tailwind-conformance.md | discarded | duplicate of 524-shadcn-tailwind-conformance.md, an active master plan
+gpui-ce__525-gpui-transform.md | discarded | duplicate of 525-gpui-transform.md, an active master plan
 playground__140-gpuix-native-darwin-x64-build.md | discarded | duplicate of 140-gpuix-native-darwin-x64-build.md, already discarded
-playground__529-native-binding-provenance.md | queued | live playground gap; folded into the playground native-probe backlog row
-playground__530-gpuix-zindex.md | queued | live playground gap; folded into the playground native-probe backlog row
-primitives-hover__030-primitives-package.md | queued | live primitives gap; folded into the primitives salvage backlog row
-primitives-hover__093-accessible-name-matrix.md | queued | live primitives gap; folded into the primitives salvage backlog row
-primitives-hover__094-rating-hover-preview.md | queued | live primitives gap; folded into the primitives salvage backlog row
-primitives__030-primitives-package.md | queued | live primitives gap; folded into the primitives salvage backlog row
+playground__529-native-binding-provenance.md | discarded | duplicate of 529-native-binding-provenance.md, already queued once
+playground__530-gpuix-zindex.md | discarded | duplicate of 530-gpuix-zindex.md, already queued once
+primitives-hover__030-primitives-package.md | discarded | duplicate of 030-primitives-package.md, already discarded
+primitives-hover__093-accessible-name-matrix.md | discarded | duplicate of 093-accessible-name-matrix.md, already queued once
+primitives-hover__094-rating-hover-preview.md | discarded | duplicate of 094-rating-hover-preview.md, already queued once
+primitives__030-primitives-package.md | discarded | duplicate of 030-primitives-package.md, already discarded
 primitives__053-value-controls.md | discarded | duplicate of 053-value-controls.md, already discarded
 primitives__203-adopt-capability-map.md | discarded | duplicate of 203-adopt-capability-map.md, an active master plan
 tokens-platform__200-adopt-compound-part-api.md | discarded | duplicate of 200-adopt-compound-part-api.md, already discarded
@@ -1329,5 +1329,5 @@ tokens-theme__019-motion-tokens.md | discarded | duplicate of 019-motion-tokens.
 tokens-theme__052-register-font.md | discarded | duplicate of 052-register-font.md, already discarded
 tokens-theme__202-adopt-theme-tokens.md | discarded | duplicate of 202-adopt-theme-tokens.md, an active master plan
 tokens-theme__206-message-scroller.md | discarded | duplicate of 206-message-scroller.md, already discarded
-transform__524-shadcn-tailwind-conformance.md | queued | live components gap; folded into the components salvage backlog row
-FINAL | 1332 plans processed | 0 implemented | 215 discarded | 1117 queued into TODO.md backlog rows | queue empty 2026-10-21
+transform__524-shadcn-tailwind-conformance.md | discarded | duplicate of 524-shadcn-tailwind-conformance.md, an active master plan
+FINAL | 1332 plans processed | 0 implemented | 225 discarded | 1107 queued into TODO.md backlog rows | queue empty 2026-10-21
