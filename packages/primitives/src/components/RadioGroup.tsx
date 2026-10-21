@@ -37,16 +37,17 @@ import {
   radioDotStyle,
   selectionBoxStyle,
   selectionRowStyle,
+  selectionRowTextStyle,
   type SelectionAccent,
   type SelectionSpec,
   type SelectionState,
 } from "../core/selection.js";
+import { usableText } from "../core/text.js";
 import type { ValueState } from "../core/state.js";
 import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
-  hasText,
   optionText,
   resolvePartStyle,
   useControlState,
@@ -292,6 +293,10 @@ export const renderRadioGroup = (
       {Arr.map(options, (option, index) => {
         const current = itemState(option, state.current);
         const text = optionText(option.label, option.value);
+        const description = Option.getOrUndefined(
+          usableText(option.description),
+        );
+        const described = description !== undefined;
         const disabled = props.disabled === true || option.disabled === true;
         const focused = Option.exists(
           focus.focusedIndex,
@@ -334,7 +339,10 @@ export const renderRadioGroup = (
                 {
                   disabled,
                   readOnly: props.readOnly === true,
-                  align: "center",
+                  // A described row aligns its box with the first line; an
+                  // undescribed one keeps the single line's centre (the
+                  // standalone Checkbox/Switch rule, plan 748).
+                  align: described ? "flex-start" : "center",
                 },
                 theme,
               ),
@@ -355,18 +363,28 @@ export const renderRadioGroup = (
                 <div style={radioDotStyle(spec, theme)} />
               ) : null}
             </div>
-            <Text
-              role="label"
-              tone={disabled ? "muted" : "default"}
-              style={shrinkLayoutStyle}
-            >
-              {text}
-            </Text>
-            {hasText(option.description) ? (
-              <Text role="caption" tone="muted" style={shrinkLayoutStyle}>
-                {option.description}
+            {described ? (
+              <div style={selectionRowTextStyle(theme)}>
+                <Text
+                  role="label"
+                  tone={disabled ? "muted" : "default"}
+                  style={shrinkLayoutStyle}
+                >
+                  {text}
+                </Text>
+                <Text role="caption" tone="muted" style={shrinkLayoutStyle}>
+                  {description}
+                </Text>
+              </div>
+            ) : (
+              <Text
+                role="label"
+                tone={disabled ? "muted" : "default"}
+                style={shrinkLayoutStyle}
+              >
+                {text}
               </Text>
-            ) : null}
+            )}
           </div>
         );
       })}

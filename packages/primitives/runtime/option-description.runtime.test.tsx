@@ -13,11 +13,35 @@
  */
 
 import { expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
-import { a11yNode, type Runtime } from "../src/testing/index.js";
+import { Box } from "../src/components/Box.js";
+import { a11yNode, type Bounds, type Runtime } from "../src/testing/index.js";
 import { openWindow, Surface } from "./fixture.js";
+
+/**
+ * The painted box of the `<text>` node holding `text`.
+ *
+ * The runtime reports text nodes by content rather than by `testId`, so this is
+ * how a layout assertion names the label and the caption of one row.
+ */
+const textBounds = (runtime: Runtime, text: string): Bounds => {
+  const element = runtime.renderer.findByText(text);
+  if (element === undefined)
+    expect.fail(`no text element paints ${JSON.stringify(text)}`);
+  const bounds = runtime.renderer.getElementBounds(element.id);
+  if (bounds === null)
+    expect.fail(`the runtime reports no bounds for ${JSON.stringify(text)}`);
+  return bounds;
+};
+
+/** A row's box, from its `testId`. */
+const rowBounds = (runtime: Runtime, testId: string): Bounds =>
+  Option.getOrElse(runtime.bounds(testId), () =>
+    expect.fail(`no row carries the testId ${testId}`),
+  );
 
 /** The description the accessibility node matching `match` reports, if any. */
 const descriptionOf = (
@@ -80,4 +104,84 @@ it("announces a radio option's visible description", async () => {
   expect(
     descriptionOf(runtime, { role: "RadioButton", label: "Monthly" }),
   ).toStrictEqual(Option.none());
+});
+
+it("paints a radio option's description under its name, as a checkbox row does", async () => {
+  // The bug this guards (plan 809): the radio row painted the box, label and
+  // caption as three siblings of a row-shaped flex row, so `Every Monday.`
+  // started 49 px right of `Weekly` inside the label's own 17 px band while the
+  // same option shape in `CheckboxGroup` painted a caption under the name.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="cadence"
+        label="Cadence"
+        options={[
+          { value: "weekly", label: "Weekly", description: "Every Monday." },
+          { value: "monthly", label: "Monthly" },
+        ]}
+      />
+      <CheckboxGroup
+        testId="channels"
+        label="Channels"
+        options={[{ value: "email", label: "Email", description: "A digest." }]}
+      />
+    </Surface>,
+  );
+  const label = textBounds(runtime, "Weekly");
+  const caption = textBounds(runtime, "Every Monday.");
+  // The shared rule: the caption starts on the name's own column and below it,
+  // exactly as the `CheckboxGroup` control in the same window paints.
+  expect(caption.x).toBe(label.x);
+  expect(caption.y).toBeGreaterThanOrEqual(label.y + label.height);
+  const checkLabel = textBounds(runtime, "Email");
+  const checkCaption = textBounds(runtime, "A digest.");
+  expect(checkCaption.x).toBe(checkLabel.x);
+  expect(checkCaption.y).toBeGreaterThanOrEqual(
+    checkLabel.y + checkLabel.height,
+  );
+  // A described row is two lines, so it is taller than its undescribed sibling.
+  expect(rowBounds(runtime, "cadence-weekly").height).toBeGreaterThan(
+    rowBounds(runtime, "cadence-monthly").height,
+  );
+});
+
+it("keeps a described radio row inside a bounded group", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box tone="background" style={{ width: 220 }}>
+        <RadioGroup
+          testId="narrow"
+          label="Delivery"
+          options={[
+            {
+              value: "digest",
+              label: "A weekly digest of everything that changed",
+              description:
+                "One summary every Monday covering the whole workspace.",
+            },
+          ]}
+        />
+      </Box>
+    </Surface>,
+  );
+  const group = rowBounds(runtime, "narrow");
+  const right = group.x + group.width;
+  const label = textBounds(
+    runtime,
+    "A weekly digest of everything that changed",
+  );
+  const caption = textBounds(
+    runtime,
+    "One summary every Monday covering the whole workspace.",
+  );
+  // Both runs stay inside the group, and the caption is under the name rather
+  // than beside it (the class plan 380 fixed for a horizontal group).
+  Arr.forEach([label, caption], (run) => {
+    expect(run.x).toBeGreaterThanOrEqual(group.x);
+    expect(run.x + run.width).toBeLessThanOrEqual(right);
+  });
+  expect(caption.y).toBeGreaterThanOrEqual(label.y + label.height);
 });

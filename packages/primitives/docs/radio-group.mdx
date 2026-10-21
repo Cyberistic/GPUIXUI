@@ -47,9 +47,11 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `testId` | `string` | — | names the group; options become `${testId}-${value}` |
 
 `RadioOption` is `{ value, label, description?, disabled? }`. `description` is a
-caption beside the name **and** the option's `aria-description`, so the visible
-hint is also announced. A blank description is absent — neither announced nor
-painted (plans 500, `577`).
+caption **under** the name **and** the option's `aria-description`, so the
+visible hint is also announced. The label and caption share one text column, and
+the row aligns the circle with the first line; an option without a description
+stays a single centred line. A blank description is absent — neither announced
+nor painted (plans 500, `577`, `809`).
 
 A selection is a **string**, and `""` is an ordinary value: a "None"/"No
 preference" choice is `{ value: "", label: "None" }` and behaves like any other
@@ -256,14 +258,20 @@ the option row:
   caller's `optionStyle` wins last (plan 355), a horizontal group's rows
   carry the content-floor removal that lets them shrink (plan 380), an
   option description becomes the row's `aria-description` (plan 500), a blank
-  description paints no caption (plan `577`), and an
+  description paints no caption (plan `577`), a described row paints the label
+  and caption in one text column with the row aligned `flex-start` while an
+  undescribed row keeps one centred line (plan `809`), and an
   option valued `""` is checked only when it is the selection while an absent
   selection leaves it unchecked and does not take the tab stop (plan 502); a
   printable key reaches the type-ahead rule while an arrow, Home/End, Enter,
   Space, a chord and a held repeat do not, and a disabled group types nothing
   (plan 741).
 - `runtime/option-description.runtime.test.tsx` — both groups' descriptions in
-  the real accessibility tree, and a blank one staying absent (plan 500).
+  the real accessibility tree, and a blank one staying absent (plan 500); the
+  radio caption measures on the name's own column and below it, exactly as the
+  `CheckboxGroup` control in the same window paints, a described row is taller
+  than its undescribed sibling, and a bounded 220 px group keeps both runs
+  inside itself (plan `809`).
 - `runtime/row-feedback.runtime.test.tsx` — the same row contract in the real
   renderer, plus a vertical row painting at the group's width so the wash covers
   the hit area (plan 355).

@@ -198,7 +198,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 177/177
+`[x]` `[████████████]` 178/178
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2787,6 +2787,20 @@ retired once both branches are one
       element + 19 runtime cases across the existing matrix, four mutations
       failing by name; offline 75 files / 1073 tests, `auto-focus` 39/39 (plan
       `808`).
+
+`[x]` `packages/primitives`: **a `RadioGroup` option's description painted on
+      the label's line** — measured (2026-10-21): the row painted the box, the
+      label and the caption as three siblings of a row-shaped flex row, so
+      `Weekly` ended at `x 77` and `Every Monday.` started at `x 83`, inside the
+      label's own 17 px band, while `CheckboxGroup` painted the same
+      `{ label, description }` shape at the label's own `x` 19 px below it — two
+      option shapes, two layouts, in one example screen. A described row now
+      puts the label and caption in the shared `selectionRowTextStyle` column and
+      aligns `flex-start`; an undescribed row keeps its one-line tree and
+      `center` alignment, and a blank description paints no wrapper. 2 element +
+      2 native geometry cases (the bounded group included), the old layout
+      failing the native case at `83 ≠ 34`; the page no longer says "beside"
+      (plan `809`; offline 75 files / 1075 tests, the scoped live file 4/4).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

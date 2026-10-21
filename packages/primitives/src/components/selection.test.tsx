@@ -889,9 +889,10 @@ describe("RadioGroup", () => {
       unfocused,
       radioHandlers(vi.fn()),
     );
-    expect(
-      elementChildren(expectSome(Arr.head(elementChildren(blank)))),
-    ).toHaveLength(2);
+    const blankRow = expectSome(Arr.head(elementChildren(blank)));
+    expect(elementChildren(blankRow)).toHaveLength(2);
+    expect(expectSome(Arr.get(elementChildren(blankRow), 1)).type).toBe(Text);
+    expect(expectSome(hostStyleString(blankRow, "alignItems"))).toBe("center");
     const described = renderRadioGroup(
       {
         options: [
@@ -904,9 +905,59 @@ describe("RadioGroup", () => {
       unfocused,
       radioHandlers(vi.fn()),
     );
-    expect(
-      elementChildren(expectSome(Arr.head(elementChildren(described)))),
-    ).toHaveLength(3);
+    const describedRow = expectSome(Arr.head(elementChildren(described)));
+    expect(elementChildren(describedRow)).toHaveLength(2);
+    const column = expectSome(Arr.get(elementChildren(describedRow), 1));
+    expect(hostTag(column)).toStrictEqual(Option.some("div"));
+    expect(elementChildren(column)).toHaveLength(2);
+  });
+
+  it("paints an option's description in the row's text column", () => {
+    // The bug this guards (plan 809): the box, label and caption were three
+    // siblings of a row-shaped flex row, so a description painted on the
+    // label's line (measured in the runtime) while `CheckboxGroup` painted the
+    // same shape as a caption under the name.
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "weekly", label: "Weekly", description: "Every Monday." },
+        ],
+      },
+      testTheme,
+      text("weekly"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const row = expectSome(Arr.head(elementChildren(element)));
+    expect(expectSome(hostStyleString(row, "alignItems"))).toBe("flex-start");
+    const column = expectSome(Arr.get(elementChildren(row), 1));
+    expect(expectSome(hostStyleString(column, "flexDirection"))).toBe("column");
+    const columnChildren = elementChildren(column);
+    expect(columnChildren).toHaveLength(2);
+    const label = expectSome(Arr.get(columnChildren, 0));
+    const caption = expectSome(Arr.get(columnChildren, 1));
+    expect(label.type).toBe(Text);
+    expect(caption.type).toBe(Text);
+    expect(elementProp(label, "children")).toStrictEqual(Option.some("Weekly"));
+    expect(elementProp(caption, "children")).toStrictEqual(
+      Option.some("Every Monday."),
+    );
+  });
+
+  it("keeps an undescribed option's row as one line, centred", () => {
+    const element = renderRadioGroup(
+      { options: [{ value: "weekly", label: "Weekly" }] },
+      testTheme,
+      text("weekly"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const row = expectSome(Arr.head(elementChildren(element)));
+    expect(expectSome(hostStyleString(row, "alignItems"))).toBe("center");
+    expect(elementChildren(row)).toHaveLength(2);
+    expect(expectSome(Arr.get(elementChildren(row), 1)).type).toBe(Text);
   });
 
   it("moves focus to the option an arrow lands on", () => {
@@ -1656,7 +1707,7 @@ describe("the row that owns the pointer paints its feedback", () => {
       expect(expectSome(hostStyle(row, "active"))).toMatchObject({
         backgroundColor: testTheme.colors.active,
       });
-      // The radio's description is a sibling, so the row centres its content.
+      // These options have no descriptions, so the row centres its one line.
       expect(expectSome(hostStyleString(row, "alignItems"))).toBe("center");
     });
   });
