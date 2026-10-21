@@ -188,7 +188,14 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   then leaves with its card, so the card records the focused host when it arrives
   and names the action against that origin before the handler runs; the modal
   captures the raising control and restores there, while a second live card's
-  dismiss control still wins (plans `770`, `830`). The behaviour harness forgets
+  dismiss control still wins (plans `770`, `830`). The card resolves that origin
+  **when the action runs**, because the raising control is often removed by its own
+  surface in the same gesture: a menu row, a popover control or a palette action
+  names its value at raise time, and the surface's own close already named where
+  its focus went (plans `826`, `832`), so the toast follows that mark when the
+  original control is gone. The resolution prefers a live origin, accepts a marked
+  target only while it is live, and reports nothing otherwise, so it can never
+  invent a target (plan `837`). The behaviour harness forgets
   every mark between tests because native host ids restart with each renderer.
   **A layer answers for its own surface**: the runtime reports
   `mouseDownOutside` by bounds, not by tree, so a nested panel painted beyond an

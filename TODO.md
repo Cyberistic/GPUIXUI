@@ -1644,6 +1644,31 @@ retired once both branches are one
       scoped smoke `overlay-dialog` + `modal-focus-trap` green, full headless
       17/20 with the three recorded binding failures; docs, `docs/component-api.md`
       §5, `COMPONENTS.md`, `PLAN.md` D30 and the index synced (owner: components)
+    - [x] A toast raised from a closing surface returns focus where the user was —
+      plan 837; measured 2026-10-21 at `HEAD` `a168e91b`: a toast raised from a
+      menu row ("Delete" → Undo), a popover control or a palette action lost the
+      keyboard when its action's dialog closed (`None`), because the card read its
+      origin once and only marked a still-existing control. The card now resolves
+      the origin when the action runs — the recorded control while it is live,
+      otherwise the successor its own surface named (plans 826/832/827) — and
+      never invents a target. 4 pure resolution cases + 4 composite cases
+      (composition 21 → 25: menu, popover, palette and a control with no
+      successor), the three new cases plus the plan-830 case red without the
+      wiring; unit 532 in 49 files, full native suite 1068/20 of 1088 with the
+      same plan-540 classes (a run with the sources reverted is 1065/23 of
+      1088), `check`/`lint`/`test` exit 0, scoped smoke `overlay-dialog` +
+      `modal-focus-trap` green and headless 17/20; docs,
+      `docs/component-api.md` §5, `COMPONENTS.md`, `PLAN.md` D30 and the index
+      synced (owner: components)
+    - [ ] A toast pushed while its provider mounts loses its action control —
+      measured 2026-10-21 while probing plan 837: a `useEffect` push on mount
+      (with `onAction`) painted `toast-1` with no `toast-1-action` at all, so the
+      card showed the label but no control; the provider's queue-prune effect from
+      the mount render runs after the push registered the handler and filters it
+      out. Repro is 12 lines (mount-effect push, wait for the card, look for the
+      action). Needs a prune that cannot outrun a registration — a functional
+      update against the current queue, or pruning on the store's removal path
+      instead of an effect (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

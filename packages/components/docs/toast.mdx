@@ -56,7 +56,7 @@ and leaves an overlay beneath open (plan 823).
 | hovering a card or one of its controls | pauses its clock; leaving resumes with the **remaining** time |
 | focusing a card's controls | pauses its clock; moving focus away resumes with the **remaining** time |
 | an action | one labelled control; pressing it runs the handler once and dismisses the toast |
-| an action that opens a modal | the modal returns focus to where the user was when the toast arrived, because the action leaves with its card (plan 830) |
+| an action that opens a modal | the modal returns focus to the control the user was on when the toast arrived — even when that control left with its own menu, popover or palette, whose close already named its trigger (plan 837) |
 | dismissing a card | its dismiss control or its action dismisses that card and hands focus to the next live card's dismiss control (the card below it, else the one above); the last card leaves focus alone |
 | progress | a positive finite `duration` paints a 2px bar across the card bottom; it shrinks every 100 ms, freezes during a pause and resumes with the same remainder |
 | placement | `position` picks `top-left`, `top-right`, `bottom-left` or `bottom-right` (default); the oldest toast is topmost and the stack hugs the named horizontal side in every corner |
@@ -105,9 +105,19 @@ toast.push(
   user was on when the notification arrived. The action unmounts with its card,
   so it cannot be the dialog's opener; the card records the focused host when it
   arrives and names its action against that origin before the handler runs, so
-  the dialog captures the live control instead (plan 830). With another toast on
-  screen, the neighbour's dismiss control keeps the keyboard first (plan 770). A
-  plain dismissal with no modal still leaves focus alone.
+  the dialog captures the live control instead (plan 830).
+- A toast is often raised by a control that its own surface removes in the same
+  gesture — a menu row ("Delete" → Undo), a popover control, a palette action.
+  That control is gone by the time the action is pressed, so the toast resolves
+  the origin when the action runs: the recorded control while it still exists,
+  otherwise the focus successor its closing surface already named — the menu,
+  popover or navigation trigger, or the palette's opener (plan 837). With no live
+  target at all the dialog restores as it would for any other vanished opener, so
+  a toast raised from a control that removes itself without naming a successor
+  still leaves focus alone.
+- With another toast on screen, the neighbour's dismiss control keeps the
+  keyboard first (plan 770). A plain dismissal with no modal still leaves focus
+  alone.
 - A toast has at most one action. More than one is a composition decision, not a
   hidden array.
 - Keyboard focus on the action holds the auto-dismiss clock exactly like the
@@ -208,6 +218,11 @@ from its two pinned edges.
   StrictMode mount/unmount/remount does not dispose the runtime the remount
   keeps using. The native test renderer does not reproduce StrictMode's double
   effect invocation, so that rule is a pure suite rather than a component test.
+- A toast's origin is resolved when its action runs, so the raising control may
+  belong to a surface that closed with the raise. The four composite cases live
+  in `src/behaviour/composition.test.tsx` (menu row, popover control, palette
+  action, and a control that removes itself with no successor); the store's
+  resolution itself is `src/internal/focus-successor.test.ts` (plan 837).
 
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
   React `focus`/`blur`, so a ring may not paint when focus moves by code
