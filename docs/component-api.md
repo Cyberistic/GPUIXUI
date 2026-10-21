@@ -169,6 +169,12 @@ the base-gpui guide is the shape reference, not a transcription target. `—`
 means base-gpui has no guide for that component and the listed plan defines the
 parts.
 
+This table is **executed**, not prose: `packages/components/src/api.test.ts`
+reads the Tier 2 rows below and fails when a shipped component has no row, when a
+row names a part the package does not export, or when an exported part of a
+component's family appears in no row. Adding a part therefore means updating the
+row in the same change.
+
 ### Tier 1 — foundational
 
 | Component | Parts | base-gpui guide | Source |
@@ -217,7 +223,7 @@ parts.
 | Confirmation dialogs | `ConfirmDialog` (composes the Dialog parts) | `AlertDialogRoot`/`Trigger`/`Popup` | plan 112 |
 | Popovers | `Popover`, `PopoverTrigger`, `PopoverContent` | `PopoverRoot`/`Trigger`/`Popup`/`Arrow`/`Close`/`Portal`/`Positioner`/`Viewport`/`Backdrop`/`Title`/`Description` | plan 112 |
 | Dropdown menus | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuGroup`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | `MenuRoot` + 18 parts | plan 114 |
-| Context menus | `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent` + the `ContextMenu*` item parts | `ContextMenuRoot`/`Trigger` | plan 114 |
+| Context menus | `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent`, `ContextMenuItem`, `ContextMenuCheckboxItem`, `ContextMenuGroup`, `ContextMenuLabel`, `ContextMenuSeparator`, `ContextMenuSub`, `ContextMenuSubTrigger`, `ContextMenuSubContent` | `ContextMenuRoot`/`Trigger` | plan 114 |
 | Command menus | `CommandMenu`, `CommandMenuInput`, `CommandMenuList`, `CommandMenuItem`, `CommandMenuEmpty` | — | plan 114, 301 |
 | Tabs | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `TabsRoot`/`List`/`Tab`/`Panel`/`Indicator` | plan 113 |
 | Accordions | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `AccordionRoot`/`Header`/`Item`/`Trigger`/`Panel` | plan 113 |
