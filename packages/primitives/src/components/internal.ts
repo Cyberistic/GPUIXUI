@@ -264,25 +264,31 @@ export const joinDescription = (
 /**
  * A control state the runtime cannot put in the accessibility tree.
  *
- * GPUix 0.10.0 publishes no `aria-disabled` and no `aria-readonly` (plan `020`
- * §1.4), and an emulated state is invisible: measured, a disabled `Button` and
- * its enabled twin are byte-identical in the accessibility tree, `Click` action
- * included (plan `810`). The runtime does publish `aria-description`, which is
- * the workaround `docs/gpuix-capabilities.md` names and the channel a busy
- * `Button` already uses for `Loading` — so the state is announced there.
+ * GPUix 0.10.0 publishes no `aria-disabled`, `aria-readonly` or `aria-invalid`
+ * (plan `020` §1.4), and an emulated state is invisible: measured, a disabled
+ * `Button` and its enabled twin are byte-identical in the accessibility tree,
+ * `Click` action included (plan `810`), and an invalid `Input` reported no
+ * description while it painted the destructive boundary (plan `812`). The
+ * runtime does publish `aria-description`, which is the workaround
+ * `docs/gpuix-capabilities.md` names and the channel a busy `Button` already
+ * uses for `Loading` — so the state is announced there.
  */
 export interface AnnouncedState {
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly loading?: boolean;
+  /** A failed validation: the paint is destructive and nothing else says so. */
+  readonly invalid?: boolean;
 }
 
 /**
  * The words a control's unexpressible state adds to its announcement.
  *
- * `disabled` wins over `readOnly`, the rule the paint, handlers and tab stop of
- * every control follow; `loading` leads because it is an activity. The words
- * are fixed English, like `Loading` and a required label's `required`.
+ * `loading` leads because it is an activity; `disabled` wins over `readOnly`,
+ * the rule the paint, handlers and tab stop of every control follow; `invalid`
+ * is independent of that pair, because a form disabled during a save can still
+ * hold a failed validation (plan `812`). The words are fixed English, like
+ * `Loading` and a required label's `required`.
  */
 export const stateWords = (state: AnnouncedState): string =>
   Arr.join(
@@ -293,6 +299,7 @@ export const stateWords = (state: AnnouncedState): string =>
         : state.readOnly === true
           ? Option.some("read only")
           : Option.none(),
+      state.invalid === true ? Option.some("invalid") : Option.none(),
     ]),
     ". ",
   );
@@ -300,10 +307,11 @@ export const stateWords = (state: AnnouncedState): string =>
 /**
  * A control's description with its state words in front of it.
  *
- * One rule for every inert surface, so the announcement cannot drift from the
- * behaviour: a disabled control says `unavailable`, a read-only one says
- * `read only`, and a caller's description or slot tip still composes after it
- * with one sentence boundary (plans `586`, `810`).
+ * One rule for every inert or invalid surface, so the announcement cannot drift
+ * from the behaviour: a disabled control says `unavailable`, a read-only one
+ * says `read only`, a failed validation says `invalid`, and a caller's
+ * description or slot tip still composes after it with one sentence boundary
+ * (plans `586`, `810`, `812`).
  */
 export const describeState = (
   description: string | undefined,

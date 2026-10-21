@@ -79,7 +79,9 @@ never changes a value.
   value falls back to `"required"` rather than publishing an unnamed image.
 - The marker is a separate node: in reading order it follows the name, but
   tabbing straight to the control announces only the control's own `label`.
-- `invalid` is colour plus the field's border; it is not announced by itself.
+- `invalid` is colour plus the field's border; the caption itself announces
+  nothing, because the control it names owns the node and announces `invalid`
+  in its own description (plan `812`).
 
 ## Theming
 

@@ -159,6 +159,9 @@ and does not delete a second character.
   announces `read only` (plan `810`). A **read-only** field keeps one tab stop
   (cell 1) and the normal chrome, and refuses every edit at the component as
   well as the host (plan `786`).
+- `invalid` puts `invalid` in that same group description — the channel the
+  missing `aria-invalid` is filled with (plan `812`) — and paints the cells'
+  borders; a visible error message is still the caller's.
 - The code is one tab stop, so assistive technology and the Tab order see one
   control with `length` named inputs inside it.
 - The code itself is the native input text; there is no `aria-valuetext` on a

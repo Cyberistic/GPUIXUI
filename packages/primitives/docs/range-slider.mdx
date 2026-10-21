@@ -132,6 +132,9 @@ entry point; a disabled slider never focuses, and a read-only one still does
 - A **read-only** range keeps both tab stops, names and announced values and
   stays reachable; it announces `read only` on each thumb, because 0.10.0 has no
   `aria-readonly` (plans `802`, `810`).
+- `invalid` adds `invalid` to both thumbs' descriptions — the channel the
+  missing `aria-invalid` is filled with (plan `812`) — and paints the rail and
+  thumb borders; a visible error message is still the caller's.
 
 ## Theming
 

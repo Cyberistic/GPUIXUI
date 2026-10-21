@@ -189,9 +189,11 @@ each star:
 ## Limitations
 
 
-- **Validation is paint only.** GPUix 0.10.0 has no `aria-invalid`, so `invalid`
-  marks the empty stars and is not announced; pair the rating with an error
-  `Text`, as with every other control.
+- **Validation is painted and announced.** GPUix 0.10.0 has no `aria-invalid`,
+  so `invalid` marks the empty stars destructive **and** adds `invalid` to each
+  star's description — the same channel the inert state uses (plans `810`,
+  `812`). Pair the rating with a visible error `Text` as well: the announcement
+  says the value failed, not why.
 - **Whole stars only.** Half stars would need clipping or a transform, neither of
   which exists in GPUix 0.10.0; a caller that needs a finer score can keep it in
   state and paint the label beside the stars.

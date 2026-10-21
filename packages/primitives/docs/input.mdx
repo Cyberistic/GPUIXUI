@@ -76,9 +76,10 @@ handler, not to a field.
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`.
   GPUix's `<input>` host receives no `onMouseEnter`, so the tip opens on
   keyboard focus only (measured, plan `345`).
-- `invalid` is a border colour (and an inner error cue), not an announced
-  error. Put the message in a `Text role="caption" tone="destructive"` beside
-  the field.
+- `invalid` adds `invalid` to the description — the channel the missing
+  `aria-invalid` is filled with (plan `812`) — and still paints the border. A
+  visible message in a `Text role="caption" tone="destructive"` beside the
+  field is still the caller's job.
 - `readOnly` remains focusable and selectable, which is the platform contract.
 - A `disabled` field is read-only at the host (GPUix has no `disabled` prop), so
   its node is still a `TextInput`; it announces `unavailable` in its description

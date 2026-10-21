@@ -138,7 +138,7 @@ verdict, the evidence, and the honest workaround.
 | Custom paint (`<canvas>`) | **unverified** | the element is in `ElementType`, but the README marks custom drawing "planned" and no drawing API is published | `<svg>` for static shapes; `setImagePixels` for frames |
 | Pointer, keyboard, focus and scroll events | **partial** | `host.d.ts` · `HostProps` declares `onClick`, `onAuxClick`, `onMouseDown/Up/Move/Enter/Leave`, `onMouseDownOutside`, `onKeyDown/Up`, `onFocus`, `onBlur`, `onScroll`, `onFileDrop`, `onChange`, `onSubmit`, `onVisibleRange`. **Focus events are not delivered:** measured on 0.10.0, native focus moves and `getFocusedElementId()` tracks it, but `onFocus`/`onBlur` never run (see [Focus events](#focus-events)) | drive focus from the renderer (`focusElement`, `focusNext`, `getFocusedElementId`); this package's `NativeFocusProvider` samples the id so focus **rings** still paint (plan `590`) and a slot trigger's **tooltip opens on focus** because the wrapper receives the trigger host through the slot's `ref` (plan `596`); a labelled `ScrollArea`'s imperative handle carries its viewport `id`, so a wrapped area's tooltip opens on focus (`Tab`) while hover reaches only the region itself (plans `610`, `399b`) |
 | Scroll offset and layout reporting (`onScrollChange`, `onLayout`) | **not supported** | no `onScrollChange` and no `onLayout` in the 0.10.0 `HostProps` (main-only; §6) | read `renderer.getScrollOffset(elementId)` — it is already the post-scroll, clamped offset inside the `onScroll` handler (measured, plan `337`); measure with `getElementBounds`; a floating wrapper samples an open layer's trigger on the window cadence (plan `645`) |
-| `role` plus a subset of `aria-*` | **partial** | `host.d.ts` · `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-valuemin`/`max`, `aria-disabled`, `aria-readonly`, `aria-labelledby`, `aria-describedby`, `aria-invalid` | carry state in `aria-valuetext`/`aria-selected`; describe with `aria-description` — this package announces `unavailable`/`read only` there, because a disabled control's node is otherwise identical to its enabled twin (measured, plan `810`); put a label inside one interactive element |
+| `role` plus a subset of `aria-*` | **partial** | `host.d.ts` · `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-valuemin`/`max`, `aria-disabled`, `aria-readonly`, `aria-labelledby`, `aria-describedby`, `aria-invalid` | carry state in `aria-valuetext`/`aria-selected`; describe with `aria-description` — this package announces `unavailable`/`read only`/`invalid` there, because a disabled control's node is otherwise identical to its enabled twin (measured, plan `810`) and an invalid one reported no description while painting its error (plan `812`); put a label inside one interactive element |
 | System appearance or high-contrast detection | **unverified** | `GpuixTheme.appearance` is set by the app; no OS preference API in 0.10.0 | the app owns the theme choice |
 | IME and composition input | **unverified** | no composition or paste events in `HostProps` | treat every `onChange` value as committed text and document the gap |
 | Font registration | **not supported** | `registerFont` is not on the 0.10.0 `NativeRenderer` (main-only; §6) | installed family names; a consumer-installed face |
@@ -162,11 +162,14 @@ Consequences, all recorded in component rows:
 - a slider/progress announces its value through `aria-valuetext`, never a
   numeric range;
 - a disabled or read-only control has no attribute to carry the state, so it is
-  announced in the description (`unavailable` / `read only`, plan `810`). The
+  announced in the description (`unavailable` / `read only`, plan `810`); a
+  failed validation has no `aria-invalid`, so it adds `invalid` to the same
+  description while the control paints its error boundary (plan `812`). The
   emulated state is otherwise invisible: measured before the fix, every disabled
-  control's node was byte-identical to its enabled twin, `Click` action included;
-  the action list stays that way, as it does for an `aria-disabled` control, and
-  the handler's own guard is what refuses the press;
+  control's node was byte-identical to its enabled twin, `Click` action included,
+  and an invalid field reported no description at all. The action list stays that
+  way, as it does for an `aria-disabled` control, and the handler's own guard is
+  what refuses the press;
 - a visible label beside a standalone box is inert, because there is no
   association mechanism and text is not part of the click target. Put the label
   **inside** the interactive element (the `CheckboxGroup` row contract), or the

@@ -154,6 +154,9 @@ rule, measured in the runtime).
   and refuses activation; its arrows move the ring only. There is no
   `aria-readonly` in 0.10.0; every option announces `read only` in its
   description, so the locked state is heard (plans `799`, `810`).
+- `invalid` adds `invalid` to every option's description — the channel the
+  missing `aria-invalid` is filled with (plan `812`) — and paints the empty
+  circles' borders; a visible error message is still the caller's.
 - The focused option paints a ring (the `ring` role, spread by
   `borderWidth.strong`), tracked per item because GPUix dispatches focus to the
   element that owns the handler — a wrapper never sees it.

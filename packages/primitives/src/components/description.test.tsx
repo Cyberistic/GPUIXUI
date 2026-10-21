@@ -18,6 +18,7 @@ import { Effect, FileSystem, Path } from "effect";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 import * as Str from "effect/String";
 import { describe, expect, it, vi } from "vitest";
 import { initValueState } from "../core/state.js";
@@ -270,6 +271,28 @@ describe("the state words", () => {
   it("leads with the activity, then the state", () => {
     expect(stateWords({ disabled: true, loading: true })).toBe(
       "Loading. unavailable",
+    );
+  });
+
+  it("announces a failed validation as invalid", () => {
+    expect(stateWords({ invalid: true })).toBe("invalid");
+  });
+
+  it("keeps the validation independent of the inert pair", () => {
+    expect(stateWords({ disabled: true, invalid: true })).toBe(
+      "unavailable. invalid",
+    );
+    expect(stateWords({ readOnly: true, invalid: true })).toBe(
+      "read only. invalid",
+    );
+  });
+
+  it("puts the whole state before a description", () => {
+    expect(stateWords({ disabled: true, loading: true, invalid: true })).toBe(
+      "Loading. unavailable. invalid",
+    );
+    expect(describeState(DESCRIPTION, { invalid: true })).toBe(
+      `invalid. ${DESCRIPTION}`,
     );
   });
 
@@ -528,5 +551,41 @@ describe("every surface that declares the prop applies the rule", () => {
         !Str.includes("stateWords(")(source.body),
     );
     expect(Arr.map(unwired, (source) => source.file)).toStrictEqual([]);
+  });
+
+  /**
+   * The validation wiring guard (plan `812`).
+   *
+   * The rule above proves `invalid` is announced; this proves the parts that
+   * *declare* a validation state are the ones the native matrix in
+   * `runtime/invalid-announcement.runtime.test.tsx` measures. The list is
+   * explicit on purpose: a new invalid-bearing part, or a part that drops the
+   * prop, must be a deliberate diff here rather than ship a painted error that
+   * assistive technology never hears. `Label.tsx` is the one exception it
+   * names — a caption, whose control owns the node and the state.
+   */
+  it("records every part that declares a validation state, by file", async () => {
+    const sources = await Effect.runPromise(scan);
+    const invalid = Arr.filter(sources, (source) =>
+      Str.includes("readonly invalid?: boolean;")(source.body),
+    );
+    expect(
+      Arr.sort(
+        Arr.map(invalid, (source) => source.file),
+        Order.String,
+      ),
+    ).toStrictEqual([
+      "Checkbox.tsx",
+      "CheckboxGroup.tsx",
+      "Input.tsx",
+      "Label.tsx",
+      "NumberField.tsx",
+      "OTPField.tsx",
+      "RadioGroup.tsx",
+      "Rating.tsx",
+      "Select.tsx",
+      "Slider.tsx",
+      "Switch.tsx",
+    ]);
   });
 });

@@ -114,6 +114,9 @@ one never does, and a read-only one still does (plan `807`).
 - `readOnly` keeps the tab stop, the name, `aria-valuetext` and the ring, and
   refuses every change; it announces `read only`. There is no `aria-readonly` in
   0.10.0, so the description is the channel (plans `799`, `810`).
+- `invalid` announces `invalid` in the same description, the channel the missing
+  `aria-invalid` is filled with (plan `812`), and paints the track's border; a
+  visible error message is still the caller's.
 - The name comes from the text child, else `label`; there is no
   `aria-labelledby`.
 - With children, the row is **one** node: role `switch`, the text as its name,

@@ -315,7 +315,10 @@ itself the accessible value.
 ordinary `combobox` node, name and `aria-valuetext`, and adds `read only` to its
 description — the runtime's one channel for a state it cannot express (plan
 `810`); a disabled one adds `unavailable`. The behavioural half (no list, no
-value change) is unchanged (plan `797`).
+value change) is unchanged (plan `797`). `invalid` joins that description as
+`invalid` — the missing `aria-invalid`'s channel (plan `812`) — while the
+trigger paints the destructive border; a visible error message is still the
+caller's.
 
 Focus is **visible**: the trigger paints the field recipe's 3 px ring while
 focused or open, the same ring `Input` paints. The runtime has no `focusVisible`,

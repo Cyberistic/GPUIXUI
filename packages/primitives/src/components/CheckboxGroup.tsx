@@ -236,7 +236,11 @@ const renderRow = (
       ref={registerRow}
       role="checkbox"
       aria-label={ariaName(label)}
-      aria-description={describeState(description, { disabled, readOnly })}
+      aria-description={describeState(description, {
+        disabled,
+        readOnly,
+        invalid,
+      })}
       aria-valuetext={selectionValueText(state)}
       tabIndex={disabled ? undefined : 0}
       autoFocus={disabled ? undefined : autoFocus}

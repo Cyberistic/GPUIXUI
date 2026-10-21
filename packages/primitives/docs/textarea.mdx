@@ -74,7 +74,9 @@ mean.
   accessibility dump prints `MultilineTextInput:"Notes"`), not the single-line
   `TextInput` that `Input` reports.
 - The name comes from `label`; there is no `aria-labelledby`.
-- `invalid` is visual; put the message beside the field in words.
+- `invalid` adds `invalid` to the description (the missing `aria-invalid`'s
+  channel, plan `812`) and paints the border; a visible message is still the
+  caller's.
 - As with `Input`, there is no `aria-describedby`.
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so
   the tip opens on keyboard focus. A `<textarea>` host receives no

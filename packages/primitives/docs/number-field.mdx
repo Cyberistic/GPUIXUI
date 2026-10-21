@@ -164,6 +164,9 @@ the caller's handler.
   description because the host has no `disabled` prop (plan `810`). A
   **read-only** field is a different state: it keeps its tab stop and the normal
   chrome and refuses edits at the component as well as the host (plan `786`).
+- `invalid` adds `invalid` to the description — the channel the missing
+  `aria-invalid` is filled with (plan `812`) — and still paints the border; a
+  visible error message is still the caller's.
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description` to
   its inner input, so the tip opens on keyboard focus. A text host receives no
   `onMouseEnter`, so hover cannot open it (measured, plan `345`).

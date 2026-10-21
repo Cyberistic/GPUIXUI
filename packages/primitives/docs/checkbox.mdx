@@ -146,6 +146,9 @@ one never does, and a read-only one still does (plan `807`).
 - `readOnly` keeps the tab stop, the name, `aria-valuetext` and the ring, and
   refuses every change; it announces `read only`. There is no `aria-readonly` in
   0.10.0, so the description is the channel (plans `799`, `810`).
+- `invalid` announces `invalid` in the same description — the channel the
+  missing `aria-invalid` is filled with (plan `812`) — and paints the empty
+  box's border; a visible error message is still the caller's.
 - With children, the row is **one** node: role `checkbox`, the text as its name,
   one tab stop and one hit area; the box inside is decoration. A **sibling**
   `Label` beside a standalone box is still inert — GPUix has no

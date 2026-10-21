@@ -194,7 +194,11 @@ export const renderOtpField = (
     <div
       role="group"
       aria-label={ariaName(props.label)}
-      aria-description={stateWords({ disabled, readOnly: props.readOnly })}
+      aria-description={stateWords({
+        disabled,
+        readOnly: props.readOnly,
+        invalid: props.invalid,
+      })}
       testId={props.testId}
       style={resolvePartStyle(otpGroupStyle(theme), props.style, {
         disabled,

@@ -198,7 +198,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 179/179
+`[x]` `[████████████]` 180/180
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1832,6 +1832,25 @@ retired once both branches are one
       1 native case (the old one-way edge times out at "the adapter blur") and
       the compile direction (`check-types` rejects a missing member); plan `811`;
       offline unchanged at 75 files / 1110 tests, `surface` 10/10.
+
+`[x]` `packages/primitives`: **a failed validation was painted but never
+       announced** — measured (2026-10-21, release-tag build): every one of the
+       twelve value-bearing controls paints `invalid`, and none reached the
+       accessibility tree. 0.10.0 has no `aria-invalid`, and the description
+       channel plan `810` established carried only `Loading`/`unavailable`/
+       `read only`; an invalid `Input`, `Select`, `CheckboxGroup`, `RadioGroup`
+       and `OTPField` all reported `description: undefined` while their borders
+       were destructive, and three pages documented the defect as a limitation
+       ("not an announced error", "not announced by itself", "Validation is paint
+       only"). `invalid` is now the third state word — independent of the inert
+       pair, so `disabled` + `invalid` says both — and the four hand-built state
+       objects (`Select`, `OTPField`, `CheckboxGroup`, `RadioGroup`) forward it;
+       `Label` stays paint-only because the control owns the node. 5 rule + a
+       wiring tripwire + 28 native cases, and five mutation directions measured
+       (the state-word branch, a page's old claim, the capability row, a new
+       invalid-bearing file, and the unwired controls); offline 76 files /
+       1117 tests, the new native file 28/28, nine scoped runtime files 219/219
+       (plan `812`).
 
 `[x]` `packages/primitives` + `packages/icons`: **a blank icon label created an
       unnamed image** — `Icon` promoted any present `label` to `role="img"`, so

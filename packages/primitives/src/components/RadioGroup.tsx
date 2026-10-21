@@ -322,6 +322,7 @@ export const renderRadioGroup = (
             aria-description={describeState(option.description, {
               disabled,
               readOnly: props.readOnly,
+              invalid: props.invalid === true,
             })}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}

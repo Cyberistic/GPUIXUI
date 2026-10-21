@@ -146,6 +146,9 @@ does not move it to whatever now sits at the old index.
   announced with the name. GPUix has no `aria-describedby`, but it exposes the
   string form; a blank description is absent — neither announced nor painted
   (plans 500, `577`).
+- `invalid` adds `invalid` to each row's description, the channel the missing
+  `aria-invalid` is filled with (plan `812`), and paints the empty boxes'
+  borders; a visible error message is still the caller's.
 - A blank `selectAll` renders **no parent row**: the parent is a focusable
   `checkbox`, so a computed empty name would publish an unnamed tab stop (the
   class plan 573 fixed for `InfoTip`). The name is trimmed; a real one is both
