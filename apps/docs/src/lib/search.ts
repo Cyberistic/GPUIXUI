@@ -43,6 +43,7 @@ import { tokenSearchEntries } from "./token-search";
 import { tokensApiSearchEntry } from "./tokens-api-search";
 import { updaterSearchEntry } from "./updater-search";
 import { eventsSearchEntry } from "./events-search";
+import { frameLoopSearchEntry } from "./frame-loop-search";
 import { placementSearchEntry } from "./placement-search";
 import { stem, typoMatch, type TypoName } from "./typo";
 import {
@@ -178,6 +179,7 @@ export const generatedSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   updaterSearchEntry,
   eventsSearchEntry,
   placementSearchEntry,
+  frameLoopSearchEntry,
 ];
 
 const generatedByUrl = new Map(

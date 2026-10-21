@@ -74,6 +74,11 @@ published wasm build — inside a browser. That is the only browser story the
 project has; there is no HTML/CSS build of the components, and a browser
 approximation on this site is labelled as one.
 
+A desktop app's frames are pumped from JavaScript: `render()` starts a paced
+`tick()` loop until the last window closes. [Frame loop](/docs/frame-loop) owns
+that contract — the budget, the per-platform tick rule, the exit and the CPU
+clamp.
+
 This site is server-rendered and then hydrated. The previews take their mode and
 platform from what the providers publish on `<html>` — `data-platform` and the
 `dark` class — through one `useSyncExternalStore` snapshot, so a preview cannot

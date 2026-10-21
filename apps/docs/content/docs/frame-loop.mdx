@@ -1,0 +1,190 @@
+---
+title: Frame loop
+description: How a GPUix app is driven — render and remount, the paced tick loop, what ends the process, how to own or stop the loop, and the macOS CPU clamp.
+---
+
+A GPUix application is a native window plus a React tree. `@gpuix/react` owns
+the part in between: it creates the renderer, opens the window, mounts the tree
+and pumps frames on a timer until the last window closes. This page is that
+contract — the pace, the platform difference, the exit, the reset and the CPU
+clamp. The window's own options belong to [Application window](/docs/window), and
+what this site has measured about performance belongs to
+[Performance](/docs/performance).
+
+## What render() does
+
+`render(node, options)` runs the same four steps on every call, in this order:
+
+1. **Resolve the process-wide slot.** One `globalThis` entry holds the renderer,
+   the loop and the React root, so the whole process shares one window.
+2. **Create the renderer and open the window** — only when the slot is empty.
+   `createRenderer()` builds the `GpuixRenderer`, `init(windowOptions)` opens the
+   window, and a log line confirms it.
+3. **Install the process-level error handlers.** An uncaught exception or an
+   unhandled rejection is turned into a runtime error rather than leaving a
+   frozen window behind, because on macOS the frame timer is the AppKit pump.
+4. **Start the loop and mount the tree** — the loop on the first call only, then
+   the React root, flushed synchronously so the window paints before `render()`
+   returns.
+
+It returns a `Root`: `render(node)` replaces the tree, `unmount()` removes it.
+Passing `renderer` in the options replaces step 2 and skips the loop; that is
+the escape hatch for a renderer you own.
+
+## Remounting and hot reload
+
+A second `render()` in the same process is a **remount**, not an error. The
+slot still holds a renderer, so the previous tree is unmounted and the new one
+is mounted into the same window and the same loop — the runtime logs
+`[gpuix] remount: unmount previous tree` when it happens. That is the
+`bun --hot` path: edit a module, the runner re-evaluates the entry, and the
+window survives.
+
+## The loop
+
+`startFrameLoop(renderer, options)` is the pump. Its contract, in the order the
+installed source applies it:
+
+- **A no-op when the platform does not need one.** If `renderer.requiresTick()`
+  is `false`, no timer is created and the returned handle does nothing.
+- **One frame at a time.** The next tick is scheduled only after the current one
+  returns, so a slow frame delays the next rather than letting timers pile up.
+- **A budget, not a cap.** The delay is `frameMs` minus the time the tick took,
+  never negative: a tick that used the whole budget waits `0` ms.
+- **A throw does not stop the pump.** `tick()` runs inside a `try`; the error
+  goes to `onError` and the timer continues. On macOS a dead timer freezes the
+  window while the process is still alive.
+- **`false` means the last window closed.** The loop stops and then calls
+  `onTerminated`. `render()` passes `process.exit(0)`, which is why closing the
+  last window ends the process.
+
+<LoopOptions />
+
+## Tick, and why the platform matters
+
+`tick()` is the renderer's per-frame entry point; `requiresTick()` says whether
+JavaScript has to call it at all. The declarations are explicit about the
+difference: on **macOS** `tick()` pumps AppKit and asks GPUI for a frame; on
+**Windows and Linux** GPUI owns a blocking event loop on a Rust UI thread, and
+`tick()` only reports whether that thread is still inside `Platform::run`. Both
+return `false` after the last window closes, so the same loop can exit the
+process the same way on every platform.
+
+<TickContract />
+
+## The default budget
+
+The default `frameMs` is **8** ms. The runtime's own comment calls that
+"~125fps": above any common display refresh rate, so frames are never the
+bottleneck, while the Node event loop stays almost idle. It is a nominal budget,
+not a measured frame rate — a frame that takes longer just gets the next slot
+later.
+
+The React declaration's comment records why the pace exists at all: calling
+`tick()` from a `setImmediate` loop spun the CPU at tens of thousands of ticks
+per second, which measured **73% CPU on an idle app** versus **1.5% when
+paced**. That number is the runtime's own recorded measurement; this site has
+recorded none, and
+[Performance](/docs/performance) keeps the list of what is unmeasured.
+
+## Stopping the loop
+
+`render()` hands back the `Root`, not the loop, so an application that must own
+the pace composes the three calls itself:
+
+```tsx title="main.tsx"
+import { createRenderer, createRoot, startFrameLoop } from "@gpuix/react";
+import { App } from "./app";
+
+const renderer = createRenderer();
+renderer.init({ title: "Notes", width: 1100, height: 720 });
+
+const root = createRoot(renderer, {
+  onUncaughtError: (error) => {
+    console.error("render failed", error.message);
+  },
+});
+
+const loop = startFrameLoop(renderer, {
+  frameMs: 16,
+  onTerminated: () => process.exit(0),
+});
+
+root.render(<App />);
+
+// Later, to stop pumping frames without unmounting the tree:
+loop.stop();
+```
+
+The handle has exactly one operation, `stop()`. There is no pause and no
+resume.
+
+`resetRender()` is the teardown for a reload or a test: it stops the loop,
+unmounts the root, closes browser automation and clears the process-wide slot.
+A later `render()` then creates a fresh renderer and a new window — `resetRender`
+does not reopen the window it cleared.
+
+<LoopFunctions />
+
+## What render() takes
+
+Only three options belong to the React layer. Everything else is a
+`WindowOptions` field ([Application window](/docs/window)) or a window-level key
+handler ([Events](/docs/events)).
+
+<RenderOptionsTable />
+
+## CPU limits on macOS
+
+A desktop app that sits in the background still pumps frames. The runtime ships
+one clamp for that: set `THROTTLE` to `utility`, `background` or `maintenance`
+and call `applyMacCpuThrottleFromEnv()` from the process entry. It re-execs the
+program under `taskpolicy -c <mode>`, marks the child with
+`GPUIX_CPU_THROTTLE_APPLIED` so it cannot recurse, and exits with the child's
+status.
+
+<CpuThrottleTable />
+
+Three errors are part of the contract, and each is thrown before anything
+re-execs:
+
+- an unknown value throws `THROTTLE=<value> is invalid. Use utility, background,
+  or maintenance.`;
+- a platform other than macOS throws `THROTTLE=<mode> needs macOS taskpolicy`;
+- a Vitest worker throws `THROTTLE=<mode> must wrap the vitest process. Use
+  examples/vitest.config.ts.` — wrap the runner, not the worker.
+
+`readMacCpuThrottle()` is the read-only half: it trims and lowercases the value,
+returns `null` when the variable is unset, and throws on the same invalid value.
+The site has not measured the clamp's effect; the mode list and the errors are
+the evidence.
+
+```ts title="main.ts"
+import { applyMacCpuThrottleFromEnv } from "@gpuix/react";
+
+// At the top of the process entry, before the window is created.
+applyMacCpuThrottleFromEnv();
+```
+
+## What is not provided
+
+<LoopAbsences />
+
+For an uncaught render error, the runtime paints its own overlay with a Reload
+control rather than remounting silently; [Troubleshooting](/docs/troubleshooting)
+owns that path. For frame times, the renderer's debug overlay reports p90, p99
+and max draw samples — [Application window](/docs/window#the-frame-overlay) owns
+it, and this page deliberately does not restate its numbers.
+
+## Related
+
+- [Application window](/docs/window) — the options, window methods, insets and
+  the frame overlay.
+- [Performance](/docs/performance) — the virtualisation probes and the measured
+  absences.
+- [Automation](/docs/automation) — the out-of-process driver, which relies on
+  this loop.
+- [Testing your components](/docs/testing) — the offscreen test renderer and its
+  own flush.
+- [Events](/docs/events) — the payload `onEvent` receives.
+- [Troubleshooting](/docs/troubleshooting) — the error overlay and its reload.

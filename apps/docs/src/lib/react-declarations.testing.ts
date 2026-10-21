@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
@@ -31,3 +31,22 @@ export const installedFloatingLayerSource = (): string =>
 /** `dist/components/tooltip.js` — the tooltip's own placement defaults. */
 export const installedTooltipSource = (): string =>
   readFileSync(join(reactRoot(), "components/tooltip.js"), "utf8");
+
+/** `dist/reconciler/renderer.js` — render(), resetRender() and the remount (plan 637). */
+export const installedReactRendererSource = (): string =>
+  readFileSync(join(reactRoot(), "reconciler/renderer.js"), "utf8");
+
+/** `dist/reconciler/renderer.d.ts` — `RenderOptions` and the signatures (plan 637). */
+export const installedReactRendererDeclarations = (): string =>
+  readFileSync(join(reactRoot(), "reconciler/renderer.d.ts"), "utf8");
+
+/** Every `dist/**\/*.js` file, for the absence guards (plan 637). */
+export const installedReactDistSources = (): ReadonlyArray<string> => {
+  const read = (directory: string): ReadonlyArray<string> =>
+    readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) return read(path);
+      return entry.name.endsWith(".js") ? [readFileSync(path, "utf8")] : [];
+    });
+  return read(reactRoot());
+};

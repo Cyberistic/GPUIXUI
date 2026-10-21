@@ -94,6 +94,16 @@ import { source } from "./source";
  * placement. The regression rows pin `position` to Styling, `anchored`/`anchor`
  * to Native elements, the per-component placement phrases to their pages and
  * the layering words to Component API, so the new table cannot steal them.
+ *
+ * Plan 637 adds the loop vocabulary: `frame pacing`, `frame budget`,
+ * `tick loop`, `hot reload`, the lifecycle phrase, the CPU and clamp words and
+ * `requestAnimationFrame` name Frame loop. The page's own title is not an alias.
+ * The regressions keep `fps`/`frame rate` on Performance (the measurement
+ * owner), `test render loop`/`createRoot` on Testing, the frame overlay and
+ * `closing the window` on Window, the driver switches on Automation and `tick`
+ * on Checkbox — a plain word the page records as a measured non-fix.
+ * `render loop` is not pinned to Testing: the real search returns the new page
+ * first, and plan 637 §9 records that measured move.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -725,6 +735,26 @@ const owned = [
   ["anchor point", "/docs/overlay-placement"],
   ["reposition", "/docs/overlay-placement"],
   ["repositioning", "/docs/overlay-placement"],
+  // Plan 637: the frame loop. The page's title covers `frame loop` and is not an
+  // alias; `render loop` moved here by the page index (plan 637 §9), so the
+  // regression pins the test renderer's narrower `test render loop` phrase.
+  ["frame pacing", "/docs/frame-loop"],
+  ["frame budget", "/docs/frame-loop"],
+  ["tick loop", "/docs/frame-loop"],
+  ["hot reload", "/docs/frame-loop"],
+  ["hot reloading", "/docs/frame-loop"],
+  ["process lifecycle", "/docs/frame-loop"],
+  ["app lifecycle", "/docs/frame-loop"],
+  ["cpu", "/docs/frame-loop"],
+  ["cpu usage", "/docs/frame-loop"],
+  ["cpu throttle", "/docs/frame-loop"],
+  ["limit cpu", "/docs/frame-loop"],
+  ["throttle", "/docs/frame-loop"],
+  ["background throttle", "/docs/frame-loop"],
+  ["taskpolicy", "/docs/frame-loop"],
+  ["why does the app exit", "/docs/frame-loop"],
+  ["requestAnimationFrame", "/docs/frame-loop"],
+  ["request animation frame", "/docs/frame-loop"],
 ] as const;
 
 const regressions = [
@@ -829,6 +859,18 @@ const regressions = [
   ["overlay", "/docs/component-api"],
   ["drawer", "/docs/components/drawer"],
   ["window edge", "/docs/window"],
+  // Plan 637: the loop page explains the pump, not the measurement, the test
+  // renderer's flush, the window's overlay or the driver's own switches.
+  ["fps", "/docs/performance"],
+  ["frame rate", "/docs/performance"],
+  ["test render loop", "/docs/testing"],
+  ["createRoot", "/docs/testing"],
+  ["frame overlay", "/docs/window"],
+  ["debug frame overlay", "/docs/window"],
+  ["closing the window", "/docs/window"],
+  ["createNativeRenderer", "/docs/automation"],
+  ["enableAutomation", "/docs/automation"],
+  ["tick", "/docs/components/checkbox"],
 ] as const;
 
 describe(

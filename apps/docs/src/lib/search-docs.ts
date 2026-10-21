@@ -206,4 +206,9 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     url: "/docs/overlay-placement",
     what: "the five placement props, the anchored mapping and the measured corrections",
   },
+  {
+    title: "Frame loop",
+    url: "/docs/frame-loop",
+    what: "the lifecycle exports, the paced tick loop, the macOS CPU clamp and the absences",
+  },
 ];

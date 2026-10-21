@@ -48,7 +48,7 @@ Queries that must **not** move (their owners are correct):
 
 - `fps`, `frame rate`, `benchmark`, `performance` → `/docs/performance` (what is
   measured, and what is not)
-- `render loop` → `/docs/testing#the-render-loop` (the test renderer's flush)
+- `test render loop` → `/docs/testing#the-render-loop` (the test renderer's flush)
 - `createRoot` → `/docs/testing` (the offscreen renderer's root)
 - `frame overlay`, `debug frame overlay` → `/docs/window` (the overlay and its
   stats)
@@ -377,9 +377,9 @@ table on the page):
 `why does the app exit`, `requestAnimationFrame`, `request animation frame`.
 
 Deliberately absent (with the regression that proves it): `fps` / `frame rate`
-(Performance owns measurement), `render loop` (Testing's test-renderer section),
-`createRoot` (Testing), `frame overlay` / `debug frame overlay` / `closing the
-window` (Window), `createNativeRenderer` / `enableAutomation` /
+(Performance owns measurement), `test render loop` (Testing's test-renderer
+section), `createRoot` (Testing), `frame overlay` / `debug frame overlay` /
+`closing the window` (Window), `createNativeRenderer` / `enableAutomation` /
 `installBrowserAutomation` (Automation), `tick` (recorded limit: a plain word,
 currently Checkbox).
 
@@ -478,8 +478,62 @@ by query and URL.
   behaviour rather than shipping the remount paragraph.
 - `smoke:build` exits `2` or reports a page count that disagrees by more than
   one page: stop and record the build log.
-- The page-alias guard cannot keep `render loop` on Testing or `createRoot` on
-  Testing while adding the new terms: stop and record the measured conflict
+- The page-alias guard cannot keep `test render loop` on Testing or `createRoot`
+  on Testing while adding the new terms: stop and record the measured conflict
   instead of widening the alias.
 - Any gate fails for a reason outside `apps/docs`: stop and record it as a
   cross-team row.
+
+## 9. Corrections measured during implementation
+
+1. **`render loop` moved to this page, by the page index rather than an alias.**
+   Measured after the page landed: `render loop` returned
+   `/docs/frame-loop` (page) with `/docs/testing#the-render-loop` second, because
+   the new page's title and body match both words. This plan's §1 originally
+   pinned the phrase to Testing. The move is accepted rather than forced with an
+   alias (§8 forbids widening one): the app's loop is the primary meaning of
+   "render loop", and Testing keeps the narrower `test render loop` phrase,
+   which is the regression row now. Testing's heading is unchanged, so
+   `/docs/testing#the-render-loop` (linked from Async data) still resolves.
+2. **`THROTTLE` and `GPUIX_CPU_THROTTLE_APPLIED` are read, not declared as
+   literals.** The guard compares `process.env.THROTTLE` and
+   `process.env.GPUIX_CPU_THROTTLE_APPLIED`, which is what the installed source
+   contains; the first draft looked for quoted literals and failed correctly.
+3. **`MAC_CPU_THROTTLES` needed its own export-vocabulary token.** The lifecycle
+   filter matched `Throttle` case-sensitively, so the all-caps constant was
+   dropped from the entry's exports and the guard reported it as claimed but
+   absent. `THROTTLE` is now an explicit alternative, and the forced-defect case
+   in §6.1 still fails by name.
+
+### 9.1 Recorded runs
+
+| Direction | Run | Result |
+| --------- | --- | ------ |
+| §6.1–8 | the eight forced-defect cases in `src/frame-loop.test.ts` | each fails by name (13 surface cases, 61 tests total) |
+| §6.9 | renamed `## Stopping the loop` to `## Owning the loop` | `keeps every section the page promises` failed: `expected [ '## Stopping the loop' ]` |
+| §6.10 | deleted `frameLoopSearchEntry` from `generatedSearchEntries` | `is one of the generated documents` failed, and `requiresTick` returned `/docs/frame-loop#tick-and-why-the-pla…` (a heading) instead of the page |
+| §6.11 | added `frame loop` as an alias | `does not shadow a page title` failed with `[ 'frame loop' ]` — the direction now proves the title rule, because `render loop` legitimately moved here (§9.1) |
+| §6.12 | restored the Window throw sentence | `Window describes a remount instead of a second-render throw` failed |
+
+Commands that ran and their results:
+
+- `nub run --filter docs check-types` — exit `0`.
+- `nubx vitest run src/frame-loop.test.ts` — 61 tests pass; with `page-aliases`,
+  `example-snippets`, `mdx-components`, `content`, `internal-links`,
+  `prose-truth`, `performance-page`, `window-page` and `content-references`,
+  720 tests across 4 files where combined.
+- `nub run --filter docs smoke:build` (build included) — exit `0`, **118
+  pages**, 257 links, 1 524 anchors, search checked, both production queries
+  included.
+- `nub scripts/smoke-a11y.ts --no-build --only /docs/frame-loop` — exit `0`,
+  1 page × 2 schemes, 0 violations.
+- `nub scripts/smoke-console.ts --no-build --only /docs/frame-loop` — exit `0`,
+  1 page, 0 errors.
+- The first two `smoke:build` runs reported all 130 search requests as `request
+  failed` while the page crawl passed. The cause was the host, not the site:
+  stray `vite preview`/`workerd` processes from earlier smoke runs were still
+  resident, and the cold search-index build timed out under their load. After
+  they were stopped the full run (build included) was green. Recorded here
+  because a `request failed` on every search is a host symptom, not a ranker
+  regression.
+- No native scenario is touched; no `--only` playground run is part of this plan.

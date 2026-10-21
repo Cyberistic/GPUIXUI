@@ -175,6 +175,10 @@ runs the resulting updates until none remain. `applyBatch` is the mutation batch
 That is why there is no `act` and no `waitFor` here: there is no pending async
 commit to wait for. Measure after the input call returns, not after a timeout.
 
+This is the **test** renderer's loop: a call you make and read. A running app is
+driven by a paced `tick()` timer instead, and [Frame loop](/docs/frame-loop)
+owns that contract.
+
 <TestMethods group="render" />
 
 ## Members another page owns

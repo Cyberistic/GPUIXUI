@@ -98,6 +98,14 @@ import {
   PlacementMatrix,
   PlacementProps,
 } from "./placement-tables";
+import {
+  CpuThrottleTable,
+  LoopAbsences,
+  LoopFunctions,
+  LoopOptions,
+  RenderOptionsTable,
+  TickContract,
+} from "./frame-loop-tables";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -187,6 +195,12 @@ export function getMDXComponents(components?: MDXComponents) {
     LayerMapping,
     PlacementMatrix,
     PlacementAbsences,
+    LoopFunctions,
+    LoopOptions,
+    TickContract,
+    RenderOptionsTable,
+    CpuThrottleTable,
+    LoopAbsences,
     ...components,
   } satisfies MDXComponents;
 }

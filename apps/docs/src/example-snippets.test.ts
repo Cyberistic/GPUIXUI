@@ -52,6 +52,7 @@ const extraPages = [
   "automation",
   "events",
   "overlay-placement",
+  "frame-loop",
 ] as const;
 
 const examples: ReadonlyArray<ExampleSnippet> = [

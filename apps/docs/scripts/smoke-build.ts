@@ -1540,6 +1540,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the placement correction, which reached Context menu's limitations before plan 636",
     },
+    {
+      query: "requiresTick",
+      expected: "/docs/frame-loop",
+      first: true,
+      what: "the renderer method the app's frame loop calls, which returned nothing before plan 637",
+    },
+    {
+      query: "taskpolicy",
+      expected: "/docs/frame-loop",
+      first: true,
+      what: "the macOS CPU clamp, which returned nothing before plan 637",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

@@ -196,6 +196,21 @@
  * not an alias: an alias may not shadow a page title, and the title already
  * wins. `position` and `overlay` are pinned as exact aliases on their owners
  * because the new page's title and its included source carry both tokens.
+ *
+ * Plan 637 adds the loop vocabulary: `frame loop`, `frame pacing`,
+ * `frame budget`, `tick loop`, `hot reload`, `hot reloading`, `process
+ * lifecycle`, `app lifecycle`, `cpu throttle`, `cpu usage`, `limit cpu`,
+ * `throttle`, `background throttle`, `taskpolicy`, `why does the app exit`,
+ * `requestAnimationFrame` and `request animation frame` name Frame loop, whose
+ * sections answer each. `fps` and `frame rate` stay on Performance (the
+ * measurement owner), `test render loop` on Testing (its test-renderer
+ * section), `createRoot` on Testing, `frame overlay`/`debug frame overlay`/
+ * `closing the window` on Window, and `createNativeRenderer`/
+ * `enableAutomation`/`installBrowserAutomation` on Automation. `tick` is a
+ * measured non-fix: it is a plain word the Checkbox page currently answers, and
+ * a promoted single word would steal it. `render loop` also moves here, by the
+ * page index rather than an alias: the new page is the app's loop, and
+ * Testing's section keeps the narrower `test render loop` phrase (plan 637 §9).
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -1084,6 +1099,27 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "sse",
       "server sent events",
       "server-sent events",
+    ],
+  ],
+  [
+    "/docs/frame-loop",
+    [
+      "frame pacing",
+      "frame budget",
+      "tick loop",
+      "hot reload",
+      "hot reloading",
+      "process lifecycle",
+      "app lifecycle",
+      "cpu throttle",
+      "cpu usage",
+      "limit cpu",
+      "throttle",
+      "background throttle",
+      "taskpolicy",
+      "why does the app exit",
+      "requestanimationframe",
+      "request animation frame",
     ],
   ],
 ]);

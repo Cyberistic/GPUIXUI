@@ -26,10 +26,12 @@ render(<App />, {
 ```
 
 That call also starts the frame loop; the process exits when the last window
-closes. It is called **once per process**: a second `render()` throws, and the
-playground's entry records the same rule. A custom root — a different renderer,
-or window-level error handling — uses `createRoot(renderer, handlers)` from the
-same package instead.
+closes. The pace, the platform's tick rule and the exit are
+[Frame loop](/docs/frame-loop)'s subject. Calling `render()` again in the same
+process is a **remount**, not an error: the previous tree is unmounted and the
+new one mounts into the same window and loop, which is the hot-reload path. A
+custom root — a different renderer, or window-level error handling — uses
+`createRoot(renderer, handlers)` from the same package instead.
 
 ## Options
 
