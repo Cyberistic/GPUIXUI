@@ -933,7 +933,36 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
   - `[ ]` Caller handler composition across the interactive parts
   - `[ ]` The switch thumb's motion
   - `[ ]` The native field's hint and selection reach
-`[ ]` `apps/docs`: docs truth — stated native-test counts and the complete public type index (salvage 310, 324, 326, 330, 333, 335; the example registry page and the copy-and-own platform example contract have landed)
+`[~]` `apps/docs`: docs truth — stated native-test counts and the complete public type index (salvage 310, 324, 326, 330, 333, 335; the example registry page and the copy-and-own platform example contract have landed)
+  - `[x]` **The complete public type index** (salvage 324) — `/docs/reference` now
+    publishes every symbol the workspace exposes: 1085 names across 9 packages,
+    each with its kind (component / hook / function / class / interface / type /
+    enum / namespace / constant / external), the file that declares it, the
+    specifiers that publish it and the first sentence of its doc comment. The
+    entry-point table is unchanged above it. The index is read from the source
+    at build time by a Vite plugin (`apps/docs/plugins/public-symbols-plugin.ts`),
+    so the browser bundle carries the index and not the 2 MB of TypeScript it
+    came from; the reference page imports the component itself, so the index
+    travels with that page's chunk and not with every page on the site.
+    `apps/docs/src/lib/public-symbols-source.ts` does the reading — it scans a
+    module's export statements the way the compiler sees them (an `export` in a
+    comment, a string or a template literal is not an export; a statement that
+    spans lines is one export), follows the re-exports and resolves each name to
+    the module that declares it. `public-symbols.test.ts` pins the scanner's
+    rules with fixtures and holds it to the workspace in both directions.
+    Verified: the dev server renders `/docs/reference` with the table, the
+    production build puts the index in the reference chunk only
+    (`page-meta` stays at 945 KB), and `nub run --filter @gpuixui/docs test` is
+    green (29 files / 197 tests).
+  - `[ ]` **Stated native-test counts** (salvage 333, 335) — the package pages
+    state how many native cases prove a component; the counts drift. Measured
+    2026-10-21: 45 of the 49 count claims in `packages/*/docs/*.mdx` are
+    correct, and one is wrong — `packages/components/docs/field.mdx` says
+    `(5 tests)` for `src/behaviour/field.test.tsx`, which runs 6 (the sibling
+    `fieldset.mdx` already says 6). The fix is the components workstream's
+    page; a guard that holds every stated count to the suite it names lands
+    with it. The curated four pages are already held by
+    `apps/docs/src/lib/component-page-truth.test.ts`.
 `[ ]` `packages/tokens`: platform recipe styles for Windows XP (Luna) and Windows 7 (Aero), plus dark editions, and the authored example that finishes its accent family (salvage 311, 328, 329, 330, 331)
 `[x]` `packages/tokens`: `createTheme` starts from the requested contrast variant (`createTheme({ mode, contrast })`) instead of silently ignoring it, every group merge inherits an explicit `undefined` instead of erasing a role, and each platform style declares the `contrast` variant its palette is designed for — `platformTheme` applies a palette only where that matches the base's. `theme.test.ts` (contrast route, the `undefined` rule per group, one brand over both palettes via `high-contrast.example.ts`) and `platforms.test.ts` (the declaration, no `undefined` role) fail in the corrected direction, each measured; docs in `docs/tokens.md` §Theme API and §Platform styles, `docs/design-system.md` §5, the package README and the two inventory rows (salvage 301, 304, 321, 323)
 `[ ]` `packages/tokens`: the suite still has no time budget (salvage 333) — no per-file cap, so a hung test blocks the gate instead of failing it

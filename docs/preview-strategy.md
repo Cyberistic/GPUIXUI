@@ -235,3 +235,36 @@ catalogue and fails any page that names another version, in prose or in a code
 block. That is how the three pages still saying `0.10.0` were found — the claim
 "the runtime exposes no appearance API" was still true, but the version it was
 measured on was not.
+
+## The reference page is generated, and it says so
+
+`/docs/reference` is the one page that claims to be the workspace's whole
+public surface, so it is generated twice over and held to both sources.
+
+- **Entry points** come from the packages' `exports` maps
+  (`src/lib/public-api.ts`): the specifier a consumer may import and the file
+  it resolves to.
+- **Symbols** come from the source behind them. A Vite plugin
+  (`apps/docs/plugins/public-symbols-plugin.ts`) reads the workspace once at
+  build time and serves an index of every published name, its kind, the file
+  that declares it and its doc comment. The browser bundle carries the index,
+  not the two megabytes of TypeScript it came from.
+
+Two rules keep that honest:
+
+- **A page that needs something heavy imports it itself.** The shared MDX
+  surface (`apps/docs/src/components/mdx.tsx`) holds the small components; the
+  reference page imports `ApiReference` directly, so the symbol index travels
+  with that page's chunk instead of with every page on the site.
+- **The index is read at build time, so it is as fresh as the build.** A new
+  export appears on the next build rather than the next edit — the price of not
+  shipping the workspace source to every reader.
+
+`src/lib/public-symbols-source.ts` does the reading. It scans a module's export
+statements the way the compiler sees them — an `export` inside a comment, a
+string or a template literal is not an export, and a statement that spans lines
+is one export — follows the re-exports, and resolves each name to the module
+that declares it. `public-symbols.test.ts` holds it to the workspace in both
+directions: every published module yields the symbols its source declares, and
+the scanner's rules are pinned by fixtures that fail when a form is missed.
+

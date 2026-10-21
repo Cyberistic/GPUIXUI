@@ -1,17 +1,22 @@
 ---
 title: API reference
-description: Every import specifier the workspace publishes, read from each package's exports map — and where the signatures live.
+description: Every import specifier the workspace publishes and every symbol behind it — read from the manifests and the source, so the page cannot drift.
 ---
+
+import { ApiReference } from "@/components/docs/api-reference";
 
 The library's public API is its **entry points**, not its files. A package
 declares what a consumer may import in its `exports` map; an import outside
 those subpaths is internal and may move without a major version. This page is
-generated from those maps, so it cannot advertise a subpath a package does not
-publish.
+generated from those maps and from the source behind them, so it cannot
+advertise a subpath a package does not publish, nor a symbol the code does not
+export.
 
 <ApiReference />
 
 ## How to read it
+
+### Entry points
 
 - **Import** is the exact specifier. `@gpuixui/components/card` resolves through
   the `./*` pattern to one file per component; `@gpuixui/primitives/core` is a
@@ -25,6 +30,20 @@ publish.
 - A **pattern exposes files, not components.** A `.test.tsx` sitting beside the
   sources matches the same `./*` rule; importing one is not a supported use and
   nothing in the library does it.
+
+### Symbols
+
+- **Symbol** is the name a consumer imports, with the file that declares it and
+  the specifiers that publish it. A name published by several specifiers — the
+  package root re-exports every module, and each module is also its own entry
+  point — is one row, not several.
+- **Kind** is how the symbol is declared: a **component** (a PascalCase export
+  of a React element), a **hook**, a **function**, a **class**, an
+  **interface**, a **type**, an **enum**, a **namespace**, a **constant**, or
+  **external** — a name re-exported from outside the workspace, whose own
+  declaration this page cannot read.
+- **Summary** is the first sentence of the symbol's doc comment, so the page
+  says what the name is for without the reader opening the file.
 
 ## Where the signatures live
 
@@ -52,5 +71,19 @@ a `.ts`/`.tsx` file and derives the specifier from the package name and subpath.
 `public-api.test.ts` re-reads every manifest from disk and fails when a declared
 entry is missing from this page, when an entry's target file does not exist, when
 a pattern matches no file, when a specifier is duplicated, or when a workspace
-package is neither published here nor listed as not published. The page
-therefore follows the manifests instead of a copy of them.
+package is neither published here nor listed as not published.
+
+The symbol table is generated the same way, one step further in. A Vite plugin
+(`plugins/public-symbols-plugin.ts`) reads the workspace's source at build time
+and hands the page an index of every published name, its kind, the file that
+declares it and its doc comment; the browser bundle carries that index and not
+the source it came from. `src/lib/public-symbols-source.ts` does the reading —
+it scans each module's export statements, follows the re-exports, and resolves
+a name to the module that declares it — and `public-symbols.test.ts` holds it to
+the workspace: an export statement in a comment, a string or a template is not
+an export, a statement that spans lines is one export, and every published
+module yields the symbols its source declares.
+
+The index is read once, at build time, so the page cannot fall behind the code
+it documents; the trade is that a new export shows up on the next build rather
+than the next edit.

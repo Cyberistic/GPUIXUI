@@ -11,6 +11,7 @@ import {
   type PackageManifest,
 } from "./public-api";
 import { publicApi } from "./public-api-data";
+import { publicSymbolIndex } from "./public-symbols-data";
 
 /**
  * The public-entry-point reference.
@@ -245,6 +246,25 @@ describe("the rendered reference", () => {
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("prints every symbol the packages publish, with the file it lives in", () => {
+    const missing = publicSymbolIndex.packages.flatMap((pkg) =>
+      pkg.symbols
+        .filter((row) => !markup.includes(row.module))
+        .map((row) => `${pkg.name}/${row.name}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("prints the summary a symbol's doc comment carries", () => {
+    const createTheme = publicSymbolIndex.packages
+      .flatMap((pkg) => pkg.symbols)
+      .find((row) => row.name === "createTheme");
+
+    expect(createTheme?.summary).not.toBe("");
+    expect(markup).toContain(createTheme?.summary);
   });
 
   it("names the packages that are not published, so the omission is explicit", () => {

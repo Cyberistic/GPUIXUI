@@ -5,10 +5,19 @@
     "jsx": "react-jsx",
     "types": ["node", "vite/client"],
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": ["./src/*"]
     },
     "noEmit": true
   },
-  "include": ["src", "content", "source.config.ts", "vite.config.ts", ".source"]
+  "include": [
+    "src",
+    "content",
+    "plugins",
+    "source.config.ts",
+    "vite.config.ts",
+    "vitest.config.ts",
+    ".source"
+  ]
 }
