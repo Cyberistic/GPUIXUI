@@ -216,8 +216,8 @@ type SeriesAuditSource = SeriesSource & { readonly colors: ThemeColors };
  * A plot surface is measured at the theme's own variant: 3:1 for a default
  * theme and 4.5:1 for a high-contrast one. A translucent or malformed series
  * colour is reported, not skipped — a swatch nobody can verify is not a pass.
- * An explicit floor set may only make the contract stricter, which is why both
- * options are floors rather than switches.
+ * Both options are floors, so a caller can hold an authored scale to a stricter
+ * contract than the variant asks for; the variant still decides the default.
  *
  * @example
  * ```ts
