@@ -54,9 +54,9 @@ import {
 | `collisionPadding` | `number` | `8` | margin kept from the window edge |
 | `alignOffset` | `number` | `0` | extra shift after the centre correction |
 
-0.10.0 snaps a surface inside the window but does not continuously flip it, and
-its `center` alignment centres on the trigger's containing block. The component
-therefore flips a snapped surface back off its trigger and converts
+The runtime snaps a surface inside the window but does not continuously flip it,
+and its `center` alignment centres on the trigger's containing block. The
+component therefore flips a snapped surface back off its trigger and converts
 `align="center"` into a measured centre.
 
 ## Dismissal
@@ -127,7 +127,7 @@ popover and a dialog lift by the same rule.
 
 - `aria-expanded` is on the trigger.
 - **No `aria-haspopup`, `aria-controls` or `aria-labelledby`** in
-  `@gpuix/native@0.10.0`; the link between trigger and surface is positional,
+  `@gpuix/native@0.11.0`; the link between trigger and surface is positional,
   not semantic.
 - Positioning is the runtime's anchored layer: no arrow, no custom anchor
   element, no backdrop.
@@ -150,4 +150,4 @@ popover and a dialog lift by the same rule.
 behaviour tests, both themes. The runtime snaps a surface but does not flip it
 and centres `align="center"` on the containing block, so the component flips a
 snapped surface back off its trigger and measures the centre itself. There is no
-portal and no `aria-haspopup` in 0.10.0.
+portal and no `aria-haspopup`.

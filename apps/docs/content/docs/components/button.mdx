@@ -3,9 +3,10 @@ title: Button
 description: The primary action — clickable and keyboard-activatable, with busy and disabled states.
 ---
 
-`Button` is the action primitive. `@gpuix/react` 0.10.0 publishes no `./button`
-subpath, so this component owns the keyboard contract itself instead of wrapping
-a headless one.
+`Button` is the action primitive. It owns its keyboard contract rather than
+wrapping the runtime's headless button: activation, the busy and disabled rules
+and the resting paint are this package's, and the runtime declares no `aria-busy`
+for it to set. Gaps below were measured on `@gpuix/native@0.11.0`.
 
 <ComponentPreview name="button-variants" />
 
@@ -121,7 +122,7 @@ a button's paint is decided:
 | `ghost` | `foreground` text, the `hover` fill |
 | `destructive` | `destructive` and `destructiveForeground` |
 | `link` | `primary` |
-| every variant | `radius.md` corners, `density` height, `focusRing(theme)` |
+| every variant | `radius.md` corners, `density` height, the `focusVisible` ring |
 
 Changing `primary`, `radius.md` or the density repaints and resizes every button
 without touching component code; the docs platform switch changes the type face
@@ -140,14 +141,18 @@ No overlay, no runtime service and no global state: the component is a leaf.
 ## Accessibility and limitations
 
 - Role `button`; the name comes from `label` or the visible text.
-- `loading` sets `aria-description="Loading"` — 0.10.0 has no `aria-busy`.
+- `loading` sets `aria-description="Loading"` — the runtime declares no
+  `aria-busy`.
 - There is no `aria-disabled`: a disabled button leaves the tab order and drops
   its handlers instead. That is the strongest truthful alternative, and assistive
   technology sees a button that does nothing.
-- Focus is a shadow ring, because the runtime has no `focusVisible`. A mouse
-  press therefore shows the same ring as Tab.
-- There is no native button element: the runtime exposes a `div` with role and
-  handlers.
+- Focus is the runtime's `focusVisible` outline, declared at rest: Tab paints it
+  and a mouse press does not (the playground's `focus-visible` probe measured
+  both). No shadow ring, so the ring costs no layout space either.
+- There is no button host element: the surface is a `div` with a role and the
+  handlers above.
+
+Gaps measured on `@gpuix/native@0.11.0`.
 
 ## Related
 
@@ -158,7 +163,9 @@ No overlay, no runtime service and no global state: the component is a leaf.
 
 ## Status
 
-Implemented in `packages/primitives`, with a native behaviour suite (activation,
-busy and disabled states) and a recipe-equivalence test. `COMPONENTS.md` still
-lists the Tier 1 rows as `todo` — the inventory sync for that package is the
-primitives workstream's — so this page claims no more than those tests prove.
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the keyboard contract
+is this package's because the runtime publishes no button host element, and there
+is no `aria-disabled` or `aria-pressed` to set. Native coverage is the shared
+controls suite in `packages/primitives/runtime/controls.runtime.test.tsx` (click,
+Enter, Space, a held key, and the disabled and busy refusals), with the recipe
+equivalence held by `packages/primitives/src/recipe/recipe.test.ts`.

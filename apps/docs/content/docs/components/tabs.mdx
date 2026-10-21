@@ -157,7 +157,7 @@ preview-only affordance. `COMPONENTS.md` records the native gap.
   exposed; the roving tab index is the single-stop pattern. Give the list a
   `label` so the set has a name.
 - **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in
-  `@gpuix/native@0.10.0`. The panel is named by its value, and the
+  `@gpuix/native@0.11.0`. The panel is named by its value, and the
   trigger-to-panel relationship is positional.
 - The list owns the keys because a key event on a focused trigger bubbles to the
   list — measured in the real renderer.
@@ -172,7 +172,9 @@ preview-only affordance. `COMPONENTS.md` records the native gap.
 
 ## Status
 
-`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 14 native
-behaviour tests, both themes and both axes. 0.10.0 has no `aria-orientation` and
-no `aria-controls`, so a panel is named by its value; the measured shared
-indicator on the native component is a tracked task.
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 19 native
+behaviour tests, both themes and both axes. `@gpuix/native@0.11.0` has no
+`aria-orientation` and no `aria-controls`, so a panel is named by its value; the
+selected surface is one measured indicator on the native component rather than a
+fill per trigger, so it jumps on a selection change (the runtime has no
+`transform`).

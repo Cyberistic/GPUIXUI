@@ -179,3 +179,17 @@ generate from the token package, and test the page against it.
    hardcoded colour or an unknown variable.
 5. Run `nub run --filter @gpuixui/docs build` before pushing: an SSR-only error
    in a preview (a missing provider) shows up here, not in `vitest`.
+
+## A page's claims about the runtime
+
+A curated page names the runtime version its gaps were measured on, how many
+native behaviour tests prove the component, and whether `COMPONENTS.md` calls it
+shipped. All three drifted once, and in opposite directions: the pages still said
+`0.10.0` after the bump, one claimed a shadow focus ring the runtime no longer
+needs, one printed 14 tests for a suite that runs 19, and the Button page
+reported `todo` rows that were `done`. `src/lib/component-page-truth.test.ts`
+holds each claim to its source — the workspace catalogue's pinned
+`@gpuix/native`, `it(` in the named behaviour suite, and the parsed inventory row
+— so a page cannot quietly contradict the code it documents. A version bump
+therefore fails the docs suite until the pages are re-read against the new
+release, which is the truth pass, not a nuisance.

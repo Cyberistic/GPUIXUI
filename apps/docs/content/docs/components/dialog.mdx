@@ -163,12 +163,14 @@ The scrim being a role is the one deliberate departure from shadcn's
 
 - `role="dialog"` with the required `label` as its accessible name.
 - Focus enters the surface on open and returns to the opener on close.
-- **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.10.0`. The
+- **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.11.0`. The
   dialog is named by `label`; its title is a separate heading, not the dialog's
   accessible name.
-- **The veil is an anchored layer at window coordinates.** 0.10.0 ships no
-  portal, and `position: "absolute"` resolves against the mount parent, so mount
-  a dialog at or near the root of the tree.
+- **The veil is an anchored layer at window coordinates.** `@gpuix/react@0.11.0`
+  ships a headless dialog with a portal part, but this is a styled compound part
+  that deliberately does not wrap it (`src/dialog.tsx` records why), and
+  `position: "absolute"` resolves against the mount parent — so mount a dialog at
+  or near the root of the tree.
 - The top-right close control is a `✕` text glyph until an icon package lands.
 - A dialog is not resizable, draggable or multi-window. One dialog per surface.
 
@@ -181,6 +183,7 @@ The scrim being a role is the one deliberate departure from shadcn's
 ## Status
 
 `done`, with the runtime support marked `partial` in `COMPONENTS.md`: 13 native
-behaviour tests plus 5 dismiss-stack tests. 0.10.0 ships no Dialog parts and no
-portal, so the veil is an `anchored` element at window coordinates and the
-surface is named by its required `label`.
+behaviour tests plus 5 dismiss-stack tests. The headless `@gpuix/react/dialog` is
+not wrapped — the styled compound shape, the dismiss stack and the runtime's
+focus calls are ours — so the veil is an `anchored` element at window coordinates
+and the surface is named by its required `label` (`@gpuix/native@0.11.0`).
