@@ -103,6 +103,12 @@ export const liveRegistry = [
     capability: "workspace",
   },
   {
+    id: "popover-lifecycle",
+    title:
+      "Overlay: the shipped Popover opens beside its trigger, compensates the runtime's centring and flips when it does not fit",
+    capability: "floating",
+  },
+  {
     id: "modal-focus-restore",
     title:
       "Focus: a modal gives the focus back only when its own surface held it",

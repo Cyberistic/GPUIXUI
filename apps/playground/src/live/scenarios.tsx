@@ -28,6 +28,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   ToastProvider,
   ToastViewport,
   useToast,
@@ -803,6 +806,246 @@ const ToastProbe = (): ReactNode => {
     </div>
   );
 };
+
+/**
+ * The shipped `Popover` — a floating panel anchored to its trigger.
+ *
+ * Three popovers, because placement is three claims: the default one opens
+ * below its trigger on the trigger's start edge, the second asks for `center`
+ * (which the runtime centres on the containing block, so the component measures
+ * and compensates), and the third sits where a panel below it would not fit.
+ */
+const PopoverProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [presses, setPresses] = useState(0);
+  return (
+    <div
+      testId="popover-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped Popover: where it opens, and how it leaves.
+        </text>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: theme.spacing.xl,
+            alignItems: "flex-start",
+          }}
+        >
+          <Popover>
+            <PopoverTrigger testId="popover-trigger">Filters</PopoverTrigger>
+            <PopoverContent testId="popover-panel">
+              <text testId="popover-panel-text">Visible columns</text>
+            </PopoverContent>
+          </Popover>
+          <Popover>
+            <PopoverTrigger testId="popover-center-trigger">
+              Centred
+            </PopoverTrigger>
+            <PopoverContent testId="popover-center-panel" align="center">
+              <text>Centred on the trigger</text>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+      {/* Top-right, where no panel below a trigger can cover it: a press that
+          lands on a panel is an inside press, so the outside-press check needs
+          a target the panels cannot reach. */}
+      <div
+        style={{
+          position: "absolute",
+          right: 40,
+          top: 40,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing.md,
+        }}
+      >
+        <PrimitiveThemeProvider theme={palettes.dark}>
+          <Button
+            testId="popover-elsewhere"
+            onActivate={() => setPresses((n) => n + 1)}
+          >
+            Elsewhere
+          </Button>
+        </PrimitiveThemeProvider>
+        <text
+          testId="popover-elsewhere-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`presses=${presses}`}
+        </text>
+      </div>
+      {/* Low in the window, with a panel too tall to fit below the trigger.
+          The wrapper is a child of the root on purpose: an absolute element
+          resolves against its **direct** parent, so it has to be the root for
+          `bottom` to mean the bottom of the window. */}
+      <div
+        style={{
+          position: "absolute",
+          left: 40,
+          bottom: 40,
+        }}
+      >
+        <Popover>
+          <PopoverTrigger testId="popover-low-trigger">Low</PopoverTrigger>
+          <PopoverContent testId="popover-low-panel" style={{ height: 220 }}>
+            <text>Above the trigger</text>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Measures the shipped popover's placement and its dismissal rules in a window.
+ *
+ * The placement claims are the ones the runtime got wrong: `align="center"` ends
+ * the panel on the trigger's centre line, and a snapped panel near the window
+ * edge lands **on** its trigger instead of flipping. The component measures both
+ * and compensates, so the checks here are about the compensation, in the
+ * runtime the compensation was tuned for.
+ */
+const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** Whether `testId` is absent from the window's tree. */
+    const unpainted = (
+      testId: string,
+    ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
+      Effect.map(ctx.host.bounds(testId), (bounds) =>
+        Option.isNone(Option.fromNullishOr(bounds)),
+      );
+
+    yield* ctx.host.waitFor("popover-trigger");
+
+    // The default placement: below the trigger, on its start edge, one gap down.
+    yield* ctx.host.click("popover-trigger");
+    yield* Effect.sleep(SETTLE);
+    const trigger = yield* paintedBox(ctx, "popover-trigger");
+    const panel = yield* paintedBox(ctx, "popover-panel");
+    yield* ctx.expectEqual(
+      "the panel opens below its trigger",
+      panel.y >= trigger.y + trigger.height,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the panel starts at the trigger's start edge",
+      panel.x,
+      trigger.x,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the panel keeps the measured gap below the trigger",
+      panel.y - (trigger.y + trigger.height),
+      6,
+      1,
+    );
+    yield* ctx.host.capture("popover-open");
+
+    // `center`, which the runtime centres on the containing block.
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click("popover-center-trigger");
+    yield* Effect.sleep(SETTLE);
+    const centreTrigger = yield* paintedBox(ctx, "popover-center-trigger");
+    const centrePanel = yield* paintedBox(ctx, "popover-center-panel");
+    yield* ctx.expectNear(
+      "a centred panel is centred on its trigger",
+      centrePanel.x + centrePanel.width / 2,
+      centreTrigger.x + centreTrigger.width / 2,
+      1,
+    );
+    yield* ctx.host.capture("popover-centred");
+
+    // A trigger with no room below it.
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click("popover-low-trigger");
+    yield* Effect.sleep(SETTLE);
+    const lowTrigger = yield* paintedBox(ctx, "popover-low-trigger");
+    const lowPanel = yield* paintedBox(ctx, "popover-low-panel");
+    yield* ctx.expectEqual(
+      "a panel with no room below opens above its trigger",
+      lowPanel.y + lowPanel.height <= lowTrigger.y,
+      true,
+    );
+    yield* ctx.host.capture("popover-flipped");
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape gives the focus back to the trigger that opened it",
+      yield* focusedAfterPaint(ctx),
+      "popover-low-trigger",
+    );
+
+    // The dismissal rules, on the first popover.
+    yield* ctx.host.click("popover-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape dismisses the panel",
+      yield* unpainted("popover-panel"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Escape returns the focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      "popover-trigger",
+    );
+
+    yield* ctx.host.click("popover-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click("popover-elsewhere");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the outside press reaches the control it landed on",
+      yield* ctx.host.text("popover-elsewhere-readout"),
+      "presses=1",
+    );
+    yield* ctx.expectEqual(
+      "a press outside dismisses the panel",
+      yield* unpainted("popover-panel"),
+      true,
+    );
+
+    yield* ctx.host.click("popover-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click("popover-panel-text");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press inside the panel leaves it open",
+      yield* unpainted("popover-panel"),
+      false,
+    );
+  });
 
 /**
  * The shipped `CommandMenu` — the Tier 4 command palette — over four actions.
@@ -1968,6 +2211,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "command-palette",
     view: () => <CommandPaletteProbe />,
     steps: commandPaletteSteps,
+  },
+  "popover-lifecycle": {
+    id: "popover-lifecycle",
+    view: () => <PopoverProbe />,
+    steps: popoverSteps,
   },
   "modal-focus-restore": {
     id: "modal-focus-restore",

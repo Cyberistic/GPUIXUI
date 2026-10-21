@@ -597,6 +597,35 @@ palette closes, nothing holds the focus (`none`), so the opener never gets it
 back. `modal-focus-restore` below isolates the cause; the components workstream
 owns the fix (`TODO.md`).
 
+### `popover-lifecycle` — measured on 0.11.0 here
+
+The shipped `Popover` in a window: where it opens, and the three ways it leaves.
+The placement claims are the runtime quirks the component compensates for, so the
+checks are about the compensation rather than about the runtime's raw behaviour.
+
+| Step | Check |
+| ---- | ----- |
+| press the trigger | the panel paints below the trigger, on its start edge, one measured gap down |
+| press the `align="center"` trigger | the panel's centre is the trigger's centre line (the runtime would centre on the containing block) |
+| press a trigger 40px from the window's bottom | the panel opens **above** it, and `Escape` returns the focus to that trigger |
+| `Escape` on the default panel | the panel unpaints and the focus is back on its trigger |
+| press outside | the press reaches the control it landed on (`presses=1`) and the panel unpaints |
+| press inside the panel | the panel stays open |
+
+18 checks. Two negative controls, measured: dropping `align="center"` fails
+`a centred panel is centred on its trigger` (`expected 127.5 ± 1, got 192`, exit
+`1`), and moving the low trigger up the window fails `a panel with no room below
+opens above its trigger` (`expected true, got false`, exit `1`) — both restored,
+green. Captures: `.artifacts/live/popover-open.png`, `popover-centred.png`,
+`popover-flipped.png`.
+
+**The probe's own layout is part of the measurement.** The outside-press target
+first sat in the column under the triggers, where the open panel covered it: the
+press landed *inside* the popover, so the readout stayed `presses=0` and the check
+failed by name. A probe for an outside press needs a target no panel can reach;
+the one here is pinned to the window's top-right. That is the same lesson as the
+veil note under `dialog-lifecycle`, from the other direction.
+
 ### `modal-focus-restore` — measured on 0.11.0 here
 
 The rule behind the gap above, measured with three modals that differ only in

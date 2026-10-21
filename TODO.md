@@ -399,7 +399,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[███████████]` 15/15
+`[x]` `[██████████]` 16/16
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -514,6 +514,19 @@ a workaround for two live sessions sharing one worktree; see
       negative controls measured (exit `1` each). The second probe isolates a
       real defect in the shipped `CommandMenu` — it loses the focus when it
       closes — recorded as an interlock row for the components workstream.
+`[x]` Land the `popover-lifecycle` live probe — 18 checks on the shipped
+      `Popover`: the panel opens one measured gap below its trigger on the
+      trigger's start edge, `align="center"` lands on the trigger's centre line
+      (the runtime centres on the containing block), a trigger near the window's
+      bottom gets its panel **above** it, `Escape` unpaints and returns the focus
+      to the trigger, an outside press reaches the control it landed on and
+      dismisses, an inside press does not. Two negative controls measured
+      (dropping `align="center"`: `expected 127.5 ± 1, got 192`; moving the low
+      trigger up: `expected true, got false`, exit `1` each). The probe's own
+      first layout put its outside-press target under the open panel, which
+      measured an inside press instead — the target is now pinned top-right, and
+      the README records the lesson. Green on 0.11.0 (`--only
+      popover-lifecycle`); evidence `.artifacts/live/popover-*.png`.
 
 ## Phase C — Tier 1–2 components
 
