@@ -61,6 +61,15 @@ component names a status family and reads its roles; it never mixes a readable
 text colour out of a solid status colour at runtime, and never special-cases a
 mode to make a tint readable.
 
+A chart breaks that rule on purpose: a series colour means "a different
+category", not "this is a warning", so data marks are the one place a component
+does not name a semantic role. They read the categorical scale instead —
+`seriesColors(theme)` returns five colours for the theme's mode and contrast
+variant, every one perceivable on the three plot surfaces (`seriesSurfaces`) and
+every pair separated by an OKLab distance (`seriesDistinctnessFloor`). A chart
+never hard-codes a hex; a brand that wants its own categories carries `series`.
+See `docs/tokens.md` §Data series.
+
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library.
 
@@ -263,6 +272,8 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
+| data series on `background`, `card` and `popover` | 3:1 | 4.5:1 |
+| any two data series apart from each other (OKLab distance) | 0.06 | 0.06 |
 
 The test runs for every shipped colour set — light, dark, both high-contrast
 variants and all six platform themes — and is part of the normal test suite. It
@@ -295,15 +306,17 @@ floor. The example now ships a white label with its violet, and the audit runs
 over it in `theme.test.ts`.
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all three in one call — `invalidRoles`, `contrast` and `decorative` — and
-`passed` is true only when every list is empty. The contrast half is measured
-against the theme's own `contrast` variant through `contrastFloorsFor(theme)`, so
-a brand derived from a high-contrast theme is held to AAA without the caller
-naming a floor set; an explicit `ContrastFloors` overrides it. The parts are
-public too: `contrastRatio(foreground, background)` measures two opaque roles,
-`contrastPairs` with `contrastFloors` / `highContrastFloors` names the text and
-boundary pairs and their floors, and `decorativeFailures(theme, floor?)` measures
-the subtle surfaces. Nothing about the requirement is private to this repo.
+reports all four in one call — `invalidRoles`, `contrast`, `decorative` and
+`series` — and `passed` is true only when every list is empty. The contrast half
+is measured against the theme's own `contrast` variant through
+`contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
+to AAA without the caller naming a floor set; an explicit `ContrastFloors`
+overrides it. The parts are public too: `contrastRatio(foreground, background)`
+measures two opaque roles, `contrastPairs` with `contrastFloors` /
+`highContrastFloors` names the text and boundary pairs and their floors,
+`decorativeFailures(theme, floor?)` measures the subtle surfaces, and
+`seriesFailures(theme)` measures a categorical scale. Nothing about the
+requirement is private to this repo.
 
 Not covered, deliberately:
 

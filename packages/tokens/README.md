@@ -1,9 +1,9 @@
 # `@gpuixui/tokens`
 
 The single source of truth for colour, typography, spacing, radii, density,
-elevation, border widths, icon sizes and avatar diameters in GPUIXUI. Light and
-dark themes are designed, not inverted — each with a high-contrast variant — and
-every component reads semantic roles from here.
+elevation, border widths, icon sizes, avatar diameters and the categorical data
+scale in GPUIXUI. Light and dark themes are designed, not inverted — each with a
+high-contrast variant — and every component reads semantic roles from here.
 
 - Core entry `@gpuixui/tokens` — pure data and pure functions, no runtime
   dependencies.
@@ -185,6 +185,24 @@ const pressed = filledPressed(theme, "primary");
 ```
 
 Ghost and subtle surfaces keep the `hover` / `active` washes.
+
+## Data series
+
+Charts and legends read a categorical scale, not a semantic role — a series
+colour means "a different category", so painting it `warning` would say the
+wrong thing. `seriesColors(theme)` returns five colours for the theme's mode and
+contrast variant; every one is perceivable on the plot surfaces (`background`,
+`card`, `popover`) and every pair is separated by an OKLab distance.
+
+```ts
+import { seriesColors } from "@gpuixui/tokens";
+
+const colors = seriesColors(theme); // five swatches, in legend order
+```
+
+A brand that wants its own categories carries `series` in `extendTheme`; the
+array replaces the shipped scale whole. `seriesFailures(theme)` reports both
+contracts and is part of `auditTheme`.
 
 ## Focus
 

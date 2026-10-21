@@ -7,6 +7,7 @@ export * from "./fonts.js";
 export * from "./platforms.js";
 export * from "./retro.js";
 export * from "./scale.js";
+export * from "./series.js";
 export * from "./styles.js";
 export * from "./theme.js";
 export * from "./typography.js";

@@ -298,6 +298,62 @@ take the `hover` / `active` washes instead. A runnable example spreads the three
 fills onto a control; see
 [`src/action-states.example.ts`](../packages/tokens/src/action-states.example.ts).
 
+## Data series
+
+A chart mark's colour means "a different category", not "this is a warning". So
+data marks get a categorical scale of their own rather than borrowing a semantic
+role or a chart-local hex — the dashboard recipe's hand-coded palette
+(`#8b5cf6`, `#3b82f6`, …) is the literal this scale replaces.
+
+`seriesColors(theme)` returns the scale for the theme's mode and contrast
+variant: **five** colours as a tuple, in the order a chart assigns them, so a
+legend cannot come up short. A chart with more than five categories folds the
+tail into "Other"; the scale is not a cycle.
+
+| Series | Light | Dark | HC light | HC dark |
+| ------ | ----- | ---- | -------- | ------- |
+| `1` | `#5F4BDB` | `#A7A9FF` | `#3B2C8F` | `#D6D2FF` |
+| `2` | `#0E7490` | `#67D4E8` | `#0B4A57` | `#A8E8F5` |
+| `3` | `#158754` | `#6FE0A3` | `#0E5135` | `#A8F0C6` |
+| `4` | `#B57600` | `#FFC94D` | `#6B4500` | `#FFE7A8` |
+| `5` | `#CC3439` | `#FF6B6B` | `#7E1D21` | `#FFC6C6` |
+
+The four tables are `lightSeries`, `darkSeries`, `highContrastLightSeries` and
+`highContrastDarkSeries`. Both contracts are measured:
+
+- **On the plot.** Every swatch is held to the theme's own boundary floor
+  against every surface a plot is drawn on — `seriesSurfaces` is `background`,
+  `card` and `popover` — so 3:1 by default and 4.5:1 for a high-contrast theme.
+  The tightest shipped value is light series 4 at 3.55:1.
+- **Apart from each other.** Contrast cannot answer "are these two colours
+  different" — a blue and a violet of one lightness measure near 1:1 yet read
+  apart — so pairs are held to `seriesDistinctnessFloor`, an OKLab distance of
+  `0.06` (roughly three just-noticeable steps). The high-contrast tables sit
+  closest to the floor (0.069 and 0.075), because a palette squeezed to AAA
+  luminance has less hue range to spend.
+
+`seriesFailures(theme, floors?)` reports both, naming the series position, the
+surface or the pair, and reporting a translucent or malformed swatch rather than
+skipping it. `auditTheme` includes that report, so a brand is held to the same
+gate. A theme owns its scale by carrying `series`:
+
+```ts
+import { auditTheme, extendTheme, seriesColors, type SeriesColors } from "@gpuixui/tokens";
+
+const house: SeriesColors = ["#6A45F0", "#1F7A8C", "#2E7D32", "#A15C00", "#C02B45"];
+const brand = extendTheme(theme, { series: house });
+
+seriesColors(brand); // the house scale, not the shipped one
+auditTheme(brand).passed; // measured on the plot and against itself
+```
+
+The array replaces the shipped table whole, like an elevation level: the five
+positions are an order the chart and its legend both read, so a partial array is
+not a merge. Platform styles and authored looks carry no scale of their own and
+follow their base theme's mode and variant. A runnable example builds a legend
+and an audit; see
+[`src/series.example.ts`](../packages/tokens/src/series.example.ts).
+
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
@@ -1149,6 +1205,9 @@ Rules:
 6. A filled action's hover and press are `filledHover(theme, action)` and
    `filledPressed(theme, action)`; never `alpha(role, …)` on a fill, which lets
    the surface behind the control show through.
+7. A chart or legend mark takes its colour from `seriesColors(theme)`; a series
+   colour is categorical, so it is neither a semantic role nor a chart-local
+   hex. See [Data series](#data-series).
 
 ```tsx
 const theme = useTheme();
@@ -1191,6 +1250,10 @@ const rows = colorRoles.map((role) => ({
 
 The other groups are already plain data with their own keys: `typography`,
 `spacing`, `radius`, `densityPresets`, `borderWidth`, `iconSize` and `palette`.
+The data series is four fixed tables rather than a theme group — `lightSeries`,
+`darkSeries`, `highContrastLightSeries`, `highContrastDarkSeries` — and
+`seriesColors(theme)` resolves the one a preview needs, including a brand's own
+`series`.
 
 `platformStyles` builds a platform comparison table the same way, so a generated
 page cannot disagree with what the library ships:

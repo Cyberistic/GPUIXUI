@@ -32,6 +32,7 @@ import {
   type Radius,
   type Spacing,
 } from "./scale.js";
+import type { SeriesColors } from "./series.js";
 import { typography, type TextStyle, type Typography } from "./typography.js";
 
 /**
@@ -100,6 +101,12 @@ export interface Theme {
   readonly borderWidth: BorderWidth;
   /** Icon sizes. */
   readonly iconSize: IconSize;
+  /**
+   * The categorical scale data marks are painted in. Absent on every shipped
+   * theme, which resolves the scale for its mode and contrast variant; a brand
+   * that carries one replaces the five-colour table whole.
+   */
+  readonly series?: SeriesColors;
 }
 
 /**
@@ -147,6 +154,11 @@ export interface ThemeOverrides {
   readonly borderWidth?: Partial<BorderWidth>;
   /** Override icon sizes. */
   readonly iconSize?: Partial<IconSize>;
+  /**
+   * Replace the categorical data scale whole. A partial array is not a merge:
+   * the five positions are an order a chart and its legend both read.
+   */
+  readonly series?: SeriesColors;
 }
 
 /** Input to {@link createTheme}: a mode, a contrast variant and overrides. */
@@ -330,6 +342,7 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     elevation: overlay(elevation, overrides.elevation),
     borderWidth: overlay(base.borderWidth, overrides.borderWidth),
     iconSize: overlay(base.iconSize, overrides.iconSize),
+    series: overrides.series ?? base.series,
   };
 }
 

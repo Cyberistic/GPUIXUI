@@ -7,7 +7,7 @@
  * from the high-contrast palette could sit at 5:1 on its secondary text and be
  * reported shippable, and a theme whose divider matched its own card passed
  * because no decorative surface was measured at all. `auditTheme` holds a theme
- * to its own variant and reports all three, which is what these cases pin.
+ * to its own variant and reports all four, which is what these cases pin.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -88,12 +88,13 @@ describe("the floors follow the theme's contrast variant", () => {
       invalidRoles: [],
       contrast: [],
       decorative: [],
+      series: { surfaces: [], distinctness: [] },
       passed: true,
     });
   });
 });
 
-describe("all three reports are part of the gate", () => {
+describe("all four reports are part of the gate", () => {
   it("reports a divider no contrast pair covers", () => {
     expect(contrastFailures(invisibleDividers)).toEqual([]);
     expect(decorativeFailures(invisibleDividers)).toContainEqual(

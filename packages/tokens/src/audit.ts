@@ -23,13 +23,24 @@ import {
   type ContrastFloors,
 } from "./contrast.js";
 import { decorativeFailures, type DecorativeFailure } from "./decorative.js";
-import type { ThemeContrast } from "./theme.js";
+import {
+  seriesFailures,
+  type SeriesColors,
+  type SeriesReport,
+} from "./series.js";
+import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /** A theme, or anything shaped like one, for the checks that only read colours. */
 type ColourSource = { readonly colors: ThemeColors };
 
 /** A theme's contrast variant, when it has declared one. */
 type ContrastSource = { readonly contrast?: ThemeContrast };
+
+/** The fields a series audit reads: the mode, the variant and an authored scale. */
+type SeriesSource = {
+  readonly mode: ThemeMode;
+  readonly series?: SeriesColors;
+};
 
 /**
  * The floors a theme's own contrast variant is held to.
@@ -55,12 +66,14 @@ export interface ThemeAudit {
   readonly contrast: readonly ContrastFailure[];
   /** Dividers, skeleton fills, veils and status edges too close to their surface. */
   readonly decorative: readonly DecorativeFailure[];
-  /** True only when all three reports are empty. */
+  /** Data series too close to a plot surface or to each other. */
+  readonly series: SeriesReport;
+  /** True only when all four reports are empty. */
   readonly passed: boolean;
 }
 
 /**
- * Audit a theme against the three contracts the library holds itself to.
+ * Audit a theme against the four contracts the library holds itself to.
  *
  * The contrast floors come from the theme's own `contrast` variant, so a
  * high-contrast brand is measured at AAA without the caller naming a floor set;
@@ -76,19 +89,23 @@ export interface ThemeAudit {
  * ```
  */
 export function auditTheme(
-  theme: ColourSource & ContrastSource,
+  theme: ColourSource & ContrastSource & SeriesSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): ThemeAudit {
   const invalidRoles = invalidColorRoles(theme);
   const contrast = contrastFailures(theme, floors);
   const decorative = decorativeFailures(theme);
+  const series = seriesFailures(theme);
   return {
     invalidRoles,
     contrast,
     decorative,
+    series,
     passed:
       invalidRoles.length === 0 &&
       contrast.length === 0 &&
-      decorative.length === 0,
+      decorative.length === 0 &&
+      series.surfaces.length === 0 &&
+      series.distinctness.length === 0,
   };
 }

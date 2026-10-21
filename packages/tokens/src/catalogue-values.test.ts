@@ -53,6 +53,12 @@ import {
   radius,
   spacing,
 } from "./scale.js";
+import {
+  darkSeries,
+  highContrastDarkSeries,
+  highContrastLightSeries,
+  lightSeries,
+} from "./series.js";
 import { statusTones } from "./styles.js";
 import { typography, type TextStyle } from "./typography.js";
 
@@ -220,6 +226,41 @@ describe("the catalogue's colour roles", () => {
         ["high contrast dark", highContrastDarkColors],
       ]),
     ).toEqual([]);
+  });
+
+  it("prints the value each variant's data series carries", () => {
+    const rows = headed(catalogue, [
+      "Series",
+      "Light",
+      "Dark",
+      "HC light",
+      "HC dark",
+    ]).rows;
+    const tables = [
+      lightSeries,
+      darkSeries,
+      highContrastLightSeries,
+      highContrastDarkSeries,
+    ];
+    const drift = tables.flatMap((colors, column) =>
+      colors.flatMap((color, index) => {
+        const printed = code(rows[index]?.[column + 1] ?? "");
+        return printed === color
+          ? []
+          : [
+              `series ${index + 1} column ${column + 1}: printed ${printed || "no value"}, carries ${color}`,
+            ];
+      }),
+    );
+
+    expect(rows.map((row) => code(row[0] ?? ""))).toEqual([
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+    ]);
+    expect(drift).toEqual([]);
   });
 
   it("prints each palette ramp's steps", () => {

@@ -273,6 +273,7 @@ describe("theme audit example", () => {
         invalidRoles: [],
         contrast: [],
         decorative: [],
+        series: { surfaces: [], distinctness: [] },
         passed: true,
       });
     });
