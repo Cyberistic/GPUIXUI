@@ -42,6 +42,7 @@ workstream declares in its own section below.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
+| `160` | Retire the components package's local `Button` stand-in | C | primitives' opaque filled hover/press (TODO 1197) and its `outline` edge painting `borderStrong` (TODO 1243) | **blocked on both prerequisites** — measured 2026-10-22: `variants.ts` still paints `alpha()` hover lifts and `outline` paints `colors.border` |
 
 Interlocks this workstream depends on and does not own:
 
