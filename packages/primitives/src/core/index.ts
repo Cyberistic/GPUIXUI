@@ -97,6 +97,7 @@ export {
   indeterminateOffset,
   PULSE_STEPS,
   pulseOpacity,
+  skeletonSize,
   skeletonStyle,
   SPINNER_ACCENTS,
   SPINNER_SEGMENTS,

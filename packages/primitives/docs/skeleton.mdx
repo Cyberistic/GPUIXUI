@@ -22,17 +22,22 @@ import { Skeleton, Stack } from "@gpuixui/primitives";
 An avatar placeholder:
 
 ```tsx
-<Skeleton width={32} height={32} circle />
+<Skeleton width={32} circle />
 ```
+
+`circle` mirrors whichever side is explicit, so `width={32} circle` paints a
+32×32 circle rather than a 32-wide ellipse. With neither side it is one line
+tall and square; with both sides explicit the caller's two numbers stand (they
+may be an ellipse on purpose).
 
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `width` | `number \| string` | `"100%"` | the block's width |
+| `width` | `number \| string` | `"100%"` (circle: one line) | the block's width |
 | `height` | `number \| string` | body line height | the block's height |
 | `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius |
-| `circle` | `boolean` | `false` | full radius; an avatar or icon placeholder |
+| `circle` | `boolean` | `false` | full radius; the missing side mirrors the other, so one explicit size stays a circle |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
@@ -51,8 +56,9 @@ skeleton.
 ## Theming
 
 `skeletonStyle` paints `colors.skeleton`; height defaults to
-`typography.body.lineHeight`. The pulse alternates opacity `1` / `0.6` every
-700 ms.
+`typography.body.lineHeight`, and a circle's size comes from the same
+`skeletonSize` rule the component uses. The pulse alternates opacity `1` /
+`0.6` every 700 ms.
 
 ## Limitations
 
@@ -63,7 +69,10 @@ skeleton.
 
 ## Verification
 
-- `src/core/loading.test.ts` — the two pulse states and the block geometry.
+- `src/core/loading.test.ts` — the two pulse states, the block geometry, and
+  the circle's mirrored side (one explicit side, neither, and both).
+- `src/components/presentational.test.tsx` — the component paints a width-only
+  circle at equal width and height.
 - `runtime/loading.runtime.test.tsx` — opacity samples take both `1` and `0.6`
   in the real renderer.
 

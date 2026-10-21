@@ -7,6 +7,7 @@ import {
   indeterminateOffset,
   PULSE_STEPS,
   pulseOpacity,
+  skeletonSize,
   skeletonStyle,
   SPINNER_SEGMENTS,
   spinnerDotStyle,
@@ -57,6 +58,27 @@ describe("skeletonStyle", () => {
     expect(skeletonStyle({ circle: true }, testTheme).borderRadius).toBe(
       testTheme.radius.full,
     );
+  });
+
+  it("mirrors a circle's missing side so one explicit size stays round", () => {
+    // The bug: width-only fell back to a line height, so a "circle" painted an
+    // ellipse and every avatar placeholder was squashed.
+    expect(skeletonSize({ circle: true, width: 40 }, testTheme)).toStrictEqual({
+      width: 40,
+      height: 40,
+    });
+    expect(skeletonSize({ circle: true, height: 40 }, testTheme)).toStrictEqual(
+      { width: 40, height: 40 },
+    );
+    const line = testTheme.typography.body.lineHeight;
+    expect(skeletonSize({ circle: true }, testTheme)).toStrictEqual({
+      width: line,
+      height: line,
+    });
+    // Two explicit sides are the caller's business, even if they differ.
+    expect(
+      skeletonSize({ circle: true, width: 40, height: 24 }, testTheme),
+    ).toStrictEqual({ width: 40, height: 24 });
   });
 });
 

@@ -29,6 +29,31 @@ export interface SkeletonSpec {
 }
 
 /**
+ * A skeleton's box.
+ *
+ * A block defaults to full width and one line of body text. A circle mirrors
+ * whichever side was given, so `circle` with only a `width` paints a circle and
+ * never an ellipse; with neither side it is one line tall. Two explicit sides
+ * are left as the caller wrote them.
+ */
+export const skeletonSize = (
+  spec: SkeletonSpec,
+  theme: PrimitiveTheme,
+): { readonly width: number | string; readonly height: number | string } => {
+  if (spec.circle !== true) {
+    return {
+      width: spec.width ?? "100%",
+      height: spec.height ?? theme.typography.body.lineHeight,
+    };
+  }
+  if (spec.width !== undefined && spec.height !== undefined) {
+    return { width: spec.width, height: spec.height };
+  }
+  const side = spec.width ?? spec.height ?? theme.typography.body.lineHeight;
+  return { width: side, height: side };
+};
+
+/**
  * A placeholder block.
  *
  * It paints the skeleton role, never the surface it stands in for, so it reads
@@ -39,8 +64,7 @@ export const skeletonStyle = (
   spec: SkeletonSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => ({
-  width: spec.width ?? "100%",
-  height: spec.height ?? theme.typography.body.lineHeight,
+  ...skeletonSize(spec, theme),
   flexShrink: 0,
   borderRadius:
     spec.circle === true

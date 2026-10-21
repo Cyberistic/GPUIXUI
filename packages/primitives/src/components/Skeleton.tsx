@@ -13,6 +13,7 @@ import { cn } from "@gpuixui/tw";
 import {
   PULSE_STEPS,
   pulseOpacity,
+  skeletonSize,
   type SkeletonSpec,
 } from "../core/loading.js";
 import type { PrimitiveTheme } from "../core/theme.js";
@@ -39,11 +40,7 @@ export const renderSkeleton = (
       mergeStyle(
         recipeTw.classesToStyle(cn(skeletonClass(spec), className), theme)
           .style,
-        {
-          width: spec.width ?? "100%",
-          height: spec.height ?? theme.typography.body.lineHeight,
-          opacity: pulseOpacity(step),
-        },
+        { ...skeletonSize(spec, theme), opacity: pulseOpacity(step) },
       ),
       style,
     )}

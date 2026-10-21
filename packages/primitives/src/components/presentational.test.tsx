@@ -291,6 +291,17 @@ describe("loading", () => {
     expect(new Set(opacities).size).toBeGreaterThan(1);
   });
 
+  it("keeps a skeleton circle round with only one side given", () => {
+    // The bug: the missing side fell back to the body line height, so a
+    // 40-wide avatar placeholder painted a 40x20 ellipse.
+    const circle = renderSkeleton({ circle: true, width: 40 }, testTheme, 0);
+    expect(expectSome(numberIn(circle, "width"))).toBe(40);
+    expect(expectSome(numberIn(circle, "height"))).toBe(40);
+    const tall = renderSkeleton({ circle: true, height: 24 }, testTheme, 0);
+    expect(expectSome(numberIn(tall, "width"))).toBe(24);
+    expect(expectSome(numberIn(tall, "height"))).toBe(24);
+  });
+
   it("announces a spinner by role and name", () => {
     const element = renderSpinner({ label: "Saving" }, testTheme, 0);
     expect(expectSome(hostProp(element, "role"))).toBe("status");
