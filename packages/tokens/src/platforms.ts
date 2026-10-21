@@ -51,9 +51,11 @@ export interface PlatformType {
 export type PlatformColors = Readonly<Record<ThemeMode, Partial<ThemeColors>>>;
 
 /**
- * One platform's appearance: the families its type resolves to, the radii and
- * control density its native windows use, and the chrome roles it paints in
- * each mode. A role it omits keeps the base theme's value.
+ * One look: the families its type resolves to, the radii and control density its
+ * controls use, and the chrome roles it paints in each mode. `platformStyles` is
+ * one table of these keyed by operating system; `retroStyles` is another keyed by
+ * era, and a consumer can author a third, because `applyStyle` takes this shape
+ * rather than a name. A role a style omits keeps the base theme's value.
  */
 export interface PlatformStyle extends PlatformType {
   /** Corner radii the platform's own controls use. */
