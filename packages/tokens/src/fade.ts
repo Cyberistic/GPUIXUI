@@ -7,7 +7,7 @@
  * focus) are the same paint: the element keeps a share of itself and shows the
  * surface behind it. The label is faded over the *faded fill*, not over the
  * surface, because the runtime dims each element's own paint — measured, not
- * assumed: see `dim.test.ts`.
+ * assumed: see `focus-dim.test.ts`.
  */
 
 import { blend, type ThemeColors } from "./color.js";
