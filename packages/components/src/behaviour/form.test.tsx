@@ -170,12 +170,17 @@ describe("Form", () => {
 
     const partial = { email: "nope", name: "Ada" };
     const partialMessages = Effect.runSync(validateAll(Signup)(partial));
+    const dropped = expectedMessages.filter(
+      (message) => !partialMessages.includes(message),
+    );
     form.rerender(<Harness value={partial} onSubmit={onSubmit} />);
 
+    expect(partialMessages.length).toBeGreaterThan(0);
     expect(form.renderer.getAllText()).toEqual(
       expect.arrayContaining([...partialMessages]),
     );
-    expect(form.renderer.getAllText()).not.toContain(expectedMessages[1]);
+    expect(dropped).toHaveLength(1);
+    expect(form.renderer.getAllText()).not.toContain(dropped[0]);
 
     form.rerender(<Harness value={valid} onSubmit={onSubmit} />);
 
