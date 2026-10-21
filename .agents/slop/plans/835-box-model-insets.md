@@ -348,6 +348,12 @@ asserts their own views; removing the row's `onClick` still fails
 `box-inset.tsx`, the two registrations, `shell.tsx` (the fold fix), plus the
 README, `COMPONENTS.md`, `PLAN.md`, `TODO.md` and index rows.
 
+**Gates.** Full headless **128/128** (**5098** checks = plan `833`'s 5034
++ this plan's 63 + one added `shell-selection` check, **67 capabilities**,
+**746.7 s** under a concurrent full run, exit `0`). Live registry
+**116 → 117**; no full live gate (merge gate). `nub run check`,
+`nub run lint` and `nub run test` green (playground **728** tests).
+
 **Not claimed.** The **paint** of the padding band is not sampled (the probe is
 bounds-only; `border-pixels` measured that a box's fill covers its border box,
 not its padding band by name). `margin: "auto"` is not expressible in the pinned
