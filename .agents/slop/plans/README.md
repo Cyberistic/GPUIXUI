@@ -426,7 +426,7 @@ references without buying correctness.
 | [836](./836-motion-easing-index.md) | The easing names every union owns an index for, except this one | F | 019, 064, 067, 068, 096, 305, 364, 519, 834 | done |
 | [838](./838-stored-edit-decoder.md) | The stored edit the package can write but not read back | F | 071, 321, 380, 383, 727, 744, 758, 794, 834, 835 | done |
 | [840](./840-status-selection-figures.md) | The status label through a text selection, in the ledger and the task list | F | 083, 366, 528, 574, 582, 611, 717, 831, 833 | done |
-| [842](./842-selection-contract-figures.md) | The selection contract's remaining present-tense minima | G | 083, 314, 362, 366, 506, 509, 528, 536, 595, 717, 840 | in progress |
+| [842](./842-selection-contract-figures.md) | The selection contract's remaining present-tense minima | G | 083, 314, 362, 366, 506, 509, 528, 536, 595, 717, 840 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

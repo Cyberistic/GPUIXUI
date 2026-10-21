@@ -1,6 +1,6 @@
 # 842 — The selection contract's remaining present-tense minima
 
-Status: ready to execute. Owner: `tokens-theme`. Depends on plans `083`, `314`,
+Status: done. Owner: `tokens-theme`. Depends on plans `083`, `314`,
 `362`, `366`, `506`, `509`, `528`, `536`, `595`, `717` and `840`.
 
 ## 1. The defect

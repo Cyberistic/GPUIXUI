@@ -337,7 +337,11 @@ const measure = (
 };
 
 /** The lowest ratio one set measures across the entry's pairs. */
-const within = (entry: DocumentedFigure, theme: Theme, against?: Theme): number =>
+const within = (
+  entry: DocumentedFigure,
+  theme: Theme,
+  against?: Theme,
+): number =>
   entry.pairs
     .map((pair) => measure(entry, pair, theme, against ?? theme))
     .reduce((best, current) => (current < best ? current : best));
@@ -1631,7 +1635,8 @@ const selectionNarrativeFigures: ReadonlyArray<DocumentedFigure> = [
     claim: "tightest",
     provenance: macosLight,
     decimals: 2,
-    sentence: "`selectedForeground` on `active` at **{figure}:1** (macOS light)",
+    sentence:
+      "`selectedForeground` on `active` at **{figure}:1** (macOS light)",
   }),
   catalogueFigure({
     name: "the inherited label on the hovered row at rest",
@@ -1640,7 +1645,8 @@ const selectionNarrativeFigures: ReadonlyArray<DocumentedFigure> = [
     claim: "tightest",
     provenance: macosLight,
     decimals: 2,
-    sentence: "`selectedForeground` on `accent` at **{figure}:1** (macOS light)",
+    sentence:
+      "`selectedForeground` on `accent` at **{figure}:1** (macOS light)",
   }),
   catalogueFigure({
     name: "the washed selection list's own minimum",

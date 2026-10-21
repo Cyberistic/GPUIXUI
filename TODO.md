@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 386/461
+`[x]` `[████████░░]` 387/461
 
 `[x]` Own the status label's shipped minimum in the ledger and the task list —
 `selectionStatusPairs`' tightest pair is **4.891:1**, Light · Linux `infoText` on
@@ -68,7 +68,7 @@ two minima, the two pairs the old rows named (7.158:1 and 5.615:1 today) and
 reads all four passages, so a palette move cannot leave them behind again; no
 colour, pair, floor, metric, role or shipped theme moves (plan 840)
 
-`[ ]` Own the selection contract's remaining present-tense minima — mutating any
+`[x]` Own the selection contract's remaining present-tense minima — mutating any
 of these leaves the package green because figures in the catalogue's *Text
 selection* and *Verification* narratives are not `documentedFigures` entries:
 the washed soft-panel body and caption **8.14:1** (identity dark, `infoSoft`)

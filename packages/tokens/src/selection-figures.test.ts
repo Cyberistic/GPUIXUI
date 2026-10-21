@@ -111,8 +111,7 @@ describe("the selection contract's documented minima", () => {
   });
 
   it("counts the figures the page states more than once", () => {
-    const occurrences = (figure: string) =>
-      page.split(figure).length - 1;
+    const occurrences = (figure: string) => page.split(figure).length - 1;
 
     expect(occurrences("8.14")).toBe(3);
     expect(occurrences("5.08")).toBe(3);
@@ -210,8 +209,16 @@ describe("the selection contract's documented minima", () => {
   it("reads a cross pair from one theme's role and the other's surface", () => {
     const identityLight = getTheme("light", "default");
     const cases = [
-      ["the light warning edge on the macOS light pressed wash", "darwin", 1.246],
-      ["the light warning edge on the Linux light pressed wash", "linux", 1.254],
+      [
+        "the light warning edge on the macOS light pressed wash",
+        "darwin",
+        1.246,
+      ],
+      [
+        "the light warning edge on the Linux light pressed wash",
+        "linux",
+        1.254,
+      ],
     ] as const;
 
     cases.forEach(([name, platform, figure]) => {
@@ -245,7 +252,10 @@ describe("the selection contract's documented minima", () => {
     expect(derive(entry).ratio).toBeCloseTo(
       contrastRatio(
         windowsDark.colors.mutedForeground,
-        compositeOver(windowsDark.colors.selection, windowsDark.colors.selected),
+        compositeOver(
+          windowsDark.colors.selection,
+          windowsDark.colors.selected,
+        ),
       ),
       10,
     );
@@ -267,9 +277,9 @@ describe("the selection contract's documented minima", () => {
     [...catalogueNames, ledgerName].forEach((name) => {
       const entry = find(name);
       const derived = derive(entry);
-      const wrong = (
-        derived.ratio + 10 ** -entry.decimals
-      ).toFixed(entry.decimals);
+      const wrong = (derived.ratio + 10 ** -entry.decimals).toFixed(
+        entry.decimals,
+      );
 
       expect(wrong, name).not.toBe(derived.figure);
       expect(
