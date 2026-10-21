@@ -417,6 +417,7 @@ references without buying correctness.
 | [821](./821-skeleton-pulse-tightest-set.md) | The skeleton pulse's "next tightest" figure and the set it names | F | 078, 094, 311, 322, 387, 393, 536, 544, 619, 737 | done |
 | [822](./822-disabled-label-tier-figures.md) | The disabled label's tier figures, and the one attributed to the wrong set | F | 392, 500, 510, 520, 537, 623, 729 | done |
 | [823](./823-wrong-role-mark-figures.md) | The wrong-role marks' five figures, and the two that put the canvas number on a card | F | 075, 309, 332, 342, 369, 818 | done |
+| [825](./825-document-anchors.md) | The anchors the three documents link to, and the heading rename nothing notices | F | 355, 356, 616, 670 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4307,6 +4308,20 @@ two attributions now name the card's own figure, and
 holds the §9 paragraph, both `TODO.md` rows and the test header, checks the
 premise per set against `contrastFloors`, and moves the ranges with a planted
 palette; no colour, pair, floor, metric, role or shipped theme moves.
+
+825 closes the last half of a link: plan `616` made a dead relative **path**
+fail, but the same guard's helper says "same-page anchors are not links to a file
+and are ignored" — so the 21 anchors the three documents write (19 distinct,
+in-page and cross-document) were read by no suite, and renaming the
+`## Text selection` heading they point at left the package green at 226 files /
+7154 tests while the Limitations link aimed at a heading that no longer existed.
+`docs-links.test.ts` now derives every heading's text slug (trim, lowercase, drop
+punctuation, spaces to hyphens — the rule that makes `## 9. Accessibility` →
+`#9-accessibility`), resolves each anchor against the document it is written in or
+the guarded sibling it names, and reports an orphaned one; the slug decision, its
+two observable headings and the un-implemented duplicate suffix are stated in the
+helper. No anchor, heading, colour, pair, floor, metric, role or shipped theme
+moves.
 
 ## How to use a plan
 
