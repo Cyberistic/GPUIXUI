@@ -14,11 +14,17 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { Icon } from "@gpuixui/icons";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   renderRangeSlider,
   renderSlider,
+  renderSliderIndicator,
+  renderSliderThumb,
+  SliderIndicator,
+  SliderThumb,
+  SliderTrack,
   type RangeSliderHandlers,
   type SliderHandlers,
 } from "./Slider.js";
@@ -33,6 +39,7 @@ import {
   hostStyle,
   hostStyleRecord,
   hostStyleString,
+  hostTag,
 } from "./testing/element.js";
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
@@ -77,8 +84,14 @@ const rangeHandlers = (
 });
 
 /** The rail and its parts: fill, thumb (and, for a range, a second of each). */
-const railOf = (element: ReactElement): ReactElement =>
-  elementChildren(element)[0] ?? expect.fail("the slider has no rail");
+const railOf = (element: ReactElement): ReactElement => {
+  const child =
+    elementChildren(element)[0] ?? expect.fail("the slider has no child");
+  // A context provider draws nothing; the rail is its only child.
+  return Option.isSome(hostTag(child))
+    ? child
+    : (elementChildren(child)[0] ?? expect.fail("the slider has no rail"));
+};
 
 const partsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(railOf(element));
@@ -296,6 +309,110 @@ describe("the range's two thumbs", () => {
     expect(
       hostProp(end ?? expect.fail("no thumb"), "aria-label"),
     ).toStrictEqual(Option.none());
+  });
+});
+
+describe("the slider parts", () => {
+  const paint = (
+    fractions: ReadonlyArray<number>,
+    thumbs: ReadonlyArray<null> = [null],
+  ) => ({
+    theme: testTheme,
+    size: "md" as const,
+    invalid: false,
+    fractions,
+    thumbs,
+  });
+
+  it("puts the thumb's centre on the value's fraction at 0, 50 and 100", () => {
+    // The track pads by half a thumb and the thumb pulls itself back by the
+    // same half, so the usable span is the track minus the two halves and the
+    // thumb's centre lands exactly on the fraction — the numbers the runtime
+    // suite measures in pixels.
+    const side = testTheme.iconSize.md;
+    const half = Math.round(side / 2);
+    const geometry = (value: number) => {
+      const element = renderSlider(
+        { value, min: 0, max: 100 },
+        testTheme,
+        valueOf(value),
+        idle,
+        sliderHandlers(vi.fn()),
+      );
+      const [fill, thumb] = partsOf(element);
+      return {
+        fill: expectSome(
+          hostStyleString(fill ?? expect.fail("no fill"), "width"),
+        ),
+        side: expectSome(hostStyle(thumb ?? expect.fail("no thumb"), "width")),
+        offset: expectSome(
+          hostStyle(thumb ?? expect.fail("no thumb"), "marginLeft"),
+        ),
+        inset: expectSome(hostStyle(element, "paddingLeft")),
+      };
+    };
+
+    expect(geometry(0)).toEqual({
+      fill: "0%",
+      side,
+      offset: -half,
+      inset: half,
+    });
+    expect(geometry(50)).toEqual({
+      fill: "50%",
+      side,
+      offset: -half,
+      inset: half,
+    });
+    expect(geometry(100)).toEqual({
+      fill: "100%",
+      side,
+      offset: -half,
+      inset: half,
+    });
+  });
+
+  it("paints the segment that belongs to a range's second thumb", () => {
+    const fill = renderSliderIndicator({ index: 1 }, paint([0.2, 0.6]));
+
+    expect(expectSome(hostStyleString(fill, "width"))).toBe("40%");
+  });
+
+  it("draws a caller's glyph inside a thumb", () => {
+    const glyph = <Icon name="star" color="red" size={8} />;
+    const thumb = renderSliderThumb({ children: glyph }, paint([0.5]));
+
+    expect(
+      expectSome(elementProp(elementChildren(thumb)[0] ?? glyph, "name")),
+    ).toBe("star");
+  });
+
+  it("replaces the default composition when the caller supplies parts", () => {
+    const element = renderSlider(
+      {
+        value: 50,
+        children: (
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb />
+          </SliderTrack>
+        ),
+      },
+      testTheme,
+      valueOf(50),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    const provider =
+      elementChildren(element)[0] ?? expect.fail("the slider drew nothing");
+    const track =
+      elementChildren(provider)[0] ??
+      expect.fail("the provider carried no body");
+
+    // The default composition would put a host rail here; the caller's own
+    // track component must be the body instead.
+    expect(track.type).toBe(SliderTrack);
+    expect(expectSome(elementProp(track, "children"))).toBeDefined();
   });
 });
 

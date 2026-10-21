@@ -20,7 +20,14 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { Meter } from "../src/components/Meter.js";
-import { RangeSlider, Slider } from "../src/components/Slider.js";
+import {
+  RangeSlider,
+  Slider,
+  SliderIndicator,
+  SliderThumb,
+  SliderTrack,
+} from "../src/components/Slider.js";
+import { Icon } from "@gpuixui/icons";
 import { Stack } from "../src/components/Stack.js";
 import { sliderInset } from "../src/core/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
@@ -99,7 +106,7 @@ const values = (): {
 it("maps a real click to the value under the pointer", async () => {
   const { seen, onChange } = values();
   const runtime = await mount(
-    <Slider testId="s" label="Volume" onChange={onChange} />,
+    <Slider testId="s" label="Volume" onValueChange={onChange} />,
   );
   const point = pointAt(runtime, "s", 0.25);
   runtime.clickAt(point.x, point.y);
@@ -107,10 +114,45 @@ it("maps a real click to the value under the pointer", async () => {
   expect(announced(runtime, "Volume")).toBe("25");
 });
 
+it("keeps the press and the mapping when the caller composes the parts", async () => {
+  // The bug this guards: a part split that leaves the custom tree without the
+  // root's pointer handling — a composed slider that looks right and answers
+  // nothing.
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={50}
+      onValueChange={onChange}
+    >
+      <SliderTrack>
+        <SliderIndicator />
+        <SliderThumb>
+          <Icon
+            name="star"
+            size={testTheme.iconSize.xs}
+            color={testTheme.colors.primaryForeground}
+          />
+        </SliderThumb>
+      </SliderTrack>
+    </Slider>,
+  );
+  const point = pointAt(runtime, "s", 0.75);
+  runtime.clickAt(point.x, point.y);
+  expect(seen.at(-1)).toBe(75);
+  expect(announced(runtime, "Volume")).toBe("75");
+});
+
 it("clamps a press in the track's inset to its nearest end", async () => {
   const { seen, onChange } = values();
   const runtime = await mount(
-    <Slider testId="s" label="Volume" defaultValue={50} onChange={onChange} />,
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={50}
+      onValueChange={onChange}
+    />,
   );
   const box = boundsOf(runtime, "s");
   runtime.clickAt(box.x + 1, box.y + box.height / 2);
@@ -138,7 +180,7 @@ it("refuses a press and a key while disabled, and stays out of the tab order", a
   const runtime = await mount(
     <Stack direction="row">
       <Button testId="b">Before</Button>
-      <Slider testId="s" label="Volume" disabled onChange={onChange} />
+      <Slider testId="s" label="Volume" disabled onValueChange={onChange} />
     </Stack>,
   );
   const point = pointAt(runtime, "s", 0.5);
@@ -163,7 +205,7 @@ it("paints the thumb centred on the value it represents", async () => {
           key={value}
           testId={`s${value}`}
           value={value}
-          onChange={() => {}}
+          onValueChange={() => {}}
           label={`Value ${value}`}
         />
       ))}

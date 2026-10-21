@@ -21,7 +21,7 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
   <RangeSlider
     label="Budget"
     value={price}
-    onChange={setPrice}
+    onValueChange={setPrice}
     step={5}
     formatValue={(value) => `$${value}`}
   />
@@ -38,7 +38,8 @@ cross.
 | ---- | ---- | ------- | ----------- |
 | `value` | `readonly [number, number]` | — | controlled span |
 | `defaultValue` | `readonly [number, number]` | `[min, max]` | uncontrolled start |
-| `onChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair |
+| `onValueChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair |
+| `onChange` | `(value: readonly [number, number]) => void` | — | deprecated alias for `onValueChange` |
 | `min` / `max` | `number` | `0` / `100` | the closed range |
 | `step` | `number` | `1` | quantisation; `0` is continuous |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
@@ -47,7 +48,16 @@ cross.
 | `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
 | `style` | `StyleDesc` | — | merged last, on the track |
+| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `children` | `ReactNode` | — | the parts to draw; omit for the default two-thumb composition |
 | `testId` | `string` | — | stable locator for the track |
+
+The parts are the same three `Slider` exports: `SliderTrack` holds
+`SliderIndicator index={0}` / `SliderThumb index={0}` /
+`SliderIndicator index={1}` / `SliderThumb index={1}`. Each thumb keeps its own
+`role="slider"`, name and tab stop; `index` is what tells the parts which end
+they paint. A custom composition may reorder or restyle them, but each thumb is
+still a tab stop and the root still owns the pointer handling.
 
 ## Keyboard
 
@@ -76,7 +86,9 @@ act on the end the user is holding. The focused thumb paints the ring.
 ## Theming
 
 Same resolver as `Slider`: `colors.muted` rail, `colors.primary` fill, thumb
-`colors.input` with a `colors.primary` border, `focusRing` for focus. The end
+`colors.input` with a `colors.primary` border, the keyboard outline
+(`keyboardRing` → the runtime's `focusVisible`) on each thumb because each thumb
+is its own tab stop. The end
 values are painted as two fills; the second fill is the length between the ends.
 
 ## Limitations
@@ -84,15 +96,19 @@ values are painted as two fills; the second fill is the length between the ends.
 - **No pointer capture** — a drag stops updating when the pointer leaves the
   track; press-to-position and the keyboard are the precise paths.
 - **No `aria-valuenow`/`min`/`max`** (above).
-- The thumbs cannot be given custom glyphs in this version; they are the same
-  pill as `Slider`'s.
+- Both thumbs are the same pill as `Slider`'s; a custom glyph goes inside a
+  `SliderThumb` in the caller's composition, one `index` per end.
+- A custom composition may not add a marker that answers a press: the root owns
+  the pointer handling, and the runtime does not bubble a press to it from a
+  child that takes the hit.
 
 ## Verification
 
 - `src/core/value.test.ts` — span ordering, the crossing guard, the nearest-end
   rule (including both thumbs at one value).
 - `src/components/Slider.test.tsx` — two named sliders, per-thumb keys, the
-  crossing result, per-thumb rings, disabled tab stops.
+  crossing result, per-thumb rings, disabled tab stops; the second segment's
+  width from the parts.
 - `runtime/value.runtime.test.tsx` — a real press at 10% moves the start, at 90%
   the end; focus follows the grabbed thumb; an arrow moves only that end; a
   start driven past the end stops on it. Measured 2026-10-17 (plan 053 §11).

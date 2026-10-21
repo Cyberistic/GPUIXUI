@@ -19,7 +19,14 @@
  * component, not a mode of the first.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import type {
   EventPayload,
   NativeRenderer,
@@ -56,16 +63,17 @@ import {
   mergeStyle,
   useControlState,
   useFocus,
+  valueChange,
   type FocusState,
+  type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** A single value on a track. */
-export interface SliderProps {
+export interface SliderProps extends ValueChangeProps<number> {
   /** Controlled value. Omit to let the slider hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
-  readonly onChange?: (value: number) => void;
   /** Defaults to 0. */
   readonly min?: number;
   /** Defaults to 100. */
@@ -84,14 +92,17 @@ export interface SliderProps {
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
+  /** The parts to draw. Omit for the default composition. */
+  readonly children?: ReactNode;
   readonly testId?: string;
 }
 
 /** Two values on one track. */
-export interface RangeSliderProps {
+export interface RangeSliderProps extends ValueChangeProps<
+  readonly [number, number]
+> {
   readonly value?: readonly [number, number];
   readonly defaultValue?: readonly [number, number];
-  readonly onChange?: (value: readonly [number, number]) => void;
   readonly min?: number;
   readonly max?: number;
   readonly step?: number;
@@ -104,6 +115,8 @@ export interface RangeSliderProps {
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
+  /** The parts to draw. Omit for the default composition. */
+  readonly children?: ReactNode;
   readonly testId?: string;
 }
 
@@ -152,6 +165,153 @@ const thumbStyle = (
 ): StyleDesc =>
   recipeTw.classesToStyle(sliderThumbClass(size, invalid), theme).style;
 
+/** The interaction a thumb owns when it is its own tab stop (the range case). */
+interface ThumbPart {
+  readonly label: string | undefined;
+  readonly valueText: string;
+  readonly tabIndex: number | undefined;
+  readonly ring: boolean;
+  readonly ref: (instance: PublicInstance | null) => void;
+  readonly onFocus: () => void;
+  readonly onBlur: () => void;
+  readonly onKeyDown: (event: EventPayload) => void;
+}
+
+/** What a slider's parts read from the slider that owns them. */
+interface SliderPart {
+  readonly theme: PrimitiveTheme;
+  readonly size: ControlSize;
+  readonly invalid: boolean;
+  /** The fraction each thumb sits at — one entry for a slider, two for a range. */
+  readonly fractions: ReadonlyArray<number>;
+  /** Per-thumb interaction; `null` where the root owns it (a single slider). */
+  readonly thumbs: ReadonlyArray<ThumbPart | null>;
+}
+
+const SliderPartContext = createContext<SliderPart | null>(null);
+
+const useSliderPart = (name: string): SliderPart => {
+  const part = useContext(SliderPartContext);
+  if (part === null) {
+    throw new Error(`${name} must be used inside Slider or RangeSlider`);
+  }
+  return part;
+};
+
+/** {@link SliderTrack} props. */
+export interface SliderTrackProps {
+  /** The indicators and thumbs. Omit for an empty rail. */
+  readonly children?: ReactNode;
+}
+
+/** The rail a slider's parts sit in. The slider paints nothing else. */
+export const renderSliderTrack = (
+  props: SliderTrackProps,
+  part: SliderPart,
+): ReactElement => (
+  <div style={recipeTw.classesToStyle(sliderRailClass, part.theme).style}>
+    {props.children}
+  </div>
+);
+
+/** The rail, inside a slider. */
+export const SliderTrack = (props: SliderTrackProps): ReactElement =>
+  renderSliderTrack(props, useSliderPart("SliderTrack"));
+
+/** {@link SliderIndicator} props. */
+export interface SliderIndicatorProps {
+  /** The thumb segment to paint: `0` fills from the start to the first thumb. */
+  readonly index?: number;
+  readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
+/**
+ * The filled span that leads to a thumb.
+ *
+ * `index` names the thumb, not the segment, so a range slider's two fills are
+ * `index={0}` (start → first thumb) and `index={1}` (first thumb → second).
+ */
+export const renderSliderIndicator = (
+  { index = 0, className, style }: SliderIndicatorProps,
+  part: SliderPart,
+): ReactElement => {
+  const to = part.fractions[index] ?? 0;
+  const from = index === 0 ? 0 : (part.fractions[index - 1] ?? 0);
+  return (
+    <div
+      style={mergeStyle(
+        mergeStyle(
+          fillStyle(to - from, part.invalid, part.theme),
+          recipeTw.classesToStyle(className, part.theme).style,
+        ),
+        style,
+      )}
+    />
+  );
+};
+
+/** The filled span, inside a slider. */
+export const SliderIndicator = (props: SliderIndicatorProps): ReactElement =>
+  renderSliderIndicator(props, useSliderPart("SliderIndicator"));
+
+/** {@link SliderThumb} props. */
+export interface SliderThumbProps {
+  /** Which thumb to draw. Defaults to `0`. */
+  readonly index?: 0 | 1;
+  /** A custom glyph inside the thumb. It cannot swallow the press. */
+  readonly children?: ReactNode;
+  readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
+/**
+ * A thumb.
+ *
+ * In a range slider each thumb is its own `role="slider"` tab stop, so the part
+ * carries that interaction; in a single slider the root is the slider and the
+ * thumb is its paint.
+ */
+export const renderSliderThumb = (
+  { index = 0, children, className, style }: SliderThumbProps,
+  part: SliderPart,
+): ReactElement => {
+  const thumb = part.thumbs[index] ?? null;
+  let resolved = thumbStyle(part.size, part.invalid, part.theme);
+  if (thumb?.ring === true) {
+    resolved = mergeStyle(resolved, keyboardRing(part.theme, part.invalid));
+  }
+  resolved = mergeStyle(
+    resolved,
+    recipeTw.classesToStyle(className, part.theme).style,
+  );
+  resolved = mergeStyle(resolved, style);
+  if (thumb === null) {
+    return <div style={resolved}>{children}</div>;
+  }
+  return (
+    <div
+      ref={thumb.ref}
+      role="slider"
+      aria-label={thumb.label}
+      aria-valuetext={thumb.valueText}
+      tabIndex={thumb.tabIndex}
+      onFocus={thumb.onFocus}
+      onBlur={thumb.onBlur}
+      onKeyDown={thumb.onKeyDown}
+      style={resolved}
+    >
+      {children}
+    </div>
+  );
+};
+
+/** A thumb, inside a slider. */
+export const SliderThumb = (props: SliderThumbProps): ReactElement =>
+  renderSliderThumb(props, useSliderPart("SliderThumb"));
+
 export const renderSlider = (
   props: SliderProps,
   theme: PrimitiveTheme,
@@ -171,6 +331,13 @@ export const renderSlider = (
   if (props.disabled === true) track = mergeStyle(track, resolved.disabled);
   else track = mergeStyle(track, keyboardRing(theme, invalid));
   track = mergeStyle(track, props.style);
+  const part: SliderPart = {
+    theme,
+    size,
+    invalid,
+    fractions: [valueFraction(value, range)],
+    thumbs: [null],
+  };
   return (
     <div
       ref={handlers.registerTrack}
@@ -193,10 +360,20 @@ export const renderSlider = (
       onBlur={focus.onBlur}
       style={track}
     >
-      <div style={recipeTw.classesToStyle(sliderRailClass, theme).style}>
-        <div style={fillStyle(valueFraction(value, range), invalid, theme)} />
-        <div style={thumbStyle(size, invalid, theme)} />
-      </div>
+      <SliderPartContext.Provider value={part}>
+        {props.children ??
+          renderSliderTrack(
+            {
+              children: (
+                <>
+                  {renderSliderIndicator({}, part)}
+                  {renderSliderThumb({}, part)}
+                </>
+              ),
+            },
+            part,
+          )}
+      </SliderPartContext.Provider>
     </div>
   );
 };
@@ -245,34 +422,28 @@ export const renderRangeSlider = (
     props.label === undefined
       ? ([undefined, undefined] as const)
       : ([`${props.label} minimum`, `${props.label} maximum`] as const);
-  const thumb = (index: 0 | 1): ReactElement => {
+  const thumbPart = (index: 0 | 1): ThumbPart => {
     const value = index === 0 ? span.start : span.end;
-    return (
-      <div
-        ref={handlers.registerThumb(index)}
-        role="slider"
-        aria-label={labels[index]}
-        aria-valuetext={sliderValueText(value, props.formatValue)}
-        tabIndex={props.disabled === true ? undefined : 0}
-        onFocus={() => focus.onFocus(index)}
-        onBlur={() => focus.onBlur(index)}
-        onKeyDown={(event) => {
-          if (props.disabled === true) return;
-          const end = index === 0 ? "start" : "end";
-          Option.match(decideValueKey(value, range, event.key ?? ""), {
-            onNone: () => {},
-            onSome: (next) =>
-              handlers.onSpanChange(
-                spanTuple(moveSpanEnd(span, end, next, range)),
-              ),
-          });
-        }}
-        style={mergeStyle(
-          thumbStyle(size, invalid, theme),
-          props.disabled === true ? {} : keyboardRing(theme, invalid),
-        )}
-      />
-    );
+    return {
+      label: labels[index],
+      valueText: sliderValueText(value, props.formatValue),
+      tabIndex: props.disabled === true ? undefined : 0,
+      ring: props.disabled !== true,
+      ref: handlers.registerThumb(index),
+      onFocus: () => focus.onFocus(index),
+      onBlur: () => focus.onBlur(index),
+      onKeyDown: (event) => {
+        if (props.disabled === true) return;
+        const end = index === 0 ? "start" : "end";
+        Option.match(decideValueKey(value, range, event.key ?? ""), {
+          onNone: () => {},
+          onSome: (next) =>
+            handlers.onSpanChange(
+              spanTuple(moveSpanEnd(span, end, next, range)),
+            ),
+        });
+      },
+    };
   };
   const resolved = recipeTw.classesToStyle(
     cn(sliderTrackClass(size), props.className),
@@ -281,6 +452,16 @@ export const renderRangeSlider = (
   let track = resolved.style;
   if (props.disabled === true) track = mergeStyle(track, resolved.disabled);
   track = mergeStyle(track, props.style);
+  const part: SliderPart = {
+    theme,
+    size,
+    invalid,
+    fractions: [
+      valueFraction(span.start, range),
+      valueFraction(span.end, range),
+    ],
+    thumbs: [thumbPart(0), thumbPart(1)],
+  };
   return (
     <div
       ref={handlers.registerTrack}
@@ -292,20 +473,22 @@ export const renderRangeSlider = (
       onMouseUp={handlers.onPointerUp}
       style={track}
     >
-      <div style={recipeTw.classesToStyle(sliderRailClass, theme).style}>
-        <div
-          style={fillStyle(valueFraction(span.start, range), invalid, theme)}
-        />
-        {thumb(0)}
-        <div
-          style={fillStyle(
-            valueFraction(span.end, range) - valueFraction(span.start, range),
-            invalid,
-            theme,
+      <SliderPartContext.Provider value={part}>
+        {props.children ??
+          renderSliderTrack(
+            {
+              children: (
+                <>
+                  {renderSliderIndicator({ index: 0 }, part)}
+                  {renderSliderThumb({ index: 0 }, part)}
+                  {renderSliderIndicator({ index: 1 }, part)}
+                  {renderSliderThumb({ index: 1 }, part)}
+                </>
+              ),
+            },
+            part,
           )}
-        />
-        {thumb(1)}
-      </div>
+      </SliderPartContext.Provider>
     </div>
   );
 };
@@ -337,7 +520,7 @@ export const Slider = (props: SliderProps): ReactElement => {
   const state = useControlState(
     props.value,
     clampValue(props.defaultValue ?? range.min, range),
-    props.onChange,
+    valueChange(props),
   );
   const inset = sliderInset(props.size ?? "md", theme);
   const apply = (event: EventPayload): void =>
@@ -391,7 +574,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   const state = useControlState<readonly [number, number]>(
     props.value,
     [initial.start, initial.end],
-    props.onChange,
+    valueChange(props),
   );
   const inset = sliderInset(props.size ?? "md", theme);
   const focusThumb = (index: 0 | 1): void => {

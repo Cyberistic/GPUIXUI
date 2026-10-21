@@ -10,8 +10,7 @@
  * on `any`.
  */
 
-import type { ReactElement } from "react";
-import { isValidElement } from "react";
+import { Fragment, isValidElement, type ReactElement } from "react";
 import type { EventPayload } from "@gpuix/react";
 import { expect } from "vitest";
 import * as Arr from "effect/Array";
@@ -129,7 +128,9 @@ const ReactElement = Schema.declare(
  * The tree is not rendered, so this is the only way to reach the parts a
  * component composes — a slider's thumb, a group's options. React keeps
  * `null`, `false` and plain strings in a children array, so anything that is
- * not an element is omitted rather than failing the whole array.
+ * not an element is omitted rather than failing the whole array, and fragments
+ * are flattened so a component may group parts without changing the tree a
+ * test reads.
  */
 export const elementChildren = (
   element: ReactElement,
@@ -141,12 +142,25 @@ export const elementChildren = (
   return Option.match(
     Schema.decodeUnknownOption(Schema.Array(Schema.Unknown))(children),
     {
-      onSome: (values) => Arr.filter(values, Schema.is(ReactElement)),
+      onSome: (values) => Arr.flatMap(values, elementsOf),
       onNone: () =>
         Option.match(Schema.decodeUnknownOption(ReactElement)(children), {
-          onSome: (single) => [single],
+          onSome: elementsOf,
           onNone: () => [],
         }),
     },
   );
+};
+
+/** One child as elements: a fragment unwraps, anything else is kept or dropped. */
+const elementsOf = (child: unknown): ReadonlyArray<ReactElement> => {
+  if (!isValidElement<{ readonly children?: unknown }>(child)) return [];
+  if (child.type !== Fragment) return [child];
+  const nested = Schema.decodeUnknownOption(Schema.Array(Schema.Unknown))(
+    child.props.children,
+  );
+  return Option.match(nested, {
+    onSome: (values) => Arr.flatMap(values, elementsOf),
+    onNone: () => Arr.flatMap([child.props.children], elementsOf),
+  });
 };

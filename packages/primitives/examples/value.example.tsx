@@ -9,12 +9,16 @@
  */
 
 import { useState, type ReactElement } from "react";
+import { Icon } from "@gpuixui/icons";
 import {
   Box,
   Meter,
   RangeSlider,
   Separator,
   Slider,
+  SliderIndicator,
+  SliderThumb,
+  SliderTrack,
   Stack,
   Text,
   useTheme,
@@ -65,9 +69,20 @@ export const ValueExample = (): ReactElement => {
             testId="value-example-quality"
             label="Quality"
             value={quality}
-            onChange={setQuality}
+            onValueChange={setQuality}
             formatValue={(value) => `${value}%`}
-          />
+          >
+            <SliderTrack>
+              <SliderIndicator />
+              <SliderThumb>
+                <Icon
+                  name="settings"
+                  size={theme.iconSize.xs}
+                  color={theme.colors.primaryForeground}
+                />
+              </SliderThumb>
+            </SliderTrack>
+          </Slider>
         </Row>
 
         <Separator orientation="horizontal" />
@@ -77,7 +92,7 @@ export const ValueExample = (): ReactElement => {
             testId="value-example-budget"
             label="Budget"
             value={price}
-            onChange={setPrice}
+            onValueChange={setPrice}
             step={5}
             formatValue={(value) => `$${value}`}
           />

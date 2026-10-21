@@ -9,9 +9,10 @@ Tier 1"; components' `internal/button.tsx` stand-in can only be retired once
 **Status:** in progress. Step 1 landed (commit `26f96a5c`); Step 2 landed for all
 four fields (`Input` + `TextArea` in `dd6d1d51`, `NumberField` + `OTPField`
 after the binding landed); Step 3 landed (Checkbox/Switch parts); Step 4 landed
-(`RadioGroupItem` + `onValueChange`). The `darwin-x64` binding for 0.11.0 landed
-on this host on 2026-10-21, so the unit suites (373) and the runtime suites (122)
-both run here again — runtime verification is no longer pending.
+(`RadioGroupItem` + `onValueChange`); Step 5 landed (slider parts, custom thumb
+glyph, `onValueChange`). The `darwin-x64` binding for 0.11.0 landed on this host
+on 2026-10-21, so the unit suites (377) and the runtime suites (123) both run
+here again — runtime verification is no longer pending.
 
 ---
 
@@ -230,7 +231,22 @@ the commit body of every later step; it must never go down.
   element items identically; a disabled item is skipped; the announced value is
   the item's `value`.
 
-### Step 5 — Slider and RangeSlider parts
+### Step 5 — Slider and RangeSlider parts — **landed**
+
+> Landed 2026-10-21. `Slider` exports `SliderTrack`, `SliderIndicator` and
+> `SliderThumb`; the root builds the default composition from the same paint
+> functions the parts use (`renderSliderTrack` / `renderSliderIndicator` /
+> `renderSliderThumb`), so a caller's `children` replace the composition without
+> a second render path. `SliderIndicator index` names the thumb whose segment it
+> fills (0: start → thumb, 1: first thumb → second), and `SliderThumb` carries
+> the range thumb's own role/tab stop/handlers from the slider's context. A
+> thumb accepts a custom glyph. `onChange` → `onValueChange` (+ deprecated alias)
+> here, in the example and in the runtime suite. New unit tests: the thumb's
+> centre at 0/50/100 % (fill width, thumb side, half-thumb offsets, track inset),
+> the second segment's width, a glyph inside a thumb, and a custom composition
+> replacing the default (proven to fail by forcing the default). New native test:
+> a composed slider still maps a real click at 75 % to 75 and announces it. The
+> `elementChildren` helper now flattens fragments. Unit suite 377, runtime 123.
 
 - Files: `Slider.tsx`, `Slider.test.tsx`, `core/value.ts` (unchanged logic),
   docs, `examples/value.example.tsx`.

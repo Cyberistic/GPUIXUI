@@ -75,8 +75,22 @@ export type { ProgressProps } from "./Progress.js";
 export { Rating, ratingMax } from "./Rating.js";
 export type { RatingProps } from "./Rating.js";
 
-export { RangeSlider, Slider, sliderRange, sliderValueText } from "./Slider.js";
-export type { RangeSliderProps, SliderProps } from "./Slider.js";
+export {
+  RangeSlider,
+  Slider,
+  SliderIndicator,
+  SliderThumb,
+  SliderTrack,
+  sliderRange,
+  sliderValueText,
+} from "./Slider.js";
+export type {
+  RangeSliderProps,
+  SliderIndicatorProps,
+  SliderProps,
+  SliderThumbProps,
+  SliderTrackProps,
+} from "./Slider.js";
 
 export { Meter } from "./Meter.js";
 export type { MeterProps } from "./Meter.js";
