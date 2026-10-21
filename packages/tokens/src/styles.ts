@@ -97,19 +97,21 @@ export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
 
 /** A focus ring, as the runtime's single-shadow shape. */
 export interface FocusRing {
-  /** The shadow a component paints while it holds focus. */
+  /**
+   * The shadow a component paints while it holds focus, including when a mouse
+   * press moved the focus.
+   */
   readonly boxShadow: BoxShadow;
 }
 
 /**
- * The keyboard-focus ring.
+ * The unconditional focus ring.
  *
- * A zero-offset, zero-blur shadow spread by the theme's `borderWidth.strong`: it
- * draws outside the border box and takes no layout space, which is what an
- * outline does. The library paints it while the control holds focus, so a mouse
- * press shows it too. The published runtime at the time had no `outline*` and no
- * `focusVisible`; `@gpuix/native@0.11.0` declares both, and plan 053 replaces
- * this shape once a native probe proves the paint.
+ * A zero-offset, zero-blur shadow spread by the theme's `borderWidth.strong`:
+ * it draws outside the border box and takes no layout space. Paint it while a
+ * control holds focus when the focus arrived programmatically before any
+ * keyboard input — a dialog or menu opened by a mouse. For keyboard focus use
+ * {@link keyboardFocusRing}, which the runtime paints itself.
  *
  * @example
  * ```tsx
@@ -124,6 +126,51 @@ export function focusRing(theme: Theme): FocusRing {
       blurRadius: 0,
       spreadRadius: theme.borderWidth.strong,
       color: theme.colors.ring,
+    },
+  };
+}
+
+/** The outline the runtime paints while a control is focused after keyboard input. */
+export interface FocusVisibleOutline {
+  /** Line thickness in pixels, from the theme's strong border. */
+  readonly outlineWidth: number;
+  /** Outline colour, the theme's `ring` role. */
+  readonly outlineColor: string;
+  /** Distance outside the border box; zero keeps the line on the control's edge. */
+  readonly outlineOffset: number;
+}
+
+/** The keyboard-only ring, as the runtime's `focusVisible` state. */
+export interface KeyboardFocusRing {
+  /**
+   * Painted by the runtime only while focused after keyboard input (Tab); a
+   * mouse press never shows it.
+   */
+  readonly focusVisible: FocusVisibleOutline;
+}
+
+/**
+ * The keyboard-focus ring.
+ *
+ * An outline in the runtime's `focusVisible` state — "while focused after
+ * keyboard input (Tab), like CSS `:focus-visible`". Apply it **at rest**: the
+ * runtime decides when to paint it, so a control never tracks focus to draw a
+ * ring, and a Tab and a click finally look different.
+ *
+ * A programmatic focus before any keyboard input does not paint it, so a
+ * mouse-opened overlay keeps {@link focusRing} for that path.
+ *
+ * @example
+ * ```tsx
+ * <div style={{ ...keyboardFocusRing(theme), backgroundColor: theme.colors.input }} />
+ * ```
+ */
+export function keyboardFocusRing(theme: Theme): KeyboardFocusRing {
+  return {
+    focusVisible: {
+      outlineWidth: theme.borderWidth.strong,
+      outlineColor: theme.colors.ring,
+      outlineOffset: 0,
     },
   };
 }

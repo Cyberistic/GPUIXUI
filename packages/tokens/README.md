@@ -142,10 +142,22 @@ Ghost and subtle surfaces keep the `hover` / `active` washes.
 
 ## Focus
 
-The ring is a shadow: zero offset, zero blur, spread by `borderWidth.strong`.
-That is what the library ships while the ring still cannot use `outline*`;
-`@gpuix/native@0.11.0` declares the outline fields and a `focusVisible` state, and
-plan 053 moves the ring there once a native probe proves the paint.
+Two rings, one per focus path.
+
+`keyboardFocusRing(theme)` is an outline in the runtime's `focusVisible` state:
+painted after keyboard input (Tab), never after a mouse press, and it takes no
+layout space. Apply it **at rest** — no control tracks focus to draw it.
+
+```tsx
+import { keyboardFocusRing } from "@gpuixui/tokens";
+
+<div style={{ ...keyboardFocusRing(theme), backgroundColor: theme.colors.input }} />;
+```
+
+`focusRing(theme)` is the unconditional ring: a zero-offset, zero-blur shadow
+spread by `borderWidth.strong`. It covers the path the keyboard ring cannot —
+a dialog or menu opened by a mouse focuses its content programmatically before
+any keyboard input, and the runtime does not paint `focusVisible` there.
 
 ```tsx
 import { focusRing } from "@gpuixui/tokens";
@@ -153,8 +165,9 @@ import { focusRing } from "@gpuixui/tokens";
 <div style={focused ? focusRing(theme) : undefined} />;
 ```
 
-Apply it while the control is focused. A mouse press shows the ring too, because
-the runtime has no `:focus-visible` equivalent. A runnable example lives in
+Both were measured in a real window on 0.11.0 (`focus-visible` live probe): Tab
+paints the outline and dims the other focusables, a mouse press paints neither,
+and a programmatic focus after a Tab paints it. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
 ## Platform styles

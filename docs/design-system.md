@@ -184,7 +184,7 @@ are darker and more opaque because contrast between surfaces is lower.
 | pressed | `active` wash; a filled action moves to `filledPressed(theme, action)` |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
-| focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
+| focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
 | text selection | `selection` translucent wash |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
@@ -195,13 +195,16 @@ would show the surface behind the control — and makes a brand's `primary`
 automatically carry a hover that belongs to it. The derivation is held to the
 same contrast floors as a role pair, for the label colour on both fills.
 
-Focus never changes layout: the ring is a shadow, painted outside the border box,
-so gaining focus reflows nothing. The library paints it while the control holds
-focus, which means a mouse press shows the ring too. `@gpuix/native@0.11.0`
-declares `outline*` and a `focusVisible` state ("while focused after keyboard
-input, like `:focus-visible`"), so the shadow is now a workaround rather than a
-constraint; plan 053's native probe decides when the ring moves to the outline, at
-which point a Tab and a click will look different for the first time.
+Focus never changes layout, and it distinguishes the two input paths the runtime
+distinguishes. `keyboardFocusRing(theme)` is an outline in the runtime's
+`focusVisible` state ("while focused after keyboard input, like
+`:focus-visible`"), applied once at rest: a Tab paints it, a click does not, and
+no control tracks focus to draw it. The probe on `@gpuix/native@0.11.0` found one
+gap: a programmatic focus before any keyboard input does not paint it, which is
+exactly how a mouse-opened dialog or menu focuses its content. That path keeps
+`focusRing(theme)`, the zero-offset, zero-blur shadow spread by
+`borderWidth.strong`, painted while the overlay holds focus. Both draw outside
+the border box, so neither reflows the layout.
 
 Selection never relies on colour alone for meaning: selected rows also carry
 `aria-selected` where the runtime exposes it.

@@ -80,7 +80,7 @@ of every `verified 0.10.0` verdict).
 | ---- | ----- | ----- | ---------- | ------ |
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | in progress |
 | [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | landed consumer-only — native face proof is the playground's row |
-| [053](./053-focus-outline.md) | Keyboard-only focus rings and the 0.11 shadow list | F | 017, 018 | planned — probe first in the playground |
+| [053](./053-focus-outline.md) | Keyboard-only focus rings and the 0.11 shadow list | F | 017, 018 | landed tokens-side — `keyboardFocusRing` outline beside the programmatic shadow; component adoption is an interlock |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -89,9 +89,10 @@ above) and 020–049 belongs to primitives, icons and Phase C, so 051 takes the
 first free block — as the tokens workstream's docs-layering plan (050) does.
 052 is rescued from the abandoned `agent/fonts` branch (`6fc7641`), with its
 step 1 answered from the pinned runtime's source; its native face proof is the
-playground's row. 053 is the 0.11 truth pass: the runtime now declares outlines,
-`focusVisible` and a shadow list, so the shadow ring is a workaround rather than
-a constraint; it is planned behind a native probe.
+playground's row. 053 is the 0.11 truth pass: the probe measured that the
+`focusVisible` outline paints for Tab but not for a programmatic focus before
+any key, so the outline ships beside the shadow rather than replacing it; the
+component call sites adopt the outline in their own workstream.
 
 ### Reference adoption (block `200–299`)
 

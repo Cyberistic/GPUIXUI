@@ -15,10 +15,10 @@ export interface BoxShadow {
 }
 
 /**
- * Elevation levels. A level is a list so a web renderer can composite several
- * shadows; the native runtime paints **one** shadow per element, so a shipped
- * level carries at most one entry and a consumer reads it with
- * {@link elevationShadow}. `overlay` is reserved and empty.
+ * Elevation levels. A level is a list because the runtime accepts a shadow list;
+ * the scale is designed with **one** shadow per level, so a shipped level carries
+ * one entry and a consumer reads it with {@link elevationShadow}. `overlay` is
+ * reserved and empty.
  */
 export interface Elevation {
   /** Resting cards and raised rows. */

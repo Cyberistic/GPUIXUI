@@ -583,9 +583,9 @@ cannot render half of itself.
 | `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | dialogs and command palettes |
 | `overlay` | `[]` | `[]` | reserved; overlay layering uses the scrim colour |
 
-A level is a list so a web renderer can composite several shadows; a shipped
-level carries at most one entry, and a consumer reads the one that paints with
-`elevationShadow`:
+A level is a list because the runtime accepts a shadow list; the scale is
+designed as one shadow per level, so a shipped level carries one entry and a
+consumer reads it with `elevationShadow`:
 
 ```tsx
 import { elevationShadow } from "@gpuixui/tokens";
@@ -594,8 +594,8 @@ import { elevationShadow } from "@gpuixui/tokens";
 ```
 
 `elevationShadow(theme, level)` returns the level's shadow, or `undefined` for
-the reserved empty `overlay` level (which `boxShadow` accepts). A shipped level
-with two entries would silently render only the first, so
+the reserved empty `overlay` level (which `boxShadow` accepts). A level with two
+entries would be a second shadow the design did not ask for, so
 `packages/tokens/src/elevation.test.ts` fails if one appears.
 
 ## Borders, icons and identity marks
@@ -624,31 +624,56 @@ element's short side, so an avatar pairs `avatarSize[step]` with `radius.full`.
 
 ## Focus
 
-The library's ring is a **shadow** that takes no layout space: a zero-offset,
-zero-blur ring spread by `borderWidth.strong`. That was the only shape 0.10.0
-could draw. The pinned `@gpuix/native@0.11.0` declares `outlineWidth`,
-`outlineColor`, `outlineOffset` and a `focusVisible` state — "while focused after
-keyboard input (Tab), like CSS `:focus-visible`" — so the shadow is now a
-workaround, and plan 053 replaces it with the outline once a native probe proves
-`focusVisible` paints here. Until that lands a mouse press still shows the ring.
+The library ships **two** rings, because the runtime paints two focus paths and
+they do not look the same.
+
+`keyboardFocusRing(theme)` is an **outline** in the runtime's `focusVisible`
+state: "while focused after keyboard input (Tab), like CSS `:focus-visible`". It
+is a line outside the border box, so it takes no layout space, and a mouse press
+never shows it. Apply it **at rest** — the runtime decides when to paint it, so a
+control never tracks focus to draw a ring.
+
+```tsx
+import { keyboardFocusRing, type Theme } from "@gpuixui/tokens";
+
+const fieldStyle = (theme: Theme) => ({
+  ...keyboardFocusRing(theme),
+  backgroundColor: theme.colors.input,
+});
+
+// fieldStyle(theme)
+// {
+//   focusVisible: { outlineWidth: 2, outlineColor: theme.colors.ring,
+//                   outlineOffset: 0 }
+// }
+```
+
+`focusRing(theme)` is the **unconditional** ring: a zero-offset, zero-blur
+shadow spread by `borderWidth.strong`. It stays for the one path the keyboard
+ring cannot cover. A dialog or menu opened by a **mouse** focuses its content
+programmatically before any keyboard input has reached the window, and
+`focusVisible` does not paint there; such an overlay paints this shadow while it
+holds focus.
 
 ```tsx
 import { focusRing, type Theme } from "@gpuixui/tokens";
 
-const ringStyle = (theme: Theme, focused: boolean) =>
+const overlayContentStyle = (theme: Theme, focused: boolean) =>
   focused ? focusRing(theme) : undefined;
 
-// ringStyle(theme, true)
+// overlayContentStyle(theme, true)
 // {
 //   boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 0,
 //                spreadRadius: 2, color: theme.colors.ring }
 // }
 ```
 
-A control applies the ring **while it is focused**, so a mouse press shows it
-too. The ring never changes an element's size or position, because a shadow is
-painted outside the border box and takes no space in layout — the same property
-`outline*` has.
+Both were measured in a real window on `@gpuix/native@0.11.0` (the playground's
+`focus-visible` live probe): Tab paints the outline and dims the other
+focusables; a mouse press paints neither; a programmatic focus after a Tab has
+been delivered paints the outline. That is why the package keeps the shadow
+instead of replacing it outright. Neither ring changes an element's size or
+position.
 
 A runnable example lives in
 [`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts).

@@ -55,12 +55,33 @@ Do these in the playground before changing `focusRing`. Owner: `playground`
 paint). Keep the shadow ring, correct only the docs, and record the evidence here.
 Do not ship a ring that silently disappears.
 
-## Design (after the probe passes)
+### Probe result — answered 2026-10-21
 
-1. **`focusRing(theme)` returns a `focusVisible` fragment**, not a shadow:
+The probe shipped as the playground's `focus-visible` live scenario and ran on
+0.11.0 here. The focus ids are asserted; the paint is judged from the five
+captures (`.artifacts/live/*.png`, table in `apps/playground/README.md`).
+
+| State | Focus id | Ring painted |
+| ----- | -------- | ------------ |
+| mouse press | `press-ring` | **no** |
+| native traversal (`focusNext`) before any key | `tab-ring` | **no** |
+| programmatic focus (`focusElement`) before any key | `programmatic-ring` | **no** |
+| Tab key | wraps to `press-ring` | **yes**, and the other focusables dim |
+| programmatic focus after a Tab | `programmatic-ring` | **yes**, others stay dimmed |
+
+So the STOP gate passes for the keyboard path, but question 2 **fails** for a
+programmatic focus before keyboard input. A dialog or menu opened by a mouse
+focuses its content with no key delivered, so `focusVisible` alone would leave
+it with no visible ring. The design below is amended accordingly: the outline is
+added **beside** the shadow, not as a replacement.
+
+## Design (amended after the probe)
+
+1. **`keyboardFocusRing(theme)` returns a `focusVisible` fragment** — the new
+   function, because `focusRing` cannot be replaced:
 
    ```ts
-   export function focusRing(theme: Theme): StyleDesc {
+   export function keyboardFocusRing(theme: Theme): KeyboardFocusRing {
      return {
        focusVisible: {
          outlineWidth: theme.borderWidth.strong,
@@ -71,15 +92,17 @@ Do not ship a ring that silently disappears.
    }
    ```
 
-   Applied once at rest, so a component never tracks `focused` to paint a ring.
-   The return type changes from `{ boxShadow }` to a style fragment — a breaking
-   change, and every call site is in-repo. `outlineOffset` is decided by the
-   probe (0 if the outline hugs the border box like the shadow did).
-2. **Overlays keep a programmatic ring only if probe 2 fails**; otherwise they
-   drop it too. This is the only conditional in the migration.
-3. **`keyboardFocusDim`** stays at the runtime default unless the probe shows it
-   conflicting with a control that paints its own dimmed state; then the adopting
-   component sets `false` and documents why.
+   Applied once at rest, so a component never tracks `focused` to paint the
+   keyboard ring. `outlineOffset` is 0: the probe's captures show the line
+   hugging the control, matching where the shadow sat.
+2. **`focusRing(theme)` keeps returning `{ boxShadow }`** as the unconditional
+   ring for the programmatic path the probe exposed (question 2): a mouse-opened
+   dialog or menu paints it while focused. Replacing it would ship an invisible
+   focus state on that path. Renaming it would break every adopting call site
+   for no gain; the JSDoc now states which path it is for.
+3. **`keyboardFocusDim`** stays at the runtime default. The probe shows it
+   tracks the same keyboard-input state as the outline and does not conflict
+   with a control's own dimmed state.
 4. **Elevation does not change.** The scale ships one shadow per level because
    the design wants one; the runtime now accepts a list, so the docs must stop
    claiming it cannot. `elevationShadow` keeps returning the one shadow.
@@ -88,35 +111,46 @@ Do not ship a ring that silently disappears.
 
 ## Steps
 
-1. Probe (above). Record answers in this plan before touching code.
-2. `packages/tokens/src/styles.ts` — rewrite `focusRing`, update its JSDoc.
-3. `packages/tokens/src/focus.test.ts` — the current suite asserts the shadow
-   shape; rewrite it to assert the fragment and the outline geometry, and keep the
-   "no layout space" claim testable (outline fields only, no width/height).
+1. Probe (above). Record answers in this plan before touching code. **Done.**
+2. `packages/tokens/src/styles.ts` — add `keyboardFocusRing`; keep `focusRing`
+   for the programmatic path and say so in its JSDoc. **Done.**
+3. `packages/tokens/src/focus.test.ts` — assert the `focusVisible` fragment and
+   the outline geometry, keep the "no layout space" claim testable (outline
+   fields only, no width/height), and keep a guard on `focusRing`'s shadow since
+   the probe showed the programmatic path still needs it. **Done.**
 4. `packages/tokens/README.md`, `docs/tokens.md`, `docs/design-system.md` — the
    focus section, the runtime-constraint table, the limitations list and the
-   elevation "one shadow" sentences.
+   elevation "one shadow" sentences. **Done.**
 5. Record the adoption interlock (components/primitives) with the exact call
-   sites; do not edit them here.
+   sites; do not edit them here. **Done** — `TODO.md` → Interlocks.
 6. Verification: `nub run --filter @gpuixui/tokens test`, then a scoped
    `nub apps/playground/dist/smoke/run.js --only focus-ring` once the playground
    scenario exists, and, for the adoption, the two packages' behaviour suites.
+   **Done for tokens:** 399 tests / 12 files, both-direction proof on the
+   outline width. The paint evidence is the playground's live `focus-visible`
+   probe; there is no headless `focus-ring` scenario.
 
 ## Test plan
 
-- `focus.test.ts` fails if `focusRing` returns a `boxShadow` (the old shape) and
-  fails if the outline is thinner than `borderWidth.strong`.
+- `focus.test.ts` fails if `keyboardFocusRing` returns a `boxShadow` or omits the
+  `focusVisible` state, and fails if the outline is thinner than
+  `borderWidth.strong` or names a literal colour.
+- It also holds `focusRing` to its shadow shape: the programmatic path must not
+  silently lose its ring.
 - A rendering-level test belongs to the adopting package (a real focus event), not
   to tokens; the probe is its source of truth until then.
-- Both-direction proof: `outlineColor: theme.colors.ring` → a hardcoded hex fails
-  the theme-driven assertion; `outlineWidth: 1` fails the thickness assertion.
+- Both-direction proof (measured): `outlineColor: theme.colors.ring` → a
+  hardcoded hex fails the theme-driven assertion; `outlineWidth: 1` fails the
+  thickness and theme-width assertions (2 failures).
 
 ## Acceptance
 
-- [ ] Probe answered in this plan, with the three questions and screenshots.
-- [ ] `focusRing` returns the `focusVisible` fragment; tokens' suite passes.
-- [ ] Docs no longer claim 0.11.0 lacks `outline*`/`focusVisible` or a shadow list.
-- [ ] Adoption interlock row names the call sites and is owned by the component
+- [x] Probe answered in this plan, with the three questions and screenshots
+  (`apps/playground/README.md` §`focus-visible`).
+- [x] `keyboardFocusRing` returns the `focusVisible` fragment; `focusRing` keeps
+  the programmatic shadow; tokens' suite passes.
+- [x] Docs no longer claim 0.11.0 lacks `outline*`/`focusVisible` or a shadow list.
+- [x] Adoption interlock row names the call sites and is owned by the component
   packages.
 - [ ] `nub run check`, `nub run lint`, `nub run test` exit 0 for the touched paths.
 

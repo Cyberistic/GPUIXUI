@@ -1,9 +1,10 @@
 /**
- * Guards the defect fixed in plan 018: GPUix paints exactly one shadow per
- * element and its `BoxShadow` has five fields, but the tokens shipped a level
- * that could hold several shadows ("painted in order") and an `inset` field the
- * runtime ignores. A level with two shadows renders as one, and an `inset` ring
- * renders as nothing — both silently.
+ * Guards the elevation scale fixed in plan 018: the runtime's `BoxShadow` has
+ * five fields and the scale is designed as one shadow per level. The old tokens
+ * shipped a level that could hold several shadows and an `inset` field the
+ * runtime ignored, so part of a design silently did not paint. 0.11.0 accepts a
+ * shadow list, but the scale still ships one entry by design, and the test keeps
+ * it that way plus the exact five runtime fields.
  */
 
 import { describe, expect, it } from "vitest";
@@ -32,7 +33,7 @@ const shipped = [
 ] as const;
 
 describe("elevation levels", () => {
-  it("never carries more than the one shadow the runtime paints", () => {
+  it("ships at most one shadow per level by design", () => {
     shipped.forEach(([label, elevation]) => {
       levels.forEach((level) => {
         expect(
@@ -78,7 +79,7 @@ describe("elevation levels", () => {
 });
 
 describe("elevationShadow", () => {
-  it("resolves a level to the one shadow that paints", () => {
+  it("resolves a level to its one designed shadow", () => {
     levels.slice(0, 3).forEach((level) => {
       expect(elevationShadow(lightTheme, level)).toBe(
         lightTheme.elevation[level][0],
