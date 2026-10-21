@@ -297,6 +297,19 @@ export const scrollClass = (axis: ScrollSpec["axis"]): string =>
       ? "overflow-y-scroll overflow-x-hidden"
       : "overflow-y-scroll overflow-x-scroll";
 
+/** The frame around a scroll area: its padding is outside the scroller. */
+export const scrollFrameClass = (spec: {
+  readonly padding?: SpaceStep;
+  readonly radius?: RadiusStep;
+  readonly border?: boolean;
+}): string =>
+  cn(
+    "flex flex-col overflow-hidden",
+    spec.padding === undefined ? undefined : `p-${spec.padding}`,
+    spec.radius === undefined ? undefined : `rounded-${spec.radius}`,
+    spec.border === true && "border border-border",
+  );
+
 // ── ButtonGroup ──────────────────────────────────────────────────────
 
 /** The class string a button group resolves from its mode and gap. */

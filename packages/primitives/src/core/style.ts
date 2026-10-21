@@ -347,13 +347,13 @@ export interface ScrollSpec {
 }
 
 /**
- * A scrollable container.
+ * A scrollable container's overflow axes.
  *
- * Only the overflow axes are ours. GPUix 0.10.0 paints the scrollbar with the
- * platform theme and exposes no `scrollbarColor`/`scrollbarWidth` (those are on
- * GPUix's unreleased `main`), so `theme.colors.scrollbar` cannot be applied and
- * there is no fade mask to configure. Both are recorded as limitations in
- * `COMPONENTS.md` rather than faked.
+ * The axes are theme-free, so they stay in this resolver. The thumb tint
+ * (`theme.colors.scrollbar`) and thickness belong to the viewport, which has a
+ * theme: `ScrollArea`'s `ScrollAreaViewport` sets the runtime's real
+ * `scrollbarColor`/`scrollbarWidth` (verified on 0.11.0). There is still no
+ * fade mask and no per-part thumb to configure.
  */
 export const scrollStyle = (spec: ScrollSpec): StyleDesc => ({
   overflowY: spec.axis === "horizontal" ? "hidden" : "scroll",

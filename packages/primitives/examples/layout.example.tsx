@@ -68,14 +68,12 @@ export const LayoutExample = (): ReactElement => {
 
       <Separator orientation="horizontal" />
 
-      <ScrollArea axis="vertical" testId="layout-example-properties">
-        <Stack
-          direction="column"
-          gap="xs"
-          style={{
-            padding: theme.spacing.md,
-          }}
-        >
+      <ScrollArea
+        axis="vertical"
+        padding="md"
+        testId="layout-example-properties"
+      >
+        <Stack direction="column" gap="xs">
           {Arr.map(properties, (property) => (
             <Grid columns={2} gap="sm" key={property.name}>
               <Text role="caption" tone="muted">

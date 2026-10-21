@@ -13,7 +13,7 @@ after the binding landed); Step 3 landed (Checkbox/Switch parts); Step 4 landed
 glyph, `onValueChange`); Step 6 landed (`Progress`/`Meter` track, indicator,
 label and value parts, with a composed composition painted in the renderer).
 The `darwin-x64` binding for 0.11.0 landed on this host on 2026-10-21, so the
-unit suites (390) and the runtime suites (124) both run here again — runtime
+unit suites (394) and the runtime suites (125) both run here again — runtime
 verification is no longer pending.
 
 ---
@@ -287,7 +287,27 @@ the commit body of every later step; it must never go down.
   `250` → 100); a value part reads the same clamp; an indeterminate progress has
   no value part.
 
-### Step 7 — `ScrollArea` root and viewport
+### Step 7 — `ScrollArea` root and viewport — **landed**
+
+> Landed 2026-10-21, with one correction to this plan's premise: GPUix **0.11.0
+> does expose `scrollbarColor` and `scrollbarWidth`** (`native/dist/host.d.ts`,
+> measured in the renderer: the element retains both). The claim that they were
+> "unreleased" was 0.10.0-era and is now retracted in the component comment, the
+> resolver comment, `docs/scroll-area.mdx`, `COMPONENTS.md` and the inventory
+> limitation. The root is the frame (`padding`/`radius`/`border`, bounded size,
+> caller `style`/`className`); `ScrollAreaViewport` carries the axes, `onScroll`
+> and the native thumb's tint/width, defaulting to `colors.scrollbar`. Plain
+> children are wrapped in one implicit viewport; a `ScrollAreaViewport` among
+> the children is the caller's scroller and nothing is wrapped. `testId` is the
+> frame's; `viewportTestId` locates the scroller. **Still impossible:** a
+> `Scrollbar`/`Thumb`/`Corner` part — the platform paints one thumb that takes
+> no pointer input. Docs record that instead of faking a component.
+>
+> Both-direction proofs measured: removing the implicit viewport fails the
+> wheel/onScroll tests ("painted no scrollable box", "expected [] to include
+> -100") and the thumb test; dropping the `scrollbarColor` assignment fails the
+> native tint test (`expected undefined to be '#000022'`). Unit suite 390 → 394,
+> runtime 124 → 125.
 
 - Files: `ScrollArea.tsx`, `presentational.test.tsx`, docs, `examples/layout.example.tsx`.
 - Root = frame (border/padding/radius from the recipe); `ScrollAreaViewport` =

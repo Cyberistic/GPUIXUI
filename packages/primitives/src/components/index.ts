@@ -16,8 +16,8 @@ export type { GridProps, StackProps } from "./Stack.js";
 export { Separator, Spacer } from "./Separator.js";
 export type { SeparatorProps, SpacerProps } from "./Separator.js";
 
-export { ScrollArea } from "./ScrollArea.js";
-export type { ScrollAreaProps } from "./ScrollArea.js";
+export { ScrollArea, ScrollAreaViewport } from "./ScrollArea.js";
+export type { ScrollAreaProps, ScrollAreaViewportProps } from "./ScrollArea.js";
 
 export { Text } from "./Text.js";
 export type { TextProps } from "./Text.js";

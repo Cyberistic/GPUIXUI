@@ -346,12 +346,13 @@ describe("scrollStyle", () => {
     expect(horizontal.overflowY).toBe("hidden");
   });
 
-  it("scrolls both axes when asked, and tints nothing it cannot", () => {
+  it("scrolls both axes and leaves the theme's thumb paint to the viewport", () => {
     const both = scrollStyle({ axis: "both" });
     expect(both.overflowY).toBe("scroll");
     expect(both.overflowX).toBe("scroll");
-    // The published runtime paints the thumb from the platform theme and has no
-    // `scrollbarColor`; the resolver must not pretend otherwise.
+    // This resolver is theme-free on purpose; `ScrollAreaViewport` is where the
+    // `scrollbar` role becomes the runtime's `scrollbarColor` (proven in
+    // `presentational.test.tsx` and `layout.runtime.test.tsx`).
     expect(Object.keys(both)).not.toContain("scrollbarColor");
   });
 });

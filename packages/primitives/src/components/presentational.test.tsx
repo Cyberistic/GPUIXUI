@@ -17,13 +17,19 @@ import { renderBox } from "./Box.js";
 import { renderButton } from "./Button.js";
 import { renderButtonGroup } from "./ButtonGroup.js";
 import { labelledBy, renderLabel } from "./Label.js";
-import { renderScrollArea } from "./ScrollArea.js";
+import {
+  renderScrollArea,
+  renderScrollAreaViewport,
+  scrollPart,
+  ScrollAreaViewport,
+} from "./ScrollArea.js";
 import { renderSeparator, renderSpacer } from "./Separator.js";
 import { renderSkeleton } from "./Skeleton.js";
 import { renderSpinner } from "./Spinner.js";
 import { renderGrid, renderStack } from "./Stack.js";
 import { renderText } from "./Text.js";
 import {
+  elementChildren,
   elementProp,
   expectSome,
   hostProp,
@@ -145,14 +151,76 @@ describe("layout containers", () => {
   });
 
   it("scroll only the axes they were asked for", () => {
-    const vertical = renderScrollArea({ axis: "vertical" }, testTheme);
+    const viewport = (axis: "vertical" | "horizontal" | "both") =>
+      renderScrollAreaViewport({}, scrollPart({ axis }, testTheme));
+    const vertical = viewport("vertical");
     expect(expectSome(stringIn(vertical, "overflowY"))).toBe("scroll");
     expect(expectSome(stringIn(vertical, "overflowX"))).toBe("hidden");
-    expect(
-      expectSome(
-        stringIn(renderScrollArea({ axis: "both" }, testTheme), "overflowX"),
-      ),
-    ).toBe("scroll");
+    expect(expectSome(stringIn(viewport("both"), "overflowX"))).toBe("scroll");
+  });
+
+  it("keeps the frame's padding and radius off the viewport", () => {
+    const root = renderScrollArea(
+      { axis: "vertical", padding: "lg", radius: "md", border: true },
+      testTheme,
+    );
+    expect(expectSome(numberIn(root, "padding"))).toBe(testTheme.spacing.lg);
+    expect(expectSome(numberIn(root, "borderRadius"))).toBe(
+      testTheme.radius.md,
+    );
+    const viewport = renderScrollAreaViewport(
+      {},
+      scrollPart({ axis: "vertical" }, testTheme),
+    );
+    expect(numberIn(viewport, "padding")).toStrictEqual(Option.none());
+    expect(hostProp(viewport, "onScroll")).toStrictEqual(Option.none());
+  });
+
+  it("an implicit viewport carries the area's onScroll and thumb colour", () => {
+    const onScroll = () => {};
+    const part = scrollPart(
+      { axis: "vertical", onScroll, scrollbarWidth: 9 },
+      testTheme,
+    );
+    const viewport = renderScrollAreaViewport({}, part);
+    expect(hostProp(viewport, "onScroll")).toStrictEqual(Option.some(onScroll));
+    expect(expectSome(stringIn(viewport, "scrollbarColor"))).toBe(
+      testTheme.colors.scrollbar,
+    );
+    expect(expectSome(numberIn(viewport, "scrollbarWidth"))).toBe(9);
+  });
+
+  it("wraps plain children in one implicit viewport", () => {
+    const content = <div />;
+    const root = renderScrollArea(
+      { axis: "vertical", viewportTestId: "scroller", children: content },
+      testTheme,
+    );
+    const provider =
+      elementChildren(root)[0] ?? expect.fail("the area drew nothing");
+    const viewport =
+      elementChildren(provider)[0] ??
+      expect.fail("the area carried no viewport");
+    expect(viewport.type).toBe(ScrollAreaViewport);
+    expect(expectSome(elementProp(viewport, "testId"))).toBe("scroller");
+    expect(expectSome(elementProp(viewport, "children"))).toBe(content);
+  });
+
+  it("keeps the caller's composition while providing the scroll context", () => {
+    const root = renderScrollArea(
+      {
+        axis: "vertical",
+        children: <ScrollAreaViewport testId="scroller" />,
+      },
+      testTheme,
+    );
+    const provider =
+      elementChildren(root)[0] ?? expect.fail("the area drew nothing");
+    const viewport =
+      elementChildren(provider)[0] ??
+      expect.fail("the area carried no viewport");
+    expect(viewport.type).toBe(ScrollAreaViewport);
+    expect(expectSome(elementProp(viewport, "testId"))).toBe("scroller");
   });
 
   it("group related buttons under one role", () => {

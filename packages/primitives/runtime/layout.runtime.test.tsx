@@ -145,7 +145,11 @@ it("scrolls a ScrollArea by the wheel's delta", async () => {
   const runtime = await openWindow();
   runtime.render(
     <Surface>
-      <ScrollArea axis="vertical" style={{ height: 60, width: 200 }} testId="s">
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+      >
         {card("tall", 200, 400)}
       </ScrollArea>
     </Surface>,
@@ -171,7 +175,7 @@ it("forwards a ScrollArea's scroll deltas to the caller", async () => {
       <ScrollArea
         axis="vertical"
         style={{ height: 60, width: 200 }}
-        testId="s"
+        viewportTestId="s"
         onScroll={(event) => deltas.push(event.deltaY ?? 0)}
       >
         {card("tall", 200, 400)}
@@ -182,6 +186,34 @@ it("forwards a ScrollArea's scroll deltas to the caller", async () => {
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
   expect(deltas).toContain(-100);
+});
+
+it("tints and sizes the platform's scrollbar", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        scrollbarWidth={9}
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  const scroller = Option.getOrElse(runtime.element("s"), () =>
+    expect.fail("the ScrollArea painted no viewport"),
+  );
+  const style = Option.getOrElse(
+    Option.map(
+      Option.fromNullishOr(runtime.renderer.getElement(scroller.id)),
+      (element) => element.style,
+    ),
+    () => expect.fail("the viewport vanished"),
+  );
+  expect(style["scrollbarColor"]).toBe(testTheme.colors.scrollbar);
+  expect(style["scrollbarWidth"]).toBe(9);
 });
 
 it("paints the type scale, not just the style", async () => {

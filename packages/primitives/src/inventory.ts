@@ -134,7 +134,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No scrollbar tint or width: scrollbarColor/scrollbarWidth are unreleased",
+      "No Scrollbar/Thumb/Corner parts: the platform paints one native thumb",
       "No fade mask at the edges",
       "onScroll reports deltas only; there is no absolute offset",
     ],
