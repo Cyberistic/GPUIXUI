@@ -172,6 +172,7 @@ import {
   flexLayoutLiveScenario,
   flexLayoutView,
 } from "../scenarios/flex-layout.js";
+import { boxInsetLiveScenario, boxInsetView } from "../scenarios/box-inset.js";
 import {
   captureLive,
   expectColour,
@@ -13404,6 +13405,18 @@ const liveFlexLayout: LiveScenario = {
 };
 
 /**
+ * The box model in a real window (plan `835`).
+ *
+ * The headless pass reads the offscreen layout's boxes; this twin proves the
+ * same insets, margins and percentages through a window's own layout pass.
+ */
+const liveBoxInset: LiveScenario = {
+  ...boxInsetLiveScenario,
+  view: boxInsetView,
+  ready: "box-stage",
+};
+
+/**
  * The content-surface theme in a real window (plan `784`).
  *
  * The headless pass proves the A/B pair in one offscreen paint; this twin
@@ -14599,6 +14612,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTruncationPixels,
   liveLineClamp,
   liveFlexLayout,
+  liveBoxInset,
   liveSurfaceTheme,
   liveDialogScrim,
   terminal,

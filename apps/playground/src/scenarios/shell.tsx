@@ -12,12 +12,13 @@
  * off-list last entry without the `overflowY`. The scroll is a loop until the
  * offset stops changing, so adding a scenario cannot break the guard.
  */
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { palettes } from "../palettes.js";
+import { awaitReadout } from "./await-readout.js";
 import { scenarios } from "./index.js";
 import type { PlaygroundScenario } from "../types.js";
 
@@ -51,6 +52,23 @@ const stageIs = (
   expected: PlaygroundScenario,
   label: string,
 ) => ctx.expectEqual(label, readout(ctx, "stage-title"), expected.title);
+
+/**
+ * Asserts the stage names `expected` after an input, waiting for the commit.
+ *
+ * A native click is delivered on a later task, so reading the title straight
+ * after it is a race under load (the full suite failed exactly here). The
+ * bounded wait only gives the frame time; the assertion that follows is the
+ * one that can fail.
+ */
+const stageAfter = (
+  ctx: Smoke.SmokeContext,
+  expected: PlaygroundScenario,
+  label: string,
+) =>
+  Effect.andThen(awaitReadout(ctx, "stage-title", expected.title), () =>
+    stageIs(ctx, expected, label),
+  );
 
 const offset = (ctx: Smoke.SmokeContext): Option.Option<Smoke.Offset> =>
   Option.fromNullishOr(ctx.host.scrollOffset("shell-nav-list"));
@@ -142,72 +160,78 @@ export const shellSelectionScenario: PlaygroundScenario = {
   view: () => <App list={scenarios} />,
   steps: (ctx) =>
     Effect.gen(function* () {
+      // The first four rows: the registry is the sidebar and it grows, so a
+      // scenario that clicks an entry must pick a row that stays above the fold
+      // (a press outside the list's clip never reaches a clipped child, plan 820).
       const first = yield* scenarioById(ctx, "window-layout");
-      const text = yield* scenarioById(ctx, "text-native");
-      const input = yield* scenarioById(ctx, "input-edit");
+      const second = yield* scenarioById(ctx, "frame-stats");
+      const flex = yield* scenarioById(ctx, "layout-flex");
+      const grid = yield* scenarioById(ctx, "layout-grid");
 
       yield* ctx.expectSome(
         "the shell is painted",
         Option.fromNullishOr(ctx.host.bounds("app-shell")),
       );
+      // The sidebar is a scroll container and the previous scenario may have
+      // left it anywhere, so this scenario sets its own precondition: reveal
+      // the first row rather than assume a fresh mount (plan 839's sweep).
+      ctx.host.scrollIntoView(`nav-${first.id}`);
+      ctx.host.advance(0);
       yield* stageIs(ctx, first, "the stage starts on the first scenario");
 
-      ctx.host.click(`nav-${text.id}`);
-      yield* stageIs(ctx, text, "clicking an entry switches the stage");
+      ctx.host.click(`nav-${flex.id}`);
+      yield* stageAfter(ctx, flex, "clicking an entry switches the stage");
       yield* ctx.expectEqual(
         "the stage mounts the selected scenario's view",
-        readout(ctx, "text-plain"),
-        "hello gpuix",
+        Option.isSome(bounds(ctx, "layout-root")),
+        true,
       );
       yield* ctx.expectEqual(
         "the selected entry paints the accent surface",
-        Option.getOrElse(background(ctx, `nav-${text.id}`), () => "none"),
+        Option.getOrElse(background(ctx, `nav-${flex.id}`), () => "none"),
         palettes.dark.colors.accent,
       );
       yield* ctx.expectEqual(
         "an unselected entry paints the shell surface",
-        Option.getOrElse(background(ctx, `nav-${first.id}`), () => "none"),
+        Option.getOrElse(background(ctx, `nav-${second.id}`), () => "none"),
         palettes.dark.colors.background,
       );
 
-      ctx.host.keyDown(`nav-${input.id}`, "enter");
-      yield* stageIs(ctx, input, "Enter on key down switches the stage");
+      ctx.host.keyDown(`nav-${grid.id}`, "enter");
+      yield* stageAfter(ctx, grid, "Enter on key down switches the stage");
       yield* ctx.expectEqual(
         "the keyboard-selected view is mounted",
-        Option.getOrElse(
-          Option.fromNullishOr(ctx.host.elementType("input-field")),
-          () => "none",
-        ),
-        "input",
+        Option.isSome(bounds(ctx, "grid-equal")),
+        true,
       );
 
-      ctx.host.keyDown(`nav-${text.id}`, "space");
-      yield* stageIs(ctx, input, "Space on key down alone does not activate");
-      ctx.host.keyUp(`nav-${text.id}`, "space");
-      yield* stageIs(ctx, text, "Space on key up switches the stage");
+      ctx.host.keyDown(`nav-${flex.id}`, "space");
+      yield* stageIs(ctx, grid, "Space on key down alone does not activate");
+      ctx.host.keyUp(`nav-${flex.id}`, "space");
+      yield* stageAfter(ctx, flex, "Space on key up switches the stage");
 
-      ctx.host.keyDown(`nav-${input.id}`, "space");
-      ctx.host.keyUp(`nav-${input.id}`, "space");
-      yield* stageIs(ctx, input, "Space on key up selects the next entry");
+      ctx.host.keyDown(`nav-${grid.id}`, "space");
+      ctx.host.keyUp(`nav-${grid.id}`, "space");
+      yield* stageAfter(ctx, grid, "Space on key up selects the next entry");
 
       ctx.host.click("theme-mode-light");
+      // The palette switch re-renders through the provider; a frame is enough
+      // for the shell surface to repaint, and the wait is bounded.
+      yield* Effect.sleep(Duration.millis(30));
       yield* ctx.expectEqual(
         "the palette switch repaints the shell",
         Option.getOrElse(background(ctx, "app-shell"), () => "none"),
         palettes.light.colors.background,
       );
-      yield* stageIs(
+      yield* stageAfter(
         ctx,
-        input,
+        grid,
         "the palette switch keeps the selected scenario",
       );
       yield* ctx.expectEqual(
         "the stage survives the provider re-render",
-        Option.getOrElse(
-          Option.fromNullishOr(ctx.host.elementType("input-field")),
-          () => "none",
-        ),
-        "input",
+        Option.isSome(bounds(ctx, "grid-equal")),
+        true,
       );
     }),
 };

@@ -297,7 +297,7 @@ native input:
 
 | Fact | Measured |
 | ---- | -------- |
-| selection | clicking `nav-text-native` mounts that scenario's real view (`text-plain` = `hello gpuix`), paints the entry with `colors.accent` and the first entry with `colors.background` |
+| selection | clicking `nav-layout-flex` mounts that scenario's real view (`layout-root`), paints the entry with `colors.accent` and `nav-frame-stats` with `colors.background`. The probe drives the **first four rows** on purpose: the registry is the sidebar and it grows, and a row below the list's fold cannot be clicked (a press outside the clip never reaches a clipped child, plan `820`). Plan `835`'s extra row pushed the old `text-native` target below the fold and failed this check — the target moved, the contract did not |
 | keyboard | Enter on key **down** switches; Space on key **up** switches; Space on the down alone does nothing. The nav uses the shipped `Button`'s `decideActivation`, not a second copy |
 | palette | `theme-mode-light` repaints `app-shell` from `#11141A` to the light `#F6F8FA`, keeps the selected scenario and leaves its view mounted |
 | isolation | the full suite mounts every scenario under a `Fragment` keyed by id: without it React kept the previous `<App>`'s Shell state and native scroll offset, and a click landed outside the viewport (found by this probe; `--only` passed, the full run did not) |
@@ -400,6 +400,54 @@ grow then distributes real free space rather than none.
 remainder given to the last growing item so the widths sum to the row exactly.
 24 unit tests; eight runtime mutations and two unit mutations failed by name
 (plan `833` §9).
+
+## The box model (plan `835`)
+
+`padding` appears in **144** shipped call sites, `margin` in 8 component sites
+(plus every separator inset and the slider thumb's **negative** margins), and a
+percentage size in 29 — and **no scenario in either registry asserted one**.
+`size-constraints` resolved `"100%"` against an **unpadded** parent,
+`flex-layout` distributed marginless items, and `border-pixels` sampled only a
+border. `box-inset` / `live-box-inset` (**63 checks each**, three green focused
+live runs) mount twelve fixtures in two 480 px columns and read every box:
+
+| Fact | Measured |
+| ---- | -------- |
+| uniform padding | a 240 × 120 box with `padding: 16` reports its origin at **+16/+16** and keeps width **240** |
+| the content box | the `"100%"` child is **208** wide; the content ends **16 px** above the painted bottom |
+| per-side padding | L40 R8 T4 B24 → the `"100%"` child is **192** (only x shrinks), the origin is **+40/+4** |
+| a border | a 2 px border moves the origin to **+18** and the reported size to **236 × 116**; the child is **204** |
+| a percentage | `"50%"` of the 208 content width → **104**; `height: "100%"` of 60 → **60** |
+| grow inside padding | a 300 px row with `padding: 10` gives two grow items **140 / 140**, starting at **+10** |
+| a positive margin | `marginLeft: 20` puts the next item **20** after its predecessor |
+| a negative margin | `marginLeft: -10` pulls it **10** back, **overlapping** its neighbour |
+| vertical margins | `marginBottom: 20` + `marginTop: 10` put the next box **50** lower — they **add**, never collapse |
+| a centred margin box | a 20 px child with 4 + 6 margins in a 60 px row sits at **+19** (`flex-start` would be **+4**) |
+| stretch | a text child with 10 + 10 margins stretches to **40** and starts at **+10** |
+| the padding band | a press 4 px into the padding runs the box's handler and not the child's |
+
+**The bounds contract, now asserted.** Plan `529` §6.5 recorded from the
+binding that `getElementBounds` returns the **content origin** with a
+**padding-box** size; the probe asserts that in both hosts and adds the padding
+relation: padding moves the origin **without changing the extent**, and the
+painted box is `x − paddingLeft − border` with `width + 2 × border`. Plan `820`
+had noted the origin half incidentally; the size half is now a check.
+
+**A consumer trap.** A `x + width` computation on a padded box overshoots the
+painted right edge by `paddingLeft` — measured at **12 px** on the 200-wide,
+`padding: 12` fixture. `packages/components/src/internal/placement.ts` derives
+its room from exactly that expression, so a padded trigger overstates its right
+room; the component fix is a cross-team row rather than a playground edit.
+
+**A null result.** The first centred fixture used margins 10 / 30, where the
+margin box exactly fills the 60 px row — centring and `flex-start` both land at
+**+10**, so that fixture could not fail the `alignItems` mutation. The shipped
+fixture uses 4 / 6 and the mutation now reads `expected 19, got 4`.
+
+`box-inset-model.ts` owns the arithmetic (`contentWidth`, `contentHeight`,
+`contentOffset`, `paintedBox`, `percentOf`, `marginRow`, `stackedStart`,
+`centreOffset`, `stretchHeight`, `reportedRight`). 16 unit tests; ten runtime
+mutations and two unit mutations failed by name (plan `835` §9).
 
 ## Layout and typography in a real window (plan `591`)
 
@@ -1854,8 +1902,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 119-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 108 scenarios. `smoke:live` opens
+The 128-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 117 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1909,6 +1957,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-truncation-pixels` | the ellipsis glyph in a window: four 32 px runs in 200-wide boxes — the ellipsis's right edge is a short dot run (tallest column **0.11** against the clipped control's **0.70**), both keep **0** ink outside their box, the `MMMM` control's edge band is blank, and a `nowrap` run with neither leaks **1922** ink pixels beside its box — 22 checks (plan `778`). A blank right edge does not count as dots: `looksLikeDots` requires ink |
 | `live-line-clamp` | multi-line `lineClamp` in a window: four runs in 240-wide boxes — a 2-line clamp measures **52** and paints 2 bands with **0** ink below, the 3-line clamp **78** and 3 bands, the unclamped control **104** and 4 bands (and ink below line 2, so the no-ink scan is not vacuous), the pitch is the declared `lineHeight` (52 device px at scale 2), and `lineClamp` **alone** hard-cuts while `textOverflow: "ellipsis"` paints the three-dot mark (`h4`, top 34, gaps 5, span 20 device px) — 30 checks (plan `829`). A 52 px box holding an unclamped run fails `clamp 2 paints no ink below its box` with `5341/122880` |
 | `live-flex-layout` | flex distribution in a window: twelve rows on one 640 px column — grow 1:1 → 300/300 and 1:2 → 200/400, a `grow: 1` beside a 100 px basis → 500/100, `basis 200/100` + grow → 350/250, `space-between` → x 0/170/340, `center` → 170, `alignItems: center` offsets +20/+10, `stretch` grows a content-height child 26 → 60 while `flex-start` leaves it at 26, `"50%"` resolves to 320 before grow, a width-less grow row fills 640 then splits 233.5/406.5, a nested 1:3 → 150/450, and `flexShrink: 0` keeps 200 while the shrinkable sibling absorbs 100 — 82 checks (plan `833`) |
+| `live-box-inset` | the box model in a window: padding shifts the content origin (+16) and keeps the declared width, per-side padding shrinks only its own axis (192), a 2 px border moves the origin to +18 and the size to 236, `"50%"` resolves to 104 and `height: "100%"` to 60, a padded grow row splits 140/140 from +10, margins place exactly (0/70/110) with a −10 overlap, vertical margins add (50) instead of collapsing, a centred margin box sits at +19, stretch gives 40, and a padding-band press runs the box — 63 checks (plan `835`) |
 | `live-surface-theme` | the content-surface theme in a window: one 880 × 580 stage mounts eleven themed/default fixtures and one frame proves the token reaches the paint — markdown text (`foreground`), inline code (`primary`), the bullet disc (`primary` at 85 %), the link underline (`mutedForeground`, and **no** `primary`: links are monochrome), both `appearance` bases, the code's syntax string and keyword tokens and its `placeholder` gutter, the `<code>`/`<markdown>` **absent** plane and the `<diff>` plane with both 5.5 % tints — 50 checks (plan `784`) |
 | `live-dialog-scrim` | the modal veil in a window: the shipped `Dialog`/`Drawer` paint the `overlay` role over the anchored layer's `#1A1A1A` plane (`#090909`) across the whole window, their surfaces stay `popover` above it, an **in-window** `absolute` layer of the same token dims the page to `#3A3B59`/`#15462C`, and every layer unmounts on close — 62 checks (plan `791`). **Measured: an anchored layer is opaque, so a modal hides the app instead of dimming it** |
 | `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |

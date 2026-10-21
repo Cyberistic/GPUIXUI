@@ -143,7 +143,35 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 154/154 plans-and-harness
+`[x]` `[██████████]` 155/155 plans-and-harness
+
+`[x]` **Prove the box model in the frame** per plan `835`: `padding` is in **144**
+      shipped call sites, `margin` in 8 component sites (plus every separator
+      inset and the slider thumb's **negative** margins) and a percentage size in
+      29, and **no scenario asserted one** — `size-constraints` resolved `"100%"`
+      against an **unpadded** parent and `flex-layout` distributed marginless
+      items, so a runtime that ignored padding, doubled a uniform inset, refused
+      a negative margin, collapsed vertical margins or resolved a percentage
+      against the border box passed. `box-inset` / `live-box-inset` (**63 checks
+      each**, three green focused live runs) measure twelve fixtures in two
+      480 px columns: padding moves the **content origin** (+16) and keeps the
+      declared width, the content width is **208**, per-side insets shrink only
+      their own axis (**192**), a 2 px border reports **+18** with a **236 × 116**
+      box, percentages resolve against the content box (`"50%"` → **104**,
+      `height: "100%"` → **60**), a padded grow row splits **140/140** from +10,
+      margins place exactly (**0/70/110**) with a **−10** overlap, vertical
+      margins **add** (**50**, no collapse), a centred margin box sits at
+      **+19**, stretch gives **40**, and a press in the padding band runs the
+      box. **The measured contract (plan `529` §6.5, now asserted):** `getElementBounds` reports the **content
+      origin** with the **padding-box size**, so a consumer's `x + width`
+      overshoots a padded box by `paddingLeft` (**12** on the fixture). A 10/30
+      centred fixture was a **null result** (flex-start also lands at +10) and
+      was replaced. Ten runtime and two unit mutations failed by name; 16 model
+      tests. The extra registry row also exposed that `shell-selection` clicked
+      `text-native`, which the growth pushed below the sidebar fold; the probe
+      now drives the first four rows (removing a row's `onClick` still fails it
+      by name). Focused ids run: `box-inset`, `live-box-inset` (×3),
+      `shell-selection`. Plan: `.agents/slop/plans/835-box-model-insets.md`.
 
 `[x]` **Prove flex distribution in the frame** per plan `833`: `flexGrow` is in
 **64** shipped call sites, `alignItems: "center"` in **163** and
@@ -2332,7 +2360,15 @@ focused id is `live-frames`.
       **moves with its own scroll**, and a child's box is **stale after an
       ancestor scroll**. Cache a scroller's box before scrolling; do not use the
       box as a stable frame. Affects docking surfaces, collapsible measurement,
-      anchored placement and drag edge loops.
+      anchored placement and drag edge loops. **The placement half is now measured
+      (plan `835`):** `internal/placement.ts` derives its `roomOn("right"/"bottom")`
+      from `trigger.x + trigger.width`, so a padded trigger (every `Button`)
+      overstates its trailing room by its `paddingLeft`/`paddingTop` — a
+      200-wide `padding: 12` box overshoots its painted right edge by **12 px**.
+      Recover the painted box (`x − paddingLeft`, `width + 2 × border`) or measure
+      the anchor's padded box once, and add a near-edge flip test with a padded
+      trigger, or record the limitation. Evidence:
+      `box-inset`/`live-box-inset`.
 `[ ]` **Cross-team:** the docs-site capability matrix
       (`apps/docs/src/lib/capabilities.ts` + its test) must gain the `frames`
       capability and the ids `frame-stats` + `live-frames`, or its gate stays
