@@ -1014,7 +1014,23 @@ Both are specified in ; each fix starts with a plan under .
       negative controls measured (adding `onSubmit`: `value=abcd`; dropping the
       lefts: `value=ab\ncdX`, exit `1` each). `--only editor-surface`, green on
       0.11.0.
-`[ ]` `apps/playground`: native probe backlog — content surfaces (svg/img/canvas), cross-element drag and file drops, the shipped Tier 1 controls in the suite, drag auto-scroll, tab overflow, tab-strip focus (salvage 161-163, 168-177). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`) and **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`)
+`[x]` `apps/playground`: content surfaces measured — the `content-surfaces` live
+      probe settles what a chart or an image preview can draw. `<svg source>`
+      paints its markup but **as one `style.color` tint** (GPUI's icon element
+      paints the mask), so a multi-colour chart is one stacked `<svg>` per
+      colour — five layers paint five exact colours, and `<text>` inside the
+      markup paints. `<img>` paints a data-URL PNG, and a pixel buffer through
+      `setImagePixels` **only from a layout effect** (a passive effect leaves the
+      `img: no src` fallback). `<canvas>` tracks no painted bounds and paints
+      nothing. 21 checks, `--only content-surfaces`, green on 0.11.0; two
+      negative controls measured (every layer on the source tint fails `the bar
+      layer paints its own tint`; the upload in a `useEffect` fails `an image
+      paints a pixel buffer set after mount`, exit `1` each). Fixtures + guard in
+      `src/live/content.ts`/`content.test.ts`; `COMPONENTS.md`'s Charts, Image
+      preview and waveform rows now carry the measurement. Evidence:
+      `apps/playground/README.md` §`content-surfaces`,
+      `.artifacts/live/content.png`
+`[ ]` `apps/playground`: native probe backlog — cross-element drag and file drops, the shipped Tier 1 controls in the suite, drag auto-scroll, tab overflow, tab-strip focus (salvage 162, 168-169, 172, 174). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`), **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`) and **content surfaces** (`content-surfaces`, salvage 161)
 `[x]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178) — `packages/testing/src/native.ts` exports `NativeRenderer`/`NativeElement` (method signatures only, so the package still imports no GPUix type) and `createTestHost`, which owns the `testId` → element lookup, the nearest-painted-ancestor fallback for a `<virtual-list>`/`<anchored>`, the subtree text join, the style decode and the drag synthesis. `apps/playground/src/smoke/host.ts` is deleted — a real `TestRenderer` satisfies the port structurally, so the runner calls `Native.createTestHost(root.renderer)`. 10 fake-renderer tests; both directions measured (dropping the ancestor fallback fails `aims input at the nearest ancestor that paints` and the drag case). Headless re-run green: `--only modal-focus-trap --only panel-resize --only scroll-container`
 `[ ]` `packages/components`: Tier 2 behaviour gaps — remaining: List row subscriptions (salvage 339).
   - `[x]` Tier 2 icon adoption (salvage 324) — every chrome mark is an `@gpuixui/icons` glyph rather than a text stand-in: the close/dismiss controls (dialog, drawer, toast, alert, tag chip, search/time/hotkey clear), the carets (date picker, combobox), the month arrows, the carousel and pagination chevrons, the selected marks (menu, combobox), the submenu chevron, the accordion indicator and the collapsing ellipses. An ellipsis in a placeholder, a keycap chord and the confirmation dialog's busy `…` stay typography by design. `src/behaviour/icons.test.tsx` (5 native tests) measures the painted `<svg>` where the glyph used to be, the Expand/Collapse and Selected images, and sweeps the source for a returning stand-in; both directions measured (restoring `⌄`/`⌃` fails the indicator case and the sweep). The three live probes that mount these surfaces stay green on 0.11.0 (`--only dialog-lifecycle --only menu-lifecycle --only toast-lifecycle`).
