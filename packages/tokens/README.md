@@ -137,8 +137,11 @@ const transition = motionTransition(theme, "normal", "enter"); // 0.2s, easeOut
 ```
 
 `none`, `step`, `fast`, `normal`, `slow` and `pulse` are the levels;
-`standard`, `enter`, `exit` and `linear` are the easings. Override any level to
-`0` to remove motion. A cubic-bezier easing is four finite control points whose
+`standard`, `enter`, `exit` and `linear` are the easings. The five names a theme
+may give a phase are `motionEasings`, narrowed from a stored value by
+`isMotionEasingName`; a cubic-bezier tuple is an easing but not a name. Override
+any level to `0` to remove motion. A cubic-bezier easing is four finite control
+points whose
 x values lie inside `0…1`; the runtime drops a transition that breaks that rule,
 so `themeMetricFailures` reports it.
 A runnable example lives in

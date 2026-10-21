@@ -54,7 +54,15 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 383/458
+`[x]` `[████████░░]` 384/459
+
+`[x]` Give the named easings the index and guard every other union has —
+`MotionEasing` was five literal names with no index and no boundary guard while
+`motionLevels`/`motionPhases` indexed the scale around it, so a stored easing had
+to be retyped; `motionEasings` is the runtime's name set, `MotionEasingName` and
+`isMotionEasingName` derive from it, the type is now derived rather than written
+out, and the guard narrows a name while a bezier tuple stays a governed value
+(plan 836)
 
 `[x]` Decode a persisted row the docs already named — the design system said to
 hand an unknown row to `resolveThemeChoice`, which neither compiles nor survives

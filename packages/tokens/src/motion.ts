@@ -11,14 +11,33 @@
 
 import type { Theme } from "./theme.js";
 
-/** An easing the runtime accepts, as the runtime names it. */
-export type MotionEasing =
-  | "linear"
-  | "ease"
-  | "easeIn"
-  | "easeOut"
-  | "easeInOut"
-  | [number, number, number, number];
+/**
+ * The easing names the runtime accepts, in documentation order. This is the set
+ * a theme may name, not the shipped set — the identity uses four and `ease` is
+ * available to a brand — so a settings row iterates it instead of retyping the
+ * union, the way `motionLevels` and `motionPhases` index the scale around it.
+ */
+export const motionEasings = [
+  "linear",
+  "ease",
+  "easeIn",
+  "easeOut",
+  "easeInOut",
+] as const;
+
+/** A named easing the runtime accepts. */
+export type MotionEasingName = (typeof motionEasings)[number];
+
+/**
+ * An easing the runtime accepts: a name, or a cubic-bezier control-point tuple.
+ * A tuple is a value, not a name, so {@link isMotionEasingName} rejects it and
+ * `themeMetricFailures` is what governs its four control points.
+ */
+export type MotionEasing = MotionEasingName | [number, number, number, number];
+
+/** Narrow unknown input to a runtime easing name. A tuple is not a name. */
+export const isMotionEasingName = (value: unknown): value is MotionEasingName =>
+  motionEasings.some((easing) => easing === value);
 
 /** Easings by phase. */
 export interface MotionEasings {

@@ -108,6 +108,7 @@ missing here is not public.
 | `MetricRule` | One of `metricRules`: `positive`, `non-negative`, `zero`, `finite`, `increasing`, `non-decreasing`, `at-least`, `at-most` or `within`. |
 | `Motion` | Six timing levels and four easing phases. |
 | `MotionEasing` | A named easing (`linear`, `ease`, `easeIn`, `easeOut`, `easeInOut`) or a cubic-bezier control-point tuple. |
+| `MotionEasingName` | A named easing from `motionEasings`. |
 | `MotionEasings` | The `standard`, `enter`, `exit` and `linear` curves. |
 | `MotionLevel` | A timing level from `motionLevels`, `none` to `pulse`. |
 | `MotionOverrides` | Partial timings and easings for `extendTheme` or a platform style's `structure.motion`. |
@@ -1393,6 +1394,13 @@ Timings are **milliseconds** in the tokens; the runtime's transition takes
 easing phases, so a table or a settings row iterates the index instead of
 `Object.keys(motion)`.
 
+`motionEasings` lists the five names the runtime accepts — `linear`, `ease`,
+`easeIn`, `easeOut` and `easeInOut` — and `isMotionEasingName(value)` narrows a
+stored one, so a theme editor's easing row iterates the index and reads its value
+back without retyping the union. The guard narrows a **name**: a cubic-bezier
+tuple is an easing too, and its four control points are `themeMetricFailures`'
+rule.
+
 Easings are named per phase: `standard` (`easeInOut`), `enter` (`easeOut`),
 `exit` (`easeIn`) and `linear`. The runtime also takes a cubic-bezier tuple, so
 `extendTheme(base, { motion: { ease: { enter: [0.4, 0, 0.2, 1] } } })` works
@@ -1405,7 +1413,8 @@ finite control points whose two x values must
 lie inside `0…1`: the runtime's `validate_ease` rejects the whole transition
 otherwise, and a curve outside that range has no progress function. A y value may
 overshoot — a spring-like curve is a design choice — and a named easing is
-constrained by `MotionEasing` itself. `themeMetricFailures` holds both rules, and
+narrowed by `isMotionEasingName` at a boundary and by `MotionEasing` in authored
+code. `themeMetricFailures` holds both rules, and
 the timings must be finite as well as ordered, because the runtime rejects a
 non-finite duration.
 

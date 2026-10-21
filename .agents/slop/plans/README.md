@@ -423,6 +423,7 @@ references without buying correctness.
 | [833](./833-live-row-figures.md) | Every remaining figure in a live cross-team row, and the ring row's set | F | 057, 079, 311, 332, 343, 344, 347, 348, 394, 603, 611, 737, 831 | done |
 | [834](./834-bezier-easing-storage.md) | The cubic-bezier easing a stored edit cannot carry | F | 685, 713, 727, 744, 758, 794 | done |
 | [835](./835-persisted-row-decoder.md) | The persisted row the design system says the package decodes | F | 067, 068, 305, 380, 529, 755 | done |
+| [836](./836-motion-easing-index.md) | The easing names every union owns an index for, except this one | F | 019, 064, 067, 068, 096, 305, 364, 519, 834 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4413,6 +4414,18 @@ compile error for a direct caller; the four passages that describe the boundary
 now name the decoder, and `theme-choice.test.ts` holds the decoded row, the
 non-row, the unknown axis and the URL equivalence. No colour, pair, floor,
 metric, role or shipped theme moves.
+
+836 closes the last union without an index. `MotionEasing` was five literal names
+and a tuple, written out in the type; `motionLevels` and `motionPhases` index the
+scale around it, but nothing owned the names a phase may carry, so a settings row
+that persisted a curve retyped them — the gap plans 067, 068, 096 and 305 closed
+for every other persisted union, and the boundary plan 834 opened when it made an
+edited easing storable. `motionEasings` is the runtime's name set, `MotionEasing`
+derives from it, `MotionEasingName` and `isMotionEasingName` join it, and the
+guard narrows a **name** only: a cubic-bezier tuple stays a value
+`themeMetricFailures` governs. The catalogue's "constrained by `MotionEasing`
+itself" sentence was true of authored code and false of a stored value and now
+states both halves. No value moves.
 
 ## How to use a plan
 
