@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
 import {
   CommandMenu,
@@ -767,6 +768,123 @@ const SliderProbe = (): ReactNode => {
         </text>
       </div>
     </PrimitiveThemeProvider>
+  );
+};
+
+/**
+ * A cross-pane drag: an item in the left pane, dropped on the right one.
+ *
+ * The source records the press; the **drop target** resolves the travel and the
+ * release. That split is forced by a measured window timing: the automation
+ * protocol delivers the whole drag (press, eight moves, release) before React
+ * commits the press's render, so a handler that gated on `dragging` **state**
+ * saw `false` for every move and the drag never started. The pointer flag
+ * therefore lives in a ref; the state only drives the readout.
+ */
+const DragProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [zone, setZone] = useState("left");
+  const [leftMoves, setLeftMoves] = useState(0);
+  const [rightMoves, setRightMoves] = useState(0);
+  const [drops, setDrops] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  // The protocol delivers the whole drag before React commits the press's
+  // render, so a handler that gated on `dragging` state would see `false` for
+  // every move and never count the gesture. The ref is the synchronous truth;
+  // the state only drives the readout.
+  const draggingRef = useRef(false);
+
+  const pane = (side: "left" | "right", children?: ReactNode): ReactNode => (
+    <div
+      key={side}
+      testId={`drag-${side}`}
+      onMouseMove={() => {
+        if (!draggingRef.current) return;
+        if (side === "left") setLeftMoves((count) => count + 1);
+        else setRightMoves((count) => count + 1);
+      }}
+      onMouseUp={() => {
+        if (!draggingRef.current) return;
+        draggingRef.current = false;
+        setZone(side);
+        setDrops((count) => count + 1);
+        setDragging(false);
+      }}
+      style={{
+        width: 300,
+        height: 240,
+        padding: theme.spacing.md,
+        borderRadius: theme.radius.sm,
+        backgroundColor: theme.colors.secondary,
+      }}
+    >
+      {children}
+    </div>
+  );
+
+  return (
+    <div
+      testId="drag-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          height: 280,
+          display: "flex",
+          flexDirection: "row",
+          gap: theme.spacing.lg,
+          padding: theme.spacing.md,
+          borderRadius: theme.radius.md,
+          backgroundColor: theme.colors.muted,
+        }}
+      >
+        {pane(
+          "left",
+          <div
+            testId="drag-item"
+            onMouseDown={() => {
+              draggingRef.current = true;
+              setDragging(true);
+            }}
+            style={{
+              width: 140,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: theme.radius.sm,
+              backgroundColor: theme.colors.primary,
+            }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: theme.colors.primaryForeground,
+              }}
+            >
+              Drag me
+            </text>
+          </div>,
+        )}
+        {pane("right")}
+      </div>
+      <text
+        testId="drag-readout"
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`zone=${zone} leftMoves=${leftMoves} rightMoves=${rightMoves} drops=${drops} dragging=${dragging}`}
+      </text>
+    </div>
   );
 };
 
@@ -2052,6 +2170,91 @@ const sliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * Drives a cross-pane drag in a window: the item records the press, each pane
+ * records the travel and the release over itself, and the readout names the side
+ * that received the drop.
+ *
+ * The source records the press; the pane under the pointer counts the travel and
+ * resolves the release. The probe drags item → right pane and back and requires
+ * the target pane to have counted a move, so a drag that never reached it fails
+ * even if the drop lands. The press flag is a ref, not state, because the
+ * protocol delivers every move before React commits the press's render.
+ */
+const dragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("drag-item");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the item starts in the left pane",
+      yield* ctx.host.text("drag-readout"),
+      "zone=left leftMoves=0 rightMoves=0 drops=0 dragging=false",
+    );
+
+    const item = yield* paintedBox(ctx, "drag-item");
+    const right = yield* paintedBox(ctx, "drag-right");
+    yield* ctx.host.drag(
+      "drag-item",
+      right.x + right.width / 2 - (item.x + item.width / 2),
+      right.y + right.height / 2 - (item.y + item.height / 2),
+    );
+    yield* Effect.sleep(SETTLE);
+    const dropped = yield* ctx.host.text("drag-readout");
+    yield* ctx.expectContains(
+      "the drop lands in the right pane",
+      dropped,
+      "zone=right",
+    );
+    yield* ctx.expectContains(
+      "the right pane resolved one drop",
+      dropped,
+      "drops=1",
+    );
+    yield* ctx.expectContains(
+      "the drag state is over after the release",
+      dropped,
+      "dragging=false",
+    );
+    yield* ctx.expectEqual(
+      "the target pane saw the pointer move with the button held",
+      Str.includes("rightMoves=0")(dropped),
+      false,
+    );
+    yield* ctx.host.capture("drag-right");
+
+    // Back again, so the gesture is not a one-way special case.
+    const left = yield* paintedBox(ctx, "drag-left");
+    const moved = yield* paintedBox(ctx, "drag-item");
+    yield* ctx.host.drag(
+      "drag-item",
+      left.x + left.width / 2 - (moved.x + moved.width / 2),
+      left.y + left.height / 2 - (moved.y + moved.height / 2),
+    );
+    yield* Effect.sleep(SETTLE);
+    const returned = yield* ctx.host.text("drag-readout");
+    yield* ctx.expectContains(
+      "a second drag lands back in the left pane",
+      returned,
+      "zone=left",
+    );
+    yield* ctx.expectContains(
+      "the left pane resolved the second drop",
+      returned,
+      "drops=2",
+    );
+    yield* ctx.expectContains(
+      "the drag state ended again",
+      returned,
+      "dragging=false",
+    );
+    yield* ctx.expectEqual(
+      "the left pane saw the return travel",
+      Str.includes("leftMoves=0")(returned),
+      false,
+    );
+    yield* ctx.host.capture("drag-left");
+  });
+
+/**
  * Opens the shipped Dialog by press, proves focus entered the surface and that
  * Escape closes it and returns focus, then closes it with its own `DialogClose`.
  *
@@ -2897,6 +3100,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "slider-lifecycle",
     view: () => <SliderProbe />,
     steps: sliderSteps,
+  },
+  "drag-between-panes": {
+    id: "drag-between-panes",
+    view: () => <DragProbe />,
+    steps: dragSteps,
   },
   "dialog-lifecycle": {
     id: "dialog-lifecycle",

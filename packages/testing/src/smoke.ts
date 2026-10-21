@@ -330,6 +330,21 @@ export interface AsyncSmokeHost {
   ) => Effect.Effect<Bounds | null, SmokeHostError>;
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Presses on `testId` and drags the pointer by the given offset, releasing
+   * there.
+   *
+   * A window's automation sends real move events with the button held, so this
+   * is a genuine pointer drag, not a synthesised down/move/up: listeners on an
+   * ancestor of both the source and the drop target receive every move. The
+   * runtime has no pointer capture, so a drag that leaves the ancestor's subtree
+   * stops receiving them — the live probes document that rather than hide it.
+   */
+  readonly drag: (
+    testId: string,
+    deltaX: number,
+    deltaY: number,
+  ) => Effect.Effect<void, SmokeHostError>;
   readonly key: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
   /**
    * Releases a key the window is holding.

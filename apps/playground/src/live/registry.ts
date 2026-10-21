@@ -91,6 +91,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "drag-between-panes",
+    title:
+      "Workspace: a drag across two panes reaches the target's move and release",
+    capability: "workspace",
+  },
+  {
     id: "dialog-lifecycle",
     title:
       "Modal: the shipped Dialog opens on a press, focuses its surface, and Escape returns focus",

@@ -32,7 +32,7 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-sixteen probes a real window can prove, of which seven mount shipped
+seventeen probes a real window can prove, of which seven mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
 palette, the tabs, the popover and the modal focus rule), three mount
 `@gpuixui/primitives` (the Input, Checkbox and Slider), and the rest prove the
@@ -560,6 +560,36 @@ does not claim otherwise.
 `disabled` fails `a press in the middle of the track moves the value there`
 (`expected a string containing "centred=true", got "value=0 changes=0
 centred=false"`, exit `1`).
+
+### `drag-between-panes` — measured on 0.11.0 here
+
+A cross-pane drag, the feasibility question a drag-and-drop component has to
+answer. The item records the press; each pane listens for the travel and the
+release over itself, and the readout names the side that resolved the drop.
+Automation sends real `mouseMove` events with the button held, so this is a
+pointer drag rather than a synthesised down/move/up.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `zone=left leftMoves=0 rightMoves=0 drops=0 dragging=false` |
+| drag the item to the right pane's centre | `zone=right drops=1 dragging=false`, and the right pane counted the move travel |
+| drag it back to the left pane | `zone=left drops=2 dragging=false`, and the left pane counted the return travel |
+
+The measured lesson is a **timing** one, and it shapes the component: the
+protocol delivers the whole drag — press, eight moves, release — before React
+commits the render the press scheduled. A handler that gated on `dragging`
+**state** therefore saw `false` for every move and the drag never started. The
+press flag must be synchronous (a ref); state is only for the readout. A second
+window-only fact is the missing pointer capture, already documented on `Slider`:
+the pane under the pointer resolves the gesture, so a drop target needs its own
+listeners.
+
+`AsyncSmokeHost` gained `drag(testId, deltaX, deltaY)` for this, implemented with
+the protocol's real drag (eight interpolated moves with `pressedButton` set).
+Captures: `.artifacts/live/drag-right.png` and `drag-left.png`. Negative control,
+measured: forcing the release's side to `left` fails `the drop lands in the right
+pane` (`expected a string containing "zone=right", got "zone=left leftMoves=3
+rightMoves=4 drops=1 dragging=false"`, exit `1`).
 
 ### `dialog-lifecycle` — measured on 0.11.0 here
 

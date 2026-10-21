@@ -27,6 +27,7 @@ const inertHost: AsyncSmokeHost = {
   bounds: () => Effect.succeed(null),
   focused: () => Effect.succeed(null),
   click: () => Effect.void,
+  drag: () => Effect.void,
   key: () => Effect.void,
   keyUp: () => Effect.void,
   focusNext: () => Effect.void,
