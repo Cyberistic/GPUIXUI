@@ -2141,9 +2141,9 @@ const toastSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  * runs the highlighted row rather than the first one, a disabled action paints
  * but runs nothing, and `Escape` dismisses the surface.
  *
- * The focus after the dismissal is the seventh, and it is a **gap**: the
- * palette does not give the focus back. `modal-focus-restore` isolates the
- * cause; the components workstream owns the fix (`TODO.md`).
+ * The focus after the dismissal is the seventh: the palette gives the focus back
+ * to its opener, which is what a modal must do. `modal-focus-restore` isolates
+ * the three cases that rule depends on.
  */
 const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
@@ -2220,15 +2220,10 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* unpainted("command-menu"),
       true,
     );
-    // The measured gap: the palette's field takes the focus with `autoFocus`,
-    // so the modal saves the field as its restore target and the focus is lost
-    // when the field unmounts with the surface. `modal-focus-restore` isolates
-    // the cause; the components workstream owns the fix (TODO), and this check
-    // flips to `palette-trigger` with it.
     yield* ctx.expectEqual(
-      "closing the palette leaves the focus nowhere (known gap: the opener does not get it back)",
+      "closing the palette returns the focus to its opener",
       yield* focusedAfterPaint(ctx),
-      "none",
+      "palette-trigger",
     );
     yield* ctx.host.capture("palette-closed");
 
@@ -2290,9 +2285,9 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
     yield* ctx.expectEqual(
-      "Escape leaves the focus nowhere as well (the same known gap)",
+      "Escape returns the focus to the opener too",
       yield* focusedAfterPaint(ctx),
-      "none",
+      "palette-trigger",
     );
   });
 

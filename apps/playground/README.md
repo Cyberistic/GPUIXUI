@@ -626,14 +626,14 @@ one.
 | press the trigger | the surface paints and the **search field** holds the focus |
 | `ArrowDown` | the field **keeps** the focus — the highlight moves, the focus does not |
 | `Enter` | `ran=open-settings runs=1` — the *second* row ran, so the arrow really moved the highlight |
-| the palette | closes itself when an action runs |
+| the palette | closes itself when an action runs, and the focus returns to `palette-trigger` |
 | press, type `theme` | only `Toggle Theme` paints; `New File` is filtered out; no empty state |
 | `Enter` | `ran=theme runs=2` — the filtered row ran |
 | press, type `zoom` | the **disabled** row still paints |
 | `Enter` | nothing runs and the palette stays open |
-| `Escape` | the palette dismisses |
+| `Escape` | the palette dismisses and the focus returns to `palette-trigger` |
 
-14 checks. Captures: `.artifacts/live/palette-open.png` (the field, the two
+16 checks. Captures: `.artifacts/live/palette-open.png` (the field, the two
 groups, the disabled row muted), `palette-filtered.png` (the field holding
 `theme`, one row left) and `palette-closed.png`.
 
@@ -642,10 +642,13 @@ The design claim is the one a browser-shaped test cannot make: the highlight is
 after the first keystroke, so the filter check would fail by name — the two
 checks together are the contract.
 
-**The measured gap: the palette does not give the focus back.** After the
-palette closes, nothing holds the focus (`none`), so the opener never gets it
-back. `modal-focus-restore` below isolates the cause; the components workstream
-owns the fix (`TODO.md`).
+The focus return is the fixed half of the gap this probe originally measured:
+the field no longer carries `autoFocus`, so the dialog focuses it through
+`initialFocus` after recording its opener, and both close paths hand the focus
+back to the palette's trigger. Negative control, measured: expecting `none`
+fails `closing the palette returns the focus to its opener`
+(`expected "none", got "palette-trigger"`, exit `1`). `modal-focus-restore`
+below still measures the remaining raw-`autoFocus` case.
 
 ### `popover-lifecycle` — measured on 0.11.0 here
 
