@@ -33,7 +33,7 @@ import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import { Smoke } from "@gpuixui/testing";
 import { Body, Pressable, Readout } from "../ui.js";
 import { nextPalette, palettes, type PaletteId } from "../palettes.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const SWATCH_COLUMNS = 4;
 const SWATCH_WIDTH = 176;
@@ -232,10 +232,7 @@ const TypeProbe = () => {
   );
 };
 
-export const themeColorRolesScenario: PlaygroundScenario = {
-  id: "theme-color-roles",
-  title: "Theme: every colour role paints and the switch re-paints",
-  capability: "theme",
+export const themeColorRolesScenario: ScenarioBody = {
   view: () => <ColorRolesProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
@@ -281,10 +278,7 @@ export const themeColorRolesScenario: PlaygroundScenario = {
     }),
 };
 
-export const themeTypeAndShadowScenario: PlaygroundScenario = {
-  id: "theme-type-and-shadow",
-  title: "Theme: type roles, focus ring and elevation reach the runtime",
-  capability: "theme",
+export const themeTypeAndShadowScenario: ScenarioBody = {
   view: () => <TypeProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

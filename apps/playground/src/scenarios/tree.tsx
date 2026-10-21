@@ -20,7 +20,7 @@ import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 interface TreeNode {
   readonly id: string;
@@ -202,10 +202,7 @@ const readout = (ctx: Smoke.SmokeContext, id: string): string =>
 const paintedExactly = (ctx: Smoke.SmokeContext, label: string): boolean =>
   Arr.some(ctx.host.paintedText(), (line) => line === label);
 
-export const treeScenario: PlaygroundScenario = {
-  id: "tree-view",
-  title: "Tree: indentation, expand/collapse and arrow keys",
-  capability: "tree",
+export const treeScenario: ScenarioBody = {
   view: () => <TreeProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

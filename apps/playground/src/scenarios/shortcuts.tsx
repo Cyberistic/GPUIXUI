@@ -15,7 +15,7 @@ import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Readout } from "../ui.js";
 import { useWindowKey } from "../window-key.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const ShortcutProbe = () => {
   const theme = useTheme();
@@ -77,10 +77,7 @@ const readout = (ctx: Smoke.SmokeContext): string =>
     Option.getOrElse(() => ""),
   );
 
-export const shortcutScenario: PlaygroundScenario = {
-  id: "window-key-shortcut",
-  title: "App-level window shortcut: cmd-k palette and Escape",
-  capability: "workspace",
+export const shortcutScenario: ScenarioBody = {
   view: () => <ShortcutProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

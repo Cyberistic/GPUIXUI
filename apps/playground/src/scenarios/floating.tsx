@@ -28,7 +28,7 @@ import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Body, Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const GAP = 6;
 const COLLISION = 8;
@@ -157,10 +157,7 @@ const bounds = (
   testId: string,
 ): Option.Option<Smoke.Bounds> => Option.fromNullishOr(ctx.host.bounds(testId));
 
-export const floatingScenario: PlaygroundScenario = {
-  id: "floating-placement",
-  title: "Floating layer: side, align, offset and the window-edge snap",
-  capability: "floating",
+export const floatingScenario: ScenarioBody = {
   view: () => <FloatingProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

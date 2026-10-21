@@ -26,7 +26,7 @@ import type { KeyEvent, PublicInstance } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Body, Pressable, Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 /** Every element the modal surface owns; nothing else may hold focus. */
 const MODAL_IDS: ReadonlyArray<string> = [
@@ -274,10 +274,7 @@ const walk = (
     );
   });
 
-export const modalScenario: PlaygroundScenario = {
-  id: "modal-focus-trap",
-  title: "Modal: focus entry, Tab trap, focus return, nested Escape",
-  capability: "modal",
+export const modalScenario: ScenarioBody = {
   view: () => <ModalProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

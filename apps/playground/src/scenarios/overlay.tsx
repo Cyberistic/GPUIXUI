@@ -24,7 +24,7 @@ import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Body, Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const OverlayProbe = () => {
   const theme = useTheme();
@@ -91,10 +91,7 @@ const OverlayProbe = () => {
   );
 };
 
-export const overlayScenario: PlaygroundScenario = {
-  id: "overlay-dialog",
-  title: "Anchored overlay: open, Escape and outside click",
-  capability: "overlay",
+export const overlayScenario: ScenarioBody = {
   view: () => <OverlayProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

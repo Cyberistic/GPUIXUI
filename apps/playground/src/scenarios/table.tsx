@@ -20,7 +20,7 @@ import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Pressable, Readout } from "../ui.js";
 import { nextSize } from "../panels/resize.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const ROWS = 200;
 const STATUS_WIDTH = 100;
@@ -222,10 +222,7 @@ const TableProbe = () => {
 const readout = (ctx: Smoke.SmokeContext, id: string): string =>
   Option.getOrElse(Option.fromNullishOr(ctx.host.text(id)), () => "");
 
-export const tableSelectSortScenario: PlaygroundScenario = {
-  id: "table-select-sort",
-  title: "Table: sort, row selection and scroll",
-  capability: "table",
+export const tableSelectSortScenario: ScenarioBody = {
   view: () => <TableProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
@@ -273,10 +270,7 @@ export const tableSelectSortScenario: PlaygroundScenario = {
     }),
 };
 
-export const tableColumnResizeScenario: PlaygroundScenario = {
-  id: "table-column-resize",
-  title: "Table: column resize by drag",
-  capability: "table",
+export const tableColumnResizeScenario: ScenarioBody = {
   view: () => <TableProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

@@ -22,7 +22,7 @@ import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Pressable, Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const INITIAL = 30;
 const APPEND = 20;
@@ -87,10 +87,7 @@ const paintedExactly = (ctx: Smoke.SmokeContext, label: string): boolean =>
 const readout = (ctx: Smoke.SmokeContext, id: string): string =>
   Option.getOrElse(Option.fromNullishOr(ctx.host.text(id)), () => "");
 
-export const logViewerScenario: PlaygroundScenario = {
-  id: "log-viewer",
-  title: "Log viewer: starts at the tail and follows appends",
-  capability: "log",
+export const logViewerScenario: ScenarioBody = {
   view: () => <LogViewerProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

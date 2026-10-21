@@ -16,7 +16,7 @@ import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Body, Pressable, Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const ROWS = 24;
 
@@ -60,10 +60,7 @@ const ScrollProbe = () => {
   );
 };
 
-export const scrollScenario: PlaygroundScenario = {
-  id: "scroll-container",
-  title: "Scroll: wheel offset, onScroll and scrollIntoView",
-  capability: "scroll",
+export const scrollScenario: ScenarioBody = {
   view: () => <ScrollProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

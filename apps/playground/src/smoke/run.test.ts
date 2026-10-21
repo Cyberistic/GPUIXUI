@@ -13,10 +13,10 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Runtime } from "@gpuixui/testing";
 import {
+  registry as scenarios,
   scenarioProblems,
-  scenarios,
   selectScenarios,
-} from "../scenarios/index.js";
+} from "../scenarios/registry.js";
 import {
   EXIT,
   formatMissing,

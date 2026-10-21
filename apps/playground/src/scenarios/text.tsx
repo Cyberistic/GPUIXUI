@@ -10,7 +10,7 @@
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const TextProbe = () => {
   const theme = useTheme();
@@ -36,10 +36,7 @@ const TextProbe = () => {
   );
 };
 
-export const textScenario: PlaygroundScenario = {
-  id: "text-native",
-  title: "Native text: <text>, <code> and <markdown>",
-  capability: "text",
+export const textScenario: ScenarioBody = {
   view: () => <TextProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

@@ -23,7 +23,7 @@ import * as Str from "effect/String";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const ROWS = 500;
 const ROW_HEIGHT = 32;
@@ -146,10 +146,7 @@ const backgroundColor = (ctx: Smoke.SmokeContext, testId: string): string =>
     Option.getOrElse(() => ""),
   );
 
-export const virtualizedTableScenario: PlaygroundScenario = {
-  id: "virtualized-table",
-  title: "Table inside <virtual-list>: window, click, selection",
-  capability: "table",
+export const virtualizedTableScenario: ScenarioBody = {
   view: () => <VirtualTableProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

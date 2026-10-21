@@ -35,7 +35,7 @@ import { createNativeHost } from "./host.js";
 import { withWindowKeyProvider } from "../window-key.js";
 import type { WindowKeyHandler } from "../window-key.js";
 import { palettes } from "../palettes.js";
-import { scenarios, selectScenarios } from "../scenarios/index.js";
+import { registry, selectScenarios } from "../scenarios/registry.js";
 
 /** The process exit code: 0 passed, 1 failed, 2 unverified. */
 export const EXIT = { passed: 0, failed: 1, unverified: 2 } as const;
@@ -211,7 +211,7 @@ class NativeLoadError extends Schema.TaggedError<NativeLoadError>()(
 ) {}
 
 const hostLabel = (): string =>
-  `gpuix TestRenderer ${process.platform}-${process.arch} @gpuix/native 0.10.0`;
+  `gpuix TestRenderer ${process.platform}-${process.arch} @gpuix/native 0.11.0`;
 
 const viewOf = (
   views: ReadonlyArray<PlaygroundScenario>,
@@ -226,6 +226,7 @@ const viewOf = (
 const mount =
   (
     flags: CliFlags,
+    views: ReadonlyArray<PlaygroundScenario>,
     root: {
       readonly render: (node: ReactNode) => void;
       readonly renderer: { captureScreenshot: (path: string) => void };
@@ -235,7 +236,7 @@ const mount =
   ) =>
   (scenario: Smoke.SmokeScenario): Effect.Effect<void> => {
     const render = Effect.sync(() =>
-      Option.match(viewOf(scenarios, scenario), {
+      Option.match(viewOf(views, scenario), {
         onNone: () => {},
         onSome: (view) =>
           root.render(
@@ -261,7 +262,6 @@ const mount =
 /** The real suite: load the binding, drive the selected scenarios, write the report. */
 export const program = (
   flags: CliFlags,
-  selected: ReadonlyArray<PlaygroundScenario>,
 ): Effect.Effect<
   ExitCode,
   PlatformError.PlatformError,
@@ -279,6 +279,18 @@ export const program = (
           cause,
         }),
     }).pipe(Effect.orDie);
+
+    // The views are imported only after the preflight: `@gpuix/react` loads the
+    // native binding at import time, and `--list` must cost no binding load.
+    const { scenarios } = yield* Effect.tryPromise({
+      try: () => import("../scenarios/index.js"),
+      catch: (cause) =>
+        new NativeLoadError({
+          operation: "import the scenario implementations",
+          cause,
+        }),
+    }).pipe(Effect.orDie);
+    const selected = selectScenarios(scenarios, flags.only);
 
     yield* fileSystem.makeDirectory(flags.artifacts, { recursive: true });
     if (flags.screenshots) {
@@ -318,7 +330,7 @@ export const program = (
       host,
       selected,
       { host: hostLabel(), startedAt },
-      mount(flags, root, path, registerWindowKey),
+      mount(flags, scenarios, root, path, registerWindowKey),
     );
 
     yield* fileSystem.writeFileString(
@@ -347,7 +359,7 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
     const parsed = parseArgs(deps.argv);
 
     if (parsed.flags.list) {
-      yield* Console.log(Arr.join(idsOf(scenarios), "\n"));
+      yield* Console.log(Arr.join(idsOf(registry), "\n"));
       return EXIT.passed;
     }
 
@@ -368,9 +380,9 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
     }
 
     const only = parsed.flags.only;
-    const selected = selectScenarios(scenarios, only);
+    const selected = selectScenarios(registry, only);
     if (Option.isSome(only) && !Arr.isReadonlyArrayNonEmpty(selected)) {
-      yield* Console.error(formatMissing(only.value, idsOf(scenarios)));
+      yield* Console.error(formatMissing(only.value, idsOf(registry)));
       return EXIT.unverified;
     }
 
@@ -380,7 +392,7 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
         arch: process.arch,
         load: deps.load,
       }),
-      runSuite: program(parsed.flags, selected).pipe(
+      runSuite: program(parsed.flags).pipe(
         Effect.provide(NodeFileSystem.layer),
         Effect.provide(NodePath.layer),
         Effect.orDie,

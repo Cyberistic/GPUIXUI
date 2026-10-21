@@ -17,7 +17,7 @@ import { Effect, Option } from "effect";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
 import { SplitPane } from "../panels/split-pane.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 type PaneId = "a" | "b";
 
@@ -169,10 +169,7 @@ const WorkspaceProbe = () => {
   );
 };
 
-export const workspaceScenario: PlaygroundScenario = {
-  id: "workspace-tab-drag",
-  title: "Workspace: tabs, drag between panes and split resize",
-  capability: "workspace",
+export const workspaceScenario: ScenarioBody = {
   view: () => <WorkspaceProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

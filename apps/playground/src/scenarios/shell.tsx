@@ -18,7 +18,7 @@ import * as Option from "effect/Option";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { scenarios } from "./index.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const bounds = (
   ctx: Smoke.SmokeContext,
@@ -51,10 +51,7 @@ const scrollToEnd = (
           : yield* scrollToEnd(ctx, current, remaining - 1);
       });
 
-export const shellNavigationScenario: PlaygroundScenario = {
-  id: "shell-navigation",
-  title: "Playground shell: the scenario list scrolls",
-  capability: "layout",
+export const shellNavigationScenario: ScenarioBody = {
   view: () => <App list={scenarios} />,
   steps: (ctx) =>
     Effect.gen(function* () {

@@ -13,7 +13,7 @@ import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Readout } from "../ui.js";
 import { SplitPane } from "../panels/split-pane.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const PanelProbe = () => {
   const theme = useTheme();
@@ -86,10 +86,7 @@ const panelSize = (ctx: Smoke.SmokeContext): number =>
     Option.getOrElse(() => -1),
   );
 
-export const panelScenario: PlaygroundScenario = {
-  id: "panel-resize",
-  title: "Panel resize: pointer capture and clamping",
-  capability: "panel",
+export const panelScenario: ScenarioBody = {
   view: () => <PanelProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

@@ -1,17 +1,18 @@
 /**
- * The scenario registry — the single source of truth for the sidebar and the
- * smoke runner.
+ * The scenario registry — the join of the pure metadata and the GPUix views.
  *
- * `scenarioProblems` is pure so the integrity check runs on any host: unique,
- * non-empty ids, every declared capability in the union, and every core and
- * Tier 3/4 capability represented.
+ * `registry.ts` owns `id`/`title`/`capability` and imports nothing native, so the
+ * CLI can validate arguments and print ids before the preflight. This module
+ * attaches the one implementation per id; `Record<ScenarioId, ScenarioBody>`
+ * makes a missing or misspelt implementation a compile error, and an extra id
+ * cannot be added without an entry in the registry.
+ *
+ * Import it only after the runtime preflight: the views import `@gpuix/react`,
+ * which loads the native binding.
  */
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
-import * as Str from "effect/String";
-import { Smoke } from "@gpuixui/testing";
-import type { PlaygroundScenario } from "../types.js";
+import type { PlaygroundScenario, ScenarioBody } from "../types.js";
+import { registry, type ScenarioId } from "./registry.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { inputScenario } from "./input.js";
@@ -34,93 +35,32 @@ import {
   themeTypeAndShadowScenario,
 } from "./theme.js";
 
-/** The capabilities Phase B must prove in the real runtime. */
-export const CORE_CAPABILITIES = [
-  "layout",
-  "text",
-  "input",
-  "focus",
-  "overlay",
-  "modal",
-  "floating",
-  "scroll",
-  "panel",
-  "virtual-list",
-  "theme",
-] as const;
-
-/** The Tier 3/4 capabilities the feasibility probes cover (plans `130`, `152`–`154`). */
-export const PROBE_CAPABILITIES = [
-  "table",
-  "tree",
-  "log",
-  "workspace",
-] as const;
-
-/** One view per capability, in the order the suite runs them. */
-export const scenarios: ReadonlyArray<PlaygroundScenario> = [
-  layoutScenario,
-  textScenario,
-  inputScenario,
-  focusScenario,
-  overlayScenario,
-  modalScenario,
-  floatingScenario,
-  scrollScenario,
-  panelScenario,
-  virtualListScenario,
-  tableSelectSortScenario,
-  tableColumnResizeScenario,
-  workspaceScenario,
-  shortcutScenario,
-  themeColorRolesScenario,
-  themeTypeAndShadowScenario,
-  shellNavigationScenario,
-  virtualizedTableScenario,
-  treeScenario,
-  logViewerScenario,
-];
-
-const isCapability = Schema.is(Smoke.Capability);
-
-/**
- * Every integrity problem in `list`. An empty array means valid.
- *
- * The bug it guards: a scenario added with a duplicate or empty id, an unknown
- * capability, or a required capability left uncovered would make the smoke
- * report claim coverage it does not have.
- */
-export const scenarioProblems = (
-  list: ReadonlyArray<PlaygroundScenario>,
-): ReadonlyArray<string> => {
-  const ids = Arr.map(list, (scenario) => scenario.id);
-  const capabilities = Arr.map(list, (scenario) => scenario.capability);
-  const required = Arr.appendAll(
-    [...CORE_CAPABILITIES],
-    [...PROBE_CAPABILITIES],
-  );
-
-  return Arr.flatten([
-    Arr.filter(ids, Str.isEmpty).map(() => "a scenario has an empty id"),
-    Arr.length(ids) === Arr.length(Arr.dedupe(ids))
-      ? []
-      : ["scenario ids are not unique"],
-    Arr.filter(list, (scenario) => !isCapability(scenario.capability)).map(
-      (scenario) => `unknown capability "${scenario.capability}"`,
-    ),
-    Arr.filter(
-      required,
-      (capability) => !Arr.contains(capabilities, capability),
-    ).map((capability) => `no scenario covers "${capability}"`),
-  ]);
+/** One implementation per registered scenario id. */
+export const implementations: Record<ScenarioId, ScenarioBody> = {
+  "layout-flex": layoutScenario,
+  "text-native": textScenario,
+  "input-edit": inputScenario,
+  "focus-traversal": focusScenario,
+  "overlay-dialog": overlayScenario,
+  "modal-focus-trap": modalScenario,
+  "floating-placement": floatingScenario,
+  "scroll-container": scrollScenario,
+  "panel-resize": panelScenario,
+  "virtual-list-window": virtualListScenario,
+  "table-select-sort": tableSelectSortScenario,
+  "table-column-resize": tableColumnResizeScenario,
+  "workspace-tab-drag": workspaceScenario,
+  "window-key-shortcut": shortcutScenario,
+  "theme-color-roles": themeColorRolesScenario,
+  "theme-type-and-shadow": themeTypeAndShadowScenario,
+  "shell-navigation": shellNavigationScenario,
+  "virtualized-table": virtualizedTableScenario,
+  "tree-view": treeScenario,
+  "log-viewer": logViewerScenario,
 };
 
-/** The scenarios a `--only <id>` run selected, or all of them when none. */
-export const selectScenarios = (
-  list: ReadonlyArray<PlaygroundScenario>,
-  only: Option.Option<string>,
-): ReadonlyArray<PlaygroundScenario> =>
-  Option.match(only, {
-    onNone: () => list,
-    onSome: (id) => Arr.filter(list, (scenario) => scenario.id === id),
-  });
+/** The full scenarios, in registry order. */
+export const scenarios: ReadonlyArray<PlaygroundScenario> = Arr.map(
+  registry,
+  (meta) => ({ ...meta, ...implementations[meta.id] }),
+);

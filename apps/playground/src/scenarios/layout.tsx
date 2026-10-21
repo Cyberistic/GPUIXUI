@@ -9,7 +9,7 @@
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const LayoutProbe = () => {
   const theme = useTheme();
@@ -52,10 +52,7 @@ const LayoutProbe = () => {
   );
 };
 
-export const layoutScenario: PlaygroundScenario = {
-  id: "layout-flex",
-  title: "Flex layout, gaps and absolute positioning",
-  capability: "layout",
+export const layoutScenario: ScenarioBody = {
   view: () => <LayoutProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

@@ -14,7 +14,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const ROWS = 5000;
 
@@ -70,10 +70,7 @@ const readIndex = (text: Option.Option<string>): number =>
     Option.getOrElse(() => -1),
   );
 
-export const virtualListScenario: PlaygroundScenario = {
-  id: "virtual-list-window",
-  title: "Virtual list builds only a window of rows",
-  capability: "virtual-list",
+export const virtualListScenario: ScenarioBody = {
   view: () => <VirtualListProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

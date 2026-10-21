@@ -27,7 +27,7 @@ import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
 import type { Smoke } from "@gpuixui/testing";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const FocusProbe = () => {
   const theme = useTheme();
@@ -67,10 +67,7 @@ const readout = (ctx: Smoke.SmokeContext): string =>
     Option.getOrElse(() => ""),
   );
 
-export const focusScenario: PlaygroundScenario = {
-  id: "focus-traversal",
-  title: "Focus: autoFocus, click-to-focus and native traversal",
-  capability: "focus",
+export const focusScenario: ScenarioBody = {
   view: () => <FocusProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {

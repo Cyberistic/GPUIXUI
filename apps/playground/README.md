@@ -11,9 +11,12 @@ app, three jobs:
 3. **The evidence source for the docs** — scenario ids, readouts and screenshots
    are what `apps/docs` links to instead of faking a native preview.
 
-The **registry is the single source of truth**: `src/scenarios/index.ts` is both
-the sidebar and the smoke list, so a scenario cannot exist in one and not the
-other. Each scenario is one capability, one view, one `steps` effect: the eleven
+The **registry is the single source of truth**: `src/scenarios/registry.ts`
+owns each id, title and capability and imports nothing native, so `--list` and
+the argument guard run on a host with no binding; `src/scenarios/index.ts` owns
+the one `view`/`steps` implementation per id and is imported only after the
+preflight. `Record<ScenarioId, ScenarioBody>` makes a missing implementation a
+compile error. Each scenario is one capability, one view, one `steps` effect: the eleven
 core capabilities (including the theme gallery, the modal contract and floating
 placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,

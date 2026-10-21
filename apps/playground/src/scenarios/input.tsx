@@ -11,7 +11,7 @@ import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
-import type { PlaygroundScenario } from "../types.js";
+import type { ScenarioBody } from "../types.js";
 
 const InputProbe = () => {
   const theme = useTheme();
@@ -53,10 +53,7 @@ const InputProbe = () => {
   );
 };
 
-export const inputScenario: PlaygroundScenario = {
-  id: "input-edit",
-  title: "Input editing, onChange and onSubmit",
-  capability: "input",
+export const inputScenario: ScenarioBody = {
   view: () => <InputProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
