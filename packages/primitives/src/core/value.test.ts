@@ -75,6 +75,18 @@ describe("clampValue", () => {
   it("snaps a quarter step", () => {
     expect(clampValue(0.3, { min: 0, max: 1, step: 0.25 })).toBe(0.25);
   });
+
+  it("keeps the maximum reachable when the step does not divide the span", () => {
+    // The bug guarded: with min 0, max 10 and step 3 the snap made the maximum
+    // unreachable — the thumb stopped at 9 and the end of the track was a place
+    // the control could not be taken to.
+    const range = { min: 0, max: 10, step: 3 };
+    expect(clampValue(10, range)).toBe(10);
+    expect(clampValue(9.5, range)).toBe(9);
+    expect(stepValue(9, range, 1)).toBe(10);
+    expect(fractionValue(1, range)).toBe(10);
+    expect(valueFraction(10, range)).toBe(1);
+  });
 });
 
 describe("valueFraction / fractionValue", () => {

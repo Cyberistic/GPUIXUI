@@ -175,6 +175,27 @@ it("moves by a step, a page and to the ends with the keyboard", async () => {
   expect(announced(runtime, "Volume")).toBe("100");
 });
 
+it("reaches its maximum when the step does not divide the span", async () => {
+  // The bug guarded: the snap made the maximum unreachable, so the thumb
+  // stopped at 9 and the end of the track was a place the control could not be
+  // taken to. Both the keyboard and a press at the end must land on 10.
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      min={0}
+      max={10}
+      step={3}
+      defaultValue={9}
+    />,
+  );
+  runtime.keyDown("s", "right");
+  expect(announced(runtime, "Volume")).toBe("10");
+  const box = boundsOf(runtime, "s");
+  runtime.clickAt(box.x + box.width - 1, box.y + box.height / 2);
+  expect(announced(runtime, "Volume")).toBe("10");
+});
+
 it("refuses a press and a key while disabled, and stays out of the tab order", async () => {
   const { seen, onChange } = values();
   const runtime = await mount(

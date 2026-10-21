@@ -61,12 +61,19 @@ const cleanStep = (value: number): number =>
  *
  * A value that is not a number reads as `min`: an unknown position must never
  * look like a deliberate one.
+ *
+ * **The ends are stops.** A step that does not divide the span must not make
+ * the maximum unreachable: with `min: 0, max: 10, step: 3` the steps are
+ * 0, 3, 6, 9 — and 10 is still a place the thumb can reach, because a
+ * control whose maximum cannot be selected is a control with a lie in its
+ * range. The same holds for the minimum, which the snap already keeps.
  */
 export const clampValue = (value: number, range: ValueRange): number => {
   const { min, max, step } = normalizeRange(range);
   if (!Number.isFinite(value)) return min;
   const clamped = Math.min(max, Math.max(min, value));
   if (step === 0) return clamped;
+  if (clamped >= max) return max;
   const snapped = min + Math.round((clamped - min) / step) * step;
   return Math.min(max, Math.max(min, cleanStep(snapped)));
 };

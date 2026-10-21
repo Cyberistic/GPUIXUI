@@ -71,6 +71,11 @@ const theme = useTheme();
 Out-of-range values are clamped, and a value between steps snaps to the step
 measured from `min`. `NaN` reads as `min`, never as a full track.
 
+**The ends are stops.** A step that does not divide the span must not make the
+maximum unreachable: with `min: 0`, `max: 10` and `step: 3` the steps are 0, 3,
+6, 9 — and 10 is still a place the thumb can go, by key or by press. A range
+whose maximum cannot be selected is a range with a lie in it.
+
 ### Parts
 
 | Part | Props | Paints |
@@ -135,7 +140,8 @@ keeps updating while the pointer is over the track.
 ## Verification
 
 - `src/core/value.test.ts` — clamping, snapping (no binary-float tails),
-  fractions, the key contract, the pointer mapping, the crossing rule.
+  fractions, the key contract, the pointer mapping, the crossing rule, and the
+  maximum staying reachable when the step does not divide the span.
 - `src/core/style.test.ts` — the inset/negative-margin geometry, the hit-test
   children, the fill fraction, the ring.
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint;
@@ -144,7 +150,8 @@ keeps updating while the pointer is over the track.
   inside a thumb; the second range segment's width.
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
-  by Tab. Measured 2026-10-17; plan 053 §11 records the probes.
+  by Tab, and a `max: 10` / `step: 3` slider still reaches 10 by key and by
+  press. Measured 2026-10-17; plan 053 §11 records the probes.
 
 ```sh
 nub run --filter @gpuixui/primitives test

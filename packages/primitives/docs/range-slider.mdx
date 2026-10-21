@@ -32,6 +32,10 @@ The value is always `[start, end]` in that order. A press picks the nearer end;
 a press beyond both thumbs picks the end it passed. The ends can touch but never
 cross.
 
+The ends of the **range** are stops as well: a step that does not divide the
+span (`min: 0`, `max: 10`, `step: 3`) leaves 10 reachable, so the last band
+cannot be selected away.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -105,7 +109,8 @@ values are painted as two fills; the second fill is the length between the ends.
 ## Verification
 
 - `src/core/value.test.ts` — span ordering, the crossing guard, the nearest-end
-  rule (including both thumbs at one value).
+  rule (including both thumbs at one value), and the maximum staying reachable
+  when the step does not divide the span.
 - `src/components/Slider.test.tsx` — two named sliders, per-thumb keys, the
   crossing result, per-thumb rings, disabled tab stops; the second segment's
   width from the parts.

@@ -899,7 +899,23 @@ Both are specified in ; each fix starts with a plan under .
   - `[x]` Combobox create-new (salvage 328) — a single-select `Create "…"` row, offered only when the query matches no option; `onCreate` receives the trimmed query, the popup closes and returns focus, and the selection stays the caller's (no ghost value). 3 native tests + 3 logic tests, both-direction measured.
   - `[x]` NavigationMenu hover-open (salvage 325) — the pointer policy opens after `openDelay`, switches panels across the row, keeps the panel across the 4 px trigger-to-panel gap and closes after leaving both; an explicit press/key cancels a pending hover open, and the panel ignores a press on its own triggers so a press can toggle an open panel shut. 7 new native tests (17 in the suite), both-direction measured for the toggle fix.
   - `[x]` Public subpath load checks (salvage 336) — `src/exports.test.ts` resolves every `@gpuixui/components/...` specifier a docs page shows through the package's real `exports` map, loads the file and asserts each imported name is exported; it caught `docs/field.mdx`'s `validation/logic` import resolving to a `.tsx` that never existed, fixed with an exact `./validation/logic` export
-`[ ]` `packages/primitives`: Tier 1 behaviour truth — activation once/Space-on-release, disabled-after-focus, caller handler composition, NumberField controlled sync and caret keys, Progress tone while indeterminate, Slider maximum as a stop, switch thumb motion, native field reach (salvage 325, 326, 328, 329, 331, 332, 334, 337, 338)
+`[~]` `packages/primitives`: Tier 1 behaviour truth — one defect per line below,
+each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
+334, 337, 338)
+  - `[x]` Slider maximum as a stop — the snap stranded a `max: 10` / `step: 3`
+    slider at 9, so the end of the track was a place the control could not go;
+    the range's ends are stops now (`core/value.ts`), proven by a unit case and
+    a native key-and-press test
+  - `[ ]` Progress tone while indeterminate, and the timer a determinate bar
+    runs for nothing
+  - `[ ]` NumberField controlled sync (an external value change, a value that
+    arrives after mount) and the caret keys it advertises
+  - `[ ]` Activation once / Space on release across the remaining parts
+  - `[ ]` Disabled-after-focus: a control disabled while focused keeps acting
+    and keeps its ring
+  - `[ ]` Caller handler composition across the interactive parts
+  - `[ ]` The switch thumb's motion
+  - `[ ]` The native field's hint and selection reach
 `[ ]` `apps/docs`: docs truth — stated native-test counts and the complete public type index (salvage 310, 324, 326, 330, 333, 335; the example registry page and the copy-and-own platform example contract have landed)
 `[ ]` `packages/tokens`: platform recipe styles for Windows XP (Luna) and Windows 7 (Aero), plus dark editions, and the authored example that finishes its accent family (salvage 311, 328, 329, 330, 331)
 `[x]` `packages/tokens`: `createTheme` starts from the requested contrast variant (`createTheme({ mode, contrast })`) instead of silently ignoring it, every group merge inherits an explicit `undefined` instead of erasing a role, and each platform style declares the `contrast` variant its palette is designed for — `platformTheme` applies a palette only where that matches the base's. `theme.test.ts` (contrast route, the `undefined` rule per group, one brand over both palettes via `high-contrast.example.ts`) and `platforms.test.ts` (the declaration, no `undefined` role) fail in the corrected direction, each measured; docs in `docs/tokens.md` §Theme API and §Platform styles, `docs/design-system.md` §5, the package README and the two inventory rows (salvage 301, 304, 321, 323)
