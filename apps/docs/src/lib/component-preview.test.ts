@@ -32,6 +32,24 @@ const mounts = (): ReadonlyArray<readonly [string, string]> =>
     ),
   );
 
+const root = new URL("../../../../", import.meta.url);
+
+const read = (path: string): string =>
+  readFileSync(new URL(path, root), "utf8");
+
+/** The curated pages: everything in `content/docs/components/` but the index. */
+const curated = (): ReadonlyArray<{
+  readonly slug: string;
+  readonly title: string;
+}> =>
+  readdirSync(new URL("apps/docs/content/docs/components/", root))
+    .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+    .map((name) => {
+      const body = read(`apps/docs/content/docs/components/${name}`);
+      const title = /^title:\s*(.+)$/m.exec(body)?.[1]?.trim();
+      return { slug: name.replace(/\.mdx$/, ""), title: title ?? "" };
+    });
+
 describe("the component previews", () => {
   it("mount at least one demo, so the scan cannot pass on an empty set", () => {
     expect(mounts().length).toBeGreaterThanOrEqual(Object.keys(demos).length);
@@ -59,5 +77,37 @@ describe("the component previews", () => {
       .map(([key]) => key);
 
     expect(empty).toEqual([]);
+  });
+
+  it("announce every curated page where a reader learns previews exist", () => {
+    // A curated page a reader never hears about is a preview nobody opens. The
+    // two places that say which pages carry one — `/docs/theming`'s switch
+    // section and the strategy's "Curated today" line — are held to the folder,
+    // so a sixth page cannot land unannounced.
+    const pages = curated();
+    const theming = read("apps/docs/content/docs/theming.mdx");
+    const switchSection = theming.slice(
+      theming.indexOf("### The switch on this site"),
+      theming.indexOf("### The look picker"),
+    );
+    const strategy = read("docs/preview-strategy.md");
+    const announced = new Set(
+      [
+        ...switchSection.matchAll(/\]\(\/docs\/components\/([a-z0-9-]+)\)/g),
+      ].flatMap((match) => (match[1] === undefined ? [] : [match[1]])),
+    );
+    const list = /Curated today: ([^.]+)\./.exec(strategy)?.[1] ?? "";
+
+    expect(pages.length).toBeGreaterThanOrEqual(5);
+    expect(
+      pages
+        .filter((page) => !announced.has(page.slug))
+        .map((page) => page.slug),
+    ).toEqual([]);
+    expect(
+      pages
+        .filter((page) => page.title.length === 0 || !list.includes(page.title))
+        .map((page) => page.slug),
+    ).toEqual([]);
   });
 });
