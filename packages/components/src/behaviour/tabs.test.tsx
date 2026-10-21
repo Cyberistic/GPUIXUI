@@ -112,6 +112,23 @@ const VerticalSettings = ({
 );
 
 describe("Tabs", () => {
+  it("moves from the selection when no trigger reported focus", () => {
+    const tabs = renderComponent(<Settings />);
+
+    // A window's Tab traversal focuses a trigger without delivering onFocus, so
+    // the list has no recorded row. A key from the rail itself must still move
+    // from the selection rather than re-anchor at the first enabled tab.
+    tabs.renderer.nativeSimulateKeyDown(
+      tabs.renderer.findByTestId("list")?.id ?? -1,
+      "right",
+    );
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
+    expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
+
+    tabs.unmount();
+  });
+
   it("shows only the panel of the clicked tab", () => {
     const tabs = renderComponent(<Settings />);
 

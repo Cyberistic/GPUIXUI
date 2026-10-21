@@ -39,6 +39,11 @@ Arrow keys move focus *and* the selection in `automatic` mode; in `manual` mode
 they only move focus, and Enter/Space selects. Disabled triggers are skipped by
 every key and cannot be clicked.
 
+An arrow move starts from the trigger that sent the key, then the row `onFocus`
+recorded, then the **selected** tab. A window's Tab traversal focuses a trigger
+without delivering `onFocus` (measured on 0.11.0), so the selection fallback is
+what keeps the first arrow moving forward instead of re-anchoring at the start.
+
 ## Orientation
 
 `orientation` defaults to `"horizontal"`. A vertical set puts the rail in a
@@ -137,7 +142,8 @@ after the trigger's own rules.
 `src/behaviour/tabs.test.tsx` runs in the real GPUix renderer: click switching,
 the shared selected surface's theme role in both themes, its painted box against
 the selected trigger's, its move with the selection, its placement on a vertical
-rail, arrow wrap with a disabled tab, manual activation waiting for Enter,
+rail, arrow wrap with a disabled tab, a move anchored on the selection when no
+focus event arrived, manual activation waiting for Enter,
 Home/End, the controlled contract, a panel whose value matches nothing, a caller
 `ref`, a caller `onBlur` composed with the focus ring, and four vertical-axis
 cases — Down/Up movement with wrap, Left/Right ignored, the row/column layout,

@@ -3,9 +3,12 @@
  *
  * The list owns the keys — a key event fired on a focused trigger bubbles to the
  * list, the same measured behaviour that lets `List` own its rows — and the
- * trigger owns its own focus. Index arithmetic is `internal/collection.ts`, so
- * disabled tabs are skipped and wrap-around agrees with every other collection
- * in the package.
+ * trigger owns its own focus. A window focuses a trigger on a Tab traversal
+ * **without delivering `onFocus`** (measured on 0.11.0), so an arrow move anchors
+ * on the trigger that sent the key, then the selection; recorded focus alone
+ * would re-anchor at the first enabled tab. Index arithmetic is
+ * `internal/collection.ts`, so disabled tabs are skipped and wrap-around agrees
+ * with every other collection in the package.
  *
  * The selected surface is **one** element for the whole set (`tabs-indicator`),
  * not a background on each trigger. It is measured rather than assumed: each
@@ -74,7 +77,11 @@ import {
 } from "./internal/parts.js";
 import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
 import { indicatorBox, measuredBox, type TabBox } from "./tabs/indicator.js";
-import { selectsOnFocus, type TabsActivation } from "./tabs/logic.js";
+import {
+  moveOrigin,
+  selectsOnFocus,
+  type TabsActivation,
+} from "./tabs/logic.js";
 
 /** The two axes a tab list can run along. */
 export type TabsOrientation = "horizontal" | "vertical";
@@ -105,7 +112,10 @@ interface TabsContextValue {
   readonly select: (value: string) => void;
   readonly noteFocus: (value: string) => void;
   readonly focusRow: (row: TabRow, select: boolean) => void;
-  readonly moveBy: (delta: 1 | -1) => void;
+  readonly moveBy: (
+    delta: 1 | -1,
+    keyOrigin?: Option.Option<string>,
+  ) => void;
   readonly jumpTo: (edge: "first" | "last") => void;
   readonly selectActive: () => void;
 }
@@ -255,11 +265,15 @@ export const Tabs = ({
   );
 
   const moveBy = useCallback(
-    (delta: 1 | -1): void => {
+    (delta: 1 | -1, keyOrigin: Option.Option<string> = Option.none()): void => {
       pipe(
         rowAt(
           rows,
-          nextEnabled(collection(rows), Option.flatMap(active, indexOf), delta),
+          nextEnabled(
+            collection(rows),
+            moveOrigin({ keyOrigin, active, selected }, indexOf),
+            delta,
+          ),
         ),
         Option.match({
           onNone: () => undefined,
@@ -267,7 +281,7 @@ export const Tabs = ({
         }),
       );
     },
-    [activation, active, focusRow, indexOf, rows],
+    [activation, active, focusRow, indexOf, rows, selected],
   );
 
   const jumpTo = useCallback(
@@ -410,7 +424,7 @@ export const TabsList = ({
   ...rest
 }: TabsListProps) => {
   const theme = useTheme();
-  const { orientation, moveBy, jumpTo, selectActive, selected, boxes } =
+  const { orientation, moveBy, jumpTo, selectActive, selected, boxes, rows } =
     useTabsContext();
   const [origin, setOrigin] = useState<Option.Option<TabBox>>(Option.none());
   assertParts(tabsList, children);
@@ -428,6 +442,13 @@ export const TabsList = ({
           ? Option.some(-1)
           : Option.none();
 
+  /** The trigger whose key reached the list, when a trigger fired it. */
+  const originOf = (event: EventPayload): Option.Option<string> =>
+    pipe(
+      Arr.findFirst(rows, (row) => row.id === event.elementId),
+      Option.map((row) => row.value),
+    );
+
   const handleKeyDown = (event: EventPayload): void => {
     Match.value(event).pipe(
       Match.when(isFirst, () => jumpTo("first")),
@@ -436,7 +457,10 @@ export const TabsList = ({
       Match.orElse((value) =>
         pipe(
           direction(value),
-          Option.match({ onNone: () => undefined, onSome: moveBy }),
+          Option.match({
+            onNone: () => undefined,
+            onSome: (delta) => moveBy(delta, originOf(value)),
+          }),
         ),
       ),
     );
