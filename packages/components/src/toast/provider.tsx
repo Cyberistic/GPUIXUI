@@ -109,7 +109,25 @@ export const ToastProvider = ({
     const fiber = runtime.runFork(
       Effect.flatMap(ToastStore, (store) =>
         Stream.runForEach(store.changes, (next) =>
-          Effect.sync(() => setToasts(next)),
+          Effect.sync(() => {
+            setToasts(next);
+            // The queue is the only proof a toast left: an auto-dismissal never
+            // calls dismiss. Pruning where the new queue arrives cannot outrun a
+            // push's registration the way a render-scoped effect could — a
+            // toast pushed from a mount effect arrived before this provider's
+            // own effects and lost its action handler (plan 838).
+            const live = HashSet.fromIterable(
+              Arr.map(next, (toast) => toast.id),
+            );
+            setActions((current) => {
+              const pruned = HashMap.filter(current, (_, id) =>
+                HashSet.has(live, id),
+              );
+              return HashMap.size(pruned) === HashMap.size(current)
+                ? current
+                : pruned;
+            });
+          }),
         ),
       ),
     );
@@ -136,17 +154,6 @@ export const ToastProvider = ({
       runtime.runFork(Fiber.interrupt(fiber));
     };
   }, [runtime]);
-
-  // An auto-dismissed action toast leaves the queue without a dismiss() call, so
-  // the handler map is pruned from the queue itself. Returning the same map when
-  // nothing was removed keeps React from re-rendering.
-  useEffect(() => {
-    const live = HashSet.fromIterable(Arr.map(toasts, (toast) => toast.id));
-    setActions((current) => {
-      const next = HashMap.filter(current, (_, id) => HashSet.has(live, id));
-      return HashMap.size(next) === HashMap.size(current) ? current : next;
-    });
-  }, [toasts]);
 
   const push = useCallback(
     (draft: ToastDraft, options?: ToastPushOptions) => {

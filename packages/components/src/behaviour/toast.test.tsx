@@ -27,6 +27,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { Duration } from "effect";
+import { useEffect } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { nodesWithRole } from "../internal/a11y.js";
@@ -36,6 +37,8 @@ import {
   clickCentreOf,
   finishMotion,
   hoverCentreOf,
+  isShown,
+  until,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -195,6 +198,52 @@ const progressWidth = (root: ComponentTestRoot): number => {
   }
   return width;
 };
+
+/** A toast pushed from a mount effect: the provider's own effects run later. */
+const MountPush = ({ onAction }: { readonly onAction: () => void }) => {
+  const toast = useToast();
+  useEffect(() => {
+    toast.push(
+      { title: "Restored", tone: "success", action: { label: "Undo" } },
+      { onAction },
+    );
+  }, []);
+  return null;
+};
+
+/** A page that pushes one action toast from a mount effect. */
+const MountPushHarness = ({ onAction }: { readonly onAction: () => void }) => (
+  <div style={{ width: 1200, height: 760 }}>
+    <ToastProvider>
+      <ToastViewport />
+      <MountPush onAction={onAction} />
+    </ToastProvider>
+  </div>
+);
+
+/** Reports whether the queue still holds toast 1's action handler. */
+const ActionProbe = () => {
+  const toast = useToast();
+  return (
+    <text testId="has-action">
+      {Option.isSome(toast.actionFor("1")) ? "yes" : "no"}
+    </text>
+  );
+};
+
+const ActionProbeHarness = ({
+  onAction,
+}: {
+  readonly onAction: () => void;
+}) => (
+  <div style={{ width: 1200, height: 760 }}>
+    <ToastProvider>
+      <Controls onElsewhere={() => undefined} onAction={onAction} />
+      <ToastViewport />
+      <ActionProbe />
+    </ToastProvider>
+  </div>
+);
 
 describe("Toast", () => {
   it("exposes a pushed toast's message as the status region", async () => {
@@ -834,5 +883,39 @@ describe("Toast", () => {
         "flex-start",
       ],
     ]);
+  });
+  it("keeps the action of a toast pushed while the provider mounts", async () => {
+    // Measured at `HEAD` before plan 838: the card painted "Restored" with no
+    // control at all, because the provider's render-scoped prune ran after the
+    // mount effect registered the handler and deleted it.
+    const onAction = vi.fn();
+    const page = renderComponent(<MountPushHarness onAction={onAction} />);
+    await until(() => isShown(page, "toast-1"));
+    expect(page.renderer.findByTestId("toast-1-action")).toBeDefined();
+
+    clickCentreOf(page, "toast-1-action");
+    await settle();
+    finishExit(page);
+
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(isShown(page, "toast-1")).toBe(false);
+
+    page.unmount();
+  });
+
+  it("forgets a handler when its card leaves the queue", async () => {
+    const page = renderComponent(
+      <ActionProbeHarness onAction={() => undefined} />,
+    );
+    clickCentreOf(page, "push-action");
+    await settle();
+    expect(page.renderer.getAllText()).toContain("yes");
+
+    clickCentreOf(page, "dismiss-all");
+    await until(() => !page.renderer.getAllText().includes("yes"));
+
+    expect(page.renderer.getAllText()).toContain("no");
+
+    page.unmount();
   });
 });
