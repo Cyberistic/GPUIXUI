@@ -258,7 +258,10 @@ canonical link. The canonical drops the `?platform=` and `?look=` switches, so
 the variants are one page to a crawler and shareable links to a reader.
 `src/lib/page-meta.ts` builds it; `docs-view.tsx` returns the page's title and
 description from the loader, so both collections — the site's pages and the
-package's — get real metadata without a copy.
+package's — get real metadata without a copy. The landing page is a route rather
+than a collection document, so it contributes its own `landingMeta` (title,
+description, Open Graph, Twitter card and the absolute URL with the same
+no-double-slash rule) from the same module.
 
 `src/lib/site.ts` holds the one origin (`https://gpuixui.sudokw.com`), and
 `site.test.ts` holds it to `DOCS_DOMAIN` in the deploy stack.

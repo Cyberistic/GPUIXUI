@@ -1,6 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { docsMetadata, pageTitle } from "./page-meta";
+import {
+  docsMetadata,
+  landingDescription,
+  landingMeta,
+  landingTitle,
+  pageTitle,
+} from "./page-meta";
 import { absoluteUrl, siteOrigin } from "./site";
 import { appName } from "./shared";
 
@@ -16,16 +22,25 @@ import { appName } from "./shared";
  * the Start build; the text is what mounts it.
  */
 
-type Head = ReturnType<typeof docsMetadata>;
+type Head = ReturnType<typeof docsMetadata> | ReturnType<typeof landingMeta>;
 
 const head = (path: string, title: string, description?: string): Head =>
   docsMetadata({ url: path, title, description });
+
+const read = (name: string): string =>
+  readFileSync(new URL(`../routes/${name}`, import.meta.url), "utf8");
 
 const named = (result: Head, name: string) =>
   result.meta.find((tag) => "name" in tag && tag.name === name);
 
 const property = (result: Head, name: string) =>
   result.meta.find((tag) => "property" in tag && tag.property === name);
+
+const contentOf = (result: Head, name: string): string | undefined => {
+  const tag = named(result, name);
+
+  return tag && "content" in tag ? tag.content : undefined;
+};
 
 const descriptionOf = (result: Head): string => {
   const tag = named(result, "description");
@@ -84,9 +99,6 @@ describe("a docs page's head", () => {
   });
 
   it("is mounted by every docs route and by the landing page", () => {
-    const read = (name: string): string =>
-      readFileSync(new URL(`../routes/${name}`, import.meta.url), "utf8");
-
     const docsRoutes = [read("docs/index.tsx"), read("docs/$.tsx")];
 
     expect(
@@ -96,7 +108,7 @@ describe("a docs page's head", () => {
           !module.includes("loaderData ??"),
       ),
     ).toEqual([]);
-    expect(read("index.tsx")).toContain('absoluteUrl("/")');
+    expect(read("index.tsx")).toContain("landingMeta()");
 
     // The loader's `path` is the file a "Copy page" reads; the canonical URL is
     // the page's `url`. Passing the file path shipped
@@ -107,5 +119,28 @@ describe("a docs page's head", () => {
     );
     expect(view).toContain("url: site.url");
     expect(view).toContain("url: packaged.url");
+  });
+});
+
+describe("the landing page's head", () => {
+  const result = landingMeta();
+
+  it("names and describes the front door for a share card", () => {
+    // The landing is a route, not a collection document, so it skipped
+    // `docsMetadata` entirely: a shared link showed a title and no description.
+    expect(result.meta[0]).toEqual({ title: landingTitle });
+    expect(contentOf(result, "description")).toBe(landingDescription);
+    expect(contentOf(result, "twitter:card")).toBe("summary");
+    expect(property(result, "og:title")?.content).toBe(landingTitle);
+    expect(property(result, "og:description")?.content).toBe(
+      landingDescription,
+    );
+  });
+
+  it("publishes its absolute URL without a doubled slash", () => {
+    const url = `${siteOrigin}/`;
+
+    expect(canonicalOf(result)).toBe(url);
+    expect(property(result, "og:url")?.content).toBe(url);
   });
 });

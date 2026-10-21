@@ -27,6 +27,41 @@ const fallbackDescription = `Documentation for ${appName}, the native UI compone
 export const pageTitle = (title: string): string => `${title} · ${appName}`;
 
 /**
+ * The landing page's document metadata.
+ *
+ * The landing is a route, not a collection document, so it never went through
+ * `docsMetadata` — and a link to the site's front door shared without an
+ * `og:description` or a canonical URL. It lives here rather than in the route
+ * so the guard can read it: the route module imports `@/` components, which a
+ * unit test cannot load.
+ */
+export const landingTitle = "GPUIxUI — one library, three native looks";
+
+/** What the landing page tells a search engine and a share card. */
+export const landingDescription =
+  "GPUIxUI is a native UI component library for GPUix + React — one component set that looks at home on macOS, Windows 11 and Linux.";
+
+export const landingMeta = () => {
+  const url = absoluteUrl("/");
+
+  return {
+    meta: [
+      { title: landingTitle },
+      { name: "description", content: landingDescription },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: appName },
+      { property: "og:title", content: landingTitle },
+      { property: "og:description", content: landingDescription },
+      { property: "og:url", content: url },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: landingTitle },
+      { name: "twitter:description", content: landingDescription },
+    ],
+    links: [{ rel: "canonical", href: url }],
+  };
+};
+
+/**
  * The `head` contribution of a docs page.
  *
  * A canonical link is the page's own absolute URL: the platform switch is a
