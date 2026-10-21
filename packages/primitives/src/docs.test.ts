@@ -152,6 +152,27 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("records the tooltip's measured keyboard limit", () => {
+    // Measured in a real window by the playground's `tooltip-lifecycle` probe: a
+    // Tab traversal focuses the trigger but never runs React's `onFocus`, so the
+    // GPUix tooltip stays closed. The page claimed the opposite, so it is held to
+    // the measurement instead of to the `TestRenderer`'s behaviour.
+    const source = read("tooltip.mdx");
+    const keyboard = Option.getOrElse(bodyOf(source, "Keyboard"), () => "");
+    const limitations = Option.getOrElse(
+      bodyOf(source, "Limitations"),
+      () => "",
+    );
+
+    expect({
+      keyboard: keyboard.includes("does not open it in a real window"),
+      limitation: limitations.includes(
+        "only open path the runtime's wiring leaves",
+      ),
+      evidence: keyboard.includes("tooltip-lifecycle"),
+    }).toEqual({ keyboard: true, limitation: true, evidence: true });
+  });
+
   it("is indexed by the package's own page table", () => {
     const index = read("README.md");
     const linked = Arr.filterMap(

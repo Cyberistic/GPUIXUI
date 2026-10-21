@@ -41,8 +41,15 @@ trigger also carries the tip as its `aria-description`.
 
 ## Keyboard
 
-Owned by GPUix: the tip opens when its trigger takes keyboard focus, and Escape
-dismisses it. A click dismisses it.
+Owned by GPUix: the tip opens when its trigger receives a focus event, and
+Escape dismisses it. A click dismisses it.
+
+**A `Tab` traversal does not open it in a real window** — measured: the traversal
+focuses the trigger (the accessibility tree names it) but never runs the
+wrapper's focus handler, and GPUix's Tooltip opens from React's `onFocus`. Hover
+opens the tip; Escape and a click dismiss it as documented. The wrapper cannot
+compensate, because a tooltip trigger carries no key event to read the focus
+from. Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 
 ## Accessibility
 
@@ -65,6 +72,9 @@ dismisses it. A click dismisses it.
 
 ## Limitations
 
+- A `Tab` traversal does not open the tip in a real window (above): hover is
+  the only open path the runtime's wiring leaves, so a tip is supplementary
+  information, never the only place a control's meaning lives.
 - The trigger must be a focusable host element (above).
 - No `aria-describedby`: a non-string tip has no description unless `description`
   is passed, and a component trigger cannot carry one.
@@ -79,10 +89,14 @@ dismisses it. A click dismisses it.
 - `src/components/Tooltip.test.tsx` — a string tip and an explicit `description`
   reach the host trigger, a non-text tip without one invents nothing, and a
   component trigger is not cloned with a prop it may ignore.
-- `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
-  dismisses on click, keeps its content inside the anchoring frame, paints the
-  popover role, and the a11y tree reports the tip as the trigger's
-  `description`.
+- `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus in
+  the `TestRenderer`, dismisses on click, keeps its content inside the anchoring
+  frame, paints the popover role, and the a11y tree reports the tip as the
+  trigger's `description`.
+- The `tooltip-lifecycle` live probe (`apps/playground/README.md`) — the same
+  wrapper in a **real window**: hover opens, the tip sits inside the frame,
+  Escape and a click dismiss, and a `Tab` traversal focuses the trigger while
+  the tip stays closed (the runtime limit above).
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
   hover.
 

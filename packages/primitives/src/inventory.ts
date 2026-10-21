@@ -356,11 +356,12 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
   {
     name: "Tooltips",
     status: "done",
-    gpuixSupport: "yes",
+    gpuixSupport: "partial (hover opens in a window; a Tab traversal focuses the trigger but runs no `onFocus`)",
     limitations: [
       "The trigger must be a focusable host element",
       "No arrow, no aria-describedby and no wrapping content",
       "Open and close timing are the runtime's",
+      "A Tab traversal does not open the tip in a window (measured)",
     ],
     source: ["src/components/Tooltip.tsx"],
     docs: "docs/tooltip.mdx",
