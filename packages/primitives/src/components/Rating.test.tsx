@@ -17,6 +17,7 @@ import {
   renderRating,
   type RatingHandlers,
   type RatingProps,
+  type RatingState,
 } from "./Rating.js";
 import type { RatingFocus } from "./Rating.js";
 import { keyEvent } from "./testing/event.js";
@@ -27,6 +28,7 @@ import {
   hostHandler,
   hostProp,
   hostStyleRecord,
+  hostStyleString,
 } from "./testing/element.js";
 
 const state = (value: number) => initValueState(Option.some(value), 0);
@@ -186,5 +188,27 @@ describe("Rating", () => {
       ];
     });
     expect(ringed).toStrictEqual(Arr.map(Arr.range(0, 4), () => [true, false]));
+  });
+
+  it("hands a style callback the live state and lets its result win", () => {
+    const seen: RatingState[] = [];
+    const element = render(
+      {
+        invalid: true,
+        style: (live) => {
+          seen.push(live);
+          return { backgroundColor: testTheme.colors.destructive };
+        },
+      },
+      2,
+      2,
+    );
+
+    expect(seen).toEqual([
+      { disabled: false, readOnly: false, focused: true, invalid: true },
+    ]);
+    expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+      testTheme.colors.destructive,
+    );
   });
 });

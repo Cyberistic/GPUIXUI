@@ -67,7 +67,8 @@ Fragments and arrays are transparent, so items can be grouped freely.
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the dot's fill |
 | `disabled` | `boolean` | `false` | disables every option |
 | `label` | `string` | none | accessible name for the group |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<RadioGroupState>` | — | resolved against the live state, merged last on the group |
+| `itemStyle` | `StateStyle<RadioItemState>` | — | resolved per option row against that row's state, merged last |
 | `testId` | `string` | — | stable locator |
 
 `RadioOption` is `{ value, label, description?, disabled?, content? }`.
@@ -113,6 +114,13 @@ The circle is `selectionBoxStyle` with `shape: "circle"` and the dot is
 `radioDotStyle`, both from `core/selection.ts`, so a radio and a checkbox of the
 same size are the same square/circle family. Gaps use `spacing.sm`.
 
+`style` takes a `StateStyle<RadioGroupState>` — a `StyleDesc`, or a callback that
+receives `{ disabled, focused }` for the group. `itemStyle` takes a
+`StateStyle<RadioItemState>` and runs **once per option row** with
+`{ disabled, focused, checked }`, whether the options came from `options` or from
+`RadioGroupItem` children — the data path cannot paint a selected row without it.
+Both merge after every role decision, so a callback is the last word.
+
 ## Limitations
 
 - No type-ahead selection.
@@ -134,7 +142,8 @@ same size are the same square/circle family. Gaps use `spacing.sm`.
 - `src/components/RadioGroup.test.tsx` — roving index and data options; an arrow
   asks the group to move focus to the option it landed on; item children produce
   the same option list as `options`, the arrow path skips a disabled item, and an
-  item's rich content reaches its row.
+  item's rich content reaches its row; the group's `style` callback sees the live
+  state, and `itemStyle` paints each row from its own.
 - `runtime/controls.runtime.test.tsx` — arrows move, wrap and skip disabled
   options (plan 044); Home/End jump to the enabled ends (plan 048); the focused
   option declares the ring; arrows move native focus with the

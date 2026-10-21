@@ -28,7 +28,8 @@ import {
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
-import type { KeyEvent, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { KeyEvent, PublicInstance } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import {
   decideAbsolute,
@@ -139,10 +140,27 @@ export interface RadioGroupProps extends ValueChangeProps<string> {
   readonly disabled?: boolean;
   /** Accessible name for the group. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the group's live state and merged last. */
+  readonly style?: StateStyle<RadioGroupState>;
+  /** Extra style for every option row, resolved against that row's live state. */
+  readonly itemStyle?: StateStyle<RadioItemState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly testId?: string;
+}
+
+/** What a `RadioGroup` tells its `style` callback. */
+export interface RadioGroupState {
+  readonly disabled: boolean;
+  /** True while any option holds native focus. */
+  readonly focused: boolean;
+}
+
+/** What a `RadioGroup` tells its `itemStyle` callback, one row at a time. */
+export interface RadioItemState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly checked: boolean;
 }
 
 /** Which item holds native focus, and how the group learns that it moved. */
@@ -246,7 +264,10 @@ export const renderRadioGroup = (
       ),
       theme,
     ).style,
-    props.style,
+    resolveStyle(props.style, {
+      disabled: props.disabled === true,
+      focused: Option.isSome(focus.focusedIndex),
+    }),
   );
   return (
     <div
@@ -279,6 +300,20 @@ export const renderRadioGroup = (
           box,
           controlRing(theme, { disabled, invalid: spec.invalid }),
         );
+        const row = mergeStyle(
+          recipeTw.classesToStyle(
+            cn(
+              "flex flex-row items-center gap-sm",
+              disabled ? "cursor-not-allowed" : "cursor-pointer",
+            ),
+            theme,
+          ).style,
+          resolveStyle(props.itemStyle, {
+            disabled,
+            focused: Option.contains(focus.focusedIndex, index),
+            checked: current === "checked",
+          }),
+        );
         return (
           <div
             key={option.value}
@@ -292,15 +327,7 @@ export const renderRadioGroup = (
             }}
             onFocus={() => focus.onFocus(index)}
             onBlur={() => focus.onBlur(index)}
-            style={
-              recipeTw.classesToStyle(
-                cn(
-                  "flex flex-row items-center gap-sm",
-                  disabled ? "cursor-not-allowed" : "cursor-pointer",
-                ),
-                theme,
-              ).style
-            }
+            style={row}
           >
             <div style={box}>
               {current === "checked" ? (

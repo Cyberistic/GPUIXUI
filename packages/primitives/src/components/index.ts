@@ -85,6 +85,8 @@ export {
 export type {
   RadioGroupItemProps,
   RadioGroupProps,
+  RadioGroupState,
+  RadioItemState,
   RadioOption,
 } from "./RadioGroup.js";
 
@@ -104,7 +106,7 @@ export type {
 } from "./Progress.js";
 
 export { Rating, ratingMax } from "./Rating.js";
-export type { RatingProps } from "./Rating.js";
+export type { RatingProps, RatingState } from "./Rating.js";
 
 export {
   RangeSlider,

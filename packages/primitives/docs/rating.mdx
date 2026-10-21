@@ -44,7 +44,7 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
 | `invalid` | `boolean` | `false` | failed validation: chosen stars paint destructive and the ring turns destructive |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<RatingState>` | — | resolved against the live state, merged last |
 | `testId` | `string` | — | stable locator on the group |
 
 Values are truncated to whole stars and clamped to `0..max`; a value that is not
@@ -87,6 +87,11 @@ invalid. The filled icon is still monochrome — its `#000` fill is what GPUix
 retints — so a theme change repaints both states. The star size is
 `theme.iconSize[size]` and the focus ring is the shared `focusRing`.
 
+`style` takes a `StateStyle<RatingState>` — a `StyleDesc`, or a callback that
+receives `{ disabled, readOnly, focused, invalid }` for the group. It merges
+after every role decision, so a callback is the last word on a property the
+recipe also sets.
+
 ## Limitations
 
 - **Whole stars only.** Half stars would need clipping or a transform, neither of
@@ -104,7 +109,8 @@ retints — so a theme change repaints both states. The star size is
   the tab-stop choice, a zero or fractional `max`.
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
   single tab stop, filled vs outline icons, the destructive paint and muted
-  empty stars while invalid, keys, click, disabled/readOnly, ring.
+  empty stars while invalid, keys, click, disabled/readOnly, ring, and a `style`
+  callback receiving the live state and winning.
 - `src/components/activation.test.tsx` — the activation contract every control
   shares: `Enter` on the press, `Space` on the release, a held key ignored and
   exactly one activation. `Rating` failed it (a focused star could not be

@@ -21,6 +21,8 @@ import {
   renderRadioGroup,
   type RadioGroupHandlers,
   type RadioGroupFocus,
+  type RadioGroupState,
+  type RadioItemState,
   type RadioOption,
 } from "./RadioGroup.js";
 import { keyEvent } from "./testing/event.js";
@@ -30,6 +32,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyleString,
   hostTag,
 } from "./testing/element.js";
 
@@ -159,6 +162,70 @@ describe("RadioGroup", () => {
         "",
       ),
     ).toBe(1);
+  });
+
+  it("hands a style callback the group's live state and lets its result win", () => {
+    const seen: RadioGroupState[] = [];
+    const element = renderRadioGroup(
+      {
+        options,
+        style: (live) => {
+          seen.push(live);
+          return { backgroundColor: testTheme.colors.destructive };
+        },
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
+      radioHandlers(vi.fn()),
+    );
+
+    expect(seen).toEqual([{ disabled: false, focused: true }]);
+    expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+      testTheme.colors.destructive,
+    );
+  });
+
+  it("styles each option row from its own state", () => {
+    const seen: RadioItemState[] = [];
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "alpha", label: "Alpha" },
+          { value: "beta", label: "Beta", disabled: true },
+          { value: "gamma", label: "Gamma" },
+        ],
+        itemStyle: (live) => {
+          seen.push(live);
+          return live.checked
+            ? { backgroundColor: testTheme.colors.primary }
+            : live.disabled
+              ? { backgroundColor: testTheme.colors.muted }
+              : { backgroundColor: testTheme.colors.card };
+        },
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      { focusedIndex: Option.some(2), onFocus: vi.fn(), onBlur: vi.fn() },
+      radioHandlers(vi.fn()),
+    );
+
+    expect(seen).toEqual([
+      { disabled: false, focused: false, checked: true },
+      { disabled: true, focused: false, checked: false },
+      { disabled: false, focused: true, checked: false },
+    ]);
+    expect(
+      rows(element).map((row) =>
+        expectSome(hostStyleString(row, "backgroundColor")),
+      ),
+    ).toEqual([
+      testTheme.colors.primary,
+      testTheme.colors.muted,
+      testTheme.colors.card,
+    ]);
   });
 });
 

@@ -18,7 +18,8 @@
 
 import { useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
-import type { PublicInstance, StyleDesc } from "@gpuix/react";
+import type { PublicInstance } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
@@ -55,10 +56,20 @@ export interface RatingProps extends ValueChangeProps<number> {
   readonly label?: string;
   /** A failed validation: the chosen stars paint the destructive role. */
   readonly invalid?: boolean;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the rating's live state and merged last. */
+  readonly style?: StateStyle<RatingState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly testId?: string;
+}
+
+/** What a `Rating` tells a `style` callback. */
+export interface RatingState {
+  readonly disabled: boolean;
+  readonly readOnly: boolean;
+  /** True while any star holds native focus. */
+  readonly focused: boolean;
+  readonly invalid: boolean;
 }
 
 /** Which star holds focus, and how the group learns that it moved. */
@@ -158,7 +169,12 @@ export const renderRating = (
       style={mergeStyle(
         recipeTw.classesToStyle(cn(ratingGroupClass, props.className), theme)
           .style,
-        props.style,
+        resolveStyle(props.style, {
+          disabled: props.disabled === true,
+          readOnly: props.readOnly === true,
+          focused: Option.isSome(focus.focusedIndex),
+          invalid: props.invalid === true,
+        }),
       )}
     >
       {Arr.map(Arr.range(1, max), star)}
