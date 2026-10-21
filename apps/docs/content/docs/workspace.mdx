@@ -43,18 +43,23 @@ panel groups, docking layouts, nested arrangements, multi-pane editing — is a
 composition over it. The runtime supports the pieces and not the behaviour:
 
 - **What exists:** pointer events, `col-resize`/`row-resize` cursors, measured
-  layout (`onLayout`), and real native focus.
+  layout (`onLayout`), real native focus, and pointer capture — with a rule.
 - **What does not:** no `transform`, so a divider cannot animate and a panel
   cannot slide; no `flex-basis` per child, so a pane's size is an explicit
-  number in state; no pointer capture, so a drag ends when the pointer leaves
-  the divider.
+  number in state.
+- **Capture takes two listeners:** the runtime arms capture on a left press only
+  for an element that listens to both `onMouseDown` and `onMouseMove` (measured
+  by `pointer-capture`). A divider that declares both kept all eight moves and
+  its release 120px outside its own box; a move-only divider got the one
+  pre-press move while the sibling received the eight.
 
 That fixes the design: a divider is a **focusable control with a numeric width**
 — arrows resize by a step, Home/End jump to the minimum and maximum, and a
-pointer drag updates the same number while reporting its bounds. The width is
-application state, because a workspace that cannot persist it is not a
-workspace. Choosing otherwise (animated panels, a drag that survives the
-pointer leaving) would be a browser promise this runtime cannot keep.
+pointer drag updates the same number while following the pointer outside the
+divider's box, because it declares both listeners. The width is application
+state, because a workspace that cannot persist it is not a workspace. Choosing
+otherwise (animated panels, a transform-based slide) would be a browser promise
+this runtime cannot keep.
 
 ## State and persistence
 
@@ -85,12 +90,12 @@ the app can reset, not a crash on mount.
 
 | Gap | Evidence | Strongest honest alternative |
 | --- | -------- | ---------------------------- |
-| Resizable panes | No drag host feature, no pointer capture, no per-child basis | A keyboard-and-pointer divider that writes a number to app state |
+| Resizable panes | No split-pane component and no per-child basis; capture is available, but only to an element that listens to both `onMouseDown` and `onMouseMove` | A keyboard-and-pointer divider that writes a number to app state, subscribing to both listeners |
 | Detachable / movable tabs | Needs a portal or drag model; the runtime has neither | Tabs that switch panels in one window |
 | Docking layouts | Composition over split panes, which do not exist yet | A fixed, hand-built layout |
 | Persistent panel state | No renderer storage | `Schema`-encoded app state, decoded at the entrypoint |
 | Application menus | The macOS menu bar is a renderer API; cross-platform menus are ours | `DropdownMenu` in the window |
-| Terminal surfaces | No terminal host element; a PTY surface is **unverified** | A log viewer: `ScrollArea` + `Text` |
+| Terminal surfaces | Rendering the app **into** a terminal is supported (`render(<App />, { terminal: true })` with `isTerminal()`); a pane that hosts a PTY **inside** a window has no host element and is unverified | Ship the app as a terminal UI, or put a log viewer in the window: `ScrollArea` + `Text` |
 
 The capability matrix and its evidence are on [Runtime](/docs/runtime).
 

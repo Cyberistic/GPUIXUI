@@ -136,3 +136,32 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).not.toContain("until a native drawing surface is verified");
   });
 });
+
+/**
+ * The workspace page denied pointer capture and called every terminal surface
+ * unverified. Both were measured since: capture exists for an element that
+ * listens to both drag events, and the whole app renders into a terminal while
+ * hosting a PTY inside a window still does not.
+ */
+
+describe("the workspace page's pointer and terminal claims", () => {
+  const workspace = read("workspace.mdx");
+
+  it("states the capture rule instead of denying capture", () => {
+    const capture = rowFor(record, "Pointer capture");
+
+    expect(capture).toContain("supported, with limits");
+    expect(capture).toContain("onMouseDown");
+    expect(capture).toContain("onMouseMove");
+    expect(workspace).not.toContain("no pointer capture");
+    expect(workspace).toContain("`onMouseDown`");
+    expect(workspace).toContain("`onMouseMove`");
+  });
+
+  it("separates rendering into a terminal from hosting one", () => {
+    expect(rowFor(record, "Terminal rendering")).toContain("supported");
+    expect(workspace).toContain("terminal: true");
+    expect(workspace).toContain("hosts a PTY");
+    expect(workspace).not.toContain("No terminal host element");
+  });
+});
