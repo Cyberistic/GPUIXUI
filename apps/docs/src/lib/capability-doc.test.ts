@@ -328,6 +328,44 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(image?.[2]).toContain("useLayoutEffect");
   });
 
+  it("records the clipboard gap and the one place the platform still provides it", () => {
+    // The binding publishes no clipboard API, so a component cannot offer
+    // "copy" — but a window measured that the platform's own keys still run
+    // inside a focused field. Both halves belong in the record, because the
+    // second is the honest alternative the first points at.
+    const appLevel = rowFor("App-level clipboard");
+    expect(appLevel?.verdict).toBe("not supported");
+    expect(appLevel?.evidence).toContain("clipboard-lifecycle");
+    expect(appLevel?.evidence).toContain("window handler");
+    expect(appLevel?.workaround).toContain("read-only field");
+
+    const field = rowFor("Clipboard keys inside a focused field");
+    expect(field?.verdict).toBe("supported, with limits");
+    expect(field?.evidence).toContain("clipboard-lifecycle");
+    expect(field?.evidence).toContain("onChange");
+  });
+
+  it("publishes the clipboard limit on /docs/runtime", () => {
+    const start = runtimePage.indexOf("## Measured in a window");
+    const end = runtimePage.indexOf("\n## ", start + 1);
+    const section = runtimePage.slice(start, end === -1 ? undefined : end);
+    const pageRows = section
+      .split("\n")
+      .filter((line) => line.startsWith("|") && !/^[\s:|-]+$/.test(line))
+      .map(cells);
+
+    const clipboard = pageRows.find((row) =>
+      (row[0] ?? "").startsWith("Clipboard"),
+    );
+    expect(
+      clipboard,
+      "the page's measured table has no clipboard row",
+    ).toBeDefined();
+    expect(clipboard?.[1]).toContain("clipboard-lifecycle");
+    expect(clipboard?.[1]).toContain("onChange");
+    expect(clipboard?.[2]).toContain("read-only field");
+  });
+
   it("leaves the uncertain rows uncertain", () => {
     const unverified = rows.filter((row) => row.verdict === "unverified");
     expect(unverified.length).toBeGreaterThanOrEqual(3);
@@ -342,6 +380,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("scroll-lifecycle");
     expect(runtimePage).toContain("pointer-capture");
     expect(runtimePage).toContain("content-surfaces");
+    expect(runtimePage).toContain("clipboard-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });

@@ -93,6 +93,8 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Text selection | supported | `userSelect`, `selectionColor`, `getSelectedText()`; **measured**: `dragSelect` fills the selection for selectable text and nothing for chrome | — |
 | Caret and selection **position**; decoration over `<code>` | not supported | **measured** by `editor-surface`: the arrow keys move the native caret, but no API reports where it is or what is selected (`getSelectedText()` returns text only), and `<code>` takes `language`/`showLineNumbers` and no decoration layer | edit in a `<textarea>`, display in `<code>`; a highlighted *editable* surface is not buildable |
 | Find-in-content highlights | supported | `highlight` spec (`query`, `caseSensitive`, `wholeWord`, `ranges`, `activeIndex`) plus `getPaintedHighlights()`; **measured** by `search-highlights` | — |
+| App-level clipboard (read or write from a component) | not supported | the binding declares **no clipboard API** — no read, no write in `index.d.ts`/`host.d.ts` — and **measured** by `clipboard-lifecycle`: the platform's copy and paste keys run inside a focused field but never reach the app's window handler (a `cmd-k` from the same control does), so a component cannot put a selected text run, a table row or a `<code>` block on the clipboard | offer the text in a read-only field the user can select and copy from; a "copy" button has no path to the OS clipboard |
+| Clipboard keys inside a focused field | supported, with limits | the platform's text actions run in the field: **measured** by `clipboard-lifecycle` against a marker unique to each mount — select-all → copy → paste → cut all reach the input's `onChange`, so a paste cannot pass on the previous run's clipboard | copy and paste are the user's own actions inside a field; an application-level clipboard needs a runtime change |
 | File drops | unverified | `onFileDrop` is declared on `HostProps`; no probe mounts a drop | accept a path through `promptForPaths` until a probe measures a drop |
 | Virtualized list | supported, with limits | `<virtual-list>` retains thousands of rows and paints a window (~9 rows in the probe) | read the painted window, not the index |
 | `role` and the `aria-*` subset | supported, with limits | `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-labelledby`, `aria-describedby`, `aria-orientation`, `aria-controls`, `aria-disabled` | name each control through its own `label`/`aria-label`; put a numeric value in `aria-valuetext`; there is no `labelledby` relationship |
@@ -129,9 +131,9 @@ short, never the carrier of meaning.
 - The same test holds `/docs/runtime` to this file: the site's *measured in a
   window* section must name the probes behind every gap it lists
   (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
-  `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`, `content-surfaces`),
-  because a measured gap is absent from the typings rather than merely hard to
-  find.
+  `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`, `content-surfaces`,
+  `clipboard-lifecycle`), because a measured gap is absent from the typings
+  rather than merely hard to find.
 - The probe measurements themselves are asserted by the suite
   (`apps/playground`), not here: this document records the verdict and points at
   the evidence.
