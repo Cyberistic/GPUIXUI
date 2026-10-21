@@ -1,8 +1,4 @@
-import {
-  appName,
-  componentDocsRoute,
-  docsRoute,
-} from "../lib/shared";
+import { appName, componentDocsRoute, docsRoute } from "../lib/shared";
 
 /**
  * The site's 404.

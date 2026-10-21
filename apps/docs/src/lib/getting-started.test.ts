@@ -15,7 +15,8 @@ import { buildWorkspaceSymbolIndex, repoRoot } from "./public-symbols-source";
  * the table that says who owns it.
  */
 
-const read = (path: string): string => readFileSync(join(repoRoot, path), "utf8");
+const read = (path: string): string =>
+  readFileSync(join(repoRoot, path), "utf8");
 
 const page = read("apps/docs/content/docs/getting-started.mdx");
 
@@ -43,8 +44,8 @@ const imports: ReadonlyArray<NamedImport> = snippets.flatMap((snippet) =>
 );
 
 /** The names each published specifier exports, read from the source. */
-const published = buildWorkspaceSymbolIndex(repoRoot).packages
-  .flatMap((pkg) => pkg.symbols)
+const published = buildWorkspaceSymbolIndex(repoRoot)
+  .packages.flatMap((pkg) => pkg.symbols)
   .flatMap((symbol) =>
     symbol.specifiers.map((specifier) => ({
       specifier,
@@ -64,9 +65,9 @@ describe("the getting-started page", () => {
     expect(page).toMatch(/^title: Getting started$/m);
     expect(page).toMatch(/^description: \S+/m);
 
-    const meta = JSON.parse(
-      read("apps/docs/content/docs/meta.json"),
-    ) as { pages: ReadonlyArray<string> };
+    const meta = JSON.parse(read("apps/docs/content/docs/meta.json")) as {
+      pages: ReadonlyArray<string>;
+    };
 
     expect(meta.pages.indexOf("getting-started")).toBe(
       meta.pages.indexOf("installation") + 1,
@@ -103,9 +104,7 @@ describe("the getting-started page", () => {
 
   it("gives every state value an owner in the state table", () => {
     const declared = [
-      ...snippets
-        .join("\n")
-        .matchAll(/const \[(\w+), set\w+\] = useState/g),
+      ...snippets.join("\n").matchAll(/const \[(\w+), set\w+\] = useState/g),
     ].map((match) => match[1] ?? "");
     const explained = [
       ...page.matchAll(/^\| `(\w+)` \| `ProjectSettings` \|/gm),
@@ -121,7 +120,10 @@ describe("the getting-started page", () => {
     expect(steps.length).toBeGreaterThanOrEqual(4);
     expect(
       steps
-        .map((step, index) => ({ index: index + 1, hasLink: step.includes("](/docs/") }))
+        .map((step, index) => ({
+          index: index + 1,
+          hasLink: step.includes("](/docs/"),
+        }))
         .filter((step) => !step.hasLink),
     ).toEqual([]);
   });

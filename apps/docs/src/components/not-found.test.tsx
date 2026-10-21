@@ -34,15 +34,17 @@ describe("the not-found page", () => {
       "/docs/reference",
     ];
 
-    expect(destinations.filter((href) => !markup.includes(`href="${href}"`))).toEqual(
-      [],
-    );
+    expect(
+      destinations.filter((href) => !markup.includes(`href="${href}"`)),
+    ).toEqual([]);
   });
 
   it("is the page the root route renders for a missing address", () => {
     const route = read("apps/docs/src/routes/__root.tsx");
 
-    expect(route).toContain('import { NotFound } from "@/components/not-found"');
+    expect(route).toContain(
+      'import { NotFound } from "@/components/not-found"',
+    );
     expect(route).toContain("notFoundComponent: NotFound");
   });
 });
