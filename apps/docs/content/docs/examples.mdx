@@ -26,17 +26,29 @@ rules out.
 
 ## Running one
 
-The primitives package mounts all of its examples in the native runtime, so a
-broken composition fails there:
+Both native suites mount them. The primitives package runs all of its examples
+in the renderer, so a broken composition fails there:
 
 ```bash
 nub run --filter @gpuixui/primitives test:runtime
 ```
 
-The components' examples are the copy-target for their pages and are not mounted
-in the playground yet — that registry is a tracked task in `TODO.md`. Until it
-lands, each component page's Code tab is the runnable usage, and the example's
-file is the fuller composition to compare it against.
+The components' registry is mounted by the playground's `examples-mount`
+scenario, which pages through every entry in sorted id order — one screen at a
+time, because the whole registry at once lays out one very tall tree and leaves
+the previous screen's timers running behind the next. It asserts from the
+renderer that each screen's wrapper paints a height and carries text of its own,
+and that no two entries paint the same screen:
+
+```bash
+nub run --filter playground build
+nub apps/playground/dist/smoke/run.js --only examples-mount
+```
+
+The scenario's checks, evidence and negative controls are in
+`apps/playground/README.md` §The example gallery. A component page's Code tab is
+still the runnable usage; the example's file is the fuller composition to
+compare it against.
 
 ## Where a change goes
 
