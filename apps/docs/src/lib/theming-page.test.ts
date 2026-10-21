@@ -1,9 +1,13 @@
 import { readFileSync } from "node:fs";
 import {
+  auditTheme,
   colorRoles,
   colorVisionDeficiencies,
   contrastFloors,
   contrastRatio,
+  createTheme,
+  indicatorFailures,
+  isThemeMode,
   retroStyles,
   themes,
   type Theme,
@@ -38,26 +42,44 @@ const section = (body: string, heading: string): string => {
   return start === -1 ? "" : body.slice(start, end === -1 ? undefined : end);
 };
 
+/** One brand snippet on the page, resolved from what the page writes. */
+interface BrandSnippet {
+  /** The mode the snippet's `createTheme` starts from. */
+  readonly mode: Theme["mode"];
+  /** The fill the snippet overrides. */
+  readonly fill: string;
+  /** The on-colour the snippet pairs with that fill. */
+  readonly label: string;
+  /** The theme the snippet produces. */
+  readonly theme: Theme;
+}
+
 /**
- * The colours the brand snippet sets, as the snippet writes them. Reading the
- * page rather than a copy is the point: the snippet is what a reader copies.
+ * Every brand snippet the page shows, resolved exactly as written — the
+ * snippet is what a reader copies, so the guard executes the page rather than
+ * a copy of its values.
  */
-const snippetColours = (body: string): Readonly<Record<string, string>> => {
-  const snippet = body
+const brandSnippets = (body: string): ReadonlyArray<BrandSnippet> =>
+  body
     .split("```")
-    .filter(
-      (fence) =>
-        fence.includes("export const") && fence.includes("createTheme({"),
-    )
-    .join("");
-  return Object.fromEntries(
-    [...snippet.matchAll(/(\w+): "(#[0-9A-Fa-f]{6})"/g)].flatMap((match) =>
-      match[1] === undefined || match[2] === undefined
-        ? []
-        : [[match[1], match[2]]],
-    ),
-  );
-};
+    .filter((fence) => fence.includes("createTheme({"))
+    .flatMap((fence) => {
+      const mode = /mode: "(\w+)"/.exec(fence)?.[1];
+      if (!isThemeMode(mode)) return [];
+      const written = Object.fromEntries(
+        [...fence.matchAll(/(\w+): "(#[0-9A-Fa-f]{6})"/g)].flatMap((match) =>
+          match[1] === undefined || match[2] === undefined
+            ? []
+            : [[match[1], match[2]]],
+        ),
+      );
+      const fill = written.primary;
+      const label = written.primaryForeground;
+      if (fill === undefined || label === undefined) return [];
+      return [
+        { mode, fill, label, theme: createTheme({ mode, colors: written }) },
+      ];
+    });
 
 describe("the theme page", () => {
   it("derives the contrast pair count instead of printing one", () => {
@@ -151,21 +173,87 @@ describe("the theming page's role count", () => {
   });
 });
 
-describe("the theming page's brand snippet", () => {
-  const colours = snippetColours(page("theming.mdx"));
+describe("the theming page's brand snippets", () => {
+  const snippets = brandSnippets(page("theming.mdx"));
+  const dark = snippets.find((snippet) => snippet.mode === "dark");
+  const light = snippets.find((snippet) => snippet.mode === "light");
 
-  it("owns the label colour of the fill it overrides", () => {
-    expect(colours.primary).toBeDefined();
-    expect(colours.primaryForeground).toBeDefined();
+  it("owns the on-colour of the fill it overrides, per mode", () => {
+    // A fill and its label are one pair, and the pair is mode-specific: a fill
+    // light enough to be found as a mark in a dark theme cannot carry white
+    // text, so the two modes need two values rather than one shared label.
+    expect(snippets.length).toBeGreaterThanOrEqual(2);
+    expect(dark).toBeDefined();
+    expect(light).toBeDefined();
   });
 
-  it("paints that label at the package's secondary-text floor", () => {
-    const fill = colours.primary ?? "";
-    const label = colours.primaryForeground ?? "";
-    const measured = contrastRatio(label, fill);
+  it("paints each label at the package's secondary-text floor", () => {
+    const missed = snippets.flatMap(({ mode, fill, label }) => {
+      const measured = contrastRatio(label, fill);
+      return measured !== undefined && measured >= contrastFloors.secondary
+        ? []
+        : [`${mode}: ${label} on ${fill} is ${measured ?? "unmeasurable"}`];
+    });
 
-    expect(measured).toBeDefined();
-    expect(measured ?? 0).toBeGreaterThanOrEqual(contrastFloors.secondary);
+    expect(missed).toEqual([]);
+  });
+
+  it("paints a fill a reader can find as a mark, not only read under text", () => {
+    // A primary is also the role a progress fill and a spinner dot paint, so
+    // the label pair alone let the documented brand ship a fill that vanished
+    // into the dark card: `#6A45F0` carried white text at 5.6:1 and measured
+    // 2.66:1 as a mark on the card. The mark contract is what sees both jobs.
+    const missed = snippets.flatMap(({ mode, theme }) =>
+      indicatorFailures(theme).map(
+        (failure) =>
+          `${mode}: mark ${failure.role} on ${failure.surface} is ${
+            failure.ratio ?? "unmeasurable"
+          }:1 (needs ${failure.floor}:1)`,
+      ),
+    );
+
+    expect(missed).toEqual([]);
+  });
+
+  it("passes the one gate the package runs on its own themes", () => {
+    const failed = snippets.flatMap(({ mode, theme }) => {
+      const audit = auditTheme(theme);
+      const counts = [
+        ...audit.invalidRoles.map((failure) => `role ${failure.role}`),
+        ...audit.invalidShadows.map((failure) => `shadow ${failure.level}`),
+        ...audit.contrast.map(
+          (failure) => `contrast ${failure.foreground}/${failure.background}`,
+        ),
+        ...audit.decorative.map(
+          (failure) => `decorative ${failure.role} on ${failure.over}`,
+        ),
+        ...audit.selection.map(
+          (failure) => `selection ${failure.kind} ${failure.background}`,
+        ),
+        ...audit.indicators.map(
+          (failure) => `mark ${failure.role}/${failure.surface}`,
+        ),
+      ];
+      return audit.passed
+        ? []
+        : [
+            `${mode}: ${counts.join(", ") || "series"} — ${[
+              audit.series.surfaces.length,
+              audit.series.distinctness.length,
+              audit.series.deficiencies.length,
+            ].join("/")} series findings`,
+          ];
+    });
+
+    expect(failed).toEqual([]);
+  });
+
+  it("says why a brand owns two values rather than one", () => {
+    const override = section(page("theming.mdx"), "Override a theme");
+
+    expect(override).toContain("indicatorFailures");
+    expect(override).toContain("spinner");
+    expect(override).toContain("brand-theme.example.ts");
   });
 });
 

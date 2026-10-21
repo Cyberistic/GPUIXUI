@@ -4,6 +4,7 @@ import {
   contrastFloors,
   contrastRatio,
   extendTheme,
+  indicatorFailures,
   isPlatformName,
   isThemeMode,
   platformTheme,
@@ -125,6 +126,23 @@ describe("the platform snippet on the theming page", () => {
 
     expect(measured).toBeDefined();
     expect(measured ?? 0).toBeGreaterThanOrEqual(contrastFloors.secondary);
+  });
+
+  it("paints a fill a reader can find as a mark, not only read under text", () => {
+    // A primary is also the role a progress fill and a spinner dot paint, so a
+    // label pair is half the contract: `#6A45F0` carried white at 5.6:1 and
+    // vanished into the dark card as a mark. The platform a brand starts from
+    // makes this worse, because its card is a different colour.
+    const { theme } = houseTheme();
+
+    expect(
+      indicatorFailures(theme).map(
+        (failure) =>
+          `mark ${failure.role} on ${failure.surface} is ${
+            failure.ratio ?? "unmeasurable"
+          }:1 (needs ${failure.floor}:1)`,
+      ),
+    ).toEqual([]);
   });
 
   it("passes the contract the library runs on its own themes", () => {
