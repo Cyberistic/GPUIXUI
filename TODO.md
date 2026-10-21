@@ -291,7 +291,9 @@ bytes in a renderer, is idempotent per renderer and per file, does not cache a
 rejected file, and returns the families a theme may name; 6 tests, docs and a
 README example. No family is bundled, so there is no licence review yet
 `[ ]` Native proof that a registered face paints — needs a window; owner:
-playground (interlock row), so plan 052 stays `blocked` on the visual half
+playground. The live window runner now exists (`--only focus-visible` green on
+0.11.0), so the probe is the remaining work; plan 052 stays `blocked` on the
+visual half
 `[x]` Cross-team: native theme gallery in `apps/playground` — `theme-color-roles`,
 `theme-type-and-shadow` and `theme-platform` read the runtime's style report;
 21/21 green on 0.11.0 (owner: `playground`)
@@ -335,7 +337,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████░░░░]` 6/10
+`[x]` `[█████░░░░]` 5/9
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -352,7 +354,7 @@ a workaround for two live sessions sharing one worktree; see
       window through `@gpuix/native/automation`, reports through the same
       `Smoke` model/exit codes (`0/1/2`), and captures one PNG per paint state.
       `packages/testing` gained `AsyncSmokeHost` + `runAsyncScenarios` over the
-      shared check model (4 tests; the errored-not-passed test fails without the
+      shared check model (5 tests; the errored-not-passed test fails without the
       defect handler).
 `[x]` Land the `focus-visible` live probe (plan `053` STOP gate): measured that
       the ring **paints** for Tab, does **not** paint for a mouse press or for a
@@ -361,7 +363,7 @@ a workaround for two live sessions sharing one worktree; see
       Evidence: `.artifacts/live/focus-visible*.png` + README table.
 `[ ]` Assert the live captures with pixels (decode the PNG, compare the ring's
       `colors.ring` pixels) instead of a human looking at them
-` [ ]` Probe 053's remaining question: `keyboardFocusDim` with a modal open —
+`[ ]` Probe 053's remaining question: `keyboardFocusDim` with a modal open —
       is the rest of the window dimmed, and should a component opt out?
 `[ ]` Port the modal/menu/toast Tier 2 examples into live probes (the headless
       scenarios already cover the primitives)

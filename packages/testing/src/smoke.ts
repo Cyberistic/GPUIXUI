@@ -205,9 +205,38 @@ export class SmokeAssertionError extends Schema.TaggedError<SmokeAssertionError>
   }
 }
 
-/** What a scenario is handed to act on and to assert against. */
-export interface SmokeContext {
-  readonly host: SmokeHost;
+/**
+ * A window host failure, named by the verb that broke.
+ *
+ * The automation protocol rejects with its own error type; a probe lifts every
+ * call with `Effect.tryPromise` and wraps the cause here, so a missing window
+ * verb reads as `text <testId>: ...` rather than as an unrelated defect.
+ */
+export class SmokeHostError extends Schema.TaggedError<SmokeHostError>()(
+  "SmokeHostError",
+  {
+    verb: Schema.String,
+    cause: Schema.Unknown,
+  },
+) {
+  get message(): string {
+    return `${this.verb}: ${causeText(this.cause)}`;
+  }
+}
+
+/** Keeps an unknown cause readable without trusting `String(error)`. */
+const causeText = (cause: unknown): string =>
+  Match.value(cause).pipe(
+    Match.when(Schema.is(Schema.String), (text) => text),
+    Match.when(
+      Schema.is(Schema.Struct({ message: Schema.String })),
+      (error) => error.message,
+    ),
+    Match.orElse(() => "unknown error"),
+  );
+
+/** The assertion members every scenario context has, whatever the host. */
+export interface Assertions {
   readonly expectEqual: (
     label: string,
     actual: Scalar,
@@ -233,6 +262,63 @@ export interface SmokeContext {
     label: string,
     assertion: Effect.Effect<void, SmokeAssertionError>,
   ) => Effect.Effect<void, SmokeAssertionError>;
+}
+
+/** What a headless scenario is handed to act on and to assert against. */
+export interface SmokeContext extends Assertions {
+  readonly host: SmokeHost;
+}
+
+/**
+ * The window twin of `SmokeHost`: the same verbs, but effectful.
+ *
+ * The automation protocol behind a real window is asynchronous, so a live probe
+ * cannot use the synchronous host. `paintedStyle` is deliberately absent: a
+ * real `GpuixRenderer` exposes no style report, so a style assertion stays a
+ * `TestRenderer` fact (`theme-*` scenarios) and a live probe proves paint
+ * through a screenshot instead.
+ */
+export interface AsyncSmokeHost {
+  readonly text: (testId: string) => Effect.Effect<string, SmokeHostError>;
+  readonly paintedText: () => Effect.Effect<
+    ReadonlyArray<string>,
+    SmokeHostError
+  >;
+  readonly bounds: (
+    testId: string,
+  ) => Effect.Effect<Bounds | null, SmokeHostError>;
+  readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
+  readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  readonly key: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
+  readonly focusNext: () => Effect.Effect<void, SmokeHostError>;
+  /** Native focus from component code (`renderer.focusElement`). */
+  readonly focusElement: (
+    testId: string,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /** Waits until `testId` paints, so a probe never races its mount. */
+  readonly waitFor: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Captures the window under `name`.
+   *
+   * The runner resolves the name inside its artifacts directory: a probe names
+   * a state (`"tab"`), never a path, so it cannot write outside the run.
+   */
+  readonly capture: (name: string) => Effect.Effect<void, SmokeHostError>;
+}
+
+/** What a live-window probe is handed to act on and to assert against. */
+export interface AsyncSmokeContext extends Assertions {
+  readonly host: AsyncSmokeHost;
+}
+
+/** One live-window probe: the async twin of `SmokeScenario`. */
+export interface AsyncSmokeScenario {
+  readonly id: string;
+  readonly title: string;
+  readonly capability: Capability;
+  readonly steps: (
+    ctx: AsyncSmokeContext,
+  ) => Effect.Effect<void, SmokeAssertionError | SmokeHostError>;
 }
 
 /** One capability, one view, one `steps` effect. */
@@ -273,8 +359,7 @@ const assert = (
     ? record(checks, label)
     : Effect.fail(new SmokeAssertionError({ label, expected, actual }));
 
-const context = (host: SmokeHost, checks: CheckSink): SmokeContext => ({
-  host,
+const assertions = (checks: CheckSink): Assertions => ({
   expectEqual: (label, actual, expected) =>
     assert(
       checks,
@@ -331,7 +416,7 @@ const errored =
   (
     checks: CheckSink,
     scenarioId: string,
-  ): ((cause: Cause.Cause<never>) => Effect.Effect<void>) =>
+  ): ((cause: Cause.Cause<unknown>) => Effect.Effect<void>) =>
   (cause) =>
     Ref.update(checks, (previous) =>
       Arr.append(
@@ -343,10 +428,30 @@ const errored =
       ),
     );
 
-const runScenario = (
-  host: SmokeHost,
-  scenario: SmokeScenario,
-  mount: Option.Option<(scenario: SmokeScenario) => Effect.Effect<void>>,
+/** The identity a mount seam needs; every scenario has one. */
+interface Mountable {
+  readonly id: string;
+}
+
+/**
+ * Runs one scenario's steps, recording a typed failure as `failed` and a defect
+ * as `errored`.
+ *
+ * `steps` receives the check sink so the caller can build its context first:
+ * both suites share this body, so the headless and live reports cannot drift on
+ * how an assertion is recorded.
+ */
+const runBody = <
+  S extends Mountable & {
+    readonly title: string;
+    readonly capability: Capability;
+  },
+>(
+  scenario: S,
+  mount: Option.Option<(scenario: S) => Effect.Effect<void>>,
+  steps: (
+    checks: CheckSink,
+  ) => Effect.Effect<void, SmokeAssertionError | SmokeHostError>,
 ): Effect.Effect<ScenarioResult> =>
   Effect.gen(function* () {
     const checks = yield* Ref.make<ReadonlyArray<CheckResult>>([]);
@@ -355,8 +460,8 @@ const runScenario = (
       onNone: () => Effect.void,
       onSome: (before) => before(scenario),
     }).pipe(
-      Effect.flatMap(() => scenario.steps(context(host, checks))),
-      Effect.catch((error) => failed(checks, error)),
+      Effect.flatMap(() => steps(checks)),
+      Effect.catchTag("SmokeAssertionError", (error) => failed(checks, error)),
       Effect.catchCause(errored(checks, scenario.id)),
     );
     const endedAt = yield* Clock.currentTimeMillis;
@@ -368,6 +473,24 @@ const runScenario = (
       durationMs: endedAt - startedAt,
     });
   });
+
+const runScenario = (
+  host: SmokeHost,
+  scenario: SmokeScenario,
+  mount: Option.Option<(scenario: SmokeScenario) => Effect.Effect<void>>,
+): Effect.Effect<ScenarioResult> =>
+  runBody(scenario, mount, (checks) =>
+    scenario.steps({ host, ...assertions(checks) }),
+  );
+
+const runAsyncScenario = (
+  host: AsyncSmokeHost,
+  scenario: AsyncSmokeScenario,
+  mount: Option.Option<(scenario: AsyncSmokeScenario) => Effect.Effect<void>>,
+): Effect.Effect<ScenarioResult> =>
+  runBody(scenario, mount, (checks) =>
+    scenario.steps({ host, ...assertions(checks) }),
+  );
 
 const isPassed = (outcome: CheckOutcome): boolean =>
   CheckOutcome.match(outcome, {
@@ -402,6 +525,22 @@ const capabilityResults = (
       }),
   );
 
+/** Aggregates scenario results into the report both runners emit. */
+const reportOf = (
+  results: ReadonlyArray<ScenarioResult>,
+  meta: { readonly host: string; readonly startedAt: number },
+): Effect.Effect<SmokeReport> =>
+  Effect.gen(function* () {
+    const endedAt = yield* Clock.currentTimeMillis;
+    return new SmokeReport({
+      host: meta.host,
+      startedAt: meta.startedAt,
+      durationMs: endedAt - meta.startedAt,
+      scenarios: results,
+      capabilities: capabilityResults(results),
+    });
+  });
+
 /**
  * Runs every scenario in order against `host` and aggregates a report.
  *
@@ -425,12 +564,28 @@ export const runScenarios = (
       (scenario) => runScenario(host, scenario, mount),
       { concurrency: 1 },
     );
-    const endedAt = yield* Clock.currentTimeMillis;
-    return new SmokeReport({
-      host: meta.host,
-      startedAt: meta.startedAt,
-      durationMs: endedAt - meta.startedAt,
-      scenarios: results,
-      capabilities: capabilityResults(results),
-    });
+    return yield* reportOf(results, meta);
+  });
+
+/**
+ * Runs every live-window probe in order and aggregates the same report shape.
+ *
+ * The window runner owns the mount seam, so a probe's view is rendered in the
+ * real window before its steps run; the checks and the exit code are identical
+ * to the headless suite.
+ */
+export const runAsyncScenarios = (
+  host: AsyncSmokeHost,
+  scenarios: ReadonlyArray<AsyncSmokeScenario>,
+  meta: { readonly host: string; readonly startedAt: number },
+  beforeEach?: (scenario: AsyncSmokeScenario) => Effect.Effect<void>,
+): Effect.Effect<SmokeReport> =>
+  Effect.gen(function* () {
+    const mount = Option.fromNullishOr(beforeEach);
+    const results = yield* Effect.forEach(
+      scenarios,
+      (scenario) => runAsyncScenario(host, scenario, mount),
+      { concurrency: 1 },
+    );
+    return yield* reportOf(results, meta);
   });

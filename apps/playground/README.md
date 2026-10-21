@@ -1,14 +1,17 @@
 # apps/playground — the native GPUix playground
 
 **Status: Phase B, implemented and verified** (plans `120`, `140`, `150`). One
-app, three jobs:
+app, four jobs:
 
 1. **The playground** — a real GPUix window showing every scenario, so a human
    can drive each primitive by hand. The shell's palette switch paints the same
    `@gpuixui/tokens` themes the library ships.
 2. **The native smoke runner** — the same scenarios exercised by synthetic GPUI
    input in a `TestRenderer`, producing `smoke-report.json`.
-3. **The evidence source for the docs** — scenario ids, readouts and screenshots
+3. **The live window runner** — the probes a window can prove (focus routing,
+   keyboard input, paint) driven through `@gpuix/native/automation`, producing
+   `live-report.json` plus one PNG per paint state.
+4. **The evidence source for the docs** — scenario ids, readouts and screenshots
    are what `apps/docs` links to instead of faking a native preview.
 
 The **registry is the single source of truth**: `src/scenarios/registry.ts`
@@ -17,8 +20,8 @@ the argument guard run on a host with no binding; `src/scenarios/index.ts` owns
 the one `view`/`steps` implementation per id and is imported only after the
 preflight. `Record<ScenarioId, ScenarioBody>` makes a missing implementation a
 compile error. Each scenario is one capability, one view, one `steps` effect: the eleven
-core capabilities (including the theme gallery, the modal contract and floating
-placement), the Tier 3/4 probes
+core capabilities (including the three theme-gallery scenarios, the modal
+contract and floating placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
 `tree-view`, `log-viewer`, `workspace-tab-drag`), the app-level shortcut probe
 (`window-key-shortcut`) and
@@ -31,7 +34,12 @@ unreachable entry would be a scenario the app cannot open.
 ```sh
 nub run dev:playground              # from the repo root: opens the playground window
 nub run --filter playground smoke   # the native smoke suite, headless
+nub run --filter playground build && nub apps/playground/dist/live/run.js --list
+nub run --filter playground build && nub apps/playground/dist/live/run.js --only focus-visible
 ```
+
+`--only` is **repeatable** in both runners; with none, the runner selects every
+scenario.
 
 `dev` and `smoke` both **preflight first**: they import the native binding only
 after asking whether it loads, so a host without one gets a one-line remedy and
@@ -66,7 +74,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo
 Artifacts (gitignored, under `.artifacts/`):
 
 - `.artifacts/smoke-report.json` — the schema-encoded report (`Report.reportJson`);
-- `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`.
+- `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`;
+- `.artifacts/live-report.json` — the live runner's report (same shape);
+- `.artifacts/live/<state>.png` — one capture per state a live probe names.
 
 Flags: `--list` (print the scenario ids, exit `0`), `--json`,
 `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`. An unknown flag or
@@ -77,9 +87,9 @@ is no evidence, and a stale report must never be mistaken for a fresh one.
 
 ## The binding on this host
 
-The library targets `@gpuix/react@0.10.0` + `@gpuix/native@0.10.0`. GPUix
-publishes **no `darwin-x64` binding** for 0.10.0, so this Intel Mac has none by
-default and the suite would exit `2`.
+The library targets `@gpuix/react@0.11.0` + `@gpuix/native@0.11.0`. GPUix
+publishes **no `darwin-x64` binding**, so this Intel Mac has none by default and
+the suite would exit `2`.
 
 It is built from source instead: the blocking `xcrun metal` step is **optional**
 — `gpui_macos`'s `runtime_shaders` feature compiles the identical shader source
@@ -90,8 +100,11 @@ Command Line Tools suffice. One script does the whole thing (idempotent):
 sh apps/playground/scripts/build-native-binding.sh
 ```
 
-It installs Rust 1.97.1 and the pinned zed tree under
-`.agents/slop/scratch/gpuix-build/` (agent state, gitignored), applies
+It fetches the **pinned upstream revision** (the `@gpuix/native@0.11.0` release
+commit; `GPUIX_REV=<sha>` overrides it for a deliberate bump) because the napi
+surface is version-specific — a binding built from a different revision does not
+satisfy the installed package. It installs Rust 1.97.1 and that revision's zed
+tree under `.agents/slop/scratch/gpuix-build/` (agent state, gitignored), applies
 `apps/playground/patches/gpuix-zindex.patch` (the binding's `StyleDesc.zIndex`,
 which orders paint and hit testing among `absolute`/`fixed` siblings — plan
 `530`), builds the cdylib with `runtime_shaders`, and drops it at
@@ -179,7 +192,7 @@ table=verified tree=verified log=verified theme=verified workspace=verified
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
-| Capability | Measured on 0.10.0 here |
+| Capability | Measured on this host (0.11.0 unless noted) |
 | ---------- | ----------------------- |
 | layout, text, input | exact bounds; `getAllText`/`getPaintedText`; `onChange`/`onSubmit` |
 | focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
@@ -199,6 +212,53 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
 (`./legacy-probe/run.sh probe`); they never set a component status.
+
+## The live window runner (plan `053` STOP gate)
+
+The headless suite drives the offscreen `TestRenderer`; a live run drives a
+**real window** through `@gpuix/native/automation` (`getByTestId`, `textContent`,
+`keystrokes`, `screenshot`) plus the renderer's own focus calls. It reports
+through the same `Smoke` model, so the exit codes below hold for both runners:
+
+| Exit | Meaning |
+| ---- | ------- |
+| `0`  | every selected probe ran and passed |
+| `1`  | a probe failed — a real regression |
+| `2`  | no window (no desktop session or no binding) — **no evidence** |
+
+Probes live in `src/live/`: `registry.ts` owns ids and capabilities (no native
+import, so `--list` costs no binding), `scenarios.tsx` owns the view and steps,
+`host.ts` adapts the window to `Smoke.AsyncSmokeHost`, and `run.ts` is the CLI.
+Artifacts: `.artifacts/live-report.json` and `.artifacts/live/<state>.png`.
+
+### `focus-visible` — measured on 0.11.0 here
+
+The probe paints the ring as a `focusVisible` outline
+(`outlineWidth: borderWidth.strong`, `outlineColor: colors.ring`,
+`outlineOffset: 0`) on three identical samples, then moves focus five ways. The
+focus ids are asserted; the **paint** is judged from the five captures, because
+a real `GpuixRenderer` reports no style.
+
+| State | Focus id (asserted) | Ring painted |
+| ----- | ------------------- | ------------ |
+| mouse press | `press-ring` | **no**, and nothing dims |
+| native traversal (`focusNext`) before any key | `tab-ring` | **no** |
+| programmatic focus (`focusElement`) before any key | `programmatic-ring` | **no** |
+| Tab key | wraps `programmatic-ring → press-ring` | **yes**, and the other focusables dim |
+| programmatic focus after a Tab has been delivered | `programmatic-ring` | **yes**, and the others stay dimmed |
+
+Three consequences, which is what plan `053` needed:
+
+1. `focusVisible` **paints** in a real window, so a keyboard-only ring is
+   available and a component no longer needs to track focus for a Tab.
+2. It does **not** paint for a programmatic focus until some keyboard input has
+   happened. An overlay opened by a **mouse** cannot rely on it, so the existing
+   programmatic ring stays for that path.
+3. `keyboardFocusDim` is on by default and tracks the same keyboard-input state:
+   it dims other focusables exactly when the ring appears.
+
+A failed probe still writes its report and captures, so a regression is visible,
+not just red.
 
 ## Structure
 

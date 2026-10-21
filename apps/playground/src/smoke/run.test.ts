@@ -10,7 +10,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
 import { Runtime } from "@gpuixui/testing";
 import {
   registry as scenarios,
@@ -45,9 +44,15 @@ describe("formatUnsupported", () => {
 });
 
 describe("parseArgs", () => {
-  it("reads --only with its value, and boolean flags", () => {
-    const parsed = parseArgs(["--only", "layout-flex", "--screenshots"]);
-    expect(Option.getOrUndefined(parsed.flags.only)).toBe("layout-flex");
+  it("reads every --only, and boolean flags", () => {
+    const parsed = parseArgs([
+      "--only",
+      "layout-flex",
+      "--only",
+      "theme-platform",
+      "--screenshots",
+    ]);
+    expect(parsed.flags.only).toEqual(["layout-flex", "theme-platform"]);
     expect(parsed.flags.screenshots).toBe(true);
     expect(parsed.unknown).toEqual([]);
     expect(parsed.flags.artifacts).toBe("apps/playground/.artifacts");
@@ -56,7 +61,7 @@ describe("parseArgs", () => {
   it("turns --list into an explicit flag", () => {
     const parsed = parseArgs(["--list"]);
     expect(parsed.flags.list).toBe(true);
-    expect(parsed.flags.only).toEqual(Option.none());
+    expect(parsed.flags.only).toEqual([]);
     expect(parsed.unknown).toEqual([]);
   });
 
@@ -83,8 +88,23 @@ describe("parseArgs", () => {
 
   it("makes an unknown --only an empty selection, not a silent pass", () => {
     const parsed = parseArgs(["--only", "no-such-scenario"]);
-    expect(Option.isSome(parsed.flags.only)).toBe(true);
+    expect(parsed.flags.only).toEqual(["no-such-scenario"]);
     expect(selectScenarios(scenarios, parsed.flags.only)).toEqual([]);
+  });
+
+  it("selects the union of repeated --only ids in registry order", () => {
+    const parsed = parseArgs([
+      "--only",
+      "theme-platform",
+      "--only",
+      "layout-flex",
+    ]);
+    expect(
+      Arr.map(
+        selectScenarios(scenarios, parsed.flags.only),
+        (scenario) => scenario.id,
+      ),
+    ).toEqual(["layout-flex", "theme-platform"]);
   });
 
   it("parses a bare run as every scenario with no unknown tokens", () => {
@@ -93,7 +113,7 @@ describe("parseArgs", () => {
       json: false,
       screenshots: false,
       list: false,
-      only: Option.none(),
+      only: [],
       artifacts: "apps/playground/.artifacts",
     });
     expect(parsed.unknown).toEqual([]);

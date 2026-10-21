@@ -50,7 +50,8 @@ export interface CliFlags {
   readonly screenshots: boolean;
   /** Print the scenario ids and exit without loading the binding. */
   readonly list: boolean;
-  readonly only: Option.Option<string>;
+  /** The scenarios to run; empty means all of them. */
+  readonly only: ReadonlyArray<string>;
   readonly artifacts: string;
 }
 
@@ -95,7 +96,7 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
               onSome: (id) =>
                 step(
                   Arr.drop(tail, 1),
-                  { ...flags, only: Option.some(id) },
+                  { ...flags, only: Arr.append(flags.only, id) },
                   unknown,
                 ),
             }),
@@ -121,7 +122,7 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
       json: false,
       screenshots: false,
       list: false,
-      only: Option.none(),
+      only: [],
       artifacts: DEFAULT_ARTIFACTS,
     },
     [],
@@ -137,7 +138,7 @@ export const idsOf = <A extends { readonly id: string }>(
 export const usage: string = Arr.join(
   [
     "usage:",
-    "  --only <scenario-id>  run only this scenario",
+    "  --only <scenario-id>  run only these scenarios (repeatable)",
     "  --list                print the scenario ids and exit",
     "  --json                print the JSON report after the run",
     "  --screenshots         capture a screenshot per scenario",
@@ -151,12 +152,13 @@ export const usage: string = Arr.join(
 export const formatMissing = (
   id: string,
   known: ReadonlyArray<string>,
+  suite = "native smoke",
 ): string =>
   Arr.join(
     [
-      `native smoke: unknown scenario id: ${id}`,
+      `${suite}: unknown scenario id: ${id}`,
       `  known ids: ${Arr.join(known, ", ")}`,
-      "exit 2: the smoke suite produced no evidence",
+      `exit 2: the ${suite} suite produced no evidence`,
     ],
     "\n",
   );
@@ -164,10 +166,11 @@ export const formatMissing = (
 /** The preflight message for a host with no GPUix binding. Actionable, not a stack trace. */
 export const formatUnsupported = (
   runtime: Runtime.RuntimeUnsupported,
+  suite = "native smoke",
 ): string =>
   Arr.join(
     [
-      `native smoke suite: no GPUix binding on ${runtime.platform}-${runtime.arch}`,
+      `${suite} suite: no GPUix binding on ${runtime.platform}-${runtime.arch}`,
       `  loader: ${runtime.reason}`,
       `  remedy: ${runtime.hint}`,
     ],
@@ -379,10 +382,17 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
       return EXIT.unverified;
     }
 
-    const only = parsed.flags.only;
-    const selected = selectScenarios(registry, only);
-    if (Option.isSome(only) && !Arr.isReadonlyArrayNonEmpty(selected)) {
-      yield* Console.error(formatMissing(only.value, idsOf(registry)));
+    const unknownIds = Arr.filter(
+      parsed.flags.only,
+      (id) => !Arr.contains(idsOf(registry), id),
+    );
+    if (Arr.isReadonlyArrayNonEmpty(unknownIds)) {
+      yield* Console.error(
+        Arr.join(
+          Arr.map(unknownIds, (id) => formatMissing(id, idsOf(registry))),
+          "\n",
+        ),
+      );
       return EXIT.unverified;
     }
 
