@@ -200,7 +200,9 @@ so the compiler enforces it.
 | `trailing` | `ReactNode` | — |
 
 `ListItemTitle` is the row's one line; `ListItemDescription` is its second, muted
-and ellipsised.
+and ellipsised. Both are clipped to a single line (`whiteSpace: "nowrap"` +
+`textOverflow: "ellipsis"`) and can never stretch the row — measured natively
+against a control that wraps, in `list.test.tsx`.
 
 `ListItem` used outside `List` throws — a programming error at the boundary, not a
 runtime state to recover from.
@@ -262,7 +264,7 @@ is on.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (37 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (38 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching, and
 `src/list/selection.test.ts` for the multiple-selection rules: the modes and
@@ -272,7 +274,8 @@ disabled row, `Home`/`End`, the accent hover on a real mouse move, the dense
 height, the controlled list not moving its own selection, type-ahead jumping and
 cycling while skipping disabled and unlabelled rows, activation by `Enter` and by
 click (and not by `Space`, a disabled row or a plain list without the prop), the
-arrow key reaching the row that activates, and — in multiple mode —
+arrow key reaching the row that activates, both text parts clipped to one line
+and bounded by the row, and — in multiple mode —
 plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, `Cmd`/`Ctrl`+A
 selecting every enabled row, and a disabled row never entering a selection.
 

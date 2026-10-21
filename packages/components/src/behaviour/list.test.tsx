@@ -35,6 +35,7 @@ import {
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
+  requireBounds,
 } from "../internal/interaction.js";
 import { List, ListItem, ListItemDescription, ListItemTitle } from "../list.js";
 import { darkTheme } from "../internal/theme.js";
@@ -840,6 +841,54 @@ describe("List", () => {
     list.renderer.simulateKeystrokes("enter");
 
     expect(onActivate).not.toHaveBeenCalled();
+
+    list.unmount();
+  });
+
+  it("clips a long title and description to the row's one line", () => {
+    const text =
+      "A very long label that would otherwise wrap far beyond the row it sits in";
+    const list = renderComponent(
+      <div style={{ width: 260, padding: 20 }}>
+        <List testId="list">
+          <ListItem testId="row" value="long">
+            <ListItemTitle testId="title">{text}</ListItemTitle>
+            <ListItemDescription testId="description">
+              {text}
+            </ListItemDescription>
+          </ListItem>
+        </List>
+        <text testId="control" style={{ width: 200 }}>
+          {text}
+        </text>
+      </div>,
+    );
+
+    const row = requireBounds(list, "row");
+    const control = requireBounds(list, "control");
+    const title = requireBounds(list, "title");
+    const description = requireBounds(list, "description");
+    const titleStyle = list.renderer.findByTestId("title")?.style;
+    const descriptionStyle = list.renderer.findByTestId("description")?.style;
+
+    // The control is the same text with no one-line rule: it wraps, so the
+    // measurement can see a wrap, and the row's parts must not be that tall.
+    expect(control.height).toBeGreaterThan(title.height);
+    expect(title.height).toBe(titleStyle?.lineHeight);
+    expect(description.height).toBe(descriptionStyle?.lineHeight);
+
+    // Neither the title nor the description stretches the row.
+    expect(title.width).toBeLessThanOrEqual(row.width);
+    expect(description.width).toBeLessThanOrEqual(row.width);
+
+    expect(titleStyle).toMatchObject({
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
+    });
+    expect(descriptionStyle).toMatchObject({
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
+    });
 
     list.unmount();
   });

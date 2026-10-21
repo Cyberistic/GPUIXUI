@@ -749,7 +749,11 @@ export interface ListItemTitleProps extends Props {
   readonly className?: string;
 }
 
-/** The row's one-line label. */
+/**
+ * The row's one-line label. The row's height is fixed, so the title is clipped
+ * rather than wrapped; the description's recipe carries the same pair, but
+ * `@gpuixui/tw` owns that table (TODO → Interlocks).
+ */
 export const ListItemTitle = ({
   className,
   style,
@@ -760,7 +764,10 @@ export const ListItemTitle = ({
     <text
       {...rest}
       style={mergeStyles(
-        recipeStyle(cn(LIST_ITEM_TITLE, className), theme),
+        mergeStyles(recipeStyle(cn(LIST_ITEM_TITLE, className), theme), {
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
+        }),
         style,
       )}
     />
