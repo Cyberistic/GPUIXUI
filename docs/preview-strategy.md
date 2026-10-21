@@ -47,8 +47,13 @@ cannot ship a page the site does not show and the two cannot drift:
 | Components | `packages/components/docs` | `/docs/components` | Components |
 
 Those pages are **strategy 4**: no browser rendering, the real API tables and
-limitations, and a note at the top naming the example file to run in
-`apps/playground`. The primitive layer is one sidebar section even though two
+limitations, and a note at the top naming the command that opens the companion
+playground — `nub run dev:playground`, read from the root manifest rather than
+typed twice — with a link to
+[how to run it](/docs/installation#run-the-playground).
+`src/components/docs/native-run-note.test.ts` holds the command to the manifest's
+script, the link to a heading the installation page has, and the page frame to
+mounting the note. The primitive layer is one sidebar section even though two
 packages write its pages, because a reader looks for a lane of the library, not
 for a package boundary. `src/lib/collection-routes.ts` is the single registry;
 `src/lib/package-docs.test.ts` holds it to every `packages/*/docs` directory and

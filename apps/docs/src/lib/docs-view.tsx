@@ -1,7 +1,6 @@
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
-import { Callout } from "fumadocs-ui/components/callout";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import {
   DocsBody,
@@ -13,6 +12,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Suspense, use } from "react";
 import { mdxComponents } from "@/components/mdx";
 import { CopyPage } from "@/components/docs/copy-page";
+import { NativeRunNote } from "@/components/docs/native-run-note";
 import {
   PlatformProvider,
   PlatformToggle,
@@ -174,17 +174,10 @@ function PackageContent({
       toc={toc}
     >
       <StatusStrip title={page.title} />
-      <Callout
-        title={`This page ships with the ${collection.kind}`}
-        type="info"
-      >
-        It is rendered from{" "}
-        <code>
-          {collection.dir}/{path.replace(/\.mdx$/, "")}.mdx
-        </code>
-        , the page the package maintains. A browser preview is not available for
-        this {collection.kind}; run it natively in <code>apps/playground</code>.
-      </Callout>
+      <NativeRunNote
+        kind={collection.kind}
+        path={`${collection.dir}/${path.replace(/\.mdx$/, "")}.mdx`}
+      />
       <MDX components={mdxComponents} />
     </PageFrame>
   );
