@@ -29,14 +29,15 @@
   --destructive: #cc3439;
   --border: #e1e5ec;
   --input: #e1e5ec;
-  --ring: #86b300;
+  /* 4.65:1 on the page: the lime family at a weight a boundary can carry. */
+  --ring: #5c7a00;
 
   --sidebar: #ffffff;
   --sidebar-foreground: #191d25;
   --sidebar-border: #e1e5ec;
   --sidebar-accent: #eef7d0;
   --sidebar-accent-foreground: #3d4a00;
-  --sidebar-ring: #86b300;
+  --sidebar-ring: #5c7a00;
   --sidebar-primary: #435300;
   --sidebar-primary-foreground: #f7ffe0;
 

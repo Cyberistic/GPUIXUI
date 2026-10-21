@@ -91,6 +91,17 @@ and Aero — which are styles of the same shape, not a fifth platform (the
 mission's toggle stays macOS · Linux · Windows · Default). Each is written to the
 URL (`?platform=…&look=…`) so a link carries what the reader saw.
 
+The site's own palette is the one thing that is not a library theme, so it is
+held to the library's contract instead: `src/styles/app.css` declares the
+Fumadocs variables once for `:root` and once for `.dark`, and
+`src/lib/docs-theme.test.ts` measures the pairs a reader reads — body text,
+secondary text, the label on every filled surface, error text — at the library's
+own floors, plus the focus ring at the 3:1 boundary floor on the page, a card and
+the sidebar. It found the light scheme's ring at 2.33:1, under the floor, and the
+ring is now `#5c7a00` (4.65:1) in light while the dark scheme keeps the bright
+lime at 8.03:1. The guard also fails when a colour is declared in one scheme and
+not the other, so a scheme cannot silently inherit a variable from its sibling.
+
 - `src/lib/theme-css.ts` is the one bridge: a `Theme` becomes CSS variables
   (`primaryForeground` → `--primary-foreground`, `radius.md` → `--radius`, both
   families, and the density's control heights and paddings). The theme editor
