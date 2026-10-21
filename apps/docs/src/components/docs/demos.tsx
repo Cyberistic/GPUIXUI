@@ -20,6 +20,8 @@ import {
 export interface Demo {
   readonly render: () => ReactNode;
   readonly source: string;
+  /** A composition of parts rather than one component; the note says so. */
+  readonly composition?: boolean;
 }
 
 const ButtonRow = () => (
@@ -216,6 +218,58 @@ const PopoverDemo = () => {
     </div>
   );
 };
+
+/**
+ * The layout lane's frame: a fixed sidebar, a header row, and a scrolling body
+ * that takes the remaining height. It is a composition of `Box`, `Stack` and
+ * `ScrollArea`, so the preview says so rather than presenting it as a component.
+ */
+const LayoutShell = () => (
+  <div className="gx-shell">
+    <div className="gx-shell-sidebar">
+      <span className="gx-shell-brand">
+        <span aria-hidden="true" className="gx-shell-mark" />
+        Atlas
+      </span>
+      {["Overview", "Runs", "Datasets", "Settings"].map((item) => (
+        <span
+          aria-current={item === "Overview" ? "page" : undefined}
+          className="gx-shell-nav"
+          key={item}
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+    <div className="gx-shell-main">
+      <div className="gx-shell-header">
+        <span>Overview</span>
+        <span className="gx-shell-meta">3 open runs</span>
+      </div>
+      <div className="gx-shell-body">
+        <div className="gx-shell-cards">
+          <div className="gx-shell-card">
+            <p className="gx-shell-card-title">Build #481</p>
+            <p className="gx-shell-card-desc">Passed in 2m 14s</p>
+          </div>
+          <div className="gx-shell-card">
+            <p className="gx-shell-card-title">Nightly export</p>
+            <p className="gx-shell-card-desc">62% of 4.2 GB</p>
+          </div>
+        </div>
+        <div className="gx-shell-card">
+          <p className="gx-shell-card-title">Ingest queue</p>
+          <p className="gx-shell-card-desc">
+            The body scrolls; the header stays.
+          </p>
+          <div className="gx-shell-bar">
+            <div className="gx-shell-fill" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const tabRows = [
   {
@@ -451,11 +505,58 @@ const tabsSource = `import {
   </TabsContent>
 </Tabs>;`;
 
+const shellSource = `import { Box, ScrollArea, Separator, Stack, Text, useTheme } from "@gpuixui/primitives";
+
+export function AppFrame() {
+  const theme = useTheme();
+  return (
+    <Box tone="background" style={{ display: "flex", height: 460, overflow: "hidden" }}>
+      <Box tone="card" style={{ width: 168, flexShrink: 0 }}>
+        <Stack direction="column" gap="2xs" style={{ padding: theme.spacing.sm }}>
+          <Text role="label">Atlas</Text>
+          <Text role="body" tone="primary">Overview</Text>
+          <Text role="body" tone="muted">Runs</Text>
+          <Text role="body" tone="muted">Datasets</Text>
+          <Text role="body" tone="muted">Settings</Text>
+        </Stack>
+      </Box>
+
+      <Stack direction="column" grow style={{ minWidth: 0 }}>
+        <Stack
+          direction="row"
+          align="center"
+          justify="between"
+          style={{ height: 36, paddingLeft: theme.spacing.md, paddingRight: theme.spacing.md }}
+        >
+          <Text role="h3">Overview</Text>
+          <Text role="caption" tone="muted">3 open runs</Text>
+        </Stack>
+        <Separator orientation="horizontal" />
+        <ScrollArea axis="vertical" style={{ flex: 1 }}>
+          <Stack direction="column" gap="sm" style={{ padding: theme.spacing.md }}>
+            <Box tone="card" border radius="md" padding="sm">
+              <Text role="body">Build #481 — passed in 2m 14s</Text>
+            </Box>
+            <Box tone="card" border radius="md" padding="sm">
+              <Text role="body">Nightly export — 62% of 4.2 GB</Text>
+            </Box>
+          </Stack>
+        </ScrollArea>
+      </Stack>
+    </Box>
+  );
+}`;
+
 export const demos: Readonly<Record<string, Demo>> = {
   "button-variants": { render: ButtonRow, source: buttonSource },
   "button-sizes": { render: ButtonSizes, source: sizeSource },
   "button-states": { render: ButtonStates, source: stateSource },
   "dialog-demo": { render: DialogDemo, source: dialogSource },
+  "layout-shell": {
+    render: LayoutShell,
+    source: shellSource,
+    composition: true,
+  },
   "popover-demo": { render: PopoverDemo, source: popoverSource },
   "tabs-demo": { render: TabsDemo, source: tabsSource },
 };

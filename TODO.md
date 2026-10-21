@@ -372,7 +372,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[███████░░░]` 7/9
+`[x]` `[████████░░]` 8/10
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -408,6 +408,22 @@ a workaround for two live sessions sharing one worktree; see
       sample, so a whole-window dim fails. Evidence: `.artifacts/live/keyboard.png`
       + README table. No component needs to undo it; one that draws its own
       ring opts out per element.
+`[x]` Land the `register-font` live probe (plan `052`'s native half): the
+      runner installs the faces a probe declares with the shipped
+      `registerFonts` before the first paint, and the probe measures the
+      **metrics** of three samples — the theme face, a family no runtime knows,
+      and the installed `GpuixTestSquare`. Measured here: the installed family
+      lays `ABm` out at its own 80px (4em at 20px) while the unknown family
+      paints 44px, so the paint is the file, not the style. Negative control:
+      dropping the face from the probe fails
+      `the installed family paints the face's own advances` (`expected 80 ± 1,
+      got 44`, exit `1`). Fixture bytes are embedded in `src/live/fonts.ts` with
+      provenance; 4 unit tests guard the file's declared family and the width
+      the probe expects. Evidence: `.artifacts/live/register-font.png`.
+`[x]` Adopt the shipped `keyboardFocusRing` in the live probes — the
+      `focus-visible` probe had its own copy of the outline, so it proved a
+      local duplicate rather than the helper the library ships; re-run green
+      after the swap (`--only focus-visible`).
 `[ ]` Port the modal/menu/toast Tier 2 examples into live probes (the headless
       scenarios already cover the primitives)
 `[ ]` Frame the live runner as a release gate before release
@@ -679,6 +695,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Seven primitives pages carried no `## API` section although the package's own page contract (`packages/primitives/docs/README.md` §Page contract) requires one: `meter.mdx`, `number-field.mdx`, `otp-field.mdx`, `range-slider.mdx`, `rating.mdx`, `slider.mdx`, `toggle.mdx` | primitives | **resolved** — each page's prop table now lives under `## API` (their "Variants, sizes and states" heading was the table under another name), and `packages/primitives/src/docs.test.ts` holds all 28 pages to the contract: required sections in order, the `Prop/Type/Default/Consequence` header, a usage snippet importing the package root, frontmatter, and the index. It failed on exactly those seven pages before the fix |
 | Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/package-docs.test.ts` fails on a regression |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
+| `COMPONENTS.md`'s Tier 1–5 tables are parsed by the docs site (`apps/docs/src/lib/inventory.ts`): each row must keep the four columns (`Component \| Status \| GPUix support \| Notes / limitations`) and the `Tier N` heading above it. A fifth column or a second table under one heading makes every row "malformed" and empties `/docs/layouts`, `/docs/data-display` and `/docs/workspace`; `inventory.test.ts` fails first, naming the line. Add a note to the file's intro when it is next edited | anyone editing `COMPONENTS.md` | open — parser and guard are in place; the source-of-truth file does not yet say so |
 | Correct `docs/component-api.md` §2: "`onValueChange` is the only change callback name" is wrong for boolean parts — base-gpui uses `on_checked_change`, so primitives adopts `onCheckedChange` alongside `onValueChange` (plan 040 §2.1) | components | pending |
 | A `darwin-x64` binding for `@gpuix/native` **0.11.0** (B1, re-opened by the version bump; the store's local build was 0.10.0) | playground | **resolved** — rebuilt from the pinned `2e31b47` with the fixed zed checkout path; 21/21 smoke green on 0.11.0 |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
@@ -709,9 +726,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ### Docs information architecture (`docs-site`)
 
-`[ ]` `[██░░░░░░░░]` 1/4
+`[x]` `[█████░░░░░]` 2/4
 
 `[x]` Architecture page — `/docs/architecture` names all 11 packages, the dependency direction, the recipe pipeline, the Effect boundaries, the testing lanes and where a change goes; `apps/docs/src/lib/architecture.test.ts` fails when a package is added without a row or the page leaves the sidebar
+`[x]` Layouts, Workspace and Data display pages — `/docs/layouts`, `/docs/workspace` and `/docs/data-display` are the three composition lanes, each under a Composition sidebar section. Their rows are **generated** from `COMPONENTS.md` by `<LaneTable lane>` (`apps/docs/src/lib/inventory.ts`), so a page cannot call a row shipped while the inventory says `todo`; the summary prints rows/shipped/to-build. Each page names the shipped pieces with links, the gaps with evidence and where a change goes; the layout page carries the window-frame composition preview (`layout-shell`), the workspace page the tabbed-panel preview and the data page links the Dashboard block. `inventory.test.ts` holds the parse (a malformed row is reported, not dropped), `lane-table.test.tsx` proves every row reaches the rendered table, `lane-page.test.ts` proves each page mounts its table, names the inventory and sits in the sidebar. `docs/preview-strategy.md` §"The lane pages" records the template and the no-preview-for-a-missing-component rule. Tests: `nub run --filter @gpuixui/docs test` (10 files, 70 tests), `check-types`, `build`, and the dev server at `/docs/layouts`, `/docs/workspace`, `/docs/data-display`
 `[ ]` Layouts, Workspace and Data display pages — the composition lanes the component inventory names, with live examples as they land
 `[ ]` Examples and API reference pages — the example registry once the playground mounts it, plus a generated public-export reference
 `[ ]` License and attribution page — rendered from `LICENSES/` once the inventory is complete

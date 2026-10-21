@@ -1,0 +1,107 @@
+---
+title: Workspace
+description: The desktop-shell lane — the parts that already compose a window, the docking behaviours the runtime cannot support yet, and where state lives.
+---
+
+A workspace is the part of a desktop app that is not a form: panels that resize,
+tabs that move, a palette that finds anything, a layout that survives a restart.
+Most of the lane is unbuilt. What ships today composes into a real window; the
+rest is blocked on one row — split panes — and this page says why instead of
+drawing a docking layout that does not exist.
+
+## The lane
+
+Rows and statuses come from `COMPONENTS.md`.
+
+<LaneTable lane="workspace" />
+
+## What composes a window today
+
+| Part of the shell | What to compose it from | Page |
+| ----------------- | ----------------------- | ---- |
+| The frame | `Box` + `Stack` + `Separator` + `ScrollArea` — fixed sidebar, growing content column | [Layouts](/docs/layouts) |
+| Tabbed panels | `Tabs` with a measured shared indicator, both axes, manual or automatic activation | [Tabs](/docs/components/tabs) |
+| Command palette | `CommandMenu` over a dialog-hosted, ranked, searchable list | [Command menu](/docs/components/command-menu) |
+| Application menus | `DropdownMenu`, `ContextMenu` and submenus over the shared row model | [Components](/docs/components) |
+| Breadcrumb navigation | `Breadcrumb` with middle collapsing | [Breadcrumb](/docs/components/breadcrumb) |
+| Toolbars and status bars | `Stack` + `ButtonGroup` + `Separator`, a page-level recipe | [Layouts](/docs/layouts) |
+| Notifications | The `Toast` provider and viewport, rendered last in the tree | [Toast](/docs/components/toast) |
+| A whole window | The [Dashboard](/docs/blocks/dashboard) block: sidebar, search, cards and rows | [Blocks](/docs/blocks) |
+
+<ComponentPreview name="tabs-demo" />
+
+The tab strip is the one workspace-shaped component with a measured behaviour:
+each trigger reports its painted box, the selected surface matches it, and
+arrows, Home and End move by the runtime's real focus. A tabbed panel built from
+it resizes with the window because the indicator re-measures instead of caching
+a pixel offset.
+
+## Split panes are the gate
+
+`Resizable split panes` is the first unbuilt row and everything that nests —
+panel groups, docking layouts, nested arrangements, multi-pane editing — is a
+composition over it. The runtime supports the pieces and not the behaviour:
+
+- **What exists:** pointer events, `col-resize`/`row-resize` cursors, measured
+  layout (`onLayout`), and real native focus.
+- **What does not:** no `transform`, so a divider cannot animate and a panel
+  cannot slide; no `flex-basis` per child, so a pane's size is an explicit
+  number in state; no pointer capture, so a drag ends when the pointer leaves
+  the divider.
+
+That fixes the design: a divider is a **focusable control with a numeric width**
+— arrows resize by a step, Home/End jump to the minimum and maximum, and a
+pointer drag updates the same number while reporting its bounds. The width is
+application state, because a workspace that cannot persist it is not a
+workspace. Choosing otherwise (animated panels, a drag that survives the
+pointer leaving) would be a browser promise this runtime cannot keep.
+
+## State and persistence
+
+There is no renderer storage, so a layout is the app's data. Model it once and
+decode at the boundary — the same rule the rest of the library follows:
+
+```tsx
+import { Effect } from "effect";
+import * as Schema from "effect/Schema";
+
+class WorkspaceLayout extends Schema.Class<WorkspaceLayout>("WorkspaceLayout")({
+  sidebarWidth: Schema.Number,
+  paneWidths: Schema.Array(Schema.Number),
+  activeTab: Schema.String,
+}) {}
+
+const decodeLayout = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(WorkspaceLayout),
+);
+```
+
+Keep that decode at the entrypoint, where the persisted string is read; the
+panels then take plain numbers. A workspace does not render from
+`JSON.parse`, and a stale or hand-edited layout becomes a typed decode failure
+the app can reset, not a crash on mount.
+
+## Gaps, with the evidence
+
+| Gap | Evidence | Strongest honest alternative |
+| --- | -------- | ---------------------------- |
+| Resizable panes | No drag host feature, no pointer capture, no per-child basis | A keyboard-and-pointer divider that writes a number to app state |
+| Detachable / movable tabs | Needs a portal or drag model; the runtime has neither | Tabs that switch panels in one window |
+| Docking layouts | Composition over split panes, which do not exist yet | A fixed, hand-built layout |
+| Persistent panel state | No renderer storage | `Schema`-encoded app state, decoded at the entrypoint |
+| Application menus | The macOS menu bar is a renderer API; cross-platform menus are ours | `DropdownMenu` in the window |
+| Terminal surfaces | No terminal host element; a PTY surface is **unverified** | A log viewer: `ScrollArea` + `Text` |
+
+The capability matrix and its evidence are on [Runtime](/docs/runtime).
+
+## Where a workspace change goes
+
+- **A panel model** (sizes, nesting, collapse) → a pure module with a unit
+  suite, then a component in `@gpuixui/components` with a native behaviour
+  suite and a page under `packages/components/docs`.
+- **A window composition** → a Block while it is one page's recipe; it becomes
+  a component only when a second consumer needs the identical behaviour.
+- **Persistence** → the application. The library ships schemas, not storage.
+- **A new theme role for chrome** → `@gpuixui/tokens`, with the contrast
+  contract updated, so a platform switch repaints the shell too. See
+  [Theming](/docs/theming).

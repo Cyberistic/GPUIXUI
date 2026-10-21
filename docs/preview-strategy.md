@@ -121,6 +121,39 @@ checks every curated page for the required sections and their order, a preview,
 and the package it installs from. The package's own pages are exempt — they are
 the component's doc file.
 
+## The lane pages
+
+Three pages sit outside the component and block folders because they describe a
+**composition lane**, not a single component: [Layouts](/docs/layouts),
+[Workspace](/docs/workspace) and [Data display](/docs/data-display). They are
+where a reader lands when the question is "how do I assemble these parts", so
+they have their own contract.
+
+| Section | Contents |
+| ------- | -------- |
+| frontmatter | `title`, one-sentence `description` |
+| intro | what the lane is, and how much of it is unbuilt |
+| The lane | `<LaneTable lane="…" />` — the generated inventory |
+| Today | the shipped pieces that compose the lane, each linked to its page, or a runnable composition preview |
+| Gaps | the missing rows, each with its evidence and the strongest honest alternative |
+| Where a change goes | which package owns the next change in the lane |
+
+**The table is generated.** `src/lib/inventory.ts` parses the tier tables in
+`COMPONENTS.md`; `<LaneTable>` renders the rows the lane names and prints "N
+rows · N shipped · N to build" from the same parse. A lane page therefore cannot
+call a row shipped while the inventory says `todo`, and a new inventory row
+appears without a docs change. `src/lib/inventory.test.ts` holds the parse (a
+malformed row is reported, not dropped), `lane-table.test.tsx` proves every row
+reaches the rendered table, and `lane-page.test.ts` proves each page mounts its
+table, names the inventory and sits in the sidebar.
+
+**No preview for a component that does not exist.** A lane preview is either a
+shipped component (`<ComponentPreview>`) or a composition of shipped parts
+(`<ComponentPreview>` with `composition: true`, which changes the note to "a
+composition of native parts, not a new component"). A docking layout, a table or
+a chart is described in prose and its gap is recorded — never drawn as if it
+were shipped.
+
 ## Adding a preview
 
 1. Add the rendering and its `source` string to `src/components/docs/demos.tsx`

@@ -443,6 +443,138 @@
   color: var(--primary);
 }
 
+/* ---- layouts: the window frame, composed from Box + Stack + ScrollArea ---- */
+.gx-shell {
+  display: flex;
+  width: 100%;
+  max-width: 620px;
+  height: 300px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--background);
+  text-align: left;
+}
+
+.gx-shell-sidebar {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  gap: 2px;
+  width: 156px;
+  padding: 12px 8px;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+}
+
+.gx-shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 10px;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.gx-shell-mark {
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--primary);
+  border-radius: 5px;
+}
+
+.gx-shell-nav {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: calc(var(--radius) - 1px);
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+}
+
+.gx-shell-nav[aria-current="page"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 600;
+}
+
+.gx-shell-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.gx-shell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: none;
+  height: var(--control-height-md);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.gx-shell-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+.gx-shell-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  padding: 12px;
+  overflow: auto;
+}
+
+.gx-shell-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.gx-shell-card {
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-shell-card-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gx-shell-card-desc {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-shell-bar {
+  height: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--secondary);
+}
+
+.gx-shell-fill {
+  width: 62%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
 /* ---- install / source blocks ---- */
 .gx-install-note {
   margin: 10px 0 0;

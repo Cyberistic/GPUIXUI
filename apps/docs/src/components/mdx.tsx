@@ -4,6 +4,7 @@ import { BlockPreview } from "./docs/block-preview";
 import { ComponentPreview } from "./docs/component-preview";
 import { ComponentSource } from "./docs/component-source";
 import { Install } from "./docs/install";
+import { LaneTable } from "./docs/lane-table";
 import { ThemeEditor } from "./docs/theme-editor";
 
 /** The MDX surface shared by every docs page. */
@@ -14,5 +15,6 @@ export const mdxComponents = {
   ComponentPreview,
   ComponentSource,
   Install,
+  LaneTable,
   ThemeEditor,
 };

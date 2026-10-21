@@ -20,16 +20,21 @@ content/docs/           MDX pages and their meta.json navigation
   dark-mode.mdx         App-owned mode switching
   primitives/           The Tier 1 section index (its pages come from the packages)
   components/           Custom pages (Button, Dialog, Popover, Tabs) and the index
+  layouts.mdx           The layout lane: primitives, the window frame, runtime rules
+  workspace.mdx         The desktop-shell lane: what composes a window, split-pane gate
+  data-display.mdx      The data lane: what ships, the table gate, runtime gaps
   contributing.mdx      Checks, worktrees and the component checklist
 public/                 Static assets (favicon)
 src/routes/index.tsx    The landing page at `/`
 src/routes/docs/        `/docs` index and the `/docs/$` splat
 src/routes/api/search   Fumadocs search endpoint
 src/components/docs/    ComponentPreview, PreviewSurface, Install, ComponentSource,
-                        CopyPage, PlatformToggle, demos
+                        CopyPage, PlatformToggle, LaneTable, demos
 src/components/mdx.tsx  The MDX component registry
 src/lib/docs-view.tsx   Shared docs layout and the two-collection page template
 src/lib/source.ts       Fumadocs collection for `content/docs`
+src/lib/inventory.ts    Parses the tier tables of COMPONENTS.md into lane rows
+src/lib/lane-page.test.ts Holds the lane pages to their template and sidebar place
 src/lib/collection-routes.ts The registry: every mounted package directory, route, section
 src/lib/package-docs.ts The Fumadocs loaders for the three package collections
 src/lib/page-tree.ts    Fills the package's pages into the Components section

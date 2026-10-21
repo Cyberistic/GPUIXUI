@@ -1,0 +1,101 @@
+---
+title: Data display
+description: The data-presentation lane — what ships today, what a table will be built from, and the runtime gaps it already measured.
+---
+
+A data surface is rows, columns, a header that sorts them and a selection that
+survives a scroll. GPUix 0.11.0 has **no table host element**, so this lane is a
+composition of layout primitives, the shipped list and a pure row model — not a
+widget the runtime hands over. None of the Tier 3 rows is shipped yet; this page
+records what exists, what a missing row will be built from, and the evidence for
+each gap, so the first table does not start by re-discovering them.
+
+## The lane
+
+Rows and statuses come from `COMPONENTS.md`.
+
+<LaneTable lane="data-display" />
+
+## What ships today
+
+Most of a data surface is already here, one tier down. These are the pieces the
+first table will compose:
+
+| Piece | Page | What it gives the lane | Its limit |
+| ----- | ---- | ---------------------- | --------- |
+| List / ListItem | [List](/docs/components/list) | A roving tab stop, single and multiple selection, Shift ranges, `Cmd`/`Ctrl`+A, type-ahead, activation | Rows are compound children, so a list is not virtualized |
+| Pagination | [Pagination](/docs/components/pagination) | A derived page window with stable width | No page-size control |
+| Empty state | [Empty state](/docs/components/empty-state) | The no-rows state a table shows | No illustration slot |
+| Cards, badges, progress | [Components](/docs/components) | Statistic cards and metric rows today | No chart component |
+| Message scroller | [Message scroller](/docs/components/message-scroller) | Append-follow, unread count, jump-to-latest | Every row renders: `<virtual-list>` takes an item count, not compound children |
+| Command menu | [Command menu](/docs/components/command-menu) | Ranked filtering over a list | Per-group ranking, no column model |
+
+A composed example is the [Dashboard](/docs/blocks/dashboard) block: statistic
+cards, `Progress` rows and a hand-drawn SVG chart. The chart is labelled a gap
+in its own source, because there is no chart component.
+
+## A data surface you can build now
+
+Two shipped primitives carry most of the lane: `Grid` for equal tracks and
+`List` for interacting rows. A statistic card is a `Card` with `Text` and
+`Badge`; a key/value panel is a two-column `Grid`.
+
+```tsx
+import { Grid, Text } from "@gpuixui/primitives";
+
+<Grid columns={2} gap="sm">
+  <Text role="caption" tone="muted">Rows</Text>
+  <Text role="code">12,480</Text>
+  <Text role="caption" tone="muted">Columns</Text>
+  <Text role="code">7</Text>
+  <Text role="caption" tone="muted">Last import</Text>
+  <Text role="code">2 min ago</Text>
+</Grid>;
+```
+
+This is the honest ceiling today: you own the row model, the sort and the
+selection, and you draw the header yourself. What is missing is the reusable
+part — a header that sorts, a selection that survives sorting, and column
+configuration.
+
+## The table row comes first
+
+The other twelve rows depend on it, so `Tables` is the row that unblocks the
+lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
+
+- **Rows and columns** — `Grid` for equal tracks; a whole row is one child, so
+  the header and body share one column count.
+- **Sort** — a pure module over the row array, like `menu/logic.ts` and
+  `calendar/logic.ts`: `sortRows(rows, key, direction)` with the column
+  definition owning the comparison. A component never sorts in render.
+- **Selection** — a set of row ids, not indices, so it survives a sort; Range
+  and `Cmd`/`Ctrl` semantics are the ones [List](/docs/components/list) already
+  proves.
+- **Keyboard** — a roving tab stop over rows and a header that is reachable, or
+  a grid composite; the runtime has real focus but no `aria-colindex`, so a
+  screen reader gets the row name and its selected state, not a cell address.
+- **Virtualization** — `<virtual-list>` exists, but it takes an item count and
+  renders a row itself, so a virtualized table is a different composition from a
+  compound-children table. That is why "Virtualized tables" is its own row.
+
+## Gaps, with the evidence
+
+| Gap | Evidence |
+| --- | -------- |
+| No table element | GPUix 0.11.0's element set has `div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`, `anchored`, `code`, `diff`, `markdown`, `virtual-list` — no table |
+| No cell-level accessibility | `role`, `aria-label`, `aria-selected` and `aria-level` exist; `aria-colindex`, `aria-rowindex` and `aria-describedby` do not |
+| Charts | No chart host. `<svg>` draws static charts; `<canvas>` is documented as planned and is **unverified** |
+| Hierarchical data | A tree view needs a `<virtual-list>` plus our own flattening; hierarchical virtualization is ours |
+| Resizable columns | Pointer events and `col-resize`/`row-resize` cursors exist; no column model, so the resize is application state |
+
+The full runtime table is on [Runtime](/docs/runtime).
+
+## Where a data change goes
+
+- A **row primitive** (selection, sorting, filtering) → a pure module with a
+  unit suite first; a component consumes it.
+- **Table, tree and toolbar components** → `@gpuixui/components`, each with a
+  native behaviour suite and a page under `packages/components/docs`.
+- A **statistic card or a chart** → a Block until the behaviour is reusable; a
+  chart is a gap until a native drawing surface is verified.
+- A **column layout in one app** → the app, or a Block, not a library prop.

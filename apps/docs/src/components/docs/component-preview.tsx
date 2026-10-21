@@ -45,9 +45,11 @@ export function ComponentPreview({ name }: { name: string }) {
         </TabsContent>
       </Tabs>
       <p className="gx-component-note">
-        Browser preview: the geometry, palette and states of the native
-        component, drawn in the {platformLabel(platform)} type style. The
-        shipped component renders through GPUix, not the DOM.
+        {demo.composition === true
+          ? "A composition of native parts, not a new component. "
+          : "Browser preview: the geometry, palette and states of the native component. "}
+        Drawn in the {platformLabel(platform)} type style; the shipped code
+        renders through GPUix, not the DOM.
       </p>
     </div>
   );

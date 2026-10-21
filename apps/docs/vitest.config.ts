@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 // minimal config keeps `nub run --filter @gpuixui/docs test` fast and isolated.
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
     environment: "node",
   },
 });
