@@ -1572,7 +1572,7 @@ const MotionProbe = (): ReactNode => {
         <motion.div
           initial={{ width: 120, height: 40 }}
           animate={{ width: grown ? 240 : 120, height: grown ? 240 : 40 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+          transition={{ duration: 3, ease: "easeInOut" }}
           onMotionComplete={() => setCompletes((current) => current + 1)}
           style={{
             overflow: "hidden",
@@ -3392,12 +3392,12 @@ const isTravelling = (height: number, from: number, to: number): boolean =>
   height > from + 2 && height < to - 2;
 
 /**
- * Six painted heights of the animated box, sampled about 40ms apart.
+ * Eight painted heights of the animated box, sampled about 50ms apart.
  *
  * A 0.6s `easeInOut` tween moves slowly at both ends, so one sample is not
  * enough to tell a tween from a jump: the run's first 240ms only reaches ~90px.
- * Five samples straddle the slow start and the sample after the last one is the
- * settled value.
+ * The samples straddle the slow start; the value read after the last one is the
+ * settled height.
  */
 const motionSamples = (
   ctx: Smoke.AsyncSmokeContext,
@@ -3406,11 +3406,11 @@ const motionSamples = (
   Smoke.SmokeAssertionError | Smoke.SmokeHostError
 > =>
   Effect.forEach(
-    [1, 2, 3, 4, 5, 6],
+    [1, 2, 3, 4, 5, 6, 7, 8],
     () =>
       Effect.gen(function* () {
         const box = yield* paintedBox(ctx, "motion-box");
-        yield* Effect.sleep(Duration.millis(40));
+        yield* Effect.sleep(Duration.millis(50));
         return box.height;
       }),
     { concurrency: 1 },
@@ -3435,7 +3435,10 @@ const motionSamples = (
 const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("motion-box");
-    yield* Effect.sleep(Duration.millis(150));
+    // A previous probe's screenshot stalls the animation clock, and a run whose
+    // frames resume late completes in one step. Settling the window before the
+    // first press is what makes this measurement independent of what ran before.
+    yield* Effect.sleep(Duration.millis(800));
     const small = yield* paintedBox(ctx, "motion-box");
     yield* ctx.expectNear(
       "the box starts at its initial height",
@@ -3466,7 +3469,7 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     yield* ctx.host.click("motion-toggle");
     const growSamples = yield* motionSamples(ctx);
-    yield* Effect.sleep(Duration.millis(600));
+    yield* Effect.sleep(Duration.millis(900));
     const grown = yield* paintedBox(ctx, "motion-box");
 
     yield* ctx.expectEqual(
@@ -3499,12 +3502,10 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       320,
       1,
     );
-    yield* ctx.host.capture("motion-grown");
-    yield* Effect.sleep(Duration.millis(400));
 
     yield* ctx.host.click("motion-toggle");
     const shrinkSamples = yield* motionSamples(ctx);
-    yield* Effect.sleep(Duration.millis(600));
+    yield* Effect.sleep(Duration.millis(900));
     const back = yield* paintedBox(ctx, "motion-box");
     yield* ctx.expectEqual(
       "the reverse run paints an intermediate frame too",
@@ -3530,6 +3531,15 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       200,
       1,
     );
+
+    // Captures come last, after every timed run: a screenshot stalls the
+    // animation clock, so a capture taken between a press and its samples makes
+    // the next run complete in one step (measured: `240, 238, 40, 40`).
+    yield* ctx.host.click("motion-toggle");
+    yield* Effect.sleep(Duration.millis(900));
+    yield* ctx.host.capture("motion-grown");
+    yield* ctx.host.click("motion-toggle");
+    yield* Effect.sleep(Duration.millis(900));
     yield* ctx.host.capture("motion-shrunk");
   });
 

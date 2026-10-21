@@ -834,30 +834,26 @@ The runtime's `motion` measured on **painted geometry**. Two inventory rows name
 it — Tier 3's "expandable rows" (`motion` height) and Tier 4's "collapsible
 sidebars" (`motion` width, as an outer clipping box) — and neither had a window
 measurement: a `TestRenderer` frame is not a run. A 120×40 box tweens to 240×240
-over 0.6s `easeInOut` and holds a fixed 320×200 child.
+with `transition={{ duration: 3, ease: "easeInOut" }}` and holds a fixed 320×200
+child.
 
 | Step | Check |
 | ---- | ----- |
 | mount | the box is 120×40 |
 | the child inside it | 320×200 although the box is 120×40 — the box **clips**, it does not reflow the content |
-| grow press, six heights ~40ms apart | `40, 41.5, 47, 57, 71.5, 89.5` — a tween, not a jump (an `easeInOut` run is slow at both ends, which is why one sample cannot tell them apart) |
+| grow press, eight heights ~50ms apart | `40, 43, 117, 123, 221, 240, 240, 240` — a tween, not a jump |
 | settled | 240×240, and `onMotionComplete` fired once |
 | the child again | still 320×200 — the larger box did not stretch it |
-| shrink press, six samples | `240, 238.5, 232.5, 222.5, 208.5, 190` — the reverse run tweens too |
+| shrink press, eight samples | `240, 240, 167, 63, 59.5, 40, 40, 40` — the reverse run tweens too |
 | settled | 40 high again, `completes=2`, the child still 200 tall |
 
-31 checks, `--only motion-geometry`, green (three consecutive runs). The
-negative control is `transition={{ duration: 0 }}`: it fails
-`the growth paints a frame between the two sizes` (exit `1`), so the check
-really is observing the run rather than the two target sizes. Captures:
+35 checks, `--only motion-geometry`, green in three consecutive runs (each
+alongside `context-menu-lifecycle` and `pointer-capture`, so the result does not
+depend on being the first probe). The negative control is
+`transition={{ duration: 0 }}`: it fails
+`the growth paints a frame between the two sizes` (exit `1`), so the check really
+is observing the run rather than the two target sizes. Captures:
 `.artifacts/live/motion-grown.png`, `motion-shrunk.png`.
-
-**A measured probe caveat.** A screenshot stalls the animation clock, and the run
-then completes early once frames resume: with a capture taken between the
-reverse press and its samples the box read `240, 238, 40, 40`, while the same run
-without that capture read `240, 238.5, 232.5, 222.5, 208.5, 190`. A probe that
-measures motion therefore keeps its captures **after** the sampling, with a
-settle between them — otherwise it measures the stall, not the animation.
 
 What it settles:
 
@@ -873,6 +869,23 @@ What it settles:
 3. **What it does not provide:** no `transform`, so nothing slides (the
    carousel's documented limitation stands), and the animation is a box-geometry
    tween, not a spring. `animate` is required — `motion` is not Framer Motion.
+4. **`duration` is not a wall-clock promise.** The same 200px travel was sampled
+   as a ~100ms step (`40, 115.5, 240`), a ~250ms tween (the table above) and a
+   ~400ms sweep for a declared 5s, in different runs of the same window. A
+   component must drive its next step from `onMotionComplete`, never from a
+   timer that assumes the number.
+
+**Two measured probe caveats**, both recorded in the steps' header:
+
+- A screenshot stalls the animation clock, and the run then completes early once
+  frames resume: with a capture taken between the press and its samples the box
+  read `240, 238, 40, 40` instead of tweening. The captures here therefore come
+  **after** every timed run, with a settle between them.
+- A probe must not press the instant it mounts. Run after another probe's
+  screenshot, the growth's intermediate frames were missed altogether
+  (`expected true, got false`); with an 800ms settle after `waitFor` the same
+  three-probe selection passed three times in a row. The probe settles first for
+  that reason, and samples eight times so one unlucky frame cannot decide it.
 
 ### `toast-lifecycle` — measured on 0.11.0 here
 
