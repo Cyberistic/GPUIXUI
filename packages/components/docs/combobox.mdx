@@ -270,6 +270,11 @@ outside press closes the popup and leaves the dialog open. That also holds for a
 picker mounted open together with the dialog, because layer order follows the
 nesting rather than React's effect order (plan 732).
 
+An option that opens a modal names the trigger as the vanishing row's **focus
+successor**, so the modal restores there rather than to nothing; an app-driven
+close of the popup while a row holds focus hands the trigger the keyboard
+(plan 832).
+
 The search input keeps focus and paints the token focus ring while it holds it
 (plan 523); the highlighted row is visual. The trigger paints the same token
 ring while it holds focus on the closed control, and gives it up while the popup

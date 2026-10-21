@@ -121,6 +121,10 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 - Choosing a link never leaves focus on the unmounted panel: focus returns to
   that item's trigger once the close is accepted, unless the app moves focus in
   `onSelect` (the app's focus wins, like every other same-update handover).
+- A link that opens a modal names the item's trigger as its **focus successor**,
+  so the modal restores there instead of to nothing when it closes. An
+  app-driven close while a link holds focus hands the trigger the keyboard
+  (plan 832).
 - Links are buttons with `onSelect`; `0.10.0` has no anchor element or `href`.
 - A disabled link is inert: it leaves the tab order, runs nothing, paints no
   hover or press fill and announces `Disabled`. The shared button drops the

@@ -78,6 +78,8 @@ interface PopoverContextValue {
   /** Request a close; focus moves only when the close is accepted. */
   readonly requestClose: (focus: PopoverCloseFocus) => void;
   readonly trigger: RefObject<PublicInstance | null>;
+  /** The floating surface's host, owned by the root so a close can measure it. */
+  readonly surface: RefObject<PublicInstance | null>;
 }
 
 const PopoverContext = createContext<PopoverContextValue | undefined>(
@@ -121,12 +123,15 @@ export const Popover = ({
   const depth = useOverlayHost().depth + 1;
   const renderer = useGpuix().renderer;
   const trigger = useRef<PublicInstance | null>(null);
+  const surface = useRef<PublicInstance | null>(null);
   // A close the caller refuses must leave the surface and the user's focus
-  // alone, so the restore waits for the observed `open -> false` transition.
-  const requestClose = useCloseFocus<PopoverCloseFocus>(
+  // alone, so the restore waits for the observed `open -> false` transition. An
+  // app-driven close takes its own control away, so it names the trigger as that
+  // control's successor and hands it the keyboard (plan 832).
+  const requestClose = useCloseFocus<PopoverCloseFocus>({
     open,
-    () => setOpen(false),
-    (focus) => {
+    close: () => setOpen(false),
+    restore: (focus) => {
       if (focus === "none") return;
       const target = trigger.current;
       if (target === null) return;
@@ -134,10 +139,15 @@ export const Popover = ({
       if (focus === "next") renderer?.focusNext?.();
       if (focus === "previous") renderer?.focusPrevious?.();
     },
-  );
+    handOff: {
+      surface,
+      target: () => trigger.current?.id ?? null,
+      focus: true,
+    },
+  });
 
   const context = useMemo<PopoverContextValue>(
-    () => ({ open, setOpen, requestClose, trigger }),
+    () => ({ open, setOpen, requestClose, trigger, surface }),
     [open, requestClose, setOpen],
   );
 
@@ -262,13 +272,12 @@ const PopoverSurface = ({
   ...rest
 }: PopoverContentProps) => {
   const theme = useTheme();
-  const { open, requestClose, trigger } = usePopoverContext();
+  const { open, requestClose, trigger, surface } = usePopoverContext();
   const depth = useOverlayHost().depth;
   const renderer = useGpuix().renderer;
   const gap = offsetOf(sideOffset, 6);
   const extra = offsetOf(alignOffset, 0);
   const margin = offsetOf(collisionPadding, 8);
-  const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   /** The first tab stop measured when the surface opened. */
   const firstTabStop = useRef<number | null>(null);

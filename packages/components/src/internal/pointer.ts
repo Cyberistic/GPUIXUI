@@ -61,6 +61,43 @@ export const pressedOn = (
 ): boolean => pressedWithin(renderer, element?.id, event);
 
 /**
+ * The focused host when its centre lies inside native element `id`.
+ *
+ * A surface cannot ask 0.10.0 "is focus inside me?" — it delivers no
+ * focus-within signal — so the box test is the signal (plan 386): a control
+ * whose centre is inside a surface leaves with it. `None` when nothing holds
+ * focus, because a removed host cannot be read (plan 708), and when either box
+ * is missing. A point-in-box test, so the plan-540 box conventions do not
+ * apply.
+ */
+export const focusedWithin = (
+  renderer: NativeRenderer | null,
+  id: number | null | undefined,
+): Option.Option<number> =>
+  Option.flatMap(
+    Option.all({
+      focused: Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
+      surface: Option.flatMap(Option.fromNullishOr(id), (target) =>
+        Option.fromNullishOr(renderer?.getElementBounds?.(target)),
+      ),
+    }),
+    ({ focused, surface }) =>
+      Option.filter(
+        Option.fromNullishOr(renderer?.getElementBounds?.(focused)),
+        (control) => {
+          const x = control.x + control.width / 2;
+          const y = control.y + control.height / 2;
+          return (
+            x >= surface.x &&
+            x <= surface.x + surface.width &&
+            y >= surface.y &&
+            y <= surface.y + surface.height
+          );
+        },
+      ).pipe(Option.as(focused)),
+  );
+
+/**
  * A dismiss layer's ownership test: the press landed on the surface `surfaceId`
  * names. Read at event time, because a surface mounts after the layer it owns.
  */

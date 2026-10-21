@@ -117,6 +117,8 @@ interface NotificationCentreContextValue {
   /** The empty panel's title, resolved on the root. */
   readonly empty: string;
   readonly trigger: RefObject<PublicInstance | null>;
+  /** The panel's host, owned by the root so a close can measure it. */
+  readonly surface: RefObject<PublicInstance | null>;
   /** Native row handles by notification id, for keyboard focus. */
   readonly rowRefs: RefObject<Map<string, PublicInstance>>;
   /** Bring one row into the list's visible box; a no-op when it already is. */
@@ -182,6 +184,7 @@ export const NotificationCentre = ({
     onChange: onOpenChange,
   });
   const trigger = useRef<PublicInstance | null>(null);
+  const surface = useRef<PublicInstance | null>(null);
   const rowRefs = useRef(new Map<string, PublicInstance>());
   const revealRow = useRef<(id: string) => void>(() => undefined);
   const [activeId, setActiveId] = useState<Option.Option<string>>(
@@ -190,15 +193,22 @@ export const NotificationCentre = ({
   /** The row the reading cursor last focused, remembered while it exists. */
   const heldRow = useRef<Option.Option<string>>(Option.none());
   // A close the caller refuses must leave the panel and the user's focus alone.
-  const requestClose = useCloseFocus<NotificationCloseFocus>(
+  // An app-driven close takes the row the reader was on away, so it names the
+  // trigger as that row's successor and hands it the keyboard (plan 832).
+  const requestClose = useCloseFocus<NotificationCloseFocus>({
     open,
-    () => setOpen(false),
-    (focus) => {
+    close: () => setOpen(false),
+    restore: (focus) => {
       if (focus === "none") return;
       const target = trigger.current;
       if (target !== null) renderer?.focusElement?.(target.id);
     },
-  );
+    handOff: {
+      surface,
+      target: () => trigger.current?.id ?? null,
+      focus: true,
+    },
+  });
 
   const rows = useMemo(() => flattenRows(notifications), [notifications]);
   const unread = useMemo(() => unreadCount(notifications), [notifications]);
@@ -321,6 +331,7 @@ export const NotificationCentre = ({
       label,
       empty,
       trigger,
+      surface,
       rowRefs,
       revealRow,
       active,
@@ -347,6 +358,7 @@ export const NotificationCentre = ({
       rows,
       setActive,
       setOpen,
+      surface,
       trigger,
       unread,
     ],
@@ -472,6 +484,7 @@ export const NotificationCentreContent = ({
     requestClose,
     label: rootLabel,
     trigger,
+    surface,
     rowRefs,
     moveActive,
     readActive,
@@ -480,7 +493,6 @@ export const NotificationCentreContent = ({
   const gap = offsetOf(sideOffset, 8);
   const extra = offsetOf(alignOffset, 0);
   const margin = offsetOf(collisionPadding, 8);
-  const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   const placement = usePlacement({
     open,

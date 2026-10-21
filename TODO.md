@@ -1624,6 +1624,24 @@ retired once both branches are one
       14/14 after, three mutations; unit 528 in 49 files, scoped smoke
       `overlay-dialog` + `modal-focus-trap` green, full headless 17/20 with the
       three recorded binding failures (owner: components)
+    - [x] A surface that closes under the user hands the keyboard on — plan 832;
+      measured 2026-10-21: a popover closed by a control inside it left focus on
+      nothing **with no modal at all**, and a popover control, a navigation link,
+      a combobox option or a preview-card control that opened a `Dialog` each left
+      focus on nothing after Escape, because these surfaces never named their
+      trigger as the vanishing control's focus successor (the 826/827/830 rule).
+      One shared capture (`useLeavingControl`) reads the leaving host on the
+      closing render, `handOffClose` marks it against the trigger and hands the
+      trigger the keyboard only when the close was not requested, and the preview
+      card is mark-only because its trigger re-opens it (plan 515). The panel refs
+      of Popover, PreviewCard and NotificationCentre moved into their roots so the
+      close can measure them. 4 composite cases + 1 popover case + 2 pins, all
+      four mark cases red at `HEAD`, four mark mutations and a capture mutation;
+      composition 19/19, Popover 32, full native suite 1062/20 of 1082 (the same
+      plan-540 classes), unit 528 in 49 files, `check`/`lint`/`test` exit 0,
+      scoped smoke `overlay-dialog` + `modal-focus-trap` green, full headless
+      17/20 with the three recorded binding failures; docs, `docs/component-api.md`
+      §5, `COMPONENTS.md`, `PLAN.md` D30 and the index synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

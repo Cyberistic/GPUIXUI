@@ -55,6 +55,15 @@ centre correction or the window margin (plan 813).
 | press outside | closes without moving focus (the press already gave it) |
 | press inside | does nothing |
 | click the trigger while open | closes it |
+| a control inside closes it | closes, and returns focus to the trigger |
+
+A close the surface did not request — the app set `open` false while a control
+inside held focus — hands that focus to the trigger, because the control leaves
+with the surface. When the control also opened a modal in the same commit, the
+trigger becomes that control's **focus successor**, so the modal restores to the
+trigger rather than to nothing (plan 832). A close the surface requested keeps
+its own rule: Escape restores, Tab walks, an outside press leaves the chosen
+control alone.
 
 Mounted open together with a dialog, the panel is still the top layer: one
 `Escape` closes the panel and leaves the dialog open (plan 732).
@@ -153,7 +162,7 @@ transform, so no scale is faked.
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (30 tests):
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (32 tests):
 opens below the trigger by measured bounds, honours `side="right"`, centres a
 requested panel on its trigger, opens above a trigger near the window bottom
 instead of covering it, keeps the default gap, the measured centre and the
@@ -177,7 +186,8 @@ panel and focus where they are (Escape and Tab), with focus moving only when the
 close is accepted. Two further cases place that panel inside a `Dialog`: Tab
 walks its controls once each and closes after the last, Shift+Tab leaves before
 the trigger, and the dialog's own caller still observes every claimed key
-(plan 719).
+(plan 719). A control that closes the panel hands focus to the trigger, while an
+outside press keeps the control it chose (plan 832).
 
 A panel mounted open together with its dialog closes alone and leaves the dialog open (plan 732).
 

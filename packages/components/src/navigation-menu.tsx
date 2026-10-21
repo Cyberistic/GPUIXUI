@@ -200,20 +200,38 @@ export const NavigationMenu = ({
   // anything open" without waiting for a commit.
   const openRef = useRef<string | null>(open);
   openRef.current = open;
+  // The item that was open last: on the render that closes the nav `open` is
+  // already null, so the closing control's successor needs the value the close
+  // is taking away (plan 832).
+  const lastOpen = useRef<string | null>(null);
+  if (open !== null) lastOpen.current = open;
+  const surface = useRef<PublicInstance | null>(null);
   // A close the caller refuses must leave the panel and the user's focus alone.
   // The token is the trigger to focus once the close is accepted; a chosen
-  // link's restore yields to focus the app has already placed (plan 808).
-  const requestClose = useCloseFocus<NavigationCloseFocus | null>(
-    open !== null,
-    () => setOpen(null),
-    (focus) => {
+  // link's restore yields to focus the app has already placed (plan 808). An
+  // app-driven close takes its own link away, so it names the item's trigger as
+  // that link's successor and hands it the keyboard (plan 832).
+  const requestClose = useCloseFocus<NavigationCloseFocus | null>({
+    open: open !== null,
+    close: () => setOpen(null),
+    restore: (focus) => {
       if (focus === null) return;
       const focused = renderer?.getFocusedElementId?.() ?? null;
       if (focus.kind === "link" && focused !== null) return;
       const instance = triggers.current.get(focus.value);
       if (instance !== undefined) renderer?.focusElement?.(instance.id);
     },
-  );
+    handOff: {
+      surface,
+      target: () => {
+        const value = lastOpen.current;
+        return value === null
+          ? null
+          : (triggers.current.get(value)?.id ?? null);
+      },
+      focus: true,
+    },
+  });
   const hover = useHoverTravel({
     isOpen: () => openRef.current !== null,
     // Identity-aware: a panel opened by a key while the close timer runs must
@@ -323,7 +341,6 @@ export const NavigationMenu = ({
   // nav sits over a dialog, and focus returns to the open item's trigger once the
   // close is accepted. A press on that trigger is its own gesture (plan 583), so
   // the layer claims it without closing; the click closes the panel.
-  const surface = useRef<PublicInstance | null>(null);
   const dismiss = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
     dismiss.current = () =>

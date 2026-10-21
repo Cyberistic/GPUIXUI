@@ -288,6 +288,20 @@ invented: the last toast card has no trigger to return to, and its page says so.
 The handover lives in the activation handler, so a value change the app made
 itself never moves focus.
 
+**A surface that closes under the user hands the keyboard on.** An app can set
+`open` false while one of a non-modal surface's own controls holds focus, with no
+close requested by the surface. The control is leaving with the surface, so the
+surface captures it on the closing render — the only moment its host can still be
+read, because effects run after the commit removed it (plan 708) — names its
+trigger as that control's **focus successor** (plans 826/827/830), and hands the
+trigger the keyboard. A control that opens a modal in the same commit therefore
+restores to the trigger when the modal closes, instead of to nothing (plan 832).
+Only an *unrequested* close hands focus on: `Escape`, a `Tab` walk and an outside
+press each state their own target. `PreviewCard` is mark-only, because its
+trigger re-opens the card (plan 515). A surface the app **unmounts** rather than
+closing never reaches its closing render, so nothing can be captured; that case
+leaves focus alone and is documented per component.
+
 **A part that draws an interactive role names itself.** 0.10.0 reports no
 accessible name for a `div role="button"` (or tab, link, …) whose label is only a
 text child — measured for menu rows in plan `387` and for every example in plan

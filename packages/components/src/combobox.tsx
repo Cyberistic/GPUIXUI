@@ -77,6 +77,7 @@ import {
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { activationHandlers } from "./internal/activate.js";
+import { handOffClose, useLeavingControl } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import {
@@ -288,6 +289,10 @@ export const Combobox = ({
   const trigger = useRef<PublicInstance | null>(null);
   const surface = useRef<PublicInstance | null>(null);
   const list = useRef<PublicInstance | null>(null);
+  // The option row this close is taking away, captured before the commit removes
+  // it (plan 832); a selection or an app-driven close names the trigger as its
+  // successor through it.
+  const leaving = useLeavingControl(visibleOpen, surface);
   const restoreFocus = useRef(false);
   /** Where a `Tab` that closes the popup continues from the trigger. */
   const leave = useRef<"next" | "previous" | null>(null);
@@ -398,6 +403,17 @@ export const Combobox = ({
   /** Close, restoring focus only for the paths that should (Escape, select). */
   useLayoutEffect(() => {
     if (wasOpen.current && !visibleOpen) {
+      // A row that opened a modal unmounts with this popup before the modal
+      // captures it; the trigger is where the user was (plan 832). A selection
+      // and a `Tab` leave focus themselves; only a close the app made hands the
+      // trigger the keyboard.
+      handOffClose(
+        renderer,
+        leaving,
+        surface,
+        trigger.current?.id ?? null,
+        !restoreFocus.current && leave.current === null,
+      );
       const instance = trigger.current;
       const direction = leave.current;
       if (instance !== null && direction !== null) {

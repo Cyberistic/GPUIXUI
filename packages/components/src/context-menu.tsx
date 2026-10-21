@@ -137,11 +137,14 @@ export const ContextMenu = ({
   });
 
   // Where focus goes once the close is accepted; a refused close leaves the
-  // keyboard-opened menu and the user's focus alone.
-  const requestClose = useCloseFocus<ContextCloseFocus>(
+  // keyboard-opened menu and the user's focus alone. A row that opens a modal
+  // names the trigger as its successor, and an app-driven close of a row does
+  // the same (plan 832); the menu never focuses the trigger itself here, because
+  // every close path already requests one.
+  const requestClose = useCloseFocus<ContextCloseFocus>({
     open,
-    () => setOpenRef.current(false),
-    (focus) => {
+    close: () => setOpenRef.current(false),
+    restore: (focus) => {
       if (focus === "none") return;
       const target = triggerId.current;
       if (target === undefined) return;
@@ -149,7 +152,12 @@ export const ContextMenu = ({
       if (focus === "next") renderer?.focusNext?.();
       else if (focus === "previous") renderer?.focusPrevious?.();
     },
-  );
+    handOff: {
+      surface,
+      target: () => triggerId.current ?? null,
+      focus: false,
+    },
+  });
 
   const close = useCallback(
     (reason: MenuCloseReason) => {

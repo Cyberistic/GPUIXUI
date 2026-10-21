@@ -66,6 +66,19 @@ import {
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "../navigation-menu.js";
+import {
+  PreviewCard,
+  PreviewCardContent,
+  PreviewCardTrigger,
+} from "../preview-card.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs.js";
 import { ToastProvider, ToastViewport, useToast } from "../toast.js";
 
@@ -460,6 +473,121 @@ const DialogFromToastPage = () => (
   </ToastProvider>
 );
 
+/**
+ * A popover control that opens a dialog. With `close` the app also closes the
+ * popover in the same handler, which is what a menu-shaped popover does; without
+ * it the panel stays open behind the dialog and keeps the control.
+ */
+const DialogFromPopover = ({ close }: { readonly close: boolean }) => {
+  const [panel, setPanel] = useState(false);
+  const [dialog, setDialog] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <Popover open={panel} onOpenChange={setPanel}>
+        <PopoverTrigger testId="filter-trigger">Filter</PopoverTrigger>
+        <PopoverContent testId="filter-panel">
+          <Button
+            testId="advanced"
+            onClick={() => {
+              if (close) setPanel(false);
+              setDialog(true);
+            }}
+          >
+            Advanced
+          </Button>
+        </PopoverContent>
+      </Popover>
+      <Dialog open={dialog} onOpenChange={setDialog}>
+        <DialogContent label="Advanced" testId="advanced-dialog" size="sm">
+          <DialogTitle>Advanced</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/** A navigation link that opens a dialog and closes the nav in the same commit. */
+const DialogFromNav = () => {
+  const [value, setValue] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <NavigationMenu label="Workspace" value={value} onValueChange={setValue}>
+        <NavigationMenuList>
+          <NavigationMenuItem value="platform">
+            <NavigationMenuTrigger testId="trigger-platform">
+              Platform
+            </NavigationMenuTrigger>
+            <NavigationMenuContent testId="nav-panel">
+              <NavigationMenuLink
+                testId="nav-advanced"
+                onSelect={() => setOpen(true)}
+              >
+                Advanced
+              </NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Advanced" testId="nav-dialog" size="sm">
+          <DialogTitle>Advanced</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/** A card control that opens a dialog, with the card closed in the same commit. */
+const DialogFromPreviewCard = () => {
+  const [card, setCard] = useState(true);
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <PreviewCard open={card} onOpenChange={setCard}>
+        <PreviewCardTrigger testId="preview-trigger">Ada</PreviewCardTrigger>
+        <PreviewCardContent label="Ada Lovelace" testId="preview-card">
+          <Button
+            testId="preview-open"
+            onClick={() => {
+              setCard(false);
+              setOpen(true);
+            }}
+          >
+            Open profile
+          </Button>
+        </PreviewCardContent>
+      </PreviewCard>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Profile" testId="profile-dialog" size="sm">
+          <DialogTitle>Profile</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/** A combobox whose selection opens a dialog: the option leaves with the popup. */
+const DialogFromCombobox = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <Combobox options={roles} onValueChange={() => setOpen(true)}>
+        <ComboboxTrigger testId="role-trigger" label="Role" />
+        <ComboboxContent>
+          <ComboboxInput label="Search roles" />
+          <ComboboxList label="Roles" />
+        </ComboboxContent>
+      </Combobox>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Advanced" testId="combo-dialog" size="sm">
+          <DialogTitle>Advanced</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 /** The toast store updates through its runtime: let the microtasks drain. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
@@ -780,6 +908,107 @@ describe("composition", () => {
 
     expect(isShown(scene, "undo-dialog")).toBe(false);
     expect(focusedTestId(scene)).toEqual(Option.some("raise"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the popover's trigger when its control's dialog closes", async () => {
+    const scene = renderComponent(<DialogFromPopover close />);
+    clickCentreOf(scene, "filter-trigger");
+    finishMotion(scene);
+    expect(isShown(scene, "filter-panel")).toBe(true);
+
+    clickCentreOf(scene, "advanced");
+    finishMotion(scene);
+    expect(isShown(scene, "advanced-dialog")).toBe(true);
+    expect(isShown(scene, "filter-panel")).toBe(false);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "advanced-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("filter-trigger"));
+
+    scene.unmount();
+  });
+
+  it("keeps the popover's control when the panel stays open behind the dialog", async () => {
+    const scene = renderComponent(<DialogFromPopover close={false} />);
+    clickCentreOf(scene, "filter-trigger");
+    finishMotion(scene);
+
+    clickCentreOf(scene, "advanced");
+    finishMotion(scene);
+    expect(isShown(scene, "advanced-dialog")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "advanced-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("advanced"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the nav trigger when a link's dialog closes", async () => {
+    const scene = renderComponent(<DialogFromNav />);
+    clickCentreOf(scene, "trigger-platform");
+    finishMotion(scene);
+    expect(isShown(scene, "nav-panel")).toBe(true);
+
+    clickCentreOf(scene, "nav-advanced");
+    finishMotion(scene);
+    expect(isShown(scene, "nav-dialog")).toBe(true);
+    expect(isShown(scene, "nav-panel")).toBe(false);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "nav-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("trigger-platform"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the combobox trigger when an option's dialog closes", async () => {
+    const scene = renderComponent(<DialogFromCombobox />);
+    clickCentreOf(scene, "role-trigger");
+    finishMotion(scene);
+    expect(isShown(scene, "combobox-content")).toBe(true);
+
+    clickCentreOf(scene, "combobox-option-owner");
+    finishMotion(scene);
+    expect(isShown(scene, "combo-dialog")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "combo-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("role-trigger"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the preview trigger when a card control's dialog closes", async () => {
+    const scene = renderComponent(<DialogFromPreviewCard />);
+    finishMotion(scene);
+    expect(isShown(scene, "preview-card")).toBe(true);
+
+    clickCentreOf(scene, "preview-open");
+    finishMotion(scene);
+    expect(isShown(scene, "profile-dialog")).toBe(true);
+    expect(isShown(scene, "preview-card")).toBe(false);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "profile-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("preview-trigger"));
 
     scene.unmount();
   });

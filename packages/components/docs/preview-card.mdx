@@ -94,6 +94,10 @@ glance. A custom theme changes it with no code change — see
 - The card is a named `group`; it is not auto-focused on hover (that would steal
   focus from whatever the user was typing), so `Tab` reaches its links/actions
   from the trigger.
+- A card control that opens a modal names the trigger as its **focus successor**,
+  so the modal restores there instead of to nothing. The card itself never
+  focuses the trigger on an app-driven close: the trigger re-opens the card
+  (plan 515, plan 832).
 - `0.10.0` has no `aria-haspopup` for this pattern and no anchor arrow.
 
 ## Limitations

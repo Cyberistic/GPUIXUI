@@ -65,6 +65,8 @@ interface PreviewCardContextValue {
   /** Request a close; focus moves only when the close is accepted. */
   readonly requestClose: (focus: PreviewCloseFocus) => void;
   readonly trigger: RefObject<PublicInstance | null>;
+  /** The card's host, owned by the root so a close can measure it. */
+  readonly surface: RefObject<PublicInstance | null>;
   readonly hover: HoverTravel;
   /** Set while a dismissal restores focus, so that focus does not re-open. */
   readonly suppressFocusOpen: RefObject<boolean>;
@@ -116,13 +118,18 @@ export const PreviewCard = ({
   });
   const depth = useOverlayHost().depth + 1;
   const trigger = useRef<PublicInstance | null>(null);
+  const surface = useRef<PublicInstance | null>(null);
   const suppressFocusOpen = useRef(false);
   const renderer = useGpuix().renderer;
   // A close the caller refuses must leave the card and the user's focus alone.
-  const requestClose = useCloseFocus<PreviewCloseFocus>(
+  // An app-driven close takes its own control away, so it names the trigger as
+  // that control's successor; it does **not** focus the trigger, because the
+  // trigger re-opens the card (plan 515) — the modal that captured the control
+  // still restores there (plan 832).
+  const requestClose = useCloseFocus<PreviewCloseFocus>({
     open,
-    () => setOpen(false),
-    (focus) => {
+    close: () => setOpen(false),
+    restore: (focus) => {
       if (focus === "none") return;
       const target = trigger.current;
       if (target === null) return;
@@ -131,7 +138,12 @@ export const PreviewCard = ({
       }
       renderer?.focusElement?.(target.id);
     },
-  );
+    handOff: {
+      surface,
+      target: () => trigger.current?.id ?? null,
+      focus: false,
+    },
+  });
   const hover = useHoverTravel({
     isOpen: () => open,
     close: () => requestClose("none"),
@@ -145,6 +157,7 @@ export const PreviewCard = ({
       setOpen,
       requestClose,
       trigger,
+      surface,
       hover,
       suppressFocusOpen,
     }),
@@ -238,13 +251,12 @@ export const PreviewCardContent = ({
   ...rest
 }: PreviewCardContentProps) => {
   const theme = useTheme();
-  const { open, requestClose, trigger, hover } = usePreviewCard();
+  const { open, requestClose, trigger, hover, surface } = usePreviewCard();
   const depth = useOverlayHost().depth;
   const renderer = useGpuix().renderer;
   const gap = offsetOf(sideOffset, 6);
   const extra = offsetOf(alignOffset, 0);
   const margin = offsetOf(collisionPadding, 8);
-  const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   const placement = usePlacement({
     open,

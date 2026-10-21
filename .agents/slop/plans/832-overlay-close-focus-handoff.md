@@ -374,7 +374,54 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/components/packages/components`.
 - Scoped smoke ids are green and recorded; the full headless suite is 17/20 with
   only the three recorded binding failures.
 
-## 7. Outcome
+## 7. Outcome (2026-10-21)
 
-*(Fill in while executing: the measured red, the green after, each mutation,
-the gate counts and the smoke ids.)*
+- **Measured at `HEAD` `a9f478d3`** with the scratch probe (deleted): a popover
+  closed by its own control left the focused host on `None` **with no modal at
+  all**, and a popover control, a navigation link and a combobox option that
+  opened a `Dialog` each left `None` after Escape. The popover that stayed open
+  kept the control (the pin), so the defect is the close, not the modal.
+- **Red before the fix.** With the four source files reverted and only the tests
+  kept: composition **3 failed** (`popover's trigger`, `nav trigger`,
+  `combobox trigger` — all `None`) and popover **1 failed** (`hands focus to the
+  trigger when a control inside closes the panel`, `None`), 43 passed / 7 failed
+  of 50 across the two files including the three pre-existing plan-540 position
+  cases. The two pins (panel stays open; outside press keeps its control) passed
+  at `HEAD`, which is what makes them pins rather than fixes.
+- **After the fix.** Composition **19/19**, Popover **32/32** except its three
+  recorded plan-540 position cases (29/32 on this host); the preview card
+  composite case was added last and is the fourth mark-dependent case.
+- **Both directions proven.** Removing `markFocusSuccessor` fails the four
+  composite cases (`popover`, `nav`, `combobox`, `preview card`) and leaves the
+  popover hand-off case green; removing the hand-off (`focus: false` at the
+  effect) fails only that popover case; capturing with no surface box fails all
+  four new cases. **The pending-request gate is hygiene, not separately
+  observable**: handing off on requested closes too still leaves every pin green
+  (the restore that follows moves focus to the same place), so no test claims it.
+- **Full native suite.** **1062 passed / 20 failed of 1082** — the 20 recorded
+  plan-540 classes (position, native focus signals and the command-menu scroll),
+  diffed against the pre-change run's list; no new failure. Composition 19,
+  Popover 32, Toast 28, Dialog 21, Confirmation 13, Navigation menu 34,
+  Combobox 70, Preview card 21, Notification centre 33, Context menu 25.
+- **Gates.** `nub run check`, `nub run lint`, `nub run test` exit 0; unit
+  **528 tests in 49 files** (unchanged — the fix is proven natively).
+- **Scoped smoke.** `overlay-dialog` 1/1 and `modal-focus-trap` 1/1 green; the
+  full headless suite is **17/20** with the same three recorded playground
+  failures (`focus-traversal`, `floating-placement`, `shell-navigation`).
+- Docs (`popover`, `navigation-menu`, `combobox`, `preview-card`),
+  `docs/component-api.md` §5, `COMPONENTS.md` (four rows and the Popover native
+  count), `TODO.md`, the plan index and `PLAN.md` D30 synced.
+
+### Deviations from §3
+
+- The panel ref was **hoisted into the root and published through the context**
+  for `Popover`, `PreviewCard` and `NotificationCentre`, as §3.4 allowed: the
+  capture must measure the surface at the root's closing render, and the
+  content-local ref was not readable there.
+- `NavigationMenu` already owned its panel ref in the root, so no hoist was
+  needed; a `lastOpen` mirror names the closing item's trigger (the open state is
+  already `null` on the closing render).
+- The Preview card case found the mark path works while the card's own hand-off
+  stays off, which is the behaviour §1 documents and the reason its trigger is
+  not focused (plan 515).
+

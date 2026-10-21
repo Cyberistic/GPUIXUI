@@ -23,48 +23,16 @@
  * back on the trigger.
  */
 
-import {
-  useGpuix,
-  type NativeRenderer,
-  type Props,
-  type PublicInstance,
-} from "@gpuix/react";
+import { useGpuix, type Props, type PublicInstance } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { MotionSurface } from "./motion.js";
+import { focusedWithin } from "./pointer.js";
 import { useMergedRef } from "./ref.js";
 
 // TODO: take this from `@gpuixui/tokens`' motion scale once plan 019 lands.
 const REVEAL_SECONDS = 0.2;
-
-/** Whether the focused element sits inside `bodyId`, by box centre. */
-const focusedInside = (
-  renderer: NativeRenderer | null,
-  bodyId: number,
-): boolean =>
-  Option.match(
-    Option.all({
-      body: Option.fromNullishOr(renderer?.getElementBounds?.(bodyId) ?? null),
-      focused: Option.fromNullishOr(
-        renderer?.getElementBounds?.(renderer.getFocusedElementId?.() ?? -1) ??
-          null,
-      ),
-    }),
-    {
-      onNone: () => false,
-      onSome: ({ body, focused }) => {
-        const x = focused.x + focused.width / 2;
-        const y = focused.y + focused.height / 2;
-        return (
-          x >= body.x &&
-          x <= body.x + body.width &&
-          y >= body.y &&
-          y <= body.y + body.height
-        );
-      },
-    },
-  );
 
 /** {@link Reveal} props. */
 export interface RevealProps extends Props {
@@ -129,7 +97,8 @@ export const Reveal = ({
     Option.match(instance, {
       onNone: () => undefined,
       onSome: (element) => {
-        if (focusedInside(renderer, element.id)) restoreFocus?.();
+        if (Option.isSome(focusedWithin(renderer, element.id)))
+          restoreFocus?.();
       },
     });
     // Snapping keeps the body measurable for this commit, then hides it.

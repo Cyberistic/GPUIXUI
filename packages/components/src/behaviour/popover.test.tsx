@@ -17,7 +17,11 @@
  * its dialog pushed its layer before the dialog's, so one Escape closed both
  * (plan 732). A non-finite `sideOffset`, `alignOffset` or `collisionPadding` was
  * coerced to 0 by the runtime, dropping the documented gap, the measured centre
- * correction and the collision flip (plan 813).
+ * correction and the collision flip (plan 813). A control inside the panel that
+ * closed it handed focus to **nothing** (measured `None`), because an
+ * app-driven close requested no restore and the control unmounted with the
+ * surface; the trigger now takes it, while an outside press keeps the control
+ * it chose and a panel that stays open keeps its own (plan 832).
  */
 
 import * as Option from "effect/Option";
@@ -94,6 +98,29 @@ const Columns = ({
     <Button testId="elsewhere">Elsewhere</Button>
   </div>
 );
+
+/**
+ * A panel whose own control closes it: the app sets `open` false from the
+ * press, so no close was requested and the control leaves with the surface.
+ */
+const PanelClosedByControl = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
+        <PopoverContent testId="panel">
+          <Button testId="first" onClick={() => setOpen(false)}>
+            First
+          </Button>
+        </PopoverContent>
+      </Popover>
+      <Button testId="elsewhere">Elsewhere</Button>
+    </div>
+  );
+};
 
 /** The same panel inside a dialog, with app controls on both sides of it. */
 const ColumnsInDialog = ({
@@ -780,6 +807,35 @@ describe("Popover", () => {
     expect(isShown(scene, "panel")).toBe(false);
     expect(isShown(scene, "before")).toBe(true);
     expect(focusedTestId(scene)).toEqual(Option.some("trigger"));
+
+    scene.unmount();
+  });
+
+  it("hands focus to the trigger when a control inside closes the panel", () => {
+    const scene = renderComponent(<PanelClosedByControl />);
+    clickCentreOf(scene, "trigger");
+    finishMotion(scene);
+    expect(focusedTestId(scene)).toEqual(Option.some("first"));
+
+    clickCentreOf(scene, "first");
+    finishMotion(scene);
+
+    expect(scene.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(scene)).toEqual(Option.some("trigger"));
+
+    scene.unmount();
+  });
+
+  it("leaves focus on the control an outside press chose", () => {
+    const scene = renderComponent(<PanelClosedByControl />);
+    clickCentreOf(scene, "trigger");
+    finishMotion(scene);
+
+    clickCentreOf(scene, "elsewhere");
+    finishMotion(scene);
+
+    expect(scene.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(scene)).toEqual(Option.some("elsewhere"));
 
     scene.unmount();
   });
