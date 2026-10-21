@@ -1,0 +1,161 @@
+---
+title: Getting started
+description: Build a settings screen from the library's parts, own its state, and run it in a native window.
+---
+
+[Installation](/docs/installation) ends with a workspace that resolves the
+packages. This page builds the first screen: a project-settings card with a
+name field, an auto-save switch, a primary action and a saved line. Every
+snippet is the real component API, and the page ends by running it natively.
+
+## What the screen is made of
+
+| Layer | Import | What it decides |
+| ----- | ------ | --------------- |
+| Theme | `@gpuixui/tokens` | colour roles, type, spacing, radius and control heights |
+| Controls | `@gpuixui/primitives` | the field, switch, button, text and layout |
+| Surface | `@gpuixui/components/card` | the card and its header, content and footer |
+
+The dependency direction follows those rows: primitives never import
+components, and components never import this site. [Architecture](/docs/architecture)
+maps every package and where a change belongs.
+
+## 1. Give the window a theme
+
+```tsx
+import { render } from "@gpuix/react";
+import { themes } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+const App = () => (
+  <ThemeProvider theme={themes.dark}>
+    <ProjectSettings />
+  </ThemeProvider>
+);
+
+render(<App />);
+```
+
+`ProjectSettings` is the screen in the next step. GPUix exposes no OS
+appearance query, so the application owns the mode: read `themes[mode]` from
+your own state instead of the literal. [Dark mode](/docs/dark-mode) covers the
+persistence, and [Theming](/docs/theming) covers the platform styles (macOS,
+Linux, Windows) that change the same screen's palette, radii and density.
+
+## 2. Compose the card
+
+```tsx
+import { useState } from "react";
+import { Button, Input, Stack, Switch, Text } from "@gpuixui/primitives";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
+
+const ProjectSettings = () => {
+  const [name, setName] = useState("Atlas");
+  const [autoSave, setAutoSave] = useState(true);
+  const [saved, setSaved] = useState(false);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Project settings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Stack direction="column" gap="md">
+          <Input label="Project name" value={name} onValueChange={setName} />
+          <Stack align="center" direction="row" gap="sm">
+            <Switch
+              checked={autoSave}
+              label="Save automatically"
+              onCheckedChange={setAutoSave}
+            />
+            <Text role="body">Save automatically</Text>
+          </Stack>
+          {saved ? (
+            <Text role="caption" tone="muted">
+              Saved {name}.
+            </Text>
+          ) : null}
+        </Stack>
+      </CardContent>
+      <CardFooter>
+        <Button variant="primary" onActivate={() => setSaved(true)}>
+          Save changes
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
+```
+
+Only `CardHeader`, `CardContent` and `CardFooter` nest directly in `Card`, and
+the header accepts `CardTitle` and `CardDescription`; the parts validate their
+placement, so a misplaced part names its family instead of painting nothing.
+The card itself holds no state — the controls inside it are the interactive
+parts.
+
+The field takes `label` and the switch takes `label` because the runtime has no
+`aria-labelledby`: a visible `Text` beside a control is paint, not association.
+The published pages for [Card](/docs/components/card), [Input](/docs/primitives/input),
+[Switch](/docs/primitives/switch), [Button](/docs/primitives/button) and
+[Stack](/docs/primitives/stack) carry the full prop tables.
+
+## 3. Own the state
+
+The three `useState` values are deliberate; this table says who owns each and
+why. [Validate a form and submit it once](/docs/patterns#validate-a-form-and-submit-it-once)
+takes the same decision further, with a schema and one submit guard.
+
+| Value | Owner | Why |
+| ----- | ----- | --- |
+| `name` | `ProjectSettings` | the save action reads it, and a reset has to put it back |
+| `autoSave` | `ProjectSettings` | auto-save reads it; a switch holding it privately would hide it from that path |
+| `saved` | `ProjectSettings` | a transient acknowledgement, not a persisted setting |
+
+Omit `value` and `checked` when nothing outside the control reads them: the
+control keeps its own draft and reports through `onValueChange` /
+`onCheckedChange`. Mirroring a value the control already owns is two sources of
+truth in one screen.
+
+## 4. Run it natively
+
+The companion playground mounts the shipped components, so the screen you just
+wrote runs in a real GPUix window — [how to run the playground](/docs/installation#run-the-playground)
+covers the dev server and the terminal variant:
+
+```sh
+nub run dev:playground
+```
+
+The same module runs in a terminal instead — frames are drawn with the kitty
+graphics protocol:
+
+```tsx
+render(<App />, { terminal: true });
+```
+
+The browser previews on this site illustrate geometry and states; they are not
+the component. The interaction proof is the packages' native suites:
+
+```sh
+nub run --filter @gpuixui/primitives test:runtime
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Where to go next
+
+- [Components](/docs/components) — every page, filterable by name, part, prop or
+  limitation.
+- [Patterns](/docs/patterns) — who owns the state when several parts work
+  together.
+- [Theming](/docs/theming) — semantic roles, a brand theme and the platform
+  switch.
+- [Runtime capabilities](/docs/runtime) — what the pinned GPUix provides, and
+  the honest alternative for each gap.
+- [API reference](/docs/reference) — every entry point and symbol, read from the
+  packages themselves.

@@ -184,6 +184,19 @@ checks every curated page for the required sections and their order, a preview,
 and the package it installs from. The package's own pages are exempt — they are
 the component's doc file.
 
+## The getting-started page
+
+`/docs/getting-started` is the one page that writes the code a reader copies
+before they know the components, so it is held to the workspace rather than
+reviewed by eye: `src/lib/getting-started.test.ts` resolves every
+`@gpuixui/*` import to a symbol the package publishes, holds
+`nub run dev:playground` to the root manifest, requires every numbered step to
+link the page it depends on, and pairs each `useState` value with the table row
+that says who owns it. It is not a component page: there is no preview, because
+a whole screen drawn in the browser would be the approximation this file opens
+by ruling out, and the runnable artefact is the snippet plus the playground
+command.
+
 ## The lane pages
 
 Three pages sit outside the component and block folders because they describe a

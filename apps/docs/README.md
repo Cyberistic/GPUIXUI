@@ -19,6 +19,7 @@ Every page is an MDX file; the paths below are relative to `content/docs/`.
 ```
 index.mdx                    Introduction (served at /docs)
 installation.mdx             Requirements, nub, first component, terminal mode
+getting-started.mdx          A first screen: theme, card, state, run it natively
 architecture.mdx             The package graph, the recipe pipeline, where a change goes
 theming.mdx                  Semantic roles, themes, the platform switch, the look picker
 dark-mode.mdx                App-owned mode switching — no hidden OS-mode listener
