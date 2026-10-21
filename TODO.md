@@ -1433,7 +1433,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 50/50
+`[x]` `[██████████]` 51/51
+
+`[x]` The platform switch's navigation memory is tested — the mission promises the
+choice is "remembered across navigation", the URL half was tested and the local
+storage half was not: `src/lib/platform-storage.ts` now owns it
+(`readRememberedChoice` / `writeRememberedChoice` over a minimal `ChoiceStorage`,
+so a test can stand in), the provider calls it instead of writing two keys
+inline, and `platform-storage.test.ts` (4 cases) proves both axes read back, an
+unusable stored value falls back **per axis** (a bad platform does not reset a
+good look), a deliberate `native` overwrites an old Luna, and the switch has no
+key literal of its own. Directions measured: dropping the look write leaves the
+old `luna` in place (case fails) and making the look fallback depend on the
+platform resets `aero` (case fails)
 
 `[x]` The theme editor words the **pressable** number rule — `NumberRule`
 gained a fourth value when the token package started holding a control height to

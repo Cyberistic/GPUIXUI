@@ -14,8 +14,6 @@ import {
   lookLabel,
   lookOrder,
   lookParam,
-  parseLook,
-  parsePlatform,
   platformFromSearch,
   platformLabel,
   platformOrder,
@@ -23,6 +21,10 @@ import {
   resolvePlatformTheme,
   type LookName,
 } from "../../lib/platform";
+import {
+  readRememberedChoice,
+  writeRememberedChoice,
+} from "../../lib/platform-storage";
 
 /**
  * The platform switch and the look picker.
@@ -35,12 +37,6 @@ import {
  * choices live in the URL, so a link carries them, and in local storage, so a
  * navigation does not reset them.
  */
-
-/** Where the chosen platform is remembered between visits. */
-const PLATFORM_KEY = "gpuixui-platform";
-
-/** Where the chosen look is remembered between visits. */
-const LOOK_KEY = "gpuixui-look";
 
 interface PlatformState {
   /** The platform every preview shows. */
@@ -56,14 +52,6 @@ interface PlatformState {
 }
 
 const PlatformContext = createContext<PlatformState | null>(null);
-
-/** The platform the reader chose last, or the default. */
-const rememberedPlatform = (): PlatformName =>
-  parsePlatform(window.localStorage.getItem(PLATFORM_KEY)) ?? "default";
-
-/** The look the reader chose last, or the platform's own style. */
-const rememberedLook = (): LookName =>
-  parseLook(window.localStorage.getItem(LOOK_KEY)) ?? "native";
 
 /** Put both choices in the address bar without navigating. */
 const writeUrl = (platform: PlatformName, look: LookName): void => {
@@ -92,13 +80,16 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const platformInUrl = platformFromSearch(search);
     const lookInUrl = lookFromSearch(search);
-    const nextPlatform = platformInUrl ?? rememberedPlatform();
-    const nextLook = lookInUrl ?? rememberedLook();
+    const remembered = readRememberedChoice(window.localStorage);
+    const nextPlatform = platformInUrl ?? remembered.platform;
+    const nextLook = lookInUrl ?? remembered.look;
 
     setPlatform(nextPlatform);
     setLook(nextLook);
-    window.localStorage.setItem(PLATFORM_KEY, nextPlatform);
-    window.localStorage.setItem(LOOK_KEY, nextLook);
+    writeRememberedChoice(window.localStorage, {
+      platform: nextPlatform,
+      look: nextLook,
+    });
     if (platformInUrl === undefined || lookInUrl === undefined)
       writeUrl(nextPlatform, nextLook);
   }, [search]);
@@ -106,7 +97,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   const choosePlatform = useCallback(
     (next: PlatformName) => {
       setPlatform(next);
-      window.localStorage.setItem(PLATFORM_KEY, next);
+      writeRememberedChoice(window.localStorage, { platform: next, look });
       writeUrl(next, look);
     },
     [look],
@@ -115,7 +106,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   const chooseLook = useCallback(
     (next: LookName) => {
       setLook(next);
-      window.localStorage.setItem(LOOK_KEY, next);
+      writeRememberedChoice(window.localStorage, { platform, look: next });
       writeUrl(platform, next);
     },
     [platform],

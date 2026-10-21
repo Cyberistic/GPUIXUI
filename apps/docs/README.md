@@ -133,6 +133,7 @@ src/lib/patterns.ts                 The one source of the patterns and their par
 src/lib/licenses.ts                 The LICENSES/*.md parse
 src/lib/licenses-data.ts            The licence records, at build time
 src/lib/platform.ts                 The platform and look switch: parse, label, resolve
+src/lib/platform-storage.ts         The remembered platform/look choice, per axis
 src/lib/theme-css.ts                Theme → CSS variables, shared with every preview
 ```
 
