@@ -378,7 +378,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 10/11
+`[x]` `[█████████░]` 11/12
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -440,6 +440,13 @@ a workaround for two live sessions sharing one worktree; see
       §Release gate: run the full suite once on the release host, record the
       report and captures, derive the probe count from `--list`, and read exit
       `2` as "no evidence", never as a pass.
+`[x]` Land the `checkbox-toggle` live probe — the shipped `Checkbox` toggles on a
+      press (hit-test) and on a Space **release** (its own keyboard contract).
+      Measuring it found a harness gap: a window's automation `keystrokes`
+      delivers only the key down, so `AsyncSmokeHost` gained `keyUp(keystroke)`
+      (released through the renderer's `simulateKeyUp`) and documents the split.
+      Negative control measured (Space pressed, never released: readout stays
+      `changes=1`, exit `1`). Evidence: `.artifacts/live/toggled.png`.
 `[ ]` Port the modal/menu/toast Tier 2 examples into live probes (the headless
       scenarios already cover the primitives) — **blocked** by the interlock row
       below: importing `@gpuixui/components` from the runner currently fails at
@@ -564,7 +571,7 @@ a workaround for two live sessions sharing one worktree; see
       - [x] DatePicker + TimePicker parts — plan 303
     - [x] Typed-by-position children — plan 304: `PartChildren` (elements/conditionals, never text) plus a family-scoped render check on 32 parents; part identity cannot be a compile error in React 19's JSX types, recorded in `docs/component-api.md` §1 (owner: components)
     - [x] Expose `style` as `StateStyle<PartState>` on the interactive parts — plan 305: 11 parts with exported state types; button-shaped triggers stay on the local stand-in until `@gpuixui/primitives` owns it (owner: components)
-    - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) — plan `040`, nine ordered steps; runtime verification waits on B1
+    - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) — plan `040`, nine ordered steps; **steps 1–4 landed** (`StateStyle` on Button/Toggle and the four fields, `CheckboxIndicator`/`SwitchThumb`, `RadioGroupItem` with `onValueChange`), steps 5–9 remain. Runtime suites now run here (0.11.0), so each step's native proof lands with it
   - Tier 2 gap rows (plan 205; each row gets its own plan before implementation)
     - [x] Write and index plans 309–320 for the twelve remaining gap rows
     - [x] Fieldset — plan 306: groups fields, propagates `disabled` to `FieldInput` (7 native tests; both-direction proof)
@@ -697,7 +704,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | **resolved** — `State.runCommands` replays a runtime's commands and queries the final state (3 tests) |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | **resolved** — `avatarSize` is exported from `@gpuixui/tokens`; fixed, not a `Theme` group (a new group breaks hand-built theme literals). Avatar can drop `DIAMETER` |
 | Platform style variants wider than typography (colour, radius, density per macOS/Linux/Windows) so the docs switch visibly repaints, not only re-types | tokens-theme | **resolved** — `platformTheme` applies the platform palette, radius and density; the docs bridge now publishes the control heights and paddings as CSS variables, so the preview controls resize too (macOS 28 / Linux 36 / Windows 32px at `md`), verified live on `/docs/components/button?platform=darwin|linux|win32|default` |
-| `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
+| `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands. The Tier 1 parts contract (plan 040) is landing now: steps 1–4 are in, so `Button`, `Checkbox`/`Switch` parts and `RadioGroupItem` are available for the stand-in retirement |
+| `examples/basic-app`'s `RadioGroup` still calls the deprecated `onChange` (plan 040 §2.1 migrated in-package callers only) | examples | open — switch it to `onValueChange`; the alias keeps it working until then |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | **resolved without the pair** — `filledHover(theme, action)` / `filledPressed(theme, action)` derive an opaque fill from the action role and the theme's `foreground`, so a brand override follows automatically and the six roles are unnecessary; adoption is the row below |
 | Adopt `filledHover` / `filledPressed` and delete the half-alpha hover fills: `components/src/internal/button.tsx`, `primitives/src/core/variants.ts` (`filled`), and the checkbox/radio hover fills in `primitives/src/core/selection.ts` (via `blend`, whose role there is not one of the three actions) | components, primitives | pending — **blocked on `@gpuixui/tw`**: the resting appearance of every migrated primitive is a class recipe, and the hover is still `hover:bg-primary/90` in `packages/tw/src/recipes.ts`, so changing the core resolver alone breaks `src/recipe/recipe.test.ts` and `src/recipe/geometry.test.ts` (measured: 4 failures). The adoptable order is (1) a derived opaque-fill utility in `@gpuixui/tw` — `hover:fill-primary`/`active:fill-primary` resolving through `filledHover`/`filledPressed` — (2) the recipes, (3) the core resolvers and their tests, all in one change; `Toggle`'s pressed accent also needs a general-role helper (accent is not one of the three `FilledAction` roles) |
 | The docs theme editor (`/docs/themes`) could show a live contrast readout while a reader edits a role — `contrastRatio` / `contrastFailures` are public and cover the 24 pairs the library itself is tested on | docs-site | **resolved** — `contrastReport`/`formatContrastFailure` in `theme-editor-logic.ts` run `contrastFailures` on the resolved edit; the editor shows a `role="status"` readout under the preview naming each failing pair with its measured ratio and floor, and reporting an unmeasurable (translucent) pair instead of counting it as passed. 3 tests: built-ins pass, a broken primary pair reads `1.00:1 (needs 4.5:1)`, a translucent ring reads `unmeasurable`. Documented on `/docs/themes#contrast` |
@@ -747,12 +755,13 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ### Docs information architecture (`docs-site`)
 
-`[x]` `[██████░░░░]` 3/5
+`[x]` `[███████░░░]` 4/6
 
 `[x]` Architecture page — `/docs/architecture` names all 11 packages, the dependency direction, the recipe pipeline, the Effect boundaries, the testing lanes and where a change goes; `apps/docs/src/lib/architecture.test.ts` fails when a package is added without a row or the page leaves the sidebar
 `[x]` Layouts, Workspace and Data display pages — `/docs/layouts`, `/docs/workspace` and `/docs/data-display` are the three composition lanes, each under a Composition sidebar section. Their rows are **generated** from `COMPONENTS.md` by `<LaneTable lane>` (`apps/docs/src/lib/inventory.ts`), so a page cannot call a row shipped while the inventory says `todo`; the summary prints rows/shipped/to-build. Each page names the shipped pieces with links, the gaps with evidence and where a change goes; the layout page carries the window-frame composition preview (`layout-shell`), the workspace page the tabbed-panel preview and the data page links the Dashboard block. `inventory.test.ts` holds the parse (a malformed row is reported, not dropped), `lane-table.test.tsx` proves every row reaches the rendered table, `lane-page.test.ts` proves each page mounts its table, names the inventory and sits in the sidebar. `docs/preview-strategy.md` §"The lane pages" records the template and the no-preview-for-a-missing-component rule. Tests: `nub run --filter @gpuixui/docs test` (10 files, 70 tests), `check-types`, `build`, and the dev server at `/docs/layouts`, `/docs/workspace`, `/docs/data-display`
 `[x]` API reference page — `/docs/reference` lists every public entry point, generated from each package's `exports` map by `apps/docs/src/lib/public-api.ts` (specifier, target, pattern/built). It publishes 9 packages and 17 entry points, including `@gpuixui/testing` (a build, so it resolves to `dist/`) and the `@gpuixui/components/*` per-file pattern; `@gpuixui/config` and `@gpuixui/deploy` are named as not published with a reason. `public-api.test.tsx` re-reads every manifest from disk and fails when a declared entry is missing, a target file does not exist, a pattern matches nothing, a specifier repeats, a built entry has no build script, or a package is neither published nor listed as not published; the page test holds the `<ApiReference />` mount and the sidebar place. `nub run --filter @gpuixui/docs test` 11 files / 83 tests, `check-types`, `build`, dev server `/docs/reference`
 `[ ]` Examples page — the per-package example registry (50 `packages/*/examples/*.tsx` files) waits on `apps/playground` mounting them (TODO → Playground row); until then each component page's Code tab is the example
+`[x]` Typography page — `/docs/typography` renders the theme's ten text roles through `<TypeScale>`: each row prints the resolved `size/leading · weight` and paints the specimen at those metrics on the platform surface, so the sidebar switch changes the families and never the sizes; tones, the `.SystemUIFont` sentinel and its browser mapping, `registerFonts`, and the limits (one run per role, no heading semantics, no tracking) are documented. `type-scale.test.tsx` fails when the guidance list and `themes.dark.typography` disagree, when a row's metrics do not match the theme, when the mono roles drift, or when the page leaves the sidebar; the sidebar parse is shared with the lane and reference guards in `sidebar-pages.test-util.ts`. `nub run --filter @gpuixui/docs test` 12 files / 88 tests, `check-types`, `build`, dev server `/docs/typography?platform=linux`
 `[ ]` License and attribution page — rendered from `LICENSES/` once the inventory is complete
 
 ## Phase G — release readiness

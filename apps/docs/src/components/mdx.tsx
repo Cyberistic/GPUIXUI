@@ -7,6 +7,7 @@ import { ComponentSource } from "./docs/component-source";
 import { Install } from "./docs/install";
 import { LaneTable } from "./docs/lane-table";
 import { ThemeEditor } from "./docs/theme-editor";
+import { TypeScale } from "./docs/type-scale";
 
 /** The MDX surface shared by every docs page. */
 export const mdxComponents = {
@@ -19,4 +20,5 @@ export const mdxComponents = {
   Install,
   LaneTable,
   ThemeEditor,
+  TypeScale,
 };

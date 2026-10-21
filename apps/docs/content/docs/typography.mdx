@@ -1,0 +1,95 @@
+---
+title: Typography
+description: The ten type roles, the two families, and exactly what a platform style is allowed to change.
+---
+
+Type is data, like colour. A component names a **role** — `h2`, `body`,
+`caption` — and `Text` resolves that role from the theme into a size, a leading
+and a weight. Nothing in the library picks a font size, and nothing carries a
+letter-spacing value. This page shows the scale the theme actually resolves, on
+the platform the sidebar switch selected.
+
+<TypeScale />
+
+## Reading the specimen
+
+Each row is one role: its name, the resolved `size/leading · weight`, the
+sentence it is for, and a specimen at those exact metrics. The specimen is a
+browser drawing — the shipped `Text` is one GPUix `text` host element with a
+resolved style — but the numbers and families are read from
+`@gpuixui/tokens`, so a change to the scale shows up here with no docs edit.
+
+The scale is fixed: **density does not change type sizes.** A compact theme makes
+controls shorter, not text smaller, so a form does not turn into a different
+reading experience when a platform preset is applied. Sizes change only when the
+theme's `typography` is overridden:
+
+```tsx
+import { extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const brand = extendTheme(lightTheme, {
+  typography: { body: { fontSize: 15, lineHeight: 22 } },
+});
+```
+
+Roles merge field by field, so overriding a body size keeps the base leading and
+weight unless both are given.
+
+## Families, and the platform switch
+
+A theme names two families: `sans` for everything except code, and `mono` for
+`code` and `codeBlock`. The default theme uses GPUix's system-UI sentinel
+(`.SystemUIFont`), which the runtime resolves to the platform's own interface
+face. The macOS, Linux and Windows presets name three distinct mono faces
+(Menlo, a DejaVu-family face, Consolas) while keeping the system-UI sans, so a
+reader sees the platform's *code* typography change and its UI text stay native.
+
+Two consequences worth knowing:
+
+- **The browser cannot resolve the sentinel.** This site maps `.SystemUIFont` to
+  a CSS stack (`src/lib/fonts.ts`) for the preview only; a shipped app passes the
+  sentinel to GPUix unchanged.
+- **A platform style changes families, not sizes.** `platformTheme` swaps `sans`
+  and `mono` and leaves every `TextStyle` alone, so switching macOS → Windows
+  repaints the chrome and re-types code without reflowing a paragraph's rhythm.
+
+A custom face is a consumer decision: `registerFonts` installs a font file in a
+renderer and returns the family a theme may then name. See
+[Theming](/docs/theming) for the mechanism and the licence note — no family is
+bundled.
+
+## Tones
+
+A role decides shape; a tone decides colour. `Text` takes `default`, `muted`,
+`primary`, `destructive` or `inherit`, mapping to the theme's `foreground`,
+`mutedForeground`, `primary` and `destructive` roles. Muted is for metadata, not
+for disabled text in a control; `inherit` exists for text on a coloured surface,
+such as a filled button's label. The specimen above shows the four usable tones
+side by side on the current platform's palette.
+
+## Limits
+
+- **One run, one role.** There is no rich text: a bold word inside a sentence is
+  a second `Text`, because the runtime has one `text` element and one style per
+  element.
+- **No heading semantics.** A `role="h2"` paints the heading style; the
+  accessibility tree still sees text. Name a region with the container's `label`
+  when the heading matters for a screen reader.
+- **No letter-spacing token.** Tracking is the font's, not the theme's.
+- **No font-style or underline in the type roles.** `textDecoration` exists on a
+  `StyleDesc` (the `link` button variant uses it) but no type role carries one;
+  reach for `style` only for a deliberate exception.
+- **No responsive sizes.** There are no breakpoints in the runtime, so a heading
+  is one size per theme, not one per window width.
+
+## Where a type change goes
+
+- A **new role or a size change** → `@gpuixui/tokens`' `typography`, with the
+  contrast contract unaffected (type has no colour) and the token docs updated.
+- A **family** → the theme's `typography.sans` / `typography.mono`, or
+  `registerFonts` at the boundary for a bundled face.
+- A **one-off size** → nowhere: use the closest role, or override `style` on one
+  `Text` and record why. A scattered pixel size is the thing the scale exists to
+  prevent.
+- The **component that renders it** → `@gpuixui/primitives`' `Text`, whose API
+  table is on [its page](/docs/primitives/text).

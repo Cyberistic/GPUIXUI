@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { sidebarPages } from "./sidebar-pages.test-util";
 
 /**
  * The composition pages.
@@ -27,16 +28,7 @@ const pages: ReadonlyArray<LanePage> = [
 ];
 
 /** The `pages` array of the root `meta.json`. */
-const sidebar = ((): ReadonlyArray<string> => {
-  const value: unknown = JSON.parse(read("meta.json"));
-  if (typeof value !== "object" || value === null || !("pages" in value)) {
-    return [];
-  }
-  const { pages: listed } = value;
-  return Array.isArray(listed)
-    ? listed.filter((page): page is string => typeof page === "string")
-    : [];
-})();
+const sidebar = sidebarPages(new URL("../../", import.meta.url));
 
 describe("the composition pages", () => {
   it("exist with a title and a one-sentence description", () => {

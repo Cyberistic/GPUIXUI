@@ -18,6 +18,7 @@ content/docs/           MDX pages and their meta.json navigation
   architecture.mdx      The package graph, the recipe pipeline and where a change goes
   theming.mdx           Semantic roles, themes, overrides
   dark-mode.mdx         App-owned mode switching
+  typography.mdx        The type scale, families, tones and the platform rule
   primitives/           The Tier 1 section index (its pages come from the packages)
   components/           Custom pages (Button, Dialog, Popover, Tabs) and the index
   layouts.mdx           The layout lane: primitives, the window frame, runtime rules
@@ -38,6 +39,7 @@ src/lib/inventory.ts    Parses the tier tables of COMPONENTS.md into lane rows
 src/lib/lane-page.test.ts Holds the lane pages to their template and sidebar place
 src/lib/public-api.ts   Derives the public entry points from each package's exports map
 src/components/docs/api-reference.tsx The generated entry-point table
+src/components/docs/type-scale.tsx The typography specimen, generated from the theme
 src/lib/collection-routes.ts The registry: every mounted package directory, route, section
 src/lib/package-docs.ts The Fumadocs loaders for the three package collections
 src/lib/page-tree.ts    Fills the package's pages into the Components section

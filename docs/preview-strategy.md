@@ -154,6 +154,18 @@ composition of native parts, not a new component"). A docking layout, a table or
 a chart is described in prose and its gap is recorded — never drawn as if it
 were shipped.
 
+## Generated specimens
+
+A preview whose content *is* the tokens is generated, not drawn. The typography
+page's `<TypeScale>` enumerates the theme's text roles, prints each resolved
+`size/leading · weight` and paints the specimen at those metrics on a
+`PreviewSurface`, so the platform switch changes the families while the sizes
+stay the theme's. `type-scale.test.tsx` holds the role list to
+`themes.dark.typography` and checks every row's metrics against the theme, so a
+role added to `@gpuixui/tokens` fails the docs until the page describes it. The
+same rule applies to any future specimen page (spacing, radius, elevation):
+generate from the token package, and test the page against it.
+
 ## Adding a preview
 
 1. Add the rendering and its `source` string to `src/components/docs/demos.tsx`

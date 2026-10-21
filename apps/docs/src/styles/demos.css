@@ -575,6 +575,90 @@
   background: var(--primary);
 }
 
+/* ---- typography: the type scale, mirrors @gpuixui/tokens typography ---- */
+.gx-type-scale {
+  display: block;
+  padding: 28px 24px;
+  text-align: left;
+}
+
+.gx-type-row {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-type-row:last-child {
+  border-bottom: 0;
+}
+
+.gx-type-meta {
+  flex: none;
+  width: 130px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-type-cell {
+  flex: 1;
+  min-width: 0;
+}
+
+.gx-type-sample {
+  margin: 0;
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+
+.gx-type-use {
+  margin: 4px 0 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-type-tones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.gx-type-tone {
+  color: var(--foreground);
+}
+
+.gx-type-tone[data-tone="muted"] {
+  color: var(--muted-foreground);
+}
+
+.gx-type-tone[data-tone="primary"] {
+  color: var(--primary);
+}
+
+.gx-type-tone[data-tone="destructive"] {
+  color: var(--destructive);
+}
+
+.gx-type-note {
+  margin: 14px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--placeholder);
+}
+
 /* ---- install / source blocks ---- */
 .gx-install-note {
   margin: 10px 0 0;

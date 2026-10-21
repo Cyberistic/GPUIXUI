@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { sidebarPages } from "./sidebar-pages.test-util";
 import { ApiReference } from "../components/docs/api-reference";
 import {
   buildPublicApi,
@@ -264,19 +265,7 @@ describe("the reference page", () => {
   });
 
   it("sits in its own sidebar section before Contributing", () => {
-    const meta: unknown = JSON.parse(
-      readFileSync(
-        new URL("../../content/docs/meta.json", import.meta.url),
-        "utf8",
-      ),
-    );
-    const pages: ReadonlyArray<string> =
-      typeof meta === "object" &&
-      meta !== null &&
-      "pages" in meta &&
-      Array.isArray(meta.pages)
-        ? meta.pages.filter((item): item is string => typeof item === "string")
-        : [];
+    const pages = sidebarPages(new URL("../../", import.meta.url));
 
     expect(pages.indexOf("reference")).toBeGreaterThan(pages.indexOf("blocks"));
     expect(pages.indexOf("reference")).toBeLessThan(
