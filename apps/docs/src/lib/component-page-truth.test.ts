@@ -48,24 +48,33 @@ interface CuratedPage {
   readonly row: string;
   /** The native suite that proves it, when the page prints a test count. */
   readonly suite?: string;
+  /** The source the page's Dependencies table describes. */
+  readonly source: string;
 }
 
 const pages: ReadonlyArray<CuratedPage> = [
-  { file: "button.mdx", row: "Buttons" },
+  {
+    file: "button.mdx",
+    row: "Buttons",
+    source: "packages/primitives/src/components/Button.tsx",
+  },
   {
     file: "dialog.mdx",
     row: "Dialogs",
     suite: "packages/components/src/behaviour/dialog.test.tsx",
+    source: "packages/components/src/dialog.tsx",
   },
   {
     file: "popover.mdx",
     row: "Popovers",
     suite: "packages/components/src/behaviour/popover.test.tsx",
+    source: "packages/components/src/popover.tsx",
   },
   {
     file: "tabs.mdx",
     row: "Tabs",
     suite: "packages/components/src/behaviour/tabs.test.tsx",
+    source: "packages/components/src/tabs.tsx",
   },
 ];
 
@@ -82,6 +91,46 @@ const status = (page: CuratedPage): string => {
 /** Every `it(` in a suite file: the native cases the page counts. */
 const nativeCases = (suite: string): number =>
   (read(suite).match(/\bit\(/g) ?? []).length;
+
+/** The `## Dependencies` table's package cells. */
+const dependencies = (page: CuratedPage): ReadonlyArray<string> => {
+  const text = body(page);
+  const start = text.indexOf("## Dependencies");
+  if (start === -1) return [];
+  const end = text.indexOf("\n## ", start + 1);
+  const section = text.slice(start, end === -1 ? undefined : end);
+
+  return section
+    .split("\n")
+    .filter((line) => line.startsWith("|"))
+    .flatMap((line) => {
+      const cell = line.replace(/^\|/, "").split("|")[0]?.trim();
+      return cell === undefined || cell === "Package" || cell.startsWith("---")
+        ? []
+        : [cell.replace(/`/g, "")];
+    });
+};
+
+/**
+ * Every package a source imports. A relative import is this package's own code
+ * (the table's `this package` row), `react` is a peer every component shares,
+ * and an `effect` subpath is the `effect` package the table names.
+ */
+const importedPackages = (source: string): ReadonlyArray<string> =>
+  [...source.matchAll(/(?:from\s+|import\s+)"([^"]+)"/g)]
+    .flatMap((match) => (match[1] === undefined ? [] : [match[1]]))
+    .filter(
+      (specifier) =>
+        !specifier.startsWith(".") &&
+        !specifier.startsWith("node:") &&
+        specifier !== "react" &&
+        specifier !== "react-dom" &&
+        specifier !== "react/jsx-runtime",
+    )
+    .map((specifier) =>
+      specifier.startsWith("effect/") ? "effect" : specifier,
+    )
+    .filter((specifier, index, all) => all.indexOf(specifier) === index);
 
 describe("the curated component pages", () => {
   it("name the runtime version their gaps were measured on", () => {
@@ -132,5 +181,19 @@ describe("the curated component pages", () => {
     });
 
     expect(disagreeing).toEqual([]);
+  });
+
+  it("list every package the component imports", () => {
+    const missing = pages.flatMap((page) => {
+      const listed = dependencies(page);
+      return importedPackages(read(page.source))
+        .filter((specifier) => !listed.includes(specifier))
+        .map(
+          (specifier) =>
+            `${page.file}: imports ${specifier}, which its Dependencies table does not list`,
+        );
+    });
+
+    expect(missing).toEqual([]);
   });
 });

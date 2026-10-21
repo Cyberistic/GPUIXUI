@@ -156,6 +156,7 @@ The scrim being a role is the one deliberate departure from shadcn's
 | ------- | --- |
 | `@gpuix/react` | `useGpuix`, `useWindowSize`, host props |
 | `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
+| `@gpuixui/icons` | the `x` glyph in the close control |
 | `@gpuixui/tw` | the `DIALOG_*` recipes |
 | this package | `internal/modal.ts` (open state, focus, Tab trap) and `internal/dismiss-layer.ts` (Escape layering) |
 
@@ -171,7 +172,8 @@ The scrim being a role is the one deliberate departure from shadcn's
   that deliberately does not wrap it (`src/dialog.tsx` records why), and
   `position: "absolute"` resolves against the mount parent — so mount a dialog at
   or near the root of the tree.
-- The top-right close control is a `✕` text glyph until an icon package lands.
+- The top-right close control is an `@gpuixui/icons` `x` glyph inside an
+  `IconButton` named `Close` — an icon and an accessible name, not a text glyph.
 - A dialog is not resizable, draggable or multi-window. One dialog per surface.
 
 ## Related
