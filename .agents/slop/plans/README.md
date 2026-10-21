@@ -419,6 +419,7 @@ references without buying correctness.
 | [823](./823-wrong-role-mark-figures.md) | The wrong-role marks' five figures, and the two that put the canvas number on a card | F | 075, 309, 332, 342, 369, 818 | done |
 | [825](./825-document-anchors.md) | The anchors the three documents link to, and the heading rename nothing notices | F | 355, 356, 616, 670 | done |
 | [828](./828-row-mark-fills.md) | The unread dot's two row fills, and the ledger rows plan 698 left behind | F | 332, 341, 351, 511, 557, 619, 651, 698, 705, 806, 823 | done |
+| [831](./831-ledger-status-figures.md) | The live cross-team rows quote figures the palette no longer produces | F | 079, 366, 528, 574, 582, 611, 737, 828 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4342,6 +4343,23 @@ accordion's *card*, which measures 4.697:1. Both rows now state today's figures
 and the reason the role move still stands, and `row-mark-claims.test.ts` derives
 all of it from `markPairs`, `shippedThemes`, `contrastFloors` and the resolved
 macOS themes, with a planted collapse proving the guard can fail.
+
+831 finishes the same class for the live rows plan `828` did not reach. Three
+cross-team rows are the instruction the next workstream follows, and their
+figures were prose no test read: the `message.tsx` status word quoted the
+identity light `successText`/`destructiveText` on `card` as 6.63:1 and 7.21:1
+after plans `366`, `528`, `574` and `582` moved them to **8.60:1** and **8.70:1**;
+the `destructiveText` row quoted the solid fill at 4.04–4.28:1 on the hover wash
+and 3.29–3.86:1 on the active wash (today **3.81–4.50:1** and **3.36–4.04:1**,
+with the identity light set the only one at the floor on hover) and
+`destructiveText` at ≥5.28:1 (today ≥6.37:1); and the ColorPicker row said the
+`foreground` ring measures 1.56–2.98:1 on `primary`/`destructive` "in most sets"
+while the shipped range is **1.57–3.59:1** on `primary` (under 3:1 in **21 of
+24**) and **1.97–3.48:1** on `destructive` (18 of 24). All three conclusions
+stand — `xText` for the status word, `destructiveText` for the error signal,
+`contrastRing` for a user-supplied swatch — and no colour, pair, floor, metric or
+shipped theme moves; `ledger-status-figures.test.ts` derives every figure and the
+two counts from `shippedThemes` and reads the three rows.
 
 ## How to use a plan
 
