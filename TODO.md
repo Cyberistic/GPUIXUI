@@ -811,6 +811,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` Consistency, keyboard, themes, composability pass
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
+  - [ ] `packages/primitives/docs` cites `@gpuix/native@0.10.0` 19 times across 14 pages (owner: primitives). Re-verify each claim against 0.11.0 rather than replacing the version string: this workstream has already found three closed gaps (`aria-description` on a trigger, `scrollbarColor`/`scrollbarWidth` on a scroller, `role`/`aria-level` for headings) and several still-true ones (no `aria-valuenow`, no `aria-checked`, no pointer capture). Record the version each verdict was taken on.
   - [ ] `packages/components/docs` still cites `@gpuix/native@0.10.0` 66 times (owner: components). The repo runs 0.11.0, so each claim needs re-verification, not a find-and-replace: some gaps closed (`onLayout` exists, `focusVisible` paints) and some did not (no `aria-current`, no `transform`). Re-measure against `HostProps`/`StyleDesc` and record the version each verdict was taken on.
 
 ### Docs information architecture (`docs-site`)
@@ -853,7 +854,6 @@ Both are specified in ; each fix starts with a plan under .
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
 
-`[ ]` `[█░░░░░░░░░]` 7/36
 
 `[x]` `packages/primitives`: blank and text-only accessible names — `accessibleName` drops a blank label at every control's name site, `Button`/`Toggle` publish a plain text child as their name, and `Text` publishes `role="heading"` + `aria-level` for `h1`–`h3` and the code role for `code`/`codeBlock`, proven in the native a11y tree (salvage 026, 058, 059)
 `[x]` `packages/primitives`: `Tooltip` content was painted but never announced; a string tip (or explicit `description`) is now cloned onto the host trigger as `aria-description`, proven in the native a11y tree (salvage 071)
@@ -905,9 +905,3 @@ Both are specified in ; each fix starts with a plan under .
 `[x]` `packages/tokens`: `createTheme` starts from the requested contrast variant (`createTheme({ mode, contrast })`) instead of silently ignoring it, every group merge inherits an explicit `undefined` instead of erasing a role, and each platform style declares the `contrast` variant its palette is designed for — `platformTheme` applies a palette only where that matches the base's. `theme.test.ts` (contrast route, the `undefined` rule per group, one brand over both palettes via `high-contrast.example.ts`) and `platforms.test.ts` (the declaration, no `undefined` role) fail in the corrected direction, each measured; docs in `docs/tokens.md` §Theme API and §Platform styles, `docs/design-system.md` §5, the package README and the two inventory rows (salvage 301, 304, 321, 323)
 `[ ]` `packages/tokens`: the suite still has no time budget (salvage 333) — no per-file cap, so a hung test blocks the gate instead of failing it
 `[ ]` `packages/components`: no native cost model or package-surface performance baseline (salvage 302, 338)
-`[ ]` `packages/tokens`: 245 candidate gaps from the salvage sweep — the contrast/role contract, theme-editing and platform-recipe plans; each slug is listed in `.agents/slop/salvage-log.md` and must be triaged against master before work starts
-`[ ]` `packages/components`: 267 candidate gaps from the salvage sweep — Tier 2 behaviour, API and state-truth plans; each slug is listed in `.agents/slop/salvage-log.md` and must be triaged against master before work starts
-`[ ]` `packages/primitives`: 176 candidate gaps from the salvage sweep — Tier 1 behaviour, accessibility and metric-contract plans; each slug is listed in `.agents/slop/salvage-log.md` and must be triaged against master before work starts
-`[ ]` `apps/docs`: 175 candidate gaps from the salvage sweep — page, preview, search and docs-truth plans; each slug is listed in `.agents/slop/salvage-log.md` and must be triaged against master before work starts
-`[ ]` `apps/playground`: 125 candidate gaps from the salvage sweep — native probe and live-scene plans; each slug is listed in `.agents/slop/salvage-log.md` and must be triaged against master before work starts
-`[ ]` `packages/runtime`: 4 candidate gaps from the salvage sweep — the application-window, selection/find, native-text-theme and frame-loop capability pages; slugs in `.agents/slop/salvage-log.md`

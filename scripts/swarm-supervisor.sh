@@ -27,7 +27,7 @@ set -uo pipefail
 REPO="${GPUIXUI_REPO:-$HOME/GPUIXUI}"
 OPENCODE="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
 MODELS="$REPO/scripts/swarm-model.sh"
-MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-6}"
+MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-5}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -39,7 +39,7 @@ LOCK="$STATE/supervisor.lock"
 
 # One workstream per agent, each with its own tree so two writers never share a
 # checkout. The descriptions keep the five from colliding.
-WORKSTREAMS="tokens-theme primitives components docs-site playground salvage"
+WORKSTREAMS="tokens-theme primitives components docs-site playground"
 
 workstream_scope() {
   case "$1" in
