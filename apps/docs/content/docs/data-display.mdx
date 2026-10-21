@@ -77,6 +77,11 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
 - **Virtualization** — `<virtual-list>` exists, but it takes an item count and
   renders a row itself, so a virtualized table is a different composition from a
   compound-children table. That is why "Virtualized tables" is its own row.
+- **A fixed header is a sibling, not a sticky row** — the runtime paints no
+  `position: "sticky"`: a sticky child scrolls with its scroller, measured by
+  `data-grid-fixed-header`. The header sits outside the row scroller, and both
+  share one horizontal scroller so they move together; otherwise it scrolls
+  away.
 
 ## Gaps, with the evidence
 

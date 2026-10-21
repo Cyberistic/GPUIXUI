@@ -135,6 +135,16 @@ describe("the data-display page's drawing claims", () => {
   it("does not send a chart to a surface that does not exist", () => {
     expect(dataPage).not.toContain("until a native drawing surface is verified");
   });
+
+  it("keeps a fixed header out of a scroller it cannot stick to", () => {
+    const sticky = rowFor(record, "Sticky positioning");
+
+    expect(sticky).toContain("not supported");
+    expect(sticky).toContain("data-grid-fixed-header");
+    expect(dataPage).toContain("sibling, not a sticky row");
+    expect(dataPage).toContain("outside the row scroller");
+    expect(dataPage).toContain("one horizontal scroller");
+  });
 });
 
 /**
