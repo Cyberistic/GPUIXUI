@@ -588,6 +588,14 @@ window and the suite produced no evidence — re-run it on a host that can open
 one. While iterating, select only the probes a change touches with
 `--only <id>` (repeatable); the full suite is for the gate.
 
+A probe's `durationMs` includes its **mount**, and a mount swaps the previous
+probe's tree out of the same window. A probe that follows one which painted
+`anchored` layers therefore reads seconds longer than the same probe run alone
+(measured: `dialog-lifecycle` 0.4 s first, 4.2 s after `floating-sides`;
+`menu-lifecycle` 0.5 s alone, 7.2 s after `dialog-lifecycle`) while every check
+still passes. Read the checks, not the milliseconds: the number is the harness's
+teardown cost, not the probe's work.
+
 ## Structure
 
 ```
