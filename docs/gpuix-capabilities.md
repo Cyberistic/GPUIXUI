@@ -85,7 +85,7 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Terminal rendering | supported | `render(<App />, { terminal: true })`, `isTerminal()` | — |
 | Headless dialog | supported | `@gpuix/react/dialog` owns the Escape layer and the Tab trap | the library keeps its styled compound `Dialog` so it can theme it; the headless one is not wrapped |
 | Tab / Shift+Tab focus traversal | supported, with limits | native tab order; `focusNext`/`focusPrevious`/`focusNextWithin` move focus from code. A synthetic `"tab"` key does not traverse the offscreen `TestRenderer` | drive traversal through the renderer calls in tests |
-| Pointer, keyboard, focus and scroll events | supported | `HostProps.onClick` (primary only), `onAuxClick`, `onMouseDown`/`Up`/`Move`/`Enter`/`Leave`, `onMouseDownOutside`, `onKeyDown`/`Up`, `onFocus`/`onBlur`, `onScroll`, `onScrollChange`, `onLayout` (`div`/`text` only) | — |
+| Pointer, keyboard, focus and scroll events | supported, with limits | `HostProps.onClick` (primary only), `onAuxClick`, `onMouseDown`/`Up`/`Move`/`Enter`/`Leave`, `onMouseDownOutside`, `onKeyDown`/`Up`, `onFocus`/`onBlur`, `onScroll`, `onScrollChange`, `onLayout` (`div`/`text` only). **Measured:** a `Tab` traversal moves focus without running React's `onFocus` — `tooltip-lifecycle` reports `focuses=0` and a tip that stays closed, `tabs-lifecycle` the same counter | read the key event's own `elementId` (the `Tabs` move origin does) or `getFocusedElementId`; publish what a focus-only surface would show as `aria-description`, as the tooltip does |
 | Text selection | supported | `userSelect`, `selectionColor`, `getSelectedText()`; **measured**: `dragSelect` fills the selection for selectable text and nothing for chrome | — |
 | Caret and selection **position**; decoration over `<code>` | not supported | **measured** by `editor-surface`: the arrow keys move the native caret, but no API reports where it is or what is selected (`getSelectedText()` returns text only), and `<code>` takes `language`/`showLineNumbers` and no decoration layer | edit in a `<textarea>`, display in `<code>`; a highlighted *editable* surface is not buildable |
 | Find-in-content highlights | supported | `highlight` spec (`query`, `caseSensitive`, `wholeWord`, `ranges`, `activeIndex`) plus `getPaintedHighlights()`; **measured** by `search-highlights` | — |
@@ -99,6 +99,13 @@ The gap components cite most often is the aria subset above: a checkbox cannot
 announce `checked`, a slider cannot announce a numeric value, and a control
 cannot be named by a sibling `Label`. Each component documents the consequence
 on its own page rather than implying the attribute exists.
+
+A keyboard traversal moves focus **without running React's `onFocus`** —
+measured by `tooltip-lifecycle` (the trigger is focused, the tip stays closed)
+and `tabs-lifecycle` (`focuses=0`). A component that reveals something on focus
+therefore reads the key event's own `elementId` or `getFocusedElementId`, and
+anything a sighted user sees only on focus is also published as
+`aria-description`, which the runtime does deliver.
 
 Assistive technology sees a node only when it has **both** an id (always set) and
 a `role`; `"none"`/`"presentation"` remove the node. Focus rings are painted by
@@ -116,8 +123,10 @@ short, never the carrier of meaning.
   that matrix: a row and the code cannot disagree about whether the runtime
   supports something, and a new matrix key without a row fails by name.
 - The same test holds `/docs/runtime` to this file: the site's *measured in a
-  window* section must name the `data-grid-fixed-header` and `editor-surface`
-  probes, because those two gaps are measured rather than typed.
+  window* section must name the probes behind every gap it lists
+  (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
+  `tabs-lifecycle`), because a measured gap is absent from the typings rather
+  than merely hard to find.
 - The probe measurements themselves are asserted by the suite
   (`apps/playground`), not here: this document records the verdict and points at
   the evidence.

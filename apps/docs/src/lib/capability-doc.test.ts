@@ -219,6 +219,17 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(caret?.workaround).toContain("<textarea>");
   });
 
+  it("records the focus-event limit a window measured on the events row", () => {
+    // `onFocus` is declared and the events row called it supported while a
+    // `Tab` traversal moved focus without ever running the handler: a tooltip
+    // that opens on focus stayed closed and Tabs' own counter stayed at 0.
+    // Both probes paint, so the row carries their evidence.
+    const events = rowFor("Pointer, keyboard, focus and scroll events");
+    expect(events?.verdict).toBe("supported, with limits");
+    expect(events?.evidence).toContain("tooltip-lifecycle");
+    expect(events?.evidence).toContain("tabs-lifecycle");
+  });
+
   it("leaves the uncertain rows uncertain", () => {
     const unverified = rows.filter((row) => row.verdict === "unverified");
     expect(unverified.length).toBeGreaterThanOrEqual(3);
@@ -228,6 +239,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("## Measured in a window");
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");
+    expect(runtimePage).toContain("tooltip-lifecycle");
+    expect(runtimePage).toContain("tabs-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
