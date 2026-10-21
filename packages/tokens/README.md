@@ -342,12 +342,18 @@ persisted theme at its own boundary, where `Schema` belongs.
   a window that differs layers `extendTheme` on the resolved theme.
 - A high-contrast theme takes a platform style's families, radii and density but
   not its palette, because no platform palette is designed for the AAA floors.
-- `.SystemUIFont` is verified against GPUI's documentation of the name, not yet
-  visually in the native runtime (B1 blocks the playground gallery).
+- `.SystemUIFont` is a name GPUI documents and the theme asserts it; what face the
+  runtime resolves it to is not measured. The playground's `theme-platform`
+  gallery proves the platform **mono** families reach the renderer from its style
+  report.
+- Fonts must be registered before the first layout that names them; a family the
+  runtime learns about later has already fallen back. The live probe covers the
+  successful order, not the late one.
 - There is no runtime theme schema; theme objects authored in TypeScript are
   trusted at compile time. Persisted themes are decoded by the application.
 - No OS appearance detection; the app selects the mode and contrast.
-- No motion tokens yet. Tracked in `TODO.md`.
+- Motion lives in `@gpuixui/motion`, not here: durations, easings, springs and
+  reduced-motion policy are that package's, and a second copy would duplicate it.
 - Exports point at `src/`: the package is private, so a consumer compiles it
   directly and no build step is required. Phase G flips `exports` to `dist` when
   the package is published.
