@@ -57,3 +57,28 @@ for a measured interval longer than one edit cycle (a minute is enough at this
 cadence), and re-read the files before editing them. The next candidate tasks are
 the MISSION IA's Patterns page and the apps/docs salvage rows, none of which were
 started here.
+
+## Measured again at 23:24–23:32 (this turn)
+
+The five files from 23:23–23:25 were still uncommitted and untouched when this
+turn started at 23:26 (`git status --short apps/docs` listed the same five, and
+no mtime moved between 23:25:18 and 23:32), so the other session's turn appears
+to have ended without landing its work. This turn did **not** stage, revert or
+edit those files:
+
+- It worked only on new paths (`content/docs/patterns.mdx`,
+  `src/lib/patterns{,.test}.ts`, `src/components/docs/patterns{,.test}.tsx`) plus
+  `content/docs/meta.json` and `src/components/mdx.tsx`, and pushed
+  `9a46029d`.
+- `nub run --filter @gpuixui/docs test` is green (31 files / 226 tests) with the
+  other session's edits present.
+- `nub run --filter @gpuixui/docs check-types` currently reports exactly one
+  error, in **their** file: `src/lib/examples.test.ts`'s fixture predates the
+  uncommitted `ComponentEntry` (`parts`, `limitations`). The committed tree is
+  consistent; the failure is the half-landed change, not this turn's.
+- `nub run --filter @gpuixui/docs build` is green and the dev server serves
+  `/docs/patterns`.
+
+So the resume condition still applies to those five files, and the next docs-site
+turn should decide whether to finish or discard that change before adding to
+`component-index.ts` or `content/docs/components/index.mdx`.
