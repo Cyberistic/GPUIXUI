@@ -103,6 +103,12 @@ export const registry = [
     capability: "scroll",
   },
   {
+    id: "tab-overflow",
+    title:
+      "Tabs: a clipped selection stays put until the strip reveals it with scrollIntoView",
+    capability: "scroll",
+  },
+  {
     id: "panel-resize",
     title: "Panel resize: pointer capture and clamping",
     capability: "panel",

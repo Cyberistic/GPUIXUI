@@ -443,7 +443,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 25/25
+`[x]` `[██████████]` 28/28
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -661,6 +661,18 @@ a workaround for two live sessions sharing one worktree; see
       at the zone: `drops=2`, exit `1`). A **live** file drop is not automatable:
       the window protocol has no file-drop command and the OS drop needs Finder;
       the headless renderer is the measured path.
+`[x]` Land the `tab-overflow` scenario and measure the reveal a tab strip owes a
+      clipped selection: two identical eight-tab rails (320px viewport, 640px of
+      tabs) — the plain one keeps `x = 0` after `End` selects the off-screen tab
+      (the runtime does not reveal a selection), the revealing one calls the
+      tab's `scrollIntoView()` and lands at `x = -320` with the tab wholly
+      inside the rail. The same probe measures the limitation: with the tabs
+      inside a flex row, `scrollIntoView()` reaches only the row (`x = -1`), so
+      tabs must be **direct children** of the `overflowX` scroller. 10 checks,
+      `--only tab-overflow`, full suite 30/30 green on 0.11.0; two negative
+      controls measured (dropping the reveal fails `scrollIntoView moves the
+      rail left`; a 720px rail fails `the last tab starts past the rail's right
+      edge`, exit `1` each). Evidence: `apps/playground/README.md` §Tab overflow
 
 ## Phase C — Tier 1–2 components
 
@@ -1204,7 +1216,7 @@ Both are specified in ; each fix starts with a plan under .
       preview and waveform rows now carry the measurement. Evidence:
       `apps/playground/README.md` §`content-surfaces`,
       `.artifacts/live/content.png`
-`[ ]` `apps/playground`: native probe backlog — drag auto-scroll, tab overflow (salvage 162, 168-169, 172, 174). **Landed since:** file drops (`file-drop`, headless `nativeSimulateFileDrop`), cross-element drag (`drag-between-panes`, plus `AsyncSmokeHost.drag`), the shipped Tier 1 controls (Input `text-input`, Checkbox `checkbox-toggle`, Slider `slider-lifecycle`) and tab-strip focus (`tabs-lifecycle`: traversal, arrows, Home/End). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`), **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`) and **content surfaces** (`content-surfaces`, salvage 161)
+`[ ]` `apps/playground`: drag edge auto-scroll is unprobed (salvage 172) — it needs a way to hold a drag at the scroller's edge across frames (`SmokeHost.drag` sends down → moves → up with no hold), then measure whether the runtime scrolls on its own or the app must drive `scrollTo` from `onMouseMove`. The rest of the salvage backlog landed: **tab overflow** (`tab-overflow`), file drops (`file-drop`, headless `nativeSimulateFileDrop`), cross-element drag (`drag-between-panes`, plus `AsyncSmokeHost.drag`), the shipped Tier 1 controls (Input `text-input`, Checkbox `checkbox-toggle`, Slider `slider-lifecycle`) and tab-strip focus (`tabs-lifecycle`: traversal, arrows, Home/End). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`), **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`) and **content surfaces** (`content-surfaces`, salvage 161)
 `[x]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178) — `packages/testing/src/native.ts` exports `NativeRenderer`/`NativeElement` (method signatures only, so the package still imports no GPUix type) and `createTestHost`, which owns the `testId` → element lookup, the nearest-painted-ancestor fallback for a `<virtual-list>`/`<anchored>`, the subtree text join, the style decode and the drag synthesis. `apps/playground/src/smoke/host.ts` is deleted — a real `TestRenderer` satisfies the port structurally, so the runner calls `Native.createTestHost(root.renderer)`. 10 fake-renderer tests; both directions measured (dropping the ancestor fallback fails `aims input at the nearest ancestor that paints` and the drag case). Headless re-run green: `--only modal-focus-trap --only panel-resize --only scroll-container`
 `[x]` `packages/components`: Tier 2 behaviour gaps — both remaining rows landed (salvage 324, 339).
   - `[x]` Tier 2 icon adoption (salvage 324) — every chrome mark is an `@gpuixui/icons` glyph rather than a text stand-in: the close/dismiss controls (dialog, drawer, toast, alert, tag chip, search/time/hotkey clear), the carets (date picker, combobox), the month arrows, the carousel and pagination chevrons, the selected marks (menu, combobox), the submenu chevron, the accordion indicator and the collapsing ellipses. An ellipsis in a placeholder, a keycap chord and the confirmation dialog's busy `…` stay typography by design. `src/behaviour/icons.test.tsx` (5 native tests) measures the painted `<svg>` where the glyph used to be, the Expand/Collapse and Selected images, and sweeps the source for a returning stand-in; both directions measured (restoring `⌄`/`⌃` fails the indicator case and the sweep). The three live probes that mount these surfaces stay green on 0.11.0 (`--only dialog-lifecycle --only menu-lifecycle --only toast-lifecycle`).

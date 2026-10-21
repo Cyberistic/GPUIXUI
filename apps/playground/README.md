@@ -24,7 +24,7 @@ core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `data-grid-fixed-header`,
 `virtualized-table`, `tree-view`, `log-viewer`, `workspace-tab-drag`,
-`docking-nested`, `search-highlights`, `editor-surface`), the app-level
+`docking-nested`, `search-highlights`, `tab-overflow`, `editor-surface`), the app-level
 shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
@@ -78,7 +78,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (29/29 green); -> 2 on a host with no binding
+# -> 0 here (30/30 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -243,6 +243,35 @@ Negative control, measured: dropping `overflowX` from the strip fails
 `the strip reports a scroll offset` (`expected a value, got none`), exit `1`;
 restored, green.
 
+## Tab overflow
+
+A workspace with more tabs than its rail is wide is the commonest tab strip, and
+nothing had measured it. `tab-overflow` mounts the same eight 80px tabs three
+times in a 320px rail: a **plain** strip, a **revealing** strip whose selection
+change calls the selected tab's `scrollIntoView()`, and a **nested** strip whose
+tabs sit inside a flex row.
+
+| Step | Check |
+| ---- | ----- |
+| mount | each rail reports `x = 0` |
+| plain: focus tab 0, press `End` | the readout selects tab 7 and the rail **does not move** — the runtime does not reveal a selection |
+| plain: the selected tab's bounds | it starts past the rail's right edge (`x ≥ 320`), so it really is clipped |
+| revealing: focus tab 0, press `End` | the readout selects tab 7, `scrollIntoView()` moves the rail to `x = -320`, and tab 7 is painted wholly inside the rail |
+| nested: focus tab 0, press `End` | the rail barely moves (`x = -1`): `scrollIntoView()` scrolls the nearest scroller to the index of its **direct child**, so it reaches the row, not the tab |
+
+The nested case is the measured limitation, not a bug in the probe: GPUix's
+`scroll_element_into_view` resolves one scroll target (the nearest ancestor that
+is a scroll container) and scrolls it to the child index. A tab strip therefore
+keeps its tabs as direct children of the `overflowX` scroller — a wrapper row
+makes the selected tab unreachable, and the fix is layout, not a second call.
+`getElementBounds` reports the painted position of an element inside a scroller,
+so the reveal is asserted on the tab's own boxes.
+
+Negative controls, measured: dropping the `scrollIntoView()` call fails
+`scrollIntoView moves the rail left` (exit `1`); widening the rail to 720px so
+the tabs fit fails `the last tab starts past the rail's right edge` (exit `1`).
+Restored, green.
+
 ## File drops
 
 `file-drop` mounts a drop zone and drives the renderer's own
@@ -274,10 +303,10 @@ independent of what ran before it.
 
 ## Evidence on this host
 
-The suite is **29/29 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **30/30 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-29/29 scenarios passed · capabilities: layout=verified text=verified
+30/30 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -925,7 +954,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (29/29), with a written report and screenshots.
+  (30/30), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
