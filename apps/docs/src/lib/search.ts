@@ -45,6 +45,7 @@ import { updaterSearchEntry } from "./updater-search";
 import { eventsSearchEntry } from "./events-search";
 import { frameLoopSearchEntry } from "./frame-loop-search";
 import { placementSearchEntry } from "./placement-search";
+import { distributionSearchEntry } from "./distribution-search";
 import { stem, typoMatch, type TypoName } from "./typo";
 import {
   DEFAULT_SEARCH_LIMIT,
@@ -180,6 +181,7 @@ export const generatedSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   eventsSearchEntry,
   placementSearchEntry,
   frameLoopSearchEntry,
+  distributionSearchEntry,
 ];
 
 const generatedByUrl = new Map(

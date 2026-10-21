@@ -211,4 +211,9 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     url: "/docs/frame-loop",
     what: "the lifecycle exports, the paced tick loop, the macOS CPU clamp and the absences",
   },
+  {
+    title: "Shipping a desktop app",
+    url: "/docs/distribution",
+    what: "the single-file build, the packager config, the icon, the signing key, the release assets and the absences",
+  },
 ];

@@ -5,9 +5,9 @@ description: How this documentation site is built and deployed as a Cloudflare W
 
 This page covers **this documentation site**: how it is built, what the deploy
 resource declares, and what the build is allowed to upload. Shipping a desktop
-app built with the library is a different problem, answered under
-[Native bindings](/docs/installation#native-bindings) and
-[Troubleshooting](/docs/troubleshooting); no packaging guide exists yet.
+app built with the library is a different problem, answered on
+[Shipping a desktop app](/docs/distribution); this page deploys the docs, not an
+application.
 
 ## What deploys
 
@@ -129,16 +129,20 @@ deploy path is confirmed.
 
 ## Shipping an app built with GPUIXUI
 
-This page does not describe packaging a desktop application. The runtime is a
-native window through `@gpuix/native`, and the binding is platform-specific:
-[Installation](/docs/installation#native-bindings) lists the published targets
-and the one unpublished platform, and
+This page does not describe packaging a desktop application, and the Worker
+above hosts documentation, not an app. The library's packaging path — the
+compiled binary, the `cargo-packager` wrapper, the `.icns` icon, the signing key
+and the release assets — is [Shipping a desktop app](/docs/distribution), which
+also records what this repository has never done (no packager config, no signed
+bundle, no packaged run).
+
+The runtime is a native window through `@gpuix/native`, and the binding is
+platform-specific: [Installation](/docs/installation#native-bindings) lists the
+published targets and the one unpublished platform, and
 [Troubleshooting](/docs/troubleshooting#the-native-binding-is-missing-for-this-platform)
-names the failure when a host has no binding. Signing, notarisation and
-installers are not implemented in this repository, so there is no packaging
-pipeline here. **Auto-update is implemented in the runtime**:
-[Auto-update](/docs/updates) documents `checkUpdate`, the signed feed contract
-and `downloadAndInstall`, and states what remains unverified.
+names the failure when a host has no binding. **Auto-update is implemented in the
+runtime**: [Auto-update](/docs/updates) documents `checkUpdate`, the signed feed
+contract and `downloadAndInstall`, and states what remains unverified.
 
 ## Related
 

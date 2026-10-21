@@ -1552,6 +1552,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the macOS CPU clamp, which returned nothing before plan 637",
     },
+    {
+      query: "bundle identifier",
+      expected: "/docs/distribution",
+      first: true,
+      what: "the packaging path's bundle-identifier phrase, which reached a Text variants paragraph before plan 638",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

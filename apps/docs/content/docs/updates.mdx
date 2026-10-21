@@ -155,9 +155,13 @@ The page is derived from `@gpuix/native@0.10.0`'s installed declarations, and
 `src/updater.test.ts` re-reads them on every run. A reader who packages an
 application with these APIs is the first to exercise them — if that produces a
 contradiction, the page is wrong and should be corrected with the evidence.
+[Shipping a desktop app](/docs/distribution) owns how that package is built,
+signed and published; this page owns what the app then calls.
 
 ## Related
 
+- [Shipping a desktop app](/docs/distribution) — the binary, the packager
+  wrapper, the signed release assets and the unverified boundary.
 - [Deployment](/docs/deployment) — how *this documentation site* is built and
   served; a desktop app is a different deliverable.
 - [Installation](/docs/installation#native-bindings) — the published native

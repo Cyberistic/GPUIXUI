@@ -1,0 +1,220 @@
+---
+title: Shipping a desktop app
+description: How a GPUix app becomes an installable one — the single-file build, the cargo-packager wrapper and packager.json, the .icns app icon, the signing key and .sig assets, the GitHub Releases feed, the bundle identifier and installer formats, and what this repository has never done.
+---
+
+This page answers the question that comes after
+[Installation](/docs/installation) and before [Auto-update](/docs/updates): how
+the application you built becomes something a user can install. The recipe is
+GPUix's own, from its repository; this repository has never packaged an app, and
+[the last section](#provenance) says exactly which claims are measured here and
+which are quoted.
+
+The frame loop that starts the app belongs to [Frame loop](/docs/frame-loop), the
+window options — including the name the macOS menu shows — to
+[Application window](/docs/window), and the update API itself to
+[Auto-update](/docs/updates). Deploying **this documentation site** is a
+different job: [Deployment and hosting](/docs/deployment).
+
+## What ships
+
+A GPUix application is three things:
+
+- the React tree, mounted through `@gpuix/react`;
+- the `@gpuix/native` addon, a Node-API binary that paints and owns the window;
+- the JavaScript runtime that loads both.
+
+The addon is platform-specific. `@gpuix/native@0.10.0` publishes prebuilt
+binaries for macOS · Apple silicon, Linux · x64 and Windows · x64, and publishes
+none for macOS · Intel; [Native bindings](/docs/installation#native-bindings)
+lists the targets and the source build. The package's browser entry
+(`browser.mjs`, plus the wasm renderer) is a target for the web, not a desktop
+package — [Architecture](/docs/architecture) separates the two renderers and
+[Security and privacy](/docs/security) states the trust boundary between them.
+
+One runtime option matters to a packager, and the installed declaration says
+why: `WindowOptions.appName` names the macOS Hide and Quit menu items and
+defaults to `title`, but **the application menu title comes from the executable**
+— "only a `.app` bundle changes it". So the name a user sees in the menu bar is
+decided by the wrapper below, not by the window options.
+
+## Build one binary
+
+GPUix's repository documents one build step before the wrapper:
+
+```sh
+bun build --compile app.tsx --outfile dist/app
+```
+
+Its claim is that the compiled binary carries the renderer, so it runs with no
+Bun and no Node install. That is the repository's documented behaviour, not a
+measurement this site has taken. The runtime is Node-API, so a Node process can
+host the app too (without Bun's `--hot` remount); what the entry point must call
+is [Frame loop](/docs/frame-loop)'s contract.
+
+## Wrap it in an app
+
+A raw Mach-O has no Dock icon and no bundle identity, so the compiled binary
+needs an application wrapper. GPUix documents
+[cargo-packager](https://github.com/crabnebula-dev/cargo-packager) for that job.
+Install the CLI once:
+
+```sh
+cargo install cargo-packager --locked
+```
+
+Then describe the bundle. This is the configuration the table below renders and
+the file the recipe passes on the command line:
+
+```json title="packager.json"
+{
+  "productName": "Notes",
+  "version": "0.1.0",
+  "identifier": "dev.example.notes",
+  "binariesDir": "dist",
+  "outDir": "bundleX",
+  "binaries": [{ "path": "app", "main": true }],
+  "icons": ["AppIcon.icns"],
+  "formats": ["app"]
+}
+```
+
+<PackagerConfig />
+
+`identifier` is the bundle identifier — the reverse-DNS name the operating
+system uses for the app. It is a **packager** field: the runtime's
+`WindowOptions` has no bundle identifier, no icon and no version, and its
+`appId` is the Wayland `app_id` / X11 `WM_CLASS` a desktop groups windows by, not
+an app identity ([Application window](/docs/window#wayland-layer-shell)).
+
+Build the bundle:
+
+```sh
+cargo packager --release --config packager.json
+```
+
+Two facts about that command surprise people, both from the same repository:
+
+- **`--release` is the packager profile, not `cargo build --release`.** The
+  packager reads its input from `binariesDir`, so that directory must already
+  hold the release binary the first step produced.
+- **The packager builds the host OS only.** A release matrix runs it on macOS,
+  Linux and Windows separately; there is no cross-compilation.
+
+The formats, what each writes, and what an update installs:
+
+<PackagerFormats />
+
+`app`, `appimage`, `nsis` and `wix` are the four values the runtime's
+`AvailableUpdate.format` can report, which is why the update client documents
+them. `dmg` is a packager output a person installs from — the update client
+cannot install it, and the macOS asset it wants is the `.app.tar.gz` the packager
+writes when it signs.
+
+## The app icon
+
+Pass the packager an `.icns`, not a PNG: a 1024 PNG was rejected with
+`No matching IconType`. GPUix's repository builds the `.icns` from one 1024 px
+source with the macOS tools:
+
+```sh
+mkdir AppIcon.iconset
+sips -z 16 16 icon-1024.png --out AppIcon.iconset/icon_16x16.png
+sips -z 32 32 icon-1024.png --out AppIcon.iconset/icon_16x16@2x.png
+sips -z 32 32 icon-1024.png --out AppIcon.iconset/icon_32x32.png
+sips -z 64 64 icon-1024.png --out AppIcon.iconset/icon_32x32@2x.png
+sips -z 128 128 icon-1024.png --out AppIcon.iconset/icon_128x128.png
+sips -z 256 256 icon-1024.png --out AppIcon.iconset/icon_128x128@2x.png
+sips -z 256 256 icon-1024.png --out AppIcon.iconset/icon_256x256.png
+sips -z 512 512 icon-1024.png --out AppIcon.iconset/icon_256x256@2x.png
+sips -z 512 512 icon-1024.png --out AppIcon.iconset/icon_512x512.png
+sips -z 1024 1024 icon-1024.png --out AppIcon.iconset/icon_512x512@2x.png
+iconutil -c icns AppIcon.iconset -o AppIcon.icns
+```
+
+The icon is the wrapper's, not the runtime's: no component draws a Dock icon and
+no window option sets one. The `@gpuixui/icons` set is in-app markup, on the
+[Icons](/docs/components/icon) page.
+
+## Sign the bundle
+
+Packaging does not turn on updates, and update signing is separate from operating
+system signing. Generate a key pair once:
+
+```sh
+cargo packager signer generate
+```
+
+Keep the private key and its password out of the repository — GPUix's repository
+puts them in `CARGO_PACKAGER_SIGN_PRIVATE_KEY` and
+`CARGO_PACKAGER_SIGN_PRIVATE_KEY_PASSWORD` — and put the **public** key in the
+app, as the `pubkey` that `checkUpdate` verifies a download against
+([Auto-update](/docs/updates#check-confirm-install)). When those two variables
+are set, the packager signs the bundle and writes the sibling `.sig` files; a
+missing `.sig` is an error, not a warning.
+
+What signing does **not** cover is the app the operating system launches. There
+is no `codesign`, `notarytool` or other code-signing call in this repository, no
+notarisation recipe on this page, and no claim that macOS will open an unsigned
+build without a Gatekeeper prompt. If you distribute an app, that step is your
+release pipeline's, using the platform's own tools.
+
+## Publish a release
+
+The update client's documented feed is a GitHub release. Create the release
+first, then upload the bundle and its `.sig`, and keep the repository public —
+a private repository's release API answers 404:
+
+```sh
+# macOS
+bun build --compile app.tsx --outfile dist/app
+cargo packager --release --config packager.json
+gh release upload v0.1.0 \
+  "bundle/My App.app.tar.gz" \
+  "bundle/My App.app.tar.gz.sig" \
+  --clobber
+```
+
+Asset names follow the packager, not `productName`: the Linux AppImage and the
+Windows setup use the **binary stem** (`app`), and the NSIS installer's arch is
+`x64`, not `x86_64`. On Windows the asset is
+`app_0.1.0_x64-setup.exe` plus its `.sig`; do not upload a feed JSON — the
+client reads the release JSON itself. The `checkUpdate` call, its options and
+the install semantics are [Auto-update](/docs/updates)'s subject.
+
+## What this repository does not do
+
+<DistributionAbsences />
+
+The list is the honest boundary of this page: the recipe is real, but none of it
+has run against this library in this repository, so nothing here is offered as a
+verified build.
+
+## Provenance
+
+- **The recipe** — the binary build, `packager.json`, the `.icns` pipeline, the
+  signing variables, the `.sig` assets and the GitHub Releases feed — is quoted
+  from GPUix's own repository README, which the published `@gpuix/native@0.10.0`
+  tarball does not ship.
+- **The installed contract** — the four update formats, `pubkey`,
+  `installerArgs` and the three published targets — is verified against the
+  pinned declarations in both directions by the guards that render this page.
+- **The sizes** GPUix records for its own example apps — 82 MB for a Bun `.app`,
+  34 MB for the Hermes counter, and the 12 MB plus 22 MB sidecar split — are
+  quoted as GPUix's measurements on GPUix's machine. This site has packaged
+  nothing, so none of them is a measurement of this library.
+- **Not verified anywhere here:** a compiled binary, a bundle, an icon build, a
+  signature, a notarised app, an installed app, a Windows or Linux package, or an
+  update delivered from a release.
+
+## Related
+
+- [Installation](/docs/installation#native-bindings) — the binding targets and
+  the one platform with no published binary.
+- [Frame loop](/docs/frame-loop) — what the packaged entry point calls.
+- [Application window](/docs/window) — the window options, `appName` and
+  `appId`.
+- [Auto-update](/docs/updates) — `checkUpdate`, the signed feed and
+  `downloadAndInstall`.
+- [Troubleshooting](/docs/troubleshooting#the-native-binding-is-missing-for-this-platform)
+  — the failure when a host has no binding.

@@ -106,6 +106,11 @@ import {
   RenderOptionsTable,
   TickContract,
 } from "./frame-loop-tables";
+import {
+  DistributionAbsences,
+  PackagerConfig,
+  PackagerFormats,
+} from "./distribution-tables";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -201,6 +206,9 @@ export function getMDXComponents(components?: MDXComponents) {
     RenderOptionsTable,
     CpuThrottleTable,
     LoopAbsences,
+    PackagerFormats,
+    PackagerConfig,
+    DistributionAbsences,
     ...components,
   } satisfies MDXComponents;
 }

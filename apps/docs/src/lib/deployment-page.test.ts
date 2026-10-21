@@ -122,8 +122,11 @@ const linkProblems = (): ReadonlyArray<string> =>
 describe("Deployment page", () => {
   it("is served, titled and ordered in the sidebar", () => {
     expect(pageTitles.get("/docs/deployment")).toBe("Deployment and hosting");
-    expect(sidebar.indexOf("deployment")).toBe(
+    expect(sidebar.indexOf("distribution")).toBe(
       sidebar.indexOf("contributing") + 1,
+    );
+    expect(sidebar.indexOf("deployment")).toBe(
+      sidebar.indexOf("distribution") + 1,
     );
   });
 

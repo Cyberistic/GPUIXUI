@@ -158,7 +158,7 @@
  * and `rollback` name Auto-update. The title is `Auto-update`, so a term equal
  * to it would trip the shadow guard; `upgrade`, `changelog` and `versioning`
  * stay on Installation (a library upgrade is not an app update), `installer`
- * stays on Deployment's shipping section, and `update`/`updates` are
+ * names Shipping a desktop app (plan 638), and `update`/`updates` are
  * deliberately absent — the plain word also means "a component updates its
  * state", and the page title already answers the hyphenated spelling.
  *
@@ -211,6 +211,16 @@
  * a promoted single word would steal it. `render loop` also moves here, by the
  * page index rather than an alias: the new page is the app's loop, and
  * Testing's section keeps the narrower `test render loop` phrase (plan 637 §9).
+ *
+ * Plan 638 adds the shipping vocabulary, the last release-readiness subject
+ * with no owner: `shipping`, `distribute`, `packaging`, `packager`,
+ * `bundle identifier`, `app bundle`, `notarize`, `executable`, `dmg`,
+ * `installer`, `cross compile`, `app icon` and `release build` name Shipping a
+ * desktop app, which documents the binary, the wrapper, the icon, the signing
+ * key and the release assets. `code signing`, `signing key`, `pubkey`, `nsis`,
+ * `appimage` and `wix` stay on Auto-update (the update client's signing and
+ * formats), `install` stays on Installation, `icon` on the Icons page, and
+ * `release` keeps Installation's release words — the page says "app release".
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -785,6 +795,7 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "is mac supported",
       "changelog",
       "change log",
+      "release",
       "release notes",
       "releases",
       "upgrade",
@@ -1120,6 +1131,36 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "why does the app exit",
       "requestanimationframe",
       "request animation frame",
+    ],
+  ],
+  [
+    "/docs/distribution",
+    [
+      "shipping",
+      "ship an app",
+      "shipping an app",
+      "distribute",
+      "distribution",
+      "distribute an app",
+      "packaging",
+      "packager",
+      "app packaging",
+      "bundle identifier",
+      "app bundle",
+      "notarize",
+      "notarization",
+      "app signing",
+      "sign the app",
+      "dmg",
+      "installer",
+      "installer build",
+      "executable",
+      "cross compile",
+      "app icon",
+      "release build",
+      "mac app",
+      "windows installer",
+      "linux app",
     ],
   ],
 ]);
