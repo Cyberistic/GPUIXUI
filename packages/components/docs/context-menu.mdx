@@ -88,8 +88,11 @@ a 500 ms, case-insensitive prefix search over enabled labels (see **Dropdown
 menu → Type-ahead**).
 
 Focus returns to the trigger on `Escape` and on activation only when the menu was
-opened from the keyboard; a pointer-opened menu leaves focus where the pointer
-put it.
+opened from the keyboard. A pointer-opened menu records no restore target, so
+dismissing it leaves the native focus **`none`** — measured in a window by the
+playground's `context-menu-lifecycle` probe. A consumer that opens the menu from
+its own shortcut and wants the focus back should go through `Shift+F10` or a
+controlled `open`.
 
 ## Submenus
 
@@ -158,19 +161,33 @@ a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`). The
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (18 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not
 opening, `Shift+F10` opening at the trigger's bottom-left with focus in the menu,
 keyboard activation running a row, Escape returning focus to the trigger, a
-disabled trigger ignoring `Shift+F10`, type-ahead jumping to a row, and the
-submenu rules — `ArrowRight` opening and focusing the first row, a pointer click
-running a row and closing both levels, and one-level Escape/ArrowLeft.
+disabled trigger ignoring `Shift+F10`, a pointer-opened menu dismissing with the
+focus `none`, type-ahead jumping to a row, and the submenu rules — `ArrowRight`
+opening and focusing the first row, a pointer click running a row and closing
+both levels, and one-level Escape/ArrowLeft.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
 ```
+
+### Measured in a real window
+
+The playground's `context-menu-lifecycle` probe mounts this shipped component in
+a real GPUix window (24 checks on 0.11.0), because a headless suite synthesises
+the aux click that opens it. The window measured: a primary press opens nothing;
+a right press paints the surface at the press point; the surface holds the focus
+so arrows move real focus and `Enter` runs the row; `Shift+F10` places the
+surface at the trigger's own bounds and `Escape` returns focus to the trigger; a
+pointer-opened menu is dismissed with the focus `none`; and a right press on a
+sibling opens nothing. Negative control: pressing the trigger with the primary
+button fails `a right press opens the menu` (`opens=0`). Evidence:
+`apps/playground/README.md` §`context-menu-lifecycle`.
 
 ## Related
 

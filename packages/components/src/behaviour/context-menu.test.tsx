@@ -210,6 +210,26 @@ describe("ContextMenu", () => {
     row.unmount();
   });
 
+  it("leaves the focus nowhere when a pointer-opened menu dismisses", () => {
+    // The light harness cannot see a native window's focus, but the rule is the
+    // component's: a pointer open records no restore target, so the documented
+    // contract is "focus stays where the pointer put it" rather than the
+    // trigger. A pointer-opened menu that started restoring would make the
+    // Context menu page wrong (measured in a window by `context-menu-lifecycle`).
+    const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
+    const origin = rowOrigin(row);
+
+    rightClickAt(row, origin.x + 40, origin.y + 30);
+    expect(focusedTestId(row)).not.toEqual(Option.some("row"));
+
+    row.renderer.simulateKeystrokes("escape");
+
+    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    expect(focusedTestId(row)).toEqual(Option.none());
+
+    row.unmount();
+  });
+
   it("does not open from a disabled trigger", () => {
     const row = renderComponent(<ProjectRow onSelect={vi.fn()} disabled />);
     const origin = rowOrigin(row);
