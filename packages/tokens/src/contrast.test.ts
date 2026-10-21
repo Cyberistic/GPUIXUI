@@ -216,6 +216,59 @@ describe("ring and selection surfaces", () => {
   });
 });
 
+/**
+ * Guards the same rule for a control **boundary**: an outline button in a muted
+ * toolbar and a bordered control in a filled panel draw their edge on the strip
+ * they sit in, not on the page. The bug this holds: `borderStrong` was measured
+ * on `background`, `card` and `input` only, so the base light theme shipped
+ * `#848E9E` at 2.92:1 on `muted`, the base dark theme `#6B7484` at 2.81:1 on
+ * `secondary` and Linux light `#8A8884` at 2.97:1 on its own muted strip, all
+ * under the 3:1 boundary floor and none of them noticed.
+ */
+describe("a control boundary on the strip it sits on", () => {
+  it("measures the strong boundary on every surface a control sits in", () => {
+    const missing = ["background", "card", "input", "muted", "secondary"]
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "borderStrong" &&
+              pair.background === background &&
+              pair.floor === "boundary",
+          ),
+      )
+      .map((background) => `borderStrong/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reports the boundary value the base themes shipped before this pair", () => {
+    const lightBefore = {
+      colors: { ...lightColors, borderStrong: "#848E9E" },
+    };
+    const muted = contrastFailures(lightBefore).find(
+      ({ foreground, background }) =>
+        foreground === "borderStrong" && background === "muted",
+    );
+
+    expect(muted?.floor).toBe(contrastFloors.boundary);
+    expect(muted?.ratio).toBeCloseTo(2.92, 2);
+  });
+
+  it("reports an edge that disappears into the strip it sits in", () => {
+    const broken = {
+      colors: { ...lightColors, borderStrong: lightColors.secondary },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "borderStrong" && background === "secondary",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+});
+
 describe("contrastFailures", () => {
   it("passes every shipped theme", () => {
     expect(contrastFailures(lightTheme)).toEqual([]);

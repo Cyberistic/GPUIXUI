@@ -144,7 +144,7 @@ tool never has to copy the palette out of this page.
 | `destructiveSoft` | `#FFE0E0` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
-| `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries |
+| `borderStrong` | `#7B8595` | `#748091` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#66707F` | `#7C8595` | placeholder text |
@@ -480,7 +480,7 @@ role — the status families, the soft tones, `foreground`, `mutedForeground`,
 | `hover` | `#E9E9EF` | `#2E2E33` | `#E7E6E4` | `#333333` | `#E8E8E8` | `#333333` |
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#DEDEDE` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
-| `borderStrong` | `#7C7C82` | `#8A8A90` | `#8A8884` | `#A0A0A0` | `#757575` | `#9A9A9A` |
+| `borderStrong` | `#7C7C82` | `#8A8A90` | `#84827E` | `#A0A0A0` | `#757575` | `#9A9A9A` |
 | `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
@@ -716,17 +716,18 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 45 pairs cover the text role
+— an empty array means the theme is readable. The 47 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
 selected row, every status and soft-status pair, each status tone's readable text
 as **page** text on `background` and `card` (a field error or an inline warning
 is not on the tone's own tinted surface), accent and selected, the state washes,
-the placeholder, and the essential boundaries and focus ring — the ring on every
-surface a focused control can sit on, including a toolbar strip (`muted`) and a
-segmented group (`secondary`). A wash — `hover`, `active`, `accent` —
-is a surface too: a ghost button or a menu row tints it and leaves its label in
-the resting `foreground`, and secondary text keeps `mutedForeground`, so both
+the placeholder, and the essential boundaries and focus ring — the ring and the
+strong boundary on every surface a focused control can sit on, including a
+toolbar strip (`muted`) and a segmented group (`secondary`). A wash — `hover`,
+`active`, `accent` — is a surface too: a ghost button or a menu row tints it and
+leaves its label in the
+resting `foreground`, and secondary text keeps `mutedForeground`, so both
 roles are measured on all three. `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
 to. `contrastFloorsFor(theme)` is the variant rule on its own, which is the floor
@@ -1456,8 +1457,9 @@ ignore. Palette edits must keep all of it green.
 `packages/tokens/src/contrast.test.ts` covers the contract itself: the ratio maths
 (21:1 at the extremes, 1:1 for identical colours, symmetry), the refusal to
 measure a translucent or unparseable colour, the two floor sets, and that a
-break to the text inside an input or to secondary text on `background`, `card`
-or `popover` is reported by name. `theme.test.ts` runs the audit over the
+break to the text inside an input, to secondary text on `background`, `card` or
+`popover`, or to a control boundary on a `muted` or `secondary` strip is
+reported by name. `theme.test.ts` runs the audit over the
 documented brand theme, so a documented brand that loses its on-colour fails the
 suite.
 

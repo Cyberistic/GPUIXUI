@@ -219,6 +219,11 @@ export const contrastPairs: readonly ContrastPair[] = [
   // page beneath it.
   { foreground: "ring", background: "muted", floor: "boundary" },
   { foreground: "ring", background: "secondary", floor: "boundary" },
+  // A control boundary sits on the same strips: an outline button in a toolbar
+  // draws its edge on `muted`, and a bordered control in a filled panel draws it
+  // on `secondary`. The edge must stay findable there for the same reason.
+  { foreground: "borderStrong", background: "muted", floor: "boundary" },
+  { foreground: "borderStrong", background: "secondary", floor: "boundary" },
   // A selected row keeps the secondary text role its siblings use, so the
   // selection tint is a surface that text sits on.
   {
