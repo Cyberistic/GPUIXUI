@@ -281,7 +281,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | disabled text on its own fill and on `background`/`card`/`popover` (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips and the field | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
-| decorative surfaces: divider, skeleton fill, modal veil, status edge | 1.05:1 | 1.05:1 |
+| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 | text inside the selection wash (input, page, card, popover) | 7:1 | 7:1 |
 | the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
@@ -309,6 +309,14 @@ which now carry a `skeleton` of their own.
 Also not measured, deliberately: the elevation tint. A shadow is a blurred
 geometry, so a flat ratio overstates what the eye receives; its contract is the
 one-shadow rule and the role-owned tint, guarded by `elevation.test.ts`.
+
+Nothing else escapes: `coverage.test.ts` holds every role in `colorRoles` to at
+least one measurement, so a role cannot ship unmeasured — it found
+`disabledForeground` (now on the disabled floor) and `scrollbar` (now measured as
+a decorative surface, because a thumb nobody can find is a scroller nobody can
+find). The only two roles with no pair are `selection`, measured by
+`selectionFailures` on the text inside the wash, and `shadow`, measured by the
+elevation tint above; the guard names each contract.
 
 A value the renderer cannot paint is the other silent failure: GPUix ignores a
 colour string it cannot parse, so a typo keeps the property's previous value or

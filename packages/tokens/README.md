@@ -379,7 +379,7 @@ const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.contrast; // [] — every measured pair meets its floor
-audit.decorative; // [] — every divider, skeleton, veil and status edge is visible
+audit.decorative; // [] — every divider, skeleton, veil, status edge and thumb is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.selection; // [] — every selection wash is visible and keeps its text readable
 // Otherwise each entry names both roles, the measured ratio and the floor.
@@ -394,8 +394,8 @@ Each report is also a function of its own:
   misses its floor, including one it cannot measure because a value is
   translucent.
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
-  skeleton fill, the modal veil — that is too close to what it is painted on to
-  be seen, compositing a translucent role first.
+  skeleton fill, the modal veil, a scrollbar thumb — that is too close to what it
+  is painted on to be seen, compositing a translucent role first.
 - `seriesFailures(theme, floors?)` lists every chart swatch lost on its plot or
   too close to its neighbour, and reports one it cannot measure.
 - `selectionFailures(theme, floors?)` composites the `selection` wash over each
@@ -408,9 +408,13 @@ check — `undefined` for a translucent or non-hex value rather than a guess.
 shipped themes meet, so a brand is held to the same pairs rather than a second
 set. The decorative surfaces use `decorativeFloor` (1.05:1, the same
 perceptibility floor the soft status surfaces use), and `decorativeSurfaces`
-names the placements measured — dividers, skeleton fills, the modal veil and each
-status tone's edge, which is read at the share `statusEdgeAlpha` that `statusTone`
-paints. See [`src/theme-audit.example.ts`](./src/theme-audit.example.ts).
+names the placements measured — dividers, skeleton fills, the modal veil, each
+status tone's edge (read at the share `statusEdgeAlpha` that `statusTone`
+paints) and the scrollbar thumb on the strips a scroller can sit on. Nothing
+escapes the contract either: `coverage.test.ts` holds every role in `colorRoles`
+to at least one measurement, and names the two that a dedicated contract measures
+instead — `selection` and `shadow`. See
+[`src/theme-audit.example.ts`](./src/theme-audit.example.ts).
 
 ## Fonts
 

@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 46/47
+`[x]` `[██████████]` 47/48
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -443,6 +443,7 @@ workstream now lands on `master` directly, so there is nothing to merge. The
 `agent/tokens-theme` / `agent/tokens-platform` branches are historical (they were
 a workaround for two live sessions sharing one worktree; see
 `.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`)
+`[x]` Hold the contract to its own scope — `coverage.test.ts` reads `colorRoles` (the inventory of what a theme carries) and fails when a role appears in no contract: not as either side of a `contrastPairs` pair, not in a `decorativeSurfaces` placement, and not named in the two-entry exemption map. It found two roles that had shipped, been documented and been painted, and been measured by **nothing**: `disabledForeground` (closed by the disabled floor above) and `scrollbar`, which `ScrollAreaViewport` tints the platform-drawn thumb from — so the thumb now joins `decorativeSurfaces` on the four strips a scroller can sit on at `decorativeFloor` (1.05:1; every theme clears it, tightest Linux dark 1.21:1 on a popover). The remaining two are named with their contract rather than exempted: `selection` by `selectionFailures`, `shadow` by `elevation.test.ts`; an exemption that stopped being needed fails the same guard. Directions measured: dropping the scrollbar placements fails the coverage case with `['scrollbar']` and both decorative cases, and dropping the disabled pairs fails the coverage case naming `disabledForeground`. Docs in `docs/tokens.md` §Every role is measured and §Decorative surfaces, `docs/design-system.md` §9 and the `Contrast contract` inventory row
 `[x]` Give the disabled state a contract — `disabled`/`disabledForeground` are painted as a pair by a disabled field, a select's value and a fieldset legend, and **no** pair measured them, so a palette edit could set the unavailable label to its own fill and every suite stayed green. `ContrastFloors` gained `disabled` (1.5:1; `highContrastFloors.disabled` 3:1) and four pairs joined `contrastPairs` (51 → 55): the label on its own fill and on `background`, `card` and `popover`. The floor is deliberately **not** a readability claim — WCAG exempts an inactive component from 1.4.3/1.4.11 — it says the state is still seen; every shipped, high-contrast, platform and authored theme already cleared it (tightest: Linux dark 1.76:1 on a popover), so no palette moved. `contrast.test.ts`'s `disabled text` suite holds the coverage, the floor's relation to `secondary`, a label painted into its fill at 1.00:1 and one matching the page; `design-system-docs.test.ts` holds the page's printed 1.5/3 to the exports. Directions measured: removing the four pairs fails the three contrast cases by name, and deleting the page row fails the docs guard. Docs in `docs/tokens.md` §The disabled floor, `docs/design-system.md` §8/§9 and the `Contrast contract` inventory row
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)

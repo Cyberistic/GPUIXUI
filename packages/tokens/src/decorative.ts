@@ -29,9 +29,14 @@ export interface DecorativeSurface {
    * What the surface is for, so a failure names the design decision rather than
    * two roles: `divider` rules a region, `skeleton` stands in for content that
    * has not loaded, `scrim` is the veil under a modal, `statusEdge` bounds a
-   * status message's soft surface.
+   * status message's soft surface, `scrollbar` is the thumb a scroller paints.
    */
-  readonly surface: "divider" | "skeleton" | "scrim" | "statusEdge";
+  readonly surface:
+    | "divider"
+    | "skeleton"
+    | "scrim"
+    | "statusEdge"
+    | "scrollbar";
   /** The role painted. Its alpha, if it has one, is part of the measurement. */
   readonly role: keyof ThemeColors;
   /** The role it is painted over, and must be distinguishable from. */
@@ -78,6 +83,13 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // theme with one separates its dialog with a border instead.
   { surface: "scrim", role: "overlay", over: "card" },
   { surface: "scrim", role: "overlay", over: "popover" },
+  // A scrollbar thumb is chrome: the platform paints and sizes it, and the role
+  // only tints it. A thumb that matches the strip it moves along is a scroller a
+  // reader cannot find, so it is measured wherever a scroller can sit.
+  { surface: "scrollbar", role: "scrollbar", over: "background" },
+  { surface: "scrollbar", role: "scrollbar", over: "card" },
+  { surface: "scrollbar", role: "scrollbar", over: "popover" },
+  { surface: "scrollbar", role: "scrollbar", over: "muted" },
   // A status message's edge is a decorative boundary — its text and icon carry
   // the meaning — so it is held to the perceptibility floor, not the boundary
   // floor, and measured on the tint it bounds and on both page surfaces.

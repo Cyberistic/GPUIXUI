@@ -104,6 +104,26 @@ describe("decorative surfaces", () => {
     });
   });
 
+  it("measures a scrollbar on every surface a scroller can sit on", () => {
+    const missing = ["background", "card", "popover", "muted"].filter(
+      (over) => !measured("scrollbar", "scrollbar", over),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reports a scrollbar thumb that matches the strip it moves along", () => {
+    const broken = {
+      colors: { ...lightColors, scrollbar: lightColors.background },
+    };
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, over }) => surface === "scrollbar" && over === "background",
+      ),
+    ).toMatchObject({ role: "scrollbar", ratio: 1, floor: decorativeFloor });
+  });
+
   it("passes every shipped theme", () => {
     shippedThemes.forEach((theme) => {
       expect(decorativeFailures(theme), theme.name).toEqual([]);

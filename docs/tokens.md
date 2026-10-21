@@ -771,13 +771,14 @@ exists so a theme that erases the state fails by name instead of shipping it.
 
 ### Decorative surfaces
 
-Four surfaces carry no text and are not an essential boundary, so WCAG's floors
+Five surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
-(`overlay`) and a status message's edge. They still have one job — be seen — so
-they get one floor of their own, `decorativeFloor = 1.05:1`, the same
-perceptibility threshold the soft status surfaces are held to. Below it a surface
-reads as the fill it is painted on: a card without an edge, a skeleton that looks
-like an empty row, a dialog with no layer behind it, a message with no boundary.
+(`overlay`), a status message's edge and a scrollbar thumb. They still have one
+job — be seen — so they get one floor of their own, `decorativeFloor = 1.05:1`,
+the same perceptibility threshold the soft status surfaces are held to. Below it
+a surface reads as the fill it is painted on: a card without an edge, a
+skeleton that looks like an empty row, a dialog with no layer behind it, a
+message with no boundary, a scroller whose thumb nobody can find.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -791,6 +792,11 @@ how a status edge is measured at the alpha its component actually uses:
 | skeleton | `skeleton` | `background`, `card`, `muted` |
 | scrim | `overlay` | `card`, `popover` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, `background`, `card` |
+| scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
+
+The thumb is chrome: the platform paints and sizes it and the role only tints it,
+so it is not held to the 3:1 a control boundary gets. It is still held to being
+findable, which is the same reason a divider is.
 
 A veiled page's **void** is not measured: a black page cannot be darkened by any
 scrim, and a high-contrast theme separates its dialog with a border instead. A
@@ -811,6 +817,19 @@ decorativeFailures(theme);
 // [{ surface: "divider", role: "border", over: "card", ratio: 1, floor: 1.05 }]
 decorativeFailures(theme, 1.2); // a brand that needs stronger decoration
 ```
+
+### Every role is measured
+
+The contracts cover the whole role list, and that is itself guarded. `colorRoles`
+is the inventory of what a theme carries, and `coverage.test.ts` fails when a
+role appears in none of them — no pair, no decorative placement, no dedicated
+contract. It found two that had shipped unmeasured: `disabledForeground` (now on
+the disabled floor) and `scrollbar` (now a decorative surface). Two roles are
+measured by a contract of their own rather than a pair, and the guard names them:
+`selection` by `selectionFailures`, because a translucent wash is measured by what
+it does to the text inside it, and `shadow` by `elevation.test.ts`, because a
+blurred geometry is not a fill. An exemption that stops being needed fails the
+same guard, so the list cannot quietly grow.
 
 ## Fonts
 
