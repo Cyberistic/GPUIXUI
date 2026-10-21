@@ -29,7 +29,7 @@ import { validate } from "@gpuixui/components/validation/logic";
 | `Field` | the column, the label row, the control slot, one message slot |
 | `FieldLabel` | the visible label and the `*` marker |
 | `FieldDescription` | supporting copy, shown when there is no error |
-| `FieldError` | `role="alert"`, destructive text, replaces the description |
+| `FieldError` | `role="alert"`, the status tone's page-text role, replaces the description |
 | `FieldInput` | a single-line input that knows its field's state |
 
 The error **replaces** the description rather than stacking under it: one
@@ -72,7 +72,10 @@ requirement is still announced. The marker itself carries `aria-label="Required"
 
 Labels use the `label` type role in `colors.foreground`; descriptions the
 `caption` role in `colors.mutedForeground`; errors the `caption` role in
-`colors.destructive`. The input paints `colors.input` / `colors.inputForeground`,
+`colors.destructiveSoftForeground` — the status tone's page-text role, measured
+at the body floor on `background` and `card`, rather than the solid
+`destructive` fill, which no contrast pair measures as text. The input paints
+`colors.input` / `colors.inputForeground`,
 a `borderWidth.thin` border in `colors.border`, `radius.md`, and swaps the border
 to `colors.destructive` when invalid. The input declares the keyboard-only
 `focusVisible` outline at rest: `colors.ring` while the value is valid, and the
@@ -105,11 +108,12 @@ declares no outline.
 
 ## Verification
 
-`src/behaviour/field.test.tsx` runs in the real GPUix renderer (6 tests): label,
+`src/behaviour/field.test.tsx` runs in the real GPUix renderer (7 tests): label,
 description and control rendering; the error replacing the description with
-`role="alert"`; the required marker and clean accessible name; the destructive
-border in both themes; typed text reaching `onChange`; and a disabled field
-leaving the tab order and accepting no typing.
+`role="alert"`; the error text painted in the tone's measured page role rather
+than the solid fill; the required marker and clean accessible name; the
+destructive border in both themes; typed text reaching `onChange`; and a
+disabled field leaving the tab order and accepting no typing.
 
 `src/validation/logic.test.ts` covers the message walk, `errors: "all"`,
 deduplication and the valid case.

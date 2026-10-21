@@ -141,7 +141,9 @@ must not re-open it — without that guard the menu flickers shut and open.
 A checkbox row does not close the menu — toggling several settings in one visit
 is the point. It shows a check icon when checked and carries `aria-selected`.
 
-`tone="destructive"` paints the row in `colors.destructive`. It is a visual
+`tone="destructive"` paints the row in the status tone's page-text role
+(`statusTone(theme, "destructive").foreground`) — the role the contrast contract
+measures as text — rather than the solid `destructive` fill. It is a visual
 signal, not a confirmation step: pair a destructive row with **Confirmation
 dialog** when the action cannot be undone.
 
@@ -238,7 +240,8 @@ tests): the `menu` role, keyboard opening on the first/last enabled row, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
-dismissal, checkbox toggling and its check mark, the destructive colour, the
+dismissal, checkbox toggling and its check mark, the destructive row's measured
+page-text role, the
 surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
 Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboard,
 hover and pointer opening, right-edge placement, focus entering the first row,

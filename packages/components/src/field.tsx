@@ -36,7 +36,12 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  keyboardRing,
+  statusTone,
+  useTheme,
+} from "./internal/theme.js";
 
 /** What a {@link FieldInput} inherits from the field around it. */
 interface FieldContextValue {
@@ -167,14 +172,24 @@ export interface FieldErrorProps extends Props {
   readonly className?: string;
 }
 
-/** The message slot used when the field is invalid. Announced as an alert. */
+/**
+ * The message slot used when the field is invalid. Announced as an alert, and
+ * painted in the status tone's measured page-text role — the solid
+ * `destructive` fill is not a role any contrast pair measures as text.
+ */
 export const FieldError = ({ className, style, ...rest }: FieldErrorProps) => {
   const theme = useTheme();
   return (
     <text
       role="alert"
       {...rest}
-      style={mergeStyles(recipeStyle(cn(FIELD_ERROR, className), theme), style)}
+      style={mergeStyles(
+        {
+          ...recipeStyle(cn(FIELD_ERROR, className), theme),
+          color: statusTone(theme, "destructive").foreground,
+        },
+        style,
+      )}
     />
   );
 };

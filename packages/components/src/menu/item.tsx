@@ -27,7 +27,7 @@ import {
   type ReactNode,
 } from "react";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
-import { controlHeight, useTheme } from "../internal/theme.js";
+import { controlHeight, statusTone, useTheme } from "../internal/theme.js";
 import {
   assertParts,
   type PartChildren,
@@ -93,7 +93,9 @@ export const menuRowStyle = (
   borderLeftWidth: theme.borderWidth.strong,
   borderColor: active ? theme.colors.accent : theme.colors.popover,
   backgroundColor: active ? theme.colors.hover : undefined,
-  ...(tone === "destructive" ? { color: theme.colors.destructive } : {}),
+  ...(tone === "destructive"
+    ? { color: statusTone(theme, "destructive").foreground }
+    : {}),
   cursor: disabled ? "not-allowed" : "pointer",
   opacity: disabled ? 0.5 : 1,
   hover: disabled ? undefined : { backgroundColor: theme.colors.hover },

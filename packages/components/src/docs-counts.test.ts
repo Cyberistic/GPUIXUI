@@ -99,7 +99,9 @@ describe("docs test counts", () => {
     const wrong = Arr.filterMap(named, ({ claim, suite }) =>
       Option.match(actualCount(suite), {
         onNone: () =>
-          Result.succeed(`${claim.page}:${claim.line}: ${suite} does not exist`),
+          Result.succeed(
+            `${claim.page}:${claim.line}: ${suite} does not exist`,
+          ),
         onSome: (actual) =>
           actual === claim.stated
             ? Result.failVoid

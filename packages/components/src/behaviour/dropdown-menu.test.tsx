@@ -5,8 +5,8 @@
  * highlights a disabled row (so Enter does nothing while the highlight claims it
  * would); Enter firing twice or not closing; focus not returning to the trigger
  * after Enter or Escape; a press on the open trigger flickering the menu back open;
- * a checkbox row toggling the wrong way; and a destructive row that is not painted
- * with the destructive role.
+ * a checkbox row toggling the wrong way; and a destructive row painted in the
+ * solid `destructive` fill role, which no contrast pair measures as text.
  *
  * Keyboard-opening regression: a menu opened from the trigger landed on the
  * surface with nothing highlighted, so Enter ran nothing and ArrowDown/ArrowUp on
@@ -431,13 +431,14 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
-  it("paints a destructive row with the destructive role", () => {
+  it("paints a destructive row in the status tone's measured page role", () => {
     const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
 
-    expect(menu.renderer.findByTestId("delete")?.style.color).toBe(
-      darkTheme.colors.destructive,
-    );
+    const painted = menu.renderer.findByTestId("delete")?.style.color;
+
+    expect(painted).toBe(darkTheme.colors.destructiveSoftForeground);
+    expect(painted).not.toBe(darkTheme.colors.destructive);
     expect(menu.renderer.findByTestId("separator")?.style.height).toBe(
       darkTheme.borderWidth.thin,
     );

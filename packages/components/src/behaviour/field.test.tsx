@@ -2,16 +2,18 @@
  * Field behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: an error that left the description visible too; an error
- * announced as ordinary text instead of an alert; a required marker that also
- * polluted the accessible name; an invalid control that kept the neutral border;
- * and an input whose typing never reached `onChange`.
+ * announced as ordinary text instead of an alert; an error painted in the solid
+ * `destructive` fill role, which no contrast pair measures as page text; a
+ * required marker that also polluted the accessible name; an invalid control
+ * that kept the neutral border; and an input whose typing never reached
+ * `onChange`.
  */
 
 import { describe, expect, it, vi } from "vitest";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
-import { Field, FieldInput } from "../field.js";
+import { Field, FieldError, FieldInput } from "../field.js";
 
 /** One email field, with the message slots driven by props. */
 const Form = ({
@@ -92,6 +94,24 @@ describe("Field", () => {
 
     assertTheme("dark", darkTheme.colors.destructive);
     assertTheme("light", lightTheme.colors.destructive);
+  });
+
+  it("paints the error text in the status tone's measured page role", () => {
+    const assertTheme = (name: TestTheme, theme: typeof darkTheme): void => {
+      const root = renderComponent(
+        <FieldError testId="error">Required</FieldError>,
+        name,
+      );
+      const painted = root.renderer.findByTestId("error")?.style.color;
+
+      expect(painted).toBe(theme.colors.destructiveSoftForeground);
+      expect(painted).not.toBe(theme.colors.destructive);
+
+      root.unmount();
+    };
+
+    assertTheme("dark", darkTheme);
+    assertTheme("light", lightTheme);
   });
 
   it("reports typed text through onChange", () => {
