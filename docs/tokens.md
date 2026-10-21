@@ -312,14 +312,14 @@ tail into "Other"; the scale is not a cycle.
 
 | Series | Light | Dark | HC light | HC dark |
 | ------ | ----- | ---- | -------- | ------- |
-| `1` | `#5F4BDB` | `#A7A9FF` | `#3B2C8F` | `#D6D2FF` |
-| `2` | `#0E7490` | `#67D4E8` | `#0B4A57` | `#A8E8F5` |
-| `3` | `#158754` | `#6FE0A3` | `#0E5135` | `#A8F0C6` |
-| `4` | `#B57600` | `#FFC94D` | `#6B4500` | `#FFE7A8` |
-| `5` | `#CC3439` | `#FF6B6B` | `#7E1D21` | `#FFC6C6` |
+| `1` | `#5F4BDB` | `#A7A9FF` | `#4C39B5` | `#C7CBFF` |
+| `2` | `#1B45AC` | `#6E9CFF` | `#2559D6` | `#6E9CFF` |
+| `3` | `#158754` | `#1FA968` | `#0E5135` | `#3BC97F` |
+| `4` | `#B57600` | `#FFDE8A` | `#8E5B00` | `#FFE7A8` |
+| `5` | `#A5262B` | `#FF9E9E` | `#CC3439` | `#FFC6C6` |
 
 The four tables are `lightSeries`, `darkSeries`, `highContrastLightSeries` and
-`highContrastDarkSeries`. Both contracts are measured:
+`highContrastDarkSeries`. Three contracts are measured:
 
 - **On the plot.** Every swatch is held to the theme's own boundary floor
   against every surface a plot is drawn on — `seriesSurfaces` is `background`,
@@ -328,23 +328,41 @@ The four tables are `lightSeries`, `darkSeries`, `highContrastLightSeries` and
 - **Apart from each other.** Contrast cannot answer "are these two colours
   different" — a blue and a violet of one lightness measure near 1:1 yet read
   apart — so pairs are held to `seriesDistinctnessFloor`, an OKLab distance of
-  `0.06` (roughly three just-noticeable steps). The high-contrast tables sit
-  closest to the floor (0.069 and 0.075), because a palette squeezed to AAA
-  luminance has less hue range to spend.
+  `0.06` (roughly three just-noticeable steps). The dark table sits closest to
+  the floor (0.082).
+- **Apart for every reader.** A pair that separates for a full-colour reader can
+  still collapse for one with a colour-vision deficiency, so every pair is
+  simulated for `colorVisionDeficiencies` — `protanopia`, `deuteranopia` and
+  `tritanopia` — with `simulateColorVision` and measured again, against
+  `seriesDeficiencyFloor`, an OKLab distance of `0.05`. The simulation is the
+  severity-1.0 model of Machado, Oliveira and Fernandes (2009) in linear sRGB:
+  dichromatic protanopia, deuteranopia and tritanopia, so it answers "do these
+  two swatches still differ for that reader", not "what exactly does this reader
+  see". It found the previous tables collapsing — light series 2/3 at 0.030
+  under tritanopia and high-contrast dark series 3/5 at 0.016 under
+  deuteranopia — and the four tables above now keep every simulated pair at or
+  above the floor (the tightest is 0.054). The model does not cover anomalous
+  trichromacy or an uncalibrated display, so a chart still labels its series.
 
-`seriesFailures(theme, floors?)` reports both, naming the series position, the
-surface or the pair, and reporting a translucent or malformed swatch rather than
-skipping it. `auditTheme` includes that report, so a brand is held to the same
-gate. A theme owns its scale by carrying `series`:
+```ts
+import { simulateColorVision } from "@gpuixui/tokens";
+
+simulateColorVision("#C02B45", "deuteranopia"); // that red to a deuteranope
+```
+
+`seriesFailures(theme, floors?)` reports all three, naming the series position,
+the surface, the pair or the deficiency, and reporting a translucent or
+malformed swatch rather than skipping it. `auditTheme` includes that report, so
+a brand is held to the same gate. A theme owns its scale by carrying `series`:
 
 ```ts
 import { auditTheme, extendTheme, seriesColors, type SeriesColors } from "@gpuixui/tokens";
 
-const house: SeriesColors = ["#6A45F0", "#1F7A8C", "#2E7D32", "#A15C00", "#C02B45"];
+const house: SeriesColors = ["#6A45F0", "#0E7490", "#116A43", "#B57600", "#A5262B"];
 const brand = extendTheme(theme, { series: house });
 
 seriesColors(brand); // the house scale, not the shipped one
-auditTheme(brand).passed; // measured on the plot and against itself
+auditTheme(brand).passed; // measured on the plot, against itself and for every deficiency
 ```
 
 The array replaces the shipped table whole, like an elevation level: the five
@@ -674,7 +692,7 @@ audit.passed; // true only when all five reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.contrast; // text, icon and boundary pairs below their floor
 audit.decorative; // dividers, skeleton fills, veils and status edges too subtle to see
-audit.series; // data-series colours lost on their plot or against each other
+audit.series; // data-series colours lost on their plot, against each other, or for a colour-blind reader
 audit.selection; // a selection wash the reader cannot see, or that hides its text
 ```
 
@@ -1551,6 +1569,14 @@ text inside it keeps the body floor. It reports the pre-fix Linux dark wash at
 6.63:1 by name, a brand whose wash is its own text colour, a transparent wash and
 a surface it cannot composite, and all 16 shipped, platform and authored themes
 clear both floors.
+
+`packages/tokens/src/series.test.ts` covers the categorical scale: every
+shipped, platform and authored theme holds every swatch to its variant's
+boundary floor on the three plot surfaces, every pair to 0.06 in OKLab, and
+every pair to 0.05 again after protanopia, deuteranopia and tritanopia are
+simulated. It reports the red/green pair a deuteranope sees 0.024 apart, a
+swatch that is the card it is drawn on, a repeated pair and a translucent
+swatch, and it executes the example's legend and reported lines.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label, both families, a density preset and a full radius scale; `sans` is

@@ -59,6 +59,8 @@ import {
   highContrastDarkSeries,
   highContrastLightSeries,
   lightSeries,
+  seriesDeficiencyFloor,
+  seriesDistinctnessFloor,
 } from "./series.js";
 import { statusTones } from "./styles.js";
 import { typography, type TextStyle } from "./typography.js";
@@ -262,6 +264,13 @@ describe("the catalogue's colour roles", () => {
       "5",
     ]);
     expect(drift).toEqual([]);
+  });
+
+  it("prints the series distances the contract applies", () => {
+    expect(catalogue).toContain(`\`${seriesDistinctnessFloor}\``);
+    expect(catalogue).toContain(`\`${seriesDeficiencyFloor}\``);
+    expect(catalogue).toContain("`colorVisionDeficiencies`");
+    expect(catalogue).toContain("`simulateColorVision`");
   });
 
   it("prints each palette ramp's steps", () => {

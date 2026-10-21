@@ -65,10 +65,11 @@ A chart breaks that rule on purpose: a series colour means "a different
 category", not "this is a warning", so data marks are the one place a component
 does not name a semantic role. They read the categorical scale instead —
 `seriesColors(theme)` returns five colours for the theme's mode and contrast
-variant, every one perceivable on the three plot surfaces (`seriesSurfaces`) and
-every pair separated by an OKLab distance (`seriesDistinctnessFloor`). A chart
-never hard-codes a hex; a brand that wants its own categories carries `series`.
-See `docs/tokens.md` §Data series.
+variant, every one perceivable on the three plot surfaces (`seriesSurfaces`),
+every pair separated by an OKLab distance (`seriesDistinctnessFloor`), and every
+pair still separated once protanopia, deuteranopia and tritanopia are simulated
+(`seriesDeficiencyFloor`). A chart never hard-codes a hex; a brand that wants its
+own categories carries `series`. See `docs/tokens.md` §Data series.
 
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library.
@@ -302,6 +303,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
 | data series on `background`, `card` and `popover` | 3:1 | 4.5:1 |
 | any two data series apart from each other (OKLab distance) | 0.06 | 0.06 |
+| any two data series apart after protanopia, deuteranopia and tritanopia (OKLab distance) | 0.05 | 0.05 |
 
 The test runs for every shipped colour set — light, dark, both high-contrast
 variants and all six platform themes — and is part of the normal test suite. It
@@ -351,7 +353,8 @@ overrides it. The parts are public too: `contrastRatio(foreground, background)`
 measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `highContrastFloors` names the text and boundary pairs and their floors,
 `decorativeFailures(theme, floor?)` measures the subtle surfaces,
-`seriesFailures(theme)` measures a categorical scale and `selectionFailures(theme)`
+`seriesFailures(theme)` measures a categorical scale — on its plot, against
+itself and after each colour-vision deficiency — and `selectionFailures(theme)`
 measures the wash a selected run sits in. Nothing about the requirement is
 private to this repo.
 

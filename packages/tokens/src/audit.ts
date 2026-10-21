@@ -67,7 +67,7 @@ export interface ThemeAudit {
   readonly contrast: readonly ContrastFailure[];
   /** Dividers, skeleton fills, veils and status edges too close to their surface. */
   readonly decorative: readonly DecorativeFailure[];
-  /** Data series too close to a plot surface or to each other. */
+  /** Data series too close to a plot surface, to each other, or to one another under a colour-vision deficiency. */
   readonly series: SeriesReport;
   /** Selection washes that cannot be seen, or that hide the text inside them. */
   readonly selection: readonly SelectionFailure[];
@@ -112,6 +112,7 @@ export function auditTheme(
       decorative.length === 0 &&
       series.surfaces.length === 0 &&
       series.distinctness.length === 0 &&
+      series.deficiencies.length === 0 &&
       selection.length === 0,
   };
 }

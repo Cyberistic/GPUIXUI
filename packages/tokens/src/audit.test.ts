@@ -89,7 +89,7 @@ describe("the floors follow the theme's contrast variant", () => {
       invalidRoles: [],
       contrast: [],
       decorative: [],
-      series: { surfaces: [], distinctness: [] },
+      series: { surfaces: [], distinctness: [], deficiencies: [] },
       selection: [],
       passed: true,
     });

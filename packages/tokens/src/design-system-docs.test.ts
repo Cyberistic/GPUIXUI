@@ -25,6 +25,7 @@ import {
   spacing,
   targetSize,
 } from "./scale.js";
+import { seriesDeficiencyFloor, seriesDistinctnessFloor } from "./series.js";
 import { typography } from "./typography.js";
 
 const doc = readFileSync(
@@ -169,6 +170,34 @@ describe("docs/design-system.md", () => {
     ).toBeDefined();
     expect(Number(floors?.[1])).toBe(targetSize.minimum);
     expect(Number(floors?.[2])).toBe(targetSize.comfortable);
+  });
+
+  it("prints the data-series distances", () => {
+    const measured =
+      /any two data series apart from each other \(OKLab distance\) \| ([\d.]+) \| ([\d.]+) \|/.exec(
+        doc,
+      );
+    const vision =
+      /any two data series apart after protanopia, deuteranopia and tritanopia \(OKLab distance\) \| ([\d.]+) \| ([\d.]+) \|/.exec(
+        doc,
+      );
+
+    expect(
+      measured,
+      "docs/design-system.md no longer states the series distinctness floor",
+    ).toBeDefined();
+    expect(
+      vision,
+      "docs/design-system.md no longer states the colour-vision floor",
+    ).toBeDefined();
+    expect([Number(measured?.[1]), Number(measured?.[2])]).toEqual([
+      seriesDistinctnessFloor,
+      seriesDistinctnessFloor,
+    ]);
+    expect([Number(vision?.[1]), Number(vision?.[2])]).toEqual([
+      seriesDeficiencyFloor,
+      seriesDeficiencyFloor,
+    ]);
   });
 
   it("prints the disabled floor and the surfaces it applies to", () => {

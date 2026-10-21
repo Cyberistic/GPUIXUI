@@ -201,16 +201,18 @@ Charts and legends read a categorical scale, not a semantic role — a series
 colour means "a different category", so painting it `warning` would say the
 wrong thing. `seriesColors(theme)` returns five colours for the theme's mode and
 contrast variant; every one is perceivable on the plot surfaces (`background`,
-`card`, `popover`) and every pair is separated by an OKLab distance.
+`card`, `popover`), every pair is separated by an OKLab distance, and every pair
+stays separated after protanopia, deuteranopia and tritanopia are simulated.
 
 ```ts
-import { seriesColors } from "@gpuixui/tokens";
+import { seriesColors, simulateColorVision } from "@gpuixui/tokens";
 
 const colors = seriesColors(theme); // five swatches, in legend order
+simulateColorVision(colors[0], "deuteranopia"); // the same swatch to a deuteranope
 ```
 
 A brand that wants its own categories carries `series` in `extendTheme`; the
-array replaces the shipped scale whole. `seriesFailures(theme)` reports both
+array replaces the shipped scale whole. `seriesFailures(theme)` reports all three
 contracts and is part of `auditTheme`.
 
 ## Focus
@@ -400,8 +402,9 @@ Each report is also a function of its own:
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
   skeleton fill, the modal veil, a scrollbar thumb — that is too close to what it
   is painted on to be seen, compositing a translucent role first.
-- `seriesFailures(theme, floors?)` lists every chart swatch lost on its plot or
-  too close to its neighbour, and reports one it cannot measure.
+- `seriesFailures(theme, floors?)` lists every chart swatch lost on its plot, too
+  close to its neighbour, or too close to it for a reader with a colour-vision
+  deficiency, and reports one it cannot measure.
 - `selectionFailures(theme, floors?)` composites the `selection` wash over each
   surface body text is selected from and lists a wash the reader cannot see and
   one that hides the text it selects; see §Text selection.

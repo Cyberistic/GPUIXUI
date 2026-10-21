@@ -48,10 +48,10 @@ export function legend(
 /** A brand that spends its five positions on its own house palette. */
 export const brandSeries: SeriesColors = [
   "#6A45F0",
-  "#1F7A8C",
-  "#2E7D32",
-  "#A15C00",
-  "#C02B45",
+  "#0E7490",
+  "#116A43",
+  "#B57600",
+  "#A5262B",
 ];
 
 /** The same brand theme with the scale it owns. */
@@ -71,6 +71,10 @@ export function seriesReport(theme: Theme): ReadonlyArray<string> {
     ...report.distinctness.map(
       ({ index, other, distance }) =>
         `series ${index + 1} and ${other + 1} are ${distance === undefined ? "unmeasurable" : distance.toFixed(3)} apart`,
+    ),
+    ...report.deficiencies.map(
+      ({ deficiency, index, other, distance }) =>
+        `${deficiency}: series ${index + 1} and ${other + 1} are ${distance === undefined ? "unmeasurable" : distance.toFixed(3)} apart`,
     ),
   ];
 }

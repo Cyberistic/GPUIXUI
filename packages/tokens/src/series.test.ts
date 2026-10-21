@@ -9,12 +9,16 @@
  * themes and nothing measuring it). Neither follows a theme, so a brand's chart
  * cannot follow its palette.
  *
- * The scale is held to two contracts and this file measures both: every swatch
- * is perceivable against the surfaces a plot is drawn on, and no two swatches
- * read as the same colour. The second cannot be a contrast ratio — two hues of
- * one lightness differ plainly yet measure near 1:1 — so it is an OKLab
- * distance, and the failure cases below build a brand whose scale is too pale
- * to see and a brand whose scale repeats a colour.
+ * The scale is held to three contracts and this file measures all of them:
+ * every swatch is perceivable against the surfaces a plot is drawn on, no two
+ * swatches read as the same colour, and no two collapse for a reader with
+ * protanopia, deuteranopia or tritanopia. The second cannot be a contrast ratio
+ * — two hues of one lightness differ plainly yet measure near 1:1 — so it is an
+ * OKLab distance; the third repeats that distance after simulating each
+ * deficiency, because a red and a green 0.286 apart for a full-colour reader
+ * are 0.027 apart to a deuteranope. The failure cases below build a brand whose
+ * scale is too pale to see, a brand whose scale repeats a colour and a brand
+ * whose red/green pair separates only for a full-colour reader.
  */
 
 import { describe, expect, it } from "vitest";
@@ -29,15 +33,18 @@ import {
   seriesReport,
 } from "./series.example.js";
 import {
+  colorVisionDeficiencies,
   darkSeries,
   highContrastDarkSeries,
   highContrastLightSeries,
   lightSeries,
   type SeriesColors,
   seriesColors,
+  seriesDeficiencyFloor,
   seriesDistinctnessFloor,
   seriesFailures,
   seriesSurfaces,
+  simulateColorVision,
 } from "./series.js";
 import {
   darkTheme,
@@ -138,6 +145,17 @@ describe("every shipped scale passes its contract", () => {
     expect(failing).toEqual([]);
   });
 
+  it("keeps every pair apart for a colour-vision-deficient reader", () => {
+    const failing = passing.flatMap((theme) =>
+      seriesFailures(theme).deficiencies.map(
+        ({ deficiency, index, other, distance }) =>
+          `${theme.name} ${deficiency} series ${index + 1}/${other + 1} is ${distance ?? "unmeasurable"}`,
+      ),
+    );
+
+    expect(failing).toEqual([]);
+  });
+
   it("audits a real set, so a scan that stopped iterating cannot pass", () => {
     expect(passing.length).toBeGreaterThanOrEqual(16);
     expect(seriesSurfaces).toEqual(["background", "card", "popover"]);
@@ -173,7 +191,7 @@ describe("the surface floor follows the theme's variant", () => {
       .filter(({ surface }) => surface === "background")
       .map(({ index }) => index);
 
-    expect(onBackground).toEqual([2, 3, 4]);
+    expect(onBackground).toEqual([2, 3]);
   });
 });
 
@@ -223,6 +241,96 @@ describe("the failures name the decision", () => {
   });
 });
 
+describe("the colour-vision contract", () => {
+  /**
+   * A brand's red and green: 0.286 apart for a full-colour reader, 0.024 apart
+   * once deuteranopia is simulated.
+   */
+  const redGreen: SeriesColors = [
+    "#C02B45",
+    "#2E7D32",
+    "#5F4BDB",
+    "#1B45AC",
+    "#B57600",
+  ];
+
+  it("reports a pair a deuteranope cannot tell apart", () => {
+    const report = seriesFailures(
+      extendTheme(lightTheme, { series: redGreen }),
+    );
+    const failure = report.deficiencies.find(
+      ({ deficiency, index, other }) =>
+        deficiency === "deuteranopia" && index === 0 && other === 1,
+    );
+
+    expect(report.surfaces).toEqual([]);
+    expect(report.distinctness).toEqual([]);
+    expect(failure?.distance).toBeCloseTo(0.024, 2);
+    expect(failure?.floor).toBe(seriesDeficiencyFloor);
+  });
+
+  it("fails the audit when the deficiency pair is the only defect", () => {
+    const brand = extendTheme(lightTheme, { series: redGreen });
+    const audit = auditTheme(brand);
+
+    expect(audit.series.deficiencies).toEqual(
+      seriesFailures(brand).deficiencies,
+    );
+    expect([
+      audit.invalidRoles,
+      audit.contrast,
+      audit.decorative,
+      audit.series.surfaces,
+      audit.series.distinctness,
+      audit.selection,
+    ]).toEqual([[], [], [], [], [], []]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("reports a swatch it cannot simulate rather than skipping it", () => {
+    const translucent = extendTheme(lightTheme, {
+      series: ["#5F4BDB80", "#2E7D32", "#1B45AC", "#B57600", "#A5262B"],
+    });
+    const unmeasurable = seriesFailures(translucent).deficiencies.filter(
+      ({ index, other }) => index === 0 && other === 1,
+    );
+
+    expect(unmeasurable).toHaveLength(colorVisionDeficiencies.length);
+    expect(unmeasurable.every(({ distance }) => distance === undefined)).toBe(
+      true,
+    );
+  });
+
+  it("lets a caller tighten the deficiency floor", () => {
+    const report = seriesFailures(lightTheme, { deficiency: 0.2 });
+
+    expect(report.deficiencies.length).toBeGreaterThan(0);
+    expect(report.deficiencies.every(({ floor }) => floor === 0.2)).toBe(true);
+  });
+
+  it("simulates each deficiency differently", () => {
+    const seen = colorVisionDeficiencies.map((deficiency) =>
+      simulateColorVision("#C02B45", deficiency),
+    );
+
+    expect(seen.every((color) => color !== undefined)).toBe(true);
+    expect(new Set(seen).size).toBe(colorVisionDeficiencies.length);
+  });
+});
+
+describe("simulateColorVision", () => {
+  it("leaves an achromatic colour unchanged", () => {
+    // Every matrix row sums to one, so grey has no hue for a deficiency to lose.
+    expect(simulateColorVision("#808080", "deuteranopia")).toBe("#808080");
+    expect(simulateColorVision("#FFFFFF", "tritanopia")).toBe("#FFFFFF");
+  });
+
+  it("returns undefined for a value it cannot read", () => {
+    expect(simulateColorVision("#C02B4580", "protanopia")).toBeUndefined();
+    expect(simulateColorVision("red", "protanopia")).toBeUndefined();
+  });
+});
+
 describe("the gate includes the scale", () => {
   it("fails an audit whose only defect is a chart swatch", () => {
     const invisible = extendTheme(lightTheme, {
@@ -243,6 +351,7 @@ describe("the gate includes the scale", () => {
     expect(seriesFailures(brandChartTheme)).toEqual({
       surfaces: [],
       distinctness: [],
+      deficiencies: [],
     });
     expect(auditPassed(brandChartTheme)).toBe(true);
   });
@@ -275,5 +384,15 @@ describe("the example is executable and its calls are the documented ones", () =
     });
 
     expect(seriesReport(broken)[0]).toBe("series 1 on background is 1.06");
+  });
+
+  it("words a deficiency failure for the same readout", () => {
+    const redGreen = extendTheme(lightTheme, {
+      series: ["#C02B45", "#2E7D32", "#5F4BDB", "#1B45AC", "#B57600"],
+    });
+
+    expect(seriesReport(redGreen)).toContain(
+      "deuteranopia: series 1 and 2 are 0.024 apart",
+    );
   });
 });
