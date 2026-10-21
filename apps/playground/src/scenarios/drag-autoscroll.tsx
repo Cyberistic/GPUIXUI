@@ -89,7 +89,9 @@ const Rail = ({
                 index % 2 === 0 ? theme.colors.card : theme.colors.background,
             }}
           >
-            <text style={{ color: theme.colors.foreground }}>{`row ${index}`}</text>
+            <text
+              style={{ color: theme.colors.foreground }}
+            >{`row ${index}`}</text>
           </div>
         ))}
       </div>
@@ -119,7 +121,11 @@ export const dragAutoscrollScenario: ScenarioBody = {
         "the plain rail reports an offset",
         offset("plain"),
       );
-      yield* ctx.expectEqual("the plain rail starts at the top", plainStart.y, 0);
+      yield* ctx.expectEqual(
+        "the plain rail starts at the top",
+        plainStart.y,
+        0,
+      );
 
       // Row 4's centre is y = 180, inside the 24px bottom band of the 200px
       // rail, so every synthesized move lands in it.

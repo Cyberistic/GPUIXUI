@@ -161,7 +161,11 @@ export const tabOverflowScenario: ScenarioBody = {
         "the plain rail reports an offset",
         offset("plain"),
       );
-      yield* ctx.expectEqual("the plain rail starts at the left", plainStart.x, 0);
+      yield* ctx.expectEqual(
+        "the plain rail starts at the left",
+        plainStart.x,
+        0,
+      );
 
       // Select the last tab with the keyboard the way a tab strip does: focus
       // the first tab, then End. The rail is narrower than the tab row, so the
