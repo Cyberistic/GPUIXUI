@@ -17,6 +17,9 @@
  * break silently in the other direction. Every `x.y.z` token in this package's
  * prose, source comments and examples is treated as a runtime claim, because no
  * other version is named here today; the floor fails if the scan stops matching.
+ * The shared API spec (`docs/component-api.md`), which this package owns, is
+ * scanned too: it went five releases stale while the scan covered only the
+ * package's own files.
  *
  * `node:fs` is the test-time boundary `inventory.test.ts` and
  * `packages/primitives/src/runtime-version.test.ts` already use.
@@ -71,6 +74,30 @@ const sources = (): ReadonlyArray<string> => [
 ];
 
 /**
+ * The shared API spec at the repo root. This package owns it, and it went five
+ * releases stale while this scan covered only the package's own files. The other
+ * root documents belong to the workstreams that write them and are guarded by
+ * their own suites.
+ */
+const sharedSources = (): ReadonlyArray<string> => ["docs/component-api.md"];
+
+/** A file to scan, the root it is read from and the label a failure prints. */
+interface Source {
+  readonly base: URL;
+  readonly file: string;
+  readonly label: string;
+}
+
+const scanned = (): ReadonlyArray<Source> => [
+  ...Arr.map(sources(), (file) => ({
+    base: packageRoot,
+    file,
+    label: `packages/components/${file}`,
+  })),
+  ...Arr.map(sharedSources(), (file) => ({ base: repoRoot, file, label: file })),
+];
+
+/**
  * A version token is a runtime claim when it is the runtime's own 0.x line (no
  * other 0.x version is named in this package) or is attached to `GPUix` or a
  * `@gpuix/*` package. Example data such as a "Release 2.4.0" label is not a
@@ -87,10 +114,10 @@ interface Mention {
 
 /** Every version token a file names, with the line it sits on. */
 const mentions = (): ReadonlyArray<Mention> =>
-  Arr.flatMap(sources(), (file) => {
-    const source = read(packageRoot, file);
+  Arr.flatMap(scanned(), ({ base, file, label }) => {
+    const source = read(base, file);
     return Arr.map(Array.from(source.matchAll(version)), (match) => ({
-      file,
+      file: label,
       line: source.slice(0, match.index ?? 0).split("\n").length,
       version: match[1] ?? match[2] ?? "",
     }));

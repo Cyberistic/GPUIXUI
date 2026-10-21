@@ -7,7 +7,7 @@ Applies to every Tier 1–2 component in `packages/components` and
 
 This is the **public API spec**. It is a translation of `base-gpui`'s
 compound-part contract (MIT; see [`LICENSES/base-gpui.md`](../LICENSES/base-gpui.md))
-into React over GPUix 0.10.0. No Rust source is copied. Where GPUix lacks a
+into React over GPUix 0.11.0. No Rust source is copied. Where GPUix lacks a
 capability, the contract says so instead of naming an API that would not work.
 
 ## Adoption status
@@ -58,7 +58,7 @@ history. No landed component currently deviates.
   shipped an `onChange` alias keeps it as deprecated; new work names neither
   callback `onChange`.
 - The resolution lives in exactly one hook — `useControllableState` from
-  `@gpuix/react/floating` (published in 0.10.0) or this package's
+  `@gpuix/react/floating` (part of the pinned release) or this package's
   `internal/controllable.ts` wrapper. Do not write a second implementation.
 
 ## 3. State-aware styling
@@ -122,7 +122,7 @@ Map `base-gpui`'s AccessKit roles onto the GPUix **verified** subset (plan
 renderer's `focusElement`/`focusNext`/`focusPrevious`/`focusNextWithin`.
 
 Do not invent `aria-checked`, `aria-valuenow`, `aria-labelledby`,
-`aria-describedby`, `aria-controls`, `aria-current` or `aria-modal` — 0.10.0
+`aria-describedby`, `aria-controls`, `aria-current` or `aria-modal` — 0.11.0
 does not accept them. Record the gap as a limitation and use the strongest
 supported alternative (`aria-selected`, `aria-valuetext`, a required `label`).
 
@@ -198,10 +198,10 @@ row in the same change.
 | Text areas | `TextArea` | — | plan 030 |
 | Checkboxes | `Checkbox` | `CheckboxRoot`/`Indicator` | plan 030 |
 | Radio groups | `RadioGroup` | `RadioGroupRoot`/`Radio`/`Indicator` | plan 030 |
-| Selects | `Select` | `SelectRoot` + 19 parts | GPUix 0.10.0 `Select` |
+| Selects | `Select` | `SelectRoot` + 19 parts | GPUix 0.11.0 `Select` |
 | Switches | `Switch` | `SwitchRoot`/`Thumb` | plan 030 |
 | Progress | `Progress` | `ProgressRoot`/`Track`/`Indicator`/`Label`/`Value` | plan 030 |
-| Tooltips | `Tooltip` | `TooltipRoot`/`Trigger`/`Popup`/… | GPUix 0.10.0 `Tooltip` |
+| Tooltips | `Tooltip` | `TooltipRoot`/`Trigger`/`Popup`/… | GPUix 0.11.0 `Tooltip` |
 | Skeletons | `Skeleton` | — | plan 030 |
 | Loading indicators | `Spinner` | — | plan 030 |
 | Slider | `Slider` | `SliderRoot`/`Track`/`Thumb`/`Control`/`Indicator`/`Label`/`Value` | plan 053 |
