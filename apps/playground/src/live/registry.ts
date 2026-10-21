@@ -162,6 +162,12 @@ export const liveRegistry = [
       "Table: a window's <virtual-list> paints only its visible rows and reports the range it moved to",
     capability: "virtual-list",
   },
+  {
+    id: "window-shortcut-lifecycle",
+    title:
+      "Workspace: a window's app-level cmd-k opens the palette from any focus, and Escape closes it",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

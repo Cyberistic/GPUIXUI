@@ -450,7 +450,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 35/35
+`[x]` `[██████████]` 36/36
 
 `[x]` Measure the modal **Tab trap in a window** — `dialog-lifecycle` now presses
       Tab six times inside the shipped `Dialog`: the focus never names
@@ -769,6 +769,18 @@ a workaround for two live sessions sharing one worktree; see
       still starts at the first row (measured lag): expected true, got false`,
       exit `1`). Evidence: `apps/playground/README.md`
       §`virtual-list-lifecycle`, `.artifacts/live/vlist-scrolled.png`
+`[x]` Land the `window-shortcut-lifecycle` live probe — the app-level key path a
+      command palette or application menu needs: the **live runner** now installs
+      the window handler once (`render({ onKeyDown })`) and forwards to whatever
+      the mounted probe registered with `useWindowKey`, the same seam the shell
+      uses. `cmd-k` reaches it, opens the palette (`open=true last=cmd-k`) and
+      paints it; `Escape` closes it; after a press moves the focus to a control
+      with no key handler, `cmd-k` still opens it. 6 checks,
+      `--only window-shortcut-lifecycle`, green on 0.11.0; negative control
+      measured (the runner's `onKeyDown` forwarding dropped: `cmd-k reaches the
+      window handler: expected "open=true last=cmd-k", got "open=false
+      last=none"`, exit `1`). Evidence: `apps/playground/README.md`
+      §`window-shortcut-lifecycle`, `.artifacts/live/shortcut-open.png`
 
 ## Phase C — Tier 1–2 components
 

@@ -33,12 +33,12 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-one probes a real window can prove, of which seven mount shipped
+twenty-two probes a real window can prove, of which seven mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
 palette, the tabs, the popover and the modal focus rule), four mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), and the rest
 prove the runtime itself (focus, paint, fonts, placement, content surfaces, the
-window's own wheel, a split pane and a virtual list).
+window's own wheel, a split pane, a virtual list and the app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -1028,6 +1028,27 @@ Negative control measured: dropping the `onVisibleRange` handler fails
 (`expected true, got false`, exit `1`). Evidence:
 `.artifacts/live/vlist-scrolled.png` — rows 13–21 painted beside a readout that
 still says `first=0 last=9`.
+
+### `window-shortcut-lifecycle` — measured on 0.11.0 here
+
+The app-level key path a command palette or an application menu needs. The runner
+installs the window handler once (`render({ onKeyDown })`) and forwards to
+whatever the mounted probe registered with `useWindowKey` — the same seam the
+shell uses, so the probe measures the shipped mechanism rather than a local
+copy.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | `open=false last=none` |
+| `cmd-k` | `open=true last=cmd-k`, and the palette's text is painted |
+| `Escape` | `open=false last=escape` |
+| press "another focus", then `cmd-k` | the focus read names `shortcut-other`, so the probe's own element is not holding it, and the palette still opens |
+
+6 checks. Negative control measured: dropping the runner's `onKeyDown`
+forwarding fails `cmd-k reaches the window handler`
+(`expected "open=true last=cmd-k", got "open=false last=none"`, exit `1`) — the
+window handler is the only path, so a probe cannot pass through an element
+handler. Evidence: `.artifacts/live/shortcut-open.png`.
 
 ## Release gate
 

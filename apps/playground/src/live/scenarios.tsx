@@ -57,6 +57,7 @@ import { FloatingLayer } from "@gpuix/react/floating";
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
+import { useWindowKey } from "../window-key.js";
 import type { LiveProbeId } from "./registry.js";
 import {
   BUFFER_COLOUR,
@@ -3949,6 +3950,155 @@ const virtualListSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** The app-level shortcut probe: a palette toggled by the window's own key handler. */
+const WindowKeyProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const [last, setLast] = useState("none");
+
+  useWindowKey((event) => {
+    if (event.key === "k" && event.modifiers?.cmd === true) {
+      setOpen((current) => !current);
+      setLast("cmd-k");
+    }
+    if (event.key === "escape") {
+      setOpen(false);
+      setLast("escape");
+    }
+  });
+
+  return (
+    <div
+      testId="shortcut-probe"
+      tabIndex={0}
+      autoFocus
+      style={{
+        width: 720,
+        height: 460,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        cmd-k is the window's key, not the focused element's; Escape closes.
+      </text>
+      <div
+        testId="shortcut-other"
+        tabIndex={0}
+        role="button"
+        style={{
+          width: 160,
+          padding: theme.spacing.sm,
+          borderRadius: theme.radius.sm,
+          backgroundColor: theme.colors.muted,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          another focus
+        </text>
+      </div>
+      <text
+        testId="shortcut-readout"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`open=${open} last=${last}`}
+      </text>
+      {open ? (
+        <div
+          testId="shortcut-palette"
+          style={{
+            width: 240,
+            padding: theme.spacing.md,
+            borderRadius: theme.radius.md,
+            backgroundColor: theme.colors.card,
+            borderWidth: theme.borderWidth.thin,
+            borderColor: theme.colors.border,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            command palette
+          </text>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const windowKeySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("shortcut-readout");
+    yield* Effect.sleep(SETTLE);
+
+    yield* ctx.expectEqual(
+      "the palette starts closed",
+      yield* ctx.host.text("shortcut-readout"),
+      "open=false last=none",
+    );
+
+    yield* ctx.host.key("cmd-k");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "cmd-k reaches the window handler",
+      yield* ctx.host.text("shortcut-readout"),
+      "open=true last=cmd-k",
+    );
+    yield* ctx.expectContains(
+      "the palette paints",
+      Arr.join(yield* ctx.host.paintedText(), "\n"),
+      "command palette",
+    );
+    yield* ctx.host.capture("shortcut-open");
+
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape closes the palette",
+      yield* ctx.host.text("shortcut-readout"),
+      "open=false last=escape",
+    );
+
+    // The shortcut belongs to the window, so moving the focus to a control with
+    // no key handler must not take it away.
+    yield* ctx.host.click("shortcut-other");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the other control holds the focus",
+      Option.getOrElse(
+        Option.fromNullishOr(yield* ctx.host.focused()),
+        () => "none",
+      ),
+      "shortcut-other",
+    );
+    yield* ctx.host.key("cmd-k");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "cmd-k still opens it from another focus",
+      yield* ctx.host.text("shortcut-readout"),
+      "open=true last=cmd-k",
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -4056,5 +4206,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "virtual-list-lifecycle",
     view: () => <VirtualListProbe />,
     steps: virtualListSteps,
+  },
+  "window-shortcut-lifecycle": {
+    id: "window-shortcut-lifecycle",
+    view: () => <WindowKeyProbe />,
+    steps: windowKeySteps,
   },
 };

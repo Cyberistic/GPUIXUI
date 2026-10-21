@@ -45,6 +45,7 @@ export { EXIT };
 import { createLiveHost } from "./host.js";
 import { liveRegistry, type LiveProbeMeta } from "./registry.js";
 import { liveProbeBodies, type LiveProbeBody } from "./scenarios.js";
+import { withWindowKeyProvider, type WindowKeyHandler } from "../window-key.js";
 
 /** One live probe: its metadata, its body and the view the window mounts. */
 export type LiveProbe = LiveProbeMeta & LiveProbeBody;
@@ -112,6 +113,7 @@ const mount =
     root: Pick<Root, "render">,
     registrar: FontRegistrar,
     selected: ReadonlyArray<LiveProbe>,
+    registerWindowKey: (handler: Option.Option<WindowKeyHandler>) => void,
   ): ((scenario: { readonly id: string }) => Effect.Effect<void>) =>
   (scenario) =>
     Effect.gen(function* () {
@@ -137,10 +139,13 @@ const mount =
             createElement(
               ThemeProvider,
               { theme: palettes.dark },
-              Option.match(view, {
-                onNone: () => null,
-                onSome: (render) => render(),
-              }),
+              withWindowKeyProvider(
+                registerWindowKey,
+                Option.match(view, {
+                  onNone: () => null,
+                  onSome: (render) => render(),
+                }),
+              ),
             ),
           ),
         ),
@@ -190,11 +195,27 @@ export const program = (
     const loop = modules.gpuix.startFrameLoop(renderer, {
       onTerminated: () => {},
     });
+    // The app-level window key handler: a window delivers window keys only
+    // through `render({ onKeyDown })`, so the runner is the "app" that owns it
+    // and forwards to whatever the mounted probe registered (`useWindowKey`).
+    const windowKey: { current: Option.Option<WindowKeyHandler> } = {
+      current: Option.none(),
+    };
+    const registerWindowKey = (
+      handler: Option.Option<WindowKeyHandler>,
+    ): void => {
+      windowKey.current = handler;
+    };
     const root = yield* Effect.sync(() =>
       modules.gpuix.render(createElement(Fragment), {
         renderer,
         title: TITLE,
         ...WINDOW,
+        onKeyDown: (event) =>
+          Option.match(windowKey.current, {
+            onNone: () => {},
+            onSome: (handler) => handler(event),
+          }),
       }),
     );
     const app = yield* Effect.tryPromise({
@@ -228,7 +249,7 @@ export const program = (
       host,
       selected,
       { host: hostLabel(), startedAt },
-      mount(root, renderer, selected),
+      mount(root, renderer, selected, registerWindowKey),
     );
 
     yield* fileSystem.writeFileString(
