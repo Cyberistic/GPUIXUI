@@ -32,10 +32,10 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-thirteen probes a real window can prove, of which six mount shipped
+fourteen probes a real window can prove, of which six mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
 palette and the modal focus rule) and the rest prove the runtime itself (focus,
-paint, fonts, placement). `apps/playground` depends on `@gpuixui/components` for
+paint, fonts, placement, content surfaces). `apps/playground` depends on `@gpuixui/components` for
 exactly that.
 
 ## Run it
@@ -269,6 +269,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable |
+| content | `<svg source>` paints as one `style.color` tint; a multi-colour chart is one stacked `<svg>` per colour, and `<text>` inside it paints; `<img>` paints a data URL or a pixel buffer uploaded from a **layout** effect; `<canvas>` tracks no bounds and paints nothing (see the probe below) |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
 (`./legacy-probe/run.sh probe`); they never set a component status.
@@ -658,6 +659,45 @@ That is why the shipped `CommandMenu` loses the focus: its search field carries
 `autoFocus` **and** the modal's `initialFocus`. The fix is the components
 workstream's (`TODO.md`); these two checks pin the measurement and flip to
 `restore-auto-trigger` with it.
+
+### `content-surfaces` — measured on 0.11.0 here
+
+What a chart or an image preview can actually draw with: SVG markup, an `<img>`
+two ways, and a `<canvas>`. Each surface carries a colour no theme paints, and
+the probe counts that colour's exact bytes in the capture, so every claim below
+is read out of the frame rather than inferred from the element type.
+
+| Surface | Measured |
+| ------- | -------- |
+| `<svg source>` with a whole chart | paints, but as **one tint** — the `style.color` value. The probe paints all five shapes and asserts the markup's own `fill` never reaches the frame |
+| one `<svg>` per layer, stacked | each layer paints its own tint: bar green, bubble blue, line red, axis yellow, label orange — a multi-series chart is five overlaid `<svg>` elements |
+| `<text>` inside the SVG | **paints** (the label's orange is in the frame), so series/axis labels can live in the chart markup |
+| `<img src="data:image/png;base64,…">` | paints its bytes |
+| `<img>` + `ref.setImagePixels(8, 8, pixels)` | paints, **only from a layout effect**; from a passive `useEffect` the element keeps its `img: no src` fallback |
+| `<canvas>` | a blank host element: it tracks no painted bounds and paints nothing, so the fill behind it shows through |
+
+The mechanism for the SVG row is `@gpuix/native`'s `SvgElement`: it renders
+through GPUI's icon element, which rasterises the markup and paints the result in
+`style.color`. That is why a tinted mask is the whole story and why a chart has
+to stack one element per colour.
+
+21 checks. Two negative controls were measured, each exit `1`: tinting every
+layer with the single-source tint fails `the bar layer paints its own tint`
+(`expected true, got false`), and moving the pixel upload into a `useEffect`
+fails `an image paints a pixel buffer set after mount` (same message).
+
+The consequences for the component inventory:
+
+- **Charts are buildable** from SVG, with one `<svg>` per series colour; a
+  gradient or a per-shape palette inside one element is not available.
+- **Image preview and avatar bytes work** both ways, but the pixel route must
+  upload before the frame paints — the upstream waveform example's `useLayoutEffect`
+  is the pattern, not a preference.
+- **`<canvas>` is not a drawing surface.** The capability matrix's reason is now
+  a measurement: no retained context, no bounds, no paint.
+
+Evidence: `.artifacts/live/content.png`; the fixtures and their guard live in
+`src/live/content.ts` and `src/live/content.test.ts`.
 
 ## Release gate
 

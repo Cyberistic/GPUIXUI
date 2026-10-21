@@ -114,6 +114,12 @@ export const liveRegistry = [
       "Focus: a modal gives the focus back only when its own surface held it",
     capability: "focus",
   },
+  {
+    id: "content-surfaces",
+    title:
+      "Content: svg markup, an image buffer and a data URL paint; a canvas paints nothing",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -7,7 +7,7 @@
  * shared `Smoke` ones, so both suites emit one report shape.
  */
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
@@ -44,10 +44,27 @@ import {
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
 import { useWindowSize } from "@gpuix/react";
+import type { ImgInstance } from "@gpuix/react";
 import { FloatingLayer } from "@gpuix/react/floating";
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import type { LiveProbeId } from "./registry.js";
+import {
+  BUFFER_COLOUR,
+  CANVAS_PARENT,
+  CHART_SVG,
+  hexOf,
+  IMAGE_COLOUR,
+  IMAGE_DATA_URL,
+  IMAGE_SIZE,
+  imagePixels,
+  LAYER_SHAPES,
+  layerColour,
+  layerSvg,
+  SOURCE_FILL,
+  SVG_TINT,
+  type Rgb,
+} from "./content.js";
 import {
   MISSING_FAMILY,
   SQUARE_BYTES,
@@ -2154,6 +2171,240 @@ const modalFocusRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * The surfaces a chart or an image preview would draw with.
+ *
+ * A real chart is generated markup, so the SVG is `source` (no file). Measured:
+ * one `<svg>` paints a **tinted mask**, so the chart source is mounted beside
+ * one shape per layer, five stacked `<svg>` elements each carrying its own tint.
+ * The image arrives the two ways an app supplies one — a data URL and a pixel
+ * buffer it already holds — and the canvas sits on a fill of its own, so the
+ * frame shows whether it paints anything at all.
+ */
+const ContentSurfacesProbe = (): ReactNode => {
+  const theme = useTheme();
+  const image = useRef<ImgInstance>(null);
+  const [imageStatus, setImageStatus] = useState("pending");
+  // The upstream waveform example uses a layout effect: the pixels must be on
+  // the element before the frame that paints it.
+  useLayoutEffect(() => {
+    const instance = image.current;
+    if (instance === null) {
+      setImageStatus("no-ref");
+      return;
+    }
+    try {
+      instance.setImagePixels(
+        IMAGE_SIZE,
+        IMAGE_SIZE,
+        Buffer.from(imagePixels()),
+      );
+      setImageStatus("set");
+    } catch (error) {
+      setImageStatus(`threw ${String(error)}`);
+    }
+  }, []);
+  return (
+    <div
+      testId="content-probe"
+      style={{
+        width: 760,
+        height: 440,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <div style={{ display: "flex", gap: theme.spacing.xl }}>
+        <svg
+          testId="chart-svg"
+          source={CHART_SVG}
+          style={{ width: 280, height: 100, color: hexOf(SVG_TINT) }}
+        />
+        <div
+          testId="chart-layers"
+          style={{ position: "relative", width: 280, height: 100 }}
+        >
+          {LAYER_SHAPES.map((shape) => (
+            <svg
+              key={shape}
+              testId={`layer-${shape}`}
+              source={layerSvg(shape)}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: 280,
+                height: 100,
+                color: hexOf(layerColour(shape)),
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: theme.spacing.lg }}>
+        <img
+          testId="url-image"
+          src={IMAGE_DATA_URL}
+          alt="A solid square from a data URL"
+          objectFit="fill"
+          style={{ width: 64, height: 64 }}
+        />
+        <img
+          testId="buffer-image"
+          ref={image}
+          alt="A solid square from a pixel buffer"
+          objectFit="fill"
+          style={{ width: 64, height: 64 }}
+        />
+      </div>
+      <div
+        testId="canvas-parent"
+        style={{
+          width: 120,
+          height: 40,
+          backgroundColor: hexOf(CANVAS_PARENT),
+        }}
+      >
+        <canvas testId="blank-canvas" style={{ width: 120, height: 40 }} />
+      </div>
+      <text testId="image-status">{imageStatus}</text>
+    </div>
+  );
+};
+
+/** How many pixels of `colour` the capture under `name` paints. */
+const painted = (
+  ctx: Smoke.AsyncSmokeContext,
+  name: string,
+  colour: Rgb,
+): Effect.Effect<number, Smoke.SmokeHostError> =>
+  Effect.map(ctx.host.pixels(name), (frame) =>
+    Pixels.countColour(frame, new Pixels.Rgba({ ...colour, a: 0xff })),
+  );
+
+/** Asserts that the capture paints `colour`. */
+const expectPaints = (
+  ctx: Smoke.AsyncSmokeContext,
+  name: string,
+  colour: Rgb,
+  label: string,
+): Effect.Effect<void, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+  Effect.flatMap(painted(ctx, name, colour), (count) =>
+    ctx.expectEqual(label, count > 0, true),
+  );
+
+/** Asserts that the capture paints no pixel of `colour`. */
+const expectAbsent = (
+  ctx: Smoke.AsyncSmokeContext,
+  name: string,
+  colour: Rgb,
+  label: string,
+): Effect.Effect<void, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+  Effect.flatMap(painted(ctx, name, colour), (count) =>
+    ctx.expectEqual(label, count, 0),
+  );
+
+const contentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("content-probe");
+    yield* ctx.host.capture("content");
+
+    // 1. One `<svg>` with a whole chart in it: GPUI rasterises the markup and
+    //    paints it in `style.color`, so every `fill` a chart author writes is
+    //    replaced by one tint.
+    yield* ctx.expectSome(
+      "the svg surface occupies space",
+      Option.fromNullishOr(yield* ctx.host.bounds("chart-svg")),
+    );
+    yield* expectPaints(
+      ctx,
+      "content",
+      SVG_TINT,
+      "an svg paints the tint its style names",
+    );
+    yield* expectAbsent(
+      ctx,
+      "content",
+      SOURCE_FILL,
+      "an svg does not paint the fills its markup names",
+    );
+
+    // 2. One shape per layer, each with its own tint: the only way this runtime
+    //    can show a multi-colour chart.
+    yield* Effect.forEach(
+      LAYER_SHAPES,
+      (shape) =>
+        Effect.gen(function* () {
+          yield* ctx.expectSome(
+            `the ${shape} layer occupies space`,
+            Option.fromNullishOr(yield* ctx.host.bounds(`layer-${shape}`)),
+          );
+          yield* expectPaints(
+            ctx,
+            "content",
+            layerColour(shape),
+            `the ${shape} layer paints its own tint`,
+          );
+        }),
+      { concurrency: 1 },
+    );
+
+    // 3. An image the app holds as bytes: the route for a screenshot or a
+    //    decoded photo, which needs no file on disk.
+    yield* ctx.expectSome(
+      "the buffer image occupies space",
+      Option.fromNullishOr(yield* ctx.host.bounds("buffer-image")),
+    );
+    yield* ctx.expectEqual(
+      "the buffer image's instance took the pixels",
+      yield* ctx.host.text("image-status"),
+      "set",
+    );
+    yield* expectPaints(
+      ctx,
+      "content",
+      BUFFER_COLOUR,
+      "an image paints a pixel buffer set after mount",
+    );
+
+    // 4. A data URL is the same bytes in a string; whether it loads is the
+    //    runtime's answer, so this check records what the frame shows.
+    yield* ctx.expectSome(
+      "the data-url image occupies space",
+      Option.fromNullishOr(yield* ctx.host.bounds("url-image")),
+    );
+    yield* expectPaints(
+      ctx,
+      "content",
+      IMAGE_COLOUR,
+      "a data-url image paints its bytes",
+    );
+
+    // 5. A canvas is a blank host element: it tracks no painted bounds and
+    //    paints nothing, so the fill behind it shows through. Measured on
+    //    0.11.0 — the matrix's "no 2D-context or draw props" claim, painted.
+    yield* ctx.expectSome(
+      "the canvas parent occupies space",
+      Option.fromNullishOr(yield* ctx.host.bounds("canvas-parent")),
+    );
+    yield* ctx.expectEqual(
+      "a canvas tracks no painted bounds",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds("blank-canvas")),
+      ),
+      true,
+    );
+    yield* expectPaints(
+      ctx,
+      "content",
+      CANVAS_PARENT,
+      "the fill behind a canvas shows through",
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -2221,5 +2472,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "modal-focus-restore",
     view: () => <ModalFocusRestoreProbe />,
     steps: modalFocusRestoreSteps,
+  },
+  "content-surfaces": {
+    id: "content-surfaces",
+    view: () => <ContentSurfacesProbe />,
+    steps: contentSteps,
   },
 };

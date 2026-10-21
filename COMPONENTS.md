@@ -229,7 +229,7 @@ placeholder.
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
 | Statistic / metric cards | todo | ? | Cards + `<text>`. |
-| Charts | todo | ? | No chart host element. `<svg>` can render static charts; `<canvas>` is "planned" (unverified). |
+| Charts | todo | partial (measured) | No chart host element. `<svg source>` paints its markup, but as **one tint** — GPUI's icon element paints `style.color` over the rasterised mask, so a series' own `fill` never reaches the frame; a multi-colour chart is one stacked `<svg>` per colour, and `<text>` inside the markup paints (measured on 0.11.0 by the playground's `content-surfaces`: five layers, five exact colours). `<canvas>` is a blank element — it tracks no painted bounds and paints nothing. No gradient or per-shape palette inside one element. |
 
 ## Tier 4 — desktop workspace
 
@@ -266,7 +266,7 @@ placeholder.
 | Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages and paints every source line (measured by `editor-surface`, read-only). API-shape work, not implementation. |
 | Diff viewer | todo | yes | `<diff>` renders a unified diff; both sides of a changed line paint (measured by `editor-surface`). API-shape work, not implementation. |
 | Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). |
-| Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. |
+| Image preview | todo | yes (measured) | `<img>` loads raster and SVG from path, data URL and http(s) — a data-URL PNG paints (measured by `content-surfaces`). In-memory bytes paint through `ref.setImagePixels(w, h, rgba)` **from a layout effect**: the same call in a passive `useEffect` leaves the `img: no src` fallback (both directions measured). API-shape work, not implementation. |
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
 | Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `onFileDrop` handles file drops only. |
 | Notification centre | todo | ? | Composition over toasts + panels. |
@@ -275,7 +275,7 @@ placeholder.
 | Advanced filtering / query builders | todo | ? | Composition over inputs + menus. |
 | QR code | todo | ? | Render the matrix as a grid of `div`s or one `<svg>`; both are provided. The encoder is ours (dependency not yet chosen). |
 | File upload | todo | ? | Picker provided (`promptForPaths`); the drop surface, progress and validation are ours. `onFileDrop` exists. |
-| Video / audio player + waveform | todo | ? | **No media host element** (verified: not in `ElementType`). Playback needs a platform surface — **unverified**; a waveform can only be drawn via `<svg>` or the planned `<canvas>`. |
+| Video / audio player + waveform | todo | ? | **No media host element** (verified: not in `ElementType`). Playback needs a platform surface — **unverified**; a waveform can be drawn as one tinted `<svg>` layer per colour (measured by `content-surfaces`; `<canvas>` paints nothing). |
 | Crop area | todo | ? | Draggable handles over `<img>`; crop geometry and constraints are ours. No custom-paint requirement unless the mask is drawn — **unverified**. |
 | Chat (AI conversation) | todo | ? | Behaviour ported from **shadcn/ui's AI Elements `chat`** (credited in `LICENSES/`): a message list in a Message scroller, a composer with attachments, submit/stop, `idle/submitting/streaming/error` states, empty state. Plan `207`. |
 | Message (AI message row) | todo | ? | Behaviour ported from **shadcn/ui's AI Elements `message`** (credited): `user`/`assistant`/`system` variants; avatar, content (`<markdown>`), actions (copy/retry/feedback), attachments, reasoning, tool calls, sources, streaming indicator. Plan `207`. |
