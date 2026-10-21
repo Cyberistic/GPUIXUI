@@ -9,10 +9,15 @@
  * row whose notes do not name a test file that exists. The fix for the last is
  * to name the file that proves the claim — never to soften the row's wording.
  *
+ * A citation may be a bare filename or a path, so the check walks each package
+ * rather than assuming the file sits in its root or in `src/`: a proof at
+ * `src/components/RadioGroup.test.tsx` cited as `RadioGroup.test.tsx` used to
+ * read as missing, although the file was there.
+ *
  * `node:fs` is deliberate, as in `docs.test.ts`: this checks the repository's
  * own Markdown, and the package keeps zero runtime dependencies.
  */
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, type Dirent } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /** The tokens package's own test files, and the repository root. */
@@ -63,12 +68,52 @@ const rows: ReadonlyArray<Row> = section
 /** The status vocabulary the file declares at the top. */
 const vocabulary = /^(todo|wip|done\b.*|blocked\b.*|unsupported\b.*)$/;
 
+/** Whether `value` is a workspace test file the inventory may cite. */
+const isTestFile = (value: string): boolean =>
+  value.endsWith(".test.ts") || value.endsWith(".test.tsx");
+
+/**
+ * Every test file in a workspace directory, as a package-relative path.
+ *
+ * `node_modules`, `dist` and dot directories are skipped so the walk never
+ * descends into an installed package or a build. Symlinked directories are not
+ * followed, which keeps the read-only `references` clone out of the index.
+ */
+const walkTests = (dir: URL, prefix: string): ReadonlyArray<string> =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry: Dirent) => {
+    if (
+      entry.name.startsWith(".") ||
+      entry.name === "node_modules" ||
+      entry.name === "dist"
+    ) {
+      return [];
+    }
+    const path = `${prefix}/${entry.name}`;
+    if (entry.isDirectory()) {
+      return walkTests(new URL(`${entry.name}/`, dir), path);
+    }
+    return isTestFile(entry.name) ? [path] : [];
+  });
+
+const workspaceTests: ReadonlyArray<string> = packageDirs.flatMap((dir) => {
+  const root = new URL(`${dir}/`, repository);
+  return existsSync(root) ? walkTests(root, dir) : [];
+});
+
 /** The `*.test.ts(x)` files a row's notes name. */
 const cited = (notes: string): ReadonlyArray<string> =>
   notes.match(/[\w@/.-]+\.test\.tsx?/g) ?? [];
 
-/** Whether a cited path exists in this package, a sibling package, or the root. */
+/**
+ * Whether a cited file exists in the workspace.
+ *
+ * A citation may be a bare filename, so it matches a test at any depth of a
+ * package — a proof lives beside its source (`src/components/RadioGroup.test.tsx`)
+ * and a row names the file, not its path. A citation may also be a path from
+ * the repository root, which the legacy candidates still resolve.
+ */
 const resolves = (path: string): boolean =>
+  workspaceTests.some((file) => file === path || file.endsWith(`/${path}`)) ||
   [
     `./${path}`,
     path,
@@ -110,5 +155,17 @@ describe("design-system inventory", () => {
       .map((row) => row.capability);
 
     expect(unproven).toEqual([]);
+  });
+});
+
+describe("citation resolution", () => {
+  it("resolves a filename that sits below a package's src", () => {
+    const nested = workspaceTests.find((file) => file.split("/").length > 4);
+    expect(nested).toBeDefined();
+    expect(resolves(nested?.split("/").at(-1) ?? "")).toBe(true);
+  });
+
+  it("reports a file the workspace does not contain", () => {
+    expect(resolves("vanished-protocol.test.ts")).toBe(false);
   });
 });
