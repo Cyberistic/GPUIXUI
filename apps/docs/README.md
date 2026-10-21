@@ -227,10 +227,13 @@ library's roles, radii, families and density, not a docs palette.
 `/docs/themes` mounts `<ThemeEditor>`, which edits the twelve shadcn-core roles,
 `radius.md` and the `sans` family for each mode, previews them through the same
 CSS bridge, and copies a `createTheme` module in the shape
-`@gpuixui/tokens` consumes. The edits persist to the URL and to local storage.
-Its readout is `auditTheme` — the library's own gate — so a role the renderer
-cannot paint, a text pair below its floor and an invisible divider are all
-reported, and a persisted state that would paint black is rejected instead of
+`@gpuixui/tokens` consumes. Its state is the **pins** a reader set, resolved over
+the platform style the switch selected (`platformThemes`), so switching the
+platform re-bases the preview and inputs while the edits stay, and the copied
+module prints the resolved values. The edits persist to the URL and to local
+storage. Its readout is `auditTheme` — the library's own gate — so a role the
+renderer cannot paint, a text pair below its floor and an invisible divider are
+all reported, and a persisted state that would paint black is rejected instead of
 restored. `theme-editor-logic.ts` is the pure core and its tests.
 
 ## Component pages
@@ -248,9 +251,9 @@ A component page uses three MDX blocks:
 
 Demo renderings and their source strings live in
 `src/components/docs/demos.tsx`. Add a registry entry there, then point a page at
-it. The curated pages are Button, Dialog, Popover and Tabs; every other component
-page is the package's own and adds the API tables, limitations and the example to
-run. `src/lib/component-page-truth.test.ts` holds the curated pages to the
+it. The curated pages — the ones with a preview — are the set named in
+`docs/preview-strategy.md`; every other component page is the package's own and
+adds the API tables, limitations and the example to run. `src/lib/component-page-truth.test.ts` holds the curated pages to the
 runtime version the workspace pins, the inventory row and the test count their
 suite actually runs.
 
