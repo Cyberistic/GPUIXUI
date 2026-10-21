@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createFromSource } from "fumadocs-core/search/server";
 import { packageSources } from "@/lib/package-docs";
+import { uniqueSearchPages } from "@/lib/search-index";
 import { source } from "@/lib/source";
 
 /**
@@ -12,16 +13,11 @@ import { source } from "@/lib/source";
  */
 const searchable = {
   ...source,
-  getPages: () => {
-    const site = source.getPages();
-    const taken = new Set(site.map((page) => page.url));
-    return [
-      ...site,
-      ...packageSources.flatMap((packageSource) =>
-        packageSource.getPages().filter((page) => !taken.has(page.url)),
-      ),
-    ];
-  },
+  getPages: () =>
+    uniqueSearchPages(
+      source.getPages(),
+      packageSources.map((packageSource) => packageSource.getPages()),
+    ),
 };
 
 const server = createFromSource(searchable, { language: "english" });

@@ -105,6 +105,7 @@ src/styles/theme-editor.css               The theme editor's chrome and preview
 src/lib/docs-view.tsx               The shared docs layout and the two-collection page template
 src/lib/layout.shared.tsx           The nav chrome: brand and top-level links
 src/lib/source.ts                   The Fumadocs collection for content/docs
+src/lib/search-index.ts             The search index's page list: curated pages shadow package pages
 src/lib/package-docs.ts             The loaders for the three package collections
 src/lib/collection-routes.ts        The registry: every mounted package directory, route, section
 src/lib/page-tree.ts                Fills the package's pages into their sidebar section
