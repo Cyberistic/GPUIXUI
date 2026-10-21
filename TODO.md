@@ -1399,7 +1399,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 46/46
+`[x]` `[██████████]` 47/47
+
+`[x]` The installation page's commands are held to the workspace — it is the
+first page a reader follows and nothing read it: `src/lib/installation-page.test.ts`
+(4 cases) holds the page's Node version to `.node-version` and its manager name to
+the root manifest's `devEngines`, every `nub add @gpuixui/<pkg>@workspace:*` to a
+package the workspace ships, every printed `nub run [--filter <pkg>] <script>` to
+that manifest's own scripts, and every `@gpuixui/*` named import to a symbol
+`buildWorkspaceSymbolIndex` reads from the source. Directions measured: a changed
+Node version, a package that does not exist and `nub run playground` each fail by
+name (three cases). The call-site also hit the known `check-tests` regex-stripper
+bug (a regex on its own indented line), so the regex begins after `(`.
 
 `[x]` The search index's shadowing rule has a test — the route merged four
 collections inline and nothing held the rule that a curated page keeps the URL of
