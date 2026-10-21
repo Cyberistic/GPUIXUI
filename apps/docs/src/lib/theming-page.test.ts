@@ -7,14 +7,16 @@ import { describe, expect, it } from "vitest";
  * changes.
  *
  * Both drifted once: `/docs/themes` printed "24 role pairs" after the contrast
- * table grew to 28, and `/docs/theming`'s brand snippet painted the dark
+ * table grew to 28, `/docs/theming`'s brand snippet painted the dark
  * theme's near-black label on a violet fill — 4.24:1, under the 4.5:1 floor the
- * package's own contract enforces. A reader copying that snippet shipped the
+ * package's own contract enforces — and the same page printed "47 semantic
+ * roles" as a literal. A reader copying that snippet shipped the
  * defect the docs describe how to avoid.
  *
  * A page cannot drift again: the pair count is interpolated from
- * `contrastPairs` in the page itself, so it has no number to fall behind, and
- * the brand snippet is measured here.
+ * `contrastPairs` in the page itself, so it has no number to fall behind, the
+ * colour-role count is interpolated from `colorRoles`, and the brand snippet is
+ * measured here.
  */
 
 const page = (name: string): string =>
@@ -60,6 +62,19 @@ describe("the theme page", () => {
     expect(page("themes.mdx")).toContain(
       'import { contrastPairs } from "@gpuixui/tokens";',
     );
+  });
+});
+
+describe("the theming page's role count", () => {
+  it("derives the number of colour roles instead of printing one", () => {
+    const body = page("theming.mdx");
+
+    expect(body).toContain('import { colorRoles } from "@gpuixui/tokens";');
+    expect(body).toContain("{colorRoles.length} semantic roles");
+    expect(body).toContain("There are {colorRoles.length} of them");
+    // A printed count is the defect this guards: it cannot follow the package.
+    expect(body).not.toMatch(/\b\d+ semantic roles\b/);
+    expect(body).not.toMatch(/There are \d+ of them/);
   });
 });
 

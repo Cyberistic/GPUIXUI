@@ -3,6 +3,8 @@ title: Theming
 description: Semantic colour roles, typography, spacing, radius and density — one theme shape for light, dark and high contrast.
 ---
 
+import { colorRoles } from "@gpuixui/tokens";
+
 A GPUIxUI theme is plain data. Components never carry a colour literal; they read
 a semantic role such as `colors.primary`, `spacing.md` or `radius.md` from the
 nearest `ThemeProvider`. Switching the provider restyles the subtree without
@@ -29,7 +31,7 @@ Every theme has the same fields:
 
 | Field | What it decides |
 | ----- | --------------- |
-| `colors` | 47 semantic roles: surfaces, text, actions, status, borders, focus |
+| `colors` | {colorRoles.length} semantic roles: surfaces, text, actions, status, borders, focus |
 | `typography` | display, headings, body, label, caption, code and the font families |
 | `spacing` | the spacing scale components use for gaps and padding |
 | `radius` | `sm` through `xl` and `full` |
@@ -40,7 +42,7 @@ Every theme has the same fields:
 
 ## Colour roles
 
-Roles describe intent, not a ramp shade. There are 47 of them; the families that
+Roles describe intent, not a ramp shade. There are {colorRoles.length} of them; the families that
 matter most on a page are:
 
 | Role | Light | Dark | Use |
