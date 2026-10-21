@@ -44,3 +44,6 @@ references
 
 # Agent screenshot artifacts — verification only, never repository content
 .agents/slop/dashboard/
+
+# salvage queue (working state; originals live in the salvage/* tags)
+.agents/slop/salvage-queue/

@@ -27,7 +27,7 @@ set -uo pipefail
 REPO="${GPUIXUI_REPO:-$HOME/GPUIXUI}"
 OPENCODE="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
 MODELS="$REPO/scripts/swarm-model.sh"
-MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-5}"
+MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-6}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -39,7 +39,7 @@ LOCK="$STATE/supervisor.lock"
 
 # One workstream per agent, each with its own tree so two writers never share a
 # checkout. The descriptions keep the five from colliding.
-WORKSTREAMS="tokens-theme primitives components docs-site playground"
+WORKSTREAMS="tokens-theme primitives components docs-site playground salvage"
 
 workstream_scope() {
   case "$1" in
@@ -57,6 +57,9 @@ workstream_scope() {
       ;;
     playground)
       echo "the native GPUix playground and the native smoke tests: layout, input, focus, overlay, scroll and panel primitives exercised in the real runtime, plus the Tier 3/4 feasibility probes. You own apps/playground and packages/testing."
+      ;;
+    salvage)
+      echo "the salvage queue: every plan an earlier swarm run wrote and never landed. Implement it or discard it, then delete it."
       ;;
     *)
       echo "the next unclaimed task."
@@ -169,7 +172,7 @@ this turn. Do not create plan-per-task files.
 Done means: the code, a test that can fail, an example, a docs page, and a
 COMPONENTS.md row for a component; code, a test, and the TODO.md tick otherwise.
 
-**Shared checkout.** Four other agents write in this same directory on master.
+**Shared checkout.** Five other agents write in this same directory on master.
 Own only your paths and never edit another workstream's files. Stage only your
 paths (\`git add <paths>\`, never \`git add -A\`) and commit with
 \`scripts/swarm-commit.sh "<message>" <paths...>\`, which serialises the index
@@ -199,6 +202,41 @@ unless it ran.
 BLOCKERS: read ~/GPUIXUI/BLOCKERS.md first. If one applies to your workstream it takes priority over your queue: fix it, and plan only if it will not fit in a turn. If none applies, continue. Do not wait for a human.
 Push: commit often with meaningful messages and push master at least once per coherent unit of work.
 PROMPT
+
+  if [ "$ws" = "salvage" ]; then
+    cat >"$prompt" <<PROMPT
+You are the **salvage** agent of the GPUIXUI swarm, working in $REPO on **master**.
+
+Your queue is \`.agents/slop/salvage-queue/\` — plans from an earlier swarm run
+that never landed. Process them one at a time and do not stop while any remain.
+
+For the next file (sorted):
+
+1. **Read it.**
+2. **Decide against master**, not against the plan's own claims:
+   - the capability already exists (grep \`packages/\`, \`apps/\`, \`TODO.md\`) — discard;
+   - duplicate, superseded, or stale (pins an old GPUix, cites a deleted plan or
+     workstream) — discard;
+   - real, missing, and fits one turn — **implement it**: code plus a test that
+     fails without it, then commit with \`scripts/swarm-commit.sh\`;
+   - real but large, or it targets a live workstream's paths
+     (tokens/primitives/components/docs-site/playground) — add **one** TODO.md
+     row naming the gap, then discard. Do not edit another workstream's files.
+3. **Delete the queue file**, then append one line to
+   \`.agents/slop/salvage-log.md\`:
+   \`<plan> | implemented|discarded|queued | <one-line reason>\`.
+4. Continue with the next file.
+
+Never write a new plan. Never claim a test passed unless it ran. When the queue
+is empty, record the final counts in the log and stop; a new file appearing is
+the only thing that restarts you.
+
+Shared checkout: five other agents write in this same directory on master.
+Stage only your paths (\`git add <paths>\`, never \`git add -A\`) and commit with
+\`scripts/swarm-commit.sh "<message>" <paths...>\`; retry once on a lock timeout.
+Push master after each coherent unit.
+PROMPT
+  fi
 
   cat >"$runner" <<RUNNER
 #!/usr/bin/env bash
