@@ -519,3 +519,22 @@ Both directions:
   `themeChoiceFromRow`, `themeChoiceParams`.
 - The ten checks: shape lives at the boundary, values stay theirs.
 - `packages/components`, `packages/primitives`, `apps/*`.
+
+## 12. Outcome
+
+Executed. `themeEditFromRow` ships in `src/theme-edit-row.ts` with the
+completeness-checked guard table, `elevationShapeFields` moved to `elevation.ts`
+and `metrics.ts` reads it (`shadowFields` is the same five strings), and
+`theme-edit-row.test.ts` adds six cases.
+
+- `nub run --filter @gpuixui/tokens test`: **228 files, 7219 tests passed**
+  (was 227 / 7213).
+- `nub run check` (check:tests + lint + fmt + check-types), `nub run lint` and
+  `nub run test` green.
+- Both directions: the suite cannot import `themeEditFromRow` before it exists;
+  with `isOverrides` reduced to `isRecord` (the accept-anything shortcut), the
+  refusal case fails while the other five — including the value-split case —
+  pass; restored, the suite is green. The pre-fix behaviour is the cast path the
+  header comment records.
+- **Native scenarios: none ran.** This is a pure decoder; no playground
+  scenario exercises the token boundary. `--only` ids: none.
