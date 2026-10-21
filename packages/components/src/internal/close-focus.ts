@@ -115,19 +115,22 @@ export const useCloseFocus = <Focus>({
   const wasOpen = useRef(open);
   const closeRef = useRef(close);
   const restoreRef = useRef(restore);
+  const handOffRef = useRef(handOff);
   useLayoutEffect(() => {
     closeRef.current = close;
     restoreRef.current = restore;
+    handOffRef.current = handOff;
   });
 
   useLayoutEffect(() => {
+    const target = handOffRef.current;
     if (wasOpen.current && !open) {
       handOffClose(
         renderer,
         leaving,
-        handOff.surface,
-        handOff.target(),
-        handOff.focus && pending.current === undefined,
+        target.surface,
+        target.target(),
+        target.focus && pending.current === undefined,
       );
       if (pending.current !== undefined) {
         restoreRef.current(pending.current);
@@ -135,7 +138,7 @@ export const useCloseFocus = <Focus>({
     }
     if (!open) pending.current = undefined;
     wasOpen.current = open;
-  }, [handOff, leaving, open, renderer]);
+  }, [leaving, open, renderer]);
 
   return useCallback((focus: Focus) => {
     pending.current = focus;
