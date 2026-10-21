@@ -2551,7 +2551,7 @@ status chip, an action, a disabled control, a loading row or a value groove as
 easily as over the canvas — and holds the face to
 the same `surface` floor, reported with `wash: "overlay"`. A theme whose scrim
 meets its own floating surface leaves the dialog with no face; the tightest
-shipped pair is **1.079:1** (identity Linux dark on `destructive`).
+shipped pair is **1.079:1** (`Dark · Linux` on `destructive`).
 
 The page layout alone was not enough. macOS dark's face met its own scrim over
 its `primary` action at **1.021:1**, and the dialog's `border` could not stand
@@ -3595,6 +3595,8 @@ list API invites, not a spare surface. The tightest shipped values are
 `popoverForeground` on `selectedActive` at **11.59:1** (Linux dark),
 `selectedForeground` on `active` at **6.22:1** (macOS light) and
 `selectedForeground` on `accent` at **6.93:1** (macOS light), so no colour moves.
+The washed list's own minimum is lower still: Windows dark's secondary text on
+the `selected` fill measures **4.801:1** through the wash.
 A text field's edge is `border` on its own `input` fill, measured at the divider
 floor; the weakest shipped set is Linux dark at **1.25:1**, above the 1.05:1
 floor. The pressed edge is `ring` on the same `input` fill, and the hover edge is
@@ -3795,8 +3797,8 @@ Plan `509` adds the two persistent surfaces the elevation list omitted:
 `selected`, the fill a chosen row keeps while a context menu or preview card
 opens over it, and `input`, the fill a popover flipped above its trigger opens
 over. `elevationSurfaces` now derives from the six page layout surfaces, taking
-the walk from twelve to eighteen painted pairs; every shipped set clears 1.05:1
-(1.109:1 at the tightest, macOS dark `sm` on `input`), so no colour moves and
+the walk from twelve to eighteen painted pairs; the two added pairs measure
+**1.109:1** at the tightest (macOS dark `sm` on `input`), so no colour moves and
 `contrastPairs` stays **394**.
 Plan `584` closes the elevation walk's last content surface. Plan `509` measured
 the six page surfaces, and plan `375` had already made the scrim total over the
@@ -4326,7 +4328,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **83** entries across
+state — `documentedFigures` and `documentedTierFigures`, **100** entries across
 this page, the design system, the README, the ledger and the package's own JSDoc
 modules — and `packages/tokens/src/figures.test.ts` derives each one from
 `shippedThemes` with the checker's own measurement and asserts both the figure

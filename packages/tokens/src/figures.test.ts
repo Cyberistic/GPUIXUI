@@ -320,8 +320,11 @@ describe("the figures the package's own JSDoc states", () => {
             return false;
           }
           const wash = composition.wash;
+          // An `over-wash` role may be translucent by design (the modal
+          // `overlay`), so an omitted wash fraction is the role's own alpha.
           return entry.kind === "over-wash"
-            ? wash === undefined || !inUnit(wash.opacity)
+            ? wash === undefined ||
+                (wash.opacity !== undefined && !inUnit(wash.opacity))
             : !inUnit(composition.opacity) || wash !== undefined;
         })
         .map((entry) => entry.name),
@@ -341,6 +344,76 @@ describe("the figures the package's own JSDoc states", () => {
         .filter((entry) => entry.kind !== "shadow" && entry.level !== undefined)
         .map((entry) => entry.name),
     ).toEqual([]);
+  });
+
+  it("reads a cross pair from the two themes it names", () => {
+    const themeFor = (
+      provenance: (typeof documentedFigures)[number]["provenance"],
+    ) =>
+      provenance.source === "recipe"
+        ? getPlatformRecipeTheme(
+            provenance.recipe,
+            provenance.mode,
+            provenance.contrast,
+          )
+        : provenance.source === "platform"
+          ? getPlatformTheme(
+              provenance.platform,
+              provenance.mode,
+              provenance.contrast,
+            )
+          : getTheme(provenance.mode, provenance.contrast);
+
+    expect(
+      documentedFigures
+        .filter(
+          (entry) => entry.kind === "cross" && entry.against === undefined,
+        )
+        .map((entry) => entry.name),
+    ).toEqual([]);
+    expect(
+      documentedFigures
+        .filter(
+          (entry) => entry.kind !== "cross" && entry.against !== undefined,
+        )
+        .map((entry) => entry.name),
+    ).toEqual([]);
+
+    const cross = documentedFigures.filter((entry) => entry.kind === "cross");
+    expect(cross.length).toBeGreaterThan(0);
+    expect(
+      cross
+        .filter((entry) => entry.claim !== "value")
+        .map((entry) => entry.name),
+    ).toEqual([]);
+
+    cross.forEach((entry) => {
+      const against = entry.against;
+      assert(against !== undefined, entry.name);
+      const [pair] = entry.pairs;
+      assert(pair !== undefined, entry.name);
+      const [foreground, background] = pair;
+      const derived = deriveFigure(entry);
+      assert(derived.kind === "derived", entry.name);
+      const foregroundTheme = themeFor(entry.provenance);
+      const backgroundTheme = themeFor(against);
+
+      expect(derived.ratio).toBeCloseTo(
+        contrastRatio(
+          foregroundTheme.colors[foreground],
+          backgroundTheme.colors[background],
+        ),
+        10,
+      );
+      // Reading both roles from one set is the mistake the kind exists to avoid.
+      expect(derived.ratio).not.toBeCloseTo(
+        contrastRatio(
+          foregroundTheme.colors[foreground],
+          foregroundTheme.colors[background],
+        ),
+        3,
+      );
+    });
   });
 
   it("measures the caret on the nine surfaces a field sits on", () => {
@@ -494,10 +567,12 @@ describe("the figures the package's own JSDoc states", () => {
         );
       }
       if (entry.kind === "over-wash" && composition?.wash !== undefined) {
-        const washed = compositeOver(
-          alpha(theme.colors[composition.wash.role], composition.wash.opacity),
-          theme.colors[background],
-        );
+        const wash = composition.wash;
+        const paint =
+          wash.opacity === undefined
+            ? theme.colors[wash.role]
+            : alpha(theme.colors[wash.role], wash.opacity);
+        const washed = compositeOver(paint, theme.colors[background]);
         return contrastRatio(theme.colors[foreground], washed);
       }
       return contrastRatio(theme.colors[foreground], theme.colors[background]);

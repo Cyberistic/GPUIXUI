@@ -68,6 +68,23 @@ two minima, the two pairs the old rows named (7.158:1 and 5.615:1 today) and
 reads all four passages, so a palette move cannot leave them behind again; no
 colour, pair, floor, metric, role or shipped theme moves (plan 840)
 
+`[ ]` Own the selection contract's remaining present-tense minima — mutating any
+of these leaves the package green because figures in the catalogue's *Text
+selection* and *Verification* narratives are not `documentedFigures` entries:
+the washed soft-panel body and caption **8.14:1** (identity dark, `infoSoft`)
+and **5.08:1** (Windows light, `destructiveSoft`), the link through the wash
+**5.69:1** (Windows dark, `selected`) and **6.19:1** (identity light,
+`destructiveSoft`), the row text **6.22 / 6.93 / 8.44 / 8.98 / 11.59:1**,
+`selectionPairs`' true minimum **4.801:1** (Windows dark `mutedForeground` on
+`selected`), which no passage states, the interactive fill on the field's own
+fill **1.0695:1** (Linux dark `selectedActive` on `input`), the dialog's face
+**1.079:1** (Linux dark on `destructive`) and the `sm` shadow on that fill
+**1.109:1** (macOS dark on `input`). The three cross-theme figures the
+warning-edge paragraph states — the identity light `warningSoftBorder` at
+**1.246 / 1.254:1** on the macOS/Linux light pressed washes and **1.319:1** on
+its own fill — gain a `"cross"` kind that reads one role from each named theme
+(plan 842)
+
 `[x]` Decode the artifact the documents tell a consumer to store — the catalogue,
 design system and README all call a stored edit a `ThemeEdit`, but its only load
 path was a cast, and `extendTheme` drops an override group it cannot merge: a

@@ -3,13 +3,17 @@ import {
   compositeOver,
   contrastPairs,
   contrastRatio,
+  dialogSurfacePairs,
   elevationContentSurfaces,
   elevationSurfaces,
   inactivePanelActionPairs,
   nativeSyntaxPairs,
   selectionInactivePairs,
+  selectionPairs,
   selectionSoftPairs,
   selectionSurfaces,
+  softPanelTextPairs,
+  stateFillSurfacePairs,
   toastTonePairs,
   trackSurfacePairs,
   textTierSurfaces,
@@ -94,7 +98,14 @@ export type FigureKind =
    * composited over the surface it lands on and held to that surface. The entry
    * names the level in {@link DocumentedFigure.level}.
    */
-  | "shadow";
+  | "shadow"
+  /**
+   * A role from one shipped theme held against a surface role of another, for a
+   * sentence that compares two sets rather than measuring one — the light
+   * warning edge on the three platform pressed washes. The entry names the
+   * second theme in {@link DocumentedFigure.against}.
+   */
+  | "cross";
 
 /** The opacity the shipped consumers dim a disabled control with. */
 export const disabledDimOpacity = 0.5;
@@ -151,6 +162,13 @@ export interface DocumentedFigure {
   /** The shipped set the sentence names. */
   readonly provenance: ShippedThemeProvenance;
   /**
+   * The shipped set whose surface the pair's background role is read from, for
+   * a `"cross"` entry: the foreground comes from {@link DocumentedFigure.provenance}
+   * and the background from here. Omitted for every other kind, and the suite
+   * fails a `"cross"` entry that omits it.
+   */
+  readonly against?: ShippedThemeProvenance;
+  /**
    * The surface a `"dim"` composition sits on. Omitted for every other kind,
    * whose pair already names its background.
    */
@@ -158,14 +176,16 @@ export interface DocumentedFigure {
   /**
    * The paints a `fade` or `over-wash` entry composes: the fraction the
    * foreground role is painted at, and — for `over-wash` — the role painted
-   * behind it and its own fraction. Every other kind leaves it undefined, and
-   * the suite fails an entry that needs it and omits it.
+   * behind it and its own fraction. An `over-wash` may omit the wash fraction
+   * when the role is translucent by design (the modal `overlay`), in which case
+   * the role's stored alpha is the paint. Every other kind leaves it undefined,
+   * and the suite fails an entry that needs it and omits it.
    */
   readonly composition?: {
     readonly opacity: number;
     readonly wash?: {
       readonly role: keyof ThemeColors;
-      readonly opacity: number;
+      readonly opacity?: number;
     };
   };
   /**
@@ -226,6 +246,7 @@ const measure = (
   entry: DocumentedFigure,
   [foreground, background]: ContrastPair,
   theme: Theme,
+  against: Theme = theme,
 ): number => {
   const colors = theme.colors;
   const composition = entry.composition;
@@ -279,10 +300,11 @@ const measure = (
       if (composition === undefined || wash === undefined) {
         return Number.NaN;
       }
-      const washed = compositeOver(
-        alpha(colors[wash.role], wash.opacity),
-        colors[background],
-      );
+      const paint =
+        wash.opacity === undefined
+          ? colors[wash.role]
+          : alpha(colors[wash.role], wash.opacity);
+      const washed = compositeOver(paint, colors[background]);
       const painted = compositeOver(
         alpha(colors[foreground], composition.opacity),
         washed,
@@ -309,13 +331,15 @@ const measure = (
       const surface = colors[background];
       return contrastRatio(compositeOver(shadow.color, surface), surface);
     }
+    case "cross":
+      return contrastRatio(colors[foreground], against.colors[background]);
   }
 };
 
 /** The lowest ratio one set measures across the entry's pairs. */
-const within = (entry: DocumentedFigure, theme: Theme): number =>
+const within = (entry: DocumentedFigure, theme: Theme, against?: Theme): number =>
   entry.pairs
-    .map((pair) => measure(entry, pair, theme))
+    .map((pair) => measure(entry, pair, theme, against ?? theme))
     .reduce((best, current) => (current < best ? current : best));
 
 /** The result of deriving a documented figure. */
@@ -331,8 +355,9 @@ export type FigureDerivation =
 const derivedAt = (
   entry: DocumentedFigure,
   shipped: ShippedTheme,
+  against?: Theme,
 ): FigureDerivation => {
-  const ratio = within(entry, shipped.theme);
+  const ratio = within(entry, shipped.theme, against);
   return {
     kind: "derived",
     ratio,
@@ -340,6 +365,12 @@ const derivedAt = (
     provenance: provenanceOf(shipped),
   };
 };
+
+/** The shipped theme a provenance names, when it is part of the enumeration. */
+const themeOf = (provenance: ShippedThemeProvenance): Theme | undefined =>
+  shippedThemes.find((candidate: ShippedTheme) =>
+    sameProvenance(provenanceOf(candidate), provenance),
+  )?.theme;
 
 /**
  * The figure the set the sentence names produces, rendered at the entry's
@@ -350,9 +381,15 @@ export function deriveFigure(entry: DocumentedFigure): FigureDerivation {
   const shipped = shippedThemes.find((candidate: ShippedTheme) =>
     sameProvenance(provenanceOf(candidate), entry.provenance),
   );
-  return shipped === undefined
-    ? { kind: "missing" }
-    : derivedAt(entry, shipped);
+  if (shipped === undefined) {
+    return { kind: "missing" };
+  }
+  const against =
+    entry.against === undefined ? undefined : themeOf(entry.against);
+  if (entry.kind === "cross" && against === undefined) {
+    return { kind: "missing" };
+  }
+  return derivedAt(entry, shipped, against);
 }
 
 /**
@@ -363,9 +400,11 @@ export function deriveFigure(entry: DocumentedFigure): FigureDerivation {
 export function tightestProvenance(
   entry: DocumentedFigure,
 ): ShippedThemeProvenance {
+  const against =
+    entry.against === undefined ? undefined : themeOf(entry.against);
   return shippedThemes
     .map((shipped: ShippedTheme) => ({
-      ratio: within(entry, shipped.theme),
+      ratio: within(entry, shipped.theme, against),
       provenance: provenanceOf(shipped),
     }))
     .reduce((best, current) => (current.ratio < best.ratio ? current : best))
@@ -1481,6 +1520,227 @@ const elevationPageFigure: DocumentedFigure = {
     "the page surfaces alone are **{figure}:1** (identity dark, `sm` on `background`)",
 };
 
+/** A figure the catalogue states, beside the list and set that produce it. */
+const catalogueFigure = (
+  entry: Omit<DocumentedFigure, "document">,
+): DocumentedFigure => ({ document: "docs/tokens.md", ...entry });
+
+/**
+ * The selection contract's present-tense minima, which the catalogue states in
+ * its *Text selection* and *Verification* narratives. None had an entry: the
+ * documents were the only copy, and the hand-typed lists in `docs.test.ts`,
+ * `selection-status-panel.test.ts`, `field-control-fill.test.ts` and
+ * `elevation-contrast.test.ts` derived some of the values without owning the
+ * sentence around them (plan 842).
+ *
+ * Three sentences needed their scope read before the entry could be written:
+ * the link's "tightest shipped pair" is the tighter of the two row fills plan
+ * `314` added, not the whole at-rest list (Windows dark's `active` wash is
+ * lower); the elevation sentence's figure is the tighter of the two surfaces
+ * plan `509` added, not the walk's own minimum (identity dark `sm` on its
+ * canvas is lower); and `selectionPairs`' true minimum appeared in no passage,
+ * so the catalogue now states it. `selection-figures.test.ts` holds those three
+ * scopes.
+ */
+const windowsDark = platformTheme("win32", "dark", "default");
+const windowsLight = platformTheme("win32", "light", "default");
+const macosLight = platformTheme("darwin", "light", "default");
+const macosDark = platformTheme("darwin", "dark", "default");
+const identityDark = identityTheme("dark", "default");
+
+const selectionNarrativeFigures: ReadonlyArray<DocumentedFigure> = [
+  catalogueFigure({
+    name: "the washed soft panel's tightest body",
+    pairs: selectionSoftPairs.filter(
+      ([foreground]) => foreground === "foreground",
+    ),
+    kind: "selection",
+    claim: "tightest",
+    provenance: identityDark,
+    decimals: 2,
+    sentence:
+      "the identity dark body on `infoSoft` is **{figure}:1** at the tightest",
+  }),
+  catalogueFigure({
+    name: "the washed soft panel's tightest caption",
+    pairs: selectionSoftPairs.filter(
+      ([foreground]) => foreground === "mutedForeground",
+    ),
+    kind: "selection",
+    claim: "tightest",
+    provenance: windowsLight,
+    decimals: 2,
+    sentence: "Windows light's caption on `destructiveSoft` **{figure}:1**",
+  }),
+  catalogueFigure({
+    name: "the link's tightest row fill",
+    pairs: [
+      ["primaryText", "accent", "secondary"],
+      ["primaryText", "selected", "secondary"],
+    ],
+    kind: "plain",
+    claim: "tightest",
+    provenance: windowsDark,
+    decimals: 2,
+    sentence:
+      "the tightest shipped pair is `primaryText` on `selected` at **{figure}:1** (Windows dark)",
+  }),
+  catalogueFigure({
+    name: "the link's tightest soft fill",
+    pairs: softPanelTextPairs,
+    kind: "plain",
+    claim: "tightest",
+    provenance: identityLight,
+    decimals: 2,
+    sentence:
+      "the soft fills are tightest at `primaryText` on `destructiveSoft` at **{figure}:1** (identity light)",
+  }),
+  catalogueFigure({
+    name: "the row title on the selected fill at rest",
+    pairs: [["foreground", "selected", "body"]],
+    kind: "plain",
+    claim: "tightest",
+    provenance: linuxDark,
+    decimals: 2,
+    sentence: "`foreground` on `selected` at **{figure}:1** (Linux dark)",
+  }),
+  catalogueFigure({
+    name: "the menu label on the selected fill at rest",
+    pairs: [["popoverForeground", "selected", "secondary"]],
+    kind: "plain",
+    claim: "tightest",
+    provenance: linuxDark,
+    decimals: 2,
+    sentence:
+      "`popoverForeground` on `selected` at **{figure}:1** (Linux dark)",
+  }),
+  catalogueFigure({
+    name: "the menu label on the pressed row at rest",
+    pairs: [["popoverForeground", "selectedActive", "body"]],
+    kind: "plain",
+    claim: "tightest",
+    provenance: linuxDark,
+    decimals: 2,
+    sentence:
+      "`popoverForeground` on `selectedActive` at **{figure}:1** (Linux dark)",
+  }),
+  catalogueFigure({
+    name: "the inherited label on the pressed row at rest",
+    pairs: [["selectedForeground", "active", "secondary"]],
+    kind: "plain",
+    claim: "tightest",
+    provenance: macosLight,
+    decimals: 2,
+    sentence: "`selectedForeground` on `active` at **{figure}:1** (macOS light)",
+  }),
+  catalogueFigure({
+    name: "the inherited label on the hovered row at rest",
+    pairs: [["selectedForeground", "accent", "secondary"]],
+    kind: "plain",
+    claim: "tightest",
+    provenance: macosLight,
+    decimals: 2,
+    sentence: "`selectedForeground` on `accent` at **{figure}:1** (macOS light)",
+  }),
+  catalogueFigure({
+    name: "the washed selection list's own minimum",
+    pairs: selectionPairs,
+    kind: "selection",
+    claim: "tightest",
+    provenance: windowsDark,
+    decimals: 3,
+    sentence:
+      "Windows dark's secondary text on the `selected` fill measures **{figure}:1** through the wash",
+  }),
+  catalogueFigure({
+    name: "the interactive fill on the field's own fill",
+    pairs: stateFillSurfacePairs.filter(
+      ([, background]) => background === "input",
+    ),
+    kind: "plain",
+    claim: "tightest",
+    provenance: linuxDark,
+    decimals: 4,
+    sentence:
+      "tightest **{figure}:1**, `selectedActive` on `input` in Dark · Linux",
+  }),
+  catalogueFigure({
+    name: "the dialog's face on the scrim",
+    pairs: dialogSurfacePairs,
+    kind: "over-wash",
+    claim: "tightest",
+    provenance: linuxDark,
+    composition: { opacity: 1, wash: { role: "overlay" } },
+    decimals: 3,
+    sentence:
+      "the tightest shipped pair is **{figure}:1** (`Dark · Linux` on `destructive`)",
+  }),
+  catalogueFigure({
+    name: "the two surfaces the elevation walk added",
+    pairs: elevationSurfaces
+      .filter((surface) => surface === "selected" || surface === "input")
+      .map((surface): ContrastPair => ["shadow", surface, "surface"]),
+    kind: "shadow",
+    level: "sm",
+    claim: "tightest",
+    provenance: macosDark,
+    decimals: 3,
+    sentence:
+      "the two added pairs measure **{figure}:1** at the tightest (macOS dark `sm` on `input`)",
+  }),
+  catalogueFigure({
+    name: "the light warning edge on the macOS light pressed wash",
+    pairs: [["warningSoftBorder", "active", "boundary"]],
+    kind: "cross",
+    claim: "value",
+    provenance: identityLight,
+    against: macosLight,
+    decimals: 3,
+    sentence: "{figure}:1 and 1.254:1 on those washes",
+  }),
+  catalogueFigure({
+    name: "the light warning edge on the Linux light pressed wash",
+    pairs: [["warningSoftBorder", "active", "boundary"]],
+    kind: "cross",
+    claim: "value",
+    provenance: identityLight,
+    against: platformTheme("linux", "light", "default"),
+    decimals: 3,
+    sentence: "1.246:1 and {figure}:1 on those washes",
+  }),
+  catalogueFigure({
+    name: "the light warning edge on its own fill",
+    pairs: [["warningSoftBorder", "warningSoft", "boundary"]],
+    kind: "plain",
+    claim: "value",
+    provenance: identityLight,
+    decimals: 3,
+    sentence: "{figure}:1 on its own fill",
+  }),
+];
+
+/**
+ * The ledger's copy of the figure plan `509` wrote for the two surfaces that
+ * plan added to the elevation walk. The sentence names those two pairs, not the
+ * walk's own minimum — identity dark's `sm` on its canvas is lower — so the
+ * entry measures the two added pairs and `selection-figures.test.ts` holds the
+ * distinction.
+ */
+const elevationAddedLedgerFigure: DocumentedFigure = {
+  document: "COMPONENTS.md",
+  name: "the ledger's two added elevation surfaces",
+  pairs: elevationSurfaces
+    .filter((surface) => surface === "selected" || surface === "input")
+    .map((surface): ContrastPair => ["shadow", surface, "surface"]),
+  kind: "shadow",
+  level: "sm",
+  claim: "tightest",
+  provenance: macosDark,
+  decimals: 3,
+  sentence:
+    "the two added pairs measure **{figure}:1** at the tightest (macOS dark `sm` on `input`)",
+};
+
 /** Every figure this table holds. */
 export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   toastToneFigure,
@@ -1501,6 +1761,8 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   ...nativePaintFigures,
   elevationContentFigure,
   elevationPageFigure,
+  elevationAddedLedgerFigure,
+  ...selectionNarrativeFigures,
 ];
 
 /** One body-role tier: secondary text below the role a surface paints. */
