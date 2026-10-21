@@ -65,7 +65,7 @@ describe("the examples page", () => {
     expect(page).toContain(`--filter ${String(playground.name)} build`);
     expect(scriptFor("apps/playground/package.json", "build")).toBeDefined();
     expect(scriptFor("apps/playground/package.json", "smoke")).toContain(
-      "dist/smoke/run.js"
+      "dist/smoke/run.js",
     );
     expect(page).toContain("apps/playground/dist/smoke/run.js");
     expect(page).toContain("--only examples-mount");
@@ -73,10 +73,10 @@ describe("the examples page", () => {
     // An id the registry does not carry, or one `index.ts` attaches no view to,
     // makes the printed command a no-op.
     expect(read("apps/playground/src/scenarios/registry.ts")).toContain(
-      'id: "examples-mount"'
+      'id: "examples-mount"',
     );
     expect(read("apps/playground/src/scenarios/index.ts")).toContain(
-      '"examples-mount":'
+      '"examples-mount":',
     );
 
     // The sentence this guard exists for.
@@ -85,7 +85,7 @@ describe("the examples page", () => {
 
   it("sends the reader to the record that proves the scenario ran", () => {
     expect(read("apps/playground/README.md")).toContain(
-      "## The example gallery"
+      "## The example gallery",
     );
     expect(page).toContain("apps/playground/README.md");
   });

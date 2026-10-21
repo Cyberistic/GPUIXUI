@@ -20,12 +20,19 @@ The block composes:
 
 ## Charts are a gap
 
-The library has no chart component yet, so the recipe ships a minimal SVG
-primitive — bars, a donut and stacked bars. GPUix paints `<svg source>` natively,
-so this is not a DOM widget: it is the strongest honest stand-in until a chart
-component lands, and it is labelled as a gap in the source.
+The library has no chart component yet, so the recipe ships a minimal
+`<svg source>` primitive — bars, a donut and stacked bars — as the strongest
+honest stand-in until a chart component lands, labelled as a gap in the source.
 
-The five colours are not the recipe's: they are the theme's categorical
+The runtime paints an `<svg source>` as **one tint** (measured by the
+playground's `content-surfaces`: the whole markup is masked in `style.color`, so
+a shape's own `fill` never reaches the frame). A multi-series chart is therefore
+one stacked `<svg>` per colour, and the recipe's `Chart` takes that colour
+rather than pretending one element can hold a palette.
+
+The preview above is a browser reproduction of the recipe's geometry and
+palette; the code tab is the `@gpuixui/*` source. Its five colours are not the
+recipe's: they are the theme's categorical
 [data series](/docs/theming#data-series), read through `seriesColors(theme)` — or
 as `--series-1` to `--series-5` in the browser preview, which is why the platform
 and look switch repaints the bars, the donut, the stacked bars and every legend

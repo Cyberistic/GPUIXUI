@@ -305,6 +305,21 @@ therefore appears without a docs change, and a step removed fails the suite.
 5. Run `nub run --filter @gpuixui/docs build` before pushing: an SSR-only error
    in a preview (a missing provider) shows up here, not in `vitest`.
 
+## Block pages
+
+A block is a page-level recipe: a browser reproduction of the composition plus
+the real `@gpuixui/*` source. Each page mounts its reproduction by registry key
+(`<BlockPreview name="dashboard-01" />`), and `src/lib/block-page.test.ts` holds
+the two inventories together in both directions — a page naming an unregistered
+key throws at render, and a registered block with no page is dead code — plus the
+blueprint sidebar entry.
+
+A block that draws must state the runtime's measured rule, not a browser one: one
+`<svg source>` paints **one tint** (a shape's own `fill` never reaches the
+frame), so a multi-series chart is one stacked element per colour. The dashboard
+page teaches that and its recipe takes the colour per layer; the evidence is
+`docs/gpuix-capabilities.md` §Inline SVG painting.
+
 ## The examples page
 
 `/docs/examples` is the registry of the worked examples the packages ship. It is

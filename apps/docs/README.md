@@ -213,6 +213,14 @@ from a `Theme` to CSS variables, and the previews take their values from the
 resolved platform theme, so a preview cannot carry a colour literal the library
 does not ship. `docs/preview-strategy.md` is the full policy.
 
+A block page mounts its reproduction by registry key (`<BlockPreview
+name="dashboard-01" />`); `src/lib/block-page.test.ts` holds every page to a
+registered key and every registered block to a page, and checks both are in the
+Blocks sidebar. The dashboard's chart recipe states the runtime's measured rule —
+one `<svg source>` paints one tint, so a multi-series chart is one stacked
+element per colour — because the page used to call a single element a native
+chart.
+
 ## The platform switch and the look picker
 
 `PlatformToggle` sits in the sidebar footer. **Platform** offers macOS, Linux,

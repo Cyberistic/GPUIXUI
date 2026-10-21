@@ -594,10 +594,12 @@ import { seriesColors } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 
 // gap: the library has no chart component yet. Chart is the recipe's minimal SVG
-// primitive — GPUix paints <svg source> natively, so it is not a DOM widget,
-// just the strongest honest stand-in until a chart component lands.
-const Chart = ({ viewBox, markup }: { viewBox: string; markup: string }) => (
-  <svg source={\`<svg viewBox="\${viewBox}" xmlns="http://www.w3.org/2000/svg">\${markup}</svg>\`} />
+// primitive. One <svg source> paints as ONE tint — the whole markup is masked in
+// style.color, so a shape's own fill never reaches the frame (measured by the
+// playground's \`content-surfaces\`). A multi-series chart is one stacked <Chart>
+// per colour, each with its own markup; one element cannot hold a palette.
+const Chart = ({ viewBox, markup, color }: { viewBox: string; markup: string; color: string }) => (
+  <svg source={\`<svg viewBox="\${viewBox}" xmlns="http://www.w3.org/2000/svg">\${markup}</svg>\`} style={{ color }} />
 );
 
 // No colour on a series: the row's position picks one from the theme's scale.
@@ -649,7 +651,7 @@ export function DashboardPage() {
                 <Badge variant="success">▲ 12%</Badge>
                 <Text role="caption" tone="muted">vs. previous day</Text>
               </Stack>
-              <Chart viewBox="0 0 300 116" markup="/* Mon–Sun bars, 0/4/8/12h axis */" />
+              <Chart viewBox="0 0 300 116" markup="/* Mon–Sun bars, 0/4/8/12h axis */" color={series[0]} />
             </CardContent>
           </Card>
 
@@ -660,7 +662,7 @@ export function DashboardPage() {
             <CardContent>
               <Text role="display">1.24M tokens</Text>
               <Badge variant="success">▲ 18%</Badge>
-              <Chart viewBox="0 0 100 100" markup="/* five-segment donut */" />
+              <Chart viewBox="0 0 100 100" markup="/* one donut segment; repeat per colour */" color={series[2]} />
               {models.map((model) => (
                 <Stack direction="row" gap="sm" align="center" key={model.name}>
                   <span style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: series[model.series] }} />
@@ -695,7 +697,7 @@ export function DashboardPage() {
             <CardTitle>Token usage over time</CardTitle>
           </CardHeader>
           <CardContent>
-            <Chart viewBox="0 0 320 120" markup="/* 12AM–10PM stacked bars */" />
+            <Chart viewBox="0 0 320 120" markup="/* 12AM–10PM stacked bars, one layer */" color={series[0]} />
           </CardContent>
         </Card>
       </Stack>

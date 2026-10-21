@@ -102,9 +102,7 @@ const record = readFileSync(
 
 /** The row of a table whose first cell is exactly `name`. */
 const rowFor = (table: string, name: string): string => {
-  const row = table
-    .split("\n")
-    .find((line) => line.startsWith(`| ${name} |`));
+  const row = table.split("\n").find((line) => line.startsWith(`| ${name} |`));
   if (!row) throw new Error(`no row named ${name}`);
   return row;
 };
@@ -115,7 +113,7 @@ describe("the data-display page's drawing claims", () => {
 
   it("states the measured surface, not a plan", () => {
     expect(rowFor(record, "Inline SVG painting")).toContain(
-      "supported, with limits"
+      "supported, with limits",
     );
     expect(charts).toContain("one tint");
     expect(charts).toContain("blank");
@@ -133,7 +131,9 @@ describe("the data-display page's drawing claims", () => {
   });
 
   it("does not send a chart to a surface that does not exist", () => {
-    expect(dataPage).not.toContain("until a native drawing surface is verified");
+    expect(dataPage).not.toContain(
+      "until a native drawing surface is verified",
+    );
   });
 
   it("keeps a fixed header out of a scroller it cannot stick to", () => {
