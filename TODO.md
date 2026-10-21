@@ -104,10 +104,10 @@ caller sizes, pulse opacity) flows through `style` while token arithmetic is a
 named derived token. `MIGRATION.md` documents the tiers and the merge order;
 `recipe/geometry.test.ts` proves the equivalence per variant/size plus the
 merge order. Zero primitives remain on their `core/` resolver.
-`[ ]` Convert `packages/components` onto `@gpuixui/tw` — these may adopt the
+`[x]` Convert `packages/components` onto `@gpuixui/tw` — these may adopt the
 shadcn recipes' fixed metrics instead of the primitives' density scale.
 
-`[ ]` `[███████░░░]` 28/39
+`[x]` `[██████████]` 39/39
 
 `[x]` Convert the eight leaf components — `Card`, `Badge`, `Alert`, `Avatar`,
 `List`, `Pagination`, `EmptyState`, `Stepper` — onto `@gpuixui/tw`. Each renders
@@ -144,9 +144,23 @@ height rather than shadcn's `grid`. `recipe.test.ts` proves the compiled
 `StyleDesc` per part, the merge order and the no-unsupported sweep;
 `behaviour/overlay-layering.test.tsx` proves Escape dismisses a dialog over a
 popover over a menu outside-in. The remaining pickers are below.
-`[ ]` Convert the remaining pickers — confirm-dialog, drawer, navigation-menu,
+`[x]` Convert the remaining pickers — confirm-dialog, drawer, navigation-menu,
 preview-card, tabs, toast, combobox, date-picker, time-picker, color-picker,
-message-scroller — in their own pass.
+message-scroller — in their own pass. Each renders its resting appearance from a
+recipe (`CONFIRM_DIALOG_BUSY`, `DRAWER_*`, `NAVIGATION_MENU_*`,
+`PREVIEW_CARD_CONTENT`, `TABS_*`, `TOAST_*`, `COMBOBOX_*`, `DATE_PICKER_*`,
+`TIME_PICKER_*`, `COLOR_PICKER_*`, `MESSAGE_SCROLLER_*`), accepts a caller
+`className` joined last via `cn`, and keeps its public API, parts, refs,
+keyboard/focus/dismissal and scroll/positioning unchanged. The overlays (toast
+card, drawer surface/scrim, navigation-menu panel, preview-card surface) reuse
+`internal/overlay.ts` (`overlaySurfaceStyle`); the pickers' triggers and list
+surfaces compile through recipes while their measured geometry, density height
+and scroll stay in `style`. Three utilities the wave needed landed in the
+default registry: `border-strong` (the picker triggers' strong edge),
+`items-end`, and `justify-start`. `recipe.test.ts` proves the compiled
+`StyleDesc` per part, the merge order and the no-unsupported sweep. None were
+skipped; the whole `packages/components` package is now on `@gpuixui/tw`
+(39/39).
 
 ### Design tokens and theming (`tokens-theme`)
 

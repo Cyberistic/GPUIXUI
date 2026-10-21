@@ -50,6 +50,14 @@ motion classes for provenance even though the renderer has no transform or
 z-index; the components own their positioning through `<anchored>` /
 `<FloatingLayer>` and the dismiss stack in `internal/dismiss-layer.ts`.
 
+The final wave (confirm-dialog, drawer, navigation-menu, preview-card, tabs,
+toast, combobox, date-picker, time-picker, color-picker, message-scroller)
+completed the conversion — **39/39**, none skipped. It added three utilities to
+the default registry (`border-strong` for the picker triggers' strong edge,
+`items-end`, `justify-start`) and routes the floating/modal surfaces through
+`overlaySurfaceStyle`, while the picker triggers keep their density height and
+the picker surfaces keep their scroll/positioning in `style`.
+
 ## What is here
 
 | Area | State |

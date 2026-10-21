@@ -44,3 +44,15 @@ metric.
 - The control-geometry density exceptions are pinned in
   `packages/components/README.md` (§Styling) so a future agent does not "fix"
   them back onto the fixed scale.
+
+## Completion
+
+The migration finished **39/39** — no component was skipped. The final wave
+(confirm-dialog, drawer, navigation-menu, preview-card, tabs, toast, combobox,
+date-picker, time-picker, color-picker, message-scroller) added its recipes to
+`packages/tw/src/recipes.ts` and three utilities to the default registry
+(`border-strong`, `items-end`, `justify-start`). The picker triggers keep their
+density height and the picker surfaces keep their scroll/positioning in `style`;
+everything else compiles from the fixed shadcn recipe. The overlay wave and the
+final wave both route the caller's `className` through `internal/overlay.ts`
+(`overlaySurfaceStyle`) for the floating/modal surfaces.
