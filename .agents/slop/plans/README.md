@@ -67,7 +67,6 @@ the authority on order; the file names carry the detail.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [030](./030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | implemented — all 19 Tier 1 components + `core/`; docs-site pages pending |
-| [040](./040-tier1-parts-contract.md) | Tier 1 adopts the compound-part contract: parts per `docs/component-api.md` §8, `StateStyle<PartState>`, `onValueChange`/`onCheckedChange` | C | 030, 200, 201 | planned — nine steps; runtime verification waits on B1 |
 
 Cross-cutting records: `.agents/adr/0001-native-smoke-host.md` (the 0.10.0
 binding gap), `0002-two-gpuix-versions.md` (the 0.5.1 legacy probe),

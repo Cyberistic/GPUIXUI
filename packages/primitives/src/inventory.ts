@@ -382,7 +382,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No pointer capture: a drag stops when the pointer leaves the track",
       "No aria-valuenow/min/max, so the range is not announced",
-      "The thumb cannot host a custom glyph",
+      "A composed part cannot answer a press",
     ],
     source: [
       "src/components/Slider.tsx",
@@ -400,7 +400,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No pointer capture: a drag stops when the pointer leaves the track",
       "No aria-valuenow/min/max, so the range is not announced",
-      "The thumbs cannot be given custom glyphs",
+      "A composed part cannot answer a press",
     ],
     source: [
       "src/components/Slider.tsx",
@@ -417,7 +417,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No aria-valuenow/min/max",
-      "No threshold segments, tick marks or in-track label",
+      "No threshold segments, tick marks or a part inside the track",
       "The fill does not animate between values",
     ],
     source: ["src/components/Meter.tsx", "src/core/value.ts"],
