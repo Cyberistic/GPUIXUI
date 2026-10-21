@@ -232,7 +232,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 24/31
+`[x]` `[████████░░]` 24/30
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -281,7 +281,11 @@ diameter table; a fixed scale, not a theme group
 `[x]` Ship `blend`, `filledHover` and `filledPressed` — opaque derived action
 fills instead of six stored hover/press roles, with the label contrast floors
 checked on both fills
-`[ ]` Add motion tokens (durations/easings) once a component consumes them
+`[-]` Add motion tokens (durations/easings) to `@gpuixui/tokens` — cancelled:
+`@gpuixui/motion` is the package that owns easing curves, spring presets, stagger
+and reduced-motion policy, so a second copy here would be the duplication the
+boundaries forbid. A component reads motion from `@gpuixui/motion` and keeps
+colour/type/space/radius from this package
 `[x]` Ship `registerFonts` (plan 052) — consumer-only: installs a font file's
 bytes in a renderer, is idempotent per renderer and per file, does not cache a
 rejected file, and returns the families a theme may name; 6 tests, docs and a
@@ -322,11 +326,46 @@ The components workstream can now delete its `paths` mapping (interlock row).
 and the union plan index are on `main` (commit `458fe10`); `main` now compiles
 `@gpuixui/tokens` from source, so `primitives`, `components` and `docs-site` can
 merge it and drop their structural copies
-`[ ]` Merge `main` into `agent/tokens-theme` once plan 019 (motion tokens) lands
-there, then promote that commit — `agent/tokens-platform` is a second branch for
-this workstream, created because two live sessions shared one worktree (see
-`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`), and should be
-retired once both branches are one
+`[-]` Merge `main` into `agent/tokens-theme` once plan 019 (motion tokens) lands
+there — cancelled: plan 019's subject moved to `@gpuixui/motion`, and this
+workstream now lands on `master` directly, so there is nothing to merge. The
+`agent/tokens-theme` / `agent/tokens-platform` branches are historical (they were
+a workaround for two live sessions sharing one worktree; see
+`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`)
+
+### Playground and native smoke (`apps/playground`, `packages/testing`)
+
+`[x]` `[██████░░░░]` 6/10
+
+`[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
+      (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
+      the release commit the package installs instead of copying the lagging
+      reference clone, so a binding always matches the napi surface
+      (`GPUIX_REV` overrides the pin). Built and installed 2026-10-21; 21/21
+      headless scenarios green.
+`[x]` Land `theme-platform` — each `platformTheme` mono family reaches the
+      runtime and the three platforms name three distinct faces while keeping
+      the system-UI sans sentinel (headless, `--only theme-platform`).
+`[x]` Make `--only` repeatable in both runners (the swarm's verification
+      instructions use it) and reject every unknown id by name.
+`[x]` Land the **live window runner** — `apps/playground/src/live/` drives a real
+      window through `@gpuix/native/automation`, reports through the same
+      `Smoke` model/exit codes (`0/1/2`), and captures one PNG per paint state.
+      `packages/testing` gained `AsyncSmokeHost` + `runAsyncScenarios` over the
+      shared check model (4 tests; the errored-not-passed test fails without the
+      defect handler).
+`[x]` Land the `focus-visible` live probe (plan `053` STOP gate): measured that
+      the ring **paints** for Tab, does **not** paint for a mouse press or for a
+      programmatic focus before any keyboard input, and that a programmatic
+      focus after a Tab does paint it; `keyboardFocusDim` tracks the same state.
+      Evidence: `.artifacts/live/focus-visible*.png` + README table.
+`[ ]` Assert the live captures with pixels (decode the PNG, compare the ring's
+      `colors.ring` pixels) instead of a human looking at them
+` [ ]` Probe 053's remaining question: `keyboardFocusDim` with a modal open —
+      is the rest of the window dimmed, and should a component opt out?
+`[ ]` Port the modal/menu/toast Tier 2 examples into live probes (the headless
+      scenarios already cover the primitives)
+`[ ]` Frame the live runner as a release gate before release
 
 ## Phase C — Tier 1–2 components
 
