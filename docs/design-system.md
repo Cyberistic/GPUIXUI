@@ -256,7 +256,10 @@ label is faded over the *faded* fill. Measured: a filled action's label lands at
 1.51:1–2.83:1, and in a high-contrast theme at 1.74:1–2.23:1, under the 3:1 that
 variant's disabled floor asks for, so the fade cannot carry the state there. The
 role pair is therefore the contract and the fade is the deviation; replacing it
-is recorded in `TODO.md` → Interlocks.
+is recorded in `TODO.md` → Interlocks. The fade is measured by the gate as
+`audit.disabledFade`, at `contrastFloors.disabled` in every variant — a brand
+whose label composites into its own faded fill fails by name even while every
+enabled pair passes.
 
 **Busy is a state of its own, and it is not faded.** A control that is working
 keeps its label at its resting contrast and stays in the tab order — a keyboard
@@ -370,14 +373,17 @@ laid out — a shadow offset may be negative, but a control height or type size
 must be positive (§10, `docs/tokens.md` §Numbers).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all eight in one call — `invalidRoles`, `invalidShadows`,
-`invalidNumbers`, `contrast`, `decorative`, `series`, `selection` and
-`indicators` — and `passed` is true only
+reports all nine in one call — `invalidRoles`, `invalidShadows`,
+`invalidNumbers`, `contrast`, `decorative`, `series`, `selection`,
+`indicators` and `disabledFade` — and `passed` is true only
 when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
 to AAA without the caller naming a floor set; an explicit `ContrastFloors`
-overrides it. The parts are public too: `contrastRatio(foreground, background)`
+overrides it. The disabled fade is the one report that ignores those floors: a
+fade is a mechanism, so it is held to `contrastFloors.disabled` in every variant
+(§8 records why the fade cannot carry a high-contrast theme). The parts are
+public too: `contrastRatio(foreground, background)`
 measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `highContrastFloors` names the text and boundary pairs and their floors,
 `decorativeFailures(theme, floor?)` measures the subtle surfaces,
@@ -462,11 +468,13 @@ roles in the tokens package, not fork components.
 
 Overrides are plain data, so `extendTheme` cannot reject a colour the renderer
 would ignore or a number it cannot lay out. The audit is the gate: `auditTheme(theme)`
-reports an unpaintable role, an unpaintable shadow in a level the brand supplied,
-a size, length or shadow geometry the renderer would drop, every pair below the
-floor its variant asks for, and every decorative surface too close to its
-background; run it over the resolved theme before it ships and assert `passed` in
-the package's own tests.
+runs all nine checks — an unpaintable role, an unpaintable shadow in a level the
+brand supplied, a size, length or shadow geometry the renderer would drop, every
+pair below the floor its variant asks for, every decorative surface too close to
+its background, a data series lost on its plot or to a colour-vision deficiency,
+a selection wash that hides its text, an indicator mark nobody can find, and a
+disabled label the fade erases; run it over the resolved theme before it ships
+and assert `passed` in the package's own tests.
 
 ## 12. Non-goals
 

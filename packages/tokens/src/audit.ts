@@ -5,12 +5,13 @@
  * paints black, a shadow colour it cannot parse paints no shadow at all, a
  * number it cannot lay out is dropped, a text pair below its floor is
  * unreadable, a decorative surface close to its background is invisible, a data
- * series is lost on its plot, the selection wash hides the text it selects, and
- * an indicator mark disappears into the strip it is drawn on. Each has its own
- * report, and a consumer who forgets one ships the failure it would have caught
- * — which is what the documented gate did, running two of the three and holding
- * every theme to the default floors even when the theme declares the
- * high-contrast variant.
+ * series is lost on its plot, the selection wash hides the text it selects, an
+ * indicator mark disappears into the strip it is drawn on, and a disabled
+ * control faded by `disabledOpacity` loses its label. Each has its own report,
+ * and a consumer who forgets one ships the failure it would have caught — which
+ * is what the documented gate did, running two of the three and holding every
+ * theme to the default floors even when the theme declares the high-contrast
+ * variant.
  */
 
 import {
@@ -26,6 +27,10 @@ import {
   type ContrastFloors,
 } from "./contrast.js";
 import { decorativeFailures, type DecorativeFailure } from "./decorative.js";
+import {
+  disabledFadeFailures,
+  type DisabledFadeFailure,
+} from "./disabled.js";
 import {
   invalidShadowColors,
   type Elevation,
@@ -94,17 +99,24 @@ export interface ThemeAudit {
   readonly selection: readonly SelectionFailure[];
   /** Indicator marks that cannot be found on the strip they are drawn on. */
   readonly indicators: readonly IndicatorFailure[];
-  /** True only when all eight reports are empty. */
+  /** Disabled controls whose faded label vanishes into the faded fill. */
+  readonly disabledFade: readonly DisabledFadeFailure[];
+  /** True only when all nine reports are empty. */
   readonly passed: boolean;
 }
 
 /**
- * Audit a theme against the eight contracts the library holds itself to.
+ * Audit a theme against the nine contracts the library holds itself to.
  *
  * The contrast floors come from the theme's own `contrast` variant, so a
  * high-contrast brand is measured at AAA without the caller naming a floor set;
- * pass `floors` to hold a theme to a different contract. `passed` is the only
- * passing result — a report nobody checked is not a pass.
+ * pass `floors` to hold a theme to a different contract. The disabled fade is
+ * the one report that does not take them: `disabledFadeFailures` measures a
+ * mechanism, not a readability claim, and holds every variant to the same
+ * `contrastFloors.disabled` — the fade cannot reach a high-contrast variant's
+ * 3:1, which is why that variant paints the role pair instead.
+ *
+ * `passed` is the only passing result — a report nobody checked is not a pass.
  *
  * @example
  * ```ts
@@ -130,6 +142,7 @@ export function auditTheme(
   const series = seriesFailures(theme);
   const selection = selectionFailures(theme, floors);
   const indicators = indicatorFailures(theme, floors);
+  const disabledFade = disabledFadeFailures(theme);
   return {
     invalidRoles,
     invalidShadows,
@@ -139,6 +152,7 @@ export function auditTheme(
     series,
     selection,
     indicators,
+    disabledFade,
     passed:
       invalidRoles.length === 0 &&
       invalidShadows.length === 0 &&
@@ -149,6 +163,7 @@ export function auditTheme(
       series.distinctness.length === 0 &&
       series.deficiencies.length === 0 &&
       selection.length === 0 &&
-      indicators.length === 0,
+      indicators.length === 0 &&
+      disabledFade.length === 0,
   };
 }

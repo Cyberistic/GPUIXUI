@@ -29,6 +29,7 @@ const read = (path: string): string =>
 
 const catalogue = read("../../../docs/tokens.md");
 const readme = read("../README.md");
+const designSystem = read("../../../docs/design-system.md");
 
 /** The package's source files a document may import from — no tests, no examples. */
 const sourceFiles: ReadonlyArray<string> = readdirSync(
@@ -104,6 +105,85 @@ describe("token catalogue", () => {
     expect(catalogue).toContain(
       `The ${Tokens.contrastPairs.length} pairs cover`,
     );
+  });
+});
+
+/**
+ * Guards the audit's report list. `auditTheme` grows a report whenever a
+ * contract lands, and the three pages that list them are how a consumer learns
+ * what `passed` actually covers: a report with no line is a check the reader
+ * never looks at, and a line for a report the gate no longer returns sends them
+ * to a property that is `undefined`. The count word is derived from the gate
+ * itself, so neither direction can drift.
+ */
+describe("the audit's report list", () => {
+  const reports = Object.keys(Tokens.auditTheme(Tokens.lightTheme)).filter(
+    (key) => key !== "passed",
+  );
+  const words = [
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+  ] as const;
+  const count = words[reports.length] ?? `${reports.length}`;
+  const surfaces = [
+    {
+      name: "docs/tokens.md",
+      text: catalogue,
+      phrase: `all ${count} reports`,
+    },
+    { name: "README.md", text: readme, phrase: `all ${count} reports` },
+    {
+      name: "docs/design-system.md",
+      text: designSystem,
+      phrase: `reports all ${count} in one call`,
+    },
+  ];
+  const named = (text: string): ReadonlySet<string> =>
+    new Set(
+      [...text.matchAll(/\baudit\.([A-Za-z][A-Za-z0-9]*)\b(?!\.)/g)].map(
+        (match) => match[1] ?? "",
+      ),
+    );
+
+  it("names every report the gate returns", () => {
+    const missing = surfaces.flatMap(({ name, text }) =>
+      reports
+        .filter(
+          (report) =>
+            !named(text).has(report) && !text.includes(`\`${report}\``),
+        )
+        .map((report) => `${name}: audit.${report}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("names no property the gate does not return", () => {
+    const known = new Set([...reports, "passed"]);
+    const stale = surfaces.flatMap(({ name, text }) =>
+      [...named(text)]
+        .filter((property) => !known.has(property))
+        .map((property) => `${name}: audit.${property}`),
+    );
+
+    expect(stale).toEqual([]);
+  });
+
+  it("prints the report count the gate has", () => {
+    const silent = surfaces
+      .filter(({ text, phrase }) => !text.includes(phrase))
+      .map(({ name }) => name);
+
+    expect(silent).toEqual([]);
   });
 });
 

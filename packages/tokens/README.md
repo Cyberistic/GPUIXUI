@@ -366,11 +366,13 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all eight reports are
+CSS validation and lint, and `passed` is true only when all nine reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
-`ContrastFloors` argument overrides it.
+`ContrastFloors` argument overrides it. The disabled fade is the exception: it
+is held to `contrastFloors.disabled` in every variant, because a fade is a
+mechanism rather than a readability claim.
 
 The contract covers the state WCAG exempts as well: `disabledForeground` is
 measured on the fill that disables it and on `background`, `card` and `popover`
@@ -395,6 +397,7 @@ audit.decorative; // [] — every divider, skeleton, veil, status edge and thumb
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.selection; // [] — every selection wash is visible and keeps its text readable
 audit.indicators; // [] — every progress fill, spinner dot and presence mark is visible
+audit.disabledFade; // [] — every faded disabled label still reads against its faded fill
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 

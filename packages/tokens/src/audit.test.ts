@@ -95,6 +95,7 @@ describe("the floors follow the theme's contrast variant", () => {
       series: { surfaces: [], distinctness: [], deficiencies: [] },
       selection: [],
       indicators: [],
+      disabledFade: [],
       passed: true,
     });
   });
@@ -198,7 +199,42 @@ describe("every report is part of the gate", () => {
       series: { surfaces: [], distinctness: [], deficiencies: [] },
       selection: [],
       indicators: [],
+      disabledFade: [],
       passed: true,
     });
+  });
+
+  it("reports a disabled label the fade erases", () => {
+    // The enabled pair is readable (4.69:1 ≥ the 4.5 floor), so the text
+    // contract passes; `disabledOpacity` composites the label into its own
+    // faded fill at 1.04:1, which no contrast pair can see because the fade is
+    // translucent. Without this report a brand shipped a control that reads as
+    // an empty box whenever it was unavailable.
+    const vanishedWhenDisabled = extendTheme(lightTheme, {
+      colors: { primary: "#101010", primaryForeground: "#7E7E7E" },
+    });
+
+    expect(contrastFailures(vanishedWhenDisabled)).toEqual([]);
+    expect(indicatorFailures(vanishedWhenDisabled)).toEqual([]);
+    expect(auditTheme(vanishedWhenDisabled).disabledFade).toContainEqual(
+      expect.objectContaining({
+        fill: "primary",
+        label: "primaryForeground",
+        over: "background",
+        floor: contrastFloors.disabled,
+      }),
+    );
+    expect(auditTheme(vanishedWhenDisabled).passed).toBe(false);
+  });
+
+  it("holds the fade to its own floor in every contrast variant", () => {
+    // A high-contrast variant's `disabled` floor is 3:1 and the fade lands at
+    // 1.74:1–2.23:1 (measured in `disabled.test.ts`), so folding the variant's
+    // floors into this report would fail every high-contrast theme for a
+    // mechanism it does not use. The report reads the same either way.
+    expect(auditTheme(highContrastLightTheme).disabledFade).toEqual([]);
+    expect(
+      auditTheme(highContrastLightTheme, highContrastFloors).disabledFade,
+    ).toEqual([]);
   });
 });

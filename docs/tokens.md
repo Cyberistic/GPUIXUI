@@ -684,8 +684,8 @@ accent — and `retro.test.ts` holds the result to the same contracts.
 
 ## Checking your own theme
 
-A theme fails silently in eight independent ways, and `auditTheme(theme)` is the
-one call that reports all eight:
+A theme fails silently in nine independent ways, and `auditTheme(theme)` is the
+one call that reports all nine:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -693,7 +693,7 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all eight reports below are empty
+audit.passed; // true only when all nine reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.invalidShadows; // elevation shadow colours the renderer cannot paint
 audit.invalidNumbers; // sizes, lengths and shadows the renderer cannot lay out
@@ -702,9 +702,10 @@ audit.decorative; // dividers, skeleton fills, veils and status edges too subtle
 audit.series; // data-series colours lost on their plot, against each other, or for a colour-blind reader
 audit.selection; // a selection wash the reader cannot see, or that hides its text
 audit.indicators; // a progress fill, spinner dot or presence mark lost on its strip
+audit.disabledFade; // a disabled control whose faded label vanishes into the faded fill
 ```
 
-`passed` is computed from the eight reports, so it cannot drift from them. The
+`passed` is computed from the nine reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -714,10 +715,17 @@ contract. The runtime **ignores** a colour string it cannot parse and keeps the
 property's previous value or paints black, and nothing else measures text
 against the surface behind it.
 
+`disabledFade` is the one report those floors do not reach: a fade is a
+mechanism rather than a readability claim, so `disabledFadeFailures` holds every
+variant to `contrastFloors.disabled` (1.5:1). The fade cannot clear a
+high-contrast theme's 3:1 — §The fade a disabled control paints has the measured
+numbers — which is why that variant paints the disabled role pair instead.
+
 Each report is also a function of its own, for a caller that wants one check.
 The three below are here; the categorical scale is §Data series
-(`seriesFailures`) and the selection wash is §Text selection
-(`selectionFailures`).
+(`seriesFailures`), the selection wash is §Text selection
+(`selectionFailures`) and the fade is §The fade a disabled control paints
+(`disabledFadeFailures`).
 
 ### Paint-ready values
 
@@ -878,6 +886,9 @@ cannot carry the state in a high-contrast theme — which is the measured reason
 the role pair is the contract and the fade is the deviation to be replaced
 (`TODO.md` → Interlocks). `disabled.test.ts` holds every shipped, platform and
 authored theme to the floor, the composite, the erased-label case and that gap.
+The report is part of `auditTheme`, as `audit.disabledFade`, so a brand's gate
+catches a label that fades into its own fill even though every enabled pair
+passes.
 
 ### Decorative surfaces
 
