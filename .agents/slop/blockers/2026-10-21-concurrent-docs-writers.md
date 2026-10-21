@@ -50,8 +50,18 @@ in `2026-10-17-concurrent-tokens-writers.md`. The permanent fix (pinned
 `--session` plus a live-session count in `agent_alive`, plan
 `022-swarm-single-writer.md`) is still the coordinator's.
 
-## When docs-site work may resume
+## Second measurement, 2026-10-22 00:57
 
+The overlap is not a single tick. Over the following hour the other session
+committed `/docs/patterns` (23:31), the props search in the component index
+(00:37), the docs runtime rows and `docs/gpuix-capabilities.md` (00:57), while
+this turn was verifying the same tree. The docs suite grew 331 → 335 tests
+between two of this turn's runs, and one intermediate full-suite run failed on
+that session's in-flight `capability-doc.test.ts`, then passed once it finished.
+This turn staged only its own paths (`page-meta.ts`, `page-meta.test.ts`,
+`README.md`), so nothing was clobbered, and pushed at `381f77c5`.
+
+## When docs-site work may resume
 Resume only after `git status --short apps/docs` has shown no uncommitted edits
 for a measured interval longer than one edit cycle (a minute is enough at this
 cadence), and re-read the files before editing them. The next candidate tasks are
