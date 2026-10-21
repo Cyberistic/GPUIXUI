@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { lightColors } from "./color.js";
+import { alpha, lightColors } from "./color.js";
 import {
   decorativeFailures,
   decorativeFloor,
@@ -22,6 +22,7 @@ import {
   edgeLessBrand,
   report,
 } from "./decorative.example.js";
+import { statusEdgeAlpha, statusTone, statusTones } from "./styles.js";
 import { platformNames } from "./platforms.js";
 import {
   darkTheme,
@@ -78,6 +79,31 @@ describe("decorative surfaces", () => {
     expect(missing).toEqual([]);
   });
 
+  it("measures every status edge on its tint and on both page surfaces", () => {
+    const missing = statusTones.flatMap((tone) =>
+      [`${tone}Soft`, "background", "card"]
+        .filter((over) => !measured("statusEdge", tone, over))
+        .map((over) => `${tone}/${over}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("measures the edge the component actually paints", () => {
+    // The edge's share is a design value, not a role; if `statusTone` paints a
+    // different one the measurement moves to a surface nobody sees.
+    statusTones.forEach((tone) => {
+      const entry = decorativeSurfaces.find(
+        ({ surface, role }) => surface === "statusEdge" && role === tone,
+      );
+
+      expect(entry?.alpha, tone).toBe(statusEdgeAlpha);
+      expect(statusTone(lightTheme, tone).border).toBe(
+        alpha(lightColors[tone], statusEdgeAlpha),
+      );
+    });
+  });
+
   it("passes every shipped theme", () => {
     shippedThemes.forEach((theme) => {
       expect(decorativeFailures(theme), theme.name).toEqual([]);
@@ -114,6 +140,18 @@ describe("decorativeFailures", () => {
         ({ surface, over }) => surface === "skeleton" && over === "card",
       ),
     ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("reports a status edge that matches the tint it bounds", () => {
+    // A message whose edge is its own fill has no boundary left; the text still
+    // carries the meaning, but the shape is gone.
+    const broken = { colors: { ...lightColors, info: lightColors.infoSoft } };
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, over }) => surface === "statusEdge" && over === "infoSoft",
+      ),
+    ).toMatchObject({ role: "info", ratio: 1, floor: decorativeFloor });
   });
 
   it("composites the veil instead of reporting it unmeasurable", () => {

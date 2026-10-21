@@ -52,6 +52,7 @@ import {
   registerFonts,
   statusTone,
   statusTones,
+  statusEdgeAlpha,
   systemUiFont,
   textStyle,
   themeContrasts,
@@ -239,8 +240,15 @@ import { statusTone } from "@gpuixui/tokens";
 const tone = statusTone(theme, "info");
 tone.background; // theme.colors.infoSoft
 tone.foreground; // theme.colors.infoSoftForeground
-tone.border; // alpha(theme.colors.info, 0.3)
+tone.border; // alpha(theme.colors.info, statusEdgeAlpha)
 ```
+
+`statusEdgeAlpha` is the share the edge paints — the one design value `statusTone`
+and the decorative-surface contract share, so the edge a component paints is the
+edge the contract measures. The edge is a **decorative** boundary (the message's
+text and icon carry the meaning), so it is held to the 1.05:1 perceptibility
+floor rather than the 3:1 boundary floor, on the tint it bounds and on both page
+surfaces; see [Decorative surfaces](#decorative-surfaces).
 
 `foreground` is the role to paint a status message **as text**, whether it sits
 on the tone's soft surface (an Alert) or directly on `background`/`card` (a field
@@ -575,24 +583,26 @@ readable rather than assumed to be.
 
 ### Decorative surfaces
 
-Three surfaces carry no text and are not a boundary, so WCAG's floors do not
-apply to them: the dividers (`border`), the skeleton fill, and the modal veil
-(`overlay`). They still have one job — be seen — so they get one floor of their
-own, `decorativeFloor = 1.05:1`, the same perceptibility threshold the soft
-status surfaces are held to. Below it a surface reads as the fill it is painted
-on: a card without an edge, a skeleton that looks like an empty row, a dialog
-with no layer behind it.
+Four surfaces carry no text and are not an essential boundary, so WCAG's floors
+do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
+(`overlay`) and a status message's edge. They still have one job — be seen — so
+they get one floor of their own, `decorativeFloor = 1.05:1`, the same
+perceptibility threshold the soft status surfaces are held to. Below it a surface
+reads as the fill it is painted on: a card without an edge, a skeleton that looks
+like an empty row, a dialog with no layer behind it, a message with no boundary.
 
-`decorativeFailures(theme, floor?)` measures the eight placements the system
-paints, compositing a translucent role over its surface first, so the veil —
-translucent in every theme by design — is measured by the result a reader sees
-rather than rejected as unmeasurable:
+`decorativeFailures(theme, floor?)` measures every placement the system paints,
+compositing a translucent role over its surface first, so the veil — translucent
+in every theme by design — is measured by the result a reader sees rather than
+rejected as unmeasurable. A derived surface states the share it paints, which is
+how a status edge is measured at the alpha its component actually uses:
 
 | Surface | Role | Measured over |
 | ------- | ---- | ------------- |
 | divider | `border` | `background`, `card`, `popover`, `muted` |
 | skeleton | `skeleton` | `background`, `card`, `muted` |
 | scrim | `overlay` | `card`, `popover` |
+| statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, `background`, `card` |
 
 A veiled page's **void** is not measured: a black page cannot be darkened by any
 scrim, and a high-contrast theme separates its dialog with a border instead. A
@@ -1118,12 +1128,13 @@ documented brand theme, so a documented brand that loses its on-colour fails the
 suite.
 
 `packages/tokens/src/decorative.test.ts` covers the surfaces that carry no text:
-the eight divider, skeleton and veil placements are measured, the veil is
-composited rather than skipped, a surface that matches its page or cannot be
-measured is reported, and every shipped and every platform theme clears the
-1.05:1 floor. It found two platform styles whose inherited skeleton matched
-their own surfaces — macOS light on `muted` at 1.045:1, Linux dark on `card` at
-1.004:1 — which now carry a `skeleton` of their own.
+every divider, skeleton, veil and status-edge placement is measured, the edge is
+held to the share `statusTone` paints, the veil is composited rather than
+skipped, a surface that matches its page or cannot be measured is reported, and
+every shipped and every platform theme clears the 1.05:1 floor. It found two
+platform styles whose inherited skeleton matched their own surfaces — macOS
+light on `muted` at 1.045:1, Linux dark on `card` at 1.004:1 — which now carry a
+`skeleton` of their own.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label, both families, a density preset and a full radius scale; `sans` is

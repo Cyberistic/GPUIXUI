@@ -248,7 +248,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card` (a field error, an inline warning) | 7:1 | 7:1 |
 | focus ring (on background, card, popover, muted and secondary) and essential boundaries | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
-| decorative surfaces: divider, skeleton fill, modal veil | 1.05:1 | 1.05:1 |
+| decorative surfaces: divider, skeleton fill, modal veil, status edge | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 
 The test runs for every shipped colour set — light, dark, both high-contrast
@@ -256,16 +256,18 @@ variants and all six platform themes — and is part of the normal test suite. I
 can fail: a palette edit that reduces contrast fails the gate.
 
 The surfaces that carry no text are measured too, because "subtle" is not
-"invisible": a divider, a skeleton fill and the modal veil are held to 1.05:1
-against what they are painted on — the same perceptibility floor the soft status
-surfaces use. The veil is composited over its surface rather than rejected as
-translucent, and the two places it is measured are the content surfaces a modal
-covers; a black page cannot be darkened, and a high-contrast theme separates its
-dialog with a border instead. `decorativeFailures(theme, floor?)` runs the check,
-and `decorative.test.ts` holds every shipped and platform theme to it. It found
-two platform styles whose inherited skeleton matched their own surfaces — macOS
-light's on a muted strip (1.045:1) and Linux dark's on its card (1.004:1) — which
-now carry a `skeleton` of their own.
+"invisible": a divider, a skeleton fill, the modal veil and a status message's
+edge are held to 1.05:1 against what they are painted on — the same
+perceptibility floor the soft status surfaces use. The veil is composited over
+its surface rather than rejected as translucent, and the two places it is
+measured are the content surfaces a modal covers; a black page cannot be
+darkened, and a high-contrast theme separates its dialog with a border instead.
+The status edge is measured at the share `statusTone` paints, on the tint it
+bounds and on both page surfaces. `decorativeFailures(theme, floor?)` runs the
+check, and `decorative.test.ts` holds every shipped and platform theme to it. It
+found two platform styles whose inherited skeleton matched their own surfaces —
+macOS light's on a muted strip (1.045:1) and Linux dark's on its card (1.004:1) —
+which now carry a `skeleton` of their own.
 
 Also not measured, deliberately: the elevation tint. A shadow is a blurred
 geometry, so a flat ratio overstates what the eye receives; its contract is the

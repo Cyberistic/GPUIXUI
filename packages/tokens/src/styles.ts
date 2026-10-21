@@ -79,6 +79,13 @@ export type StatusTone = (typeof statusTones)[number];
 export const isStatusTone = (value: unknown): value is StatusTone =>
   statusTones.some((tone) => tone === value);
 
+/**
+ * The share of a status tone's solid role that its soft surface's edge paints.
+ * The edge sits between the tone's own tint and the page, so both sides are held
+ * to the decorative perceptibility floor (`decorative.ts`).
+ */
+export const statusEdgeAlpha = 0.3;
+
 /** The readable text and soft surface roles of a status tone. */
 export interface StatusToneStyle {
   /** The tone's soft surface (`xSoft`). */
@@ -89,7 +96,11 @@ export interface StatusToneStyle {
    * a field error or inline warning needs no colour of its own.
    */
   readonly foreground: string;
-  /** The tone's solid colour at 30% alpha, for the surface edge. */
+  /**
+   * The tone's solid colour at {@link statusEdgeAlpha} alpha, for the surface
+   * edge. It is a decorative boundary, measured against both the soft surface
+   * and the page.
+   */
   readonly border: string;
 }
 
@@ -116,7 +127,7 @@ export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
   return {
     background: theme.colors[`${tone}Soft`],
     foreground: theme.colors[`${tone}SoftForeground`],
-    border: alpha(theme.colors[tone], 0.3),
+    border: alpha(theme.colors[tone], statusEdgeAlpha),
   };
 }
 

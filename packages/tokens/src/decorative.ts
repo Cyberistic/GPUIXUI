@@ -1,18 +1,20 @@
 /**
  * The perceptibility contract for the surfaces that carry no text: dividers,
- * skeleton fills and the modal veil.
+ * skeleton fills, the modal veil and a status message's edge.
  *
- * WCAG's text and non-text floors do not cover them — the first two are
- * decorative, and the veil's job is to suppress what is behind it — so they
- * have no floor at all unless this file states one. They still have a minimum
- * job: be seen. A divider that matches the page is a card without an edge; a
- * skeleton that matches the row it stands in is an empty list that looks
- * loaded; a veil that dims nothing is a dialog with no layer behind it. One
- * floor covers all three, the same 1.05:1 the soft status surfaces are held to.
+ * WCAG's text and non-text floors do not cover them — they are decorative, and
+ * the veil's job is to suppress what is behind it — so they have no floor at all
+ * unless this file states one. They still have a minimum job: be seen. A divider
+ * that matches the page is a card without an edge; a skeleton that matches the
+ * row it stands in is an empty list that looks loaded; a veil that dims nothing
+ * is a dialog with no layer behind it; an edge that matches its tint is a
+ * message with no boundary. One floor covers all four, the same 1.05:1 the soft
+ * status surfaces are held to.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
+import { statusEdgeAlpha, statusTones } from "./styles.js";
 
 /**
  * The perceptibility floor a decorative surface meets: 1.05:1 against what it
@@ -26,20 +28,42 @@ export interface DecorativeSurface {
   /**
    * What the surface is for, so a failure names the design decision rather than
    * two roles: `divider` rules a region, `skeleton` stands in for content that
-   * has not loaded, `scrim` is the veil under a modal.
+   * has not loaded, `scrim` is the veil under a modal, `statusEdge` bounds a
+   * status message's soft surface.
    */
-  readonly surface: "divider" | "skeleton" | "scrim";
+  readonly surface: "divider" | "skeleton" | "scrim" | "statusEdge";
   /** The role painted. Its alpha, if it has one, is part of the measurement. */
   readonly role: keyof ThemeColors;
   /** The role it is painted over, and must be distinguishable from. */
   readonly over: keyof ThemeColors;
+  /**
+   * The share of `role` painted over `over`. Absent means the role's own alpha
+   * byte, which is how a translucent role carries its share in the theme; a
+   * derived surface — a status edge — states the share its component paints.
+   */
+  readonly alpha?: number;
 }
+
+/**
+ * A status message's edge: the tone's solid role at the share `statusTone`
+ * paints, on the tint it bounds or on the page the message sits on.
+ */
+const statusEdge = (
+  tone: (typeof statusTones)[number],
+  over: keyof ThemeColors,
+): DecorativeSurface => ({
+  surface: "statusEdge",
+  role: tone,
+  over,
+  alpha: statusEdgeAlpha,
+});
 
 /**
  * The decorative surfaces the library paints. Each is measured where it is
  * actually used rather than against a single generic surface: a divider sits on
  * the page, inside a card, in a popover and in a muted toolbar strip; a
- * skeleton stands in for a row on a page, in a card and in a muted list.
+ * skeleton stands in for a row on a page, in a card and in a muted list; a soft
+ * status surface's edge sits between its own tint and the page it is placed on.
  */
 export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "divider", role: "border", over: "background" },
@@ -54,7 +78,15 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // theme with one separates its dialog with a border instead.
   { surface: "scrim", role: "overlay", over: "card" },
   { surface: "scrim", role: "overlay", over: "popover" },
-];
+  // A status message's edge is a decorative boundary — its text and icon carry
+  // the meaning — so it is held to the perceptibility floor, not the boundary
+  // floor, and measured on the tint it bounds and on both page surfaces.
+  ...statusTones.flatMap((tone) => [
+    statusEdge(tone, `${tone}Soft`),
+    statusEdge(tone, "background"),
+    statusEdge(tone, "card"),
+  ]),
+] satisfies ReadonlyArray<DecorativeSurface>;
 
 /** One decorative surface that does not meet its floor. */
 export interface DecorativeFailure {
@@ -79,8 +111,9 @@ export interface DecorativeFailure {
  *
  * The surface is composited over the role it is painted on first, so a
  * translucent veil is measured by the result a reader sees rather than rejected
- * as translucent. `blend` clamps the amount, so a theme cannot pass by carrying
- * an alpha byte the runtime would ignore.
+ * as translucent, and a derived surface states the share it paints. `blend`
+ * clamps the amount, so a theme cannot pass by carrying an alpha byte the
+ * runtime would ignore.
  *
  * @example
  * ```ts
@@ -93,11 +126,11 @@ export function decorativeFailures(
   theme: { readonly colors: ThemeColors },
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
-  return decorativeSurfaces.flatMap(({ surface, role, over }) => {
+  return decorativeSurfaces.flatMap(({ surface, role, over, alpha }) => {
     const painted = blend(
       theme.colors[over],
       theme.colors[role],
-      alphaOf(theme.colors[role]),
+      alpha ?? alphaOf(theme.colors[role]),
     );
     const ratio = contrastRatio(painted, theme.colors[over]);
     return ratio !== undefined && ratio >= floor
