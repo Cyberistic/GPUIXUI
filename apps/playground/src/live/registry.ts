@@ -48,6 +48,12 @@ export const liveRegistry = [
       "Text: registerFonts makes a family paint, and an unknown family falls back",
     capability: "text",
   },
+  {
+    id: "text-input",
+    title:
+      "Input: the shipped Input takes typed keys through onChange and Enter through onSubmit",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

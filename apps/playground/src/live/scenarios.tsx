@@ -7,9 +7,14 @@
  * shared `Smoke` ones, so both suites emit one report shape.
  */
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
+import {
+  Input,
+  ThemeProvider as PrimitiveThemeProvider,
+} from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
@@ -230,6 +235,61 @@ const RegisterFontProbe = (): ReactNode => {
   );
 };
 
+/**
+ * The library's own `Input`, wired to a readout.
+ *
+ * The readout is the proof: it shows the value React received through
+ * `onChange`, so a keystroke that the window delivered but the component
+ * swallowed fails by name rather than by a screenshot nobody reads.
+ */
+const TextInputProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [value, setValue] = useState("");
+  const [submits, setSubmits] = useState(0);
+  return (
+    <PrimitiveThemeProvider theme={palettes.dark}>
+      <div
+        testId="text-input-probe"
+        style={{
+          width: 480,
+          height: 240,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped Input: typing reaches onChange, Enter reaches onSubmit.
+        </text>
+        <Input
+          testId="input-field"
+          label="Name"
+          placeholder="type here"
+          value={value}
+          onChange={setValue}
+          onSubmit={() => setSubmits((count) => count + 1)}
+        />
+        <text
+          testId="input-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`value=${value} submits=${submits}`}
+        </text>
+      </div>
+    </PrimitiveThemeProvider>
+  );
+};
+
 /** What a probe module supplies; the registry supplies the metadata. */
 export interface LiveProbeBody {
   readonly id: LiveProbeId;
@@ -445,6 +505,37 @@ const registerFontSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("input-field");
+
+    yield* ctx.expectContains(
+      "the shipped Input starts empty",
+      yield* ctx.host.text("input-readout"),
+      "value= submits=0",
+    );
+
+    // A field needs focus before the window routes keys to it.
+    yield* ctx.host.click("input-field");
+    yield* ctx.host.key("h");
+    yield* ctx.host.key("i");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "typing reaches the component's onChange",
+      yield* ctx.host.text("input-readout"),
+      "value=hi",
+    );
+
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Enter reaches the component's onSubmit",
+      yield* ctx.host.text("input-readout"),
+      "submits=1",
+    );
+    yield* ctx.host.capture("typed");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -462,5 +553,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     fonts: [SQUARE_FACE],
     view: () => <RegisterFontProbe />,
     steps: registerFontSteps,
+  },
+  "text-input": {
+    id: "text-input",
+    view: () => <TextInputProbe />,
+    steps: textInputSteps,
   },
 };

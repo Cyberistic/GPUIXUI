@@ -377,7 +377,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[████████░░]` 8/10
+`[x]` `[██████████]` 10/11
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -429,9 +429,20 @@ a workaround for two live sessions sharing one worktree; see
       `focus-visible` probe had its own copy of the outline, so it proved a
       local duplicate rather than the helper the library ships; re-run green
       after the swap (`--only focus-visible`).
+`[x]` Land the `text-input` live probe — the first probe that mounts a **shipped
+      component**: `@gpuixui/primitives`' controlled `Input` above a readout, so
+      the window's typed keys must reach `onChange` (`value=hi`) and `Enter` must
+      reach `onSubmit` (`submits=1`). Negative control measured (field left
+      uncontrolled: `expected a string containing "value=hi", got "value=
+      submits=0"`, exit `1`). Evidence: `.artifacts/live/typed.png`.
+`[x]` Frame the live runner as the release gate — `apps/playground/README.md`
+      §Release gate: run the full suite once on the release host, record the
+      report and captures, derive the probe count from `--list`, and read exit
+      `2` as "no evidence", never as a pass.
 `[ ]` Port the modal/menu/toast Tier 2 examples into live probes (the headless
-      scenarios already cover the primitives)
-`[ ]` Frame the live runner as a release gate before release
+      scenarios already cover the primitives) — **blocked** by the interlock row
+      below: importing `@gpuixui/components` from the runner currently fails at
+      module load
 
 ## Phase C — Tier 1–2 components
 
@@ -691,7 +702,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | The docs theme editor (`/docs/themes`) could show a live contrast readout while a reader edits a role — `contrastRatio` / `contrastFailures` are public and cover the 24 pairs the library itself is tested on | docs-site | **resolved** — `contrastReport`/`formatContrastFailure` in `theme-editor-logic.ts` run `contrastFailures` on the resolved edit; the editor shows a `role="status"` readout under the preview naming each failing pair with its measured ratio and floor, and reporting an unmeasurable (translucent) pair instead of counting it as passed. 3 tests: built-ins pass, a broken primary pair reads `1.00:1 (needs 4.5:1)`, a translucent ring reads `unmeasurable`. Documented on `/docs/themes#contrast` |
 | The docs previews should show a platform's control geometry too — `toCssVars` publishes `--radius`, the families and every colour role, but not density, so the `compact`/`spacious` half of `platformTheme` is invisible in a browser preview | docs-site | **resolved** — `toCssVars` now publishes `--control-height-{sm,md,lg}` and `--control-padding-x-{sm,md,lg}`, `.gx-demo` defaults them to `themes.dark`'s comfortable density, and `.gx-btn*`, `.gx-field` and `.gx-tab` take their geometry from them. `theme-css.test.ts` holds the bridge, the defaults and the consumed rules, and asserts macOS 28 / Linux 36 / Windows 32px for `--control-height-md`. Verified in the dev server on `/docs/components/button?platform=`; no `--row-height` until a list/table preview exists |
 | The Theming page's prose carries a hardcoded contract count ("`contrastFailures` checks 24 role pairs"), which is now 28, and its brand snippet still uses the unreadable `#7C5CFF` fill | docs-site | pending — `apps/docs/content/docs/themes.mdx` should derive the number from `contrastPairs.length` (or drop it) and take the corrected brand snippet from `docs/tokens.md` §Theme API, where the brand owns `primaryForeground`. The editor itself needs no change: it calls `contrastFailures`, so it checks all 28 pairs already |
-| Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
+| `packages/components/tsconfig.json` must stop mapping `@gpuix/react/jsx-runtime` (and `jsx-dev-runtime`) to the `.d.ts` files, so the playground can mount the package's components | components | pending — **blocks the Tier 2 live probes.** Importing `@gpuixui/components` from the runner fails at module load: `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` for `packages/components/node_modules/@gpuix/react/jsx-runtime.d.ts`. The compiled `jsx()` import resolves through the mapping at runtime, and Node refuses to type-strip a file under `node_modules`. It is the class of problem tokens fixed with its `/** @jsxImportSource react */` pragma; deleting the mapping is the components-side half the earlier tokens row already asked for. Measured 2026-10-21 from `apps/playground` (the dependency was added, a `dialog-modal` probe written, both reverted — no unrunnable probe was kept) |
+| Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending — blocked by the row above; the probe design is ready (open the real `Dialog` by press, assert focus entered the content, Escape closes and returns focus) |
 | Native proof that `registerFonts` paints the registered face: register a face in the theme gallery and show the fallback and the intended face | playground | **resolved** — the `register-font` live probe (`apps/playground/src/live/`) installs `GpuixTestSquare` through `registerFonts` before the first paint and measures the painted **widths**: installed 80px (its own 4em at 20px), unknown family 44px, theme face 42px. Negative control measured (no face declared → `expected 80 ± 1, got 44`, exit `1`). 4 unit tests guard the fixture's declared family and the expected width; README §`register-font`, `.artifacts/live/register-font.png` |
 | Probe that `focusVisible` paints after Tab and not after a mouse press (and on programmatic focus in a dialog) — plan 053's STOP gate | playground | **resolved** — the `focus-visible` live probe measured all five states on 0.11.0 (`apps/playground/README.md` §`focus-visible`): Tab paints the outline and dims other focusables; a mouse press, a native traversal and a programmatic focus before any key paint nothing; a programmatic focus after a Tab paints it. The tokens half shipped `keyboardFocusRing`; adoption is the row below |
 | Adopt the keyboard-only ring and delete the manual focus tracking: `components/src/{inline-edit,time-picker,search-input,tabs,date-picker,field,list,accordion,breadcrumb,tag-input,color-picker,mention-input,hotkey-recorder,collapsible,context-menu}.tsx`, `components/src/internal/button.tsx`, `primitives/src/core/{selection,style}.ts`, `primitives/src/components/internal.ts` | components, primitives | **primitives half shipped; components pending** — `core/focus.ts` (`keyboardRing`) declares the `focusVisible` outline at rest and every primitive uses it: Button, Toggle, Checkbox, Switch, RadioGroup, Input/TextArea (`fieldChrome`), NumberField, OTPField, Slider's track, RangeSlider's thumbs and Rating's stars. No primitive merges a shadow ring on focus any more; `internal.ts`'s `focusRingStyle` is deleted. The components package still paints the shadow while focused. Keep tokens' `focusRing` only for a mouse-opened overlay's programmatic focus (the probe's measured gap) |

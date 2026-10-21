@@ -322,6 +322,58 @@ are embedded in `src/live/fonts.ts` so the runner needs no asset-copy step, and
 the fallback family is **not** in the file, and that `registerFonts` installs the
 bytes once.
 
+### `text-input` — measured on 0.11.0 here
+
+The first probe that mounts a **shipped component** rather than a hand-built
+sample: `@gpuixui/primitives`' `Input`, controlled, above a readout that prints
+the value React received and the number of submits.
+
+| Step | Check |
+| ---- | ----- |
+| mount | the readout reads `value= submits=0` |
+| press the field, type `h`, type `i` | the readout reads `value=hi` — the window's keystrokes reached the component's `onChange` |
+| `Enter` | the readout reads `submits=1` — the runtime delivers submit |
+
+The capture (`.artifacts/live/typed.png`) shows the field's own chrome, the
+typed text, the keyboard focus ring and the readout, so the readout is a check
+and the frame is the visual evidence. Negative control, measured: dropping
+`value`/`onChange` from the composition (so the field keeps its own draft and
+never reports it) fails `typing reaches the component's onChange`
+(`expected a string containing "value=hi", got "value= submits=0"`, exit `1`).
+
+That is the first native proof that a library component — not a primitive host
+element — takes real typed input in a window. The Tier 2 probes (dialog, menu,
+toast) wait on a `packages/components` module-load issue recorded in `TODO.md`
+→ Interlocks: its `tsconfig.json` maps `@gpuix/react/jsx-runtime` to a `.d.ts`,
+which the runner's loader resolves at runtime and Node refuses to type-strip.
+
+## Release gate
+
+The live suite is **not** part of `nub run check`: it needs a desktop session
+and a loaded binding, so it runs as a **release gate** — once, on the release
+host, before a tag:
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/live/run.js            # every probe; ~1 min
+echo $?                                          # 0 = evidence, 2 = no window
+```
+
+What a release records:
+
+- `.artifacts/live-report.json` — each probe's checks, with the host line
+  (`gpuix live window darwin-x64 @gpuix/native 0.11.0`) and the duration;
+- `.artifacts/live/<state>.png` — one capture per paint state a probe names,
+  which is what the docs cite instead of a fake preview;
+- the probe count, **derived** from the registry rather than typed:
+  `nub apps/playground/dist/live/run.js --list | wc -l`.
+
+A failing probe exits `1` and still writes its report and captures, so a release
+blocker stays visible. Exit `2` is **not** a pass: it means the host had no
+window and the suite produced no evidence — re-run it on a host that can open
+one. While iterating, select only the probes a change touches with
+`--only <id>` (repeatable); the full suite is for the gate.
+
 ## Structure
 
 ```
