@@ -108,6 +108,35 @@ cannot fire an action twice.
 | `testId` | `string` | none | stable locator |
 | `children` | `ReactNode` | none | visible label |
 
+## Theming
+
+A variant maps to colour roles, never to a colour, so the theme is the only place
+a button's paint is decided:
+
+| Part | Reads |
+| ---- | ----- |
+| `primary` | `primary` fill, `primaryForeground` text |
+| `secondary` | `secondary` and `secondaryForeground` |
+| `outline` | `border` at rest, the `hover` fill |
+| `ghost` | `foreground` text, the `hover` fill |
+| `destructive` | `destructive` and `destructiveForeground` |
+| `link` | `primary` |
+| every variant | `radius.md` corners, `density` height, `focusRing(theme)` |
+
+Changing `primary`, `radius.md` or the density repaints and resizes every button
+without touching component code; the docs platform switch changes the type face
+and metrics, not the shape.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | host element props, events and `StateStyle` |
+| `@gpuixui/tw` | the `buttonClass` recipe and `cn` |
+| `@gpuixui/tokens` | the roles above, through the theme provider |
+
+No overlay, no runtime service and no global state: the component is a leaf.
+
 ## Accessibility and limitations
 
 - Role `button`; the name comes from `label` or the visible text.
@@ -126,3 +155,10 @@ cannot fire an action twice.
 - **Toggle** — a momentary pressed state rather than an action.
 - **Tooltip** — explain an icon-only action.
 - **Progress** — the long-running form of "working", alongside `loading`.
+
+## Status
+
+Implemented in `packages/primitives`, with a native behaviour suite (activation,
+busy and disabled states) and a recipe-equivalence test. `COMPONENTS.md` still
+lists the Tier 1 rows as `todo` — the inventory sync for that package is the
+primitives workstream's — so this page claims no more than those tests prove.

@@ -135,6 +135,30 @@ one event cannot close both.
 they render a host element plus, for the buttons, the button `variant` and
 `size`. Every part merges `style` last.
 
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| veil | `overlay` — the theme's scrim, not a literal black |
+| surface | `popover` and `popoverForeground` |
+| heading / copy | `popoverForeground` / `mutedForeground` |
+| close control | `mutedForeground`, the `hover` fill on hover |
+| actions | the button roles |
+| edge and lift | `border`, `elevation.md`, `radius` |
+
+The scrim being a role is the one deliberate departure from shadcn's
+`bg-black/30`: a literal black cannot follow a high-contrast theme, and the
+`overlay` role does.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | `useGpuix`, `useWindowSize`, host props |
+| `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
+| `@gpuixui/tw` | the `DIALOG_*` recipes |
+| this package | `internal/modal.ts` (open state, focus, Tab trap) and `internal/dismiss-layer.ts` (Escape layering) |
+
 ## Accessibility and limitations
 
 - `role="dialog"` with the required `label` as its accessible name.
@@ -153,3 +177,10 @@ they render a host element plus, for the buttons, the button `variant` and
 - **Confirmation dialog** — the safe default for destructive actions.
 - **Popover** — a non-modal floating surface anchored to a trigger.
 - **Card** — the in-flow surface, when nothing should be blocked.
+
+## Status
+
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 13 native
+behaviour tests plus 5 dismiss-stack tests. 0.10.0 ships no Dialog parts and no
+portal, so the veil is an `anchored` element at window coordinates and the
+surface is named by its required `label`.

@@ -100,6 +100,29 @@ is an ordinary button — `Enter` and `Space` toggle it.
 | `collisionPadding` | `number` | `8` |
 | `alignOffset` | `number` | `0` |
 
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| surface | `popover` and `popoverForeground` |
+| edge | a `foreground` ring at 5% — 10% in the dark theme |
+| lift | the `lg` elevation step |
+| corners | `radius` |
+| trigger | the button roles, plus `focusRing(theme)` |
+
+Shadows are a single theme step rather than a shadcn `shadow-lg` literal, so the
+popover and a dialog lift by the same rule.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | `useGpuix` for the renderer's focus calls |
+| `@gpuix/react/floating` | `FloatingLayer` positioning, `useControllableState`, `mergeStyles` |
+| `@gpuixui/tw` | the `POPOVER_CONTENT` recipe |
+| `effect` | `Match` for the dismiss-key dispatch |
+| this package | the shared dismiss stack and the local button stand-in |
+
 ## Accessibility and limitations
 
 - `aria-expanded` is on the trigger.
@@ -120,3 +143,11 @@ is an ordinary button — `Enter` and `Space` toggle it.
 - **Dialog** — a modal surface when the window itself must be blocked.
 - **Dropdown menu** — a list of actions anchored to a trigger.
 - **Preview card** — a passive floating surface for richer content.
+
+## Status
+
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 12 native
+behaviour tests, both themes. The runtime snaps a surface but does not flip it
+and centres `align="center"` on the containing block, so the component flips a
+snapped surface back off its trigger and measures the centre itself. There is no
+portal and no `aria-haspopup` in 0.10.0.

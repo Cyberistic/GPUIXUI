@@ -128,6 +128,29 @@ Only the selected trigger is in the tab order; every other trigger is `-1`.
 `TabsTriggerState` passed to a style function is
 `{ active, disabled, focused, highlighted, orientation }`.
 
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| rail | `background` with a `border` edge |
+| trigger, selected | `foreground`, at the density height |
+| trigger, rest | `mutedForeground`, `hover` on hover |
+| panel | the body text role |
+| focus | `focusRing(theme)` |
+
+Selection is painted per trigger rather than by a shared sliding indicator: the
+native side has no measured overlay, and the browser demo's sliding bar is a
+preview-only affordance. `COMPONENTS.md` records the native gap.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | host props, events, `PublicInstance` for the roving tab stop |
+| `@gpuix/react/floating` | `mergeStyles`, `useControllableState` |
+| `@gpuixui/tw` | the `TABS_*` recipes |
+| `effect` | `Match`, `Array` and `Option` for the selection fold |
+
 ## Accessibility and limitations
 
 - `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
@@ -146,3 +169,10 @@ Only the selected trigger is in the tab order; every other trigger is `-1`.
 - **Accordion** — stacked sections with more than one open.
 - **List** — the same collection arithmetic for selectable rows.
 - **Breadcrumb** — orientation through a hierarchy rather than across peers.
+
+## Status
+
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 14 native
+behaviour tests, both themes and both axes. 0.10.0 has no `aria-orientation` and
+no `aria-controls`, so a panel is named by its value; the measured shared
+indicator on the native component is a tracked task.

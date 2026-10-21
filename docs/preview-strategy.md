@@ -101,7 +101,10 @@ recorded instead.
 | Status | `done` / `partial`, with the runtime evidence, when it is not `done` |
 
 The template is a contract, not a suggestion: a page missing a section is a page
-that hides a decision from the reader.
+that hides a decision from the reader, so `src/lib/component-page.test.ts`
+checks every curated page for the required sections and their order, a preview,
+and the package it installs from. The package's own pages are exempt — they are
+the component's doc file.
 
 ## Adding a preview
 
