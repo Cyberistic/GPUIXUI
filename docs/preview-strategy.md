@@ -154,6 +154,17 @@ composition of native parts, not a new component"). A docking layout, a table or
 a chart is described in prose and its gap is recorded — never drawn as if it
 were shipped.
 
+## Examples: source, never a rendering
+
+Every package ships a worked example beside its components — a screen that owns
+its state, not a gallery of props — and `/docs/examples` lists all of them. The
+page shows each file's source and the summary the file writes in its own header.
+It does **not** render the example: a GPUix screen drawn in the DOM would be the
+approximation this strategy warns about, with no component page to anchor it, and
+the file a reader copies is the stronger artefact. `examples.test.ts` holds the
+registry to the files on disk in both directions, so a new example appears
+without a docs change and a deleted one leaves no dead row.
+
 ## Generated specimens
 
 A preview whose content *is* the tokens is generated, not drawn. The typography

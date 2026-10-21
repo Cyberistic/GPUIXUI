@@ -24,12 +24,15 @@ content/docs/           MDX pages and their meta.json navigation
   layouts.mdx           The layout lane: primitives, the window frame, runtime rules
   workspace.mdx         The desktop-shell lane: what composes a window, split-pane gate
   data-display.mdx      The data lane: what ships, the table gate, runtime gaps
-  reference.mdx         The public entry points, generated from each package manifest
+  examples.mdx          The example registry, generated from every package's examples
+  reference.mdx         The public entry points, and the symbols behind them
   contributing.mdx      Checks, worktrees and the component checklist
-public/                 Static assets (favicon)
+public/                 Static assets (favicon, robots.txt)
 src/routes/index.tsx    The landing page at `/`
 src/routes/docs/        `/docs` index and the `/docs/$` splat
+src/routes/sitemap[.]xml.ts  `/sitemap.xml`, generated from every collection
 src/routes/api/search   Fumadocs search endpoint
+plugins/public-symbols-plugin.ts Build-time module: the public symbol index
 src/components/docs/    ComponentPreview, PreviewSurface, Install, ComponentSource,
                         CopyPage, PlatformToggle, LaneTable, demos
 src/components/mdx.tsx  The MDX component registry
@@ -38,7 +41,13 @@ src/lib/source.ts       Fumadocs collection for `content/docs`
 src/lib/inventory.ts    Parses the tier tables of COMPONENTS.md into lane rows
 src/lib/lane-page.test.ts Holds the lane pages to their template and sidebar place
 src/lib/public-api.ts   Derives the public entry points from each package's exports map
-src/components/docs/api-reference.tsx The generated entry-point table
+src/lib/public-symbols.ts The symbol index model: kinds, modules and summaries
+src/lib/public-symbols-source.ts Reads the workspace source the index describes
+src/lib/public-symbols-data.ts The index, read from the plugin's build-time module
+src/lib/examples.ts     The example registry: ids, paths and the header summary
+src/lib/examples-data.ts Reads `packages/*/examples/*.example.tsx` at build time
+src/components/docs/api-reference.tsx The entry-point table and the symbol index
+src/components/docs/examples-index.tsx The generated registry on /docs/examples
 src/components/docs/type-scale.tsx The typography specimen, generated from the theme
 src/components/docs/component-index.tsx The filterable index on /docs/components
 src/components/docs/token-scales.tsx The spacing/radius/density specimens on /docs/theming
@@ -77,6 +86,26 @@ stricter: frontmatter must be valid YAML and prose may not contain a raw
 `<tag>` outside code. `src/lib/package-docs.test.ts` guards that, that every
 `packages/*/docs` directory is mounted, and that the primitives index links every
 page it ships — a violation fails the collection, not just one page.
+
+## Generated pages
+
+Three pages read the workspace instead of restating it:
+
+- **Examples** (`/docs/examples`) is built from `packages/*/examples/*.example.tsx`
+  by `src/lib/examples-data.ts`. The row's summary is the file's own header, so
+  a new example appears with no docs change and a deleted one leaves no dead
+  row. The site shows the source and never renders an example in the browser:
+  an example is a GPUix screen, and a DOM drawing of it would be the fake
+  preview the preview strategy rules out.
+- **Reference** (`/docs/reference`) publishes the entry points from each
+  package's `exports` map, then the symbols behind them. The symbol index needs
+  the workspace source, which is far too large for a browser bundle, so
+  `plugins/public-symbols-plugin.ts` reads it once at build time and exposes a
+  virtual module; `src/lib/public-symbols-data.ts` reads that module and the
+  page renders one table.
+- **Sitemap** (`/sitemap.xml`) is generated per request from the same
+  collections (`src/lib/sitemap.ts`), with one URL per page and a curated page
+  shadowing its package page; `public/robots.txt` points at it.
 
 ## The platform switch
 
