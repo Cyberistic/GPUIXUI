@@ -64,6 +64,12 @@ export interface ContrastFloors {
   readonly secondary: number;
   /** Essential boundaries and focus rings. AA for non-text. */
   readonly boundary: number;
+  /**
+   * Inactive text and the control it labels. WCAG exempts a disabled component
+   * from the text and non-text floors, so this is not a readability claim: it
+   * says a disabled control is still *seen* as one, rather than as an empty box.
+   */
+  readonly disabled: number;
 }
 
 /** The floors of a default-contrast theme. */
@@ -71,17 +77,20 @@ export const contrastFloors: ContrastFloors = {
   body: 7,
   secondary: 4.5,
   boundary: 3,
+  disabled: 1.5,
 };
 
 /**
  * The floors of a high-contrast theme: every text pair reaches AAA and every
  * boundary AA, so a high-contrast theme is a real accessibility mode rather
- * than a darker palette.
+ * than a darker palette. Inactive text is held higher too, because a reader who
+ * needs the mode still has to find the control that is unavailable.
  */
 export const highContrastFloors: ContrastFloors = {
   body: 7,
   secondary: 7,
   boundary: 4.5,
+  disabled: 3,
 };
 
 /** One role pair a theme is measured on, and the floor it must reach. */
@@ -243,6 +252,27 @@ export const contrastPairs: readonly ContrastPair[] = [
   // on `secondary`. The edge must stay findable there for the same reason.
   { foreground: "borderStrong", background: "muted", floor: "boundary" },
   { foreground: "borderStrong", background: "secondary", floor: "boundary" },
+  // A disabled control is exempt from WCAG's text floors, not from being found:
+  // a field whose unavailable value matches its fill reads as an empty box.
+  {
+    foreground: "disabledForeground",
+    background: "disabled",
+    floor: "disabled",
+  },
+  // A disabled label also sits on the page beside enabled text — a fieldset
+  // legend, a field's value the component leaves unfilled, an unavailable item
+  // in a popover.
+  {
+    foreground: "disabledForeground",
+    background: "background",
+    floor: "disabled",
+  },
+  { foreground: "disabledForeground", background: "card", floor: "disabled" },
+  {
+    foreground: "disabledForeground",
+    background: "popover",
+    floor: "disabled",
+  },
   // A selected row keeps the secondary text role its siblings use, so the
   // selection tint is a surface that text sits on.
   {

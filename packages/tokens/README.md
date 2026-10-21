@@ -366,6 +366,12 @@ from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
 `ContrastFloors` argument overrides it.
 
+The contract covers the state WCAG exempts as well: `disabledForeground` is
+measured on the fill that disables it and on `background`, `card` and `popover`
+at `contrastFloors.disabled` (1.5:1; 3:1 in a high-contrast theme). That is not a
+readability claim — an inactive label is designed quiet — it only says a disabled
+control can still be seen as one rather than as an empty box.
+
 ```ts
 import { auditTheme } from "@gpuixui/tokens";
 

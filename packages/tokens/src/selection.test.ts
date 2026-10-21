@@ -160,7 +160,7 @@ describe("selectionFailures", () => {
   });
 
   it("takes a floor set, so a stricter brand can run the check it needs", () => {
-    const strict = { body: 21, secondary: 21, boundary: 21 };
+    const strict = { body: 21, secondary: 21, boundary: 21, disabled: 21 };
 
     expect(selectionFailures(lightTheme, strict).length).toBe(
       selectionPairs.length,

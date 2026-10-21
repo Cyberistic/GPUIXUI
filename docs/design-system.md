@@ -230,7 +230,7 @@ it. It is held instead to one shadow per level, tinted by the `shadow` role (see
 | hover | `hover` wash on ghost and subtle surfaces; a filled action moves to `filledHover(theme, action)` |
 | pressed | `active` wash; a filled action moves to `filledPressed(theme, action)` |
 | selected | `selected` + `selectedForeground` |
-| disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
+| disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible; held to `contrastFloors.disabled` so the state stays visible rather than to a readability floor |
 | focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
 | text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
@@ -278,6 +278,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | on-colour text, placeholder | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text on `background`/`card`/`popover` (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
+| disabled text on its own fill and on `background`/`card`/`popover` (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips and the field | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge | 1.05:1 | 1.05:1 |

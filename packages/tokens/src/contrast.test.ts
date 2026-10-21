@@ -54,7 +54,12 @@ describe("contrastRatio", () => {
 
 describe("contrast floors", () => {
   it("holds text to AAA and boundaries to AA in a default theme", () => {
-    expect(contrastFloors).toEqual({ body: 7, secondary: 4.5, boundary: 3 });
+    expect(contrastFloors).toEqual({
+      body: 7,
+      secondary: 4.5,
+      boundary: 3,
+      disabled: 1.5,
+    });
   });
 
   it("raises every floor in a high-contrast theme", () => {
@@ -62,12 +67,16 @@ describe("contrast floors", () => {
       body: 7,
       secondary: 7,
       boundary: 4.5,
+      disabled: 3,
     });
     expect(highContrastFloors.secondary).toBeGreaterThan(
       contrastFloors.secondary,
     );
     expect(highContrastFloors.boundary).toBeGreaterThan(
       contrastFloors.boundary,
+    );
+    expect(highContrastFloors.disabled).toBeGreaterThan(
+      contrastFloors.disabled,
     );
   });
 
@@ -170,6 +179,66 @@ describe("text on the state washes", () => {
           foreground === "mutedForeground" && background === "active",
       ),
     ).toMatchObject({ ratio: 1, floor: contrastFloors.secondary });
+  });
+});
+
+/**
+ * Guards the one state the contract used to skip entirely. `disabled` and
+ * `disabledForeground` are painted as a pair by a disabled field, a select's
+ * value and a fieldset legend, and **no** pair measured them — so a palette edit
+ * could set the unavailable label to its own fill and the whole suite stayed
+ * green. WCAG exempts inactive components from the text floors, so this is not
+ * an AA claim: the floor only says a disabled control is still seen as one.
+ */
+describe("disabled text", () => {
+  const surfaces = ["disabled", "background", "card", "popover"] as const;
+
+  it("measures the unavailable label on the fill and the page", () => {
+    const missing = surfaces
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "disabledForeground" &&
+              pair.background === background &&
+              pair.floor === "disabled",
+          ),
+      )
+      .map((background) => `disabledForeground/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the disabled floor below the readable text floor", () => {
+    // A disabled label is deliberately quiet; holding it to AA would be a
+    // readability claim the state does not make.
+    expect(contrastFloors.disabled).toBeLessThan(contrastFloors.secondary);
+  });
+
+  it("reports an unavailable label painted into its own fill", () => {
+    const broken = {
+      colors: { ...lightColors, disabledForeground: lightColors.disabled },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "disabledForeground" && background === "disabled",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.disabled });
+  });
+
+  it("reports an unavailable label that matches the page", () => {
+    const broken = {
+      colors: { ...lightColors, disabledForeground: lightColors.background },
+    };
+    const failures = contrastFailures(broken).map(
+      ({ foreground, background }) => `${foreground}/${background}`,
+    );
+
+    expect(failures).toContain("disabledForeground/background");
+    expect(failures).toContain("disabledForeground/card");
+    expect(failures).toContain("disabledForeground/popover");
   });
 });
 
