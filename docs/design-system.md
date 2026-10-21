@@ -232,6 +232,7 @@ it. It is held instead to one shadow per level, tinted by the `shadow` role (see
 | pressed | `active` wash; a filled action moves to `filledPressed(theme, action)` |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible; held to `contrastFloors.disabled` so the state stays visible rather than to a readability floor |
+| loading | a mark — `primary`, or a status tone's readable role — never the disabled fade: a busy control keeps its label, its tab stop and its announcement |
 | focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
 | text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
@@ -256,6 +257,18 @@ label is faded over the *faded* fill. Measured: a filled action's label lands at
 variant's disabled floor asks for, so the fade cannot carry the state there. The
 role pair is therefore the contract and the fade is the deviation; replacing it
 is recorded in `TODO.md` → Interlocks.
+
+**Busy is a state of its own, and it is not faded.** A control that is working
+keeps its label at its resting contrast and stays in the tab order — a keyboard
+user is not dropped from the page mid-action — while it refuses activation on
+both input paths and announces itself (`aria-description="Loading"`; the runtime
+has no `aria-busy`). What changes is the mark: a spinner's lit dot or an
+indeterminate `Progress` bar, painted `primary` for working, `success` for
+finished and `destructive` for failed. A status dot paints the tone's readable
+role rather than its solid fill, because that fill is a *surface designed to
+carry text* — light `warning` is 1.78:1 on the page — and §9 measures every mark
+on the strips the library draws it on. `disabledOpacity` is never the busy
+treatment: a faded control says "unavailable", a busy one says "wait".
 
 A filled action's hover and press are **derived, not stored roles**: each moves
 the fill a step toward the theme's foreground, so it darkens in a light theme
@@ -296,6 +309,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card`/`popover` (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own fill and on `background`/`card`/`popover` (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips and the field | 3:1 | 4.5:1 |
+| an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
@@ -346,9 +360,9 @@ report — it reads `colors` — and an unpaintable shadow colour paints no shad
 so `invalidShadowColors(theme)` names the level and position (§7).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all six in one call — `invalidRoles`, `invalidShadows`, `contrast`,
-`decorative`, `series` and `selection` — and `passed` is true only when every
-list is empty. The contrast half
+reports all seven in one call — `invalidRoles`, `invalidShadows`, `contrast`,
+`decorative`, `series`, `selection` and `indicators` — and `passed` is true only
+when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
 to AAA without the caller naming a floor set; an explicit `ContrastFloors`
@@ -357,8 +371,9 @@ measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `highContrastFloors` names the text and boundary pairs and their floors,
 `decorativeFailures(theme, floor?)` measures the subtle surfaces,
 `seriesFailures(theme)` measures a categorical scale — on its plot, against
-itself and after each colour-vision deficiency — and `selectionFailures(theme)`
-measures the wash a selected run sits in. Nothing about the requirement is
+itself and after each colour-vision deficiency — while `selectionFailures(theme)`
+measures the wash a selected run sits in and `indicatorFailures(theme)` measures
+the marks a component shows. Nothing about the requirement is
 private to this repo.
 
 ### Target sizes

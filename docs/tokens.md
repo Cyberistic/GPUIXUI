@@ -40,6 +40,9 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   highContrastThemes,
+  indicatorFailures,
+  indicatorRoles,
+  indicatorSurfaces,
   invalidColorRoles,
   isControlSize,
   isDensityName,
@@ -72,6 +75,7 @@ import {
   type FocusRing,
   type FontRegistrar,
   type FontSource,
+  type IndicatorFailure,
   type InvalidColorRole,
   type ContrastFloors,
   type ContrastPair,
@@ -586,12 +590,13 @@ platformStyles.darwin.colors.dark.primary; // "#0A84FF"
 
 // Take the platform look and own the parts you change. A brand that changes a
 // fill owns its on-colour too, or the platform's foreground is designed for a
-// colour it no longer paints.
+// colour it no longer paints — and per mode, because a dark fill light enough to
+// be a progress mark cannot carry white text.
 const house = extendTheme(platformTheme(themes.dark, "win32"), {
   name: "House",
   colors: {
-    primary: "#6A45F0",
-    primaryForeground: "#FFFFFF",
+    primary: "#B49CFF",
+    primaryForeground: "#1C1547",
     ring: "#8A6EFF",
     // The accent family too: `accent`, `selected` and `selection` are surfaces
     // derived from the accent, so leaving them on the platform's blue paints a
@@ -679,8 +684,8 @@ accent — and `retro.test.ts` holds the result to the same contracts.
 
 ## Checking your own theme
 
-A theme fails silently in six independent ways, and `auditTheme(theme)` is the
-one call that reports all six:
+A theme fails silently in seven independent ways, and `auditTheme(theme)` is the
+one call that reports all seven:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -688,16 +693,17 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all six reports below are empty
+audit.passed; // true only when all seven reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.invalidShadows; // elevation shadow colours the renderer cannot paint
 audit.contrast; // text, icon and boundary pairs below their floor
 audit.decorative; // dividers, skeleton fills, veils and status edges too subtle to see
 audit.series; // data-series colours lost on their plot, against each other, or for a colour-blind reader
 audit.selection; // a selection wash the reader cannot see, or that hides its text
+audit.indicators; // a progress fill, spinner dot or presence mark lost on its strip
 ```
 
-`passed` is computed from the six reports, so it cannot drift from them. The
+`passed` is computed from the seven reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -876,6 +882,52 @@ decorativeFailures(theme);
 // [{ surface: "divider", role: "border", over: "card", ratio: 1, floor: 1.05 }]
 decorativeFailures(theme, 1.2); // a brand that needs stronger decoration
 ```
+
+### Indicator marks
+
+A **mark** is the role a component paints when it shows rather than says
+something: a progress fill, a spinner's lit dot, a slider's filled span, a
+switch's on-state, an avatar's presence dot. It is neither text nor a boundary,
+so no part of the contrast table covered it — `primary` was measured only against
+its own on-colour, and a bar drawn on the page was measured by nothing.
+
+A mark still has one job: a reader has to find it from across a panel. So it is
+held to the theme's non-text floor — `contrastFloors.boundary`, 3:1 (4.5:1 in a
+high-contrast theme) — on every strip a bar or dot is drawn on.
+
+The 8 mark roles, on the 4 strips, are `indicatorRoles` and `indicatorSurfaces`
+— `background`, `card`, `popover` and a `muted` toolbar strip:
+
+| Mark | Role |
+| ---- | ---- |
+| working / progress / selected | `primary` |
+| complete | `success` |
+| invalid | `destructive` |
+| a quiet bar or trail | `mutedForeground` |
+| a status dot | each tone's readable role — `statusTone(theme, tone).foreground` |
+
+The last row is the rule, not a preference. A status tone's **solid** role is a
+*surface designed to carry text*: light `warning` is a pale amber with near-black
+text, 1.78:1 on the page. A dot painted in it would be the one mark nobody can
+find, so a status mark paints the tone's readable role — the same role a soft
+status surface and a field error paint — instead. A mark drawn **inside** a
+filled control is the exception the table does not need: it paints that fill's
+on-colour (`primaryForeground`, …), which the contrast table already measures on
+its own fill.
+
+```ts
+import { indicatorFailures, lightTheme } from "@gpuixui/tokens";
+
+indicatorFailures(lightTheme); // [] — every shipped mark is visible
+// [{ role: "primary", surface: "background", ratio: 1.04, floor: 3 }]
+```
+
+`indicatorFailures(theme, floors?)` names each mark and strip that misses the
+floor, reports one it cannot measure (a translucent role) rather than skipping
+it, and is part of [`auditTheme`](#checking-your-own-theme). Every shipped,
+high-contrast, platform and authored theme passes; the tightest placement is
+Luna light's `success` mark on its muted strip at 3.30:1. `indicator.test.ts`
+holds the sweep, the rule, the unmeasurable case and a caller's stricter floor.
 
 ### Every role is measured
 
@@ -1351,12 +1403,16 @@ high-contrast one.
 ```ts
 import { createTheme, extendTheme, darkTheme } from "@gpuixui/tokens";
 
+// The on-colour is per mode, and the primary is also the mark a progress fill
+// or spinner dot paints: the dark brand takes a light violet with a near-black
+// label so it can be found on the card, the light brand the saturated violet
+// with a white label.
 export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
   colors: {
-    primary: "#6A45F0",
-    primaryForeground: "#FFFFFF",
+    primary: "#B49CFF",
+    primaryForeground: "#1C1547",
     ring: "#9B8CFF",
   },
   radius: { md: 8 },

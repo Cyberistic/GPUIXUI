@@ -94,8 +94,12 @@ any theme. Neither mutates its base. Groups merge key by key — a key written a
 merges field by field, elevation levels replace whole arrays, and the mode is not
 overridable.
 
-A brand that changes a fill owns its **on-colour** too: the dark base pairs a
-light fill with dark text, so a saturated brand violet needs a white label.
+A brand that changes a fill owns its **on-colour** too, per mode. Dark themes
+pair a light fill with dark text, so the brand's dark fill is a light violet with
+the near-black iris on it; light themes pair a dark fill with a white label. The
+fill is also the mark a progress bar and a spinner dot paint, so `auditTheme`
+holds it to being findable on the card as well — a violet that carries white text
+in dark mode is too dark to be a mark.
 
 ```ts
 import { createTheme } from "@gpuixui/tokens";
@@ -104,8 +108,8 @@ export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
   colors: {
-    primary: "#6A45F0",
-    primaryForeground: "#FFFFFF",
+    primary: "#B49CFF",
+    primaryForeground: "#1C1547",
     ring: "#9B8CFF",
   },
   radius: { md: 8 },
@@ -314,8 +318,8 @@ platformStyles.darwin.colors.dark.primary; // "#0A84FF"
 
 const house = extendTheme(platformTheme(themes.dark, "win32"), {
   colors: {
-    primary: "#6A45F0",
-    primaryForeground: "#FFFFFF",
+    primary: "#B49CFF",
+    primaryForeground: "#1C1547",
     ring: "#8A6EFF",
   },
   radius: { md: 6 },
@@ -362,7 +366,7 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all six reports are
+CSS validation and lint, and `passed` is true only when all seven reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
@@ -389,6 +393,7 @@ audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status edge and thumb is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.selection; // [] — every selection wash is visible and keeps its text readable
+audit.indicators; // [] — every progress fill, spinner dot and presence mark is visible
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 
@@ -417,6 +422,10 @@ Each report is also a function of its own:
   applies (`disabledOpacity`) and lists a label that disappears into the faded
   fill; the role pair is measured by `contrastFailures`, this is the other
   mechanism.
+- `indicatorFailures(theme, floors?)` lists every progress fill, spinner dot,
+  slider fill or presence mark that cannot be found on the strip it is drawn on,
+  and reports one it cannot measure. A status mark paints the tone's readable
+  role, never its solid fill; see §Checking a theme.
 
 `contrastRatio(foreground, background)` is the WCAG 2.1 ratio behind the second
 check — `undefined` for a translucent or non-hex value rather than a guess.

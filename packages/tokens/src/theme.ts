@@ -317,7 +317,7 @@ export function getTheme(
  * ```ts
  * const brand = extendTheme(darkTheme, {
  *   name: "Acme",
- *   colors: { primary: "#6A45F0", primaryForeground: "#FFFFFF" },
+ *   colors: { primary: "#B49CFF", primaryForeground: "#1C1547" },
  * });
  * ```
  */
@@ -356,7 +356,7 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
  *   mode: "dark",
  *   contrast: "high",
  *   name: "Acme",
- *   colors: { primary: "#6A45F0", primaryForeground: "#FFFFFF" },
+ *   colors: { primary: "#CBC2FF", primaryForeground: "#1C1547" },
  *   density: "compact",
  * });
  * ```

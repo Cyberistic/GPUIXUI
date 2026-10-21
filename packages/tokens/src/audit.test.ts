@@ -21,6 +21,7 @@ import {
   highContrastFloors,
   highContrastLightTheme,
   highContrastThemes,
+  indicatorFailures,
   lightTheme,
   platformNames,
   platformTheme,
@@ -92,6 +93,7 @@ describe("the floors follow the theme's contrast variant", () => {
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },
       selection: [],
+      indicators: [],
       passed: true,
     });
   });
@@ -116,6 +118,27 @@ describe("every report is part of the gate", () => {
     expect(contrastFailures(invisibleSelection)).toEqual([]);
     expect(auditTheme(invisibleSelection).selection.length).toBe(4);
     expect(auditTheme(invisibleSelection).passed).toBe(false);
+  });
+
+  it("reports an indicator mark no contrast pair covers", () => {
+    // A near-white fill with a near-black label is a readable *fill* — the
+    // on-colour pair passes — while the fill itself is the page it sits on, so a
+    // progress bar painted in it would be the one bar nobody sees. Nothing in
+    // the pair table measures a role as a mark, so only the new report finds it.
+    const invisibleMark = extendTheme(lightTheme, {
+      colors: {
+        primary: themes.dark.colors.primary,
+        primaryForeground: themes.dark.colors.primaryForeground,
+      },
+    });
+
+    expect(contrastFailures(invisibleMark)).toEqual([]);
+    const mark = indicatorFailures(invisibleMark).find(
+      ({ role, surface }) => role === "primary" && surface === "background",
+    );
+    expect(mark?.ratio).toBeCloseTo(2.02, 2);
+    expect(mark?.floor).toBe(contrastFloors.boundary);
+    expect(auditTheme(invisibleMark).passed).toBe(false);
   });
 
   it("reports an unpaintable role", () => {
@@ -172,6 +195,7 @@ describe("every report is part of the gate", () => {
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },
       selection: [],
+      indicators: [],
       passed: true,
     });
   });

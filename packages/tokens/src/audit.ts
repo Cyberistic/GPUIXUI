@@ -4,11 +4,12 @@
  * A theme fails silently in independent ways: a role the renderer cannot parse
  * paints black, a shadow colour it cannot parse paints no shadow at all, a text
  * pair below its floor is unreadable, a decorative surface close to its
- * background is invisible, a data series is lost on its plot, and the selection
- * wash hides the text it selects. Each has its own report, and a consumer who
- * forgets one ships the failure it would have caught — which is what the
- * documented gate did, running two of the three and holding every theme to the
- * default floors even when the theme declares the high-contrast variant.
+ * background is invisible, a data series is lost on its plot, the selection
+ * wash hides the text it selects, and an indicator mark disappears into the
+ * strip it is drawn on. Each has its own report, and a consumer who forgets one
+ * ships the failure it would have caught — which is what the documented gate
+ * did, running two of the three and holding every theme to the default floors
+ * even when the theme declares the high-contrast variant.
  */
 
 import {
@@ -29,6 +30,7 @@ import {
   type Elevation,
   type InvalidShadowColor,
 } from "./elevation.js";
+import { indicatorFailures, type IndicatorFailure } from "./indicator.js";
 import { selectionFailures, type SelectionFailure } from "./selection.js";
 import {
   seriesFailures,
@@ -82,12 +84,14 @@ export interface ThemeAudit {
   readonly series: SeriesReport;
   /** Selection washes that cannot be seen, or that hide the text inside them. */
   readonly selection: readonly SelectionFailure[];
-  /** True only when all six reports are empty. */
+  /** Indicator marks that cannot be found on the strip they are drawn on. */
+  readonly indicators: readonly IndicatorFailure[];
+  /** True only when all seven reports are empty. */
   readonly passed: boolean;
 }
 
 /**
- * Audit a theme against the six contracts the library holds itself to.
+ * Audit a theme against the seven contracts the library holds itself to.
  *
  * The contrast floors come from the theme's own `contrast` variant, so a
  * high-contrast brand is measured at AAA without the caller naming a floor set;
@@ -112,6 +116,7 @@ export function auditTheme(
   const decorative = decorativeFailures(theme);
   const series = seriesFailures(theme);
   const selection = selectionFailures(theme, floors);
+  const indicators = indicatorFailures(theme, floors);
   return {
     invalidRoles,
     invalidShadows,
@@ -119,6 +124,7 @@ export function auditTheme(
     decorative,
     series,
     selection,
+    indicators,
     passed:
       invalidRoles.length === 0 &&
       invalidShadows.length === 0 &&
@@ -127,6 +133,7 @@ export function auditTheme(
       series.surfaces.length === 0 &&
       series.distinctness.length === 0 &&
       series.deficiencies.length === 0 &&
-      selection.length === 0,
+      selection.length === 0 &&
+      indicators.length === 0,
   };
 }

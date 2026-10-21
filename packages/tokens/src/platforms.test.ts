@@ -19,6 +19,7 @@ import {
   contrastRatio,
 } from "./contrast.js";
 import { decorativeFailures } from "./decorative.js";
+import { indicatorFailures } from "./indicator.js";
 import {
   currentPlatform,
   platformNames,
@@ -246,6 +247,7 @@ describe("editing a platform style", () => {
     const house = resolveHouseTheme("light");
     expect(house.name).toBe("House");
     expect(house.colors.primary).toBe("#6A45F0");
+    expect(resolveHouseTheme("dark").colors.primary).toBe("#B49CFF");
     expect(house.colors.card).toBe(
       platformTheme(lightTheme, "win32").colors.card,
     );
@@ -259,6 +261,10 @@ describe("editing a platform style", () => {
     expect(invalidColorRoles(resolveHouseTheme("dark"))).toEqual([]);
     expect(contrastFailures(resolveHouseTheme("light"))).toEqual([]);
     expect(contrastFailures(resolveHouseTheme("dark"))).toEqual([]);
+    // The fill is also a mark a progress bar and a spinner dot paint, so the
+    // dark edition takes the light violet rather than one that carries white.
+    expect(indicatorFailures(resolveHouseTheme("light"))).toEqual([]);
+    expect(indicatorFailures(resolveHouseTheme("dark"))).toEqual([]);
   });
 
   it("finishes the accent family instead of leaving the platform's blue", () => {

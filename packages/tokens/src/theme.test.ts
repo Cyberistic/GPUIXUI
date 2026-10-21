@@ -252,7 +252,8 @@ describe("brand example", () => {
   it("extends the dark theme with a brand palette and compact density", () => {
     expect(brandTheme.mode).toBe("dark");
     expect(brandTheme.name).toBe("Acme");
-    expect(brandTheme.colors.primary).toBe("#6A45F0");
+    expect(brandTheme.colors.primary).toBe("#B49CFF");
+    expect(brandTheme.colors.primaryForeground).toBe("#1C1547");
     expect(brandTheme.colors.background).toBe(darkTheme.colors.background);
     expect(brandTheme.radius.md).toBe(8);
     expect(brandTheme.radius.lg).toBe(lightTheme.radius.lg);
@@ -276,6 +277,7 @@ describe("theme audit example", () => {
         decorative: [],
         series: { surfaces: [], distinctness: [], deficiencies: [] },
         selection: [],
+        indicators: [],
         passed: true,
       });
     });

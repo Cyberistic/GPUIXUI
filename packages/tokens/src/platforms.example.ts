@@ -43,8 +43,11 @@ export const resolveHouseTheme = (mode: ThemeMode): Theme =>
   extendTheme(platformTheme(themes[mode], "win32"), {
     name: "House",
     colors: {
-      primary: "#6A45F0",
-      primaryForeground: "#FFFFFF",
+      // A primary is also the role a progress fill or spinner dot paints, so a
+      // dark theme needs it light enough to be found on the card; that fill can
+      // no longer carry white text, so the dark label is the near-black iris.
+      primary: mode === "dark" ? "#B49CFF" : "#6A45F0",
+      primaryForeground: mode === "dark" ? "#1C1547" : "#FFFFFF",
       ring: mode === "dark" ? "#8A6EFF" : "#6A45F0",
       ...(mode === "dark"
         ? {
