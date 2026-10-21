@@ -550,14 +550,34 @@ library task; ship the quit-and-relaunch-externally contract and pin issue 5.
 
 ---
 
-## 6. Upstream issue drafts (deferred)
+## 6. Upstream issues (filed 2026-10-21)
 
-Drafts against `remorses/gpuix` (the runtime), written general — no product
-names, no private details. **Deferred by the owner's call: not filing for now.**
-The library ships the honest half meanwhile — `@gpuixui/runtime` records each
-gap as `supported: false` with a reason and workaround, and `@gpuixui/tw` refuses
-the unrepresentable classes by name. Issue 2 is already closed by 0.11.0 and is
-kept only as a record of what changed.
+Filed against `remorses/gpuix`, one capability per issue, minimal bodies (one
+sentence + one short example). Verified against the README, `docs/`, and the
+Rust source on `main` first: none already exist as a feature, and the three
+already tracked upstream were not duplicated.
+
+| Filed | Issue |
+| --- | --- |
+| `transform` style key | [#102](https://github.com/remorses/gpuix/issues/102) |
+| `gridColumn` / `gridRow` span | [#103](https://github.com/remorses/gpuix/issues/103) |
+| IME composition events (custom-rendered text) | [#104](https://github.com/remorses/gpuix/issues/104) |
+| `code` on `KeyEvent` (physical bindings) | [#105](https://github.com/remorses/gpuix/issues/105) |
+| App relaunch API | [#106](https://github.com/remorses/gpuix/issues/106) |
+| Delta updates | [#107](https://github.com/remorses/gpuix/issues/107) |
+| Updater rollback | [#108](https://github.com/remorses/gpuix/issues/108) |
+| Tray / status-bar item | [#109](https://github.com/remorses/gpuix/issues/109) |
+
+Not filed: global shortcut ([#72](https://github.com/remorses/gpuix/issues/72)),
+webview/native view ([#69](https://github.com/remorses/gpuix/issues/69)),
+canvas drawing ([#82](https://github.com/remorses/gpuix/issues/82),
+[#8](https://github.com/remorses/gpuix/issues/8)) — already open upstream.
+`preventDefault`/`stopPropagation`/`keystrokeId` shipped in 0.11.0, so issue 2
+below is kept only as a record.
+
+The library ships the honest half in the meantime — `@gpuixui/runtime` records
+each gap as `supported: false` with a reason and workaround, and `@gpuixui/tw`
+refuses the unrepresentable classes by name.
 
 1. **"Add a global/system hotkey registration API"** — The renderer exposes only
    focused-window key events; there is no way to register a system hotkey that
