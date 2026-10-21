@@ -220,7 +220,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 16/22
+`[x]` `[███████░░░]` 17/23
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -248,9 +248,12 @@ diameter table; a fixed scale, not a theme group
 fills instead of six stored hover/press roles, with the label contrast floors
 checked on both fills
 `[ ]` Add motion tokens (durations/easings) once a component consumes them
-`[ ]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
-runtime, and record the licence review for any bundled family — plan 052, native
-proof blocked by B1 (rescued from the abandoned `agent/fonts` branch)
+`[x]` Ship `registerFonts` (plan 052) — consumer-only: installs a font file's
+bytes in a renderer, is idempotent per renderer and per file, does not cache a
+rejected file, and returns the families a theme may name; 6 tests, docs and a
+README example. No family is bundled, so there is no licence review yet
+`[ ]` Native proof that a registered face paints — needs a window; owner:
+playground (interlock row), so plan 052 stays `blocked` on the visual half
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
 docs platform toggle (macOS / Linux / Windows / Default) built on
@@ -540,6 +543,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | **resolved without the pair** — `filledHover(theme, action)` / `filledPressed(theme, action)` derive an opaque fill from the action role and the theme's `foreground`, so a brand override follows automatically and the six roles are unnecessary; adoption is the row below |
 | Adopt `filledHover` / `filledPressed` and delete the half-alpha hover fills: `components/src/internal/button.tsx`, `primitives/src/core/variants.ts` (`filled`), and the checkbox/radio hover fills in `primitives/src/core/selection.ts` (via `blend`, whose role there is not one of the three actions) | components, primitives | pending — tokens side is shipped and tested |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
+| Native proof that `registerFonts` paints the registered face: register a face in the theme gallery and show the fallback and the intended face | playground | pending — `@gpuixui/tokens` side is shipped and unit-tested |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Correct `docs/component-api.md` §2: "`onValueChange` is the only change callback name" is wrong for boolean parts — base-gpui uses `on_checked_change`, so primitives adopts `onCheckedChange` alongside `onValueChange` (plan 040 §2.1) | components | pending |

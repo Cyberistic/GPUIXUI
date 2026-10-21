@@ -31,11 +31,14 @@ import {
   lightTheme,
   platformTheme,
   platformTypes,
+  registerFonts,
   statusTone,
   systemUiFont,
   textStyle,
   type FilledAction,
   type FocusRing,
+  type FontRegistrar,
+  type FontSource,
   type PlatformName,
   type StatusTone,
   type Theme,
@@ -355,11 +358,54 @@ theme never names a face the machine may not have. The table still exists for th
 two things a component cannot infer: the platform's monospace family, and which
 platform a preview is showing.
 
-**Two runtime facts the table respects.** GPUix 0.10.0's `StyleDesc.fontFamily`
-is a **single** string, not a CSS stack, so an entry never contains a comma; and a
+**Two runtime facts the table respects.** GPUix's `StyleDesc.fontFamily` is a
+**single** string, not a CSS stack, so an entry never contains a comma; and a
 family the machine does not have falls back silently, so the platform table only
 names families each platform installs. This table changes no colours, sizes or
 spacing: a platform style is a theme, not a second design system.
+
+## Fonts
+
+A theme can only name a family the runtime knows, and GPUix knows the operating
+system's own faces plus any font file an application installs. `registerFonts`
+is that install step: it takes the renderer, hands it each file's **bytes**, and
+returns the families a theme may now name.
+
+```ts
+import { registerFonts, type FontRegistrar } from "@gpuixui/tokens";
+
+declare const renderer: FontRegistrar;
+const families = registerFonts(renderer, [{ family: "Inter", data }]);
+// ["Inter"]
+```
+
+Three facts shape the API:
+
+- **Bytes, not a path.** `renderer.registerFont(bytes)` takes the file. The
+  family comes from the font's own name table, so the `family` you pass is what
+  your theme will name — a mismatch falls back silently.
+- **Idempotent per renderer and per file.** An application that calls it on every
+  mount installs each file once; a second call still returns the families. A file
+  the runtime rejects throws and is not remembered, so a corrected file can be
+  retried.
+- **Boundary, not render.** The React renderer exposes `registerFont` optionally
+  (the browser renderer has none), so call it where the renderer exists and
+  guard for its absence. Rendering before registration is fine: GPUix re-shapes
+  text that already named the family.
+
+The face reaches components through the theme rather than through the runtime:
+
+```ts
+import { extendTheme, lightTheme, textStyle } from "@gpuixui/tokens";
+
+const theme = extendTheme(lightTheme, { typography: { sans: "Inter" } });
+textStyle(theme, "body").fontFamily; // "Inter"
+```
+
+The library ships no bundled family yet, so there is no font licence obligation
+today; a consumer's own typeface travels the same route. The runnable example is
+in [`src/fonts.test.ts`](../packages/tokens/src/fonts.test.ts) (there is no
+window here to shape text in, so the native proof is a `TODO.md` interlock).
 
 ## Spacing
 
@@ -680,5 +726,8 @@ its own hover.
 - `avatarSize` is a fixed scale, not a theme group. Adding a group to `Theme` is a
   breaking change for a hand-built theme literal, so a brand-specific diameter
   stays a component decision for now.
+- No font family is bundled: `registerFonts` is consumer-only, so there is no
+  redistribution licence to review yet. Shipping one needs the same review
+  `LICENSES/` gives every other asset.
 - Native visual proof is the playground's theme gallery, not this document. See
   `TODO.md`.

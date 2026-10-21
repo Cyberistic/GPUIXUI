@@ -182,6 +182,49 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 A runnable example lives in
 [`src/platforms.example.ts`](./src/platforms.example.ts).
 
+## Fonts
+
+A theme can only name a family the runtime knows. `registerFonts(registrar,
+fonts)` installs font files in a renderer and returns the families a theme may
+then name. The runtime takes the file's **bytes** and reads the family from the
+font's own name table, so the API takes bytes and declares no new family name of
+its own.
+
+```tsx
+import { registerFonts } from "@gpuixui/tokens";
+import { useGpuixRequired } from "@gpuix/react";
+import { useEffect } from "react";
+
+function Fonts({ data }: { data: Uint8Array }) {
+  const renderer = useGpuixRequired();
+  useEffect(() => {
+    if (renderer.registerFont === undefined) {
+      return; // the browser renderer installs no fonts
+    }
+    registerFonts(renderer, [{ family: "Inter", data }]);
+  }, [renderer, data]);
+  return null;
+}
+```
+
+Registration is **idempotent per renderer and per file**: calling it on every
+mount installs the bytes once. A file the runtime rejects throws and is not
+remembered, so a corrected file can be retried. Rendering before registration is
+fine — GPUix re-shapes text that already named the family.
+
+The face reaches components through the theme, not through the runtime:
+
+```ts
+import { extendTheme, lightTheme, textStyle } from "@gpuixui/tokens";
+
+const theme = extendTheme(lightTheme, { typography: { sans: "Inter" } });
+textStyle(theme, "body").fontFamily; // "Inter"
+```
+
+The library ships **no font family of its own** yet: a bundled face needs a
+licence review that permits redistribution, and that decision is recorded in
+`TODO.md`. A consumer registers their own typeface, which is the same route.
+
 ## For documentation sites
 
 `colorRoles` lists every semantic role in documentation order, typed as

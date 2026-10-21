@@ -157,13 +157,26 @@ native runtime can produce.
 
 ## Acceptance
 
-- [ ] `registerFonts()` is exported, documented, idempotent per registrar and accepts a
-      consumer's own typeface.
-- [ ] Bundled font files (step 2) are licensed, committed, and recorded in `LICENSES/`
-      with the copyright line — **only if this plan ships our own faces**; a
-      consumer-only delivery skips step 2 and says so in the docs.
-- [ ] `nub run check`, `nub run lint` and `nub run test` exit 0.
-- [ ] **Native smoke test passes — blocked by B1 until the playground can run.**
+- [x] `registerFonts()` is exported, documented, idempotent per registrar and accepts a
+      consumer's own typeface. — `src/fonts.ts`, 6 tests in `src/fonts.test.ts`
+      (idempotence across calls and within one call, per-renderer isolation,
+      retry-after-throw, and the theme route); docs in `docs/tokens.md` §Fonts and
+      `packages/tokens/README.md`.
+- [x] No bundled font files: this landed as a consumer-only delivery, so step 2 is
+      skipped and there is no `LICENSES/` entry to add. Recorded in the docs and
+      `COMPONENTS.md`.
+- [x] This package's gates: `nub run --filter @gpuixui/tokens check-types` and
+      `test` (231 tests) exit 0; repo lint and fmt are clean for the touched paths.
+- [ ] **Native smoke test passes — needs a window; the playground owns it.** The
+      cross-team row is in `TODO.md` → Interlocks, so the plan stays `blocked` on the
+      visual half rather than claiming the face paints.
+
+**Landing note (2026-10-21).** The runtime is now `@gpuix/native@0.11.0`, whose
+`NativeRenderer` exposes `registerFont(bytes: Buffer | Uint8Array)` optionally —
+the interface this module declares structurally. B1's *install* half is resolved
+on this host (a locally built `darwin-x64` binding), but this workstream owns no
+window, so the visual proof moved to the playground rather than staying tied to
+B1.
 
 ## STOP conditions
 
