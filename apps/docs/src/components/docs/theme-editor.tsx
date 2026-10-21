@@ -203,7 +203,9 @@ export function ThemeEditorSurface({
                 type="range"
                 value={pins.radiusMd ?? base.radius.md}
               />
-              <span className="gx-te-range-value">{pins.radiusMd ?? base.radius.md}px</span>
+              <span className="gx-te-range-value">
+                {pins.radiusMd ?? base.radius.md}px
+              </span>
             </label>
           </fieldset>
 
@@ -266,12 +268,12 @@ export function ThemeEditorSurface({
       </div>
 
       <p className="gx-component-note">
-        Browser preview of the semantic tokens from <code>@gpuixui/tokens</code>.
-        The shipped components read these roles through GPUix, not CSS
-        variables; the bridge above only exists for this preview. The base is the
-        platform style the switch selected — switch it and the preview re-bases
-        while your edits stay; <strong>Reset</strong> clears them back to that
-        style.
+        Browser preview of the semantic tokens from <code>@gpuixui/tokens</code>
+        . The shipped components read these roles through GPUix, not CSS
+        variables; the bridge above only exists for this preview. The base is
+        the platform style the switch selected — switch it and the preview
+        re-bases while your edits stay; <strong>Reset</strong> clears them back
+        to that style.
       </p>
     </div>
   );

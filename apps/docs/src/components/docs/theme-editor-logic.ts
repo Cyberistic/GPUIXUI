@@ -321,7 +321,9 @@ const modeBlock = (mode: ThemeMode, theme: Theme): string => {
  * preview resolved — the base style plus the reader's edits — so what a reader
  * copies is what they saw, including the platform styles they did not touch.
  */
-export const themeSource = (resolved: Readonly<Record<ThemeMode, Theme>>): string =>
+export const themeSource = (
+  resolved: Readonly<Record<ThemeMode, Theme>>,
+): string =>
   `import { createTheme } from "@gpuixui/tokens";
 
 // Usage: <ThemeProvider theme={theme[activeMode]} /> from "@gpuixui/tokens/react".
