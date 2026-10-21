@@ -107,7 +107,7 @@ merge order. Zero primitives remain on their `core/` resolver.
 `[ ]` Convert `packages/components` onto `@gpuixui/tw` — these may adopt the
 shadcn recipes' fixed metrics instead of the primitives' density scale.
 
-`[ ]` `[██████░░░░]` 23/39
+`[ ]` `[███████░░░]` 28/39
 
 `[x]` Convert the eight leaf components — `Card`, `Badge`, `Alert`, `Avatar`,
 `List`, `Pagination`, `EmptyState`, `Stepper` — onto `@gpuixui/tw`. Each renders
@@ -130,8 +130,21 @@ recipe. The recipe oracle per part, the merge-order test and the
 no-unsupported-classes sweep all extend `src/recipe/recipe.test.ts`; the
 utilities the new recipes need (`flex-wrap`, `self-stretch`, `h-px`/`w-px`,
 `mt-`/`mb-`/`ml-`/`mr-`) landed in the default registry. None were skipped.
-`[ ]` Convert the overlays and pickers — command-menu, confirm-dialog,
-context-menu, dialog, drawer, dropdown-menu, navigation-menu, popover,
+`[x]` Convert the five overlay components — `Dialog`, `Popover`, `DropdownMenu`,
+`ContextMenu`, `CommandMenu` — onto `@gpuixui/tw` recipes. Each surface compiles
+its resting appearance from a recipe (`DIALOG_*`, `POPOVER_CONTENT`,
+`MENU_CONTENT`/`MENU_*`, `COMMAND_*`), accepts a caller `className` joined last
+via `cn`, and keeps its public API, parts, refs, keyboard, focus trap, Escape
+layering and dismissal unchanged. The shared composition lives once in
+`internal/overlay.ts` (`overlaySurfaceStyle`); the menu surface and rows are
+hoisted recipes (`menu/surface.tsx`, `menu/item.tsx`) so Dropdown, Context and
+Sub menu agree. The scrim maps shadcn's `bg-black/30` to the theme's `overlay`
+role so it stays contrast-aware; the dialog keeps its flex layout and density
+height rather than shadcn's `grid`. `recipe.test.ts` proves the compiled
+`StyleDesc` per part, the merge order and the no-unsupported sweep;
+`behaviour/overlay-layering.test.tsx` proves Escape dismisses a dialog over a
+popover over a menu outside-in. The remaining pickers are below.
+`[ ]` Convert the remaining pickers — confirm-dialog, drawer, navigation-menu,
 preview-card, tabs, toast, combobox, date-picker, time-picker, color-picker,
 message-scroller — in their own pass.
 

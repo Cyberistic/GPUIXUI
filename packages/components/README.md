@@ -20,28 +20,41 @@ exception, plan 117 §3), DOM APIs or CSS.
 ## Styling
 
 A component's resting appearance is a Tailwind recipe exported from
-`@gpuixui/tw` (`CARD_BASE`, `BADGE_VARIANTS`, …), compiled through
+`@gpuixui/tw` (`CARD_BASE`, `BADGE_VARIANTS`, `MENU_CONTENT`, …), compiled through
 `classesToStyle` against the **default** registry — shadcn's fixed metrics
 (`h-9` = 36, `px-4` = 16, `text-sm` = 14/20) — not the primitives' density
 scale (ADR 0006). The caller's `className` is joined after the recipe via `cn`
 so it wins conflicts, and its `style` is merged last so it wins outright. The
-`internal/recipe.ts` seam wraps the compile; no other file imports
-`@gpuixui/tw`'s compiler directly.
+`internal/recipe.ts` seam wraps the compile; `internal/overlay.ts` is the
+overlay-only slice of that seam (it joins the caller `className` for the
+floating/modal surfaces). No other file imports `@gpuixui/tw`'s compiler
+directly.
 
 Two kinds of metric keep density, because they must stay aligned with the
 density-driven controls beside them: a list row's height
 (`theme.density.rowHeight`), and a control's height/side — the accordion
 trigger's `controlHeight(theme, "lg")`, the field/search/mention/tag and
-inline-edit input heights (`controlHeight(theme, "md")`/`"sm"`), the
-hotkey-recorder's min-height, and the stepper marker's side (`controlHeight`).
-Everything else — structure, type roles, spacing, radius, border and semantic
-colours — compiles from the fixed shadcn recipe.
+inline-edit input heights (`controlHeight(theme, "md")`/`"sm"`), the menu row's
+`controlHeight(theme, "sm")`, the hotkey-recorder's min-height, and the stepper
+marker's side (`controlHeight`). Everything else — structure, type roles,
+spacing, radius, border and semantic colours — compiles from the fixed shadcn
+recipe.
+
+The overlay wave (Dialog, Popover, DropdownMenu, ContextMenu, CommandMenu) made
+one deliberate deviation and one deliberate mapping: the dialog scrim maps
+shadcn's literal `bg-black/30` to the theme's `overlay` role so the veil stays
+light/dark/high-contrast aware, and the dialog keeps its flex column layout
+(plus the density close-control clearance) instead of shadcn's `grid`, because
+its parts are flex blocks. The overlay recipes keep shadcn's positioning and
+motion classes for provenance even though the renderer has no transform or
+z-index; the components own their positioning through `<anchored>` /
+`<FloatingLayer>` and the dismiss stack in `internal/dismiss-layer.ts`.
 
 ## What is here
 
 | Area | State |
 | ---- | ----- |
-| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the merged host ref, the a11y-dump reader, the monotonic clock read and the behaviour-suite render helper |
+| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the merged host ref, the a11y-dump reader, the monotonic clock read, the overlay recipe seam (`overlay.ts`) and the behaviour-suite render helper |
 | `src/runtime.test.tsx` | the native-renderer guard (plan 117 §5b) |
 | `src/card.tsx` | Card and its five parts — verified natively |
 | `src/badge.tsx` | Badge — the status pill, seven variants, two sizes |
