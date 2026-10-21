@@ -33,13 +33,13 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-five probes a real window can prove, of which eight mount shipped
+twenty-six probes a real window can prove, of which eight mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the popover and the modal focus rule), four mount
-`@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), and the rest
-prove the runtime itself (focus, paint, fonts, placement, content surfaces,
-pointer capture, the window's own wheel, a split pane, a virtual list and the
-app-level key handler).
+`@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), one mounts the
+runtime's own `Select` parts, and the rest prove the runtime itself (focus,
+paint, fonts, placement, content surfaces, pointer capture, the window's own
+wheel, a split pane, a virtual list and the app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -1198,6 +1198,43 @@ capture; a drag that leaves the track stops" — was wrong. `primitives` retract
 it in those surfaces and added the headless twin
 (`runtime/value.runtime.test.tsx`); this probe pins the window behaviour so a
 runtime change fails here instead of moving the components silently.
+
+### `select-lifecycle` — measured on 0.11.0 here
+
+The runtime's `Select` is the one overlay surface a window had never painted:
+`COMPONENTS.md` says a select's "open state, positioning and dismissal are the
+runtime's", and every proof for it was a `TestRenderer` case. The probe mounts
+the runtime's own parts (`@gpuix/react/select`) rather than the shipped wrapper,
+because the wrapper passes a **root** `testId` only — its trigger and its rows
+paint with no id a locator can address. The parts are the ones the wrapper
+composes, so the behaviour measured here is the behaviour it inherits. The
+options are `Daily` (selected), `Weekly`, `Monthly` and a disabled `Archived`
+last, so an arrow that starts on `Monthly` has to wrap past the disabled row.
+
+| State | Measured |
+| ----- | -------- |
+| at rest | the trigger paints `Daily` and the readout is `value=daily changes=0`; the list is absent from the tree |
+| one press on the trigger | the list paints in its own layer one `6`px gap below the trigger, on the trigger's start edge, and the focus moves **into the list** (`select-list`) |
+| a press on `Weekly` | the readout becomes `value=weekly changes=1`, the trigger repaints with `Weekly`, and the list unpaints |
+| the keyboard | the list opens with the selected row highlighted, one `down` moves the highlight off it and `Enter` selects the row it landed on (`value=monthly`) |
+| a `down` from the last enabled row | wraps to `Daily`, not to the disabled `Archived` — the disabled row changes nothing and leaves the list open |
+| `Escape` | unpaints the list, leaves the selection alone and gives the **focus back to the trigger** |
+| an outside press | reaches the control it landed on (`presses=1`), unpaints the list and leaves the selection alone |
+| a second press on the trigger | closes the list (the outside-press path, not a toggle) |
+| a disabled select | ignores the press and keeps its label |
+
+26 checks. Two negative controls measured: dropping `sideOffset={6}` fails
+`the list keeps the gap it was given below the trigger` with
+`expected 6 ± 1, got 0`; enabling the disabled row fails
+`an arrow skips the disabled row and wraps to the first enabled one` with
+`expected "value=daily changes=3", got "value=archived changes=3"` — exit `1`
+each, and restored green (`--only select-lifecycle`). Evidence:
+`.artifacts/live/select-open.png`, `.artifacts/live/select-picked.png`.
+
+What it leaves open: the shipped `Select` cannot be driven by an automation
+test, because `SelectProps` carries no `testId` for its trigger or its option
+rows. That is recorded as an interlock for `primitives`; until then a probe of
+the wrapper can only press the root and read the joined text.
 
 ## Release gate
 

@@ -186,6 +186,12 @@ export const liveRegistry = [
       "Input: a press captures the pointer for a mouseDown+mouseMove element, not for a move-only one, and the Slider follows it off the track",
     capability: "input",
   },
+  {
+    id: "select-lifecycle",
+    title:
+      "Overlay: the runtime's Select opens its list below the trigger, selects by press and by key, skips a disabled row and dismisses on Escape or an outside press",
+    capability: "overlay",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

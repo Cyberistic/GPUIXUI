@@ -59,6 +59,13 @@ import { useTheme } from "@gpuixui/tokens/react";
 import { useWindowSize, motion } from "@gpuix/react";
 import type { ImgInstance, PublicInstance } from "@gpuix/react";
 import { FloatingLayer } from "@gpuix/react/floating";
+import {
+  Select as GpuixSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@gpuix/react/select";
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
@@ -4850,6 +4857,417 @@ const windowKeySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** The gap the select's list opens with, measured back from the paint. */
+const SELECT_GAP = 6;
+
+/** One option the probe's selects offer. */
+interface ProbeOption {
+  readonly value: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+}
+
+/**
+ * The options every select in the probe offers.
+ *
+ * `Archived` is disabled and comes last on purpose: an arrow that starts on
+ * `Monthly` has to wrap past it to reach `Daily`, so the skip cannot be
+ * explained by the list simply ending.
+ */
+const SELECT_OPTIONS: ReadonlyArray<ProbeOption> = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "archived", label: "Archived", disabled: true },
+];
+
+/** One select, wired to a readout that prints what React received. */
+const ProbeSelect = ({
+  testId,
+  disabled = false,
+  options,
+  onValueChange,
+}: {
+  readonly testId: string;
+  readonly disabled?: boolean;
+  readonly options: ReadonlyArray<ProbeOption>;
+  readonly onValueChange?: (value: string) => void;
+}): ReactNode => {
+  const theme = useTheme();
+  const items = Arr.map(options, (option) => ({
+    value: option.value,
+    label: option.label,
+  }));
+  return (
+    <GpuixSelect
+      items={items}
+      defaultValue="daily"
+      disabled={disabled}
+      onValueChange={onValueChange}
+      style={{ width: 260 }}
+    >
+      <SelectTrigger
+        testId={`${testId}-trigger`}
+        style={(state) => ({
+          ...textStyle(theme, "body"),
+          color: state.disabled
+            ? theme.colors.disabledForeground
+            : theme.colors.foreground,
+          padding: theme.spacing.sm,
+          borderRadius: theme.radius.md,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.input,
+        })}
+      >
+        <SelectValue placeholder="Choose a cadence" />
+      </SelectTrigger>
+      <SelectContent
+        testId={`${testId}-list`}
+        sideOffset={SELECT_GAP}
+        style={{
+          padding: theme.spacing.xs,
+          borderRadius: theme.radius.md,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.popover,
+        }}
+      >
+        {Arr.map(options, (option) => (
+          <SelectItem
+            key={option.value}
+            value={option.value}
+            disabled={option.disabled === true}
+            testId={`${testId}-row-${option.value}`}
+            style={(state) => ({
+              padding: theme.spacing.sm,
+              borderRadius: theme.radius.sm,
+              backgroundColor: state.highlighted
+                ? theme.colors.accent
+                : undefined,
+            })}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color:
+                  option.disabled === true
+                    ? theme.colors.disabledForeground
+                    : theme.colors.popoverForeground,
+              }}
+            >
+              {option.label}
+            </text>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </GpuixSelect>
+  );
+};
+
+/**
+ * The runtime's own `Select` in a window.
+ *
+ * The list is the runtime's, not the library's: it paints in an anchored layer,
+ * takes the focus, moves a highlight over the enabled rows and dismisses on
+ * Escape or an outside press. The shipped primitive is a themed wrapper around
+ * these parts and passes only a **root** `testId`, so a probe built on the
+ * wrapper could not address the trigger or a row. The parts mounted here are
+ * the ones the wrapper composes, and the measurement is of the behaviour both
+ * share — the claim in `COMPONENTS.md` that open state, positioning and
+ * dismissal "are the runtime's".
+ */
+const SelectProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [value, setValue] = useState("daily");
+  const [changes, setChanges] = useState(0);
+  const [presses, setPresses] = useState(0);
+  const record = (next: string) => {
+    setValue(next);
+    setChanges((count) => count + 1);
+  };
+
+  return (
+    <div
+      testId="select-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The runtime's Select: the list opens in its own layer, selects by press
+        and by key, and dismisses on Escape or an outside press.
+      </text>
+      <ProbeSelect
+        testId="select"
+        options={SELECT_OPTIONS}
+        onValueChange={record}
+      />
+      <text
+        testId="select-readout"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`value=${value} changes=${changes}`}
+      </text>
+      <div style={{ display: "flex", flexDirection: "row", gap: theme.spacing.xl }}>
+        <ProbeSelect
+          testId="select-disabled"
+          disabled
+          options={SELECT_OPTIONS}
+        />
+      </div>
+      {/* Top-right: a press outside the list has to land on something that is
+          not the list, and nothing the list opens over can cover this corner. */}
+      <div
+        style={{
+          position: "absolute",
+          right: 40,
+          top: 40,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing.md,
+        }}
+      >
+        <div
+          testId="select-elsewhere"
+          role="button"
+          onClick={() => setPresses((count) => count + 1)}
+          style={{
+            padding: theme.spacing.sm,
+            borderRadius: theme.radius.md,
+            backgroundColor: theme.colors.muted,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Elsewhere
+          </text>
+        </div>
+        <text
+          testId="select-elsewhere-readout"
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`presses=${presses}`}
+        </text>
+      </div>
+    </div>
+  );
+};
+
+const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** Whether `testId` is absent from the window's tree. */
+    const painted = (
+      testId: string,
+    ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
+      Effect.map(ctx.host.bounds(testId), (bounds) =>
+        Option.isSome(Option.fromNullishOr(bounds)),
+      );
+    /** Opens the enabled select and waits one paint. */
+    const open = Effect.flatMap(ctx.host.click("select-trigger"), () =>
+      Effect.sleep(SETTLE),
+    );
+
+    yield* ctx.host.waitFor("select-trigger");
+    yield* ctx.expectContains(
+      "the trigger paints the selected label",
+      yield* ctx.host.text("select-trigger"),
+      "Daily",
+    );
+    yield* ctx.expectEqual(
+      "the readout starts on the selected value",
+      yield* ctx.host.text("select-readout"),
+      "value=daily changes=0",
+    );
+    yield* ctx.expectEqual(
+      "the list is not painted before the trigger is pressed",
+      yield* painted("select-list"),
+      false,
+    );
+
+    // The press: the list paints in the runtime's layer, below its trigger.
+    yield* open;
+    const trigger = yield* paintedBox(ctx, "select-trigger");
+    const list = yield* paintedBox(ctx, "select-list");
+    yield* ctx.expectEqual(
+      "pressing the trigger paints the list",
+      yield* painted("select-row-weekly"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the list opens below its trigger",
+      list.y >= trigger.y + trigger.height,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the list keeps the gap it was given below the trigger",
+      list.y - (trigger.y + trigger.height),
+      SELECT_GAP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the list starts at the trigger's start edge",
+      list.x,
+      trigger.x,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "opening moves the focus into the list",
+      yield* focusedAfterPaint(ctx),
+      "select-list",
+    );
+    yield* ctx.host.capture("select-open");
+
+    // A pointer selects a row, and the trigger repaints with its label.
+    yield* ctx.host.click("select-row-weekly");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press on a row selects it",
+      yield* ctx.host.text("select-readout"),
+      "value=weekly changes=1",
+    );
+    yield* ctx.expectContains(
+      "the trigger paints the new label",
+      yield* ctx.host.text("select-trigger"),
+      "Weekly",
+    );
+    yield* ctx.expectEqual(
+      "selecting unpaints the list",
+      yield* painted("select-list"),
+      false,
+    );
+    yield* ctx.host.capture("select-picked");
+
+    // The keyboard path: the list opens on the selected row, one arrow moves the
+    // highlight off it, and Enter selects the row the highlight landed on.
+    yield* open;
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow moves the highlight off the selected row and Enter selects it",
+      yield* ctx.host.text("select-readout"),
+      "value=monthly changes=2",
+    );
+
+    // From the last enabled row, the next arrow wraps past the disabled one.
+    yield* open;
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow skips the disabled row and wraps to the first enabled one",
+      yield* ctx.host.text("select-readout"),
+      "value=daily changes=3",
+    );
+
+    // Escape closes without choosing, and gives the focus back.
+    yield* open;
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape unpaints the list",
+      yield* painted("select-list"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "Escape leaves the selection alone",
+      yield* ctx.host.text("select-readout"),
+      "value=daily changes=3",
+    );
+    yield* ctx.expectEqual(
+      "Escape gives the focus back to the trigger",
+      yield* focusedAfterPaint(ctx),
+      "select-trigger",
+    );
+
+    // An outside press closes it too, and reaches the control it landed on.
+    yield* open;
+    yield* ctx.host.click("select-elsewhere");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an outside press reaches the control it landed on",
+      yield* ctx.host.text("select-elsewhere-readout"),
+      "presses=1",
+    );
+    yield* ctx.expectEqual(
+      "an outside press unpaints the list",
+      yield* painted("select-list"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "an outside press leaves the selection alone",
+      yield* ctx.host.text("select-readout"),
+      "value=daily changes=3",
+    );
+
+    // A disabled row paints and refuses the choice; the list stays open.
+    yield* open;
+    yield* ctx.host.click("select-row-archived");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled row changes nothing",
+      yield* ctx.host.text("select-readout"),
+      "value=daily changes=3",
+    );
+    yield* ctx.expectEqual(
+      "a disabled row leaves the list open",
+      yield* painted("select-list"),
+      true,
+    );
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+
+    // The trigger toggles its own list closed.
+    yield* open;
+    yield* ctx.host.click("select-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a second press on the trigger unpaints the list",
+      yield* painted("select-list"),
+      false,
+    );
+
+    // A disabled select refuses the press entirely.
+    yield* ctx.host.click("select-disabled-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled select ignores a press",
+      yield* painted("select-disabled-list"),
+      false,
+    );
+    yield* ctx.expectContains(
+      "a disabled select keeps its label",
+      yield* ctx.host.text("select-disabled-trigger"),
+      "Daily",
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -4977,5 +5395,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "pointer-capture",
     view: () => <PointerCaptureProbe />,
     steps: pointerCaptureSteps,
+  },
+  "select-lifecycle": {
+    id: "select-lifecycle",
+    view: () => <SelectProbe />,
+    steps: selectSteps,
   },
 };

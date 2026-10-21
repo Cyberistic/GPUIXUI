@@ -464,7 +464,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 39/39
+`[x]` `[██████████]` 40/40
 
 `[x]` Land the `pointer-capture` live probe and settle what a drag control may
       rely on — GPUix arms pointer capture on left mouse down **only** for an
@@ -860,6 +860,29 @@ a workaround for two live sessions sharing one worktree; see
       `onMotionComplete`, never a timer. Evidence: `apps/playground/README.md`
       §`motion-geometry`, `.artifacts/live/motion-grown.png`
 
+`[x]` Land the `select-lifecycle` live probe — the runtime's own `Select` was
+      the one overlay surface no window had painted, although `COMPONENTS.md`
+      rests its "open state, positioning and dismissal are the runtime's" claim
+      on `TestRenderer` cases alone. The probe mounts the runtime's parts
+      (`@gpuix/react/select`) rather than the shipped wrapper, because
+      `SelectProps` carries one root `testId` and the trigger and rows paint
+      nothing a locator can address (the interlock row below). Measured: the
+      list is absent at rest, one press paints it in its own layer one 6px gap
+      below the trigger on its start edge and moves the focus **into** it, a
+      press on a row selects it and repaints the trigger's label, the list opens
+      on the selected row so one arrow moves the highlight and `Enter` selects
+      the row it landed on, an arrow from the last enabled row wraps past the
+      disabled one, `Escape` unpaints without choosing and gives the focus back
+      to the trigger, an outside press reaches its target and dismisses without
+      choosing, a second trigger press closes, a disabled row changes nothing
+      and leaves the list open, and a disabled select ignores the press. 26
+      checks, `--only select-lifecycle`, green on 0.11.0; two negative controls
+      measured (dropping `sideOffset`: `expected 6 ± 1, got 0`; enabling the
+      disabled row: `expected "value=daily changes=3", got "value=archived
+      changes=3"`, exit `1` each). Evidence: `apps/playground/README.md`
+      §`select-lifecycle`, `.artifacts/live/select-open.png`,
+      `.artifacts/live/select-picked.png`
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -1222,6 +1245,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | The shipped `Spinner` inside a **filled** button paints the fill it sits on — `Button`'s `loading` branch renders `<Spinner>` with its default `accent: "primary"`, whose lit dot is `bg-primary`, so a `variant="primary"` button paints `primary` on `primary` (1.00:1) and the busy indicator disappears exactly where it matters; the resting dots are `mutedForeground`, so the spinner reads as a stopped trail rather than as working | primitives | **resolved** — `SPINNER_ACCENTS` gained the three on-colours (`on-primary`, `on-secondary`, `on-destructive`) and `variantSpinnerAccent(variant)` maps a filled button to its own label's role, while outline/ghost/link keep the brand accent the mark contract measures on the page. **The trail changed with it**: every dot painted the accent and only the opacity steps, because a muted trail on a filled control is the same 1.00:1 problem one dot over. Proof: `core/loading.test.ts` holds the accent on every dot and each on-colour role; `Button.test.tsx` fails without the mapping (`accentOf("primary")` reads `on-primary`); `runtime/loading.runtime.test.tsx` reads the dots back off a window — a busy primary button's three dots are `#000008` (`primaryForeground`, against the `#000007` primary the unfixed code painted — measured) and a secondary one's are its `secondaryForeground` — and the lit-dot probe now finds the opaque dot instead of the accent-coloured one. Docs in `docs/spinner.mdx` §Theming/§API/§Limitations, `docs/button.mdx` and the two `COMPONENTS.md` rows |
 | `Avatar`'s `away` presence dot paints the **solid** `warning` role on `card`, which is 1.89:1 in the light theme — 1.55:1 on Luna light's card — below the new mark floor, because `warning` is a pale amber designed to carry near-black text rather than to be found as a 10px dot | components | **resolved** — `statusFill` paints `statusTone(theme, "warning").foreground` for `away`, so all four presence states are roles `indicatorRoles` measures at the mark floor. `src/behaviour/avatar.test.tsx` holds the painted dot for every state to `indicatorRoles` (measured both ways: restoring the solid `warning` fill fails `paints the presence dot from the theme's status roles` — `expected '#FFC94D' to deeply equal '#FFEFC6'` — and `paints every dot in a role the token contract measures as a mark`). `docs/avatar.mdx` §Presence explains why a dot is not a text role and the `COMPONENTS.md` row records it |
 | The `Context menus` inventory row's right-press path is now measured in a real window (the probe mounts the shipped component: a right press opens the surface at the pointer, arrows move real focus, `Enter` runs the row, `Shift+F10` places from the trigger and restores focus, and a pointer-opened menu leaves the focus `none`) | components | **playground half landed** — `context-menu-lifecycle`, 24 checks green on 0.11.0 (`apps/playground/README.md` §`context-menu-lifecycle`). The row still calls right click a `partial` limitation and its docs page does not name the probe; the pointer-open focus rule is the measured contract a reader should be told |
+| The shipped `Select` cannot be driven from an automation test: `SelectProps` passes a **root** `testId` to `GpuixSelect` and nothing to `SelectTrigger`, `SelectContent` or `SelectItem`, so a locator can address neither the control nor an option. The window probe (`select-lifecycle`) therefore mounts the runtime's own parts, which measure the behaviour the wrapper inherits; the `COMPONENTS.md` Selects row likewise cites no probe. Add `triggerTestId`/`itemTestId` (or accept `testId` on the parts), then the probe can mount the wrapper and the row can cite it | primitives (and the Selects inventory row) | open — the runtime half is measured: `select-lifecycle`, 26 checks green on 0.11.0, with `expected 6 ± 1, got 0` and `expected "value=daily changes=3", got "value=archived changes=3"` as its negative controls (`apps/playground/README.md` §`select-lifecycle`). No library code depends on this; it is an addressability gap, not a behaviour gap |
 
 ## Phase D — data and workspace components
 
