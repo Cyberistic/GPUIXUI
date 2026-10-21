@@ -244,6 +244,7 @@ it. It is held instead to one shadow per level, tinted by the `shadow` role (see
 | pressed | `active` wash; a filled action moves to `filledPressed(theme, action)` |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible; held to `contrastFloors.disabled` so the state stays visible rather than to a readability floor |
+| invalid | the `destructive` role as the field's edge and as its `focusVisible` line; the fill and text roles do not change, so the value and placeholder stay readable |
 | loading | a mark — `primary`, or a status tone's readable role — never the disabled fade: a busy control keeps its label, its tab stop and its announcement |
 | focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
 | text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor |
@@ -268,6 +269,19 @@ measured on the same four strips (`filledAction` in `decorative.ts`), because th
 tonal variant's fill is its whole shape (§7); light `secondary` had shipped as
 the `muted` value and every platform window sat within a step of it, so the base
 fill and each affected style's own control face moved with that contract.
+
+**An invalid control changes its edge, not its fill.** Validation failure paints
+the field's border and its focus line in the `destructive` role, and leaves the
+field's fill alone — so the value and the placeholder keep the roles the contrast
+table measures for them (`inputForeground` and `placeholder` on `input`). The
+edge is a boundary: `destructive` is held to `contrastFloors.boundary` on the page,
+a card, a popover, a `muted` toolbar, a field's own fill and a segmented
+`secondary` panel, the last two through `contrastPairs` (§9). A destructive
+**fill** is a different role with a different job — it is designed to carry
+`destructiveForeground`, not `inputForeground` — and painting one behind a field's
+value is the failure the tokens catalogue records as an interlock: the
+primitives' field recipe still does, and §9's table cannot make that text
+readable.
 
 **Disabled ships two ways today, and only one of them is the contract.** A
 disabled field, a select's value and a fieldset legend paint the role pair —
@@ -338,6 +352,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card`/`popover` (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own fill and on `background`/`card`/`popover` (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips and the field | 3:1 | 4.5:1 |
+| the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash | 1.05:1 | 1.05:1 |

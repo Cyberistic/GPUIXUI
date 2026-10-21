@@ -15,6 +15,7 @@ import {
   highContrastFloors,
 } from "./contrast.js";
 import { lightColors } from "./color.js";
+import { indicatorRoles, indicatorSurfaces } from "./indicator.js";
 import { statusTones } from "./styles.js";
 import {
   darkTheme,
@@ -354,6 +355,78 @@ describe("a control boundary on the strip it sits on", () => {
           foreground === "borderStrong" && background === "secondary",
       ),
     ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+});
+
+/**
+ * Guards the edge an invalid control paints. A failed validation swaps the
+ * control's border and its focus line to `destructive` — a field's border, the
+ * `focusVisible` outline a primitive declares while invalid — so that role is a
+ * *boundary* on every strip a control sits on. The bug this holds: the page,
+ * card, popover and `muted` strips were held only by the mark contract, and a
+ * field's own fill (`input`) and a filled panel (`secondary`) were held by
+ * nothing, although both roles are painted there.
+ */
+describe("the invalid state's edge", () => {
+  const surfaces = [
+    "background",
+    "card",
+    "popover",
+    "input",
+    "muted",
+    "secondary",
+  ] as const;
+
+  const isMarkSurface = (surface: (typeof surfaces)[number]) =>
+    indicatorSurfaces.some((strip) => strip === surface);
+
+  it("measures the invalid edge on every strip a control sits on", () => {
+    const missing = surfaces.filter(
+      (background) =>
+        !contrastPairs.some(
+          (pair) =>
+            pair.foreground === "destructive" &&
+            pair.background === background &&
+            pair.floor === "boundary",
+        ) &&
+        !(indicatorRoles.includes("destructive") && isMarkSurface(background)),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reports an invalid edge that matches the field it sits in", () => {
+    const broken = {
+      colors: { ...lightColors, destructive: lightColors.input },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "destructive" && background === "input",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+
+  it("keeps the invalid edge visible on every strip in every shipped theme", () => {
+    const samples = [
+      { theme: lightTheme, floors: contrastFloors },
+      { theme: darkTheme, floors: contrastFloors },
+      { theme: highContrastLightTheme, floors: highContrastFloors },
+      { theme: highContrastDarkTheme, floors: highContrastFloors },
+    ].flatMap(({ theme, floors }) =>
+      surfaces.map((surface) => ({
+        theme: theme.name,
+        surface,
+        ratio: contrastRatio(theme.colors.destructive, theme.colors[surface]),
+        floor: floors.boundary,
+      })),
+    );
+    const hidden = samples.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+
+    expect(hidden).toEqual([]);
   });
 });
 

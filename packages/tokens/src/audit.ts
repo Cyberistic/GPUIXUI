@@ -27,10 +27,7 @@ import {
   type ContrastFloors,
 } from "./contrast.js";
 import { decorativeFailures, type DecorativeFailure } from "./decorative.js";
-import {
-  disabledFadeFailures,
-  type DisabledFadeFailure,
-} from "./disabled.js";
+import { disabledFadeFailures, type DisabledFadeFailure } from "./disabled.js";
 import {
   invalidShadowColors,
   type Elevation,

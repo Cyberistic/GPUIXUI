@@ -235,6 +235,44 @@ describe("focus adoption claim", () => {
   });
 });
 
+describe("filled action adoption claim", () => {
+  /**
+   * The catalogue said the derived fills were "shipped and documented" while
+   * "the component packages still paint a translucent hover", and named the
+   * components package's button — which had already moved to
+   * `filledHover`/`filledPressed`. The page is held to both sources: a package
+   * that adopts the fills must leave the deviation list, and the clause that
+   * remains must name the code that is still there.
+   */
+  const limitation = (() => {
+    const start = catalogue.indexOf("- The derived action fills");
+    const end = catalogue.indexOf("\n- ", start + 1);
+    return catalogue.slice(start, end).replace(/\s+/g, " ");
+  })();
+
+  it("names the components package as the adopter", () => {
+    const source = read("../../../packages/components/src/internal/button.tsx");
+
+    expect(source).toContain('filledHover(theme, "primary")');
+    expect(limitation).toContain("packages/components/src/internal/button.tsx");
+    expect(limitation).toContain("filledHover");
+  });
+
+  it("names the primitive package as the remaining deviation", () => {
+    const source = read("../../../packages/primitives/src/recipe/index.ts");
+
+    expect(source).toContain("hover:bg-primary/90");
+    expect(limitation).toContain("packages/primitives/src/recipe/index.ts");
+    expect(limitation).toContain("hover:bg-primary/90");
+  });
+
+  it("no longer calls every component package's hover translucent", () => {
+    expect(limitation).not.toContain(
+      "component packages still paint a translucent hover",
+    );
+  });
+});
+
 describe("documents import what the package exports", () => {
   /** The two documents a consumer copies a snippet from. */
   const documents: Readonly<Record<string, string>> = {

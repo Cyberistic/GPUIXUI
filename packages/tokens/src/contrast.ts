@@ -252,6 +252,13 @@ export const contrastPairs: readonly ContrastPair[] = [
   // on `secondary`. The edge must stay findable there for the same reason.
   { foreground: "borderStrong", background: "muted", floor: "boundary" },
   { foreground: "borderStrong", background: "secondary", floor: "boundary" },
+  // A failed validation swaps a control's edge — and the focus line it paints
+  // while invalid — to the `destructive` role, so that role is a boundary on
+  // every strip a control sits on. The page, card, popover and `muted` strips
+  // are already held to the same floor as an indicator mark; a field's own fill
+  // and a filled panel are the two strips no contract measured.
+  { foreground: "destructive", background: "input", floor: "boundary" },
+  { foreground: "destructive", background: "secondary", floor: "boundary" },
   // A disabled control is exempt from WCAG's text floors, not from being found:
   // a field whose unavailable value matches its fill reads as an empty box.
   {

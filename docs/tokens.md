@@ -816,7 +816,7 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 55 pairs cover the text role
+— an empty array means the theme is readable. The 57 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
 selected row, every status and soft-status pair, each status tone's readable text
@@ -826,7 +826,8 @@ the unavailable label on the fill that disables it and on the three page
 surfaces, accent and selected, the state washes,
 the placeholder, and the essential boundaries and focus ring — the ring and the
 strong boundary on every surface a focused control can sit on, including a
-toolbar strip (`muted`) and a segmented group (`secondary`). A wash — `hover`,
+toolbar strip (`muted`) and a segmented group (`secondary`), plus the invalid
+edge below. A wash — `hover`,
 `active`, `accent` — is a surface too: a ghost button or a menu row tints it and
 leaves its label in the
 resting `foreground`, and secondary text keeps `mutedForeground`, so both
@@ -853,6 +854,35 @@ measure one by hand, composite it first and use `contrastRatio`.
 `src/theme-audit.example.ts` runs `auditTheme` over a theme with one misspelt
 fill, and `theme.test.ts` asserts the reported role, so the failure this page
 describes is the failure the example produces.
+
+### The invalid state
+
+Validation failure is a boundary, not a fill. An invalid field's border — and
+the `focusVisible` line it paints while focused — take the `destructive` role,
+the one colour a reader reads as "this needs attention", and the field keeps its
+own fill, so the value it holds and its placeholder stay the roles the table
+measures (`inputForeground` on `input` at the body floor, `placeholder` on
+`input` at the secondary floor).
+
+That edge is a boundary, so `destructive` is held to `contrastFloors.boundary`
+on every strip a control sits on. Four of them — the page, a card, a popover and
+a `muted` toolbar — already hold the same role to the same floor as an indicator
+mark; a field's own fill (`input`) and a segmented panel (`secondary`) joined
+`contrastPairs` because no other contract measured them. The tightest shipped
+placement is Windows XP Luna's dark `secondary` panel at 3.26:1.
+`contrast.test.ts`'s `the invalid state's edge` suite holds the coverage from
+both contracts, reports an invalid edge that matches its own field fill, and
+checks every shipped theme on all six strips.
+
+One limitation is the primitive package's, recorded here because this page owns
+the rule: `FIELD_INVALID` in `packages/primitives/src/recipe/index.ts` also
+paints `aria-invalid:bg-destructive`, so an invalid `Input`, `TextArea`,
+`OTPField` cell, `Select` trigger or `NumberField` becomes a solid destructive
+box while its value keeps `inputForeground` — 3.31:1 in the light theme, 2.45:1
+in the dark and 2.08:1 in high contrast, with a placeholder at 1.02:1. A role
+designed to be an edge cannot carry text, and no contract rescues that; the
+components package's `FieldInput` already keeps the fill. The fix is an
+interlock row in `TODO.md`.
 
 ### The disabled floor
 
@@ -1893,13 +1923,15 @@ or dropped is named rather than passing silently.
 - Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. No component consumes it yet.
-- The derived action fills are shipped and documented, but the component
-  packages still paint a translucent hover: `alpha(primary, 0.5)` in
-  `packages/components/src/internal/button.tsx`, the `hover:bg-primary/90` and
+- The derived action fills are adopted by the components package's `Button` and
+  `IconButton` (`filledHover` / `filledPressed` in
+  `packages/components/src/internal/button.tsx`), but the primitive package
+  still paints a translucent hover: the `hover:bg-primary/90` and
   `active:bg-primary/80` classes in `packages/primitives/src/recipe/index.ts`,
-  and the selection role at 0.9 alpha in `packages/primitives/src/core/selection.ts`
-  for a filled checkbox or radio. Adopting `filledHover` / `filledPressed` is
-  their workstream's, recorded in `TODO.md` → Interlocks.
+  and the selection role at 0.9 alpha in
+  `packages/primitives/src/core/selection.ts` for a filled checkbox or radio.
+  Adopting the fills there is the primitives workstream's, recorded in
+  `TODO.md` → Interlocks.
 - `avatarSize` is a fixed scale, not a theme group. Adding a group to `Theme` is a
   breaking change for a hand-built theme literal, so a brand-specific diameter
   stays a component decision for now.

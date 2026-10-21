@@ -447,7 +447,10 @@ Each report is also a function of its own:
 check — `undefined` for a translucent or non-hex value rather than a guess.
 `contrastFloors` / `highContrastFloors` and `contrastPairs` are the contract the
 shipped themes meet, so a brand is held to the same pairs rather than a second
-set. The decorative surfaces use `decorativeFloor` (1.05:1, the same
+set. An invalid control's edge — the `destructive` role as a field's border and
+focus line — is held to the boundary floor on the six strips a control sits on:
+four through the mark contract and two (`input`, `secondary`) through
+`contrastPairs`. The decorative surfaces use `decorativeFloor` (1.05:1, the same
 perceptibility floor the soft status surfaces use), and `decorativeSurfaces`
 names the placements measured — dividers, skeleton fills, the modal veil, each
 status tone's edge (read at the share `statusEdgeAlpha` that `statusTone`
