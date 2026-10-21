@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * The filesystem behind the surface measurement.
  *
@@ -22,6 +21,7 @@ import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import {
   measureSurface,
+  packageName,
   type Surface,
   type SurfaceIO,
 } from "../src/surface.js";
@@ -126,17 +126,6 @@ const resolveBare = (
         : firstFile(withExtensions(join(directory, "src", subpath))),
     ),
   );
-};
-
-/** The package part of a bare specifier; `None` for a relative path. */
-const packageName = (specifier: string): Option.Option<string> => {
-  if (Str.startsWith(".")(specifier) || Str.startsWith("/")(specifier)) {
-    return Option.none();
-  }
-  const parts = Str.split("/")(specifier);
-  return Str.startsWith("@")(specifier)
-    ? Option.map(Arr.get(parts, 1), (rest) => `${parts[0] ?? ""}/${rest}`)
-    : Arr.head(parts);
 };
 
 const io: SurfaceIO = {
