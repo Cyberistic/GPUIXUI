@@ -121,7 +121,7 @@ export const patterns: ReadonlyArray<Pattern> = [
       "The screen owns the value and passes it down; `Form` owns the error list and the pending guard. There is no field registration and no second copy of the value.",
     steps: [
       "Keep the value in one place — a schema-decoded value in the screen's state — and pass it to `Form`.",
-      "Decode on submit; every message appears in one `role=\"alert\"` summary in schema order, so a failed save is announced once.",
+      'Decode on submit; every message appears in one `role="alert"` summary in schema order, so a failed save is announced once.',
       "Pass `pending` to `Form` and disable the submit control with the same flag; the component refuses a submit while it is set.",
       "Read `form.errors` from the render prop when a field also needs its own message; `Field` carries the description to the control.",
     ],

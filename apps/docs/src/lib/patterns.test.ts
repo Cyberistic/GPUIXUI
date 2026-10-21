@@ -21,7 +21,10 @@ const repo = new URL("../../../../", import.meta.url);
 /** Every `.mdx` file under a directory, recursively, as URLs. */
 const mdxFiles = (dir: URL): ReadonlyArray<URL> =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const child = new URL(`${entry.name}${entry.isDirectory() ? "/" : ""}`, dir);
+    const child = new URL(
+      `${entry.name}${entry.isDirectory() ? "/" : ""}`,
+      dir,
+    );
     if (entry.isDirectory()) return mdxFiles(child);
     return entry.name.endsWith(".mdx") ? [child] : [];
   });
@@ -86,9 +89,9 @@ describe("the pattern data", () => {
       return source === undefined || !mentions(source, reference.name);
     });
 
-    expect(broken.map((reference) => `${reference.owner}: ${reference.name}`)).toEqual(
-      [],
-    );
+    expect(
+      broken.map((reference) => `${reference.owner}: ${reference.name}`),
+    ).toEqual([]);
   });
 
   it("points every example at a file the registry publishes", () => {
@@ -134,9 +137,7 @@ describe("the patterns page", () => {
   it("renders every pattern under its own heading", () => {
     const unruly = patterns.filter(
       (pattern) =>
-        !page.includes(
-          `## ${pattern.title}\n\n<Pattern id="${pattern.id}" />`,
-        ),
+        !page.includes(`## ${pattern.title}\n\n<Pattern id="${pattern.id}" />`),
     );
 
     expect(unruly.map((pattern) => pattern.id)).toEqual([]);
@@ -155,8 +156,7 @@ describe("the patterns page", () => {
   });
 
   it("hands off to the block, example and reference pages", () => {
-    const links =
-      page.match(/\]\(\/docs\/[a-z0-9/-]+(?:#[a-z-]+)?\)/g) ?? [];
+    const links = page.match(/\]\(\/docs\/[a-z0-9/-]+(?:#[a-z-]+)?\)/g) ?? [];
 
     expect(links.length).toBeGreaterThanOrEqual(3);
   });

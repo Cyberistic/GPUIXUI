@@ -33,15 +33,13 @@ describe("a pattern", () => {
       const pattern = patterns.find((candidate) => candidate.id === id);
       if (pattern === undefined) throw new Error(`no pattern ${id}`);
 
-      expect(pattern.parts.filter((part) => !markup.includes(part.name))).toEqual(
-        [],
-      );
+      expect(
+        pattern.parts.filter((part) => !markup.includes(part.name)),
+      ).toEqual([]);
       expect(
         pattern.parts.filter((part) => !markup.includes(`href="${part.url}"`)),
       ).toEqual([]);
-      expect(
-        pattern.steps.filter((step) => !prose.includes(step)),
-      ).toEqual([]);
+      expect(pattern.steps.filter((step) => !prose.includes(step))).toEqual([]);
       expect(prose).toContain(pattern.state);
       expect(prose).toContain(pattern.prevents);
       expect(markup).toContain(pattern.example);
@@ -66,9 +64,9 @@ describe("the component chooser", () => {
   it("prints every question with the component it recommends", () => {
     const markup = renderToStaticMarkup(<PatternChoices />);
 
-    expect(patternChoices.filter((choice) => !markup.includes(choice.need))).toEqual(
-      [],
-    );
+    expect(
+      patternChoices.filter((choice) => !markup.includes(choice.need)),
+    ).toEqual([]);
     expect(
       patternChoices.filter(
         (choice) => !markup.includes(`href="${choice.use.url}"`),
