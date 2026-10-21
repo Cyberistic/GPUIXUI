@@ -19,6 +19,42 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 </Stack>;
 ```
 
+The parts put the label and measurement beside the bar:
+
+```tsx
+import {
+  Meter,
+  MeterIndicator,
+  MeterLabel,
+  MeterTrack,
+  MeterValue,
+  Stack,
+} from "@gpuixui/primitives";
+
+<Meter value={68} max={100} label="Disk usage" formatValue={(v) => `${v} GB`}>
+  <Stack direction="row" justify="between">
+    <MeterLabel />
+    <MeterValue />
+  </Stack>
+  <MeterTrack>
+    <MeterIndicator />
+  </MeterTrack>
+</Meter>;
+```
+
+## Parts
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Meter` | role, accessible name, announced measurement, the frame |
+| `MeterTrack` | the bar's background, height, radius and overflow clip |
+| `MeterIndicator` | the measurement's share of the track |
+| `MeterLabel` | visible subject, defaulting to the root's `label` |
+| `MeterValue` | the formatted measurement, defaulting to the announced text |
+
+The default composition is the track and its indicator. A caller's `children`
+replace it, and every part reads the same clamped measurement the fill paints.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -27,10 +63,17 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 | `min` / `max` | `number` | `0` / `100` | the range the fill is a fraction of |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs` / `sm` |
-| `label` | `string` | none | accessible name |
-| `formatValue` | `(value: number) => string` | `String` | the announced measurement |
-| `style` | `StyleDesc` | — | merged last, on the track |
-| `testId` | `string` | — | stable locator |
+| `label` | `string` | none | accessible name, and `MeterLabel`'s default text |
+| `formatValue` | `(value: number) => string` | `String` | the announced and displayed measurement |
+| `children` | `ReactNode` | the track | the parts to draw |
+| `style` | `StyleDesc` | — | merged last, on the root frame |
+| `className` | `string` | — | Tailwind classes, joined last on the root frame |
+| `testId` | `string` | — | stable locator, on the root |
+
+`MeterTrack` and `MeterIndicator` accept `style`, `className` and `testId`;
+`MeterTrack` also takes `children`. `MeterLabel` takes `children` (visible
+text) and `testId`; `MeterValue` takes `testId`. Each part's `style` is merged
+last, after the recipe.
 
 There is no `aria-valuemax` in the runtime, so pair the meter with visible text
 when the range matters ("68 of 100 GB" above) — the announcement is the value
@@ -48,26 +91,29 @@ behaviour and no tab stop.
   0.10.0 has no `aria-valuenow`/`min`/`max`.
 - The name comes from `label`. Without one the meter is unnamed; give it the
   measurement's subject ("Disk usage").
+- `MeterLabel` is visible text, not a second name.
 
 ## Theming
 
 The paint is `Progress`'s: `colors.muted` track, the tone's role for the fill
 (`colors.primary`, `colors.success`, `colors.destructive`,
 `colors.mutedForeground`), height a spacing step, both ends `radius.full`. One
-bar painter means `Progress` and `Meter` cannot drift apart.
+bar painter means `Progress` and `Meter` cannot drift apart. The label and value
+parts use the `caption` type role in the `muted` text tone.
 
 ## Limitations
 
 - No `aria-valuenow`/`min`/`max` (above).
-- No threshold segments, tick marks or a label inside the track.
+- No threshold segments, tick marks or a part that paints inside the track.
 - The fill cannot animate between values; `motion` is not used here, so a
   changing measurement repaints rather than interpolates.
 
 ## Verification
 
 - `src/core/value.test.ts` — the fraction and clamping the paint depends on.
-- `src/components/Meter.test.tsx` — role, announced value, clamped range, the
-  formatted measurement, and that it is neither a tab stop nor a handler target.
+- `src/components/Meter.test.tsx` — role, announced value, clamped range and
+  fill, the formatted measurement part, the label part, a custom composition,
+  the frame/style split, and that it is neither a tab stop nor a handler target.
 - `runtime/value.runtime.test.tsx` — AccessKit reports `Meter` with the value,
   the fill's painted width is the measurement's fraction of the track, and Tab
   never lands on it. Measured 2026-10-17 (plan 053 §11).

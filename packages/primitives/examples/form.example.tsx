@@ -16,6 +16,10 @@ import {
   Input,
   Label,
   Progress,
+  ProgressIndicator,
+  ProgressLabel,
+  ProgressTrack,
+  ProgressValue,
   Select,
   Stack,
   Text,
@@ -107,7 +111,15 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         {saving ? (
-          <Progress label="Creating project" value={62} tone="success" />
+          <Progress label="Creating project" value={62} tone="success">
+            <Stack direction="row" justify="between">
+              <ProgressLabel />
+              <ProgressValue />
+            </Stack>
+            <ProgressTrack>
+              <ProgressIndicator />
+            </ProgressTrack>
+          </Progress>
         ) : null}
 
         <ButtonGroup

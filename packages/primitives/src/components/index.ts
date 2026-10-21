@@ -69,8 +69,20 @@ export type {
   RadioOption,
 } from "./RadioGroup.js";
 
-export { Progress } from "./Progress.js";
-export type { ProgressProps } from "./Progress.js";
+export {
+  Progress,
+  ProgressIndicator,
+  ProgressLabel,
+  ProgressTrack,
+  ProgressValue,
+} from "./Progress.js";
+export type {
+  ProgressIndicatorProps,
+  ProgressLabelProps,
+  ProgressProps,
+  ProgressTrackProps,
+  ProgressValueProps,
+} from "./Progress.js";
 
 export { Rating, ratingMax } from "./Rating.js";
 export type { RatingProps } from "./Rating.js";
@@ -92,8 +104,20 @@ export type {
   SliderTrackProps,
 } from "./Slider.js";
 
-export { Meter } from "./Meter.js";
-export type { MeterProps } from "./Meter.js";
+export {
+  Meter,
+  MeterIndicator,
+  MeterLabel,
+  MeterTrack,
+  MeterValue,
+} from "./Meter.js";
+export type {
+  MeterIndicatorProps,
+  MeterLabelProps,
+  MeterProps,
+  MeterTrackProps,
+  MeterValueProps,
+} from "./Meter.js";
 
 export { Skeleton } from "./Skeleton.js";
 export type { SkeletonProps } from "./Skeleton.js";

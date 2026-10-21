@@ -307,12 +307,15 @@ it("announces a meter's measurement and paints it inside its own range", async (
     Option.isSome(a11yNode(runtime.a11y(), { role: "Meter", label: "Disk" })),
   ).toBe(true);
   expect(announced(runtime, "Disk")).toBe("25");
-  const track = boundsOf(runtime, "m");
-  const fill = elementById(runtime, trackOf(runtime, "m").children[0] ?? -1);
+  const bar = elementById(runtime, trackOf(runtime, "m").children[0] ?? -1);
+  const fill = elementById(runtime, bar.children[0] ?? -1);
+  const barBox = Option.getOrElse(runtime.boundsOfId(bar.id), () =>
+    expect.fail("the meter painted no track box"),
+  );
   const fillBox = Option.getOrElse(runtime.boundsOfId(fill.id), () =>
     expect.fail("the meter painted no fill"),
   );
-  expect(Math.abs(fillBox.width - track.width / 2)).toBeLessThan(2);
+  expect(Math.abs(fillBox.width - barBox.width / 2)).toBeLessThan(2);
 });
 
 it("keeps a meter out of the tab order", async () => {

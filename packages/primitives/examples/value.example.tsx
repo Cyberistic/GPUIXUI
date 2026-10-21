@@ -13,6 +13,10 @@ import { Icon } from "@gpuixui/icons";
 import {
   Box,
   Meter,
+  MeterIndicator,
+  MeterLabel,
+  MeterTrack,
+  MeterValue,
   RangeSlider,
   Separator,
   Slider,
@@ -100,16 +104,22 @@ export const ValueExample = (): ReactElement => {
 
         <Separator orientation="horizontal" />
 
-        <Row title="Disk usage" value={`${diskUsed} of 100 GB`}>
-          <Meter
-            testId="value-example-disk"
-            label="Disk usage"
-            value={diskUsed}
-            max={100}
-            tone={diskUsed > 90 ? "destructive" : "primary"}
-            formatValue={(value) => `${value} GB`}
-          />
-        </Row>
+        <Meter
+          testId="value-example-disk"
+          label="Disk usage"
+          value={diskUsed}
+          max={100}
+          tone={diskUsed > 90 ? "destructive" : "primary"}
+          formatValue={(value) => `${value} GB`}
+        >
+          <Stack direction="row" justify="between" align="baseline">
+            <MeterLabel />
+            <MeterValue />
+          </Stack>
+          <MeterTrack>
+            <MeterIndicator />
+          </MeterTrack>
+        </Meter>
 
         <Text role="caption" tone="muted">
           Theme step: {theme.spacing.md}px · drag the thumb or use the arrow

@@ -17,7 +17,11 @@ import { expect, it } from "vitest";
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { Progress } from "../src/components/Progress.js";
+import {
+  Progress,
+  ProgressIndicator,
+  ProgressTrack,
+} from "../src/components/Progress.js";
 import { Skeleton } from "../src/components/Skeleton.js";
 import { Spinner } from "../src/components/Spinner.js";
 import { Stack } from "../src/components/Stack.js";
@@ -29,6 +33,16 @@ const childrenOf = (runtime: Runtime, testId: string) =>
   Option.getOrElse(
     Option.map(runtime.element(testId), (element) => element.children),
     () => expect.fail(`the runtime retained no ${testId}`),
+  );
+
+/** The child element ids of an element by id. */
+const childrenOfId = (runtime: Runtime, id: number) =>
+  Option.getOrElse(
+    Option.map(
+      Option.fromNullishOr(runtime.renderer.getElement(id)),
+      (element) => element.children,
+    ),
+    () => expect.fail(`element ${id} vanished`),
   );
 
 const idOf = (runtime: Runtime, testId: string): number =>
@@ -103,14 +117,19 @@ it("fills a determinate Progress to its value", async () => {
         <Progress testId="pg" value={value} />
       </Surface>,
     );
-    const track = Option.getOrElse(runtime.bounds("pg"), () =>
+    // The root is the frame; the bar is its only child, the fill the bar's.
+    const trackId = Option.getOrElse(Arr.head(childrenOf(runtime, "pg")), () =>
       expect.fail("the Progress painted no track"),
     );
-    const fill = Option.getOrElse(
-      Option.flatMap(Arr.head(childrenOf(runtime, "pg")), (id) =>
-        runtime.boundsOfId(id),
-      ),
+    const fillId = Option.getOrElse(
+      Arr.head(childrenOfId(runtime, trackId)),
       () => expect.fail("the Progress painted no fill"),
+    );
+    const track = Option.getOrElse(runtime.boundsOfId(trackId), () =>
+      expect.fail("the Progress painted no track box"),
+    );
+    const fill = Option.getOrElse(runtime.boundsOfId(fillId), () =>
+      expect.fail("the Progress painted no fill box"),
     );
     return { track: track.width, fill: fill.width };
   };
@@ -120,6 +139,28 @@ it("fills a determinate Progress to its value", async () => {
   const partial = await widths(42);
   expect(partial.fill).toBeGreaterThan(0);
   expect(partial.fill).toBeLessThan(partial.track);
+});
+
+it("paints a caller's Progress composition from the same resolved state", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" value={50} label="Uploading">
+        <ProgressTrack testId="track">
+          <ProgressIndicator testId="fill" />
+        </ProgressTrack>
+      </Progress>
+    </Surface>,
+  );
+  // The parts read the root's context in the real renderer: a part wired to
+  // the wrong state would paint at the wrong width or not at all.
+  const track = Option.getOrElse(runtime.bounds("track"), () =>
+    expect.fail("the composed track painted no box"),
+  );
+  const fill = Option.getOrElse(runtime.bounds("fill"), () =>
+    expect.fail("the composed indicator painted no box"),
+  );
+  expect(Math.abs(fill.width - track.width / 2)).toBeLessThan(2);
 });
 
 it("clamps a Progress value outside 0–100", async () => {
@@ -152,7 +193,10 @@ it("moves an indeterminate Progress's segment over time", async () => {
   const offsets = await sample(
     runtime,
     () => {
-      const lead = Arr.head(childrenOf(runtime, "pg"));
+      const track = Arr.head(childrenOf(runtime, "pg"));
+      const lead = Option.flatMap(track, (id) =>
+        Arr.head(childrenOfId(runtime, id)),
+      );
       return Option.getOrUndefined(
         Option.flatMap(lead, (id) =>
           Option.fromNullishOr(styleOf(runtime, id)["width"]),

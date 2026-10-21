@@ -22,6 +22,43 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 <Progress label="Saving" />
 ```
 
+The parts compose the bar for a caller who wants the value beside it:
+
+```tsx
+import {
+  Progress,
+  ProgressIndicator,
+  ProgressLabel,
+  ProgressTrack,
+  ProgressValue,
+  Stack,
+} from "@gpuixui/primitives";
+
+<Progress value={42} label="Uploading">
+  <ProgressTrack>
+    <ProgressIndicator />
+  </ProgressTrack>
+  <Stack direction="row" justify="between">
+    <ProgressLabel>Uploading</ProgressLabel>
+    <ProgressValue />
+  </Stack>
+</Progress>;
+```
+
+## Parts
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Progress` | role, accessible name, announced value, the frame |
+| `ProgressTrack` | the bar's background, height, radius and overflow clip |
+| `ProgressIndicator` | the fill; while indeterminate it is the moving segment |
+| `ProgressLabel` | visible task name, defaulting to the root's `label` |
+| `ProgressValue` | the clamped percentage, or `loading` with no value |
+
+The default composition is the track and its indicator. A caller's `children`
+replace it entirely, and the parts render from the same resolved state the
+root uses — there is no second paint path.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -29,12 +66,20 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `value` | `number` | — | 0–100 determinate fill; omit for indeterminate |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
-| `label` | `string` | none | accessible name |
-| `style` | `StyleDesc` | — | merged last |
-| `testId` | `string` | — | stable locator |
+| `label` | `string` | none | accessible name, and `ProgressLabel`'s default text |
+| `children` | `ReactNode` | the track | the parts to draw |
+| `style` | `StyleDesc` | — | merged last, on the root frame |
+| `className` | `string` | — | Tailwind classes, joined last on the root frame |
+| `testId` | `string` | — | stable locator, on the root |
+
+`ProgressTrack` and `ProgressIndicator` accept `style`, `className` and
+`testId`; `ProgressTrack` also takes `children`. `ProgressLabel` takes
+`children` (visible text) and `testId`; `ProgressValue` takes `testId`. Each
+part's `style` is merged last, after the recipe.
 
 Values outside 0–100 are clamped, so a bar can never paint outside its track.
-`NaN` is treated as empty, never as complete.
+`NaN` is treated as empty, never as complete. The fill and `ProgressValue` read
+the same clamped number.
 
 ## Keyboard
 
@@ -47,27 +92,33 @@ Not focusable. Progress is status, not a control; there is no slider behaviour.
   `"loading"` — because GPUix 0.10.0 has no `aria-valuenow`.
 - The name comes from `label`. Without one, a progress bar is an unnamed
   progress bar; give it the task's name ("Uploading", "Saving").
+- `ProgressLabel` is visible text, not a second name: it does not replace the
+  root's `label`.
 
 ## Theming
 
-`progressTrackStyle` paints `colors.muted`; `progressFillStyle` paints the tone's
-role. Height is a spacing step and both ends are `radius.full`, so a density or
-radius change moves the whole family.
+`progressTrackClass` paints `colors.muted`; `progressFillClass` paints the
+tone's role. Height is a spacing step and both ends are `radius.full`, so a
+density or radius change moves the whole family. The label and value parts use
+the `caption` type role in the `muted` text tone.
 
 ## Limitations
 
 - No `aria-valuenow` (above).
 - The indeterminate segment is a discrete step, not a smooth sweep; the runtime
   cannot interpolate position beyond the motion API this package does not import.
-- No buffer/secondary value, no stacked segments, no label inside the track.
+- No buffer/secondary value and no stacked segments. The label and value parts
+  sit beside the track; painting text *inside* the bar is not a part.
 
 ## Verification
 
 - `src/core/style.test.ts` — clamping, including `NaN` and infinity.
-- `src/components/Progress.test.tsx` — tree-level track/fill and tone.
+- `src/components/Progress.test.tsx` — the tree-level track/fill, the clamped
+  fill width, the value part agreeing with it, the indeterminate lead, a custom
+  composition, and the root frame's style merge.
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
-  and −5 to `"0%"`, the fill tracks the value, and the indeterminate segment
-  moves over real time.
+  and −5 to `"0%"`, the fill tracks the value inside the track, and the
+  indeterminate segment moves over real time.
 
 ```sh
 nub run --filter @gpuixui/primitives test
@@ -78,4 +129,5 @@ nub run --filter @gpuixui/primitives test:runtime
 
 - **Spinner** — activity with no known proportion.
 - **Skeleton** — content that has not arrived.
+- **Meter** — a measurement in a range, not task progress.
 - **Button** — the `loading` action state.

@@ -10,9 +10,11 @@ Tier 1"; components' `internal/button.tsx` stand-in can only be retired once
 four fields (`Input` + `TextArea` in `dd6d1d51`, `NumberField` + `OTPField`
 after the binding landed); Step 3 landed (Checkbox/Switch parts); Step 4 landed
 (`RadioGroupItem` + `onValueChange`); Step 5 landed (slider parts, custom thumb
-glyph, `onValueChange`). The `darwin-x64` binding for 0.11.0 landed on this host
-on 2026-10-21, so the unit suites (377) and the runtime suites (123) both run
-here again — runtime verification is no longer pending.
+glyph, `onValueChange`); Step 6 landed (`Progress`/`Meter` track, indicator,
+label and value parts, with a composed composition painted in the renderer).
+The `darwin-x64` binding for 0.11.0 landed on this host on 2026-10-21, so the
+unit suites (390) and the runtime suites (124) both run here again — runtime
+verification is no longer pending.
 
 ---
 
@@ -257,7 +259,24 @@ the commit body of every later step; it must never go down.
 - Test: the thumb's centre lands on the filled fraction at 0 %, 50 %, 100 %
   (assert the computed margins/width, the same numbers the runtime measures).
 
-### Step 6 — `Progress` and `Meter` parts
+### Step 6 — `Progress` and `Meter` parts — **landed**
+
+> Landed 2026-10-21. `Progress` exports `ProgressTrack`, `ProgressIndicator`,
+> `ProgressLabel` and `ProgressValue`; `Meter` mirrors them. The root is a frame
+> (`role`, name, announced value, caller `style`/`className`), the track carries
+> the bar recipe, and the indicator paints the clamped fill (the moving lead
+> segment while indeterminate). One `progressPart`/`meterPart` resolver feeds the
+> root and every part, so a label or value part cannot disagree with the fill.
+> Parts read a small context; the default composition calls the same paint
+> functions directly. New tests: the fill width at 42/250/−5/NaN, the value part
+> printing the same clamp, `loading` for an indeterminate value part, a custom
+> composition replacing the default, the frame/bar style split, and a native test
+> that a composed `ProgressTrack`/`ProgressIndicator` paints at the root's value
+> through the real context. Both-direction proofs measured: printing the raw
+> value fails three Progress tests (`250%` vs `100%`), and removing the context
+> provider fails the composed runtime test (`ProgressTrack must be used inside
+> Progress`). Unit suite 377 → 390; runtime 123 → 124. Docs list the five parts
+> and both examples compose them.
 
 - Files: `Progress.tsx`, `Meter.tsx`, their unit tests, docs, `examples/form.example.tsx`,
   `examples/value.example.tsx`.

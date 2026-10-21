@@ -1,16 +1,36 @@
 /**
- * `Progress` — the bar and its accessible value.
+ * `Progress` — the bar, its parts and its accessible value.
  *
  * GPUix has no `aria-valuenow` (plan 020 §1.4), so the value rides on
  * `aria-valuetext`. The bug to guard is paint outside the track: a value above
  * 100 or below 0 must clamp, and an indeterminate bar must not look finished.
+ * The parts suite guards the second failure: the value a caller renders must be
+ * the same clamped number the fill paints, and the default composition must
+ * stay the track alone so an existing `<Progress value={42} />` does not grow
+ * text it never asked for.
  */
 
+import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import { renderProgress } from "./Progress.js";
-import { expectSome, hostProp } from "./testing/element.js";
+import {
+  progressPart,
+  ProgressIndicator,
+  ProgressTrack,
+  renderProgress,
+  renderProgressLabel,
+  renderProgressValue,
+} from "./Progress.js";
+import {
+  elementChildren,
+  elementProp,
+  expectSome,
+  hostProp,
+  hostStyleString,
+  hostTag,
+} from "./testing/element.js";
 
 const bar = (value: Option.Option<number>) =>
   renderProgress(
@@ -20,6 +40,35 @@ const bar = (value: Option.Option<number>) =>
     }),
     testTheme,
     0,
+  );
+
+/**
+ * The first painted element: a context provider draws nothing, so the root's
+ * body is one level in before the default composition's track.
+ */
+const bodyOf = (element: ReactElement): ReactElement => {
+  const child =
+    elementChildren(element)[0] ?? expect.fail("the progress drew nothing");
+  return Option.isSome(hostTag(child))
+    ? child
+    : (elementChildren(child)[0] ?? expect.fail("the progress has no body"));
+};
+
+/** The bar's background — the default composition's only body. */
+const trackOf = bodyOf;
+
+/** The fill inside the default track. */
+const fillOf = (element: ReactElement) =>
+  elementChildren(trackOf(element))[0] ??
+  expect.fail("the track has no indicator");
+
+/** A text part's children, as React handed them to the host. */
+const textOf = (element: ReactElement): string =>
+  Option.getOrElse(
+    Option.flatMap(elementProp(element, "children"), (children) =>
+      Schema.decodeUnknownOption(Schema.String)(children),
+    ),
+    () => expect.fail("the part carried no text"),
   );
 
 describe("Progress", () => {
@@ -44,5 +93,110 @@ describe("Progress", () => {
     const element = bar(Option.some(42));
     expect(hostProp(element, "aria-valuenow")).toStrictEqual(Option.none());
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42%");
+  });
+
+  it("paints the fill at the clamped percentage of the track", () => {
+    const widthAt = (value: number): string =>
+      expectSome(hostStyleString(fillOf(bar(Option.some(value))), "width"));
+    expect(widthAt(42)).toBe("42%");
+    expect(widthAt(250)).toBe("100%");
+    expect(widthAt(-5)).toBe("0%");
+    expect(widthAt(Number.NaN)).toBe("0%");
+  });
+
+  it("gives the value part the same clamp the fill paints", () => {
+    const valueText = (value: number): string =>
+      textOf(renderProgressValue({}, progressPart({ value }, testTheme, 0)));
+    expect(valueText(42)).toBe("42%");
+    expect(valueText(250)).toBe("100%");
+    expect(valueText(-5)).toBe("0%");
+    expect(valueText(Number.NaN)).toBe("0%");
+    // A value part that read the raw prop would print "250%".
+    expect(valueText(250)).toBe(
+      expectSome(hostStyleString(fillOf(bar(Option.some(250))), "width")),
+    );
+  });
+
+  it("reads the loading state, not a percentage, on an indeterminate value part", () => {
+    const element = renderProgressValue({}, progressPart({}, testTheme, 0));
+    expect(textOf(element)).toBe("loading");
+  });
+
+  it("shows the label in a label part, or the caller's own text", () => {
+    const part = progressPart({ value: 42, label: "Uploading" }, testTheme, 0);
+    expect(textOf(renderProgressLabel({}, part))).toBe("Uploading");
+    expect(textOf(renderProgressLabel({ children: "Saving" }, part))).toBe(
+      "Saving",
+    );
+  });
+
+  it("keeps the default composition to the track and its indicator", () => {
+    const element = bar(Option.some(42));
+    const track = trackOf(element);
+    expect(expectSome(hostTag(track))).toBe("div");
+    expect(hostStyleString(track, "backgroundColor")).toStrictEqual(
+      Option.some(testTheme.colors.muted),
+    );
+    // One child: an indeterminate bar adds a second moving segment, and no
+    // composition carries a value part unless the caller asks for one.
+    expect(elementChildren(track)).toHaveLength(1);
+    // Root → provider → track: the default body has no value part.
+    const provider =
+      elementChildren(element)[0] ?? expect.fail("the progress drew nothing");
+    expect(elementChildren(provider)).toHaveLength(1);
+  });
+
+  it("draws a lead segment before the indicator while indeterminate", () => {
+    const element = bar(Option.none());
+    const track = trackOf(element);
+    expect(elementChildren(track)).toHaveLength(2);
+    const leadWidth = (step: number): string =>
+      expectSome(
+        hostStyleString(
+          elementChildren(trackOf(renderProgress({}, testTheme, step)))[0] ??
+            expect.fail("no lead"),
+          "width",
+        ),
+      );
+    expect(leadWidth(0)).not.toBe(leadWidth(1));
+  });
+
+  it("lets a caller replace the composition with the parts", () => {
+    const element = renderProgress(
+      {
+        value: 50,
+        children: (
+          <ProgressTrack>
+            <ProgressIndicator />
+          </ProgressTrack>
+        ),
+      },
+      testTheme,
+      0,
+    );
+    const provider =
+      elementChildren(element)[0] ?? expect.fail("the progress drew nothing");
+    const track = elementChildren(provider)[0];
+    expect(track?.type).toBe(ProgressTrack);
+    const indicator = elementChildren(
+      track ?? expect.fail("the caller's track went missing"),
+    )[0];
+    expect(indicator?.type).toBe(ProgressIndicator);
+  });
+
+  it("keeps the caller's style on the root frame and the bar's paint on the track", () => {
+    const element = renderProgress(
+      { value: 42, style: { width: "80%" } },
+      testTheme,
+      0,
+    );
+    expect(hostStyleString(element, "flexDirection")).toStrictEqual(
+      Option.some("column"),
+    );
+    // The caller's style is merged last, after the frame's own width.
+    expect(hostStyleString(element, "width")).toStrictEqual(Option.some("80%"));
+    expect(hostStyleString(trackOf(element), "backgroundColor")).toStrictEqual(
+      Option.some(testTheme.colors.muted),
+    );
   });
 });
