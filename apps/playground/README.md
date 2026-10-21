@@ -284,6 +284,34 @@ per-element, and an element that draws its own focus look opts out with
 A failed probe still writes its report and captures, so a regression is visible,
 not just red.
 
+### `floating-sides` — measured on 0.11.0 here
+
+The headless `floating-placement` scenario measures the engine against the
+`TestRenderer`; a window can differ (the tabs indicator did). The horizontal
+sides and the runtime's `align="center"` offset had never been measured live, so
+this probe mounts three anchors at rest — `side="right"`, `side="left"` and
+`side="right" align="center"` — and compares each panel's painted box with its
+anchor's on the axis the prop controls:
+
+| Placement | Check | Measured |
+| --------- | ----- | -------- |
+| `side="right"` | panel left edge | anchor right + 6px |
+| `side="left"` | panel right edge | anchor left − 6px |
+| `align="start"` (both) | panel top | anchor top |
+| `side="right" align="center"` | panel bottom | the anchor's centre line — the runtime ends the panel at the centre rather than centring it |
+
+That last row is the quirk the overlay components compensate for with a measured
+`start` offset (plan `323`); the probe pins the runtime behaviour so an upstream
+fix fails here instead of silently moving every menu. The components' own
+compensation is their native behaviour suites' job — the runner still cannot
+import `@gpuixui/components` (TODO → Interlocks).
+
+Negative control, measured: mapping the left layer to `side="right"` fails
+`side=left ends one gap left of its anchor: expected 254 ± 1, got 546`,
+exit `1`. Capture: `.artifacts/live/floating-sides.png` — the right panel sits
+beside its anchor, the left panel mirrors it, and the centre panel visibly starts
+half its height low.
+
 ### `font-registration-late` — measured on 0.11.0 here
 
 The typings for `registerFont` say a family that did not exist when the text
@@ -512,7 +540,10 @@ narrower. Each deviation is deliberate and measured:
   fails `side=right sits one gap right of the anchor: expected 326 ± 1, got 200`
   (plan `156` §8). Declaring `GpuixTestSquare` at mount in
   `font-registration-late` fails `the face was not painted before it was
-  installed` (exit `1`), which is that probe's negative control.
+  installed` (exit `1`), which is that probe's negative control. Mapping the
+  left layer to `side="right"` in `floating-sides` fails
+  `side=left ends one gap left of its anchor: expected 254 ± 1, got 546`
+  (exit `1`).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

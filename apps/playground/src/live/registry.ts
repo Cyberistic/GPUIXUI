@@ -49,6 +49,12 @@ export const liveRegistry = [
     capability: "focus",
   },
   {
+    id: "floating-sides",
+    title:
+      "Floating: left/right sides and the align=center offset measure the same in a window",
+    capability: "floating",
+  },
+  {
     id: "font-registration-late",
     title:
       "Text: a face installed after the first layout paints on the next re-layout",

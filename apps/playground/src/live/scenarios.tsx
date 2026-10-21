@@ -17,6 +17,8 @@ import {
   ThemeProvider as PrimitiveThemeProvider,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
+import { useWindowSize } from "@gpuix/react";
+import { FloatingLayer } from "@gpuix/react/floating";
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import type { LiveProbeId } from "./registry.js";
@@ -324,6 +326,107 @@ const LateRegistrationProbe = (): ReactNode => {
 };
 
 /**
+ * Three anchors in a real window, one per placement this probe asks about.
+ *
+ * The headless `floating-placement` scenario proves the same engine against the
+ * `TestRenderer`. A window can differ (it did for the tabs indicator), and the
+ * left/right sides plus the `align="center"` quirk were never measured live, so
+ * each anchor mounts its own layer: `side=right`, `side=left`, and
+ * `side=right align=center` — the state every menu compensates for.
+ */
+const FloatingSidesProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const place = { left: 260, width: 120, height: 40 } as const;
+  const panel = (testId: string): ReactNode => (
+    <div
+      testId={testId}
+      style={{
+        width: 160,
+        height: 80,
+        padding: theme.spacing.sm,
+        pointerEvents: "auto",
+        backgroundColor: theme.colors.popover,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        borderRadius: theme.radius.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        panel
+      </text>
+    </div>
+  );
+  const anchor = (testId: string, top: number, layer: ReactNode): ReactNode => (
+    <div
+      testId={testId}
+      role="button"
+      tabIndex={0}
+      style={{
+        position: "absolute",
+        left: place.left,
+        top,
+        width: place.width,
+        height: place.height,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme.colors.muted,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {testId}
+      </text>
+      {layer}
+    </div>
+  );
+
+  return (
+    <div
+      testId="float-live-window"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      {anchor(
+        "anchor-right",
+        80,
+        <FloatingLayer side="right" align="start" sideOffset={GAP}>
+          {panel("panel-right")}
+        </FloatingLayer>,
+      )}
+      {anchor(
+        "anchor-left",
+        220,
+        <FloatingLayer side="left" align="start" sideOffset={GAP}>
+          {panel("panel-left")}
+        </FloatingLayer>,
+      )}
+      {anchor(
+        "anchor-centre",
+        360,
+        <FloatingLayer side="right" align="center" sideOffset={GAP}>
+          {panel("panel-centre")}
+        </FloatingLayer>,
+      )}
+    </div>
+  );
+};
+
+/**
  * The library's own `Input`, wired to a readout.
  *
  * The readout is the proof: it shows the value React received through
@@ -622,6 +725,24 @@ const paintedWidth = (
     return bounds.width;
   });
 
+/** The placement gap every layer in `floating-sides` uses. */
+const GAP = 6;
+
+/** The painted box of `testId`, failing by name when the runtime omitted it. */
+const paintedBox = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<
+  Smoke.Bounds,
+  Smoke.SmokeAssertionError | Smoke.SmokeHostError
+> =>
+  Effect.gen(function* () {
+    return yield* ctx.expectSome(
+      `the runtime paints ${testId}`,
+      Option.fromNullishOr(yield* ctx.host.bounds(testId)),
+    );
+  });
+
 const registerFontSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("register-font-probe");
@@ -714,6 +835,61 @@ const lateRegistrationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * Measures the two horizontal sides and the `align="center"` quirk in a window.
+ *
+ * Each anchor mounts its layer at rest, so there is no open/close state to race:
+ * the probe compares the panel's box with its anchor's on the axis each prop
+ * controls. `align="center"` is asserted the way the runtime behaves (the panel
+ * ends at the anchor's centre line, short by half its own height), because the
+ * components compensate with a measured offset and a live change to that quirk
+ * must fail here rather than silently move every menu.
+ */
+const floatingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("anchor-right");
+
+    const right = yield* paintedBox(ctx, "anchor-right");
+    const rightPanel = yield* paintedBox(ctx, "panel-right");
+    yield* ctx.expectNear(
+      "side=right sits one gap right of its anchor",
+      rightPanel.x,
+      right.x + right.width + GAP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "align=start keeps the panel at the anchor's top",
+      rightPanel.y,
+      right.y,
+      1,
+    );
+
+    const left = yield* paintedBox(ctx, "anchor-left");
+    const leftPanel = yield* paintedBox(ctx, "panel-left");
+    yield* ctx.expectNear(
+      "side=left ends one gap left of its anchor",
+      leftPanel.x + leftPanel.width,
+      left.x - GAP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "align=start holds on the left side too",
+      leftPanel.y,
+      left.y,
+      1,
+    );
+
+    const centre = yield* paintedBox(ctx, "anchor-centre");
+    const centrePanel = yield* paintedBox(ctx, "panel-centre");
+    yield* ctx.expectNear(
+      "align=center ends the panel at the anchor's centre line",
+      centrePanel.y + centrePanel.height,
+      centre.y + centre.height / 2,
+      1,
+    );
+    yield* ctx.host.capture("floating-sides");
+  });
+
 const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("input-field");
@@ -788,6 +964,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "keyboard-focus-dim",
     view: () => <FocusDimProbe />,
     steps: focusDimSteps,
+  },
+  "floating-sides": {
+    id: "floating-sides",
+    view: () => <FloatingSidesProbe />,
+    steps: floatingSteps,
   },
   "font-registration-late": {
     id: "font-registration-late",
