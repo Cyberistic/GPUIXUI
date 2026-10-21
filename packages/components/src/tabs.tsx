@@ -19,6 +19,15 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  TABS_CONTENT,
+  TABS_LIST,
+  TABS_LIST_ORIENTATION,
+  TABS_ORIENTATION,
+  TABS_ROOT,
+  TABS_TRIGGER,
+} from "@gpuixui/tw";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -46,6 +55,7 @@ import {
   isRight,
   isUp,
 } from "./internal/key.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   assertParts,
@@ -53,12 +63,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 import { selectsOnFocus, type TabsActivation } from "./tabs/logic.js";
 
 /** The two axes a tab list can run along. */
@@ -139,6 +144,8 @@ export interface TabsProps extends Omit<Props, "children"> {
   readonly orientation?: TabsOrientation;
   /** Default `"automatic"`: moving focus selects. */
   readonly activation?: TabsActivation;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -152,6 +159,7 @@ export const Tabs = ({
   onValueChange,
   orientation = "horizontal",
   activation = "automatic",
+  className,
   children,
   style,
   ...rest
@@ -303,11 +311,10 @@ export const Tabs = ({
       <div
         {...rest}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: orientation === "horizontal" ? "column" : "row",
-            gap: theme.spacing.md,
-          },
+          recipeStyle(
+            cn(TABS_ROOT, TABS_ORIENTATION[orientation], className),
+            theme,
+          ),
           style,
         )}
       >
@@ -321,12 +328,15 @@ export const Tabs = ({
 export interface TabsListProps extends Omit<Props, "children"> {
   /** The tab list's accessible name. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** The row of triggers. Owns the arrow, Home and End keys. */
 export const TabsList = ({
   label,
+  className,
   onKeyDown,
   children,
   style,
@@ -373,17 +383,10 @@ export const TabsList = ({
         onKeyDown?.(event);
       }}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: orientation === "horizontal" ? "row" : "column",
-          alignItems: "stretch",
-          gap: theme.spacing.xs,
-          padding: theme.spacing.xs,
-          backgroundColor: theme.colors.background,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          borderRadius: theme.radius.md,
-        },
+        recipeStyle(
+          cn(TABS_LIST, TABS_LIST_ORIENTATION[orientation], className),
+          theme,
+        ),
         style,
       )}
     >
@@ -397,6 +400,8 @@ export interface TabsTriggerProps extends Omit<Props, "style"> {
   /** The value this trigger selects. Must match a {@link TabsContent}. */
   readonly value: string;
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the trigger's state. */
   readonly style?: StateStyle<TabsTriggerState>;
 }
@@ -416,6 +421,7 @@ export interface TabsTriggerState {
 export const TabsTrigger = ({
   value,
   disabled = false,
+  className,
   onClick,
   onFocus,
   onBlur,
@@ -483,16 +489,8 @@ export const TabsTrigger = ({
             }
       }
       style={mergeStyles(
-        {
-          ...textStyle(theme, "label"),
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
+        mergeStyles(recipeStyle(cn(TABS_TRIGGER, className), theme), {
           height: controlHeight(theme, "md"),
-          paddingLeft: theme.spacing.lg,
-          paddingRight: theme.spacing.lg,
-          borderRadius: theme.radius.sm,
           backgroundColor: isSelected ? theme.colors.card : undefined,
           color: isSelected
             ? theme.colors.foreground
@@ -508,7 +506,7 @@ export const TabsTrigger = ({
                 color: theme.colors.foreground,
               },
           ...(focused ? focusRing(theme) : {}),
-        },
+        }),
         resolveStyle(style, state),
       )}
     />
@@ -519,10 +517,17 @@ export const TabsTrigger = ({
 export interface TabsContentProps extends Props {
   /** The trigger value that reveals this panel. */
   readonly value: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** The panel for one tab. Renders nothing while another tab is selected. */
-export const TabsContent = ({ value, style, ...rest }: TabsContentProps) => {
+export const TabsContent = ({
+  value,
+  className,
+  style,
+  ...rest
+}: TabsContentProps) => {
   const { selected } = useTabsContext();
   const theme = useTheme();
 
@@ -533,12 +538,7 @@ export const TabsContent = ({ value, style, ...rest }: TabsContentProps) => {
       aria-label={value}
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.md,
-          color: theme.colors.foreground,
-        },
+        recipeStyle(cn(TABS_CONTENT, className), theme),
         style,
       )}
     />

@@ -15,6 +15,8 @@
 import { Match } from "effect";
 import { useRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
+import { mergeStyles } from "@gpuix/react/floating";
+import { CONFIRM_DIALOG_BUSY } from "@gpuixui/tw";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +27,8 @@ import {
 } from "./dialog.js";
 import type { PartChildren } from "./internal/parts.js";
 import { Button } from "./internal/button.js";
-import { textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme } from "./internal/theme.js";
 
 /** How much emphasis the confirm action carries. */
 export type ConfirmTone = "default" | "danger";
@@ -108,7 +111,9 @@ export const ConfirmDialog = ({
             {loading ? (
               <text
                 aria-label="In progress"
-                style={{ ...textStyle(theme, "label"), color: "inherit" }}
+                style={mergeStyles(recipeStyle(CONFIRM_DIALOG_BUSY, theme), {
+                  color: "inherit",
+                })}
               >
                 …
               </text>

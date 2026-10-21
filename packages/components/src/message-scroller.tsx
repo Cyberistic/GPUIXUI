@@ -30,6 +30,12 @@ import type {
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
+  cn,
+  MESSAGE_SCROLLER_ITEM,
+  MESSAGE_SCROLLER_ROOT,
+  MESSAGE_SCROLLER_VIEWPORT,
+} from "@gpuixui/tw";
+import {
   Children,
   createContext,
   useCallback,
@@ -49,6 +55,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 import {
@@ -96,6 +103,8 @@ export interface MessageScrollerProps extends Omit<Props, "children"> {
   readonly pinned?: boolean;
   readonly defaultPinned?: boolean;
   readonly onPinnedChange?: (pinned: boolean) => void;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -107,6 +116,7 @@ export const MessageScroller = ({
   defaultPinned = true,
   onPinnedChange,
   children,
+  className,
   style,
   ...rest
 }: MessageScrollerProps) => {
@@ -158,12 +168,7 @@ export const MessageScroller = ({
         role="group"
         aria-label={label}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing.sm,
-            minHeight: 0,
-          },
+          recipeStyle(cn(MESSAGE_SCROLLER_ROOT, className), theme),
           style,
         )}
       >
@@ -175,6 +180,8 @@ export const MessageScroller = ({
 
 /** {@link MessageScrollerViewport} props. */
 export interface MessageScrollerViewportProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
   readonly ref?: Ref<PublicInstance>;
 }
@@ -185,6 +192,7 @@ export interface MessageScrollerViewportProps extends Omit<Props, "children"> {
  */
 export const MessageScrollerViewport = ({
   children,
+  className,
   style,
   ref,
   onScroll,
@@ -246,12 +254,8 @@ export const MessageScrollerViewport = ({
   };
 
   const base: StyleDesc = {
-    display: "flex",
-    flexDirection: "column",
+    ...recipeStyle(cn(MESSAGE_SCROLLER_VIEWPORT, className), theme),
     overflowY: "scroll",
-    minHeight: 0,
-    backgroundColor: theme.colors.background,
-    color: theme.colors.foreground,
   };
 
   return (
@@ -269,12 +273,15 @@ export const MessageScrollerViewport = ({
 
 /** {@link MessageScrollerItem} props. */
 export interface MessageScrollerItemProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: ReactNode;
 }
 
 /** One message row. It paints no surface of its own. */
 export const MessageScrollerItem = ({
   children,
+  className,
   style,
   ...rest
 }: MessageScrollerItemProps) => {
@@ -284,14 +291,7 @@ export const MessageScrollerItem = ({
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.xs,
-          flexShrink: 0,
-          alignSelf: "stretch",
-          paddingBottom: theme.spacing.sm,
-        },
+        recipeStyle(cn(MESSAGE_SCROLLER_ITEM, className), theme),
         style,
       )}
     >

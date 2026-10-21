@@ -22,7 +22,18 @@
 
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
+import {
+  cn,
+  TIME_PICKER_CLEAR,
+  TIME_PICKER_ROOT,
+  TIME_PICKER_SEGMENT,
+  TIME_PICKER_SEPARATOR,
+} from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import {
@@ -40,6 +51,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { recipeStyle } from "./internal/recipe.js";
 import {
   addMinutes,
   clampSegment,
@@ -51,12 +63,7 @@ import {
   parseIsoTime,
   type TimeOfDay,
 } from "./time-picker/time.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 
 /** The two segments a time is entered in. */
 export type TimeSegment = "hours" | "minutes";
@@ -107,6 +114,8 @@ export interface TimePickerProps {
   readonly disabled?: boolean;
   /** Base id for the parts: `<testId>-hours`, `-minutes`, `-clear`. Default `"time-picker"`. */
   readonly testId?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -122,6 +131,7 @@ export const TimePicker = ({
   clearable = false,
   disabled = false,
   testId = "time-picker",
+  className,
   children,
 }: TimePickerProps) => {
   const theme = useTheme();
@@ -257,21 +267,14 @@ export const TimePicker = ({
         role="group"
         aria-label={groupLabel}
         testId={testId}
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing["2xs"],
-          height: controlHeight(theme, "md"),
-          paddingLeft: theme.spacing.sm,
-          paddingRight: theme.spacing.sm,
-          backgroundColor: theme.colors.input,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          borderRadius: theme.radius.md,
-          opacity: disabled ? 0.5 : 1,
-          ...(focused && !disabled ? focusRing(theme) : {}),
-        }}
+        style={mergeStyles(
+          recipeStyle(cn(TIME_PICKER_ROOT, className), theme),
+          {
+            height: controlHeight(theme, "md"),
+            opacity: disabled ? 0.5 : 1,
+            ...(focused && !disabled ? focusRing(theme) : {}),
+          },
+        )}
       >
         {children}
       </div>
@@ -333,16 +336,11 @@ export const TimePickerSegment = ({
       setFocusedSegment(false);
       setFocused(false);
     },
-    style: {
-      ...textStyle(theme, "body"),
-      color: theme.colors.inputForeground,
+    style: mergeStyles(recipeStyle(TIME_PICKER_SEGMENT, theme), {
       width: SEGMENT_WIDTH,
-      height: "100%",
-      padding: 0,
-      textAlign: "center",
       backgroundColor: undefined,
       ...resolveStyle(style, state),
-    },
+    }),
   };
 
   return (
@@ -365,14 +363,7 @@ export const TimePickerSeparator = ({
   const theme = useTheme();
 
   return (
-    <text
-      role="presentation"
-      style={{
-        ...textStyle(theme, "body"),
-        color: theme.colors.mutedForeground,
-        userSelect: "none",
-      }}
-    >
+    <text role="presentation" style={recipeStyle(TIME_PICKER_SEPARATOR, theme)}>
       {children}
     </text>
   );
@@ -402,21 +393,12 @@ export const TimePickerClear = ({
       onKeyDown={(event: EventPayload) => {
         if (event.key === "enter" || event.key === "space") clear();
       }}
-      style={{
-        ...textStyle(theme, "caption"),
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: 18,
-        height: 18,
-        borderRadius: theme.radius.sm,
-        color: theme.colors.mutedForeground,
-        cursor: "pointer",
+      style={mergeStyles(recipeStyle(TIME_PICKER_CLEAR, theme), {
         hover: {
           backgroundColor: theme.colors.accent,
           color: theme.colors.accentForeground,
         },
-      }}
+      })}
     >
       <text>✕</text>
     </div>

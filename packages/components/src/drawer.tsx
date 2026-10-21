@@ -18,6 +18,14 @@ import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
+  DRAWER_CONTENT,
+  DRAWER_DESCRIPTION,
+  DRAWER_FOOTER,
+  DRAWER_HEADER,
+  DRAWER_OVERLAY,
+  DRAWER_TITLE,
+} from "@gpuixui/tw";
+import {
   createContext,
   useCallback,
   useContext,
@@ -38,12 +46,8 @@ import {
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
-import {
-  elevationShadow,
-  textStyle,
-  useTheme,
-  type Theme,
-} from "./internal/theme.js";
+import { overlaySurfaceStyle } from "./internal/overlay.js";
+import { useTheme, type Theme } from "./internal/theme.js";
 
 /** The window edge a drawer opens from. */
 export type DrawerSide = "left" | "right" | "bottom";
@@ -159,6 +163,8 @@ export interface DrawerContentProps extends Omit<Props, "children"> {
   readonly showClose?: boolean;
   /** The native id focus should land on after the drawer takes focus. */
   readonly initialFocus?: () => number | null;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -175,24 +181,17 @@ const surfaceSize = (
     ? { width: window.width, height: Math.min(HEIGHT[size], window.height) }
     : { width: Math.min(WIDTH[size], window.width), height: window.height };
 
-/** The surface's look: the popover role, a border, the largest elevation. */
+/** The surface's look: the popover role, a border, the largest elevation. The
+ * measured box, `position` and `overflow` stay here — the renderer owns them. */
 const surfaceStyle = (
   theme: Theme,
   box: { width: number; height: number },
+  className?: string,
 ) => ({
-  display: "flex",
-  flexDirection: "column" as const,
-  gap: theme.spacing.lg,
+  ...overlaySurfaceStyle(DRAWER_CONTENT, className, theme),
   width: box.width,
   height: box.height,
-  padding: theme.spacing["2xl"],
-  backgroundColor: theme.colors.popover,
-  color: theme.colors.popoverForeground,
-  borderWidth: theme.borderWidth.thin,
-  borderColor: theme.colors.border,
-  boxShadow: elevationShadow(theme, "lg"),
   position: "relative" as const,
-  pointerEvents: "auto" as const,
   overflow: "scroll" as const,
 });
 
@@ -207,6 +206,7 @@ export const DrawerContent = ({
   label,
   showClose = true,
   initialFocus,
+  className,
   children,
   onKeyDown,
   onMouseDownOutside,
@@ -248,16 +248,18 @@ export const DrawerContent = ({
     >
       <div
         testId="drawer-backdrop"
-        style={{
-          width: window.width,
-          height: window.height,
-          display: "flex",
-          flexDirection: isVertical(side) ? "column" : "row",
-          alignItems: "stretch",
-          justifyContent: side === "left" ? "flex-start" : "flex-end",
-          backgroundColor: theme.colors.overlay,
-          pointerEvents: "auto",
-        }}
+        style={mergeStyles(
+          overlaySurfaceStyle(DRAWER_OVERLAY, undefined, theme),
+          {
+            width: window.width,
+            height: window.height,
+            display: "flex",
+            flexDirection: isVertical(side) ? "column" : "row",
+            alignItems: "stretch",
+            justifyContent: side === "left" ? "flex-start" : "flex-end",
+            pointerEvents: "auto",
+          },
+        )}
       >
         <div
           role="dialog"
@@ -271,7 +273,7 @@ export const DrawerContent = ({
             dismissTopLayer(event);
           }}
           onKeyDown={handleKeyDown}
-          style={mergeStyles(surfaceStyle(theme, box), style)}
+          style={mergeStyles(surfaceStyle(theme, box, className), style)}
         >
           {children}
           {showClose ? (
@@ -296,18 +298,27 @@ export const DrawerContent = ({
 };
 
 /** The surface's heading block: title, description and any meta row. */
-export const DrawerHeader = ({ children, style, ...rest }: Props) => {
+export interface DrawerHeaderProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+  readonly children?: PartChildren;
+}
+
+/** The surface's heading block. The close-control clearance stays in style. */
+export const DrawerHeader = ({
+  children,
+  className,
+  style,
+  ...rest
+}: DrawerHeaderProps) => {
   const theme = useTheme();
   return (
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.xs,
+        mergeStyles(overlaySurfaceStyle(DRAWER_HEADER, className, theme), {
           paddingRight: theme.spacing["2xl"],
-        },
+        }),
         style,
       )}
     >
@@ -316,8 +327,18 @@ export const DrawerHeader = ({ children, style, ...rest }: Props) => {
   );
 };
 
+/** {@link DrawerTitle} props. */
+export interface DrawerTitleProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The drawer's heading, announced as a level-2 heading. */
-export const DrawerTitle = ({ style, ...rest }: Props) => {
+export const DrawerTitle = ({
+  className,
+  style,
+  ...rest
+}: DrawerTitleProps) => {
   const theme = useTheme();
   return (
     <text
@@ -325,41 +346,55 @@ export const DrawerTitle = ({ style, ...rest }: Props) => {
       aria-level={2}
       {...rest}
       style={mergeStyles(
-        { ...textStyle(theme, "h3"), color: theme.colors.popoverForeground },
+        overlaySurfaceStyle(DRAWER_TITLE, className, theme),
         style,
       )}
     />
   );
 };
 
+/** {@link DrawerDescription} props. */
+export interface DrawerDescriptionProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** One paragraph of supporting copy under {@link DrawerTitle}. */
-export const DrawerDescription = ({ style, ...rest }: Props) => {
+export const DrawerDescription = ({
+  className,
+  style,
+  ...rest
+}: DrawerDescriptionProps) => {
   const theme = useTheme();
   return (
     <text
       {...rest}
       style={mergeStyles(
-        { ...textStyle(theme, "body"), color: theme.colors.mutedForeground },
+        overlaySurfaceStyle(DRAWER_DESCRIPTION, className, theme),
         style,
       )}
     />
   );
 };
 
+/** {@link DrawerFooter} props. */
+export interface DrawerFooterProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The actions row, right-aligned. */
-export const DrawerFooter = ({ style, ...rest }: Props) => {
+export const DrawerFooter = ({
+  className,
+  style,
+  ...rest
+}: DrawerFooterProps) => {
   const theme = useTheme();
   return (
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: theme.spacing.md,
-        },
+        overlaySurfaceStyle(DRAWER_FOOTER, className, theme),
         style,
       )}
     />

@@ -18,6 +18,7 @@ import {
   mergeStyles,
   type FloatingContentProps,
 } from "@gpuix/react/floating";
+import { PREVIEW_CARD_CONTENT } from "@gpuixui/tw";
 import {
   createContext,
   useCallback,
@@ -31,6 +32,7 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss } from "./internal/key.js";
+import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
   assertParts,
   type PartChildren,
@@ -38,7 +40,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
-import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
+import { useTheme } from "./internal/theme.js";
 
 /** The rules a card part follows; throws outside a {@link PreviewCard}. */
 interface PreviewCardContextValue {
@@ -223,6 +225,8 @@ export interface PreviewCardContentProps extends FloatingContentProps {
   readonly sideOffset?: number;
   /** Default `8`. */
   readonly collisionPadding?: number;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** The hoverable card, rendered while open. */
@@ -232,6 +236,7 @@ export const PreviewCardContent = ({
   align = "start",
   sideOffset = 6,
   collisionPadding = 8,
+  className,
   children,
   onKeyDown,
   onMouseDownOutside,
@@ -292,19 +297,7 @@ export const PreviewCardContent = ({
         if (isDismiss(event)) dismissTopLayer(event);
       }}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "body"),
-          minWidth: 240,
-          maxWidth: 360,
-          padding: theme.spacing.lg,
-          backgroundColor: theme.colors.popover,
-          color: theme.colors.popoverForeground,
-          borderRadius: theme.radius.lg,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          boxShadow: elevationShadow(theme, "md"),
-          pointerEvents: "auto",
-        },
+        overlaySurfaceStyle(PREVIEW_CARD_CONTENT, className, theme),
         style,
       )}
     >

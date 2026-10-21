@@ -8,18 +8,22 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import {
+  cn,
+  TOAST_CARD,
+  TOAST_DESCRIPTION,
+  TOAST_GLYPH,
+  TOAST_TITLE,
+  TOAST_VIEWPORT,
+} from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useRef, type ReactNode } from "react";
 import { Button, IconButton } from "../internal/button.js";
-import {
-  elevationShadow,
-  textStyle,
-  tone,
-  useTheme,
-  type Tone,
-} from "../internal/theme.js";
+import { overlaySurfaceStyle } from "../internal/overlay.js";
+import { recipeStyle } from "../internal/recipe.js";
+import { tone, useTheme, type Tone } from "../internal/theme.js";
 import type { Toast, ToastTone } from "./model.js";
 import { useToast } from "./provider.js";
 
@@ -82,20 +86,7 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
       testId={`toast-${toast.id}`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "flex-start",
-        width: 380,
-        backgroundColor: theme.colors.popover,
-        color: theme.colors.popoverForeground,
-        borderWidth: theme.borderWidth.thin,
-        borderColor: theme.colors.border,
-        borderRadius: theme.radius.md,
-        boxShadow: elevationShadow(theme, "md"),
-        overflow: "hidden",
-        pointerEvents: "auto",
-      }}
+      style={overlaySurfaceStyle(TOAST_CARD, undefined, theme)}
     >
       <div
         style={{ width: 3, alignSelf: "stretch", backgroundColor: palette.fg }}
@@ -112,11 +103,10 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
       >
         <text
           aria-label={toast.tone}
-          style={{
-            ...textStyle(theme, "label"),
+          style={mergeStyles(recipeStyle(TOAST_GLYPH, theme), {
             color: palette.fg,
             width: theme.iconSize.md,
-          }}
+          })}
         >
           {glyph(toast.tone)}
         </text>
@@ -129,23 +119,11 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
             minWidth: 0,
           }}
         >
-          <text
-            style={{
-              ...textStyle(theme, "bodyStrong"),
-              color: theme.colors.popoverForeground,
-            }}
-          >
-            {toast.title}
-          </text>
+          <text style={recipeStyle(TOAST_TITLE, theme)}>{toast.title}</text>
           {Option.match(toast.description, {
             onNone: () => null,
             onSome: (description) => (
-              <text
-                style={{
-                  ...textStyle(theme, "caption"),
-                  color: theme.colors.mutedForeground,
-                }}
-              >
+              <text style={recipeStyle(TOAST_DESCRIPTION, theme)}>
                 {description}
               </text>
             ),
@@ -186,6 +164,8 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
 
 /** {@link ToastViewport} props: where the stack sits in the app root. */
 export interface ToastViewportProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** An optional element before the toasts, e.g. a "dismiss all" action. */
   readonly children?: ReactNode;
 }
@@ -196,6 +176,7 @@ export interface ToastViewportProps extends Props {
  */
 export const ToastViewport = ({
   children,
+  className,
   style,
   ...rest
 }: ToastViewportProps) => {
@@ -209,17 +190,11 @@ export const ToastViewport = ({
       testId="toast-viewport"
       {...rest}
       style={mergeStyles(
-        {
+        mergeStyles(recipeStyle(cn(TOAST_VIEWPORT, className), theme), {
           position: "absolute",
           right: theme.spacing.xl,
           bottom: theme.spacing.xl,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: theme.spacing.md,
-          maxWidth: 380,
-          pointerEvents: "none",
-        },
+        }),
         style,
       )}
     >

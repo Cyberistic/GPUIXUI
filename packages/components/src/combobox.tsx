@@ -35,6 +35,20 @@ import {
   type FloatingContentProps,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  COMBOBOX_CARET,
+  COMBOBOX_CONTENT,
+  COMBOBOX_EMPTY,
+  COMBOBOX_INPUT,
+  COMBOBOX_ITEM,
+  COMBOBOX_ITEM_DESCRIPTION,
+  COMBOBOX_ITEM_MARK,
+  COMBOBOX_ITEM_TEXT,
+  COMBOBOX_LIST,
+  COMBOBOX_TRIGGER,
+  COMBOBOX_TRIGGER_TEXT,
+} from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -59,14 +73,9 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import {
-  controlHeight,
-  elevationShadow,
-  textStyle,
-  useTheme,
-  type Theme,
-} from "./internal/theme.js";
+import { controlHeight, useTheme, type Theme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
 /** What a selection callback receives: one value, several, or none. */
@@ -138,17 +147,8 @@ const optionOf = (
 
 /** The row's look in each interaction state. */
 const rowStyle = (theme: Theme, state: ComboboxItemState): StyleDesc => ({
-  ...textStyle(theme, "label"),
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "center",
-  gap: theme.spacing.md,
+  ...recipeStyle(COMBOBOX_ITEM, theme),
   minHeight: controlHeight(theme, "sm"),
-  paddingLeft: theme.spacing.md,
-  paddingRight: theme.spacing.md,
-  paddingTop: theme.spacing.xs,
-  paddingBottom: theme.spacing.xs,
-  borderRadius: theme.radius.sm,
   cursor: state.disabled ? "not-allowed" : "pointer",
   opacity: state.disabled ? 0.5 : 1,
   backgroundColor: state.highlighted ? theme.colors.hover : undefined,
@@ -284,6 +284,8 @@ export interface ComboboxTriggerProps extends Omit<
   readonly placeholder?: string;
   /** The trigger's accessible name. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** Default `"combobox-trigger"`. */
   readonly testId?: string;
 }
@@ -292,6 +294,7 @@ export interface ComboboxTriggerProps extends Omit<
 export const ComboboxTrigger = ({
   placeholder = "Select…",
   label,
+  className,
   testId = "combobox-trigger",
   ...rest
 }: ComboboxTriggerProps) => {
@@ -305,6 +308,7 @@ export const ComboboxTrigger = ({
           Arr.map(selectedValues, (value) => labelFor(value)),
           ", ",
         );
+  const isPlaceholder = selectedValues.length === 0;
 
   return (
     <HeadlessTrigger
@@ -314,49 +318,26 @@ export const ComboboxTrigger = ({
       testId={testId}
       disabled={disabled}
       {...rest}
-      style={{
-        ...textStyle(theme, "label"),
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: theme.spacing.md,
-        width: "100%",
+      style={mergeStyles(recipeStyle(cn(COMBOBOX_TRIGGER, className), theme), {
         height: controlHeight(theme, "md"),
-        paddingLeft: theme.spacing.md,
-        paddingRight: theme.spacing.md,
-        backgroundColor: theme.colors.background,
-        color:
-          selectedValues.length === 0
-            ? theme.colors.mutedForeground
-            : theme.colors.foreground,
-        borderWidth: theme.borderWidth.thin,
-        borderColor: theme.colors.borderStrong,
-        borderRadius: theme.radius.md,
+        color: isPlaceholder
+          ? theme.colors.mutedForeground
+          : theme.colors.foreground,
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
         hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
-      }}
+      })}
     >
       <text
-        style={{
-          ...textStyle(theme, "label"),
-          color:
-            selectedValues.length === 0
-              ? theme.colors.mutedForeground
-              : theme.colors.foreground,
-        }}
+        style={mergeStyles(recipeStyle(COMBOBOX_TRIGGER_TEXT, theme), {
+          color: isPlaceholder
+            ? theme.colors.mutedForeground
+            : theme.colors.foreground,
+        })}
       >
         {display}
       </text>
-      <text
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
-        ▾
-      </text>
+      <text style={recipeStyle(COMBOBOX_CARET, theme)}>▾</text>
     </HeadlessTrigger>
   );
 };
@@ -371,6 +352,8 @@ export interface ComboboxContentProps extends FloatingContentProps {
   readonly sideOffset?: number;
   /** Added on top of the measured centre correction. Default `0`. */
   readonly alignOffset?: number;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -381,6 +364,7 @@ export const ComboboxContent = ({
   sideOffset = 4,
   alignOffset = 0,
   collisionPadding = 8,
+  className,
   children,
   onMouseDownOutside,
   style,
@@ -416,22 +400,10 @@ export const ComboboxContent = ({
         onMouseDownOutside?.(event);
       }}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-          minWidth: 220,
+        mergeStyles(recipeStyle(cn(COMBOBOX_CONTENT, className), theme), {
           maxHeight: 280,
           overflowY: "scroll",
-          padding: theme.spacing.xs,
-          backgroundColor: theme.colors.popover,
-          color: theme.colors.popoverForeground,
-          borderRadius: theme.radius.md,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          boxShadow: elevationShadow(theme, "md"),
-          pointerEvents: "auto",
-        },
+        }),
         style,
       )}
     >
@@ -464,17 +436,9 @@ export const ComboboxInput = ({
       onKeyDown={(event) => {
         if (isDismiss(event)) noteEscape();
       }}
-      style={{
-        ...textStyle(theme, "body"),
+      style={mergeStyles(recipeStyle(COMBOBOX_INPUT, theme), {
         height: controlHeight(theme, "sm"),
-        paddingLeft: theme.spacing.md,
-        paddingRight: theme.spacing.md,
-        backgroundColor: theme.colors.input,
-        color: theme.colors.inputForeground,
-        borderRadius: theme.radius.sm,
-        borderWidth: theme.borderWidth.thin,
-        borderColor: theme.colors.border,
-      }}
+      })}
     />
   );
 };
@@ -494,12 +458,13 @@ export const ComboboxList = ({
   style,
   ...rest
 }: ComboboxListProps) => {
+  const theme = useTheme();
   return (
     <HeadlessList
       role="listbox"
       aria-label={label}
       {...rest}
-      style={mergeStyles({ display: "flex", flexDirection: "column" }, style)}
+      style={mergeStyles(recipeStyle(COMBOBOX_LIST, theme), style)}
     >
       {(item) => <ComboboxItem key={item} value={item} style={itemStyle} />}
     </HeadlessList>
@@ -542,24 +507,14 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
           gap: theme.spacing["2xs"],
         }}
       >
-        <text
-          style={{
-            ...textStyle(theme, "label"),
-            color: theme.colors.popoverForeground,
-          }}
-        >
+        <text style={recipeStyle(COMBOBOX_ITEM_TEXT, theme)}>
           {labelFor(value)}
         </text>
         {Option.match(option, {
           onNone: () => null,
           onSome: (candidate) =>
             candidate.description === undefined ? null : (
-              <text
-                style={{
-                  ...textStyle(theme, "caption"),
-                  color: theme.colors.mutedForeground,
-                }}
-              >
+              <text style={recipeStyle(COMBOBOX_ITEM_DESCRIPTION, theme)}>
                 {candidate.description}
               </text>
             ),
@@ -568,10 +523,7 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
       {selected ? (
         <text
           aria-label="Selected"
-          style={{
-            ...textStyle(theme, "caption"),
-            color: theme.colors.primary,
-          }}
+          style={recipeStyle(COMBOBOX_ITEM_MARK, theme)}
         >
           ✓
         </text>
@@ -592,16 +544,7 @@ export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
   return (
     <HeadlessEmpty testId="combobox-empty">
       {children ?? (
-        <text
-          style={{
-            ...textStyle(theme, "body"),
-            color: theme.colors.mutedForeground,
-            paddingTop: theme.spacing.lg,
-            paddingBottom: theme.spacing.lg,
-          }}
-        >
-          No matches
-        </text>
+        <text style={recipeStyle(COMBOBOX_EMPTY, theme)}>No matches</text>
       )}
     </HeadlessEmpty>
   );

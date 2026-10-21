@@ -15,15 +15,23 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  COLOR_PICKER_CELL,
+  COLOR_PICKER_FIELD,
+  COLOR_PICKER_INPUT,
+  COLOR_PICKER_ROOT,
+  COLOR_PICKER_SWATCHES,
+} from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useLayoutEffect, useState } from "react";
 import { normalizeHex, sameHex } from "./color/hex.js";
 import { useControllableState } from "./internal/controllable.js";
 import { isActivation } from "./internal/key.js";
+import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
   focusRing,
-  textStyle,
   useTheme,
   type Theme,
 } from "./internal/theme.js";
@@ -53,6 +61,8 @@ export interface ColorPickerProps extends Omit<
   /** Defaults to six theme colours. */
   readonly swatches?: ReadonlyArray<string>;
   readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the field's state. */
   readonly style?: StateStyle<ColorPickerState>;
 }
@@ -71,6 +81,7 @@ export const ColorPicker = ({
   onValueChange,
   swatches: swatchesProp,
   disabled = false,
+  className,
   style,
   testId,
   ...rest
@@ -114,23 +125,13 @@ export const ColorPicker = ({
       {...rest}
       testId={testId}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.md,
+        mergeStyles(recipeStyle(cn(COLOR_PICKER_ROOT, className), theme), {
           opacity: disabled ? 0.5 : 1,
-        },
+        }),
         resolveStyle(style, { disabled, valid }),
       )}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: theme.spacing.sm,
-        }}
-      >
+      <div style={recipeStyle(COLOR_PICKER_SWATCHES, theme)}>
         {swatches.map((swatch, index) => {
           const selected = sameHex(swatch, value);
           return (
@@ -149,43 +150,32 @@ export const ColorPicker = ({
               onKeyDown={(event: EventPayload) => {
                 if (!disabled && isActivation(event)) choose(swatch);
               }}
-              style={{
+              style={mergeStyles(recipeStyle(COLOR_PICKER_CELL, theme), {
                 width: controlHeight(theme, "sm"),
                 height: controlHeight(theme, "sm"),
                 backgroundColor: swatch,
-                borderRadius: theme.radius.md,
                 borderWidth: selected
                   ? theme.borderWidth.strong
                   : theme.borderWidth.thin,
                 borderColor: selected
                   ? theme.colors.foreground
                   : theme.colors.border,
-              }}
+              })}
             />
           );
         })}
       </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.md,
-        }}
-      >
+      <div style={recipeStyle(COLOR_PICKER_FIELD, theme)}>
         <div
           testId={testId === undefined ? undefined : `${testId}-preview`}
-          style={{
+          style={mergeStyles(recipeStyle(COLOR_PICKER_CELL, theme), {
             width: controlHeight(theme, "md"),
             height: controlHeight(theme, "md"),
-            borderRadius: theme.radius.md,
-            borderWidth: theme.borderWidth.thin,
-            borderColor: theme.colors.border,
             backgroundColor: Option.getOrElse(
               normalizeHex(value),
               () => theme.colors.muted,
             ),
-          }}
+          })}
         />
         <input
           aria-label={`${label} hex value`}
@@ -200,19 +190,11 @@ export const ColorPicker = ({
             setFocused(false);
             commit();
           }}
-          style={{
-            ...textStyle(theme, "body"),
-            flexGrow: 1,
+          style={mergeStyles(recipeStyle(COLOR_PICKER_INPUT, theme), {
             height: controlHeight(theme, "md"),
-            paddingLeft: theme.spacing.md,
-            paddingRight: theme.spacing.md,
-            backgroundColor: theme.colors.background,
-            color: theme.colors.inputForeground,
-            borderRadius: theme.radius.md,
-            borderWidth: theme.borderWidth.thin,
             borderColor: valid ? theme.colors.border : theme.colors.destructive,
             ...(focused ? focusRing(theme) : {}),
-          }}
+          })}
         />
       </div>
     </div>

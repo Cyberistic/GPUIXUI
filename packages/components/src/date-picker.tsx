@@ -24,6 +24,18 @@
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles, type FloatingContentProps } from "@gpuix/react/floating";
+import {
+  cn,
+  DATE_PICKER_CARET,
+  DATE_PICKER_CONTENT,
+  DATE_PICKER_DAY,
+  DATE_PICKER_GRID,
+  DATE_PICKER_MONTH,
+  DATE_PICKER_NAV,
+  DATE_PICKER_TRIGGER,
+  DATE_PICKER_TRIGGER_TEXT,
+  DATE_PICKER_WEEKDAY,
+} from "@gpuixui/tw";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -74,13 +86,9 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import {
-  controlHeight,
-  focusRing,
-  textStyle,
-  useTheme,
-} from "./internal/theme.js";
+import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover.js";
 
 /** The rules a date-picker part follows; throws outside a {@link DatePicker}. */
@@ -232,6 +240,8 @@ export interface DatePickerTriggerProps extends Omit<ButtonProps, "children"> {
   readonly placeholder?: string;
   /** The trigger's accessible name. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** Default `"date-picker-trigger"`. */
   readonly testId?: string;
 }
@@ -240,6 +250,7 @@ export interface DatePickerTriggerProps extends Omit<ButtonProps, "children"> {
 export const DatePickerTrigger = ({
   placeholder = "Pick a date",
   label,
+  className,
   testId = "date-picker-trigger",
   ...rest
 }: DatePickerTriggerProps) => {
@@ -253,6 +264,7 @@ export const DatePickerTrigger = ({
     onNone: () => placeholder,
     onSome: formatDayLabel,
   });
+  const isPlaceholder = Option.isNone(selectedDay);
 
   return (
     <PopoverTrigger
@@ -262,46 +274,25 @@ export const DatePickerTrigger = ({
       disabled={disabled}
       {...(label === undefined ? {} : { "aria-label": label })}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "label"),
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: theme.spacing.md,
-          width: 220,
+        mergeStyles(recipeStyle(cn(DATE_PICKER_TRIGGER, className), theme), {
           height: controlHeight(theme, "md"),
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          backgroundColor: theme.colors.background,
-          color: Option.isNone(selectedDay)
+          color: isPlaceholder
             ? theme.colors.mutedForeground
             : theme.colors.foreground,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.borderStrong,
-          borderRadius: theme.radius.md,
-        },
+        }),
         rest.style,
       )}
     >
       <text
-        style={{
-          ...textStyle(theme, "label"),
-          color: Option.isNone(selectedDay)
+        style={mergeStyles(recipeStyle(DATE_PICKER_TRIGGER_TEXT, theme), {
+          color: isPlaceholder
             ? theme.colors.mutedForeground
             : theme.colors.foreground,
-        }}
+        })}
       >
         {labelText}
       </text>
-      <text
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
-        ▾
-      </text>
+      <text style={recipeStyle(DATE_PICKER_CARET, theme)}>▾</text>
     </PopoverTrigger>
   );
 };
@@ -314,6 +305,8 @@ export interface DatePickerContentProps extends FloatingContentProps {
   readonly align?: "start" | "center" | "end";
   /** The gap between trigger and surface. Default `6`. */
   readonly sideOffset?: number;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -322,6 +315,7 @@ export const DatePickerContent = ({
   side = "bottom",
   align = "start",
   sideOffset = 6,
+  className,
   children,
   style,
   ...rest
@@ -338,18 +332,7 @@ export const DatePickerContent = ({
       testId="date-picker-content"
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.md,
-          padding: theme.spacing.md,
-          backgroundColor: theme.colors.popover,
-          color: theme.colors.popoverForeground,
-          borderRadius: theme.radius.md,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          pointerEvents: "auto",
-        },
+        recipeStyle(cn(DATE_PICKER_CONTENT, className), theme),
         style,
       )}
     >
@@ -495,15 +478,7 @@ export const DatePickerCalendar = ({
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: theme.spacing.md,
-        }}
-      >
+      <div style={recipeStyle(DATE_PICKER_NAV, theme)}>
         <IconButton
           label="Previous month"
           size="sm"
@@ -513,13 +488,7 @@ export const DatePickerCalendar = ({
         >
           <text>‹</text>
         </IconButton>
-        <text
-          testId="date-month"
-          style={{
-            ...textStyle(theme, "label"),
-            color: theme.colors.foreground,
-          }}
-        >
+        <text testId="date-month" style={recipeStyle(DATE_PICKER_MONTH, theme)}>
           {formatMonthLabel(viewMonth)}
         </text>
         <IconButton
@@ -536,23 +505,16 @@ export const DatePickerCalendar = ({
         role="grid"
         aria-label={label}
         onKeyDown={handleKeyDown}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-        }}
+        style={recipeStyle(DATE_PICKER_GRID, theme)}
       >
         <div role="row" style={{ display: "flex", flexDirection: "row" }}>
           {Arr.map(weekdayLabels(weekStartsOn), (name) => (
             <text
               key={name}
               aria-label={name}
-              style={{
-                ...textStyle(theme, "caption"),
+              style={mergeStyles(recipeStyle(DATE_PICKER_WEEKDAY, theme), {
                 width: CELL,
-                textAlign: "center",
-                color: theme.colors.mutedForeground,
-              }}
+              })}
             >
               {name}
             </text>
@@ -589,14 +551,9 @@ export const DatePickerCalendar = ({
                       testId={`date-day-${iso}`}
                       onClick={available ? () => choose(day) : undefined}
                       onFocus={() => setActive(Option.some(day))}
-                      style={{
-                        ...textStyle(theme, "caption"),
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                      style={mergeStyles(recipeStyle(DATE_PICKER_DAY, theme), {
                         width: CELL,
                         height: CELL,
-                        borderRadius: theme.radius.sm,
                         backgroundColor: isSelected
                           ? theme.colors.primary
                           : undefined,
@@ -618,7 +575,7 @@ export const DatePickerCalendar = ({
                         formatIsoDay(Option.getOrElse(active, () => tabbable))
                           ? focusRing(theme)
                           : {}),
-                      }}
+                      })}
                     >
                       {DateTime.toPartsUtc(day).day}
                     </div>

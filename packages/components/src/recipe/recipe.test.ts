@@ -142,6 +142,64 @@ import {
   MENU_SEPARATOR,
   POPOVER_CONTENT,
 } from "@gpuixui/tw";
+import {
+  COLOR_PICKER_CELL,
+  COLOR_PICKER_FIELD,
+  COLOR_PICKER_INPUT,
+  COLOR_PICKER_ROOT,
+  COLOR_PICKER_SWATCHES,
+  COMBOBOX_CARET,
+  COMBOBOX_CONTENT,
+  COMBOBOX_EMPTY,
+  COMBOBOX_INPUT,
+  COMBOBOX_ITEM,
+  COMBOBOX_ITEM_DESCRIPTION,
+  COMBOBOX_ITEM_MARK,
+  COMBOBOX_ITEM_TEXT,
+  COMBOBOX_LIST,
+  COMBOBOX_TRIGGER,
+  COMBOBOX_TRIGGER_TEXT,
+  CONFIRM_DIALOG_BUSY,
+  DATE_PICKER_CARET,
+  DATE_PICKER_CONTENT,
+  DATE_PICKER_DAY,
+  DATE_PICKER_GRID,
+  DATE_PICKER_MONTH,
+  DATE_PICKER_NAV,
+  DATE_PICKER_TRIGGER,
+  DATE_PICKER_TRIGGER_TEXT,
+  DATE_PICKER_WEEKDAY,
+  DRAWER_CONTENT,
+  DRAWER_DESCRIPTION,
+  DRAWER_FOOTER,
+  DRAWER_HEADER,
+  DRAWER_OVERLAY,
+  DRAWER_TITLE,
+  MESSAGE_SCROLLER_ITEM,
+  MESSAGE_SCROLLER_ROOT,
+  MESSAGE_SCROLLER_VIEWPORT,
+  NAVIGATION_MENU_CONTENT,
+  NAVIGATION_MENU_ITEM,
+  NAVIGATION_MENU_LINK,
+  NAVIGATION_MENU_LIST,
+  NAVIGATION_MENU_ROOT,
+  PREVIEW_CARD_CONTENT,
+  TABS_CONTENT,
+  TABS_LIST,
+  TABS_LIST_ORIENTATION,
+  TABS_ORIENTATION,
+  TABS_ROOT,
+  TABS_TRIGGER,
+  TIME_PICKER_CLEAR,
+  TIME_PICKER_ROOT,
+  TIME_PICKER_SEGMENT,
+  TIME_PICKER_SEPARATOR,
+  TOAST_CARD,
+  TOAST_DESCRIPTION,
+  TOAST_GLYPH,
+  TOAST_TITLE,
+  TOAST_VIEWPORT,
+} from "@gpuixui/tw";
 import { alpha, darkTheme, elevationShadow } from "../internal/theme.js";
 
 const style = (className: string): StyleDesc =>
@@ -1191,6 +1249,530 @@ describe("Command recipe", () => {
   });
 });
 
+describe("Toast recipe", () => {
+  it("resolves the viewport stack and the card surface", () => {
+    expect(style(TOAST_VIEWPORT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-end",
+      gap: 8,
+      maxWidth: 380,
+      pointerEvents: "none",
+    });
+    expect(style(TOAST_CARD)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      width: 380,
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      borderRadius: 6,
+      boxShadow: elevationShadow(darkTheme, "md"),
+      overflow: "hidden",
+      pointerEvents: "auto",
+    });
+  });
+
+  it("resolves the title, description and glyph type", () => {
+    expect(style(TOAST_TITLE)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 600,
+      fontFamily: sans,
+      color: darkTheme.colors.popoverForeground,
+    });
+    expect(style(TOAST_DESCRIPTION)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(TOAST_GLYPH)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+  });
+});
+
+describe("Tabs recipe", () => {
+  it("resolves the root, rail, trigger and panel", () => {
+    expect(style(TABS_ROOT)).toEqual({ display: "flex", gap: 8 });
+    expect(style(cn(TABS_ROOT, TABS_ORIENTATION.horizontal))).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+    });
+    expect(style(cn(TABS_ROOT, TABS_ORIENTATION.vertical))).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      gap: 8,
+    });
+    expect(style(TABS_LIST)).toEqual({
+      display: "flex",
+      alignItems: "stretch",
+      gap: 4,
+      padding: 4,
+      backgroundColor: darkTheme.colors.background,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      borderRadius: 6,
+    });
+    expect(style(cn(TABS_LIST, TABS_LIST_ORIENTATION.horizontal))).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "stretch",
+      gap: 4,
+      padding: 4,
+      backgroundColor: darkTheme.colors.background,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      borderRadius: 6,
+    });
+    expect(style(cn(TABS_LIST, TABS_LIST_ORIENTATION.vertical))).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: 4,
+      padding: 4,
+      backgroundColor: darkTheme.colors.background,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      borderRadius: 6,
+    });
+    expect(style(TABS_TRIGGER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingLeft: 12,
+      paddingRight: 12,
+      borderRadius: 4,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+    expect(style(TABS_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      color: darkTheme.colors.foreground,
+    });
+  });
+});
+
+describe("PreviewCard, ConfirmDialog and Drawer recipes", () => {
+  it("resolves the preview-card surface", () => {
+    expect(style(PREVIEW_CARD_CONTENT)).toEqual({
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      minWidth: 240,
+      maxWidth: 360,
+      padding: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      boxShadow: elevationShadow(darkTheme, "md"),
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      pointerEvents: "auto",
+    });
+  });
+
+  it("resolves the confirm-dialog busy glyph type", () => {
+    expect(style(CONFIRM_DIALOG_BUSY)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+  });
+
+  it("resolves the drawer scrim, surface and parts", () => {
+    expect(style(DRAWER_OVERLAY)).toEqual({
+      backgroundColor: darkTheme.colors.overlay,
+    });
+    expect(style(DRAWER_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+      padding: 24,
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      boxShadow: elevationShadow(darkTheme, "lg"),
+      pointerEvents: "auto",
+    });
+    expect(style(DRAWER_HEADER)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      paddingRight: 24,
+    });
+    expect(style(DRAWER_TITLE)).toEqual({
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: 600,
+      fontFamily: sans,
+      color: darkTheme.colors.popoverForeground,
+    });
+    expect(style(DRAWER_DESCRIPTION)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(DRAWER_FOOTER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: 8,
+    });
+  });
+});
+
+describe("NavigationMenu recipe", () => {
+  it("resolves the bar, list, item, panel and link", () => {
+    expect(style(NAVIGATION_MENU_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+    });
+    expect(style(NAVIGATION_MENU_LIST)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+    });
+    expect(style(NAVIGATION_MENU_ITEM)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      position: "relative",
+    });
+    expect(style(NAVIGATION_MENU_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+      minWidth: 220,
+      padding: 6,
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      boxShadow: elevationShadow(darkTheme, "md"),
+      pointerEvents: "auto",
+    });
+    expect(style(NAVIGATION_MENU_LINK)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      width: "100%",
+      padding: 6,
+      borderRadius: 4,
+    });
+  });
+});
+
+describe("Combobox recipe", () => {
+  it("resolves the trigger, content, input, list, row and messages", () => {
+    expect(style(COMBOBOX_TRIGGER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+      width: "100%",
+      paddingLeft: 8,
+      paddingRight: 8,
+      backgroundColor: darkTheme.colors.background,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.borderStrong,
+      borderRadius: 6,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+    expect(style(COMBOBOX_TRIGGER_TEXT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+    expect(style(COMBOBOX_CARET)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(COMBOBOX_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+      minWidth: 220,
+      padding: 4,
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      boxShadow: elevationShadow(darkTheme, "md"),
+      pointerEvents: "auto",
+    });
+    expect(style(COMBOBOX_INPUT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      paddingLeft: 8,
+      paddingRight: 8,
+      backgroundColor: darkTheme.colors.input,
+      color: darkTheme.colors.inputForeground,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+    expect(style(COMBOBOX_LIST)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+    });
+    expect(style(COMBOBOX_ITEM)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingLeft: 8,
+      paddingRight: 8,
+      paddingTop: 4,
+      paddingBottom: 4,
+      borderRadius: 4,
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+    });
+    expect(style(COMBOBOX_ITEM_TEXT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      color: darkTheme.colors.popoverForeground,
+    });
+    expect(style(COMBOBOX_ITEM_DESCRIPTION)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(COMBOBOX_ITEM_MARK)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.primary,
+    });
+    expect(style(COMBOBOX_EMPTY)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+      paddingTop: 12,
+      paddingBottom: 12,
+    });
+  });
+});
+
+describe("DatePicker recipe", () => {
+  it("resolves the trigger, content, nav, grid and cells", () => {
+    expect(style(DATE_PICKER_TRIGGER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+      width: 220,
+      paddingLeft: 8,
+      paddingRight: 8,
+      backgroundColor: darkTheme.colors.background,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.borderStrong,
+      borderRadius: 6,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+    });
+    expect(style(DATE_PICKER_TRIGGER_TEXT)).toEqual(
+      style(COMBOBOX_TRIGGER_TEXT),
+    );
+    expect(style(DATE_PICKER_CARET)).toEqual(style(COMBOBOX_CARET));
+    expect(style(DATE_PICKER_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      padding: 8,
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      pointerEvents: "auto",
+    });
+    expect(style(DATE_PICKER_NAV)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+    });
+    expect(style(DATE_PICKER_MONTH)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(DATE_PICKER_GRID)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+    });
+    expect(style(DATE_PICKER_WEEKDAY)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+      textAlign: "center",
+    });
+    expect(style(DATE_PICKER_DAY)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 4,
+    });
+  });
+});
+
+describe("TimePicker recipe", () => {
+  it("resolves the field, segments, separator and clear control", () => {
+    expect(style(TIME_PICKER_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+      paddingLeft: 6,
+      paddingRight: 6,
+      backgroundColor: darkTheme.colors.input,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      borderRadius: 6,
+    });
+    expect(style(TIME_PICKER_SEGMENT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      color: darkTheme.colors.inputForeground,
+      textAlign: "center",
+      height: "100%",
+      padding: 0,
+    });
+    expect(style(TIME_PICKER_SEPARATOR)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+      userSelect: "none",
+    });
+    expect(style(TIME_PICKER_CLEAR)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 18,
+      height: 18,
+      borderRadius: 4,
+      color: darkTheme.colors.mutedForeground,
+      cursor: "pointer",
+    });
+  });
+});
+
+describe("ColorPicker recipe", () => {
+  it("resolves the picker, swatches, field, cell and input", () => {
+    expect(style(COLOR_PICKER_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+    });
+    expect(style(COLOR_PICKER_SWATCHES)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 6,
+    });
+    expect(style(COLOR_PICKER_FIELD)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    });
+    expect(style(COLOR_PICKER_CELL)).toEqual({
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+    expect(style(COLOR_PICKER_INPUT)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      flexGrow: 1,
+      paddingLeft: 8,
+      paddingRight: 8,
+      backgroundColor: darkTheme.colors.background,
+      color: darkTheme.colors.inputForeground,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+  });
+});
+
+describe("MessageScroller recipe", () => {
+  it("resolves the root, viewport and row", () => {
+    expect(style(MESSAGE_SCROLLER_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      minHeight: 0,
+    });
+    expect(style(MESSAGE_SCROLLER_VIEWPORT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      minHeight: 0,
+      backgroundColor: darkTheme.colors.background,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(MESSAGE_SCROLLER_ITEM)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      flexShrink: 0,
+      alignSelf: "stretch",
+      paddingBottom: 6,
+    });
+  });
+});
+
 describe("merge order", () => {
   it("lets the caller's className win over the recipe", () => {
     expect(style(cn(CARD_BASE, "rounded-none")).borderRadius).toBe(0);
@@ -1222,6 +1804,21 @@ describe("merge order", () => {
     );
     expect(style(cn(DIALOG_FOOTER, "gap-4")).gap).toBe(16);
     expect(style(cn(COMMAND_EMPTY, "py-2")).paddingTop).toBe(8);
+    // The final wave's recipes join the caller's className the same way.
+    expect(style(cn(TOAST_CARD, "rounded-none")).borderRadius).toBe(0);
+    expect(style(cn(TABS_TRIGGER, "px-6")).paddingLeft).toBe(24);
+    expect(style(cn(COMBOBOX_TRIGGER, "border-border")).borderColor).toBe(
+      darkTheme.colors.border,
+    );
+    expect(style(cn(DATE_PICKER_TRIGGER, "w-[280px]")).width).toBe(280);
+    expect(style(cn(TIME_PICKER_ROOT, "rounded-none")).borderRadius).toBe(0);
+    expect(style(cn(COLOR_PICKER_ROOT, "flex-row")).flexDirection).toBe("row");
+    expect(style(cn(MESSAGE_SCROLLER_ROOT, "gap-4")).gap).toBe(16);
+    expect(
+      style(cn(NAVIGATION_MENU_CONTENT, "rounded-none")).borderRadius,
+    ).toBe(0);
+    expect(style(cn(PREVIEW_CARD_CONTENT, "p-6")).padding).toBe(24);
+    expect(style(cn(DRAWER_CONTENT, "gap-6")).gap).toBe(24);
   });
 });
 
@@ -1346,6 +1943,62 @@ describe("no unsupported classes", () => {
       COMMAND_EMPTY,
       COMMAND_SHORTCUT,
       COMMAND_HINT,
+      TOAST_VIEWPORT,
+      TOAST_CARD,
+      TOAST_TITLE,
+      TOAST_DESCRIPTION,
+      TOAST_GLYPH,
+      TABS_ROOT,
+      ...Object.values(TABS_ORIENTATION),
+      TABS_LIST,
+      ...Object.values(TABS_LIST_ORIENTATION),
+      TABS_TRIGGER,
+      TABS_CONTENT,
+      PREVIEW_CARD_CONTENT,
+      CONFIRM_DIALOG_BUSY,
+      DRAWER_OVERLAY,
+      DRAWER_CONTENT,
+      DRAWER_HEADER,
+      DRAWER_TITLE,
+      DRAWER_DESCRIPTION,
+      DRAWER_FOOTER,
+      NAVIGATION_MENU_ROOT,
+      NAVIGATION_MENU_LIST,
+      NAVIGATION_MENU_ITEM,
+      NAVIGATION_MENU_CONTENT,
+      NAVIGATION_MENU_LINK,
+      COMBOBOX_TRIGGER,
+      COMBOBOX_TRIGGER_TEXT,
+      COMBOBOX_CARET,
+      COMBOBOX_CONTENT,
+      COMBOBOX_INPUT,
+      COMBOBOX_LIST,
+      COMBOBOX_ITEM,
+      COMBOBOX_ITEM_TEXT,
+      COMBOBOX_ITEM_DESCRIPTION,
+      COMBOBOX_ITEM_MARK,
+      COMBOBOX_EMPTY,
+      DATE_PICKER_TRIGGER,
+      DATE_PICKER_TRIGGER_TEXT,
+      DATE_PICKER_CARET,
+      DATE_PICKER_CONTENT,
+      DATE_PICKER_NAV,
+      DATE_PICKER_MONTH,
+      DATE_PICKER_GRID,
+      DATE_PICKER_WEEKDAY,
+      DATE_PICKER_DAY,
+      TIME_PICKER_ROOT,
+      TIME_PICKER_SEGMENT,
+      TIME_PICKER_SEPARATOR,
+      TIME_PICKER_CLEAR,
+      COLOR_PICKER_ROOT,
+      COLOR_PICKER_SWATCHES,
+      COLOR_PICKER_FIELD,
+      COLOR_PICKER_CELL,
+      COLOR_PICKER_INPUT,
+      MESSAGE_SCROLLER_ROOT,
+      MESSAGE_SCROLLER_VIEWPORT,
+      MESSAGE_SCROLLER_ITEM,
     ];
     const unsupported = Arr.flatMap(
       recipes,

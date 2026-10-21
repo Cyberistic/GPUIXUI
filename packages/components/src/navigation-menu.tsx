@@ -20,6 +20,14 @@ import {
   mergeStyles,
 } from "@gpuix/react/floating";
 import {
+  cn,
+  NAVIGATION_MENU_CONTENT,
+  NAVIGATION_MENU_ITEM,
+  NAVIGATION_MENU_LINK,
+  NAVIGATION_MENU_LIST,
+  NAVIGATION_MENU_ROOT,
+} from "@gpuixui/tw";
+import {
   createContext,
   useCallback,
   useContext,
@@ -39,14 +47,16 @@ import {
   isLeft,
   isRight,
 } from "./internal/key.js";
+import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
   assertParts,
   type PartChildren,
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { elevationShadow, useTheme } from "./internal/theme.js";
+import { useTheme } from "./internal/theme.js";
 
 /** The rules a nav part follows; throws outside a {@link NavigationMenu}. */
 interface NavigationMenuContextValue {
@@ -98,6 +108,8 @@ export interface NavigationMenuProps extends Omit<Props, "children"> {
   readonly value?: string | null;
   readonly defaultValue?: string | null;
   readonly onValueChange?: (value: string | null) => void;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -107,11 +119,13 @@ export const NavigationMenu = ({
   value: valueProp,
   defaultValue = null,
   onValueChange,
+  className,
   children,
   style,
   onKeyDown,
   ...rest
 }: NavigationMenuProps) => {
+  const theme = useTheme();
   const renderer = useGpuix().renderer;
   const [open, setOpen] = useControllableState({
     value: valueProp,
@@ -212,11 +226,7 @@ export const NavigationMenu = ({
             if (isDismiss(event)) dismissTopLayer(event);
           }}
           style={mergeStyles(
-            {
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            },
+            recipeStyle(cn(NAVIGATION_MENU_ROOT, className), theme),
             style,
           )}
         >
@@ -229,12 +239,15 @@ export const NavigationMenu = ({
 
 /** {@link NavigationMenuList} props. */
 export interface NavigationMenuListProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** The row of items. */
 export const NavigationMenuList = ({
   children,
+  className,
   style,
   ...rest
 }: NavigationMenuListProps) => {
@@ -245,12 +258,7 @@ export const NavigationMenuList = ({
       role="list"
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing["2xs"],
-        },
+        recipeStyle(cn(NAVIGATION_MENU_LIST, className), theme),
         style,
       )}
     >
@@ -263,16 +271,20 @@ export const NavigationMenuList = ({
 export interface NavigationMenuItemProps extends Omit<Props, "children"> {
   /** The item's identity in the nav's `value`. */
   readonly value: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** One nav item: its trigger and the panel that trigger owns. */
 export const NavigationMenuItem = ({
   value,
+  className,
   children,
   style,
   ...rest
 }: NavigationMenuItemProps) => {
+  const theme = useTheme();
   const { open } = useNavigationMenu();
   assertParts(navigationMenuItem, children);
   return (
@@ -281,7 +293,7 @@ export const NavigationMenuItem = ({
         role="listitem"
         {...rest}
         style={mergeStyles(
-          { display: "flex", flexDirection: "row", position: "relative" },
+          recipeStyle(cn(NAVIGATION_MENU_ITEM, className), theme),
           style,
         )}
       >
@@ -338,12 +350,15 @@ export const NavigationMenuTrigger = ({
 
 /** {@link NavigationMenuContent} props. */
 export interface NavigationMenuContentProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** The anchored panel for its item, rendered only while that item is open. */
 export const NavigationMenuContent = ({
   children,
+  className,
   style,
   onMouseDownOutside,
   ...rest
@@ -380,20 +395,7 @@ export const NavigationMenuContent = ({
         dismissTopLayer(event);
       }}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-          minWidth: 220,
-          padding: theme.spacing.sm,
-          backgroundColor: theme.colors.popover,
-          color: theme.colors.popoverForeground,
-          borderRadius: theme.radius.lg,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          boxShadow: elevationShadow(theme, "md"),
-          pointerEvents: "auto",
-        },
+        overlaySurfaceStyle(NAVIGATION_MENU_CONTENT, className, theme),
         style,
       )}
     >
@@ -406,12 +408,15 @@ export const NavigationMenuContent = ({
 export interface NavigationMenuLinkProps extends Omit<ButtonProps, "variant"> {
   /** Called when the link is chosen; the nav closes afterwards. */
   readonly onSelect?: () => void;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** A navigation row. 0.10.0 has no anchor/href, so this is a button. */
 export const NavigationMenuLink = ({
   onSelect,
   onClick,
+  className,
   style,
   ...rest
 }: NavigationMenuLinkProps) => {
@@ -427,22 +432,12 @@ export const NavigationMenuLink = ({
         setOpen(null);
       }}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          width: "100%",
-          paddingTop: theme.spacing.sm,
-          paddingBottom: theme.spacing.sm,
-          paddingLeft: theme.spacing.sm,
-          paddingRight: theme.spacing.sm,
-          borderRadius: theme.radius.sm,
+        mergeStyles(recipeStyle(cn(NAVIGATION_MENU_LINK, className), theme), {
           hover: {
             backgroundColor: theme.colors.accent,
             color: theme.colors.accentForeground,
           },
-        },
+        }),
         style,
       )}
     />
