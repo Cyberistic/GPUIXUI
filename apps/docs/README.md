@@ -7,63 +7,130 @@ reimplement it. The browser site never pretends to be GPUix.
 
 The landing page lives at `/`. Documentation lives under `/docs` and follows the
 shadcn/ui anatomy: a sectioned sidebar, Preview/Code tabs, an install block, the
-page TOC and a previous/next pager.
+page TOC and a previous/next pager. `docs/preview-strategy.md` at the repo root is
+the policy a page follows: every browser rendering is labelled as one, the source
+is copyable, and a page whose interaction cannot be shown says so.
 
-## Layout
+## Pages
+
+Every page is an MDX file; the paths below are relative to `content/docs/`.
+`src/lib/readme-ledger.test.ts` holds this list to the directory.
 
 ```
-content/docs/           MDX pages and their meta.json navigation
-  index.mdx             Introduction (served at /docs)
-  installation.mdx      Requirements, nub, first component
-  architecture.mdx      The package graph, the recipe pipeline and where a change goes
-  theming.mdx           Semantic roles, themes, overrides
-  dark-mode.mdx         App-owned mode switching
-  typography.mdx        The type scale, families, tones and the platform rule
-  primitives/           The Tier 1 section index (its pages come from the packages)
-  components/           Custom pages (Button, Dialog, Popover, Tabs) and the index
-  layouts.mdx           The layout lane: primitives, the window frame, runtime rules
-  workspace.mdx         The desktop-shell lane: what composes a window, split-pane gate
-  data-display.mdx      The data lane: what ships, the table gate, runtime gaps
-  examples.mdx          The example registry, generated from every package's examples
-  reference.mdx         The public entry points, and the symbols behind them
-  contributing.mdx      Checks, worktrees and the component checklist
-public/                 Static assets (favicon, robots.txt)
-src/routes/index.tsx    The landing page at `/`
-src/routes/docs/        `/docs` index and the `/docs/$` splat
-src/routes/sitemap[.]xml.ts  `/sitemap.xml`, generated from every collection
-src/routes/api/search   Fumadocs search endpoint
-plugins/public-symbols-plugin.ts Build-time module: the public symbol index
-src/components/docs/    ComponentPreview, PreviewSurface, Install, ComponentSource,
-                        CopyPage, PlatformToggle, LaneTable, demos
-src/components/mdx.tsx  The MDX component registry
-src/lib/docs-view.tsx   Shared docs layout and the two-collection page template
-src/lib/source.ts       Fumadocs collection for `content/docs`
-src/lib/inventory.ts    Parses the tier tables of COMPONENTS.md into lane rows
-src/lib/inventory-status.ts The page → COMPONENTS.md row join behind the status strip
-src/components/docs/status-strip.tsx The generated status and GPUix-support strip
-src/lib/lane-page.test.ts Holds the lane pages to their template and sidebar place
-src/lib/public-api.ts   Derives the public entry points from each package's exports map
-src/lib/public-symbols.ts The symbol index model: kinds, modules and summaries
-src/lib/public-symbols-source.ts Reads the workspace source the index describes
-src/lib/public-symbols-data.ts The index, read from the plugin's build-time module
-src/lib/examples.ts     The example registry: ids, paths and the header summary
-src/lib/examples-data.ts Reads `packages/*/examples/*.example.tsx` at build time
-src/components/docs/api-reference.tsx The entry-point table and the symbol index
-src/components/docs/examples-index.tsx The generated registry on /docs/examples
-src/components/docs/type-scale.tsx The typography specimen, generated from the theme
-src/components/docs/component-index.tsx The filterable index on /docs/components
-src/components/docs/token-scales.tsx The spacing/radius/density specimens on /docs/theming
-src/lib/collection-routes.ts The registry: every mounted package directory, route, section
-src/lib/package-docs.ts The Fumadocs loaders for the three package collections
-src/lib/page-tree.ts    Fills the package's pages into the Components section
-src/lib/component-index.ts The component index: URL mapping, curated shadowing, filter
-src/lib/component-index-data.ts The index, read from every docs collection at build time
-src/lib/platform.ts     The platform switch: parse, label, resolve the theme
-src/lib/theme-css.ts    Theme → CSS variables, shared with the theme editor
-src/lib/page-markdown.ts Server function for the "Copy page" action
-src/styles/app.css      Tailwind, Fumadocs presets and the GPUIxUI palette
-src/styles/demos.css    Scoped browser previews of the native components
+index.mdx                    Introduction (served at /docs)
+installation.mdx             Requirements, nub, first component, terminal mode
+architecture.mdx             The package graph, the recipe pipeline, where a change goes
+theming.mdx                  Semantic roles, themes, the platform switch, the look picker
+dark-mode.mdx                App-owned mode switching — no hidden OS-mode listener
+typography.mdx               The ten type roles, the two families, the platform rule
+runtime.mdx                  What the pinned GPUix provides, what it does not, and the workaround
+layouts.mdx                  The layout lane: primitives, the window frame, runtime facts
+workspace.mdx                The desktop-shell lane: composing parts, the docking gate
+data-display.mdx             The data lane: what ships, the table gate, runtime gaps
+patterns.mdx                 The workflows that cross components, and who owns the state
+examples.mdx                 The example registry, generated from every package's examples
+reference.mdx                The public entry points and the symbols behind them
+themes.mdx                   The live token editor, its audit and its copy output
+blocks/index.mdx             Page-level recipes composed from the library
+blocks/login.mdx             A centered sign-in card
+blocks/settings.mdx          A settings page with tabbed sections
+blocks/dashboard.mdx         An activity dashboard composed from the library
+components/index.mdx         The filterable component index
+components/button.mdx        Curated: previews, install, source (the package page keeps the API)
+components/dialog.mdx        Curated: a real confirmation workflow
+components/popover.mdx       Curated: anchored placement
+components/tabs.mdx          Curated: the measured indicator
+primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
+contributing.mdx             The checks, the worktree rules, the component checklist
+license.mdx                  Licenses and attribution, read from LICENSES/*.md
 ```
+
+## Site source
+
+```
+plugins/public-symbols-plugin.ts    Build-time module: the public symbol index
+
+src/start.ts                        TanStack Start instance and the Worker cache policy
+src/router.tsx                      The router instance
+src/routes/__root.tsx               The document shell, icons and the Fumadocs provider
+src/routes/index.tsx                The landing page at /
+src/routes/docs/index.tsx           /docs, the Introduction
+src/routes/docs/$.tsx               Every other docs page, from either collection
+src/routes/api/search.ts            Fumadocs search endpoint over all four collections
+src/routes/sitemap[.]xml.ts         /sitemap.xml, generated from every collection
+
+src/components/mdx.tsx              The MDX component registry
+src/components/landing/landing.tsx  The landing page composition
+src/components/landing/deck.tsx     The stacked native-window deck
+src/components/landing/terminal.tsx The "run it in your terminal" section
+src/components/landing/lineage.tsx  References and attribution on the landing page
+src/components/landing/data.ts      The landing page's content, as data
+
+src/components/docs/component-preview.tsx The Preview/Code component preview
+src/components/docs/preview-surface.tsx   A preview carrying the resolved theme's variables
+src/components/docs/demos.tsx             The browser renderings and their source strings
+src/components/docs/sources.ts            The real source files the Code tab shows
+src/components/docs/component-source.tsx  The copyable source block
+src/components/docs/install.tsx           The nub / manual install tabs
+src/components/docs/copy-page.tsx         Copy the page as Markdown
+src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
+src/components/docs/lane-table.tsx        The generated rows on the three lane pages
+src/components/docs/component-index.tsx   The filterable index on /docs/components
+src/components/docs/examples-index.tsx    The generated registry on /docs/examples
+src/components/docs/api-reference.tsx     The entry-point table and the symbol index
+src/components/docs/type-scale.tsx        The typography specimen, from the theme
+src/components/docs/token-scales.tsx      The spacing/radius/density specimens on /docs/theming
+src/components/docs/platform-toggle.tsx   The platform and look switch, and its provider
+src/components/docs/license-table.tsx     LICENSES/*.md, rendered
+src/components/docs/patterns.tsx          The pattern workflows and the chooser
+src/components/docs/block-index.tsx       The Blocks index
+src/components/docs/blocks.tsx            The Login, Settings and Dashboard recipes
+src/components/docs/block-preview.tsx     A block's browser rendering
+src/components/docs/dashboard.tsx         The dashboard's charts and stats
+src/components/docs/theme-editor.tsx      The live token editor on /docs/themes
+src/components/docs/theme-editor-logic.ts Its pure core: edits, audit, copy output
+src/styles/app.css                        Tailwind, Fumadocs presets and the docs palette
+src/styles/demos.css                      Scoped browser previews of the native components
+src/styles/blocks.css                     The block recipes' preview styles
+src/styles/landing.css                    The landing page's styles
+src/styles/platform.css                   The platform switch's own chrome
+src/styles/theme-editor.css               The theme editor's chrome and preview
+
+src/lib/docs-view.tsx               The shared docs layout and the two-collection page template
+src/lib/layout.shared.tsx           The nav chrome: brand and top-level links
+src/lib/source.ts                   The Fumadocs collection for content/docs
+src/lib/package-docs.ts             The loaders for the three package collections
+src/lib/collection-routes.ts        The registry: every mounted package directory, route, section
+src/lib/page-tree.ts                Fills the package's pages into their sidebar section
+src/lib/page-meta.ts                Title, description, canonical and social metadata
+src/lib/page-markdown.ts            Server function behind "Copy page"
+src/lib/site.ts                     The one deployed origin
+src/lib/shared.ts                   App name, docs route and the repository link
+src/lib/sitemap.ts                  The sitemap's URL set
+src/lib/virtual-modules.d.ts        The types of the build-time modules
+src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
+src/lib/inventory.ts                Parses the tier tables of COMPONENTS.md into lane rows
+src/lib/inventory-data.ts           The parsed inventory, at build time
+src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip
+src/lib/public-api.ts               Derives the entry points from each package's exports map
+src/lib/public-api-data.ts          The entry points, at build time
+src/lib/public-symbols.ts           The symbol index model: kinds, modules and summaries
+src/lib/public-symbols-source.ts    Reads the workspace source the index describes
+src/lib/public-symbols-data.ts      The index, read from the plugin's build-time module
+src/lib/examples.ts                 The example registry: ids, paths and header summaries
+src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at build time
+src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
+src/lib/component-index-data.ts     The index, from every docs collection at build time
+src/lib/patterns.ts                 The one source of the patterns and their parts
+src/lib/licenses.ts                 The LICENSES/*.md parse
+src/lib/licenses-data.ts            The licence records, at build time
+src/lib/platform.ts                 The platform and look switch: parse, label, resolve
+src/lib/theme-css.ts                Theme → CSS variables, shared with every preview
+```
+
+`src/routeTree.gen.ts` is generated by the TanStack Start plugin and is not
+edited; `src/lib/sidebar-pages.test-util.ts` is the shared `meta.json` parse the
+three sidebar guards import.
 
 ## Four collections
 
@@ -93,15 +160,14 @@ Every package page opens with a **status strip** generated from its
 `COMPONENTS.md` row (`src/components/docs/status-strip.tsx`): the inventory's
 status and its GPUix support verdict, plus a link to the inventory. The join is
 the page title (`src/lib/inventory-status.ts`), which normalises punctuation and
-a trailing plural and names the sixteen titles whose row reads differently. The
-page therefore cannot claim more than the inventory, and a row that changes
-changes the page with no docs edit; `src/lib/inventory-status.test.ts` holds
-every mounted page to a row, and the two pages that have none are argued in the
-module.
+a trailing plural and names the titles whose row reads differently. The page
+therefore cannot claim more than the inventory, and a row that changes changes
+the page with no docs edit; `src/lib/inventory-status.test.ts` holds every
+mounted page to a row, and the pages that have none are argued in the module.
 
-## Generated pages
+## Pages that read the workspace
 
-Three pages read the workspace instead of restating it:
+No page restates what the code already says:
 
 - **Examples** (`/docs/examples`) is built from `packages/*/examples/*.example.tsx`
   by `src/lib/examples-data.ts`. The row's summary is the file's own header, so
@@ -115,35 +181,53 @@ Three pages read the workspace instead of restating it:
   `plugins/public-symbols-plugin.ts` reads it once at build time and exposes a
   virtual module; `src/lib/public-symbols-data.ts` reads that module and the
   page renders one table.
+- **Component index** (`/docs/components`) lists every primitives and components
+  page from its frontmatter (`component-index.ts`), so the index cannot
+  advertise a page that does not exist and a new page appears without a docs
+  edit. A curated page shadows its package page.
+- **Lane pages** (`/docs/layouts`, `/docs/workspace`, `/docs/data-display`) get
+  their rows from the tier tables of `COMPONENTS.md` through `<LaneTable>`, so a
+  page cannot call a row shipped while the inventory says `todo`.
+- **Typography and Theming** render specimens from the theme itself
+  (`<TypeScale>`, `<TokenScales>`), so a token edit moves the page with it.
+- **License** (`/docs/license`) renders `LICENSES/*.md` through
+  `<LicenseInventory>`; a record added beside the code appears with no docs
+  change.
 - **Sitemap** (`/sitemap.xml`) is generated per request from the same
   collections (`src/lib/sitemap.ts`), with one URL per page and a curated page
   shadowing its package page; `public/robots.txt` points at it.
 
-## The platform switch
+## Preview honesty
 
-`PlatformToggle` sits in the sidebar footer and offers macOS, Linux, Windows and
-Default. `resolvePlatformTheme` asks `@gpuixui/tokens` for the theme, the choice
-is carried in `?platform=` and remembered in local storage, and every preview
-renders on a `PreviewSurface` that applies the theme's variables. A preview
-therefore paints the library's roles, not a docs palette. See
-`docs/preview-strategy.md` for the full policy.
+`<ComponentPreview>` and `<BlockPreview>` render a browser reproduction of the
+component's geometry, palette and states, always with the note that the shipped
+component renders through GPUix. The same page carries the real source, so the
+reader can run it in `apps/playground`. `src/lib/theme-css.ts` is the one bridge
+from a `Theme` to CSS variables, and the previews take their values from the
+resolved platform theme, so a preview cannot carry a colour literal the library
+does not ship. `docs/preview-strategy.md` is the full policy.
 
-## Metadata and discovery
+## The platform switch and the look picker
 
-Every docs page publishes its own document metadata: the frontmatter `title`
-with the site name, its `description`, an Open Graph and Twitter card, and a
-canonical link. The canonical drops the `?platform=` switch, so the four
-platform looks are one page to a crawler and four shareable links to a reader.
-`src/lib/page-meta.ts` builds it; `docs-view.tsx` returns the page's title and
-description from the loader, so both collections — the site's pages and the
-package's — get real metadata without a copy.
+`PlatformToggle` sits in the sidebar footer. **Platform** offers macOS, Linux,
+Windows and Default; **Look** offers the platform's own style and the two
+authored looks (`Windows XP (Luna)`, `Windows 7 (Aero)`). `src/lib/platform.ts`
+resolves `platformTheme(themes[mode], platform)` and then `applyStyle` over it for
+a look, the choice is carried in `?platform=…&look=…` and remembered in local
+storage, and every preview renders on a `PreviewSurface` that applies the resolved
+theme's variables, `data-platform` and `data-look`. A preview therefore paints the
+library's roles, radii, families and density, not a docs palette.
 
-`src/lib/site.ts` holds the one origin (`https://gpuixui.sudokw.com`), and
-`site.test.ts` holds it to `DOCS_DOMAIN` in the deploy stack. `/sitemap.xml` is
-generated from the collections at request time (`src/lib/sitemap.ts`), so a page
-added to any mounted collection is listed without a docs change; a curated page
-shadows its package page and the URL is listed once. `public/robots.txt` points
-at it.
+## The theme editor
+
+`/docs/themes` mounts `<ThemeEditor>`, which edits the twelve shadcn-core roles,
+`radius.md` and the `sans` family for each mode, previews them through the same
+CSS bridge, and copies a `createTheme` module in the shape
+`@gpuixui/tokens` consumes. The edits persist to the URL and to local storage.
+Its readout is `auditTheme` — the library's own gate — so a role the renderer
+cannot paint, a text pair below its floor and an invisible divider are all
+reported, and a persisted state that would paint black is rejected instead of
+restored. `theme-editor-logic.ts` is the pure core and its tests.
 
 ## Component pages
 
@@ -160,21 +244,32 @@ A component page uses three MDX blocks:
 
 Demo renderings and their source strings live in
 `src/components/docs/demos.tsx`. Add a registry entry there, then point a page at
-it.
+it. The curated pages are Button, Dialog, Popover and Tabs; every other component
+page is the package's own and adds the API tables, limitations and the example to
+run. `src/lib/component-page-truth.test.ts` holds the curated pages to the
+runtime version the workspace pins, the inventory row and the test count their
+suite actually runs.
 
-The Components index (`/docs/components`) mounts `<ComponentIndex />`, which
-lists every page in the Primitives and Components lanes with its description and
-a filter box. The rows come from the pages' frontmatter at build time
-(`src/lib/component-index.ts` and `component-index-data.ts`), so a page added to
-any collection appears without a docs change, a curated page shadows its package
-page, and the index cannot advertise a page that does not exist.
+## Metadata and discovery
+
+Every docs page publishes its own document metadata: the frontmatter `title`
+with the site name, its `description`, an Open Graph and Twitter card, and a
+canonical link. The canonical drops the `?platform=` and `?look=` switches, so
+the variants are one page to a crawler and shareable links to a reader.
+`src/lib/page-meta.ts` builds it; `docs-view.tsx` returns the page's title and
+description from the loader, so both collections — the site's pages and the
+package's — get real metadata without a copy.
+
+`src/lib/site.ts` holds the one origin (`https://gpuixui.sudokw.com`), and
+`site.test.ts` holds it to `DOCS_DOMAIN` in the deploy stack.
 
 ## Commands
 
 ```sh
-nub run dev:docs                               # dev server
-nub run --filter @gpuixui/docs build           # production build
-nub run --filter @gpuixui/docs check-types     # tsc
+nub run dev:docs                                 # dev server
+nub run --filter @gpuixui/docs test              # vitest, including the page guards
+nub run --filter @gpuixui/docs build             # production build
+nub run --filter @gpuixui/docs check-types       # tsc
 ```
 
 ## Deploy

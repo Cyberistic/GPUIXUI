@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 40/41
+`[x]` `[█████████░]` 41/42
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -331,6 +331,27 @@ diameter table; a fixed scale, not a theme group
 `[x]` Ship `blend`, `filledHover` and `filledPressed` — opaque derived action
 fills instead of six stored hover/press roles, with the label contrast floors
 checked on both fills
+`[x]` Ship the categorical **data series** — `seriesColors(theme)` resolves five
+authored colours per mode and contrast variant (`lightSeries`, `darkSeries`,
+`highContrastLightSeries`, `highContrastDarkSeries`) for chart marks, legends and
+any colour whose meaning is "a different category". It had neither a role nor a
+scale, so the docs dashboard's hand-coded `PALETTE` is the literal it replaces.
+Every swatch clears the theme's own boundary floor on the three plot surfaces
+(`seriesSurfaces`: `background`, `card`, `popover`) — 3:1 default, 4.5:1 high
+contrast — and every pair clears `seriesDistinctnessFloor`, an OKLab distance of
+0.06, because contrast cannot tell a blue from a violet of one lightness.
+`seriesFailures(theme, floors?)` reports both (naming the position, surface or
+pair, and an unmeasurable swatch rather than skipping it) and `auditTheme` folds
+the report into its gate; a theme owns a scale by carrying `series`, which
+replaces the five positions whole. `series.test.ts` holds every shipped, platform
+and retro theme to both contracts and executes `series.example.ts`;
+`catalogue-values.test.ts` holds the printed table to the four exports. Four
+directions measured: a repeated dark swatch fails the distinctness case, the
+catalogue case and the audit case; a pale light swatch fails the surface case by
+name (`Light series 4 on background is 1.14`); and dropping the series half of
+`passed` fails the chart-swatch gate case. Docs in `docs/tokens.md` §Data series,
+`docs/design-system.md` §3/§9, the README and the `Data series` inventory row.
+Consumer adoption is the interlock row below
 `[-]` Add motion tokens (durations/easings) to `@gpuixui/tokens` — cancelled:
 `@gpuixui/motion` is the package that owns easing curves, spring presets, stagger
 and reduced-motion policy, so a second copy here would be the duplication the
@@ -956,7 +977,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ### Docs information architecture (`docs-site`)
 
-`[x]` `[██████████]` 16/16
+`[x]` `[██████████]` 17/17
 
 `[x]` Architecture page — `/docs/architecture` names all 11 packages, the dependency direction, the recipe pipeline, the Effect boundaries, the testing lanes and where a change goes; `apps/docs/src/lib/architecture.test.ts` fails when a package is added without a row or the page leaves the sidebar
 `[x]` Layouts, Workspace and Data display pages — `/docs/layouts`, `/docs/workspace` and `/docs/data-display` are the three composition lanes, each under a Composition sidebar section. Their rows are **generated** from `COMPONENTS.md` by `<LaneTable lane>` (`apps/docs/src/lib/inventory.ts`), so a page cannot call a row shipped while the inventory says `todo`; the summary prints rows/shipped/to-build. Each page names the shipped pieces with links, the gaps with evidence and where a change goes; the layout page carries the window-frame composition preview (`layout-shell`), the workspace page the tabbed-panel preview and the data page links the Dashboard block. `inventory.test.ts` holds the parse (a malformed row is reported, not dropped), `lane-table.test.tsx` proves every row reaches the rendered table, `lane-page.test.ts` proves each page mounts its table, names the inventory and sits in the sidebar. `docs/preview-strategy.md` §"The lane pages" records the template and the no-preview-for-a-missing-component rule. Tests: `nub run --filter @gpuixui/docs test` (10 files, 70 tests), `check-types`, `build`, and the dev server at `/docs/layouts`, `/docs/workspace`, `/docs/data-display`
@@ -981,6 +1002,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[x]` The look picker — the sidebar switch has a second axis beside the platform: **Look** offers the platform's own style and the two authored looks `@gpuixui/tokens` ships (Luna, Aero), resolved through `applyStyle` so every preview paints the look's palette, radii, density and monospace family. `?look=` shares and remembers it, `PreviewSurface` marks it with `data-look`, and `/docs/theming#the-look-picker` documents the URL, the labels and why a look is not a fifth platform. `platform.test.ts` holds the switch to `retroNames` (a new look without an entry fails), rejects an unknown name, round-trips the query parameter and proves the resolved theme keeps every role the bridge publishes; `theme-css.test.ts` proves the bridge carries the look's values; `theming-page.test.ts` holds the page to the labels. Both directions measured (dropping the `applyStyle` call fails three cases; removing the page section fails three page guards), and the dev server renders `data-look="luna"` on `/docs/theming?platform=darwin&look=luna`
 
 `[x]` Link integrity — `link-integrity.test.ts` resolves every in-site link on every mounted page (the site's 27 pages and the three package collections, 95 in all) against the mounted URLs: markdown links, JSX `href`s, relative `./` targets, `?query` strings and `#anchor`s, with fenced code skipped so a snippet's example URL is not a link. Anchors are held to the slug the rendered page uses, verified against the dev server (`Tray / menu bar` → `tray--menu-bar`, `` `isTerminal()` `` → `isterminal`) and pinned by fixture cases, including a repeated heading's `-1` suffix. A dead link is either fixed or argued in `knownDeadLinks` with its owner, and an entry that stops being dead fails, so the list cannot outlive the defect. Both directions measured: planted `/docs/does-not-exist` and `#not-a-heading` links fail by page and target; an exemption pointing at a live page fails the staleness case. The two component pages' three 404s are the components workstream's fix and are listed with their reasons
+
+`[x]` The site's own ledger — `apps/docs/README.md` names every page it ships and every module the site is built from, and `src/lib/readme-ledger.test.ts` holds it to the tree in the ledger's own format (a line beginning with the path). It had drifted by ten pages (`patterns`, `runtime`, `themes`, `license`, the four blocks, …) and 44 modules, so a contributor reading it could not find the file they were editing. The guard reads `content/docs`, `src` and `plugins`, exempts only the generated `src/routeTree.gen.ts` and the shared `sidebar-pages.test-util.ts` with a reason, floors the scan at 20 pages and 50 modules, and checks that the preview policy it points at is the file on disk. Both directions measured: the pre-repair README fails the two list cases naming `blocks/dashboard.mdx` and 44 modules; the rewritten ledger passes (3 cases). The same pass added the sections the site gained and the README lacked — the look picker, the theme editor, the blocks and the preview-honesty policy
 
 ## Phase G — release readiness
 
