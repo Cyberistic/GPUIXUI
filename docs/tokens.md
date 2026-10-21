@@ -1470,6 +1470,15 @@ platform styles whose inherited skeleton matched their own surfaces — macOS
 light on `muted` at 1.045:1, Linux dark on `card` at 1.004:1 — which now carry a
 `skeleton` of their own.
 
+`packages/tokens/src/selection.test.ts` covers the wash behind a selected run:
+`selectionPairs` names the four content surfaces and keeps the text role each one
+already carries, `selectionFailures` composites the role over each surface, and a
+theme passes only when the wash is visible against what it covers (1.05:1) and the
+text inside it keeps the body floor. It reports the pre-fix Linux dark wash at
+6.63:1 by name, a brand whose wash is its own text colour, a transparent wash and
+a surface it cannot composite, and all 16 shipped, platform and authored themes
+clear both floors.
+
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label, both families, a density preset and a full radius scale; `sans` is
 the GPUI sentinel; no family is a comma stack; `platformTheme` repaints, re-shapes
@@ -1495,10 +1504,10 @@ its base — the elevation keeps the base geometry in the look's own `shadow` ti
 A role a look does not author inherits, each look paints a background, primary
 and radius of its own (different from the other look and from the Windows
 platform style), both dark editions are a real second palette, a high-contrast
-base keeps its colours, and all four themes clear every `contrastPairs` pair and
-every decorative placement. `resolveRetroBrand` is executed and held to the
-audit, and the provenance prose, the catalogue table and the inventory row are
-held to the table the package ships.
+base keeps its colours, and all four themes clear every `contrastPairs` pair,
+every decorative placement and both selection floors. `resolveRetroBrand` is
+executed and held to the audit, and the provenance prose, the catalogue table and
+the inventory row are held to the table the package ships.
 
 `packages/tokens/src/catalogue-values.test.ts` holds **the values the catalogue
 and the README print** to the package, so a document cannot teach a theme the
