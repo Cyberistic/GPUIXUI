@@ -45,6 +45,7 @@ packages/primitives Tier 1 render primitives
 packages/icons      Icon set and sizing rules
 packages/components Tier 2 composition and feedback components
 packages/tw         shadcn class recipes → GPUix StyleDesc (with `cn`)
+packages/runtime    The pinned runtime's capability matrix + typed refusals
 packages/testing   Platform-free smoke suite: checks, runner, report, preflight
 docs/              Design-system and architecture documents (source of truth)
 examples/          Runnable example apps

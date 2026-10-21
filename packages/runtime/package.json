@@ -1,0 +1,32 @@
+{
+  "name": "@gpuixui/runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The pinned GPUix runtime's capability matrix, typed refusals and runtime-detected helpers.",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@gpuixui/config": "workspace:*",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

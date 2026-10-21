@@ -11,6 +11,7 @@ Dependencies point down this list and never up:
 ```
 tokens      → (nothing)
 motion      → (nothing; pure math, `react` peer for the hooks)
+runtime     → (nothing; `@gpuix/react` + `effect` — the runtime surface it describes)
 primitives  → tokens
 components  → tokens, primitives
 icons       → tokens
