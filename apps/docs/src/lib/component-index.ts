@@ -173,11 +173,44 @@ export interface PageProps {
 const withoutCodeFences = (text: string): string =>
   text.replace(/^```[\s\S]*?^```/gm, "");
 
-/** A table row's cells, trimmed. A padded cell names a part, not a prop. */
-const tableCells = (text: string): ReadonlyArray<ReadonlyArray<string>> =>
-  [...withoutCodeFences(text).matchAll(/^\|(.+)\|\s*$/gm)].map((match) =>
-    (match[1] ?? "").split("|").map((cell) => cell.trim()),
-  );
+/** One table: its header cells and the body rows that carry data. */
+interface Table {
+  readonly header: ReadonlyArray<string>;
+  readonly rows: ReadonlyArray<ReadonlyArray<string>>;
+}
+
+/** A row's cells, with a `\\|` kept inside its cell instead of splitting it. */
+const cellsOf = (line: string): ReadonlyArray<string> =>
+  line
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split(/(?<!\\)\|/)
+    .map((cell) => cell.replace(/\\\|/g, "|").trim());
+
+/** A row of dashes (`---`, `:--:`) marks the header boundary. */
+const separator = (cells: ReadonlyArray<string>): boolean =>
+  cells.every((cell) => /^-+$/.test(cell.replace(/:/g, "")));
+
+/**
+ * The tables in a section.
+ *
+ * A table is a blank-line-delimited block of `|` rows, so prose between two
+ * tables does not join them and a fenced example is already gone.
+ */
+const tablesOf = (text: string): ReadonlyArray<Table> =>
+  withoutCodeFences(text)
+    .split(/\n\s*\n/)
+    .map((block) =>
+      block
+        .split("\n")
+        .filter((line) => line.startsWith("|"))
+        .map(cellsOf),
+    )
+    .filter((rows) => rows.length >= 2)
+    .flatMap(([header = [], ...rows]) => {
+      const body = rows.filter((cells) => !separator(cells));
+      return body.length === 0 ? [] : [{ header, rows: body }];
+    });
 
 /** The identifiers inside one cell's code spans, split on `/` for pairs. */
 const codeNames = (cell: string): ReadonlyArray<string> =>
@@ -188,37 +221,85 @@ const codeNames = (cell: string): ReadonlyArray<string> =>
       .filter((name) => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name)),
   );
 
-/** A cell headed "`Dialog` prop" names the part whose props follow it. */
-const partRow = (cell: string): boolean => /^`[^`]+`\s+prop\b/i.test(cell);
+/**
+ * The props named in a free-form props cell.
+ *
+ * Some pages describe a part's props in one sentence — "`value` (required),
+ * `max?`, children" — so the names are the code spans and the words marked
+ * optional with `?`. A capitalised name is the part or a type, not a prop.
+ */
+const listedNames = (cell: string): ReadonlyArray<string> => [
+  ...[...cell.matchAll(/`([^`]+)`/g)].flatMap((match) =>
+    (match[1] ?? "")
+      .split("/")
+      .map((piece) => piece.trim().split(/[?:<(]/)[0] ?? "")
+      .filter((name) => /^[a-z][A-Za-z0-9]*$/.test(name)),
+  ),
+  ...[
+    ...cell.matchAll(/(?:^|[\s,])`?([a-z][A-Za-z0-9]*)\?`?(?=[\s,]|$)/g),
+  ].flatMap((match) => (match[1] === undefined ? [] : [match[1]])),
+];
+
+/** The capitalised type names a cell writes in code. */
+const namedTypes = (cell: string): ReadonlyArray<string> =>
+  [...cell.matchAll(/`([^`]+)`/g)].flatMap(
+    (match) => match[1]?.match(/\b[A-Z][A-Za-z0-9]*\b/g) ?? [],
+  );
+
+/** The column a header names, or `-1`. */
+const columnOf = (header: ReadonlyArray<string>, pattern: RegExp): number =>
+  header.findIndex((cell) => pattern.test(cell.trim()));
 
 /**
  * The props a page documents, read from its API tables.
  *
  * A reader who knows the prop but not the component — "which pages take
  * `onCheckedChange`?" — has nothing else to search: the sidebar shows names and
- * the parts table shows parts. The named types come along for the same reason
+ * the parts table shows parts. The pages write three table shapes: one prop per
+ * row (`Prop | Type`), one part per row with a prop column (`Part | Prop |
+ * Type`), and one part per row with its props in a sentence (`Part | Renders |
+ * Props`). All three are read. The named types come along for the same reason
  * ("which components take a `StateStyle`?"), limited to capitalised identifiers
  * so a `boolean` does not match every page in the library.
  */
 export const propsOf = (source: string): PageProps => {
   const rows = sectionsOf(source)
     .filter((section) => /^(API|Props)\b/.test(section.heading))
-    .flatMap((section) => tableCells(section.text));
+    .flatMap((section) => tablesOf(section.text));
 
-  const documented = rows
-    .filter(([first = ""]) => first.startsWith("`") && !partRow(first))
-    .reduce<PageProps>(
-      (found, [first = "", second = ""]) => ({
-        props: [...found.props, ...codeNames(first)],
-        types: [
-          ...found.types,
-          ...[...second.matchAll(/`([^`]+)`/g)].flatMap(
-            (match) => match[1]?.match(/\b[A-Z][A-Za-z0-9]*\b/g) ?? [],
-          ),
-        ],
-      }),
-      { props: [], types: [] },
-    );
+  const documented = rows.reduce<PageProps>(
+    (found, table) => {
+      const propColumn = columnOf(table.header, /(^|\s)prop$/i);
+      const propsColumn = columnOf(table.header, /^props$/i);
+      const typeColumn = columnOf(table.header, /^type$/i);
+      const self = table.rows.reduce<PageProps>(
+        (inside, cells) => {
+          const names =
+            propsColumn >= 0
+              ? listedNames(cells[propsColumn] ?? "")
+              : propColumn >= 0
+                ? codeNames(cells[propColumn] ?? "")
+                : [];
+          const types =
+            propsColumn >= 0
+              ? namedTypes(cells[propsColumn] ?? "")
+              : typeColumn >= 0
+                ? namedTypes(cells[typeColumn] ?? "")
+                : [];
+          return {
+            props: [...inside.props, ...names],
+            types: [...inside.types, ...types],
+          };
+        },
+        { props: [], types: [] },
+      );
+      return {
+        props: [...found.props, ...self.props],
+        types: [...found.types, ...self.types],
+      };
+    },
+    { props: [], types: [] },
+  );
 
   return {
     props: [...new Set(documented.props.filter((name) => !notAProp.has(name)))],

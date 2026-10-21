@@ -228,6 +228,38 @@ describe("the props a page documents", () => {
     });
   });
 
+  it("reads a props sentence in a part table, keeping the part out of the props", () => {
+    const source = [
+      "## API",
+      "",
+      "| Part | Renders | Props |",
+      "| ---- | ------- | ----- |",
+      '| `TagInput` | `div` with `role="group"` | `value` (required), `onValueChange` (required), `max?`, `allowDuplicates?` |',
+      "| `TagInputField` | `<input>` | `style?: StateStyle<TagInputFieldState>` |",
+    ].join("\n");
+
+    expect(propsOf(source)).toEqual({
+      props: ["value", "onValueChange", "max", "allowDuplicates", "style"],
+      types: ["StateStyle", "TagInputFieldState"],
+    });
+  });
+
+  it("reads a part-per-row table with a prop and a type column", () => {
+    const source = [
+      "## API",
+      "",
+      "| Part | Prop | Type | Default |",
+      "| ---- | ---- | ---- | ------- |",
+      '| `Alert` | `tone` | `"neutral" \\| "success"` | `"neutral"` |',
+      "| `Alert` | `onDismiss` | `() => void` | — |",
+    ].join("\n");
+
+    expect(propsOf(source)).toEqual({
+      props: ["tone", "onDismiss"],
+      types: [],
+    });
+  });
+
   it("ignores a table outside an API section, and one inside a fence", () => {
     const source = [
       "## Usage",
@@ -240,6 +272,8 @@ describe("the props a page documents", () => {
       "| `fenced` | `boolean` |",
       "```",
       "",
+      "| Prop | Type |",
+      "| ---- | ---- |",
       "| `open` | `boolean` |",
     ].join("\n");
 
@@ -390,6 +424,26 @@ describe("the real index", () => {
     const found = filterEntries(componentIndex, "onCheckedChange");
 
     expect(found.map((row) => row.url)).toContain("/docs/primitives/switch");
+  });
+
+  it("keeps a part name out of the props a part table lists", () => {
+    const tagInput = componentIndex.find(
+      (row) => row.url === "/docs/components/tag-input",
+    );
+
+    expect(tagInput?.props).toContain("onValueChange");
+    expect(tagInput?.props).not.toContain("TagInput");
+    expect(tagInput?.types).toContain("TagInputFieldState");
+  });
+
+  it("indexes props, never the part a table is headed by", () => {
+    const capitalised = componentIndex.flatMap((row) =>
+      row.props
+        .filter((name) => !/^[a-z]/.test(name))
+        .map((name) => `${row.url}: ${name}`),
+    );
+
+    expect(capitalised).toEqual([]);
   });
 
   it("finds the pages whose props take a named type", () => {
