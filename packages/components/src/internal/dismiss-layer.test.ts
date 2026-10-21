@@ -3,8 +3,9 @@
  *
  * The bugs these guard: two Escape handlers firing on one keystroke (a popover
  * inside a dialog closing both layers), an outside press closing an overlay that
- * is not topmost, and a closed overlay leaving its handler on the stack to be
- * dismissed later.
+ * is not topmost, a closed overlay leaving its handler on the stack to be
+ * dismissed later, and one key dispatch counted twice because the runtime builds
+ * a payload per handler.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -17,6 +18,13 @@ import {
 
 /** A syntactically complete event; only its identity matters here. */
 const event = (): EventPayload => ({ elementId: 1, eventType: "keyDown" });
+
+/** The key dispatch a renderer numbers; every handler's payload shares it. */
+const keystroke = (keystrokeId: number): EventPayload => ({
+  elementId: 1,
+  eventType: "keyDown",
+  keystrokeId,
+});
 
 describe("dismiss layer stack", () => {
   it("reports no consumer when nothing is open", () => {
@@ -68,6 +76,55 @@ describe("dismiss layer stack", () => {
     expect(outer).toHaveBeenCalledTimes(1);
 
     removeOuter();
+  });
+
+  it("treats one key dispatch as one event across handlers' payloads", () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const removeOuter = pushDismissLayer(outer);
+    const removeInner = pushDismissLayer(inner);
+
+    // The same Escape reaches the input and the dialog as two objects that share
+    // the dispatch id; only the first call may dismiss a layer.
+    expect(dismissTopLayer(keystroke(7))).toBe(true);
+    expect(dismissTopLayer(keystroke(7))).toBe(false);
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+
+    removeInner();
+    removeOuter();
+  });
+
+  it("counts the next dispatch separately, even with the same key payload shape", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const removeFirst = pushDismissLayer(first);
+    const removeSecond = pushDismissLayer(second);
+
+    expect(dismissTopLayer(keystroke(1))).toBe(true);
+    removeSecond();
+    expect(dismissTopLayer(keystroke(2))).toBe(true);
+
+    expect(first).toHaveBeenCalledTimes(1);
+
+    removeFirst();
+  });
+
+  it("forgets the last dispatch once the stack empties", () => {
+    const closed = vi.fn();
+    const remove = pushDismissLayer(closed);
+
+    expect(dismissTopLayer(keystroke(1))).toBe(true);
+    remove();
+
+    // A fresh renderer numbers its keystrokes from its own start; a stale id
+    // must not swallow the first Escape of the next stack.
+    const next = vi.fn();
+    const removeNext = pushDismissLayer(next);
+    expect(dismissTopLayer(keystroke(1))).toBe(true);
+    expect(next).toHaveBeenCalledTimes(1);
+
+    removeNext();
   });
 
   it("drops a removed layer instead of dismissing it later", () => {

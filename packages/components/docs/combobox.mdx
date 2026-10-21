@@ -40,7 +40,7 @@ import {
 | `Combobox` | the headless root: ranking, selection, open state and focus restore |
 | `ComboboxTrigger` | the field-shaped control: selected labels or `placeholder`, `aria-expanded`, a chevron |
 | `ComboboxContent` | the anchored popup surface |
-| `ComboboxInput` | the search field; Escape asks the root to restore focus |
+| `ComboboxInput` | the search field; Escape offers the key to the shared dismiss stack |
 | `ComboboxList` | the ranked listbox, one `ComboboxItem` per visible option |
 | `ComboboxItem` | one row: label, optional description, a check icon while selected |
 | `ComboboxEmpty` | shown only when no option matches; children replace the default |
@@ -97,12 +97,18 @@ arrow or Enter.
 | typing | filters; the first enabled match is highlighted |
 | `ArrowDown` / `ArrowUp` | moves the highlight, wrapping and skipping disabled rows |
 | `Enter` | selects the highlighted row |
-| `Escape` | closes and returns focus to the trigger |
+| `Escape` | closes the popup and returns focus to the trigger; inside a dialog it closes only the popup |
 | outside press | closes without stealing focus back |
 
 The search input keeps focus; the highlighted row is visual. **No
 `aria-activedescendant`** exists in 0.11.0, so assistive technology does not get
 the input→row relationship; `aria-selected` on the rows is the supported signal.
+
+The popup joins the shared dismiss stack, so one `Escape` dismisses one surface,
+outside-in: with the popup open inside a dialog the popup closes and the dialog
+stays; the next `Escape` closes the dialog. One key dispatch is identified by
+the runtime's `keystrokeId`, because GPUix hands every enclosing handler its own
+payload object.
 
 ## Creating a value
 
@@ -167,17 +173,18 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (20 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (21 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
-add/remove with order, the disabled row, Escape restoring focus,
-prefix-before-substring ranking, both themes, the pointer path — selecting an
-option, toggling several while skipping a disabled one, closing on an outside
-press — a caller-supplied empty state, the trigger's placeholder/name coming
-from the part, and the create row: offered for an unmatched query, reported
-once with the trimmed query while the selection stays put, suppressed when an
-option matches, the query is blank, no handler is given, or the mode is multiple.
+add/remove with order, the disabled row, Escape restoring focus and closing only
+its own popup inside a dialog, prefix-before-substring ranking, both themes, the
+pointer path — selecting an option, toggling several while skipping a disabled
+one, closing on an outside press — a caller-supplied empty state, the trigger's
+placeholder/name coming from the part, and the create row: offered for an
+unmatched query, reported once with the trimmed query while the selection stays
+put, suppressed when an option matches, the query is blank, no handler is given,
+or the mode is multiple.
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf`,
 `toggledSelection` and the create-row round trip.

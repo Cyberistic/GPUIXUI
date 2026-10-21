@@ -72,6 +72,7 @@ import {
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
+import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -97,8 +98,6 @@ interface ComboboxContextValue {
   readonly isDisabled: (value: string) => boolean;
   readonly trigger: RefObject<PublicInstance | null>;
   readonly registerTrigger: (instance: PublicInstance | null) => void;
-  /** An Escape press: close and return focus to the trigger. */
-  readonly noteEscape: () => void;
   /** An outside press already moved focus, so do not restore it. */
   readonly noteOutsidePress: () => void;
 }
@@ -244,6 +243,18 @@ export const Combobox = ({
     wasOpen.current = open;
   }, [open, renderer]);
 
+  // An open popup is a dismiss layer, so a combobox inside a dialog closes on
+  // Escape before the dialog does: the stack consumes the event once and the
+  // dialog's own layer is never reached.
+  useLayoutEffect(() => {
+    if (!open) return;
+    return pushDismissLayer((event) => {
+      restoreFocus.current = event.eventType === "keyDown";
+      setOpen(false);
+      setQuery("");
+    });
+  }, [open]);
+
   return (
     <ComboboxContext.Provider
       value={{
@@ -260,9 +271,6 @@ export const Combobox = ({
         trigger,
         registerTrigger: (instance) => {
           trigger.current = instance;
-        },
-        noteEscape: () => {
-          restoreFocus.current = true;
         },
         noteOutsidePress: () => {
           restoreFocus.current = false;
@@ -470,7 +478,6 @@ export const ComboboxInput = ({
   label = "Search options",
 }: ComboboxInputProps) => {
   const theme = useTheme();
-  const { noteEscape } = useCombobox();
 
   return (
     <HeadlessInput
@@ -478,7 +485,7 @@ export const ComboboxInput = ({
       placeholder={placeholder}
       aria-label={label}
       onKeyDown={(event) => {
-        if (isDismiss(event)) noteEscape();
+        if (isDismiss(event)) dismissTopLayer(event);
       }}
       style={mergeStyles(recipeStyle(COMBOBOX_INPUT, theme), {
         height: controlHeight(theme, "sm"),

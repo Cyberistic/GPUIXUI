@@ -15,6 +15,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
+import { Dialog, DialogContent } from "../dialog.js";
 import {
   clickCentreOf,
   focusedTestId,
@@ -370,6 +371,31 @@ describe("Combobox", () => {
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
 
     picker.unmount();
+  });
+
+  it("closes only its own popup on Escape inside a dialog", async () => {
+    const nested = renderComponent(
+      <Dialog defaultOpen>
+        <DialogContent label="Assign reviewer" testId="dialog-panel">
+          <Picker />
+        </DialogContent>
+      </Dialog>,
+    );
+    await open(nested);
+    expect(nested.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    await settle();
+
+    expect(nested.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog-panel")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    await settle();
+
+    expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined();
+
+    nested.unmount();
   });
 
   it("ranks a prefix match above a substring match", async () => {

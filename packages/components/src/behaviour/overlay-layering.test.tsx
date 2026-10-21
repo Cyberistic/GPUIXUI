@@ -15,7 +15,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "../dropdown-menu.js";
-import { Popover, PopoverContent } from "../popover.js";
+import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
+import { clickCentreOf } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
 /**
@@ -53,6 +54,35 @@ const focus = (
 };
 
 describe("overlay layering", () => {
+  it("dismisses a popover opened inside a dialog one layer at a time", () => {
+    const nested = renderComponent(
+      <Dialog defaultOpen>
+        <DialogContent label="Dialog" testId="dialog-panel">
+          <Popover>
+            <PopoverTrigger testId="open-popover">Details</PopoverTrigger>
+            <PopoverContent testId="popover-panel">
+              <text>Popover</text>
+            </PopoverContent>
+          </Popover>
+        </DialogContent>
+      </Dialog>,
+    );
+
+    clickCentreOf(nested, "open-popover");
+    expect(nested.renderer.findByTestId("popover-panel")).toBeDefined();
+
+    // One keystroke reaches the popover's handler and the dialog's: the shared
+    // stack must dismiss only the popover, which is what is on top.
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("popover-panel")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog-panel")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined();
+
+    nested.unmount();
+  });
+
   it("dismisses a dialog over a popover over a menu outside-in", () => {
     const stack = renderComponent(<Stack />);
 
