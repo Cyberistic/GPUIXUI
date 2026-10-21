@@ -116,6 +116,26 @@ owns that state and decides what "not set" means.
 </TimePicker>;
 ```
 
+## API
+
+Every part takes the GPUix host props and merges `style` last. The root's `testId`
+is the base for the parts: `<testId>-hours`, `<testId>-minutes` and
+`<testId>-clear`.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `TimePicker` | `value` / `defaultValue` | `string \| null` — `HH:mm`, 24-hour | — / `null` |
+| `TimePicker` | `onValueChange` | `(value: string \| null) => void` — every accepted edit, including clear | — |
+| `TimePicker` | `label` | `string` — the field group's accessible name | `"Time"` |
+| `TimePicker` | `minuteStep` | `number` — arrow-key step, normalised to 1..59 | `1` |
+| `TimePicker` | `clearable` | `boolean` — shows the clear control while a time is set | `false` |
+| `TimePicker` | `disabled` | `boolean` | `false` |
+| `TimePicker` | `testId` | `string` — base id for the parts | `"time-picker"` |
+| `TimePickerSegment` | `segment` | `"hours" \| "minutes"` (required) | — |
+| `TimePickerSegment` | `style` | `StateStyle<TimePickerSegmentState>` | recipe |
+| `TimePickerSeparator` | `children` | `ReactNode` | `:` |
+| `TimePickerClear` | `label` | `string` — the control's accessible name | `"Clear time"` |
+
 ## Theming
 
 The field paints `colors.input` with `colors.inputForeground` text, a

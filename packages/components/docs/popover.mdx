@@ -71,6 +71,21 @@ Focus moves into the surface on open, so keys reach its content without a click.
 The surface is a tab stop (`tabIndex={-1}`) but not a trap: Tab leaves and closes
 it. The trigger is an ordinary button: `Enter`/`Space` toggle it.
 
+## API
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Popover` | `open` / `defaultOpen` | `boolean` | — / `false` |
+| `Popover` | `onOpenChange` | `(open: boolean) => void` | — |
+| `PopoverTrigger` | — | the local button's props (`variant`, `size`, `label`, `disabled`) | — |
+| `PopoverContent` | `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` |
+| `PopoverContent` | `align` | `"start" \| "center" \| "end"` | `"start"` |
+| `PopoverContent` | `sideOffset` | `number` — the gap to the trigger | `6` |
+| `PopoverContent` | `collisionPadding` | `number` — the margin kept from the window edge | `8` |
+| `PopoverContent` | `alignOffset` | `number` — added to the measured centre | `0` |
+
 ## Theming
 
 The surface paints `colors.popover` / `colors.popoverForeground`,

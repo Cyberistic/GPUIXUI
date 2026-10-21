@@ -113,6 +113,21 @@ and return focus to the sub-trigger; choosing a row (by keyboard or pointer)
 runs it once, closes both levels, and a pointer-opened menu leaves focus where
 the click put it. A press elsewhere closes both levels.
 
+## API
+
+The rows, separators and submenu parts are the shared menu parts, so their props
+are identical to **Dropdown menu**'s. Every part takes the GPUix host props and
+merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `ContextMenu` | root context | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
+| `ContextMenuTrigger` | the area whose right click opens the menu | `disabled?: boolean` |
+| `ContextMenuContent` | `anchored` surface at the pointer | `label?: string` (default `"Context menu"`) |
+| `ContextMenuItem` / `ContextMenuCheckboxItem` | the shared rows | `onSelect?`, `disabled?`, `tone?: "default" \| "destructive"`, `leading?`, `trailing?`, `textValue?`, `closeOnSelect?`; the checkbox row adds `checked: boolean` and `onCheckedChange: (checked: boolean) => void` |
+| `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure | — |
+| `ContextMenuSub` / `ContextMenuSubTrigger` / `ContextMenuSubContent` | one secondary level | `ContextMenuSubContent` takes the same placement props as the root surface |
+
 ## Theming
 
 The surface and rows are the shared menu look: `colors.popover`, `radius.md`,

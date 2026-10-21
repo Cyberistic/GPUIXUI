@@ -189,6 +189,20 @@ also closes both.
 <DropdownMenu open={open} onOpenChange={setOpen}>…</DropdownMenu>;  // app remembers
 ```
 
+## API
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `DropdownMenu` | root context | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
+| `DropdownMenuTrigger` | button with `aria-expanded` | `disabled?: boolean`; the rest are the local button's `variant`, `size` and `label` |
+| `DropdownMenuContent` | floating `role="menu"` surface | `label?: string`, `side?` (default `"bottom"`), `align?` (default `"start"`), `sideOffset?: number` (default `4`), `collisionPadding?: number` (default `8`), `alignOffset?: number` (default `0`) |
+| `DropdownMenuItem` | one action row | `onSelect?: () => void`, `disabled?: boolean`, `tone?: "default" \| "destructive"`, `leading?: ReactNode`, `trailing?: ReactNode`, `textValue?: string`, `closeOnSelect?: boolean` (default `true`) |
+| `DropdownMenuCheckboxItem` | an on/off row that stays open | `checked: boolean` and `onCheckedChange: (checked: boolean) => void` (both required); `closeOnSelect` defaults to `false` here |
+| `DropdownMenuSub` / `DropdownMenuSubTrigger` / `DropdownMenuSubContent` | one secondary level | `DropdownMenuSubContent` takes the root surface's placement props |
+| `DropdownMenuSeparator` / `DropdownMenuLabel` / `DropdownMenuGroup` | the structure between rows | — |
+
 ## Theming
 
 The surface paints `colors.popover` / `colors.popoverForeground`, `radius.md`,

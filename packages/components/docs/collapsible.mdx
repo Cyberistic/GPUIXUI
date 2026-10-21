@@ -43,6 +43,16 @@ stale values. The cost is that closing loses local state inside the body.
 In controlled mode the trigger reports `onOpenChange` and leaves the body where
 the consumer put it.
 
+## API
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Collapsible` | `div` column | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
+| `CollapsibleTrigger` | `div role="button"` with `aria-expanded` | `disabled?: boolean`, `style?: StateStyle<CollapsibleTriggerState>` |
+| `CollapsibleContent` | `div`, mounted only while open | `children: ReactNode` |
+
 ## Theming
 
 The trigger uses the `label` type role, `colors.foreground`, `colors.hover` on

@@ -135,6 +135,29 @@ it is single-select only, and `children` still compose the same parts.
 Selecting a created query does not call `onValueChange`; add the option and set
 the value from `onCreate` for a controlled combobox.
 
+## API
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Combobox` | `options` | `ReadonlyArray<ComboboxOption>` — `{ value, label, description?, disabled? }` (required) | — |
+| `Combobox` | `value` / `defaultValue` | `string \| ReadonlyArray<string>` — one value, or the values in the order chosen | — |
+| `Combobox` | `onValueChange` | `(value: string \| ReadonlyArray<string>) => void` | — |
+| `Combobox` | `multiple` | `boolean` | `false` |
+| `Combobox` | `disabled` | `boolean` | `false` |
+| `Combobox` | `onCreate` | `(query: string) => void` — single mode only; the caller adds the option | — |
+| `Combobox` | `createLabel` | `(query: string) => string` | `Create "…"` |
+| `ComboboxTrigger` | `placeholder` | `string` — shown while nothing is selected | `"Select…"` |
+| `ComboboxTrigger` | `label` | `string` — the trigger's accessible name | — |
+| `ComboboxContent` | `side` / `align` | `"top" \| "right" \| "bottom" \| "left"` · `"start" \| "center" \| "end"` | `"bottom"` · `"start"` |
+| `ComboboxContent` | `sideOffset` / `alignOffset` | `number` | `4` / `0` |
+| `ComboboxInput` | `placeholder` / `label` | `string` | `"Search…"` / `"Search options"` |
+| `ComboboxList` | `label` | `string` — the listbox's accessible name | `"Options"` |
+| `ComboboxList` | `itemStyle` | `StateStyle<ComboboxItemState>` | recipe |
+| `ComboboxItem` | `value` | `string` (required) — the label is read from the root's option | — |
+| `ComboboxEmpty` | `children` | `ReactNode` | `No matches` |
+
 ## Theming
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in

@@ -77,6 +77,25 @@ Arrow movement changes focus only — it never opens or closes a section. Disabl
 headers are skipped, and a control inside an open section keeps its own arrow
 keys because the handler lives on the trigger, not the accordion root.
 
+## API
+
+`Accordion` takes the GPUix host props and merges `style` last. The root is a
+discriminated union on `type`, so the value type follows the mode: a `single`
+accordion cannot be given an array.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Accordion` | `type` | `"single" \| "multiple"` (required) | — |
+| `Accordion` | `collapsible` | `boolean` — single mode only; may the open section close | `false` |
+| `Accordion` | `value` / `defaultValue` | `string \| null` (single) · `ReadonlyArray<string>` (multiple) | — / `null` · `[]` |
+| `Accordion` | `onValueChange` | `(value: string \| null) => void` (single) · `(values: ReadonlyArray<string>) => void` (multiple) | — |
+| `AccordionItem` | `value` | `string` (required) — the id the root reports | — |
+| `AccordionItem` | `disabled` | `boolean` | `false` |
+| `AccordionTrigger` | `style` | `StateStyle<AccordionTriggerState>` — `{ open, disabled, focused }` | recipe |
+| `AccordionContent` | `children` | `ReactNode` — mounted only while its section is open | — |
+
+Every part also takes `className`, joined after the recipe so it wins conflicts.
+
 ## Theming
 
 Triggers use the `label` type role at `controlHeight(theme, "lg")`, with

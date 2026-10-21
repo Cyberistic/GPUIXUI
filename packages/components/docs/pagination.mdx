@@ -67,6 +67,23 @@ leave the tab order at the ends instead of merely looking disabled.
 Tab moves through the enabled buttons only. Enter and Space activate the focused
 button, through the shared button primitive.
 
+## API
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Pagination` | `page` | `number` (required) — 1-based, clamped into range | — |
+| `Pagination` | `pageCount` | `number` (required) — zero or fewer renders nothing | — |
+| `Pagination` | `onPageChange` | `(page: number) => void` (required) | — |
+| `Pagination` | `siblingCount` | `number` — pages either side of the current one | `1` |
+| `Pagination` | `showEdges` | `boolean` — keep the first and last page visible | `true` |
+| `PaginationList` | — | renders the derived page window | — |
+| `PaginationItem` | `page` | `number` (required) — the page this button goes to | — |
+| `PaginationItem` | `style` | `StateStyle<PaginationItemState>` | recipe |
+| `PaginationPrevious` / `PaginationNext` | — | page by one; leave the tab order at their end | — |
+| `PaginationEllipsis` | — | the non-focusable gap mark | — |
+
 ## Theming
 
 Page buttons are `controlHeight(theme, "sm")` square, `radius.sm`; the current

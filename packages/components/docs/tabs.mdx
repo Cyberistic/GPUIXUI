@@ -87,6 +87,24 @@ and the vertical workspace settings.
 A controlled tab set reports a click or key but does not switch its panel until
 the consumer re-renders with the new `value` — the classic contract, tested.
 
+## API
+
+Every part takes the GPUix host props and merges `style` last. The root is
+controlled or uncontrolled in the usual way: `undefined` for `value` means the
+component remembers the selection.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Tabs` | `value` / `defaultValue` | `string` | — / `""` (nothing selected) |
+| `Tabs` | `onValueChange` | `(value: string) => void` | — |
+| `Tabs` | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` |
+| `Tabs` | `activation` | `"automatic" \| "manual"` | `"automatic"` |
+| `TabsList` | `label` | `string` — the tab list's accessible name | — |
+| `TabsTrigger` | `value` | `string` (required) — must match a `TabsContent` | — |
+| `TabsTrigger` | `disabled` | `boolean` | `false` |
+| `TabsTrigger` | `style` | `StateStyle<TabsTriggerState>` — `{ selected, disabled, focused }` | recipe |
+| `TabsContent` | `value` | `string` (required) — mounted only while selected | — |
+
 ## Theming
 
 The rail paints `colors.background`, a `borderWidth.thin` border in `colors.border`

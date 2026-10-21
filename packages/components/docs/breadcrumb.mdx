@@ -63,6 +63,19 @@ counted as one entry.
 Tab reaches each link in order. Enter and Space fire `onSelect`. The current page
 and the ellipsis are not focusable.
 
+## API
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Breadcrumb` | `div role="navigation"` | `maxItems?: number` (below 3 clamps to 3; absent = no collapse), `separator?: ReactNode` (default `/`) |
+| `BreadcrumbList` | `div role="list"` | — (reads its direct children) |
+| `BreadcrumbItem` | `div role="listitem"` | — |
+| `BreadcrumbLink` | `div role="link"` | `onSelect?: () => void`, `current?: boolean` |
+| `BreadcrumbPage` | `text` | — (the current page, not focusable) |
+| `BreadcrumbSeparator` | `text role="presentation"` | — |
+
 ## Theming
 
 Links and separators use the `caption` type role; links are

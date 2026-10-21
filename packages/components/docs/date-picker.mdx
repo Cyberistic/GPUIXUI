@@ -122,6 +122,24 @@ One cell is the tab stop (the selected day, else the first selectable day of the
 viewed month); the arrow keys move real focus, so the highlight and the focus are
 the same cell.
 
+## API
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `DatePicker` | `value` / `defaultValue` | `string \| null` — an ISO day, `YYYY-MM-DD` | — / `null` |
+| `DatePicker` | `onValueChange` | `(value: string \| null) => void` | — |
+| `DatePicker` | `weekStartsOn` | `1..7`, Monday is `1` | `1` |
+| `DatePicker` | `min` / `max` | ISO day, inclusive; a malformed bound is ignored | unbounded |
+| `DatePicker` | `clearable` | `boolean` — shows the Clear row while a day is set | `false` |
+| `DatePicker` | `disabled` | `boolean` | `false` |
+| `DatePicker` | `today` | ISO day the grid treats as today | runtime clock |
+| `DatePickerTrigger` | `placeholder` / `label` | `string` | `"Pick a date"` / — |
+| `DatePickerContent` | `side` / `align` | `"top" \| "right" \| "bottom" \| "left"` · `"start" \| "center" \| "end"` | `"bottom"` · `"start"` |
+| `DatePickerContent` | `sideOffset` | `number` | `6` |
+| `DatePickerCalendar` | `label` | `string` — the grid's accessible name | `"Calendar"` |
+
 ## Theming
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in

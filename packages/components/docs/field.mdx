@@ -68,6 +68,24 @@ presentation.
 `aria-description`, so the accessible name stays `"Workspace URL"` and the
 requirement is still announced. The marker itself carries `aria-label="Required"`.
 
+## API
+
+Every part takes the GPUix host props and merges `style` last, so a caller can
+override any rule; `FieldInput` and `FieldLabel` forward the input's own props.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Field` | `label` | `string` (required) — the visible label and the input's name | — |
+| `Field` | `description` | `string` — hidden while `error` is set | — |
+| `Field` | `error` | `string` — the message, which also paints the control invalid | — |
+| `Field` | `required` | `boolean` — appends a `*` to the label | `false` |
+| `FieldLabel` | `required` | `boolean` — appends the marker without changing the name | `false` |
+| `FieldDescription` | `children` | `ReactNode` | — |
+| `FieldError` | `children` | `ReactNode` | — |
+| `FieldInput` | `invalid` | `boolean` — overrides the field's own error as the validity signal | the field's state |
+| `FieldInput` | `disabled` | `boolean` — also inferred from a disabled `Fieldset` | `false` |
+| `FieldInput` | `style` | `StateStyle<FieldInputState>` — `{ disabled, focused, invalid }` | recipe |
+
 ## Theming
 
 Labels use the `label` type role in `colors.foreground`; descriptions the

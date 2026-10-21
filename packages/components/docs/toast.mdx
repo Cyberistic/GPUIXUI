@@ -101,6 +101,23 @@ The queue belongs to the provider, not to the calling component. Any component
 inside the provider can push; the viewport is the single place that renders.
 There is no per-toast React state to keep in sync.
 
+## API
+
+`ToastProvider` accepts the store options; `ToastViewport` takes the GPUix host
+props. `push` decodes its draft with `ToastInput`, so an empty title or an unknown
+tone is dropped at the store and nothing half-formed is queued.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `ToastProvider` | `max` | `number` — toasts kept before the oldest is dropped | `3` |
+| `ToastProvider` | `defaultDuration` | `Duration.Input` | `5 seconds` |
+| `ToastViewport` | `children` | `ReactNode` — an optional control before the stack | — |
+| `useToast()` | `toasts` | `ReadonlyArray<Toast>` — oldest first | — |
+| `useToast()` | `push` | `(draft: ToastDraft, options?: { onAction?: () => void }) => void` — `title` (required), `description?`, `tone?`, `duration?`, `action?` | — |
+| `useToast()` | `dismiss` / `dismissAll` | `(id: string) => void` / `() => void` | — |
+| `useToast()` | `pause` / `resume` | `(id: string) => void` — stop and restart the auto-dismiss clock | — |
+| `useToast()` | `actionFor` | `(id: string) => Option<() => void>` — the handler a queued action carries | — |
+
 ## Theming
 
 Cards paint `colors.popover` with `colors.popoverForeground`, a

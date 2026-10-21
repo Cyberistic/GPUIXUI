@@ -55,6 +55,21 @@ value, while `onValueChange` still fires — the classic contract, tested.
 Clicking the clear control (or pressing Escape) empties the field, calls
 `onClear`, and returns focus to the input so typing can continue immediately.
 
+## API
+
+`SearchInput` takes the input's own `aria-*` and key handlers and merges `style`
+last.
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` / `defaultValue` | `string` | — / `""` |
+| `onValueChange` | `(value: string) => void` — every edit, including the clear and Escape paths | — |
+| `onSubmit` | `(value: string) => void` — Enter, with the current text | — |
+| `onClear` | `() => void` — the clear control and Escape on a non-empty field | — |
+| `placeholder` | `string` | `"Search…"` |
+| `disabled` | `boolean` | `false` |
+| `style` | `StateStyle<SearchInputState>` — `{ disabled, focused }` | recipe |
+
 ## Theming
 
 The container paints `colors.background`, a `borderWidth.thin` border in
