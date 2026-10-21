@@ -39,6 +39,8 @@ src/components/mdx.tsx  The MDX component registry
 src/lib/docs-view.tsx   Shared docs layout and the two-collection page template
 src/lib/source.ts       Fumadocs collection for `content/docs`
 src/lib/inventory.ts    Parses the tier tables of COMPONENTS.md into lane rows
+src/lib/inventory-status.ts The page → COMPONENTS.md row join behind the status strip
+src/components/docs/status-strip.tsx The generated status and GPUix-support strip
 src/lib/lane-page.test.ts Holds the lane pages to their template and sidebar place
 src/lib/public-api.ts   Derives the public entry points from each package's exports map
 src/lib/public-symbols.ts The symbol index model: kinds, modules and summaries
@@ -86,6 +88,16 @@ stricter: frontmatter must be valid YAML and prose may not contain a raw
 `<tag>` outside code. `src/lib/package-docs.test.ts` guards that, that every
 `packages/*/docs` directory is mounted, and that the primitives index links every
 page it ships — a violation fails the collection, not just one page.
+
+Every package page opens with a **status strip** generated from its
+`COMPONENTS.md` row (`src/components/docs/status-strip.tsx`): the inventory's
+status and its GPUix support verdict, plus a link to the inventory. The join is
+the page title (`src/lib/inventory-status.ts`), which normalises punctuation and
+a trailing plural and names the sixteen titles whose row reads differently. The
+page therefore cannot claim more than the inventory, and a row that changes
+changes the page with no docs edit; `src/lib/inventory-status.test.ts` holds
+every mounted page to a row, and the two pages that have none are argued in the
+module.
 
 ## Generated pages
 
