@@ -658,6 +658,17 @@ a workaround for two live sessions sharing one worktree; see
 
 ## Blockers (project-level, with evidence)
 
+`[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
+23:23.** This turn's files (`apps/docs/src/lib/component-index.ts` and its test,
+written in `2e557066`) were modified one second before they were measured by a
+session that added `partsOf`/`limitationsOf` (search by a documented part name),
+and that session had just landed `/docs/examples` and the public symbol index
+plus the docs IA ticks. This turn stopped writing under `apps/docs` at the
+measurement and left the tree clean of its own edits (its work is pushed at
+`53977a27`). Evidence, the rule crossed and the resume condition:
+`.agents/slop/blockers/2026-10-21-concurrent-docs-writers.md`; permanent fix is
+plan `022-swarm-single-writer.md` (coordinator, `scripts/`).
+
 `[x]` **The GPUix native runtime now loads on this machine, so the Tier 2 behaviour
 suites run here.** Resolved 2026-10-17 08:57 by plan `140` (playground workstream):
 `@gpuix/native@0.10.0` publishes no `darwin-x64` binary, so the pinned source was
