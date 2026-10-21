@@ -235,6 +235,70 @@ describe("theme-editor audit readout", () => {
     expect(audit.passed).toBe(false);
   });
 
+  it("reports a scale that collapses only for a colour-blind reader", () => {
+    // Contrast and distinctness both assume full colour vision: this red and
+    // green read apart to a full-colour reader and 0.029 apart to a deuteranope,
+    // so neither of the other two series contracts sees it. The readout claims
+    // the whole audit, so the deficiency line has to exist.
+    const brand = extendTheme(themes.dark, {
+      series: [
+        "#A7A9FF",
+        "#D94B4B",
+        "#3E9E5C",
+        "#FFDE8A",
+        "#FF9E9E",
+      ],
+    });
+    const audit = auditTheme(brand);
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "deficiency",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      "deuteranopia: series 2 and series 3 — 0.029 apart (needs 0.05)",
+    ]);
+
+    // Only the deficiency report can see this theme — the swatches clear their
+    // plot surfaces and their full-colour distances — and it fails the gate.
+    expect([
+      ...audit.invalidRoles,
+      ...audit.contrast,
+      ...audit.decorative,
+      ...audit.series.surfaces,
+      ...audit.series.distinctness,
+    ]).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("reports an elevation shadow the renderer cannot paint, which no colour role covers", () => {
+    // A level passed in `elevation` replaces the whole array, colours and all —
+    // the tint is the caller's then, not the `shadow` role's. The runtime
+    // ignores a value it cannot parse, so the level paints no shadow at all.
+    const brand = extendTheme(themes.light, {
+      elevation: {
+        md: [
+          {
+            offsetX: 0,
+            offsetY: 4,
+            blurRadius: 12,
+            spreadRadius: 0,
+            color: "#00000",
+          },
+        ],
+      },
+    });
+    const audit = auditTheme(brand);
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "shadow",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      'elevation md (shadow 1) — "#00000" is not a colour GPUix can paint',
+    ]);
+    expect(audit.invalidRoles).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
   it("reports a selection wash that buries the text it covers, which no contrast pair measures", () => {
     // `selection` is translucent by design and `contrastRatio` refuses a
     // translucent colour, so no pair in the table ever covered the wash or the

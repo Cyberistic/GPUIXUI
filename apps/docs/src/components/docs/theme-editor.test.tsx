@@ -32,8 +32,11 @@ describe("the theme editor", () => {
 
   it("says the built-in themes pass the whole audit, not only contrast", () => {
     expect(builtIn).toContain("every role paints");
+    expect(builtIn).toContain("every shadow level paints its colour");
     expect(builtIn).toContain("every decorative surface stays visible");
-    expect(builtIn).toContain("every data-series colour separates");
+    expect(builtIn).toContain(
+      "every data-series colour separates from its plot and from its neighbours under every colour-vision deficiency",
+    );
     expect(builtIn).toContain("every selection wash stays visible");
   });
 

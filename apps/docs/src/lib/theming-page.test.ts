@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import {
   colorRoles,
+  colorVisionDeficiencies,
   contrastFloors,
   contrastRatio,
   retroStyles,
@@ -78,10 +79,16 @@ describe("the theme page", () => {
     // black read a passing line. The page has to describe the readout it has.
     const audit = section(page("themes.mdx"), "The theme audit");
 
-    expect(audit).toContain("five independent failures");
+    expect(audit).toContain("six independent failures");
     expect(audit).toContain("auditTheme");
+    expect(audit).toContain("invalidShadowColors");
     expect(audit).toContain("decorativeFailures");
     expect(audit).toContain("seriesFailures");
+    expect(audit).toContain("seriesDeficiencyFloor");
+    expect(audit).toContain("colorVisionDeficiencies");
+    expect(
+      colorVisionDeficiencies.filter((deficiency) => !audit.includes(deficiency)),
+    ).toEqual([]);
     expect(audit).toContain("selectionFailures");
     expect(audit).toContain("cannot paint");
     expect(audit).toContain("localStorage");
@@ -138,13 +145,27 @@ describe("the theming page's data series", () => {
     expect(series).not.toMatch(/scale of \d+ colours/);
   });
 
-  it("states the two contracts the scale is held to, and the reason it exists", () => {
+  it("states the three contracts the scale is held to, and the reason it exists", () => {
     // The section is why a component has no hex of its own: a role carries
-    // status, the series carries identity, and the scale is measured.
+    // status, the series carries identity, and the scale is measured — against
+    // its plot surface, against itself, and against each colour-vision
+    // deficiency, which is the contract a full-colour distance cannot replace.
     expect(series).toContain("seriesSurfaces");
     expect(series).toContain("seriesDistinctnessFloor");
+    expect(series).toContain("seriesDeficiencyFloor");
+    expect(series).toContain("colorVisionDeficiencies");
     expect(series).toContain("seriesFailures");
     expect(series).toContain("identity");
+  });
+
+  it("names every deficiency the package measures the scale against", () => {
+    // A deficiency added to the package without a sentence here would be a
+    // contract the page claims the reader is protected from and never mentions.
+    expect(
+      colorVisionDeficiencies.filter(
+        (deficiency) => !section(body, "Data series").includes(deficiency),
+      ),
+    ).toEqual([]);
   });
 
   it("sits with the colour roles rather than in the platform section", () => {

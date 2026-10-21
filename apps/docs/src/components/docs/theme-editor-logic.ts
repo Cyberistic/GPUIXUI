@@ -5,9 +5,11 @@ import {
   type ContrastFailure,
   type DecorativeFailure,
   type InvalidColorRole,
+  type InvalidShadowColor,
   type SelectionFailure,
   type SeriesDistinctnessFailure,
   type SeriesSurfaceFailure,
+  type SeriesVisionFailure,
   type Theme,
   type ThemeAudit,
   type ThemeMode,
@@ -119,12 +121,13 @@ export const themeConfig = (
 
 /**
  * The whole theme contract for an edit, as the library's own gate reports it: a
- * role the renderer cannot paint, a text pair below its floor, a decorative
- * surface too close to what it sits on, a data-series colour too close to its
- * plot or to its neighbour, and a selection wash that hides itself or the text
- * it covers. `auditTheme` reads all five in one call, so the editor cannot show
- * some reports and leave the others silent. The base is the platform style the
- * preview is painted over, so the audit measures what the reader sees.
+ * role or an elevation shadow the renderer cannot paint, a text pair below its
+ * floor, a decorative surface too close to what it sits on, a data-series colour
+ * too close to its plot or to its neighbour (or two that collapse once a
+ * colour-vision deficiency is simulated), and a selection wash that hides itself
+ * or the text it covers. `auditTheme` reads all six in one call, so the editor
+ * cannot show some reports and leave the others silent. The base is the platform
+ * style the preview is painted over, so the audit measures what the reader sees.
  */
 export const auditReport = (
   mode: ThemeMode,
@@ -132,12 +135,14 @@ export const auditReport = (
   base: Theme = themes[mode],
 ): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
-/** Which of the audit's five reports a finding came from. */
+/** Which of the audit's six reports a finding came from. */
 export type AuditKind =
   | "role"
+  | "shadow"
   | "contrast"
   | "decorative"
   | "series"
+  | "deficiency"
   | "selection";
 
 /** One audit finding, already worded for the readout. */
@@ -172,6 +177,18 @@ export const formatDecorativeFailure = ({
 export const formatInvalidRole = ({ role, value }: InvalidColorRole): string =>
   `${role} — ${JSON.stringify(value)} is not a colour GPUix can paint`;
 
+/**
+ * An elevation shadow the renderer would ignore, e.g. `elevation md (shadow 1) —
+ * "#00000" is not a colour GPUix can paint`. The level then paints no shadow at
+ * all, so a raised card or dialog silently sits flat.
+ */
+export const formatInvalidShadow = ({
+  level,
+  index,
+  color,
+}: InvalidShadowColor): string =>
+  `elevation ${level} (shadow ${index + 1}) — ${JSON.stringify(color)} is not a colour GPUix can paint`;
+
 /** A series colour too close to a plot surface, e.g. `card: series 2 — 1.14:1 (needs 3:1)`. */
 export const formatSeriesSurfaceFailure = ({
   index,
@@ -181,6 +198,10 @@ export const formatSeriesSurfaceFailure = ({
 }: SeriesSurfaceFailure): string =>
   `${surface}: series ${index + 1} — ${measured(ratio, floor)}`;
 
+/** Two positions as a distance against the floor they had to reach. */
+const apart = (distance: number | undefined, floor: number): string =>
+  `${distance === undefined ? "unmeasurable" : distance.toFixed(3)} apart (needs ${floor})`;
+
 /** Two series colours a reader cannot tell apart. */
 export const formatSeriesDistinctnessFailure = ({
   index,
@@ -188,9 +209,22 @@ export const formatSeriesDistinctnessFailure = ({
   distance,
   floor,
 }: SeriesDistinctnessFailure): string =>
-  `series ${index + 1} and series ${other + 1} — ${
-    distance === undefined ? "unmeasurable" : distance.toFixed(3)
-  } apart (needs ${floor})`;
+  `series ${index + 1} and series ${other + 1} — ${apart(distance, floor)}`;
+
+/**
+ * Two series colours a reader with a colour-vision deficiency cannot tell apart,
+ * e.g. `deuteranopia: series 1 and 2 — 0.029 apart (needs 0.05)`. Contrast and
+ * distance both assume full colour vision, so this is the one report that sees a
+ * scale collapsing for a colour-blind reader.
+ */
+export const formatSeriesVisionFailure = ({
+  deficiency,
+  index,
+  other,
+  distance,
+  floor,
+}: SeriesVisionFailure): string =>
+  `${deficiency}: series ${index + 1} and series ${other + 1} — ${apart(distance, floor)}`;
 
 /**
  * A selection wash as a line. It has two jobs and one line per missed job: the
@@ -216,6 +250,10 @@ export const auditFindings = (
     kind: "role" as const,
     text: formatInvalidRole(failure),
   })),
+  ...report.invalidShadows.map((failure) => ({
+    kind: "shadow" as const,
+    text: formatInvalidShadow(failure),
+  })),
   ...report.contrast.map((failure) => ({
     kind: "contrast" as const,
     text: formatContrastFailure(failure),
@@ -231,6 +269,10 @@ export const auditFindings = (
   ...report.series.distinctness.map((failure) => ({
     kind: "series" as const,
     text: formatSeriesDistinctnessFailure(failure),
+  })),
+  ...report.series.deficiencies.map((failure) => ({
+    kind: "deficiency" as const,
+    text: formatSeriesVisionFailure(failure),
   })),
   ...report.selection.map((failure) => ({
     kind: "selection" as const,

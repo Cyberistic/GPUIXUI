@@ -47,11 +47,16 @@ cannot. The bridge exists only for this preview.
 The readout under the preview runs `auditTheme` on the theme the edits resolve to
 — the same gate `@gpuixui/tokens` tells a theme author to run before shipping, so
 an edit is measured against exactly the contract the library holds itself to. One
-call reports five independent failures:
+call reports six independent failures:
 
 - **Roles** the renderer cannot paint. GPUix ignores a colour string it cannot
   parse and keeps the previous value or paints black, so the editor names the role
   and the value instead of failing in silence.
+- **Elevation shadows** the renderer cannot paint. A level is normally a geometry
+  plus a share of the `shadow` role, which the role check covers — but an
+  `elevation` override replaces a level whole, colours and all.
+  `invalidShadowColors` names the level and the value, because the runtime then
+  paints no shadow at all and a raised card or dialog silently sits flat.
 - **Contrast**: `contrastFailures` checks {contrastPairs.length} role pairs — body
   text at 7:1, secondary text at 4.5:1, boundaries and focus rings at 3:1 — and
   the readout names every pair an edit breaks, with its measured ratio. A
@@ -63,11 +68,15 @@ call reports five independent failures:
   `background` is how a card loses its edge, and no contrast pair would see it.
 - **Data series**: `seriesFailures` measures the five categorical colours a chart
   paints against the three surfaces a plot is drawn on (`background`, `card`,
-  `popover`) at the boundary floor, and each pair against `seriesDistinctnessFloor`
+  `popover`) at the boundary floor, each pair against `seriesDistinctnessFloor`
   in OKLab — a blue and a violet of one lightness pass contrast and still read as
-  one series. The editor does not edit the scale, so an edit cannot break it; the
-  readout reports it because `auditTheme` does, and a line that only appears for
-  some themes would make a passing readout mean less than it says.
+  one series — and each pair again through every `colorVisionDeficiencies`
+  simulation (`protanopia`, `deuteranopia`, `tritanopia`) against
+  `seriesDeficiencyFloor`, because contrast and distance both assume full colour
+  vision and two hues can separate for one reader while collapsing for another.
+  The editor does not edit the scale, so an edit cannot break it; the readout
+  reports it because `auditTheme` does, and a line that only appears for some
+  themes would make a passing readout mean less than it says.
 - **Text selection**: `selectionFailures` composites the `selection` wash over
   the four content surfaces body text can be selected from (`input`,
   `background`, `card`, `popover`) and holds the result to two floors — visible

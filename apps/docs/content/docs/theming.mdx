@@ -83,7 +83,11 @@ colours, `seriesColors(theme)`, designed per mode and contrast variant. Every
 colour is measured against the three surfaces a plot is drawn on
 (`seriesSurfaces`) at the 3:1 non-text floor, and no two are closer than
 `seriesDistinctnessFloor` in OKLab — contrast alone cannot tell a blue from a
-violet of the same lightness.
+violet of the same lightness. Both of those contracts assume full colour vision,
+so every pair is also simulated for each `colorVisionDeficiencies` entry
+(`protanopia`, `deuteranopia`, `tritanopia`) and held to
+`seriesDeficiencyFloor`: two hues can read apart to one reader and collapse for
+another, and only the simulation sees it.
 
 <SeriesSwatches />
 
