@@ -23,6 +23,7 @@ describe("the theme editor", () => {
     expect(markup).toContain("every role paints");
     expect(markup).toContain("every decorative surface stays visible");
     expect(markup).toContain("every data-series colour separates");
+    expect(markup).toContain("every selection wash stays visible");
   });
 
   it("renders one control per editable role", () => {

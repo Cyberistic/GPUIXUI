@@ -208,4 +208,49 @@ describe("theme-editor audit readout", () => {
     expect([...audit.contrast, ...audit.decorative]).toEqual([]);
     expect(audit.passed).toBe(false);
   });
+
+  it("reports a selection wash that buries the text it covers, which no contrast pair measures", () => {
+    // `selection` is translucent by design and `contrastRatio` refuses a
+    // translucent colour, so no pair in the table ever covered the wash or the
+    // text inside it. An opaque wash over the dark page is the case the fifth
+    // report exists for: light text on a white selection.
+    const brand = extendTheme(themes.dark, {
+      colors: { selection: "#FFFFFF" },
+    });
+    const audit = auditTheme(brand);
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "selection",
+    );
+
+    expect(findings.map((finding) => finding.text)).toContainEqual(
+      expect.stringMatching(
+        /^foreground on the selection wash over background — 1\.\d+:1 \(needs 7:1\)$/,
+      ),
+    );
+
+    // Only the selection report can see this theme, and it fails the gate.
+    expect([
+      ...audit.invalidRoles,
+      ...audit.contrast,
+      ...audit.decorative,
+      ...audit.series.surfaces,
+      ...audit.series.distinctness,
+    ]).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("reports a wash the reader cannot find at all", () => {
+    // A selection at zero opacity paints the surface itself: the reader cannot
+    // see what they selected, and the body floor never comes into it.
+    const brand = extendTheme(themes.dark, {
+      colors: { selection: "#00000000" },
+    });
+    const findings = auditFindings(auditTheme(brand)).filter(
+      (finding) => finding.kind === "selection",
+    );
+
+    expect(findings.map((finding) => finding.text)).toContain(
+      "selection wash over background — 1.00:1 (needs 1.05:1)",
+    );
+  });
 });

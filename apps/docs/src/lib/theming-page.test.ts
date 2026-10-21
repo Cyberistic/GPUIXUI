@@ -1,5 +1,12 @@
 import { readFileSync } from "node:fs";
-import { contrastFloors, contrastRatio, retroStyles } from "@gpuixui/tokens";
+import {
+  colorRoles,
+  contrastFloors,
+  contrastRatio,
+  retroStyles,
+  themes,
+  type Theme,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { lookLabel, lookOrder, resolvePlatformTheme } from "./platform";
 
@@ -71,9 +78,11 @@ describe("the theme page", () => {
     // black read a passing line. The page has to describe the readout it has.
     const audit = section(page("themes.mdx"), "The theme audit");
 
+    expect(audit).toContain("five independent failures");
     expect(audit).toContain("auditTheme");
     expect(audit).toContain("decorativeFailures");
     expect(audit).toContain("seriesFailures");
+    expect(audit).toContain("selectionFailures");
     expect(audit).toContain("cannot paint");
     expect(audit).toContain("localStorage");
   });
@@ -177,5 +186,72 @@ describe("the theming page's look picker", () => {
       retroStyles.luna.label,
     );
     expect(flat(page("theming.mdx"))).toContain(retroStyles.aero.label);
+  });
+});
+
+/** One row of `/docs/theming`'s colour-role table: role, light cell, dark cell. */
+interface RoleRow {
+  readonly role: string;
+  readonly light: string;
+  readonly dark: string;
+}
+
+/**
+ * The role rows the page prints, read the way a reader reads them. The table is
+ * a subset — the page names the families that matter on a page and links the
+ * full catalogue — so the guard holds the cells it prints, not its length.
+ */
+const colourRows = (body: string): ReadonlyArray<RoleRow> =>
+  section(body, "Colour roles")
+    .split("\n")
+    .flatMap((line) => {
+      const match =
+        /^\|\s*`([A-Za-z]+)`\s*\|\s*`(#[0-9A-Fa-f]{6})`\s*\|\s*`(#[0-9A-Fa-f]{6})`\s*\|/.exec(
+          line,
+        );
+      const [, role, light, dark] = match ?? [];
+      return role === undefined || light === undefined || dark === undefined
+        ? []
+        : [{ role, light: light.toUpperCase(), dark: dark.toUpperCase() }];
+    });
+
+/** A theme's roles as `role → hex`, without an index-signature cast. */
+const roleColours = (theme: Theme): ((role: string) => string | undefined) => {
+  const byRole = new Map<string, string>(Object.entries({ ...theme.colors }));
+  return (role) => byRole.get(role);
+};
+
+describe("the theming page's colour-role table", () => {
+  it("prints the palette the package ships", () => {
+    // A palette edit is exactly when a hand-written table rots, and nothing else
+    // reads this one: the token catalogue has its own guard. A stale cell taught
+    // the previous value for both `borderStrong` shades after the dark palettes
+    // moved.
+    const rows = colourRows(page("theming.mdx"));
+    const roles = new Set<string>(colorRoles);
+    const light = roleColours(themes.light);
+    const dark = roleColours(themes.dark);
+
+    expect(rows.length).toBeGreaterThanOrEqual(12);
+
+    const mismatched = rows.flatMap((row) => {
+      const expectedLight = light(row.role);
+      const expectedDark = dark(row.role);
+      return [
+        ...(roles.has(row.role) ? [] : [`${row.role}: is not a colour role`]),
+        ...(expectedLight?.toUpperCase() === row.light
+          ? []
+          : [
+              `${row.role}: light prints ${row.light}, the theme has ${expectedLight}`,
+            ]),
+        ...(expectedDark?.toUpperCase() === row.dark
+          ? []
+          : [
+              `${row.role}: dark prints ${row.dark}, the theme has ${expectedDark}`,
+            ]),
+      ];
+    });
+
+    expect(mismatched).toEqual([]);
   });
 });

@@ -5,6 +5,7 @@ import {
   type ContrastFailure,
   type DecorativeFailure,
   type InvalidColorRole,
+  type SelectionFailure,
   type SeriesDistinctnessFailure,
   type SeriesSurfaceFailure,
   type Theme,
@@ -98,14 +99,20 @@ export const resolveTheme = (mode: ThemeMode, edits: TokenEdits): Theme =>
  * The whole theme contract for an edit, as the library's own gate reports it: a
  * role the renderer cannot paint, a text pair below its floor, a decorative
  * surface too close to what it sits on, a data-series colour too close to its
- * plot or to its neighbour. `auditTheme` reads all four in one call, so the
- * editor cannot show some reports and leave the others silent.
+ * plot or to its neighbour, and a selection wash that hides itself or the text
+ * it covers. `auditTheme` reads all five in one call, so the editor cannot show
+ * some reports and leave the others silent.
  */
 export const auditReport = (mode: ThemeMode, edits: TokenEdits): ThemeAudit =>
   auditTheme(resolveTheme(mode, edits));
 
-/** Which of the audit's four reports a finding came from. */
-export type AuditKind = "role" | "contrast" | "decorative" | "series";
+/** Which of the audit's five reports a finding came from. */
+export type AuditKind =
+  | "role"
+  | "contrast"
+  | "decorative"
+  | "series"
+  | "selection";
 
 /** One audit finding, already worded for the readout. */
 export interface AuditFinding {
@@ -159,6 +166,22 @@ export const formatSeriesDistinctnessFailure = ({
     distance === undefined ? "unmeasurable" : distance.toFixed(3)
   } apart (needs ${floor})`;
 
+/**
+ * A selection wash as a line. It has two jobs and one line per missed job: the
+ * wash must be visible where the reader selected, and the text inside it must
+ * keep the body floor.
+ */
+export const formatSelectionFailure = ({
+  kind,
+  foreground,
+  background,
+  ratio,
+  floor,
+}: SelectionFailure): string =>
+  kind === "visibility"
+    ? `selection wash over ${background} — ${measured(ratio, floor)}`
+    : `${foreground} on the selection wash over ${background} — ${measured(ratio, floor)}`;
+
 /** Every finding the audit reports, in the one list the readout prints. */
 export const auditFindings = (
   report: ThemeAudit,
@@ -182,6 +205,10 @@ export const auditFindings = (
   ...report.series.distinctness.map((failure) => ({
     kind: "series" as const,
     text: formatSeriesDistinctnessFailure(failure),
+  })),
+  ...report.selection.map((failure) => ({
+    kind: "selection" as const,
+    text: formatSelectionFailure(failure),
   })),
 ];
 
