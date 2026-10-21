@@ -129,6 +129,21 @@ export const suppressSelectionFeedback = (style: StyleDesc): StyleDesc => ({
 });
 
 /**
+ * A drawing inside a control: painted and hoverable, never the press target.
+ *
+ * Two measured rules meet here. A painted element owns a mouse-blocking hitbox
+ * in this runtime (`should_occlude`), so a fill drawn inside a row or a target
+ * swallowed the press before the control's own handler ran; and
+ * `pointerEvents: "none"` removes only the *blocking*, not the element's
+ * hitbox, so its `hover` refinement still paints while the press falls through
+ * to the target. A wheel over it still reaches the scroller behind it — forcing
+ * the press with `pointerEvents: "auto"` would instead make the drawing
+ * `occlude()`, which stops the wheel too.
+ */
+export const decorative = (style: StyleDesc): StyleDesc =>
+  mergeStyle(style, { pointerEvents: "none" });
+
+/**
  * The theme a provider hands down.
  *
  * Density moves numbers and never colour, so the override swaps the `density`

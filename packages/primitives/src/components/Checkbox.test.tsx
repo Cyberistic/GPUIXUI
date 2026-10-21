@@ -14,6 +14,7 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
+import { targetInset, targetSize } from "@gpuixui/tokens";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -30,6 +31,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
@@ -39,13 +41,18 @@ const checked = (value: boolean): ValueState<boolean> =>
   initValueState(Option.some(value), false);
 const customMark = <Icon name="star" color="red" size={12} />;
 
+/** The box a checkbox draws inside its press target. */
+const drawingOf = (element: ReactElement): ReactElement =>
+  elementChildren(element)[0] ?? expect.fail("the checkbox drew no box");
+
 /**
- * The mark a box draws: the root wraps the indicator in the part's context, so
- * the path is root → provider → indicator.
+ * The mark a box draws: the target wraps the drawing, which wraps the indicator
+ * in the part's context, so the path is target → drawing → provider → indicator.
  */
 const markOf = (element: ReactElement): ReactElement => {
   const provider =
-    elementChildren(element)[0] ?? expect.fail("the box drew no mark");
+    elementChildren(drawingOf(element))[0] ??
+    expect.fail("the box drew no mark");
   return (
     elementChildren(provider)[0] ?? expect.fail("the mark part drew nothing")
   );
@@ -149,9 +156,34 @@ describe("Checkbox", () => {
         invalid: true,
       },
     ]);
-    expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
-      testTheme.colors.destructive,
+    expect(
+      expectSome(hostStyleString(drawingOf(element), "backgroundColor")),
+    ).toBe(testTheme.colors.destructive);
+  });
+
+  it("reserves the pressable floor and keeps the drawing out of the press", () => {
+    // The box is icon-sized (16px at `md`) and was its own press target — under
+    // WCAG 2.2 SC 2.5.8's 24px floor. The target grows around it, the drawing
+    // takes `pointerEvents: "none"` so a press anywhere activates once (a
+    // painted drawing owns a mouse-blocking hitbox and would swallow it), and
+    // the ring stays on the element that holds focus.
+    const element = renderCheckbox(
+      {},
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
     );
+    const side = testTheme.iconSize.md;
+    const target = expectSome(hostStyleRecord(element));
+    expect(target["width"]).toBe(side + targetInset(side) * 2);
+    expect(target["height"]).toBe(side + targetInset(side) * 2);
+    expect(target["width"]).toBeGreaterThanOrEqual(targetSize.minimum);
+    expect(Option.isSome(hostStyle(element, "focusVisible"))).toBe(true);
+    expect(
+      expectSome(hostStyleString(drawingOf(element), "pointerEvents")),
+    ).toBe("none");
+    expect(expectSome(hostProp(element, "role"))).toBe("checkbox");
   });
 });
 
@@ -199,7 +231,7 @@ describe("CheckboxIndicator", () => {
       idle,
       vi.fn(),
     );
-    expect(elementChildren(box)).toStrictEqual([]);
+    expect(elementChildren(drawingOf(box))).toStrictEqual([]);
   });
 
   it("replaces the default glyph with the caller's mark", () => {

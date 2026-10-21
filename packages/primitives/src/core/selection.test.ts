@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
+import { targetInset, targetSize } from "@gpuixui/tokens";
 import {
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
+  selectionTargetStyle,
+  switchTargetStyle,
   switchThumbInset,
   switchThumbStyle,
   switchThumbTravel,
@@ -171,5 +174,61 @@ describe("switch", () => {
     const style = switchTrackStyle(spec(), testTheme);
     expect(style.focusVisible).toBeUndefined();
     expect(style.boxShadow).toBeUndefined();
+  });
+});
+
+describe("selectionTargetStyle", () => {
+  const sizes = ["sm", "md", "lg"] as const;
+
+  it("reserves the pressable floor around every box size", () => {
+    // The bug these guard: the icon-sized box was its own press target — 14/16/
+    // 20px against WCAG 2.2 SC 2.5.8's 24px floor.
+    const sides = Arr.map(sizes, (size) => {
+      const style = selectionTargetStyle(spec({ size }), testTheme);
+      return { size, width: style.width, height: style.height };
+    });
+    expect(sides).toStrictEqual(
+      Arr.map(sizes, (size) => ({
+        size,
+        width:
+          testTheme.iconSize[size] + targetInset(testTheme.iconSize[size]) * 2,
+        height:
+          testTheme.iconSize[size] + targetInset(testTheme.iconSize[size]) * 2,
+      })),
+    );
+    expect(
+      Arr.every(sides, (side) => Number(side.width) >= targetSize.minimum),
+    ).toBe(true);
+  });
+
+  it("keeps the drawing's filled square out of the press", () => {
+    expect(
+      selectionTargetStyle(spec(), testTheme).backgroundColor,
+    ).toBeUndefined();
+  });
+
+  it("refuses the pointer feedback a disabled control would invite", () => {
+    expect(
+      selectionTargetStyle(spec({ disabled: true }), testTheme).cursor,
+    ).toBe("not-allowed");
+    expect(selectionTargetStyle(spec(), testTheme).cursor).toBe("pointer");
+  });
+});
+
+describe("switchTargetStyle", () => {
+  it("grows only the band a track cannot fill", () => {
+    // The track keeps the pill's width and is one icon-height tall; the target
+    // adds the height to reach the floor and leaves the width to the track.
+    const style = switchTargetStyle(spec());
+    expect(style.minHeight).toBe(targetSize.minimum);
+    expect(style.width).toBeUndefined();
+    expect(style.height).toBeUndefined();
+  });
+
+  it("refuses the pointer feedback a disabled switch would invite", () => {
+    expect(switchTargetStyle(spec({ disabled: true })).cursor).toBe(
+      "not-allowed",
+    );
+    expect(switchTargetStyle(spec()).cursor).toBe("pointer");
   });
 });

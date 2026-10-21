@@ -23,6 +23,7 @@ import {
   lightTheme,
   platformTheme,
   platformTypes,
+  targetSize,
   type Density,
 } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
@@ -95,6 +96,25 @@ const heightOf = (runtime: Runtime, testId: string): number =>
     expect.fail(`the runtime painted no ${testId}`),
   ).height;
 
+/**
+ * The height of the drawing inside a control.
+ *
+ * A selection control's `testId` addresses its press target (the floor), and the
+ * box it draws is the target's first child.
+ */
+const drawingHeightOf = (runtime: Runtime, testId: string): number => {
+  const target = Option.getOrElse(runtime.element(testId), () =>
+    expect.fail(`the runtime retained no ${testId}`),
+  );
+  const drawing = Option.getOrElse(
+    Option.fromNullishOr(target.children[0]),
+    () => expect.fail(`the ${testId} drew no box`),
+  );
+  return Option.getOrElse(runtime.boundsOfId(drawing), () =>
+    expect.fail(`the ${testId} painted no box`),
+  ).height;
+};
+
 it("paints the high-contrast light palette, not the default one", async () => {
   const runtime = await rendered(controls(highContrastLightTheme));
   const colours = paintedColours(runtime);
@@ -139,8 +159,10 @@ it("a density override moves control heights and leaves colour alone", async () 
       density.controlHeight.md - 2 * lightTheme.borderWidth.thin,
     );
     expect(heightOf(runtime, "number")).toBe(density.controlHeight.md);
-    // A selection box is icon-sized by design; density must not stretch it.
-    expect(heightOf(runtime, "checkbox")).toBe(lightTheme.iconSize.md);
+    // A selection control's target is the pressable floor and density must not
+    // move it; the box it draws stays icon-sized by design.
+    expect(heightOf(runtime, "checkbox")).toBe(targetSize.minimum);
+    expect(drawingHeightOf(runtime, "checkbox")).toBe(lightTheme.iconSize.md);
   };
 
   runtime.render(densityScene(densityPresets.compact));

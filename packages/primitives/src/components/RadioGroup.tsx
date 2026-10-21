@@ -45,7 +45,6 @@ import {
 import { recipeTw } from "../recipe/registry.js";
 import {
   optionBody,
-  optionBoxStyle,
   optionItems,
   optionRowStyle,
   useRovingFocus,
@@ -57,6 +56,7 @@ import {
 import {
   composeEvent,
   composePress,
+  decorative,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
@@ -252,7 +252,7 @@ export const renderRadioGroup = (
           selectionBoxClass(spec),
           theme,
         );
-        const box = optionBoxStyle(
+        const box = decorative(
           disabled
             ? suppressSelectionFeedback(
                 mergeStyle(resolved.style, resolved.disabled),

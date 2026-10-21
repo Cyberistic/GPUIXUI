@@ -31,6 +31,7 @@ import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import {
+  switchTargetStyle,
   switchThumbInset,
   type SelectionAccent,
   type SelectionSpec,
@@ -44,6 +45,7 @@ import {
   checkedChange,
   composeEvent,
   composePress,
+  decorative,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
@@ -188,22 +190,24 @@ export const renderSwitch = (
     cn(switchTrackClass(spec), props.className),
     theme,
   );
-  let track = resolved.style;
-  if (spec.disabled === true) {
-    track = suppressSelectionFeedback(mergeStyle(track, resolved.disabled));
-  }
-  track = mergeStyle(
-    track,
-    controlRing(theme, { disabled: spec.disabled, invalid: spec.invalid }),
+  const drawn =
+    spec.disabled === true
+      ? suppressSelectionFeedback(mergeStyle(resolved.style, resolved.disabled))
+      : resolved.style;
+  const track = decorative(
+    mergeStyle(
+      drawn,
+      resolveStyle(props.style, {
+        disabled: spec.disabled === true,
+        focused: focus.focused,
+        checked: spec.state === "checked",
+        invalid: spec.invalid === true,
+      }),
+    ),
   );
-  track = mergeStyle(
-    track,
-    resolveStyle(props.style, {
-      disabled: spec.disabled === true,
-      focused: focus.focused,
-      checked: spec.state === "checked",
-      invalid: spec.invalid === true,
-    }),
+  const target = mergeStyle(
+    switchTargetStyle(spec),
+    controlRing(theme, { disabled: spec.disabled, invalid: spec.invalid }),
   );
   return (
     <div
@@ -217,11 +221,13 @@ export const renderSwitch = (
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}
       onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
       onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
-      style={track}
+      style={target}
     >
-      <SwitchContext.Provider value={{ spec, theme }}>
-        {renderSwitchThumb({ children: props.children }, spec, theme)}
-      </SwitchContext.Provider>
+      <div style={track}>
+        <SwitchContext.Provider value={{ spec, theme }}>
+          {renderSwitchThumb({ children: props.children }, spec, theme)}
+        </SwitchContext.Provider>
+      </div>
     </div>
   );
 };

@@ -21,18 +21,33 @@ import { switchThumbInset, switchThumbTravel } from "../src/core/selection.js";
 import type { Bounds, Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
+/**
+ * The track inside the switch's press target.
+ *
+ * The `testId` addresses the target — the element with the role, the focus and
+ * the ring — and the track is the first child it draws.
+ */
+const trackElement = (runtime: Runtime) => {
+  const target = Option.getOrElse(runtime.element("s"), () =>
+    expect.fail("the runtime retained no switch"),
+  );
+  return Option.getOrElse(
+    Option.flatMap(Option.fromNullishOr(target.children[0]), (id) =>
+      Option.fromNullishOr(runtime.renderer.getElement(id)),
+    ),
+    () => expect.fail("the switch drew no track"),
+  );
+};
+
 /** The track's painted box, failing when it painted none. */
 const trackOf = (runtime: Runtime): Bounds =>
-  Option.getOrElse(runtime.bounds("s"), () =>
+  Option.getOrElse(runtime.boundsOfId(trackElement(runtime).id), () =>
     expect.fail("the switch painted no track"),
   );
 
 /** The thumb's painted box: the track's only painted child. */
 const thumbOf = (runtime: Runtime): Bounds => {
-  const track = Option.getOrElse(runtime.element("s"), () =>
-    expect.fail("the runtime retained no switch"),
-  );
-  const thumb = track.children[0];
+  const thumb = trackElement(runtime).children[0];
   return Option.getOrElse(
     thumb === undefined ? Option.none() : runtime.boundsOfId(thumb),
     () => expect.fail("the switch painted no thumb"),
@@ -110,10 +125,7 @@ it("paints the track's checked fill and leaves it at rest when disabled", async 
       </Stack>
     </Surface>,
   );
-  const fill = (): unknown =>
-    Option.getOrElse(runtime.element("s"), () =>
-      expect.fail("the runtime retained no switch"),
-    ).style["backgroundColor"];
+  const fill = (): unknown => trackElement(runtime).style["backgroundColor"];
   expect(fill()).toBe(testTheme.colors.muted);
   runtime.click("s");
   runtime.renderer.clockFastForward(300);

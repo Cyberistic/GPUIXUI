@@ -115,7 +115,11 @@ also scroll while the control waits for the release.
 
 ## Accessibility
 
-- Role: `CheckBox` in the runtime's accessibility tree.
+- Role: `CheckBox` in the runtime's accessibility tree, on a **24px press
+  target** — the box it draws stays icon-sized (16px at `md`, so it lines up
+  with a label's icon), and the target around it meets WCAG 2.2 SC 2.5.8. The
+  drawing is decoration with `pointerEvents: "none"`, so a press on the box and a
+  press on its padding each toggle exactly once.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
   `mixed`), because `@gpuix/native` 0.11.0 has no `aria-checked` (plan 020 §1.4).
 - `disabled` removes the tab stop; there is no `aria-disabled`.
@@ -128,11 +132,14 @@ also scroll while the control waits for the release.
 `selectionBoxClass` compiles the box through the recipe registry: side from
 `iconSize`, radius from `radius.sm`, border from `input`/`destructive`, fill from
 the accent role, and the mark colour from `selectionMarkColor`. Hover and press
-are declared in `style.hover`/`style.active`, not scripted. Disabled adds half
-opacity and removes pointer feedback. Focus is the keyboard outline declared at
-rest (`controlRing`, `colors.ring` at `borderWidth.strong`), painted by the
-runtime after Tab and never after a mouse press; a disabled box declares none,
-since disabling the focused box does not take the runtime's focus away.
+are declared in `style.hover`/`style.active`, not scripted — and they still paint
+on a drawing that takes no press: `pointerEvents: "none"` removes the blocking,
+not the element's hitbox. Disabled adds half opacity and removes pointer
+feedback. The target is `selectionTargetStyle` (`targetInset`, the shared floor
+arithmetic) and carries the focus: the keyboard outline is declared at rest
+(`controlRing`, `colors.ring` at `borderWidth.strong`), painted by the runtime
+after Tab and never after a mouse press; a disabled box declares none, since
+disabling the focused box does not take the runtime's focus away.
 
 `style` takes a `StateStyle<CheckboxState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, checked, indeterminate, invalid }` and returns
@@ -162,6 +169,9 @@ on a property the recipe also sets.
   declares the keyboard ring and moves native focus with the selection; a
   caller's `onFocus`/`onClick`/`onKeyUp`/`onBlur` are delivered by GPUI's own
   dispatch alongside the toggle, and a disabled box delivers no press.
+- `runtime/selection-targets.runtime.test.tsx` — the 24px target around the
+  16px drawing, a press on the padding and a press on the drawing each reporting
+  exactly one change.
 - `runtime/labelling.runtime.test.tsx` — a `Label` beside the box paints its
   text but does not name the box; the same string through `labelledBy` does.
 

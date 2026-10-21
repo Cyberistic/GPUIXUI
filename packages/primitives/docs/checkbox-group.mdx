@@ -129,7 +129,7 @@ value: unlike a radio group, a checkbox group has no "selection follows focus".
 
 Each box compiles `selectionBoxClass` — side from `iconSize`, radius from
 `radius.sm`, border from `input`/`destructive`, fill from the accent role — and
-is kept out of the press by `optionBoxStyle`. The **row** is the control: it
+is kept out of the press by the shared `decorative` guard. The **row** is the control: it
 takes the shared keyboard ring from `controlRing` and reserves the 24px
 pressable floor, both from `group.tsx`'s `optionRowStyle`, so radio and checkbox
 rows cannot disagree. The row body uses the label and caption type roles, muted

@@ -13,6 +13,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { Icon } from "@gpuixui/icons";
+import { targetSize } from "@gpuixui/tokens";
 import { switchThumbInset, switchThumbTravel } from "../core/selection.js";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -25,6 +26,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
@@ -34,10 +36,15 @@ const checked = (value: boolean): ValueState<boolean> =>
   initValueState(Option.some(value), false);
 const customGlyph = <Icon name="sun" color="red" size={8} />;
 
-/** The thumb a switch draws: root → the part's context → the knob. */
+/** The track a switch draws inside its press target. */
+const trackOf = (element: ReactElement): ReactElement =>
+  elementChildren(element)[0] ?? expect.fail("the switch drew no track");
+
+/** The thumb a switch draws: target → track → the part's context → the knob. */
 const thumbOf = (element: ReactElement): ReactElement => {
   const provider =
-    elementChildren(element)[0] ?? expect.fail("the switch drew no thumb");
+    elementChildren(trackOf(element))[0] ??
+    expect.fail("the switch drew no thumb");
   return (
     elementChildren(provider)[0] ?? expect.fail("the thumb part drew nothing")
   );
@@ -113,8 +120,23 @@ it("hands a style callback the live state and lets its result win", () => {
   expect(seen).toEqual([
     { disabled: false, focused: true, checked: true, invalid: true },
   ]);
-  expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+  expect(expectSome(hostStyleString(trackOf(element), "backgroundColor"))).toBe(
     testTheme.colors.destructive,
+  );
+});
+
+it("reserves the pressable floor around the track and keeps it out of the press", () => {
+  // The track is one icon-height tall (16px at `md`) and was its own press
+  // target — under WCAG 2.2 SC 2.5.8's 24px floor. The target grows around it,
+  // the track takes `pointerEvents: "none"` so a press anywhere activates once,
+  // and the ring stays on the element that holds focus.
+  const element = renderSwitch({}, testTheme, checked(false), idle, vi.fn());
+  expect(expectSome(hostStyleRecord(element))["minHeight"]).toBe(
+    targetSize.minimum,
+  );
+  expect(Option.isSome(hostStyle(element, "focusVisible"))).toBe(true);
+  expect(expectSome(hostStyleString(trackOf(element), "pointerEvents"))).toBe(
+    "none",
   );
 });
 

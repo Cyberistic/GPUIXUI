@@ -139,19 +139,6 @@ export const optionRowStyle = (
     { minHeight: targetSize.minimum },
   );
 
-/**
- * A box a row draws inside itself: painted, hoverable, and never the press
- * target.
- *
- * A painted element owns a mouse-blocking hitbox in this runtime
- * (`should_occlude`), so a filled box swallowed the press before the row's
- * handler ran — measured: a checked option could not be unchecked by pressing
- * its own box. `pointerEvents: "none"` leaves it painted while the press falls
- * through to the row.
- */
-export const optionBoxStyle = (style: StyleDesc): StyleDesc =>
-  mergeStyle(style, { pointerEvents: "none" });
-
 /** Which option holds native focus, and how the group learns that it moved. */
 export interface GroupFocus {
   /** The focused option, or `None` while focus is outside the group. */

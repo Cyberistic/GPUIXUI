@@ -80,7 +80,10 @@ also scroll while the control waits for the release.
 
 ## Accessibility
 
-- Role: `Switch`.
+- Role: `Switch`, on a **24px press target**: the track is one icon-height tall
+  (16px at `md`), so the target is a 24px-high band with the pill centred in it
+  (WCAG 2.2 SC 2.5.8). The track is decoration with `pointerEvents: "none"`, so
+  a press on the track and a press on the band each toggle exactly once.
 - State is announced through **`aria-valuetext`** (`checked` / `unchecked`);
   there is no `aria-checked` in `@gpuix/native` 0.11.0.
 - `disabled` removes the tab stop; no `aria-disabled`.
@@ -98,10 +101,12 @@ absolutely positioned child, placed by its `left` inset — the resting inset wh
 off, the inset plus the travel when on. The runtime has no `transform`, but it
 can interpolate a `left` inset, so the component hands that same value to
 `motion` and the thumb slides (150 ms, `easeOut`) instead of jumping. Disabled
-adds half opacity and removes feedback. `invalid` gives an off-switch the
-destructive border, the same role a checkbox uses, and focus declares the shared
-keyboard outline at rest (`controlRing`), which the runtime paints after keyboard
-focus only; a disabled switch declares none.
+adds half opacity and removes feedback — the `pointerEvents: "none"` guard on the
+track removes the blocking, not its hitbox, so the hover and press refinements
+still paint. `invalid` gives an off-switch the destructive border, the same role
+a checkbox uses. The target is `switchTargetStyle`, and it carries the focus: the
+shared keyboard outline is declared at rest (`controlRing`), which the runtime
+paints after keyboard focus only; a disabled switch declares none.
 
 `style` takes a `StateStyle<SwitchState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, checked, invalid }` and returns one. The result
@@ -138,6 +143,8 @@ the recipe also sets.
 - `runtime/controls.runtime.test.tsx` — a click toggles; the role is `Switch`;
   a custom glyph still toggles on a real hit test; the announced value flips;
   Space and Enter both toggle.
+- `runtime/selection-targets.runtime.test.tsx` — the 24px band around the track,
+  a press on the band and a press on the track each reporting exactly one change.
 - `runtime/labelling.runtime.test.tsx` — a `Label` beside the switch paints its
   text but does not name it; the same string through `labelledBy` does.
 

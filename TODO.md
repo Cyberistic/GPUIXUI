@@ -1772,9 +1772,10 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     padding and the drawing and reports one change each; the two unit suites hold
     the geometry, the guard and the ring's placement; `switch.runtime.test.tsx`
     and `theme-axes.runtime.test.tsx` now read the drawing by child id, since the
-    `testId` addresses the target. Both directions measured: before the change the
-    padding press reported `expected +0 to be 1` (there was no target) and the
-    theme-axes case read 16px where the floor is 24
+    `testId` addresses the target. Both directions measured: with the two
+    components reverted to `HEAD`, both new runtime cases fail on the missing
+    target (`expected 16 to be greater than or equal to 24`) and the unit cases
+    fail by name; with the change, unit 636 and runtime 180 are green
   - `[x]` A group option's row is the control, its ring and its press target —
     three measured defects in one place. **The ring never painted**:
     `RadioGroup` and `CheckboxGroup` declared `focusVisible` on the decorative

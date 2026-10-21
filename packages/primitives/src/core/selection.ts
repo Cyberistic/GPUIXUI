@@ -11,7 +11,7 @@
 
 import * as Arr from "effect/Array";
 import type { StyleDesc } from "@gpuix/react";
-import { alpha } from "@gpuixui/tokens";
+import { alpha, targetInset, targetSize } from "@gpuixui/tokens";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 
 export const SELECTION_STATES = [
@@ -114,6 +114,49 @@ export const selectionBoxStyle = (
 /** The gap a switch thumb keeps from the track's edge, on every side. */
 export const switchThumbInset = (theme: PrimitiveTheme): number =>
   theme.spacing["2xs"];
+
+/**
+ * The box a selection control reserves around its drawing.
+ *
+ * The drawing is the icon-sized square that lines up with a label's icon; the
+ * *target* is what a pointer has to hit, and WCAG 2.2 SC 2.5.8 puts a 24px floor
+ * under it. `targetInset` is the shared arithmetic, so a checkbox keeps its
+ * drawn size and gains only the padding a reachable target needs. The control's
+ * role, focus and ring live on this box, and the drawing inside it is
+ * `pointerEvents: "none"` — a press anywhere in the square activates once.
+ */
+export const selectionTargetStyle = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const side = theme.iconSize[spec.size];
+  const inset = targetInset(side);
+  return {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: side + inset * 2,
+    height: side + inset * 2,
+    flexShrink: 0,
+    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+  };
+};
+
+/**
+ * The box a switch reserves around its track.
+ *
+ * The track is a pill one icon-height tall, shorter than the floor, so the
+ * target keeps the pill's width and grows vertically: the press box is a
+ * 24px-high band with the pill centred in it.
+ */
+export const switchTargetStyle = (spec: SelectionSpec): StyleDesc => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: targetSize.minimum,
+  flexShrink: 0,
+  cursor: spec.disabled === true ? "not-allowed" : "pointer",
+});
 
 /**
  * How far a switch thumb travels between its two positions.

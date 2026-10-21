@@ -26,6 +26,7 @@ import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import {
   selectionMarkColor,
+  selectionTargetStyle,
   type SelectionAccent,
   type SelectionSpec,
   type SelectionState,
@@ -39,6 +40,7 @@ import {
   checkedChange,
   composeEvent,
   composePress,
+  decorative,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
@@ -204,23 +206,25 @@ export const renderCheckbox = (
     cn(selectionBoxClass(spec), props.className),
     theme,
   );
-  let box = resolved.style;
-  if (spec.disabled === true) {
-    box = suppressSelectionFeedback(mergeStyle(box, resolved.disabled));
-  }
-  box = mergeStyle(
-    box,
-    controlRing(theme, { disabled: spec.disabled, invalid: spec.invalid }),
+  const drawn =
+    spec.disabled === true
+      ? suppressSelectionFeedback(mergeStyle(resolved.style, resolved.disabled))
+      : resolved.style;
+  const drawing = decorative(
+    mergeStyle(
+      drawn,
+      resolveStyle(props.style, {
+        disabled: spec.disabled === true,
+        focused: focus.focused,
+        checked: current === "checked",
+        indeterminate: current === "indeterminate",
+        invalid: spec.invalid === true,
+      }),
+    ),
   );
-  box = mergeStyle(
-    box,
-    resolveStyle(props.style, {
-      disabled: spec.disabled === true,
-      focused: focus.focused,
-      checked: current === "checked",
-      indeterminate: current === "indeterminate",
-      invalid: spec.invalid === true,
-    }),
+  const target = mergeStyle(
+    selectionTargetStyle(spec, theme),
+    controlRing(theme, { disabled: spec.disabled, invalid: spec.invalid }),
   );
   return (
     <div
@@ -234,13 +238,15 @@ export const renderCheckbox = (
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}
       onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
       onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
-      style={box}
+      style={target}
     >
-      {current === "unchecked" ? null : (
-        <CheckboxContext.Provider value={{ spec, theme }}>
-          {renderCheckboxIndicator({ children: props.children }, spec, theme)}
-        </CheckboxContext.Provider>
-      )}
+      <div style={drawing}>
+        {current === "unchecked" ? null : (
+          <CheckboxContext.Provider value={{ spec, theme }}>
+            {renderCheckboxIndicator({ children: props.children }, spec, theme)}
+          </CheckboxContext.Provider>
+        )}
+      </div>
     </div>
   );
 };

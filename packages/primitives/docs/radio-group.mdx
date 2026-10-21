@@ -128,7 +128,8 @@ The circle is `selectionBoxStyle` with `shape: "circle"` and the dot is
 `radioDotStyle`, both from `core/selection.ts`, so a radio and a checkbox of the
 same size are the same square/circle family. The row's style — the pressable
 floor, the ring, the cursor — comes from `group.tsx`'s `optionRowStyle`, and the
-circle's from `optionBoxStyle`, so the three group controls cannot disagree about
+circle's from the shared `decorative` guard, so the group controls — and the
+standalone selection controls — cannot disagree about
 which element is the control. Gaps use `spacing.sm`.
 
 `style` takes a `StateStyle<RadioGroupState>` — a `StyleDesc`, or a callback that
@@ -149,7 +150,7 @@ Both merge after every role decision, so a callback is the last word.
   mouse-blocking hitbox in this runtime, so a `Box` (or anything with its own
   background) inside a `RadioGroupItem` takes the press that would select the
   row; text and icons do not. Measured on 0.11.0. The circle a row draws is
-  guarded for you (`optionBoxStyle`).
+  guarded for you (`decorative`, from `components/internal.ts`).
 
 ## Verification
 
