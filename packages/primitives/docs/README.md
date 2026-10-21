@@ -65,6 +65,20 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
 10. **Verification** — the suites and the command that ran them.
 11. **Related**.
 
+## Cross-component guards
+
+Two suites hold rules no single page owns:
+
+- `src/components/handlers.test.tsx` — a caller's host handlers are **composed**
+  with each part's own, never substituted, and a blocked control installs none.
+- `src/components/focus-matrix.test.tsx` — one row per focusable control
+  (Button, IconButton, Toggle, Checkbox, Switch, RadioGroup, Rating, Slider,
+  RangeSlider, Input, TextArea, NumberField, OTPField): the tab stops it owes at
+  rest, and that a disabled control has no tab stop and paints no ring. `Select`
+  is absent because its trigger and items are GPUix's own components, so the
+  element tree never holds their host nodes; its ring and stops are pinned on its
+  page and in the runtime suite.
+
 ## Verification commands
 
 ```sh
