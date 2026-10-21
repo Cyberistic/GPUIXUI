@@ -1,10 +1,12 @@
 import { createTheme, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
+  contrastReport,
   decodeState,
   defaultState,
   editableRoles,
   editsFromTheme,
+  formatContrastFailure,
   parseState,
   resolveTheme,
   themeConfig,
@@ -78,5 +80,54 @@ describe("theme-editor persistence boundary", () => {
     expect(decodeState(JSON.stringify(state))).toEqual(state);
     expect(decodeState("not json")).toBeUndefined();
     expect(decodeState('{"light":{}}')).toBeUndefined();
+  });
+});
+
+describe("theme-editor contrast readout", () => {
+  it("passes both built-in themes", () => {
+    expect(contrastReport("light", defaultState().light)).toEqual([]);
+    expect(contrastReport("dark", defaultState().dark)).toEqual([]);
+  });
+
+  it("names a pair an edit breaks, with the measured ratio and the floor", () => {
+    const edits = defaultState().dark;
+    const broken = {
+      ...edits,
+      colors: {
+        ...edits.colors,
+        // The label on a primary fill, painted in the fill's own colour.
+        primary: themes.dark.colors.primaryForeground,
+      },
+    };
+
+    const primary = contrastReport("dark", broken).filter(
+      (failure) =>
+        failure.foreground === "primaryForeground" &&
+        failure.background === "primary",
+    );
+
+    expect(primary.map(formatContrastFailure)).toEqual([
+      "primaryForeground on primary — 1.00:1 (needs 4.5:1)",
+    ]);
+  });
+
+  it("reports an unmeasurable pair instead of counting it as passed", () => {
+    const edits = defaultState().dark;
+    const translucent = {
+      ...edits,
+      colors: { ...edits.colors, ring: "#00000080" },
+    };
+
+    const ring = contrastReport("dark", translucent).filter(
+      (failure) => failure.foreground === "ring",
+    );
+
+    expect(ring.length).toBeGreaterThan(0);
+    expect(ring.every((failure) => failure.ratio === undefined)).toBe(true);
+    expect(
+      ring
+        .map(formatContrastFailure)
+        .every((line) => line.includes("unmeasurable")),
+    ).toBe(true);
   });
 });

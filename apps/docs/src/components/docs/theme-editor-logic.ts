@@ -1,6 +1,8 @@
 import {
+  contrastFailures,
   extendTheme,
   themes,
+  type ContrastFailure,
   type Theme,
   type ThemeMode,
 } from "@gpuixui/tokens";
@@ -68,23 +70,46 @@ export const resolveTheme = (mode: ThemeMode, edits: TokenEdits): Theme =>
     typography: { sans: edits.fontSans },
   });
 
-/** The `createTheme` config the copy output emits, as data (not a string). */
-export const themeConfig = (
+/** The `createTheme` config the copy output emits, as data (not a string). */ export const themeConfig =
+  (
+    mode: ThemeMode,
+    edits: TokenEdits,
+  ): {
+    mode: ThemeMode;
+    name: string;
+    colors: Record<EditableRole, string>;
+    radius: { md: number };
+    typography: { sans: string };
+  } => ({
+    mode,
+    name: "My theme",
+    colors: edits.colors,
+    radius: { md: edits.radiusMd },
+    typography: { sans: edits.fontSans },
+  });
+
+/**
+ * The contrast pairs an edited theme misses, measured against the same floors
+ * the library's own themes are tested on. An unmeasurable pair (a translucent
+ * or non-hex value) is reported, not skipped: a pair nobody can verify has not
+ * passed.
+ */
+export const contrastReport = (
   mode: ThemeMode,
   edits: TokenEdits,
-): {
-  mode: ThemeMode;
-  name: string;
-  colors: Record<EditableRole, string>;
-  radius: { md: number };
-  typography: { sans: string };
-} => ({
-  mode,
-  name: "My theme",
-  colors: edits.colors,
-  radius: { md: edits.radiusMd },
-  typography: { sans: edits.fontSans },
-});
+): ReadonlyArray<ContrastFailure> =>
+  contrastFailures(resolveTheme(mode, edits));
+
+/** One failure as an editable line, e.g. `mutedForeground on muted — 3.9:1 (needs 4.5:1)`. */
+export const formatContrastFailure = ({
+  foreground,
+  background,
+  ratio,
+  floor,
+}: ContrastFailure): string =>
+  `${foreground} on ${background} — ${
+    ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1`
+  } (needs ${floor}:1)`;
 
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?$/;
 

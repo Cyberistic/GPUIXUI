@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import type { Theme, ThemeMode } from "@gpuixui/tokens";
 import { toCssVars } from "../../lib/theme-css";
 import {
+  contrastReport,
   decodeState,
   defaultState,
   editableRoles,
+  formatContrastFailure,
   resolveTheme,
   themeSource,
   type EditableRole,
@@ -105,6 +107,7 @@ export function ThemeEditor() {
   };
 
   const resolved = resolveTheme(mode, edits);
+  const failures = contrastReport(mode, edits);
 
   return (
     <div className="gx-theme-editor not-prose">
@@ -199,6 +202,31 @@ export function ThemeEditor() {
         </div>
 
         <ThemePreview theme={resolved} />
+      </div>
+
+      <div
+        aria-live="polite"
+        className={`gx-te-contrast ${failures.length === 0 ? "gx-te-contrast-pass" : "gx-te-contrast-fail"}`}
+        role="status"
+      >
+        {failures.length === 0 ? (
+          <p>Contrast: every pair passes the library's floors.</p>
+        ) : (
+          <>
+            <p>
+              Contrast: {failures.length}{" "}
+              {failures.length === 1 ? "pair is" : "pairs are"} below the floor
+              — the library tests these same pairs.
+            </p>
+            <ul>
+              {failures.map((failure) => (
+                <li key={`${failure.foreground}-${failure.background}`}>
+                  {formatContrastFailure(failure)}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
 
       <p className="gx-component-note">

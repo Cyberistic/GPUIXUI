@@ -26,6 +26,17 @@ element, maps `radius.md` to `--radius`, and maps `.SystemUIFont` to a CSS
 system stack because GPUI resolves that sentinel natively and the browser
 cannot. The bridge exists only for this preview.
 
+## Contrast
+
+The editor measures the theme against the same contract `@gpuixui/tokens` tests
+its own themes on: `contrastFailures` checks 24 role pairs — body text at 7:1,
+secondary text at 4.5:1, boundaries and focus rings at 3:1 — and the readout
+under the preview names every pair an edit breaks, with its measured ratio. A
+translucent value is reported as **unmeasurable** rather than counted as a pass,
+because its contrast depends on the surface behind it. Copy theme carries the
+edited values; running the same check on the result is up to the consumer, and
+`contrastFailures` is public for exactly that.
+
 ## Copy theme
 
 **Copy theme** emits a `createTheme` module — one theme per mode — in the exact
