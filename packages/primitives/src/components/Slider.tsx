@@ -34,6 +34,7 @@ import type {
   StyleDesc,
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
 import * as Option from "effect/Option";
@@ -90,7 +91,8 @@ export interface SliderProps extends ValueChangeProps<number> {
   readonly label?: string;
   /** How the value is announced. Defaults to `String(value)`. */
   readonly formatValue?: (value: number) => string;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the slider's live state and merged last. */
+  readonly style?: StateStyle<SliderState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   /** The parts to draw. Omit for the default composition. */
@@ -113,7 +115,8 @@ export interface RangeSliderProps extends ValueChangeProps<
   /** The group's name; each thumb becomes "<label> minimum"/"<label> maximum". */
   readonly label?: string;
   readonly formatValue?: (value: number) => string;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the range's live state and merged last. */
+  readonly style?: StateStyle<SliderState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   /** The parts to draw. Omit for the default composition. */
@@ -132,6 +135,28 @@ export const sliderRange = (props: {
     max: props.max ?? 100,
     step: props.step ?? 1,
   });
+
+/**
+ * What a slider tells a `style` callback.
+ *
+ * A range slider reports `focused` when either thumb holds focus: the callback
+ * styles the track both components share, not an individual thumb.
+ */
+export interface SliderState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
+}
+
+/** The state a slider is in, from its props and its focus. */
+const sliderState = (
+  props: { readonly disabled?: boolean; readonly invalid?: boolean },
+  focused: boolean,
+): SliderState => ({
+  disabled: props.disabled === true,
+  focused,
+  invalid: props.invalid === true,
+});
 
 /** The text a slider announces. */
 export const sliderValueText = (
@@ -337,7 +362,10 @@ export const renderSlider = (
     track,
     controlRing(theme, { disabled: props.disabled, invalid }),
   );
-  track = mergeStyle(track, props.style);
+  track = mergeStyle(
+    track,
+    resolveStyle(props.style, sliderState(props, focus.focused)),
+  );
   const part: SliderPart = {
     theme,
     size,
@@ -458,7 +486,13 @@ export const renderRangeSlider = (
   );
   let track = resolved.style;
   if (props.disabled === true) track = mergeStyle(track, resolved.disabled);
-  track = mergeStyle(track, props.style);
+  track = mergeStyle(
+    track,
+    resolveStyle(
+      props.style,
+      sliderState(props, Option.isSome(focus.focusedIndex)),
+    ),
+  );
   const part: SliderPart = {
     theme,
     size,

@@ -63,7 +63,7 @@ const theme = useTheme();
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name |
 | `formatValue` | `(value: number) => string` | `String` | the announced text |
-| `style` | `StyleDesc` | — | merged last, on the track |
+| `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `children` | `ReactNode` | — | the parts to draw; omit for `SliderTrack` with an indicator and a thumb |
 | `testId` | `string` | — | stable locator for the track |
@@ -118,6 +118,11 @@ border `borderWidth.strong`, and focus is the keyboard-only outline
 (`keyboardRing` → the runtime's `focusVisible`), declared on the track because
 the track is the tab stop. Nothing in the component names a literal.
 
+`style` takes a `StateStyle<SliderState>` — a `StyleDesc`, or a callback that
+receives `{ disabled, focused, invalid }` and returns one. It merges after every
+role decision, so a callback is the last word on a property the recipe also
+sets.
+
 ## Pointer behaviour
 
 A press anywhere on the track moves the value to the point under the pointer —
@@ -147,7 +152,8 @@ keeps updating while the pointer is over the track.
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint;
   the thumb's centre at 0/50/100 % (fill width, thumb size and its half-thumb
   offset, track inset); a custom composition replacing the default; a glyph
-  inside a thumb; the second range segment's width.
+  inside a thumb; the second range segment's width; a `style` callback
+  receiving the live state and winning.
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
   by Tab, and a `max: 10` / `step: 3` slider still reaches 10 by key and by

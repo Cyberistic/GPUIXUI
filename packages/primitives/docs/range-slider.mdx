@@ -51,7 +51,7 @@ cannot be selected away.
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
 | `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
-| `style` | `StyleDesc` | — | merged last, on the track |
+| `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `children` | `ReactNode` | — | the parts to draw; omit for the default two-thumb composition |
 | `testId` | `string` | — | stable locator for the track |
@@ -95,6 +95,11 @@ Same resolver as `Slider`: `colors.muted` rail, `colors.primary` fill, thumb
 is its own tab stop. The end
 values are painted as two fills; the second fill is the length between the ends.
 
+`style` takes the same `StateStyle<SliderState>` as `Slider` — a `StyleDesc`, or
+a callback that receives `{ disabled, focused, invalid }`. A range reports
+`focused` while **either** thumb holds focus, because the callback styles the
+track both components share, not an individual thumb.
+
 ## Limitations
 
 - **No pointer capture** — a drag stops updating when the pointer leaves the
@@ -113,7 +118,8 @@ values are painted as two fills; the second fill is the length between the ends.
   when the step does not divide the span.
 - `src/components/Slider.test.tsx` — two named sliders, per-thumb keys, the
   crossing result, per-thumb rings, disabled tab stops; the second segment's
-  width from the parts.
+  width from the parts; a `style` callback reporting focus anywhere in the group
+  and winning over the recipe.
 - `runtime/value.runtime.test.tsx` — a real press at 10% moves the start, at 90%
   the end; focus follows the grabbed thumb; an arrow moves only that end; a
   start driven past the end stops on it. Measured 2026-10-17 (plan 053 §11).

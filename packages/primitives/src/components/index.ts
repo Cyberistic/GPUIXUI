@@ -61,7 +61,12 @@ export type { OTPFieldInputProps, OTPFieldProps } from "./OTPField.js";
 export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";
 
-export { Checkbox, CheckboxIndicator, checkboxState, selectionValueText } from "./Checkbox.js";
+export {
+  Checkbox,
+  CheckboxIndicator,
+  checkboxState,
+  selectionValueText,
+} from "./Checkbox.js";
 export type {
   CheckboxIndicatorProps,
   CheckboxProps,
@@ -114,6 +119,7 @@ export type {
   RangeSliderProps,
   SliderIndicatorProps,
   SliderProps,
+  SliderState,
   SliderThumbProps,
   SliderTrackProps,
 } from "./Slider.js";

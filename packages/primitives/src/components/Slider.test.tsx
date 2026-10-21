@@ -27,6 +27,7 @@ import {
   SliderTrack,
   type RangeSliderHandlers,
   type SliderHandlers,
+  type SliderState,
 } from "./Slider.js";
 import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
@@ -211,6 +212,27 @@ describe("Slider", () => {
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("right"));
     expect(onValueChange).toHaveBeenCalledTimes(0);
   });
+
+  it("hands a style callback the live state and lets its result win", () => {
+    const seen: SliderState[] = [];
+    const element = renderSlider(
+      {
+        invalid: true,
+        style: (state) => {
+          seen.push(state);
+          return { backgroundColor: testTheme.colors.destructive };
+        },
+      },
+      testTheme,
+      valueOf(42),
+      { ...idle, focused: true },
+      sliderHandlers(vi.fn()),
+    );
+    expect(seen).toEqual([{ disabled: false, focused: true, invalid: true }]);
+    expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+      testTheme.colors.destructive,
+    );
+  });
 });
 
 describe("RangeSlider", () => {
@@ -290,6 +312,38 @@ describe("RangeSlider", () => {
     expect(hostProp(end ?? expect.fail("no thumb"), "tabIndex")).toStrictEqual(
       Option.none(),
     );
+  });
+
+  it("reports a focus anywhere in the group, and none while every thumb is idle", () => {
+    const seen: SliderState[] = [];
+    const style = (state: SliderState) => {
+      seen.push(state);
+      return { backgroundColor: testTheme.colors.destructive };
+    };
+    const focused = renderRangeSlider(
+      { label: "Price", style },
+      testTheme,
+      spanOf(20, 60),
+      { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
+      rangeHandlers(vi.fn()),
+    );
+    const idleRange = renderRangeSlider(
+      { label: "Price", style, disabled: true },
+      testTheme,
+      spanOf(20, 60),
+      { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+      rangeHandlers(vi.fn()),
+    );
+
+    expect(seen).toEqual([
+      { disabled: false, focused: true, invalid: false },
+      { disabled: true, focused: false, invalid: false },
+    ]);
+    expect(
+      [focused, idleRange].map((element) =>
+        expectSome(hostStyleString(element, "backgroundColor")),
+      ),
+    ).toEqual([testTheme.colors.destructive, testTheme.colors.destructive]);
   });
 });
 
