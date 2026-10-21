@@ -341,6 +341,56 @@ it("paints the type scale, not just the style", async () => {
   expect(h1.height).toBeGreaterThan(body.height);
 });
 
+it("clamps a Text after its own line count, when the copy is unique", async () => {
+  // The control for the limitation below: a string the window has not laid out
+  // before gets its own layout, so the clamp is the caller's.
+  const runtime = await openWindow();
+  const line = testTheme.typography.body.lineHeight;
+  const long =
+    "A sentence long enough that a hundred and sixty pixels wrap it over several lines.";
+  runtime.render(
+    <Surface>
+      <Box tone="none" style={{ width: 160 }} testId="one">
+        <Text clamp={1}>{long}</Text>
+      </Box>
+      <Box tone="none" style={{ width: 160 }} testId="two">
+        <Text clamp={2}>
+          {
+            "A second sentence, also long enough to wrap over several lines here."
+          }
+        </Text>
+      </Box>
+    </Surface>,
+  );
+  expect(boundsOf(runtime, "one").height).toBe(line);
+  expect(boundsOf(runtime, "two").height).toBe(2 * line);
+});
+
+it("shares one layout between identical strings, so a later clamp follows the first", async () => {
+  // **A measured runtime limitation, pinned rather than worked around.** GPUI
+  // lays a string out once per window and reuses that layout for the same copy,
+  // so `clamp` is decided by the first identical string painted: here the
+  // two-line node is first and the one-line node beside it paints two lines.
+  // If a runtime upgrade fixes the cache, this test fails and the limitation
+  // comes off `docs/text.mdx` §Limitations.
+  const runtime = await openWindow();
+  const line = testTheme.typography.body.lineHeight;
+  const same =
+    "The quick brown fox jumps over the lazy dog and keeps running past the fence.";
+  runtime.render(
+    <Surface>
+      <Box tone="none" style={{ width: 160 }} testId="first">
+        <Text clamp={2}>{same}</Text>
+      </Box>
+      <Box tone="none" style={{ width: 160 }} testId="duplicate">
+        <Text clamp={1}>{same}</Text>
+      </Box>
+    </Surface>,
+  );
+  expect(boundsOf(runtime, "first").height).toBe(2 * line);
+  expect(boundsOf(runtime, "duplicate").height).toBe(2 * line);
+});
+
 it("addresses a Text element by the testId the caller gave it", async () => {
   const runtime = await openWindow();
   runtime.render(

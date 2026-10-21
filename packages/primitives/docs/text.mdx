@@ -102,6 +102,13 @@ selection by accident; turn it on for content.
   `Stack`.
 - No responsive type scale or fluid sizing.
 - `truncate` needs a bounded width to truncate against.
+- **Identical copy shares one layout per window.** GPUI lays a string out once
+  and reuses that layout for the same text, so `clamp` follows the first
+  identical string painted: a two-line node and a one-line node with the same
+  copy both paint two lines. Give duplicate copy a distinct string (one changed
+  word is enough), or clamp only one of them. Measured on 0.11.0 — the native
+  suite pins both the correct case and the limitation, so a runtime fix fails
+  that case and removes this note.
 
 ## Verification
 
@@ -111,7 +118,9 @@ selection by accident; turn it on for content.
   left plain).
 - `runtime/layout.runtime.test.tsx` — the string is painted, its box height
   equals the role's line height, and the a11y tree reports a heading's level
-  (`h1` = 1, `h3` = 3) with body copy carrying no heading role.
+  (`h1` = 1, `h3` = 3) with body copy carrying no heading role; a clamp over
+  unique copy lands on its own line count, and identical copy shares the first
+  layout (the pinned limitation above).
 
 ```sh
 nub run --filter @gpuixui/primitives test
