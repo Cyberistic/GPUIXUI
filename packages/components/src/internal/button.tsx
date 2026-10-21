@@ -20,9 +20,10 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import { isActivation } from "./key.js";
 import {
-  alpha,
   controlHeight,
   controlPaddingX,
+  filledHover,
+  filledPressed,
   keyboardRing,
   textStyle,
   useTheme,
@@ -60,16 +61,16 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
     Match.when("primary", () => ({
       backgroundColor: theme.colors.primary,
       color: theme.colors.primaryForeground,
-      // Tokens ship no `primaryHover`; a half-alpha fill is the closest honest
-      // step, and the interlock records the missing role.
-      hover: { backgroundColor: alpha(theme.colors.primary, 0.5) },
+      // An opaque fill derived from the action role: a half-alpha fill lets the
+      // surface behind the button through, so one button reads two colours.
+      hover: { backgroundColor: filledHover(theme, "primary") },
+      active: { backgroundColor: filledPressed(theme, "primary") },
     })),
     Match.when("danger", () => ({
       backgroundColor: theme.colors.destructive,
       color: theme.colors.destructiveForeground,
-      hover: {
-        backgroundColor: alpha(theme.colors.destructive, 0.5),
-      },
+      hover: { backgroundColor: filledHover(theme, "destructive") },
+      active: { backgroundColor: filledPressed(theme, "destructive") },
     })),
     Match.when("secondary", () => ({
       backgroundColor: theme.colors.secondary,

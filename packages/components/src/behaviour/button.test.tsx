@@ -5,16 +5,28 @@
  * so every later overlay inherits their correctness. The bugs these guard: a
  * click that fires twice (once from the pointer, once from a synthesised key); a
  * disabled control that still runs its handler or still takes a tab stop; a
- * keyboard activation that works for Enter but not Space; and an icon-only
- * control with no accessible name.
+ * keyboard activation that works for Enter but not Space; an icon-only
+ * control with no accessible name; and a filled action whose hover was a
+ * half-alpha fill, so the same button read two colours on two surfaces.
  */
 
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button, IconButton } from "../internal/button.js";
-import { clickCentreOf, sizeOf } from "../internal/interaction.js";
-import { controlHeight, darkTheme } from "../internal/theme.js";
+import {
+  clickCentreOf,
+  hoverCentreOf,
+  sizeOf,
+} from "../internal/interaction.js";
+import {
+  alpha,
+  controlHeight,
+  darkTheme,
+  filledHover,
+  filledPressed,
+} from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
 describe("Button", () => {
@@ -106,6 +118,57 @@ describe("Button", () => {
     );
 
     expect(button.renderer.findByTestId("button")?.style.height).toBe(48);
+
+    button.unmount();
+  });
+
+  it("paints an opaque derived hover and press on a filled action", () => {
+    Arr.forEach(
+      [
+        ["primary", "primary"],
+        ["danger", "destructive"],
+      ] as const,
+      ([variant, action]) => {
+        const button = renderComponent(
+          <Button testId="button" variant={variant}>
+            Save
+          </Button>,
+        );
+
+        hoverCentreOf(button, "button");
+
+        const style = button.renderer.findByTestId("button")?.style;
+        expect(style?.hover).toMatchObject({
+          backgroundColor: filledHover(darkTheme, action),
+        });
+        expect(style?.active).toMatchObject({
+          backgroundColor: filledPressed(darkTheme, action),
+        });
+        // The half-alpha fill let the surface through and depended on it.
+        expect(style?.hover).not.toMatchObject({
+          backgroundColor: alpha(darkTheme.colors[action], 0.5),
+        });
+
+        button.unmount();
+      },
+    );
+  });
+
+  it("keeps the measured hover roles on a secondary action", () => {
+    const button = renderComponent(
+      <Button testId="button" variant="secondary">
+        Save
+      </Button>,
+    );
+
+    hoverCentreOf(button, "button");
+
+    expect(button.renderer.findByTestId("button")?.style.hover).toMatchObject({
+      backgroundColor: darkTheme.colors.hover,
+    });
+    expect(button.renderer.findByTestId("button")?.style.active).toMatchObject({
+      backgroundColor: darkTheme.colors.active,
+    });
 
     button.unmount();
   });
