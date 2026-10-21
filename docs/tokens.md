@@ -716,12 +716,13 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 47 pairs cover the text role
+— an empty array means the theme is readable. The 51 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
 selected row, every status and soft-status pair, each status tone's readable text
-as **page** text on `background` and `card` (a field error or an inline warning
-is not on the tone's own tinted surface), accent and selected, the state washes,
+as **page** text on `background`, `card` and `popover` (a field error, an inline
+warning or a destructive menu row is not on the tone's own tinted surface),
+accent and selected, the state washes,
 the placeholder, and the essential boundaries and focus ring — the ring and the
 strong boundary on every surface a focused control can sit on, including a
 toolbar strip (`muted`) and a segmented group (`secondary`). A wash — `hover`,

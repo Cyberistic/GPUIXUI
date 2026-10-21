@@ -86,16 +86,18 @@ describe("contrast floors", () => {
 });
 
 /**
- * Guards the pair set a status message needs when it is written as text on the
- * page rather than on its own tinted surface — a field error or an inline
- * warning. The bug this holds: `FieldError` painted the solid `destructive`
- * fill role as text, and no pair measured it, so a status message could ship
- * below the body floor in silence.
+ * Guards the pair set a status message needs when it is written as text on a
+ * surface rather than on its own tinted one — a field error, an inline warning,
+ * or a `tone="destructive"` menu row on a popover. The bug this holds twice:
+ * `FieldError` painted the solid `destructive` fill role as text, and no pair
+ * measured it; later the same role was painted on a popover, and the table held
+ * only `background` and `card`, so a menu row could ship below the body floor
+ * with nothing to notice.
  */
-describe("status text on the page", () => {
-  it("measures every tone's readable text on background and card", () => {
+describe("status text on a surface", () => {
+  it("measures every tone's readable text on background, card and popover", () => {
     const missing = statusTones.flatMap((tone) =>
-      ["background", "card"]
+      ["background", "card", "popover"]
         .filter(
           (background) =>
             !contrastPairs.some(
@@ -108,6 +110,23 @@ describe("status text on the page", () => {
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("reports status text painted invisible on a popover", () => {
+    const broken = {
+      colors: {
+        ...lightColors,
+        destructiveSoftForeground: lightColors.popover,
+      },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "destructiveSoftForeground" &&
+          background === "popover",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
   });
 });
 

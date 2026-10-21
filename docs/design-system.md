@@ -277,7 +277,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | secondary text on background/card/muted/popover and on a selected row | 4.5:1 | 7:1 |
 | on-colour text, placeholder | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
-| status text on `background`/`card` (a field error, an inline warning) | 7:1 | 7:1 |
+| status text on `background`/`card`/`popover` (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips and the field | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge | 1.05:1 | 1.05:1 |

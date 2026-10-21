@@ -187,6 +187,25 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "card",
     floor: "body",
   },
+  // A status message also sits on a floating surface: a destructive menu row
+  // inside a popover, an inline warning on a command panel. The popover paints
+  // the same role, so it is the third page a tone's text is measured on.
+  { foreground: "infoSoftForeground", background: "popover", floor: "body" },
+  {
+    foreground: "successSoftForeground",
+    background: "popover",
+    floor: "body",
+  },
+  {
+    foreground: "warningSoftForeground",
+    background: "popover",
+    floor: "body",
+  },
+  {
+    foreground: "destructiveSoftForeground",
+    background: "popover",
+    floor: "body",
+  },
   {
     foreground: "accentForeground",
     background: "accent",
