@@ -68,6 +68,26 @@ two minima, the two pairs the old rows named (7.158:1 and 5.615:1 today) and
 reads all four passages, so a palette move cannot leave them behind again; no
 colour, pair, floor, metric, role or shipped theme moves (plan 840)
 
+`[ ]` Own the selection contract's remaining present-tense minima — mutating any
+of these leaves all 7226 tests green because `falsified`-by-hand figures in the
+catalogue's *Text selection* and *Verification* narratives are not
+`documentedFigures` entries: the washed soft-panel body and caption **8.14:1**
+(identity dark, `infoSoft`) and **5.08:1** (Windows light, `destructiveSoft`),
+the link through the wash **5.69:1** (Windows dark, `selected`) and **6.19:1**
+(identity light, `destructiveSoft`), `selectionPairs`' four dark-set values
+**6.22 / 6.93 / 8.44 / 8.98:1** and its true minimum **4.801:1** (Dark ·
+Windows `mutedForeground` on `selected`), which no passage states, the pressed
+option's label **11.59:1** (Linux dark, `selectedActive`), the interactive fill
+on the field's own fill **1.0695:1** (Dark · Linux `selectedActive` on `input`),
+the dialog's face **1.079:1** (Linux dark on `destructive`) and the `sm` shadow
+on that fill **1.109:1** (macOS dark on `input`). The three cross-theme figures
+the warning-edge paragraph states — the identity light `warningSoftBorder` at
+**1.246 / 1.254:1** on the macOS/Linux light pressed washes and **1.319:1** on
+its own fill — need a kind that measures a role from one theme against a surface
+of another, which `figures.ts` does not have yet; decide between a `"cross"`
+kind and a purpose-named case before adding entries (found while landing plan
+840)
+
 `[x]` Decode the artifact the documents tell a consumer to store — the catalogue,
 design system and README all call a stored edit a `ThemeEdit`, but its only load
 path was a cast, and `extendTheme` drops an override group it cannot merge: a
