@@ -393,7 +393,7 @@ audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
 audit.invalidNumbers; // [] — every size, length and shadow the renderer can lay out
 audit.contrast; // [] — every measured pair meets its floor
-audit.decorative; // [] — every divider, skeleton, veil, status edge, thumb and state wash is visible
+audit.decorative; // [] — every divider, skeleton, veil, status edge, thumb, state wash and control face is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.selection; // [] — every selection wash is visible and keeps its text readable
 audit.indicators; // [] — every progress fill, spinner dot and presence mark is visible
@@ -421,10 +421,13 @@ Each report is also a function of its own:
   translucent.
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
   skeleton fill, the modal veil, a scrollbar thumb, the wash a hovered or
-  selected row is tinted with — that is too close to what it is painted on to be
-  seen, compositing a translucent role first. The washes are the reason it
-  matters twice: the base dark theme's `hover` was its `popover`, so a hovered
-  menu row painted nothing.
+  selected row is tinted with, the fill a tonal action rests on — that is too
+  close to what it is painted on to be seen, compositing a translucent role
+  first. The washes are the reason it matters twice: the base dark theme's
+  `hover` was its `popover`, so a hovered menu row painted nothing. The filled
+  action is the same defect without the state: light `secondary` was its `muted`
+  value, and `secondary` paints no border, so a secondary button in a toolbar
+  was a label with no button around it.
 - `seriesFailures(theme, floors?)` lists every chart swatch lost on its plot, too
   close to its neighbour, or too close to it for a reader with a colour-vision
   deficiency, and reports one it cannot measure.
@@ -448,8 +451,8 @@ set. The decorative surfaces use `decorativeFloor` (1.05:1, the same
 perceptibility floor the soft status surfaces use), and `decorativeSurfaces`
 names the placements measured — dividers, skeleton fills, the modal veil, each
 status tone's edge (read at the share `statusEdgeAlpha` that `statusTone`
-paints), the scrollbar thumb, and `hover`/`active`/`selected`/`accent` on the four
-strips a row can sit on. Nothing
+paints), the scrollbar thumb, `hover`/`active`/`selected`/`accent` and the
+`secondary` fill on the four strips a control can sit on. Nothing
 escapes the contract either: `coverage.test.ts` holds every role in `colorRoles`
 to at least one measurement, and names the two that a dedicated contract measures
 instead — `selection` and `shadow`. See

@@ -85,7 +85,11 @@ export interface PlatformStyle extends PlatformType {
  * a lighter `placeholder` than the base theme because their field surfaces are
  * lighter than its canvas. Two styles also carry their own `skeleton`, because
  * a placeholder fill is measured against the card and the muted strip it stands
- * in (`decorative.ts`) and the inherited fill matched theirs. The `linux` and
+ * in (`decorative.ts`) and the inherited fill matched theirs. Each `darwin` set
+ * and all three dark sets carry their own `secondary`, because a tonal action's
+ * fill has to be visible on the strip it sits on and their surfaces are
+ * lighter than the base theme's — macOS light's window sits 1.015:1 from the
+ * base fill, and the dark popovers sit 1.039–1.049:1 from it. The `linux` and
  * `win32` dark sets carry a 24% `selection` — the base dark theme's share —
  * rather than 30%, because a stronger wash over their lighter cards left the
  * text it selects at 6.6:1, under the body floor (`selection.ts`). A role a set
@@ -105,6 +109,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         card: "#FFFFFF",
         popover: "#FFFFFF",
         input: "#FFFFFF",
+        secondary: "#DEE3EA",
         muted: "#E9E9EF",
         skeleton: "#DCDFE7",
         hover: "#E2E2E8",
@@ -125,6 +130,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         card: "#26262A",
         popover: "#2C2C30",
         input: "#1F1F22",
+        secondary: "#3A3A3C",
         muted: "#2A2A2E",
         hover: "#35353B",
         active: "#3A3A40",
@@ -174,6 +180,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         card: "#303030",
         popover: "#383838",
         input: "#212121",
+        secondary: "#404040",
         muted: "#2A2A2A",
         skeleton: "#3A3A3A",
         hover: "#343434",
@@ -224,6 +231,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         card: "#2B2B2B",
         popover: "#2D2D2D",
         input: "#1F1F1F",
+        secondary: "#3A3A3A",
         muted: "#2A2A2A",
         hover: "#333333",
         active: "#3A3A3A",

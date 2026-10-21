@@ -1,8 +1,8 @@
 /**
  * The perceptibility contract for the surfaces that carry no text: dividers,
- * skeleton fills, the modal veil, a status message's edge, the scrollbar thumb
- * and the washes a control tints its surface with while it is hovered, pressed,
- * selected or accented.
+ * skeleton fills, the modal veil, a status message's edge, the scrollbar thumb,
+ * the wash a control tints its surface with while it is hovered, pressed,
+ * selected or accented, and the fill a tonal action rests on.
  *
  * WCAG's text and non-text floors do not cover them — they are decorative, and
  * the veil's job is to suppress what is behind it — so they have no floor at all
@@ -11,8 +11,9 @@
  * row it stands in is an empty list that looks loaded; a veil that dims nothing
  * is a dialog with no layer behind it; an edge that matches its tint is a
  * message with no boundary; a hover that matches the row it tints is a menu with
- * no feedback. One floor covers all six, the same 1.05:1 the soft status
- * surfaces are held to.
+ * no feedback; a tonal action painted in its toolbar's own colour is a label a
+ * reader cannot tell is a button. One floor covers all seven, the same 1.05:1
+ * the soft status surfaces are held to.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -33,7 +34,8 @@ export interface DecorativeSurface {
    * two roles: `divider` rules a region, `skeleton` stands in for content that
    * has not loaded, `scrim` is the veil under a modal, `statusEdge` bounds a
    * status message's soft surface, `scrollbar` is the thumb a scroller paints,
-   * `stateWash` is the tint behind a hovered, pressed, selected or accented row.
+   * `stateWash` is the tint behind a hovered, pressed, selected or accented row,
+   * `filledAction` is the resting fill of a tonal action.
    */
   readonly surface:
     | "divider"
@@ -41,7 +43,8 @@ export interface DecorativeSurface {
     | "scrim"
     | "statusEdge"
     | "scrollbar"
-    | "stateWash";
+    | "stateWash"
+    | "filledAction";
   /** The role painted. Its alpha, if it has one, is part of the measurement. */
   readonly role: keyof ThemeColors;
   /** The role it is painted over, and must be distinguishable from. */
@@ -81,11 +84,34 @@ const stateWashRoles = ["hover", "active", "selected", "accent"] as const;
 const stateWashStrips = ["background", "card", "popover", "muted"] as const;
 
 /**
+ * The tonal action's resting fill, on every strip a filled control can sit on.
+ *
+ * `secondary` is the one filled action with no brand colour of its own, so its
+ * fill is the only thing that separates it from the surface behind it: the
+ * variant paints no border (`packages/primitives/src/core/variants.ts`), and its
+ * own hover and press are derived from the fill rather than from a wash role.
+ * The base light theme shipped it equal to `muted`, so a secondary button inside
+ * a muted toolbar was a label with no button around it; macOS light was 1.015:1
+ * from its own window, Linux light 1.040:1 and Windows light 1.021:1, while the
+ * dark platform palettes fell under the floor on their lighter popovers.
+ *
+ * This is the perceptibility claim, not the 3:1 control-boundary claim: a
+ * component that needs a hard edge paints `borderStrong`, which `contrastPairs`
+ * measures. A `primary` or `destructive` fill is measured as a mark on the page
+ * by `indicatorFailures`, because a brand fill is also the role a progress bar
+ * or a slider's span paints.
+ */
+const filledActionRole = "secondary" as const;
+const filledActionStrips = ["background", "card", "popover", "muted"] as const;
+
+/**
  * The decorative surfaces the library paints. Each is measured where it is
  * actually used rather than against a single generic surface: a divider sits on
  * the page, inside a card, in a popover and in a muted toolbar strip; a
  * skeleton stands in for a row on a page, in a card and in a muted list; a soft
- * status surface's edge sits between its own tint and the page it is placed on.
+ * status surface's edge sits between its own tint and the page it is placed on;
+ * a tonal action sits on any of the four strips, because a toolbar, a card and
+ * a popover all hold buttons.
  */
 export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "divider", role: "border", over: "background" },
@@ -107,12 +133,21 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "scrollbar", role: "scrollbar", over: "card" },
   { surface: "scrollbar", role: "scrollbar", over: "popover" },
   { surface: "scrollbar", role: "scrollbar", over: "muted" },
-  ...stateWashRoles.flatMap((role) =>
-    stateWashStrips.map((over): DecorativeSurface => ({
-      surface: "stateWash",
-      role,
+  ...filledActionStrips.map(
+    (over): DecorativeSurface => ({
+      surface: "filledAction",
+      role: filledActionRole,
       over,
-    })),
+    }),
+  ),
+  ...stateWashRoles.flatMap((role) =>
+    stateWashStrips.map(
+      (over): DecorativeSurface => ({
+        surface: "stateWash",
+        role,
+        over,
+      }),
+    ),
   ),
   // A status message's edge is a decorative boundary — its text and icon carry
   // the meaning — so it is held to the perceptibility floor, not the boundary

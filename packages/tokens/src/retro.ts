@@ -17,7 +17,9 @@
  * same contrast, decorative and selection contracts as everything else — they
  * are not reconstructions, and are documented as invented. Luna's dark
  * `selection` is a 24% tint, not the 30% Aero can carry: its lighter card left
- * the selected text under the body floor (`selection.ts`).
+ * the selected text under the body floor (`selection.ts`). Both modes carry
+ * their own `secondary` — the face a tonal action rests on — because each look's
+ * muted strip and window sit at their own lightness (`decorative.ts`).
  */
 
 import type { ThemeColors } from "./color.js";
@@ -51,6 +53,7 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     card: "#FFFFFF",
     popover: "#FFFFFF",
     input: "#FFFFFF",
+    secondary: "#D5CFB8",
     muted: "#E0DCCB",
     mutedForeground: "#4F5550",
     hover: "#F4F1E3",
@@ -78,6 +81,7 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     card: "#172A44",
     popover: "#1C3250",
     input: "#0B1626",
+    secondary: "#3A4A5E",
     muted: "#1B2F4A",
     mutedForeground: "#A3B9D4",
     hover: "#223A58",
@@ -109,6 +113,7 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     card: "#FFFFFF",
     popover: "#FFFFFF",
     input: "#FFFFFF",
+    secondary: "#CFDDEA",
     muted: "#DEE8F2",
     hover: "#EFF6FD",
     active: "#CFDEEE",
@@ -135,6 +140,7 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     card: "#172835",
     popover: "#1C3040",
     input: "#0A141C",
+    secondary: "#33475A",
     muted: "#1D2F3D",
     mutedForeground: "#A6BAC9",
     hover: "#25394A",

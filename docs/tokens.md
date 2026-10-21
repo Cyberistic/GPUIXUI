@@ -112,7 +112,9 @@ not iris, so it can never be confused with `primary`.
 The four washes — `hover`, `active`, `selected` and `accent` — are surfaces with
 two contracts: the text on them keeps the contrast floors, and the tint itself
 must be visible against every strip it can land on (see
-[Decorative surfaces](#decorative-surfaces)).
+[Decorative surfaces](#decorative-surfaces)). `secondary` is the tonal action's
+resting fill and is held to the same perceptibility floor on the same strips,
+because that variant paints no border — its fill is the whole control.
 
 The literal tables behind the themes are exported too: `lightColors`,
 `darkColors`, `highContrastLightColors` and `highContrastDarkColors`. Read them
@@ -130,7 +132,7 @@ tool never has to copy the palette out of this page.
 | `popoverForeground` | `#191D25` | `#F6F8FA` | text on `popover` |
 | `primary` | `#5F4BDB` | `#A7A9FF` | primary action |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
-| `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
+| `secondary` | `#E1E5EC` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `muted` | `#EEF1F5` | `#222730` | quiet surface |
 | `mutedForeground` | `#545D6C` | `#A1A9B7` | secondary text |
@@ -153,7 +155,7 @@ tool never has to copy the palette out of this page.
 | `destructiveSoft` | `#FFE0E0` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
-| `borderStrong` | `#7B8595` | `#748091` | essential control boundaries |
+| `borderStrong` | `#75808F` | `#748091` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#66707F` | `#7C8595` | placeholder text |
@@ -161,7 +163,7 @@ tool never has to copy the palette out of this page.
 | `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24% alpha) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#E4E9F0` | `#272D37` | hover wash for ghost surfaces |
-| `active` | `#E1E5EC` | `#333A46` | pressed wash |
+| `active` | `#D6DBE4` | `#333A46` | pressed wash |
 | `selected` | `#E0E3FF` | `#2E2370` | selected row or item |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface |
@@ -303,8 +305,12 @@ keeps its contrast floor on both fills in every shipped theme (4.5:1 default,
 7:1 high contrast), and both fills are opaque and move toward the foreground.
 
 Ghost and subtle surfaces are the other case: they paint no fill at rest and
-take the `hover` / `active` washes instead. A runnable example spreads the three
-fills onto a control; see
+take the `hover` / `active` washes instead. A **filled action's resting fill** is
+measured too, because the tonal one has no border: `secondary` is held to the
+perceptibility floor on every strip it can sit on (see
+[Decorative surfaces](#decorative-surfaces)), which is why the base light
+`secondary` is `#E1E5EC` rather than the `muted` value it used to be. A runnable
+example spreads the three fills onto a control; see
 [`src/action-states.example.ts`](../packages/tokens/src/action-states.example.ts).
 
 ## Data series
@@ -493,7 +499,9 @@ table, so a preview cannot show a look the library does not ship.
 | `win32` (Windows) | `.SystemUIFont` | `Consolas` | 4 | `comfortable` (32px) |
 | `default` | `.SystemUIFont` | `Menlo` | 6 | `comfortable` (32px) |
 
-Each styled platform repaints the roles that give it its identity. Every other
+Each styled platform repaints the roles that give it its identity — including its
+control face, the `secondary` fill a tonal action rests on, because a button's
+surface has to be visible on that platform's own window. Every other
 role — the status families, the soft tones, `foreground`, `mutedForeground`,
 `inputForeground` — keeps the base theme's value.
 
@@ -504,6 +512,7 @@ role — the status families, the soft tones, `foreground`, `mutedForeground`,
 | `popover` | `#FFFFFF` | `#2C2C30` | `#FFFFFF` | `#383838` | `#FFFFFF` | `#2D2D2D` |
 | `input` | `#FFFFFF` | `#1F1F22` | `#FFFFFF` | `#212121` | `#FFFFFF` | `#1F1F1F` |
 | `muted` | `#E9E9EF` | `#2A2A2E` | `#ECEBE9` | `#2A2A2A` | `#EBEBEB` | `#2A2A2A` |
+| `secondary` | `#DEE3EA` | `#3A3A3C` | base | `#404040` | base | `#3A3A3A` |
 | `hover` | `#E2E2E8` | `#35353B` | `#E3E2DF` | `#343434` | `#E0E0E0` | `#333333` |
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
@@ -520,9 +529,12 @@ role — the status families, the soft tones, `foreground`, `mutedForeground`,
 `platformStyles[platform].colors[mode]` is that table: a partial `ThemeColors`, so
 a value you leave out is the base theme's. The dark sets carry a lighter
 `placeholder` because their field surfaces are lighter than the base canvas.
-Each style also declares the `contrast` variant its palette is designed for
-(`"default"` today), and `platformTheme` applies a palette only where that
-matches the base theme's variant.
+Each `darwin` set and all three dark sets carry their own `secondary`, because
+`platformTheme` inherits the base `#E1E5EC` and those windows and popovers sit
+1.004–1.049:1 from it — a tonal button would have no shape on them
+(`decorative.ts`). Each style also declares the `contrast` variant its palette is
+designed for (`"default"` today), and `platformTheme` applies a palette only where
+that matches the base theme's variant.
 
 Four rules the mechanism keeps:
 
@@ -897,16 +909,17 @@ passes.
 
 ### Decorative surfaces
 
-Six surfaces carry no text and are not an essential boundary, so WCAG's floors
+Seven surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
-(`overlay`), a status message's edge, a scrollbar thumb, and the wash a row is
-tinted with while it is hovered, pressed, selected or accented. They still have
-one job — be seen — so they get one floor of their own,
-`decorativeFloor = 1.05:1`, the same perceptibility threshold the soft status
-surfaces are held to. Below it a surface reads as the fill it is painted on: a
-card without an edge, a skeleton that looks like an empty row, a dialog with no
-layer behind it, a message with no boundary, a scroller whose thumb nobody can
-find, a menu row that does not answer the pointer.
+(`overlay`), a status message's edge, a scrollbar thumb, the wash a row is tinted
+with while it is hovered, pressed, selected or accented, and the resting fill of
+a tonal action (`secondary`). They still have one job — be seen — so they get one
+floor of their own, `decorativeFloor = 1.05:1`, the same perceptibility threshold
+the soft status surfaces are held to. Below it a surface reads as the fill it is
+painted on: a card without an edge, a skeleton that looks like an empty row, a
+dialog with no layer behind it, a message with no boundary, a scroller whose
+thumb nobody can find, a menu row that does not answer the pointer, a button
+that looks like a label.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -922,6 +935,7 @@ how a status edge is measured at the alpha its component actually uses:
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, `background`, `card` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
 | stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted` |
+| filledAction | `secondary` | `background`, `card`, `popover`, `muted` |
 
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
 so it is not held to the 3:1 a control boundary gets. It is still held to being
@@ -939,6 +953,26 @@ now carries a wash that clears the floor on all four strips, and `accent` /
 `selected` on `muted` in the light themes were deepened for the same reason. The
 strips are the four surfaces a row can sit on; a filled action's own hover is a
 derived fill (`filledHover`) and is measured by the contrast table instead.
+
+A **filled action** is the same defect one control over. `secondary` is the one
+filled variant with no brand colour and no border — `packages/primitives` paints
+`border-0` for it — so its fill is the whole button. The base light theme shipped
+`secondary` equal to `muted` (1.000:1), which made a secondary button inside a
+muted toolbar a label with no button around it; macOS light's window sat
+1.015:1 from it, Linux light 1.040:1 and Windows light 1.021:1, and the four
+dark platform and look palettes landed at 1.021–1.049:1 on their lighter
+popovers. The base light `secondary` is now `#E1E5EC` (one neutral step above
+`muted`), its `active` wash moved to `#D6DBE4` so a resting control is not the
+same value as a pressed ghost, `borderStrong` darkened to `#75808F` to keep its
+3:1 on the new fill, and each affected platform style and authored look carries
+its own control face.
+
+This is the **perceptibility** claim, not the 3:1 control-boundary claim: a
+component that needs a hard edge paints `borderStrong` on the strips
+`contrastPairs` measures. `primary` and `destructive` are not in this table
+because a brand fill is also the role a progress bar, a slider's span or a
+spinner's lit dot paints, so `indicatorFailures` holds them to the non-text
+floor on the same four strips.
 
 A veiled page's **void** is not measured: a black page cannot be darkened by any
 scrim, and a high-contrast theme separates its dialog with a border instead. A
@@ -1711,19 +1745,23 @@ documented brand theme, so a documented brand that loses its on-colour fails the
 suite.
 
 `packages/tokens/src/decorative.test.ts` covers the surfaces that carry no text:
-every divider, skeleton, veil, status-edge, scrollbar and state-wash placement is
-measured, the edge is held to the share `statusTone` paints, the veil is
-composited rather than skipped, a surface that matches its page or cannot be
-measured is reported, and every shipped and every platform theme clears the
-1.05:1 floor. It found two platform styles whose inherited skeleton matched their
-own surfaces — macOS light on `muted` at 1.045:1, Linux dark on `card` at
-1.004:1 — which now carry a `skeleton` of their own. The state-wash half found
-five aliases: the base dark theme's `hover` was its `popover` (a hovered menu row
-painted nothing), the base light theme's was its `muted` toolbar, and macOS
-light, Windows light and Linux dark were within one step of the strips they tint,
-so those five palettes carry a wash a reader can see. The suite reports the base
-dark alias by name (`hover`/`popover` at 1.00:1) and fails when a placement
-leaves the table.
+every divider, skeleton, veil, status-edge, scrollbar, state-wash and
+filled-action placement is measured, the edge is held to the share `statusTone`
+paints, the veil is composited rather than skipped, a surface that matches its
+page or cannot be measured is reported, and every shipped and every platform
+theme clears the 1.05:1 floor. It found two platform styles whose inherited
+skeleton matched their own surfaces — macOS light on `muted` at 1.045:1, Linux
+dark on `card` at 1.004:1 — which now carry a `skeleton` of their own. The
+state-wash half found five aliases: the base dark theme's `hover` was its
+`popover` (a hovered menu row painted nothing), the base light theme's was its
+`muted` toolbar, and macOS light, Windows light and Linux dark were within one
+step of the strips they tint, so those five palettes carry a wash a reader can
+see. The filled-action half found the base light theme's `secondary` equal to
+`muted` at 1.00:1, and macOS light, Linux light, Windows light, both dark
+platform rows that sit under a lighter popover, and both dark authored looks
+1.001–1.049:1 from a strip they sit on; each now carries a control face, and the
+suite names the shipped alias (`secondary`/`muted` at 1.00:1) and fails when a
+placement leaves the table or a face is reverted.
 
 `packages/tokens/src/selection.test.ts` covers the wash behind a selected run:
 `selectionPairs` names the four content surfaces and keeps the text role each one

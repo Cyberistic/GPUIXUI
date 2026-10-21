@@ -15,6 +15,15 @@
  * theme's `hover` was its `muted` toolbar; macOS light's `hover` was its own
  * muted strip, and Windows light's and Linux dark's were within a step of one.
  * Those five now carry a wash a reader can see.
+ *
+ * The tonal action's resting fill joined last, and it is the same defect one
+ * control over: `secondary` is a filled variant with no border and no brand
+ * colour, so the fill is the whole button. The base light theme shipped it
+ * equal to `muted` (1.000:1), which made a secondary button inside a muted
+ * toolbar a label with no button around it; macOS light's window sat at
+ * 1.015:1, Linux light at 1.040:1, Windows light at 1.021:1, and the four dark
+ * platform/look palettes fell at 1.021–1.049:1 on their lighter popovers. Each
+ * of those styles now carries its own control face.
  */
 
 import { describe, expect, it } from "vitest";
@@ -155,6 +164,35 @@ describe("decorative surfaces", () => {
         ({ surface, over }) => surface === "scrollbar" && over === "background",
       ),
     ).toMatchObject({ role: "scrollbar", ratio: 1, floor: decorativeFloor });
+  });
+
+  it("measures the tonal action's fill on every strip it sits on", () => {
+    // A secondary button paints no border, so its fill is the whole control: a
+    // fill that matches the toolbar it lives in leaves a label with no button
+    // around it. A toolbar, a card, a popover and the page all hold one.
+    const missing = ["background", "card", "popover", "muted"].filter(
+      (over) => !measured("filledAction", "secondary", over),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reports a filled action that matches the strip it sits on", () => {
+    // The shipped defect: the base light theme's `secondary` was its `muted`
+    // value, and `secondary` paints `border-0`, so a secondary button in a
+    // muted toolbar had no edge, no fill difference and no hover until pressed.
+    const broken = {
+      colors: { ...lightColors, secondary: lightColors.muted },
+    };
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, role, over }) =>
+          surface === "filledAction" &&
+          role === "secondary" &&
+          over === "muted",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
 
   it("passes every shipped theme", () => {

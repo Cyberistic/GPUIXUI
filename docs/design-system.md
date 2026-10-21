@@ -205,6 +205,18 @@ Two border roles:
   toolbar strip and a secondary fill — so a control is perceivable without
   relying on fill alone.
 
+A control with **no** border — the `secondary` variant paints `border-0` — is
+carried by its fill instead, so that fill is measured: `secondary` is held to the
+perceptibility floor (1.05:1) on the page, a card, a popover and a muted toolbar,
+the strips a button can sit on. It is the same claim the state washes make, one
+control over, and it found the shipped alias: light `secondary` *was* `muted`, so
+a secondary button in a toolbar was a label with no button around it, and each
+platform window was 1.015–1.049:1 from it. The base light fill is now `#E1E5EC`,
+its pressed wash `#D6DBE4` (so a resting control is not the value of a pressed
+ghost) and `borderStrong` `#75808F` (so the boundary keeps its 3:1 on the new
+fill); each affected platform style and look owns its control face. §9 lists the
+placement, `docs/tokens.md` §Decorative surfaces the measurements.
+
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
 `md` for menus and popovers, `lg` for dialogs and the command palette. A level is
 designed as **one** shadow, read with `elevationShadow(theme, level)`; the
@@ -251,7 +263,11 @@ and a `muted` toolbar. The base themes had shipped the alias — dark `hover` *w
 light `hover` was its `muted` strip — and macOS light, Windows light and Linux
 dark were within a step of one. Each now carries a wash a reader can see; the
 tokens and the paragraph above are the same rule from its two ends, legibility of
-the text and visibility of the tint.
+the text and visibility of the tint. The **filled action's resting fill** is
+measured on the same four strips (`filledAction` in `decorative.ts`), because the
+tonal variant's fill is its whole shape (§7); light `secondary` had shipped as
+the `muted` value and every platform window sat within a step of it, so the base
+fill and each affected style's own control face moved with that contract.
 
 **Disabled ships two ways today, and only one of them is the contract.** A
 disabled field, a select's value and a fieldset legend paint the role pair —
@@ -325,6 +341,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash | 1.05:1 | 1.05:1 |
+| a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 | text inside the selection wash (input, page, card, popover) | 7:1 | 7:1 |
 | the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
@@ -338,22 +355,28 @@ can fail: a palette edit that reduces contrast fails the gate.
 
 The surfaces that carry no text are measured too, because "subtle" is not
 "invisible": a divider, a skeleton fill, the modal veil, a status message's
-edge, the scrollbar thumb and the wash a row is hovered, pressed, selected or
-accented with are held to 1.05:1 against what they are painted on — the same
-perceptibility floor the soft status surfaces use. The veil is composited over
-its surface rather than rejected as translucent, and the two places it is
-measured are the content surfaces a modal covers; a black page cannot be
-darkened, and a high-contrast theme separates its dialog with a border instead.
-The status edge is measured at the share `statusTone` paints, on the tint it
-bounds and on both page surfaces. `decorativeFailures(theme, floor?)` runs the
-check, and `decorative.test.ts` holds every shipped and platform theme to it. It
-found two platform styles whose inherited skeleton matched their own surfaces —
-macOS light's on a muted strip (1.045:1) and Linux dark's on its card (1.004:1) —
-which now carry a `skeleton` of their own, and the state-wash half found five
-aliases: the base dark theme's `hover` was its `popover`, the base light theme's
-was its `muted` strip, and macOS light's, Windows light's and Linux dark's were
-within one step of the strips they tint (the Linux dark wash now sits at 1.06 on
-both the card and the popover it can land on).
+edge, the scrollbar thumb, the wash a row is hovered, pressed, selected or
+accented with, and the resting fill of a tonal action are held to 1.05:1 against
+what they are painted on — the same perceptibility floor the soft status surfaces
+use. The veil is composited over its surface rather than rejected as
+translucent, and the two places it is measured are the content surfaces a modal
+covers; a black page cannot be darkened, and a high-contrast theme separates its
+dialog with a border instead. The status edge is measured at the share
+`statusTone` paints, on the tint it bounds and on both page surfaces.
+`decorativeFailures(theme, floor?)` runs the check, and `decorative.test.ts` holds
+every shipped and platform theme to it. It found two platform styles whose
+inherited skeleton matched their own surfaces — macOS light's on a muted strip
+(1.045:1) and Linux dark's on its card (1.004:1) — which now carry a `skeleton`
+of their own, and the state-wash half found five aliases: the base dark theme's
+`hover` was its `popover`, the base light theme's was its `muted` strip, and
+macOS light's, Windows light's and Linux dark's were within one step of the
+strips they tint (the Linux dark wash now sits at 1.06 on both the card and the
+popover it can land on). The filled-action half found the same defect one control
+over: `secondary` paints no border, so its fill is the whole button, and light
+`secondary` was the `muted` value exactly (1.00:1) while macOS light, Linux
+light, Windows light and the dark platform/look popovers sat 1.004–1.049:1 from
+it. The base fill, its pressed wash, `borderStrong` and every affected style's
+own control face moved with the contract.
 
 Also not measured, deliberately: the elevation tint. A shadow is a blurred
 geometry, so a flat ratio overstates what the eye receives; its contract is the
