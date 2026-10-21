@@ -471,7 +471,7 @@ Implemented on 2026-10-21 in `workspaces/docs-site`.
   names only, listed in Site search's generated-document index, and two
   production queries in `smoke:build`.
 - **Measured runs.**
-  - `nub run --filter docs test` → 153 files / 1 856 tests, exit `0`.
+  - `nub run --filter docs test` → 153 files / 1 857 tests, exit `0`.
   - `nub run --filter docs check-types`, `nub run lint`, `nub run fmt` → exit
     `0`.
   - `nub run --filter docs smoke:build` → 116 pages / 253 links / 1 499 anchors,
@@ -486,7 +486,10 @@ Implemented on 2026-10-21 in `workspaces/docs-site`.
     document test failed; restored, passed.
   - Made the example read `event.modifiers.shift` (required) instead of
     `event.modifiers?.shift` → `example-snippets.test.ts` failed; restored,
-    passed (45 tests across the two files).
+    passed (46 tests across the two files).
+  - The page test also renders all four tables to static markup and counts
+    one `data-event-*` row per declared handler, payload field, window handler
+    and absence, so a registered-but-empty table fails.
   - The suite's own mutated-copy cases cover a new payload field, a removed
     field, a forbidden field, a forbidden handler, a changed `EVENT_PROPS`
     tuple, a fourth window handler and a stripped dispatcher rewrite.

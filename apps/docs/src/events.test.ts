@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as Schema from "effect/Schema";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
   installedNativeDeclarations,
@@ -17,6 +19,12 @@ import {
   eventSurfaceViolations as violations,
 } from "./lib/events";
 import { eventsSearchEntry } from "./lib/events-search";
+import {
+  EventAbsences,
+  EventHandlerTable,
+  EventPayloadTables,
+  WindowEventTable,
+} from "./components/event-tables";
 import { generatedSearchEntries, search } from "./lib/search";
 
 /**
@@ -248,6 +256,24 @@ describe("the Events page", () => {
     expect(
       headings.filter((heading) => !EVENTS_PAGE.includes(heading)),
     ).toEqual([]);
+  });
+
+  it("renders every declared row, not an empty table", () => {
+    const handlers = renderToStaticMarkup(createElement(EventHandlerTable));
+    const payloads = renderToStaticMarkup(createElement(EventPayloadTables));
+    const window = renderToStaticMarkup(createElement(WindowEventTable));
+    const absences = renderToStaticMarkup(createElement(EventAbsences));
+
+    expect(handlers.match(/data-event-handler=/gu)).toHaveLength(
+      eventHandlers.length,
+    );
+    expect(payloads.match(/data-event-field=/gu)).toHaveLength(
+      eventPayloadFieldNames.length,
+    );
+    expect(window.match(/data-window-event=/gu)).toHaveLength(4);
+    expect(absences.match(/data-event-absence=/gu)).toHaveLength(
+      eventAbsences.length,
+    );
   });
 
   it("carries a compiled example and no placeholder", () => {
