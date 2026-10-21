@@ -1,4 +1,11 @@
-import { platformTheme, retroStyles, themes } from "@gpuixui/tokens";
+import {
+  darkSeries,
+  lightSeries,
+  platformTheme,
+  retroStyles,
+  themes,
+  type Theme,
+} from "@gpuixui/tokens";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { cssFontStack } from "./fonts";
@@ -42,15 +49,15 @@ const captures = (css: string, pattern: RegExp, at: number): string[] =>
 
 /** Every custom property a style sheet reads through `var(--…)`. */
 const referencedVars = (css: string): ReadonlyArray<string> =>
-  captures(css, /var\((--[a-z-]+)/g, 1);
+  captures(css, /var\((--[a-z0-9-]+)/g, 1);
 
 /** Every custom property a style sheet declares. */
 const declaredVars = (css: string): ReadonlyArray<string> =>
-  captures(css, /^\s*(--[a-z-]+):/gm, 1);
+  captures(css, /^\s*(--[a-z0-9-]+):/gm, 1);
 
 /** The declarations of a block, as `{ name, value }` pairs. */
 const declarations = (body: string): ReadonlyArray<Declaration> =>
-  [...body.matchAll(/(--[a-z-]+):\s*([^;]+);/g)].flatMap((match) => {
+  [...body.matchAll(/(--[a-z0-9-]+):\s*([^;]+);/g)].flatMap((match) => {
     const [name, value] = [match[1], match[2]];
     return name === undefined || value === undefined ? [] : [{ name, value }];
   });
@@ -199,8 +206,10 @@ describe("preview style sheets", () => {
     const defaults = block(read("../styles/demos.css"), ".gx-demo");
 
     const literals = previewCss().flatMap(([sheet, css]) => {
-      // The dashboard's palette is its own: the landing renders the same markup
-      // light and dark from `--dash-*`, so it is not a library preview.
+      // The dashboard's chrome is its own illustration: the landing renders the
+      // same markup light and dark from `--dash-*`, so it is not a library
+      // preview. Its chart colours are the theme's series instead — see "the
+      // data series" below.
       const [scoped = ""] = css.split("/* ---- dashboard ---- */");
       const body =
         sheet === "demos.css" ? scoped.replace(defaults, "") : scoped;
@@ -210,5 +219,70 @@ describe("preview style sheets", () => {
     });
 
     expect(literals).toEqual([]);
+  });
+});
+
+describe("the data series", () => {
+  /** The scale as a style sheet spells it: lowercase hex. */
+  const cssSeries = (scale: ReadonlyArray<string>): ReadonlyArray<string> =>
+    scale.map((colour) => colour.toLowerCase());
+
+  it("publishes the theme's five colours as --series-1 to --series-5", () => {
+    const series = (theme: Theme) =>
+      [1, 2, 3, 4, 5].map(
+        (position) => toCssVars(theme)[`--series-${position}`],
+      );
+
+    // A chart in a preview reads these; a fixed palette here would leave the
+    // platform switch showing one theme's bars on another theme's page.
+    expect(series(themes.dark)).toEqual([...darkSeries]);
+    expect(series(themes.light)).toEqual([...lightSeries]);
+    // A look owns type, radii, density and chrome, not a categorical scale.
+    expect(series(resolvePlatformTheme("default", "light", "luna"))).toEqual([
+      ...lightSeries,
+    ]);
+  });
+
+  it("keeps the dashboard's fallbacks on the dark theme's scale", () => {
+    const declared = declarations(
+      block(read("../styles/blocks.css"), ".gx-dash"),
+    )
+      .filter(({ name }) => name.startsWith("--dash-series-"))
+      .map(({ name, value }) => [name, value] as const);
+
+    // The landing renders the dashboard outside a preview surface, so these are
+    // the only paint it gets there — and each must defer to an inherited
+    // `--series-*` first, or the switch could not repaint the charts.
+    expect(declared).toEqual(
+      darkSeries.map(
+        (colour, index) =>
+          [
+            `--dash-series-${index + 1}`,
+            `var(--series-${index + 1}, ${colour.toLowerCase()})`,
+          ] as const,
+      ),
+    );
+  });
+
+  it("re-maps the landing's two modes to the matching scale", () => {
+    const landing = read("../styles/landing.css");
+    const values = (selector: string): string[] =>
+      declarations(block(landing, selector))
+        .filter(({ name }) => name.startsWith("--dash-series-"))
+        .map(({ value }) => value);
+
+    expect(values("\n.landing .gx-dash")).toEqual(cssSeries(lightSeries));
+    expect(values("\n.dark .landing .gx-dash")).toEqual(cssSeries(darkSeries));
+  });
+
+  it("draws the dashboard's charts from the variables, not a palette", () => {
+    const source = read("../components/docs/dashboard.tsx");
+
+    // The block used to carry five hand-picked hexes described as "readable in
+    // both themes", which nothing measured. A colour literal returning here
+    // means the charts stop following the theme again.
+    expect(source.match(/#[0-9a-f]{6}\b/gi) ?? []).toEqual([]);
+    expect(source).toContain("var(--dash-series-");
+    expect(source).toContain("seriesColors(useTheme())");
   });
 });

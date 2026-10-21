@@ -9,16 +9,12 @@ import type { ReactNode } from "react";
  * Charts and the app/database glyphs are a labelled gap: the library has no
  * chart component yet, so the recipe ships a minimal SVG primitive and the
  * composition note says so.
+ *
+ * The categorical colours are the library's data series, never a palette of the
+ * docs' own: `--series-*` arrives from the preview surface's theme (so the
+ * platform and look switch repaint the charts) and `.gx-dash` falls back to the
+ * dark theme's scale on the landing, which renders outside a preview surface.
  */
-
-/** Five distinguishable categorical colours, readable in both themes. */
-const PALETTE = [
-  "#8b5cf6",
-  "#3b82f6",
-  "#14b8a6",
-  "#f59e0b",
-  "#f43f5e",
-] as const;
 
 const MODELS = [
   { name: "Kimi", model: "moonshot-v1-32k", pct: 33, tokens: "409k" },
@@ -74,8 +70,9 @@ const HOURLY = [
 const sum = (values: ReadonlyArray<number>): number =>
   values.reduce((total, value) => total + value, 0);
 
-/** The categorical colour for a model index; the palette is fixed-length. */
-const colorAt = (index: number): string => PALETTE[index] ?? PALETTE[0];
+/** The categorical colour for a model index, from the theme's series scale. */
+const colorAt = (index: number): string =>
+  `var(--dash-series-${(index % 5) + 1})`;
 
 /** A 24px monochrome icon, tinted by `currentColor`. */
 function IconGlyph({
@@ -235,10 +232,10 @@ function TokenDonut() {
             fill="none"
             key={segment.name}
             r={radius}
-            stroke={segment.color}
             strokeDasharray={`${segment.length} ${circumference - segment.length}`}
             strokeDashoffset={-segment.offset}
             strokeWidth="13"
+            style={{ stroke: segment.color }}
           />
         ))}
       </g>
@@ -281,9 +278,9 @@ function HourlyStack() {
               const segH = (value / total) * columnH;
               const rect = (
                 <rect
-                  fill={colorAt(j)}
                   height={segH}
                   key={j}
+                  style={{ fill: colorAt(j) }}
                   width={barW}
                   x={x}
                   y={y}
@@ -584,6 +581,7 @@ export const dashboardPackages = [
   "@gpuixui/components",
   "@gpuixui/primitives",
   "@gpuixui/icons",
+  "@gpuixui/tokens",
 ] as const;
 
 /** The recipe a consumer copies — real `@gpuixui/*` parts, chart gap labelled. */
@@ -592,6 +590,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@gpuixui/components/ca
 import { SearchInput } from "@gpuixui/components/search-input";
 import { Button, Progress, Stack, Text } from "@gpuixui/primitives";
 import { Icon } from "@gpuixui/icons";
+import { seriesColors } from "@gpuixui/tokens";
+import { useTheme } from "@gpuixui/tokens/react";
 
 // gap: the library has no chart component yet. Chart is the recipe's minimal SVG
 // primitive — GPUix paints <svg source> natively, so it is not a DOM widget,
@@ -600,12 +600,13 @@ const Chart = ({ viewBox, markup }: { viewBox: string; markup: string }) => (
   <svg source={\`<svg viewBox="\${viewBox}" xmlns="http://www.w3.org/2000/svg">\${markup}</svg>\`} />
 );
 
+// No colour on a series: the row's position picks one from the theme's scale.
 const models = [
-  { name: "Kimi", model: "moonshot-v1-32k", pct: 33, tokens: "409k", color: "#8b5cf6" },
-  { name: "DeepSeek", model: "deepseek-chat", pct: 24, tokens: "298k", color: "#3b82f6" },
-  { name: "Qwen", model: "qwen3-14b", pct: 18, tokens: "224k", color: "#14b8a6" },
-  { name: "GLM", model: "glm-4-9b", pct: 14, tokens: "174k", color: "#f59e0b" },
-  { name: "Minimax", model: "minimax-8b", pct: 11, tokens: "136k", color: "#f43f5e" },
+  { name: "Kimi", model: "moonshot-v1-32k", pct: 33, tokens: "409k", series: 0 },
+  { name: "DeepSeek", model: "deepseek-chat", pct: 24, tokens: "298k", series: 1 },
+  { name: "Qwen", model: "qwen3-14b", pct: 18, tokens: "224k", series: 2 },
+  { name: "GLM", model: "glm-4-9b", pct: 14, tokens: "174k", series: 3 },
+  { name: "Minimax", model: "minimax-8b", pct: 11, tokens: "136k", series: 4 },
 ];
 
 const projects = [
@@ -615,6 +616,8 @@ const projects = [
 ];
 
 export function DashboardPage() {
+  const series = seriesColors(useTheme());
+
   return (
     <Stack direction="row" grow>
       <Stack direction="column" style={{ width: 240, padding: 16 }}>
@@ -660,7 +663,7 @@ export function DashboardPage() {
               <Chart viewBox="0 0 100 100" markup="/* five-segment donut */" />
               {models.map((model) => (
                 <Stack direction="row" gap="sm" align="center" key={model.name}>
-                  <span style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: model.color }} />
+                  <span style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: series[model.series] }} />
                   <Text role="label">{model.name}</Text>
                   <Text role="caption" tone="muted">{model.tokens}</Text>
                   <Text role="caption" tone="muted">{model.pct}%</Text>

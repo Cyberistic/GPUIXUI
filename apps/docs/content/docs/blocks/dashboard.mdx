@@ -21,8 +21,13 @@ The block composes:
 ## Charts are a gap
 
 The library has no chart component yet, so the recipe ships a minimal SVG
-primitive — bars, a donut and stacked bars — drawn with the five-colour
-categorical palette. GPUix paints `<svg source>` natively, so this is not a DOM
-widget: it is the strongest honest stand-in until a chart component lands, and
-it is labelled as a gap in the source. The app and database glyphs are not in
-the icon set either; the recipe uses monograms and a hand-drawn database mark.
+primitive — bars, a donut and stacked bars. GPUix paints `<svg source>` natively,
+so this is not a DOM widget: it is the strongest honest stand-in until a chart
+component lands, and it is labelled as a gap in the source.
+
+The five colours are not the recipe's: they are the theme's categorical
+[data series](/docs/theming#data-series), read through `seriesColors(theme)` — or
+as `--series-1` to `--series-5` in the browser preview, which is why the platform
+and look switch repaints the bars, the donut, the stacked bars and every legend
+swatch together. The app and database glyphs are not in the icon set either; the
+recipe uses monograms and a hand-drawn database mark.

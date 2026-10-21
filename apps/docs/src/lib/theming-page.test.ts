@@ -82,7 +82,9 @@ describe("the theming page's role count", () => {
   it("derives the number of colour roles instead of printing one", () => {
     const body = page("theming.mdx");
 
-    expect(body).toContain('import { colorRoles } from "@gpuixui/tokens";');
+    expect(body).toMatch(
+      /import \{[^}]*\bcolorRoles\b[^}]*\} from "@gpuixui\/tokens";/,
+    );
     expect(body).toContain("{colorRoles.length} semantic roles");
     expect(body).toContain("There are {colorRoles.length} of them");
     // A printed count is the defect this guards: it cannot follow the package.
@@ -106,6 +108,42 @@ describe("the theming page's brand snippet", () => {
 
     expect(measured).toBeDefined();
     expect(measured ?? 0).toBeGreaterThanOrEqual(contrastFloors.secondary);
+  });
+});
+
+describe("the theming page's data series", () => {
+  const body = page("theming.mdx");
+  const series = section(body, "Data series");
+
+  it("mounts the generated swatches", () => {
+    expect(series).toContain("<SeriesSwatches />");
+    expect(body).toContain(
+      'import { colorRoles, seriesColors, themes } from "@gpuixui/tokens";',
+    );
+  });
+
+  it("derives the scale's length instead of printing it", () => {
+    expect(series).toContain("{seriesColors(themes.dark).length}");
+    // A printed count is the defect the role count already guards against.
+    expect(series).not.toMatch(/scale of \d+ colours/);
+  });
+
+  it("states the two contracts the scale is held to, and the reason it exists", () => {
+    // The section is why a component has no hex of its own: a role carries
+    // status, the series carries identity, and the scale is measured.
+    expect(series).toContain("seriesSurfaces");
+    expect(series).toContain("seriesDistinctnessFloor");
+    expect(series).toContain("seriesFailures");
+    expect(series).toContain("identity");
+  });
+
+  it("sits with the colour roles rather than in the platform section", () => {
+    const colours = body.indexOf("## Colour roles");
+    const builtIn = body.indexOf("## Built-in themes");
+    const start = body.indexOf("## Data series");
+
+    expect(start).toBeGreaterThan(colours);
+    expect(start).toBeLessThan(builtIn);
   });
 });
 

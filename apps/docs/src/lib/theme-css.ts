@@ -1,4 +1,4 @@
-import type { Theme } from "@gpuixui/tokens";
+import { seriesColors, type Theme } from "@gpuixui/tokens";
 import type { CSSProperties } from "react";
 import { cssFontStack } from "./fonts";
 
@@ -21,9 +21,11 @@ const toKebab = (name: string): string =>
 
 /**
  * The variables a preview reads from a theme: every colour role as
- * `--<kebab role>`, `--radius` from `radius.md`, the two families, and the
- * control metrics of the theme's density so a platform's controls change size
- * in a browser preview the way they do in the runtime.
+ * `--<kebab role>`, `--radius` from `radius.md`, the two families, the control
+ * metrics of the theme's density so a platform's controls change size in a
+ * browser preview the way they do in the runtime, and the five categorical
+ * series colours as `--series-1` through `--series-5` so a chart or a legend
+ * paints the theme's scale instead of a palette of its own.
  *
  * @example
  * ```tsx
@@ -41,6 +43,9 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--control-padding-x-sm": `${theme.density.controlPaddingX.sm}px`,
   "--control-padding-x-md": `${theme.density.controlPaddingX.md}px`,
   "--control-padding-x-lg": `${theme.density.controlPaddingX.lg}px`,
+  ...Object.fromEntries(
+    seriesColors(theme).map((value, index) => [`--series-${index + 1}`, value]),
+  ),
   ...Object.fromEntries(
     Object.entries(theme.colors).map(([role, value]) => [
       `--${toKebab(role)}`,

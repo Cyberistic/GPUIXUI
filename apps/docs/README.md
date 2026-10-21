@@ -83,6 +83,7 @@ src/components/docs/token-scales.tsx      The spacing/radius/density specimens o
 src/components/docs/platform-toggle.tsx   The platform and look switch, and its provider
 src/components/docs/license-table.tsx     LICENSES/*.md, rendered
 src/components/docs/patterns.tsx          The pattern workflows and the chooser
+src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/block-index.tsx       The Blocks index
 src/components/docs/blocks.tsx            The Login, Settings and Dashboard recipes
 src/components/docs/block-preview.tsx     A block's browser rendering

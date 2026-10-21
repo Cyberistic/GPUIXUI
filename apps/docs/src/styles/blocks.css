@@ -222,9 +222,16 @@
  * The dashboard window. Its palette lives on the root as custom properties so
  * the same markup renders three ways with no per-element overrides: the dark
  * native preview below (the defaults), and the landing's light/dark in
- * `landing.css`. The five categorical colours are fixed and work in all three.
+ * `landing.css`. The five categorical colours are the library's data series: a
+ * preview surface inherits `--series-*` from the platform theme it is showing,
+ * and the fallback is the dark theme's own scale for the landing.
  */
 .gx-dash {
+  --dash-series-1: var(--series-1, #a7a9ff);
+  --dash-series-2: var(--series-2, #67d4e8);
+  --dash-series-3: var(--series-3, #6fe0a3);
+  --dash-series-4: var(--series-4, #ffc94d);
+  --dash-series-5: var(--series-5, #ff6b6b);
   --dash-canvas: #10141b;
   --dash-chrome: #171c24;
   --dash-side: #0d1117;
