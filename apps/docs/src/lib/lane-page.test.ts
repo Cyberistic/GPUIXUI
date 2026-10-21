@@ -86,3 +86,53 @@ describe("the composition pages", () => {
     expect(orphans).toEqual([]);
   });
 });
+
+/**
+ * The data page is the one lane whose prose makes a claim about what the
+ * runtime can draw, and it drifted: it called `<canvas>` "documented as planned
+ * and unverified" and told a reader a chart was a gap "until a native drawing
+ * surface is verified", long after `content-surfaces` had measured the surface.
+ * The capability record is the source; the page has to agree with it.
+ */
+
+const record = readFileSync(
+  new URL("../../../../docs/gpuix-capabilities.md", import.meta.url),
+  "utf8",
+);
+
+/** The row of a table whose first cell is exactly `name`. */
+const rowFor = (table: string, name: string): string => {
+  const row = table
+    .split("\n")
+    .find((line) => line.startsWith(`| ${name} |`));
+  if (!row) throw new Error(`no row named ${name}`);
+  return row;
+};
+
+describe("the data-display page's drawing claims", () => {
+  const dataPage = read("data-display.mdx");
+  const charts = rowFor(dataPage, "Charts");
+
+  it("states the measured surface, not a plan", () => {
+    expect(rowFor(record, "Inline SVG painting")).toContain(
+      "supported, with limits"
+    );
+    expect(charts).toContain("one tint");
+    expect(charts).toContain("blank");
+    expect(charts).not.toContain("unverified");
+    expect(charts).not.toContain("planned");
+  });
+
+  it("hands the reader the measured workaround", () => {
+    expect(charts).toContain("stacked");
+    expect(charts).toContain("layout effect");
+
+    // The two facts the workaround rests on are the record's, not the page's.
+    expect(rowFor(record, "Canvas drawing")).toContain("paints nothing");
+    expect(rowFor(record, "Image painting")).toContain("layout effect");
+  });
+
+  it("does not send a chart to a surface that does not exist", () => {
+    expect(dataPage).not.toContain("until a native drawing surface is verified");
+  });
+});

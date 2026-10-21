@@ -84,7 +84,7 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
 | --- | -------- |
 | No table element | GPUix 0.11.0's element set has `div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`, `anchored`, `code`, `diff`, `markdown`, `virtual-list` — no table |
 | No cell-level accessibility | `role`, `aria-label`, `aria-selected` and `aria-level` exist; `aria-colindex`, `aria-rowindex` and `aria-describedby` do not |
-| Charts | No chart host. `<svg>` draws static charts; `<canvas>` is documented as planned and is **unverified** |
+| Charts | No chart component; the drawing surface is measured. `<svg source>` paints its markup as **one tint**, so a multi-series chart is one stacked `<svg>` per colour, and `<text>` inside the markup paints; `<img>` paints a path, URL or data-URL PNG and a pixel buffer from a layout effect; `<canvas>` is measured **blank**, so the fill behind it shows through. There is no gradient or per-shape palette inside one element |
 | Hierarchical data | A tree view needs a `<virtual-list>` plus our own flattening; hierarchical virtualization is ours |
 | Resizable columns | Pointer events and `col-resize`/`row-resize` cursors exist; no column model, so the resize is application state |
 
@@ -97,5 +97,7 @@ The full runtime table is on [Runtime](/docs/runtime).
 - **Table, tree and toolbar components** → `@gpuixui/components`, each with a
   native behaviour suite and a page under `packages/components/docs`.
 - A **statistic card or a chart** → a Block until the behaviour is reusable; a
-  chart is a gap until a native drawing surface is verified.
+  chart composes the measured surface — one tinted `<svg>` layer per series, or
+  an `<img>` pixel buffer uploaded from a layout effect — so it waits on a
+  reusable chart component, not on a drawing surface.
 - A **column layout in one app** → the app, or a Block, not a library prop.
