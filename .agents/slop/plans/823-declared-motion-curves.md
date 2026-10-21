@@ -420,5 +420,6 @@ tests), `apps/playground/src/scenarios/motion-curve.tsx`, the registry entries
 End-of-task gates: `nub run check`, `nub run lint` and `nub run test` green
 (playground **671** tests, `testing` 75). Full headless suite **124/124**
 (**4888** checks, 67 capabilities, 1259.7 s under concurrent load, exit `0`).
-Live registry **110 → 111**; the full live suite was **not** run — it is the
-merge/release gate.
+Live registry **112 → 113** (the plan-`812` total of 110 was stale: plans `819`
+and `820` added `live-hidden-surface` and `live-scroll-clip` after it); the full
+live suite was **not** run — it is the merge/release gate.

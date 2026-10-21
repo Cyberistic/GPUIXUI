@@ -338,6 +338,31 @@ provider (`ThemeProvider`, `useWindowKey`'s provider) adds no host element and
 does not change the count, so wrapping two roots in a provider does **not** fix
 them — wrap them in a `div`.
 
+## Size constraints and percentages (plan `825`)
+
+`size-constraints` measures the four `StyleDesc` constraints and the `"N%"`
+form of `DimensionValue`, which the shipped components use in **20+ call
+sites** (a hover card is 240–360 px, a toast stops at 380, a menu stops at 320
+and scrolls, a list row writes `minWidth: 0`) while no scenario read any of them.
+
+Every fixture sits in an identical 300 px parent; the expectations are
+`size-model.ts` (`constrained` = the CSS precedence, `percentOf`).
+
+| Fact | Measured |
+| ---- | -------- |
+| `minWidth` / `maxWidth` | `width: 100, minWidth: 200` → **200**; `width: 400, maxWidth: 240` → **240** |
+| precedence | `width: 200, minWidth: 300, maxWidth: 260` → **300** — the minimum wins, so a component cannot clamp below its own floor |
+| `minHeight` / `maxHeight` | `height: 40, minHeight: 80` → **80**; `height: 400, maxHeight: 120` → **120** |
+| a clamped box | `maxHeight` clamps the box, not the subtree: a 200 px child keeps its 200 px layout and extends past it. Pair it with `overflow` to scroll (the `menu/sub` recipe) |
+| flex shrink | a 400 px item in a 300 px row shrinks to **300** |
+| the flex auto-minimum | a **nowrap** run that cannot fit holds **441 px** in a 300 px row — this is why a row of chips, list rows and toast cards all write `minWidth: 0` |
+| the escape | the same run with `minWidth: 0` shrinks to **300 px** (a 141 px difference) |
+| percentages | `width: "100%"` → **300**, `width: "50%"` → **150**, `minWidth: "50%"` raises 80 → **150** |
+| `maxWidth` on text | the run is constrained to **200** and wraps (height ≥ two 26 px line boxes) |
+
+`live-size-constraints` repeats the same 34 checks in the real 1100 × 720
+window (three green focused runs), so the constraints need no live correction.
+
 ## Layout and typography in a real window (plan `591`)
 
 The three geometry contracts every component rests on were the last
@@ -3133,9 +3158,9 @@ narrower. Each deviation is deliberate and measured:
   (`media-surface`, plan `520`), the **text ink** probe (`text-ink-pixels`,
   plan `773`) and the **text decoration** probe (`text-decoration-pixels`,
   plan `775`)
-  pass in real GPUix 0.10.0 on this host (**124/124**, **4888** checks, 67
-  capabilities, exit `0` — plan `823`, which adds `motion-curve`'s 150 curve
-  checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (**125/125**, **4922** checks, 67
+  capabilities, exit `0` — plans `823`/`825`, which add `motion-curve`'s 150
+  curve checks and `size-constraints`' 34), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

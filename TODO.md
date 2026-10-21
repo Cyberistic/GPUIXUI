@@ -143,7 +143,31 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 153/153 plans-and-harness
+`[x]` `[██████████]` 154/154 plans-and-harness
+
+`[x]` **Prove the size constraints and percentage sizes in the frame** per plan
+      `825`: the shipped components write `minWidth`/`maxWidth`/`minHeight`/
+      `maxHeight` and `"100%"` in **20+ call sites** (a hover card 240–360, a
+      toast max 380 with `minWidth: 0`, `combobox` max height 280, `menu/sub`
+      320 + scroll, `field`/`accordion`/`combobox` `width: "100%"`) and no
+      scenario in either registry read one, so a runtime that dropped them all
+      passed. `size-constraints` / `live-size-constraints` (**34 checks each**,
+      one 300 px parent per fixture, five unit tests) prove: `minWidth` raises
+      (100 → **200**), `maxWidth` clamps (400 → **240**), **the minimum wins**
+      (`min 300 + max 260` → **300**), `minHeight` raises (40 → **80**),
+      `maxHeight` clamps (400 → **120**) while its 200 px child keeps its layout
+      and extends past the box, a 400 px flex item shrinks to its 300 px row, a
+      nowrap run **holds 441 px** without `minWidth` and shrinks to **300** with
+      `minWidth: 0` (the 141 px escape every row/card/toast relies on), and
+      `"100%"`/`"50%"`/`"50%" min` resolve against the parent
+      (300/150/150); `maxWidth` also wraps a text run at 200. Six runtime
+      mutations failed by name (M1 `got 100`, M2 `got 400`, M3 `got 200`,
+      M4 `got 400`, M5 `got 441`, M6 `got 30`) and the model mutation failed its
+      unit suite. Focused ids run: `size-constraints` (green ×3 + six
+      mutations + a debug read), `live-size-constraints` (green ×3, 234–235 ms).
+      End-of-task full headless **125/125** (**4922** checks, 67 capabilities,
+      exit `0`); live registry **113 → 114**; no full live gate (merge gate).
+      Plan: `.agents/slop/plans/825-size-constraints.md`.
 
 `[x]` **Prove the declared tween curve in the frame** per plan `823`: every
       motion probe in both registries declares `ease: "linear"`, and none
@@ -174,8 +198,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `motion-curve` (green ×2 + five mutations + the zero-tolerance debug
       read), `live-motion-curve` (green ×3). End-of-task full headless
       **124/124** (**4888** checks, 67 capabilities, 1259.7 s under concurrent
-      load, exit `0`); live registry **110 → 111**; no full live gate (merge
-      gate). Plan:
+      load, exit `0`); live registry **112 → 113** (the plan-`812` count was
+      110, and plans `819`/`820` added their twins after it); no full live gate
+      (merge gate). Plan:
       `.agents/slop/plans/823-declared-motion-curves.md`.
 
 `[ ]` **Cross-team:** `@gpuixui/components` and `@gpuixui/tokens` may now treat

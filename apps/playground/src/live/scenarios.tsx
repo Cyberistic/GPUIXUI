@@ -47,6 +47,10 @@ import { clickRoutingScenario } from "../scenarios/click-routing.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
 import { curveChecks, motionCurveScenario } from "../scenarios/motion-curve.js";
+import {
+  sizeChecks,
+  sizeConstraintsScenario,
+} from "../scenarios/size-constraints.js";
 import { floatingScenario } from "../scenarios/floating.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { panelNestedScenario } from "../scenarios/panel-nested.js";
@@ -2371,6 +2375,31 @@ const liveMotionCurve: LiveScenario = {
         ),
       });
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveMotionCurve.id}.png`);
+    }),
+};
+
+/**
+ * The size constraints in a real window (plan `825`).
+ *
+ * Shares `sizeChecks` with the headless scenario: constraints are layout, and
+ * the live window reproduces the offscreen arithmetic exactly (plan `591`).
+ */
+const liveSizeConstraints: LiveScenario = {
+  id: "live-size-constraints",
+  title:
+    "Live size constraints: min/max width and height, flex minimum and percentages",
+  capability: "layout",
+  view: sizeConstraintsScenario.view,
+  ready: "size-min-width-parent",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* sizeChecks(ctx, {
+        box: (testId) =>
+          Effect.map(ctx.host.bounds(testId), Option.fromNullishOr),
+      });
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${liveSizeConstraints.id}.png`,
+      );
     }),
 };
 
@@ -14435,6 +14464,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   livePanelNested,
   motion,
   liveMotionCurve,
+  liveSizeConstraints,
   overlay,
   liveFloating,
   focus,
