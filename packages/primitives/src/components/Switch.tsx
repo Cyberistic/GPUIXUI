@@ -18,6 +18,7 @@ import {
   type ReactNode,
 } from "react";
 import type { EventPayload, KeyEvent, StyleDesc } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
@@ -75,10 +76,19 @@ export interface SwitchProps extends CheckedChangeProps, InteractionProps {
    * same string, or spread `labelledBy(name)`.
    */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the switch's live state and merged last. */
+  readonly style?: StateStyle<SwitchState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly testId?: string;
+}
+
+/** What a `Switch` tells a `style` callback. */
+export interface SwitchState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly checked: boolean;
+  readonly invalid: boolean;
 }
 
 /**
@@ -160,7 +170,15 @@ export const renderSwitch = (
     track,
     controlRing(theme, { disabled: spec.disabled, invalid: spec.invalid }),
   );
-  track = mergeStyle(track, props.style);
+  track = mergeStyle(
+    track,
+    resolveStyle(props.style, {
+      disabled: spec.disabled === true,
+      focused: focus.focused,
+      checked: spec.state === "checked",
+      invalid: spec.invalid === true,
+    }),
+  );
   return (
     <div
       role="switch"

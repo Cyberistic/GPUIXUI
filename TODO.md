@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 41/42
+`[x]` `[█████████░]` 42/43
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -442,7 +442,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 24/24
+`[x]` `[██████████]` 25/25
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -648,6 +648,18 @@ a workaround for two live sessions sharing one worktree; see
       containing "zone=right", got "zone=left leftMoves=3 rightMoves=4 drops=1
       dragging=false"`, exit `1`). The pointer-capture limit documented on
       `Slider` applies: the drop target needs its own listeners.
+`[x]` Land the `file-drop` headless scenario and `SmokeHost.fileDrop` — the
+      renderer's own `nativeSimulateFileDrop` dispatches the same
+      `FileDrop::Entered`/`Submit` pair a Finder drag produces, so the scenario
+      proves `onFileDrop` receives `/tmp/alpha.txt` and `/tmp/beta.txt` in order
+      (`drops=1`), and a drop on a sibling element reaches no handler (`drops=1`
+      unchanged). The host verb aims at the centre of the nearest painted
+      ancestor, held by a fake-renderer test (`drop 100,50
+      /tmp/alpha.txt,/tmp/beta.txt`; 47 tests in `packages/testing`). Green
+      (`--only file-drop`); negative control measured (aiming the outside drop
+      at the zone: `drops=2`, exit `1`). A **live** file drop is not automatable:
+      the window protocol has no file-drop command and the OS drop needs Finder;
+      the headless renderer is the measured path.
 
 ## Phase C — Tier 1–2 components
 
@@ -1100,7 +1112,7 @@ Both are specified in ; each fix starts with a plan under .
 `[ ]` `packages/primitives`: `Text`'s `clamp` is decided by the first identical string the runtime lays out (salvage 082)
 `[x]` `packages/primitives`: no `IconButton` (icon-only button) part (salvage 086) — `IconButton` narrows `Button` to the icon-only case with a **required** `label`, an `icon` slot that can never become the name, and an always-square box; ghost by default for toolbars. It is `renderButton(iconButtonProps(props), …)`, so activation, busy and disabled stay `Button`'s one implementation. 7 unit tests + 5 native (the accessibility tree names it with no image node; the painted box measures 32×32 at `md`), an example, a docs page and a `COMPONENTS.md` row. Both directions measured: dropping `square` fails `expected 1256 to be 32`, blanking `label` fails the name case
 `[x]` `packages/primitives`: value callbacks use the contract's name (salvage 088) — `Input`, `NumberField`, `OTPField`, `Rating` and `Select` now take `onValueChange` (the name `RadioGroup` and `Slider` already used) with `onChange` kept as a deprecated alias that only runs when the new name is absent. Every value control resolves its callback through the one `valueChange` helper, so the precedence rule cannot drift per component. `src/components/change.test.ts` pins the rule and holds all seven value controls to the helper and the shared `ValueChangeProps` type; the native `fields.runtime.test.tsx` types into an `Input` carrying both names and sees only `onValueChange` fire; the pages, usage snippets and API tables now name the contract callback
-`[ ]` `packages/primitives`: state-aware `style` is adopted only by the fields; the controls, group roots and overlays, plus a focus/tab-order matrix over every focusable control, remain (salvage 079, 080, 081, 084, 089, 090)
+`[~]` `packages/primitives`: state-aware `style` is adopted only by the fields; the controls, group roots and overlays, plus a focus/tab-order matrix over every focusable control, remain (salvage 079, 080, 081, 084, 089, 090) — **Checkbox and Switch landed**: each takes `StateStyle<CheckboxState>` (`disabled`/`focused`/`checked`/`indeterminate`/`invalid`) or `StateStyle<SwitchState>` (`disabled`/`focused`/`checked`/`invalid`) and merges the result after every role decision, so a callback is the last word; a case in each component suite proves the callback sees the live state and its property wins. Remaining: `Slider`/`RangeSlider`, `Rating`, `RadioGroup`, `Select` and the overlays, and the tab-order matrix
 `[x]` `packages/primitives`: docs still advise putting a `Label` beside a standalone checkbox/switch, which does not name it (salvage 087) — `checkbox.mdx`, `switch.mdx` and the `input.mdx` API row now say a `Label` beside the control is visible text only and does not name it; the control's own `label` prop (built once by `labelledBy`) is the name. The `label` prop comments on `Checkbox` and `Switch` say the same, so a caller reads it in their editor. Proven in a window by `runtime/labelling.runtime.test.tsx` (a Label paints and leaves the box, switch and input unnamed; the same string through `labelledBy` names all three), and held by `src/labelling.test.ts` (3 cases; both directions measured — restoring "pair it with a `Label`" fails by name, and a `labelledBy` that returns a blank name fails the runtime case)
 `[x]` `packages/tokens`: status text on `background`/`card` has a measured role without adding one — `statusTone(...).foreground` (the existing `xSoftForeground`) is already designed and theme-owned, and it clears the body floor (7:1) as page text on **both** `background` and `card` in every shipped, high-contrast and platform theme. Eight pairs joined `contrastPairs` for that, so nothing was added to `ThemeColors` and a hand-built theme literal (including `packages/primitives/src/core/testing/theme.fixture.ts`) still compiles; the role count stays 47. `contrast.test.ts`'s `status text on the page` suite fails if a tone's page pair is dropped; `styles.test.ts` fails if `statusTone` returns the solid fill role instead (measured: 4 failures). Docs in `docs/tokens.md` §Status tones and §Contrast, `docs/design-system.md` §9 (salvage 057)
 `[x]` `packages/tokens`: measure the ring on the strips a focused control can sit on and a selected row's secondary text — 42 → 45 pairs (`ring`/`muted`, `ring`/`secondary`, `mutedForeground`/`selected`). It found a real miss: Linux dark's `selected` left a row's second line at 4.26:1 against the 4.5 floor, so the palette deepened to `#1B3F60` (`selectedForeground` 7.75 → 8.37). `contrast.test.ts`'s `ring and selection surfaces` suite fails when a pair is dropped or when a role matches the surface it must stand on (five directions measured); docs in `docs/tokens.md` §Contrast and `docs/design-system.md` §9 (salvage 074, 076, 078)
@@ -1173,7 +1185,7 @@ Both are specified in ; each fix starts with a plan under .
       preview and waveform rows now carry the measurement. Evidence:
       `apps/playground/README.md` §`content-surfaces`,
       `.artifacts/live/content.png`
-`[ ]` `apps/playground`: native probe backlog — file drops, drag auto-scroll, tab overflow (salvage 162, 168-169, 172, 174). **Landed since:** cross-element drag (`drag-between-panes`, plus `AsyncSmokeHost.drag`), the shipped Tier 1 controls (Input `text-input`, Checkbox `checkbox-toggle`, Slider `slider-lifecycle`) and tab-strip focus (`tabs-lifecycle`: traversal, arrows, Home/End). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`), **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`) and **content surfaces** (`content-surfaces`, salvage 161)
+`[ ]` `apps/playground`: native probe backlog — drag auto-scroll, tab overflow (salvage 162, 168-169, 172, 174). **Landed since:** file drops (`file-drop`, headless `nativeSimulateFileDrop`), cross-element drag (`drag-between-panes`, plus `AsyncSmokeHost.drag`), the shipped Tier 1 controls (Input `text-input`, Checkbox `checkbox-toggle`, Slider `slider-lifecycle`) and tab-strip focus (`tabs-lifecycle`: traversal, arrows, Home/End). Landed already: **text selection** (`text-selection`, salvage 163), **search highlights** (`search-highlights`), **horizontal scroll** (`scroll-horizontal`), **nested panels** (`docking-nested`), **command palette** (`command-palette`), **tabbed workspace panes** (`docking-nested`/`workspace-tab-drag`) and **content surfaces** (`content-surfaces`, salvage 161)
 `[x]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178) — `packages/testing/src/native.ts` exports `NativeRenderer`/`NativeElement` (method signatures only, so the package still imports no GPUix type) and `createTestHost`, which owns the `testId` → element lookup, the nearest-painted-ancestor fallback for a `<virtual-list>`/`<anchored>`, the subtree text join, the style decode and the drag synthesis. `apps/playground/src/smoke/host.ts` is deleted — a real `TestRenderer` satisfies the port structurally, so the runner calls `Native.createTestHost(root.renderer)`. 10 fake-renderer tests; both directions measured (dropping the ancestor fallback fails `aims input at the nearest ancestor that paints` and the drag case). Headless re-run green: `--only modal-focus-trap --only panel-resize --only scroll-container`
 `[x]` `packages/components`: Tier 2 behaviour gaps — both remaining rows landed (salvage 324, 339).
   - `[x]` Tier 2 icon adoption (salvage 324) — every chrome mark is an `@gpuixui/icons` glyph rather than a text stand-in: the close/dismiss controls (dialog, drawer, toast, alert, tag chip, search/time/hotkey clear), the carets (date picker, combobox), the month arrows, the carousel and pagination chevrons, the selected marks (menu, combobox), the submenu chevron, the accordion indicator and the collapsing ellipses. An ellipsis in a placeholder, a keycap chord and the confirmation dialog's busy `…` stay typography by design. `src/behaviour/icons.test.tsx` (5 native tests) measures the painted `<svg>` where the glyph used to be, the Expand/Collapse and Selected images, and sweeps the source for a returning stand-in; both directions measured (restoring `⌄`/`⌃` fails the indicator case and the sweep). The three live probes that mount these surfaces stay green on 0.11.0 (`--only dialog-lifecycle --only menu-lifecycle --only toast-lifecycle`).

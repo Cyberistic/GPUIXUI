@@ -20,6 +20,7 @@ import {
   checkboxState,
   renderCheckbox,
   selectionValueText,
+  type CheckboxState,
 } from "./Checkbox.js";
 import { checkedChange, type FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
@@ -121,6 +122,36 @@ describe("Checkbox", () => {
     // A disabled control installs no press handler at all, so nothing can run.
     expect(hostHandler(element, "onClick")).toStrictEqual(Option.none());
     expect(onValueChange).toHaveBeenCalledTimes(0);
+  });
+
+  it("hands a style callback the live state and lets its result win", () => {
+    const seen: CheckboxState[] = [];
+    const element = renderCheckbox(
+      {
+        indeterminate: true,
+        invalid: true,
+        style: (state) => {
+          seen.push(state);
+          return { backgroundColor: testTheme.colors.destructive };
+        },
+      },
+      testTheme,
+      checked(false),
+      { ...idle, focused: true },
+      vi.fn(),
+    );
+    expect(seen).toEqual([
+      {
+        disabled: false,
+        focused: true,
+        checked: false,
+        indeterminate: true,
+        invalid: true,
+      },
+    ]);
+    expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+      testTheme.colors.destructive,
+    );
   });
 });
 

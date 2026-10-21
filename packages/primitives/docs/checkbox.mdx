@@ -79,7 +79,7 @@ press that toggles the box.
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the box's own; yours runs first |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<CheckboxState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
 
 ### `CheckboxIndicator`
@@ -134,6 +134,11 @@ rest (`controlRing`, `colors.ring` at `borderWidth.strong`), painted by the
 runtime after Tab and never after a mouse press; a disabled box declares none,
 since disabling the focused box does not take the runtime's focus away.
 
+`style` takes a `StateStyle<CheckboxState>` — a `StyleDesc`, or a callback that
+receives `{ disabled, focused, checked, indeterminate, invalid }` and returns
+one. The result merges after every role decision, so a callback is the last word
+on a property the recipe also sets.
+
 ## Limitations
 
 - No `aria-checked` (above).
@@ -147,7 +152,8 @@ since disabling the focused box does not take the runtime's focus away.
 - `src/core/selection.test.ts` — the three-state paint and mark colour.
 - `src/components/Checkbox.test.tsx` — toggle, indeterminate and disabled
   wiring; the mark's state flows into its colour; a custom glyph replaces the
-  default; the mark keeps the pointer guard; the callback name and its alias.
+  default; the mark keeps the pointer guard; the callback name and its alias;
+  a `style` callback receives the live state and wins.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus are
   composed with the box's own, and a disabled box installs no press handler.
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced

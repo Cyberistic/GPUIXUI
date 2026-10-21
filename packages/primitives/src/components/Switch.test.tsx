@@ -15,7 +15,7 @@ import * as Schema from "effect/Schema";
 import { Icon } from "@gpuixui/icons";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import { renderSwitch } from "./Switch.js";
+import { renderSwitch, type SwitchState } from "./Switch.js";
 import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
 import {
@@ -73,6 +73,30 @@ it("declares the keyboard ring on the track, never a shadow", () => {
   const style = expectSome(hostStyleRecord(element));
   expect(style["focusVisible"]).toBeDefined();
   expect(Option.fromNullishOr(style["boxShadow"])).toStrictEqual(Option.none());
+});
+
+it("hands a style callback the live state and lets its result win", () => {
+  const seen: SwitchState[] = [];
+  const element = renderSwitch(
+    {
+      checked: true,
+      invalid: true,
+      style: (state) => {
+        seen.push(state);
+        return { backgroundColor: testTheme.colors.destructive };
+      },
+    },
+    testTheme,
+    checked(true),
+    { ...idle, focused: true },
+    vi.fn(),
+  );
+  expect(seen).toEqual([
+    { disabled: false, focused: true, checked: true, invalid: true },
+  ]);
+  expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+    testTheme.colors.destructive,
+  );
 });
 
 describe("SwitchThumb", () => {

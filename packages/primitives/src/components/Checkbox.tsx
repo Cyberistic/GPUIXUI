@@ -19,6 +19,7 @@ import {
   type ReactNode,
 } from "react";
 import type { EventPayload, KeyEvent, StyleDesc } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { accessibleName } from "../core/a11y.js";
@@ -84,10 +85,20 @@ export interface CheckboxProps extends CheckedChangeProps, InteractionProps {
    * string, or spread `labelledBy(name)`.
    */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the box's live state and merged last. */
+  readonly style?: StateStyle<CheckboxState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly testId?: string;
+}
+
+/** What a `Checkbox` tells a `style` callback. */
+export interface CheckboxState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly checked: boolean;
+  readonly indeterminate: boolean;
+  readonly invalid: boolean;
 }
 
 /** What a checkbox announces: there is no `aria-checked` to carry it. */
@@ -201,7 +212,16 @@ export const renderCheckbox = (
     box,
     controlRing(theme, { disabled: spec.disabled, invalid: spec.invalid }),
   );
-  box = mergeStyle(box, props.style);
+  box = mergeStyle(
+    box,
+    resolveStyle(props.style, {
+      disabled: spec.disabled === true,
+      focused: focus.focused,
+      checked: current === "checked",
+      indeterminate: current === "indeterminate",
+      invalid: spec.invalid === true,
+    }),
+  );
   return (
     <div
       role="checkbox"
