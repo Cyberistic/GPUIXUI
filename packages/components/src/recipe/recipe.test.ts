@@ -123,6 +123,25 @@ import {
   classesToStyle,
   cn,
 } from "@gpuixui/tw";
+import {
+  COMMAND_EMPTY,
+  COMMAND_HINT,
+  COMMAND_INPUT,
+  COMMAND_LIST,
+  COMMAND_SHORTCUT,
+  DIALOG_CONTENT,
+  DIALOG_DESCRIPTION,
+  DIALOG_FOOTER,
+  DIALOG_HEADER,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  MENU_CONTENT,
+  MENU_GROUP,
+  MENU_ITEM,
+  MENU_LABEL,
+  MENU_SEPARATOR,
+  POPOVER_CONTENT,
+} from "@gpuixui/tw";
 import { alpha, darkTheme, elevationShadow } from "../internal/theme.js";
 
 const style = (className: string): StyleDesc =>
@@ -995,6 +1014,183 @@ describe("Timeline recipe", () => {
   });
 });
 
+describe("Dialog parts recipe", () => {
+  it("resolves the header, title, description and footer", () => {
+    expect(style(DIALOG_HEADER)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+    });
+    expect(style(DIALOG_TITLE)).toEqual({
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: 500,
+      color: darkTheme.colors.popoverForeground,
+    });
+    expect(style(DIALOG_DESCRIPTION)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(DIALOG_FOOTER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: 8,
+    });
+  });
+});
+
+/** The ring the overlay surfaces draw instead of a border: a 1px zero-blur
+ * shadow in `foreground/5`. */
+const ring = {
+  offsetX: 0,
+  offsetY: 0,
+  blurRadius: 0,
+  spreadRadius: 1,
+  color: alpha(darkTheme.colors.foreground, 0.05),
+};
+
+describe("Overlay surface recipes", () => {
+  it("resolves the scrim to the theme's overlay role", () => {
+    expect(style(DIALOG_OVERLAY)).toEqual({
+      position: "absolute",
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      backgroundColor: darkTheme.colors.overlay,
+    });
+  });
+
+  it("resolves the dialog content surface to shadcn's fixed metrics", () => {
+    expect(style(DIALOG_CONTENT)).toEqual({
+      position: "absolute",
+      width: "100%",
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      display: "grid",
+      gap: 24,
+      borderRadius: 32,
+      padding: 24,
+      fontSize: 14,
+      lineHeight: 20,
+      boxShadow: ring,
+      maxWidth: 448,
+    });
+  });
+
+  it("resolves the popover content surface cleanly", () => {
+    expect(style(POPOVER_CONTENT)).toEqual({
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      display: "flex",
+      flexDirection: "column",
+      gap: 16,
+      borderRadius: 24,
+      padding: 16,
+      fontSize: 14,
+      lineHeight: 20,
+      boxShadow: ring,
+    });
+  });
+
+  it("keeps only the renderer-unowned classes out of the surface", () => {
+    expect(classesToStyle(DIALOG_OVERLAY, darkTheme).unsupported).toEqual([
+      "isolate",
+      "z-50",
+      "supports-backdrop-filter:backdrop-blur-sm",
+    ]);
+    expect(classesToStyle(DIALOG_CONTENT, darkTheme).unsupported).toEqual([
+      "top-1/2",
+      "left-1/2",
+      "z-50",
+      "-translate-x-1/2",
+      "-translate-y-1/2",
+      "max-w-[calc(100%-2rem)]",
+    ]);
+    expect(classesToStyle(POPOVER_CONTENT, darkTheme).unsupported).toEqual([]);
+  });
+});
+
+describe("Menu recipe", () => {
+  it("resolves the surface, row, label, separator and group", () => {
+    expect(style(MENU_CONTENT)).toEqual({
+      backgroundColor: darkTheme.colors.popover,
+      color: darkTheme.colors.popoverForeground,
+      minWidth: 192,
+      borderRadius: 24,
+      padding: 6,
+      gap: 2,
+      boxShadow: ring,
+    });
+    expect(style(MENU_ITEM)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      borderRadius: 16,
+      paddingLeft: 6,
+      paddingRight: 8,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      color: darkTheme.colors.popoverForeground,
+    });
+    expect(style(MENU_LABEL)).toEqual({
+      color: darkTheme.colors.mutedForeground,
+      paddingLeft: 12,
+      paddingRight: 12,
+      paddingTop: 10,
+      paddingBottom: 10,
+      fontSize: 12,
+      lineHeight: 16,
+      userSelect: "none",
+    });
+    expect(style(MENU_SEPARATOR)).toEqual({
+      backgroundColor: alpha(darkTheme.colors.border, 0.5),
+      marginTop: 6,
+      marginBottom: 6,
+      height: 1,
+    });
+    expect(style(MENU_GROUP)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+    });
+  });
+});
+
+describe("Command recipe", () => {
+  it("resolves the input, list, empty, shortcut and hint", () => {
+    expect(style(COMMAND_INPUT)).toEqual({
+      width: "100%",
+      fontSize: 14,
+      lineHeight: 20,
+    });
+    expect(style(COMMAND_LIST)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+    });
+    expect(style(COMMAND_EMPTY)).toEqual({
+      paddingTop: 24,
+      paddingBottom: 24,
+      textAlign: "center",
+      fontSize: 14,
+      lineHeight: 20,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(COMMAND_SHORTCUT)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(COMMAND_HINT)).toEqual(style(COMMAND_SHORTCUT));
+  });
+});
+
 describe("merge order", () => {
   it("lets the caller's className win over the recipe", () => {
     expect(style(cn(CARD_BASE, "rounded-none")).borderRadius).toBe(0);
@@ -1019,6 +1215,13 @@ describe("merge order", () => {
     expect(style(cn(KEYCAP, "bg-accent")).backgroundColor).toBe(
       darkTheme.colors.accent,
     );
+    // The overlay recipes join the caller's className the same way.
+    expect(style(cn(MENU_CONTENT, "rounded-none")).borderRadius).toBe(0);
+    expect(style(cn(MENU_ITEM, "text-primary")).color).toBe(
+      darkTheme.colors.primary,
+    );
+    expect(style(cn(DIALOG_FOOTER, "gap-4")).gap).toBe(16);
+    expect(style(cn(COMMAND_EMPTY, "py-2")).paddingTop).toBe(8);
   });
 });
 
@@ -1129,6 +1332,20 @@ describe("no unsupported classes", () => {
       TIMELINE_TIMESTAMP,
       TIMELINE_TITLE,
       TIMELINE_DESCRIPTION,
+      DIALOG_HEADER,
+      DIALOG_TITLE,
+      DIALOG_DESCRIPTION,
+      DIALOG_FOOTER,
+      MENU_CONTENT,
+      MENU_ITEM,
+      MENU_LABEL,
+      MENU_SEPARATOR,
+      MENU_GROUP,
+      COMMAND_INPUT,
+      COMMAND_LIST,
+      COMMAND_EMPTY,
+      COMMAND_SHORTCUT,
+      COMMAND_HINT,
     ];
     const unsupported = Arr.flatMap(
       recipes,

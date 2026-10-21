@@ -29,6 +29,14 @@ import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
+  DIALOG_CONTENT,
+  DIALOG_DESCRIPTION,
+  DIALOG_FOOTER,
+  DIALOG_HEADER,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+} from "@gpuixui/tw";
+import {
   createContext,
   useCallback,
   useContext,
@@ -42,6 +50,7 @@ import {
   useModalFocus,
   useModalState,
 } from "./internal/modal.js";
+import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
   assertParts,
   type PartChildren,
@@ -49,12 +58,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
-import {
-  elevationShadow,
-  textStyle,
-  useTheme,
-  type Theme,
-} from "./internal/theme.js";
+import { useTheme } from "./internal/theme.js";
 
 /** The surface widths a dialog offers: 360, 480 or 640 pixels. */
 export type DialogSize = "sm" | "md" | "lg";
@@ -160,6 +164,8 @@ export const DialogClose = ({ onClick, ...rest }: ButtonProps) => {
 export interface DialogContentProps extends Omit<Props, "children"> {
   /** Default `"md"` (480px). */
   readonly size?: DialogSize;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** The accessible name — required, because 0.10.0 has no `aria-labelledby`. */
   readonly label: string;
   /** Renders the top-right close control. Default `true`. */
@@ -173,31 +179,15 @@ export interface DialogContentProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
-/** The surface's look: the popover role, a border, the largest elevation. */
-const surfaceStyle = (
-  theme: Theme,
-  size: DialogSize,
-  available: number,
-): object => ({
-  display: "flex",
-  flexDirection: "column",
-  gap: theme.spacing.lg,
-  width: Math.min(MAX_WIDTH[size], available),
-  padding: theme.spacing["2xl"],
-  backgroundColor: theme.colors.popover,
-  color: theme.colors.popoverForeground,
-  borderRadius: theme.radius.xl,
-  borderWidth: theme.borderWidth.thin,
-  borderColor: theme.colors.border,
-  boxShadow: elevationShadow(theme, "lg"),
-  position: "relative",
-  pointerEvents: "auto",
-});
-
 /**
  * The modal surface: a full-window veil plus the dialog box, rendered while the
  * dialog is open. Focus enters the surface, Tab stays inside it, Escape and an
  * outside press close it, and closing returns focus to whatever had it before.
+ *
+ * The veil and the box compile the `DIALOG_OVERLAY` / `DIALOG_CONTENT` recipes;
+ * the size, the centring and the scroll are the component's own, merged after
+ * the recipe, because the renderer owns the window measurement and the size is
+ * a library variant shadcn expresses with responsive classes.
  */
 export const DialogContent = ({
   size = "md",
@@ -207,6 +197,7 @@ export const DialogContent = ({
   children,
   onKeyDown,
   onMouseDownOutside,
+  className,
   style,
   testId = "dialog-content",
   ref,
@@ -236,6 +227,8 @@ export const DialogContent = ({
     handleModalKeyDown({ event, contentId, renderer, onKeyDown });
   };
 
+  const available = window.width - 2 * theme.spacing["3xl"];
+
   return (
     <anchored
       position={{ x: 0, y: 0 }}
@@ -244,16 +237,18 @@ export const DialogContent = ({
     >
       <div
         testId="dialog-backdrop"
-        style={{
-          width: window.width,
-          height: window.height,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: theme.spacing["3xl"],
-          backgroundColor: theme.colors.overlay,
-          pointerEvents: "auto",
-        }}
+        style={mergeStyles(
+          overlaySurfaceStyle(DIALOG_OVERLAY, undefined, theme),
+          {
+            width: window.width,
+            height: window.height,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: theme.spacing["3xl"],
+            pointerEvents: "auto",
+          },
+        )}
       >
         <div
           role="dialog"
@@ -268,15 +263,16 @@ export const DialogContent = ({
           }}
           onKeyDown={handleKeyDown}
           style={mergeStyles(
-            {
-              ...surfaceStyle(
-                theme,
-                size,
-                window.width - 2 * theme.spacing["3xl"],
-              ),
+            mergeStyles(overlaySurfaceStyle(DIALOG_CONTENT, className, theme), {
+              display: "flex",
+              flexDirection: "column",
+              position: "relative",
+              width: Math.min(MAX_WIDTH[size], available),
+              maxWidth: available,
               maxHeight: window.height - 2 * theme.spacing["3xl"],
               overflow: "scroll",
-            },
+              pointerEvents: "auto",
+            }),
             style,
           )}
         >
@@ -304,12 +300,19 @@ export const DialogContent = ({
 
 /** The surface's heading block: title, description and any meta row. */
 export interface DialogHeaderProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The surface's heading block: title, description and any meta row. */
+/**
+ * The surface's heading block: title, description and any meta row. The
+ * close-control clearance (`paddingRight`) is the library's own, because the
+ * close control floats over the heading rather than sitting in the grid.
+ */
 export const DialogHeader = ({
   children,
+  className,
   style,
   ...rest
 }: DialogHeaderProps) => {
@@ -319,12 +322,9 @@ export const DialogHeader = ({
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.xs,
+        mergeStyles(overlaySurfaceStyle(DIALOG_HEADER, className, theme), {
           paddingRight: theme.spacing["2xl"],
-        },
+        }),
         style,
       )}
     >
@@ -333,8 +333,18 @@ export const DialogHeader = ({
   );
 };
 
+/** {@link DialogTitle} props. */
+export interface DialogTitleProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The dialog's heading, announced as a level-2 heading. */
-export const DialogTitle = ({ style, ...rest }: Props) => {
+export const DialogTitle = ({
+  className,
+  style,
+  ...rest
+}: DialogTitleProps) => {
   const theme = useTheme();
   return (
     <text
@@ -342,41 +352,55 @@ export const DialogTitle = ({ style, ...rest }: Props) => {
       aria-level={2}
       {...rest}
       style={mergeStyles(
-        { ...textStyle(theme, "h3"), color: theme.colors.popoverForeground },
+        overlaySurfaceStyle(DIALOG_TITLE, className, theme),
         style,
       )}
     />
   );
 };
 
+/** {@link DialogDescription} props. */
+export interface DialogDescriptionProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** One paragraph of supporting copy under {@link DialogTitle}. */
-export const DialogDescription = ({ style, ...rest }: Props) => {
+export const DialogDescription = ({
+  className,
+  style,
+  ...rest
+}: DialogDescriptionProps) => {
   const theme = useTheme();
   return (
     <text
       {...rest}
       style={mergeStyles(
-        { ...textStyle(theme, "body"), color: theme.colors.mutedForeground },
+        overlaySurfaceStyle(DIALOG_DESCRIPTION, className, theme),
         style,
       )}
     />
   );
 };
 
+/** {@link DialogFooter} props. */
+export interface DialogFooterProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** The actions row, right-aligned. */
-export const DialogFooter = ({ style, ...rest }: Props) => {
+export const DialogFooter = ({
+  className,
+  style,
+  ...rest
+}: DialogFooterProps) => {
   const theme = useTheme();
   return (
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: theme.spacing.md,
-        },
+        overlaySurfaceStyle(DIALOG_FOOTER, className, theme),
         style,
       )}
     />

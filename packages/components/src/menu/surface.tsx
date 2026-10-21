@@ -11,6 +11,7 @@
 
 import type { EventPayload, Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { MENU_CONTENT } from "@gpuixui/tw";
 import { Match, pipe } from "effect";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
@@ -26,29 +27,14 @@ import {
   isUp,
   typedChar,
 } from "../internal/key.js";
-import {
-  elevationShadow,
-  textStyle,
-  useTheme,
-  type Theme,
-} from "../internal/theme.js";
+import { overlaySurfaceStyle } from "../internal/overlay.js";
+import { useTheme, type Theme } from "../internal/theme.js";
 import { useMenuContext, type MenuContextValue } from "./state.js";
 
-/** The floating surface every menu paints. */
-export const menuSurfaceStyle = (theme: Theme): StyleDesc => ({
-  display: "flex",
-  flexDirection: "column",
-  gap: theme.spacing["2xs"],
-  minWidth: 180,
-  padding: theme.spacing.xs,
-  backgroundColor: theme.colors.popover,
-  color: theme.colors.popoverForeground,
-  borderRadius: theme.radius.md,
-  borderWidth: theme.borderWidth.thin,
-  borderColor: theme.colors.border,
-  boxShadow: elevationShadow(theme, "md"),
-  pointerEvents: "auto",
-});
+/** The floating surface every menu paints: the shared `MENU_CONTENT` recipe
+ * compiled against the default registry, with the caller's `className` last. */
+export const menuSurfaceStyle = (theme: Theme, className?: string): StyleDesc =>
+  overlaySurfaceStyle(MENU_CONTENT, className, theme);
 
 /**
  * The key handler a menu surface installs. It is a hook-free function so both
@@ -91,6 +77,8 @@ export const menuKeyHandler = (
 export interface MenuSurfaceProps extends Props {
   /** The menu's accessible name. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: ReactNode;
 }
 
@@ -103,6 +91,7 @@ export const MenuSurface = ({
   label,
   children,
   onKeyDown,
+  className,
   style,
   ...rest
 }: MenuSurfaceProps) => {
@@ -122,7 +111,9 @@ export const MenuSurface = ({
         onKeyDown?.(event);
       }}
       style={mergeStyles(
-        { ...textStyle(theme, "body"), ...menuSurfaceStyle(theme) },
+        mergeStyles(menuSurfaceStyle(theme, className), {
+          pointerEvents: "auto",
+        }),
         style,
       )}
     >

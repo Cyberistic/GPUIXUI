@@ -30,6 +30,7 @@ import {
   mergeStyles,
   type FloatingContentProps,
 } from "@gpuix/react/floating";
+import { POPOVER_CONTENT } from "@gpuixui/tw";
 import { Match } from "effect";
 import {
   createContext,
@@ -43,6 +44,7 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss, isTab } from "./internal/key.js";
+import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
   assertParts,
   type PartChildren,
@@ -50,7 +52,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
-import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
+import { useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
 /** The rules a {@link PopoverContent} follows; throws outside a {@link Popover}. */
@@ -144,6 +146,8 @@ export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
 
 /** {@link PopoverContent} props: a floating surface, side and alignment. */
 export interface PopoverContentProps extends FloatingContentProps {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
   readonly side?: "top" | "right" | "bottom" | "left";
   /** Default `"start"`. `"center"` is measured from the trigger, not the runtime's `center`. */
@@ -161,6 +165,7 @@ export interface PopoverContentProps extends FloatingContentProps {
  * on open; Escape returns focus to the trigger, Tab and outside presses do not.
  */
 export const PopoverContent = ({
+  className,
   side = "bottom",
   align = "start",
   sideOffset = 6,
@@ -244,18 +249,10 @@ export const PopoverContent = ({
         );
       }}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "body"),
+        mergeStyles(overlaySurfaceStyle(POPOVER_CONTENT, className, theme), {
           minWidth: 200,
-          padding: theme.spacing.lg,
-          backgroundColor: theme.colors.popover,
-          color: theme.colors.popoverForeground,
-          borderRadius: theme.radius.lg,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          boxShadow: elevationShadow(theme, "md"),
           pointerEvents: "auto",
-        },
+        }),
         style,
       )}
     >

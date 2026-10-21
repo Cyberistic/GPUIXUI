@@ -40,7 +40,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
-import { textStyle, useTheme } from "./internal/theme.js";
+import { useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 import {
   MenuCheckboxItem,
@@ -231,6 +231,8 @@ export const DropdownMenuTrigger = ({
 export interface DropdownMenuContentProps extends FloatingContentProps {
   /** The menu's accessible name. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
   readonly side?: "top" | "right" | "bottom" | "left";
   /** Default `"start"`. `"center"` is measured from the trigger, not the runtime's `center`. */
@@ -245,6 +247,7 @@ export interface DropdownMenuContentProps extends FloatingContentProps {
 /** The menu surface, rendered while the menu is open. */
 export const DropdownMenuContent = ({
   label,
+  className,
   side = "bottom",
   align = "start",
   sideOffset = 4,
@@ -308,7 +311,9 @@ export const DropdownMenuContent = ({
         onKeyDown?.(event);
       }}
       style={mergeStyles(
-        { ...textStyle(theme, "body"), ...menuSurfaceStyle(theme) },
+        mergeStyles(menuSurfaceStyle(theme, className), {
+          pointerEvents: "auto",
+        }),
         style,
       )}
     >

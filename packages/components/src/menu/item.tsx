@@ -15,6 +15,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { MENU_GROUP, MENU_ITEM, MENU_LABEL, MENU_SEPARATOR } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import {
@@ -24,6 +25,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { overlaySurfaceStyle } from "../internal/overlay.js";
 import { controlHeight, textStyle, useTheme } from "../internal/theme.js";
 import {
   assertParts,
@@ -59,6 +61,8 @@ export interface MenuItemProps extends Omit<Props, "style"> {
    * sets `false`, because toggling several settings in one visit is the point.
    */
   readonly closeOnSelect?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the row's state. */
   readonly style?: StateStyle<MenuItemState>;
 }
@@ -70,30 +74,25 @@ export interface MenuItemState {
   readonly highlighted: boolean;
 }
 
-/** The row's own look, shared by actions, checkbox rows and the Command menu. */
+/** The row's own look, shared by actions, checkbox rows and the Command menu.
+ *
+ * The resting geometry and type come from the `MENU_ITEM` recipe (fixed shadcn
+ * metrics); the density height, the accent bar and the state colours stay here
+ * because they are density- and state-driven (ADR 0006).
+ */
 export const menuRowStyle = (
   theme: ReturnType<typeof useTheme>,
   tone: MenuItemTone,
   active: boolean,
   disabled: boolean,
+  className?: string,
 ): Props["style"] => ({
-  ...textStyle(theme, "label"),
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "center",
-  gap: theme.spacing.md,
+  ...overlaySurfaceStyle(MENU_ITEM, className, theme),
   height: controlHeight(theme, "sm"),
-  paddingRight: theme.spacing.md,
-  // The 2px bar is always present, so highlighting never shifts the label.
-  paddingLeft: theme.spacing.md - theme.borderWidth.strong,
   borderLeftWidth: theme.borderWidth.strong,
   borderColor: active ? theme.colors.accent : theme.colors.popover,
-  borderRadius: theme.radius.sm,
   backgroundColor: active ? theme.colors.hover : undefined,
-  color:
-    tone === "destructive"
-      ? theme.colors.destructive
-      : theme.colors.popoverForeground,
+  ...(tone === "destructive" ? { color: theme.colors.destructive } : {}),
   cursor: disabled ? "not-allowed" : "pointer",
   opacity: disabled ? 0.5 : 1,
   hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
@@ -139,6 +138,7 @@ export const MenuItem = ({
   onFocus,
   onClick,
   onMouseEnter,
+  className,
   style,
   ref,
   ...rest
@@ -207,7 +207,7 @@ export const MenuItem = ({
         onMouseEnter?.(event);
       }}
       style={mergeStyles(
-        menuRowStyle(theme, tone, active, disabled),
+        menuRowStyle(theme, tone, active, disabled, className),
         resolveStyle(style, state),
       )}
     >
@@ -293,42 +293,45 @@ export const MenuCheckboxItem = ({
   );
 };
 
+/** {@link MenuSeparator} props. */
+export interface MenuSeparatorProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** A hairline between groups of actions. Not focusable. */
-export const MenuSeparator = ({ style, ...rest }: Props) => {
+export const MenuSeparator = ({
+  className,
+  style,
+  ...rest
+}: MenuSeparatorProps) => {
   const theme = useTheme();
   return (
     <div
       role="separator"
       {...rest}
       style={mergeStyles(
-        {
-          height: theme.borderWidth.thin,
-          marginTop: theme.spacing.xs,
-          marginBottom: theme.spacing.xs,
-          backgroundColor: theme.colors.border,
-        },
+        overlaySurfaceStyle(MENU_SEPARATOR, className, theme),
         style,
       )}
     />
   );
 };
 
+/** {@link MenuLabel} props. */
+export interface MenuLabelProps extends Props {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
+
 /** A small heading over a group of rows. Not focusable. */
-export const MenuLabel = ({ style, ...rest }: Props) => {
+export const MenuLabel = ({ className, style, ...rest }: MenuLabelProps) => {
   const theme = useTheme();
   return (
     <text
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          paddingTop: theme.spacing.xs,
-          paddingBottom: theme.spacing.xs,
-          userSelect: "none",
-        },
+        overlaySurfaceStyle(MENU_LABEL, className, theme),
         style,
       )}
     />
@@ -337,11 +340,18 @@ export const MenuLabel = ({ style, ...rest }: Props) => {
 
 /** A labelled group of rows. */
 export interface MenuGroupProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** A labelled group of rows. */
-export const MenuGroup = ({ children, style, ...rest }: MenuGroupProps) => {
+export const MenuGroup = ({
+  className,
+  children,
+  style,
+  ...rest
+}: MenuGroupProps) => {
   const theme = useTheme();
   assertParts(menuGroup, children);
   return (
@@ -349,11 +359,7 @@ export const MenuGroup = ({ children, style, ...rest }: MenuGroupProps) => {
       role="group"
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-        },
+        overlaySurfaceStyle(MENU_GROUP, className, theme),
         style,
       )}
     >

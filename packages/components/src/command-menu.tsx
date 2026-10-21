@@ -17,6 +17,13 @@
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import {
+  COMMAND_EMPTY,
+  COMMAND_HINT,
+  COMMAND_INPUT,
+  COMMAND_LIST,
+  COMMAND_SHORTCUT,
+} from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -30,13 +37,14 @@ import {
 import { Dialog, DialogContent } from "./dialog.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
   assertParts,
   type PartChildren,
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
+import { controlHeight, useTheme } from "./internal/theme.js";
 import { MenuLabel, menuRowStyle } from "./menu/item.js";
 import { fuzzyMatches, rankByGroup } from "./menu/fuzzy.js";
 import {
@@ -240,6 +248,8 @@ export interface CommandMenuInputProps {
   readonly placeholder?: string;
   /** The field's accessible name. Default `"Search commands"`. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /**
@@ -249,6 +259,7 @@ export interface CommandMenuInputProps {
 export const CommandMenuInput = ({
   placeholder = "Type a command…",
   label = "Search commands",
+  className,
 }: CommandMenuInputProps) => {
   const theme = useTheme();
   const { query, setQuery, runActive, handleKeyDown, registerInput } =
@@ -266,7 +277,7 @@ export const CommandMenuInput = ({
       onSubmit={runActive}
       onKeyDown={handleKeyDown}
       style={{
-        ...textStyle(theme, "body"),
+        ...overlaySurfaceStyle(COMMAND_INPUT, className, theme),
         height: controlHeight(theme, "md"),
         paddingLeft: theme.spacing.md,
         paddingRight: theme.spacing.md,
@@ -281,14 +292,21 @@ export const CommandMenuInput = ({
 };
 
 /** {@link CommandMenuList} props. */
-export type CommandMenuListProps = Omit<Props, "children">;
+export interface CommandMenuListProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+}
 
 /**
  * The match column: a heading at each group change, the rows, and the key hint.
  * The hint belongs to the list because it describes the list's keys; a custom
  * list drops it.
  */
-export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
+export const CommandMenuList = ({
+  className,
+  style,
+  ...rest
+}: CommandMenuListProps) => {
   const theme = useTheme();
   const { matches } = useCommandMenu();
 
@@ -296,11 +314,7 @@ export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.md,
-        },
+        overlaySurfaceStyle(COMMAND_LIST, className, theme),
         style,
       )}
     >
@@ -327,12 +341,7 @@ export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
           );
         })}
       </div>
-      <text
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
+      <text style={overlaySurfaceStyle(COMMAND_HINT, undefined, theme)}>
         ↑↓ to navigate · ↵ to run · esc to close
       </text>
     </div>
@@ -342,11 +351,14 @@ export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
 /** {@link CommandMenuItem} props. */
 export interface CommandMenuItemProps extends Omit<Props, "children"> {
   readonly action: CommandAction;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** One runnable row: highlighted from the root, never focused. */
 export const CommandMenuItem = ({
   action,
+  className,
   style,
   ...rest
 }: CommandMenuItemProps) => {
@@ -362,7 +374,13 @@ export const CommandMenuItem = ({
       onClick={() => run(action)}
       {...rest}
       style={mergeStyles(
-        menuRowStyle(theme, "default", highlighted, action.disabled === true),
+        menuRowStyle(
+          theme,
+          "default",
+          highlighted,
+          action.disabled === true,
+          className,
+        ),
         style,
       )}
     >
@@ -377,12 +395,7 @@ export const CommandMenuItem = ({
         {action.label}
       </div>
       {action.shortcut === undefined ? null : (
-        <text
-          style={{
-            ...textStyle(theme, "caption"),
-            color: theme.colors.mutedForeground,
-          }}
-        >
+        <text style={overlaySurfaceStyle(COMMAND_SHORTCUT, undefined, theme)}>
           {action.shortcut}
         </text>
       )}
@@ -392,11 +405,16 @@ export const CommandMenuItem = ({
 
 /** {@link CommandMenuEmpty} props. */
 export interface CommandMenuEmptyProps {
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: ReactNode;
 }
 
 /** The empty state. It renders only while no action matches the query. */
-export const CommandMenuEmpty = ({ children }: CommandMenuEmptyProps) => {
+export const CommandMenuEmpty = ({
+  className,
+  children,
+}: CommandMenuEmptyProps) => {
   const theme = useTheme();
   const { matches } = useCommandMenu();
   if (matches.length > 0) return null;
@@ -404,12 +422,7 @@ export const CommandMenuEmpty = ({ children }: CommandMenuEmptyProps) => {
   return (
     <text
       testId="command-empty"
-      style={{
-        ...textStyle(theme, "body"),
-        color: theme.colors.mutedForeground,
-        paddingTop: theme.spacing.lg,
-        paddingBottom: theme.spacing.lg,
-      }}
+      style={overlaySurfaceStyle(COMMAND_EMPTY, className, theme)}
     >
       {children ?? "No matching commands"}
     </text>

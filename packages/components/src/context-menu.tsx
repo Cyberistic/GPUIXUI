@@ -279,6 +279,8 @@ export const ContextMenuTrigger = ({
 export interface ContextMenuContentProps extends Omit<Props, "children"> {
   /** The menu's accessible name. Default `"Context menu"`. */
   readonly label?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -290,6 +292,7 @@ export const ContextMenuContent = ({
   label = "Context menu",
   children,
   testId = "context-menu",
+  className,
   style,
   onMouseDownOutside,
   ...rest
@@ -305,6 +308,7 @@ export const ContextMenuContent = ({
         {...rest}
         label={label}
         testId={testId}
+        className={className}
         onMouseDownOutside={(event) => {
           onMouseDownOutside?.(event);
           dismissTopLayer(event);
