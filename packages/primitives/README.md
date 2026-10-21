@@ -250,7 +250,9 @@ one that holds the composed-app ledger to its real suite (plan `608`), one that
 keeps the Tier 1 inventory's "why wip" true (plan `648`), one that keeps the
 floating pages' trigger-follow claim true and both samplers live (plan `649`),
 one that every slot handler reaches an element and calls the caller on every
-single-root trigger (plan `694`),
+single-root trigger (plan `694`), one that every part with a `disabled` prop
+announces the state the runtime cannot express (`unavailable` / `read only`,
+plan `810`),
 and one that fails by file name when a runtime suite has no header or is named
 like a scratch probe (plan `390`).
 

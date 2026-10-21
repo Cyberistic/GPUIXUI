@@ -1807,7 +1807,7 @@ retired once both branches are one
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
 
-`[~]` `packages/primitives`: **a disabled control did not say it was disabled** —
+`[x]` `packages/primitives`: **a disabled control did not say it was disabled** —
       measured against the release-tag build: every disabled control's
       accessibility node is byte-identical to its enabled twin, `Click` action
       included (`Button/Save/[Click,Focus]` both ways), because 0.10.0 has no
@@ -1815,7 +1815,10 @@ retired once both branches are one
       One `stateWords`/`describeState` rule now announces `unavailable` and
       `read only` in front of the description — the channel the runtime
       publishes and `docs/gpuix-capabilities.md` recommends — for all 13 inert
-      parts, with the busy `Button`'s `Loading` folded in (plan `810`).
+      parts, with the busy `Button`'s `Loading` folded in (plan `810`). 35
+      offline + a 50-case native matrix, three mutation directions failing
+      20 / 2 / 14 cases by name; the 27 "not announced" doc lines corrected
+      (offline 75 files / 1110 tests, runtime 78 → 79 files / 1081 tests).
 
 `[x]` `packages/primitives` + `packages/icons`: **a blank icon label created an
       unnamed image** — `Icon` promoted any present `label` to `role="img"`, so

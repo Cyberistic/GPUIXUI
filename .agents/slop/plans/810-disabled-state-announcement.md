@@ -358,7 +358,7 @@ caller's description composed after. `Button`'s hand-rolled `Loading` expression
 was replaced by the helper, so the busy half is unchanged
 (`"Loading. Net of refunds."`).
 
-**Wired (14 files, 16 nodes).** `Button` (and `IconButton` through it), `Toggle`,
+**Wired (13 parts, plus `IconButton` through `Button`).** `Button`, `Toggle`,
 `Checkbox`, `Switch`, `Input`/`TextArea` (`fieldHostProps`), `NumberField`,
 `Select`'s trigger, `Slider`'s track, both `RangeSlider` thumbs, every `Rating`
 star, `CheckboxGroup`'s rows (parent included), `RadioGroup`'s options,
