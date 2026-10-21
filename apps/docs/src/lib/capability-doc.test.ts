@@ -231,4 +231,55 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
+
+  it("publishes the same matrix the code narrows on", () => {
+    // The page says its table cannot go stale because `@gpuixui/runtime`
+    // encodes the matrix. That is only true if a guard reads the page: the
+    // table is written by hand, so a flipped verdict would be a confident lie.
+    const start = runtimePage.indexOf("## The matrix");
+    const end = runtimePage.indexOf("\n## ", start + 1);
+    const section = start === -1 ? "" : runtimePage.slice(start, end);
+
+    const rows = section
+      .split("\n")
+      .filter((line) => line.startsWith("|") && !/^\|[\s:|-]+\|$/.test(line))
+      .filter((line) => !/^\|\s*Capability\s*\|/.test(line))
+      .map((line) => cells(line));
+
+    const pageLabels: ReadonlyArray<readonly [string, string]> = [
+      ["terminal", "Terminal rendering"],
+      ["headlessDialog", "Headless `Dialog`"],
+      ["tabNavigation", "Tab / Shift+Tab focus"],
+      ["transform", "`transform`"],
+      ["gridSpan", "Grid span"],
+      ["canvas", "Canvas drawing"],
+      ["imeComposition", "IME composition"],
+      ["globalShortcut", "Global shortcut"],
+      ["tray", "Tray / menu bar"],
+      ["nativeView", "Native view"],
+    ];
+
+    const wrong = matrix.flatMap((entry) => {
+      const label = pageLabels.find(([key]) => key === entry.key)?.[1];
+      const row = rows.find((cells) => (cells[0] ?? "").startsWith(label));
+      if (label === undefined)
+        return [`matrix key \`${entry.key}\` has no page label`];
+      if (row === undefined) return [`the page has no "${label}" row`];
+
+      const expected = entry.supported ? "Supported" : "Not supported";
+      const workaround = row[2] ?? "";
+      const problems = [
+        ...(row[1] === expected
+          ? []
+          : [`"${label}" says "${row[1]}", the matrix says "${expected}"`]),
+        ...(entry.supported || workaround.length > 0
+          ? []
+          : [`"${label}" refuses the capability without a workaround`]),
+      ];
+      return problems;
+    });
+
+    expect(wrong).toEqual([]);
+    expect(rows).toHaveLength(matrix.length);
+  });
 });
