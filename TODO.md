@@ -786,13 +786,24 @@ Both are specified in ; each fix starts with a plan under .
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
 
-`[ ]` `[░░░░░░░░░░]` 0/8
+`[ ]` `[░░░░░░░░░░]` 0/19
 
-`[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, and a `Button`/`Toggle` whose name is its text child must publish that text (salvage plans 026, 058)
-`[ ]` `packages/primitives`: `Text` cannot publish heading, code or other semantic roles to the accessibility tree (salvage plan 059)
-`[ ]` `packages/primitives`: `Skeleton circle` paints an ellipse when only one of `width`/`height` is explicit; the circle must keep a square box (salvage plan 028)
-`[ ]` `packages/primitives`: no `ToggleGroup` or `CheckboxGroup` control, and disabled options need a roving tab stop (salvage plans 056, 065)
-`[ ]` `packages/primitives`: `Select`'s list neither flips off a window edge, scrolls past the window, nor reveals its keyboard highlight (salvage plans 066, 068, 069)
-`[ ]` `packages/primitives`: `Rating` cannot show a failed validation (salvage plan 070)
-`[ ]` `packages/tokens`: no `infoText`/`successText`/`warningText`/`destructiveText` roles for status text and indicators on `background`/`card`, and `statusTone` exposes no `text` (salvage plan 057)
-`[ ]` `packages/tokens`: no README drift guard and no runtime narrowing guards for persisted unions (`PlatformName`, `Density`, `StatusTone`, `ThemeMode`) (salvage plans 065, 067, 068)
+`[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, a `Button`/`Toggle` named by its text child must publish that text, and `Text` must carry heading/code semantics (salvage 026, 058, 059)
+`[ ]` `packages/primitives`: `Tooltip` content is not published as an accessible description on its trigger (salvage 071)
+`[ ]` `packages/primitives`: `Skeleton circle` paints an ellipse when only one of `width`/`height` is explicit (salvage 028)
+`[ ]` `packages/primitives`: no `ToggleGroup` or `CheckboxGroup` control, and disabled options need a roving tab stop (salvage 056, 065)
+`[ ]` `packages/primitives`: `Select` has no option groups, its list neither flips off a window edge nor scrolls past the window, its keyboard highlight cannot be revealed, and its trigger paints no ring (salvage 066, 068, 069, 075, 083)
+`[ ]` `packages/primitives`: `Rating` cannot show a failed validation (salvage 070)
+`[ ]` `packages/primitives`: `ScrollArea` is not focusable and has no keyboard scrolling (salvage 072)
+`[ ]` `packages/primitives`: every `OTPField` cell is a tab stop (salvage 076)
+`[ ]` `packages/primitives`: `stepNumber` adds raw floats, so a 0.1 step accumulates binary noise (salvage 077)
+`[ ]` `packages/primitives`: `Text`'s `clamp` is decided by the first identical string the runtime lays out (salvage 082)
+`[ ]` `packages/primitives`: no `IconButton` (icon-only button) part (salvage 086)
+`[ ]` `packages/primitives`: value callbacks are not consistently named (`onValueChange` vs `onChange`) (salvage 088)
+`[ ]` `packages/primitives`: state-aware `style` is adopted only by the fields; the controls, group roots and overlays, plus a focus/tab-order matrix over every focusable control, remain (salvage 079, 080, 081, 084, 089, 090)
+`[ ]` `packages/primitives`: docs still advise putting a `Label` beside a standalone checkbox/switch, which does not name it (salvage 087)
+`[ ]` `packages/tokens`: no `infoText`/`successText`/`warningText`/`destructiveText` roles for status text and indicators on `background`/`card`, and `statusTone` exposes no `text` (salvage 057)
+`[ ]` `packages/tokens`: the contrast contract covers only the 28 text pairs; state washes, soft surfaces, dividers, skeleton, elevation tint, selection, overlays and the ring on each control surface are unmeasured (salvage 074, 076, 078, 079, 081, 082, 083, 084, 086, 087, 088, 090)
+`[ ]` `packages/tokens`: `alpha` emits an unparseable colour for `NaN`, the README has no drift guard, and persisted unions have no runtime narrowing guards (salvage 065, 067, 068, 072, 077)
+`[ ]` `packages/tokens`: the soft status edge is mixed with `alpha(tone, 0.3)` instead of a role held to its contrast floor (salvage 090)
+`[ ]` `packages/tokens`: elevation levels paint literal shadow colours instead of the `shadow` role, so a brand cannot retint them (salvage 085)
