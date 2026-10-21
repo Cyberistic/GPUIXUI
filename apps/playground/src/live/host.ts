@@ -132,6 +132,7 @@ export const createLiveHost = ({
         );
       }),
     click: (testId) => call(`click ${testId}`, () => at(testId).click()),
+    hover: (testId) => call(`hover ${testId}`, () => at(testId).hover()),
     drag: (testId, deltaX, deltaY) =>
       call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY)),
     key: (keystroke) =>

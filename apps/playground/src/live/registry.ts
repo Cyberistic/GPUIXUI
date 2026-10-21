@@ -91,6 +91,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "tooltip-lifecycle",
+    title:
+      "Overlay: the shipped Tooltip opens on hover above its trigger, closes on leave and dismisses on Escape, while a keyboard focus does not open it",
+    capability: "overlay",
+  },
+  {
     id: "drag-between-panes",
     title:
       "Workspace: a drag across two panes reaches the target's move and release",

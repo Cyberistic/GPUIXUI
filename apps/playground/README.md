@@ -33,11 +33,11 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-seventeen probes a real window can prove, of which seven mount shipped
+eighteen probes a real window can prove, of which seven mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
-palette, the tabs, the popover and the modal focus rule), three mount
-`@gpuixui/primitives` (the Input, Checkbox and Slider), and the rest prove the
-runtime itself (focus, paint, fonts, placement, content surfaces).
+palette, the tabs, the popover and the modal focus rule), four mount
+`@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), and the rest
+prove the runtime itself (focus, paint, fonts, placement, content surfaces).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -648,6 +648,43 @@ does not claim otherwise.
 `disabled` fails `a press in the middle of the track moves the value there`
 (`expected a string containing "centred=true", got "value=0 changes=0
 centred=false"`, exit `1`).
+
+### `tooltip-lifecycle` — measured on 0.11.0 here
+
+The shipped `Tooltip` (`@gpuixui/primitives`) in a window. A tooltip has no state
+a caller can read, so the probe measures it the way the frame reports it: its
+**text** through the renderer's `getPaintedText`, and its **box** through the
+content's own `onLayout`. That second choice is a measured limitation, not a
+preference: the automation tree does not address a tooltip's layer, so
+`text("tooltip-content")` reports `Locator did not match any element` while the
+tip's text is painted.
+
+| Step | Check |
+| ---- | ----- |
+| mount | the tip's text is not painted; `enters=0 leaves=0` |
+| `Tab` | focus lands on `tooltip-trigger` — and the tip stays **closed** (the measured gap below) |
+| hover the trigger | `enters=1`, the tip paints its content, and the layout report puts it **above** the trigger on `side="top"`, overlapping it horizontally |
+| hover a sibling | `leaves=1` and the tip stops painting — leaving closes it (80ms close timer) |
+| hover again, `Escape` | the tip paints again, then Escape dismisses it while the focus stays on the trigger |
+
+12 checks, `--only tooltip-lifecycle`, green on 0.11.0; capture
+`.artifacts/live/tooltip-open.png`. Negative control, measured: mounting the
+trigger without the `Tooltip` wrapper fails
+`a hover opens the tip with its own content` (`expected true, got false`,
+exit `1`).
+
+**Measured gap — a tooltip does not open on keyboard focus in a window.** The
+`Tab` traversal focuses the trigger (`getFocusedElementId` reports it) but React's
+`onFocus` never runs — the same runtime gap the `tabs-lifecycle` probe found. The
+GPUix tooltip opens on `onFocus`, so the documented "hover or keyboard focus"
+path loses its second half in a real window; the tip's text still reaches a
+screen reader, because the wrapper publishes it as the trigger's
+`aria-description`. Recorded as an interlock in `TODO.md` (owner: primitives).
+
+`AsyncSmokeHost` gained `hover(testId)` for this: the automation protocol's own
+`hover` moves the pointer onto the element's centre without pressing, which is
+what fires the enter/leave pair. A press would fire the trigger's close handler
+instead, so it cannot stand in for hover.
 
 ### `drag-between-panes` — measured on 0.11.0 here
 

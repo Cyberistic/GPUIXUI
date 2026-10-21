@@ -47,6 +47,7 @@ import {
   Input,
   Slider,
   ThemeProvider as PrimitiveThemeProvider,
+  Tooltip,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
 import { useWindowSize } from "@gpuix/react";
@@ -965,11 +966,183 @@ const DialogProbe = (): ReactNode => {
 };
 
 /**
+ * The shipped `Tooltip` from `@gpuixui/primitives`: one trigger, and a second
+ * focusable element to move the pointer onto when the tip has to close.
+ *
+ * A tooltip has no state a caller can read, so the probe measures the tip the
+ * way the runtime paints it: its **text** through `getPaintedText`, and its
+ * **box** through the content's own `onLayout`. The automation tree does not
+ * address a tooltip's layer by `testId` in a window (measured: the content
+ * paints while `text tooltip-content` reports no locator), which is why the box
+ * is published on a readout instead. The trigger sits low in the window on
+ * purpose: the tip opens on its `side="top"` default, and a trigger near the top
+ * would be clamped by the window edge instead of measuring the placement.
+ */
+const TOOLTIP_CONTENT = "Rename the file";
+
+/** The runtime closes a tooltip 80ms after the pointer leaves; allow for it. */
+const TOOLTIP_CLOSE_SETTLE = Duration.millis(240);
+
+/** A painted box, as the runtime's own layout report gives it. */
+interface Painted {
+  readonly y: number;
+  readonly height: number;
+  readonly x: number;
+  readonly width: number;
+}
+
+/** The fields an `onLayout` payload may carry; every one is optional. */
+interface LayoutPayload {
+  readonly x?: number;
+  readonly y?: number;
+  readonly width?: number;
+  readonly height?: number;
+}
+
+/** A layout report as a box, or `None` while a field is missing. */
+const boxOf = (payload: LayoutPayload): Option.Option<Painted> =>
+  Option.map(
+    Option.all([
+      Option.fromNullishOr(payload.x),
+      Option.fromNullishOr(payload.y),
+      Option.fromNullishOr(payload.width),
+      Option.fromNullishOr(payload.height),
+    ]),
+    ([x, y, width, height]) => ({ x, y, width, height }),
+  );
+
+const TooltipProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [enters, setEnters] = useState(0);
+  const [leaves, setLeaves] = useState(0);
+  const [tip, setTip] = useState<Option.Option<Painted>>(Option.none());
+  const [anchor, setAnchor] = useState<Option.Option<Painted>>(Option.none());
+  const above = Option.getOrElse(
+    Option.flatMap(tip, (painted) =>
+      Option.map(anchor, (box) => painted.y + painted.height <= box.y + 1),
+    ),
+    () => false,
+  );
+  const overlaps = Option.getOrElse(
+    Option.flatMap(tip, (painted) =>
+      Option.map(
+        anchor,
+        (box) =>
+          painted.x < box.x + box.width && box.x < painted.x + painted.width,
+      ),
+    ),
+    () => false,
+  );
+  const offset = (box: Option.Option<Painted>): string =>
+    Option.match(box, {
+      onNone: () => "none",
+      onSome: (painted) => `${Math.round(painted.y)}`,
+    });
+  const target = (
+    testId: string,
+    label: string,
+    pointer: {
+      readonly onMouseEnter?: () => void;
+      readonly onMouseLeave?: () => void;
+      readonly onLayout?: (payload: LayoutPayload) => void;
+    } = {},
+  ): ReactNode => (
+    <div
+      testId={testId}
+      tabIndex={0}
+      aria-label={label}
+      onMouseEnter={pointer.onMouseEnter}
+      onMouseLeave={pointer.onMouseLeave}
+      onLayout={pointer.onLayout}
+      style={{
+        width: 160,
+        height: 40,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: theme.radius.md,
+        backgroundColor: theme.colors.card,
+        ...keyboardFocusRing(theme),
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {label}
+      </text>
+    </div>
+  );
+  return (
+    <PrimitiveThemeProvider theme={palettes.dark}>
+      <div
+        testId="tooltip-probe"
+        style={{
+          width: window.width,
+          height: window.height,
+          paddingTop: 220,
+          paddingLeft: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.xl,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped Tooltip: a hover opens it, leaving closes it, the keyboard
+          opens it and Escape dismisses it.
+        </text>
+        <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+          <Tooltip
+            content={
+              <div onLayout={(payload) => setTip(boxOf(payload))}>
+                <text
+                  style={{
+                    ...textStyle(theme, "body"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  {TOOLTIP_CONTENT}
+                </text>
+              </div>
+            }
+          >
+            {target("tooltip-trigger", "Hover me", {
+              onMouseEnter: () => setEnters((count) => count + 1),
+              onMouseLeave: () => setLeaves((count) => count + 1),
+              onLayout: (payload) => setAnchor(boxOf(payload)),
+            })}
+          </Tooltip>
+          {target("tooltip-away", "Leave here")}
+        </div>
+        <text
+          testId="tooltip-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`enters=${enters} leaves=${leaves} above=${above} overlaps=${overlaps} tip=${offset(tip)} anchor=${offset(anchor)}`}
+        </text>
+      </div>
+    </PrimitiveThemeProvider>
+  );
+};
+
+/**
  * The shipped `DropdownMenu`: opened from the keyboard at its first row, moved
  * with the arrow keys, activated with Enter, and closed by a pointer press.
  *
  * A menu's highlight is real focus, so every step reads the renderer's focus id
- * rather than a painted colour: an arrow key that moves a highlight without
+ * rather than a painted colour: an arrow key that moved a highlight without
  * moving focus would fail here.
  */
 const MenuProbe = (): ReactNode => {
@@ -2328,6 +2501,105 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * Drives the shipped `Tooltip` through the two paths it opens on and the way it
+ * leaves: the pointer entering the trigger, a focus from component code, and a
+ * pointer leaving or an Escape dismissing it.
+ *
+ * A window reports no style and a tooltip has no readout, so the checks are the
+ * runtime's own bounds for the tip and its text: `bounds` answers nothing while
+ * the tip is closed, which is what makes "closed" measurable at all.
+ */
+const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** The tip is painted exactly when its text is in the frame. */
+    const painted = Effect.map(ctx.host.paintedText(), (lines) =>
+      lines.join("\n").includes(TOOLTIP_CONTENT),
+    );
+
+    yield* ctx.host.waitFor("tooltip-trigger");
+    yield* ctx.expectEqual("a tooltip starts closed", yield* painted, false);
+    yield* ctx.expectContains(
+      "the trigger has not been entered yet",
+      yield* ctx.host.text("tooltip-readout"),
+      "enters=0 leaves=0",
+    );
+
+    // The keyboard path first: the trigger is the probe's first tab stop, so a
+    // traversal has to land on it. The tip then staying closed is the measured
+    // gap — the wrapper opens on React's `onFocus`, and a window does not
+    // deliver that for a traversal (`tabs-lifecycle` measured the same gap).
+    yield* ctx.host.key("tab");
+    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* ctx.expectEqual(
+      "Tab lands on the trigger",
+      yield* focusedId(ctx),
+      "tooltip-trigger",
+    );
+    yield* ctx.expectEqual(
+      "a keyboard focus does not open the tip",
+      yield* painted,
+      false,
+    );
+
+    // The pointer path. The tip opens immediately (the wrapper's provider has a
+    // zero delay), so the wait is for the frame, not for a timer.
+    yield* ctx.host.hover("tooltip-trigger");
+    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* ctx.expectContains(
+      "the pointer enters the trigger",
+      yield* ctx.host.text("tooltip-readout"),
+      "enters=1 leaves=0",
+    );
+    yield* ctx.expectEqual(
+      "a hover opens the tip with its own content",
+      yield* painted,
+      true,
+    );
+    // The tip's box is the content's own layout report: `side="top"` puts it
+    // above the trigger, overlapping it on the horizontal axis.
+    yield* ctx.expectContains(
+      "the tip opens above its trigger on the default side",
+      yield* ctx.host.text("tooltip-readout"),
+      "above=true overlaps=true",
+    );
+    yield* ctx.host.capture("tooltip-open");
+
+    // Leaving is a pointer move too: the runtime schedules the close 80ms later,
+    // so the probe waits past it rather than reading the frame it left.
+    yield* ctx.host.hover("tooltip-away");
+    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* ctx.expectContains(
+      "the pointer leaves the trigger",
+      yield* ctx.host.text("tooltip-readout"),
+      "enters=1 leaves=1",
+    );
+    yield* ctx.expectEqual(
+      "leaving the trigger closes the tip",
+      yield* painted,
+      false,
+    );
+
+    // A second hover proves the tip reopens, then Escape (the runtime's
+    // window-level dismissal, which does not need the focus inside the layer)
+    // is the keyboard way out.
+    yield* ctx.host.hover("tooltip-trigger");
+    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* ctx.expectEqual(
+      "a second hover reopens the tip",
+      yield* painted,
+      true,
+    );
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual("Escape dismisses the tip", yield* painted, false);
+    yield* ctx.expectEqual(
+      "Escape leaves the focus on the trigger",
+      yield* focusedId(ctx),
+      "tooltip-trigger",
+    );
+  });
+
+/**
  * Drives the shipped `DropdownMenu` through the paths a menu has to survive in a
  * window: a press opens it, Escape dismisses it and returns focus, a keyboard
  * open lands on the first row, arrows move real focus, Enter activates the row,
@@ -3087,6 +3359,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "slider-lifecycle",
     view: () => <SliderProbe />,
     steps: sliderSteps,
+  },
+  "tooltip-lifecycle": {
+    id: "tooltip-lifecycle",
+    view: () => <TooltipProbe />,
+    steps: tooltipSteps,
   },
   "drag-between-panes": {
     id: "drag-between-panes",

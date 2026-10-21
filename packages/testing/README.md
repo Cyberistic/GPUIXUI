@@ -77,6 +77,11 @@ control that activates on release — Space on a button, checkbox or switch,
 which is the platform's own rule — is therefore driven with `keyUp(keystroke)`,
 which releases through the renderer's `simulateKeyUp`.
 
+Pointer input is three verbs. `click` presses and releases, `drag` presses and
+travels, and `hover` moves the pointer onto the element's centre **without
+pressing** — the only way to drive the enter/leave pair a tooltip or a
+hover style listens for, since any press also fires the press handlers.
+
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and
 fails with a label naming the id via `ctx.expectSome`.

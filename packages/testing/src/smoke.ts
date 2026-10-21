@@ -340,6 +340,15 @@ export interface AsyncSmokeHost {
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /**
+   * Moves the pointer onto `testId` and leaves it there, pressing nothing.
+   *
+   * Hover is its own input path: a tooltip opens on a pointer entering its
+   * trigger and closes when the pointer leaves, and neither fires for a press.
+   * A window's automation sends a real move to the element's centre, which is
+   * the only way to drive the enter/leave pair the way a pointer does.
+   */
+  readonly hover: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  /**
    * Presses on `testId` and drags the pointer by the given offset, releasing
    * there.
    *
