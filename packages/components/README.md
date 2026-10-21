@@ -179,5 +179,8 @@ not collect it (plan 117 §5a–§5c).
 5. Test it twice: logic tests beside the code (`src/<name>.test.ts`), and a
    behaviour suite in `src/behaviour/<name>.test.tsx` that renders through
    `internal/test-root.tsx` — real clicks, keys, focus, text and bounds.
-6. Ship an example (`examples/<name>.example.tsx`), a docs page
-   (`docs/<name>.mdx`) and an inventory record, in the same commit.
+6. Ship an example (`examples/<name>.example.tsx`) registered in
+   `examples/index.ts`, a docs page (`docs/<name>.mdx`) and an inventory record,
+   in the same commit. The registry is what `apps/playground` mounts, and
+   `src/examples.test.ts` fails when an example file has no entry — the docs
+   site reads the filesystem, so an unregistered example looks shipped.
