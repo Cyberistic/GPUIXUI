@@ -176,6 +176,44 @@ preview style sheets to that).
   surface. The shipped component is the one in the Code tab.
 </Callout>
 
+### Take one and make it yours
+
+A platform style is data, not a compiled preset: `platformStyles` holds each
+platform's colour roles, radius scale, density preset and type families, and
+`platformTheme` applies them to a base theme. A consumer who wants a platform's
+geometry with their own brand edits the values it names and ships the result —
+there is no hidden layer to fight.
+
+```tsx
+import { extendTheme, platformTheme, themes } from "@gpuixui/tokens";
+
+// Windows' controls, your accent and corners.
+export const house = extendTheme(platformTheme(themes.dark, "win32"), {
+  name: "House",
+  colors: {
+    primary: "#6A45F0",
+    primaryForeground: "#FFFFFF",
+    ring: "#8A6EFF",
+  },
+  radius: { md: 6, lg: 10 },
+});
+```
+
+Only what is written changes: every other role, the density and the type
+families come from the platform style, and the base theme is untouched. Two
+things a brand owns when it overrides a fill:
+
+- **The on-colour.** A fill and the text on it are a pair; the base theme's
+  `primaryForeground` was chosen for the base fill. The snippet sets both.
+- **The measurement.** `contrastFailures(theme)` runs the package's contract and
+  names every pair that misses its floor, so the check the library runs on its
+  own themes is the check a brand runs on theirs.
+
+`packages/tokens/src/platforms.example.ts` is the working version of this
+snippet (`resolveHouseTheme`), executed by the package's suite in both modes.
+`src/lib/platform-page.test.ts` executes this page's snippet against the same
+contract, so a copy from the page is a theme that passes.
+
 ## Read the theme
 
 `useTheme` returns the nearest theme, or the light theme when no provider

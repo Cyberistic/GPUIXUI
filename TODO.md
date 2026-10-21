@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 35/36
+`[x]` `[█████████░]` 37/38
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -294,6 +294,23 @@ measured it), and `mutedForeground` on `background`, `card` and `popover` so
 secondary text is measured on every surface it can sit on. `contrast.test.ts`
 proves a break to either is reported by name; all shipped and platform themes
 already met the floors
+`[x]` Measure the state washes — 28 → 42 pairs: the resting `foreground` on
+`hover`, `active` and `accent` at the body floor, and `mutedForeground` on the
+same three at the secondary floor. A ghost button or a menu row tints its
+surface and keeps its label in the resting role, so those washes carry text no
+pair measured. `contrast.test.ts`'s `text on the state washes` suite fails when
+a pair is dropped (proven: removing `mutedForeground`/`accent` reports it by
+name) and when a wash matches the text it has to carry. All shipped,
+high-contrast and platform themes pass; the tightest pair is
+`mutedForeground`/`active` in Linux dark at 4.59:1 against the 4.5 floor
+`[x]` Correct the catalogue's focus limitation — it said the component packages
+still paint `focusRing` on every focus path long after both adopted
+`keyboardFocusRing` at rest (`packages/primitives/src/core/focus.ts`,
+`packages/components/src/internal/theme.ts`). The Limitation now states only the
+measured runtime gap (a programmatic focus before any key does not paint
+`focusVisible`), and `docs.test.ts`'s `focus adoption claim` suite fails on the
+retracted sentence, on a missing seam, and when either package source calls
+`focusRing(` again — all three directions measured
 `[x]` Ship `invalidColorRoles(theme)` and audit the documented brand themes — a
 value the renderer cannot parse is ignored, so a typo painted black in silence.
 The audit over `brand-theme.example.ts` found the documented brand pairing a
@@ -781,7 +798,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ### Docs information architecture (`docs-site`)
 
-`[x]` `[█████████░]` 10/11
+`[x]` `[█████████░]` 11/12
 
 `[x]` Architecture page — `/docs/architecture` names all 11 packages, the dependency direction, the recipe pipeline, the Effect boundaries, the testing lanes and where a change goes; `apps/docs/src/lib/architecture.test.ts` fails when a package is added without a row or the page leaves the sidebar
 `[x]` Layouts, Workspace and Data display pages — `/docs/layouts`, `/docs/workspace` and `/docs/data-display` are the three composition lanes, each under a Composition sidebar section. Their rows are **generated** from `COMPONENTS.md` by `<LaneTable lane>` (`apps/docs/src/lib/inventory.ts`), so a page cannot call a row shipped while the inventory says `todo`; the summary prints rows/shipped/to-build. Each page names the shipped pieces with links, the gaps with evidence and where a change goes; the layout page carries the window-frame composition preview (`layout-shell`), the workspace page the tabbed-panel preview and the data page links the Dashboard block. `inventory.test.ts` holds the parse (a malformed row is reported, not dropped), `lane-table.test.tsx` proves every row reaches the rendered table, `lane-page.test.ts` proves each page mounts its table, names the inventory and sits in the sidebar. `docs/preview-strategy.md` §"The lane pages" records the template and the no-preview-for-a-missing-component rule. Tests: `nub run --filter @gpuixui/docs test` (10 files, 70 tests), `check-types`, `build`, and the dev server at `/docs/layouts`, `/docs/workspace`, `/docs/data-display`
@@ -793,6 +810,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[x]` Page metadata and discovery — every docs page publishes its own `title`, description, Open Graph/Twitter tags and an absolute canonical URL built from the page's own frontmatter, with `?platform=` excluded so the four looks stay one page; `/sitemap.xml` is generated from both collections at request time (90 URLs, one per page, a curated page shadowing its package page) and `public/robots.txt` points at it. `site.test.ts` holds the one origin to `DOCS_DOMAIN` in the deploy stack, `page-meta.test.ts` holds the title, the absolute canonical, the description fallback and both route mounts (it found the loader handing the *file* path `components/dialog.mdx` as a canonical), and `sitemap.test.ts` holds the XML shape, the dedupe and the route's use of every collection. Verified in the dev server: `/docs/components/dialog` → `Dialog · GPUIxUI` + its canonical, `/docs/primitives/slider`, `/docs`, `/sitemap.xml` (`200`, `application/xml`, 90 `<loc>`), `/robots.txt`. `nub run --filter @gpuixui/docs test`: 20 files / 124 tests, the only failure the pre-existing `COMPONENTS.md` line 159 row (owner: primitives); `check-types` and `build` green
 `[x]` Component index — `/docs/components` mounts `<ComponentIndex />`: a filter over every component and primitive page, generated from the pages' frontmatter at build time (`component-index.ts` + `component-index-data.ts`), so the list cannot advertise a page that does not exist and a new page appears with no docs change; a curated page shadows its package page, `index.mdx` is excluded, and the filter requires every whitespace-separated term across name, description and lane. `component-index.test.ts` holds the URL mapping, the shadowing, the section order and the filter (with the real index held to every `packages/*/docs` file); `component-index.test.tsx` holds every row, the count and the labelled control. Verified in the dev server: `/docs/components` renders `69 of 69 pages`
 `[x]` Runtime-version truth on the site's own pages — `theming.mdx`, `dark-mode.mdx` and `contributing.mdx` still said GPUix `0.10.0` on a `0.11.0` repo; all three now name `0.11.0`, and the claim itself was re-checked against the pinned typings (0.11.0 still exposes no OS appearance query — `GpuixTheme.appearance` themes the runtime's own text components, it does not read the OS). `runtime-version.test.ts` reads the pin from the workspace catalogue and fails any `content/docs/**` page naming another version; it failed on exactly those three before the fix, and the scan's floor fails if the pattern stops matching. `nub run --filter @gpuixui/docs test`: 23 files / 141 tests, the only failure the pre-existing `COMPONENTS.md` line 159 row (owner: primitives)
+`[x]` Platform styles: the copy-and-own contract — `/docs/theming#take-one-and-make-it-yours` shows a snippet that takes `platformTheme(themes.dark, "win32")` and re-owns the accent (fill, on-colour and ring) plus two radii, states that only what is written changes, and points at `packages/tokens/src/platforms.example.ts` (`resolveHouseTheme`), which the tokens suite executes. `platform-page.test.ts` executes the page's own snippet: the fill differs from the platform's, every untouched role, the density and both families are identical, the label clears `contrastFloors.secondary`, `contrastFailures` reports nothing, the shipped themes are unchanged, and the page still links the example (proven: a light label on the violet fails at 1.55:1). Closes the mission's "a consumer can take one platform theme file, edit it, and ship their own look"
 `[x]` Curated-page truth pass — the four curated pages (Button, Dialog, Popover, Tabs) claimed 0.10.0 gaps on a 0.11.0 repo, the Button page said the runtime had no `focusVisible` and painted a shadow ring on a mouse press (0.11.0 declares `focusVisible` and a press paints nothing — the live probe measured both), it also reported `COMPONENTS.md`'s Tier 1 rows as `todo` after they were `done`, and Tabs printed 14 native tests for a 19-case suite. Each page now names `@gpuix/native@0.11.0` once and states the runtime's real focus, aria and portal situation (Dialog mirrors `src/dialog.tsx`: the 0.11.0 headless dialog is not wrapped). `apps/docs/src/lib/component-page-truth.test.ts` derives the claims: every semver on the page must be the catalogue's pinned `@gpuix/native`, the `## Status` test count must equal the `it(` count of the named behaviour suite, and the status must contain the parsed inventory row's status — all four guards failed on the old pages. Recorded in `docs/preview-strategy.md` §"A page's claims about the runtime"
 
 ## Phase G — release readiness
