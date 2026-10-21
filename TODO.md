@@ -54,7 +54,16 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 380/455
+`[x]` `[████████░░]` 381/456
+
+`[x]` Own every remaining figure in a live cross-team row — the pressed
+selection control's ring set and range (16 of 24, 1.02–1.61), the message
+bubble's six palettes, the invalid field's 1.97/3.48, the secondary Button's
+23/19, the avatar's 1.89, the timeline's 1.036/1.014, the menu accent's two
+ranges, the Toast countdown's 1.000/1.069, the unchecked control's `#FFFFFF`
+and the native hint's 3.23; `ledger-figure-claims.test.ts` derives each from
+`shippedThemes`; no colour, pair, floor, metric, role or shipped theme moves
+(plan 833)
 
 `[x]` Own the three live cross-team rows' figures — the `message.tsx` status
 word, the `destructiveText` error signal and the ColorPicker ring each quote a
@@ -725,11 +734,11 @@ invalid state), or use `destructiveSoft` + `destructiveSoftForeground`
 `[ ]` Cross-team: `primitives` gives a pressed selection control a perceivable
 state — `selectionBoxStyle` and `switchTrackStyle` paint
 `active: { borderColor: ring }` on a filled box whose fill is `primary` or
-`destructive`, and `ring` measures **1.000:1** on `primary` in the identity dark,
-Linux dark, Windows dark, the XP and Aero dark recipes and both AAA dark sets,
-1.000:1 on `primary` in the macOS, Linux and Windows light variants, and
-1.02–1.42:1 on `destructive` — so a pressed checked checkbox or switch shows no
-change on its only state signal; both also hover and press at
+`destructive`, and `ring` measures **1.000:1** on `primary` in 16 of the 24
+shipped sets — the default light platform variants and recipes, the default dark
+sets except macOS, and the AAA dark sets — and **1.02–1.61:1** on `destructive`
+— so a pressed checked checkbox or switch shows no change on its only state
+signal in those sixteen sets; both also hover and press at
 `alpha(fill, 0.9/0.8)`, the plan-097 defect one component over.
 `filledControl(theme, family)` returns the designed trio and its one foreground,
 so the press becomes a measured fill step while the ring stays the focus

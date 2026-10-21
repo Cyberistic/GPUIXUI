@@ -1,10 +1,11 @@
 /**
- * Guards the figures in `TODO.md`'s three live cross-team rows.
+ * Guards the figures in `TODO.md`'s live cross-team rows.
  *
  * A live row is the instruction the next workstream follows: what a consumer
  * paints today, what it should paint, and the measured cost of the defect. The
- * three rows below are evidence, but their figures are prose no test read, so
- * the plans that moved a role left them behind:
+ * rows below are evidence, but their figures are prose no test read, so the
+ * plans that moved a role left them behind (plan 831 found three, plan 833 the
+ * rest):
  *
  * - `message.tsx`'s status word quoted the identity light `successText` and
  *   `destructiveText` on `card` as 6.63:1 and 7.21:1; plans `366`, `528`, `574`
@@ -16,6 +17,9 @@
  * - the ColorPicker row said the `foreground` ring measures 1.56–2.98:1 on
  *   `primary`/`destructive` "in most sets"; today it is 1.57–3.59:1 on `primary`
  *   (under 3:1 in 21 of 24 sets) and 1.97–3.48:1 on `destructive` (18 of 24).
+ * - the pressed-selection row named ten of the sixteen sets where `ring` equals
+ *   `primary` and quoted 1.02–1.42:1 on `destructive`; the range reaches
+ *   1.02–1.61:1.
  *
  * The conclusions still stand — `xText` for a status word, `destructiveText` for
  * an error signal, `contrastRing` for a user-supplied swatch — so this suite
@@ -24,7 +28,8 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { contrastRatio } from "./contrast.js";
+import { compositeOver, contrastRatio } from "./contrast.js";
+import { getPlatformRecipeTheme } from "./platform-recipes.js";
 import { shippedThemes } from "./shipped-themes.js";
 import { extendTheme, getTheme, lightTheme } from "./theme.js";
 
@@ -67,6 +72,45 @@ const errorRow = liveRow(
 const pickerRow = liveRow(
   "Cross-team: `components` gives the ColorPicker's selected swatch",
 );
+const ringRow = liveRow(
+  "Cross-team: `primitives` gives a pressed selection control",
+);
+const bubbleRow = liveRow("Cross-team: `components` applies `selectionStyle");
+const invalidFieldRow = liveRow(
+  "Cross-team: `primitives` must not paint an invalid field",
+);
+const secondaryRow = liveRow(
+  "Cross-team: `components` moves the secondary Button",
+);
+const avatarRow = liveRow(
+  "Cross-team: `components` moves the Avatar presence dot",
+);
+const timelineRow = liveRow(
+  "Cross-team: `components` moves the Timeline upcoming dot",
+);
+const menuBarRow = liveRow(
+  "Cross-team: `components` moves the menu row's highlight bar",
+);
+const menuCheckRow = liveRow(
+  "Cross-team: `components` moves the menu checkbox item",
+);
+const countdownRow = liveRow(
+  "Cross-team: `components` paints the Toast countdown",
+);
+const uncheckedRow = liveRow(
+  "Cross-team: `primitives` paints an unchecked checkbox/switch border",
+);
+const nativeHintRow = liveRow(
+  "Cross-team: `primitives` stops trusting `nativeTextTheme`",
+);
+
+/** The six default-contrast dark sets the countdown row's claim is about. */
+const defaultDark = shippedThemes.filter(
+  (shipped) =>
+    shipped.theme.mode === "dark" && shipped.theme.contrast === "default",
+);
+
+const aeroLight = getPlatformRecipeTheme("aero", "light");
 
 describe("the status word's ink on the identity light card", () => {
   it("states the three roles' current ratios", () => {
@@ -189,5 +233,186 @@ describe("the derivation is not a restatement", () => {
 
     expect(edited).toBeLessThan(3);
     expect(edited).not.toBeCloseTo(shipped, 1);
+  });
+
+  it("moves when the palette moves a mark's fill", () => {
+    const moved = extendTheme(lightTheme, {
+      colors: { warning: lightTheme.colors.card },
+    });
+
+    expect(ratio(moved.colors.warning, moved.colors.card)).toBeCloseTo(1, 3);
+    expect(ratio(light.colors.warning, light.colors.card)).not.toBeCloseTo(
+      1,
+      1,
+    );
+  });
+});
+
+describe("the pressed selection control's ring", () => {
+  it("states the sixteen sets and the destructive range", () => {
+    const equalPrimary = shippedThemes.filter(
+      ({ theme }) => ratio(theme.colors.ring, theme.colors.primary) === 1,
+    );
+    const onDestructive = shippedThemes.map(({ theme }) =>
+      ratio(theme.colors.ring, theme.colors.destructive),
+    );
+
+    expect(equalPrimary).toHaveLength(16);
+    expect(Math.min(...onDestructive)).toBeCloseTo(1.024, 3);
+    expect(Math.max(...onDestructive)).toBeCloseTo(1.609, 3);
+
+    expect(ringRow).toContain(`16 of the ${shippedThemes.length}`);
+    expect(ringRow).toContain(
+      `${fixed(Math.min(...onDestructive))}–${fixed(Math.max(...onDestructive))}:1`,
+    );
+    expect(ringRow).not.toContain("1.02–1.42");
+  });
+});
+
+describe("the message bubble's invisible selection wash", () => {
+  it("states the six palettes where the wash composites onto its own fill", () => {
+    const vanishing = shippedThemes
+      .filter(
+        ({ theme }) =>
+          ratio(
+            theme.colors.primary,
+            compositeOver(theme.colors.selection, theme.colors.primary),
+          ) === 1,
+      )
+      .map(({ theme }) => theme.name);
+
+    expect(vanishing).toEqual([
+      "Dark",
+      "Light · macOS",
+      "Dark · macOS",
+      "Light · Linux",
+      "Light · Windows",
+      "Light · Windows 7",
+    ]);
+    [
+      "identity dark",
+      "macOS light and dark",
+      "Linux light",
+      "Windows light",
+      "Aero light",
+    ].forEach((palette) => expect(bubbleRow).toContain(palette));
+  });
+});
+
+describe("the invalid field's painted fill", () => {
+  it("states both AAA dark sets and the Aero light set", () => {
+    shippedThemes
+      .filter(({ theme }) => theme.contrast === "high" && theme.mode === "dark")
+      .forEach(({ theme }) =>
+        expect(
+          ratio(theme.colors.inputForeground, theme.colors.destructive),
+        ).toBeCloseTo(1.974, 3),
+      );
+    expect(
+      ratio(aeroLight.colors.inputForeground, aeroLight.colors.destructive),
+    ).toBeCloseTo(3.48, 3);
+
+    expect(invalidFieldRow).toContain("**1.97:1**");
+    expect(invalidFieldRow).toContain("**3.48:1**");
+    expect(invalidFieldRow).toContain("both AAA dark");
+  });
+});
+
+describe("the secondary control's collapsed step", () => {
+  it("states the 23 under-floor pairs and the 19 equal values", () => {
+    const step = shippedThemes.map(({ theme }) =>
+      ratio(theme.colors.secondary, theme.colors.hover),
+    );
+    const equal = shippedThemes.filter(
+      ({ theme }) => theme.colors.secondary === theme.colors.hover,
+    );
+
+    expect(step.filter((value) => value < 1.05)).toHaveLength(23);
+    expect(equal).toHaveLength(19);
+    expect(secondaryRow).toContain("23 of 24");
+    expect(secondaryRow).toContain("19");
+  });
+});
+
+describe("the two marks painted on the wrong role", () => {
+  it("states the avatar's 1.89 and the timeline's 1.036 / 1.014", () => {
+    expect(ratio(light.colors.warning, light.colors.card)).toBeCloseTo(1.89, 3);
+    expect(ratio(light.colors.muted, light.colors.background)).toBeCloseTo(
+      1.036,
+      3,
+    );
+    expect(
+      ratio(aeroLight.colors.muted, aeroLight.colors.background),
+    ).toBeCloseTo(1.014, 3);
+
+    expect(avatarRow).toContain("**1.89:1**");
+    expect(timelineRow).toContain("**1.036:1**");
+    expect(timelineRow).toContain("1.014:1");
+  });
+});
+
+describe("the menu's accent on its own rows", () => {
+  it("states both rows' ranges on popover, hover and active", () => {
+    const popover = shippedThemes.map(({ theme }) =>
+      ratio(theme.colors.accent, theme.colors.popover),
+    );
+    const hover = shippedThemes.map(({ theme }) =>
+      ratio(theme.colors.accent, theme.colors.hover),
+    );
+
+    expect(Math.min(...popover)).toBeCloseTo(1.118, 3);
+    expect(Math.max(...popover)).toBeCloseTo(1.392, 3);
+    expect(Math.min(...hover)).toBeCloseTo(1, 3);
+    expect(Math.max(...hover)).toBeCloseTo(1.113, 3);
+
+    expect(menuBarRow).toContain("1.118–1.392:1");
+    expect(menuBarRow).toContain("1.000–1.113:1");
+    expect(menuCheckRow).toContain("1.11–1.39:1");
+    expect(menuCheckRow).toContain("1.00–1.08:1");
+  });
+});
+
+describe("the Toast countdown's groove", () => {
+  it("states the six equal dark sets and the tightest track pair", () => {
+    expect(defaultDark).toHaveLength(6);
+    defaultDark.forEach(({ theme }) =>
+      expect(theme.colors.muted).toBe(theme.colors.popover),
+    );
+
+    const measured = shippedThemes.map((shipped) => ({
+      name: shipped.theme.name,
+      value: ratio(shipped.theme.colors.track, shipped.theme.colors.popover),
+    }));
+    const tightest = measured.reduce((a, b) => (a.value <= b.value ? a : b));
+
+    expect(tightest.name).toBe("Dark · Windows");
+    expect(tightest.value).toBeCloseTo(1.069, 3);
+    expect(countdownRow).toContain("**1.000:1**");
+    expect(countdownRow).toContain(`${tightest.value.toFixed(3)}:1`);
+  });
+});
+
+describe("the unchecked control's field fill", () => {
+  it("states the white input fill and the five white cards", () => {
+    defaultLight.forEach(({ theme }) =>
+      expect(theme.colors.input).toBe("#FFFFFF"),
+    );
+    const whiteCard = defaultLight.filter(
+      ({ theme }) => theme.colors.card === "#FFFFFF",
+    );
+
+    expect(whiteCard).toHaveLength(5);
+    whiteCard.forEach(({ theme }) =>
+      expect(ratio(theme.colors.input, theme.colors.card)).toBe(1),
+    );
+    expect(uncheckedRow).toContain("1.000:1");
+    expect(uncheckedRow).toContain("`#FFFFFF`");
+  });
+});
+
+describe("the native field's own hint", () => {
+  it("states the runtime grey's ratio on the light field", () => {
+    expect(ratio("#8F8F8F", light.colors.input)).toBeCloseTo(3.234, 3);
+    expect(nativeHintRow).toContain("3.23:1");
   });
 });
