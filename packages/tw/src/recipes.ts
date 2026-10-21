@@ -370,3 +370,239 @@ export const COMMAND_SHORTCUT = "text-xs text-muted-foreground";
 
 /** `command-menu.tsx` — the keyboard hint under the list. */
 export const COMMAND_HINT = "text-xs text-muted-foreground";
+
+// ── The final wave (toast, tabs, preview-card, confirm-dialog, drawer, ─────
+// navigation-menu, combobox, date-picker, time-picker, color-picker,
+// message-scroller) ────────────────────────────────────────────────────────
+//
+// As in the overlay wave, each string is the resting appearance in shadcn's
+// class vocabulary, compiled against the default registry (fixed metrics). The
+// density-driven control geometry (row/control heights), state colours
+// (highlight, selected, destructive, hover/focus) and the renderer-owned
+// positioning/scroll stay in the component's `style`, exactly as before.
+
+/** `toast/viewport.tsx` — the bottom-right stack container. The corner
+ * anchoring (`position`, `right`, `bottom`) stays in `style`; the flex
+ * direction, right alignment, gap, width cap and pass-through pointer are the
+ * resting recipe. */
+export const TOAST_VIEWPORT =
+  "flex flex-col items-end gap-2 max-w-[380px] pointer-events-none";
+
+/** `toast/viewport.tsx` — one card. The tone bar and glyph stay in `style`
+ * (tone-driven); the surface, border, radius and elevation are fixed shadcn. */
+export const TOAST_CARD =
+  "flex flex-row items-start w-[380px] bg-popover text-popover-foreground border border-border rounded-md shadow-md overflow-hidden pointer-events-auto";
+
+/** `toast/viewport.tsx` — the card title. */
+export const TOAST_TITLE =
+  "text-sm font-semibold font-sans text-popover-foreground";
+
+/** `toast/viewport.tsx` — the card description. */
+export const TOAST_DESCRIPTION = "text-xs font-sans text-muted-foreground";
+
+/** `toast/viewport.tsx` — the tone glyph (label role); the tone colour and the
+ * glyph width stay in `style`. */
+export const TOAST_GLYPH = "text-sm font-medium font-sans";
+
+/** `tabs.tsx` — the root; the axis is the orientation variant below. */
+export const TABS_ROOT = "flex gap-2";
+
+/** `tabs.tsx` — the root axis: the horizontal list sits above its panel. */
+export const TABS_ORIENTATION = {
+  horizontal: "flex-col",
+  vertical: "flex-row",
+} as const;
+
+/** `tabs.tsx` — the rail. The axis is `TABS_LIST_ORIENTATION`; the density
+ * height of the triggers stays in the trigger's `style`. */
+export const TABS_LIST =
+  "flex items-stretch gap-1 p-1 bg-background border border-border rounded-md";
+
+/** `tabs.tsx` — the rail axis. */
+export const TABS_LIST_ORIENTATION = {
+  horizontal: "flex-row",
+  vertical: "flex-col",
+} as const;
+
+/** `tabs.tsx` — a trigger's resting box. Selection colour, hover, focus and
+ * the density height stay in `style`. */
+export const TABS_TRIGGER =
+  "flex flex-row items-center justify-center px-3 rounded-sm text-sm font-medium font-sans";
+
+/** `tabs.tsx` — the panel. */
+export const TABS_CONTENT = "flex flex-col gap-2 text-foreground";
+
+/** `preview-card.tsx` — the hoverable card surface (`hover-card.tsx`'s
+ * `rounded-md border bg-popover p-4`, but the library's own padding/radius so
+ * the card reads as a card, not a popover). */
+export const PREVIEW_CARD_CONTENT =
+  "bg-popover text-popover-foreground min-w-[240px] max-w-[360px] p-3 rounded-lg border border-border shadow-md text-sm font-sans pointer-events-auto";
+
+/** `confirm-dialog.tsx` — the busy glyph (label role; `color: inherit` stays in
+ * `style` because it is the one value no utility names). */
+export const CONFIRM_DIALOG_BUSY = "text-sm font-medium font-sans";
+
+/** `drawer.tsx` — the scrim role (shadcn's `bg-black/50` → `overlay`), so the
+ * veil stays contrast-aware. The flex anchoring and window size stay in style. */
+export const DRAWER_OVERLAY = "bg-overlay";
+
+/** `drawer.tsx` — the edge surface. Size, `overflow: scroll` and `position`
+ * stay in `style` (the renderer owns the window measure). */
+export const DRAWER_CONTENT =
+  "flex flex-col gap-3 p-6 bg-popover text-popover-foreground border border-border shadow-lg pointer-events-auto";
+
+/** `drawer.tsx` — the heading block. The close-control clearance stays in style. */
+export const DRAWER_HEADER = "flex flex-col gap-1 pr-6";
+
+/** `drawer.tsx` — the surface's title. */
+export const DRAWER_TITLE =
+  "text-base font-semibold font-sans text-popover-foreground";
+
+/** `drawer.tsx` — the supporting copy. */
+export const DRAWER_DESCRIPTION = "text-sm font-sans text-muted-foreground";
+
+/** `drawer.tsx` — the right-aligned actions row. */
+export const DRAWER_FOOTER = "flex flex-row items-center justify-end gap-2";
+
+/** `navigation-menu.tsx` — the nav bar. */
+export const NAVIGATION_MENU_ROOT = "flex flex-row items-center";
+
+/** `navigation-menu.tsx` — the row of items. */
+export const NAVIGATION_MENU_LIST = "flex flex-row items-center gap-0.5";
+
+/** `navigation-menu.tsx` — one item (`position: relative` anchors its panel). */
+export const NAVIGATION_MENU_ITEM = "flex flex-row relative";
+
+/** `navigation-menu.tsx` — the anchored panel. */
+export const NAVIGATION_MENU_CONTENT =
+  "flex flex-col gap-0.5 min-w-[220px] p-1.5 bg-popover text-popover-foreground rounded-lg border border-border shadow-md pointer-events-auto";
+
+/** `navigation-menu.tsx` — a nav row's resting box; the hover accent stays in
+ * `style`. */
+export const NAVIGATION_MENU_LINK =
+  "flex flex-row items-center justify-start w-full p-1.5 rounded-sm";
+
+/** `combobox.tsx` — the field-shaped trigger. The density height, the
+ * placeholder/selected colour and hover stay in `style`. */
+export const COMBOBOX_TRIGGER =
+  "flex flex-row items-center justify-between gap-2 w-full px-2 bg-background border border-strong rounded-md text-sm font-medium font-sans";
+
+/** `combobox.tsx` — the popup surface. `maxHeight` and `overflow-y: scroll`
+ * stay in `style` (scroll logic). */
+export const COMBOBOX_CONTENT =
+  "flex flex-col gap-0.5 min-w-[220px] p-1 bg-popover text-popover-foreground rounded-md border border-border shadow-md pointer-events-auto";
+
+/** `combobox.tsx` — the search field. The density height stays in `style`. */
+export const COMBOBOX_INPUT =
+  "text-sm font-sans px-2 bg-input text-input-foreground rounded-sm border border-border";
+
+/** `combobox.tsx` — the listbox column. */
+export const COMBOBOX_LIST = "flex flex-col";
+
+/** `combobox.tsx` — a row's resting box. The density height, highlight,
+ * selection and disabled states stay in `style`. */
+export const COMBOBOX_ITEM =
+  "flex flex-row items-center gap-2 px-2 py-1 rounded-sm text-sm font-sans";
+
+/** `combobox.tsx` — the trigger's label text (state colour stays in `style`). */
+export const COMBOBOX_TRIGGER_TEXT = "text-sm font-medium font-sans";
+
+/** `combobox.tsx` — the caret glyph. */
+export const COMBOBOX_CARET = "text-xs font-sans text-muted-foreground";
+
+/** `combobox.tsx` — a row's label text. */
+export const COMBOBOX_ITEM_TEXT = "text-sm font-sans text-popover-foreground";
+
+/** `combobox.tsx` — a row's description. */
+export const COMBOBOX_ITEM_DESCRIPTION =
+  "text-xs font-sans text-muted-foreground";
+
+/** `combobox.tsx` — the selected mark. */
+export const COMBOBOX_ITEM_MARK = "text-xs font-sans text-primary";
+
+/** `combobox.tsx` — the no-match message. */
+export const COMBOBOX_EMPTY = "text-sm font-sans text-muted-foreground py-3";
+
+/** `date-picker.tsx` — the field-shaped trigger. */
+export const DATE_PICKER_TRIGGER =
+  "flex flex-row items-center justify-between gap-2 w-[220px] px-2 bg-background border border-strong rounded-md text-sm font-medium font-sans";
+
+/** `date-picker.tsx` — the trigger's label text (state colour stays in `style`). */
+export const DATE_PICKER_TRIGGER_TEXT = "text-sm font-medium font-sans";
+
+/** `date-picker.tsx` — the caret glyph. */
+export const DATE_PICKER_CARET = "text-xs font-sans text-muted-foreground";
+
+/** `date-picker.tsx` — the popup surface. */
+export const DATE_PICKER_CONTENT =
+  "flex flex-col gap-2 p-2 bg-popover text-popover-foreground rounded-md border border-border pointer-events-auto";
+
+/** `date-picker.tsx` — the month nav row. */
+export const DATE_PICKER_NAV =
+  "flex flex-row items-center justify-between gap-2";
+
+/** `date-picker.tsx` — the month caption. */
+export const DATE_PICKER_MONTH =
+  "text-sm font-medium font-sans text-foreground";
+
+/** `date-picker.tsx` — the grid column. The cell size (`CELL`) and day states
+ * stay in `style` (the cell is a measured square, and selection/today/focus are
+ * state). */
+export const DATE_PICKER_GRID = "flex flex-col gap-0.5";
+
+/** `date-picker.tsx` — the weekday header cell. */
+export const DATE_PICKER_WEEKDAY =
+  "text-xs font-sans text-muted-foreground text-center";
+
+/** `date-picker.tsx` — a day cell's resting box; the measured `CELL` square and
+ * the selected/today/focus states stay in `style`. */
+export const DATE_PICKER_DAY =
+  "text-xs font-sans flex items-center justify-center rounded-sm";
+
+/** `time-picker.tsx` — the field group. The density height and focus ring stay
+ * in `style`. */
+export const TIME_PICKER_ROOT =
+  "flex flex-row items-center gap-0.5 px-1.5 bg-input border border-border rounded-md";
+
+/** `time-picker.tsx` — one segment input. The `SEGMENT_WIDTH` and the cleared
+ * background stay in `style` (the input's own geometry and default fill). */
+export const TIME_PICKER_SEGMENT =
+  "text-sm font-sans text-input-foreground text-center h-full p-0";
+
+/** `time-picker.tsx` — the colon. */
+export const TIME_PICKER_SEPARATOR =
+  "text-sm font-sans text-muted-foreground select-none";
+
+/** `time-picker.tsx` — the clear control. The hover accent stays in `style`. */
+export const TIME_PICKER_CLEAR =
+  "text-xs font-sans flex items-center justify-center size-[18px] rounded-sm text-muted-foreground cursor-pointer";
+
+/** `color-picker.tsx` — the picker column. */
+export const COLOR_PICKER_ROOT = "flex flex-col gap-2";
+
+/** `color-picker.tsx` — the swatch row. */
+export const COLOR_PICKER_SWATCHES = "flex flex-row flex-wrap gap-1.5";
+
+/** `color-picker.tsx` — the preview/field row. */
+export const COLOR_PICKER_FIELD = "flex flex-row items-center gap-2";
+
+/** `color-picker.tsx` — a colour cell's resting box (swatch and preview). The
+ * density size, the fill and the selected border stay in `style`. */
+export const COLOR_PICKER_CELL = "rounded-md border border-border";
+
+/** `color-picker.tsx` — the HEX field. The density height, focus ring and the
+ * valid/invalid border colour stay in `style`. */
+export const COLOR_PICKER_INPUT =
+  "text-sm font-sans flex-grow px-2 bg-background text-input-foreground rounded-md border border-border";
+
+/** `message-scroller.tsx` — the scroller root. */
+export const MESSAGE_SCROLLER_ROOT = "flex flex-col gap-1.5 min-h-0";
+
+/** `message-scroller.tsx` — the scroll viewport. `overflow-y: scroll` stays in
+ * `style` (scroll logic). */
+export const MESSAGE_SCROLLER_VIEWPORT =
+  "flex flex-col min-h-0 bg-background text-foreground";
+
+/** `message-scroller.tsx` — one message row. */
+export const MESSAGE_SCROLLER_ITEM =
+  "flex flex-col gap-1 shrink-0 self-stretch pb-1.5";

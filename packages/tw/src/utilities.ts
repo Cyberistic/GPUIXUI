@@ -199,6 +199,9 @@ export const resolveUtility = (
   if (name === "border") return { borderWidth: 1 };
   // shadcn's `--input` is a border role; our tokens' `input` is the field fill.
   if (name === "border-input") return { borderColor: theme.colors.border };
+  // The picker triggers' strong edge, a role shadcn has no name for.
+  if (name === "border-strong")
+    return { borderColor: theme.colors.borderStrong };
   if (name === "border-t") return { borderTopWidth: 1 };
   if (name === "outline-none" || name === "outline-hidden") return {};
   if (name === "bg-transparent") return { backgroundColor: "transparent" };
@@ -212,8 +215,10 @@ export const resolveUtility = (
   if (name === "flex-wrap") return { flexWrap: "wrap" };
   if (name === "items-center") return { alignItems: "center" };
   if (name === "items-start") return { alignItems: "flex-start" };
+  if (name === "items-end") return { alignItems: "flex-end" };
   if (name === "items-stretch") return { alignItems: "stretch" };
   if (name === "justify-center") return { justifyContent: "center" };
+  if (name === "justify-start") return { justifyContent: "flex-start" };
   if (name === "justify-between") return { justifyContent: "space-between" };
   if (name === "justify-end") return { justifyContent: "flex-end" };
   if (name === "shrink-0") return { flexShrink: 0 };
