@@ -17,7 +17,13 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { colorRoles, darkColors, lightColors } from "./color.js";
 import { platformNames, platformStyles } from "./platforms.js";
-import { avatarSize, densityPresets, radius, spacing, targetSize } from "./scale.js";
+import {
+  avatarSize,
+  densityPresets,
+  radius,
+  spacing,
+  targetSize,
+} from "./scale.js";
 import { typography } from "./typography.js";
 
 const doc = readFileSync(
@@ -151,9 +157,10 @@ describe("docs/design-system.md", () => {
   });
 
   it("prints the pressable-target floors", () => {
-    const floors = /`targetSize\.minimum` — (\d+)px — and a touch-first surface may raise it to\s+`targetSize\.comfortable`, (\d+)px/.exec(
-      doc,
-    );
+    const floors =
+      /`targetSize\.minimum` — (\d+)px — and a touch-first surface may raise it to\s+`targetSize\.comfortable`, (\d+)px/.exec(
+        doc,
+      );
 
     expect(
       floors,

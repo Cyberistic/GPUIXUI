@@ -7,10 +7,11 @@
  * from the high-contrast palette could sit at 5:1 on its secondary text and be
  * reported shippable, and a theme whose divider matched its own card passed
  * because no decorative surface was measured at all. `auditTheme` holds a theme
- * to its own variant and reports all four, which is what these cases pin.
+ * to its own variant and reports every contract, which is what these cases pin.
  */
 import { describe, expect, it } from "vitest";
 import {
+  alpha,
   auditTheme,
   contrastFailures,
   contrastFloors,
@@ -89,18 +90,31 @@ describe("the floors follow the theme's contrast variant", () => {
       contrast: [],
       decorative: [],
       series: { surfaces: [], distinctness: [] },
+      selection: [],
       passed: true,
     });
   });
 });
 
-describe("all four reports are part of the gate", () => {
+describe("every report is part of the gate", () => {
   it("reports a divider no contrast pair covers", () => {
     expect(contrastFailures(invisibleDividers)).toEqual([]);
     expect(decorativeFailures(invisibleDividers)).toContainEqual(
       expect.objectContaining({ surface: "divider", role: "border" }),
     );
     expect(auditTheme(invisibleDividers).passed).toBe(false);
+  });
+
+  it("reports a selection wash the reader cannot find", () => {
+    // No contrast pair measures the wash: it is translucent, so the text
+    // contract skips it. The audit's own report is what catches it.
+    const invisibleSelection = extendTheme(lightTheme, {
+      colors: { selection: alpha(lightTheme.colors.card, 0) },
+    });
+
+    expect(contrastFailures(invisibleSelection)).toEqual([]);
+    expect(auditTheme(invisibleSelection).selection.length).toBe(4);
+    expect(auditTheme(invisibleSelection).passed).toBe(false);
   });
 
   it("reports an unpaintable role", () => {

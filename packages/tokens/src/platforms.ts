@@ -85,8 +85,11 @@ export interface PlatformStyle extends PlatformType {
  * a lighter `placeholder` than the base theme because their field surfaces are
  * lighter than its canvas. Two styles also carry their own `skeleton`, because
  * a placeholder fill is measured against the card and the muted strip it stands
- * in (`decorative.ts`) and the inherited fill matched theirs. A role a set omits
- * keeps the base theme's value.
+ * in (`decorative.ts`) and the inherited fill matched theirs. The `linux` and
+ * `win32` dark sets carry a 24% `selection` — the base dark theme's share —
+ * rather than 30%, because a stronger wash over their lighter cards left the
+ * text it selects at 6.6:1, under the body floor (`selection.ts`). A role a set
+ * omits keeps the base theme's value.
  */
 export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   darwin: {
@@ -185,7 +188,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         selected: "#1B3F60",
         selectedForeground: "#CFE4FA",
         placeholder: "#8A93A3",
-        selection: "#78AEED4D",
+        selection: "#78AEED3D",
       },
     },
   },
@@ -234,7 +237,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         selected: "#123C57",
         selectedForeground: "#CDEBFF",
         placeholder: "#8A93A3",
-        selection: "#60CDFF4D",
+        selection: "#60CDFF3D",
       },
     },
   },

@@ -79,6 +79,8 @@ describe("the shipped scales against the floor", () => {
       (size) => size + targetInset(size) * 2,
     );
 
-    expect(boxes).toEqual(Object.values(iconSize).map(() => targetSize.minimum));
+    expect(boxes).toEqual(
+      Object.values(iconSize).map(() => targetSize.minimum),
+    );
   });
 });

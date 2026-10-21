@@ -14,8 +14,10 @@
  * glass-blue greys and `#3399FF` highlight. No artwork, gradient, bitmap, icon
  * or logo is copied, so there is no redistributable asset here. Neither era had
  * a dark mode, so both dark sets are authored for this library and held to the
- * same contrast and decorative contracts as everything else — they are not
- * reconstructions, and are documented as invented.
+ * same contrast, decorative and selection contracts as everything else — they
+ * are not reconstructions, and are documented as invented. Luna's dark
+ * `selection` is a 24% tint, not the 30% Aero can carry: its lighter card left
+ * the selected text under the body floor (`selection.ts`).
  */
 
 import type { ThemeColors } from "./color.js";
@@ -89,7 +91,7 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     accentForeground: "#CFE0F7",
     selected: "#22456B",
     selectedForeground: "#DCE9FB",
-    selection: "#7AB0FF4D",
+    selection: "#7AB0FF3D",
     placeholder: "#93A8C4",
     disabled: "#1B2F4A",
     disabledForeground: "#7086A0",

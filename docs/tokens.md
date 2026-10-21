@@ -661,8 +661,8 @@ accent — and `retro.test.ts` holds the result to the same contracts.
 
 ## Checking your own theme
 
-A theme fails silently in three independent ways, and `auditTheme(theme)` is the
-one call that reports all three:
+A theme fails silently in five independent ways, and `auditTheme(theme)` is the
+one call that reports all five:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -670,13 +670,15 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all three reports below are empty
+audit.passed; // true only when all five reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.contrast; // text, icon and boundary pairs below their floor
 audit.decorative; // dividers, skeleton fills, veils and status edges too subtle to see
+audit.series; // data-series colours lost on their plot or against each other
+audit.selection; // a selection wash the reader cannot see, or that hides its text
 ```
 
-`passed` is computed from the three reports, so it cannot drift from them. The
+`passed` is computed from the five reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -686,7 +688,10 @@ contract. The runtime **ignores** a colour string it cannot parse and keeps the
 property's previous value or paints black, and nothing else measures text
 against the surface behind it.
 
-Each report is also a function of its own, for a caller that wants one check:
+Each report is also a function of its own, for a caller that wants one check.
+The three below are here; the categorical scale is §Data series
+(`seriesFailures`) and the selection wash is §Text selection
+(`selectionFailures`).
 
 ### Paint-ready values
 
@@ -1142,6 +1147,59 @@ position.
 
 A runnable example lives in
 [`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts).
+
+## Text selection
+
+`selection` is the translucent wash the runtime paints behind a run the reader
+selected: GPUix's `selectionColor` style property washes a subtree, and the text
+inside it keeps the role it already had. A translucent colour has no ratio of its
+own — `contrastRatio` refuses it — so the wash is measured **after** it is
+composited over the surface it sits on.
+
+`selectionPairs` names the four content surfaces body text is selected from — a
+field's value, prose on the page, a card and a popover — and each pair keeps the
+text role that surface already carries. `selectionFailures(theme, floors?)`
+measures two things per pair:
+
+| Contract | Floor | What it catches |
+| -------- | ----- | --------------- |
+| the wash is visible against its surface | 1.05:1 | a selection the reader cannot find |
+| the selected text reads on the wash | body, 7:1 | a wash that hides the text it selects |
+
+The visibility floor is `decorativeFloor`, the perceptibility floor the dividers,
+skeleton fills and veil are held to — a selection that matches what it covers is
+not a selection. The legibility floor is the body floor of the theme's own
+contrast variant, so a high-contrast brand is measured at AAA without naming a
+floor set. Each failure carries its `kind` (`visibility` or `legibility`), the
+pair, the composited `wash` and the measured `ratio`; a surface that cannot be
+composited is reported with `ratio: undefined` rather than skipped.
+
+```ts
+import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const brand = extendTheme(lightTheme, { colors: { selection: "#6A45F03D" } });
+
+brand.colors.selection; // the wash a component hands to `selectionColor`
+auditTheme(brand).selection; // [] — visible, and the text inside it readable
+```
+
+**It found three shipped styles.** Before the contract existed, Linux dark,
+Windows dark and Windows XP Luna dark painted a 30% accent wash over cards
+lighter than the base theme's, which left body text at 6.63:1, 6.33:1 and
+6.80:1 against the 7:1 floor. All three carry the base dark theme's 24% share
+now. A brand that wants a stronger wash should deepen its hue or its surface
+rather than raise the share: the contract measures the composite, and 30% of a
+mid accent over a light card is exactly what put those three under the floor.
+
+**Adoption.** The role reaches a window through the runtime's `selectionColor`
+property, which inherits down a subtree. Setting it on selectable text and
+fields is the component packages' work, recorded in `TODO.md` → Interlocks; the
+runtime's own default is the theme accent at 35%, which is not this role.
+
+**Not measured, deliberately:** secondary text selected under the wash. A
+caption already sits at the 4.5:1 secondary floor, so any visible wash lowers it;
+holding that pair to 4.5:1 would force a wash too faint to see. The wash is held
+to the primary reading text it covers.
 
 ## Theme API
 

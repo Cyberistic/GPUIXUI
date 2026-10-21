@@ -243,6 +243,28 @@ paints the outline and dims the other focusables, a mouse press paints neither,
 and a programmatic focus after a Tab paints it. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
+## Text selection
+
+`selection` is the translucent wash behind a run the reader selected. GPUix
+paints it through the `selectionColor` style property, which inherits down a
+subtree and defaults to the theme accent at 35%; a component passes
+`theme.colors.selection` to keep the selection in the design system's palette.
+
+`selectionPairs` names the four content surfaces body text is selected from (a
+field's value, prose, a card, a popover) and
+`selectionFailures(theme, floors?)` composites the wash over each one and checks
+both jobs: it is visible against its surface (`decorativeFloor`, 1.05:1) and the
+text inside it keeps the theme variant's body floor (7:1). A failure names its
+`kind` (`visibility` or `legibility`), the pair, the composited colour and the
+ratio; `auditTheme` includes the report.
+
+It found three shipped styles under the body floor — Linux dark at 6.63:1 on its
+card, Windows dark at 6.33:1 and Luna dark at 6.80:1 on its popover — from a 30%
+wash over cards lighter than the base theme's, so each carries the base dark
+theme's 24% share now. Secondary text selected under a wash is not measured: it
+already sits at 4.5:1, so any visible wash lowers it. A runnable example lives in
+[`src/selection.example.ts`](./src/selection.example.ts).
+
 ## Platform styles
 
 `platformStyles` decides each platform once — its families, corner radii, control
@@ -338,7 +360,7 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all three reports are
+CSS validation and lint, and `passed` is true only when all five reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
@@ -352,6 +374,8 @@ audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil and status edge is visible
+audit.series; // [] — every chart swatch is perceivable and distinct
+audit.selection; // [] — every selection wash is visible and keeps its text readable
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 
@@ -366,6 +390,11 @@ Each report is also a function of its own:
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
   skeleton fill, the modal veil — that is too close to what it is painted on to
   be seen, compositing a translucent role first.
+- `seriesFailures(theme, floors?)` lists every chart swatch lost on its plot or
+  too close to its neighbour, and reports one it cannot measure.
+- `selectionFailures(theme, floors?)` composites the `selection` wash over each
+  surface body text is selected from and lists a wash the reader cannot see and
+  one that hides the text it selects; see §Text selection.
 
 `contrastRatio(foreground, background)` is the WCAG 2.1 ratio behind the second
 check — `undefined` for a translucent or non-hex value rather than a guess.

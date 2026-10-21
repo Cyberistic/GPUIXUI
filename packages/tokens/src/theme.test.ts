@@ -274,6 +274,7 @@ describe("theme audit example", () => {
         contrast: [],
         decorative: [],
         series: { surfaces: [], distinctness: [] },
+        selection: [],
         passed: true,
       });
     });

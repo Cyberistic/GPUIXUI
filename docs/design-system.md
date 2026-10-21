@@ -230,7 +230,7 @@ it. It is held instead to one shadow per level, tinted by the `shadow` role (see
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
-| text selection | `selection` translucent wash |
+| text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
 A state wash is a surface with text on it, so it is measured like one: the
@@ -280,6 +280,8 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
+| text inside the selection wash (input, page, card, popover) | 7:1 | 7:1 |
+| the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
 | data series on `background`, `card` and `popover` | 3:1 | 4.5:1 |
 | any two data series apart from each other (OKLab distance) | 0.06 | 0.06 |
 
@@ -314,17 +316,18 @@ floor. The example now ships a white label with its violet, and the audit runs
 over it in `theme.test.ts`.
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all four in one call — `invalidRoles`, `contrast`, `decorative` and
-`series` — and `passed` is true only when every list is empty. The contrast half
+reports all five in one call — `invalidRoles`, `contrast`, `decorative`, `series`
+and `selection` — and `passed` is true only when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
 to AAA without the caller naming a floor set; an explicit `ContrastFloors`
 overrides it. The parts are public too: `contrastRatio(foreground, background)`
 measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `highContrastFloors` names the text and boundary pairs and their floors,
-`decorativeFailures(theme, floor?)` measures the subtle surfaces, and
-`seriesFailures(theme)` measures a categorical scale. Nothing about the
-requirement is private to this repo.
+`decorativeFailures(theme, floor?)` measures the subtle surfaces,
+`seriesFailures(theme)` measures a categorical scale and `selectionFailures(theme)`
+measures the wash a selected run sits in. Nothing about the requirement is
+private to this repo.
 
 ### Target sizes
 
@@ -341,6 +344,10 @@ component packages is recorded in `TODO.md`.
 Not covered, deliberately:
 
 - disabled text (WCAG exempts inactive controls); it stays visibly dimmed;
+- secondary text selected under the wash — a caption already sits at the
+  secondary floor, so a wash that can be seen lowers it; the wash is held to the
+  primary reading text it covers, and the limit is stated in `docs/tokens.md`
+  §Text selection;
 - placeholder as a substitute for a label — placeholders are hints, labels are
   required;
 - colour as the only status signal — status components pair colour with text or
@@ -360,6 +367,7 @@ design system cannot compensate for a missing role.
 | no CSS variables or cascade | tokens are inline values; theme switch re-renders |
 | no inherited `color` | every `<text>` sets `color` explicitly |
 | focus has two paint paths | `keyboardFocusRing` is the `focusVisible` outline the runtime paints after Tab; a programmatic focus before any key (a mouse-opened overlay) does not paint it, so that path keeps `focusRing`'s shadow |
+| selection is a style property | `selectionColor` washes a subtree and inherits; the runtime defaults to the theme accent at 35%, so the `selection` role is what a component passes to keep the reader's selection in the design system's palette |
 | elevation is one shadow per level by design | `boxShadow` accepts a list, but a level is designed as one shadow |
 | no `zIndex` in the published API | paint order is tree order; an overlay paints above the page by being mounted after it, the dismiss stack decides what Escape closes, and there is no numeric `z` token (`docs/tokens.md` §Layering) |
 | `letterSpacing` absent | no display tracking or all-caps tracking |
