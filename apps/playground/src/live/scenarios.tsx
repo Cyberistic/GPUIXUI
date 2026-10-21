@@ -177,6 +177,7 @@ import {
   containingBlockLiveScenario,
   containingBlockView,
 } from "../scenarios/containing-block.js";
+import { flexAxesLiveScenario, flexAxesView } from "../scenarios/flex-axes.js";
 import {
   captureLive,
   expectColour,
@@ -13434,6 +13435,19 @@ const liveContainingBlock: LiveScenario = {
 };
 
 /**
+ * The flex box's remaining axes in a real window (plan `841`).
+ *
+ * The headless pass reads the offscreen layout's boxes; this twin proves the
+ * same directions, wrapping, `alignContent` and per-axis gaps through a window's
+ * own layout pass.
+ */
+const liveFlexAxes: LiveScenario = {
+  ...flexAxesLiveScenario,
+  view: flexAxesView,
+  ready: "fx-stage",
+};
+
+/**
  * The content-surface theme in a real window (plan `784`).
  *
  * The headless pass proves the A/B pair in one offscreen paint; this twin
@@ -14631,6 +14645,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveFlexLayout,
   liveBoxInset,
   liveContainingBlock,
+  liveFlexAxes,
   liveSurfaceTheme,
   liveDialogScrim,
   terminal,

@@ -60,6 +60,7 @@ import { lineClampPixelsScenario } from "./line-clamp.js";
 import { flexLayoutScenario } from "./flex-layout.js";
 import { boxInsetScenario } from "./box-inset.js";
 import { containingBlockScenario } from "./containing-block.js";
+import { flexAxesScenario } from "./flex-axes.js";
 import { collapsibleHeightScenario } from "./collapsible.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { variableRowsScenario } from "./variable-rows.js";
@@ -226,6 +227,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   flexLayoutScenario,
   boxInsetScenario,
   containingBlockScenario,
+  flexAxesScenario,
 
   rootSingleChildScenario,
   rootWrapperScenario,
