@@ -96,5 +96,6 @@ floor is a design choice the readout reports, not a malformed state.
 **Copy theme** emits a `createTheme` module — one theme per mode, with the values
 the preview resolved — in the exact format `@gpuixui/tokens` consumes, plus a
 one-line usage note. Running the same audit on the result is up to the consumer;
-`auditTheme`, `contrastFailures`, `decorativeFailures`, `seriesFailures` and
-`selectionFailures` are public for exactly that.
+`auditTheme` and the reports it folds — `invalidColorRoles`, `invalidShadowColors`,
+`contrastFailures`, `decorativeFailures`, `seriesFailures` and
+`selectionFailures` — are public for exactly that.

@@ -95,6 +95,27 @@ describe("the theme page", () => {
   });
 });
 
+describe("the theme page's copy-theme note", () => {
+  it("names every report the audit folds, so a consumer can run one of them alone", () => {
+    // The note is the list a consumer starts from. `auditTheme` returned six
+    // reports while the note named four helpers, so a reader looking for the
+    // role or shadow check had to find it in the package.
+    const note = section(page("themes.mdx"), "Copy theme");
+
+    expect(
+      [
+        "auditTheme",
+        "invalidColorRoles",
+        "invalidShadowColors",
+        "contrastFailures",
+        "decorativeFailures",
+        "seriesFailures",
+        "selectionFailures",
+      ].filter((name) => !note.includes(name)),
+    ).toEqual([]);
+  });
+});
+
 describe("the theming page's role count", () => {
   it("derives the number of colour roles instead of printing one", () => {
     const body = page("theming.mdx");
