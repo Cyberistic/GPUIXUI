@@ -1240,6 +1240,19 @@ foreground, the press moves further than the hover and stops short of the
 foreground, the three actions stay distinct, and a brand's own `primary` carries
 its own hover.
 
+`packages/tokens/src/retro.test.ts` covers the authored looks: `retroStyles`
+describes exactly `retroNames`, the guard rejects a renamed or misspelt look, each
+look keeps the sentinel UI face, one mono family, a full radius scale and a
+density preset, and `retroTheme` repaints, re-shapes and re-types without mutating
+its base — the elevation keeps the base geometry in the look's own `shadow` tint.
+A role a look does not author inherits, each look paints a background, primary
+and radius of its own (different from the other look and from the Windows
+platform style), both dark editions are a real second palette, a high-contrast
+base keeps its colours, and all four themes clear every `contrastPairs` pair and
+every decorative placement. `resolveRetroBrand` is executed and held to the
+audit, and the provenance prose, the catalogue table and the inventory row are
+held to the table the package ships.
+
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
@@ -1255,6 +1268,11 @@ its own hover.
   not its palette, because no platform palette is designed for the AAA floors.
   A consumer who wants both starts from `platformStyles` and checks the result
   with `contrastRatio`.
+- The authored looks are styles, not platform names: the docs platform toggle
+  offers the four operating systems, so a site that wants to preview Luna or Aero
+  resolves `retroTheme` itself. Their dark editions are invented — neither era
+  shipped one — and their UI face is still the sentinel, so the era's monospace
+  family falls back where the machine lacks it.
 - `.SystemUIFont` is a name GPUI documents, and the theme asserts it as the UI
   family on every platform; what face the runtime resolves it to is not measured
   anywhere. The playground's `theme-platform` proves the platform **mono**
