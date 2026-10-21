@@ -1138,8 +1138,8 @@ const TooltipProbe = (): ReactNode => {
             color: theme.colors.mutedForeground,
           }}
         >
-          The shipped Tooltip: a hover opens it, leaving closes it, the keyboard
-          opens it and Escape dismisses it.
+          The shipped Tooltip: a hover opens it, leaving closes it and Escape
+          dismisses it — a keyboard focus does not.
         </text>
         <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
           <Tooltip
