@@ -179,6 +179,20 @@ alpha("#2559D6", 0.3); // "#2559D64D"
 alpha("transparent", 0.3); // "transparent"
 ```
 
+### `alphaOf`
+
+`alphaOf(color)` reads a colour's alpha share as a number in `0…1` — the inverse
+of `alpha`. A rule that restates a colour at the same strength in another tint
+reads it here; a 6-digit colour, or one the parser does not recognise, reads as
+`1` (opaque). The elevation scale uses it, so a level's strength has one source.
+
+```ts
+import { alphaOf } from "@gpuixui/tokens";
+
+alphaOf("#191D2514"); // 0.078
+alphaOf("#191D25"); // 1
+```
+
 ### `blend`
 
 `blend(color, toward, amount)` moves each channel of `color` `amount` of the way
@@ -677,12 +691,12 @@ Shadows are structured objects (`offsetX`, `offsetY`, `blurRadius`,
 list; the elevation scale deliberately ships **one** shadow per level, so a level
 cannot render half of itself.
 
-| Level | Light | Dark | Use |
-| ----- | ----- | ---- | --- |
-| `sm` | `0 1 2 0 #191D2514` | `0 1 2 0 #00000066` | resting cards |
-| `md` | `0 4 12 -2 #191D251F` | `0 8 24 -4 #000000A6` | menus and popovers |
-| `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | dialogs and command palettes |
-| `overlay` | `[]` | `[]` | reserved; overlay layering uses the scrim colour |
+| Level | Light | Dark | High-contrast light | High-contrast dark | Use |
+| ----- | ----- | ---- | ------------------- | ------------------ | --- |
+| `sm` | `0 1 2 0 #191D2514` | `0 1 2 0 #00000066` | `0 1 2 0 #00000014` | `0 1 2 0 #00000066` | resting cards |
+| `md` | `0 4 12 -2 #191D251F` | `0 8 24 -4 #000000A6` | `0 4 12 -2 #0000001F` | `0 8 24 -4 #000000A6` | menus and popovers |
+| `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | `0 16 40 -8 #00000029` | `0 24 56 -12 #000000CC` | dialogs and command palettes |
+| `overlay` | `[]` | `[]` | `[]` | `[]` | reserved; overlay layering uses the scrim colour |
 
 A level is a list because the runtime accepts a shadow list; the scale is
 designed as one shadow per level, so a shipped level carries one entry and a
@@ -699,9 +713,35 @@ the reserved empty `overlay` level (which `boxShadow` accepts). A level with two
 entries would be a second shadow the design did not ask for, so
 `packages/tokens/src/elevation.test.ts` fails if one appears.
 
-`lightElevation` and `darkElevation` are the literal level tables the two themes
-carry; a consumer that needs a level outside a resolved theme reads them
-directly.
+Each level's colour is the theme's `shadow` role at that level's designed
+strength — 8%, 12% and 16% over a pale canvas; 40%, 65% and 80% over a dark one,
+where the shadow is the only separation two surfaces have. The level owns its
+geometry and its share, the role owns the tint, so a brand that retints `shadow`
+retints every shadow it paints:
+
+```ts
+import { extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const brand = extendTheme(lightTheme, { colors: { shadow: "#0B1220" } });
+elevationShadow(brand, "md"); // the shipped md geometry, tinted #0B1220 at 12%
+```
+
+`extendTheme` restates every level it inherits when `colors.shadow` changes; a
+level passed in `elevation` replaces the whole array, colours and all, because
+its colours are the caller's. `elevationWithTint(elevation, tint)` is that rule on
+its own, for a theme composed by hand, and keeps each level's strength and
+geometry.
+
+`lightElevation` and `darkElevation` are the level tables the two themes carry,
+shaded from their own colour set's `shadow` role;
+`highContrastLightElevation` and `highContrastDarkElevation` are the high-contrast
+themes' tables, shaded from theirs — the contrast variant changes the palette, so
+it changes the role, and the role owns the hue. The geometry and the strength are
+the same in every variant of a mode. A consumer that needs a level outside a
+resolved theme reads the tables directly. `elevation.test.ts` holds each level to
+the role's hue and its strength, holds every shipped theme to its own role, and
+proves a brand's retint reaches every inherited level while an explicit one
+survives.
 
 ## Borders, icons and identity marks
 

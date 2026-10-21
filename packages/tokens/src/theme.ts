@@ -5,7 +5,14 @@ import {
   lightColors,
   type ThemeColors,
 } from "./color.js";
-import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
+import {
+  darkElevation,
+  elevationWithTint,
+  highContrastDarkElevation,
+  highContrastLightElevation,
+  lightElevation,
+  type Elevation,
+} from "./elevation.js";
 import { platformStyles, type PlatformName } from "./platforms.js";
 import {
   borderWidth,
@@ -245,7 +252,7 @@ export const highContrastLightTheme: Theme = {
   spacing,
   radius,
   density: defaultDensity,
-  elevation: lightElevation,
+  elevation: highContrastLightElevation,
   borderWidth,
   iconSize,
 };
@@ -260,7 +267,7 @@ export const highContrastDarkTheme: Theme = {
   spacing,
   radius,
   density: defaultDensity,
-  elevation: darkElevation,
+  elevation: highContrastDarkElevation,
   borderWidth,
   iconSize,
 };
@@ -299,16 +306,24 @@ export function getTheme(
  * ```
  */
 export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
+  const colors = overlay(base.colors, overrides.colors);
+  // A level's strength is its share of the shadow role, so a brand that retints
+  // the role retints every shadow it inherits. A level passed in `elevation`
+  // replaces the whole array, colours and all.
+  const elevation =
+    overrides.colors?.shadow === undefined
+      ? base.elevation
+      : elevationWithTint(base.elevation, colors.shadow);
   return {
     name: overrides.name ?? base.name,
     mode: base.mode,
     contrast: base.contrast,
-    colors: overlay(base.colors, overrides.colors),
+    colors,
     typography: mergeTypography(base.typography, overrides.typography),
     spacing: overlay(base.spacing, overrides.spacing),
     radius: overlay(base.radius, overrides.radius),
     density: mergeDensity(base.density, overrides.density),
-    elevation: overlay(base.elevation, overrides.elevation),
+    elevation: overlay(elevation, overrides.elevation),
     borderWidth: overlay(base.borderWidth, overrides.borderWidth),
     iconSize: overlay(base.iconSize, overrides.iconSize),
   };

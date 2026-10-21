@@ -180,9 +180,13 @@ Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
 `md` for menus and popovers, `lg` for dialogs and the command palette. A level is
 designed as **one** shadow, read with `elevationShadow(theme, level)`; the
 runtime also accepts a shadow list, but the scale does not use one, so a level
-cannot render half of itself. Overlay layering uses the `overlay` scrim colour;
-`elevation.overlay` is reserved and empty so the shape stays stable. Dark shadows
-are darker and more opaque because contrast between surfaces is lower.
+cannot render half of itself. Each level paints the `shadow` role at its designed
+strength — 8%, 12% and 16% over a pale canvas, 40%, 65% and 80% over a dark one —
+so retinting that one role retints every shadow a theme inherits. The high-contrast
+themes carry the same geometry in their own role's tint.
+Overlay layering uses the `overlay` scrim colour; `elevation.overlay` is reserved
+and empty so the shape stays stable. Dark shadows are stronger because contrast
+between surfaces is lower.
 
 ## 8. Interaction states
 

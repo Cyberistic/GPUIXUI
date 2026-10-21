@@ -427,6 +427,26 @@ export function alpha(color: string, amount: number): string {
 }
 
 /**
+ * The alpha share of `color`, from `0` to `1`.
+ *
+ * The inverse of {@link alpha}: it reads the byte a translucent colour carries
+ * so a rule can restate that colour at the same strength in another tint. An
+ * opaque six-digit colour reads as `1`, and so does a value the parser does not
+ * recognise — an unparseable colour is painted solid, not cut up.
+ *
+ * @example
+ * ```ts
+ * alphaOf("#191D2514"); // 0.078
+ * alphaOf("#191D25"); // 1
+ * ```
+ */
+export function alphaOf(color: string): number {
+  const match = hexColor.exec(color);
+  const byte = match?.[2];
+  return byte === undefined ? 1 : Number.parseInt(byte, 16) / 255;
+}
+
+/**
  * Blend `amount` of `toward` into `color`, channel by channel.
  *
  * `amount` is clamped to `0…1`. The result keeps `color`'s alpha byte when it

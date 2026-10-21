@@ -70,6 +70,12 @@ const shadow = elevationShadow(theme, "md");
 <div style={{ boxShadow: shadow }} />;
 ```
 
+A level is a geometry plus a share of the theme's `shadow` role, so the role owns
+the tint: `extendTheme` restates every inherited level when `colors.shadow`
+changes, and a brand retints the library's shadows by changing that one role.
+`elevationWithTint(elevation, tint)` is the same rule on its own, for a theme
+composed by hand.
+
 ## Extending a theme
 
 `createTheme` starts from the built-in theme of the requested `mode` and
