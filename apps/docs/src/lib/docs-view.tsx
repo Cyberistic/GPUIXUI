@@ -67,6 +67,9 @@ export const loadDocsPage = createServerFn({ method: "GET" })
       return {
         origin: "site" as const,
         path: site.path,
+        url: site.url,
+        title: site.data.title,
+        description: site.data.description,
         pageTree: await pageTree(),
       };
     }
@@ -83,6 +86,9 @@ export const loadDocsPage = createServerFn({ method: "GET" })
     return {
       origin: collection.origin,
       path: packaged.path,
+      url: packaged.url,
+      title: packaged.data.title,
+      description: packaged.data.description,
       pageTree: await pageTree(),
     };
   });

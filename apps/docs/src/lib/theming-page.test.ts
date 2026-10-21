@@ -35,7 +35,8 @@ const snippetColours = (body: string): Readonly<Record<string, string>> => {
   const snippet = body
     .split("```")
     .filter(
-      (fence) => fence.includes("export const") && fence.includes("createTheme({"),
+      (fence) =>
+        fence.includes("export const") && fence.includes("createTheme({"),
     )
     .join("");
   return Object.fromEntries(

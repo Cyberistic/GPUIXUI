@@ -83,6 +83,23 @@ renders on a `PreviewSurface` that applies the theme's variables. A preview
 therefore paints the library's roles, not a docs palette. See
 `docs/preview-strategy.md` for the full policy.
 
+## Metadata and discovery
+
+Every docs page publishes its own document metadata: the frontmatter `title`
+with the site name, its `description`, an Open Graph and Twitter card, and a
+canonical link. The canonical drops the `?platform=` switch, so the four
+platform looks are one page to a crawler and four shareable links to a reader.
+`src/lib/page-meta.ts` builds it; `docs-view.tsx` returns the page's title and
+description from the loader, so both collections — the site's pages and the
+package's — get real metadata without a copy.
+
+`src/lib/site.ts` holds the one origin (`https://gpuixui.sudokw.com`), and
+`site.test.ts` holds it to `DOCS_DOMAIN` in the deploy stack. `/sitemap.xml` is
+generated from the collections at request time (`src/lib/sitemap.ts`), so a page
+added to any mounted collection is listed without a docs change; a curated page
+shadows its package page and the URL is listed once. `public/robots.txt` points
+at it.
+
 ## Component pages
 
 A component page uses three MDX blocks:
