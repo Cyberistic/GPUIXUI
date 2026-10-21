@@ -415,7 +415,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 20/20
+`[x]` `[██████████]` 21/21
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -579,6 +579,15 @@ a workaround for two live sessions sharing one worktree; see
       1, got 0`; dropping `wholeWord`: `alp,alp,alp`). `packages/testing` gained
       `HighlightWash` + `highlights()` with a fake-renderer test (46 pass).
       `--only search-highlights`, green on 0.11.0.
+`[x]` Land the `theme-look` theme-gallery scenario — one row per authored look
+      (`luna`, `aero`) painted through `retroTheme` and read back from the
+      runtime's style report: mono family, `primary` fill, `lg` radius (3 / 6
+      against the base's 8) and an `md` control at each look's density (28 /
+      32px). Negative control measured (painting the base radius: `luna large
+      radius: expected 3, got 8`, exit `1`); `src/scenarios/theme.test.ts` holds
+      the samples to being distinct from the base and each other (4 tests, all
+      four fail when a look is collapsed). `--only theme-look --only
+      theme-platform`, green (2/2).
 
 ## Phase C — Tier 1–2 components
 

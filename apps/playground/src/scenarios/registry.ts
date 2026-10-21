@@ -156,6 +156,12 @@ export const registry = [
     capability: "theme",
   },
   {
+    id: "theme-look",
+    title:
+      "Theme: each authored look's palette, radius, density and mono family reach the runtime",
+    capability: "theme",
+  },
+  {
     id: "shell-navigation",
     title: "Playground shell: the scenario list scrolls",
     capability: "layout",

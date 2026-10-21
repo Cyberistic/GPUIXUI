@@ -38,6 +38,7 @@ import { modalScenario } from "./modal.js";
 import { floatingScenario } from "./floating.js";
 import {
   themeColorRolesScenario,
+  themeLookScenario,
   themePlatformScenario,
   themeTypeAndShadowScenario,
 } from "./theme.js";
@@ -65,6 +66,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "theme-color-roles": themeColorRolesScenario,
   "theme-type-and-shadow": themeTypeAndShadowScenario,
   "theme-platform": themePlatformScenario,
+  "theme-look": themeLookScenario,
   "shell-navigation": shellNavigationScenario,
   "virtualized-table": virtualizedTableScenario,
   "tree-view": treeScenario,

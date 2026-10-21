@@ -15,6 +15,10 @@
  * its density — and asserts each against the runtime's style report, so the
  * platform styles are real theme values rather than a docs-only toggle.
  *
+ * `theme-look` does the same for the authored looks (`retroTheme` over
+ * `retroStyles`), with the base theme's own `lg` radius and `primary` fill as the
+ * negative control: a look that inherited its base would fail both.
+ *
  * The role lists are derived from `colorRoles` and `typography`, never copied,
  * so a new token cannot go untested. The panel rows are explicit flex rows
  * because `flexWrap` is not a verified GPUix capability.
@@ -30,6 +34,8 @@ import {
   elevationShadow,
   focusRing,
   platformTheme,
+  retroNames,
+  retroTheme,
   textStyle,
   typography,
   type PlatformName,
@@ -383,6 +389,113 @@ export const themeTypeAndShadowScenario: ScenarioBody = {
 };
 
 /**
+ * One row of theme samples: the mono face, the primary fill, an `lg` radius and
+ * an `md` control at the theme's density.
+ *
+ * The sans face is GPUI's `.SystemUIFont` sentinel in every style, so the family
+ * that distinguishes two themes is the mono one. `base` paints the labels and
+ * the row's gap; `themed` owns every sampled value.
+ */
+const ThemeRow = ({
+  label,
+  testId,
+  base,
+  themed,
+}: {
+  readonly label: string;
+  readonly testId: string;
+  readonly base: Theme;
+  readonly themed: Theme;
+}) => (
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: base.spacing.lg,
+    }}
+  >
+    <text
+      testId={testId}
+      style={{
+        ...textStyle(themed, "code"),
+        color: base.colors.foreground,
+      }}
+    >
+      {`${label}: ${themed.typography.mono}`}
+    </text>
+    <div
+      testId={`${testId}-primary`}
+      style={{
+        width: 24,
+        height: 24,
+        backgroundColor: themed.colors.primary,
+        borderRadius: themed.radius.sm,
+      }}
+    />
+    <div
+      testId={`${testId}-radius`}
+      style={{
+        width: 32,
+        height: 32,
+        backgroundColor: themed.colors.card,
+        borderRadius: themed.radius.lg,
+      }}
+    />
+    <div
+      testId={`${testId}-control`}
+      style={{
+        width: 64,
+        height: themed.density.controlHeight.md,
+        backgroundColor: themed.colors.muted,
+        borderRadius: themed.radius.md,
+      }}
+    />
+  </div>
+);
+
+/** Asserts one row's four samples against the runtime's own style report. */
+const expectThemeRow = (
+  ctx: Smoke.SmokeContext,
+  label: string,
+  testId: string,
+  themed: Theme,
+): Effect.Effect<void, Smoke.SmokeAssertionError> =>
+  Effect.gen(function* () {
+    yield* expectStyle(
+      ctx,
+      `${label} mono family`,
+      testId,
+      (snapshot) => snapshot.fontFamily,
+      themed.typography.mono,
+    );
+    yield* expectStyle(
+      ctx,
+      `${label} primary fill`,
+      `${testId}-primary`,
+      (snapshot) => snapshot.backgroundColor,
+      themed.colors.primary,
+    );
+    yield* expectStyle(
+      ctx,
+      `${label} large radius`,
+      `${testId}-radius`,
+      (snapshot) => snapshot.borderRadius,
+      themed.radius.lg,
+    );
+    const control = yield* ctx.expectSome(
+      `${label} paints a control box`,
+      Option.fromNullishOr(ctx.host.bounds(`${testId}-control`)),
+    );
+    yield* ctx.expectNear(
+      `${label} md control height`,
+      control.height,
+      themed.density.controlHeight.md,
+      1,
+    );
+  });
+
+/**
  * The platforms whose styles the gallery proves.
  *
  * `default` is the house identity and is already painted by the other two
@@ -394,74 +507,21 @@ const platformNames: ReadonlyArray<Exclude<PlatformName, "default">> = [
   "win32",
 ];
 
-/**
- * One row per platform, styled through `platformTheme`: the mono face it types
- * with, the primary fill it paints, the radius its controls take from its own
- * scale, and the height its density gives an `md` control.
- *
- * The sans face is GPUI's `.SystemUIFont` sentinel on every platform, so the
- * family that distinguishes them is the mono one; a theme that lost the
- * platform's mono family would paint the same string three times. The other
- * three samples are the half of `platformTheme` that only pure value tests held:
- * a palette role, a radius and a density measurement in the renderer.
- */
 const PlatformProbe = () => {
   const base = palettes.dark;
 
   return (
     <ThemeProvider theme={base}>
       <Surface>
-        {Arr.map(platformNames, (platform) => {
-          const themed = platformTheme(base, platform);
-          return (
-            <div
-              key={platform}
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: base.spacing.lg,
-              }}
-            >
-              <text
-                testId={`platform-${platform}`}
-                style={{
-                  ...textStyle(themed, "code"),
-                  color: base.colors.foreground,
-                }}
-              >
-                {`${platform}: ${themed.typography.mono}`}
-              </text>
-              <div
-                testId={`platform-${platform}-primary`}
-                style={{
-                  width: 24,
-                  height: 24,
-                  backgroundColor: themed.colors.primary,
-                  borderRadius: themed.radius.sm,
-                }}
-              />
-              <div
-                testId={`platform-${platform}-radius`}
-                style={{
-                  width: 32,
-                  height: 32,
-                  backgroundColor: themed.colors.card,
-                  borderRadius: themed.radius.lg,
-                }}
-              />
-              <div
-                testId={`platform-${platform}-control`}
-                style={{
-                  width: 64,
-                  height: themed.density.controlHeight.md,
-                  backgroundColor: themed.colors.muted,
-                  borderRadius: themed.radius.md,
-                }}
-              />
-            </div>
-          );
-        })}
+        {Arr.map(platformNames, (platform) => (
+          <ThemeRow
+            key={platform}
+            label={platform}
+            testId={`platform-${platform}`}
+            base={base}
+            themed={platformTheme(base, platform)}
+          />
+        ))}
       </Surface>
     </ThemeProvider>
   );
@@ -473,48 +533,17 @@ export const themePlatformScenario: ScenarioBody = {
     Effect.gen(function* () {
       const families = yield* Effect.forEach(
         platformNames,
-        (platform) =>
-          Effect.gen(function* () {
-            const themed = platformTheme(palettes.dark, platform);
-            yield* expectStyle(
-              ctx,
-              `${platform} mono family`,
-              `platform-${platform}`,
-              (snapshot) => snapshot.fontFamily,
-              themed.typography.mono,
-            );
-            yield* expectStyle(
-              ctx,
-              `${platform} primary fill`,
-              `platform-${platform}-primary`,
-              (snapshot) => snapshot.backgroundColor,
-              themed.colors.primary,
-            );
-            yield* expectStyle(
-              ctx,
-              `${platform} large radius`,
-              `platform-${platform}-radius`,
-              (snapshot) => snapshot.borderRadius,
-              themed.radius.lg,
-            );
-            const control = yield* ctx.expectSome(
-              `${platform} paints a control box`,
-              Option.fromNullishOr(
-                ctx.host.bounds(`platform-${platform}-control`),
-              ),
-            );
-            yield* ctx.expectNear(
-              `${platform} md control height`,
-              control.height,
-              themed.density.controlHeight.md,
-              1,
-            );
-            return {
+        (platform) => {
+          const themed = platformTheme(palettes.dark, platform);
+          return Effect.map(
+            expectThemeRow(ctx, platform, `platform-${platform}`, themed),
+            () => ({
               platform,
               mono: themed.typography.mono,
               sans: themed.typography.sans,
-            };
-          }),
+            }),
+          );
+        },
         { concurrency: 1 },
       );
 
@@ -528,6 +557,80 @@ export const themePlatformScenario: ScenarioBody = {
         "the three platforms name three different mono families",
         Arr.length(Arr.dedupe(Arr.map(families, (family) => family.mono))),
         3,
+      );
+    }),
+};
+
+/**
+ * One row per authored look, styled through `retroTheme`.
+ *
+ * The looks are not platform names — `platformNames` is the persisted key and
+ * the docs toggle offers it — so they get their own probe rather than a fourth
+ * platform row. Each row samples the same four values `platformTheme` is held to,
+ * because `applyStyle` is the one merge rule both routes use.
+ */
+const LookProbe = () => {
+  const base = palettes.dark;
+
+  return (
+    <ThemeProvider theme={base}>
+      <Surface>
+        {Arr.map(retroNames, (look) => (
+          <ThemeRow
+            key={look}
+            label={look}
+            testId={`look-${look}`}
+            base={base}
+            themed={retroTheme(base, look)}
+          />
+        ))}
+      </Surface>
+    </ThemeProvider>
+  );
+};
+
+export const themeLookScenario: ScenarioBody = {
+  view: () => <LookProbe />,
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const base = palettes.dark;
+      const painted = Arr.map(retroNames, (look) => ({
+        look,
+        theme: retroTheme(base, look),
+      }));
+
+      yield* Effect.forEach(
+        painted,
+        ({ look, theme }) => expectThemeRow(ctx, look, `look-${look}`, theme),
+        { concurrency: 1, discard: true },
+      );
+
+      // The samples only prove `retroTheme` painted the look if they differ from
+      // the base and from each other; the probe's negative control is a row that
+      // inherited the base's radius or primary fill.
+      const radii = Arr.map(painted, ({ theme }) => theme.radius.lg);
+      yield* ctx.expectEqual(
+        "every look paints a radius the base does not",
+        Arr.contains(radii, base.radius.lg),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "the looks do not share one lg radius",
+        Arr.length(Arr.dedupe(radii)),
+        Arr.length(painted),
+      );
+      const fills = Arr.map(painted, ({ theme }) => theme.colors.primary);
+      yield* ctx.expectEqual(
+        "every look paints a palette the base does not",
+        Arr.contains(fills, base.colors.primary),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "the looks do not share one mono family",
+        Arr.length(
+          Arr.dedupe(Arr.map(painted, ({ theme }) => theme.typography.mono)),
+        ),
+        Arr.length(painted),
       );
     }),
 };
