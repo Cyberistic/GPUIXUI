@@ -425,6 +425,7 @@ references without buying correctness.
 | [835](./835-persisted-row-decoder.md) | The persisted row the design system says the package decodes | F | 067, 068, 305, 380, 529, 755 | done |
 | [836](./836-motion-easing-index.md) | The easing names every union owns an index for, except this one | F | 019, 064, 067, 068, 096, 305, 364, 519, 834 | done |
 | [838](./838-stored-edit-decoder.md) | The stored edit the package can write but not read back | F | 071, 321, 380, 383, 727, 744, 758, 794, 834, 835 | done |
+| [840](./840-status-selection-figures.md) | The status label through a text selection, in the ledger and the task list | F | 083, 366, 528, 574, 582, 611, 717, 831, 833 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4442,6 +4443,19 @@ that lost the edit; values stay the checks' job, and a well-formed override that
 misses a floor still decodes and is reported. `elevationShapeFields` moved to
 `elevation.ts` so the decoder and the numeric contract count the same five
 fields, and no colour, pair, floor, metric, role or shipped theme moves.
+
+840 closes the same class in the two remaining present-tense rows.
+`selectionStatusPairs`' shipped minimum is **4.891:1**, Light · Linux `infoText`
+on `active`, which `docs/tokens.md` states in both the *Text selection* section
+and the *Verification* narrative; the ledger's Design tokens row and the task
+list's plan-366 row still carried **4.827:1** (Aero light `successText` on
+`selected`) and **4.661:1** (XP light `infoText` on `active`), figures plan `582`
+and plan `574` moved out from under them, because `figures.ts` owns the
+catalogue's figures and neither row was an entry. Both rows now copy the
+catalogue's wording, and `status-selection-figures.test.ts` derives the two
+minima, the two pairs the old rows named (7.158:1 and 5.615:1 today) and reads
+all four passages, so a palette move cannot leave the rows behind again. No
+colour, pair, floor, metric, role or shipped theme moves.
 
 ## How to use a plan
 

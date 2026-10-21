@@ -54,7 +54,19 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 385/460
+`[x]` `[████████░░]` 386/461
+
+`[x]` Own the status label's shipped minimum in the ledger and the task list —
+`selectionStatusPairs`' tightest pair is **4.891:1**, Light · Linux `infoText` on
+`active`, which both catalogue passages state, while `COMPONENTS.md`'s Design
+tokens row still quoted **4.827:1** (Aero light `successText` on `selected`) and
+the plan-366 row here quoted **4.661:1** (XP light `infoText` on `active`) —
+figures plan `582` and plan `574` moved out from under them, because
+`figures.ts` owns the catalogue's figures and neither row was an entry. Both rows
+copy the catalogue's wording, and `status-selection-figures.test.ts` derives the
+two minima, the two pairs the old rows named (7.158:1 and 5.615:1 today) and
+reads all four passages, so a palette move cannot leave them behind again; no
+colour, pair, floor, metric, role or shipped theme moves (plan 840)
 
 `[x]` Decode the artifact the documents tell a consumer to store — the catalogue,
 design system and README all call a stored edit a `ThemeEdit`, but its only load
@@ -1387,7 +1399,7 @@ pair measured it through the composited `selection` wash, so XP light
 and every high-contrast light tone 6.12–6.72:1 under 7:1 while
 `themeContrastFailures` returned `[]`; `selectionStatusPairs` adds the four tones
 on the nine surfaces (36 pairs), the six light status roles move one designed
-half-step, every shipped set passes (4.661:1 XP light `infoText` on `active`,
+half-step, every shipped set passes (4.891:1 Linux light `infoText` on `active`,
 7.370:1 at AAA) and the plain 338 pairs do not move (plan 366)
 `[x]` Hold the type scale to its two documented ladders — `themeMetricFailures`
 checked a role's size was positive and its leading long enough, but the prose
