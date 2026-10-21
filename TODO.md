@@ -722,7 +722,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Seven primitives pages carried no `## API` section although the package's own page contract (`packages/primitives/docs/README.md` §Page contract) requires one: `meter.mdx`, `number-field.mdx`, `otp-field.mdx`, `range-slider.mdx`, `rating.mdx`, `slider.mdx`, `toggle.mdx` | primitives | **resolved** — each page's prop table now lives under `## API` (their "Variants, sizes and states" heading was the table under another name), and `packages/primitives/src/docs.test.ts` holds all 28 pages to the contract: required sections in order, the `Prop/Type/Default/Consequence` header, a usage snippet importing the package root, frontmatter, and the index. It failed on exactly those seven pages before the fix |
 | Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/package-docs.test.ts` fails on a regression |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
-| `COMPONENTS.md`'s Tier 1–5 tables are parsed by the docs site (`apps/docs/src/lib/inventory.ts`): each row must keep the four columns (`Component \| Status \| GPUix support \| Notes / limitations`) and the `Tier N` heading above it. A fifth column or a second table under one heading makes every row "malformed" and empties `/docs/layouts`, `/docs/data-display` and `/docs/workspace`; `inventory.test.ts` fails first, naming the line. Add a note to the file's intro when it is next edited | anyone editing `COMPONENTS.md` | open — parser and guard are in place; the source-of-truth file does not yet say so |
+| `COMPONENTS.md`'s Tier 1–5 tables are parsed by the docs site (`apps/docs/src/lib/inventory.ts`): each row must keep the four columns (`Component \| Status \| GPUix support \| Notes / limitations`) and the `Tier N` heading above it. A fifth column or a second table under one heading makes every row "malformed" and empties `/docs/layouts`, `/docs/data-display` and `/docs/workspace`; `inventory.test.ts` fails first, naming the line. | anyone editing `COMPONENTS.md` | **resolved** — the file's intro now says so, names the parser and both guards (the docs-site parser and `packages/tokens/src/inventory.test.ts` for the design-system table), and says one table per heading |
 | Correct `docs/component-api.md` §2: "`onValueChange` is the only change callback name" is wrong for boolean parts — base-gpui uses `on_checked_change`, so primitives adopts `onCheckedChange` alongside `onValueChange` (plan 040 §2.1) | components | pending |
 | A `darwin-x64` binding for `@gpuix/native` **0.11.0** (B1, re-opened by the version bump; the store's local build was 0.10.0) | playground | **resolved** — rebuilt from the pinned `2e31b47` with the fixed zed checkout path; 21/21 smoke green on 0.11.0 |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
@@ -785,9 +785,13 @@ Both are specified in ; each fix starts with a plan under .
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
 
-`[ ]` `[░░░░░░░░░░]` 0/4
+`[ ]` `[░░░░░░░░░░]` 0/8
 
 `[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, and a `Button`/`Toggle` whose name is its text child must publish that text (salvage plans 026, 058)
+`[ ]` `packages/primitives`: `Text` cannot publish heading, code or other semantic roles to the accessibility tree (salvage plan 059)
 `[ ]` `packages/primitives`: `Skeleton circle` paints an ellipse when only one of `width`/`height` is explicit; the circle must keep a square box (salvage plan 028)
-`[ ]` `packages/primitives`: no `ToggleGroup` segmented control; disabled options also need a roving tab stop (salvage plan 056)
+`[ ]` `packages/primitives`: no `ToggleGroup` or `CheckboxGroup` control, and disabled options need a roving tab stop (salvage plans 056, 065)
+`[ ]` `packages/primitives`: `Select`'s list neither flips off a window edge, scrolls past the window, nor reveals its keyboard highlight (salvage plans 066, 068, 069)
+`[ ]` `packages/primitives`: `Rating` cannot show a failed validation (salvage plan 070)
 `[ ]` `packages/tokens`: no `infoText`/`successText`/`warningText`/`destructiveText` roles for status text and indicators on `background`/`card`, and `statusTone` exposes no `text` (salvage plan 057)
+`[ ]` `packages/tokens`: no README drift guard and no runtime narrowing guards for persisted unions (`PlatformName`, `Density`, `StatusTone`, `ThemeMode`) (salvage plans 065, 067, 068)
