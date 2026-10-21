@@ -1,4 +1,5 @@
 import { blockList } from "./blocks";
+import { PreviewSurface } from "./preview-surface";
 
 /**
  * The blocks index: one card per block, linking to its page, the way shadcn/ui
@@ -14,7 +15,9 @@ export function BlockIndex() {
           href={`/docs/blocks/${block.slug}`}
           key={block.name}
         >
-          <div className="gx-demo gx-block-card-thumb">{block.render()}</div>
+          <PreviewSurface className="gx-block-card-thumb">
+            {block.render()}
+          </PreviewSurface>
           <div className="gx-block-card-body">
             <h3 className="gx-block-card-title">{block.title}</h3>
             <p className="gx-block-card-desc">{block.description}</p>

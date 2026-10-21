@@ -6,7 +6,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "fumadocs-ui/components/tabs";
+import { platformLabel } from "../../lib/platform";
 import { blocks, type Block } from "./blocks";
+import { usePlatform } from "./platform-toggle";
+import { PreviewSurface } from "./preview-surface";
 
 const copyLabel = {
   idle: "Copy recipe",
@@ -27,6 +30,8 @@ export function BlockPreview({ name }: { name: string }) {
     throw new Error(`BlockPreview: no block named "${name}"`);
   }
 
+  const { platform } = usePlatform();
+
   return (
     <div className="gx-component not-prose">
       <Tabs defaultValue="preview" className="gx-component-tabs">
@@ -38,7 +43,9 @@ export function BlockPreview({ name }: { name: string }) {
           <CopyRecipe block={block} />
         </div>
         <TabsContent className="gx-component-panel" value="preview">
-          <div className="gx-demo gx-block-demo">{block.render()}</div>
+          <PreviewSurface className="gx-block-demo">
+            {block.render()}
+          </PreviewSurface>
         </TabsContent>
         <TabsContent
           className="gx-component-panel gx-component-code"
@@ -50,7 +57,8 @@ export function BlockPreview({ name }: { name: string }) {
       <p className="gx-component-note">
         A recipe composed from {block.packages.join(" and ")}, not a new
         component. Browser preview: the geometry, palette and states of the
-        native parts; the shipped block renders through GPUix, not the DOM.
+        native parts, drawn in the {platformLabel(platform)} type style; the
+        shipped block renders through GPUix, not the DOM.
       </p>
     </div>
   );

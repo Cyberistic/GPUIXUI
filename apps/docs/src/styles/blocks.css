@@ -29,17 +29,17 @@
   gap: 12px;
   width: min(360px, 100%);
   padding: 24px;
-  border: 1px solid #2a303b;
-  border-radius: 12px;
-  background: #191d25;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--card);
 }
 
 .gx-block-mark {
   position: relative;
   width: 22px;
   height: 22px;
-  border: 2px solid #a7a9ff;
-  border-radius: 6px;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
 }
 
 .gx-block-mark::after {
@@ -47,7 +47,7 @@
   position: absolute;
   inset: 4px;
   border-radius: 2px;
-  background: #a7a9ff;
+  background: var(--primary);
 }
 
 .gx-block-title {
@@ -61,7 +61,7 @@
   margin: 0;
   font-size: 12.5px;
   line-height: 1.5;
-  color: #a1a9b7;
+  color: var(--muted-foreground);
 }
 
 .gx-block-label {
@@ -70,7 +70,7 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #7c8595;
+  color: var(--placeholder);
 }
 
 .gx-block-field {
@@ -82,15 +82,15 @@
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
-  color: #e1e5ec;
+  color: var(--foreground);
 }
 
 .gx-block-check {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border-radius: 4px;
-  background: #a7a9ff;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--primary);
   position: relative;
 }
 
@@ -101,7 +101,7 @@
   top: 2px;
   width: 4px;
   height: 8px;
-  border: solid #11141a;
+  border: solid var(--primary-foreground);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -117,7 +117,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
-  color: #7c8595;
+  color: var(--placeholder);
 }
 
 .gx-block-divider::before,
@@ -125,7 +125,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: #2a303b;
+  background: var(--secondary);
 }
 
 /* ---- settings ---- */
@@ -142,7 +142,7 @@
   align-items: center;
   gap: 12px;
   padding: 18px 22px;
-  border-bottom: 1px solid #2a303b;
+  border-bottom: 1px solid var(--border);
 }
 
 .gx-block-avatar {
@@ -152,7 +152,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #2a303b;
+  background: var(--secondary);
   font-size: 14px;
   font-weight: 600;
 }
@@ -164,8 +164,8 @@
 .gx-block-badge {
   padding: 2px 10px;
   border-radius: 9999px;
-  background: #a7a9ff;
-  color: #11141a;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-size: 11px;
   font-weight: 600;
 }
@@ -194,7 +194,7 @@
   width: 36px;
   height: 20px;
   border-radius: 9999px;
-  background: #a7a9ff;
+  background: var(--primary);
 }
 
 .gx-block-switch::after {
@@ -205,7 +205,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #11141a;
+  background: var(--primary-foreground);
 }
 
 .gx-block-footer {
@@ -213,7 +213,7 @@
   justify-content: flex-end;
   gap: 8px;
   padding: 14px 22px;
-  border-top: 1px solid #2a303b;
+  border-top: 1px solid var(--border);
 }
 
 /* ---- dashboard ---- */

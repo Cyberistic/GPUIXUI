@@ -118,16 +118,53 @@ data-dense desktop surfaces; `comfortable` is the default.
 const compact = createTheme({ mode: "dark", density: "compact" });
 ```
 
-## Platform typography
+## Platform styles
 
-`platformTheme` keeps the colours, scales and mode, and swaps only the type
-families for one platform. It is the hook for the macOS/Windows/Linux looks.
+GPUIxUI ships one theme per platform. `platformTheme` keeps the base theme's
+mode, colours, scales and density, and swaps the families for the platform's:
 
 ```tsx
 import { platformTheme, themes } from "@gpuixui/tokens";
 
-const windows = platformTheme(themes.dark, "win32");
+const windows = platformTheme(themes.dark, "win32"); // "Dark · Windows"
 ```
+
+The UI face stays GPUI's `.SystemUIFont` sentinel — the runtime resolves it to
+the operating system's own font — while the monospace family is the one the
+platform installs (`Menlo`, `DejaVu Sans Mono`, `Consolas`). `default` is the
+library's own identity, for a platform it does not name.
+
+### The switch on this site
+
+The **Platform** switch at the foot of the sidebar picks the theme every preview
+on this site renders through: macOS, Linux, Windows or Default. The choice lives
+in the page URL, so a link carries it:
+
+```text
+https://gpuixui.sudokw.com/docs/components/button?platform=win32
+```
+
+and it is remembered between visits, so navigating does not reset it.
+
+A preview surface receives the resolved theme's colour roles, radius and
+families as CSS variables from the same bridge the theme editor uses. Nothing
+is a docs-only style sheet: the variables are `@gpuixui/tokens` values, and a
+preview cannot paint a colour the library does not have (a test holds the
+preview style sheets to that).
+
+<Callout type="info" title="What the variants change today">
+  Today `platformTheme` swaps the type families and the platform label; the
+  colours, radius and density are the base theme's. The previews read all of
+  them through the same bridge, so a wider platform variant — the Windows and
+  macOS shape work in `packages/tokens` — repaints every preview with no
+  change to this site.
+</Callout>
+
+<Callout type="warn" title="Browser previews are illustrative">
+  The library renders through GPUix, not the DOM. A preview shows the geometry,
+  palette and states of the native component in a browser; it is not the native
+  surface. The shipped component is the one in the Code tab.
+</Callout>
 
 ## Read the theme
 

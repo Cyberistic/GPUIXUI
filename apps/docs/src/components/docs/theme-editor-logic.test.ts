@@ -1,7 +1,6 @@
 import { createTheme, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
-  cssFontStack,
   decodeState,
   defaultState,
   editableRoles,
@@ -10,30 +9,10 @@ import {
   resolveTheme,
   themeConfig,
   themeSource,
-  toCssVars,
   type EditorState,
 } from "./theme-editor-logic";
 
 describe("theme-editor bridge", () => {
-  it("maps token roles to the shadcn variable names", () => {
-    const vars = toCssVars(themes.dark);
-
-    expect(vars["--background"]).toBe(themes.dark.colors.background);
-    expect(vars["--primary"]).toBe(themes.dark.colors.primary);
-    // CamelCase roles must become kebab-case (`primaryForeground` →
-    // `--primary-foreground`), matching shadcn and the docs' app.css.
-    expect(vars["--primary-foreground"]).toBe(
-      themes.dark.colors.primaryForeground,
-    );
-    expect(vars["--muted-foreground"]).toBe(themes.dark.colors.mutedForeground);
-    expect(vars["--radius"]).toBe(`${themes.dark.radius.md}px`);
-  });
-
-  it("maps the GPUI font sentinel to a CSS stack, and leaves other families alone", () => {
-    expect(cssFontStack(".SystemUIFont")).toContain("BlinkMacSystemFont");
-    expect(cssFontStack("Inter")).toBe("Inter");
-  });
-
   it("resolves edits into a complete theme without dropping non-edited roles", () => {
     const edits = editsFromTheme(themes.dark);
     const edited = {

@@ -2,12 +2,43 @@
  * Browser previews for the native components.
  *
  * GPUIxUI renders through GPUix, not the DOM. These rules reproduce the
- * library's measured geometry and palette so a reader can see the shape of a
- * component; the shipping component is the native one, shown in the Code tab.
- * Scoped under `.gx-demo` so nothing leaks into the docs chrome.
+ * library's measured geometry so a reader can see the shape of a component; the
+ * shipping component is the native one, shown in the Code tab.
+ *
+ * The paint is the library's, not the site's. `.gx-demo` declares the dark
+ * theme's roles and families as defaults — the landing's product window sits
+ * outside a preview, so it needs them too — and a `PreviewSurface` overrides
+ * every one inline from the platform theme the switch selected. The test beside
+ * this file holds the defaults to `themes.dark` and rejects a colour literal
+ * anywhere else, so the previews cannot drift from the tokens. Scoped under
+ * `.gx-demo` so nothing leaks into the docs chrome.
  */
 
 .gx-demo {
+  /* `themes.dark`, for surfaces with no PreviewSurface above them. */
+  --background: #11141a;
+  --foreground: #eef1f5;
+  --card: #191d25;
+  --popover: #222730;
+  --primary: #a7a9ff;
+  --primary-foreground: #11141a;
+  --secondary: #2a303b;
+  --muted: #222730;
+  --muted-foreground: #a1a9b7;
+  --accent: #2e2370;
+  --accent-foreground: #c7cbff;
+  --destructive: #ff6b6b;
+  --destructive-foreground: #3a0b0d;
+  --border: #2a303b;
+  --border-strong: #6b7484;
+  --input: #191d25;
+  --placeholder: #7c8595;
+  --ring: #a7a9ff;
+  --overlay: #000000a6;
+  --hover: #222730;
+  --shadow: #00000080;
+  --radius: 6px;
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -18,19 +49,19 @@
   position: relative;
   overflow: hidden;
   color-scheme: dark;
-  background-color: #11141a;
+  background-color: var(--background);
   background-image:
     radial-gradient(
       720px 220px at 50% 0%,
-      rgba(167, 169, 255, 0.07),
+      color-mix(in srgb, var(--primary) 7%, transparent),
       transparent 65%
     ),
     repeating-linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.014) 0 1px,
+      color-mix(in srgb, var(--foreground) 3%, transparent) 0 1px,
       transparent 1px 3px
     );
-  color: #eef1f5;
+  color: var(--foreground);
   font-family: var(--font-sans);
 }
 
@@ -52,7 +83,7 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #7c8595;
+  color: var(--placeholder);
 }
 
 /* ---- button: mirrors primitives/core/style.ts ---- */
@@ -64,7 +95,7 @@
   height: 34px;
   padding: 0 14px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: calc(var(--radius) + 2px);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -78,7 +109,7 @@
 }
 
 .gx-btn:focus-visible {
-  outline: 2px solid #a7a9ff;
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
@@ -94,58 +125,60 @@
   font-size: 14px;
 }
 
+/* A filled action's hover moves the fill toward the foreground, away from the
+   canvas — the rule `filledHover` applies in the library. */
 .gx-btn-primary {
-  background: #a7a9ff;
-  color: #11141a;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .gx-btn-primary:hover {
-  background: #b9bbff;
+  background: color-mix(in srgb, var(--primary), var(--foreground) 12%);
 }
 
 .gx-btn-secondary {
-  background: #2a303b;
-  color: #eef1f5;
+  background: var(--secondary);
+  color: var(--foreground);
 }
 
 .gx-btn-secondary:hover {
-  background: #343b48;
+  background: color-mix(in srgb, var(--secondary), var(--foreground) 12%);
 }
 
 .gx-btn-outline {
-  border-color: #2a303b;
+  border-color: var(--border);
   background: transparent;
-  color: #eef1f5;
+  color: var(--foreground);
 }
 
 .gx-btn-outline:hover {
-  background: #222730;
-  border-color: #3f4754;
+  background: var(--hover);
+  border-color: var(--border-strong);
 }
 
 .gx-btn-ghost {
   background: transparent;
-  color: #eef1f5;
+  color: var(--foreground);
 }
 
 .gx-btn-ghost:hover {
-  background: #222730;
+  background: var(--hover);
 }
 
 .gx-btn-destructive {
-  background: #ff6b6b;
-  color: #1a0606;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
 }
 
 .gx-btn-destructive:hover {
-  background: #ff8585;
+  background: color-mix(in srgb, var(--destructive), var(--foreground) 12%);
 }
 
 .gx-btn-link {
   height: auto;
   padding: 0;
   background: none;
-  color: #a7a9ff;
+  color: var(--primary);
   text-decoration: none;
 }
 
@@ -191,7 +224,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(3, 4, 5, 0.72);
+  background: var(--overlay);
   backdrop-filter: blur(2px);
 }
 
@@ -199,10 +232,10 @@
   position: relative;
   width: min(400px, 100%);
   padding: 22px;
-  border: 1px solid #2a303b;
-  border-radius: 14px;
-  background: #222730;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--popover);
+  box-shadow: 0 24px 60px var(--shadow);
 }
 
 .gx-dialog-title {
@@ -216,7 +249,7 @@
   margin: 0 0 16px;
   font-size: 13px;
   line-height: 1.5;
-  color: #a1a9b7;
+  color: var(--muted-foreground);
 }
 
 .gx-dialog-close {
@@ -228,16 +261,16 @@
   display: grid;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: transparent;
-  color: #a1a9b7;
+  color: var(--muted-foreground);
   font-size: 13px;
   cursor: pointer;
 }
 
 .gx-dialog-close:hover {
-  background: #2a303b;
-  color: #eef1f5;
+  background: var(--hover);
+  color: var(--foreground);
 }
 
 .gx-field {
@@ -245,18 +278,18 @@
   align-items: center;
   height: 34px;
   padding: 0 11px;
-  border: 1px solid #2a303b;
-  border-radius: 7px;
-  background: #191d25;
-  color: #eef1f5;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 1px);
+  background: var(--input);
+  color: var(--foreground);
   font-family: var(--font-mono);
   font-size: 12.5px;
   outline: none;
 }
 
 .gx-field:focus {
-  border-color: #a7a9ff;
-  box-shadow: 0 0 0 2px rgba(134, 179, 0, 0.35);
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
 }
 
 .gx-dialog-actions {
@@ -286,10 +319,10 @@
   z-index: 2;
   width: 260px;
   padding: 14px;
-  border: 1px solid #2a303b;
-  border-radius: 10px;
-  background: #222730;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--popover);
+  box-shadow: 0 18px 44px var(--shadow);
 }
 
 .gx-popover-title {
@@ -302,7 +335,7 @@
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
-  color: #a1a9b7;
+  color: var(--muted-foreground);
 }
 
 .gx-popover-meta {
@@ -311,14 +344,14 @@
   gap: 12px;
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px solid #2a303b;
+  border-top: 1px solid var(--border);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: #7c8595;
+  color: var(--placeholder);
 }
 
 .gx-popover-meta b {
-  color: #a7a9ff;
+  color: var(--primary);
   font-weight: 600;
 }
 
@@ -336,7 +369,7 @@
   display: flex;
   gap: 2px;
   padding: 10px 12px 0;
-  border-bottom: 1px solid #2a303b;
+  border-bottom: 1px solid var(--border);
 }
 
 .gx-tabs-indicator {
@@ -345,7 +378,7 @@
   bottom: 0;
   height: 2px;
   border-radius: 2px;
-  background: #a7a9ff;
+  background: var(--primary);
   pointer-events: none;
   transition:
     transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -363,7 +396,7 @@
   padding: 0 12px;
   border: 0;
   background: transparent;
-  color: #a1a9b7;
+  color: var(--muted-foreground);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -371,15 +404,15 @@
 }
 
 .gx-tab:hover {
-  color: #eef1f5;
+  color: var(--foreground);
 }
 
 .gx-tab[aria-selected="true"] {
-  color: #eef1f5;
+  color: var(--foreground);
 }
 
 .gx-tab:focus-visible {
-  outline: 2px solid #a7a9ff;
+  outline: 2px solid var(--ring);
   outline-offset: -2px;
 }
 
@@ -387,20 +420,20 @@
   padding: 18px 14px;
   font-size: 13px;
   line-height: 1.6;
-  color: #e1e5ec;
+  color: var(--foreground);
 }
 
 .gx-tab-panel b {
-  color: #eef1f5;
+  color: var(--foreground);
 }
 
 .gx-tab-panel code {
   padding: 1px 5px;
-  border-radius: 4px;
-  background: #2a303b;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--secondary);
   font-family: var(--font-mono);
   font-size: 11.5px;
-  color: #a7a9ff;
+  color: var(--primary);
 }
 
 /* ---- install / source blocks ---- */

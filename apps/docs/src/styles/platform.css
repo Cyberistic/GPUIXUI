@@ -1,0 +1,57 @@
+/*
+ * The platform switch.
+ *
+ * The switch is chrome, but the choice is a library one: it resolves
+ * `platformTheme` from `@gpuixui/tokens`, and every preview reads the
+ * families that theme names. The control only says which platform is showing.
+ */
+
+.gx-platform {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.gx-platform-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.gx-platform-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.gx-platform-option {
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.gx-platform-option:hover {
+  background: var(--accent);
+}
+
+.gx-platform-option[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-platform-meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}

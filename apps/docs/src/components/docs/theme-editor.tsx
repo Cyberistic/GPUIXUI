@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Theme, ThemeMode } from "@gpuixui/tokens";
+import { toCssVars } from "../../lib/theme-css";
 import {
   decodeState,
   defaultState,
   editableRoles,
   resolveTheme,
   themeSource,
-  toCssVars,
   type EditableRole,
   type EditorState,
 } from "./theme-editor-logic";

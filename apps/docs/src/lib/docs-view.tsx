@@ -11,6 +11,10 @@ import {
 import { Suspense, use } from "react";
 import { mdxComponents } from "@/components/mdx";
 import { CopyPage } from "@/components/docs/copy-page";
+import {
+  PlatformProvider,
+  PlatformToggle,
+} from "@/components/docs/platform-toggle";
 import { baseOptions } from "./layout.shared";
 import { docs, source } from "./source";
 
@@ -53,10 +57,16 @@ export function DocsView({ data }: { data: DocsPageData }) {
   const { path, pageTree } = useFumadocsLoader(data);
 
   return (
-    <DocsLayout {...baseOptions()} tree={pageTree}>
-      <Suspense>
-        <Content path={path} />
-      </Suspense>
-    </DocsLayout>
+    <PlatformProvider>
+      <DocsLayout
+        {...baseOptions()}
+        sidebar={{ footer: <PlatformToggle /> }}
+        tree={pageTree}
+      >
+        <Suspense>
+          <Content path={path} />
+        </Suspense>
+      </DocsLayout>
+    </PlatformProvider>
   );
 }

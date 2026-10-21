@@ -6,13 +6,11 @@ import {
 } from "@gpuixui/tokens";
 
 /**
- * The theme editor's pure core: the editable role subset, the token→CSS-variable
- * bridge for the browser preview, and the `createTheme` serialiser for "Copy
- * theme". No React, no DOM — unit-testable and reusable.
+ * The theme editor's pure core: the editable role subset and the `createTheme`
+ * serialiser for "Copy theme". No React, no DOM — unit-testable and reusable.
  *
- * The bridge exists because `@gpuixui/tokens` ships TypeScript data objects,
- * not CSS variables. The docs preview is CSS, so the bridge maps the library's
- * `ThemeColors` to the shadcn variable names the preview reads.
+ * The theme→CSS-variable bridge every browser preview reads is
+ * `src/lib/theme-css.ts`: the editor and the platform switch share it.
  */
 
 /** The shadcn-core roles the editor exposes. Each is a real `keyof ThemeColors`. */
@@ -69,37 +67,6 @@ export const resolveTheme = (mode: ThemeMode, edits: TokenEdits): Theme =>
     radius: { md: edits.radiusMd },
     typography: { sans: edits.fontSans },
   });
-
-/**
- * GPUI resolves `.SystemUIFont` to the operating system's own UI font; the
- * browser cannot. Map the sentinel to a CSS system stack for the preview.
- */
-export const SYSTEM_FONT_STACK =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-
-export const cssFontStack = (sans: string): string =>
-  sans === ".SystemUIFont" ? SYSTEM_FONT_STACK : sans;
-
-/** `primaryForeground` → `primary-foreground`: the shadcn variable name. */
-const toKebab = (name: string): string =>
-  name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-
-/**
- * The bridge: a complete `Theme` to the CSS variables the preview reads. Every
- * colour role maps to `--<kebab-role>` (shadcn's names, e.g. `primaryForeground`
- * → `--primary-foreground`); `radius.md` maps to the single `--radius`; the UI
- * family maps to `--font-sans`.
- */
-export const toCssVars = (theme: Theme): Record<string, string> => {
-  const vars: Record<string, string> = {
-    "--radius": `${theme.radius.md}px`,
-    "--font-sans": cssFontStack(theme.typography.sans),
-  };
-  for (const [role, value] of Object.entries(theme.colors)) {
-    vars[`--${toKebab(role)}`] = `${value}`;
-  }
-  return vars;
-};
 
 /** The `createTheme` config the copy output emits, as data (not a string). */
 export const themeConfig = (

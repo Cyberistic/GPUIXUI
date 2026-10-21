@@ -5,17 +5,25 @@ import {
   TabsList,
   TabsTrigger,
 } from "fumadocs-ui/components/tabs";
+import { platformLabel } from "../../lib/platform";
 import { demos } from "./demos";
+import { usePlatform } from "./platform-toggle";
+import { PreviewSurface } from "./preview-surface";
 
 /**
  * The component page preview: a live browser rendering and the native usage
  * side by side, exactly as shadcn/ui pairs Preview and Code.
+ *
+ * The rendering sits on a `PreviewSurface`, which carries the variables of the
+ * platform theme the switch selected — the library's roles, not a docs style.
  */
 export function ComponentPreview({ name }: { name: string }) {
   const demo = demos[name];
   if (demo === undefined) {
     throw new Error(`ComponentPreview: no demo named "${name}"`);
   }
+
+  const { platform } = usePlatform();
 
   return (
     <div className="gx-component not-prose">
@@ -27,7 +35,7 @@ export function ComponentPreview({ name }: { name: string }) {
           </TabsList>
         </div>
         <TabsContent className="gx-component-panel" value="preview">
-          <div className="gx-demo">{demo.render()}</div>
+          <PreviewSurface>{demo.render()}</PreviewSurface>
         </TabsContent>
         <TabsContent
           className="gx-component-panel gx-component-code"
@@ -38,7 +46,8 @@ export function ComponentPreview({ name }: { name: string }) {
       </Tabs>
       <p className="gx-component-note">
         Browser preview: the geometry, palette and states of the native
-        component. The shipped component renders through GPUix, not the DOM.
+        component, drawn in the {platformLabel(platform)} type style. The
+        shipped component renders through GPUix, not the DOM.
       </p>
     </div>
   );
