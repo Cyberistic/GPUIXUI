@@ -11,7 +11,7 @@ import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import type { ValueState } from "../core/state.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { fieldChrome, fieldHostProps, type FieldProps } from "./Input.js";
+import { fieldHostProps, type FieldProps } from "./Input.js";
 import { useControlState, useFocus, type FocusState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -38,7 +38,7 @@ export const renderTextArea = (
   const host = fieldHostProps(props, theme, state, focus, onValueChange);
   const vertical = theme.density.controlPaddingX[props.size ?? "md"];
   const style: StyleDesc = {
-    ...fieldChrome(props, theme, focus.focused),
+    ...host.style,
     height: undefined,
     paddingTop: vertical,
     paddingBottom: vertical,

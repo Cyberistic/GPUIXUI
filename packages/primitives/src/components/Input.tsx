@@ -13,6 +13,7 @@
 
 import type { ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import type { ValueState } from "../core/state.js";
 import { nativeTextTheme } from "../core/style.js";
@@ -28,6 +29,13 @@ import {
   type FocusState,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** What a text field tells a `style` callback. */
+export interface FieldState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
+}
 
 /** Props shared by `Input` and `TextArea`. */
 export interface FieldProps {
@@ -59,7 +67,8 @@ export interface FieldProps {
   readonly fullWidth?: boolean;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the field's live state and merged last. */
+  readonly style?: StateStyle<FieldState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly testId?: string;
@@ -83,7 +92,14 @@ export const fieldChrome = (
   }
   const ring =
     focused && disabled !== true ? focusRingStyle(theme, invalid) : {};
-  return mergeStyle(mergeStyle(base, ring), style);
+  return mergeStyle(
+    mergeStyle(base, ring),
+    resolveStyle(style, {
+      disabled: disabled === true,
+      focused,
+      invalid: invalid === true,
+    }),
+  );
 };
 
 /** The props an `<input>`/`<textarea>` shares, from the spec and its state. */

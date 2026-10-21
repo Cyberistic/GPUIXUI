@@ -42,7 +42,7 @@ const email = "Contact email";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `label` | `string` | none | accessible name; pair with a visible `Label` |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<FieldState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
 
 ## Keyboard
@@ -74,6 +74,11 @@ handler, not to a field.
 `fieldChrome` uses `fieldVariant` (the `input` role) and the density metrics;
 `fieldTextStyle` and `nativeTextTheme` set the font, caret and selection colours
 the native element paints with. Focus uses the shared shadow ring.
+
+`style` takes a `StateStyle<FieldState>` — a `StyleDesc`, or a callback that
+receives `{ disabled, focused, invalid }`. `TextArea` and `Input` share the type,
+so a form styles both the same way, and the result merges after the ring (the
+last word on a property the recipe also sets).
 
 ## Limitations
 

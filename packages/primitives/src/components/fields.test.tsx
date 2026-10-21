@@ -14,7 +14,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import { renderInput } from "./Input.js";
+import { renderInput, type FieldState } from "./Input.js";
 import { renderTextArea } from "./TextArea.js";
 import type { FocusState } from "./internal.js";
 import { changeEvent } from "./testing/event.js";
@@ -189,5 +189,47 @@ describe("TextArea", () => {
     const field = renderInput({}, testTheme, draft(""), idle, vi.fn());
     expect(heightOf(area)).toStrictEqual(Option.none());
     expect(Option.isSome(heightOf(field))).toBe(true);
+  });
+
+  it("hands a style callback the live state and lets its result win", () => {
+    const seen: FieldState[] = [];
+    const focused: FocusState = {
+      focused: true,
+      onFocus: vi.fn(),
+      onBlur: vi.fn(),
+    };
+    const field = renderInput(
+      {
+        invalid: true,
+        style: (state) => {
+          seen.push(state);
+          return { opacity: 0.4 };
+        },
+      },
+      testTheme,
+      draft(""),
+      focused,
+      vi.fn(),
+    );
+    const area = renderTextArea(
+      {
+        disabled: true,
+        style: (state) => {
+          seen.push(state);
+          return { opacity: 0.4 };
+        },
+      },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+
+    expect(seen).toEqual([
+      { disabled: false, focused: true, invalid: true },
+      { disabled: true, focused: false, invalid: false },
+    ]);
+    expect(chromeOf(field).opacity).toStrictEqual(Option.some(0.4));
+    expect(chromeOf(area).opacity).toStrictEqual(Option.some(0.4));
   });
 });

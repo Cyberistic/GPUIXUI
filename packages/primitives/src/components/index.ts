@@ -35,7 +35,7 @@ export { pressedValueText, Toggle } from "./Toggle.js";
 export type { ToggleProps, ToggleState } from "./Toggle.js";
 
 export { Input } from "./Input.js";
-export type { FieldProps, InputProps } from "./Input.js";
+export type { FieldProps, FieldState, InputProps } from "./Input.js";
 
 export { NumberField, numberRange } from "./NumberField.js";
 export type { NumberFieldProps } from "./NumberField.js";
