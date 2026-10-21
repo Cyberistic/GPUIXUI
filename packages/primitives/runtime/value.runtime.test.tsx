@@ -157,6 +157,28 @@ it("installs no press for a caller on a disabled slider but still delivers its k
   expect(events).toStrictEqual(["key"]);
 });
 
+it("delivers exactly one press when the pointer lands on a thumb", async () => {
+  // The caller's press is installed on the track and on the painted thumb, so a
+  // press on the knob is observed too — once, not twice. The runtime hit-tests
+  // one element, so the guard is that the handler is not also reached by a
+  // second path.
+  const clicks: Array<number> = [];
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={50}
+      onClick={(event) => clicks.push(event.elementId)}
+    />,
+  );
+  const thumb = thumbOf(runtime, "s");
+  const box = Option.getOrElse(runtime.boundsOfId(thumb.id), () =>
+    expect.fail("the thumb painted no box"),
+  );
+  runtime.clickAt(box.x + box.width / 2, box.y + box.height / 2);
+  expect(clicks).toHaveLength(1);
+});
+
 it("keeps the press and the mapping when the caller composes the parts", async () => {
   // The bug this guards: a part split that leaves the custom tree without the
   // root's pointer handling — a composed slider that looks right and answers
