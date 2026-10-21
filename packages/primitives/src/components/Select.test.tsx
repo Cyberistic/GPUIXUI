@@ -49,6 +49,35 @@ describe("Select", () => {
     expect(disabled.color).toBe(testTheme.colors.disabledForeground);
   });
 
+  it("declares the keyboard ring on the trigger, destructive while invalid", () => {
+    // The bug: the trigger was the only Tier 1 control with no ring at all, so
+    // a keyboard user could not see where Tab had landed.
+    const ringAt = (spec: Parameters<typeof selectTriggerStyle>[0]) =>
+      selectTriggerStyle(
+        spec,
+        testTheme,
+      )({
+        open: false,
+        disabled: false,
+        placeholder: false,
+      });
+    const rest = ringAt({ variant: fieldVariant, size: "md" });
+    expect(rest.focusVisible?.outlineColor).toBe(testTheme.colors.ring);
+    const invalid = ringAt({
+      variant: fieldVariant,
+      size: "md",
+      invalid: true,
+    });
+    expect(invalid.focusVisible?.outlineColor).toBe(
+      testTheme.colors.destructive,
+    );
+    const disabled = selectTriggerStyle(
+      { variant: fieldVariant, size: "md" },
+      testTheme,
+    )({ open: false, disabled: true, placeholder: false });
+    expect(disabled.focusVisible).toBeUndefined();
+  });
+
   it("gives an invalid trigger the destructive border", () => {
     const trigger = selectTriggerStyle(
       { variant: fieldVariant, size: "md", invalid: true },

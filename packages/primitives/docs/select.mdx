@@ -65,7 +65,10 @@ key.
 `selectTriggerStyle`, `selectContentStyle` and `selectItemStyle` resolve the
 trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
 `radius.md` + `elevation.overlay`) and the item states (`selected`, `hover`,
-`disabledForeground`). The list is one spacing step inset, full trigger width.
+`disabledForeground`). The trigger declares the shared keyboard outline at rest
+(`keyboardRing`, destructive while `invalid`), so the runtime paints it after
+Tab and not after a mouse press; a disabled trigger declares none. The list is
+one spacing step inset, full trigger width.
 
 ## Limitations
 
@@ -78,7 +81,8 @@ trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
 
 ## Verification
 
-- `src/components/Select.test.tsx` — trigger chrome, list surface and item
+- `src/components/Select.test.tsx` — trigger chrome, the keyboard ring (ring
+  role, destructive while invalid, absent while disabled), list surface and item
   states.
 - `runtime/fields.runtime.test.tsx` — opens, paints its options and commits a
   clicked option in the real renderer; open state and dismissal are GPUix's.
