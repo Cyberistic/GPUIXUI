@@ -10,6 +10,17 @@ Status: `todo` · `wip` · `done` · `blocked (reason)` · `unsupported (evidenc
 Every row also records **GPUix support** and, when it is not `yes`, the evidence
 and the strongest honest alternative.
 
+> **Editing this file.** The `Tier 1`–`Tier 5` tables are parsed by the docs site
+> (`apps/docs/src/lib/inventory.ts`), which renders `/docs/layouts`,
+> `/docs/data-display` and `/docs/workspace` from them. A row keeps exactly four
+> columns — `Component | Status | GPUix support | Notes / limitations` — under its
+> `Tier N` heading, one table per heading. A fifth column, or a second table under
+> one heading, silences every row on those pages;
+> `apps/docs/src/lib/inventory.test.ts` fails first and names the line.
+> The design-system table is held to its own contract by
+> `packages/tokens/src/inventory.test.ts`: four columns, the declared status
+> vocabulary, and a `done` row that names an existing test file.
+
 ## Design system
 
 | Capability | Status | GPUix support | Notes / limitations |
@@ -137,7 +148,7 @@ placeholder.
 | Text inputs | done | partial | `Input` over the host `<input>`, with the theme's native text theme (caret, selection, placeholder, fonts), invalid state and an optional label; `style` is a `StateStyle<FieldState>` (`disabled`/`focused`/`invalid`) merged last, shared with `TextArea`. No `type`/`maxLength`/`inputMode`/`pattern`, no prefix/suffix or mask; `disabled` is emulated (read-only + out of the tab order + disabled roles) because the host has no `disabled` prop; no `aria-describedby`. |
 | Text areas | done | partial | `TextArea` over `<textarea>` with `rows`/`maxRows` (auto-grow up to the cap, then scroll) and the same `StateStyle<FieldState>` `style` contract as `Input`. No rich text, no character counter, **no submit-on-Enter by design**. Disabled is the same read-only emulation as `Input`. |
 | Checkboxes | done | partial | two parts (`Checkbox`, `CheckboxIndicator`); three states (unchecked/checked/indeterminate) over the shared selection model, click and Space-up, disabled and destructive accent; a caller's children replace the mark's glyph inside the `pointerEvents: none` guard, so a custom mark cannot swallow the press (native hit-test case in `controls.runtime.test.tsx`); `onCheckedChange` with `onChange` as a deprecated alias. **No `aria-checked`**: the state is announced through `aria-valuetext` (`mixed` for indeterminate). No label-inside composition |
-| Radio groups | done | partial | `RadioGroup` + `RadioGroupItem`: the choices arrive as data (`options`) or as item children carrying rich content, and both are read into one option list, so the roving tab stop that follows the selection, wrapping arrows that skip disabled options, Home/End and the click path have a single implementation; `onValueChange` with `onChange` as a deprecated alias; a named `role="radiogroup"`. No type-ahead, and an option `description` is not associated for assistive technology (no `aria-describedby`). |
+| Radio groups | done | partial | `RadioGroup` + `RadioGroupItem`: the choices arrive as data (`options`) or as item children carrying rich content, and both are read into one option list, so the roving tab stop that follows the selection, wrapping arrows that skip disabled options, Home/End and the click path have a single implementation; `onValueChange` with `onChange` as a deprecated alias; a named `role="radiogroup"`. No type-ahead; an option `description` is not associated for assistive technology (no `aria-describedby`), and rich content must stay presentational because the runtime hit-tests the deepest element (a `Box` takes the press from the row, text and icons do not). |
 | Selects | done | yes | Wraps GPUix's published `Select` parts and themes the trigger, list surface and rows; open state, positioning and dismissal are the runtime's. Options are data — no option groups, rich options, search/type-ahead or multi-select. |
 | Switches | done | partial | two parts (`Switch`, `SwitchThumb`); an immediate on/off over the same three-state paint and keyboard contract as the checkbox, with the knob moved by `justifyContent`; a caller's children are a glyph on the knob, kept out of the hit test by the recipe's `pointer-events-none` (native hit-test case in `controls.runtime.test.tsx`); `onCheckedChange` with `onChange` as a deprecated alias. No slide animation (no colour interpolation in `motion`), no pending state, and no `aria-checked` — the visible label carries the meaning. |
 | Progress | done | partial | Determinate fill (clamped 0–100, `Number.NaN` reads as empty) and an indeterminate discrete step; four tones, two sizes. **No `aria-valuenow`** — the value is announced as `aria-valuetext` (`"42%"`, `"loading"`). No buffer value, stacked segments or in-track label. |

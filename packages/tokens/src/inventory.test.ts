@@ -32,8 +32,11 @@ const components = readFileSync(
   "utf8",
 );
 
-const start = components.indexOf("## Design system");
-const section = components.slice(start, components.indexOf("\n## ", start + 1));
+/** The `## Design system` section, found by its heading rather than by a phrase. */
+const section =
+  components
+    .split(/^## /m)
+    .find((part) => part.startsWith("Design system\n")) ?? "";
 
 interface Row {
   readonly capability: string;
