@@ -122,6 +122,12 @@ export const registry = [
     capability: "workspace",
   },
   {
+    id: "docking-nested",
+    title:
+      "Workspace: nested splits, a collapsible caller-owned sidebar and a tabbed pane",
+    capability: "workspace",
+  },
+  {
     id: "window-key-shortcut",
     title: "App-level window shortcut: cmd-k palette and Escape",
     capability: "workspace",

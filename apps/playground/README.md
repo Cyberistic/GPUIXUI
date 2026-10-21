@@ -23,14 +23,15 @@ compile error. Each scenario is one capability, one view, one `steps` effect: th
 core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
-`tree-view`, `log-viewer`, `workspace-tab-drag`), the app-level shortcut probe
+`tree-view`, `log-viewer`, `workspace-tab-drag`, `docking-nested`), the
+app-level shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twelve probes a real window can prove, of which five mount shipped
+thirteen probes a real window can prove, of which six mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
 palette and the modal focus rule) and the rest prove the runtime itself (focus,
 paint, fonts, placement). `apps/playground` depends on `@gpuixui/components` for
@@ -75,7 +76,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (23/23 green); -> 2 on a host with no binding
+# -> 0 here (24/24 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -234,10 +235,10 @@ restored, green.
 
 ## Evidence on this host
 
-The suite is **23/23 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **24/24 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-23/23 scenarios passed · capabilities: layout=verified text=verified
+24/24 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -257,6 +258,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
+| docking | nested splits compose: each level keeps its own width, so an outer drag moves the inner split's origin and leaves its width alone, and an inner drag leaves the sidebar alone. A caller-owned sidebar collapses to 0 (the nested split takes the width) and reopens at the width it had; a tab switch inside a pane repaints it without moving it. A split's `max` is the **caller's number**, not the container's width: a nested split does not re-clamp when its parent shrinks, so a dock passes its own bounds (0.11.0's `onLayout` is the way to measure them) |
 | virtual table | `onVisibleRange` **lags the painted window by one gesture** — after two wheel gestures the painted rows were `32–40` while the range read `16`; an index-driven feature must use the painted rows as the current window |
 | tree | `paddingLeft` indents exactly (16px per depth); expand/collapse repaints the subtree; a clicked row takes native focus and receives arrow keys. Focus movement from component code is measured separately (`modal`), so a roving-tabindex tree can use `renderer.focusElement` |
 | log | bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up and appending does **not** snap back — a follow toggle is app state plus a scroll |
@@ -706,6 +708,7 @@ src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
 src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
 src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/floating.tsx  side/align/offset placement and the window snap
+src/scenarios/docking.tsx   nested splits, a caller-owned sidebar and a tabbed pane
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -746,7 +749,7 @@ narrower. Each deviation is deliberate and measured:
 - The thirteen core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (23/23), with a written report and screenshots.
+  (24/24), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

@@ -399,7 +399,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 16/16
+`[x]` `[██████████]` 17/17
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -527,6 +527,17 @@ a workaround for two live sessions sharing one worktree; see
       measured an inside press instead — the target is now pinned top-right, and
       the README records the lesson. Green on 0.11.0 (`--only
       popover-lifecycle`); evidence `.artifacts/live/popover-*.png`.
+`[x]` Land the `docking-nested` Tier 4 feasibility probe — a sidebar, a nested
+      split and a tabbed pane composed in one layout. Each level keeps its own
+      width under the other level's drag; the sidebar is caller-owned (`size`),
+      so collapsing it to 0 hands the width to the nested split and reopening
+      restores the width it held (not the starting one); a tab switch inside a
+      pane repaints it without moving it. 22 assertions / 30 checks; two
+      negative controls measured (uncontrolled sidebar: `expected 6 ± 1, got
+      206`; inner divider wired to the sidebar: `sidebar=340 editor=260`, exit
+      `1` each). `SplitPane` gained an optional controlled `size`, so
+      `panel-resize` and `workspace-tab-drag` re-passed (`--only docking-nested
+      --only panel-resize --only workspace-tab-drag`).
 
 ## Phase C — Tier 1–2 components
 
@@ -926,7 +937,20 @@ Both are specified in ; each fix starts with a plan under .
       anchor: expected 254 ± 1, got 546`, exit `1`). Evidence:
       `apps/playground/README.md` §`floating-sides`,
       `.artifacts/live/floating-sides.png`
-`[ ]` `apps/playground`: no Tier 3/4 feasibility probes exist for the data-grid, docking and editor packages (salvage 130)
+`[x]` `apps/playground`: dock feasibility measured — the `docking-nested`
+      scenario composes a sidebar, a nested split and a tabbed pane in one
+      layout: each level keeps its own width (an outer drag moves the inner
+      split's origin, an inner drag leaves the sidebar alone), a caller-owned
+      sidebar collapses to 0 and reopens at the width it held, and a tab switch
+      repaints its pane without moving it. 22 assertions (30 checks with the
+      paint guards); two negative controls measured (dropping the controlled
+      `size` leaves the layout at 140 while the readout says 0, `expected 6 ± 1,
+      got 206`; wiring the inner divider to the sidebar reads
+      `sidebar=340 editor=260`, exit `1` each). Its measured limitation — a
+      split's `max` is the caller's number, not the container's — is recorded in
+      the README. `--only docking-nested`, green on 0.11.0.
+`[ ]` `apps/playground`: no data-grid or editor feasibility probe yet
+      (salvage 130; docking landed above)
 `[ ]` `apps/playground`: native probe backlog — content surfaces (svg/img/diff/canvas), cross-element drag and file drops, the shipped Tier 1 controls in the suite, search highlights, drag auto-scroll, horizontal scroll and tab overflow, tab-strip focus, nested panels, command palette, tabbed workspace panes (salvage 161-163, 168-177). **Text selection landed** (`text-selection`, salvage 163)
 `[x]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178) — `packages/testing/src/native.ts` exports `NativeRenderer`/`NativeElement` (method signatures only, so the package still imports no GPUix type) and `createTestHost`, which owns the `testId` → element lookup, the nearest-painted-ancestor fallback for a `<virtual-list>`/`<anchored>`, the subtree text join, the style decode and the drag synthesis. `apps/playground/src/smoke/host.ts` is deleted — a real `TestRenderer` satisfies the port structurally, so the runner calls `Native.createTestHost(root.renderer)`. 10 fake-renderer tests; both directions measured (dropping the ancestor fallback fails `aims input at the nearest ancestor that paints` and the drag case). Headless re-run green: `--only modal-focus-trap --only panel-resize --only scroll-container`
 `[ ]` `packages/components`: Tier 2 behaviour gaps — remaining: List row subscriptions and icon adoption (salvage 324, 339).

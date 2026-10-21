@@ -25,6 +25,7 @@ import { panelScenario } from "./panel.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { workspaceScenario } from "./workspace.js";
+import { dockingScenario } from "./docking.js";
 import { shortcutScenario } from "./shortcuts.js";
 import { shellNavigationScenario } from "./shell.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
@@ -55,6 +56,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "table-select-sort": tableSelectSortScenario,
   "table-column-resize": tableColumnResizeScenario,
   "workspace-tab-drag": workspaceScenario,
+  "docking-nested": dockingScenario,
   "window-key-shortcut": shortcutScenario,
   "theme-color-roles": themeColorRolesScenario,
   "theme-type-and-shadow": themeTypeAndShadowScenario,

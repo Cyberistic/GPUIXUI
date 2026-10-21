@@ -6,6 +6,11 @@
  * `onMouseMove` to it. The pane width is `nextSize(start, delta)` clamped to the
  * caller's bounds.
  *
+ * `size` makes the width the caller's: a layout that collapses a sidebar to zero
+ * or restores a saved arrangement cannot reach internal state, so it passes the
+ * width and takes every change through `onResize`. Without it the split owns the
+ * width and `initial` is the starting point.
+ *
  * `max` is a prop, not measured at runtime: GPUix 0.10.0 has no `onLayout`
  * event, so the total width cannot be observed from the tree (see the app
  * README). The app knows its window width and passes it.
@@ -28,6 +33,8 @@ export interface SplitPaneProps {
   readonly primary: ReactNode;
   readonly secondary: ReactNode;
   readonly initial: number;
+  /** The width when the caller owns it; omit to let the split own it. */
+  readonly size?: number;
   readonly min: number;
   readonly max: number;
   /** Called with each clamped width, so a scenario can read the split state. */
@@ -40,16 +47,18 @@ export const SplitPane = ({
   primary,
   secondary,
   initial,
+  size: sizeProp,
   min,
   max,
   onResize,
 }: SplitPaneProps) => {
   const theme = useTheme();
-  const [size, setSize] = useState(initial);
+  const [owned, setOwned] = useState(initial);
   const [press, setPress] = useState<Option.Option<Press>>(Option.none());
+  const size = sizeProp ?? owned;
 
   const resize = (next: number) => {
-    setSize(next);
+    setOwned(next);
     onResize?.(next);
   };
 
