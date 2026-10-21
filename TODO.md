@@ -399,7 +399,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 14/14
+`[x]` `[███████████]` 15/15
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -501,6 +501,19 @@ a workaround for two live sessions sharing one worktree; see
       multi-child fragment, so providers with sibling children need a host
       wrapper. All three green on 0.11.0 (`--only dialog-lifecycle --only
       menu-lifecycle --only toast-lifecycle`).
+`[x]` Land the Tier 4 live probes — `command-palette` (14 checks: the shipped
+      `CommandMenu` opens from a press, the search field takes the focus, an
+      arrow key moves the **highlight** without moving the focus, `Enter` runs
+      the highlighted row and not the first one, typing filters the rows, a
+      disabled action paints but runs nothing, `Escape` dismisses) and
+      `modal-focus-restore` (8 checks: the modal focus rule measured with three
+      modals — the surface holds the focus → the opener gets it back, a field
+      the modal focused with `initialFocus` → the opener gets it back, a field
+      that took the focus with `autoFocus` → **nothing** holds it). Both green
+      on 0.11.0 (`--only command-palette --only modal-focus-restore`), with
+      negative controls measured (exit `1` each). The second probe isolates a
+      real defect in the shipped `CommandMenu` — it loses the focus when it
+      closes — recorded as an interlock row for the components workstream.
 
 ## Phase C — Tier 1–2 components
 
@@ -788,6 +801,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `COMPONENTS.md` line 159 (Range slider, from commit `d8523ced`) writes a raw `\|` inside the note — `` `SliderThumb index={0\|1}` `` — so the row has five cells and every docs inventory guard reports it: `apps/docs/src/lib/inventory.test.ts` says "line 159: expected 4 cells under a tier, found 5" and the lane/authoring contract is red until it is escaped or reworded. The parse is deliberately strict because a five-column row would silently empty the lane pages. Fix: write `0 and 1`, `0 \| 1`, or a code span without a pipe | primitives | open — no docs-site change fixes it; the row is primitives' note. Measured 2026-10-21 while landing the curated-page truth pass (111/112 docs tests green, this the only failure) |
 
 | `nub run check:tests` rejects two docs-site tests it cannot see an assertion in — `apps/docs/src/lib/site.test.ts:15` ("is the host the deploy stack publishes", which does call `expect(domain).toBeDefined()`) and `apps/docs/src/lib/component-page-truth.test.ts:84` (reported with a `(dynamic)` title) | docs-site + tooling (`scripts/check-tests.ts`) | open — measured 2026-10-21 while landing the tokens contrast pairs: the gate, part of `nub run check`, is red until the parse is fixed or each finding is argued with a `// check-tests-ok:` line |
+| A modal that focuses a field with `autoFocus` **loses the focus when it closes**: the field takes the focus during the commit that mounts it, before the modal records who held it, so the modal's restore target is a field that is gone by the time the surface unmounts. The shipped `CommandMenu` is affected — its search field carries `autoFocus`, so closing the palette leaves the focus nowhere and the opener never gets it back | components | open — **measured on 0.11.0** by the playground's new `modal-focus-restore` probe (control: the surface holds the focus → the opener gets it back; a field the modal focused itself with `initialFocus` → the opener gets it back; a field that took the focus with `autoFocus` → **nothing** holds it), and reproduced in the shipped palette by `command-palette` (both close paths: running an action and `Escape`). Negative controls measured (exit `1` each): `expected "restore-auto-trigger", got "none"` and `expected "ran=new-file runs=1", got "ran=open-settings runs=1"`. The fix is the field's `autoFocus` (the modal's `initialFocus` already focuses it) or the shared `useModalFocus`; the two probe checks flip to the restored focus with it. Evidence: `apps/playground/README.md` §`modal-focus-restore` and §`command-palette` |
 
 ## Phase D — data and workspace components
 

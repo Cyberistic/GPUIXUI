@@ -29,11 +29,12 @@ the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
-The **live** registry (`src/live/registry.ts`) is separate and shorter: the eight
-probes a real window can prove, of which the last three mount shipped
-`@gpuixui/components` (`dialog`, `menu`, `toast`) and the rest prove the runtime
-itself (focus, paint, fonts, placement). `apps/playground` depends on
-`@gpuixui/components` for exactly that.
+The **live** registry (`src/live/registry.ts`) is separate and shorter: the
+twelve probes a real window can prove, of which five mount shipped
+`@gpuixui/components` (the dialog, the menu, the toast system, the command
+palette and the modal focus rule) and the rest prove the runtime itself (focus,
+paint, fonts, placement). `apps/playground` depends on `@gpuixui/components` for
+exactly that.
 
 ## Run it
 
@@ -561,6 +562,68 @@ root: every probe here mounts exactly one wrapper element, and the toast provide
 is mounted inside it. This is a runtime quirk, not a probe workaround — record it
 before nesting a provider at a window's root.
 
+### `command-palette` — measured on 0.11.0 here
+
+The shipped `CommandMenu` — the Tier 4 command palette — in a window. The palette
+is controlled and has no trigger part (an application opens it from a shortcut),
+so the probe's own button stands in for that shortcut, and a readout reports what
+React received: the difference between a **highlighted** row and an **executed**
+one.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `ran=none runs=0`, and the closed palette paints no surface |
+| press the trigger | the surface paints and the **search field** holds the focus |
+| `ArrowDown` | the field **keeps** the focus — the highlight moves, the focus does not |
+| `Enter` | `ran=open-settings runs=1` — the *second* row ran, so the arrow really moved the highlight |
+| the palette | closes itself when an action runs |
+| press, type `theme` | only `Toggle Theme` paints; `New File` is filtered out; no empty state |
+| `Enter` | `ran=theme runs=2` — the filtered row ran |
+| press, type `zoom` | the **disabled** row still paints |
+| `Enter` | nothing runs and the palette stays open |
+| `Escape` | the palette dismisses |
+
+14 checks. Captures: `.artifacts/live/palette-open.png` (the field, the two
+groups, the disabled row muted), `palette-filtered.png` (the field holding
+`theme`, one row left) and `palette-closed.png`.
+
+The design claim is the one a browser-shaped test cannot make: the highlight is
+**not** focus. If the arrow key moved the focus instead, the typing would stop
+after the first keystroke, so the filter check would fail by name — the two
+checks together are the contract.
+
+**The measured gap: the palette does not give the focus back.** After the
+palette closes, nothing holds the focus (`none`), so the opener never gets it
+back. `modal-focus-restore` below isolates the cause; the components workstream
+owns the fix (`TODO.md`).
+
+### `modal-focus-restore` — measured on 0.11.0 here
+
+The rule behind the gap above, measured with three modals that differ only in
+what holds the focus while the surface is open.
+
+| Case | What holds the focus while open | Focus after `Escape` |
+| ---- | ------------------------------ | --------------------- |
+| control: nothing focusable inside | the modal's own surface | **the opener** |
+| the modal focused a field itself (`initialFocus`) | the field | **the opener** |
+| a field took the focus at mount (`autoFocus`) | the modal's own surface | **nothing** |
+
+8 checks. The control comes first, so the third row is about the field and not
+about modals in general.
+
+The mechanism, measured rather than inferred: `autoFocus` takes the focus during
+the commit that mounts the field, **before** the modal's focus effect records
+who held it. The modal therefore saves the *field* as its restore target, and
+`getElementBounds` reports that field as gone by the time the surface unmounts —
+so the restore is skipped and the focus ends up nowhere. A field the modal
+focuses itself (`initialFocus`) is focused *after* the modal has recorded the
+opener, so the restore works.
+
+That is why the shipped `CommandMenu` loses the focus: its search field carries
+`autoFocus` **and** the modal's `initialFocus`. The fix is the components
+workstream's (`TODO.md`); these two checks pin the measurement and flip to
+`restore-auto-trigger` with it.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -682,7 +745,14 @@ narrower. Each deviation is deliberate and measured:
   fails `an arrow key moves focus to the next row`
   (`expected "menu-delete", got "menu-rename"`); in `toast-lifecycle`, dropping
   the viewport fails `text toast-viewport: Locator did not match any element` —
-  each exit `1`.
+  each exit `1`. In `modal-focus-restore`, expecting the opener to get the focus
+  back from the `autoFocus` case fails
+  `a field that took the focus at mount leaves the focus nowhere when the modal
+  closes: expected "restore-auto-trigger", got "none"` (exit `1`) — the defect
+  the probe measures; in `command-palette`, expecting the first row instead of
+  the highlighted one fails
+  `Enter runs the highlighted action, not the first one: expected "ran=new-file
+  runs=1", got "ran=open-settings runs=1"` (exit `1`).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

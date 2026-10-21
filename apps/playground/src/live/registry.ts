@@ -96,6 +96,18 @@ export const liveRegistry = [
       "Overlay: the shipped toast system queues a toast and dismisses it from its own control",
     capability: "overlay",
   },
+  {
+    id: "command-palette",
+    title:
+      "Workspace: the shipped CommandMenu filters by typing, highlights without moving focus, and runs the highlighted action",
+    capability: "workspace",
+  },
+  {
+    id: "modal-focus-restore",
+    title:
+      "Focus: a modal gives the focus back only when its own surface held it",
+    capability: "focus",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

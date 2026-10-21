@@ -12,6 +12,10 @@ import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
 import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
   Dialog,
   DialogClose,
   DialogContent,
@@ -27,6 +31,7 @@ import {
   ToastProvider,
   ToastViewport,
   useToast,
+  type CommandAction,
 } from "@gpuixui/components";
 import {
   Button,
@@ -799,6 +804,129 @@ const ToastProbe = (): ReactNode => {
   );
 };
 
+/**
+ * The shipped `CommandMenu` — the Tier 4 command palette — over four actions.
+ *
+ * The palette is controlled and has no trigger part: the application opens it
+ * from a shortcut or from its own control, so the probe's button stands in for
+ * that shortcut. The readout is React's report of what ran, which is the
+ * difference between a highlighted row and an executed one.
+ *
+ * The fourth action is disabled: it paints, and it runs nothing — the
+ * difference a menu with only enabled rows cannot show.
+ */
+const CommandPaletteProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [open, setOpen] = useState(false);
+  const [ran, setRan] = useState("none");
+  const [runs, setRuns] = useState(0);
+  const record = (id: string) => () => {
+    setRan(id);
+    setRuns((count) => count + 1);
+  };
+
+  const actions: ReadonlyArray<CommandAction> = [
+    {
+      id: "new-file",
+      label: "New File",
+      group: "File",
+      shortcut: "⌘N",
+      perform: record("new-file"),
+    },
+    {
+      id: "open-settings",
+      label: "Open Settings",
+      group: "File",
+      shortcut: "⌘,",
+      perform: record("open-settings"),
+    },
+    {
+      id: "theme",
+      label: "Toggle Theme",
+      group: "View",
+      perform: record("theme"),
+    },
+    {
+      id: "zoom",
+      label: "Reset Zoom",
+      group: "View",
+      disabled: true,
+      perform: record("zoom"),
+    },
+  ];
+  return (
+    <div
+      testId="command-palette-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped CommandMenu: typing filters, the highlight is not focus,
+          and Enter runs the row.
+        </text>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <div
+            testId="palette-trigger"
+            role="button"
+            tabIndex={0}
+            onClick={() => setOpen(true)}
+            style={{
+              paddingTop: theme.spacing.sm,
+              paddingBottom: theme.spacing.sm,
+              paddingLeft: theme.spacing.lg,
+              paddingRight: theme.spacing.lg,
+              borderRadius: theme.radius.md,
+              backgroundColor: theme.colors.primary,
+            }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: theme.colors.primaryForeground,
+              }}
+            >
+              Open palette
+            </text>
+          </div>
+        </div>
+        <text
+          testId="palette-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`ran=${ran} runs=${runs}`}
+        </text>
+      </div>
+      <CommandMenu open={open} onOpenChange={setOpen} actions={actions}>
+        <CommandMenuInput placeholder="Type a command…" />
+        <CommandMenuList testId="command-list" />
+        <CommandMenuEmpty />
+      </CommandMenu>
+    </div>
+  );
+};
+
 /** What a probe module supplies; the registry supplies the metadata. */
 export interface LiveProbeBody {
   readonly id: LiveProbeId;
@@ -1441,6 +1569,348 @@ const toastSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("toast-dismissed");
   });
 
+/**
+ * Drives the shipped `CommandMenu` the way an application shortcut would.
+ *
+ * Six claims, each of which a browser-shaped test cannot make: a window's
+ * keystrokes reach the palette's search field, typing really filters the rows,
+ * the arrow key moves the *highlight* while the field keeps native focus (the
+ * component's documented contract — moving focus would stop the typing), Enter
+ * runs the highlighted row rather than the first one, a disabled action paints
+ * but runs nothing, and `Escape` dismisses the surface.
+ *
+ * The focus after the dismissal is the seventh, and it is a **gap**: the
+ * palette does not give the focus back. `modal-focus-restore` isolates the
+ * cause; the components workstream owns the fix (`TODO.md`).
+ */
+const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** Whether `testId` is absent from the window's tree. */
+    const unpainted = (
+      testId: string,
+    ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
+      Effect.map(ctx.host.bounds(testId), (bounds) =>
+        Option.isNone(Option.fromNullishOr(bounds)),
+      );
+
+    /** Types a key sequence in order; one keystroke at a time. */
+    const type = (
+      keys: ReadonlyArray<string>,
+    ): Effect.Effect<void, Smoke.SmokeHostError> =>
+      Effect.forEach(keys, (key) => ctx.host.key(key), {
+        discard: true,
+        concurrency: 1,
+      });
+
+    /** Presses the trigger and lets the surface paint. */
+    const openPalette: Effect.Effect<void, Smoke.SmokeHostError> = Effect.gen(
+      function* () {
+        yield* ctx.host.focusElement("palette-trigger");
+        yield* ctx.host.click("palette-trigger");
+        yield* Effect.sleep(SETTLE);
+      },
+    );
+
+    yield* ctx.host.waitFor("palette-trigger");
+    yield* ctx.expectEqual(
+      "the palette starts with nothing run",
+      yield* ctx.host.text("palette-readout"),
+      "ran=none runs=0",
+    );
+    yield* ctx.expectEqual(
+      "a closed palette paints no surface",
+      yield* unpainted("command-menu"),
+      true,
+    );
+
+    // The unfiltered list: four rows, the first one highlighted.
+    yield* openPalette;
+    yield* ctx.expectEqual(
+      "a press opens the palette surface",
+      (yield* paintedBox(ctx, "command-menu")).width > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the palette opens with its search field focused",
+      yield* focusedAfterPaint(ctx),
+      "command-input",
+    );
+    yield* ctx.host.capture("palette-open");
+
+    // The design claim: the highlight moves, the field keeps the focus. If the
+    // arrow key moved focus instead, the typing below would stop working.
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow key keeps the search field focused",
+      yield* focusedAfterPaint(ctx),
+      "command-input",
+    );
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter runs the highlighted action, not the first one",
+      yield* ctx.host.text("palette-readout"),
+      "ran=open-settings runs=1",
+    );
+    yield* ctx.expectEqual(
+      "running an action dismisses the palette",
+      yield* unpainted("command-menu"),
+      true,
+    );
+    // The measured gap: the palette's field takes the focus with `autoFocus`,
+    // so the modal saves the field as its restore target and the focus is lost
+    // when the field unmounts with the surface. `modal-focus-restore` isolates
+    // the cause; the components workstream owns the fix (TODO), and this check
+    // flips to `palette-trigger` with it.
+    yield* ctx.expectEqual(
+      "closing the palette leaves the focus nowhere (known gap: the opener does not get it back)",
+      yield* focusedAfterPaint(ctx),
+      "none",
+    );
+    yield* ctx.host.capture("palette-closed");
+
+    // The filtered list: typing reaches the field and really filters the rows.
+    yield* openPalette;
+    yield* type(["t", "h", "e", "m", "e"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "typing filters the palette to the matching row",
+      (yield* paintedBox(ctx, "command-theme")).width > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "an unrelated row is filtered out",
+      yield* unpainted("command-new-file"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a matching query paints no empty state",
+      yield* unpainted("command-empty"),
+      true,
+    );
+    yield* ctx.host.capture("palette-filtered");
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter runs the filtered action",
+      yield* ctx.host.text("palette-readout"),
+      "ran=theme runs=2",
+    );
+
+    // A query whose only match is disabled: the row paints, and it runs nothing.
+    yield* openPalette;
+    yield* type(["z", "o", "o", "m"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled action still paints as a row",
+      (yield* paintedBox(ctx, "command-zoom")).width > 0,
+      true,
+    );
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter on a disabled action runs nothing",
+      yield* ctx.host.text("palette-readout"),
+      "ran=theme runs=2",
+    );
+    yield* ctx.expectEqual(
+      "a disabled action leaves the palette open",
+      (yield* paintedBox(ctx, "command-menu")).width > 0,
+      true,
+    );
+
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape dismisses the palette",
+      yield* unpainted("command-menu"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Escape leaves the focus nowhere as well (the same known gap)",
+      yield* focusedAfterPaint(ctx),
+      "none",
+    );
+  });
+
+/**
+ * Three modals and the question the command palette raised: does a modal give
+ * the focus back when the focused thing unmounts with it?
+ *
+ * The three cases differ only in what holds the focus while the surface is
+ * open:
+ *
+ * - the **control** has nothing focusable inside, so the modal's own surface
+ *   holds the focus;
+ * - the **manual** field is focused by the modal itself (`initialFocus`), after
+ *   the surface exists;
+ * - the **auto** field takes the focus the way the runtime does it
+ *   (`autoFocus`, at mount) — before the modal has looked at the focus.
+ *
+ * All three unmount with their surface, so all three are the case that matters.
+ */
+const ModalFocusRestoreProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [manualId, setManualId] = useState<number | null>(null);
+  const field = {
+    height: 32,
+    paddingLeft: theme.spacing.sm,
+    backgroundColor: theme.colors.input,
+    color: theme.colors.inputForeground,
+  };
+  return (
+    <div
+      testId="modal-focus-restore-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          Three modals: does the focus come back when what held it unmounts with
+          the surface?
+        </text>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: theme.spacing.md,
+          }}
+        >
+          <Dialog>
+            <DialogTrigger testId="restore-control-trigger">
+              Nothing inside
+            </DialogTrigger>
+            <DialogContent
+              label="Nothing inside"
+              testId="restore-control-content"
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "body"),
+                  color: theme.colors.foreground,
+                }}
+              >
+                The surface holds the focus.
+              </text>
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger testId="restore-manual-trigger">
+              Focused field
+            </DialogTrigger>
+            <DialogContent
+              label="Focused field"
+              testId="restore-manual-content"
+              initialFocus={() => manualId}
+            >
+              <input
+                testId="restore-manual-input"
+                ref={(instance) => setManualId(instance?.id ?? null)}
+                style={field}
+              />
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger testId="restore-auto-trigger">
+              Auto-focused field
+            </DialogTrigger>
+            <DialogContent
+              label="Auto-focused field"
+              testId="restore-auto-content"
+            >
+              <input testId="restore-auto-input" autoFocus style={field} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Measures where the focus lands after each modal closes.
+ *
+ * The control comes first: a modal whose own surface held the focus gives it
+ * back, so the two readings after it are about the field, not about modals in
+ * general.
+ */
+const modalFocusRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("restore-control-trigger");
+
+    // The control: nothing focusable inside, the surface holds the focus.
+    yield* ctx.host.click("restore-control-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the control's surface holds the focus while it is open",
+      yield* focusedAfterPaint(ctx),
+      "restore-control-content",
+    );
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the control's modal gives the focus back to its opener",
+      yield* focusedAfterPaint(ctx),
+      "restore-control-trigger",
+    );
+
+    // A field the modal focused itself, after the surface existed.
+    yield* ctx.host.click("restore-manual-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the manually focused field holds the focus while the modal is open",
+      yield* focusedAfterPaint(ctx),
+      "restore-manual-input",
+    );
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a modal gives the focus back when it focused the field itself",
+      yield* focusedAfterPaint(ctx),
+      "restore-manual-trigger",
+    );
+
+    // A field that took the focus at mount, before the modal looked.
+    yield* ctx.host.click("restore-auto-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the auto-focused modal's own surface holds the focus while it is open",
+      yield* focusedAfterPaint(ctx),
+      "restore-auto-content",
+    );
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    // The measured gap: `autoFocus` took the focus before the modal recorded
+    // who held it, so the modal's restore target is the field — which is gone
+    // by the time the surface unmounts, and the focus ends up nowhere.
+    // The components workstream owns the fix (TODO); this check pins the
+    // measurement and flips to `restore-auto-trigger` with it.
+    yield* ctx.expectEqual(
+      "a field that took the focus at mount leaves the focus nowhere when the modal closes",
+      yield* focusedAfterPaint(ctx),
+      "none",
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -1493,5 +1963,15 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "toast-lifecycle",
     view: () => <ToastProbe />,
     steps: toastSteps,
+  },
+  "command-palette": {
+    id: "command-palette",
+    view: () => <CommandPaletteProbe />,
+    steps: commandPaletteSteps,
+  },
+  "modal-focus-restore": {
+    id: "modal-focus-restore",
+    view: () => <ModalFocusRestoreProbe />,
+    steps: modalFocusRestoreSteps,
   },
 };
