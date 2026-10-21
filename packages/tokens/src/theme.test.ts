@@ -7,10 +7,11 @@
  */
 import { describe, expect, it } from "vitest";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
-import { auditTheme, almostBrandTheme } from "./theme-audit.example.js";
+import { almostBrandAudit } from "./theme-audit.example.js";
 import { resolveBrandTheme, resolveTheme } from "./high-contrast.example.js";
 import { densityPresets, type BoxShadow } from "./index.js";
 import {
+  auditTheme,
   createTheme,
   darkTheme,
   extendTheme,
@@ -266,20 +267,21 @@ describe("brand example", () => {
 });
 
 describe("theme audit example", () => {
-  it("passes both checks for the documented brand theme", () => {
-    expect(auditTheme(brandTheme)).toEqual({
-      invalidRoles: [],
-      contrastFailures: [],
-    });
-    expect(auditTheme(brandLightTheme)).toEqual({
-      invalidRoles: [],
-      contrastFailures: [],
+  it("passes every check for the documented brand theme", () => {
+    [brandTheme, brandLightTheme].forEach((theme) => {
+      expect(auditTheme(theme)).toEqual({
+        invalidRoles: [],
+        contrast: [],
+        decorative: [],
+        passed: true,
+      });
     });
   });
 
   it("names a misspelt fill rather than letting it paint black", () => {
-    expect(auditTheme(almostBrandTheme).invalidRoles).toEqual([
+    expect(almostBrandAudit.invalidRoles).toEqual([
       { role: "primary", value: "#7C5CF" },
     ]);
+    expect(almostBrandAudit.passed).toBe(false);
   });
 });

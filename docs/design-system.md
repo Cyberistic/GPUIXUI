@@ -294,8 +294,13 @@ saturated violet with the dark theme's near-black on-colour — 4.24:1, below th
 floor. The example now ships a white label with its violet, and the audit runs
 over it in `theme.test.ts`.
 
-The contract is public, so a brand theme runs the same checks:
-`contrastRatio(foreground, background)` measures two opaque roles,
+The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
+reports all three in one call — `invalidRoles`, `contrast` and `decorative` — and
+`passed` is true only when every list is empty. The contrast half is measured
+against the theme's own `contrast` variant through `contrastFloorsFor(theme)`, so
+a brand derived from a high-contrast theme is held to AAA without the caller
+naming a floor set; an explicit `ContrastFloors` overrides it. The parts are
+public too: `contrastRatio(foreground, background)` measures two opaque roles,
 `contrastPairs` with `contrastFloors` / `highContrastFloors` names the text and
 boundary pairs and their floors, and `decorativeFailures(theme, floor?)` measures
 the subtle surfaces. Nothing about the requirement is private to this repo.
@@ -355,9 +360,10 @@ expects the full role set. A brand that needs a different structure should add
 roles in the tokens package, not fork components.
 
 Overrides are plain data, so `extendTheme` cannot reject a colour the renderer
-would ignore. The audit is the gate: `invalidColorRoles` for paint-readiness and
-`contrastFailures` for readability, run over the resolved theme before it ships
-and asserted in the package's own tests.
+would ignore. The audit is the gate: `auditTheme(theme)` reports an unpaintable
+role, every pair below the floor its variant asks for, and every decorative
+surface too close to its background; run it over the resolved theme before it
+ships and assert `passed` in the package's own tests.
 
 ## 12. Non-goals
 

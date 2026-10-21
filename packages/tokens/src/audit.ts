@@ -1,0 +1,94 @@
+/**
+ * The one check a theme runs before it ships.
+ *
+ * A theme fails silently in three independent ways: a role the renderer cannot
+ * parse paints black, a text pair below its floor is unreadable, and a
+ * decorative surface close to its background is invisible. Each has its own
+ * report, and a consumer who forgets one ships the failure it would have
+ * caught — which is what the documented gate did, running two of the three and
+ * holding every theme to the default floors even when the theme declares the
+ * high-contrast variant.
+ */
+
+import {
+  invalidColorRoles,
+  type InvalidColorRole,
+  type ThemeColors,
+} from "./color.js";
+import {
+  contrastFailures,
+  contrastFloors,
+  highContrastFloors,
+  type ContrastFailure,
+  type ContrastFloors,
+} from "./contrast.js";
+import { decorativeFailures, type DecorativeFailure } from "./decorative.js";
+import type { ThemeContrast } from "./theme.js";
+
+/** A theme, or anything shaped like one, for the checks that only read colours. */
+type ColourSource = { readonly colors: ThemeColors };
+
+/** A theme's contrast variant, when it has declared one. */
+type ContrastSource = { readonly contrast?: ThemeContrast };
+
+/**
+ * The floors a theme's own contrast variant is held to.
+ *
+ * A theme that declares `contrast: "high"` is held to the AAA floors, not to the
+ * default ones — the floors follow the declaration rather than the caller's
+ * memory. A hand-built theme declares nothing and gets the default floors.
+ *
+ * @example
+ * ```ts
+ * contrastFloorsFor(highContrastDarkTheme); // { body: 7, secondary: 7, boundary: 4.5 }
+ * ```
+ */
+export function contrastFloorsFor(theme: ContrastSource): ContrastFloors {
+  return theme.contrast === "high" ? highContrastFloors : contrastFloors;
+}
+
+/** Everything a theme must be free of before it ships. */
+export interface ThemeAudit {
+  /** Roles whose value is not a colour GPUix can paint. */
+  readonly invalidRoles: readonly InvalidColorRole[];
+  /** Text, icon and boundary pairs that miss their floor, or cannot be measured. */
+  readonly contrast: readonly ContrastFailure[];
+  /** Dividers, skeleton fills, veils and status edges too close to their surface. */
+  readonly decorative: readonly DecorativeFailure[];
+  /** True only when all three reports are empty. */
+  readonly passed: boolean;
+}
+
+/**
+ * Audit a theme against the three contracts the library holds itself to.
+ *
+ * The contrast floors come from the theme's own `contrast` variant, so a
+ * high-contrast brand is measured at AAA without the caller naming a floor set;
+ * pass `floors` to hold a theme to a different contract. `passed` is the only
+ * passing result — a report nobody checked is not a pass.
+ *
+ * @example
+ * ```ts
+ * import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
+ *
+ * const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
+ * auditTheme(brand).passed; // true
+ * ```
+ */
+export function auditTheme(
+  theme: ColourSource & ContrastSource,
+  floors: ContrastFloors = contrastFloorsFor(theme),
+): ThemeAudit {
+  const invalidRoles = invalidColorRoles(theme);
+  const contrast = contrastFailures(theme, floors);
+  const decorative = decorativeFailures(theme);
+  return {
+    invalidRoles,
+    contrast,
+    decorative,
+    passed:
+      invalidRoles.length === 0 &&
+      contrast.length === 0 &&
+      decorative.length === 0,
+  };
+}

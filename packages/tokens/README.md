@@ -310,7 +310,25 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 
 ## Checking a theme
 
-Three public checks cover what a browser build gets from CSS validation and lint:
+`auditTheme(theme)` is the gate: it runs every check a browser build gets from
+CSS validation and lint, and `passed` is true only when all three reports are
+empty. The floors follow the theme's own `contrast` variant, so a brand built
+from a high-contrast theme is measured at AAA without the caller naming a floor
+set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
+`ContrastFloors` argument overrides it.
+
+```ts
+import { auditTheme } from "@gpuixui/tokens";
+
+const audit = auditTheme(brandTheme);
+audit.passed; // true when nothing below reports
+audit.invalidRoles; // [] — every role is paint-ready
+audit.contrast; // [] — every measured pair meets its floor
+audit.decorative; // [] — every divider, skeleton, veil and status edge is visible
+// Otherwise each entry names both roles, the measured ratio and the floor.
+```
+
+Each report is also a function of its own:
 
 - `invalidColorRoles(theme)` lists every role whose value is not a hex colour
   GPUix can paint. The runtime **ignores** a value it cannot parse, so a typo
@@ -321,19 +339,6 @@ Three public checks cover what a browser build gets from CSS validation and lint
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
   skeleton fill, the modal veil — that is too close to what it is painted on to
   be seen, compositing a translucent role first.
-
-```ts
-import {
-  contrastFailures,
-  decorativeFailures,
-  invalidColorRoles,
-} from "@gpuixui/tokens";
-
-invalidColorRoles(brandTheme); // [] — every role is paint-ready
-contrastFailures(brandTheme); // [] — every measured pair meets its floor
-decorativeFailures(brandTheme); // [] — every divider, skeleton, veil and status edge is visible
-// Otherwise each entry names both roles, the measured ratio and the floor.
-```
 
 `contrastRatio(foreground, background)` is the WCAG 2.1 ratio behind the second
 check — `undefined` for a translucent or non-hex value rather than a guess.

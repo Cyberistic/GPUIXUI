@@ -15,10 +15,12 @@ with a different `Theme` object.
 import {
   alpha,
   applyStyle,
+  auditTheme,
   blend,
   colorRoles,
   contrastFailures,
   contrastFloors,
+  contrastFloorsFor,
   contrastPairs,
   contrastRatio,
   controlSizes,
@@ -78,6 +80,7 @@ import {
   type RetroName,
   type StatusTone,
   type Theme,
+  type ThemeAudit,
   type ThemeContrast,
   type ThemeMode,
 } from "@gpuixui/tokens";
@@ -602,10 +605,32 @@ accent — and `retro.test.ts` holds the result to the same contracts.
 
 ## Checking your own theme
 
-Two checks cover the two ways a theme fails silently, and a third covers the
-surfaces that are allowed to be subtle but not invisible. The runtime
-**ignores** a colour string it cannot parse and keeps the property's previous
-value or paints black, and nothing measures text against the surface behind it.
+A theme fails silently in three independent ways, and `auditTheme(theme)` is the
+one call that reports all three:
+
+```ts
+import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
+const audit = auditTheme(brand);
+
+audit.passed; // true only when all three reports below are empty
+audit.invalidRoles; // roles the renderer cannot paint
+audit.contrast; // text, icon and boundary pairs below their floor
+audit.decorative; // dividers, skeleton fills, veils and status edges too subtle to see
+```
+
+`passed` is computed from the three reports, so it cannot drift from them. The
+contrast floors come from the theme's own `contrast` variant —
+`contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
+`contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
+high-contrast theme is measured at AAA without the caller naming a floor set.
+Pass a `ContrastFloors` as the second argument to hold a theme to a different
+contract. The runtime **ignores** a colour string it cannot parse and keeps the
+property's previous value or paints black, and nothing else measures text
+against the surface behind it.
+
+Each report is also a function of its own, for a caller that wants one check:
 
 ### Paint-ready values
 
@@ -643,14 +668,15 @@ is a surface too: a ghost button or a menu row tints it and leaves its label in
 the resting `foreground`, and secondary text keeps `mutedForeground`, so both
 roles are measured on all three. `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
-to. A brand theme runs the same check the built-in themes pass:
+to. `contrastFloorsFor(theme)` is the variant rule on its own, which is the floor
+set `auditTheme` uses unless one is passed. A brand theme runs the same check the
+built-in themes pass:
 
 ```ts
-import { contrastFailures, invalidColorRoles, type Theme } from "@gpuixui/tokens";
+import { auditTheme, type Theme } from "@gpuixui/tokens";
 
-export const isShippable = (theme: Theme): boolean =>
-  invalidColorRoles(theme).length === 0 &&
-  contrastFailures(theme).length === 0;
+// The theme's own variant picks the floors; the report names the rest.
+export const shipsCleanly = (theme: Theme): boolean => auditTheme(theme).passed;
 
 // A pair failure names both roles, the measured ratio and the floor:
 // { foreground: "mutedForeground", background: "muted", ratio: 1, floor: 4.5 }
@@ -660,9 +686,9 @@ A pair whose values are translucent or not hex is reported with `ratio:
 undefined` rather than skipped, because an unverifiable pair is not a pass. To
 measure one by hand, composite it first and use `contrastRatio`.
 
-`src/theme-audit.example.ts` runs both checks over a brand theme, and
-`theme.test.ts` asserts the result, so the documented brand theme is proven
-readable rather than assumed to be.
+`src/theme-audit.example.ts` runs `auditTheme` over a theme with one misspelt
+fill, and `theme.test.ts` asserts the reported role, so the failure this page
+describes is the failure the example produces.
 
 ### Decorative surfaces
 

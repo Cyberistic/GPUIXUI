@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 37/38
+`[x]` `[█████████░]` 38/39
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -389,6 +389,7 @@ merge it and drop their structural copies
 `[x]` Ship the persisted-choice contract (salvage 065/067/068) — seven ordered indexes (`themeModes`, `themeContrasts`, `platformNames`, `retroNames`, `densityNames`, `controlSizes`, `statusTones`) own their unions, each with a guard that narrows `unknown`; `guards.test.ts` holds every index to the records it selects (a mode without both contrast variants, a platform without a style, a preset without a metric per size, a tone without its own soft roles) and executes `persisted-choices.example.ts`, and the package's own suites read the indexes instead of retyping the unions. Two directions measured: dropping `dark` from `themeModes` fails the record check and the stored-choice case; a guard that accepts any string fails the rejection case
 `[x]` Guard the documents' imports — `docs.test.ts` reads `README.md` and `docs/tokens.md`, collects every name imported from `@gpuixui/tokens`, and fails when one is not a declared export (proven with `isThemeModez`)
 `[x]` Hold `docs/design-system.md`'s numbers to the tokens — `design-system-docs.test.ts` reads the page and checks the role count (`colorRoles` and both colour sets), the spacing and radius scales, the avatar diameters, each density preset's control heights and row height, each platform's radius scale and named density, and every type size in §5 against `typography`; a stale number fails by name (proven with a changed comfortable height, a changed body size and a changed role count)
+`[x]` Ship `auditTheme(theme, floors?)` as the gate a theme is told to run — the documented `isShippable` snippet assembled two of the three reports and called `contrastFailures(theme)` without floors, so a brand built from a high-contrast theme was audited at the **default** floors (a 5:1 placeholder passed the gate it was told to run) and a theme whose divider matched its own page was not measured at all. One call now returns `invalidRoles`, `contrast` and `decorative` plus a `passed` computed from them; `contrastFloorsFor(theme)` holds the contrast half to the theme's own variant and an explicit floor set overrides it. `audit.test.ts` proves every shipped, platform and retro theme passes one audit, reports the 5:1 placeholder the default floors pass, reports a divider no contrast pair covers, and honours an explicit floor set; docs in `docs/tokens.md` §Checking your own theme, `docs/design-system.md` §9/§11, the package README and the `Contrast contract` inventory row
 `[x]` `alpha`/`blend` return a colour the renderer can paint for a non-finite amount — `NaN.toString(16)` emitted `#2559D6NAN`, which GPUix ignores in silence; the colour is now returned unchanged, proven with `#2559D6NAN`/`#NANNANNAN` before the guard
 `[-]` Merge `main` into `agent/tokens-theme` once plan 019 (motion tokens) lands
 there — cancelled: plan 019's subject moved to `@gpuixui/motion`, and this
