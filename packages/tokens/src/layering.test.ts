@@ -125,6 +125,17 @@ describe("docs/tokens.md §Layering", () => {
     ).toEqual([]);
   });
 
+  it("records the decision to keep the reserved level, with its reason", () => {
+    expect(
+      missing([
+        "The slot is kept rather than filled or removed",
+        "the key would be a breaking type change",
+        "no consumer",
+      ]),
+      "docs/tokens.md §Layering no longer records why `elevation.overlay` stays reserved",
+    ).toEqual([]);
+  });
+
   it("keeps the reserved level empty in every shipped theme", () => {
     // The page's claim is only true while the level paints nothing; a theme
     // that filled it without the section moving would be a silent shadow.

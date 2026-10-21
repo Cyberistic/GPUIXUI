@@ -1011,8 +1011,13 @@ Two differently named tokens are easy to mix up here:
   `elevationShadow(theme, "overlay")` returns `undefined`, and a surface that
   names it paints flat. Floating surfaces take `elevation.md` (menus and
   popovers) or `elevation.lg` (dialogs and command palettes) — see §Elevation.
-  The level is kept empty so the level shape stays stable; filling it is a design
-  decision recorded in `TODO.md`, not a silent default.
+  The slot is kept rather than filled or removed, because the shape is the
+  contract: a `Theme` is plain data a brand may write from scratch, so dropping
+  the key would be a breaking type change for every hand-built theme literal and
+  every `elevation` override, while a designed step above `lg` has no consumer —
+  a popover inside a dialog still sits *on* the dialog, and stacking is paint
+  order. `layering.test.ts` holds the decision to this page, so re-opening it
+  means moving the page.
 
 The repo's own source-built `darwin-x64` binding carries a local `zIndex` patch
 (`apps/playground/patches/gpuix-zindex.patch`) so a probe can measure occlusion.
