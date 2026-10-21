@@ -99,6 +99,12 @@ Every Tier 1 component has a page and a composed example beside the source:
 - `runtime/examples.runtime.test.tsx` — mounts every example in the real
   renderer, so an example cannot rot into source that has never run.
 
+`src/inventory.ts` + `src/inventory.test.ts` hold the `COMPONENTS.md` Tier 1
+table to the code: every row has a record, every path a record names exists, a
+`done` row has a test, and a row and its record agree on status and GPUix
+support. Flip a row back to `todo` and the suite fails — the table had drifted
+to `todo` for every row while all of them were built.
+
 The browser docs site (`apps/docs`) is a separate workstream and must not render
 these examples as live previews: they are GPUix host trees, not DOM.
 

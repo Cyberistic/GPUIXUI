@@ -1,0 +1,148 @@
+/**
+ * The Tier 1 inventory check.
+ *
+ * The `COMPONENTS.md` foundational table is the document a reader and the
+ * release gate trust, and it had drifted to `todo` for every row while all
+ * twenty-seven components were built, documented and runtime-verified. This
+ * suite makes that drift impossible: each row has a record in `inventory.ts`,
+ * the record names the source, docs page, example and tests that must exist,
+ * and a `done` row without a test fails.
+ *
+ * `node:fs` is used here only because this is a test-time repository check, the
+ * same boundary `components/src/inventory.test.ts` and `core/theme.test.ts`
+ * already use.
+ */
+
+import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import { describe, expect, it } from "vitest";
+import { inventory, type PrimitiveMeta } from "./inventory.js";
+
+const packageRoot = new URL("../", import.meta.url);
+const repoRoot = new URL("../../../", import.meta.url);
+
+const fileExists = (relative: string): boolean =>
+  existsSync(fileURLToPath(new URL(relative, packageRoot)));
+
+interface Row {
+  readonly name: string;
+  readonly status: string;
+  readonly support: string;
+  readonly notes: string;
+}
+
+/** The Tier 1 rows of `COMPONENTS.md`, parsed from its markdown table. */
+const tier1Rows = (): ReadonlyArray<Row> => {
+  const markdown = readFileSync(
+    fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+    "utf8",
+  );
+  const start = markdown.indexOf("## Tier 1");
+  const end = markdown.indexOf("## Tier 2");
+  if (start < 0 || end < 0 || end <= start) return [];
+
+  return Arr.flatMap(markdown.slice(start, end).split("\n"), (line) => {
+    if (!line.startsWith("|")) return [];
+    const cells = Arr.map(line.split("|").slice(1, -1), (cell) => cell.trim());
+    if (cells.length < 3) return [];
+    const name = cells[0] ?? "";
+    if (name === "Component" || name.startsWith("---") || name === "")
+      return [];
+    return [
+      {
+        name,
+        status: cells[1] ?? "",
+        support: cells[2] ?? "",
+        notes: cells[3] ?? "",
+      },
+    ];
+  });
+};
+
+const duplicates = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
+  Arr.filter(values, (value, index) => values.indexOf(value) !== index);
+
+const rowFor = (meta: PrimitiveMeta): Option.Option<Row> =>
+  Arr.findFirst(tier1Rows(), (row) => row.name === meta.name);
+
+describe("Tier 1 inventory", () => {
+  it("names files that exist", () => {
+    const problems = Arr.flatMap(inventory, (meta) =>
+      Arr.filter(
+        [...meta.source, meta.docs, meta.example, ...meta.tests],
+        (path) => !fileExists(path),
+      ).map((path) => `${meta.name}: missing ${path}`),
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("has at least one test for every row marked done", () => {
+    const problems = Arr.filter(
+      Arr.filter(inventory, (meta) => meta.status === "done"),
+      (meta) => meta.tests.length === 0,
+    ).map((meta) => `${meta.name}: done without a test`);
+
+    expect(problems).toEqual([]);
+  });
+
+  it("agrees with its COMPONENTS.md row", () => {
+    const problems = Arr.flatMap(inventory, (meta) =>
+      Option.match(rowFor(meta), {
+        onNone: () => [`${meta.name}: no COMPONENTS.md row`],
+        onSome: (row) => [
+          ...(row.status === meta.status
+            ? []
+            : [
+                `${meta.name}: row says ${row.status}, record says ${meta.status}`,
+              ]),
+          ...(row.support === meta.gpuixSupport
+            ? []
+            : [
+                `${meta.name}: row says support ${row.support}, record says ${meta.gpuixSupport}`,
+              ]),
+        ],
+      }),
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("has a record for every Tier 1 row that is no longer todo", () => {
+    const problems = Arr.filter(
+      Arr.filter(tier1Rows(), (row) => row.status !== "todo"),
+      (row) => !Arr.some(inventory, (meta) => meta.name === row.name),
+    ).map((row) => `${row.name}: row is ${row.status} with no record`);
+
+    expect(problems).toEqual([]);
+  });
+
+  it("covers every Tier 1 row exactly once", () => {
+    const rows = Arr.map(tier1Rows(), (row) => row.name);
+
+    expect(duplicates(rows)).toEqual([]);
+    expect(Arr.length(inventory)).toBe(Arr.length(rows));
+    expect(
+      Arr.filter(inventory, (meta) => !Option.isSome(rowFor(meta))).map(
+        (meta) => `${meta.name}: record with no row`,
+      ),
+    ).toEqual([]);
+  });
+
+  it("has no duplicate names or docs pages", () => {
+    expect([
+      ...duplicates(Arr.map(inventory, (meta) => meta.name)),
+      ...duplicates(Arr.map(inventory, (meta) => meta.docs)),
+    ]).toEqual([]);
+  });
+
+  it("records limitations as an explicit array", () => {
+    expect(
+      Arr.filter(inventory, (meta) => !Array.isArray(meta.limitations)).map(
+        (meta) => `${meta.name}: limitations is not an array`,
+      ),
+    ).toEqual([]);
+  });
+});

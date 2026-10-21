@@ -218,7 +218,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 14/20
+`[x]` `[███████░░░]` 16/22
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -240,6 +240,12 @@ prebuilt `dist` (plan 016)
 `[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
 platform toggle (plan 051)
 `[x]` Add the design-system rows to `COMPONENTS.md`
+`[x]` Add `avatarSize` (20/26/32/40) as a theme group with an `extendTheme`
+override, so the Avatar component drops its local diameter table and a brand can
+change a step
+`[x]` Ship `blend`, `filledHover` and `filledPressed` — opaque derived action
+fills instead of six stored hover/press roles, with the label contrast floors
+checked on both fills
 `[ ]` Add motion tokens (durations/easings) once a component consumes them
 `[ ]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
 runtime, and record the licence review for any bundled family — plan 052, native
@@ -285,8 +291,10 @@ retired once both branches are one
 
 `[~]` Tier 1 foundational components (code + test + example + docs + inventory):
       all 19 components have code, tests, a runtime-verified interaction, an
-      in-package docs page, a mounted example and an inventory row; **docs-site
-      pages are still pending** (docs-site workstream)
+      in-package docs page, a mounted example and an inventory row;
+      `packages/primitives/src/inventory.test.ts` now holds the 27
+      `COMPONENTS.md` rows to the code, so that table cannot drift again;
+      **docs-site pages are still pending** (docs-site workstream)
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness
@@ -382,7 +390,11 @@ retired once both branches are one
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
-    - [ ] 201 (shared helper) — `packages/testing/src/state.ts` + its test (`runCommands` over a runtime), so suites outside `packages/components` replay commands (owner: playground; this package's `runtime.run` is the same fold)
+    - [x] 201 (shared helper) — `packages/testing/src/state.ts` + its test
+      (`runCommands` over a runtime), so suites outside `packages/components`
+      replay commands (owner: playground; this package's `runtime.run` is the
+      same fold). 3 tests; both-direction proof (skipping the fold fails the
+      state/query check).
     - [x] Split Alert into parts — `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` over a tone context; 11 native tests; docs, example and API table updated (plan 158)
     - [x] Split the remaining landed deviations named in `docs/component-api.md` §9 into parts — each with its own behaviour test, docs update and inventory row (owner: components). Plans 300–303 are landed.
       - [x] Pagination parts — plan 300
@@ -521,10 +533,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `alpha(color, amount)` helper | tokens-theme | **resolved** — landed on `main`; the local `withAlpha` is deleted (plan 157) |
 | An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | **resolved** — `infoSoft`/`infoSoftForeground` are the tone's roles (plan 157) |
 | `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
-| `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
-| An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
+| `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | **resolved** — `State.runCommands` replays a runtime's commands and queries the final state (3 tests) |
+| An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | **resolved** — `avatarSize` is a theme group (`theme.avatarSize`), overridable with `extendTheme`; the Avatar component can drop `DIAMETER` |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
-| A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
+| A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | **resolved without the pair** — `filledHover(theme, action)` / `filledPressed(theme, action)` derive an opaque fill from the action role and the theme's `foreground`, so a brand override follows automatically and the six roles are unnecessary; adoption is the row below |
+| Adopt `filledHover` / `filledPressed` and delete the half-alpha hover fills: `components/src/internal/button.tsx`, `primitives/src/core/variants.ts` (`filled`) and `primitives/src/core/selection.ts` | components, primitives | pending — tokens side is shipped and tested |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
