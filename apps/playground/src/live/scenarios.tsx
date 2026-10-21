@@ -12,7 +12,8 @@ import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import { textStyle, type Theme } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
-import type { Smoke } from "@gpuixui/testing";
+import { Pixels, type Smoke } from "@gpuixui/testing";
+import { palettes } from "../palettes.js";
 import type { LiveProbeId } from "./registry.js";
 
 /** Long enough for one paint after an input reaches the window. */
@@ -106,7 +107,14 @@ const focusedId = (
     Option.getOrElse(Option.fromNullishOr(id), () => "none"),
   );
 
-/** Reads focus after the window has painted the input it just received. */
+/** How many pixels of the capture under `name` paint exactly `colour`. */
+const paintedPixels = (
+  ctx: Smoke.AsyncSmokeContext,
+  name: string,
+  colour: Pixels.Rgba,
+): Effect.Effect<number, Smoke.SmokeHostError> =>
+  Effect.map(ctx.host.pixels(name), (frame) => Pixels.countColour(frame, colour));
+
 const focusedAfterPaint = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
@@ -115,6 +123,10 @@ const focusedAfterPaint = (
 const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("focus-visible-probe");
+    const ring = yield* ctx.expectSome(
+      "the theme names a ring colour",
+      Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.ring)),
+    );
 
     // 1. A mouse press focuses the element; `focusVisible` must not paint.
     yield* ctx.host.click("press-ring");
@@ -124,6 +136,11 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "press-ring",
     );
     yield* ctx.host.capture("press");
+    yield* ctx.expectEqual(
+      "a press paints no focus ring",
+      yield* paintedPixels(ctx, "press", ring),
+      0,
+    );
 
     // 2. Native traversal (`window.focus_next`) before any key is delivered:
     //    a traversal is not keyboard input, so the ring must stay off.
@@ -134,6 +151,11 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tab-ring",
     );
     yield* ctx.host.capture("traversal-before-keyboard");
+    yield* ctx.expectEqual(
+      "traversal before a key paints no focus ring",
+      yield* paintedPixels(ctx, "traversal-before-keyboard", ring),
+      0,
+    );
 
     // 3. Programmatic focus, still before any key: same expected null ring.
     yield* ctx.host.focusElement("programmatic-ring");
@@ -143,6 +165,11 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "programmatic-ring",
     );
     yield* ctx.host.capture("programmatic-before-keyboard");
+    yield* ctx.expectEqual(
+      "programmatic focus before a key paints no focus ring",
+      yield* paintedPixels(ctx, "programmatic-before-keyboard", ring),
+      0,
+    );
 
     // 4. Tab traverses natively and is the keyboard-input case the ring is
     //    meant for. Focus wraps from the last sample to the first.
@@ -153,6 +180,11 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "press-ring",
     );
     yield* ctx.host.capture("tab");
+    yield* ctx.expectEqual(
+      "Tab paints the focus ring",
+      (yield* paintedPixels(ctx, "tab", ring)) > 0,
+      true,
+    );
 
     // 5. Programmatic focus after keyboard input has happened: does the ring
     //    persist, or is it tied to the input that caused the focus?
@@ -163,6 +195,11 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "programmatic-ring",
     );
     yield* ctx.host.capture("programmatic-after-keyboard");
+    yield* ctx.expectEqual(
+      "programmatic focus after a key paints the focus ring",
+      (yield* paintedPixels(ctx, "programmatic-after-keyboard", ring)) > 0,
+      true,
+    );
   });
 
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */

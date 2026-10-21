@@ -10,7 +10,6 @@
  * on any host.
  */
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import { Smoke } from "@gpuixui/testing";
@@ -191,12 +190,13 @@ export const scenarioProblems = (
   ]);
 };
 
-/** The scenarios a `--only <id>` run selected, or all of them when none. */
+/** The scenarios a `--only` run selected, or all of them when none. */
 export const selectScenarios = <A extends ScenarioMeta>(
   list: ReadonlyArray<A>,
-  only: Option.Option<string>,
+  only: ReadonlyArray<string>,
 ): ReadonlyArray<A> =>
-  Option.match(only, {
-    onNone: () => list,
-    onSome: (id) => Arr.filter(list, (scenario) => scenario.id === id),
+  Arr.match(only, {
+    onEmpty: () => list,
+    onNonEmpty: (ids) =>
+      Arr.filter(list, (scenario) => Arr.contains(ids, scenario.id)),
   });

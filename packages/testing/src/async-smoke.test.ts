@@ -32,6 +32,8 @@ const inertHost: AsyncSmokeHost = {
   focusElement: () => Effect.void,
   waitFor: () => Effect.void,
   capture: () => Effect.void,
+  pixels: () =>
+    Effect.fail(new SmokeHostError({ verb: "pixels", cause: "inert host" })),
 };
 
 const probe = (

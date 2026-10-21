@@ -15,7 +15,7 @@ import * as Option from "effect/Option";
 import type { GpuixRenderer } from "@gpuix/native";
 import { AutomationError } from "@gpuix/native/automation";
 import type { App } from "@gpuix/native/automation";
-import { Smoke } from "@gpuixui/testing";
+import { Pixels, Smoke } from "@gpuixui/testing";
 import { testIdOf, type LiveNode } from "./tree.js";
 
 /** The renderer surface a live host reads; nothing else is needed. */
@@ -30,6 +30,12 @@ export interface LiveHostOptions {
   readonly renderer: LiveRenderer;
   /** Resolves a capture name into an absolute path inside the run's artifacts. */
   readonly capturePath: (name: string) => string;
+  /** Reads a capture's PNG bytes; the runner owns the filesystem effect. */
+  readonly readCapture: (
+    name: string,
+  ) => Effect.Effect<Uint8Array, Smoke.SmokeHostError>;
+  /** Inflates a PNG's compressed data; the runner injects the platform's zlib. */
+  readonly inflate: (bytes: Uint8Array) => Uint8Array;
 }
 
 /** Lifts a protocol call, keeping the cause for the verb that names it. */
@@ -68,6 +74,8 @@ export const createLiveHost = ({
   app,
   renderer,
   capturePath,
+  readCapture,
+  inflate,
 }: LiveHostOptions): Smoke.AsyncSmokeHost => {
   const at = (testId: string) => app.getByTestId(testId);
 
@@ -124,5 +132,16 @@ export const createLiveHost = ({
       call(`capture ${name}`, () =>
         app.screenshot({ path: capturePath(name) }),
       ).pipe(Effect.asVoid),
+    pixels: (name) =>
+      Effect.gen(function* () {
+        const bytes = yield* readCapture(name);
+        const frame = Pixels.decodePng(bytes, inflate);
+        if (frame instanceof Pixels.PngDecodeError) {
+          return yield* Effect.fail(
+            new Smoke.SmokeHostError({ verb: `pixels ${name}`, cause: frame }),
+          );
+        }
+        return frame;
+      }),
   };
 };

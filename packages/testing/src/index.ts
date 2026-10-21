@@ -4,6 +4,7 @@
  * Namespace projections, one per module, so a consumer reads
  * `Smoke.runScenarios`, `Report.formatReport` and `Runtime.detectRuntime`.
  */
+export * as Pixels from "./pixels.js";
 export * as Report from "./report.js";
 export * as Runtime from "./runtime.js";
 export * as Smoke from "./smoke.js";

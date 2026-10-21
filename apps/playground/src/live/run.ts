@@ -25,6 +25,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
+import { inflateSync } from "node:zlib";
 import { Report, Runtime, Smoke } from "@gpuixui/testing";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { Root } from "@gpuix/react";
@@ -196,6 +197,21 @@ export const program = (
       app,
       renderer,
       capturePath: (name) => path.join(captures, `${name}.png`),
+      // The filesystem is the Effect service; zlib has no Effect equivalent, so
+      // the runner injects it and the decoder stays platform-free.
+      readCapture: (name) =>
+        fileSystem
+          .readFile(path.join(captures, `${name}.png`))
+          .pipe(
+            Effect.mapError(
+              (cause) =>
+                new Smoke.SmokeHostError({
+                  verb: `read capture ${name}`,
+                  cause,
+                }),
+            ),
+          ),
+      inflate: (bytes) => inflateSync(bytes),
     });
     const startedAt = yield* Clock.currentTimeMillis;
     const report = yield* Smoke.runAsyncScenarios(

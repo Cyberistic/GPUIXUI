@@ -26,7 +26,8 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 | Namespace | Responsibility |
 | --------- | -------------- |
 | `Runtime` | `detectRuntime` (never fails), `bindingHint`, `RuntimeStatus` |
-| `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union |
+| `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union; the async twin `AsyncSmokeHost`/`AsyncSmokeScenario`/`runAsyncScenarios` for a real window |
+| `Pixels`  | `decodePng` (inflate injected), `pixelAt`, `countColour`, `hexToRgba`, `Pixels`, `Rgba` — paint evidence from a captured frame |
 | `State`   | `runCommands` — replay a component runtime's commands and query the final state |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 
@@ -43,6 +44,17 @@ type appears; scenarios see plain values.
 `None`; a payload whose property type changed fails the whole decode (`null`),
 deliberately — a runtime that changed its style report is a defect a scenario
 must see, never something to coerce.
+
+## Adapting a window
+
+A real window's automation API is asynchronous and its renderer reports no
+style, so the live half adapts to `Smoke.AsyncSmokeHost` and runs through
+`Smoke.runAsyncScenarios`: same checks, same report, same exit code. Its verbs
+return `Effect`s and every failure is a `SmokeHostError` naming the verb. Paint
+is proved from the frame: `capture(name)` writes a PNG, `pixels(name)` decodes
+it, and a probe counts exact colours with `Pixels.countColour`. The inflate
+function is injected by the runner, so this package still imports no platform
+or GPUix module.
 
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and

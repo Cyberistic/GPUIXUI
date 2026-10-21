@@ -15,6 +15,7 @@ import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
+import type { Pixels } from "./pixels.js";
 
 /** Every capability the suite can report a verdict for. */
 export const CAPABILITIES = [
@@ -304,6 +305,13 @@ export interface AsyncSmokeHost {
    * a state (`"tab"`), never a path, so it cannot write outside the run.
    */
   readonly capture: (name: string) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Decodes the capture stored under `name`, so a probe can assert paint.
+   *
+   * A window's renderer reports no style, which makes the frame the only
+   * evidence; every colour a probe claims to see must be read from it.
+   */
+  readonly pixels: (name: string) => Effect.Effect<Pixels, SmokeHostError>;
 }
 
 /** What a live-window probe is handed to act on and to assert against. */

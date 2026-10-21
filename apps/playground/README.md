@@ -235,9 +235,12 @@ Artifacts: `.artifacts/live-report.json` and `.artifacts/live/<state>.png`.
 
 The probe paints the ring as a `focusVisible` outline
 (`outlineWidth: borderWidth.strong`, `outlineColor: colors.ring`,
-`outlineOffset: 0`) on three identical samples, then moves focus five ways. The
-focus ids are asserted; the **paint** is judged from the five captures, because
-a real `GpuixRenderer` reports no style.
+`outlineOffset: 0`) on three identical samples, then moves focus five ways.
+Both facts are asserted: the focus id after each move, and the **paint** — the
+probe decodes each capture and counts pixels of `colors.ring` (`Pixels`, in
+`@gpuixui/testing`), so a ring that stops painting fails the run. Painting the
+same probe with a wrong ring colour fails `Tab paints the focus ring`
+(`expected true, got false`, exit `1`), which is the negative control.
 
 | State | Focus id (asserted) | Ring painted |
 | ----- | ------------------- | ------------ |
