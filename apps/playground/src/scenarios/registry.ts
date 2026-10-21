@@ -109,6 +109,12 @@ export const registry = [
     capability: "scroll",
   },
   {
+    id: "drag-autoscroll",
+    title:
+      "Drag: a rail does not scroll at its edge by itself; the caller's scrollTo does",
+    capability: "workspace",
+  },
+  {
     id: "panel-resize",
     title: "Panel resize: pointer capture and clamping",
     capability: "panel",

@@ -28,6 +28,7 @@ import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { dataGridScenario } from "./data-grid.js";
 import { workspaceScenario } from "./workspace.js";
+import { dragAutoscrollScenario } from "./drag-autoscroll.js";
 import { dockingScenario } from "./docking.js";
 import { shortcutScenario } from "./shortcuts.js";
 import { shellNavigationScenario } from "./shell.js";
@@ -65,6 +66,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "table-column-resize": tableColumnResizeScenario,
   "data-grid-fixed-header": dataGridScenario,
   "workspace-tab-drag": workspaceScenario,
+  "drag-autoscroll": dragAutoscrollScenario,
   "docking-nested": dockingScenario,
   "window-key-shortcut": shortcutScenario,
   "theme-color-roles": themeColorRolesScenario,

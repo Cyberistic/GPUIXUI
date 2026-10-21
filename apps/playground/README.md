@@ -24,7 +24,8 @@ core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `data-grid-fixed-header`,
 `virtualized-table`, `tree-view`, `log-viewer`, `workspace-tab-drag`,
-`docking-nested`, `search-highlights`, `tab-overflow`, `editor-surface`), the app-level
+`docking-nested`, `drag-autoscroll`, `search-highlights`, `tab-overflow`,
+`editor-surface`), the app-level
 shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
@@ -78,7 +79,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (30/30 green); -> 2 on a host with no binding
+# -> 0 here (31/31 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -272,6 +273,32 @@ Negative controls, measured: dropping the `scrollIntoView()` call fails
 the tabs fit fails `the last tab starts past the rail's right edge` (exit `1`).
 Restored, green.
 
+## Drag auto-scroll
+
+Dragging to the bottom of a pane to grow a tree, or to the edge of a list to
+reach a far row, needs the rail to move while the pointer rests in its edge
+band. `drag-autoscroll` mounts two identical 320×200 rails of 24 rows and drags
+row 4 (centre `y = 180`, inside the 24px band of the 200px rail) by 10px in eight
+moves:
+
+| Rail | Handler | Measured |
+| ---- | ------- | -------- |
+| plain | none | offset stays `y = 0` — the runtime does **not** auto-scroll a scroller because a pointer rests near its edge |
+| driven | `onMouseMove` reads the rail's own `getElementBounds`, and inside the band calls `renderer.scrollTo(id, 0, offset - 16)` | `moves=8` and `y = -128` — one step per move, driven by the component |
+
+The driven rail is the strongest honest alternative, not a workaround: the
+renderer exposes no drag-scroll policy, so the component owns the edge band,
+the step and the clamp. Measured ordering fact: `scrollTo` paints synchronously,
+so probe state written **after** the call was not committed when the drag
+returned (`moves=0` while the offset had reached `-128`); the probe increments
+first and scrolls second. A real component that derives its next offset from
+state should keep the offset in a ref, as this probe does.
+
+Negative controls, measured: with the driven rail's handler off, the drag scrolls
+nothing and fails `every edge move runs the scroll step` (`moves=0`); giving the
+plain rail the handler fails `a drag at the edge does not scroll by itself`
+(`expected 0, got -128`), exit `1` each. Restored, green.
+
 ## File drops
 
 `file-drop` mounts a drop zone and drives the renderer's own
@@ -303,10 +330,10 @@ independent of what ran before it.
 
 ## Evidence on this host
 
-The suite is **30/30 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **31/31 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-30/30 scenarios passed · capabilities: layout=verified text=verified
+31/31 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -331,6 +358,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | search highlights | a `highlight` spec paints a wash per match, and `SmokeHost.highlights()` (the renderer's `getPaintedHighlights`) reports each wash's run, `[start, end)` and boxes: three for `alpha`, two for `beta`, and none once the query is case-sensitive `ALPHA` or a whole-word `alp` — the insensitive/word-off queries mark them again. One `activeIndex` marks exactly one wash `active`. `ranges: [[0, 5)]` marks the same region `indexOf` would. A wash is a quad, so `text`/`paintedText` never report it |
 | editor | a `<textarea>` edits lines: Enter inserts a newline (a field with an `onSubmit` listener reports Enter **instead**, so an editor must not set one), and the arrow keys move the native caret (two lefts from the end of `cd` put the next character before its `c`). `<code code language showLineNumbers>` paints its source and every line, scrolls in a bounded viewport, and `<diff patch>` paints both sides of a changed line. **No caret or selection API exists**, so a highlighted editable surface cannot be built: the honest editor is edit in the textarea, display in `<code>` |
 | docking | nested splits compose: each level keeps its own width, so an outer drag moves the inner split's origin and leaves its width alone, and an inner drag leaves the sidebar alone. A caller-owned sidebar collapses to 0 (the nested split takes the width) and reopens at the width it had; a tab switch inside a pane repaints it without moving it. A split's `max` is the **caller's number**, not the container's width: a nested split does not re-clamp when its parent shrinks, so a dock passes its own bounds (0.11.0's `onLayout` is the way to measure them) |
+| drag auto-scroll | a drag at a scroller's edge does **not** move it: the offset stays `0` across eight moves. `renderer.scrollTo(id, 0, y)` from the component's `onMouseMove`, using the rail's own `getElementBounds` for the edge band, is the measured alternative (`y = -128` for 8 × 16px). `scrollTo` paints synchronously, so state after the call is not committed when the drag returns — keep the offset in a ref |
 | virtual table | `onVisibleRange` **lags the painted window by one gesture** — after two wheel gestures the painted rows were `32–40` while the range read `16`; an index-driven feature must use the painted rows as the current window |
 | tree | `paddingLeft` indents exactly (16px per depth); expand/collapse repaints the subtree; a clicked row takes native focus and receives arrow keys. Focus movement from component code is measured separately (`modal`), so a roving-tabindex tree can use `renderer.focusElement` |
 | log | bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up and appending does **not** snap back — a follow toggle is app state plus a scroll |
@@ -954,7 +982,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (30/30), with a written report and screenshots.
+  (31/31), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
