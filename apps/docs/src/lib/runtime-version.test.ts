@@ -11,6 +11,10 @@ import { describe, expect, it } from "vitest";
  * describes is still real. This guard reads the pin from the workspace catalogue
  * and fails any page that names another version, which makes the next upgrade a
  * re-read rather than a find-and-replace.
+ *
+ * The scan reads through a closing backtick: `@gpuix/native` 0.10.0 is how the
+ * inventory's preamble wrote it, and a pattern that stopped at the backtick
+ * reported a clean bill while those verdicts were a release behind.
  */
 
 const root = new URL("../../../../", import.meta.url);
@@ -40,7 +44,7 @@ const reactPin = catalogPin(manifest, "@gpuix/react");
 const versionMentions = (source: string): ReadonlyArray<string> =>
   [
     ...source.matchAll(
-      /\b(?:GPUix|@gpuix\/(?:native|react))\s*(?:@\s*)?v?(\d+\.\d+\.\d+)/g,
+      /(?:GPUix\b|@gpuix\/(?:native|react)\b)[\x60*]*\s*(?:@\s*)?v?(\d+\.\d+\.\d+)/g,
     ),
   ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
@@ -55,6 +59,28 @@ const pages = (dir: URL, slug = ""): ReadonlyArray<[string, string]> =>
       : [];
   });
 
+/**
+ * The documents beside the site that a page sends a reader to: the inventory a
+ * status strip links, the capability record `/docs/runtime` publishes, and the
+ * README a visitor lands on before the site.
+ */
+const documents = [
+  "COMPONENTS.md",
+  "README.md",
+  "docs/gpuix-capabilities.md",
+].map((path) => [path, readFileSync(new URL(path, root), "utf8")] as const);
+
+/** Every source whose version disagrees with the pin, named for the failure. */
+const staleVersions = (
+  sources: ReadonlyArray<readonly [string, string]>,
+  pin: string,
+): ReadonlyArray<string> =>
+  sources.flatMap(([path, source]) =>
+    versionMentions(source).flatMap((version) =>
+      version === pin ? [] : [`${path}: ${version} (pinned ${pin})`],
+    ),
+  );
+
 describe("the pinned runtime", () => {
   it("is one version for the native package and the React bindings", () => {
     expect(nativePin).toBeDefined();
@@ -62,14 +88,7 @@ describe("the pinned runtime", () => {
   });
 
   it("is what every docs page names", () => {
-    const pin = nativePin ?? "";
-    const stale = pages(docsDir).flatMap(([path, source]) =>
-      versionMentions(source).flatMap((version) =>
-        version === pin ? [] : [`${path}: ${version} (pinned ${pin})`],
-      ),
-    );
-
-    expect(stale).toEqual([]);
+    expect(staleVersions(pages(docsDir), nativePin ?? "")).toEqual([]);
   });
 
   it("is named often enough that the scan cannot pass by matching nothing", () => {
@@ -80,5 +99,14 @@ describe("the pinned runtime", () => {
     // Seven pages name it today; the floor only proves the scan is matching.
     expect(mentions.length).toBeGreaterThan(4);
     expect([...new Set(mentions)]).toEqual([nativePin]);
+  });
+
+  it("is the version the documents beside the site name", () => {
+    // The inventory's preamble decided every Tier 1–5 verdict against 0.10.0
+    // after the workspace moved to 0.11.0 — and 0.11.0 publishes a headless
+    // Button, Dialog parts and `createPortal`, so the rows calling those absent
+    // were false. The capability record and the README are read by the same
+    // readers, so they are held to the same pin.
+    expect(staleVersions(documents, nativePin ?? "")).toEqual([]);
   });
 });
