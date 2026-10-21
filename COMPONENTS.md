@@ -261,9 +261,9 @@ placeholder.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Code editor integration | todo | ? | `<code>` renders highlighted code; there is **no editable code surface** (verified). |
-| Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages. API-shape work, not implementation. |
-| Diff viewer | todo | yes | `<diff>` renders a unified diff. API-shape work, not implementation. |
+| Code editor integration | todo | partial | `<code>` renders highlighted read-only source, and `<textarea>` edits multi-line text with a working native caret (Enter inserts a newline when no `onSubmit` listener is set). The runtime exposes **no caret/selection position and no decoration layer over `<code>`**, so a highlighted *editable* surface cannot be built; the shipped pattern is edit in the textarea, display in `<code>` (measured by the playground's `editor-surface`). |
+| Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages and paints every source line (measured by `editor-surface`, read-only). API-shape work, not implementation. |
+| Diff viewer | todo | yes | `<diff>` renders a unified diff; both sides of a changed line paint (measured by `editor-surface`). API-shape work, not implementation. |
 | Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). |
 | Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. |
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |

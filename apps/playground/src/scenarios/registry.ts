@@ -35,6 +35,7 @@ export const PROBE_CAPABILITIES = [
   "tree",
   "log",
   "workspace",
+  "editor",
 ] as const;
 
 /** One scenario's identity: what it is called and which capability it proves. */
@@ -173,6 +174,12 @@ export const registry = [
     id: "log-viewer",
     title: "Log viewer: starts at the tail and follows appends",
     capability: "log",
+  },
+  {
+    id: "editor-surface",
+    title:
+      "Editor: a textarea edits lines and caret, <code> and <diff> paint a read-only view",
+    capability: "editor",
   },
 ] as const satisfies ReadonlyArray<ScenarioMeta>;
 

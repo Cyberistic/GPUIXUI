@@ -399,7 +399,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 18/18
+`[x]` `[██████████]` 19/19
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -545,6 +545,14 @@ a workaround for two live sessions sharing one worktree; see
       one `overflowX` scroller wraps both, so a header cell and its column's
       cells move together. 15 assertions / 25 checks; one negative control
       measured (no `overflowX`: `expected a value, got none`, exit `1`).
+`[x]` Land the `editor-surface` Tier 5 feasibility probe — a `<textarea>` that
+      edits lines (Enter as a newline, arrow-key caret movement proved by where
+      the next character lands) beside a `<code>` view that paints highlighted
+      source in a bounded scroller and a `<diff>` that paints both sides of a
+      changed line. The measured gap: no caret/selection API and no decoration
+      layer over `<code>`, so an editor is edit-then-display. 8 assertions / 9
+      checks; two negative controls measured (an `onSubmit` listener turns Enter
+      into a submit, `value=abcd`; no arrow keys, `value=ab\ncdX`).
 
 ## Phase C — Tier 1–2 components
 
@@ -969,7 +977,19 @@ Both are specified in ; each fix starts with a plan under .
       offset guards); one negative control measured (no `overflowX` scroller:
       `scroll offset of grid-hscroll: expected a value, got none`, exit `1`).
       `--only data-grid-fixed-header`, green on 0.11.0.
-`[ ]` `apps/playground`: no editor feasibility probe yet (salvage 130)
+`[x]` `apps/playground`: editor feasibility measured — `editor-surface` proves
+      what an editor package can build on and what it cannot: `<textarea>` edits
+      lines (Enter inserts a newline; a field with `onSubmit` reports Enter
+      instead, measured), the arrow keys move the native caret (positioned by
+      where the next character lands), and `<code>`/`<diff>` paint read-only
+      highlighted source and a unified diff, including a bounded scrolling code
+      viewport. **No caret/selection API and no decoration layer** exist, so a
+      highlighted editable surface is not buildable; `COMPONENTS.md`'s "no
+      editable code surface" row is corrected to the measured
+      textarea-edits/`<code>`-displays split. 8 assertions / 9 checks; two
+      negative controls measured (adding `onSubmit`: `value=abcd`; dropping the
+      lefts: `value=ab\ncdX`, exit `1` each). `--only editor-surface`, green on
+      0.11.0.
 `[ ]` `apps/playground`: native probe backlog — content surfaces (svg/img/diff/canvas), cross-element drag and file drops, the shipped Tier 1 controls in the suite, search highlights, drag auto-scroll, horizontal scroll and tab overflow, tab-strip focus, nested panels, command palette, tabbed workspace panes (salvage 161-163, 168-177). **Text selection landed** (`text-selection`, salvage 163)
 `[x]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178) — `packages/testing/src/native.ts` exports `NativeRenderer`/`NativeElement` (method signatures only, so the package still imports no GPUix type) and `createTestHost`, which owns the `testId` → element lookup, the nearest-painted-ancestor fallback for a `<virtual-list>`/`<anchored>`, the subtree text join, the style decode and the drag synthesis. `apps/playground/src/smoke/host.ts` is deleted — a real `TestRenderer` satisfies the port structurally, so the runner calls `Native.createTestHost(root.renderer)`. 10 fake-renderer tests; both directions measured (dropping the ancestor fallback fails `aims input at the nearest ancestor that paints` and the drag case). Headless re-run green: `--only modal-focus-trap --only panel-resize --only scroll-container`
 `[ ]` `packages/components`: Tier 2 behaviour gaps — remaining: List row subscriptions and icon adoption (salvage 324, 339).
