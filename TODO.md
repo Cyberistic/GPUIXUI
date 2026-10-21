@@ -1168,18 +1168,20 @@ each with the test that fails without it (salvage 325, 326, 328, 329, 331, 332,
     production build puts the index in the reference chunk only
     (`page-meta` stays at 945 KB), and `nub run --filter @gpuixui/docs test` is
     green (29 files / 197 tests).
-  - `[ ]` **Stated native-test counts** (salvage 333, 335) — the package pages
+  - `[x]` **Stated native-test counts** (salvage 333, 335) — the package pages
     state how many native cases prove a component; the counts drift. Measured
     2026-10-21: 45 of the 49 count claims in `packages/*/docs/*.mdx` are
-    correct, and one is wrong — `packages/components/docs/field.mdx` says
-    `(5 tests)` for `src/behaviour/field.test.tsx`, which runs 6 (the sibling
-    `fieldset.mdx` already says 6). The fix is the components workstream's
-    page; a guard that holds every stated count to the suite it names lands
-    with it. The curated four pages are already held by
-    `apps/docs/src/lib/component-page-truth.test.ts`. **Blocked on that one
-    line** (owner: components): the guard is a docs-site file, but landing it
-    while `field.mdx` says 5 would leave the docs suite red, so it waits for
-    the page's `(6 tests)` and lands in the same change.
+    correct, and one was wrong — `packages/components/docs/field.mdx` said
+    `(5 tests)` for `src/behaviour/field.test.tsx`, which runs 6. The page now
+    states 6 and lists the missing disabled case, and
+    `packages/components/src/docs-counts.test.ts` holds every `(N tests)` claim
+    in all 39 component pages to the suite it names (a claim that names no suite
+    fails; `drawer.mdx`'s "guard (18 tests)" now names Dialog's 13 and
+    Confirmation dialog's 5). Both directions measured: restoring `(5 tests)`
+    fails `field.mdx:108 says 5, src/behaviour/field.test.tsx runs 6`, and
+    returning drawer's prose to the bare count fails `states 18 tests without
+    naming a suite`. The four curated pages stay held by
+    `apps/docs/src/lib/component-page-truth.test.ts`.
 `[x]` `packages/tokens`: the authored house theme finishes its accent **family** — `resolveHouseTheme` now owns `accent`, `accentForeground`, `selected`, `selectedForeground` and `selection` for both modes, because those are surfaces derived from the accent: owning only `primary` painted a violet action inside the platform's blue popover and a blue-tinted selection. The light and dark values are violet tints; `platforms.test.ts` asserts they are the house theme's and not win32's, that `selection` is the brand's alpha, and that both modes clear the contrast and decorative contracts (measured: without the family the new case fails on `expected '#E5F1FB' not to be '#E5F1FB'`); docs in `docs/tokens.md` §Editing a platform style and the inventory row (salvage 330, 331)
 `[x]` `packages/tokens`: Windows XP (Luna) and Windows 7 (Aero) recipe styles, plus dark editions — **landed** as authored looks in `src/retro.ts` (`retroStyles`, `retroTheme`, `retroNames`/`isRetroName`), **not** new `platformNames`: that list is the persisted platform key and the mission's toggle is macOS · Linux · Windows · Default, so a look is applied by name. `applyStyle(base, style)` is now the one merge rule (`platformTheme` is `applyStyle` over `platformStyles`), so a consumer can author a third look as data. Each look carries families, a full radius scale, a density preset and per-mode chrome; the dark editions are authored (invented — Luna and Aero shipped no dark mode) and documented as such, with the chrome provenance stated (colour values only, no artwork/gradient/icon/logo copied, no bundled face). `retro.test.ts` (205 cases) holds all four themes to every `contrastPairs` pair through `contrastFailures` and every placement through `decorativeFailures`, holds the dark editions to a real second palette, proves a high-contrast base keeps its colours, executes `retro.example.ts` (`resolveRetroBrand`) and guards the provenance prose plus the catalogue table and the inventory row. Directions measured: a grey `mutedForeground` fails eight named pairs; a changed `radius.md` in the catalogue table fails by look name; a retracted "not a platform" claim fails by file; a removed inventory row fails. Headless re-run after the `applyStyle` refactor: `--only theme-color-roles --only theme-platform` (2/2). Docs in `docs/tokens.md` §Authored looks, `docs/design-system.md` §5/§11, the package README and a `COMPONENTS.md` row (salvage 311, 328)
 `[x]` `packages/tokens`: `createTheme` starts from the requested contrast variant (`createTheme({ mode, contrast })`) instead of silently ignoring it, every group merge inherits an explicit `undefined` instead of erasing a role, and each platform style declares the `contrast` variant its palette is designed for — `platformTheme` applies a palette only where that matches the base's. `theme.test.ts` (contrast route, the `undefined` rule per group, one brand over both palettes via `high-contrast.example.ts`) and `platforms.test.ts` (the declaration, no `undefined` role) fail in the corrected direction, each measured; docs in `docs/tokens.md` §Theme API and §Platform styles, `docs/design-system.md` §5, the package README and the two inventory rows (salvage 301, 304, 321, 323)

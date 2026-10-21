@@ -105,10 +105,11 @@ declares no outline.
 
 ## Verification
 
-`src/behaviour/field.test.tsx` runs in the real GPUix renderer (5 tests): label,
+`src/behaviour/field.test.tsx` runs in the real GPUix renderer (6 tests): label,
 description and control rendering; the error replacing the description with
 `role="alert"`; the required marker and clean accessible name; the destructive
-border in both themes; and typed text reaching `onChange`.
+border in both themes; typed text reaching `onChange`; and a disabled field
+leaving the tab order and accepting no typing.
 
 `src/validation/logic.test.ts` covers the message walk, `errors: "all"`,
 deduplication and the valid case.
