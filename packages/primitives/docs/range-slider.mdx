@@ -108,8 +108,6 @@ track both components share, not an individual thumb.
 
 ## Limitations
 
-- **No pointer capture** — a drag stops updating when the pointer leaves the
-  track; press-to-position and the keyboard are the precise paths.
 - **No `aria-valuenow`/`min`/`max`** (above).
 - Both thumbs are the same pill as `Slider`'s; a custom glyph goes inside a
   `SliderThumb` in the caller's composition, one `index` per end.
@@ -128,7 +126,9 @@ track both components share, not an individual thumb.
   and winning over the recipe.
 - `runtime/value.runtime.test.tsx` — a real press at 10% moves the start, at 90%
   the end; focus follows the grabbed thumb; an arrow moves only that end; a
-  start driven past the end stops on it. Measured 2026-10-17 (plan 053 §11).
+  start driven past the end stops on it; and a drag that leaves the track keeps
+  moving the end it grabbed until it stops on the other end. Measured
+  2026-10-17 (plan 053 §11).
 
 ```sh
 nub run --filter @gpuixui/primitives test

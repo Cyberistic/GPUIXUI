@@ -142,9 +142,11 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
   before the value reaches the field.
 - **No `type="number"`, `inputMode` or `maxLength`.** The host input takes
   `value`, `placeholder`, `readOnly`, `theme` and its events — nothing else.
-- **No drag-to-scrub.** The runtime has the coordinates and bounds for it, but a
-  scrub that keeps tracking outside the field would need pointer capture, which
-  does not exist; the steppers are the honest gesture.
+- **No drag-to-scrub.** The runtime has the coordinates, bounds and pointer
+  capture for it (a track that listens to `mouseDown` and `mouseMove` keeps its
+  moves outside its box — measured by the `pointer-capture` probe), so this is a
+  component feature not yet written rather than a capability gap; the steppers
+  are the gesture today.
 - **`autoFocus` paints no ring on mount.** A focus that arrives without keyboard
   input (mount, programmatic) does not paint `focusVisible`, so the wrapper's ring
   appears at the first Tab. The same is true of `Input`.

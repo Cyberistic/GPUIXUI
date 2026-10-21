@@ -410,9 +410,9 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No pointer capture: a drag stops when the pointer leaves the track",
       "No aria-valuenow/min/max, so the range is not announced",
       "A composed part cannot answer a press",
+      "The thumb cannot rotate or scale: the runtime has no transform",
     ],
     source: [
       "src/components/Slider.tsx",
@@ -428,9 +428,9 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No pointer capture: a drag stops when the pointer leaves the track",
       "No aria-valuenow/min/max, so the range is not announced",
       "A composed part cannot answer a press",
+      "The thumb cannot rotate or scale: the runtime has no transform",
     ],
     source: [
       "src/components/Slider.tsx",

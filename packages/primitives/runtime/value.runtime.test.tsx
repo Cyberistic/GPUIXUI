@@ -332,6 +332,57 @@ it("declares the keyboard ring on the slider's track, not its thumb", async () =
   ).toStrictEqual(Option.none());
 });
 
+it("keeps tracking a drag that leaves the track, and ends it on the release", async () => {
+  // The claim this measured: a slider drag does **not** stop at the track's
+  // edge. GPUix arms pointer capture on left mouse down for an element that
+  // listens to both `mouseDown` and `mouseMove` — this track does — so the
+  // moves keep arriving outside its box. The live `pointer-capture` probe
+  // measured the same on 0.11.0 (`slider=66 sliderChanges=9`); this holds the
+  // headless renderer to it.
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={50}
+      onValueChange={onChange}
+    />,
+  );
+  const box = boundsOf(runtime, "s");
+  const start = pointAt(runtime, "s", 0.3);
+  runtime.mouseDownAt(start.x, start.y);
+  expect(seen.at(-1)).toBe(30);
+  runtime.mouseMoveAt(box.x + box.width + 200, start.y, 0);
+  runtime.flush();
+  expect(seen.at(-1)).toBe(100);
+  const duringDrag = seen.length;
+  runtime.mouseUpAt(box.x + box.width + 200, start.y);
+  runtime.flush();
+  // The release ended the gesture even though it landed outside the track: a
+  // move afterwards must not keep dragging the value.
+  runtime.mouseMoveAt(pointAt(runtime, "s", 0.1).x, start.y, 0);
+  runtime.flush();
+  expect(seen.length).toBe(duringDrag);
+  expect(announced(runtime, "Volume")).toBe("100");
+});
+
+it("keeps a range drag that leaves the track on the end it grabbed", async () => {
+  const runtime = await mount(
+    <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,
+  );
+  const box = boundsOf(runtime, "r");
+  const start = pointAt(runtime, "r", 0.25);
+  runtime.mouseDownAt(start.x, start.y);
+  expect(announced(runtime, "Price minimum")).toBe("25");
+  runtime.mouseMoveAt(box.x + box.width + 150, start.y, 0);
+  runtime.flush();
+  // The start it grabbed followed the pointer past the track and stopped on
+  // the end it may not cross.
+  expect(announced(runtime, "Price minimum")).toBe("60");
+  expect(announced(runtime, "Price maximum")).toBe("60");
+  runtime.mouseUpAt(box.x + box.width + 150, start.y);
+});
+
 it("moves the nearer end of a range when its track is pressed", async () => {
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,

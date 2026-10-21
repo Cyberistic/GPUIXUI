@@ -80,7 +80,7 @@ none paints a literal and none scripts hover or press
 | `focusVisible` / `outline*` | **present** | every control declares the keyboard outline at rest (`controlRing` → `focusVisible`); the runtime paints it after Tab and never after a mouse press, and a disabled control declares none so a focused-then-disabled element keeps no ring |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
-| pointer capture | absent | a slider drag only tracks while the pointer is over the track; click-to-position and the keyboard are the precise paths |
+| pointer capture | present (armed by a `mouseDown` + `mouseMove` listener pair) | a slider's track carries both, so a drag that leaves the track keeps updating, clamped to the ends, until release; measured in a window by the `pointer-capture` probe and in `runtime/value.runtime.test.tsx` |
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once |
 | scrollbar tint | present | `ScrollArea` tints the platform thumb through `scrollbarColor`/`scrollbarWidth` (measured in `runtime/layout.runtime.test.tsx`) and sets the overflow axes |
 | absolute scroll offset | present (`onScrollChange`, `scrollTo`) | `ScrollArea` forwards `onScrollChange` and is a keyboard scroll region (arrows, PageUp/PageDown, Home/End) through the renderer, measured in a window |
@@ -129,7 +129,7 @@ the suites in `runtime/` mount the components in the GPUix 0.11.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-22: **16 files, 163 tests, all passing** —
+runtime-proven too. Measured 2026-10-22: **16 files, 165 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override

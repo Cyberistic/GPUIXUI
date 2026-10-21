@@ -7,12 +7,15 @@
  * file owns only what is irreducible here — reading the track's box from the
  * renderer so a pointer becomes a value, the drag flag, and focus.
  *
- * **Two runtime limits are structural, not defects:**
+ * **One runtime limit is structural:** there is no
+ * `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the value reaches
+ * assistive technology through `aria-valuetext` only.
  *
- * - there is no pointer capture, so a drag only tracks while the pointer is
- *   over the track (a click anywhere on it and the keyboard always work);
- * - there is no `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the value
- *   reaches assistive technology through `aria-valuetext` only.
+ * Pointer capture is **present**, and the track is what arms it: the runtime
+ * captures the pointer for an element that listens to both `mouseDown` and
+ * `mouseMove`, so a drag that leaves the track keeps reporting to it (clamped to
+ * the ends) until the release. Measured in a window by the playground's
+ * `pointer-capture` probe and held by `runtime/value.runtime.test.tsx`.
  *
  * `RangeSlider` is a different ARIA contract from `Slider` — two sliders in one
  * group rather than one slider with an array value — so it is a second
