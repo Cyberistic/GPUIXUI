@@ -33,6 +33,7 @@ describe("StyleSnapshot", () => {
       width: 40,
       height: 20,
       backgroundColor: "#7567F23D",
+      borderRadius: 10,
       fontFamily: "Menlo, monospace",
       fontSize: 13,
       boxShadow: {
@@ -46,6 +47,9 @@ describe("StyleSnapshot", () => {
     });
     expect(field(snapshot, (style) => style.backgroundColor)).toEqual(
       Option.some("#7567F23D"),
+    );
+    expect(field(snapshot, (style) => style.borderRadius)).toEqual(
+      Option.some(10),
     );
     expect(field(snapshot, (style) => style.fontSize)).toEqual(Option.some(13));
     expect(field(snapshot, (style) => style.fontFamily)).toEqual(
@@ -67,6 +71,9 @@ describe("StyleSnapshot", () => {
     const snapshot = decode({ width: 40, height: 20 });
     expect(Option.isSome(snapshot)).toBe(true);
     expect(field(snapshot, (style) => style.backgroundColor)).toEqual(
+      Option.none(),
+    );
+    expect(field(snapshot, (style) => style.borderRadius)).toEqual(
       Option.none(),
     );
     expect(field(snapshot, (style) => style.color)).toEqual(Option.none());

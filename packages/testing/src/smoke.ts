@@ -144,6 +144,7 @@ export class BoxShadowSnapshot extends Schema.Class<BoxShadowSnapshot>(
 export class StyleSnapshot extends Schema.Class<StyleSnapshot>("StyleSnapshot")(
   {
     backgroundColor: Schema.OptionFromOptional(Schema.String),
+    borderRadius: Schema.OptionFromOptional(Schema.Number),
     color: Schema.OptionFromOptional(Schema.String),
     fontFamily: Schema.OptionFromOptional(Schema.String),
     fontSize: Schema.OptionFromOptional(Schema.Number),

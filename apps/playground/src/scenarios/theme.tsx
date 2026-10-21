@@ -10,9 +10,10 @@
  * `textStyle`, plus `focusRing` and an `md` elevation. The ring check is a
  * **style** proof, not a focus-behaviour proof: `focus-traversal` owns that.
  *
- * `theme-platform` paints one mono sample per platform through
- * `platformTheme` and asserts the runtime reports each platform's family, so
- * the platform styles are real theme values rather than a docs-only toggle.
+ * `theme-platform` paints one row per platform through `platformTheme` — its
+ * mono face, a palette role, a radius from its own scale and an `md` control at
+ * its density — and asserts each against the runtime's style report, so the
+ * platform styles are real theme values rather than a docs-only toggle.
  *
  * The role lists are derived from `colorRoles` and `typography`, never copied,
  * so a new token cannot go untested. The panel rows are explicit flex rows
@@ -381,7 +382,12 @@ export const themeTypeAndShadowScenario: ScenarioBody = {
     }),
 };
 
-/** The platforms whose type styles the gallery proves. */
+/**
+ * The platforms whose styles the gallery proves.
+ *
+ * `default` is the house identity and is already painted by the other two
+ * scenarios, so only the three that must differ are sampled here.
+ */
 const platformNames: ReadonlyArray<Exclude<PlatformName, "default">> = [
   "darwin",
   "linux",
@@ -389,13 +395,17 @@ const platformNames: ReadonlyArray<Exclude<PlatformName, "default">> = [
 ];
 
 /**
- * One mono sample per platform, styled through `platformTheme`.
+ * One row per platform, styled through `platformTheme`: the mono face it types
+ * with, the primary fill it paints, the radius its controls take from its own
+ * scale, and the height its density gives an `md` control.
  *
  * The sans face is GPUI's `.SystemUIFont` sentinel on every platform, so the
  * family that distinguishes them is the mono one; a theme that lost the
- * platform's mono family would paint the same string three times.
+ * platform's mono family would paint the same string three times. The other
+ * three samples are the half of `platformTheme` that only pure value tests held:
+ * a palette role, a radius and a density measurement in the renderer.
  */
-const PlatformTypeProbe = () => {
+const PlatformProbe = () => {
   const base = palettes.dark;
 
   return (
@@ -404,16 +414,52 @@ const PlatformTypeProbe = () => {
         {Arr.map(platformNames, (platform) => {
           const themed = platformTheme(base, platform);
           return (
-            <text
+            <div
               key={platform}
-              testId={`platform-${platform}`}
               style={{
-                ...textStyle(themed, "code"),
-                color: base.colors.foreground,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: base.spacing.lg,
               }}
             >
-              {`${platform}: ${themed.typography.mono}`}
-            </text>
+              <text
+                testId={`platform-${platform}`}
+                style={{
+                  ...textStyle(themed, "code"),
+                  color: base.colors.foreground,
+                }}
+              >
+                {`${platform}: ${themed.typography.mono}`}
+              </text>
+              <div
+                testId={`platform-${platform}-primary`}
+                style={{
+                  width: 24,
+                  height: 24,
+                  backgroundColor: themed.colors.primary,
+                  borderRadius: themed.radius.sm,
+                }}
+              />
+              <div
+                testId={`platform-${platform}-radius`}
+                style={{
+                  width: 32,
+                  height: 32,
+                  backgroundColor: themed.colors.card,
+                  borderRadius: themed.radius.lg,
+                }}
+              />
+              <div
+                testId={`platform-${platform}-control`}
+                style={{
+                  width: 64,
+                  height: themed.density.controlHeight.md,
+                  backgroundColor: themed.colors.muted,
+                  borderRadius: themed.radius.md,
+                }}
+              />
+            </div>
           );
         })}
       </Surface>
@@ -422,7 +468,7 @@ const PlatformTypeProbe = () => {
 };
 
 export const themePlatformScenario: ScenarioBody = {
-  view: () => <PlatformTypeProbe />,
+  view: () => <PlatformProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
       const families = yield* Effect.forEach(
@@ -436,6 +482,32 @@ export const themePlatformScenario: ScenarioBody = {
               `platform-${platform}`,
               (snapshot) => snapshot.fontFamily,
               themed.typography.mono,
+            );
+            yield* expectStyle(
+              ctx,
+              `${platform} primary fill`,
+              `platform-${platform}-primary`,
+              (snapshot) => snapshot.backgroundColor,
+              themed.colors.primary,
+            );
+            yield* expectStyle(
+              ctx,
+              `${platform} large radius`,
+              `platform-${platform}-radius`,
+              (snapshot) => snapshot.borderRadius,
+              themed.radius.lg,
+            );
+            const control = yield* ctx.expectSome(
+              `${platform} paints a control box`,
+              Option.fromNullishOr(
+                ctx.host.bounds(`platform-${platform}-control`),
+              ),
+            );
+            yield* ctx.expectNear(
+              `${platform} md control height`,
+              control.height,
+              themed.density.controlHeight.md,
+              1,
             );
             return {
               platform,

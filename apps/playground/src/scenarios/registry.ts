@@ -128,7 +128,8 @@ export const registry = [
   },
   {
     id: "theme-platform",
-    title: "Theme: each platform's mono family reaches the runtime",
+    title:
+      "Theme: each platform's palette, radius, density and mono family reach the runtime",
     capability: "theme",
   },
   {
