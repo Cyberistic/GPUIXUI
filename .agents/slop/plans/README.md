@@ -77,15 +77,17 @@ of every `verified 0.10.0` verdict).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | in progress |
 | [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | landed consumer-only — native face proof is the playground's row |
 | [053](./053-focus-outline.md) | Keyboard-only focus rings and the 0.11 shadow list | F | 017, 018 | landed tokens-side — `keyboardFocusRing` outline beside the programmatic shadow; component adoption is an interlock |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
-agent that owns its paths. The block was full at 019 (`010–019` in the table
-above) and 020–049 belongs to primitives, icons and Phase C, so 051 takes the
-first free block — as the tokens workstream's docs-layering plan (050) does.
+agent that owns its paths. `019` was motion tokens and is **cancelled before
+implementation**: durations, easings, springs and reduced-motion policy belong to
+`@gpuixui/motion`, so a second copy here would duplicate the package that owns
+them (`TODO.md` records the decision). 020–049 belongs to primitives, icons and
+Phase C, so 051 takes the first free block — as the tokens workstream's
+docs-layering plan (050) does.
 052 is rescued from the abandoned `agent/fonts` branch (`6fc7641`), with its
 step 1 answered from the pinned runtime's source; its native face proof is the
 playground's row. 053 is the 0.11 truth pass: the probe measured that the

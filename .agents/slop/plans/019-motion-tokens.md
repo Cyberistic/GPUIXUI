@@ -1,5 +1,12 @@
 # 019 — Motion tokens (durations and easings)
 
+**Status: cancelled before implementation.** Motion — durations, easings,
+springs, stagger and reduced-motion policy — belongs to `@gpuixui/motion`, which
+now exists and owns it; a second copy in `@gpuixui/tokens` would be the
+duplication the package boundaries forbid. `TODO.md` records the decision. The
+file stays because plan `439` names it as the overlap boundary; it is not in the
+plan index, which lists active work only.
+
 **Workstream:** `tokens-theme`
 **Phase:** B (working foundation), extending plan 011
 **Depends on:** plan 011 (implemented `@gpuixui/tokens`), plan 016 (source exports)
