@@ -305,7 +305,7 @@ Docs in `docs/tokens.md` §Checking your own theme and `docs/design-system.md` �
 `docs/tokens.md` (the page that says a token absent from it is not public) and
 fails when a public export has no line in it, a colour role is missing from
 either colour table, a type role has no row, or the documented role/pair counts
-disagree with `colorRoles`/`contrastPairs`. It found six undocument exports —
+disagree with `colorRoles`/`contrastPairs`. It found six undocumented exports —
 `darkColors`, the two high-contrast colour sets, `lightElevation`,
 `darkElevation` and `defaultDensity` — now in the catalogue
 `[x]` Add the design-system rows to `COMPONENTS.md`

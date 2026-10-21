@@ -76,6 +76,12 @@ There are 47 roles. The four status families — `info`, `success`, `warning` an
 pair (`xSoft` / `xSoftForeground`) for alerts, badges and toasts. `info` is blue,
 not iris, so it can never be confused with `primary`.
 
+The literal tables behind the themes are exported too: `lightColors`,
+`darkColors`, `highContrastLightColors` and `highContrastDarkColors`. Read them
+when you need a value outside a resolved `Theme` — a generated table, a test, a
+documentation page. A component reads `theme.colors`; the raw sets exist so a
+tool never has to copy the palette out of this page.
+
 | Role | Light | Dark | Use |
 | ---- | ----- | ---- | --- |
 | `background` | `#F6F8FA` | `#11141A` | window and application canvas |
@@ -598,6 +604,9 @@ A platform style picks the preset its native controls sit at — macOS `compact`
 Windows `comfortable`, Linux `spacious` — so `platformTheme` carries a density
 too. Layer `extendTheme` to change it without losing the platform's look.
 
+`densityPresets` holds all three presets and `defaultDensity` is
+`densityPresets.comfortable`, the preset the built-in themes carry.
+
 ```ts
 import { controlHeight, controlPaddingX } from "@gpuixui/tokens";
 
@@ -634,6 +643,10 @@ import { elevationShadow } from "@gpuixui/tokens";
 the reserved empty `overlay` level (which `boxShadow` accepts). A level with two
 entries would be a second shadow the design did not ask for, so
 `packages/tokens/src/elevation.test.ts` fails if one appears.
+
+`lightElevation` and `darkElevation` are the literal level tables the two themes
+carry; a consumer that needs a level outside a resolved theme reads them
+directly.
 
 ## Borders, icons and identity marks
 
