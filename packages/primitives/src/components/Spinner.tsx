@@ -16,6 +16,7 @@ import {
   spinnerDots,
   type SpinnerAccent,
 } from "../core/loading.js";
+import { accessibleName } from "../core/a11y.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { spinnerDotClass, spinnerGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -58,7 +59,12 @@ export const renderSpinner = (
       { width: dot, height: dot, opacity },
     );
   return (
-    <div role="status" aria-label={label} testId={testId} style={group}>
+    <div
+      role="status"
+      aria-label={accessibleName(label)}
+      testId={testId}
+      style={group}
+    >
       {Arr.map(spinnerDots(step, 3), (point, index) => (
         <div key={index} style={dotStyle(point.active, point.opacity)} />
       ))}

@@ -15,6 +15,7 @@ import type { ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
+import { accessibleName } from "../core/a11y.js";
 import type { ValueState } from "../core/state.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -116,7 +117,7 @@ export const fieldHostProps = (
   tabIndex: props.disabled === true ? -1 : undefined,
   theme: nativeTextTheme(theme),
   testId: props.testId,
-  "aria-label": props.label,
+  "aria-label": accessibleName(props.label),
   style: fieldChrome(props, theme, focus.focused),
   onChange: (event: EventPayload) => {
     if (props.disabled !== true) onValueChange(event.value ?? "");

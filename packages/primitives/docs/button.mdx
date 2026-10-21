@@ -76,7 +76,9 @@ import { Button, Stack } from "@gpuixui/primitives";
 
 ## Accessibility
 
-- Role: `button`; the name comes from `label` or its text content.
+- Role: `button`; the name comes from `label`, or from a plain text child when
+  `label` is absent or blank — a blank label is omitted rather than published as
+  an empty name.
 - `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.

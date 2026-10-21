@@ -39,6 +39,7 @@ import {
   stepNumber,
   type NumberRange,
 } from "../core/number.js";
+import { accessibleName } from "../core/a11y.js";
 import { keyboardRing } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
@@ -148,7 +149,7 @@ export const numberFieldPart = (
     disabled,
     text,
     placeholder: props.placeholder,
-    label: props.label,
+    label: accessibleName(props.label),
     autoFocus: disabled ? undefined : props.autoFocus,
     current: state.current,
     range: numberRange(props),

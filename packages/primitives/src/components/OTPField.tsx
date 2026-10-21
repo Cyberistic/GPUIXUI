@@ -48,6 +48,7 @@ import {
   otpLength,
   type OtpEdit,
 } from "../core/otp.js";
+import { accessibleName } from "../core/a11y.js";
 import { keyboardRing } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
@@ -111,7 +112,7 @@ export interface OTPFieldHandlers {
 export const otpCellLabel = (
   label: string | undefined,
   index: number,
-): string => `${label ?? "Code"} digit ${index + 1}`;
+): string => `${accessibleName(label) ?? "Code"} digit ${index + 1}`;
 
 /** What every cell part reads from the OTP field that owns it. */
 export interface OTPFieldPart {
@@ -155,7 +156,7 @@ export const otpFieldPart = (
   return {
     theme,
     disabled,
-    label: props.label,
+    label: accessibleName(props.label),
     testId: props.testId,
     autoFocus: disabled ? undefined : props.autoFocus,
     cells: otpCells(code, limit),
@@ -254,7 +255,7 @@ export const renderOtpField = (
   return (
     <div
       role="group"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label)}
       testId={props.testId}
       style={mergeStyle(
         group,

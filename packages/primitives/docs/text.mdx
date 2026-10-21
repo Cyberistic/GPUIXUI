@@ -69,11 +69,16 @@ there is no copy command binding in the component.
 
 ## Accessibility
 
-`Text` is a plain text node. GPUix's `<text>` has no heading level, no paragraph
-role and no semantics beyond its string; the `role` prop is **visual only**.
-A screen-reader user hears the words in reading order, not a document outline.
-If a heading level matters, the application must supply the semantics with a host
-element the runtime exposes — and 0.10.0 exposes no heading element.
+`Text` publishes the semantics its typographic role carries. GPUix 0.11.0
+exposes `role` and `aria-level` on the host element, so:
+
+- `h1`/`h2`/`h3` set `role="heading"` with `aria-level` 1/2/3, and a plain string
+  child becomes the heading's name;
+- `code`/`codeBlock` set `role="code"` (AccessKit `Code`);
+- `display`, `body`, `bodyStrong`, `label` and `caption` stay plain text.
+
+A mixed or element child gets the role but no derived name. `display` is a
+visual size, not a heading; if the document outline matters, use `h1`–`h3`.
 
 ## Theming
 
@@ -83,8 +88,10 @@ selection by accident; turn it on for content.
 
 ## Limitations
 
-- No heading semantics (above). Do not claim a `role="h2"` is announced as a
-  heading.
+- No paragraph or list semantics: only the heading and code roles above are
+  published.
+- A heading's name is derived from a **plain string** child; compose icon or
+  formatted children and give the region its own accessible name elsewhere.
 - No rich text: one run, one role. Composition is several `Text` nodes in a
   `Stack`.
 - No responsive type scale or fluid sizing.
@@ -93,10 +100,12 @@ selection by accident; turn it on for content.
 ## Verification
 
 - `src/core/variants.test.ts` — every role resolves from the theme.
-- `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp and
-  selectable.
-- `runtime/layout.runtime.test.tsx` — the string is painted and its box height
-  equals the role's line height.
+- `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp,
+  selectable, and the heading/code semantics (level and name, with body copy
+  left plain).
+- `runtime/layout.runtime.test.tsx` — the string is painted, its box height
+  equals the role's line height, and the a11y tree reports a heading's level
+  (`h1` = 1, `h3` = 3) with body copy carrying no heading role.
 
 ```sh
 nub run --filter @gpuixui/primitives test

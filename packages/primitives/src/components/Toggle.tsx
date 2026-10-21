@@ -23,6 +23,7 @@ import type { ReactElement, ReactNode } from "react";
 import type { EventPayload } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
+import { accessibleName } from "../core/a11y.js";
 import { keyboardRing } from "../core/focus.js";
 import { decideActivation } from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -31,6 +32,7 @@ import type { ValueState } from "../core/state.js";
 import { toggleClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
+  childrenName,
   mergeStyle,
   suppressFeedback,
   useControlState,
@@ -116,7 +118,7 @@ export const renderToggle = (
   return (
     <div
       role="button"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label) ?? childrenName(props.children)}
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}

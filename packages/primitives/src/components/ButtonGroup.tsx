@@ -15,6 +15,7 @@
 import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
+import { accessibleName } from "../core/a11y.js";
 import type { PrimitiveTheme, SpaceStep } from "../core/theme.js";
 import { buttonGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -60,7 +61,7 @@ export const renderButtonGroup = (
   return (
     <div
       role="group"
-      aria-label={label}
+      aria-label={accessibleName(label)}
       testId={testId}
       style={mergeStyle(resolved.style, style)}
     >

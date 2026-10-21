@@ -22,6 +22,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
+import { accessibleName } from "../core/a11y.js";
 import { clampRating, decideRating, ratingTabStop } from "../core/rating.js";
 import { ratingStarColor } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
@@ -120,7 +121,7 @@ export const renderRating = (
   return (
     <div
       role="radiogroup"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label)}
       testId={props.testId}
       onKeyDown={(event) => {
         if (!interactive) return;

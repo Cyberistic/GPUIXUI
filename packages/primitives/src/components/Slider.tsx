@@ -34,6 +34,7 @@ import type {
   StyleDesc,
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
+import { accessibleName } from "../core/a11y.js";
 import { keyboardRing } from "../core/focus.js";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
@@ -342,7 +343,7 @@ export const renderSlider = (
     <div
       ref={handlers.registerTrack}
       role="slider"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label)}
       aria-valuetext={sliderValueText(value, props.formatValue)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
@@ -466,7 +467,7 @@ export const renderRangeSlider = (
     <div
       ref={handlers.registerTrack}
       role="group"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label)}
       testId={props.testId}
       onMouseDown={handlers.onPointerDown}
       onMouseMove={handlers.onPointerMove}

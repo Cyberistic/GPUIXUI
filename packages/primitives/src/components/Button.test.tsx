@@ -69,6 +69,31 @@ describe("Button", () => {
     expect(expectSome(hostProp(element, "role"))).toBe("button");
   });
 
+  it("publishes its plain text child as the name", () => {
+    // The bug: a div named by its text has no accessible name unless the
+    // wrapper writes it, so `<Button>Save</Button>` was announced unnamed.
+    expect(
+      expectSome(hostProp(resting({ children: "Save" }), "aria-label")),
+    ).toBe("Save");
+  });
+
+  it("prefers an explicit label and omits a blank one", () => {
+    expect(
+      expectSome(
+        hostProp(
+          resting({ label: "Save file", children: "Save" }),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Save file");
+    expect(
+      hostProp(resting({ label: "", children: "Save" }), "aria-label"),
+    ).toStrictEqual(Option.some("Save"));
+    expect(
+      hostProp(resting({ label: "   ", children: "Save" }), "aria-label"),
+    ).toStrictEqual(Option.some("Save"));
+  });
+
   it("stays focusable while loading but refuses to activate", () => {
     const onActivate = vi.fn();
     const loading = resting({ loading: true, onActivate });

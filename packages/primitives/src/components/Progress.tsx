@@ -20,6 +20,7 @@ import {
 } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
+import { accessibleName } from "../core/a11y.js";
 import { indeterminateOffset, SPINNER_SEGMENTS } from "../core/loading.js";
 import {
   progressPercent,
@@ -240,7 +241,7 @@ export const renderProgress = (
   return (
     <div
       role="progressbar"
-      aria-label={label}
+      aria-label={accessibleName(label)}
       aria-valuetext={part.valueText}
       testId={testId}
       style={mergeStyle(

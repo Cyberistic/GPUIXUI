@@ -29,6 +29,7 @@ import {
   type SelectItemState,
   type SelectTriggerState,
 } from "@gpuix/react/select";
+import { accessibleName } from "../core/a11y.js";
 import type { ControlSpec } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
@@ -134,7 +135,7 @@ export const renderSelect = (
       defaultValue={defaultValue}
       onValueChange={onChange}
       disabled={disabled}
-      aria-label={label}
+      aria-label={accessibleName(label)}
       testId={testId}
       style={mergeStyle(
         { width: fullWidth === true ? "100%" : undefined },

@@ -21,6 +21,7 @@ import {
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
+import { accessibleName } from "../core/a11y.js";
 import { decideActivation } from "../core/keyboard.js";
 import {
   selectionMarkColor,
@@ -193,7 +194,7 @@ export const renderCheckbox = (
   return (
     <div
       role="checkbox"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label)}
       aria-valuetext={selectionValueText(current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}

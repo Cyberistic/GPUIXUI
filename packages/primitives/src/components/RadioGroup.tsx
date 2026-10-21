@@ -40,6 +40,7 @@ import type {
   SelectionSpec,
   SelectionState,
 } from "../core/selection.js";
+import { accessibleName } from "../core/a11y.js";
 import { keyboardRing } from "../core/focus.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -243,7 +244,7 @@ export const renderRadioGroup = (
   return (
     <div
       role="radiogroup"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label)}
       testId={props.testId}
       onKeyDown={onKeyDown}
       style={group}

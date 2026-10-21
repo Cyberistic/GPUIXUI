@@ -43,7 +43,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "yes",
     limitations: [
-      "No heading semantics: the a11y dump has no heading role",
+      "No paragraph or list semantics: only the heading and code roles are published",
       "One run and one role; compose several Text nodes for mixed runs",
     ],
     source: ["src/components/Text.tsx", "src/core/style.ts"],

@@ -22,12 +22,13 @@ import { useState, type ReactElement, type ReactNode } from "react";
 import type { EventPayload } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
+import { accessibleName } from "../core/a11y.js";
 import { decideActivation } from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
 import { buttonClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle, suppressFeedback } from "./internal.js";
+import { childrenName, mergeStyle, suppressFeedback } from "./internal.js";
 import { keyboardRing } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -125,7 +126,7 @@ export const renderButton = (
   return (
     <div
       role="button"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label) ?? childrenName(props.children)}
       aria-description={props.loading === true ? "Loading" : undefined}
       tabIndex={
         props.disabled === true && props.loading !== true ? undefined : 0

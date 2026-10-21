@@ -21,7 +21,7 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import type { Density } from "../src/core/theme.js";
-import type { Bounds, Runtime } from "./harness.js";
+import { a11yNode, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const next = { width: WINDOW.width - testTheme.spacing.lg * 2 } as const;
@@ -214,6 +214,34 @@ it("tints and sizes the platform's scrollbar", async () => {
   );
   expect(style["scrollbarColor"]).toBe(testTheme.colors.scrollbar);
   expect(style["scrollbarWidth"]).toBe(9);
+});
+
+it("publishes a heading's level, and leaves body copy plain", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <Text role="h1">Title</Text>
+        <Text role="h3">Section</Text>
+        <Text role="body">Body</Text>
+      </Stack>
+    </Surface>,
+  );
+  const dump = runtime.a11y();
+  const h1 = Option.getOrElse(
+    a11yNode(dump, { role: "Heading", label: "Title" }),
+    () => expect.fail("the h1 was not announced as a heading"),
+  );
+  expect(h1.aria?.level).toBe(1);
+  const h3 = Option.getOrElse(
+    a11yNode(dump, { role: "Heading", label: "Section" }),
+    () => expect.fail("the h3 was not announced as a heading"),
+  );
+  expect(h3.aria?.level).toBe(3);
+  // Body copy is not a landmark, so it must not fabricate a role.
+  expect(a11yNode(dump, { role: "Heading", label: "Body" })).toStrictEqual(
+    Option.none(),
+  );
 });
 
 it("paints the type scale, not just the style", async () => {

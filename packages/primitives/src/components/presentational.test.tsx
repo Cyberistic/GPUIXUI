@@ -256,6 +256,23 @@ describe("type", () => {
     );
   });
 
+  it("carries the semantics of a heading or code role", () => {
+    const h1 = renderText({ role: "h1", children: "Title" }, testTheme);
+    expect(expectSome(hostProp(h1, "role"))).toBe("heading");
+    expect(expectSome(hostProp(h1, "aria-level"))).toBe(1);
+    expect(expectSome(hostProp(h1, "aria-label"))).toBe("Title");
+    expect(
+      expectSome(hostProp(renderText({ role: "h3" }, testTheme), "aria-level")),
+    ).toBe(3);
+    expect(
+      expectSome(hostProp(renderText({ role: "code" }, testTheme), "role")),
+    ).toBe("code");
+    // Body copy is not a landmark; it must not invent a role.
+    expect(
+      hostProp(renderText({ role: "body" }, testTheme), "role"),
+    ).toStrictEqual(Option.none());
+  });
+
   it("clamps after a line count and truncates on one line", () => {
     const clamped = renderText({ clamp: 3 }, testTheme);
     expect(numberIn(clamped, "lineClamp")).toStrictEqual(Option.some(3));

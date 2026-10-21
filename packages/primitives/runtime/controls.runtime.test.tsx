@@ -140,6 +140,22 @@ it("refuses to activate a loading Button, and still announces itself busy", asyn
   ).toBe(true);
 });
 
+it("names a Button by its text child", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Button testId="b">Save changes</Button>
+    </Surface>,
+  );
+  // The bug: a role="button" div named only by its painted text was unnamed in
+  // the accessibility tree.
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "Button", label: "Save changes" }),
+    ),
+  ).toBe(true);
+});
+
 it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", async () => {
   const gapOf = async (mode: "attached" | "separated"): Promise<number> => {
     const runtime = await openWindow();

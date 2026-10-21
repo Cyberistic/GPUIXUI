@@ -47,6 +47,17 @@ describe("Toggle", () => {
     expect(hostProp(element, "aria-pressed")).toStrictEqual(Option.none());
   });
 
+  it("publishes its plain text child when it has no label", () => {
+    const element = renderToggle(
+      { children: "Bold" },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "aria-label"))).toBe("Bold");
+  });
+
   it("announces a pressed toggle", () => {
     const element = renderToggle(
       { pressed: true },

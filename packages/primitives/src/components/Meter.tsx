@@ -22,6 +22,7 @@ import {
 } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
+import { accessibleName } from "../core/a11y.js";
 import type { ProgressTone } from "../core/style.js";
 import { clampValue, normalizeRange, valueFraction } from "../core/value.js";
 import type { PrimitiveTheme } from "../core/theme.js";
@@ -223,7 +224,7 @@ export const renderMeter = (
   return (
     <div
       role="meter"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label)}
       aria-valuetext={part.valueText}
       testId={props.testId}
       style={mergeStyle(

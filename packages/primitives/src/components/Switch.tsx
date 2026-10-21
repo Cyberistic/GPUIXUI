@@ -19,6 +19,7 @@ import {
 } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
+import { accessibleName } from "../core/a11y.js";
 import { decideActivation } from "../core/keyboard.js";
 import type { SelectionAccent, SelectionSpec } from "../core/selection.js";
 import { keyboardRing } from "../core/focus.js";
@@ -152,7 +153,7 @@ export const renderSwitch = (
   return (
     <div
       role="switch"
-      aria-label={props.label}
+      aria-label={accessibleName(props.label)}
       aria-valuetext={state.current ? "checked" : "unchecked"}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}

@@ -7,7 +7,7 @@
  * rotate or interpolate a colour (plan 020 §1.2).
  */
 
-import { useEffect, useState } from "react";
+import { Children, useEffect, useState, type ReactNode } from "react";
 import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import {
@@ -17,6 +17,24 @@ import {
   type ValueState,
 } from "../core/state.js";
 import type { Density, PrimitiveTheme } from "../core/theme.js";
+
+/**
+ * The name a button-shaped control's plain text children carry.
+ *
+ * A `<div role="button">Save</div>` has no accessible name unless the wrapper
+ * publishes the text it paints; rich (`Text`) children get no derived name, so
+ * an icon-only or composed control still needs an explicit `label`.
+ */
+export const childrenName = (children: ReactNode): string | undefined => {
+  const text = Children.toArray(children)
+    .filter(
+      (child): child is string | number =>
+        typeof child === "string" || typeof child === "number",
+    )
+    .join(" ")
+    .trim();
+  return text === "" ? undefined : text;
+};
 
 /** The caller's style wins, property by property. */
 export const mergeStyle = (
