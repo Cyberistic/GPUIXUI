@@ -49,7 +49,32 @@ const isColour = (
   frame.data[at + 2] === colour.b &&
   frame.data[at + 3] === colour.a;
 
+/** The palette, pinned: a recolour must edit this list as well as the fixture. */
+const PALETTE = [
+  SVG_TINT,
+  SOURCE_FILL,
+  ...Arr.map(LAYER_SHAPES, layerColour),
+  IMAGE_COLOUR,
+  BUFFER_COLOUR,
+  CANVAS_PARENT,
+] as const;
+
 describe("the content-surface fixtures", () => {
+  it("pins every fixture colour to the hex the probe's evidence names", () => {
+    expect(Arr.map(PALETTE, hexOf)).toEqual([
+      "#ff00ff",
+      "#123456",
+      "#2ecc71",
+      "#3498db",
+      "#e74c3c",
+      "#f1c40f",
+      "#e67e22",
+      "#9b59b6",
+      "#00ff00",
+      "#16a085",
+    ]);
+  });
+
   it("carries a PNG that decodes to the colour the probe asserts", () => {
     const frame = Pixels.decodePng(payload(IMAGE_DATA_URL), (bytes) =>
       inflateSync(bytes),
@@ -65,14 +90,13 @@ describe("the content-surface fixtures", () => {
 
   it("builds the in-memory buffer as straight RGBA in the asserted colour", () => {
     const pixels = imagePixels();
-    const colour = rgba(BUFFER_COLOUR);
+    // Literal bytes, not `BUFFER_COLOUR`: the stride and the channel order are
+    // what this holds, so deriving the expectation from the same constant would
+    // assert nothing.
+    const rgbaBytes = [0x00, 0xff, 0x00, 0xff] as const;
     expect(pixels.length).toBe(IMAGE_SIZE * IMAGE_SIZE * 4);
-    const wrong = offsets().filter(
-      (at) =>
-        pixels[at] !== colour.r ||
-        pixels[at + 1] !== colour.g ||
-        pixels[at + 2] !== colour.b ||
-        pixels[at + 3] !== colour.a,
+    const wrong = offsets().filter((at) =>
+      rgbaBytes.some((byte, channel) => pixels[at + channel] !== byte),
     );
     expect(wrong).toEqual([]);
   });
