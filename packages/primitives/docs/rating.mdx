@@ -61,12 +61,12 @@ unrated; an infinity is out of range and clamps to its own end (`+Infinity` is
 | `ArrowLeft` / `ArrowDown` | − one star from the focused star, clamped at `0` |
 | `Home` / `End` | one star / `max` |
 | `Enter` / `Space` | select the star the ring is on (key down / key up) |
+| `Delete` / `Backspace` | clear to `0` |
 
 `autoFocus` puts native focus on the star that holds the group's tab stop when
 the rating mounts — the value's star, or star 1 when unrated — including a later
 mount behind a loading state. A disabled rating never focuses; a read-only one
 still does (plan `808`).
-| `Delete` / `Backspace` | clear to `0` |
 
 The group holds **one tab stop** — on the current rating, or on the first star
 when unrated — and an arrow moves the ring and commits the star it lands on, so

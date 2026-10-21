@@ -20,7 +20,10 @@ import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { decideMove } from "./core/keyboard.js";
+import { decideActivation, decideMove } from "./core/keyboard.js";
+import { decideRating } from "./core/rating.js";
+import { typeaheadChar } from "./core/typeahead.js";
+import { docTableBlocks, tableCells } from "./testing/index.js";
 
 /** The document's arrow glyphs, mapped to the runtime key names. */
 const KEYS: Readonly<Record<string, string>> = {
@@ -124,10 +127,129 @@ describe("the keyboard pages", () => {
     const axes = Arr.getSomes(Arr.map(arrowRows(page), orientation));
     expect(sorted(axes)).toStrictEqual(["horizontal", "vertical"]);
   });
+
+  it("document every Rating movement key, and answer it as the rule does", async () => {
+    const page = await Effect.runPromise(readDoc("rating"));
+    const labels = documentedKeys(page);
+    Arr.forEach(RATING_MOVES, ([label, key, expected]) => {
+      expect(labels, `the page documents ${label}`).toContain(label);
+      expect(decideRating(3, 5, key), `${label} from 3 of 5`).toStrictEqual(
+        Option.some(expected),
+      );
+    });
+  });
+
+  it("answer no Rating key the page does not document", async () => {
+    const page = await Effect.runPromise(readDoc("rating"));
+    const documented = keyNames(documentedKeys(page));
+    const answered = Arr.filter(runtimeKeys(), (key) =>
+      Option.isSome(decideRating(3, 5, key)),
+    );
+    // Both sides exclude the two activation keys, which the page documents but
+    // `decideRating` does not answer.
+    expect(
+      sorted(Arr.filter(answered, (key) => !isActivation(key))),
+    ).toStrictEqual(
+      sorted(Arr.filter(documented, (key) => !isActivation(key))),
+    );
+  });
+
+  it("document the Rating activation keys on their own phases", async () => {
+    const page = await Effect.runPromise(readDoc("rating"));
+    const keys = keyNames(documentedKeys(page));
+    expect(keys).toContain("enter");
+    expect(keys).toContain("space");
+    expect(decideActivation("enter", "down", false)).toBe(true);
+    expect(decideActivation("enter", "up", false)).toBe(false);
+    expect(decideActivation("space", "up", false)).toBe(true);
+    expect(decideActivation("space", "down", false)).toBe(false);
+    expect(decideActivation("enter", "down", true)).toBe(false);
+    expect(decideActivation("space", "up", true)).toBe(false);
+  });
+
+  it("keep the CheckboxGroup activation and arrow rows true", async () => {
+    const page = await Effect.runPromise(readDoc("checkbox-group"));
+    const labels = documentedKeys(page);
+    expect(labels).toContain("Enter");
+    expect(labels).toContain("Space");
+    expect(labels, "the page documents that arrows are not handled").toContain(
+      "arrows",
+    );
+    expect(decideActivation("space", "up", false)).toBe(true);
+    expect(decideActivation("enter", "down", false)).toBe(true);
+    // The row owns the role, tab stop and key handlers, and its only key rules
+    // are activation and type-ahead. Neither answers an arrow, which is what
+    // the page's "not handled" row claims (plan 813).
+    Arr.forEach(["up", "down", "left", "right"], (key) => {
+      expect(decideActivation(key, "down", false), key).toBe(false);
+      expect(Option.isNone(typeaheadChar({ key })), key).toBe(true);
+    });
+  });
 });
 
-/** Orientation labels in the order the guard compares them. */
-const sorted = (values: ReadonlyArray<Orientation>): ReadonlyArray<string> =>
+/** The runtime's name for each key the pages may document. */
+const RUNTIME_KEY: Readonly<Record<string, string>> = {
+  ArrowRight: "right",
+  ArrowUp: "up",
+  ArrowLeft: "left",
+  ArrowDown: "down",
+  Home: "home",
+  End: "end",
+  Enter: "enter",
+  Space: "space",
+  Delete: "delete",
+  Backspace: "backspace",
+};
+
+/** The Rating page's movement rows, and the value each must produce from 3. */
+const RATING_MOVES: ReadonlyArray<readonly [string, string, number]> = [
+  ["ArrowRight", "right", 4],
+  ["ArrowUp", "up", 4],
+  ["ArrowLeft", "left", 2],
+  ["ArrowDown", "down", 2],
+  ["Home", "home", 1],
+  ["End", "end", 5],
+  ["Delete", "delete", 0],
+  ["Backspace", "backspace", 0],
+];
+
+/** The keys that activate rather than move a value control. */
+const isActivation = (key: string): boolean =>
+  key === RUNTIME_KEY.Enter || key === RUNTIME_KEY.Space;
+
+/** A keyboard table's rows, without its header and delimiter row. */
+const keyboardRows = (markdown: string): ReadonlyArray<ReadonlyArray<string>> =>
+  Arr.match(docTableBlocks(section(markdown, "Keyboard")), {
+    onEmpty: () => [],
+    onNonEmpty: (blocks) =>
+      Arr.map(Arr.drop(Arr.headNonEmpty(blocks), 2), (line) =>
+        tableCells(line.text),
+      ),
+  });
+
+/** Every key name the Keyboard table's first column mentions. */
+const documentedKeys = (markdown: string): ReadonlyArray<string> =>
+  Arr.flatMap(keyboardRows(markdown), (cells) =>
+    Arr.map(
+      Str.split("/")(Option.getOrElse(Arr.head(cells), () => "")),
+      (label) => Str.trim(Str.replace(/`/g, "")(label)),
+    ),
+  );
+
+/** The runtime name of a documented key label, when it is one we know. */
+const runtimeKeyOf = (label: string): Option.Option<string> =>
+  Option.fromNullishOr(RUNTIME_KEY[label]);
+
+/** The runtime names of the documented labels, in page order. */
+const keyNames = (labels: ReadonlyArray<string>): ReadonlyArray<string> =>
+  Arr.getSomes(Arr.map(labels, runtimeKeyOf));
+
+/** Every runtime key name this guard knows. */
+const runtimeKeys = (): ReadonlyArray<string> =>
+  Arr.getSomes(Arr.map(R.keys(RUNTIME_KEY), runtimeKeyOf));
+
+/** Strings in the order a guard compares them. */
+const sorted = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.sort(values, Order.String);
 
 const optionOrFail = <Value>(

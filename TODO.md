@@ -2847,6 +2847,17 @@ retired once both branches are one
       failing the native case at `83 ≠ 34`; the page no longer says "beside"
       (plan `809`; offline 75 files / 1075 tests, the scoped live file 4/4).
 
+`[x]` `packages/primitives`: **a keyboard-table row outside its table is not
+      documentation** — two pages put a row after the table's closing paragraph,
+      so Markdown painted it as body text and the key it documented was missing
+      from the table: the `Rating` clear row (`Delete`/`Backspace`, the only way
+      back to unrated) and `CheckboxGroup`'s "arrows not handled" row. Both move
+      inside their tables; `src/docs-tables.test.ts` fails by file and line on
+      any `|` line outside a well-formed block across both packages, and the two
+      keyboards join `docs-keyboard.test.ts` against `decideRating` /
+      `decideActivation` in both directions. Offline 77 files / 1126 tests, four
+      mutation directions measured (plan `813`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails

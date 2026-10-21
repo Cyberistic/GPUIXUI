@@ -100,6 +100,7 @@ its state in the description (`read only` / `unavailable`, plan `810`).
 | ---- | -------- |
 | Tab | moves to the **next row**; every enabled row is its own tab stop, as a checkbox group is on the platform |
 | Shift+Tab | moves to the previous row |
+| arrows | **not handled** — arrows do not move between checkboxes on the platform |
 | Space | toggles the focused row on key **up** |
 | Enter | toggles the focused row on key **down** |
 | held key | repeat events do nothing |
@@ -110,7 +111,6 @@ including a later mount behind a loading state — the select-all parent when it
 exists and is enabled, otherwise the first enabled option. A disabled group
 never focuses; a read-only one still does, because its rows keep their stops
 (plan `808`).
-| arrows | **not handled** — arrows do not move between checkboxes on the platform |
 
 The focus ring follows the row's **value**, so reordering or filtering `options`
 does not move it to whatever now sits at the old index.
