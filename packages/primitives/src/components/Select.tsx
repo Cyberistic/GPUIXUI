@@ -18,7 +18,11 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import type { FloatingSide } from "@gpuix/react/floating";
+import {
+  resolveStyle,
+  type FloatingSide,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import {
   Select as GpuixSelect,
@@ -48,6 +52,9 @@ import {
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
+/** The trigger and item states GPUix reports; the style callbacks receive them. */
+export type { SelectItemState, SelectTriggerState };
+
 export interface SelectOption {
   readonly value: string;
   readonly label: string;
@@ -70,7 +77,12 @@ export interface SelectProps extends ValueChangeProps<string> {
   readonly side?: FloatingSide;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
+  /** Extra style on the wrapper, which paints nothing but its width. */
   readonly style?: StyleDesc;
+  /** Extra style for the trigger, resolved against its own live state. */
+  readonly triggerStyle?: StateStyle<SelectTriggerState>;
+  /** Extra style for every option, resolved against that option's state. */
+  readonly itemStyle?: StateStyle<SelectItemState>;
   readonly testId?: string;
 }
 
@@ -78,6 +90,7 @@ export interface SelectProps extends ValueChangeProps<string> {
 export const selectTriggerStyle = (
   spec: ControlSpec,
   theme: PrimitiveTheme,
+  caller?: StateStyle<SelectTriggerState>,
 ): ((state: SelectTriggerState) => StyleDesc) => {
   const resolved = recipeTw.classesToStyle(
     selectTriggerClass({
@@ -95,7 +108,7 @@ export const selectTriggerStyle = (
     } else {
       style = mergeStyle(style, controlRing(theme, { invalid: spec.invalid }));
     }
-    return style;
+    return mergeStyle(style, resolveStyle(caller, state));
   };
 };
 
@@ -105,9 +118,15 @@ export const selectContentStyle = (theme: PrimitiveTheme): StyleDesc =>
 
 /** An item's paint, from the three states the runtime reports. */
 export const selectItemStyle =
-  (theme: PrimitiveTheme): ((state: SelectItemState) => StyleDesc) =>
+  (
+    theme: PrimitiveTheme,
+    caller?: StateStyle<SelectItemState>,
+  ): ((state: SelectItemState) => StyleDesc) =>
   (state) =>
-    recipeTw.classesToStyle(selectItemClass(state), theme).style;
+    mergeStyle(
+      recipeTw.classesToStyle(selectItemClass(state), theme).style,
+      resolveStyle(caller, state),
+    );
 
 /** The element tree `Select` renders. Pure in its arguments. */
 export const renderSelect = (
@@ -125,6 +144,8 @@ export const renderSelect = (
     side,
     label,
     style,
+    triggerStyle,
+    itemStyle,
     testId,
   }: SelectProps,
   theme: PrimitiveTheme,
@@ -152,7 +173,7 @@ export const renderSelect = (
     >
       <SelectTrigger
         disabled={disabled}
-        style={selectTriggerStyle(spec, theme)}
+        style={selectTriggerStyle(spec, theme, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
@@ -162,7 +183,7 @@ export const renderSelect = (
             key={option.value}
             value={option.value}
             disabled={option.disabled}
-            style={selectItemStyle(theme)}
+            style={selectItemStyle(theme, itemStyle)}
           >
             {option.label}
           </SelectItem>

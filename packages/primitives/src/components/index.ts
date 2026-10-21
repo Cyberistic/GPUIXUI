@@ -148,7 +148,12 @@ export { Spinner } from "./Spinner.js";
 export type { SpinnerProps } from "./Spinner.js";
 
 export { Select } from "./Select.js";
-export type { SelectOption, SelectProps } from "./Select.js";
+export type {
+  SelectItemState,
+  SelectOption,
+  SelectProps,
+  SelectTriggerState,
+} from "./Select.js";
 
 export { Tooltip } from "./Tooltip.js";
 export type { TooltipProps } from "./Tooltip.js";

@@ -43,7 +43,9 @@ import { Label, Select } from "@gpuixui/primitives";
 | `fullWidth` | `boolean` | `false` | trigger and list fill the parent |
 | `side` | `FloatingSide` | GPUix's choice | which side the list opens on |
 | `label` | `string` | none | accessible name for the select |
-| `style` | `StyleDesc` | — | merged last on the select root |
+| `style` | `StyleDesc` | — | merged last on the select root, which only carries its width |
+| `triggerStyle` | `StateStyle<SelectTriggerState>` | — | resolved against the trigger's live state, merged last |
+| `itemStyle` | `StateStyle<SelectItemState>` | — | resolved per option against that option's state, merged last |
 | `testId` | `string` | — | stable locator |
 
 ## Keyboard
@@ -71,6 +73,14 @@ trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
 Tab and not after a mouse press; a disabled trigger declares none. The list is
 one spacing step inset, full trigger width.
 
+`triggerStyle` and `itemStyle` are the state-aware hooks. The trigger callback
+receives GPUix's own `{ open, disabled, placeholder }`, so a caller can paint the
+open state; the item callback receives `{ selected, highlighted, disabled }` and
+runs once per option, so a data-driven list can style its rows. Both merge after
+the recipe and its role decisions, so a callback is the last word. The root
+`style` stays a plain `StyleDesc`: the root is a positioning wrapper with no live
+state of its own.
+
 ## Limitations
 
 - **Options are data.** No option groups, no rich option content, no compound
@@ -84,7 +94,7 @@ one spacing step inset, full trigger width.
 
 - `src/components/Select.test.tsx` — trigger chrome, the keyboard ring (ring
   role, destructive while invalid, absent while disabled), list surface and item
-  states.
+  states, and both state-aware callbacks receiving their live state and winning.
 - `runtime/fields.runtime.test.tsx` — opens, paints its options and commits a
   clicked option in the real renderer; open state and dismissal are GPUix's.
 

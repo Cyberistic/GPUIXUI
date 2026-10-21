@@ -20,6 +20,8 @@ import {
   selectContentStyle,
   selectItemStyle,
   selectTriggerStyle,
+  type SelectItemState,
+  type SelectTriggerState,
 } from "./Select.js";
 import { tooltipStyle } from "./Tooltip.js";
 import { elementProp, expectSome } from "./testing/element.js";
@@ -101,6 +103,39 @@ describe("Select", () => {
       Option.map(Arr.head(itemsOf(element)), (item) => item["label"]),
     ).toStrictEqual(Option.some("Alpha"));
     expect(expectSome(elementProp(element, "disabled"))).toBe(true);
+  });
+
+  it("hands the trigger style callback its live state and lets its result win", () => {
+    const seen: Array<SelectTriggerState> = [];
+    const trigger = selectTriggerStyle(
+      { variant: fieldVariant, size: "md", invalid: true },
+      testTheme,
+      (live) => {
+        seen.push(live);
+        return { backgroundColor: testTheme.colors.destructive };
+      },
+    )({ open: true, disabled: false, placeholder: false });
+
+    expect(seen).toEqual([{ open: true, disabled: false, placeholder: false }]);
+    expect(trigger.backgroundColor).toBe(testTheme.colors.destructive);
+  });
+
+  it("hands each option's style callback that option's state", () => {
+    const seen: Array<SelectItemState> = [];
+    const paint = selectItemStyle(testTheme, (live) => {
+      seen.push(live);
+      return {
+        backgroundColor: live.selected
+          ? testTheme.colors.primary
+          : testTheme.colors.card,
+      };
+    });
+
+    expect(paint({ ...rest, selected: true }).backgroundColor).toBe(
+      testTheme.colors.primary,
+    );
+    expect(paint(rest).backgroundColor).toBe(testTheme.colors.card);
+    expect(seen).toEqual([{ ...rest, selected: true }, rest]);
   });
 });
 
