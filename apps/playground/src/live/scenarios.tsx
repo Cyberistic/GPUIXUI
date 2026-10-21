@@ -50,6 +50,7 @@ import {
   Button,
   Checkbox,
   Input,
+  RangeSlider,
   Slider,
   ThemeProvider as PrimitiveThemeProvider,
   Tooltip,
@@ -800,6 +801,8 @@ const PointerCaptureProbe = (): ReactNode => {
   const [moveUnder, setMoveUnder] = useState(0);
   const [value, setValue] = useState(0);
   const [changes, setChanges] = useState(0);
+  const [range, setRange] = useState<readonly [number, number]>([10, 30]);
+  const [rangeChanges, setRangeChanges] = useState(0);
 
   return (
     <PrimitiveThemeProvider theme={palettes.dark}>
@@ -880,6 +883,17 @@ const PointerCaptureProbe = (): ReactNode => {
             }}
           />
         </div>
+        <div style={{ width: 400 }}>
+          <RangeSlider
+            testId="capture-range"
+            label="Range follows the pointer"
+            value={range}
+            onValueChange={(next) => {
+              setRange(next);
+              setRangeChanges((count) => count + 1);
+            }}
+          />
+        </div>
         <text
           testId="capture-readout"
           style={{
@@ -887,7 +901,7 @@ const PointerCaptureProbe = (): ReactNode => {
             color: theme.colors.foreground,
           }}
         >
-          {`both=${bothMoves} bothUnder=${bothUnder} bothUp=${bothUp} move=${moveMoves} moveUnder=${moveUnder} slider=${value} sliderChanges=${changes} sliderFollowed=${value > 60 && changes >= 5}`}
+          {`both=${bothMoves} bothUnder=${bothUnder} bothUp=${bothUp} move=${moveMoves} moveUnder=${moveUnder} slider=${value} sliderChanges=${changes} sliderFollowed=${value > 60 && changes >= 5} range=${range[0]}-${range[1]} rangeChanges=${rangeChanges} rangeFollowed=${range[1] > 30 && range[0] === 10}`}
         </text>
       </div>
     </PrimitiveThemeProvider>
@@ -2723,7 +2737,7 @@ const pointerCaptureSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "nothing has been dragged yet",
       yield* ctx.host.text("capture-readout"),
-      "both=0 bothUnder=0 bothUp=0 move=0 moveUnder=0 slider=0 sliderChanges=0 sliderFollowed=false",
+      "both=0 bothUnder=0 bothUp=0 move=0 moveUnder=0 slider=0 sliderChanges=0 sliderFollowed=false range=10-30 rangeChanges=0 rangeFollowed=false",
     );
 
     yield* ctx.host.drag("capture-both", 120, 0);
@@ -2748,6 +2762,21 @@ const pointerCaptureSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the shipped Slider follows a drag that leaves its track",
       yield* ctx.host.text("capture-readout"),
       "sliderFollowed=true",
+    );
+
+    // The range's two thumbs are separate stops on one track: the press picks
+    // the nearer end, so the other one must not move.
+    yield* ctx.host.drag("capture-range", 60, 120);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the shipped RangeSlider follows a drag that leaves its track",
+      yield* ctx.host.text("capture-readout"),
+      "rangeFollowed=true",
+    );
+    yield* ctx.expectContains(
+      "only the nearer end of the range moves",
+      yield* ctx.host.text("capture-readout"),
+      "range=10-",
     );
     yield* ctx.host.capture("pointer-capture");
   });

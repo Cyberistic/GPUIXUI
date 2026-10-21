@@ -471,13 +471,16 @@ a workaround for two live sessions sharing one worktree; see
       them instead. The probe mounts both cases side by side and drags each
       120px onto a sibling (`both=8 bothUnder=0 bothUp=1`; `move=1
       moveUnder=8`), then drags the shipped `Slider` 60px right and 120px down
-      off its track (`slider=66 sliderChanges=9`). 4 checks, `--only
+      off its track (`slider=66 sliderChanges=9`) and the shipped `RangeSlider`
+      the same way (`[10, 30]` → the nearer end follows the pointer to ~65 while
+      the other thumb stays at 10, so the range's drag is measured on the range
+      rather than inferred from the single slider). 6 checks, `--only
       pointer-capture`, green on 0.11.0; negative control measured (removing
       the sample's `onMouseMove` so capture is not armed: `both=0
-      bothUnder=8 bothUp=0`, exit `1`). This retracts the "no pointer capture"
-      claim the primitives docs and the `AsyncSmokeHost.drag` comment made; the
-      `packages/testing` comment is corrected here and the `Slider` half is the
-      interlock row below. Evidence: `apps/playground/README.md`
+      bothUnder=8 bothUp=0`, exit `1`). The probe retracted the "no pointer
+      capture" claim the primitives docs and the `AsyncSmokeHost.drag` comment
+      made, and both halves now cite it — the interlock row below records the
+      retraction and its headless twin. Evidence: `apps/playground/README.md`
       §`pointer-capture`, `.artifacts/live/pointer-capture.png`
 
 `[x]` Measure the modal **Tab trap in a window** — `dialog-lifecycle` now presses

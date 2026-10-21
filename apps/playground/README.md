@@ -1159,28 +1159,32 @@ mouse down **only** for an element that listens to both `mouseDown` and
 pair and one with `onMouseMove` alone, each beside a 400px sibling that counts
 its own moves — then drags each 120px right, ending over the sibling. It also
 drags the shipped `Slider` 60px right and 120px down, so the pointer leaves the
-track entirely.
+track entirely. The shipped `RangeSlider` gets the same drag, because its two
+thumbs are separate stops on one track and a capture rule that held for one
+control need not hold for the pair.
 
 | Sample | Listeners | Measured after the drag |
 | ------ | --------- | ----------------------- |
 | `capture-both` | `mouseDown` + `mouseMove` + `mouseUp` | `both=8 bothUnder=0 bothUp=1` — every move and the release went to the chosen element, 120px outside its box |
 | `capture-move-only` | `mouseMove` only | `move=1 moveUnder=8` — the one move before the press landed on it, then the captured-or-not rule sent all eight drag moves to the sibling |
 | `capture-slider` | the shipped `Slider` | `slider=66 sliderChanges=9` from a press at the track's centre and a release 120px below it, so the value followed the pointer's x while the pointer was off the track |
+| `capture-range` | the shipped `RangeSlider`, `[10, 30]` | the same drag leaves `range=10-…`: the press picked the **nearer** end (the centre is value 50, closest to 30) and that end followed the pointer to ~65 while the other thumb stayed at 10 |
 
-Four checks — one at rest and one per sample. Negative control measured: deleting
-the sample's `onMouseMove`
+Six checks — one at rest and one per sample plus the range's "only the nearer
+end moves" pair. Negative control measured: deleting the sample's `onMouseMove`
 handler (so the runtime no longer arms capture) fails the first check with
 `both=0 bothUnder=8 bothUp=0` — the sibling received the drag and the release,
-exit `1`; restored, `--only pointer-capture` is green (4 checks, exit `0`).
+exit `1`; restored, `--only pointer-capture` is green (6 checks, exit `0`).
 Evidence: `.artifacts/live/pointer-capture.png`.
 
-The consequence for the library: the shipped `Slider` **does** capture, so the
-limitation its source header, `docs/slider.mdx`, `docs/range-slider.mdx`, the
-`number-field.mdx` aside and the two `COMPONENTS.md` rows state — "no pointer
-capture; a drag that leaves the track stops" — is wrong. The correction belongs
-to `primitives` and is recorded as an interlock in `TODO.md`; this probe pins
-the measured behaviour so a runtime change fails here instead of moving the
-components silently.
+The consequence for the library: both shipped sliders **do** capture — the
+`RangeSlider` drag is measured above, not inferred from the `Slider`'s — so the
+limitation their source headers, `docs/slider.mdx`, `docs/range-slider.mdx`, the
+`number-field.mdx` aside and the two `COMPONENTS.md` rows stated — "no pointer
+capture; a drag that leaves the track stops" — was wrong. `primitives` retracted
+it in those surfaces and added the headless twin
+(`runtime/value.runtime.test.tsx`); this probe pins the window behaviour so a
+runtime change fails here instead of moving the components silently.
 
 ## Release gate
 
