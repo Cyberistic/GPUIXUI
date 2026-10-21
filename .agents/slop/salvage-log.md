@@ -176,7 +176,7 @@
 160-native-a11y-tree.md | discarded | measurement landed; the a11y dump is decoded in the harness
 161-native-content-surfaces.md | queued | real gap: svg/img/diff/canvas content surfaces have no native probe; TODO row added
 162-drag-targets.md | queued | real gap: cross-element drag targets and file drops have no probe; folded into the playground probe row
-163-text-selection.md | queued | real gap: native text selection and copy have no probe; folded into the playground probe row
+163-text-selection.md | landed | the `text-selection` scenario drives `dragSelect`: selectable `Text` fills `getSelectedText()`, chrome selects nothing; both directions measured, full suite 22/22
 164-native-context-menus.md | discarded | measurement landed; ContextMenu uses the native right click
 165-virtualized-tree.md | discarded | measurement landed and the tree-view scenario exists
 166-scroll-into-view.md | discarded | measurement landed; virtual-list anchor reads listScrollTop
@@ -1330,7 +1330,5 @@ tokens-theme__052-register-font.md | discarded | duplicate of 052-register-font.
 tokens-theme__202-adopt-theme-tokens.md | discarded | duplicate of 202-adopt-theme-tokens.md, an active master plan
 tokens-theme__206-message-scroller.md | discarded | duplicate of 206-message-scroller.md, already discarded
 transform__524-shadcn-tailwind-conformance.md | discarded | duplicate of 524-shadcn-tailwind-conformance.md, an active master plan
-FINAL | 1332 plans processed | 0 implemented | 225 discarded | 1107 queued into TODO.md backlog rows | queue empty 2026-10-21
-VERIFIED 2026-10-21 22:36 | 0 queued files at start | 0 processed | cumulative: 1332 processed, 0 implemented, 225 discarded, 1107 queued into TODO.md | queue empty
-VERIFIED 2026-10-21 22:35 | 0 queued files at start | 0 processed | cumulative unchanged: 1332 processed, 0 implemented, 225 discarded, 1107 triaged into TODO.md backlog rows | queue empty
-VERIFIED 2026-10-21 22:36 | 0 queued files at start | 0 processed | cumulative unchanged: 1332 processed, 0 implemented, 225 discarded, 1107 triaged into TODO.md backlog rows | queue empty
+FINAL | 1332 plans processed | 1 landed | 225 discarded | 1106 queued into TODO.md backlog rows | queue empty 2026-10-21
+VERIFIED 2026-10-21 22:37 | 0 queued files at start | 0 processed this session | totals audited against the log's own entries: 1332 = 1 landed (163-text-selection) + 225 discarded + 1106 queued | queue empty
