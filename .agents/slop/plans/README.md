@@ -420,6 +420,7 @@ references without buying correctness.
 | [825](./825-document-anchors.md) | The anchors the three documents link to, and the heading rename nothing notices | F | 355, 356, 616, 670 | done |
 | [828](./828-row-mark-fills.md) | The unread dot's two row fills, and the ledger rows plan 698 left behind | F | 332, 341, 351, 511, 557, 619, 651, 698, 705, 806, 823 | done |
 | [831](./831-ledger-status-figures.md) | The live cross-team rows quote figures the palette no longer produces | F | 079, 366, 528, 574, 582, 611, 737, 828 | done |
+| [833](./833-live-row-figures.md) | Every remaining figure in a live cross-team row, and the ring row's set | F | 057, 079, 311, 332, 343, 344, 347, 348, 394, 603, 611, 737, 831 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4360,6 +4361,22 @@ stand — `xText` for the status word, `destructiveText` for the error signal,
 `contrastRing` for a user-supplied swatch — and no colour, pair, floor, metric or
 shipped theme moves; `ledger-status-figures.test.ts` derives every figure and the
 two counts from `shippedThemes` and reads the three rows.
+
+833 closes the class for the rest of the ledger's live rows, and finds the one
+figure still wrong: the pressed-selection row said `ring` measures 1.000:1 on
+`primary` in ten named sets and 1.02–1.42:1 on `destructive`, while it is
+1.000:1 in **16 of the 24** sets and **1.024–1.609:1** on `destructive` (the
+identity light set is the only one above 1.42). The row now states the derived
+count and range, and the suite — renamed `ledger-figure-claims.test.ts` because
+it owns every live row's figures, not only the status rows — also derives the
+message bubble's six palettes where the `selection` wash composites to 1.000:1
+on `primary`, the invalid field's 1.97/3.48, the secondary Button's 23-of-24
+collapsed steps and 19 equal values, the avatar's 1.89, the timeline's
+1.036/1.014, the menu accent's two ranges on `popover`/`hover`/`active`, the
+Toast countdown's six equal `muted`/`popover` sets and 1.069 groove, the
+unchecked control's six `#FFFFFF` field fills (XP's beige card is the documented
+exception), and the native field's 3.23 runtime grey. No colour, pair, floor,
+metric or shipped theme moves.
 
 ## How to use a plan
 
