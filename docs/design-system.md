@@ -184,6 +184,10 @@ and the spacing scale stay fixed, so a density switch cannot reflow text
 unexpectedly. Components read `controlHeight(theme, size)` and
 `controlPaddingX(theme, size)` instead of hardcoding numbers.
 
+The shortest of those controls — `compact` `sm` at 24px — is also the
+pressable-target floor, so a control built at a control height never needs
+extra hit-area padding. An icon-sized part does; §9 has the rule.
+
 ## 7. Radii, borders and elevation
 
 Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12.
@@ -321,6 +325,18 @@ measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `decorativeFailures(theme, floor?)` measures the subtle surfaces, and
 `seriesFailures(theme)` measures a categorical scale. Nothing about the
 requirement is private to this repo.
+
+### Target sizes
+
+Colour is not the only measured contract. Every pointer target keeps
+`targetSize.minimum` — 24px — and a touch-first surface may raise it to
+`targetSize.comfortable`, 44px. Every shipped control height is at or above the
+first floor; an icon-sized part — a checkbox's 16px box, a 12px chevron — keeps
+its drawing and reserves the difference as padding with `targetInset`, so the
+look does not change and the target still reaches the floor. The floor is fixed
+rather than theme-owned: a brand can restyle the control, not lower the target.
+`target.test.ts` holds the helper and every density against it; adoption by the
+component packages is recorded in `TODO.md`.
 
 Not covered, deliberately:
 

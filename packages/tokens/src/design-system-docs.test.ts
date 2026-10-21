@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { colorRoles, darkColors, lightColors } from "./color.js";
 import { platformNames, platformStyles } from "./platforms.js";
-import { avatarSize, densityPresets, radius, spacing } from "./scale.js";
+import { avatarSize, densityPresets, radius, spacing, targetSize } from "./scale.js";
 import { typography } from "./typography.js";
 
 const doc = readFileSync(
@@ -148,5 +148,18 @@ describe("docs/design-system.md", () => {
 
     expect(printed.length).toBeGreaterThanOrEqual(5);
     expect(printed.filter((pair) => !sizes.has(pair))).toEqual([]);
+  });
+
+  it("prints the pressable-target floors", () => {
+    const floors = /`targetSize\.minimum` — (\d+)px — and a touch-first surface may raise it to\s+`targetSize\.comfortable`, (\d+)px/.exec(
+      doc,
+    );
+
+    expect(
+      floors,
+      "docs/design-system.md no longer states the target floors by name",
+    ).toBeDefined();
+    expect(Number(floors?.[1])).toBe(targetSize.minimum);
+    expect(Number(floors?.[2])).toBe(targetSize.comfortable);
   });
 });

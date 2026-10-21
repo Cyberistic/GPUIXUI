@@ -1039,6 +1039,8 @@ numeric stacking token.
 | `avatarSize.sm` | 26 |
 | `avatarSize.md` | 32 (default) |
 | `avatarSize.lg` | 40 |
+| `targetSize.minimum` | 24 |
+| `targetSize.comfortable` | 44 |
 
 Icons and avatars are separate scales. `iconSize` is a theme group, so a brand
 can change a step with `extendTheme(theme, { iconSize: { md: 18 } })`.
@@ -1047,6 +1049,38 @@ can change a step with `extendTheme(theme, { iconSize: { md: 18 } })`.
 rather than chrome. Neither follows density — a control's height changes with
 the workspace preset, an identity mark does not. A circle's diameter is the
 element's short side, so an avatar pairs `avatarSize[step]` with `radius.full`.
+
+### Target sizes
+
+A control may draw smaller than the area a pointer has to hit. A checkbox paints
+at `iconSize.md` (16px), a switch thumb at the same step, a tree chevron at
+`iconSize.xs` (12px): the drawing is the look, not the target.
+`targetSize.minimum` is 24px — WCAG 2.2 SC 2.5.8, level AA — and
+`targetSize.comfortable` is 44px, the AAA floor WCAG 2.1 SC 2.5.5 gives a
+touch-first surface. Both are fixed, not a `Theme` group: a floor a brand could
+lower would stop being a conformance claim.
+
+Keep the drawing and reserve the difference as padding:
+
+```tsx
+import { iconSize, targetInset } from "@gpuixui/tokens";
+
+const checkboxInset = targetInset(iconSize.md); // 4
+// 16px box + 4px each side = a 24px square the pointer can hit
+```
+
+`targetInset` rounds up, so an odd drawing (13px) reserves 6 and the target is
+25px rather than 23px. Two neighbours at that inset have 24px target circles
+that touch but never overlap — the spacing alternative in SC 2.5.8. A control
+that already reaches the floor gets `0` and needs no wrapper, which is every
+control built at `controlHeight`: the shortest shipped control is `compact`
+`sm` at exactly 24px, and `target.test.ts` holds every preset and size to the
+floor. The inset is for the icon-sized parts — selection boxes, chevrons, close
+buttons, status dots — and it belongs on the element that receives the press. A
+transparent wrapper only becomes a target when it opts in: the runtime passes a
+press through an element that paints no fill, so the wrapper sets
+`pointerEvents: "auto"` and a component adopting the rule measures the hit box
+in a window probe. Component adoption is recorded in `TODO.md` → Interlocks.
 
 ## Focus
 

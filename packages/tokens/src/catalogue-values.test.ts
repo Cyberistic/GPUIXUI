@@ -52,6 +52,7 @@ import {
   iconSize,
   radius,
   spacing,
+  targetSize,
 } from "./scale.js";
 import {
   darkSeries,
@@ -402,7 +403,7 @@ describe("the catalogue's scales", () => {
     );
   });
 
-  it("prints the border, icon and avatar scales", () => {
+  it("prints the border, icon, avatar and target scales", () => {
     const table = scalarTable(true, "the border and icon table");
     const scales = [
       ...Object.entries(borderWidth).map(
@@ -413,6 +414,9 @@ describe("the catalogue's scales", () => {
       ),
       ...Object.entries(avatarSize).map(
         ([step, value]) => [`avatarSize.${step}`, value] as const,
+      ),
+      ...Object.entries(targetSize).map(
+        ([step, value]) => [`targetSize.${step}`, value] as const,
       ),
     ];
 

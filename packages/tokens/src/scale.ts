@@ -113,6 +113,52 @@ export interface AvatarSize {
 export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
 
 /**
+ * Pressable-target floors in pixels.
+ *
+ * A control may paint smaller than its pressable box — a checkbox draws at an
+ * icon step, a tree chevron is a 14px glyph — but the area a pointer must hit
+ * has a floor. Fixed, not a theme group: a floor is an accessibility contract,
+ * and a brand that could lower it would make the library's own components
+ * non-conforming.
+ */
+export interface TargetSize {
+  /** 24px — the floor every pointer target keeps (WCAG 2.2 SC 2.5.8, AA). */
+  readonly minimum: number;
+  /** 44px — a touch-first surface's floor (WCAG 2.1 SC 2.5.5, AAA). */
+  readonly comfortable: number;
+}
+
+/** Default pressable-target floors. */
+export const targetSize: TargetSize = { minimum: 24, comfortable: 44 };
+
+/**
+ * Padding each side of a `visual`-sized control needs to reach `floor`.
+ *
+ * A control whose painted box is below the floor keeps its drawn size and
+ * reserves the difference as padding, so the press target grows without the
+ * control looking heavier. Rounding up means a fractional gap never leaves the
+ * target short, and two neighbours at this inset have 24px target circles that
+ * touch rather than overlap — WCAG 2.2 SC 2.5.8's spacing alternative. The
+ * result is `0` when the control already reaches the floor, and for a
+ * non-finite size or floor, which cannot describe a box.
+ *
+ * @example
+ * ```ts
+ * targetInset(iconSize.md); // 4 — a 16px checkbox needs 4px each side
+ * targetInset(iconSize.md, targetSize.comfortable); // 14
+ * ```
+ */
+export function targetInset(
+  visual: number,
+  floor: number = targetSize.minimum,
+): number {
+  if (!Number.isFinite(visual) || !Number.isFinite(floor)) {
+    return 0;
+  }
+  return Math.max(0, Math.ceil((floor - visual) / 2));
+}
+
+/**
  * Named control density presets, in documentation order. `DensityName` derives
  * from this list, so a new preset must also gain metrics in `densityPresets`.
  */
