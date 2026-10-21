@@ -66,7 +66,11 @@ export interface SwitchProps extends CheckedChangeProps {
   readonly size?: ControlSize;
   /** Defaults to `primary`. */
   readonly accent?: SelectionAccent;
-  /** Accessible name. The visible name goes in a `Label` beside it. */
+  /**
+   * Accessible name. A `Label` beside the switch only paints the text — it is
+   * not associated with the control — so this prop is what names it; pass the
+   * same string, or spread `labelledBy(name)`.
+   */
   readonly label?: string;
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */

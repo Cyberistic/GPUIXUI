@@ -111,8 +111,9 @@ clearing.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
   `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
 - `disabled` removes the tab stop; there is no `aria-disabled`.
-- The visible name is a separate `Label`; the `label` prop is the accessible
-  name, and there is no `aria-labelledby`.
+- The visible name is a separate `Label`, but it does not name the box: there is
+  no `aria-labelledby`, so the box's own `label` prop is its accessible name —
+  pass the same string, or spread `labelledBy(name)`.
 
 ## Theming
 
@@ -127,8 +128,9 @@ runtime after Tab and never after a mouse press.
 ## Limitations
 
 - No `aria-checked` (above).
-- No label-inside-the-control composition: pair it with a `Label` or use the
-  `label` prop for the accessible name only.
+- No label-inside-the-control composition: a `Label` beside the box is visible
+  text only — it does not name the control. The box is named by its own `label`
+  prop, which `labelledBy(name)` builds from the same string.
 - No partial-state animation.
 
 ## Verification
@@ -141,6 +143,8 @@ runtime after Tab and never after a mouse press.
   value flips `unchecked → checked`; a custom mark still toggles on a real hit
   test; indeterminate reads `mixed`; the AccessKit role is `CheckBox`; focus
   declares the keyboard ring and moves native focus with the selection.
+- `runtime/labelling.runtime.test.tsx` — a `Label` beside the box paints its
+  text but does not name the box; the same string through `labelledBy` does.
 
 ```sh
 nub run --filter @gpuixui/primitives test

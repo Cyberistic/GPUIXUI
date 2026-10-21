@@ -94,8 +94,10 @@ paints after keyboard focus only.
 
 ## Limitations
 
-- No `aria-checked` and no on/off text inside the control; pair it with a visible
-  `Label` or text row. A glyph on the knob is decoration, not a state label.
+- No `aria-checked` and no on/off text inside the control. A `Label` beside it
+  is visible text only — it does not name the switch — so pass the same string
+  as the switch's own `label` prop, or spread `labelledBy(name)`. A glyph on the
+  knob is decoration, not a state label.
 - No slide animation: the thumb jumps between the two `justifyContent` values.
 - No loading or pending state; disable it while a request is in flight.
 
@@ -109,6 +111,8 @@ paints after keyboard focus only.
 - `runtime/controls.runtime.test.tsx` — a click toggles; the role is `Switch`;
   a custom glyph still toggles on a real hit test; the announced value flips;
   Space and Enter both toggle.
+- `runtime/labelling.runtime.test.tsx` — a `Label` beside the switch paints its
+  text but does not name it; the same string through `labelledBy` does.
 
 ```sh
 nub run --filter @gpuixui/primitives test
