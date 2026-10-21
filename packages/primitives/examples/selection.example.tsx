@@ -8,6 +8,7 @@
  */
 
 import { useState, type ReactElement } from "react";
+import { Icon } from "@gpuixui/icons";
 import {
   Box,
   Checkbox,
@@ -65,7 +66,7 @@ export const SelectionExample = (): ReactElement => {
         <Checkbox
           checked={all}
           indeterminate={!all && !none}
-          onChange={(next) => {
+          onCheckedChange={(next) => {
             setEmail(next);
             setPush(next);
           }}
@@ -87,16 +88,32 @@ export const SelectionExample = (): ReactElement => {
           <Row title="Email" description="A digest to your account address.">
             <Checkbox
               checked={email}
-              onChange={setEmail}
+              onCheckedChange={setEmail}
               label="Email notifications"
             />
           </Row>
           <Row title="Push" description="Delivered by the desktop application.">
             <Checkbox
               checked={push}
-              onChange={setPush}
+              onCheckedChange={setPush}
               label="Push notifications"
             />
+          </Row>
+          <Row
+            title="Favourites"
+            description="A custom mark replaces the default check."
+          >
+            <Checkbox
+              defaultChecked
+              label="Mark as favourite"
+              testId="selection-example-favourite"
+            >
+              <Icon
+                name="star-filled"
+                size={theme.iconSize.sm}
+                color={theme.colors.primaryForeground}
+              />
+            </Checkbox>
           </Row>
         </Stack>
 
@@ -128,7 +145,7 @@ export const SelectionExample = (): ReactElement => {
         >
           <Switch
             checked={paused}
-            onChange={setPaused}
+            onCheckedChange={setPaused}
             label="Pause all notifications"
             testId="selection-example-pause"
           />

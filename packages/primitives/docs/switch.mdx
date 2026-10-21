@@ -8,6 +8,9 @@ the switch role. It shares `core/selection.ts`'s metrics with `Checkbox`, so the
 two line up on the same row, but they mean different things — a checkbox is a
 choice submitted with a form, a switch is applied immediately.
 
+Two parts: the track, and `SwitchThumb`. `Switch`'s children are the thumb's
+content, drawn inside the recipe's `pointer-events-none` guard.
+
 ## Usage
 
 ```tsx
@@ -15,18 +18,35 @@ import { Switch } from "@gpuixui/primitives";
 
 <Switch
   checked={paused}
-  onChange={setPaused}
+  onCheckedChange={setPaused}
   label="Pause all notifications"
 />;
 ```
 
+A glyph on the knob:
+
+```tsx
+import { Icon } from "@gpuixui/icons";
+import { useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+<Switch checked={dark} onCheckedChange={setDark} label="Theme">
+  <Icon name="moon" size={8} color={theme.colors.primaryForeground} />
+</Switch>;
+```
+
 ## API
+
+### `Switch`
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `checked` | `boolean` | — | controlled; omit to let the switch keep its own state |
 | `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
-| `onChange` | `(next: boolean) => void` | none | the next boolean |
+| `onCheckedChange` | `(next: boolean) => void` | none | the next boolean |
+| `onChange` | `(next: boolean) => void` | none | deprecated alias for `onCheckedChange`, removed next release; the new name wins when both are passed |
+| `children` | `ReactNode` | none | a glyph inside the knob |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
 | `invalid` | `boolean` | `false` | the track takes the destructive role |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
@@ -34,6 +54,16 @@ import { Switch } from "@gpuixui/primitives";
 | `label` | `string` | none | accessible name |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
+
+### `SwitchThumb`
+
+The knob. `Switch` renders it; a caller's `children` are its content.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | none | a glyph on the knob |
+| `className` | `string` | — | compiled through the recipe, joined after the thumb's rules |
+| `style` | `StyleDesc` | — | merged last |
 
 ## Keyboard
 
@@ -54,7 +84,7 @@ import { Switch } from "@gpuixui/primitives";
 
 ## Theming
 
-`switchTrackStyle` and `switchThumbStyle` resolve both parts from the same
+`switchTrackClass` and `switchThumbClass` compile both parts from the same
 selection spec. The thumb is positioned by the track's `justifyContent`, not a
 pixel offset, because the runtime has no `transform` — so it cannot drift out of
 the pill. Disabled adds half opacity and removes feedback. `invalid` gives an
@@ -64,7 +94,7 @@ paints the shared selection ring.
 ## Limitations
 
 - No `aria-checked` and no on/off text inside the control; pair it with a visible
-  `Label` or text row.
+  `Label` or text row. A glyph on the knob is decoration, not a state label.
 - No slide animation: the thumb jumps between the two `justifyContent` values.
 - No loading or pending state; disable it while a request is in flight.
 
@@ -72,9 +102,12 @@ paints the shared selection ring.
 
 - `src/core/selection.test.ts` — track and thumb geometry across sizes and
   states; the destructive border when `invalid`; the focus ring.
-- `src/components/selection.test.tsx` — controlled/uncontrolled wiring.
+- `src/components/Switch.test.tsx` — the knob's geometry from the theme scale, a
+  custom glyph inside it, and the pointer guard that keeps the glyph from taking
+  the press.
 - `runtime/controls.runtime.test.tsx` — a click toggles; the role is `Switch`;
-  the announced value flips; Space and Enter both toggle.
+  a custom glyph still toggles on a real hit test; the announced value flips;
+  Space and Enter both toggle.
 
 ```sh
 nub run --filter @gpuixui/primitives test

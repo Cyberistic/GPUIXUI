@@ -238,7 +238,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No aria-checked: the state is announced through aria-valuetext",
       "No label-inside-the-control composition",
-      "No partial-state animation and no custom mark",
+      "No partial-state animation",
     ],
     source: [
       "src/components/Checkbox.tsx",
@@ -248,7 +248,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     docs: "docs/checkbox.mdx",
     example: "examples/selection.example.tsx",
     tests: [
-      "src/components/selection.test.tsx",
+      "src/components/Checkbox.test.tsx",
       "src/core/selection.test.ts",
       "runtime/controls.runtime.test.tsx",
     ],
@@ -270,7 +270,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     docs: "docs/radio-group.mdx",
     example: "examples/selection.example.tsx",
     tests: [
-      "src/components/selection.test.tsx",
+      "src/components/RadioGroup.test.tsx",
       "runtime/controls.runtime.test.tsx",
     ],
   },
@@ -308,7 +308,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     docs: "docs/switch.mdx",
     example: "examples/selection.example.tsx",
     tests: [
-      "src/components/selection.test.tsx",
+      "src/components/Switch.test.tsx",
       "runtime/controls.runtime.test.tsx",
     ],
   },

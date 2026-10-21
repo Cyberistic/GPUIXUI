@@ -19,6 +19,7 @@ import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
+import { Icon } from "@gpuixui/icons";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
@@ -246,6 +247,37 @@ it("announces an indeterminate Checkbox as mixed", async () => {
     </Surface>,
   );
   expect(announced(runtime, "Enable")).toBe("mixed");
+});
+
+it("toggles a Checkbox through a custom mark", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Checkbox testId="cb" label="Enable" defaultChecked>
+          <Icon name="star" color="#ffffff" size={12} />
+        </Checkbox>
+      </Stack>
+    </Surface>,
+  );
+  expect(announced(runtime, "Enable")).toBe("checked");
+  runtime.click("cb");
+  expect(announced(runtime, "Enable")).toBe("unchecked");
+});
+
+it("toggles a Switch through a custom glyph", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Switch testId="sw" label="Dark mode">
+          <Icon name="sun" color="#000000" size={8} />
+        </Switch>
+      </Stack>
+    </Surface>,
+  );
+  runtime.click("sw");
+  expect(announced(runtime, "Dark mode")).toBe("checked");
 });
 
 it("toggles a Switch on a click and reports the role the runtime maps it to", async () => {

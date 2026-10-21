@@ -7,8 +7,10 @@
 Tier 1"; components' `internal/button.tsx` stand-in can only be retired once
 `Button` is exported from this package.
 **Status:** in progress. Step 1 landed (commit `26f96a5c`); Step 2 landed for
-`Input` + `TextArea` (commit `dd6d1d51`), `NumberField`/`OTPField` still to do —
-their unit suites cannot load until B1 is fixed.
+`Input` + `TextArea` (commit `dd6d1d51`), `NumberField`/`OTPField` still to do;
+Step 3 landed (Checkbox/Switch parts). The `darwin-x64` binding for 0.11.0 landed
+on this host on 2026-10-21, so the unit suites (355) and the runtime suites (121)
+both run here again — runtime verification is no longer pending.
 
 ---
 
@@ -175,10 +177,21 @@ the commit body of every later step; it must never go down.
 - Test: the same three-state matrix on each of the four, plus a style function
   that returns `{}` leaving the recipe untouched.
 
-### Step 3 — `CheckboxIndicator` and `SwitchThumb`
+### Step 3 — `CheckboxIndicator` and `SwitchThumb` — **landed**
 
-- Files: `Checkbox.tsx`, `Switch.tsx`, `selection.test.tsx`,
-  `core/selection.ts` (the mark/thumb style), docs pages, examples.
+> Landed 2026-10-21. `Checkbox`/`Switch` take `onCheckedChange` (with `onChange`
+> as the deprecated alias, resolved through `internal.checkedChange` so the new
+> name wins when both are passed) and `children` as the mark/knob content. The
+> mark and the knob are parts behind a small context, each with one pure
+> `renderX` entry point so the tree is testable without the native binding.
+> Native proof: a custom mark/glyph still toggles through a real hit test
+> (`controls.runtime.test.tsx`, proven to fail by dropping the pointer guard).
+> The old `selection.test.tsx` split into `Checkbox.test.tsx`,
+> `Switch.test.tsx` and `RadioGroup.test.tsx`. Unit suite 292 → 355 (the B1
+> binding also landed, so the five blocked files run again); runtime 119 → 121.
+
+- Files: `Checkbox.tsx`, `Switch.tsx`, the three suites, `internal.ts`, docs
+  pages, `examples/selection.example.tsx`, `src/inventory.ts`, `COMPONENTS.md`.
 - `Checkbox` renders `<CheckboxIndicator>`; the caller may pass their own
   children to it (a custom mark) — when they do, the default icon is not drawn.
 - `Switch` renders `<SwitchThumb>`; the caller may pass children (a glyph).

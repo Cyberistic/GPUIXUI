@@ -46,11 +46,16 @@ export type { OTPFieldProps } from "./OTPField.js";
 export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";
 
-export { Checkbox, checkboxState, selectionValueText } from "./Checkbox.js";
-export type { CheckboxProps } from "./Checkbox.js";
+export {
+  Checkbox,
+  CheckboxIndicator,
+  checkboxState,
+  selectionValueText,
+} from "./Checkbox.js";
+export type { CheckboxIndicatorProps, CheckboxProps } from "./Checkbox.js";
 
-export { Switch } from "./Switch.js";
-export type { SwitchProps } from "./Switch.js";
+export { Switch, SwitchThumb } from "./Switch.js";
+export type { SwitchProps, SwitchThumbProps } from "./Switch.js";
 
 export { initialActiveIndex, RadioGroup } from "./RadioGroup.js";
 export type { RadioGroupProps, RadioOption } from "./RadioGroup.js";

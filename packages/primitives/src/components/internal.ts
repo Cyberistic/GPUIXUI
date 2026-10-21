@@ -93,6 +93,26 @@ export const useFocus = (): FocusState => {
   };
 };
 
+/**
+ * The change props a boolean control accepts.
+ *
+ * `onCheckedChange` is the contract's name for a boolean part
+ * (`docs/component-api.md` §2, base-gpui's `on_checked_change`). `onChange` is
+ * the deprecated alias kept for one release; when a caller passes both, the new
+ * name is the one that runs, so migrating cannot double-fire a handler.
+ */
+export interface CheckedChangeProps {
+  readonly onCheckedChange?: (next: boolean) => void;
+  /** @deprecated use `onCheckedChange`; removed in the next release. */
+  readonly onChange?: (next: boolean) => void;
+}
+
+/** The one change callback a boolean control calls. */
+export const checkedChange = (
+  props: CheckedChangeProps,
+): ((next: boolean) => void) | undefined =>
+  props.onCheckedChange ?? props.onChange;
+
 /** A control's controlled/uncontrolled value, and the setter that respects it. */
 export interface ControlState<Value> {
   readonly value: ValueState<Value>;

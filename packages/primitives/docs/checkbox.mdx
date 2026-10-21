@@ -7,6 +7,9 @@ description: An independent yes/no, optionally indeterminate.
 three-state paint (`unchecked`, `checked`, `indeterminate`) with `Switch` and
 `RadioGroup` through `core/selection.ts`, so they cannot drift apart.
 
+Two parts: the box, and `CheckboxIndicator` — the mark. `Checkbox`'s children
+are the indicator's content, so a custom glyph needs no rebuild of the control.
+
 ## Usage
 
 ```tsx
@@ -14,7 +17,7 @@ import { Checkbox } from "@gpuixui/primitives";
 
 <Checkbox
   checked={email}
-  onChange={setEmail}
+  onCheckedChange={setEmail}
   label="Email notifications"
 />;
 ```
@@ -25,7 +28,7 @@ An indeterminate parent:
 <Checkbox
   checked={email && push}
   indeterminate={!email !== !push}
-  onChange={(next) => {
+  onCheckedChange={(next) => {
     setEmail(next);
     setPush(next);
   }}
@@ -33,13 +36,42 @@ An indeterminate parent:
 />;
 ```
 
+A custom mark:
+
+```tsx
+import { Icon } from "@gpuixui/icons";
+import { useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+<Checkbox
+  checked={favourite}
+  onCheckedChange={setFavourite}
+  label="Favourite"
+>
+  <Icon
+    name="star-filled"
+    size={theme.iconSize.sm}
+    color={theme.colors.primaryForeground}
+  />
+</Checkbox>;
+```
+
+Passing children replaces the default check/dash glyph. They are drawn inside
+the mark's `pointerEvents: "none"` region, so a custom mark cannot swallow the
+press that toggles the box.
+
 ## API
+
+### `Checkbox`
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `checked` | `boolean` | — | controlled state; omit to let the box keep its own |
 | `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
-| `onChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
+| `onCheckedChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
+| `onChange` | `(next: boolean) => void` | none | deprecated alias for `onCheckedChange`, removed next release; the new name wins when both are passed |
+| `children` | `ReactNode` | the default glyph | the mark's content |
 | `indeterminate` | `boolean` | `false` | paints a dash and announces `mixed`; overrides `checked` |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
 | `invalid` | `boolean` | `false` | the empty box takes the destructive border |
@@ -48,6 +80,17 @@ An indeterminate parent:
 | `label` | `string` | none | accessible name |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
+
+### `CheckboxIndicator`
+
+The mark region. `Checkbox` renders it; compose it directly only when you need
+its props (a `style`, a `className`) in addition to `Checkbox`'s children.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | the default check/dash | the glyph |
+| `className` | `string` | — | compiled through the recipe registry, after the part's rules |
+| `style` | `StyleDesc` | — | merged last |
 
 `indeterminate` is a **paint override**: activation still toggles the underlying
 boolean, so an indeterminate parent becomes checked on the next click rather than
@@ -73,27 +116,30 @@ clearing.
 
 ## Theming
 
-`selectionBoxStyle` resolves box side from `iconSize`, radius from `radius.sm`,
-border from `input`/`destructive`, fill from the accent role and the mark from
-`selectionMarkColor`. Hover and press are declared in `style.hover`/`style.active`,
-not scripted. Disabled adds half opacity and removes pointer feedback. Focus
-paints the selection ring (`colors.ring`, spread by `borderWidth.strong`).
+`selectionBoxClass` compiles the box through the recipe registry: side from
+`iconSize`, radius from `radius.sm`, border from `input`/`destructive`, fill from
+the accent role, and the mark colour from `selectionMarkColor`. Hover and press
+are declared in `style.hover`/`style.active`, not scripted. Disabled adds half
+opacity and removes pointer feedback. Focus paints the selection ring
+(`colors.ring`, spread by `borderWidth.strong`).
 
 ## Limitations
 
 - No `aria-checked` (above).
 - No label-inside-the-control composition: pair it with a `Label` or use the
   `label` prop for the accessible name only.
-- No partial-state animation and no custom mark.
+- No partial-state animation.
 
 ## Verification
 
 - `src/core/selection.test.ts` — the three-state paint and mark colour.
-- `src/components/selection.test.tsx` — toggle, indeterminate and disabled
-  wiring at the render seam.
+- `src/components/Checkbox.test.tsx` — toggle, indeterminate and disabled
+  wiring; the mark's state flows into its colour; a custom glyph replaces the
+  default; the mark keeps the pointer guard; the callback name and its alias.
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
-  value flips `unchecked → checked`; indeterminate reads `mixed`; the AccessKit
-  role is `CheckBox`; focus paints the ring and moves it with focus.
+  value flips `unchecked → checked`; a custom mark still toggles on a real hit
+  test; indeterminate reads `mixed`; the AccessKit role is `CheckBox`; focus
+  paints the ring and moves it with focus.
 
 ```sh
 nub run --filter @gpuixui/primitives test

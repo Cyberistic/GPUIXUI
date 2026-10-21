@@ -1,11 +1,12 @@
 /**
- * The selection controls: `Checkbox`, `Switch`, `RadioGroup`.
+ * `RadioGroup` — the element tree the runtime receives.
  *
- * The bug this suite exists for is the a11y contract on a runtime that exposes
- * neither `aria-checked` nor `aria-valuenow` (plan 020 §1.4): state must be
- * legible through `aria-valuetext`, and the unsupported attributes must stay
- * *absent* rather than being written for the DOM's benefit and ignored by GPUix.
- * The rest is the keyboard and roving-index contract the platform expects.
+ * The bug this suite guards is the roving tab stop: arrows changed the
+ * selection but native focus stayed on the old radio, so the platform's
+ * "selection follows focus" contract was broken and a ring would have sat on
+ * the wrong item. It also holds the group to the supported accessibility
+ * subset: GPUix 0.10.0 has no `aria-checked`, so state is announced through
+ * `aria-valuetext`.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -13,19 +14,12 @@ import * as Option from "effect/Option";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
-  checkboxState,
-  renderCheckbox,
-  selectionValueText,
-} from "./Checkbox.js";
-import {
   initialActiveIndex,
   renderRadioGroup,
   type RadioGroupHandlers,
   type RadioGroupFocus,
   type RadioOption,
 } from "./RadioGroup.js";
-import { renderSwitch } from "./Switch.js";
-import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
 import {
   expectSome,
@@ -34,7 +28,6 @@ import {
   hostTag,
 } from "./testing/element.js";
 
-const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
 const unfocused: RadioGroupFocus = {
   focusedIndex: Option.none(),
   onFocus: vi.fn(),
@@ -48,8 +41,6 @@ const radioHandlers = (
   onFocusMove: vi.fn(),
   registerItem: () => () => {},
 });
-const checked = (value: boolean): ValueState<boolean> =>
-  initValueState(Option.some(value), false);
 const text = (value: string): ValueState<string> =>
   initValueState(Option.some(value), "");
 
@@ -58,76 +49,6 @@ const options: ReadonlyArray<RadioOption> = [
   { value: "beta", label: "Beta" },
   { value: "gamma", label: "Gamma" },
 ];
-
-describe("Checkbox", () => {
-  it("announces its state as value text, and never invents aria-checked", () => {
-    const element = renderCheckbox(
-      { checked: true },
-      testTheme,
-      checked(true),
-      idle,
-      vi.fn(),
-    );
-    expect(expectSome(hostProp(element, "role"))).toBe("checkbox");
-    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("checked");
-    expect(hostProp(element, "aria-checked")).toStrictEqual(Option.none());
-  });
-
-  it("reports the indeterminate state as mixed", () => {
-    const element = renderCheckbox(
-      { indeterminate: true },
-      testTheme,
-      checked(false),
-      idle,
-      vi.fn(),
-    );
-    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("mixed");
-  });
-
-  it("toggles to the opposite of what it currently shows", () => {
-    const onValueChange = vi.fn();
-    const element = renderCheckbox(
-      {},
-      testTheme,
-      checked(false),
-      idle,
-      onValueChange,
-    );
-    expectSome(hostHandler(element, "onClick"))(keyEvent("space"));
-    expect(onValueChange).toHaveBeenCalledWith(true);
-  });
-
-  it("does not toggle while disabled", () => {
-    const onValueChange = vi.fn();
-    const element = renderCheckbox(
-      { disabled: true },
-      testTheme,
-      checked(false),
-      idle,
-      onValueChange,
-    );
-    expectSome(hostHandler(element, "onClick"))(keyEvent("space"));
-    expect(onValueChange).toHaveBeenCalledTimes(0);
-  });
-});
-
-describe("Switch", () => {
-  it("announces itself as a switch and toggles on Space key up", () => {
-    const onValueChange = vi.fn();
-    const element = renderSwitch(
-      {},
-      testTheme,
-      checked(false),
-      idle,
-      onValueChange,
-    );
-    expect(expectSome(hostProp(element, "role"))).toBe("switch");
-    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("space"));
-    expect(onValueChange).toHaveBeenCalledTimes(0);
-    expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
-    expect(onValueChange).toHaveBeenCalledWith(true);
-  });
-});
 
 describe("RadioGroup", () => {
   it("moves the selection with the arrow key and reports the option it landed on", () => {
@@ -146,9 +67,6 @@ describe("RadioGroup", () => {
   });
 
   it("moves focus to the option an arrow lands on", () => {
-    // The bug guarded: arrows moved the selection and the tab stop while native
-    // focus stayed on the old radio, so the platform's "selection follows
-    // focus" contract was broken and a ring would have sat on the wrong item.
     const handlers = radioHandlers(vi.fn());
     const element = renderRadioGroup(
       { options },
@@ -217,13 +135,9 @@ describe("RadioGroup", () => {
       ),
     ).toBe(1);
   });
-
-  it("reports selection state through value text, not aria-checked", () => {
-    expect(selectionValueText(checkboxState({ indeterminate: true }))).toBe(
-      "mixed",
-    );
-    expect(selectionValueText(checkboxState({ checked: true }))).toBe(
-      "checked",
-    );
-  });
 });
+
+// The `Checkbox`/`Switch` halves of the old selection suite moved to their own
+// files: those two controls do not need the native binding, and keeping them in
+// one file made a `useGpuix` import in `RadioGroup` take their tests down with
+// it.
