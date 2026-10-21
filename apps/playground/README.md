@@ -1869,6 +1869,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-text-ink` | the four text roles in a window: a 64 px run's glyph pixels carry `foreground #EEF1F5`, `mutedForeground #A1A9B7`, `destructive #FF6B6B` or `success #3BC97F` (at least 32 device pixels each, exact ink), no run paints the next role's token, and the stage stays `background` — 23 checks (plan `773`). The scan maps the run's logical box through the frame's device scale (2) and reports the closest pixel on failure |
 | `live-text-decoration` | `underline` and `line-through` in a window: a 427 px continuous ink row at `y=0.67` (underline) and `y=0.45` (line-through) on a 280 × 96 panel, the undeclared control's widest row is 22 px (a glyph stem), both lines are exactly `foreground #EEF1F5`, and a wrapper `div`'s declaration reaches its child run — 18 checks (plan `775`). The scan uses the panel because an underline paints 1–2 device px **below** the `<text>` box |
 | `live-truncation-pixels` | the ellipsis glyph in a window: four 32 px runs in 200-wide boxes — the ellipsis's right edge is a short dot run (tallest column **0.11** against the clipped control's **0.70**), both keep **0** ink outside their box, the `MMMM` control's edge band is blank, and a `nowrap` run with neither leaks **1922** ink pixels beside its box — 22 checks (plan `778`). A blank right edge does not count as dots: `looksLikeDots` requires ink |
+| `live-line-clamp` | multi-line `lineClamp` in a window: four runs in 240-wide boxes — a 2-line clamp measures **52** and paints 2 bands with **0** ink below, the 3-line clamp **78** and 3 bands, the unclamped control **104** and 4 bands (and ink below line 2, so the no-ink scan is not vacuous), the pitch is the declared `lineHeight` (52 device px at scale 2), and `lineClamp` **alone** hard-cuts while `textOverflow: "ellipsis"` paints the three-dot mark (`h4`, top 34, gaps 5, span 20 device px) — 30 checks (plan `829`). A 52 px box holding an unclamped run fails `clamp 2 paints no ink below its box` with `5341/122880` |
 | `live-surface-theme` | the content-surface theme in a window: one 880 × 580 stage mounts eleven themed/default fixtures and one frame proves the token reaches the paint — markdown text (`foreground`), inline code (`primary`), the bullet disc (`primary` at 85 %), the link underline (`mutedForeground`, and **no** `primary`: links are monochrome), both `appearance` bases, the code's syntax string and keyword tokens and its `placeholder` gutter, the `<code>`/`<markdown>` **absent** plane and the `<diff>` plane with both 5.5 % tints — 50 checks (plan `784`) |
 | `live-dialog-scrim` | the modal veil in a window: the shipped `Dialog`/`Drawer` paint the `overlay` role over the anchored layer's `#1A1A1A` plane (`#090909`) across the whole window, their surfaces stay `popover` above it, an **in-window** `absolute` layer of the same token dims the page to `#3A3B59`/`#15462C`, and every layer unmounts on close — 62 checks (plan `791`). **Measured: an anchored layer is opaque, so a modal hides the app instead of dimming it** |
 | `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |
@@ -2672,8 +2673,45 @@ kept it on screen). Truncating UI must supply one of the two — the shipped
 `Text` does. The ceilings (`0.4` dots, `0.6` clipped) sit between the measured
 values.
 
-**Not claimed:** `ellipsis-start`, multi-line `lineClamp` paint, the exact
-glyph, and the `Text` component's API. The probe mounts bare `<text>` runs.
+**Not claimed:** `ellipsis-start`, the exact glyph, and the `Text` component's
+API. The probe mounts bare `<text>` runs. Multi-line `lineClamp` is now measured
+separately, below.
+
+### Multi-line `lineClamp`, in the frame (plan `829`)
+
+Plan `335` read `lineClamp` as **geometry only** (`2 × 26 = 52`, `3 × 26 = 78`).
+Two defects hid behind that: a runtime that stopped laying out at N lines but
+kept painting the rest, and a runtime that grew an ellipsis from the clamp
+alone. `line-clamp-pixels` / `live-line-clamp` (**30 checks each**) mount four
+240-wide 16 px runs at `lineHeight: 26` on one 640 × 400 stage and decode one
+frame per host:
+
+| Fixture | Declaration | Box | Ink bands | Ink below the box | Tail |
+| ------- | ----------- | --- | --------- | ----------------- | ---- |
+| `cut` | `lineClamp: 2` | **52** | 2 | **0** / 122880 | a glyph (`h17`–`h24`) |
+| `mark` | `lineClamp: 2` + `textOverflow: "ellipsis"` | **52** | 2 | **0** / 122880 | **3 dots** (`h4`, top 34, gaps 5, span 20) |
+| `three` | `lineClamp: 3` | **78** | 3 | **0** / 122880 | a glyph |
+| `free` | none | **104** | 4 | paints below line 2 | a glyph |
+
+**The clamp stops the paint, not just the layout**, and the unclamped control is
+what makes that check non-vacuous: the same strip below the two-line mark holds
+ink when nothing clamps. **`lineClamp` alone hard-cuts.** The `…` appears only
+when `textOverflow: "ellipsis"` is declared too — the pinned gpui appends the
+mark in `truncate_wrapped_line`, which is gated on `text_style.text_overflow`;
+otherwise `shape_text(…, clamp)` stops at N lines with no affix. The dots are
+three clusters of 3–4 device px at row 34 of the 52 px (device) line, so a dot
+is `0.08` of the line tall against a clipped glyph's `0.46`. The line pitch is
+the declared `lineHeight`, exactly `52` device px at scale 2.
+
+The load-bearing mutation is the runtime shape this guards: a 52 px box holding
+an **unclamped** run — layout clamped, paint not — fails `clamp 2 paints no ink
+below its box` with `5341/122880`. Five further mutations and one unit mutation
+failed by name (plan `829` §9).
+
+**Not claimed:** `lineClamp` with `ellipsis-start`, a clamp inside a virtual
+row, and the `Text` component's own `clamp` prop routing — the probe mounts bare
+`<text>` runs. `Text clamp` paints no mark today; that is recorded as a
+cross-team row in `TODO.md`.
 
 ### The content-surface theme: tokens reach markdown, code and diff (plan `784`)
 
@@ -2872,10 +2910,12 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **123/123 green** here (`exit 0`, 4738 checks, 67 capabilities,
-2026-10-21 after plan `820`; **422.6 s**, which includes plan `819`'s 60-check
-`hidden-surface`, plan `816`'s 7 extra `surface-theme` checks and plan `820`'s
-98-check `scroll-clip`; the run before them read **121/121** · 4573 · 577.8 s
+The suite is **126/126 green** here (`exit 0`, 4952 checks, 67 capabilities,
+2026-10-21 after plan `829`; **408.3 s**, which includes plan `829`'s 30-check
+`line-clamp-pixels`, plan `825`'s 34-check `size-constraints`, plan `823`'s
+150-check `motion-curve`, plan `819`'s 60-check `hidden-surface`, plan `816`'s 7
+extra `surface-theme` checks and plan `820`'s 98-check `scroll-clip`; the run
+before them read **121/121** · 4573 · 577.8 s
 after plan `807`; **120/120** · 4452 · 525.80 s after
 plan `801`, or 348.41 s on the head that
 merges `origin/master`'s `packages/motion`; **119/119** · 4359 after plan
@@ -2905,7 +2945,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-123/123 scenarios passed · capabilities: layout=verified root=verified text=verified
+126/126 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -3158,10 +3198,10 @@ narrower. Each deviation is deliberate and measured:
   (`media-surface`, plan `520`), the **text ink** probe (`text-ink-pixels`,
   plan `773`) and the **text decoration** probe (`text-decoration-pixels`,
   plan `775`)
-  pass in real GPUix 0.10.0 on this host (**125/125**, **4922** checks, 67
-  capabilities, exit `0` — plans `823`/`825`, which add `motion-curve`'s 150
-  curve checks and `size-constraints`' 34), with a written report and
-  screenshots. The **message-scroller** probe
+  pass in real GPUix 0.10.0 on this host (**126/126**, **4952** checks, 67
+  capabilities, exit `0` — plans `823`/`825`/`829`, which add `motion-curve`'s
+  150 curve checks, `size-constraints`' 34 and `line-clamp-pixels`' 30), with a
+  written report and screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
   unpinned, jump-to-latest, the threshold and a short history. The

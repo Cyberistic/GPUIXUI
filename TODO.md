@@ -145,6 +145,39 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 154/154 plans-and-harness
 
+`[x]` **Prove the multi-line `lineClamp` paint in the frame** per plan `829`:
+`lineClamp` had only ever been measured as geometry (plan `335`: `52`, `78`), so
+a runtime that stopped laying out at N lines but **kept painting**, or one that
+grew an ellipsis from the clamp alone, passed the whole suite.
+`line-clamp-pixels` / `live-line-clamp` (**30 checks each**, three consecutive
+green live runs) mount four 240-wide runs at `lineHeight: 26` and prove: the box
+(52/52/78/104), the ink bands (2/2/3/4), the declared pitch (**52** device px at
+scale 2), **no ink below a clamped box** while the unclamped control paints in
+the same strip (so the scan is not vacuous), `lineClamp` **alone is a hard cut**
+with a glyph tail (`h17`–`h24`), and `lineClamp` + `textOverflow: "ellipsis"`
+paints **three dots** (`h4`, top 34, gaps 5, span 20 device px). **Measured
+correction:** the plan's M5 (clamp the unclamped control) is caught earlier by
+the height contract, so the load-bearing mutation is instead a 52 px box holding
+an unclamped run — layout clamped, paint not — which fails `clamp 2 paints no
+ink below its box` with `5341/122880`. Five further runtime mutations and one
+unit mutation failed by name; 13 model tests. Focused ids run:
+`line-clamp-pixels` (green, then M1–M6 each, then green), `live-line-clamp`
+(green ×3). End-of-task full headless **126/126** (**4952** checks = `4922 + 30`
+exactly, 67 capabilities, **408.3 s**, exit `0`). Live registry **112 → 115**
+counting plans `823`/`825`, of which this plan adds one; no full live gate
+(merge gate). `check`/`lint`/`test` green (playground **688** tests). Plan:
+`.agents/slop/plans/829-line-clamp-pixels.md`.
+
+`[ ]` **Cross-team:** `@gpuixui/primitives`' `Text clamp={n}` maps to
+      `lineClamp` **without** `textOverflow`, and the pinned runtime paints no
+      `…` unless `textOverflow` is declared (plan `829` — the mark lives in
+      `truncate_wrapped_line`, gated on `text_style.text_overflow`). So every
+      `Text clamp` today is a hard mid-word cut that reads as clipped text, not
+      as truncated. Decide: add `textOverflow: "ellipsis"` to the clamp branch
+      (and document `ellipsis-start`'s unmeasured status) or document the hard
+      cut as intentional. Owner: `primitives`; evidence: plan `829` §2/§9,
+      `line-clamp-pixels` / `live-line-clamp`.
+
 `[x]` **Prove the size constraints and percentage sizes in the frame** per plan
       `825`: the shipped components write `minWidth`/`maxWidth`/`minHeight`/
       `maxHeight` and `"100%"` in **20+ call sites** (a hover card 240–360, a

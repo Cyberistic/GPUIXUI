@@ -82,7 +82,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow`, `tier2-scroller`, `tier2-command` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
 | states | `declared-styles`, `state-pixels`, `live-states`, `live-state-pixels`, `opacity-pixels`, `live-opacity-pixels` | verified |
-| truncation | `text-truncation`, `live-truncation`, `text-truncation-pixels`, `live-truncation-pixels` | verified |
+| truncation | `text-truncation`, `live-truncation`, `text-truncation-pixels`, `live-truncation-pixels`, `line-clamp-pixels`, `live-line-clamp` | verified |
 | inspector | `property-panel`, `live-inspector` | verified |
 | editor | `multi-pane-editor`, `live-editor` | verified |
 | data-toolbar | `data-toolbar`, `live-data-toolbar` | verified |
@@ -98,7 +98,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | gradient | `gradient-pixels`, `live-gradient` | verified |
 | clip | `scroll-clip`, `live-scroll-clip` | verified |
 
-The suite is **123/123 green here** (exit `0`, `.artifacts/smoke-report.json`, **4738 checks**, 67 capabilities; **422.6 s** after plan `820`, which added the 98-check `scroll-clip` on top of plan `819`'s 60-check `hidden-surface` and plan `816`'s 7 extra `surface-theme` checks; **577.8 s** after plan `807`, **525.8 s** after plan `801`, **302.0 s** after plan `791`, **302.4 s** at plan `784`, **275.0 s** after plan `778`, **432.8 s** at the plan `777` gate, **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head; plan `807` added the 121-check `gradient-pixels`, plan `801` added the 93-check `scroll-affordance`, plan `797` added the 19-check `field-ink-pixels`, plan `791` added the 62-check `dialog-scrim-pixels`, plan `784` added the 50-check `surface-theme`, plan `778` added the 22-check `text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`, plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check `font-family`, plan `764` the 46-check `editing-actions`, plan `761` the 29-check `opacity-pixels`, plan `754` the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 106/106**
+The suite is **126/126 green here** (exit `0`, `.artifacts/smoke-report.json`, **4952 checks**, 67 capabilities; **408.3 s** after plan `829`, which added the 30-check `line-clamp-pixels` on top of plan `825`'s 34-check `size-constraints` and plan `823`'s 150-check `motion-curve`; **422.6 s** after plan `820`, which added the 98-check `scroll-clip` on top of plan `819`'s 60-check `hidden-surface` and plan `816`'s 7 extra `surface-theme` checks; **577.8 s** after plan `807`, **525.8 s** after plan `801`, **302.0 s** after plan `791`, **302.4 s** at plan `784`, **275.0 s** after plan `778`, **432.8 s** at the plan `777` gate, **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head; plan `807` added the 121-check `gradient-pixels`, plan `801` added the 93-check `scroll-affordance`, plan `797` added the 19-check `field-ink-pixels`, plan `791` added the 62-check `dialog-scrim-pixels`, plan `784` added the 50-check `surface-theme`, plan `778` added the 22-check `text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`, plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check `font-family`, plan `764` the 46-check `editing-actions`, plan `761` the 29-check `opacity-pixels`, plan `754` the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 106/106**
 (`live-report.json`, **3059 checks**, **62 capabilities**; **1176.8 s**, exit `0`)
 on 2026-10-20, the merge/release gate (plan `786`); it covered every scenario
 registered at that point (**the live registry is now 110** — plans `791`'s
@@ -137,7 +137,7 @@ The live registry is guarded by
 `live-opacity-pixels`, to 101 with plan `764`'s `live-editing-actions`, to 102
 with plan `771`'s `live-font-family`, to 103 with plan `773`'s `live-text-ink`,
 to 104 with plan `775`'s `live-text-decoration`, to 105 with plan `778`'s
-`live-truncation-pixels`, to 106 with plan `784`'s `live-surface-theme`, to 107 with plan `791`'s `live-dialog-scrim`, to 108 with plan `797`'s `live-field-ink`, to 109 with plan `801`'s `live-scroll-affordance` and to 110 with plan `807`'s `live-gradient`, to 111 with plan `819`'s `live-hidden-surface` and to 112 with plan `820`'s `live-scroll-clip`.
+`live-truncation-pixels`, to 106 with plan `784`'s `live-surface-theme`, to 107 with plan `791`'s `live-dialog-scrim`, to 108 with plan `797`'s `live-field-ink`, to 109 with plan `801`'s `live-scroll-affordance` and to 110 with plan `807`'s `live-gradient`, to 111 with plan `819`'s `live-hidden-surface`, to 112 with plan `820`'s `live-scroll-clip`, to 113 with plan `823`'s `live-motion-curve`, to 114 with plan `825`'s `live-size-constraints` and to **115** with plan `829`'s `live-line-clamp`.
 Plans `697` and
 `701` added **31** checks to `live-chart` (40 → 71) and **41** to
 `live-highlights` (12 → 53), plan `715` added **14** to `live-docking`, plan
@@ -415,9 +415,20 @@ script it" rule is sound. Three properties matter:
 364 px wrapped) and inherit from an ancestor `div`; `whiteSpace: "nowrap"` alone
 also gives one line, so the two are indistinguishable from bounds — and
 `getPaintedText()` reports the **full source run**, never the ellipsis glyph. A
-truncation test must assert the line count; the glyph needs pixels, which this
-suite does not read (D24). `lineClamp` clamps exactly (`lineClamp: 2` → 52 px,
-`3` → 78 px) and inherits from the box, with no fixed container height needed.
+truncation test must assert the line count **and** the glyph, which needs pixels:
+`text-truncation-pixels` does that for one line (plan `778`) and
+`line-clamp-pixels` for a multi-line clamp (plan `829`). `lineClamp` clamps
+exactly (`lineClamp: 2` → 52 px, `3` → 78 px) and inherits from the box, with no
+fixed container height needed.
+
+**A multi-line clamp is a hard cut unless `textOverflow` is declared too**
+(plan `829`). `lineClamp: 2` alone paints two ink bands with a glyph at the end;
+`lineClamp: 2` + `textOverflow: "ellipsis"` paints the three-dot mark (each dot
+`0.08` of the line tall, against a clipped glyph's `0.46`). A clamped run paints
+**no ink below its box** — the unclamped control in the same strip does, so the
+scan is not vacuous — and the paint's line pitch is the declared `lineHeight`.
+`Text`'s `clamp` prop sets `lineClamp` **without** `textOverflow`, so it
+hard-cuts today; that is recorded as a cross-team row in `TODO.md`.
 
 The one trap: **the text layout is shared per `(string, width)` and the key
 ignores `lineClamp`.** The same string at the same width cannot clamp

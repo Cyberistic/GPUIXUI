@@ -165,6 +165,10 @@ import {
   textTruncationView,
 } from "../scenarios/text-truncation.js";
 import {
+  lineClampPixelsLiveScenario,
+  lineClampView,
+} from "../scenarios/line-clamp.js";
+import {
   captureLive,
   expectColour,
   expectPixel,
@@ -13362,6 +13366,27 @@ const liveTruncationPixels: LiveScenario = {
 };
 
 /**
+ * Multi-line `lineClamp` in a real window (plan `829`).
+ *
+ * The headless pass proves the cut, the mark and the empty strip in one
+ * offscreen paint; this twin proves the same three facts through a window's
+ * rasteriser, which is the layer no authored-style report can see.
+ */
+const liveLineClamp: LiveScenario = {
+  ...lineClampPixelsLiveScenario,
+  view: lineClampView,
+  ready: "clamp-stage",
+  steps: (ctx) =>
+    lineClampPixelsLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-line-clamp.png`),
+        ),
+      ),
+};
+
+/**
  * The content-surface theme in a real window (plan `784`).
  *
  * The headless pass proves the A/B pair in one offscreen paint; this twin
@@ -14555,6 +14580,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveClip,
   liveGradient,
   liveTruncationPixels,
+  liveLineClamp,
   liveSurfaceTheme,
   liveDialogScrim,
   terminal,
