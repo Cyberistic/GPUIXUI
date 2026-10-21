@@ -1967,9 +1967,9 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     // Measured on 0.11.0: the window focuses the element but delivers no React
     // `onFocus`, so the list's `active` row stays empty after a traversal. The
-    // first arrow therefore re-anchors at the first enabled tab instead of
-    // moving to the next one. Recorded as an interlock for `@gpuixui/components`
-    // (see README §`tabs-lifecycle`); the second arrow moves relative to it.
+    // component anchors an arrow move on the trigger that sent the key
+    // (`tabs/logic.ts`), which is what makes the first arrow move off the
+    // traversal's tab instead of re-anchoring at the first enabled one.
     yield* ctx.expectEqual(
       "a traversal delivers no onFocus to the trigger",
       yield* ctx.host.text("tabs-focus-readout"),
@@ -1978,20 +1978,7 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
-      "the first arrow re-anchors on the first tab",
-      yield* focusedId(ctx),
-      "tabs-overview",
-    );
-    yield* ctx.expectContains(
-      "the re-anchor leaves the selection alone",
-      yield* ctx.host.text("tabs-readout"),
-      "value=overview changes=0",
-    );
-
-    yield* ctx.host.key("right");
-    yield* Effect.sleep(SETTLE);
-    yield* ctx.expectEqual(
-      "an arrow key moves real focus",
+      "the first arrow moves off the traversal's tab without an onFocus",
       yield* focusedId(ctx),
       "tabs-reports",
     );

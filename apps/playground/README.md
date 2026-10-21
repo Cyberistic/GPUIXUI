@@ -602,23 +602,25 @@ the pill covers the selected trigger, not that a screenshot looks right.
 | ---- | ----- |
 | mount | `value=overview changes=0`; the pill is within 2px of the trigger's `x`, `width` and `height`; `tabs-panel-reports` has no bounds |
 | `Tab` | focus is `tabs-overview`; the trigger's own `onFocus` counter is **0** |
-| first `right` | focus re-anchors on `tabs-overview` and the selection stays `overview` — the measured defect below |
-| second `right` | focus is `tabs-reports`, `value=reports changes=1`, the reports panel paints and the overview panel has no bounds; the pill moved to the reports trigger |
-| third `right` | focus is `tabs-archive` — the disabled `settings` is skipped — `value=archive` |
-| `Home` / `End` | focus and selection land on the first and last enabled triggers |
+| first `right` | focus is `tabs-reports`, `value=reports changes=1`, the reports panel paints and the overview panel has no bounds; the pill moved to the reports trigger |
+| second `right` | focus is `tabs-archive` — the disabled `settings` is skipped — `value=archive changes=2` |
+| `Home` / `End` | `value=overview changes=3`, then `value=archive changes=4` |
 | press `tabs-reports` | `value=reports changes=5`, the pill follows the pressed trigger |
 | press `tabs-settings` | the readout does not change — a disabled tab ignores a press |
 
-**Measured defect, recorded as an interlock for `@gpuixui/components`:** a
-window focuses the trigger on a `Tab` traversal (the renderer's focus id is
-`tabs-overview`) but does not run React's `onFocus` (the probe's counter stays
-`0`). `Tabs` seeds its `active` row from `onFocus`, so after a traversal the row
-is empty and the **first** arrow re-anchors at the first enabled tab instead of
-moving to the next one; from then on the arrows move correctly. A unit suite
-cannot see this: the `TestRenderer`'s `focusElement` does fire `onFocus`. The
-fix is the component's (seed `active` from the selected row, or track the
-focused row from the key event); the probe's two checks then become
-`tabs-reports`/`changes=1` on the first arrow. Negative controls measured:
+**The runtime gap this probe found, and the fix it now measures.** A window
+focuses the trigger on a `Tab` traversal (the renderer's focus id is
+`tabs-overview`) but does not run React's `onFocus` (the counter stays `0`), so
+a row seeded only from `onFocus` is empty and the first arrow re-anchored at the
+first enabled tab. The probe originally asserted that defect; `@gpuixui/components`
+fixed it in `moveOrigin` (`src/tabs/logic.ts`), which anchors a move on the
+trigger that sent the key (`event.elementId`), then the recorded row, then the
+selection. The probe now asserts the fixed direction, and the `focuses=0` check
+stays: it is the measurement the key-origin anchor exists for. A unit suite
+cannot make it: the `TestRenderer`'s `focusElement` does fire `onFocus`.
+
+27 checks, `--only tabs-lifecycle`, green on 0.11.0; the paint guards
+`paintedBox` adds are counted in that number. Negative controls measured:
 dropping `disabled` fails `the arrow skips the disabled trigger`
 (`expected "tabs-archive", got "tabs-settings"`), and moving the expected pill
 40px fails `the pill starts on the selected trigger's left edge`
