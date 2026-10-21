@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 51/52
+`[x]` `[██████████]` 52/52
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -262,11 +262,17 @@ The probe measured that `focusVisible` does **not** paint for a programmatic
 focus before any keyboard input, so `focusRing(theme)` stays the unconditional
 shadow for a mouse-opened overlay; both are documented with the evidence, and
 `focus.test.ts` guards the split. Component adoption is the interlock row below
-`[~]` Truth pass on the remaining `0.10.0` claims outside this workstream —
-**primitives half done**: every ring claim in `packages/primitives/docs` and its
-inventory rows now names `focusVisible`, and `COMPONENTS.md`'s Tier 1 rows no
-longer say a press paints the ring; the components package's comments and rows
-still claim the old absence (owner: components; plan 053 §Why lists the evidence)
+`[x]` Truth pass on the remaining `0.10.0` ring claims — **both halves landed**:
+every ring claim in `packages/primitives/docs` and its inventory rows names
+`focusVisible`, `COMPONENTS.md`'s Tier 1 rows no longer say a press paints the
+ring, and the components package adopted the same rule (`internal/theme.ts`
+returns `keyboardFocusRing(theme)`'s outline at rest, no source calls
+`focusRing(`, and `src/behaviour/focus-ring.test.tsx` holds the declaration in
+the native renderer). The audit's design-system `Focus state` row records both
+packages as done. The one `0.10.0` claim left in the repository is the
+capability-map preamble in `COMPONENTS.md` §"Not provided by GPUix", which is a
+separate interlock row (primitives + docs-site); nothing in this workstream's
+documents depends on it now
 `[x]` Drop `BoxShadow.inset`, document the one-shadow rule and hoist
 `elevationShadow(theme, level)` (plan 018)
 `[x]` Write `docs/tokens.md` (every token + extension API)
