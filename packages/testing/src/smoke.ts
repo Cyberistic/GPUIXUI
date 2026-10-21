@@ -353,10 +353,11 @@ export interface AsyncSmokeHost {
    * there.
    *
    * A window's automation sends real move events with the button held, so this
-   * is a genuine pointer drag, not a synthesised down/move/up: listeners on an
-   * ancestor of both the source and the drop target receive every move. The
-   * runtime has no pointer capture, so a drag that leaves the ancestor's subtree
-   * stops receiving them — the live probes document that rather than hide it.
+   * is a genuine pointer drag, not a synthesised down/move/up. The runtime
+   * captures the pointer on left mouse down **only** for an element that
+   * listens to both `mouseDown` and `mouseMove`, so a drag handle keeps its
+   * moves after the pointer leaves its box while a move-only element does not —
+   * the `pointer-capture` probe measures both cases.
    */
   readonly drag: (
     testId: string,

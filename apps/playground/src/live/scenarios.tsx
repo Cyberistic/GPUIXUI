@@ -776,6 +776,105 @@ const SliderProbe = (): ReactNode => {
 };
 
 /**
+ * What the runtime does with a press that leaves the element.
+ *
+ * GPUix captures the pointer on left mouse down **only** for an element that
+ * listens to both `mouseDown` and `mouseMove` (`renderer.rs` arms
+ * `capture_pointer` from that pair). A splitter, a drag handle and the shipped
+ * `Slider` all qualify; a move-only element does not, and the element under the
+ * pointer receives the moves instead. The probe mounts both cases and the
+ * shipped `Slider`, then reads the counters back, because a drag control's
+ * whole behaviour depends on this rule.
+ */
+const PointerCaptureProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [bothMoves, setBothMoves] = useState(0);
+  const [bothUp, setBothUp] = useState(0);
+  const [bothUnder, setBothUnder] = useState(0);
+  const [moveMoves, setMoveMoves] = useState(0);
+  const [moveUnder, setMoveUnder] = useState(0);
+  const [value, setValue] = useState(0);
+  const [changes, setChanges] = useState(0);
+
+  return (
+    <PrimitiveThemeProvider theme={palettes.dark}>
+      <div
+        testId="capture-probe"
+        style={{
+          width: window.width,
+          height: window.height,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          Press the 24px sample and drag 120px right: the element that took the
+          press keeps the moves only when it listens to mouseDown and mouseMove.
+        </text>
+        <div style={{ display: "flex", height: 24 }}>
+          <div
+            testId="capture-both"
+            style={{ width: 24, height: 24, backgroundColor: theme.colors.primary }}
+            onMouseDown={() => {
+              setBothMoves(0);
+              setBothUp(0);
+            }}
+            onMouseMove={() => setBothMoves((count) => count + 1)}
+            onMouseUp={() => setBothUp((count) => count + 1)}
+          />
+          <div
+            testId="capture-both-under"
+            style={{ width: 400, height: 24, backgroundColor: theme.colors.muted }}
+            onMouseMove={() => setBothUnder((count) => count + 1)}
+          />
+        </div>
+        <div style={{ display: "flex", height: 24 }}>
+          <div
+            testId="capture-move-only"
+            style={{ width: 24, height: 24, backgroundColor: theme.colors.primary }}
+            onMouseMove={() => setMoveMoves((count) => count + 1)}
+          />
+          <div
+            testId="capture-move-under"
+            style={{ width: 400, height: 24, backgroundColor: theme.colors.muted }}
+            onMouseMove={() => setMoveUnder((count) => count + 1)}
+          />
+        </div>
+        <div style={{ width: 400 }}>
+          <Slider
+            testId="capture-slider"
+            label="Follows the pointer"
+            value={value}
+            onValueChange={(next) => {
+              setValue(next);
+              setChanges((count) => count + 1);
+            }}
+          />
+        </div>
+        <text
+          testId="capture-readout"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`both=${bothMoves} bothUnder=${bothUnder} bothUp=${bothUp} move=${moveMoves} moveUnder=${moveUnder} slider=${value} sliderChanges=${changes} sliderFollowed=${value > 60 && changes >= 5}`}
+        </text>
+      </div>
+    </PrimitiveThemeProvider>
+  );
+};
+
+/**
  * A cross-pane drag: an item in the left pane, dropped on the right one.
  *
  * The source records the press; the **drop target** resolves the travel and the
@@ -2300,9 +2399,10 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  * becomes a value there (the hit-test reads the track's box), the keys step and
  * jump to the ends, and a disabled track ignores a press.
  *
- * Pointer capture is a measured runtime gap, so this probe makes no drag claim:
- * a drag that leaves the track stops there by design and is documented, not
- * asserted. What it does prove is the two paths that always work.
+ * Pointer capture is real, but it is a separate measurement: `pointer-capture`
+ * drags this same component off its track and proves the value follows, because
+ * the runtime captures for an element that listens to both `mouseDown` and
+ * `mouseMove`. This probe stays on the press and keyboard paths.
  */
 const sliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
@@ -2370,6 +2470,51 @@ const sliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       beforeDisabled,
     );
     yield* ctx.host.capture("slider-keys");
+  });
+
+/**
+ * Measures the pointer rule and what it means for a drag control.
+ *
+ * The check is the counters, not a screenshot: a runtime that kept delivering
+ * moves without capture would make `move=8`, and one that stopped at the box
+ * edge would leave `both` at 0 with the element under the pointer counting. The
+ * shipped `Slider` is the third sample, so the probe measures the component the
+ * library ships rather than a stand-in.
+ */
+const pointerCaptureSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("capture-both");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "nothing has been dragged yet",
+      yield* ctx.host.text("capture-readout"),
+      "both=0 bothUnder=0 bothUp=0 move=0 moveUnder=0 slider=0 sliderChanges=0 sliderFollowed=false",
+    );
+
+    yield* ctx.host.drag("capture-both", 120, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "an element listening to mouseDown and mouseMove keeps every move after the pointer leaves it",
+      yield* ctx.host.text("capture-readout"),
+      "both=8 bothUnder=0 bothUp=1",
+    );
+
+    yield* ctx.host.drag("capture-move-only", 120, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a move-only element captures nothing, so the element under the pointer gets the drag's moves",
+      yield* ctx.host.text("capture-readout"),
+      "move=1 moveUnder=8",
+    );
+
+    yield* ctx.host.drag("capture-slider", 60, 120);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the shipped Slider follows a drag that leaves its track",
+      yield* ctx.host.text("capture-readout"),
+      "sliderFollowed=true",
+    );
+    yield* ctx.host.capture("pointer-capture");
   });
 
 /**
@@ -4211,5 +4356,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "window-shortcut-lifecycle",
     view: () => <WindowKeyProbe />,
     steps: windowKeySteps,
+  },
+  "pointer-capture": {
+    id: "pointer-capture",
+    view: () => <PointerCaptureProbe />,
+    steps: pointerCaptureSteps,
   },
 };

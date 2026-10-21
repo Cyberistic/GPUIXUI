@@ -33,12 +33,13 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-two probes a real window can prove, of which seven mount shipped
+twenty-three probes a real window can prove, of which seven mount shipped
 `@gpuixui/components` (the dialog, the menu, the toast system, the command
 palette, the tabs, the popover and the modal focus rule), four mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), and the rest
-prove the runtime itself (focus, paint, fonts, placement, content surfaces, the
-window's own wheel, a split pane, a virtual list and the app-level key handler).
+prove the runtime itself (focus, paint, fonts, placement, content surfaces,
+pointer capture, the window's own wheel, a split pane, a virtual list and the
+app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -630,10 +631,11 @@ dropping `disabled` fails `the arrow skips the disabled trigger`
 ### `slider-lifecycle` — measured on 0.11.0 here
 
 The shipped `Slider` (`@gpuixui/primitives`), controlled, with a second disabled
-track beside it. The checks are the two input paths that always work — a press
-anywhere on the track and the keyboard — because the runtime has **no pointer
-capture**: a drag that leaves the track stops there by design, and this probe
-does not claim otherwise.
+track beside it. The checks are the two input paths this probe owns — a press
+anywhere on the track and the keyboard. The drag path is measured separately by
+`pointer-capture`, which drags this same component off its track and proves the
+value follows: the runtime **does** capture the pointer for an element that
+listens to both `mouseDown` and `mouseMove`.
 
 | Step | Check |
 | ---- | ----- |
@@ -705,10 +707,12 @@ The measured lesson is a **timing** one, and it shapes the component: the
 protocol delivers the whole drag — press, eight moves, release — before React
 commits the render the press scheduled. A handler that gated on `dragging`
 **state** therefore saw `false` for every move and the drag never started. The
-press flag must be synchronous (a ref); state is only for the readout. A second
-window-only fact is the missing pointer capture, already documented on `Slider`:
-the pane under the pointer resolves the gesture, so a drop target needs its own
-listeners.
+press flag must be synchronous (a ref); state is only for the readout. The
+second fact is the capture rule (`pointer-capture` probe): only an element that
+listens to both `mouseDown` and `mouseMove` keeps the pointer. The item here
+listens to `mouseDown` alone, so it captures nothing and the pane under the
+pointer sees every move and resolves the release; a drag handle that wants the
+moves after leaving its box must also subscribe to `mouseMove`.
 
 `AsyncSmokeHost` gained `drag(testId, deltaX, deltaY)` for this, implemented with
 the protocol's real drag (eight interpolated moves with `pressedButton` set).
@@ -995,9 +999,9 @@ fails `a drag grows the pane by its travel` with the readout still `split=320`
 
 The `moves=8` row is the pointer-capture measurement: the element that took the
 press keeps receiving moves after the pointer leaves its box, which is what a
-6px divider needs. The Slider pages say the opposite for a drag leaving the
-track, so this probe is the evidence on the other side of that question
-(`TODO.md` interlocks).
+6px divider needs. The `pointer-capture` probe now isolates the runtime rule and
+measures the shipped `Slider` against it, so the Slider pages' "no pointer
+capture" sentence is retired rather than left as a competing claim.
 
 ### `virtual-list-lifecycle` — measured on 0.11.0 here
 
@@ -1049,6 +1053,39 @@ forwarding fails `cmd-k reaches the window handler`
 (`expected "open=true last=cmd-k", got "open=false last=none"`, exit `1`) — the
 window handler is the only path, so a probe cannot pass through an element
 handler. Evidence: `.artifacts/live/shortcut-open.png`.
+
+### `pointer-capture` — measured on 0.11.0 here
+
+Whether a press keeps delivering moves after the pointer leaves the element is
+the whole contract behind a splitter, a drag handle and a slider's track. The
+runtime answers it in `renderer.rs`: it arms GPUI's pointer capture on left
+mouse down **only** for an element that listens to both `mouseDown` and
+`mouseMove`. The probe mounts both cases side by side — a 24px sample with the
+pair and one with `onMouseMove` alone, each beside a 400px sibling that counts
+its own moves — then drags each 120px right, ending over the sibling. It also
+drags the shipped `Slider` 60px right and 120px down, so the pointer leaves the
+track entirely.
+
+| Sample | Listeners | Measured after the drag |
+| ------ | --------- | ----------------------- |
+| `capture-both` | `mouseDown` + `mouseMove` + `mouseUp` | `both=8 bothUnder=0 bothUp=1` — every move and the release went to the chosen element, 120px outside its box |
+| `capture-move-only` | `mouseMove` only | `move=1 moveUnder=8` — the one move before the press landed on it, then the captured-or-not rule sent all eight drag moves to the sibling |
+| `capture-slider` | the shipped `Slider` | `slider=66 sliderChanges=9` from a press at the track's centre and a release 120px below it, so the value followed the pointer's x while the pointer was off the track |
+
+Four checks — one at rest and one per sample. Negative control measured: deleting
+the sample's `onMouseMove`
+handler (so the runtime no longer arms capture) fails the first check with
+`both=0 bothUnder=8 bothUp=0` — the sibling received the drag and the release,
+exit `1`; restored, `--only pointer-capture` is green (4 checks, exit `0`).
+Evidence: `.artifacts/live/pointer-capture.png`.
+
+The consequence for the library: the shipped `Slider` **does** capture, so the
+limitation its source header, `docs/slider.mdx`, `docs/range-slider.mdx`, the
+`number-field.mdx` aside and the two `COMPONENTS.md` rows state — "no pointer
+capture; a drag that leaves the track stops" — is wrong. The correction belongs
+to `primitives` and is recorded as an interlock in `TODO.md`; this probe pins
+the measured behaviour so a runtime change fails here instead of moving the
+components silently.
 
 ## Release gate
 

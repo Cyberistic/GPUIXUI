@@ -168,6 +168,12 @@ export const liveRegistry = [
       "Workspace: a window's app-level cmd-k opens the palette from any focus, and Escape closes it",
     capability: "workspace",
   },
+  {
+    id: "pointer-capture",
+    title:
+      "Input: a press captures the pointer for a mouseDown+mouseMove element, not for a move-only one, and the Slider follows it off the track",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
