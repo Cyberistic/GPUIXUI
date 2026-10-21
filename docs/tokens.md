@@ -570,10 +570,9 @@ in [`src/fonts.test.ts`](../packages/tokens/src/fonts.test.ts), and the native
 proof is the playground's `register-font` probe: a registered face lays the
 sample word out at its own advances while an unknown family paints the
 fallback's, so the paint is the file
-([`apps/playground/README.md`](../apps/playground/README.md)).
-That probe registers before its first paint — the order above. The failure the
-order avoids, text already laid out in the fallback, is not yet measured in a
-window; it is recorded in `TODO.md`.
+([`apps/playground/README.md`](../apps/playground/README.md)). That probe
+registers before its first paint — the order above; the failure the order avoids
+is still unmeasured (§Limitations).
 
 ## Spacing
 
@@ -977,9 +976,17 @@ its own hover.
   not its palette, because no platform palette is designed for the AAA floors.
   A consumer who wants both starts from `platformStyles` and checks the result
   with `contrastRatio`.
-- `.SystemUIFont` is verified by GPUI's own documentation of the name, not yet
-  visually in a native window; the playground's platform gallery is the proof
-  (the cross-team row in `TODO.md`).
+- `.SystemUIFont` is a name GPUI documents, and the theme asserts it as the UI
+  family on every platform; what face the runtime resolves it to is not measured
+  anywhere. The playground's `theme-platform` proves the platform **mono**
+  families reach the renderer (`Menlo`, `DejaVu Sans Mono`, `Consolas`) from the
+  style report, which is the paint proof the table has.
+- Fonts must be registered before the first layout that names them: a family the
+  runtime learns about later has already fallen back (the pinned
+  `@gpuix/native@0.11.0` `registerFont` doc), so the guideline is "create the
+  renderer, register, then render". That late-registration failure is not yet
+  measured in a window — the live probe only covers the successful order
+  (`TODO.md` → Interlocks).
 - `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
   for a programmatic focus **after** a Tab, but not for a programmatic focus
   before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s

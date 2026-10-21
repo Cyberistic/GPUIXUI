@@ -12,12 +12,20 @@
  * `node:fs` is deliberate, as in `docs.test.ts`: this checks the repository's
  * own Markdown, and the package keeps zero runtime dependencies.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /** The tokens package's own test files, and the repository root. */
 const packageSource = new URL("./", import.meta.url);
 const repository = new URL("../../../", import.meta.url);
+
+/** Where a cited test file may live: a workspace package's `src`, or the root. */
+const packageDirs: ReadonlyArray<string> = [
+  ...readdirSync(new URL("packages/", repository)).map(
+    (name) => `packages/${name}`,
+  ),
+  ...readdirSync(new URL("apps/", repository)).map((name) => `apps/${name}`),
+];
 
 const components = readFileSync(
   new URL("../../../COMPONENTS.md", import.meta.url),
@@ -56,10 +64,17 @@ const vocabulary = /^(todo|wip|done\b.*|blocked\b.*|unsupported\b.*)$/;
 const cited = (notes: string): ReadonlyArray<string> =>
   notes.match(/[\w@/.-]+\.test\.tsx?/g) ?? [];
 
-/** Whether a cited path resolves inside this package or from the repo root. */
+/** Whether a cited path exists in this package, a sibling package, or the root. */
 const resolves = (path: string): boolean =>
-  existsSync(new URL(`./${path}`, packageSource)) ||
-  existsSync(new URL(path, repository));
+  [
+    `./${path}`,
+    path,
+    ...packageDirs.flatMap((dir) => [`${dir}/${path}`, `${dir}/src/${path}`]),
+  ].some(
+    (candidate) =>
+      existsSync(new URL(candidate, packageSource)) ||
+      existsSync(new URL(candidate, repository)),
+  );
 
 describe("design-system inventory", () => {
   it("reads the table it guards", () => {
