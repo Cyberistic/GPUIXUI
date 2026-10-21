@@ -145,6 +145,38 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 154/154 plans-and-harness
 
+`[x]` **Prove flex distribution in the frame** per plan `833`: `flexGrow` is in
+**64** shipped call sites, `alignItems: "center"` in **163** and
+`justifyContent` in **89**, and no scenario in either registry measured one —
+`layout-flex` proved fixed widths and a `gap`, `size-constraints` the min/max
+constraints, so a runtime that ignored grow, grew from zero instead of from the
+basis, treated `space-between` as `flex-start`, or never stretched a default
+child passed the suite. `flex-layout` / `live-flex-layout` (**82 checks each**,
+bounds-only, 3 consecutive green live runs at ~0.22 s) prove: grow 1:1 →
+**300/300** and 1:2 → **200/400**, a `grow: 1` beside a 100 px basis →
+**500/100**, `basis 200/100` + grow → **350/250**, `space-between` → x
+**0/170/340** with both gaps 110, `center` → **170** with 170 to the right edge,
+`alignItems: center` offsets **+20/+10**, `stretch` (and the default) grows a
+content-height child **26 → 60** while `flex-start` leaves **26**, `"50%"` →
+**320** then **160/160**, a width-less grow row fills its column **640** then
+splits **233.5/406.5**, a nested 1:3 → **150/450**, and `flexShrink: 0` keeps
+**200** while the shrinkable sibling absorbs all 100. **Two measured traps:** a
+stretched child needs an intrinsic height — an empty div with no height
+collapses and is **not painted** (`bounds = null`) — and a `flexGrow` row does
+not need a declared width inside a column (the column's stretch gives it one).
+`flex-layout-model.ts` owns the arithmetic (24 unit tests; the remainder goes to
+the last growing item so the widths sum exactly). Eight runtime mutations failed
+by name (M1 grow dropped → `expected 300,300, got 0,600`; M2 1:2 swapped →
+`got 400,200`; M3 basis dropped → `got 250,350`; M4 `space-between` →
+`flex-start` → `expected 400 ± 1, got 180`; M5 `center` → `flex-start` →
+`expected 170 ± 1, got 0`; M6 cross `center` → `flex-start` → `expected 20 ± 1,
+got 0`; M7 stretch → `flex-start` → `expected 60 ± 1, got 26`; M8
+`flexShrink: 0` removed → `expected 200 ± 1, got 150`) and two unit mutations
+(U1 grow ignoring the basis → 2 tests; U2 the unclamped cross offset → 1 test).
+Focused ids run: `flex-layout` (green + M1–M8) and `live-flex-layout` (green
+×3 + a re-run after restore). Plan:
+`.agents/slop/plans/833-flex-distribution.md`.
+
 `[x]` **Prove the multi-line `lineClamp` paint in the frame** per plan `829`:
 `lineClamp` had only ever been measured as geometry (plan `335`: `52`, `78`), so
 a runtime that stopped laying out at N lines but **kept painting**, or one that
@@ -167,6 +199,16 @@ exactly, 67 capabilities, **408.3 s**, exit `0`). Live registry **112 → 115**
 counting plans `823`/`825`, of which this plan adds one; no full live gate
 (merge gate). `check`/`lint`/`test` green (playground **688** tests). Plan:
 `.agents/slop/plans/829-line-clamp-pixels.md`.
+
+`[ ]` **Cross-team:** `@gpuixui/primitives`' `Stack`/`Card` may rely on
+      `alignItems: "stretch"` to fill a cross-axis child, but the runtime only
+      stretches a child with **intrinsic** height: an empty `div` with no height
+      or content collapses and is **not painted** (`bounds = null`). A stretched
+      slot that must fill needs content, an explicit height, or `flexGrow` on
+      the cross axis — worth a note in the `Stack` docs (and a runtime test) so a
+      consumer does not read "stretch" as "guaranteed to fill". Owner:
+      `primitives`; evidence: plan `833` §2.5/§9,
+      `flex-layout`/`live-flex-layout`.
 
 `[ ]` **Cross-team:** `@gpuixui/primitives`' `Text clamp={n}` maps to
       `lineClamp` **without** `textOverflow`, and the pinned runtime paints no

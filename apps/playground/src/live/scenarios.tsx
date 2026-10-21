@@ -169,6 +169,10 @@ import {
   lineClampView,
 } from "../scenarios/line-clamp.js";
 import {
+  flexLayoutLiveScenario,
+  flexLayoutView,
+} from "../scenarios/flex-layout.js";
+import {
   captureLive,
   expectColour,
   expectPixel,
@@ -13387,6 +13391,19 @@ const liveLineClamp: LiveScenario = {
 };
 
 /**
+ * Flex distribution in a real window (plan `833`).
+ *
+ * The headless pass reads the offscreen layout's boxes; this twin proves the
+ * same twelve rows through a window's own layout pass, which is the layer a
+ * style report cannot see.
+ */
+const liveFlexLayout: LiveScenario = {
+  ...flexLayoutLiveScenario,
+  view: flexLayoutView,
+  ready: "flex-stage",
+};
+
+/**
  * The content-surface theme in a real window (plan `784`).
  *
  * The headless pass proves the A/B pair in one offscreen paint; this twin
@@ -14581,6 +14598,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveGradient,
   liveTruncationPixels,
   liveLineClamp,
+  liveFlexLayout,
   liveSurfaceTheme,
   liveDialogScrim,
   terminal,

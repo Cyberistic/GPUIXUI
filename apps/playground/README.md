@@ -363,6 +363,44 @@ Every fixture sits in an identical 300 px parent; the expectations are
 `live-size-constraints` repeats the same 34 checks in the real 1100 × 720
 window (three green focused runs), so the constraints need no live correction.
 
+## Flex distribution (plan `833`)
+
+`flexGrow` appears in **64** shipped call sites, `alignItems: "center"` in
+**163** and `justifyContent` in **89** — a toolbar spacer, a dialog footer, a
+status bar, every flexible pane — and **no scenario in either registry measured
+one of them**. `layout-flex` proved fixed widths and a `gap`;
+`size-constraints` proved the min/max constraints; neither reads a grow, a
+justification or a cross-axis alignment. `flex-layout` / `live-flex-layout`
+(**82 checks each**) mount twelve rows on one 640 px column and read every box:
+
+| Fact | Measured |
+| ---- | -------- |
+| grow 1:1 / 1:2 | 600 px with two `flexGrow: 1` → **300 / 300**; 1:2 → **200 / 400** |
+| grow takes the free space | a `grow: 1` beside a 100 px basis → **500 / 100** |
+| grow adds to the basis | `basis 200 grow 1` + `basis 100 grow 1` → **350 / 250** (the 300 free px split) |
+| `space-between` | three 60 px items in 400 → x **0 / 170 / 340**, both gaps 110 |
+| `center` | 60 px item in 400 → x **170**, 170 to the right edge |
+| `alignItems: center` | a 20 px child in a 60 px row → **+20**; a 40 px child → **+10** |
+| `stretch` (and the default) | a child with **no height** and one text line: **26 → 60** |
+| `flex-start` | the same child stays at its content height, **26** |
+| a percentage width | `"50%"` of 640 → **320**, then two grow items take **160 / 160** |
+| a width-less grow row | fills its column (**640**), then splits 520 free px over two 60 px bases → **233.5 / 406.5** |
+| a nested grow row | the parent hands 600 down, and `grow 1:3` → **150 / 450** |
+| `flexShrink: 0` | a 200 px item in a 300 px row keeps **200**; the shrinkable 200 px sibling absorbs the whole 100 px → **150 / 150** when both may shrink |
+
+**Two traps the probe measured.** A stretched child must have an **intrinsic**
+height: an empty div with no height collapses to nothing and is **not painted at
+all** (`bounds = null`), so a stretch fixture carries one text line. And a
+`flexGrow` row does **not** need a declared width inside a column — the
+column's default `align-items: stretch` gives it the column's width, so the
+grow then distributes real free space rather than none.
+
+`flex-layout-model.ts` owns the arithmetic (`growWidths`, `shrinkWidths`,
+`justifyGaps`, `justifyOffset`, `crossOffset`, `rowPositions`), with the
+remainder given to the last growing item so the widths sum to the row exactly.
+24 unit tests; eight runtime mutations and two unit mutations failed by name
+(plan `833` §9).
+
 ## Layout and typography in a real window (plan `591`)
 
 The three geometry contracts every component rests on were the last
@@ -1870,6 +1908,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-text-decoration` | `underline` and `line-through` in a window: a 427 px continuous ink row at `y=0.67` (underline) and `y=0.45` (line-through) on a 280 × 96 panel, the undeclared control's widest row is 22 px (a glyph stem), both lines are exactly `foreground #EEF1F5`, and a wrapper `div`'s declaration reaches its child run — 18 checks (plan `775`). The scan uses the panel because an underline paints 1–2 device px **below** the `<text>` box |
 | `live-truncation-pixels` | the ellipsis glyph in a window: four 32 px runs in 200-wide boxes — the ellipsis's right edge is a short dot run (tallest column **0.11** against the clipped control's **0.70**), both keep **0** ink outside their box, the `MMMM` control's edge band is blank, and a `nowrap` run with neither leaks **1922** ink pixels beside its box — 22 checks (plan `778`). A blank right edge does not count as dots: `looksLikeDots` requires ink |
 | `live-line-clamp` | multi-line `lineClamp` in a window: four runs in 240-wide boxes — a 2-line clamp measures **52** and paints 2 bands with **0** ink below, the 3-line clamp **78** and 3 bands, the unclamped control **104** and 4 bands (and ink below line 2, so the no-ink scan is not vacuous), the pitch is the declared `lineHeight` (52 device px at scale 2), and `lineClamp` **alone** hard-cuts while `textOverflow: "ellipsis"` paints the three-dot mark (`h4`, top 34, gaps 5, span 20 device px) — 30 checks (plan `829`). A 52 px box holding an unclamped run fails `clamp 2 paints no ink below its box` with `5341/122880` |
+| `live-flex-layout` | flex distribution in a window: twelve rows on one 640 px column — grow 1:1 → 300/300 and 1:2 → 200/400, a `grow: 1` beside a 100 px basis → 500/100, `basis 200/100` + grow → 350/250, `space-between` → x 0/170/340, `center` → 170, `alignItems: center` offsets +20/+10, `stretch` grows a content-height child 26 → 60 while `flex-start` leaves it at 26, `"50%"` resolves to 320 before grow, a width-less grow row fills 640 then splits 233.5/406.5, a nested 1:3 → 150/450, and `flexShrink: 0` keeps 200 while the shrinkable sibling absorbs 100 — 82 checks (plan `833`) |
 | `live-surface-theme` | the content-surface theme in a window: one 880 × 580 stage mounts eleven themed/default fixtures and one frame proves the token reaches the paint — markdown text (`foreground`), inline code (`primary`), the bullet disc (`primary` at 85 %), the link underline (`mutedForeground`, and **no** `primary`: links are monochrome), both `appearance` bases, the code's syntax string and keyword tokens and its `placeholder` gutter, the `<code>`/`<markdown>` **absent** plane and the `<diff>` plane with both 5.5 % tints — 50 checks (plan `784`) |
 | `live-dialog-scrim` | the modal veil in a window: the shipped `Dialog`/`Drawer` paint the `overlay` role over the anchored layer's `#1A1A1A` plane (`#090909`) across the whole window, their surfaces stay `popover` above it, an **in-window** `absolute` layer of the same token dims the page to `#3A3B59`/`#15462C`, and every layer unmounts on close — 62 checks (plan `791`). **Measured: an anchored layer is opaque, so a modal hides the app instead of dimming it** |
 | `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |
@@ -2910,11 +2949,12 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **126/126 green** here (`exit 0`, 4952 checks, 67 capabilities,
-2026-10-21 after plan `829`; **408.3 s**, which includes plan `829`'s 30-check
-`line-clamp-pixels`, plan `825`'s 34-check `size-constraints`, plan `823`'s
-150-check `motion-curve`, plan `819`'s 60-check `hidden-surface`, plan `816`'s 7
-extra `surface-theme` checks and plan `820`'s 98-check `scroll-clip`; the run
+The suite is **127/127 green** here (`exit 0`, 5034 checks, 67 capabilities,
+2026-10-21 after plan `833`; **526.3 s**, which includes plan `833`'s 82-check
+`flex-layout`, plan `829`'s 30-check `line-clamp-pixels`, plan `825`'s 34-check
+`size-constraints`, plan `823`'s 150-check `motion-curve`, plan `819`'s 60-check
+`hidden-surface`, plan `816`'s 7 extra `surface-theme` checks and plan `820`'s
+98-check `scroll-clip`; the run
 before them read **121/121** · 4573 · 577.8 s
 after plan `807`; **120/120** · 4452 · 525.80 s after
 plan `801`, or 348.41 s on the head that
@@ -2945,7 +2985,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-126/126 scenarios passed · capabilities: layout=verified root=verified text=verified
+127/127 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -3198,10 +3238,11 @@ narrower. Each deviation is deliberate and measured:
   (`media-surface`, plan `520`), the **text ink** probe (`text-ink-pixels`,
   plan `773`) and the **text decoration** probe (`text-decoration-pixels`,
   plan `775`)
-  pass in real GPUix 0.10.0 on this host (**126/126**, **4952** checks, 67
-  capabilities, exit `0` — plans `823`/`825`/`829`, which add `motion-curve`'s
-  150 curve checks, `size-constraints`' 34 and `line-clamp-pixels`' 30), with a
-  written report and screenshots. The **message-scroller** probe
+  pass in real GPUix 0.10.0 on this host (**127/127**, **5034** checks, 67
+  capabilities, exit `0` — plans `823`/`825`/`829`/`833`, which add
+  `motion-curve`'s 150 curve checks, `size-constraints`' 34,
+  `line-clamp-pixels`' 30 and `flex-layout`'s 82), with a written report and
+  screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
   unpinned, jump-to-latest, the threshold and a short history. The

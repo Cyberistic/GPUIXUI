@@ -57,6 +57,7 @@ import { motionScenario } from "./motion.js";
 import { motionCurveScenario } from "./motion-curve.js";
 import { sizeConstraintsScenario } from "./size-constraints.js";
 import { lineClampPixelsScenario } from "./line-clamp.js";
+import { flexLayoutScenario } from "./flex-layout.js";
 import { collapsibleHeightScenario } from "./collapsible.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { variableRowsScenario } from "./variable-rows.js";
@@ -220,6 +221,8 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   layoutGridScenario,
   sizeConstraintsScenario,
   lineClampPixelsScenario,
+  flexLayoutScenario,
+
   rootSingleChildScenario,
   rootWrapperScenario,
   textScenario,
