@@ -1,3 +1,12 @@
+/**
+ * Guards the provider's behaviour and the packaging fact that makes the entry
+ * portable: the component packages compile workspace source with
+ * `jsxImportSource: "@gpuix/react"`, so without the pragma this file's JSX asks
+ * for `@gpuix/react/jsx-runtime` from a package that does not depend on it and
+ * the components program fails with TS2875. Deleting the pragma fails here.
+ */
+
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ThemeProvider, useTheme } from "./react.js";
@@ -34,5 +43,16 @@ describe("ThemeProvider", () => {
       </ThemeProvider>,
     );
     expect(html).toContain(darkTheme.colors.background);
+  });
+});
+
+describe("the React entry's JSX runtime", () => {
+  it("pins React, so a consumer's jsxImportSource cannot capture the file", () => {
+    const source = readFileSync(
+      new URL("./react.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(source.startsWith("/** @jsxImportSource react */")).toBe(true);
   });
 });

@@ -232,7 +232,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 23/30
+`[x]` `[████████░░]` 24/31
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -308,12 +308,15 @@ already resolved the ring and elevation through `@gpuixui/tokens`; the last copy
 once (owner: primitives; plan 157 records the components half)
 `[x]` Components carry no structural copy of `@gpuixui/tokens` and import the
 package directly (plan 157)
-`[!]` Tokens' `src/react.tsx` is compiled inside the components program when
+`[x]` Tokens' `src/react.tsx` is compiled inside the components program when
 tokens resolves from source; the isolated linker puts `@gpuix/react` only under
-`packages/components/node_modules`, so components' `tsconfig.json` maps the JSX
-runtime to its own dependency. The durable fix is a tokens-side
-`@gpuix/react` devDependency or an `@jsxImportSource react` pragma (owner:
-tokens-theme — do not edit from this workstream)
+`packages/components/node_modules`, so components' `tsconfig.json` mapped the JSX
+runtime to its own dependency. **Fixed tokens-side** with the
+`/** @jsxImportSource react */` pragma (no new dependency, no lockfile change):
+the entry now compiles under any consumer's `jsxImportSource`. Proven both ways —
+without the pragma a program with `jsxImportSource: "@gpuix/react"` and no path
+mapping fails TS2875; with it, it compiles. `react.test.tsx` guards the pragma.
+The components workstream can now delete its `paths` mapping (interlock row).
 `[x]` Promote the workstream to `main`: plans 010–019 and 051, `packages/tokens`
 and the union plan index are on `main` (commit `458fe10`); `main` now compiles
 `@gpuixui/tokens` from source, so `primitives`, `components` and `docs-site` can
@@ -571,7 +574,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) | tokens-theme | **resolved** — landed on `main`; `internal/theme.ts` consumes `statusTone` (plan 157) |
 | `alpha(color, amount)` helper | tokens-theme | **resolved** — landed on `main`; the local `withAlpha` is deleted (plan 157) |
 | An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | **resolved** — `infoSoft`/`infoSoftForeground` are the tone's roles (plan 157) |
-| `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
+| `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | **resolved tokens-side** — `react.tsx` carries `/** @jsxImportSource react */`, so the entry pins React's runtime wherever it is compiled (proof: a program with `jsxImportSource: "@gpuix/react"` and no path mapping fails TS2875 without it and compiles with it). **components:** delete the `jsx-runtime` `paths` mapping in `packages/components/tsconfig.json`, then this row closes |
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | **resolved** — `State.runCommands` replays a runtime's commands and queries the final state (3 tests) |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | **resolved** — `avatarSize` is exported from `@gpuixui/tokens`; fixed, not a `Theme` group (a new group breaks hand-built theme literals). Avatar can drop `DIAMETER` |
 | Platform style variants wider than typography (colour, radius, density per macOS/Linux/Windows) so the docs switch visibly repaints, not only re-types | tokens-theme | **in progress** — `platformTheme` applies them in this tree; `platformTheme` applies the platform palette, radius and density; the site's previews repaint through the same bridge with no docs change (verified: darwin `#1C1C1E`/6px vs win32 `#202020`/4px on `/docs/components/button`) |

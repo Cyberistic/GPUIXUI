@@ -1,3 +1,15 @@
+/** @jsxImportSource react */
+/**
+ * The React binding: a context provider and the hook that reads it.
+ *
+ * The pragma above is deliberate. A consumer that compiles this file from source
+ * with its own `jsxImportSource` — the component packages compile their JSX
+ * through `@gpuix/react` — would otherwise resolve *this* file's JSX runtime from
+ * that package, which they have and this package does not. The pragma pins the
+ * file to React's runtime wherever it is compiled, so no consumer needs a path
+ * mapping or a hoisted copy.
+ */
+
 import { createContext, useContext, type ReactNode } from "react";
 import { lightTheme, type Theme } from "./theme.js";
 

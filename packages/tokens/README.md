@@ -288,6 +288,10 @@ const rows = colorRoles.map((role) => ({
   switching is a re-render with a different `Theme`.
 - Components must not use `palette` directly; it exists for documentation and
   rare cases with no semantic role.
+- The React entry begins with `/** @jsxImportSource react */`. A consumer that
+  compiles workspace source with its own `jsxImportSource` would otherwise pull
+  *this* file's JSX runtime from a package that does not ship it; the pragma
+  keeps the entry portable without a path mapping on the consumer's side.
 
 ## Why no Effect here
 
