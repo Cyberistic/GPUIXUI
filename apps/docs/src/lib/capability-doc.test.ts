@@ -243,6 +243,42 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(scroll?.workaround).toContain("onScrollChange");
   });
 
+  it("records the pointer-capture rule a window measured, with the probe behind it", () => {
+    // The Slider's page, the range slider's and two COMPONENTS.md rows said a
+    // drag that leaves the track stops, and this record said nothing at all, so
+    // a splitter or a drag handle had no contract to build on. `pointer-capture`
+    // measured the rule: the runtime arms capture only for an element that
+    // listens to both mouseDown and mouseMove, and the shipped Slider follows a
+    // drag the pointer finishes 120px off its track.
+    const capture = rowFor("Pointer capture");
+    expect(capture?.verdict).toBe("supported, with limits");
+    expect(capture?.evidence).toContain("pointer-capture");
+    expect(capture?.evidence).toContain("onMouseDown");
+    expect(capture?.evidence).toContain("onMouseMove");
+    expect(capture?.workaround).toContain("onMouseMove");
+  });
+
+  it("publishes the pointer-capture rule on /docs/runtime", () => {
+    const start = runtimePage.indexOf("## Measured in a window");
+    const end = runtimePage.indexOf("\n## ", start + 1);
+    const section = runtimePage.slice(start, end === -1 ? undefined : end);
+    const pageRows = section
+      .split("\n")
+      .filter((line) => line.startsWith("|") && !/^[\s:|-]+$/.test(line))
+      .map(cells);
+
+    const capture = pageRows.find((row) =>
+      (row[0] ?? "").startsWith("Pointer capture"),
+    );
+    expect(
+      capture,
+      "the page's measured table has no pointer-capture row",
+    ).toBeDefined();
+    expect(capture?.[1]).toContain("onMouseMove");
+    expect(capture?.[1]).toContain("pointer-capture");
+    expect(capture?.[2]).toContain("onMouseMove");
+  });
+
   it("leaves the uncertain rows uncertain", () => {
     const unverified = rows.filter((row) => row.verdict === "unverified");
     expect(unverified.length).toBeGreaterThanOrEqual(3);
@@ -255,6 +291,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("tooltip-lifecycle");
     expect(runtimePage).toContain("tabs-lifecycle");
     expect(runtimePage).toContain("scroll-lifecycle");
+    expect(runtimePage).toContain("pointer-capture");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });

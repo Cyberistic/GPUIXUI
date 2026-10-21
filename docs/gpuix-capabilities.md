@@ -87,6 +87,7 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Tab / Shift+Tab focus traversal | supported, with limits | native tab order; `focusNext`/`focusPrevious`/`focusNextWithin` move focus from code. A synthetic `"tab"` key does not traverse the offscreen `TestRenderer` | drive traversal through the renderer calls in tests |
 | Pointer, keyboard and focus events | supported, with limits | `HostProps.onClick` (primary only), `onAuxClick`, `onMouseDown`/`Up`/`Move`/`Enter`/`Leave`, `onMouseDownOutside`, `onKeyDown`/`Up`, `onFocus`/`onBlur`, `onLayout` (`div`/`text` only). **Measured:** a `Tab` traversal moves focus without running React's `onFocus` — `tooltip-lifecycle` reports `focuses=0` and a tip that stays closed, `tabs-lifecycle` the same counter | read the key event's own `elementId` (the `Tabs` move origin does) or `getFocusedElementId`; publish what a focus-only surface would show as `aria-description`, as the tooltip does |
 | Scroll events | supported, with limits | both listeners fire, and they report **different** things. **Measured** by `scroll-lifecycle`: `onScroll`'s `deltaX`/`deltaY` is the wheel input the window received — a `-100000` wheel reports `-100000` after the offset travelled 200px and clamped — while `onScrollChange`'s `scrollX`/`scrollY` is the clamped absolute pair `getScrollOffset` returns | a scrollbar, a saved position or a "follow the tail" scroller reads `onScrollChange`; use `onScroll` only for the gesture's own delta |
+| Pointer capture | supported, with limits | `renderer.rs` arms GPUI's pointer capture on a left mouse down **only** for an element that listens to both `onMouseDown` and `onMouseMove` (the host's `mouseDown`/`mouseMove`); **measured** by `pointer-capture`: the paired sample kept all eight moves and its release 120px outside its box (`both=8 bothUnder=0 bothUp=1`), a move-only sample got the one pre-press move and the sibling received the eight (`move=1 moveUnder=8`), and the shipped `Slider` followed a drag that left its track (`slider=66 sliderChanges=9`) | a splitter, drag handle or slider must subscribe to **both** `onMouseDown` and `onMouseMove`; a move-only element captures nothing, so the element under the pointer resolves the drag |
 | Text selection | supported | `userSelect`, `selectionColor`, `getSelectedText()`; **measured**: `dragSelect` fills the selection for selectable text and nothing for chrome | — |
 | Caret and selection **position**; decoration over `<code>` | not supported | **measured** by `editor-surface`: the arrow keys move the native caret, but no API reports where it is or what is selected (`getSelectedText()` returns text only), and `<code>` takes `language`/`showLineNumbers` and no decoration layer | edit in a `<textarea>`, display in `<code>`; a highlighted *editable* surface is not buildable |
 | Find-in-content highlights | supported | `highlight` spec (`query`, `caseSensitive`, `wholeWord`, `ranges`, `activeIndex`) plus `getPaintedHighlights()`; **measured** by `search-highlights` | — |
@@ -126,8 +127,8 @@ short, never the carrier of meaning.
 - The same test holds `/docs/runtime` to this file: the site's *measured in a
   window* section must name the probes behind every gap it lists
   (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
-  `tabs-lifecycle`, `scroll-lifecycle`), because a measured gap is absent from the
-  typings rather than merely hard to find.
+  `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`), because a measured
+  gap is absent from the typings rather than merely hard to find.
 - The probe measurements themselves are asserted by the suite
   (`apps/playground`), not here: this document records the verdict and points at
   the evidence.
