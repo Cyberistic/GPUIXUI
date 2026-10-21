@@ -27,6 +27,7 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 | --------- | -------------- |
 | `Runtime` | `detectRuntime` (never fails), `bindingHint`, `RuntimeStatus` |
 | `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union |
+| `State`   | `runCommands` — replay a component runtime's commands and query the final state |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 
 ## Adapting a host

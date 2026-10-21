@@ -44,9 +44,10 @@ const DARWIN_ARM64 =
   "support is expected on Apple Silicon; a failure means the install is " +
   "broken — reinstall `@gpuix/native` at the exact version of `@gpuix/react`.";
 const DARWIN_X64 =
-  "GPUix 0.10.0 publishes no darwin-x64 binding (targets: darwin-arm64, " +
-  "linux-x64, win32-x64). Run the smoke suite on an Apple Silicon Mac, x64 " +
-  "Linux or x64 Windows.";
+  "GPUix publishes no darwin-x64 binding (0.11.0 targets: darwin-arm64, " +
+  "linux-x64, win32-x64). Build one from source with " +
+  "`sh apps/playground/scripts/build-native-binding.sh`, or run the smoke " +
+  "suite on an Apple Silicon Mac, x64 Linux or x64 Windows.";
 const LINUX_X64 =
   "the native binding loads, but `TestRenderer`/`createTestRoot` are macOS " +
   "and Windows only (no wgpu read-back): live-app smoke only.";
