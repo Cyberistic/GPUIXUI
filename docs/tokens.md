@@ -2228,19 +2228,21 @@ is `default`, an unknown platform is the identity, an unknown recipe falls back
 to the platform, and an unknown density keeps the resolved theme's preset. A
 value from an older release must not stop a settings screen from opening.
 
-```ts
-import { resolveThemeChoice } from "@gpuixui/tokens";
+The row itself arrives un-narrowed too, so it narrows through
+`themeChoiceFromRow(value)`: it reads the five keys through the same guards,
+keeps an unknown axis absent, ignores a key it does not know, and answers the
+empty choice for a value that is not a row at all — `null` from a missing
+storage key included, so a first run opens the identity instead of throwing.
 
-const theme = resolveThemeChoice({
-  mode: storedMode,
-  contrast: storedContrast,
-  platform: storedPlatform,
-  density: storedDensity,
-});
+```ts
+import { resolveThemeChoice, themeChoiceFromRow } from "@gpuixui/tokens";
+
+const theme = resolveThemeChoice(themeChoiceFromRow(storedPreference));
 ```
 
-The object's shape is still the application's `Schema` boundary; the unions and
-the precedence are the package's. The executed example is
+The five axes' shape is the package's too; a **theme object** loaded from a
+file is the boundary that stays the application's `Schema`. The executed example
+is
 [`src/theme-choice.example.ts`](../packages/tokens/src/theme-choice.example.ts).
 
 The guards a stored row relies on are exercised in

@@ -422,6 +422,7 @@ references without buying correctness.
 | [831](./831-ledger-status-figures.md) | The live cross-team rows quote figures the palette no longer produces | F | 079, 366, 528, 574, 582, 611, 737, 828 | done |
 | [833](./833-live-row-figures.md) | Every remaining figure in a live cross-team row, and the ring row's set | F | 057, 079, 311, 332, 343, 344, 347, 348, 394, 603, 611, 737, 831 | done |
 | [834](./834-bezier-easing-storage.md) | The cubic-bezier easing a stored edit cannot carry | F | 685, 713, 727, 744, 758, 794 | done |
+| [835](./835-persisted-row-decoder.md) | The persisted row the design system says the package decodes | F | 067, 068, 305, 380, 529, 755 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4395,6 +4396,23 @@ value on both sides — matching the function's own comment and
 a new `theme-edit.test.ts` case stores the pair through JSON, and the
 `MotionEasing` type row now names both forms. No colour, pair, floor, metric,
 role or shipped theme moves.
+
+835 closes the half of the boundary the URL transport already had. The design
+system told a consumer to "hand the whole row to `resolveThemeChoice`", but the
+resolver takes a `ThemeChoice`: from the `unknown` a stored row really is, the
+call does not compile, and a consumer who casts to make it compile meets the
+other half — `JSON.parse("null")` is `null`, and `resolveThemeChoice(null)`
+threw a `TypeError` on the path both pages describe as "must not stop a settings
+screen from opening". The row's five axes were already the package's, so
+`themeChoiceFromRow(value)` narrows them through the same guards the URL decoder
+uses — the two now share one `narrowChoice`, which also removes the generic
+`readChoice` helper — ignores a key the row does not know, and treats a value
+that is not a row (`null`, a number, a string, an array) as the empty choice.
+`resolveThemeChoice` keeps its typed parameter, so a misspelled axis is still a
+compile error for a direct caller; the four passages that describe the boundary
+now name the decoder, and `theme-choice.test.ts` holds the decoded row, the
+non-row, the unknown axis and the URL equivalence. No colour, pair, floor,
+metric, role or shipped theme moves.
 
 ## How to use a plan
 

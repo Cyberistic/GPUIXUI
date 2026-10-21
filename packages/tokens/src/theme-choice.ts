@@ -62,13 +62,31 @@ export interface ThemeParamSource {
   readonly get: (key: string) => string | null | undefined;
 }
 
-const readChoice = <A extends string>(
-  source: ThemeParamSource,
-  key: ThemeChoiceKey,
-  guard: (value: unknown) => value is A,
-): A | undefined => {
-  const value = source.get(key);
-  return guard(value) ? value : undefined;
+/**
+ * A row read from storage. The shape is not trusted: a missing key arrives as
+ * `null`, the text `"null"` parses to `null`, and neither is a row.
+ */
+const isRow = (value: unknown): value is Readonly<Record<string, unknown>> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/**
+ * Narrow the five axes through the package's guards — the one owner of the
+ * choice a URL, a stored row and a settings screen carry. An unknown value is
+ * absent, so an older or newer row still resolves to a readable theme.
+ */
+const narrowChoice = (read: (key: ThemeChoiceKey) => unknown): ThemeChoice => {
+  const mode = read("mode");
+  const contrast = read("contrast");
+  const platform = read("platform");
+  const recipe = read("recipe");
+  const density = read("density");
+  return {
+    mode: isThemeMode(mode) ? mode : undefined,
+    contrast: isThemeContrast(contrast) ? contrast : undefined,
+    platform: isPlatformName(platform) ? platform : undefined,
+    recipe: isPlatformRecipeName(recipe) ? recipe : undefined,
+    density: isDensityName(density) ? density : undefined,
+  };
 };
 
 /**
@@ -91,13 +109,34 @@ const readChoice = <A extends string>(
  * ```
  */
 export function themeChoiceFromParams(source: ThemeParamSource): ThemeChoice {
-  return {
-    mode: readChoice(source, "mode", isThemeMode),
-    contrast: readChoice(source, "contrast", isThemeContrast),
-    platform: readChoice(source, "platform", isPlatformName),
-    recipe: readChoice(source, "recipe", isPlatformRecipeName),
-    density: readChoice(source, "density", isDensityName),
-  };
+  return narrowChoice((key) => source.get(key));
+}
+
+/**
+ * Decode a persisted row — a settings object, a stored preference, a payload —
+ * into a {@link ThemeChoice} without trusting its shape.
+ *
+ * The row is what the application stores; the five unions are the package's, so
+ * the package narrows them. Every axis goes through the same guard as a URL
+ * parameter: a known value is kept, an unknown or missing value is absent, and a
+ * key the row does not know is ignored, so a row written by an older or a newer
+ * release still opens. A value that is not a row at all — `null` from a missing
+ * storage key, the text `"null"` after `JSON.parse`, a number, an array — is the
+ * empty choice, which {@link resolveThemeChoice} resolves to the identity.
+ *
+ * The shape of a **theme object** loaded from a file or a URL is a different
+ * boundary and stays the application's `Schema`.
+ *
+ * @example
+ * ```ts
+ * import { resolveThemeChoice, themeChoiceFromRow } from "@gpuixui/tokens";
+ *
+ * const theme = resolveThemeChoice(themeChoiceFromRow(storedPreference));
+ * ```
+ */
+export function themeChoiceFromRow(value: unknown): ThemeChoice {
+  const row: Readonly<Record<string, unknown>> = isRow(value) ? value : {};
+  return narrowChoice((key) => row[key]);
 }
 
 const encodeThemeChoice: Readonly<

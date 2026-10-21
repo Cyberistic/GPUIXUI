@@ -263,8 +263,10 @@ object loaded from a file is still the application’s `Schema` boundary.
 contrast select the variant, `recipe` or `platform` styles it, and a stored
 density is applied last so it beats the platform's preset (macOS is `compact`).
 A recipe wins over a stray platform key, and every unknown axis keeps a readable
-default — an unknown density keeps the resolved theme's preset. A runnable
-example lives in
+default — an unknown density keeps the resolved theme's preset. A row that has
+not been narrowed goes through `themeChoiceFromRow(value)`, which applies the
+same five guards, ignores an unknown key and treats a non-row — a `null` from a
+missing storage key included — as the empty choice. A runnable example lives in
 [`src/theme-choice.example.ts`](./src/theme-choice.example.ts).
 
 A shareable URL is the same row, and the package owns the transport.

@@ -54,7 +54,15 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 382/457
+`[x]` `[████████░░]` 383/458
+
+`[x]` Decode a persisted row the docs already named — the design system said to
+hand an unknown row to `resolveThemeChoice`, which neither compiles nor survives
+a missing key (`JSON.parse("null")` threw a `TypeError` on the documented
+"must not stop a settings screen" path); `themeChoiceFromRow(value)` shares the
+five guards with the URL decoder through one `narrowChoice`, ignores an unknown
+key, treats a non-row as the empty choice, and the four passages name it
+(plan 835)
 
 `[x]` Carry a cubic-bezier easing through the edit artifact — `sameMembers`
 refused the pair because the shipped phase is a name and an edited one is a

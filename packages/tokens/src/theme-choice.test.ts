@@ -33,8 +33,19 @@ import {
   type Theme,
 } from "./theme.js";
 import { themeChecks, themeFailures } from "./theme-check.js";
-import { resolveThemeChoice } from "./theme-choice.js";
-import { resolvedChoice, storedChoice } from "./theme-choice.example.js";
+import {
+  resolveThemeChoice,
+  themeChoiceFromParams,
+  themeChoiceFromRow,
+  themeChoiceParams,
+} from "./theme-choice.js";
+import {
+  emptyStoredRow,
+  resolvedChoice,
+  resolvedStoredRow,
+  storedChoice,
+  storedRow,
+} from "./theme-choice.example.js";
 import { themeWithDensity } from "./persisted-choices.example.js";
 
 /** Every check a resolved theme must pass, named for the failing axis. */
@@ -189,5 +200,82 @@ describe("resolveThemeChoice", () => {
       platformStyles.win32.structure.radius?.md,
     );
     expect(themeFailures(resolvedChoice)).toEqual([]);
+  });
+});
+
+/**
+ * Guards the defect plan 835 fixes: the design system told a consumer to hand a
+ * whole persisted row — which arrives as `unknown` — to `resolveThemeChoice`,
+ * which neither compiles from `unknown` nor survives the row a missing storage
+ * key produces: `JSON.parse("null")` is `null`, and the resolver threw a
+ * `TypeError` while both pages promise a stale value "must not stop a settings
+ * screen from opening". The row's five axes were already the package's, so the
+ * decoder is the half the URL transport already had.
+ */
+describe("a persisted row", () => {
+  it("decodes the row the example stores", () => {
+    expect(storedRow).not.toBeNull();
+    expect(resolvedStoredRow.mode).toBe("dark");
+    expect(resolvedStoredRow.name).toContain("Windows");
+    // The row's density is not a preset and its `from` key is not an axis.
+    expect(resolvedStoredRow.density.name).toBe("comfortable");
+    expect(themeFailures(resolvedStoredRow)).toEqual([]);
+  });
+
+  it("treats a value that is not a row as the empty choice", () => {
+    const empty = themeChoiceFromRow({});
+    const notRows: ReadonlyArray<unknown> = [
+      null,
+      undefined,
+      42,
+      "dark",
+      [],
+      true,
+    ];
+
+    notRows.forEach((value) => {
+      expect(themeChoiceFromRow(value), JSON.stringify(value)).toEqual(empty);
+    });
+    expect(emptyStoredRow.mode).toBe("light");
+    expect(emptyStoredRow.name).toBe(getTheme("light").name);
+  });
+
+  it("narrows a known axis and drops an unknown one", () => {
+    const row = themeChoiceFromRow({
+      mode: "dark",
+      contrast: "medium",
+      platform: "beos",
+      recipe: "aero",
+      density: "cosy",
+    });
+
+    expect(row.mode).toBe("dark");
+    expect(row.contrast).toBeUndefined();
+    expect(row.platform).toBeUndefined();
+    expect(row.density).toBeUndefined();
+    // The recipe survives, and the resolver still prefers it over a platform.
+    expect(row.recipe).toBe("aero");
+    expect(resolveThemeChoice(row).name).toContain("Windows 7");
+  });
+
+  it("decodes the same choice as the URL transport", () => {
+    const params = new URLSearchParams();
+    themeChoiceParams(storedChoice).forEach(([key, value]) => {
+      params.set(key, value);
+    });
+
+    const fromUrl = themeChoiceFromParams(params);
+    // A stored row carries the same keys; `get` answers `null` for a missing one,
+    // which the decoder treats exactly like an absent key.
+    const fromRow = themeChoiceFromRow({
+      mode: params.get("mode"),
+      contrast: params.get("contrast"),
+      platform: params.get("platform"),
+      recipe: params.get("recipe"),
+      density: params.get("density"),
+    });
+
+    expect(fromRow).toEqual(fromUrl);
+    expect(resolveThemeChoice(fromRow)).toEqual(resolvedChoice);
   });
 });
