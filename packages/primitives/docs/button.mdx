@@ -59,7 +59,7 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `() => void` | none | click or activating key; not called while busy |
 | `onClick` | `(event) => void` | none | the raw click, called before `onActivate` |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<ButtonState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |
 
@@ -90,6 +90,17 @@ import { Button, Stack } from "@gpuixui/primitives";
 from the theme; `buttonVariants` maps each variant to colour **roles**, never
 colours. Size and padding come from `density`.
 
+`style` takes a `StateStyle<ButtonState>` — a `StyleDesc`, or a callback that
+receives `{ disabled, focused }` and returns one. The result merges after every
+role decision, so a callback is the last word on a property the recipe also sets:
+
+```tsx
+<Button style={(state) => ({ opacity: state.focused ? 1 : 0.9 })}>Save</Button>
+```
+
+`loading` is not in the state: a busy button reports `disabled`, because it
+refuses activation.
+
 ## Limitations
 
 - No `focusVisible`: the ring cannot distinguish pointer from keyboard focus.
@@ -100,8 +111,9 @@ colours. Size and padding come from `density`.
 ## Verification
 
 - `src/core/keyboard.test.ts` — the Enter/Space/held rules as pure decisions.
-- `src/components/Button.test.tsx` — tree-level props, busy blocking and the
-  loading description.
+- `src/components/Button.test.tsx` — tree-level props, busy blocking, the
+  loading description, and a `style` callback receiving the live state and
+  winning over the recipe.
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name.

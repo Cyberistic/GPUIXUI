@@ -20,7 +20,8 @@
  */
 
 import type { ReactElement, ReactNode } from "react";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import type { EventPayload } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { decideActivation } from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -54,7 +55,8 @@ export interface ToggleProps {
   readonly trailing?: ReactNode;
   /** Accessible name. Required when the toggle has only an icon. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** Extra style, resolved against the toggle's live state and merged last. */
+  readonly style?: StateStyle<ToggleState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: ReactNode;
@@ -64,6 +66,13 @@ export interface ToggleProps {
 /** The state a toggle announces: there is no `aria-pressed` to carry it. */
 export const pressedValueText = (pressed: boolean): string =>
   pressed ? "pressed" : "not pressed";
+
+/** What a `Toggle` tells a `style` callback. `pressed` is `selected`. */
+export interface ToggleState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly selected: boolean;
+}
 
 /** The element a toggle renders. Pure in its arguments. */
 export const renderToggle = (
@@ -96,6 +105,14 @@ export const renderToggle = (
     style = suppressFeedback(mergeStyle(style, resolved.disabled));
   }
   if (focus.focused) style = mergeStyle(style, focusRingStyle(theme));
+  style = mergeStyle(
+    style,
+    resolveStyle(props.style, {
+      disabled: props.disabled === true,
+      focused: focus.focused,
+      selected: state.current,
+    }),
+  );
   return (
     <div
       role="button"
@@ -108,7 +125,7 @@ export const renderToggle = (
       onKeyUp={onKey("up")}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(style, props.style)}
+      style={style}
     >
       {props.leading}
       {props.children}

@@ -26,13 +26,13 @@ export { Label, labelledBy } from "./Label.js";
 export type { LabelProps } from "./Label.js";
 
 export { Button } from "./Button.js";
-export type { ButtonFocus, ButtonProps } from "./Button.js";
+export type { ButtonFocus, ButtonProps, ButtonState } from "./Button.js";
 
 export { ButtonGroup, BUTTON_GROUP_MODES } from "./ButtonGroup.js";
 export type { ButtonGroupMode, ButtonGroupProps } from "./ButtonGroup.js";
 
 export { pressedValueText, Toggle } from "./Toggle.js";
-export type { ToggleProps } from "./Toggle.js";
+export type { ToggleProps, ToggleState } from "./Toggle.js";
 
 export { Input } from "./Input.js";
 export type { FieldProps, InputProps } from "./Input.js";

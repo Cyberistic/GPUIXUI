@@ -19,7 +19,8 @@
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import type { EventPayload } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { decideActivation } from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -48,7 +49,14 @@ export interface ButtonProps {
   /** Called for a click or an activating key. Not called while busy or disabled. */
   readonly onActivate?: () => void;
   readonly onClick?: (event: EventPayload) => void;
-  readonly style?: StyleDesc;
+  /**
+   * Extra style, resolved against the button's live state and merged last.
+   *
+   * A function form is how a consumer styles by state: `style={(state) =>
+   * ({ opacity: state.focused ? 1 : 0.9 })}`. `loading` is not a state — a busy
+   * button reports `disabled`, because it refuses activation.
+   */
+  readonly style?: StateStyle<ButtonState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: ReactNode;
@@ -60,6 +68,12 @@ export interface ButtonFocus {
   readonly focused: boolean;
   readonly onFocus?: () => void;
   readonly onBlur?: () => void;
+}
+
+/** What a `Button` tells a `style` callback. */
+export interface ButtonState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
 }
 
 const isBusy = (props: ButtonProps): boolean =>
@@ -94,13 +108,18 @@ export const renderButton = (
     ),
     theme,
   );
-  const state =
+  const base =
     props.disabled === true
       ? suppressFeedback(mergeStyle(resolved.style, resolved.disabled))
       : resolved.style;
-  const style = focus.focused
-    ? mergeStyle(state, focusRingStyle(theme))
-    : state;
+  const own = focus.focused ? mergeStyle(base, focusRingStyle(theme)) : base;
+  const style = mergeStyle(
+    own,
+    resolveStyle(props.style, {
+      disabled: props.disabled === true,
+      focused: focus.focused,
+    }),
+  );
 
   return (
     <div
@@ -120,7 +139,7 @@ export const renderButton = (
       onBlur={focus.onBlur}
       onKeyDown={onKey("down")}
       onKeyUp={onKey("up")}
-      style={mergeStyle(style, props.style)}
+      style={style}
     >
       {props.loading === true ? (
         <Spinner size={theme.iconSize.sm} label="Loading" />

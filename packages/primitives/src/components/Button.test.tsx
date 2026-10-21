@@ -13,12 +13,14 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import { renderButton } from "./Button.js";
+import { renderButton, type ButtonState } from "./Button.js";
 import { keyEvent } from "./testing/event.js";
 import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyleRecord,
+  hostStyleString,
   hostTag,
 } from "./testing/element.js";
 
@@ -90,5 +92,30 @@ describe("Button", () => {
     );
     expect(Option.isSome(idle) && Option.isSome(focused)).toBe(true);
     expect(focused).not.toStrictEqual(idle);
+  });
+
+  it("hands a style callback the live state and lets its result win", () => {
+    const seen: ButtonState[] = [];
+    const element = renderButton(
+      {
+        disabled: true,
+        style: (state) => {
+          seen.push(state);
+          return { backgroundColor: testTheme.colors.destructive };
+        },
+      },
+      testTheme,
+      { focused: true },
+    );
+
+    expect(seen).toEqual([{ disabled: true, focused: true }]);
+    expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+      testTheme.colors.destructive,
+    );
+  });
+
+  it("still merges an object style last", () => {
+    const element = resting({ style: { opacity: 0.4 } });
+    expect(expectSome(hostStyleRecord(element))["opacity"]).toBe(0.4);
   });
 });

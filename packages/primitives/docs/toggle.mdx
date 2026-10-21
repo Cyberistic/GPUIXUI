@@ -36,7 +36,7 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
 | `label` | `string` | none | accessible name; required when icon-only |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<ToggleState>` | — | resolved against the live state and merged last |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |
 
@@ -72,6 +72,11 @@ docs and the component read one table. Rest paints no fill (or a border for
 `outline`); pressed paints `colors.accent`/`colors.accentForeground`; hover and
 press lift the accent's alpha like a filled button. Nothing names a literal.
 
+`style` takes a `StateStyle<ToggleState>` — a `StyleDesc`, or a callback that
+receives `{ disabled, focused, selected }` and returns one. `selected` is the
+pressed state under the contract's vocabulary. The result merges after every role
+decision, so a callback is the last word on a property the recipe also sets.
+
 ## Limitations
 
 - No `aria-pressed` (above).
@@ -84,7 +89,8 @@ press lift the accent's alpha like a filled button. Nothing names a literal.
 
 - `src/components/Toggle.test.tsx` — role and value text, no `aria-pressed`,
   the pressed paint from the accent role, the outline border, click/Enter/Space
-  activation, held keys, disabled, the focus ring.
+  activation, held keys, disabled, the focus ring, and a `style` callback that
+  receives the live state and wins over the recipe.
 - `runtime/toggle.runtime.test.tsx` — a real click flips the announced state and
   repaints the accent fill; Enter down and Space up each activate once; a
   disabled toggle leaves the tab order; the ring follows focus. Measured

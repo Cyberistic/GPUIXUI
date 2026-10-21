@@ -12,7 +12,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import { renderToggle } from "./Toggle.js";
+import { renderToggle, type ToggleState } from "./Toggle.js";
 import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
 import {
@@ -149,5 +149,27 @@ describe("Toggle", () => {
     expect(
       Option.getOrUndefined(hostStyleRecord(rest))?.["boxShadow"],
     ).toBeUndefined();
+  });
+
+  it("hands a style callback the live state and lets its result win", () => {
+    const seen: ToggleState[] = [];
+    const element = renderToggle(
+      {
+        disabled: true,
+        style: (next) => {
+          seen.push(next);
+          return { backgroundColor: testTheme.colors.destructive };
+        },
+      },
+      testTheme,
+      state(true),
+      focused,
+      vi.fn(),
+    );
+
+    expect(seen).toEqual([{ disabled: true, focused: true, selected: true }]);
+    expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+      testTheme.colors.destructive,
+    );
   });
 });
