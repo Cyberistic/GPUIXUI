@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   clampNumeric,
@@ -81,6 +82,22 @@ describe("stepNumber", () => {
 
   it("treats a zero step as one, so the arrows never freeze", () => {
     expect(stepNumber(10, { step: 0 }, 1)).toBe(11);
+  });
+
+  it("keeps a decimal step free of binary noise", () => {
+    // The bug: `0.2 + 0.1` is 0.30000000000000004, which a controlled field
+    // then reports and a form submits. The step lands on the decimal.
+    expect(stepNumber(0.2, { step: 0.1 }, 1)).toBe(0.3);
+    expect(stepNumber(0.05, { step: 0.1 }, 1)).toBe(0.15);
+    expect(stepNumber(1.1, { step: 0.2 }, 1)).toBe(1.3);
+    const tenSteps = Arr.reduce(Arr.range(1, 10), 0, (value) =>
+      stepNumber(value, { step: 0.1 }, 1),
+    );
+    expect(tenSteps).toBe(1);
+  });
+
+  it("does not round away an integer step at a large magnitude", () => {
+    expect(stepNumber(1e15, { step: 1 }, 1)).toBe(1_000_000_000_000_001);
   });
 });
 

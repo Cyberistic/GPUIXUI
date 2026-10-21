@@ -43,13 +43,37 @@ export const clampNumeric = (value: number, range: NumberRange): number => {
 export const formatNumber = (value: number, precision = 0): string =>
   value.toFixed(Math.min(20, Math.max(0, Math.trunc(precision))));
 
-/** Move by `steps` steps and clamp. A step of 0 is treated as 1. */
+/**
+ * The decimal places a number's shortest representation carries.
+ *
+ * Capped at 15: a double has no meaningful digits past that, and the cap keeps
+ * the scale finite for an exponential literal.
+ */
+const decimalsOf = (value: number): number => {
+  const text = String(value);
+  const [mantissa = text, exponentText] = text.split(/e/i);
+  const exponent = exponentText === undefined ? 0 : Number(exponentText);
+  const fraction = mantissa.split(".")[1]?.length ?? 0;
+  return Math.min(15, Math.max(0, fraction - exponent));
+};
+
+/**
+ * Move by `steps` steps and clamp. A step of 0 is treated as 1.
+ *
+ * The move is rounded to the finer of the value's and the step's decimal
+ * places, so `0.2 + 0.1` reports `0.3` rather than `0.30000000000000004`. A
+ * step between integers stays an integer step — the rounding scale is `1`.
+ */
 export const stepNumber = (
   value: number,
   range: NumberRange,
   steps: number,
-): number =>
-  clampNumeric(value + steps * (range.step > 0 ? range.step : 1), range);
+): number => {
+  const step = range.step > 0 ? range.step : 1;
+  const scale = 10 ** Math.max(decimalsOf(step), decimalsOf(value));
+  const moved = Math.round((value + steps * step) * scale) / scale;
+  return clampNumeric(moved, range);
+};
 
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   up: 1,

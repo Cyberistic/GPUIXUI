@@ -92,6 +92,10 @@ While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
 the caret never jumps. Every edit that parses reports the clamped number
 through `onChange`; on blur or `Enter` the draft is reformatted to `precision`.
 
+A step is exact at decimal precision: stepping `0.2` by `0.1` reports `0.3`, not
+the binary `0.30000000000000004`, because the move is rounded to the finer of
+the value's and the step's decimal places. An integer step is untouched.
+
 ## Keyboard
 
 | Key | Effect |
@@ -141,7 +145,8 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
 ## Verification
 
 - `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
-  stepping, Home/End only with a bound.
+  noisy-free decimal steps (ten 0.1 steps reach 1 exactly), a large integer step
+  that rounding must not erase, Home/End only with a bound.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
   raw edit report, steppers as presentation, one tab stop, disabled/invalid,
   the four part names in a caller's composition, and the input part carrying
