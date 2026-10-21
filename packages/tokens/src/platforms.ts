@@ -175,7 +175,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         ring: "#78AEED",
         accent: "#1B3B5C",
         accentForeground: "#BBD9F7",
-        selected: "#1E4468",
+        selected: "#1B3F60",
         selectedForeground: "#CFE4FA",
         placeholder: "#8A93A3",
         selection: "#78AEED4D",

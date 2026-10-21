@@ -154,6 +154,68 @@ describe("text on the state washes", () => {
   });
 });
 
+/**
+ * Guards the surfaces a focused control's ring and a selected row's second line
+ * are painted on. The bug this holds: the contract measured the ring on the
+ * page's three surfaces only, and secondary text on every surface but a
+ * selection — so a control focused inside a muted toolbar, or a description in
+ * a selected row, could ship unreadable. The pair found one: Linux dark painted
+ * `selected` so light that `mutedForeground` reached 4.26:1 against the 4.5
+ * floor, and the palette was deepened to `#1B3F60`.
+ */
+describe("ring and selection surfaces", () => {
+  it("measures the ring on every strip a control can sit on", () => {
+    const missing = ["background", "card", "popover", "muted", "secondary"]
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "ring" &&
+              pair.background === background &&
+              pair.floor === "boundary",
+          ),
+      )
+      .map((background) => `ring/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("measures secondary text on a selected surface", () => {
+    expect(
+      contrastPairs.some(
+        (pair) =>
+          pair.foreground === "mutedForeground" &&
+          pair.background === "selected" &&
+          pair.floor === "secondary",
+      ),
+    ).toBe(true);
+  });
+
+  it("reports a ring that disappears into a muted strip", () => {
+    const broken = { colors: { ...lightColors, ring: lightColors.muted } };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "ring" && background === "muted",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+
+  it("reports secondary text that matches its selected surface", () => {
+    const broken = {
+      colors: { ...lightColors, mutedForeground: lightColors.selected },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "mutedForeground" && background === "selected",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.secondary });
+  });
+});
+
 describe("contrastFailures", () => {
   it("passes every shipped theme", () => {
     expect(contrastFailures(lightTheme)).toEqual([]);

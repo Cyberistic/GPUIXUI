@@ -394,7 +394,7 @@ role — the status families, the soft tones, `foreground`, `mutedForeground`,
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
 | `accent` | `#E1EBFA` | `#13304F` | `#E4EFFB` | `#1B3B5C` | `#E5F1FB` | `#1B3A50` |
 | `accentForeground` | `#0A4A8F` | `#A9CCF7` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
-| `selected` | `#D3E5FB` | `#0D3A66` | `#CFE3F9` | `#1E4468` | `#CCE4F7` | `#123C57` |
+| `selected` | `#D3E5FB` | `#0D3A66` | `#CFE3F9` | `#1B3F60` | `#CCE4F7` | `#123C57` |
 | `selectedForeground` | `#0B3D6B` | `#C7E0FF` | `#0F3E74` | `#CFE4FA` | `#093A5C` | `#CDEBFF` |
 | `placeholder` | base | `#8A93A3` | base | `#8A93A3` | base | `#8A93A3` |
 
@@ -519,13 +519,15 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 42 pairs cover the text role
+— an empty array means the theme is readable. The 45 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
-`input`, secondary text on `background`, `card`, `muted` and `popover`, every
-status and soft-status pair, each status tone's readable text as **page** text on
-`background` and `card` (a field error or an inline warning is not on the tone's
-own tinted surface), accent and selected, the state washes, the placeholder, and
-the essential boundaries and focus ring. A wash — `hover`, `active`, `accent` —
+`input`, secondary text on `background`, `card`, `muted`, `popover` and a
+selected row, every status and soft-status pair, each status tone's readable text
+as **page** text on `background` and `card` (a field error or an inline warning
+is not on the tone's own tinted surface), accent and selected, the state washes,
+the placeholder, and the essential boundaries and focus ring — the ring on every
+surface a focused control can sit on, including a toolbar strip (`muted`) and a
+segmented group (`secondary`). A wash — `hover`, `active`, `accent` —
 is a surface too: a ghost button or a menu row tints it and leaves its label in
 the resting `foreground`, and secondary text keeps `mutedForeground`, so both
 roles are measured on all three. `contrastFloors` and `highContrastFloors` are the

@@ -214,6 +214,18 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "ring", background: "background", floor: "boundary" },
   { foreground: "ring", background: "card", floor: "boundary" },
   { foreground: "ring", background: "popover", floor: "boundary" },
+  // A focused control inside a tinted strip — a toolbar on `muted`, a
+  // segmented group on `secondary` — draws its ring on that strip, not on the
+  // page beneath it.
+  { foreground: "ring", background: "muted", floor: "boundary" },
+  { foreground: "ring", background: "secondary", floor: "boundary" },
+  // A selected row keeps the secondary text role its siblings use, so the
+  // selection tint is a surface that text sits on.
+  {
+    foreground: "mutedForeground",
+    background: "selected",
+    floor: "secondary",
+  },
 ];
 
 /** One role pair that does not meet its floor. */
