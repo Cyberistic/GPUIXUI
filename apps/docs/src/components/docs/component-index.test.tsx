@@ -32,7 +32,7 @@ describe("the component index", () => {
   });
 
   it("labels the filter box for a screen reader", () => {
-    expect(markup).toContain("Filter components by name or purpose");
+    expect(markup).toContain("Filter components by name, part or purpose");
     expect(markup).toContain('type="search"');
   });
 });

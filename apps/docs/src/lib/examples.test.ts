@@ -137,12 +137,16 @@ describe("matching an example to its page", () => {
         description: "",
         url: "/docs/primitives/a-one",
         section: "Primitives",
+        parts: [],
+        limitations: "",
       },
       {
         title: "B",
         description: "",
         url: "/docs/primitives/a-two",
         section: "Primitives",
+        parts: [],
+        limitations: "",
       },
     ];
     expect(pageFor("a", "/docs/primitives", pages)).toBeUndefined();

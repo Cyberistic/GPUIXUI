@@ -8,6 +8,10 @@ import { filterEntries } from "../../lib/component-index";
  * The rows are generated (`component-index-data.ts`), so the index cannot list
  * a page that does not exist or miss one that does. The query only narrows what
  * is already rendered: the unfiltered list is the complete section.
+ *
+ * The query matches a page's name, its purpose, its lane, the parts it
+ * documents and the limits it records — so a reader who knows the part they
+ * want, or the capability a component lacks, finds the page from here.
  */
 export function ComponentIndex() {
   const [query, setQuery] = useState("");
@@ -16,11 +20,13 @@ export function ComponentIndex() {
   return (
     <div className="not-prose my-6">
       <label className="block">
-        <span className="sr-only">Filter components by name or purpose</span>
+        <span className="sr-only">
+          Filter components by name, part or purpose
+        </span>
         <input
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Filter by name or purpose — try “search”, “overlay”, “primitives”"
+          placeholder="Filter by name, part or limit — try “search”, “DialogFooter”, “aria-current”"
           type="search"
           value={query}
         />

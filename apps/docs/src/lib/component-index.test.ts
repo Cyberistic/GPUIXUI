@@ -3,12 +3,15 @@ import { describe, expect, it } from "vitest";
 import {
   buildIndex,
   filterEntries,
+  limitationsOf,
   pageUrl,
+  partsOf,
   type ComponentEntry,
   type ComponentPage,
 } from "./component-index";
 import { componentIndex } from "./component-index-data";
 import { packageCollections } from "./collection-routes";
+import { readPublishedModules, repoRoot } from "./public-symbols-source";
 
 /**
  * The component index, and the rows it is allowed to show.
@@ -40,10 +43,14 @@ const entry = (
   title: string,
   section: string,
   description = "",
+  parts: ReadonlyArray<string> = [],
+  limitations = "",
 ): ComponentEntry => ({
   title,
   description,
   section,
+  parts,
+  limitations,
   url: `/docs/${section.toLowerCase()}/${title.toLowerCase()}`,
 });
 
@@ -124,7 +131,7 @@ describe("the filter", () => {
   const entries = [
     entry("Search input", "Components", "A field that queries a list."),
     entry("Input", "Primitives", "A single-line text field."),
-    entry("Dialog", "Components", "A modal surface."),
+    entry("Dialog", "Components", "A modal surface.", ["DialogFooter"]),
   ];
 
   it("returns every row for an empty or blank query", () => {
@@ -142,6 +149,71 @@ describe("the filter", () => {
     expect(filterEntries(entries, "input")).toHaveLength(2);
     expect(filterEntries(entries, "search input")).toHaveLength(1);
     expect(filterEntries(entries, "search dialog")).toEqual([]);
+  });
+
+  it("finds a page by the name of a part it documents", () => {
+    expect(filterEntries(entries, "dialogfooter")).toEqual([entries[2]]);
+  });
+});
+
+describe("the parts a page documents", () => {
+  it("reads a parts table", () => {
+    const source = [
+      "## Anatomy",
+      "",
+      "| Part | Responsibility |",
+      "| ---- | -------------- |",
+      "| `Dialog` | owns the state |",
+      "| `DialogFooter` | the actions |",
+    ].join("\n");
+
+    expect(partsOf(source)).toEqual(["Dialog", "DialogFooter"]);
+  });
+
+  it("reads an API table headed by the part's name", () => {
+    const source = [
+      "## API",
+      "",
+      "| `Dialog` prop | Type | Default |",
+      "| ------------- | ---- | ------- |",
+      "| `open` | `boolean` | uncontrolled |",
+    ].join("\n");
+
+    expect(partsOf(source)).toEqual(["Dialog"]);
+  });
+
+  it("reads a heading per part", () => {
+    const source = [
+      "## API reference",
+      "",
+      "### Dialog",
+      "",
+      "### DialogContent",
+    ].join("\n");
+
+    expect(partsOf(source)).toEqual(["Dialog", "DialogContent"]);
+  });
+
+  it("reads nothing from a section that documents no parts", () => {
+    expect(partsOf("## Usage\n\nA `Dialog` in a sentence.")).toEqual([]);
+  });
+});
+
+describe("the limitations a page records", () => {
+  it("reads the limit section", () => {
+    const source = "## Limitations\n\nNo `aria-current` in 0.11.0.";
+
+    expect(limitationsOf(source)).toContain("aria-current");
+  });
+
+  it("reads the accessibility section the packages use", () => {
+    const source = "## Accessibility\n\nThe role is `dialog`.";
+
+    expect(limitationsOf(source)).toContain("dialog");
+  });
+
+  it("reads nothing from a page that records no limits", () => {
+    expect(limitationsOf("## Usage\n\nNothing.")).toBe("");
   });
 });
 
@@ -178,5 +250,35 @@ describe("the real index", () => {
     expect(componentIndex.length).toBeGreaterThan(0);
     expect(componentIndex[0]?.section).toBe("Primitives");
     expect(componentIndex.at(-1)?.section).toBe("Components");
+  });
+
+  it("finds a component by a part name, which the sidebar cannot show", () => {
+    const found = filterEntries(componentIndex, "DropdownMenuCheckboxItem");
+
+    expect(found.map((row) => row.url)).toContain(
+      "/docs/components/dropdown-menu",
+    );
+  });
+
+  it("finds a component by a limitation it records", () => {
+    const found = filterEntries(componentIndex, "aria-orientation");
+
+    expect(found.length).toBeGreaterThan(0);
+    expect(found.map((row) => row.url)).toContain("/docs/components/tabs");
+  });
+
+  it("lists only parts the library actually exports", () => {
+    const exported = new Set(
+      readPublishedModules(repoRoot).flatMap((module) =>
+        module.symbols.map((symbol) => symbol.name),
+      ),
+    );
+    const unknown = componentIndex.flatMap((row) =>
+      row.parts
+        .filter((part) => !exported.has(part))
+        .map((part) => `${row.url}: ${part}`),
+    );
+
+    expect(unknown).toEqual([]);
   });
 });

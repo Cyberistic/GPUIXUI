@@ -25,6 +25,10 @@ export interface ComponentEntry {
   readonly url: string;
   /** The sidebar section the page belongs to: `Primitives` or `Components`. */
   readonly section: string;
+  /** The compound parts the page documents, e.g. `DialogFooter`. */
+  readonly parts: ReadonlyArray<string>;
+  /** What the page says the component cannot do. */
+  readonly limitations: string;
 }
 
 /** The section the site's own component pages belong to. */
@@ -80,6 +84,97 @@ const frontmatterValue = (head: string, key: string): string | undefined => {
 const frontmatter = (source: string): string =>
   /^---\n([\s\S]*?)\n---\n/.exec(source)?.[1] ?? "";
 
+/** One page's section: its `##` heading and the text under it. */
+interface PageSection {
+  readonly heading: string;
+  readonly text: string;
+}
+
+/**
+ * The `##` sections of a page.
+ *
+ * A page is prose with headings, and the two the index needs are the parts a
+ * component is made of and the limits it has.
+ */
+const sectionsOf = (source: string): ReadonlyArray<PageSection> =>
+  source
+    .split(/^## /m)
+    .slice(1)
+    .map((part) => {
+      const newline = part.indexOf("\n");
+      return {
+        heading: (newline === -1 ? part : part.slice(0, newline)).trim(),
+        text: newline === -1 ? "" : part.slice(newline + 1),
+      };
+    });
+
+/**
+ * The compound parts a page documents.
+ *
+ * The pages name their parts in three ways: a parts table (`## Parts`,
+ * `## Anatomy`), an API table headed by the part's name (`| `Dialog` prop |`),
+ * and a heading per part (`### DialogContent`, or `### `CheckboxIndicator``).
+ * All three are read, so a reader who searches "DialogFooter" finds the page
+ * that documents it.
+ */
+export const partsOf = (source: string): ReadonlyArray<string> => {
+  const names = sectionsOf(source).flatMap((section) => {
+    const isParts =
+      section.heading === "Parts" || section.heading === "Anatomy";
+    const isApi =
+      section.heading === "API" || section.heading === "API reference";
+    if (!isParts && !isApi) return [];
+
+    const rows = [
+      ...section.text.matchAll(/^\|\s*`([A-Z][A-Za-z0-9]*)`\s*(prop\s*)?\|/gm),
+    ].map((match) => match[1] ?? "");
+    const headings = [
+      ...section.text.matchAll(/^###\s+`?([A-Z][A-Za-z0-9]*)`?\s*$/gm),
+    ].map((match) => match[1] ?? "");
+
+    return [...rows, ...headings];
+  });
+
+  return [...new Set(names.filter((name) => !notAPart.has(name)))];
+};
+
+/**
+ * The headings a page uses for something other than a part.
+ *
+ * `### Parts` inside an API section is a table of contents, not a part, and a
+ * row headed `Part` is a column label.
+ */
+const notAPart = new Set([
+  "Part",
+  "Parts",
+  "Prop",
+  "Props",
+  "Type",
+  "Types",
+  "Default",
+  "Consequence",
+  "Responsibility",
+]);
+
+/**
+ * What a page says its component cannot do.
+ *
+ * The limits are the reason a reader searches at all — "which component has no
+ * `aria-current`?" — and they are written under three different headings
+ * across the packages.
+ */
+export const limitationsOf = (source: string): string =>
+  sectionsOf(source)
+    .filter((section) =>
+      /^(Limitations|Accessibility|Accessibility and limitations)$/.test(
+        section.heading,
+      ),
+    )
+    .map((section) => section.text)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 /** One page's row, or `undefined` when it has no title or is not a component. */
 const entryOf = (page: ComponentPage): ComponentEntry | undefined => {
   const url = pageUrl(page.file);
@@ -95,6 +190,8 @@ const entryOf = (page: ComponentPage): ComponentEntry | undefined => {
     description: frontmatterValue(head, "description") ?? "",
     url,
     section,
+    parts: partsOf(page.source),
+    limitations: limitationsOf(page.source),
   };
 };
 
@@ -127,7 +224,8 @@ export const buildIndex = (
  *
  * Every whitespace-separated term must appear in the row, so "search input"
  * finds the search field and not every input, and a term matches the section so
- * "primitives" narrows to that lane.
+ * "primitives" narrows to that lane. A part name finds the page that
+ * documents it, and a limitation finds the pages that carry it.
  */
 export const filterEntries = (
   entries: ReadonlyArray<ComponentEntry>,
@@ -141,7 +239,7 @@ export const filterEntries = (
 
   return entries.filter((entry) => {
     const haystack =
-      `${entry.title} ${entry.description} ${entry.section}`.toLowerCase();
+      `${entry.title} ${entry.description} ${entry.section} ${entry.parts.join(" ")} ${entry.limitations}`.toLowerCase();
     return terms.every((term) => haystack.includes(term));
   });
 };
