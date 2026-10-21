@@ -42,7 +42,7 @@ import type {
   SelectionState,
 } from "../core/selection.js";
 import { accessibleName } from "../core/a11y.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
@@ -275,7 +275,10 @@ export const renderRadioGroup = (
         if (disabled) {
           box = suppressSelectionFeedback(mergeStyle(box, resolved.disabled));
         }
-        box = mergeStyle(box, keyboardRing(theme, spec.invalid));
+        box = mergeStyle(
+          box,
+          controlRing(theme, { disabled, invalid: spec.invalid }),
+        );
         return (
           <div
             key={option.value}

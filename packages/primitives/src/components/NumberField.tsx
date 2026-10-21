@@ -45,7 +45,7 @@ import {
   type NumberRange,
 } from "../core/number.js";
 import { accessibleName } from "../core/a11y.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -319,7 +319,7 @@ export const renderNumberField = (
     chrome = suppressFeedback(mergeStyle(chrome, resolved.disabled));
   chrome = mergeStyle(
     chrome,
-    part.disabled ? {} : keyboardRing(theme, part.invalid),
+    controlRing(theme, { disabled: part.disabled, invalid: part.invalid }),
   );
   chrome = mergeStyle(
     chrome,

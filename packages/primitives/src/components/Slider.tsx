@@ -35,7 +35,7 @@ import type {
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { accessibleName } from "../core/a11y.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import {
@@ -282,7 +282,10 @@ export const renderSliderThumb = (
   const thumb = part.thumbs[index] ?? null;
   let resolved = thumbStyle(part.size, part.invalid, part.theme);
   if (thumb?.ring === true) {
-    resolved = mergeStyle(resolved, keyboardRing(part.theme, part.invalid));
+    resolved = mergeStyle(
+      resolved,
+      controlRing(part.theme, { invalid: part.invalid }),
+    );
   }
   resolved = mergeStyle(
     resolved,
@@ -330,7 +333,10 @@ export const renderSlider = (
   );
   let track = resolved.style;
   if (props.disabled === true) track = mergeStyle(track, resolved.disabled);
-  else track = mergeStyle(track, keyboardRing(theme, invalid));
+  track = mergeStyle(
+    track,
+    controlRing(theme, { disabled: props.disabled, invalid }),
+  );
   track = mergeStyle(track, props.style);
   const part: SliderPart = {
     theme,

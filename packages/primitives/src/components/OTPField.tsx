@@ -49,7 +49,7 @@ import {
   type OtpEdit,
 } from "../core/otp.js";
 import { accessibleName } from "../core/a11y.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -150,7 +150,10 @@ export const otpFieldPart = (
   if (disabled) {
     cellStyle = suppressFeedback(mergeStyle(cellStyle, resolved.disabled));
   } else {
-    cellStyle = mergeStyle(cellStyle, keyboardRing(theme, props.invalid));
+    cellStyle = mergeStyle(
+      cellStyle,
+      controlRing(theme, { disabled, invalid: props.invalid }),
+    );
   }
   const code = normalizeOtp(state.current, limit);
   return {

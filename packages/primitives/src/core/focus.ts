@@ -32,3 +32,22 @@ export const keyboardRing = (
       }
     : ring;
 };
+
+/** What decides whether a control declares a ring at all. */
+export interface RingState {
+  readonly disabled?: boolean;
+  readonly invalid?: boolean;
+}
+
+/**
+ * The ring a control declares at rest, or none for a control that cannot act.
+ *
+ * A disabled control leaves the tab order, but disabling the element that
+ * already holds the focus does not move that focus — the runtime keeps it, so a
+ * ring declared anyway would stay painted on a control that refuses every key.
+ * Disabled therefore means no declaration; invalid still recolours it.
+ */
+export const controlRing = (
+  theme: PrimitiveTheme,
+  { disabled, invalid }: RingState,
+): StyleDesc => (disabled === true ? {} : keyboardRing(theme, invalid));

@@ -25,7 +25,7 @@ import type {
   SpaceStep,
   TextRole,
 } from "./theme.js";
-import { keyboardRing } from "./focus.js";
+import { controlRing } from "./focus.js";
 import { fieldVariant } from "./variants.js";
 
 /**
@@ -145,7 +145,8 @@ export const controlStyle = (
 export const controlFocusStyle = (
   spec: ControlSpec,
   theme: PrimitiveTheme,
-): StyleDesc => keyboardRing(theme, spec.invalid);
+): StyleDesc =>
+  controlRing(theme, { disabled: spec.disabled, invalid: spec.invalid });
 
 /**
  * What a text field adds over the shared control chrome.

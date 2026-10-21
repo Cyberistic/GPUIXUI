@@ -32,7 +32,7 @@ import type { ButtonVariant } from "../core/variants.js";
 import { buttonClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { childrenName, mergeStyle, suppressFeedback } from "./internal.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -118,7 +118,10 @@ export const renderButton = (
     props.disabled === true
       ? suppressFeedback(mergeStyle(resolved.style, resolved.disabled))
       : resolved.style;
-  const own = mergeStyle(base, keyboardRing(theme));
+  const own = mergeStyle(
+    base,
+    controlRing(theme, { disabled: props.disabled }),
+  );
   const style = mergeStyle(
     own,
     resolveStyle(props.style, {

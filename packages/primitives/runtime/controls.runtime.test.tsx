@@ -125,6 +125,54 @@ it("refuses to activate a disabled Button by click or by Enter", async () => {
   expect(calls()).toBe(0);
 });
 
+it("drops a focused control's ring and keys when it becomes disabled", async () => {
+  const runtime = await openWindow();
+  let changes = 0;
+  const View = ({ disabled }: { readonly disabled: boolean }) => (
+    <Surface>
+      <Checkbox
+        label="Pick"
+        disabled={disabled}
+        onCheckedChange={() => {
+          changes += 1;
+        }}
+        testId="cb"
+      />
+    </Surface>
+  );
+  /** Whether the element still declares the keyboard ring the runtime paints. */
+  const declaresRing = (): boolean =>
+    Option.match(runtime.element("cb"), {
+      onNone: () => false,
+      onSome: (element) => {
+        const style = runtime.renderer.getElement(element.id)?.style;
+        return style !== undefined && Object.hasOwn(style, "focusVisible");
+      },
+    });
+
+  runtime.render(<View disabled={false} />);
+  runtime.keyDown("cb", "space");
+  runtime.keyUp("cb", "space");
+  expect(changes).toBe(1);
+  expect(declaresRing()).toBe(true);
+
+  // Disabling the element that holds the focus does not move that focus, so the
+  // bug was a ring left painted on a control that refuses every key.
+  runtime.render(<View disabled={true} />);
+  expect(runtime.focused()).toStrictEqual(Option.some("cb"));
+  expect(declaresRing()).toBe(false);
+  runtime.keyDown("cb", "space");
+  runtime.keyUp("cb", "space");
+  expect(changes).toBe(1);
+
+  // Re-enabling restores both the declaration and the activation contract.
+  runtime.render(<View disabled={false} />);
+  expect(declaresRing()).toBe(true);
+  runtime.keyDown("cb", "space");
+  runtime.keyUp("cb", "space");
+  expect(changes).toBe(2);
+});
+
 it("refuses to activate a loading Button, and still announces itself busy", async () => {
   const { runtime, calls } = await renderButton({
     loading: true,

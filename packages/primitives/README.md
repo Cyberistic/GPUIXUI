@@ -77,7 +77,7 @@ none paints a literal and none scripts hover or press
 
 | Capability | GPUix 0.11.0 | Here |
 | ---------- | ------------ | ---- |
-| `focusVisible` / `outline*` | **present** | every control declares the keyboard outline at rest (`keyboardRing` → `focusVisible`); the runtime paints it after Tab and never after a mouse press |
+| `focusVisible` / `outline*` | **present** | every control declares the keyboard outline at rest (`controlRing` → `focusVisible`); the runtime paints it after Tab and never after a mouse press, and a disabled control declares none so a focused-then-disabled element keeps no ring |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | absent | a slider drag only tracks while the pointer is over the track; click-to-position and the keyboard are the precise paths |

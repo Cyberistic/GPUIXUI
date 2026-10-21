@@ -172,6 +172,17 @@ describe("controlStyle", () => {
     expect(ring.boxShadow).toBeUndefined();
   });
 
+  it("declares no ring for a disabled control", () => {
+    // A control disabled while focused keeps the runtime's focus; the ring must
+    // not stay painted on an element that can no longer act.
+    expect(
+      controlFocusStyle(spec({ disabled: true }), testTheme),
+    ).toStrictEqual({});
+    expect(
+      controlFocusStyle(spec({ disabled: true, invalid: true }), testTheme),
+    ).toStrictEqual({});
+  });
+
   it("warns the eye at rest for a field, and declares the keyboard ring", () => {
     expect(
       controlStyle(spec({ variant: fieldVariant }), testTheme).borderColor,

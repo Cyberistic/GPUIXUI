@@ -31,7 +31,7 @@ import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { ratingGroupClass, ratingStarClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -104,7 +104,10 @@ export const renderRating = (
   if (props.disabled === true) {
     starStyle = mergeStyle(starStyle, resolved.disabled);
   } else if (interactive) {
-    starStyle = mergeStyle(starStyle, keyboardRing(theme, props.invalid));
+    starStyle = mergeStyle(
+      starStyle,
+      controlRing(theme, { invalid: props.invalid }),
+    );
   }
   const star = (index: number): ReactElement => (
     <div

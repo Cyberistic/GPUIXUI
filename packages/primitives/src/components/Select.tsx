@@ -30,7 +30,7 @@ import {
   type SelectTriggerState,
 } from "@gpuix/react/select";
 import { accessibleName } from "../core/a11y.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import type { ControlSpec } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
@@ -89,7 +89,7 @@ export const selectTriggerStyle = (
     if (state.disabled === true) {
       style = suppressFeedback(mergeStyle(style, resolved.disabled));
     } else {
-      style = mergeStyle(style, keyboardRing(theme, spec.invalid));
+      style = mergeStyle(style, controlRing(theme, { invalid: spec.invalid }));
     }
     return style;
   };

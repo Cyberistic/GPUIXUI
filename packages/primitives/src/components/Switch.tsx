@@ -22,7 +22,7 @@ import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import type { SelectionAccent, SelectionSpec } from "../core/selection.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { switchThumbClass, switchTrackClass } from "../recipe/index.js";
@@ -153,7 +153,10 @@ export const renderSwitch = (
   if (spec.disabled === true) {
     track = suppressSelectionFeedback(mergeStyle(track, resolved.disabled));
   }
-  track = mergeStyle(track, keyboardRing(theme, spec.invalid));
+  track = mergeStyle(
+    track,
+    controlRing(theme, { disabled: spec.disabled, invalid: spec.invalid }),
+  );
   track = mergeStyle(track, props.style);
   return (
     <div

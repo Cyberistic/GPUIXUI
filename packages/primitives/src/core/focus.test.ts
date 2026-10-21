@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 import { keyboardFocusRing } from "@gpuixui/tokens";
-import { keyboardRing } from "./focus.js";
+import { keyboardRing, controlRing } from "./focus.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
 describe("keyboardRing", () => {
@@ -40,5 +40,23 @@ describe("keyboardRing", () => {
       outlineColor: testTheme.colors.destructive,
     });
     expect(invalid.focusVisible?.outlineOffset).toBe(0);
+  });
+});
+
+describe("controlRing", () => {
+  it("is the keyboard ring while the control can act", () => {
+    expect(controlRing(testTheme, {})).toStrictEqual(keyboardRing(testTheme));
+    expect(controlRing(testTheme, { invalid: true })).toStrictEqual(
+      keyboardRing(testTheme, true),
+    );
+  });
+
+  it("declares nothing for a disabled control", () => {
+    // The bug: a control disabled while focused keeps the runtime's focus, so a
+    // ring declared anyway stayed painted on a control that refuses every key.
+    expect(controlRing(testTheme, { disabled: true })).toStrictEqual({});
+    expect(
+      controlRing(testTheme, { disabled: true, invalid: true }),
+    ).toStrictEqual({});
   });
 });

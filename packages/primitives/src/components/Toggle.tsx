@@ -24,7 +24,7 @@ import type { KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
-import { keyboardRing } from "../core/focus.js";
+import { controlRing } from "../core/focus.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ToggleVariant } from "../core/variants.js";
@@ -107,7 +107,7 @@ export const renderToggle = (
   if (props.disabled === true) {
     style = suppressFeedback(mergeStyle(style, resolved.disabled));
   }
-  style = mergeStyle(style, keyboardRing(theme));
+  style = mergeStyle(style, controlRing(theme, { disabled: props.disabled }));
   style = mergeStyle(
     style,
     resolveStyle(props.style, {

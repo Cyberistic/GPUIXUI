@@ -92,8 +92,8 @@ selection spec. The thumb is positioned by the track's `justifyContent`, not a
 pixel offset, because the runtime has no `transform` — so it cannot drift out of
 the pill. Disabled adds half opacity and removes feedback. `invalid` gives an
 off-switch the destructive border, the same role a checkbox uses, and focus
-declares the shared keyboard outline at rest (`keyboardRing`), which the runtime
-paints after keyboard focus only.
+declares the shared keyboard outline at rest (`controlRing`), which the runtime
+paints after keyboard focus only; a disabled switch declares none.
 
 ## Limitations
 

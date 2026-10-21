@@ -52,9 +52,10 @@ different states.
 | `Space` | activates on key **up** |
 | a held key | ignored, so it does not repeat |
 
-A click activates as well. The toggle is one tab stop and paints the focus ring
-while it holds focus. A Space **press** calls `preventDefault()`, so a scroll
-container does not also scroll while the toggle waits for the release.
+A click activates as well. The toggle is one tab stop and declares the keyboard
+outline while it can act; a disabled toggle declares none. A Space **press**
+calls `preventDefault()`, so a scroll container does not also scroll while the
+toggle waits for the release.
 
 ## Accessibility
 

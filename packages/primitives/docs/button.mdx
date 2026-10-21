@@ -88,9 +88,12 @@ container) does not run while activation waits for the release.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.
 - Focus is a **keyboard-only outline**: the button declares `focusVisible`
-  (`keyboardRing` from `core/focus.ts`, `colors.ring` at `borderWidth.strong`)
+  (`controlRing` from `core/focus.ts`, `colors.ring` at `borderWidth.strong`)
   at rest, and the runtime paints it after keyboard input only. A mouse click
-  shows no ring, which is the native contract (measured in plan 053).
+  shows no ring, which is the native contract (measured in plan 053). A disabled
+  button declares no ring: disabling the focused button does not move the
+  runtime's focus, so a declared ring would stay painted on a control that
+  refuses every key.
 
 ## Theming
 
