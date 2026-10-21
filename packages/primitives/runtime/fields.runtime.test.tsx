@@ -624,6 +624,27 @@ it("paints the theme's hint for an empty field and replaces it with the value", 
   expect(hints()).toBe(0);
 });
 
+it("paints an invalid field's edge, not its fill", async () => {
+  // The invalid state is an edge: the field keeps the `input` fill so its value
+  // stays on the pair `contrastPairs` measures, and the border plus the focus
+  // line carry the destructive role. Painting the solid role behind the value
+  // measured 2.45:1 in the dark theme.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Input testId="field" label="Project name" invalid value="atlas" />
+    </Surface>,
+  );
+  const style = Option.getOrElse(runtime.element("field"), () =>
+    expect.fail("the runtime retained no field"),
+  ).style;
+  expect(style.backgroundColor).toBe(testTheme.colors.input);
+  expect(style.borderColor).toBe(testTheme.colors.destructive);
+  // The anti-tautology guard: the two roles are not the same value, so a test
+  // that only compared the field with itself could not pass by accident.
+  expect(testTheme.colors.destructive).not.toBe(testTheme.colors.input);
+});
+
 it("paints the design system's selection wash on what a reader can select", async () => {
   const runtime = await openWindow();
   runtime.render(

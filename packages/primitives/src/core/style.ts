@@ -68,7 +68,14 @@ export interface ControlSpec {
   readonly square?: boolean;
   readonly fullWidth?: boolean;
   readonly disabled?: boolean;
-  /** Validation failed: the border and ring switch to the destructive role. */
+  /**
+   * Validation failed: the border and ring switch to the destructive role.
+   *
+   * The fill does not change. `destructive` is designed to carry
+   * `destructiveForeground`, so painting it behind a field's value leaves the
+   * text at 2.45:1 in the dark theme; `contrastPairs` measures the pair that
+   * stays — `inputForeground` on `input` — and the edge is what says invalid.
+   */
   readonly invalid?: boolean;
 }
 
@@ -86,10 +93,7 @@ export const controlStyle = (
   const height = theme.density.controlHeight[size];
   const padding = theme.density.controlPaddingX[size];
   const label = theme.typography.label;
-  const rest =
-    spec.invalid === true
-      ? theme.colors.destructive
-      : paint(variant.background, theme);
+  const rest = paint(variant.background, theme);
   const border =
     spec.invalid === true
       ? theme.colors.destructive

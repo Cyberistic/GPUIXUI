@@ -86,6 +86,12 @@ the wash the token contract measures, rather than the runtime's accent-at-35%
 default. Focus is the shared keyboard outline (`keyboardRing`), declared at rest
 and painted after Tab, not after a click.
 
+An `invalid` field keeps its `input` fill and paints only the **edge** — the
+border and the focus line — in `destructive`. The solid role is designed to
+carry `destructiveForeground`; behind the value it leaves `inputForeground` at
+2.45:1 in the dark theme, while `inputForeground` on `input` is a pair the
+token contract measures.
+
 `style` takes a `StateStyle<FieldState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, invalid }`. `TextArea` and `Input` share the type,
 so a form styles both the same way, and the result merges after the ring (the

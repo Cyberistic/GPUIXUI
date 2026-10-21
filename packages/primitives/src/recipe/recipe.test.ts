@@ -21,7 +21,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
-import { darkTheme, lightTheme } from "@gpuixui/tokens";
+import { contrastFloors, contrastRatio, darkTheme, lightTheme } from "@gpuixui/tokens";
 import type { ControlSize } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import {
@@ -81,21 +81,10 @@ import { recipeTw } from "./registry.js";
 const SIZES: ReadonlyArray<ControlSize> = ["sm", "md", "lg"];
 
 /** The field's resting chrome, as `fieldChrome` resolved it before the migration. */
-const fieldOracle = (
-  theme: PrimitiveTheme,
-  size: ControlSize,
-  over: {
-    readonly invalid?: boolean;
-    readonly disabled?: boolean;
-    readonly fullWidth?: boolean;
-  } = {},
-): StyleDesc =>
+const fieldOracle = (theme: PrimitiveTheme, size: ControlSize): StyleDesc =>
   mergeStyle(
-    mergeStyle(
-      controlStyle({ variant: fieldVariant, size, ...over }, theme),
-      fieldTextStyle(theme),
-    ),
-    over.disabled === true ? { cursor: "not-allowed" } : undefined,
+    controlStyle({ variant: fieldVariant, size }, theme),
+    fieldTextStyle(theme),
   );
 
 const button = (variant: ButtonVariant, size: ControlSize) =>
@@ -162,18 +151,42 @@ describe("Input recipe", () => {
     });
   });
 
-  it("routes invalid to the destructive bucket", () => {
+  /**
+   * A failed validation is an edge, not a fill: `destructive` is designed to
+   * carry `destructiveForeground`, so painting it behind the value left the
+   * text at 2.45:1 in the dark theme. The regression this guards is the solid
+   * destructive box the recipe used to merge in.
+   */
+  it("takes the destructive edge and keeps the field's own fill", () => {
     const resolved = recipeTw.classesToStyle(
       fieldClass({ size: "md", invalid: true }),
       testTheme,
     );
     expect(resolved.invalid).toEqual({
-      backgroundColor: testTheme.colors.destructive,
       borderColor: testTheme.colors.destructive,
     });
     expect(mergeStyle(resolved.style, resolved.invalid).backgroundColor).toBe(
-      fieldOracle(testTheme, "md", { invalid: true }).backgroundColor,
+      testTheme.colors.input,
     );
+  });
+
+  it("keeps an invalid field's value above the body floor", () => {
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const resolved = recipeTw.classesToStyle(
+        fieldClass({ size: "md", invalid: true }),
+        theme,
+      );
+      const painted = mergeStyle(resolved.style, resolved.invalid);
+      const fill =
+        painted.backgroundColor ?? expect.fail("the invalid field had no fill");
+      expect(contrastRatio(theme.colors.inputForeground, fill) ?? 0)
+        .toBeGreaterThanOrEqual(contrastFloors.body);
+      // The premise: the fill the recipe used to paint cannot carry the value.
+      expect(
+        contrastRatio(theme.colors.inputForeground, theme.colors.destructive) ??
+          Infinity,
+      ).toBeLessThan(contrastFloors.body);
+    });
   });
 
   it("routes disabled opacity and cursor to their bucket", () => {

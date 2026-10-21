@@ -82,8 +82,15 @@ export const buttonClass = (
 const FIELD_BASE =
   "flex flex-row items-center justify-start gap-sm rounded-md type-body cursor-text select-text bg-input text-input-foreground border border-border hover:border-border-strong active:border-ring disabled:opacity-50 disabled:cursor-not-allowed";
 
-const FIELD_INVALID =
-  "aria-invalid:bg-destructive aria-invalid:border-destructive";
+/**
+ * A failed validation is an **edge**, not a fill.
+ *
+ * `destructive` carries `destructiveForeground`; painting it behind a field's
+ * value leaves the text unreadable (`inputForeground` on it measures 2.45:1 in
+ * the dark theme). The value keeps the field's own `input` fill — the pair
+ * `contrastPairs` measures — and the border plus the ring say invalid.
+ */
+const FIELD_INVALID = "aria-invalid:border-destructive";
 
 export interface FieldRecipeOptions {
   readonly size: ControlSize;
