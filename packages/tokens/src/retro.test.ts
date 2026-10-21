@@ -312,26 +312,17 @@ describe("retro documentation", () => {
     expect(vague).toEqual([]);
   });
 
-  it("prints each look's radius and density as the table carries them", () => {
+  it("prints each look's family, radius and density as the table carries them", () => {
+    // A row is the look's whole identity on the page, so it is compared as one
+    // line built from the table: a changed value cannot drift in either place.
     const catalogue = read("../../../docs/tokens.md");
-    const wrong = looks
+    const missing = looks
       .map((name) => {
         const style = retroStyles[name];
-        const row = catalogue
-          .split("\n")
-          .find((line) => line.startsWith(`| \`${name}\``));
-        const expected = [
-          style.mono,
-          `radius.md ${style.radius.md}`,
-          style.density,
-        ];
-        return row !== undefined &&
-          expected.every((value) => row.includes(value))
-          ? []
-          : [name];
+        return `| \`${name}\` — ${style.label} | \`${style.mono}\` | ${style.radius.md} | \`${style.density}\` |`;
       })
-      .flat();
-    expect(wrong).toEqual([]);
+      .filter((row) => !catalogue.includes(row));
+    expect(missing).toEqual([]);
   });
 });
 

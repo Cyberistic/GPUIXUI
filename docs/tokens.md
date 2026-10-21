@@ -549,12 +549,14 @@ retroTheme(themes.light, "luna"); // "Light · Windows XP (Luna)"
 retroStyles.aero.colors.dark.primary; // "#5FB6F2", visible and copyable
 ```
 
-Two looks ship: Windows XP's Luna and Windows 7's Aero.
+Two looks ship: Windows XP's Luna and Windows 7's Aero. Their UI face is the
+sentinel on both — the era is carried by colour, radius and density — so the
+table names what differs:
 
-| Look | `sans` | `mono` | `radius.md` | density |
-| ---- | ------ | ------ | ----------- | ------- |
-| `luna` (Windows XP) | `.SystemUIFont` | `Lucida Console` | radius.md 2 | `compact` (24px) |
-| `aero` (Windows 7) | `.SystemUIFont` | `Consolas` | radius.md 4 | `comfortable` (32px) |
+| Look | `mono` | `radius.md` | density |
+| ---- | ------ | ----------- | ------- |
+| `luna` — Windows XP (Luna) | `Lucida Console` | 2 | `compact` |
+| `aero` — Windows 7 (Aero) | `Consolas` | 4 | `comfortable` |
 
 `retroStyles` is the table and `retroTheme(base, name)` resolves one for the
 base's mode. `retroNames` is the ordered index and `isRetroName` narrows a
