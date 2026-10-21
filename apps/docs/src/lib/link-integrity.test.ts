@@ -158,25 +158,16 @@ const linksOf = (page: Page): ReadonlyArray<Link> => {
  * Links that are dead today, with the owner that fixes them. `TODO.md` →
  * Interlocks carries the task; the guard fails when an entry here no longer
  * matches a dead link, so a fix must delete its row.
+ *
+ * Empty: the three cross-links between the keyboard-shortcut and hotkey-recorder
+ * pages omitted the `/docs/components` prefix; the components workstream
+ * corrected them.
  */
 const knownDeadLinks: ReadonlyArray<{
   readonly from: string;
   readonly target: string;
   readonly reason: string;
-}> = [
-  {
-    from: "packages/components/docs/hotkey-recorder.mdx",
-    target: "/docs/keyboard-shortcuts",
-    reason:
-      "the page is at /docs/components/keyboard-shortcuts (owner: components)",
-  },
-  {
-    from: "packages/components/docs/keyboard-shortcuts.mdx",
-    target: "/docs/hotkey-recorder",
-    reason:
-      "the page is at /docs/components/hotkey-recorder (owner: components)",
-  },
-];
+}> = [];
 
 /** Resolve a link, or say why it cannot resolve. */
 const deadReason = (link: Link): string | undefined => {
