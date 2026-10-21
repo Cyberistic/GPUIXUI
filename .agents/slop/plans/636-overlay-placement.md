@@ -562,6 +562,8 @@ Two directions were also run by hand against the real tree and reverted:
   `/docs/overlay-placement`.
 - `nub scripts/smoke-a11y.ts --no-build --only /docs/overlay-placement` — exit
   `0`, 1 page × 2 schemes, 0 violations.
+- `nub scripts/smoke-responsive.ts --no-build` — exit `0`, 117 pages at 390 px,
+  phone controls and mobile navigation checked.
 - `nub run check` — exit `0`.
 - `nub run test` — exit `0`: tokens 197, testing 19, icons 19, playground 11,
   components 308, primitives 282, docs 1 941.
