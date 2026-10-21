@@ -1348,6 +1348,65 @@ test, because `SelectProps` carries no `testId` for its trigger or its option
 rows. That is recorded as an interlock for `primitives`; until then a probe of
 the wrapper can only press the root and read the joined text.
 
+### `virtual-tree-lifecycle` — measured on 0.11.0 here
+
+The Tier 3/4 file tree, which needs a flattened hierarchy **and** windowing from
+the same component. Forty directories hold ninety-nine files each; when every
+directory is open the tree is 4 000 rows in a 280px viewport. Every visible node
+is one `<virtual-list>` child, and the keyboard model is the tree's own: arrows
+move **native** focus between rows through the renderer (`focusElement`), which
+is the roving-focus path plan `153` recorded as unproven.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | one row per directory (`visible=40 expanded=0 selected=none range=none`), `dir 000` painted and the last of forty outside the window |
+| a press on `dir 000` | the focus read names `tree-row-dir-000` — a press is a real focus, not just a click handler |
+| `Right` | opens the directory in place (`visible=139 expanded=1 selected=dir-000`, 99 files join the rows) and the focus stays on it |
+| the opened child | its label's painted `x` is one `TREE_INDENT` (16px) past its parent's |
+| `Right` again | enters the first child (`tree-row-file-dir-000/000`); `Left` returns to the parent |
+| `Left` on the open directory | closes it (`visible=40 expanded=0`) |
+| `down` / `up` | move the roving focus a row at a time (`tree-row-dir-001`, then back) |
+| `Right` on a file | changes no row and keeps the focus: a leaf does not expand |
+| `Expand all` | 4 000 rows (`visible=4000 expanded=40`), fewer than 40 row lines painted, and the last row (`file 039/098`) is not |
+| `scrollToItem(3000)` | paints `dir 030` and no longer `dir 000`; the renderer's anchor reads `itemIndex=3000` and the list's own viewport |
+| a press on the revealed row | `tree-row-dir-030` takes the focus — a revealed row is an ordinary row |
+
+30 checks. Measured along the way:
+
+- **A reveal is index-addressed, not pixel-addressed.** `renderer.scrollToItem`
+  moved the window to a row that had never been mounted; `getListScrollTop`
+  reported `itemIndex=3000`, and the list's `viewportHeight` is the frame's
+  painted height minus its two 1px borders (`278`), not the fixture's 280.
+- **A programmatic reveal fires no `onVisibleRange`.** The probe reads the
+  report count before and after the reveal and asserts it did not change, so a
+  tree cannot lazily load from that event after a "reveal this path" action; it
+  must read the painted rows or the anchor.
+- **Changing the flattened row count reports indices that do not describe the
+  window.** Expanding and collapsing fired four events whose ranges read
+  `1..2` and `0..1` while the painted window held ten rows of 139 or 4 000 —
+  the event is computed against the child list at the moment of the splice.
+  The probe does not assert the count (it is paint-timing dependent); the stable
+  half — no report on a programmatic reveal — is the check above. A consumer
+  that paginates from this event has to treat the row count and the report as
+  two separate facts.
+- **Roving focus is available to component code.** `useGpuix().renderer`'s
+  `focusElement` moves the native focus from a row's own key handler, so the
+  Tab-stop-per-row model plan `153` called impossible from a component is not:
+  the tree keeps one focus and moves it.
+
+Two host verbs were added for it, both on `AsyncSmokeHost`:
+`scrollToItem(testId, index, offsetInItem?)` and `listAnchor(testId)` (the
+`[itemIndex, offsetInItem, viewportHeight]` tuple as a named record, `null` for
+anything that is not a `<virtual-list>`). `listAnchorOf` refuses a short tuple
+rather than filling the gap with zero, held by three unit tests.
+
+Negative controls measured: revealing index `0` instead of 3000 fails
+`the reveal paints the directory the index names`; dropping the renderer's
+`focusElement` from the row key handler fails
+`Right on an open directory enters its first child` — exit `1` each, restored
+green (`--only virtual-tree-lifecycle`). Evidence:
+`.artifacts/live/vtree-expanded.png`, `.artifacts/live/vtree-revealed.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -1414,6 +1473,8 @@ src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
 src/live/registry.ts     live probe ids + capabilities (imports nothing native)
 src/live/scenarios.tsx   one window view + async steps per live probe
 src/live/fonts.ts        the probe typeface's bytes and its declared advances
+src/live/content.ts      the chart/image fixtures the content probe paints
+src/live/virtual-tree.ts the 4 000-node file-tree fixture and its flattening
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
 ```

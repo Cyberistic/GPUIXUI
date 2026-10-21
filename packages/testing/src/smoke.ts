@@ -124,6 +124,20 @@ export interface Offset {
 }
 
 /**
+ * Where a `<virtual-list>` is anchored, in logical rows.
+ *
+ * Pixel offsets lie while a list's row heights are still estimates, and an
+ * unbuilt row has no element to read bounds from, so a reveal is checked by the
+ * index the renderer anchored at. `itemIndex` equals the row count at the end
+ * sentinel.
+ */
+export interface ListAnchor {
+  readonly itemIndex: number;
+  readonly offsetInItem: number;
+  readonly viewportHeight: number;
+}
+
+/**
  * One highlight wash the renderer painted in the last frame.
  *
  * `text.slice(start, end)` is the match, because the runtime reports the run's
@@ -396,6 +410,28 @@ export interface AsyncSmokeHost {
   readonly scrollOffset: (
     testId: string,
   ) => Effect.Effect<Offset | null, SmokeHostError>;
+  /**
+   * Scrolls a `<virtual-list>` to a logical row index.
+   *
+   * The path a file tree needs to reveal a deep path: once thousands of rows are
+   * flattened, pixel arithmetic is wrong the moment a row's height is estimated,
+   * and a row outside the window is not mounted, so it has no bounds to
+   * `scrollIntoView`. `offsetInItem` is in pixels and may be negative, which
+   * anchors the viewport above the row.
+   */
+  readonly scrollToItem: (
+    testId: string,
+    index: number,
+    offsetInItem?: number,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * The logical row a `<virtual-list>` is anchored at, or `null` for anything
+   * else — so a probe can prove a plain scroller is not a list instead of
+   * reading index 0 for both.
+   */
+  readonly listAnchor: (
+    testId: string,
+  ) => Effect.Effect<ListAnchor | null, SmokeHostError>;
   readonly key: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
   /**
    * The text the window currently has selected, or `null` for no selection.

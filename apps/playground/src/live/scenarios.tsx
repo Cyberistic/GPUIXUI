@@ -7,8 +7,8 @@
  * shared `Smoke` ones, so both suites emit one report shape.
  */
 import type { ReactNode } from "react";
-import { useLayoutEffect, useRef, useState } from "react";
-import { Duration, Effect } from "effect";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { Duration, Effect, Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -62,7 +62,7 @@ import {
   Tooltip,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
-import { useWindowSize, motion } from "@gpuix/react";
+import { useGpuix, useWindowSize, motion } from "@gpuix/react";
 import type { ImgInstance, PublicInstance } from "@gpuix/react";
 import { FloatingLayer } from "@gpuix/react/floating";
 import {
@@ -75,6 +75,7 @@ import {
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
+import { Readout } from "../ui.js";
 import { useWindowKey } from "../window-key.js";
 import type { LiveProbeId } from "./registry.js";
 import {
@@ -102,6 +103,19 @@ import {
   SQUARE_WORD,
   SQUARE_WORD_WIDTH,
 } from "./fonts.js";
+import {
+  TREE_ALL_DIRECTORIES,
+  TREE_INDENT,
+  TREE_REVEAL_INDEX,
+  TREE_ROW_HEIGHT,
+  TREE_VIEWPORT_HEIGHT,
+  labelInset,
+  labelTestId,
+  rowTestId,
+  toggleTestId,
+  visibleRows,
+  type TreeNode,
+} from "./virtual-tree.js";
 
 /** Long enough for one paint after an input reaches the window. */
 const SETTLE = Duration.millis(40);
@@ -5643,6 +5657,469 @@ const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * One focusable tree row.
+ *
+ * The row owns the focus and the keyboard; the disclosure marker is a pointer
+ * target only, so opening a directory never adds a second tab stop per row.
+ * Its element id is registered by ref: `focusElement` takes a native id, and a
+ * row inside a `<virtual-list>` mounts and unmounts as the window moves.
+ */
+const TreeRow = ({
+  node,
+  open,
+  selected,
+  register,
+  onSelect,
+  onToggle,
+  onKey,
+}: {
+  readonly node: TreeNode;
+  readonly open: boolean;
+  readonly selected: boolean;
+  readonly register: (id: string, elementId: number | null) => void;
+  readonly onSelect: (node: TreeNode) => void;
+  readonly onToggle: (node: TreeNode) => void;
+  readonly onKey: (node: TreeNode, key: string) => void;
+}): ReactNode => {
+  const theme = useTheme();
+  const attach = useCallback(
+    (instance: PublicInstance | null) =>
+      register(node.id, instance?.id ?? null),
+    [node.id, register],
+  );
+  return (
+    <div
+      testId={rowTestId(node)}
+      ref={attach}
+      tabIndex={0}
+      role="treeitem"
+      aria-level={node.depth + 1}
+      aria-expanded={node.kind === "dir" ? open : undefined}
+      aria-selected={selected}
+      onClick={() => onSelect(node)}
+      onKeyDown={(event) => onKey(node, event.key ?? "")}
+      style={{
+        height: TREE_ROW_HEIGHT,
+        display: "flex",
+        alignItems: "center",
+        paddingLeft: labelInset(node),
+        backgroundColor: selected ? theme.colors.accent : theme.colors.card,
+        ...keyboardFocusRing(theme),
+      }}
+    >
+      {node.kind === "dir" ? (
+        <div
+          testId={toggleTestId(node)}
+          onClick={() => onToggle(node)}
+          style={{ width: TREE_INDENT, height: TREE_ROW_HEIGHT }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            {open ? "v" : ">"}
+          </text>
+        </div>
+      ) : (
+        <div style={{ width: TREE_INDENT, height: TREE_ROW_HEIGHT }} />
+      )}
+      <text
+        testId={labelTestId(node)}
+        style={{
+          ...textStyle(theme, "body"),
+          color:
+            node.kind === "dir"
+              ? theme.colors.foreground
+              : theme.colors.mutedForeground,
+        }}
+      >
+        {node.label}
+      </text>
+    </div>
+  );
+};
+
+/**
+ * A virtualized file tree: one `<virtual-list>` child per visible node.
+ *
+ * The keyboard model is the tree's own: arrows move native focus between rows
+ * through the renderer (`focusElement`), Right opens a directory then enters it,
+ * Left collapses or returns to the parent. A row only exists while it is near
+ * the viewport, so the ids are kept in a ref keyed by node id.
+ */
+const VirtualTreeProbe = (): ReactNode => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const [expanded, setExpanded] = useState<ReadonlyArray<string>>([]);
+  const [selected, setSelected] = useState("none");
+  const [range, setRange] = useState("none");
+  const [reports, setReports] = useState(0);
+  const elements = useRef(new Map<string, number>());
+
+  const rows = visibleRows(expanded);
+  const isOpen = (id: string): boolean => Arr.contains(expanded, id);
+
+  const register = useCallback((id: string, elementId: number | null) => {
+    const map = elements.current;
+    if (elementId === null) map.delete(id);
+    else map.set(id, elementId);
+  }, []);
+
+  const focusRow = (node: TreeNode): void => {
+    const elementId = elements.current.get(node.id);
+    if (elementId !== undefined) renderer?.focusElement?.(elementId);
+  };
+
+  const toggle = (node: TreeNode): void =>
+    setExpanded((current) =>
+      Arr.contains(current, node.id)
+        ? Arr.filter(current, (id) => id !== node.id)
+        : Arr.append(current, node.id),
+    );
+
+  /** Moves the roving focus by `delta` visible rows, if the row exists. */
+  const step = (node: TreeNode, delta: number): void => {
+    Option.match(
+      Option.flatMap(
+        Arr.findFirstIndex(rows, (row) => row.id === node.id),
+        (index) => Arr.get(rows, index + delta),
+      ),
+      { onNone: () => undefined, onSome: focusRow },
+    );
+  };
+
+  const onKey = (node: TreeNode, key: string): void => {
+    Match.value(key).pipe(
+      Match.when("down", () => step(node, 1)),
+      Match.when("up", () => step(node, -1)),
+      Match.when("right", () => {
+        if (node.kind !== "dir") return;
+        if (isOpen(node.id)) step(node, 1);
+        else toggle(node);
+      }),
+      Match.when("left", () => {
+        if (node.kind === "file") {
+          Option.match(
+            Arr.findFirst(rows, (row) => row.id === node.parent),
+            { onNone: () => undefined, onSome: focusRow },
+          );
+          return;
+        }
+        if (isOpen(node.id)) toggle(node);
+      }),
+      Match.when("enter", () => setSelected(node.id)),
+      Match.when("space", () => setSelected(node.id)),
+      Match.orElse(() => undefined),
+    );
+  };
+
+  return (
+    <div
+      testId="tree-probe"
+      style={{
+        width: 720,
+        height: 470,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        4 000 nodes flattened into one list: only the window near the viewport
+        exists.
+      </text>
+      <PrimitiveThemeProvider theme={palettes.dark}>
+        <div style={{ display: "flex", gap: theme.spacing.sm }}>
+          <Button
+            testId="tree-expand-all"
+            size="sm"
+            onActivate={() => setExpanded(TREE_ALL_DIRECTORIES)}
+          >
+            Expand all
+          </Button>
+          <Button
+            testId="tree-collapse-all"
+            size="sm"
+            variant="secondary"
+            onActivate={() => setExpanded([])}
+          >
+            Collapse all
+          </Button>
+        </div>
+      </PrimitiveThemeProvider>
+      <div
+        testId="tree-frame"
+        style={{
+          display: "flex",
+          height: TREE_VIEWPORT_HEIGHT,
+          backgroundColor: theme.colors.card,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+          borderRadius: theme.radius.md,
+        }}
+      >
+        <virtual-list
+          testId="tree-list"
+          style={{ flexGrow: 1, minHeight: 0 }}
+          onVisibleRange={(event) => {
+            setRange(`${event.startIndex ?? -1}..${event.endIndex ?? -1}`);
+            setReports((current) => current + 1);
+          }}
+        >
+          {Arr.map(rows, (node) => (
+            <TreeRow
+              key={node.id}
+              node={node}
+              open={node.kind === "dir" && isOpen(node.id)}
+              selected={selected === node.id}
+              register={register}
+              onSelect={(row) => setSelected(row.id)}
+              onToggle={toggle}
+              onKey={onKey}
+            />
+          ))}
+        </virtual-list>
+      </div>
+      <Readout testId="tree-readout">
+        {`visible=${rows.length} expanded=${expanded.length} selected=${selected} range=${range}`}
+      </Readout>
+      <Readout testId="tree-reports">{`reports=${reports}`}</Readout>
+    </div>
+  );
+};
+
+/** A row line the window painted: the tree's labels, never its readout. */
+const paintedTreeRows = (lines: ReadonlyArray<string>): number =>
+  Arr.length(
+    Arr.filter(
+      lines,
+      (line) => Str.startsWith("dir ")(line) || Str.startsWith("file ")(line),
+    ),
+  );
+
+const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** The focused row's testId, asserted against the expected one. */
+    const expectFocused = (
+      label: string,
+      testId: string,
+    ): Effect.Effect<void, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+      Effect.flatMap(focusedId(ctx), (id) =>
+        ctx.expectEqual(label, id, testId),
+      );
+
+    yield* ctx.host.waitFor("tree-list");
+    yield* Effect.sleep(SETTLE);
+
+    // 1. Collapsed, the tree is its forty root directories — and only a window
+    //    of those is painted.
+    yield* ctx.expectEqual(
+      "a collapsed tree paints one row per directory",
+      yield* ctx.host.text("tree-readout"),
+      "visible=40 expanded=0 selected=none range=none",
+    );
+    const atRest = yield* ctx.host.paintedText();
+    yield* ctx.expectEqual(
+      "the first directory is painted",
+      Arr.contains(atRest, "dir 000"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the last of forty is outside the painted window",
+      Arr.contains(atRest, "dir 039"),
+      false,
+    );
+
+    // 2. A press takes native focus, which is what every arrow needs.
+    yield* ctx.host.click("tree-row-dir-000");
+    yield* Effect.sleep(SETTLE);
+    yield* expectFocused(
+      "a press focuses the row it landed on",
+      "tree-row-dir-000",
+    );
+
+    // 3. Right on a collapsed directory opens it in place: the focus stays on
+    //    the directory while ninety-nine files join the flattened rows.
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Right opens a collapsed directory",
+      yield* ctx.host.text("tree-readout"),
+      "visible=139 expanded=1 selected=dir-000",
+    );
+    yield* expectFocused(
+      "opening a directory keeps the focus on it",
+      "tree-row-dir-000",
+    );
+
+    // 4. A depth-1 row indents its label by one step.
+    const openRows = visibleRows(["dir-000"]);
+    const directoryRow = yield* ctx.expectSome(
+      "the fixture has a directory row to measure",
+      Arr.get(openRows, 0),
+    );
+    const fileRow = yield* ctx.expectSome(
+      "the fixture has a child row to measure",
+      Arr.get(openRows, 1),
+    );
+    const parent = yield* ctx.expectSome(
+      "the directory's label painted",
+      Option.fromNullishOr(yield* ctx.host.bounds(labelTestId(directoryRow))),
+    );
+    const child = yield* ctx.expectSome(
+      "the child's label painted",
+      Option.fromNullishOr(yield* ctx.host.bounds(labelTestId(fileRow))),
+    );
+    yield* ctx.expectNear(
+      "a depth-1 label indents by one step",
+      child.x - parent.x,
+      TREE_INDENT,
+      1,
+    );
+
+    // 5. A second Right enters the first child; Left returns to the parent.
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* expectFocused(
+      "Right on an open directory enters its first child",
+      "tree-row-file-dir-000/000",
+    );
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* expectFocused(
+      "Left from a child returns to its parent",
+      "tree-row-dir-000",
+    );
+
+    // 6. Left on an open directory closes it; the rows below move back up.
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Left closes an open directory",
+      yield* ctx.host.text("tree-readout"),
+      "visible=40 expanded=0",
+    );
+
+    // 7. Down and Up move the roving focus row by row.
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* expectFocused(
+      "Down moves the focus to the next row",
+      "tree-row-dir-001",
+    );
+    yield* ctx.host.key("up");
+    yield* Effect.sleep(SETTLE);
+    yield* expectFocused("Up moves the focus back", "tree-row-dir-000");
+
+    // 8. A file is a leaf: Right neither opens nor moves.
+    yield* ctx.host.click("tree-toggle-dir-000");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click("tree-row-file-dir-000/000");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Right on a file changes no row",
+      yield* ctx.host.text("tree-readout"),
+      "visible=139 expanded=1",
+    );
+    yield* expectFocused(
+      "Right on a file keeps the focus on it",
+      "tree-row-file-dir-000/000",
+    );
+
+    // 9. Expanded whole, the tree is 4 000 rows and still paints a window.
+    yield* ctx.host.click("tree-expand-all");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "Expand all flattens every node",
+      yield* ctx.host.text("tree-readout"),
+      "visible=4000 expanded=40",
+    );
+    yield* ctx.host.capture("vtree-expanded");
+    const expandedRows = yield* ctx.host.paintedText();
+    const paintedCount = paintedTreeRows(expandedRows);
+    yield* ctx.expectEqual(
+      "a 4 000-row tree paints only its window",
+      paintedCount > 0 && paintedCount < 40,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the last of 4 000 rows is not painted",
+      Arr.contains(expandedRows, "file 039/098"),
+      false,
+    );
+
+    // 10. Reveal by index: the path a file tree takes to a deep node, with no
+    //     wheel at all. A pixel offset would be wrong while heights are
+    //     estimates, so the renderer's own anchor is the evidence.
+    const reportsBefore = yield* ctx.host.text("tree-reports");
+    yield* ctx.host.scrollToItem("tree-list", TREE_REVEAL_INDEX);
+    yield* Effect.sleep(Duration.millis(300));
+    yield* ctx.host.capture("vtree-revealed");
+    const revealed = yield* ctx.host.paintedText();
+    yield* ctx.expectEqual(
+      "the reveal paints the directory the index names",
+      Arr.contains(revealed, "dir 030"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the reveal leaves the top of the tree",
+      Arr.contains(revealed, "dir 000"),
+      false,
+    );
+    const anchor = yield* ctx.expectSome(
+      "the renderer reports the list's logical anchor",
+      Option.fromNullishOr(yield* ctx.host.listAnchor("tree-list")),
+    );
+    yield* ctx.expectNear(
+      "the anchor is the row the reveal asked for",
+      anchor.itemIndex,
+      TREE_REVEAL_INDEX,
+      1,
+    );
+    const frame = yield* ctx.expectSome(
+      "the list's frame painted",
+      Option.fromNullishOr(yield* ctx.host.bounds("tree-frame")),
+    );
+    yield* ctx.expectNear(
+      "the anchor reports the list's own viewport",
+      anchor.viewportHeight,
+      frame.height - 2,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "a plain container is not a virtual list",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.listAnchor("tree-frame")),
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a programmatic reveal fires no visible-range report",
+      yield* ctx.host.text("tree-reports"),
+      reportsBefore,
+    );
+
+    // 11. A revealed row is addressable and focusable like any other.
+    yield* ctx.host.click("tree-row-dir-030");
+    yield* Effect.sleep(SETTLE);
+    yield* expectFocused(
+      "the revealed row takes the focus",
+      "tree-row-dir-030",
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -5785,5 +6262,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "selection-lifecycle",
     view: () => <SelectionProbe />,
     steps: selectionSteps,
+  },
+  "virtual-tree-lifecycle": {
+    id: "virtual-tree-lifecycle",
+    view: () => <VirtualTreeProbe />,
+    steps: virtualTreeSteps,
   },
 };

@@ -244,7 +244,7 @@ placeholder.
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
 | Virtualized tables | todo | ? | `<virtual-list>` rows can host a grid; there is no table element. |
-| Tree views | todo | ? | `<virtual-list>` + indentation; hierarchical virtualization is ours. |
+| Tree views | todo | yes (measured) | `<virtual-list>` + indentation; hierarchical virtualization is ours. The playground's `virtual-tree-lifecycle` measured 4 000 flattened rows painting only a ten-row window, expand/collapse repainting the flattening in place, a 16px depth inset, arrow keys moving **real** focus row by row (`renderer.focusElement`), and `scrollToItem` revealing a row that was never mounted. Limits it measured: `onVisibleRange` does not fire for a programmatic reveal and reports indices computed against a spliced child list after a row-count change, so a tree reads the painted rows or the list anchor. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
@@ -272,7 +272,7 @@ placeholder.
 | Breadcrumb navigation | todo | ? | Breadcrumbs + navigation. |
 | Inspector panels | todo | ? | Property panels + panels. |
 | Property editors | todo | ? | Fieldset + inputs. |
-| File trees | todo | ? | Tree views + `<virtual-list>`. |
+| File trees | todo | yes (measured) | Tree views + `<virtual-list>`; `virtual-tree-lifecycle` measured the reveal path a deep path needs (`scrollToItem` + `getListScrollTop` anchor) and the painting window, and that the visible-range event is not a pagination signal across an expand/collapse. |
 | Log viewers | todo | ? | `<virtual-list>` + `<text>`; text search/highlight hooks exist. |
 | Terminal surfaces | todo | partial | No terminal **host element**: a pane that hosts a PTY inside a window is still unverified, and nothing in `ElementType` draws one. The runtime does render the whole app **into** a terminal — `render(<App />, { terminal: true })` with `isTerminal()`, `terminal: supported` in `@gpuixui/runtime`'s matrix and documented on `/docs/runtime` — so the honest alternative is the terminal runtime mode, not an embedded shell. |
 | Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |

@@ -478,7 +478,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 45/45
+`[x]` `[██████████]` 46/46
 
 `[x]` Land the `pointer-capture` live probe and settle what a drag control may
       rely on — GPUix arms pointer capture on left mouse down **only** for an
@@ -975,6 +975,35 @@ a workaround for two live sessions sharing one worktree; see
       (measured before the line, gone after). It is also why this row exists —
       nothing ran `check-types` for this package since `file-drop` landed
 
+`[x]` Land the `virtual-tree-lifecycle` live probe and settle the Tier 3/4
+      file-tree question — a 4 000-row flattened tree (40 directories × 99
+      files) as one `<virtual-list>`, so windowing and hierarchy meet in one
+      component. Only a ten-row window paints at every size; `Right` opens a
+      directory in place (40 → 139 rows) and a second `Right` enters its first
+      child while the focus stays on the directory until then; `Left` collapses
+      or returns to the parent; `down`/`up` move a row at a time; a file is a
+      leaf; a depth-1 label indents 16px. The arrows move **native** focus from
+      the row's own key handler through `useGpuix().renderer.focusElement`, so
+      the roving-focus model plan `153` called impossible from a component is
+      measured working. `scrollToItem(3000)` reveals `dir 030` — a row that was
+      never mounted — and `getListScrollTop` anchors at `itemIndex=3000` with
+      the list's own viewport (278: the frame's 280 minus two 1px borders). A
+      programmatic reveal fires **no** `onVisibleRange`, and changing the row
+      count reports indices (`1..2`, `0..1`) that describe the spliced child
+      list rather than the painted window, so a tree reads the painted rows or
+      the anchor. 30 checks, `--only virtual-tree-lifecycle`, green on 0.11.0;
+      two negative controls measured (revealing index 0:
+      `the reveal paints the directory the index names — expected true, got
+      false`; dropping `focusElement`: `Right on an open directory enters its
+      first child — expected "tree-row-file-dir-000/000", got
+      "tree-row-dir-000"`, exit `1` each). `AsyncSmokeHost` gained
+      `scrollToItem(testId, index, offsetInItem?)` and `listAnchor(testId)`
+      (`listAnchorOf` refuses a short tuple: 3 unit tests), and the fixture's
+      flattening is guarded by `src/live/virtual-tree.test.ts` (6 tests).
+      Evidence: `apps/playground/README.md` §`virtual-tree-lifecycle`,
+      `.artifacts/live/vtree-expanded.png`,
+      `.artifacts/live/vtree-revealed.png`
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -1345,6 +1374,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `/docs/examples` still says the components' examples "are not mounted in the playground yet — that registry is a tracked task in `TODO.md`", which stopped being true when the registry reached 39/39 and the playground gained `examples-mount` | docs-site | **resolved** — §Running one now teaches both native mounts: the primitives command it already printed, and the components' registry through `examples-mount` (`nub run --filter playground build`, then `nub apps/playground/dist/smoke/run.js --only examples-mount`), with what the scenario asserts (one screen at a time in sorted id order, each wrapper paints a height and its own text, no two entries paint the same screen) and a pointer to `apps/playground/README.md` §The example gallery for the checks and negative controls. The honesty paragraph above it is unchanged. `examples-page.test.ts` grew two cases: the printed command is resolved to the app's manifest (`name` filter, `build` script, the `dist/smoke/run.js` path in `smoke`) and to the scenario registry (`id: "examples-mount"` plus its `index.ts` view binding), and the record it cites must carry the named heading. The old sentence is the regression: restoring "not mounted" fails `expected … not to contain 'not mounted'`, swapping the id for `example-gallery` fails `expected … to contain '--only examples-mount'` (both measured); `nub run --filter @gpuixui/docs test` green (45 files / 385 tests), `check-types` and `build` green |
 | Record the **clipboard** capability — the binding has no clipboard read or write, and the window probe measured what a consumer can actually do: `cmd-a`/`cmd-c`/`cmd-v`/`cmd-x` inside a focused field reach `onChange` (select-all, copy, paste, cut all work), while none of those keys reach the app's window handler, so a component cannot offer "copy" for a selected text run, a table row or a `<code>` block. `docs/gpuix-capabilities.md` §3 and `/docs/runtime`'s measured table have no clipboard row, and the Tier 3/4 rows (log viewers, tables, code viewer) do not state the measured alternative (a read-only field the user selects and copies) | docs-site | **resolved** — §3 carries two rows: **App-level clipboard** (`not supported` — no read/write in `index.d.ts`/`host.d.ts`, and the keys never reach the window handler, with the read-only-field workaround) and **Clipboard keys inside a focused field** (`supported, with limits` — select-all/copy/paste/cut reach `onChange` against a per-mount marker). `/docs/runtime#measured-in-a-window` publishes the one row a reader needs, §5 names the probe it owes, and `capability-doc.test.ts` gained the doc-row case, the page-row case and `clipboard-lifecycle` in the required-probes case. Both directions measured: deleting the two doc rows fails `expected undefined to be 'not supported'`, and deleting the page row fails the page case (`the page's measured table has no clipboard row`) plus the required-probes case. Evidence: `apps/playground/README.md` §`clipboard-lifecycle`, 9 checks on 0.11.0 with `expected "gpuix clipboard q6uuii", got "gpuix clipboard pt6c88"` as its negative control. Exposing a `Clipboard` inventory row or a component-level copy action is not possible without a runtime API, so no library change follows |
 | Cite `selection-lifecycle` where selection is described — the window measured a **pointer** drag over a selectable `Text` (the wash paints, `getSelectedText()` reports the run, `Cmd+C` copies it, a default node opts out), which the headless `text-selection` scenario could not: it drives the renderer's `dragSelect`. `docs/gpuix-capabilities.md`'s **Text selection** row and `/docs/runtime`'s measured table rest on that synthetic verb, and the selection row also owes the measured geometry rule (the line's box must hug its glyphs, or the press lands past the last glyph and selects nothing) | docs-site | **resolved** — the **Text selection** row now records the pointer measurement (wash paints, `getSelectedText()` reports `ection world`, `Cmd+C` pastes the run into a field, `clearSelection()` clears it, a default `Text` paints none) beside the synthetic `dragSelect` it replaces, and states both limits: the box must hug its glyphs (`alignSelf: "start"`) or the press selects nothing, and an **initiated** copy has no API though the user's own gesture works. `/docs/runtime#measured-in-a-window` gains the same row, and §5's owed-probe list names `selection-lifecycle`. `capability-doc.test.ts` gained two cases (the doc row and the page row) and the required-probes case names the probe; four repeated table parses were hoisted into `measuredRow` at the same time. Directions measured: removing the probe from the doc row fails `expected … to contain 'selection-lifecycle'`, deleting the page row fails the page case (`the page's measured table has no text-selection row`) and the required-probes case, and the full docs suite is green (45 files / 380 tests) with `check-types` clean. Evidence: `apps/playground/README.md` §`selection-lifecycle`, `.artifacts/live/selection-dragged.png` |
+| Record the `<virtual-list>` **reveal and range** measurement — `docs/gpuix-capabilities.md` §3's Virtualized list row says only "`<virtual-list>` retains thousands of rows and paints a window (~9 rows in the probe)" and "read the painted window, not the index", and `/docs/runtime`'s measured table has no virtual-list row, so a reader looking for "how do I reveal a file deep in a tree" or "can I paginate from `onVisibleRange`" has nothing to read. The playground's `virtual-tree-lifecycle` measured: `renderer.scrollToItem(list, 3000)` reveals a row that was never mounted and `getListScrollTop` anchors at `itemIndex=3000` with the list's own viewport; a programmatic reveal fires **no** `onVisibleRange`; changing the flattened child count reports indices (`1..2`, `0..1`) computed against the spliced child list, not the painted rows; and roving focus from a row's key handler works through `useGpuix().renderer.focusElement` | docs-site (capability record + `/docs/runtime`), and the Tier 3/4 components that read the event | open — the probe is green on 0.11.0 (30 checks) with two negative controls measured; the consumer rule is: reveal with `scrollToItem`, read the painted rows or the anchor, and never paginate from `onVisibleRange` across a row-count change. Evidence: `apps/playground/README.md` §`virtual-tree-lifecycle` |
 | The shipped `Select` cannot be driven from an automation test: `SelectProps` passes a **root** `testId` to `GpuixSelect` and nothing to `SelectTrigger`, `SelectContent` or `SelectItem`, so a locator can address neither the control nor an option. The window probe (`select-lifecycle`) therefore mounts the runtime's own parts, which measure the behaviour the wrapper inherits; the `COMPONENTS.md` Selects row likewise cites no probe. Add `triggerTestId`/`itemTestId` (or accept `testId` on the parts), then the probe can mount the wrapper and the row can cite it | primitives (and the Selects inventory row) | open — the runtime half is measured: `select-lifecycle`, 26 checks green on 0.11.0, with `expected 6 ± 1, got 0` and `expected "value=daily changes=3", got "value=archived changes=3"` as its negative controls (`apps/playground/README.md` §`select-lifecycle`). No library code depends on this; it is an addressability gap, not a behaviour gap |
 
 ## Phase D — data and workspace components

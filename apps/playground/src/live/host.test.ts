@@ -1,12 +1,14 @@
 /**
- * Guards the live host's font verb and its right-button verb.
+ * Guards the live host's font, right-button and list-anchor verbs.
  *
  * The bug these catch: `fontInstaller` dropping or reshaping the probe's bytes
  * (the late-registration probe would then measure a face nobody installed), a
  * rejected font file surfacing as an unlabelled failure — the probe report must
- * name `registerFont`, not `unknown error` — and a context-menu probe pressing
- * the primary button, which fires `onClick` and never `onAuxClick`, so the menu
- * stays shut and the probe measures nothing.
+ * name `registerFont`, not `unknown error` — a context-menu probe pressing the
+ * primary button, which fires `onClick` and never `onAuxClick`, so the menu
+ * stays shut and the probe measures nothing, and a `<virtual-list>` anchor read
+ * out of a short tuple as index 0, which would make a tree reveal assert the
+ * row it never reached.
  */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -14,6 +16,7 @@ import * as Arr from "effect/Array";
 import { Smoke } from "@gpuixui/testing";
 import {
   fontInstaller,
+  listAnchorOf,
   rightPress,
   type LiveFontRegistrar,
   type PressableLocator,
@@ -51,6 +54,25 @@ describe("rightPress", () => {
       });
       expect(buttons).toEqual([2]);
     });
+  });
+});
+
+describe("listAnchorOf", () => {
+  it("names the renderer's three-number anchor", () => {
+    expect(listAnchorOf([3000, 0, 278])).toEqual({
+      itemIndex: 3000,
+      offsetInItem: 0,
+      viewportHeight: 278,
+    });
+  });
+
+  it("refuses a short tuple instead of filling the gap with zero", () => {
+    expect(listAnchorOf([12])).toBeNull();
+    expect(listAnchorOf([])).toBeNull();
+  });
+
+  it("keeps the renderer's null, which is how a plain element answers", () => {
+    expect(listAnchorOf(null)).toBeNull();
   });
 });
 

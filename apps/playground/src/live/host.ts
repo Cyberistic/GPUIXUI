@@ -11,6 +11,7 @@
  * window focused and how it is named in the tree.
  */
 import { Effect } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { GpuixRenderer } from "@gpuix/native";
 import { AutomationError } from "@gpuix/native/automation";
@@ -29,6 +30,8 @@ export type LiveRenderer = Pick<
   | "clearSelection"
   | "simulateKeyUp"
   | "registerFont"
+  | "scrollToItem"
+  | "getListScrollTop"
 >;
 
 /**
@@ -114,6 +117,35 @@ export interface PressableLocator {
 export const rightPress = (locator: PressableLocator): Promise<void> =>
   locator.click({ button: 2 });
 
+/**
+ * Reads the renderer's `[itemIndex, offsetInItem, viewportHeight]` anchor.
+ *
+ * A tuple is a positional shape, so a short one is not an anchor: returning
+ * `null` keeps a probe from asserting an index the runtime never reported.
+ */
+export const listAnchorOf = (
+  anchor: ReadonlyArray<number> | null,
+): Smoke.ListAnchor | null =>
+  Option.match(Option.fromNullishOr(anchor), {
+    onNone: () => null,
+    onSome: (values) =>
+      Option.match(
+        Option.all([
+          Arr.get(values, 0),
+          Arr.get(values, 1),
+          Arr.get(values, 2),
+        ]),
+        {
+          onNone: () => null,
+          onSome: ([itemIndex, offsetInItem, viewportHeight]) => ({
+            itemIndex,
+            offsetInItem,
+            viewportHeight,
+          }),
+        },
+      ),
+  });
+
 /** An `AsyncSmokeHost` over a connected window. */
 export const createLiveHost = ({
   app,
@@ -178,6 +210,27 @@ export const createLiveHost = ({
           onNone: () => null,
           onSome: ([x, y]) => ({ x, y }),
         });
+      }),
+    scrollToItem: (testId, index, offsetInItem) =>
+      Effect.gen(function* () {
+        const node = yield* call(`scrollToItem ${testId}`, () =>
+          at(testId).element(),
+        );
+        yield* named(
+          `scrollToItem ${testId}`,
+          sync(() => renderer.scrollToItem(node.id, index, offsetInItem)),
+        );
+      }),
+    listAnchor: (testId) =>
+      Effect.gen(function* () {
+        const node = yield* call(`listAnchor ${testId}`, () =>
+          at(testId).element(),
+        );
+        const anchor = yield* named(
+          `listAnchor ${testId}`,
+          sync(() => renderer.getListScrollTop(node.id)),
+        );
+        return listAnchorOf(anchor);
       }),
     key: (keystroke) =>
       call(`key ${keystroke}`, () =>

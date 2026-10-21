@@ -204,6 +204,12 @@ export const liveRegistry = [
       "Overlay: the runtime's Select opens its list below the trigger, selects by press and by key, skips a disabled row and dismisses on Escape or an outside press",
     capability: "overlay",
   },
+  {
+    id: "virtual-tree-lifecycle",
+    title:
+      "Tree: a 4 000-row file tree paints only its window, opens in place, moves real focus by key and reveals a deep index",
+    capability: "tree",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

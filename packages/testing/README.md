@@ -82,6 +82,12 @@ travels, and `hover` moves the pointer onto the element's centre **without
 pressing** — the only way to drive the enter/leave pair a tooltip or a
 hover style listens for, since any press also fires the press handlers.
 
+A `<virtual-list>` is addressed in rows, not pixels: `scrollToItem(testId,
+index)` reveals a row that is not mounted, and `listAnchor(testId)` reads the
+renderer's `[itemIndex, offsetInItem, viewportHeight]` anchor (or `null` for
+anything that is not a list) as a `ListAnchor`. Pixel arithmetic lies while row
+heights are estimates, so a reveal is checked by the index it anchored at.
+
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and
 fails with a label naming the id via `ctx.expectSome`.
