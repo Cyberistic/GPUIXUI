@@ -8,6 +8,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   cn,
   TOAST_CARD,
@@ -27,7 +28,7 @@ import { tone, useTheme, type Tone } from "../internal/theme.js";
 import type { Toast, ToastTone } from "./model.js";
 import { useToast } from "./provider.js";
 
-/** The status tone behind a toast's bar and glyph. */
+/** The status tone behind a toast's bar and icon. */
 const asTone = (value: ToastTone): Tone =>
   Match.value(value).pipe(
     Match.when("info", () => "info" as const),
@@ -37,17 +38,17 @@ const asTone = (value: ToastTone): Tone =>
     Match.exhaustive,
   );
 
-/** The glyph each tone shows until an icon set lands. */
-const glyph = (value: ToastTone): string =>
+/** The icon each tone shows beside its title. */
+const glyph = (value: ToastTone): "info" | "success" | "warning" | "error" =>
   Match.value(value).pipe(
-    Match.when("info", () => "i"),
-    Match.when("success", () => "✓"),
-    Match.when("warning", () => "!"),
-    Match.when("danger", () => "✕"),
+    Match.when("info", () => "info" as const),
+    Match.when("success", () => "success" as const),
+    Match.when("warning", () => "warning" as const),
+    Match.when("danger", () => "error" as const),
     Match.exhaustive,
   );
 
-/** One card. Its left bar and glyph carry the tone; the surface is neutral. */
+/** One card. Its left bar and tone icon carry the status; the surface is neutral. */
 const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   const theme = useTheme();
   const { dismiss, pause, resume, actionFor } = useToast();
@@ -101,15 +102,19 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
           padding: theme.spacing.lg,
         }}
       >
-        <text
-          aria-label={toast.tone}
+        <div
           style={mergeStyles(recipeStyle(TOAST_GLYPH, theme), {
             color: palette.fg,
             width: theme.iconSize.md,
           })}
         >
-          {glyph(toast.tone)}
-        </text>
+          <Icon
+            name={glyph(toast.tone)}
+            size="sm"
+            color={palette.fg}
+            label={toast.tone}
+          />
+        </div>
         <div
           style={{
             display: "flex",
@@ -155,7 +160,7 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
         >
-          <text>✕</text>
+          <Icon name="x" size="sm" color={theme.colors.foreground} />
         </IconButton>
       </div>
     </div>
@@ -215,7 +220,6 @@ export const toastMeta = {
   limitations: [
     "no zIndex: the viewport stacks by paint order, so render it last in the app root",
     "no progress indicator for the remaining auto-dismiss time",
-    "the tone glyph is text until an icon set lands",
   ],
   docs: "docs/toast.mdx",
   example: "examples/toast.example.tsx",

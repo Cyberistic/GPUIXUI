@@ -10,6 +10,7 @@
 
 import type { KeyEvent, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   BREADCRUMB_ELLIPSIS,
   BREADCRUMB_ITEM,
@@ -125,13 +126,18 @@ const entries = (
   return collected;
 };
 
-/** The text standing in for the hidden middle. Not focusable, and labelled. */
+/** The icon standing in for the hidden middle. Not focusable, and named. */
 const Ellipsis = () => {
   const theme = useTheme();
   return (
-    <text aria-label="More" style={recipeStyle(BREADCRUMB_ELLIPSIS, theme)}>
-      …
-    </text>
+    <div style={recipeStyle(BREADCRUMB_ELLIPSIS, theme)}>
+      <Icon
+        name="ellipsis"
+        size="xs"
+        color={theme.colors.mutedForeground}
+        label="More"
+      />
+    </div>
   );
 };
 

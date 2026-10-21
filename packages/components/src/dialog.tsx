@@ -28,6 +28,7 @@
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   DIALOG_CONTENT,
   DIALOG_DESCRIPTION,
@@ -289,7 +290,7 @@ export const DialogContent = ({
                 right: theme.spacing.lg,
               }}
             >
-              <text>✕</text>
+              <Icon name="x" size="sm" color={theme.colors.foreground} />
             </IconButton>
           ) : null}
         </div>
@@ -455,7 +456,6 @@ export const dialogMeta = {
   limitations: [
     "no aria-modal and no aria-labelledby in 0.10.0: the dialog is named with aria-label and its title is a heading",
     "the veil is an anchored element at window coordinates because the release ships no portal; a dialog mounted inside a scroll container stays painted at the window origin, not inside that container",
-    "the close control is a text glyph until packages/icons lands",
   ],
   docs: "docs/dialog.mdx",
   example: "examples/dialog.example.tsx",

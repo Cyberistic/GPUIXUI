@@ -17,6 +17,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import { cn, CAROUSEL_ROOT, CAROUSEL_SLIDE, CAROUSEL_TRACK } from "@gpuixui/tw";
 import {
   Children,
@@ -256,6 +257,7 @@ export const CarouselControl = ({
   ...rest
 }: CarouselControlProps) => {
   const { active, count, loop, step } = useCarousel();
+  const theme = useTheme();
   const atEdge = direction === "next" ? active >= count - 1 : active <= 0;
   const name =
     label ?? (direction === "next" ? "Next slide" : "Previous slide");
@@ -267,7 +269,11 @@ export const CarouselControl = ({
       disabled={disabled || count === 0 || (atEdge && !loop)}
       onClick={() => step(direction === "next" ? 1 : -1)}
     >
-      <text>{direction === "next" ? "›" : "‹"}</text>
+      <Icon
+        name={direction === "next" ? "chevron-right" : "chevron-left"}
+        size="md"
+        color={theme.colors.secondaryForeground}
+      />
     </Button>
   );
 };

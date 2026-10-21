@@ -24,6 +24,7 @@
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles, type FloatingContentProps } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   cn,
   DATE_PICKER_CARET,
@@ -246,7 +247,7 @@ export interface DatePickerTriggerProps extends Omit<ButtonProps, "children"> {
   readonly testId?: string;
 }
 
-/** The field-shaped trigger: the selected day or the placeholder, plus `▾`. */
+/** The field-shaped trigger: the selected day or the placeholder, plus a caret. */
 export const DatePickerTrigger = ({
   placeholder = "Pick a date",
   label,
@@ -292,7 +293,13 @@ export const DatePickerTrigger = ({
       >
         {labelText}
       </text>
-      <text style={recipeStyle(DATE_PICKER_CARET, theme)}>▾</text>
+      <div style={recipeStyle(DATE_PICKER_CARET, theme)}>
+        <Icon
+          name="chevron-down"
+          size="xs"
+          color={theme.colors.mutedForeground}
+        />
+      </div>
     </PopoverTrigger>
   );
 };
@@ -486,7 +493,7 @@ export const DatePickerCalendar = ({
           disabled={!canBrowseMonth(viewMonth, -1, bounds)}
           onClick={() => setViewMonth(addMonths(viewMonth, -1))}
         >
-          <text>‹</text>
+          <Icon name="chevron-left" size="md" color={theme.colors.foreground} />
         </IconButton>
         <text testId="date-month" style={recipeStyle(DATE_PICKER_MONTH, theme)}>
           {formatMonthLabel(viewMonth)}
@@ -498,7 +505,11 @@ export const DatePickerCalendar = ({
           disabled={!canBrowseMonth(viewMonth, 1, bounds)}
           onClick={() => setViewMonth(addMonths(viewMonth, 1))}
         >
-          <text>›</text>
+          <Icon
+            name="chevron-right"
+            size="md"
+            color={theme.colors.foreground}
+          />
         </IconButton>
       </div>
       <div

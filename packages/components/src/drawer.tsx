@@ -17,6 +17,7 @@
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   DRAWER_CONTENT,
   DRAWER_DESCRIPTION,
@@ -288,7 +289,7 @@ export const DrawerContent = ({
                 right: theme.spacing.lg,
               }}
             >
-              <text>✕</text>
+              <Icon name="x" size="sm" color={theme.colors.foreground} />
             </IconButton>
           ) : null}
         </div>

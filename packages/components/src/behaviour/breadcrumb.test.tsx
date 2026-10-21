@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import { nodesWithRole } from "../internal/a11y.js";
 import { clickCentreOf } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
@@ -117,14 +118,16 @@ describe("Breadcrumb", () => {
     expect(texts).toContain("components");
     expect(texts).not.toContain("GPUIXUI");
     expect(texts).not.toContain("packages");
-    expect(texts).toContain("…");
+    expect(
+      nodesWithRole(trail.renderer, "image").map((node) => node.name),
+    ).toContain("More");
 
     trail.unmount();
   });
 
   it("leaves the collapsing ellipsis out of the tab order", () => {
     const trail = renderComponent(<Trail maxItems={3} />);
-    const ellipsis = trail.renderer.findByText("…");
+    const [ellipsis] = trail.renderer.findByType("svg");
 
     expect(ellipsis).toBeDefined();
     expect(ellipsis?.customProps?.tabIndex).toBeUndefined();

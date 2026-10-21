@@ -16,6 +16,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   cn,
   PAGINATION_ELLIPSIS,
@@ -146,7 +147,8 @@ export const PaginationPrevious = ({
         style,
       )}
     >
-      ‹ Prev
+      <Icon name="chevron-left" size="md" color={theme.colors.foreground} />
+      Prev
     </Button>
   );
 };
@@ -175,7 +177,8 @@ export const PaginationNext = ({ style, ...rest }: PaginationNextProps) => {
         style,
       )}
     >
-      Next ›
+      Next
+      <Icon name="chevron-right" size="md" color={theme.colors.foreground} />
     </Button>
   );
 };
@@ -279,16 +282,20 @@ export const PaginationEllipsis = ({
   const theme = useTheme();
 
   return (
-    <text
-      aria-label="More pages"
+    <div
       {...rest}
       style={mergeStyles(
         recipeStyle(cn(PAGINATION_ELLIPSIS, className), theme),
         style,
       )}
     >
-      …
-    </text>
+      <Icon
+        name="ellipsis"
+        size="xs"
+        color={theme.colors.mutedForeground}
+        label="More pages"
+      />
+    </div>
   );
 };
 

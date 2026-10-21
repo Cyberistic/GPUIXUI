@@ -93,13 +93,7 @@ describe("Carousel", () => {
   it("mounts every slide and displays only the active one", () => {
     const gallery = renderComponent(<Gallery value={1} />);
 
-    expect(gallery.renderer.getAllText()).toEqual([
-      "One",
-      "Two",
-      "Three",
-      "‹",
-      "›",
-    ]);
+    expect(gallery.renderer.getAllText()).toEqual(["One", "Two", "Three"]);
     expect(displays(gallery)).toEqual(["none", "flex", "none"]);
 
     gallery.unmount();

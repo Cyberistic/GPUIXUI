@@ -38,11 +38,11 @@ import {
 | Part | Responsibility |
 | ---- | -------------- |
 | `Combobox` | the headless root: ranking, selection, open state and focus restore |
-| `ComboboxTrigger` | the field-shaped control: selected labels or `placeholder`, `aria-expanded`, `▾` |
+| `ComboboxTrigger` | the field-shaped control: selected labels or `placeholder`, `aria-expanded`, a chevron |
 | `ComboboxContent` | the anchored popup surface |
 | `ComboboxInput` | the search field; Escape asks the root to restore focus |
 | `ComboboxList` | the ranked listbox, one `ComboboxItem` per visible option |
-| `ComboboxItem` | one row: label, optional description, `✓` while selected |
+| `ComboboxItem` | one row: label, optional description, a check icon while selected |
 | `ComboboxEmpty` | shown only when no option matches; children replace the default |
 
 Single mode selects one value and closes. Multiple mode keeps the popup open,

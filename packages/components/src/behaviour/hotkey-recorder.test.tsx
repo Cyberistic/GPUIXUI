@@ -54,7 +54,7 @@ describe("HotkeyRecorder", () => {
     empty.unmount();
 
     const bound = renderComponent(<Harness initial="ctrl+k" />);
-    expect(bound.renderer.getAllText()).toEqual(["⌃", "K", "✕", "Elsewhere"]);
+    expect(bound.renderer.getAllText()).toEqual(["⌃", "K", "Elsewhere"]);
     expect(bound.renderer.findByText("⌃")?.parentId).toBeDefined();
     bound.unmount();
   });

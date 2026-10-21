@@ -10,8 +10,9 @@ component.
 ## Boundary
 
 Allowed imports, in full: `effect`, `@gpuixui/tokens`, `@gpuixui/tw`,
-`@gpuixui/primitives` (only where a behavioural primitive is genuinely needed —
-see plan 110 §7), `@gpuix/react` and its subpaths, and `react`.
+`@gpuixui/icons`, `@gpuixui/primitives` (only where a behavioural primitive is
+genuinely needed — see plan 110 §7), `@gpuix/react` and its subpaths, and
+`react`.
 
 Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 `node:*` in component source (the inventory test is the sole repository-check
@@ -29,6 +30,19 @@ so it wins conflicts, and its `style` is merged last so it wins outright. The
 overlay-only slice of that seam (it joins the caller `className` for the
 floating/modal surfaces). No other file imports `@gpuixui/tw`'s compiler
 directly.
+
+## Chrome marks
+
+Every mark a control paints — close, caret, chevron, check, ellipsis, tone — is
+an `Icon` from `@gpuixui/icons` inside the part's recipe-styled wrapper, tinted
+with the token role that wrapper used to give its text. A mark that names a
+control is decorative (`role="presentation"`) because the control already
+carries the name; a mark that *is* the state (a toast's tone, a menu row's
+checked box, an accordion's Expand/Collapse) carries a `label` and is announced
+as an image. Placeholder ellipses, keycap chords and the confirmation dialog's
+busy `…` stay typography: they are punctuation, not chrome.
+`src/behaviour/icons.test.tsx` measures the painted `<svg>` and sweeps the
+source for a returning text stand-in.
 
 Two kinds of metric keep density, because they must stay aligned with the
 density-driven controls beside them: a list row's height

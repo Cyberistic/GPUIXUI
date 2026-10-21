@@ -5,8 +5,8 @@
  * plus a boolean, because single mode has to decide what "opening another"
  * means and multiple mode has to preserve the order sections were opened in.
  *
- * The indicator is a glyph swap (`⌄`/`⌃`), not a rotation: `@gpuix/native@0.10.0`
- * has no `transform` in `StyleDesc` (see `host.ts:121-237`).
+ * The indicator is an icon swap (`chevron-down`/`chevron-up`), not a rotation:
+ * `@gpuix/native@0.11.0` has no `transform` in `StyleDesc`.
  */
 
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
@@ -16,6 +16,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   ACCORDION_CONTENT,
   ACCORDION_INDICATOR,
@@ -476,12 +477,14 @@ export const AccordionTrigger = ({
       )}
     >
       <div style={recipeStyle(ACCORDION_TRIGGER_ROW, theme)}>{children}</div>
-      <text
-        aria-label={open ? "Collapse" : "Expand"}
-        style={recipeStyle(ACCORDION_INDICATOR, theme)}
-      >
-        {open ? "⌃" : "⌄"}
-      </text>
+      <div style={recipeStyle(ACCORDION_INDICATOR, theme)}>
+        <Icon
+          name={open ? "chevron-up" : "chevron-down"}
+          size="xs"
+          color={theme.colors.mutedForeground}
+          label={open ? "Collapse" : "Expand"}
+        />
+      </div>
     </div>
   );
 };
@@ -547,7 +550,7 @@ export const accordionMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "the indicator is a glyph swap: 0.10.0's StyleDesc has no transform",
+    "the indicator is an icon swap: 0.11.0's StyleDesc has no transform",
     "sections mount and unmount instantly; no height animation",
   ],
   docs: "docs/accordion.mdx",

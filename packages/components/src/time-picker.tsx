@@ -27,6 +27,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   cn,
   TIME_PICKER_CLEAR,
@@ -389,13 +390,10 @@ export const TimePickerClear = ({
       }}
       style={mergeStyles(recipeStyle(TIME_PICKER_CLEAR, theme), {
         ...keyboardRing(theme),
-        hover: {
-          backgroundColor: theme.colors.accent,
-          color: theme.colors.accentForeground,
-        },
+        hover: { backgroundColor: theme.colors.accent },
       })}
     >
-      <text>✕</text>
+      <Icon name="x" size="sm" color={theme.colors.mutedForeground} />
     </div>
   );
 };

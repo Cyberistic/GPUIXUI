@@ -16,6 +16,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   cn,
   SEARCH_INPUT,
@@ -59,7 +60,7 @@ export interface SearchInputState {
   readonly focused: boolean;
 }
 
-/** A search field with a leading glyph and a conditional clear control. */
+/** A search field with a leading icon and a conditional clear control. */
 export const SearchInput = ({
   value: valueProp,
   defaultValue = "",
@@ -108,7 +109,9 @@ export const SearchInput = ({
         resolveStyle(style, state),
       )}
     >
-      <text style={recipeStyle(SEARCH_INPUT_ICON, theme)}>⌕</text>
+      <div style={recipeStyle(SEARCH_INPUT_ICON, theme)}>
+        <Icon name="search" size="sm" color={theme.colors.mutedForeground} />
+      </div>
       <input
         {...rest}
         ref={setInput}
@@ -149,13 +152,10 @@ export const SearchInput = ({
           }}
           style={mergeStyles(recipeStyle(SEARCH_INPUT_CLEAR, theme), {
             ...(disabled ? {} : keyboardRing(theme)),
-            hover: {
-              backgroundColor: theme.colors.accent,
-              color: theme.colors.accentForeground,
-            },
+            hover: { backgroundColor: theme.colors.accent },
           })}
         >
-          <text>✕</text>
+          <Icon name="x" size="sm" color={theme.colors.mutedForeground} />
         </div>
       )}
     </div>

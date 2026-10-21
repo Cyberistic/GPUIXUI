@@ -15,6 +15,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import { MENU_GROUP, MENU_ITEM, MENU_LABEL, MENU_SEPARATOR } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
@@ -26,7 +27,7 @@ import {
   type ReactNode,
 } from "react";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
-import { controlHeight, textStyle, useTheme } from "../internal/theme.js";
+import { controlHeight, useTheme } from "../internal/theme.js";
 import {
   assertParts,
   type PartChildren,
@@ -233,7 +234,7 @@ export interface MenuCheckboxItemState {
   readonly highlighted: boolean;
 }
 
-/** A menu row that represents an on/off setting. Shows `✓` when checked. */
+/** A menu row that represents an on/off setting. Shows a check icon when checked. */
 export const MenuCheckboxItem = ({
   checked,
   onCheckedChange,
@@ -272,18 +273,23 @@ export const MenuCheckboxItem = ({
       }}
       leading={
         leading ?? (
-          <text
-            aria-label={checked ? "Checked" : "Not checked"}
+          <div
             style={{
-              ...textStyle(theme, "caption"),
-              color: checked
-                ? theme.colors.accent
-                : theme.colors.mutedForeground,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
               width: theme.iconSize.md,
             }}
           >
-            {checked ? "✓" : ""}
-          </text>
+            {checked ? (
+              <Icon
+                name="check"
+                size="sm"
+                color={theme.colors.accent}
+                label="Checked"
+              />
+            ) : null}
+          </div>
         )
       }
       trailing={trailing}

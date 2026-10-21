@@ -59,8 +59,8 @@ describe("Pagination", () => {
       <Pager page={1} pageCount={10} onPageChange={vi.fn()} />,
     );
 
-    expect(buttonFor(first, "‹ Prev")?.customProps?.tabIndex).toBe(-1);
-    expect(buttonFor(first, "Next ›")?.customProps?.tabIndex).toBe(0);
+    expect(buttonFor(first, "Prev")?.customProps?.tabIndex).toBe(-1);
+    expect(buttonFor(first, "Next")?.customProps?.tabIndex).toBe(0);
 
     first.unmount();
 
@@ -68,8 +68,8 @@ describe("Pagination", () => {
       <Pager page={10} pageCount={10} onPageChange={vi.fn()} />,
     );
 
-    expect(buttonFor(last, "‹ Prev")?.customProps?.tabIndex).toBe(0);
-    expect(buttonFor(last, "Next ›")?.customProps?.tabIndex).toBe(-1);
+    expect(buttonFor(last, "Prev")?.customProps?.tabIndex).toBe(0);
+    expect(buttonFor(last, "Next")?.customProps?.tabIndex).toBe(-1);
 
     last.unmount();
   });
@@ -106,8 +106,8 @@ describe("Pagination", () => {
       <Pager page={5} pageCount={10} onPageChange={onPageChange} />,
     );
 
-    clickLabel(pager, "‹ Prev");
-    clickLabel(pager, "Next ›");
+    clickLabel(pager, "Prev");
+    clickLabel(pager, "Next");
 
     expect(onPageChange.mock.calls).toEqual([[4], [6]]);
 
@@ -118,7 +118,7 @@ describe("Pagination", () => {
     const pager = renderComponent(
       <Pager page={5} pageCount={10} onPageChange={vi.fn()} />,
     );
-    const ellipsis = pager.renderer.findByText("…");
+    const [ellipsis] = pager.renderer.findByType("svg");
 
     expect(ellipsis).toBeDefined();
     expect(ellipsis?.customProps?.tabIndex).toBeUndefined();
@@ -178,10 +178,10 @@ describe("Pagination", () => {
     );
 
     const texts = pager.renderer.getAllText();
-    expect(texts.indexOf("‹ Prev")).toBeGreaterThanOrEqual(0);
-    expect(texts.indexOf("7")).toBeGreaterThan(texts.indexOf("‹ Prev"));
+    expect(texts.indexOf("Prev")).toBeGreaterThanOrEqual(0);
+    expect(texts.indexOf("7")).toBeGreaterThan(texts.indexOf("Prev"));
     expect(texts.indexOf("7")).toBeLessThan(texts.indexOf("1"));
-    expect(texts.indexOf("Next ›")).toBeGreaterThan(texts.indexOf("10"));
+    expect(texts.indexOf("Next")).toBeGreaterThan(texts.indexOf("10"));
 
     pager.unmount();
   });

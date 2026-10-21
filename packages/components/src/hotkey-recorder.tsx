@@ -16,6 +16,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   cn,
   HOTKEY_RECORDER,
@@ -171,13 +172,10 @@ export const HotkeyRecorder = ({
             if (isActivation(event)) clear();
           }}
           style={mergeStyles(recipeStyle(HOTKEY_RECORDER_CLEAR, theme), {
-            hover: {
-              backgroundColor: theme.colors.accent,
-              color: theme.colors.accentForeground,
-            },
+            hover: { backgroundColor: theme.colors.accent },
           })}
         >
-          <text>✕</text>
+          <Icon name="x" size="sm" color={theme.colors.mutedForeground} />
         </div>
       )}
     </div>

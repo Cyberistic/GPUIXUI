@@ -17,6 +17,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   ALERT_BASE,
   ALERT_CONTENT,
@@ -212,17 +213,20 @@ export const AlertDismiss = ({
   onDismiss,
   label = "Dismiss",
   ...rest
-}: AlertDismissProps) => (
-  <IconButton
-    {...rest}
-    size="sm"
-    label={label}
-    testId="alert-dismiss"
-    onClick={onDismiss}
-  >
-    ✕
-  </IconButton>
-);
+}: AlertDismissProps) => {
+  const theme = useTheme();
+  return (
+    <IconButton
+      {...rest}
+      size="sm"
+      label={label}
+      testId="alert-dismiss"
+      onClick={onDismiss}
+    >
+      <Icon name="x" size="sm" color={theme.colors.foreground} />
+    </IconButton>
+  );
+};
 
 /** Every part of Alert, so a misplaced sibling is named. */
 const alertParts: ReadonlyArray<PartComponent> = [

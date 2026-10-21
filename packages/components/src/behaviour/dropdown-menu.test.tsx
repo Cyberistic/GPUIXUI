@@ -26,6 +26,7 @@ import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -412,7 +413,9 @@ describe("DropdownMenu", () => {
     expect(
       menu.renderer.findByTestId("hidden")?.customProps?.["aria-selected"],
     ).toBe(false);
-    expect(menu.renderer.getAllText()).not.toContain("✓");
+    expect(
+      nodesWithRole(menu.renderer, "image").map((node) => node.name),
+    ).not.toContain("Checked");
 
     clickCentreOf(menu, "hidden");
 
@@ -421,7 +424,9 @@ describe("DropdownMenu", () => {
     expect(
       menu.renderer.findByTestId("hidden")?.customProps?.["aria-selected"],
     ).toBe(true);
-    expect(menu.renderer.getAllText()).toContain("✓");
+    expect(
+      nodesWithRole(menu.renderer, "image").map((node) => node.name),
+    ).toContain("Checked");
 
     menu.unmount();
   });

@@ -30,7 +30,7 @@ import {
 | ---- | -------------- |
 | `Accordion` | the open state, the mode rules, the divider order |
 | `AccordionItem` | one section, its value and its disabled flag |
-| `AccordionTrigger` | a full-width button with `aria-expanded` and the glyph |
+| `AccordionTrigger` | a full-width button with `aria-expanded` and the indicator icon |
 | `AccordionContent` | the body; unmounts while its section is closed |
 
 ## The two modes
@@ -82,8 +82,8 @@ keys because the handler lives on the trigger, not the accordion root.
 Triggers use the `label` type role at `controlHeight(theme, "lg")`, with
 `colors.foreground` and `colors.primary` on hover. Sections are separated by a
 `borderWidth.thin` divider in `colors.border`; the last section draws none. The
-indicator is a text glyph (`⌄` closed, `⌃` open) because 0.10.0's `StyleDesc`
-has no `transform` — a rotation is not available.
+indicator is the icon set's `chevron-down`/`chevron-up` (swapped, not rotated)
+because 0.11.0's `StyleDesc` has no `transform` — a rotation is not available.
 
 ## Style by state
 
@@ -100,7 +100,7 @@ has no `transform` — a rotation is not available.
 
 - `aria-expanded` on each trigger; the trigger names the section.
 - **No `aria-controls`** in 0.10.0; the relationship is positional.
-- The indicator glyph carries `aria-label="Expand"` / `"Collapse"`.
+- The indicator icon carries `aria-label="Expand"` / `"Collapse"`.
 - Arrow keys move focus between enabled headers; they do not activate them.
 - No height animation (see **Collapsible** for the measured reason).
 

@@ -34,7 +34,7 @@ playground mounts.
 | Pasting `"a,b"` | adds both tokens |
 | A token already present | ignored, unless `allowDuplicates` |
 | Reaching `max` | further additions are refused; existing tokens stay |
-| The chip's `✕` | removes that token |
+| The chip's remove icon | removes that token |
 | Whitespace-only input | never becomes a token |
 
 Removal is the chip control. **Backspace on an empty field is not wired**: the
@@ -62,7 +62,7 @@ controlled list.
 ## Theming
 
 The group uses `background`, `border`, `radius.md`, `controlHeight` and
-`focusRing`; chips use `muted` / `mutedForeground` and `radius.sm`; the `✕`
+`focusRing`; chips use `muted` / `mutedForeground` and `radius.sm`; the remove
 control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
 (0.10.0 has no `aria-disabled`). A custom theme changes all of it — see
 [Theming](/docs/theming).
