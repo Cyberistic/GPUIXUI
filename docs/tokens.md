@@ -109,6 +109,11 @@ There are 47 roles. The four status families — `info`, `success`, `warning` an
 pair (`xSoft` / `xSoftForeground`) for alerts, badges and toasts. `info` is blue,
 not iris, so it can never be confused with `primary`.
 
+The four washes — `hover`, `active`, `selected` and `accent` — are surfaces with
+two contracts: the text on them keeps the contrast floors, and the tint itself
+must be visible against every strip it can land on (see
+[Decorative surfaces](#decorative-surfaces)).
+
 The literal tables behind the themes are exported too: `lightColors`,
 `darkColors`, `highContrastLightColors` and `highContrastDarkColors`. Read them
 when you need a value outside a resolved `Theme` — a generated table, a test, a
@@ -129,7 +134,7 @@ tool never has to copy the palette out of this page.
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `muted` | `#EEF1F5` | `#222730` | quiet surface |
 | `mutedForeground` | `#545D6C` | `#A1A9B7` | secondary text |
-| `accent` | `#EEF0FF` | `#2E2370` | tinted emphasis surface |
+| `accent` | `#E0E3FF` | `#2E2370` | tinted emphasis surface |
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
 | `destructive` | `#CC3439` | `#FF6B6B` | destructive action |
 | `destructiveForeground` | `#FFFFFF` | `#3A0B0D` | text on `destructive` |
@@ -155,9 +160,9 @@ tool never has to copy the palette out of this page.
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24% alpha) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
-| `hover` | `#EEF1F5` | `#222730` | hover wash for ghost surfaces |
-| `active` | `#E1E5EC` | `#2A303B` | pressed wash |
-| `selected` | `#EEF0FF` | `#2E2370` | selected row or item |
+| `hover` | `#E4E9F0` | `#272D37` | hover wash for ghost surfaces |
+| `active` | `#E1E5EC` | `#333A46` | pressed wash |
+| `selected` | `#E0E3FF` | `#2E2370` | selected row or item |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface |
 | `disabledForeground` | `#A1A9B7` | `#545D6C` | disabled text |
@@ -406,7 +411,7 @@ getTheme("light"); // the default light theme, unchanged
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
 | `muted` | `#F2F2F2` | `#1A1A1A` | quiet surface |
 | `mutedForeground` | `#1F1F1F` | `#E0E0E0` | secondary text |
-| `accent` | `#E0E3FF` | `#1C1547` | tinted emphasis surface |
+| `accent` | `#E0E3FF` | `#231B59` | tinted emphasis surface |
 | `accentForeground` | `#2E2370` | `#E0E3FF` | text on `accent` |
 | `destructive` | `#7E1D21` | `#FF9E9E` | destructive action |
 | `destructiveForeground` | `#FFFFFF` | `#000000` | text on `destructive` |
@@ -434,7 +439,7 @@ getTheme("light"); // the default light theme, unchanged
 | `overlay` | `#000000A6` | `#000000CC` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
-| `selected` | `#E0E3FF` | `#1C1547` | selected row or item |
+| `selected` | `#E0E3FF` | `#231B59` | selected row or item |
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface |
 | `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
@@ -499,14 +504,14 @@ role — the status families, the soft tones, `foreground`, `mutedForeground`,
 | `popover` | `#FFFFFF` | `#2C2C30` | `#FFFFFF` | `#383838` | `#FFFFFF` | `#2D2D2D` |
 | `input` | `#FFFFFF` | `#1F1F22` | `#FFFFFF` | `#212121` | `#FFFFFF` | `#1F1F1F` |
 | `muted` | `#E9E9EF` | `#2A2A2E` | `#ECEBE9` | `#2A2A2A` | `#EBEBEB` | `#2A2A2A` |
-| `hover` | `#E9E9EF` | `#2E2E33` | `#E7E6E4` | `#333333` | `#E8E8E8` | `#333333` |
-| `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#DEDEDE` | `#3A3A3A` |
+| `hover` | `#E2E2E8` | `#35353B` | `#E3E2DF` | `#343434` | `#E0E0E0` | `#333333` |
+| `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
 | `borderStrong` | `#7C7C82` | `#8A8A90` | `#84827E` | `#A0A0A0` | `#757575` | `#9A9A9A` |
 | `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
-| `accent` | `#E1EBFA` | `#13304F` | `#E4EFFB` | `#1B3B5C` | `#E5F1FB` | `#1B3A50` |
+| `accent` | `#CCE0F9` | `#1A3D60` | `#D2E4F7` | `#1B3E60` | `#CFE6F9` | `#1B3A50` |
 | `accentForeground` | `#0A4A8F` | `#A9CCF7` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
 | `selected` | `#D3E5FB` | `#0D3A66` | `#CFE3F9` | `#1B3F60` | `#CCE4F7` | `#123C57` |
 | `selectedForeground` | `#0B3D6B` | `#C7E0FF` | `#0F3E74` | `#CFE4FA` | `#093A5C` | `#CDEBFF` |
@@ -892,14 +897,16 @@ passes.
 
 ### Decorative surfaces
 
-Five surfaces carry no text and are not an essential boundary, so WCAG's floors
+Six surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
-(`overlay`), a status message's edge and a scrollbar thumb. They still have one
-job — be seen — so they get one floor of their own, `decorativeFloor = 1.05:1`,
-the same perceptibility threshold the soft status surfaces are held to. Below it
-a surface reads as the fill it is painted on: a card without an edge, a
-skeleton that looks like an empty row, a dialog with no layer behind it, a
-message with no boundary, a scroller whose thumb nobody can find.
+(`overlay`), a status message's edge, a scrollbar thumb, and the wash a row is
+tinted with while it is hovered, pressed, selected or accented. They still have
+one job — be seen — so they get one floor of their own,
+`decorativeFloor = 1.05:1`, the same perceptibility threshold the soft status
+surfaces are held to. Below it a surface reads as the fill it is painted on: a
+card without an edge, a skeleton that looks like an empty row, a dialog with no
+layer behind it, a message with no boundary, a scroller whose thumb nobody can
+find, a menu row that does not answer the pointer.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -914,10 +921,24 @@ how a status edge is measured at the alpha its component actually uses:
 | scrim | `overlay` | `card`, `popover` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, `background`, `card` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
+| stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted` |
 
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
 so it is not held to the 3:1 a control boundary gets. It is still held to being
 findable, which is the same reason a divider is.
+
+A **state wash** is the one entry a component paints *behind* content rather than
+around it, so it has two jobs and two contracts: the text on it keeps the floors
+`contrastPairs` measures, and the tint itself is held to the 1.05:1 above,
+because a wash that carries the strip's own value is a state the reader never
+sees. That is not hypothetical — the base dark theme shipped `hover` equal to
+`popover`, so hovering a menu row repainted the surface it already sat on; the
+base light theme's `hover` was its `muted` toolbar; macOS light's `hover` was its
+own muted strip; and Windows light's and Linux dark's were one step away. Each
+now carries a wash that clears the floor on all four strips, and `accent` /
+`selected` on `muted` in the light themes were deepened for the same reason. The
+strips are the four surfaces a row can sit on; a filled action's own hover is a
+derived fill (`filledHover`) and is measured by the contrast table instead.
 
 A veiled page's **void** is not measured: a black page cannot be darkened by any
 scrim, and a high-contrast theme separates its dialog with a border instead. A
@@ -935,7 +956,7 @@ the tint owned by the `shadow` role, in
 import { decorativeFailures } from "@gpuixui/tokens";
 
 decorativeFailures(theme);
-// [{ surface: "divider", role: "border", over: "card", ratio: 1, floor: 1.05 }]
+// [{ surface: "stateWash", role: "hover", over: "popover", ratio: 1, floor: 1.05 }]
 decorativeFailures(theme, 1.2); // a brand that needs stronger decoration
 ```
 
@@ -1690,13 +1711,19 @@ documented brand theme, so a documented brand that loses its on-colour fails the
 suite.
 
 `packages/tokens/src/decorative.test.ts` covers the surfaces that carry no text:
-every divider, skeleton, veil and status-edge placement is measured, the edge is
-held to the share `statusTone` paints, the veil is composited rather than
-skipped, a surface that matches its page or cannot be measured is reported, and
-every shipped and every platform theme clears the 1.05:1 floor. It found two
-platform styles whose inherited skeleton matched their own surfaces — macOS
-light on `muted` at 1.045:1, Linux dark on `card` at 1.004:1 — which now carry a
-`skeleton` of their own.
+every divider, skeleton, veil, status-edge, scrollbar and state-wash placement is
+measured, the edge is held to the share `statusTone` paints, the veil is
+composited rather than skipped, a surface that matches its page or cannot be
+measured is reported, and every shipped and every platform theme clears the
+1.05:1 floor. It found two platform styles whose inherited skeleton matched their
+own surfaces — macOS light on `muted` at 1.045:1, Linux dark on `card` at
+1.004:1 — which now carry a `skeleton` of their own. The state-wash half found
+five aliases: the base dark theme's `hover` was its `popover` (a hovered menu row
+painted nothing), the base light theme's was its `muted` toolbar, and macOS
+light, Windows light and Linux dark were within one step of the strips they tint,
+so those five palettes carry a wash a reader can see. The suite reports the base
+dark alias by name (`hover`/`popover` at 1.00:1) and fails when a placement
+leaves the table.
 
 `packages/tokens/src/selection.test.ts` covers the wash behind a selected run:
 `selectionPairs` names the four content surfaces and keeps the text role each one

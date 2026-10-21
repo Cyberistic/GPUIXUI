@@ -243,6 +243,16 @@ and `mutedForeground` clears the secondary floor on all three. A ghost button or
 a menu row tints its surface and leaves its label in its resting role, so a wash
 that drifted toward its text would be unreadable with nothing else noticing.
 
+It is also measured as a surface, because a wash with no contrast against the row
+it tints is a state nobody sees: `decorativeFailures` holds each of `hover`,
+`active`, `selected` and `accent` to 1.05:1 on `background`, `card`, `popover`
+and a `muted` toolbar. The base themes had shipped the alias — dark `hover` *was*
+`popover`, so a hovered menu row repainted the surface it already sat on, and
+light `hover` was its `muted` strip — and macOS light, Windows light and Linux
+dark were within a step of one. Each now carries a wash a reader can see; the
+tokens and the paragraph above are the same rule from its two ends, legibility of
+the text and visibility of the tint.
+
 **Disabled ships two ways today, and only one of them is the contract.** A
 disabled field, a select's value and a fieldset legend paint the role pair —
 `disabled` behind `disabledForeground` — which is what `contrastFloors.disabled`
@@ -314,7 +324,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips and the field | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
-| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb | 1.05:1 | 1.05:1 |
+| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 | text inside the selection wash (input, page, card, popover) | 7:1 | 7:1 |
 | the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
@@ -327,8 +337,9 @@ variants and all six platform themes — and is part of the normal test suite. I
 can fail: a palette edit that reduces contrast fails the gate.
 
 The surfaces that carry no text are measured too, because "subtle" is not
-"invisible": a divider, a skeleton fill, the modal veil and a status message's
-edge are held to 1.05:1 against what they are painted on — the same
+"invisible": a divider, a skeleton fill, the modal veil, a status message's
+edge, the scrollbar thumb and the wash a row is hovered, pressed, selected or
+accented with are held to 1.05:1 against what they are painted on — the same
 perceptibility floor the soft status surfaces use. The veil is composited over
 its surface rather than rejected as translucent, and the two places it is
 measured are the content surfaces a modal covers; a black page cannot be
@@ -338,7 +349,11 @@ bounds and on both page surfaces. `decorativeFailures(theme, floor?)` runs the
 check, and `decorative.test.ts` holds every shipped and platform theme to it. It
 found two platform styles whose inherited skeleton matched their own surfaces —
 macOS light's on a muted strip (1.045:1) and Linux dark's on its card (1.004:1) —
-which now carry a `skeleton` of their own.
+which now carry a `skeleton` of their own, and the state-wash half found five
+aliases: the base dark theme's `hover` was its `popover`, the base light theme's
+was its `muted` strip, and macOS light's, Windows light's and Linux dark's were
+within one step of the strips they tint (the Linux dark wash now sits at 1.06 on
+both the card and the popover it can land on).
 
 Also not measured, deliberately: the elevation tint. A shadow is a blurred
 geometry, so a flat ratio overstates what the eye receives; its contract is the

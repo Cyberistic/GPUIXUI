@@ -8,6 +8,13 @@
  * palettes did exactly that: macOS light's inherited skeleton reached 1.045:1
  * on its muted strip and Linux dark's reached 1.004:1 on its card, so both
  * styles now carry a `skeleton` of their own.
+ *
+ * The state washes joined the same contract because they had the same hole and
+ * a worse symptom: the base dark theme's `hover` was its `popover`, so hovering
+ * a menu row repainted the surface it already sat on, and the base light
+ * theme's `hover` was its `muted` toolbar; macOS light's `hover` was its own
+ * muted strip, and Windows light's and Linux dark's were within a step of one.
+ * Those five now carry a wash a reader can see.
  */
 
 import { describe, expect, it } from "vitest";
@@ -110,6 +117,32 @@ describe("decorative surfaces", () => {
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("measures every state wash on every strip it tints", () => {
+    // A component paints a row's hover, press, selection or accent tint on the
+    // page, in a card, in a popover and in a muted toolbar — so each role is
+    // measured on all four rather than on one and assumed for the rest.
+    const missing = ["hover", "active", "selected", "accent"].flatMap((role) =>
+      ["background", "card", "popover", "muted"]
+        .filter((over) => !measured("stateWash", role, over))
+        .map((over) => `${role}/${over}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reports a hover that matches the row it tints", () => {
+    // The shipped defect: the base dark theme's hover was its popover value, so
+    // a hovered menu row painted the surface it already sat on.
+    const broken = { colors: { ...lightColors, hover: lightColors.muted } };
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, role, over }) =>
+          surface === "stateWash" && role === "hover" && over === "muted",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
 
   it("reports a scrollbar thumb that matches the strip it moves along", () => {

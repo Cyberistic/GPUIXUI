@@ -51,16 +51,16 @@ export const resolveHouseTheme = (mode: ThemeMode): Theme =>
       ring: mode === "dark" ? "#8A6EFF" : "#6A45F0",
       ...(mode === "dark"
         ? {
-            accent: "#241C4D",
+            accent: "#382C72",
             accentForeground: "#D5CBFF",
-            selected: "#2E2366",
+            selected: "#3E317E",
             selectedForeground: "#DDD3FF",
             selection: "#8A6EFF3D",
           }
         : {
-            accent: "#F2EEFF",
+            accent: "#E5DDFF",
             accentForeground: "#3E2E9E",
-            selected: "#ECE6FF",
+            selected: "#E2D9FF",
             selectedForeground: "#372680",
             selection: "#6A45F03D",
           }),
