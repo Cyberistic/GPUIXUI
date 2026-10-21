@@ -362,7 +362,7 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all five reports are
+CSS validation and lint, and `passed` is true only when all six reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
@@ -384,6 +384,7 @@ import { auditTheme } from "@gpuixui/tokens";
 const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
+audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status edge and thumb is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
@@ -396,6 +397,10 @@ Each report is also a function of its own:
 - `invalidColorRoles(theme)` lists every role whose value is not a hex colour
   GPUix can paint. The runtime **ignores** a value it cannot parse, so a typo
   paints black instead of failing — this is the warning that makes it visible.
+- `invalidShadowColors(theme)` applies the same grammar to every shadow in the
+  elevation scale, which the role report cannot see: a level a brand supplies
+  replaces the array whole, and a colour the runtime ignores paints no shadow at
+  all. `isPaintableColor(value)` is the grammar on its own.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
   translucent.

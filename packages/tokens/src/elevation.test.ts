@@ -28,6 +28,7 @@ import {
   elevationWithTint,
   highContrastDarkElevation,
   highContrastLightElevation,
+  invalidShadowColors,
   lightElevation,
   type BoxShadow,
 } from "./elevation.js";
@@ -291,5 +292,68 @@ describe("brand retint", () => {
   it("keeps the base scale when the shadow role is untouched", () => {
     const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
     expect(brand.elevation).toBe(lightTheme.elevation);
+  });
+});
+
+describe("unpaintable shadow colours", () => {
+  const shadow = (color: string): BoxShadow => ({
+    offsetX: 0,
+    offsetY: 2,
+    blurRadius: 4,
+    spreadRadius: 0,
+    color,
+  });
+
+  it("reports nothing for a scale the library builds", () => {
+    shipped.forEach(([label, elevation]) => {
+      expect(invalidShadowColors({ elevation }), label).toEqual([]);
+    });
+  });
+
+  it("names the level, the position and the value", () => {
+    const brand = extendTheme(lightTheme, {
+      elevation: { md: [shadow("#0B1220"), shadow("#12345")] },
+    });
+
+    expect(invalidShadowColors(brand)).toEqual([
+      { level: "md", index: 1, color: "#12345" },
+    ]);
+  });
+
+  it("reads a level a brand supplies whole, not only its first shadow", () => {
+    // `elevationShadow` resolves the first entry, so an invalid colour behind a
+    // valid one is the case a reader would otherwise never see.
+    const brand = extendTheme(darkTheme, {
+      elevation: { lg: [shadow("#00000066"), shadow("#0000006")] },
+    });
+
+    expect(invalidShadowColors(brand)).toEqual([
+      { level: "lg", index: 1, color: "#0000006" },
+    ]);
+  });
+
+  it("accepts the 6- and 8-digit grammar and rejects a colour the runtime cannot parse", () => {
+    const valid = extendTheme(lightTheme, {
+      elevation: { sm: [shadow("#000000")], md: [shadow("#00000020")] },
+    });
+    const invalid = extendTheme(lightTheme, {
+      elevation: { sm: [shadow("black")], md: [shadow("")] },
+    });
+
+    expect(invalidShadowColors(valid)).toEqual([]);
+    expect(invalidShadowColors(invalid)).toEqual([
+      { level: "sm", index: 0, color: "black" },
+      { level: "md", index: 0, color: "" },
+    ]);
+  });
+
+  it("reports a retint through the shadow role only once the role itself is invalid", () => {
+    // A valid role keeps every inherited level paintable; an invalid one is
+    // already `invalidColorRoles`' report, and the shadow report follows it.
+    const retinted = extendTheme(lightTheme, { colors: { shadow: "#0B1220" } });
+    const broken = extendTheme(lightTheme, { colors: { shadow: "#0B122" } });
+
+    expect(invalidShadowColors(retinted)).toEqual([]);
+    expect(invalidShadowColors(broken)[0]?.level).toBe("sm");
   });
 });

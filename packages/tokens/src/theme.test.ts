@@ -271,6 +271,7 @@ describe("theme audit example", () => {
     [brandTheme, brandLightTheme].forEach((theme) => {
       expect(auditTheme(theme)).toEqual({
         invalidRoles: [],
+        invalidShadows: [],
         contrast: [],
         decorative: [],
         series: { surfaces: [], distinctness: [], deficiencies: [] },

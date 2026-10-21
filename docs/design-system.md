@@ -341,11 +341,14 @@ paints black. `invalidColorRoles(theme)` reports every role that is not a 6- or
 8-digit hex colour, and it is what found the documented brand example pairing a
 saturated violet with the dark theme's near-black on-colour — 4.24:1, below the
 floor. The example now ships a white label with its violet, and the audit runs
-over it in `theme.test.ts`.
+over it in `theme.test.ts`. An elevation level a brand supplies is outside that
+report — it reads `colors` — and an unpaintable shadow colour paints no shadow,
+so `invalidShadowColors(theme)` names the level and position (§7).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all five in one call — `invalidRoles`, `contrast`, `decorative`, `series`
-and `selection` — and `passed` is true only when every list is empty. The contrast half
+reports all six in one call — `invalidRoles`, `invalidShadows`, `contrast`,
+`decorative`, `series` and `selection` — and `passed` is true only when every
+list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
 to AAA without the caller naming a floor set; an explicit `ContrastFloors`
@@ -432,9 +435,10 @@ roles in the tokens package, not fork components.
 
 Overrides are plain data, so `extendTheme` cannot reject a colour the renderer
 would ignore. The audit is the gate: `auditTheme(theme)` reports an unpaintable
-role, every pair below the floor its variant asks for, and every decorative
-surface too close to its background; run it over the resolved theme before it
-ships and assert `passed` in the package's own tests.
+role, an unpaintable shadow in a level the brand supplied, every pair below the
+floor its variant asks for, and every decorative surface too close to its
+background; run it over the resolved theme before it ships and assert `passed`
+in the package's own tests.
 
 ## 12. Non-goals
 

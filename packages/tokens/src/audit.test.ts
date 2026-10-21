@@ -87,6 +87,7 @@ describe("the floors follow the theme's contrast variant", () => {
   it("honours an explicit floor set over the variant", () => {
     expect(auditTheme(faintPlaceholder, contrastFloors)).toEqual({
       invalidRoles: [],
+      invalidShadows: [],
       contrast: [],
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },
@@ -123,5 +124,55 @@ describe("every report is part of the gate", () => {
       { role: "ring", value: "#2559D" },
     ]);
     expect(auditTheme(typo).passed).toBe(false);
+  });
+
+  it("reports a shadow colour no role check can see", () => {
+    // The role check reads `colors`, so a level a brand supplies is outside its
+    // reach: the runtime ignores the colour and the card or dialog paints flat.
+    const flatShadows = extendTheme(lightTheme, {
+      elevation: {
+        md: [
+          {
+            offsetX: 0,
+            offsetY: 4,
+            blurRadius: 12,
+            spreadRadius: 0,
+            color: "#00000",
+          },
+        ],
+      },
+    });
+
+    expect(auditTheme(flatShadows).invalidRoles).toEqual([]);
+    expect(auditTheme(flatShadows).invalidShadows).toEqual([
+      { level: "md", index: 0, color: "#00000" },
+    ]);
+    expect(auditTheme(flatShadows).passed).toBe(false);
+  });
+
+  it("passes a level a brand supplies in a colour the runtime paints", () => {
+    const raisedShadows = extendTheme(lightTheme, {
+      elevation: {
+        md: [
+          {
+            offsetX: 0,
+            offsetY: 4,
+            blurRadius: 12,
+            spreadRadius: 0,
+            color: "#00000020",
+          },
+        ],
+      },
+    });
+
+    expect(auditTheme(raisedShadows)).toEqual({
+      invalidRoles: [],
+      invalidShadows: [],
+      contrast: [],
+      decorative: [],
+      series: { surfaces: [], distinctness: [], deficiencies: [] },
+      selection: [],
+      passed: true,
+    });
   });
 });

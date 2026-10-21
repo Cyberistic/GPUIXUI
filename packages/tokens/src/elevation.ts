@@ -4,6 +4,7 @@ import {
   darkColors,
   highContrastDarkColors,
   highContrastLightColors,
+  isPaintableColor,
   lightColors,
 } from "./color.js";
 import type { Theme } from "./theme.js";
@@ -50,6 +51,14 @@ export interface Elevation {
 /** A level a surface can be raised to. */
 export type ElevationLevel = keyof Elevation;
 
+/** Every elevation level, in the order the catalogue lists them. */
+const elevationLevels = [
+  "sm",
+  "md",
+  "lg",
+  "overlay",
+] as const satisfies readonly ElevationLevel[];
+
 /**
  * The shadow an elevation level paints. A level is designed as one shadow, so it
  * resolves to its first entry; a reserved empty level paints nothing and returns
@@ -66,6 +75,53 @@ export function elevationShadow(
   level: ElevationLevel,
 ): BoxShadow | undefined {
   return theme.elevation[level][0];
+}
+
+/** One elevation shadow whose colour the renderer cannot paint. */
+export interface InvalidShadowColor {
+  /** The level that carries it. */
+  readonly level: ElevationLevel;
+  /** The shadow's position in the level's list. */
+  readonly index: number;
+  /** The value the theme carries. */
+  readonly color: string;
+}
+
+/**
+ * Every elevation shadow whose colour GPUix cannot parse.
+ *
+ * A level is normally a geometry plus a share of the `shadow` role, which
+ * `invalidColorRoles` covers — but `extendTheme` also takes an `elevation`
+ * override that replaces a level whole, colours and all. Those colours are the
+ * caller's, the runtime ignores one it cannot parse, and the level then paints
+ * no shadow at all: a raised card or a dialog silently sits flat. This is the
+ * report that makes it visible, and `auditTheme` includes it.
+ *
+ * A level's geometry is not checked here: a number the renderer reads is
+ * painted, so the failure this report covers is the silent one.
+ *
+ * @example
+ * ```ts
+ * import { extendTheme, invalidShadowColors, lightTheme } from "@gpuixui/tokens";
+ *
+ * const brand = extendTheme(lightTheme, {
+ *   elevation: {
+ *     md: [{ offsetX: 0, offsetY: 4, blurRadius: 12, spreadRadius: 0, color: "#00000020" }],
+ *   },
+ * });
+ * invalidShadowColors(brand); // [] — the colour is one GPUix paints
+ * ```
+ */
+export function invalidShadowColors(theme: {
+  readonly elevation: Elevation;
+}): readonly InvalidShadowColor[] {
+  return elevationLevels.flatMap((level) =>
+    theme.elevation[level].flatMap((shadow, index) =>
+      isPaintableColor(shadow.color)
+        ? []
+        : [{ level, index, color: shadow.color }],
+    ),
+  );
 }
 
 /**

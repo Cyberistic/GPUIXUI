@@ -679,8 +679,8 @@ accent — and `retro.test.ts` holds the result to the same contracts.
 
 ## Checking your own theme
 
-A theme fails silently in five independent ways, and `auditTheme(theme)` is the
-one call that reports all five:
+A theme fails silently in six independent ways, and `auditTheme(theme)` is the
+one call that reports all six:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -688,15 +688,16 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all five reports below are empty
+audit.passed; // true only when all six reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
+audit.invalidShadows; // elevation shadow colours the renderer cannot paint
 audit.contrast; // text, icon and boundary pairs below their floor
 audit.decorative; // dividers, skeleton fills, veils and status edges too subtle to see
 audit.series; // data-series colours lost on their plot, against each other, or for a colour-blind reader
 audit.selection; // a selection wash the reader cannot see, or that hides its text
 ```
 
-`passed` is computed from the five reports, so it cannot drift from them. The
+`passed` is computed from the six reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -725,6 +726,11 @@ import { invalidColorRoles } from "@gpuixui/tokens";
 invalidColorRoles({ colors: { ...lightColors, primary: "#7C5CF" } });
 // [{ role: "primary", value: "#7C5CF" }]
 ```
+
+`isPaintableColor(value)` is that grammar on its own, for a caller validating one
+value — a theme editor's hex field, a persisted brand colour — before it reaches
+a style. `invalidShadowColors(theme)` applies it to an elevation level a brand
+supplies, which the role report cannot see (§Elevation).
 
 ### Contrast
 
@@ -1048,6 +1054,25 @@ level passed in `elevation` replaces the whole array, colours and all, because
 its colours are the caller's. `elevationWithTint(elevation, tint)` is that rule on
 its own, for a theme composed by hand, and keeps each level's strength and
 geometry.
+
+A supplied level's colours are outside `invalidColorRoles`' reach — that report
+reads `colors` — and the runtime ignores a shadow colour it cannot parse, so the
+level paints no shadow at all. `invalidShadowColors(theme)` names the level, the
+position and the value, and `auditTheme` includes the report:
+
+```ts
+import { extendTheme, invalidShadowColors, lightTheme } from "@gpuixui/tokens";
+
+const brand = extendTheme(lightTheme, {
+  elevation: {
+    md: [
+      { offsetX: 0, offsetY: 4, blurRadius: 12, spreadRadius: 0, color: "#00000" },
+    ],
+  },
+});
+
+invalidShadowColors(brand); // [{ level: "md", index: 0, color: "#00000" }]
+```
 
 `lightElevation` and `darkElevation` are the level tables the two themes carry,
 shaded from their own colour set's `shadow` role;
@@ -1577,6 +1602,13 @@ every pair to 0.05 again after protanopia, deuteranopia and tritanopia are
 simulated. It reports the red/green pair a deuteranope sees 0.024 apart, a
 swatch that is the card it is drawn on, a repeated pair and a translucent
 swatch, and it executes the example's legend and reported lines.
+
+`packages/tokens/src/elevation.test.ts` covers the shadow scale: one shadow per
+level with exactly the runtime's five fields, the role's hue and strength per
+level and per shipped theme, a brand's retint reaching every inherited level while
+an explicit one survives, and the colour an explicit level carries —
+`invalidShadowColors` names the level, position and value, so a shadow the
+runtime would silently not paint is reported instead of shipped.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label, both families, a density preset and a full radius scale; `sans` is

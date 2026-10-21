@@ -10,7 +10,7 @@ export const almostBrandTheme = extendTheme(lightTheme, {
 });
 
 /**
- * The three checks a brand theme runs before it ships, as one call, on a theme
- * that fails one of them: an unparsable role is reported, and `passed` is false.
+ * The checks a brand theme runs before it ships, as one call, on a theme that
+ * fails one of them: an unparsable role is reported, and `passed` is false.
  */
 export const almostBrandAudit = auditTheme(almostBrandTheme);

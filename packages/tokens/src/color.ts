@@ -402,6 +402,24 @@ export const highContrastDarkColors = {
 const hexColor = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
 
 /**
+ * Whether `value` is a colour string GPUix can paint: a 6-digit `#RRGGBB` or an
+ * 8-digit `#RRGGBBAA`. The alpha byte is how the translucent roles — `selection`
+ * and `overlay` — carry their share.
+ *
+ * The runtime ignores a colour it cannot parse instead of failing, so this is
+ * the grammar every theme value is checked against: `invalidColorRoles` for the
+ * roles and `invalidShadowColors` for an elevation level a brand supplies.
+ *
+ * @example
+ * ```ts
+ * isPaintableColor("#2559D6"); // true
+ * isPaintableColor("#2559D"); // false
+ * ```
+ */
+export const isPaintableColor = (value: string): boolean =>
+  hexColor.test(value);
+
+/**
  * Return `color` with an alpha channel, as an 8-digit hex colour.
  *
  * `amount` is clamped to `0…1` and rounded to the nearest byte. A 6-digit
@@ -581,6 +599,6 @@ export function invalidColorRoles(theme: {
 }): readonly InvalidColorRole[] {
   return colorRoles.flatMap((role) => {
     const value = theme.colors[role];
-    return hexColor.test(value) ? [] : [{ role, value }];
+    return isPaintableColor(value) ? [] : [{ role, value }];
   });
 }
