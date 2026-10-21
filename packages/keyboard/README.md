@@ -1,51 +1,84 @@
 # `@gpuixui/keyboard`
 
-The keyboard/command layer: accelerator grammar, keymaps with scopes, exact
-event matching, and a command registry. Dependency-light on purpose — `effect`
-for typed parsing and the registry service, `@gpuix/react` for the key-event
-shape it reads. Nothing here renders or depends on the component/token layers.
-
-Plan `438` §4 specified the architecture; this package implements its library
-half (accelerators, scopes, commands). Focus traversal and the Escape layer
-stack belong to the runtime (`@gpuix/native@0.11.0` owns Tab/Shift+Tab and the
-headless `Dialog`), so they are deliberately **not** here.
+The keyboard/command layer: chord grammar, matching, keymaps with scope-stack
+precedence, multi-step sequences and a command registry. The grammar, parsing,
+matching and display are **`@tanstack/hotkeys`** (the pure, DOM-free API); this
+package keeps the thin GPUix adapter, the scope stack and the registry.
 
 ## Modules
 
 | Module | What it owns |
 | ------ | ------------ |
-| `accelerator` | `parse` / `format` / `formatSymbols` / `serialize` / `fromEvent` / `sameAccelerator`, the `Accelerator`/`Modifier`/`Key` schemas, and `AcceleratorParseError` |
-| `match` | `match(accelerator, event, platform)` — exact modifier matching |
-| `keymap` | `Keymap` + `resolve(keymap, scopes, accelerator, platform)` — scope precedence |
+| `decode` | `decodeGpuixEvent(event, platform)` — the GPUix `KeyEvent` → parsed-chord adapter |
+| `match` | `match(binding, event, platform)` — exact modifier matching via `areHotkeysEqual` |
+| `keymap` | `Keymap` + `resolve(keymap, scopes, chord, platform)` — scope precedence, first match wins |
+| `sequence` | `makeSequenceMatcher(sequence, options)` — multi-step sequences with a timeout |
 | `registry` | `Command` + the `CommandRegistry` `Context.Service` and its layer |
-| `display` | `formatSymbols` (keycap glyphs) and `formatText` (plain text) |
+| `display` | `formatSymbols` (keycap glyphs), an alias over `formatForDisplay(..., parts)` |
+| `platform` | `Platform` + `toTanstackPlatform` |
 | `react` | `CommandRegistryProvider` + `useCommandRegistry` |
 
-## The accelerator grammar
+## Why `@tanstack/hotkeys` (0.17.0)
 
-`+`-separated tokens: zero or more modifiers, then exactly one key.
-Case-insensitive, order-insensitive on parse, canonical order on format.
+The hand-rolled accelerator grammar (~459 LOC across `accelerator.ts` and
+`display.ts`) is deleted. `@tanstack/hotkeys@0.17.0` already provides, better
+than we did, `parseHotkey` / `normalizeHotkey` / `formatForDisplay`,
+`areHotkeysEqual`, `hasNonModifierKey`, `validateHotkey`, `normalizeKeyName`,
+`PUNCTUATION_CODE_MAP`, physical bindings (`Mod+[KeyS]`), dead-key handling, and
+sequence types. It is TanStack-maintained, `sideEffects: false`, and has **zero
+peer dependencies** — only `@tanstack/store`, which the repo already has.
 
-- **Modifiers** — `Mod`, `Cmd`/`Meta`/`Command`/`Super`, `Ctrl`/`Control`,
-  `Alt`/`Option`, `Shift`.
-- **`Mod`** resolves to the platform's primary modifier (⌘/Cmd on macOS, Ctrl
-  elsewhere); `Cmd` and `Ctrl` stay distinct on every platform.
-- **Keys** — the named keys (`Enter`, `Space`, `Tab`, `Escape`, `Backspace`,
-  `Delete`, arrows, `PageUp`, `PageDown`, `Home`, `End`, `F1`–`F12`) or one
-  printable character.
+- **Gained**: the full chord/sequence algebra, physical bindings, dead-key and
+  Option+letter correctness, `Mod` resolution, and canonical display — for a net
+  **~280 fewer LOC** (non-test source shrank 643 → 363; the 459-LOC grammar is
+  now a 68-LOC adapter).
+- **Deleted**: `accelerator.ts` (parse/format/serialize/alias tables),
+  `display.ts`, and the `Accelerator`/`AcceleratorParseError`/`Modifier`/`Key`
+  schemas TanStack now owns.
 
-`parse` is strict and returns a `Result`: a malformed chord is a typed
-`AcceleratorParseError` that names the offending token and the accepted form.
-`Platform` mirrors `@gpuixui/tokens`'s `PlatformName`
-(`"darwin" | "linux" | "win32" | "default"`) so the two are interchangeable.
+### Pure API + adapter, not `@tanstack/react-hotkeys`
 
-## Scopes and precedence
+`@tanstack/react-hotkeys` peers on `react-dom`, which this repo does not have
+(GPUix renders through React, not the DOM). `@tanstack/hotkeys`' event-facing
+API (`matchesKeyboardEvent`, `parseKeyboardEvent`, `createSequenceMatcher`) is
+typed against the DOM `KeyboardEvent`, which a GPUix `KeyEvent` is not. So this
+package installs **only** `@tanstack/hotkeys`, uses its pure functions, and
+writes the GPUix decode itself rather than casting a plain object to
+`KeyboardEvent`.
 
-A `Keymap` maps accelerators to command ids in named scopes. `resolve` takes the
-scope **stack as data**, ordered most-specific first (`["dialog", "global"]`),
-and returns the first match — so a dialog's binding shadows the global one for
-the same chord, and popping the scope restores it.
+### The 0.x churn risk
 
-The `CommandRegistry` service resolves a `KeyEvent` to at most one `Command`;
-the matched command's `handler` runs at the caller's boundary, never inside the
-registry.
+`@tanstack/hotkeys` is 0.x, so its surface may change in a minor release. The
+adapter isolates that risk: only `decode.ts`, `display.ts` and `platform.ts`
+touch the dependency's types; consumers import `@gpuixui/keyboard` and see a
+stable `Platform`/`Binding` shape. A breaking bump means updating three small
+files, not the components.
+
+## The decode adapter
+
+GPUix has no DOM, so its `KeyEvent` carries `key` (the logical key name —
+`"s"`, `"enter"`, `"f1"`), `keyChar` (the produced character — `"ß"` for
+Option+S), and `modifiers` `{shift, ctrl, alt, cmd}` — **no `code`**.
+
+`decodeGpuixEvent` reads `key` and the modifier flags, normalises with
+`normalizeKeyName`, and produces `parseHotkey({ key, ctrl, shift, alt, meta })`
+where `meta` is `modifiers.cmd`. It never touches `keyChar`: binding identity is
+the physical key, so an Option+letter or dead-key press decodes to its base key
+(Option+S → `Alt+S`, not `Alt+ß`). This is the `code` fallback TanStack's DOM
+matcher performs, already supplied here by `key` itself.
+
+A consequence: **physical bindings (`Mod+[KeyS]`) parse but cannot match a GPUix
+event** — there is no `code` to compare. They stay distinct from logical
+bindings (`Mod+S`), and are supported for forward compatibility, not for the
+current runtime.
+
+## Scopes, sequences and the registry
+
+A `Keymap` maps bindings (a chord or a `["g", "g"]` sequence) to command ids in
+named scopes. `resolve` takes the scope **stack as data**, most-specific first
+(`["dialog", "global"]`), first match wins. Multi-step sequences resolve through
+`makeSequenceMatcher`, a small step machine driven by decoded chords and an
+injected clock (mirroring `createSequenceMatcher`, which is DOM-typed and so
+unusable here without a cast). The `CommandRegistry` service resolves one
+`KeyEvent` to at most one `Command`; its `handler` runs at the caller's
+boundary, never inside the registry.

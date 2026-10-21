@@ -45,30 +45,34 @@ native playground mounts and which shows the same chords on macOS and Windows.
 
 ## The accelerator grammar
 
-A chord is `+`-separated tokens, case-insensitive, trimmed:
+The grammar and glyphs are `@tanstack/hotkeys`' `formatForDisplay`. A chord is
+`+`-separated tokens, case-insensitive, trimmed; named keys render as symbol
+glyphs on every platform, and modifier labels differ by platform:
 
 | Token | macOS | Windows / Linux |
 | ----- | ----- | --------------- |
 | `mod` | `⌘` | `Ctrl` |
-| `cmd` / `meta` | `⌘` | `⌘` |
-| `ctrl` | `Ctrl` | `Ctrl` |
+| `cmd` / `meta` | `⌘` | `Win` (`Super` on Linux) |
+| `ctrl` | `⌃` | `Ctrl` |
 | `alt` / `option` | `⌥` | `Alt` |
 | `shift` | `⇧` | `Shift` |
-| `enter` | `↵` | `Enter` |
+| `enter` | `↵` | `↵` |
 | `escape` | `Esc` | `Esc` |
-| `backspace` / `delete` | `⌫` / `⌦` | `Backspace` / `Del` |
-| `up` / `down` / `left` / `right` | `↑ ↓ ← →` | `Up Down Left Right` |
-| `pageup` / `pagedown` / `home` / `end` | `PgUp PgDn Home End` | same |
-| `f1`–`f12` | `F1`–`F12` | same |
+| `backspace` / `delete` | `⌫` / `⌦` | `⌫` / `⌦` |
+| `tab` / `space` | `⇥` / `␣` | `⇥` / `␣` |
+| `up` / `down` / `left` / `right` | `↑ ↓ ← →` | `↑ ↓ ← →` |
+| `pageup` / `pagedown` / `home` / `end` | `PageUp PageDown Home End` | same |
+| `f1`–`f24` | `F1`–`F24` | same |
 | one character | upper-cased | upper-cased |
 
 - **`mod` is the portable token**: on macOS it is Command, elsewhere Control.
-  Use `ctrl` only when you mean the Control key on every platform.
-- **Order is canonicalised.** Modifiers render in a fixed order (`mod`, `cmd`,
-  `ctrl`, `alt`, `shift`, then the key), so `shift+mod+k` renders `⌘ ⇧ K` no
-  matter how it was written.
-- **Unknown multi-character tokens display verbatim** (title-cased), so a
-  consumer is never blocked by a missing entry.
+  Use `ctrl` only when you mean the Control key on every platform, and `cmd`
+  only for the Command/Windows key.
+- **Order is canonicalised.** On macOS modifiers render Shift-then-Command
+  (`⇧⌘Z`); on Windows/Linux they render `Ctrl+Shift+Z` — no matter how the
+  chord was written.
+- **An unknown token displays verbatim**, so a consumer is never blocked by a
+  missing entry.
 
 `KeyboardShortcut` takes `platform?: "darwin" | "linux" | "win32" | "default"`
 to render another platform's glyphs — this is what the docs platform toggle
@@ -119,8 +123,8 @@ every cheat sheet with no code change — see [Theming](/docs/theming).
 `src/behaviour/keyboard-shortcuts.test.tsx` runs in the real GPUix renderer
 (6 tests): declaration order, list/group/listitem roles, level-3 headings, the
 muted keycap surface, a consumer style callback receiving the formatted keys,
-and both themes. The `@gpuixui/keyboard` accelerator suite covers the grammar
-itself.
+and both themes. The `@gpuixui/keyboard` suite covers the grammar, decode,
+matching and sequence resolution behind the glyphs.
 
 ```sh
 nub run --filter @gpuixui/components test
@@ -133,6 +137,6 @@ Linux x64, Windows x64, or this Intel Mac, where plan 140's locally built
 
 ## Related
 
-- **Hotkey recorder** — capture a chord, using the same accelerator model.
+- **Hotkey recorder** — capture a chord, using the same chord model.
 - **Dropdown menus** — a shortcut can be shown beside a menu action.
 - **Command menu** — the palette a `mod+k` chord usually opens.

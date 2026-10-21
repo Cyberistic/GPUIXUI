@@ -1,9 +1,9 @@
 /**
  * HotkeyRecorder: bind a keyboard chord to an action.
  *
- * The accelerator grammar and the platform glyphs come from `@gpuixui/keyboard`
- * (`fromEvent`, `serialize`, `formatSymbols`); this component only owns the
- * recording state and the display.
+ * The chord grammar and the platform glyphs come from `@gpuixui/keyboard`
+ * (`decodeGpuixEvent`, `normalizeHotkey`, `hasNonModifierKey`, `formatSymbols`);
+ * this component only owns the recording state and the display.
  *
  * 0.10.0's test renderer emits no key event for Backspace or Delete, so
  * clearing is a real control next to the recorder rather than a key the docs
@@ -23,8 +23,13 @@ import {
   HOTKEY_RECORDER_KEYS,
   HOTKEY_RECORDER_TEXT,
 } from "@gpuixui/tw";
-import { formatSymbols, fromEvent, serialize } from "@gpuixui/keyboard";
-import * as Option from "effect/Option";
+import {
+  decodeGpuixEvent,
+  formatSymbols,
+  hasNonModifierKey,
+  normalizeHotkey,
+  toTanstackPlatform,
+} from "@gpuixui/keyboard";
 import { useRef, useState } from "react";
 import { isActivation, isDismiss } from "./internal/key.js";
 import { Keycap } from "./keyboard-shortcuts.js";
@@ -117,13 +122,12 @@ export const HotkeyRecorder = ({
             setRecording(false);
             return;
           }
-          Option.match(fromEvent(event, currentPlatform), {
-            onNone: () => undefined,
-            onSome: (accelerator) => {
-              onChange(serialize(accelerator));
-              setRecording(false);
-            },
-          });
+          const platform = toTanstackPlatform(currentPlatform);
+          const chord = decodeGpuixEvent(event, currentPlatform);
+          if (hasNonModifierKey(chord, platform)) {
+            onChange(normalizeHotkey(chord, platform));
+            setRecording(false);
+          }
           return;
         }
         if (isActivation(event)) start();

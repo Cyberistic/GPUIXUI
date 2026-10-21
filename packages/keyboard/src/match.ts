@@ -1,29 +1,24 @@
-import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
-import {
-  fromEvent,
-  sameAccelerator,
-  type Accelerator,
-  type Platform,
-} from "./accelerator.js";
+import { areHotkeysEqual, parseHotkey } from "@tanstack/hotkeys";
+import { decodeGpuixEvent } from "./decode.js";
+import type { Binding } from "./keymap.js";
+import { toTanstackPlatform, type Platform } from "./platform.js";
 
 /**
- * Whether `accelerator` matches this key event exactly.
+ * Whether `binding` matches this key event exactly.
  *
- * Modifiers are exact: `Mod+K` does not match `Mod+Shift+K` unless Shift is
- * listed, and a modifier never leaks into a chord that did not name it. `mod`
- * resolves against `platform`; `cmd` and `ctrl` stay distinct. The real
- * `KeyEvent` carries `keystrokeId`, the authoritative identity of one physical
- * keystroke shared by its element handler and the window handler — the registry
- * uses that id to avoid resolving twice — while this predicate itself reads the
- * event's `key` and `modifiers`.
+ * Modifiers are exact — `Mod+K` does not match `Mod+Shift+K` unless Shift is
+ * named, and `cmd`/`ctrl` stay distinct. `Mod` resolves against `platform`.
+ * Comparison is delegated to `areHotkeysEqual`, so a physical binding
+ * (`Mod+[KeyS]`) and a logical one (`Mod+S`) stay distinct.
  */
 export const match = (
-  accelerator: Accelerator,
+  binding: Binding,
   event: EventPayload,
   platform: Platform,
 ): boolean =>
-  Option.match(fromEvent(event, platform), {
-    onNone: () => false,
-    onSome: (captured) => sameAccelerator(accelerator, captured, platform),
-  });
+  areHotkeysEqual(
+    parseHotkey(binding, toTanstackPlatform(platform)),
+    decodeGpuixEvent(event, platform),
+    toTanstackPlatform(platform),
+  );

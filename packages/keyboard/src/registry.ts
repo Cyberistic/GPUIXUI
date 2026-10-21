@@ -4,15 +4,18 @@ import * as Context from "effect/Context";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import type { KeyEvent } from "@gpuix/react";
-import { fromEvent, type Accelerator, type Platform } from "./accelerator.js";
-import { resolve, type Keymap, type Scope } from "./keymap.js";
+import { hasNonModifierKey } from "@tanstack/hotkeys";
+import { decodeGpuixEvent } from "./decode.js";
+import { resolve, type Binding, type Keymap, type Scope } from "./keymap.js";
+import { toTanstackPlatform, type Platform } from "./platform.js";
 
-/** One command: a named action bound to an accelerator in a scope. */
+/** One command: a named action bound to a hotkey in a scope. */
 export interface Command {
   readonly id: string;
   readonly title: string;
   readonly scope: Scope;
-  readonly accelerator: Accelerator;
+  /** The chord (`"mod+s"`) or sequence (`["g", "g"]`) that triggers it. */
+  readonly hotkey: Binding;
   /** Runs at the caller's boundary; the registry only resolves, never runs. */
   readonly handler: Effect.Effect<void>;
 }
@@ -35,7 +38,7 @@ export class CommandRegistry extends Context.Service<
 
 const keymapOf = (commands: ReadonlyArray<Command>): Keymap => ({
   bindings: Arr.map(commands, (command) => ({
-    accelerator: command.accelerator,
+    hotkey: command.hotkey,
     commandId: command.id,
     scope: command.scope,
   })),
@@ -46,14 +49,17 @@ const resolveCommand = (
   event: KeyEvent,
   scopes: ReadonlyArray<Scope>,
   platform: Platform,
-): Option.Option<Command> =>
-  Option.flatMap(fromEvent(event, platform), (accelerator) =>
-    Option.flatMap(
-      resolve(keymapOf(commands), scopes, accelerator, platform),
-      (commandId) =>
-        Arr.findFirst(commands, (command) => command.id === commandId),
-    ),
+): Option.Option<Command> => {
+  const chord = decodeGpuixEvent(event, platform);
+  if (!hasNonModifierKey(chord, toTanstackPlatform(platform))) {
+    return Option.none();
+  }
+  return Option.flatMap(
+    resolve(keymapOf(commands), scopes, chord, platform),
+    (commandId) =>
+      Arr.findFirst(commands, (command) => command.id === commandId),
   );
+};
 
 /** A read-only registry over the given commands, as plain data. */
 export const commandRegistry = (

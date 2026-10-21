@@ -54,13 +54,8 @@ describe("HotkeyRecorder", () => {
     empty.unmount();
 
     const bound = renderComponent(<Harness initial="ctrl+k" />);
-    expect(bound.renderer.getAllText()).toEqual([
-      "Ctrl",
-      "K",
-      "✕",
-      "Elsewhere",
-    ]);
-    expect(bound.renderer.findByText("Ctrl")?.parentId).toBeDefined();
+    expect(bound.renderer.getAllText()).toEqual(["⌃", "K", "✕", "Elsewhere"]);
+    expect(bound.renderer.findByText("⌃")?.parentId).toBeDefined();
     bound.unmount();
   });
 
@@ -73,8 +68,8 @@ describe("HotkeyRecorder", () => {
 
     recorder.renderer.simulateKeystrokes("ctrl-shift-k");
 
-    expect(onChange).toHaveBeenCalledWith("ctrl+shift+k");
-    expect(recorder.renderer.getAllText()).toContain("Ctrl");
+    expect(onChange).toHaveBeenCalledWith("Control+Shift+K");
+    expect(recorder.renderer.getAllText()).toContain("⌃");
 
     recorder.unmount();
   });
@@ -89,7 +84,7 @@ describe("HotkeyRecorder", () => {
     recorder.renderer.simulateKeystrokes("escape");
 
     expect(onChange).not.toHaveBeenCalled();
-    expect(recorder.renderer.getAllText()).toContain("Ctrl");
+    expect(recorder.renderer.getAllText()).toContain("⌃");
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
 
     recorder.unmount();

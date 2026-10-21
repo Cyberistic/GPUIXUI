@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@gpuix/react": "catalog:",
+    "@tanstack/hotkeys": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {

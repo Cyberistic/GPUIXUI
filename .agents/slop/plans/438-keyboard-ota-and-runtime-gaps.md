@@ -353,6 +353,18 @@ half (§4.3) is **not** needed: 0.11.0 owns Tab/Shift+Tab and the headless
 scopes and commands, not focus traversal. Nothing here needs a runtime change,
 and gaps 3 and 4 from §3 are the only ones it consumes.
 
+**Engine change (owner's call).** The hand-rolled accelerator grammar described
+below was replaced by `@tanstack/hotkeys@0.17.0` as the engine, with a thin
+GPUix adapter on top: `decodeGpuixEvent` (the `KeyEvent` → `ParsedHotkeyChord`
+adapter, since the runtime has no `code`), `formatSymbols` over
+`formatForDisplay`, `match` over `areHotkeysEqual`, and `makeSequenceMatcher`
+(a step machine mirroring TanStack's DOM-typed `createSequenceMatcher`, which
+cannot be driven without a `KeyboardEvent`). The scope-stack `Keymap` (§4.2)
+and the `CommandRegistry` (§4.1) stay ours — TanStack's scope model is bound to
+its DOM `HotkeyManager`. Physical bindings (`Mod+[KeyS]`) now parse but cannot
+match a GPUix event (no `code` to compare); they are forward-compatible, not
+runtime-supported. The dependency justification is in `packages/keyboard/README.md`.
+
 ### 4.1 Typed command / action registry
 
 A `CommandRegistry` service (Effect `Context.Service` + `Layer`, per the house
@@ -613,14 +625,17 @@ kept only as a record of what changed.
 ## 7. Result
 
 The keyboard half of the architecture **landed** as `packages/keyboard`
-(`@gpuixui/keyboard`): the strict `Accelerator` grammar (parse/format/serialize,
-canonical order, typed `AcceleratorParseError`), the `Keymap` with scope-stack
-precedence, exact `match`, the `CommandRegistry` `Context.Service` and the
-React provider, plus the `formatSymbols`/`formatText` display surface. The two
-consumers (`HotkeyRecorder`, `KeyboardShortcuts`) now reuse it; the
-`shortcut/accelerator.ts` and `hotkey/logic.ts` modules were lifted into the
-package and removed. Focus traversal is **not** in the package — 0.11.0 owns
+(`@gpuixui/keyboard`). It began with the strict `Accelerator` grammar, then the
+grammar was **replaced by `@tanstack/hotkeys@0.17.0`** behind a thin GPUix
+adapter: `decodeGpuixEvent` (no `code` → the adapter reads `key` + modifiers),
+`formatSymbols` over `formatForDisplay`, `match` over `areHotkeysEqual`, and a
+tested `makeSequenceMatcher` step machine. Our own pieces remain: the `Keymap`
+scope-stack precedence, `resolve`, and the `CommandRegistry` `Context.Service`
+plus React provider. The two consumers (`HotkeyRecorder`, `KeyboardShortcuts`)
+keep their public props. Focus traversal is **not** in the package — 0.11.0 owns
 Tab/Shift+Tab and the headless `Dialog` owns the Escape layer stack (§4.3).
+Physical bindings (`Mod+[KeyS]`) parse but cannot match a GPUix event (no `code`
+to compare).
 
 Still open:
 

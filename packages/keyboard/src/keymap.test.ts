@@ -8,29 +8,15 @@
 
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import * as Result from "effect/Result";
-import { Accelerator, parse } from "./accelerator.js";
+import { parseHotkey } from "@tanstack/hotkeys";
 import { resolve, type KeyBinding, type Keymap } from "./keymap.js";
-
-const parsed = (input: string): Accelerator => {
-  const result = parse(input);
-  if (Result.isFailure(result)) {
-    throw new Error(
-      `parse(${JSON.stringify(input)}) failed: ${result.failure.message}`,
-    );
-  }
-  return result.success;
-};
+import { toTanstackPlatform } from "./platform.js";
 
 const binding = (
-  accelerator: string,
+  hotkey: string,
   commandId: string,
   scope: string,
-): KeyBinding => ({
-  accelerator: parsed(accelerator),
-  commandId,
-  scope,
-});
+): KeyBinding => ({ hotkey, commandId, scope });
 
 const keymap: Keymap = {
   bindings: [
@@ -40,34 +26,37 @@ const keymap: Keymap = {
   ],
 };
 
+const chord = (binding: string, platform: "darwin" | "win32" = "darwin") =>
+  parseHotkey(binding, toTanstackPlatform(platform));
+
 describe("resolve", () => {
   it("lets a dialog binding shadow the global one for the same chord", () => {
     expect(
-      resolve(keymap, ["dialog", "global"], parsed("mod+k"), "darwin"),
+      resolve(keymap, ["dialog", "global"], chord("mod+k"), "darwin"),
     ).toEqual(Option.some("dialog.save"));
   });
 
   it("restores the global binding once the scope is popped", () => {
-    expect(resolve(keymap, ["global"], parsed("mod+k"), "darwin")).toEqual(
+    expect(resolve(keymap, ["global"], chord("mod+k"), "darwin")).toEqual(
       Option.some("global.save"),
     );
   });
 
   it("resolves a chord with no scoped shadow", () => {
     expect(
-      resolve(keymap, ["dialog", "global"], parsed("mod+j"), "darwin"),
+      resolve(keymap, ["dialog", "global"], chord("mod+j"), "darwin"),
     ).toEqual(Option.some("global.jump"));
   });
 
   it("returns None for an unmatched chord", () => {
     expect(
-      resolve(keymap, ["dialog", "global"], parsed("mod+z"), "darwin"),
+      resolve(keymap, ["dialog", "global"], chord("mod+z"), "darwin"),
     ).toEqual(Option.none());
   });
 
   it("honours the stack order: a reversed stack restores the global binding", () => {
     expect(
-      resolve(keymap, ["global", "dialog"], parsed("mod+k"), "darwin"),
+      resolve(keymap, ["global", "dialog"], chord("mod+k"), "darwin"),
     ).toEqual(Option.some("global.save"));
   });
 });

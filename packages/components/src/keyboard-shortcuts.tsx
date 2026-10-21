@@ -254,7 +254,7 @@ export const keyboardShortcutsMeta = {
   gpuixSupport: "yes",
   limitations: [
     "display-only: a row documents a chord, it does not register a handler",
-    "the accelerator grammar is ours; an unknown token displays verbatim rather than failing",
+    "the chord grammar is @tanstack/hotkeys; an unknown token displays verbatim rather than failing",
     "rows are separated by 1px elements because 0.10.0 has one border colour per element",
   ],
   docs: "docs/keyboard-shortcuts.mdx",

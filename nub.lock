@@ -21,6 +21,9 @@ catalogs:
     '@tailwindcss/vite':
       specifier: ^4.3.2
       version: 4.3.3
+    '@tanstack/hotkeys':
+      specifier: 0.17.0
+      version: 0.17.0
     '@tanstack/react-router':
       specifier: ^1.170.44
       version: 1.170.45
@@ -312,6 +315,9 @@ importers:
       '@gpuix/react':
         specifier: 'catalog:'
         version: 0.11.0(react@19.3.1)
+      '@tanstack/hotkeys':
+        specifier: 'catalog:'
+        version: 0.17.0
       effect:
         specifier: 'catalog:'
         version: 4.0.5
@@ -2369,6 +2375,10 @@ packages:
   '@tanstack/history@1.162.5':
     resolution: {integrity: sha512-w1+YvwmTkwt5n8yUqEH3IWZ9DsmorCZW/EQ3KYHnqEgIkOZpH54NvW6/Epq3Dzb8H0ifIeYX8PExvrNLIH5FIA==}
     engines: {node: '>=20.19'}
+
+  '@tanstack/hotkeys@0.17.0':
+    resolution: {integrity: sha512-HhgfF+Wqz3ofCQaDHXSkItRbLXmigoHsxJsQGbGc3Kgu/gunwcFLqVubfoUmdRK/YN7fuZYN2vEOk3oMGxSWTg==}
+    engines: {node: '>=20'}
 
   '@tanstack/react-router@1.170.45':
     resolution: {integrity: sha512-6tuiIAFb82zsk/YxveJRyGjbsm6kIfgUuoH7qCp2R2aSHveW6W0t/6j+Sn4m1iIlA2lLU4cvooqks08/YMOThw==}
@@ -5889,6 +5899,10 @@ snapshots:
       vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
 
   '@tanstack/history@1.162.5': {}
+
+  '@tanstack/hotkeys@0.17.0':
+    dependencies:
+      '@tanstack/store': 0.11.2
 
   '@tanstack/react-router@1.170.45(react@19.3.1)(react-dom@19.3.1(react@19.3.1))':
     dependencies:

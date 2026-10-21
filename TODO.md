@@ -91,7 +91,7 @@ of a generic "unknown class".
 
 ### Keyboard workstream (`@gpuixui/keyboard`)
 
-`[x]` `[██████████]` 3/3
+`[x]` `[██████████]` 4/4
 
 `[x]` Land `@gpuixui/keyboard` (plan 438 §4) — the strict `Accelerator` grammar
 (`parse`/`format`/`formatSymbols`/`serialize` with canonical order, `mod`
@@ -107,6 +107,17 @@ unchanged.
 `[x]` Test it: 29 unit tests (parse/format round-trips + exact error text,
 modifier exactness, scope precedence with pop-restore, platform formatting,
 negative controls); `@gpuixui/components` unit + behaviour suites stay green.
+`[x]` Replace the hand-rolled accelerator grammar with `@tanstack/hotkeys@0.17.0`
+as the engine (owner's call): delete `accelerator.ts`/`display.ts` and the
+`Accelerator`/`AcceleratorParseError`/`Modifier`/`Key` schemas; keep the thin
+GPUix adapter (`decodeGpuixEvent`), the scope-stack `Keymap` and the
+`CommandRegistry`. Adopt `HotkeySequence` in `Keymap` + a tested
+`makeSequenceMatcher` step machine (TanStack's `createSequenceMatcher` is
+DOM-typed, so it is not driven without a cast). Recorder captures via
+`normalizeHotkey(decodeGpuixEvent(…))` + `hasNonModifierKey`; display via
+`formatForDisplay`. 32 unit tests now (decode/match/scope/sequence/format),
+`@gpuixui/components` unit (332) + behaviour (452) stay green. Non-test source
+643 → 363 LOC; the 459-LOC grammar is now a 68-LOC adapter.
 
 ### `@gpuixui/tw` migration (`tw-primitives`)
 
