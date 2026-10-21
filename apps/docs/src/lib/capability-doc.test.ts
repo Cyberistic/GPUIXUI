@@ -224,10 +224,23 @@ describe("docs/gpuix-capabilities.md", () => {
     // `Tab` traversal moved focus without ever running the handler: a tooltip
     // that opens on focus stayed closed and Tabs' own counter stayed at 0.
     // Both probes paint, so the row carries their evidence.
-    const events = rowFor("Pointer, keyboard, focus and scroll events");
+    const events = rowFor("Pointer, keyboard and focus events");
     expect(events?.verdict).toBe("supported, with limits");
     expect(events?.evidence).toContain("tooltip-lifecycle");
     expect(events?.evidence).toContain("tabs-lifecycle");
+  });
+
+  it("records what each scroll event reports, with the probe that measured it", () => {
+    // The events row listed `onScroll` and `onScrollChange` side by side as if
+    // they carried the same number. A window measured that they do not: the
+    // wheel input is not the distance travelled, so a scrollbar built on
+    // `deltaY` jumps past the position it painted.
+    const scroll = rowFor("Scroll events");
+    expect(scroll?.verdict).toBe("supported, with limits");
+    expect(scroll?.evidence).toContain("scroll-lifecycle");
+    expect(scroll?.evidence).toContain("onScrollChange");
+    expect(scroll?.evidence).toContain("getScrollOffset");
+    expect(scroll?.workaround).toContain("onScrollChange");
   });
 
   it("leaves the uncertain rows uncertain", () => {
@@ -241,8 +254,34 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("editor-surface");
     expect(runtimePage).toContain("tooltip-lifecycle");
     expect(runtimePage).toContain("tabs-lifecycle");
+    expect(runtimePage).toContain("scroll-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
+  });
+
+  it("publishes which scroll listener carries which number", () => {
+    // The doc row is the durable record; the page is what a component author
+    // reads before wiring a scrollbar. Naming the two listeners is not enough
+    // — the page has to say which one is the absolute, clamped position.
+    const start = runtimePage.indexOf("## Measured in a window");
+    const end = runtimePage.indexOf("\n## ", start + 1);
+    const section = runtimePage.slice(start, end === -1 ? undefined : end);
+    const pageRows = section
+      .split("\n")
+      .filter((line) => line.startsWith("|") && !/^\|[\s:|-]+\|$/.test(line))
+      .map(cells);
+
+    const scroll = pageRows.find((row) =>
+      (row[0] ?? "").startsWith("Scroll event"),
+    );
+    expect(
+      scroll,
+      "the page's measured table has no scroll-event row",
+    ).toBeDefined();
+    expect(scroll?.[1]).toContain("onScrollChange");
+    expect(scroll?.[1]).toContain("getScrollOffset");
+    expect(scroll?.[1]).toContain("clamped");
+    expect(scroll?.[2]).toContain("onScrollChange");
   });
 
   it("publishes the same matrix the code narrows on", () => {
