@@ -200,6 +200,17 @@ describe("the rule is precise", () => {
       { group: "radius", path: "md", value: -8, rule: "nonNegative" },
     ]);
   });
+
+  it("reports a size that reached the theme from a value that did not parse", () => {
+    // The real source of a non-finite token is arithmetic on input — a scale
+    // factor read from a settings file, a `parseFloat` of "auto" — not a literal
+    // `NaN` typed into a theme.
+    expect(
+      invalidNumbers(brand({ spacing: { md: Number.parseFloat("auto") } })),
+    ).toEqual([
+      { group: "spacing", path: "md", value: Number.NaN, rule: "nonNegative" },
+    ]);
+  });
 });
 
 describe("the audit gates on the numbers", () => {
