@@ -26,12 +26,11 @@ import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { Report, Runtime, Smoke } from "@gpuixui/testing";
+import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
 import { createElement, type ReactNode } from "react";
 import type { PlaygroundScenario } from "../types.js";
-import { createNativeHost } from "./host.js";
 import { withWindowKeyProvider } from "../window-key.js";
 import type { WindowKeyHandler } from "../window-key.js";
 import { palettes } from "../palettes.js";
@@ -326,7 +325,7 @@ export const program = (
           onSome: (handler) => handler(event),
         }),
     });
-    const host = createNativeHost(root.renderer);
+    const host = Native.createTestHost(root.renderer);
     const startedAt = yield* Clock.currentTimeMillis;
 
     const report = yield* Smoke.runScenarios(

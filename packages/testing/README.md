@@ -20,23 +20,31 @@ the native half (`apps/playground`) supplies the real renderer.
 ## Surface
 
 ```ts
-import { Report, Runtime, Smoke } from "@gpuixui/testing";
+import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 ```
 
 | Namespace | Responsibility |
 | --------- | -------------- |
 | `Runtime` | `detectRuntime` (never fails), `bindingHint`, `RuntimeStatus` |
 | `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union; the async twin `AsyncSmokeHost`/`AsyncSmokeScenario`/`runAsyncScenarios` for a real window |
+| `Native`  | `createTestHost` over the structural `NativeRenderer`/`NativeElement` port: the synchronous offscreen host, with the `testId` lookups, ancestor-bounds fallback, subtree text join, style decode and drag synthesis this package can test without a renderer |
 | `Pixels`  | `decodePng` (inflate injected), `pixelAt`, `countColour`, `hexToRgba`, `Pixels`, `Rgba` — paint evidence from a captured frame |
 | `State`   | `runCommands` — replay a component runtime's commands and query the final state |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 
 ## Adapting a host
 
-A consumer adapts its renderer to `Smoke.SmokeHost` — an input surface (click,
-key, wheel, drag, text selection) and an inspection surface (text, bounds,
-scroll offset, the selected text, the runtime's own painted style, screenshot).
-The adapter is the only place a GPUix type appears; scenarios see plain values.
+A consumer either passes its synchronous renderer to `Native.createTestHost` —
+the port is structural, so a real `TestRenderer` satisfies it with no wrapper —
+or adapts to `Smoke.SmokeHost` itself: an input surface (click, key, wheel, drag,
+text selection) and an inspection surface (text, bounds, scroll offset, the
+selected text, the runtime's own painted style, screenshot).
+
+`Native` is where the offscreen decisions live, and they are unit-tested against
+a fake renderer: a `<virtual-list>` or `<anchored>` layer paints no bounds of its
+own, so input aimed at it walks up to the nearest painted ancestor; a subtree's
+text is a join; a style the runtime reports with the wrong type fails the decode;
+a drag is a down, N moves and an up.
 
 `dragSelect(from, to)` is separate from `drag` on purpose: the runtime registers
 its selection listeners during **paint**, so a hand-rolled down/move/up with no

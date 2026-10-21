@@ -853,7 +853,7 @@ Both are specified in ; each fix starts with a plan under .
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
 
-`[ ]` `[█░░░░░░░░░]` 3/36
+`[ ]` `[█░░░░░░░░░]` 4/36
 
 `[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, a `Button`/`Toggle` named by its text child must publish that text, and `Text` must carry heading/code semantics (salvage 026, 058, 059)
 `[ ]` `packages/primitives`: `Tooltip` content is not published as an accessible description on its trigger (salvage 071)
@@ -862,7 +862,7 @@ Both are specified in ; each fix starts with a plan under .
 `[ ]` `packages/primitives`: `Select` has no option groups, its list neither flips off a window edge nor scrolls past the window, its keyboard highlight cannot be revealed, and its trigger paints no ring (salvage 066, 068, 069, 075, 083)
 `[ ]` `packages/primitives`: `Rating` cannot show a failed validation (salvage 070)
 `[ ]` `packages/primitives`: `ScrollArea` is not focusable and has no keyboard scrolling (salvage 072)
-`[ ]` `packages/primitives`: every `OTPField` cell is a tab stop (salvage 076)
+`[x]` `packages/primitives`: every `OTPField` cell was a tab stop; the group now has one roving stop on the cell the code has reached (or the focused cell), proven natively as Tab-in/Tab-out (salvage 076)
 `[x]` `packages/primitives`: `stepNumber` added raw floats, so a 0.1 step reported `0.30000000000000004`; the move is now rounded to the finer of the value's and step's decimal places, with an integer step left exact at 1e15 (salvage 077)
 `[ ]` `packages/primitives`: `Text`'s `clamp` is decided by the first identical string the runtime lays out (salvage 082)
 `[ ]` `packages/primitives`: no `IconButton` (icon-only button) part (salvage 086)
