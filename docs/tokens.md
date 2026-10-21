@@ -631,8 +631,9 @@ Rules:
 4. Use `borderStrong` for essential control boundaries and `border` for
    dividers.
 5. Focus is `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by
-   `borderWidth.strong`. The runtime has no `outline*` and no `focusVisible`, so
-   the ring is never a border and never changes layout. See [Focus](#focus).
+   `borderWidth.strong`. The ring is never a border and never changes layout; plan
+   053 moves it to an `outline` once the runtime's `focusVisible` paint is proven.
+   See [Focus](#focus).
 6. A filled action's hover and press are `filledHover(theme, action)` and
    `filledPressed(theme, action)`; never `alpha(role, …)` on a fill, which lets
    the surface behind the control show through.
