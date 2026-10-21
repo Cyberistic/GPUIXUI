@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 33/34
+`[x]` `[█████████░]` 35/36
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -371,6 +371,7 @@ merge it and drop their structural copies
 `[x]` Guard the design-system rows in `COMPONENTS.md` — `packages/tokens/src/inventory.test.ts` fails when a row loses one of its four columns, leaves the status vocabulary, or says `done` without naming a test file that exists (all three directions measured). It found seven `done` rows claiming a capability with no named proof; each now cites the file that proves it (`color.test.ts`, `contrast.test.ts`, `focus.test.ts`, `scale.test.ts`, `styles.test.ts`, `theme.test.ts`, `typography.test.ts`, `react.test.tsx`, the two `apps/docs` guards, and the playground's registry guard for the gallery), and two rows move to `done` on evidence: `Design tokens` (the 21/21 native gallery closed the last gap) and `Theme extension` (the gallery switches the provider's value dark → light → high contrast in the renderer and every role repaints, so the switch is no longer a server-render claim)
 `[x]` Ship the persisted-choice contract (salvage 065/067/068) — six ordered indexes (`themeModes`, `themeContrasts`, `platformNames`, `densityNames`, `controlSizes`, `statusTones`) own their unions, each with a guard that narrows `unknown`; `guards.test.ts` holds every index to the records it selects (a mode without both contrast variants, a platform without a style, a preset without a metric per size, a tone without its own soft roles) and executes `persisted-choices.example.ts`, and the package's own suites read the indexes instead of retyping the unions. Two directions measured: dropping `dark` from `themeModes` fails the record check and the stored-choice case; a guard that accepts any string fails the rejection case
 `[x]` Guard the documents' imports — `docs.test.ts` reads `README.md` and `docs/tokens.md`, collects every name imported from `@gpuixui/tokens`, and fails when one is not a declared export (proven with `isThemeModez`)
+`[x]` Hold `docs/design-system.md`'s numbers to the tokens — `design-system-docs.test.ts` reads the page and checks the role count (`colorRoles` and both colour sets), the spacing and radius scales, the avatar diameters, each density preset's control heights and row height, each platform's radius scale and named density, and every type size in §5 against `typography`; a stale number fails by name (proven with a changed comfortable height, a changed body size and a changed role count)
 `[x]` `alpha`/`blend` return a colour the renderer can paint for a non-finite amount — `NaN.toString(16)` emitted `#2559D6NAN`, which GPUix ignores in silence; the colour is now returned unchanged, proven with `#2559D6NAN`/`#NANNANNAN` before the guard
 `[-]` Merge `main` into `agent/tokens-theme` once plan 019 (motion tokens) lands
 there — cancelled: plan 019's subject moved to `@gpuixui/motion`, and this
@@ -381,7 +382,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[█████████░]` 12/13
+`[x]` `[█████████░]` 13/14
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -453,6 +454,11 @@ a workaround for two live sessions sharing one worktree; see
       (released through the renderer's `simulateKeyUp`) and documents the split.
       Negative control measured (Space pressed, never released: readout stays
       `changes=1`, exit `1`). Evidence: `.artifacts/live/toggled.png`.
+`[x]` Land the `scroll-horizontal` scenario — an `overflowX: "scroll"` strip
+      (18 × 80px in a 320px viewport) moves on `deltaX` with `y` at 0, reports
+      the delta through `onScroll`, and clamps exactly at `-1120`. 9 checks,
+      negative control measured (dropping `overflowX`), `--only
+      scroll-horizontal`.
 `[x]` Land the `text-selection` scenario — the shipped `Text` primitive twice:
       a `selectable` line fills `getSelectedText()` after the renderer's own
       `dragSelect`, and a default (chrome) line selects nothing, with
