@@ -137,6 +137,35 @@ describe("expanded shadcn utilities", () => {
   });
 });
 
+describe("transform and grid families refuse by name", () => {
+  it.each([
+    "transform",
+    "rotate-45",
+    "scale-125",
+    "translate-x-4",
+    "skew-x-12",
+  ])("names the transform gap and its workaround for %s", (token) => {
+    expect(classesToStyle(token, lightTheme).unsupported).toContain(token);
+    expect(unsupportedReason(token)).toContain("transform");
+    expect(unsupportedReason(token)).toContain("@gpuixui/motion");
+  });
+
+  it.each(["col-span-2", "row-span-3"])(
+    "names the grid-span gap for %s",
+    (token) => {
+      expect(classesToStyle(token, lightTheme).unsupported).toContain(token);
+      expect(unsupportedReason(token)).toContain("span");
+      expect(unsupportedReason(token)).toContain("gridColumnMin");
+    },
+  );
+
+  it("names the grid-area gap", () => {
+    const token = "grid-area-header";
+    expect(classesToStyle(token, lightTheme).unsupported).toContain(token);
+    expect(unsupportedReason(token)).toContain("named areas");
+  });
+});
+
 describe("component utility additions", () => {
   it.each([
     ["flex-row", { flexDirection: "row" }],

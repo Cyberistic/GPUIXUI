@@ -30,6 +30,7 @@ import {
   type TwRegistryConfig,
   type TwState,
 } from "./registry.js";
+import { prefixReason } from "./unsupported.js";
 import { isRing, ringColor, ringShadow, ringWidth } from "./utilities.js";
 import { calcReasonFromClass } from "./calc.js";
 
@@ -435,7 +436,8 @@ export const unsupportedReason = (
   registry: TwRegistry = defaultRegistry,
 ): string | undefined =>
   Option.getOrUndefined(registryReason(registry, className)) ??
-  calcReasonFromClass(className);
+  calcReasonFromClass(className) ??
+  prefixReason(className);
 
 /** A registry with `classesToStyle` bound to it. */
 export interface TwCompiler {

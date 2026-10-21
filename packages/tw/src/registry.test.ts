@@ -128,6 +128,13 @@ describe("unsupported reasons", () => {
       lightTheme.colors.card,
     );
   });
+
+  it("names the transform and grid gaps through the public reason", () => {
+    const tw = createTw();
+    expect(tw.unsupportedReason("rotate-45")).toContain("@gpuixui/motion");
+    expect(tw.unsupportedReason("col-span-2")).toContain("span");
+    expect(tw.unsupportedReason("grid-area-header")).toContain("named areas");
+  });
 });
 
 describe("createTw", () => {

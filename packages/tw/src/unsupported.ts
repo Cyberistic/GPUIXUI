@@ -4,16 +4,31 @@
  * `TwResult.unsupported` spells each class out; this table is the audit trail
  * behind it. `coverage.test.ts` refuses an upstream class that is neither
  * resolved nor named here, so a new shadcn recipe cannot silently lose a rule.
+ *
+ * `PREFIX_GROUPS` names whole utility families (`rotate-*`, `col-span-*`, …)
+ * that have no `StyleDesc` value at all, so a class in one never falls through
+ * to a generic "unknown class".
  */
 
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
+
+const NO_TRANSFORM =
+  "GPUix `StyleDesc` has no `transform` (no rotate/scale/translate/skew); " +
+  "animate motion with `@gpuixui/motion`, static transforms are unsupported.";
+const NO_GRID_SPAN =
+  "GPUix grid has no span — only `gridColumnMin`/`gridRowMin` and integer " +
+  "`gridTemplateColumns`/`gridTemplateRows`; size the track or set an explicit width instead.";
+const NO_GRID_AREA =
+  "GPUix grid has no named areas — only integer track counts; place the item " +
+  "with explicit row/column layout instead.";
 
 const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
   [
-    "GPUix has no CSS transform, so translate/origin/scale stay out.",
+    NO_TRANSFORM,
     [
       "-translate-x-1/2",
       "-translate-y-1/2",
@@ -118,6 +133,13 @@ const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
   ],
 ];
 
+/** Family prefixes with no `StyleDesc` value, mapped to their reason. */
+const PREFIX_GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
+  [NO_TRANSFORM, ["transform", "rotate-", "scale-", "translate-", "skew-"]],
+  [NO_GRID_SPAN, ["col-span-", "row-span-"]],
+  [NO_GRID_AREA, ["grid-area-"]],
+];
+
 const BY_TOKEN = HashMap.fromIterable(
   Arr.flatMap(GROUPS, ([reason, tokens]) =>
     Arr.map(tokens, (token) => [token, reason] as const),
@@ -138,6 +160,20 @@ export const unsupportedReasons: Readonly<Record<string, string>> =
     ),
   );
 
+/** Why a class in a transform/grid family cannot resolve, or undefined. */
+export const prefixReason = (className: string): string | undefined =>
+  Option.match(
+    Arr.findFirst(PREFIX_GROUPS, ([, prefixes]) =>
+      Arr.some(prefixes, (prefix) => Str.startsWith(prefix)(className)),
+    ),
+    {
+      onNone: () => undefined,
+      onSome: ([reason]) => reason,
+    },
+  );
+
 /** Why `className` cannot become a `StyleDesc`, or undefined when it can. */
-export const unsupportedReason = (className: string): string | undefined =>
-  Option.getOrUndefined(HashMap.get(BY_TOKEN, className));
+export const unsupportedReason = (className: string): string | undefined => {
+  const exact = HashMap.get(BY_TOKEN, className);
+  return Option.isSome(exact) ? exact.value : prefixReason(className);
+};
