@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   avatarSize,
+  borderWidth,
   controlSizes,
   densityNames,
   densityPresets,
+  iconSize,
+  radius,
   spacing,
   type DensityName,
 } from "./scale.js";
@@ -19,6 +22,24 @@ const ascendingSpacing = [
   [spacing["3xl"], spacing["4xl"]],
   [spacing["4xl"], spacing["5xl"]],
 ] as const;
+
+const ascendingRadii: readonly [keyof typeof radius, keyof typeof radius][] = [
+  ["none", "sm"],
+  ["sm", "md"],
+  ["md", "lg"],
+  ["lg", "xl"],
+  ["xl", "full"],
+];
+
+const ascendingIcons: readonly [
+  keyof typeof iconSize,
+  keyof typeof iconSize,
+][] = [
+  ["xs", "sm"],
+  ["sm", "md"],
+  ["md", "lg"],
+  ["lg", "xl"],
+];
 
 const ascendingDensities: readonly [DensityName, DensityName][] = [
   ["compact", "comfortable"],
@@ -71,6 +92,29 @@ describe("density presets", () => {
         densityPresets[preset].controlHeight.lg,
       );
       expect(densityPresets[preset].rowHeight).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("radius, border and icon scales", () => {
+  it("increases strictly from none to full, so a smaller step is always sharper", () => {
+    ascendingRadii.forEach(([sharper, rounder]) => {
+      expect(radius[rounder], `${rounder} > ${sharper}`).toBeGreaterThan(
+        radius[sharper],
+      );
+    });
+  });
+
+  it("keeps emphasis thicker than a divider", () => {
+    expect(borderWidth.strong).toBeGreaterThan(borderWidth.thin);
+    expect(borderWidth.thin).toBeGreaterThan(0);
+  });
+
+  it("increases strictly from xs to xl, so an icon step names a size", () => {
+    ascendingIcons.forEach(([smaller, larger]) => {
+      expect(iconSize[larger], `${larger} > ${smaller}`).toBeGreaterThan(
+        iconSize[smaller],
+      );
     });
   });
 });

@@ -845,7 +845,8 @@ by group, path, value and the rule it missed:
 | `borderWidth` | `thin`, `strong` | finite, `>= 0` |
 | `iconSize` | `xs`…`xl` | finite, `> 0` |
 | `typography` | every role's size and leading | finite, `> 0` |
-| `density` | `controlHeight` per size, `rowHeight` | finite, `> 0` |
+| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`) |
+| `density` | `rowHeight` | finite, `> 0` |
 | `density` | `controlPaddingX` per size | finite, `>= 0` |
 | `elevation` | every shadow's `offsetX`, `offsetY`, `spreadRadius` | finite |
 | `elevation` | every shadow's `blurRadius` | finite, `>= 0` |
@@ -854,7 +855,14 @@ The rule follows the design, not a blanket "must be positive". A shadow may be
 offset up and in, so a negative offset or spread is a decision; a zero radius, a
 zero border and a zero-blur shadow are how a square, borderless or flat surface
 is stated. A size a reader has to see is the one place zero is not allowed: a
-zero height or type size is a control that paints nothing.
+zero height or type size is a control that paints nothing. A control height is
+also the box the pointer presses, and the library reserves no hit-area padding
+on top of it, so the rule for `controlHeight` is the pressable floor rather than
+just "greater than zero": a brand that shrinks one to 20px ships a target a
+reader cannot reliably hit, and `invalidNumbers` reports it as `pressable`
+instead of letting the audit pass. The shipped presets sit at or above it —
+`compact` `sm` is exactly `targetSize.minimum` — so no palette or metric moves
+for a theme that keeps them.
 
 ```ts
 import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
@@ -1499,8 +1507,12 @@ that touch but never overlap — the spacing alternative in SC 2.5.8. A control
 that already reaches the floor gets `0` and needs no wrapper, which is every
 control built at `controlHeight`: the shortest shipped control is `compact`
 `sm` at exactly 24px, and `target.test.ts` holds every preset and size to the
-floor. The inset is for the icon-sized parts — selection boxes, chevrons, close
-buttons, status dots — and it belongs on the element that receives the press. A
+floor. That is a claim about a theme, not only about the built-in presets:
+`invalidNumbers` holds a brand's `controlHeight` to `targetSize.minimum`, so a
+theme that shrinks one below it fails the audit rather than shipping a target no
+pointer can reliably hit. The inset is for the icon-sized parts — selection
+boxes, chevrons, close buttons, status dots — and it belongs on the element that
+receives the press. A
 transparent wrapper only becomes a target when it opts in: the runtime passes a
 press through an element that paints no fill, so the wrapper sets
 `pointerEvents: "auto"` and a component adopting the rule measures the hit box

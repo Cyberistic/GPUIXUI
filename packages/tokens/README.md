@@ -428,7 +428,7 @@ const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
-audit.invalidNumbers; // [] — every size, length and shadow the renderer can lay out
+audit.invalidNumbers; // [] — every size, length and shadow is layable and every control height is pressable
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status edge, thumb, state wash and control face is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
@@ -452,12 +452,14 @@ Each report is also a function of its own:
   elevation scale, which the role report cannot see: a level a brand supplies
   replaces the array whole, and a colour the runtime ignores paints no shadow at
   all. `isPaintableColor(value)` is the grammar on its own.
-- `invalidNumbers(theme)` lists every numeric token the renderer cannot lay out.
-  A style batch is JSON, so `NaN` and `Infinity` reach native as `null` and the
-  property is dropped — the element paints as if the value were never set — while
-  a negative size is accepted and paints nothing usable. Each failure names its
-  group, path, value and the rule it missed; a shadow offset may be negative, but
-  a control height or type size must be positive.
+- `invalidNumbers(theme)` lists every numeric token the renderer cannot lay out
+  or a pointer cannot press. A style batch is JSON, so `NaN` and `Infinity`
+  reach native as `null` and the property is dropped — the element paints as if
+  the value were never set — while a negative size is accepted and paints
+  nothing usable. Each failure names its group, path, value and the rule it
+  missed; a shadow offset may be negative, but a type size must be positive and
+  a control height must reach `targetSize.minimum`, because the library builds
+  the control box at that height and reserves no extra hit area.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
   translucent.

@@ -14,6 +14,7 @@
 import { describe, expect, it } from "vitest";
 import {
   auditTheme,
+  densityPresets,
   extendTheme,
   highContrastThemes,
   invalidNumbers,
@@ -22,6 +23,7 @@ import {
   platformTheme,
   retroNames,
   retroTheme,
+  targetSize,
   themes,
   type ThemeOverrides,
 } from "./index.js";
@@ -119,7 +121,7 @@ describe("every group of numbers is inspected", () => {
     ]);
   });
 
-  it("reports a density metric that makes a control invisible", () => {
+  it("reports a density metric that makes a control invisible or unhittable", () => {
     expect(
       invalidNumbers(
         brand({
@@ -136,7 +138,7 @@ describe("every group of numbers is inspected", () => {
         group: "density",
         path: "controlHeight.md",
         value: 0,
-        rule: "positive",
+        rule: "pressable",
       },
     ]);
     expect(invalidNumbers(brand({ density: { rowHeight: -1 } }))).toEqual([
@@ -167,6 +169,73 @@ describe("every group of numbers is inspected", () => {
         rule: "nonNegative",
       },
     ]);
+  });
+});
+
+describe("a control height a pointer cannot reach", () => {
+  it("reports a height under the pressable floor", () => {
+    expect(
+      invalidNumbers(
+        brand({
+          density: {
+            controlHeight: {
+              ...lightTheme.density.controlHeight,
+              sm: 20,
+            },
+          },
+        }),
+      ),
+    ).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.sm",
+        value: 20,
+        rule: "pressable",
+      },
+    ]);
+  });
+
+  it("accepts the floor itself, which is what the shortest shipped control is built to", () => {
+    // A control box IS the press target: the library reserves no extra inset, so
+    // 24px is the smallest height a control may have. `compact` `sm` sits
+    // exactly on it, which is why the shipped presets pass.
+    expect(densityPresets.compact.controlHeight.sm).toBe(targetSize.minimum);
+    expect(
+      invalidNumbers(
+        brand({
+          density: {
+            controlHeight: {
+              ...lightTheme.density.controlHeight,
+              sm: targetSize.minimum,
+            },
+          },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reports only the sizes a shrunken density puts under the floor", () => {
+    const paths = invalidNumbers(
+      brand({
+        density: {
+          controlHeight: { sm: 22, md: targetSize.minimum, lg: 26 },
+        },
+      }),
+    ).map((failure) => failure.path);
+
+    expect(paths).toEqual(["controlHeight.sm"]);
+  });
+
+  it("fails the gate on it, with no colour report involved", () => {
+    const audit = auditTheme(
+      brand({ density: { controlHeight: { sm: 20, md: 20, lg: 20 } } }),
+    );
+
+    expect(audit.invalidNumbers).toHaveLength(3);
+    expect(audit.invalidRoles).toEqual([]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.passed).toBe(false);
   });
 });
 

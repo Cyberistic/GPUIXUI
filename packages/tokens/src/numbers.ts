@@ -11,11 +11,18 @@
  * dropped and paints nothing a reader can use — `fontSize: -4` laid a text
  * element out at height 0 — so a size that must be positive is held to that.
  *
+ * A control height is also the box a pointer presses. The library builds a
+ * control at its `controlHeight` and reserves no extra hit area, so a height
+ * under `targetSize.minimum` is a target a reader cannot reliably hit — the
+ * claim `docs/design-system.md` §6 makes about the shipped presets, held here
+ * for a brand's density too.
+ *
  * `invalidColorRoles` covers the values the renderer cannot parse as a colour;
- * this covers the ones it cannot lay out as a number.
+ * this covers the ones it cannot lay out or press.
  */
 
 import type { BoxShadow } from "./elevation.js";
+import { targetSize } from "./scale.js";
 import type { Theme } from "./theme.js";
 import type { TextStyle } from "./typography.js";
 
@@ -30,15 +37,19 @@ export type NumberGroup =
   | "elevation";
 
 /**
- * What makes a number layable.
+ * What makes a number usable.
  *
  * - `finite` — any real number, including a negative shadow offset;
  * - `nonNegative` — a length that cannot go below zero but may be zero
  *   (`radius.none`, a hairline divider, a shadow with no blur);
- * - `positive` — a size a reader has to see (a type size, a control height, an
- *   icon), where zero is an invisible control.
+ * - `positive` — a size a reader has to see (a type size, an icon), where zero
+ *   paints nothing;
+ * - `pressable` — a control height, which is also the box a pointer presses, so
+ *   it reaches {@link targetSize.minimum}. The library builds a control at its
+ *   `controlHeight` with no extra inset, so a shorter one is a target a reader
+ *   cannot reliably hit.
  */
-export type NumberRule = "finite" | "positive" | "nonNegative";
+export type NumberRule = "finite" | "positive" | "nonNegative" | "pressable";
 
 /** One numeric token that is not a number the renderer can lay out. */
 export interface InvalidNumber {
@@ -74,6 +85,9 @@ const layable = (value: number, rule: NumberRule): boolean => {
   }
   if (rule === "positive") {
     return value > 0;
+  }
+  if (rule === "pressable") {
+    return value >= targetSize.minimum;
   }
   return rule === "finite" || value >= 0;
 };
@@ -152,12 +166,15 @@ const inspectShadow = (
 };
 
 /**
- * Every numeric token in a theme that the renderer cannot lay out.
+ * Every numeric token in a theme that the renderer cannot lay out or a pointer
+ * cannot press.
  *
  * An empty array means every size, length and shadow a theme carries is one the
- * runtime can paint. A number that is not finite is dropped rather than
- * clamped, and a size at or below zero paints a control no one can find or
- * press, so both are reported by path instead of shipping as a default.
+ * runtime can paint and every control height is one a reader can hit. A number
+ * that is not finite is dropped rather than clamped, a size at or below zero
+ * paints an element no one can find, and a control height under
+ * {@link targetSize.minimum} is a press target the library's own components do
+ * not pad up — all three are reported by path instead of shipping as a default.
  *
  * @example
  * ```ts
@@ -166,6 +183,8 @@ const inspectShadow = (
  * invalidNumbers(extendTheme(lightTheme, { radius: { md: 0 } })); // []
  * invalidNumbers(extendTheme(lightTheme, { radius: { md: Number.NaN } }));
  * // [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
+ * invalidNumbers(extendTheme(lightTheme, { density: { controlHeight: { sm: 20 } } }));
+ * // [{ group: "density", path: "controlHeight.sm", value: 20, rule: "pressable" }]
  * ```
  */
 export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
@@ -178,7 +197,7 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
     ...inspectLengths(
       "density",
       theme.density.controlHeight,
-      "positive",
+      "pressable",
       "controlHeight.",
     ),
     ...inspectLengths(

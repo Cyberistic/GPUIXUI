@@ -178,6 +178,19 @@ describe("docs/design-system.md", () => {
     expect(Number(floors?.[2])).toBe(targetSize.comfortable);
   });
 
+  it("holds a theme's control heights to the floor in the prose it prints", () => {
+    const rule =
+      /`invalidNumbers` reports a `controlHeight` under `targetSize\.minimum`\s+\((\d+)px\) as `pressable`/.exec(
+        doc,
+      );
+
+    expect(
+      rule,
+      "docs/design-system.md no longer holds a brand's control height to the pressable floor",
+    ).toBeDefined();
+    expect(Number(rule?.[1])).toBe(targetSize.minimum);
+  });
+
   it("prints the data-series distances", () => {
     const measured =
       /any two data series apart from each other \(OKLab distance\) \| ([\d.]+) \| ([\d.]+) \|/.exec(

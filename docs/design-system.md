@@ -200,7 +200,11 @@ unexpectedly. Components read `controlHeight(theme, size)` and
 
 The shortest of those controls — `compact` `sm` at 24px — is also the
 pressable-target floor, so a control built at a control height never needs
-extra hit-area padding. An icon-sized part does; §9 has the rule.
+extra hit-area padding. That is a claim about a theme, not only about the built-in
+presets: `invalidNumbers` reports a `controlHeight` under `targetSize.minimum`
+(24px) as `pressable`, so a brand that shrinks one fails the audit instead of
+shipping a target a pointer cannot reliably hit. An icon-sized part needs an
+inset; §9 has the rule.
 
 ## 7. Radii, borders and elevation
 
