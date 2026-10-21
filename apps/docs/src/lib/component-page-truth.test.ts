@@ -81,7 +81,7 @@ const status = (page: CuratedPage): string => {
 
 /** Every `it(` in a suite file: the native cases the page counts. */
 const nativeCases = (suite: string): number =>
-  read(suite).split("it(").length - 1;
+  (read(suite).match(/\bit\(/g) ?? []).length;
 
 describe("the curated component pages", () => {
   it("name the runtime version their gaps were measured on", () => {
