@@ -120,6 +120,10 @@ toast.push(
   alone.
 - A toast has at most one action. More than one is a composition decision, not a
   hidden array.
+- The handler map is pruned when the queue the store publishes changes, not from a
+  render-scoped effect: a toast pushed from a component's mount effect arrives
+  before the provider's own effects, and the older prune deleted the handler it
+  had just registered, so the card painted its label with no control (plan 838).
 - Keyboard focus on the action holds the auto-dismiss clock exactly like the
   dismiss control; the two controls share one hold count, so moving focus between
   them does not resume the timer.
@@ -238,7 +242,7 @@ from its two pinned edges.
   malformed-cap guard proves `NaN` and `Infinity` each keep the newest three.
 - `src/toast/timing.test.ts` — six pure cases for the percentage, clamping, the
   zero-total guard, one running tick, a paused tick and the final zero.
-`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (28 tests): push
+`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (30 tests): push
 and the card's status name, stacking order, dismissing one card, the per-card
 control handles, focus handed to the next card (below, and above when the last
 one goes) by a dismiss control and by an action, `dismissAll`,

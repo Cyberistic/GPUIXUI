@@ -1660,15 +1660,17 @@ retired once both branches are one
       `modal-focus-trap` green and headless 17/20; docs,
       `docs/component-api.md` §5, `COMPONENTS.md`, `PLAN.md` D30 and the index
       synced (owner: components)
-    - [ ] A toast pushed while its provider mounts loses its action control —
-      measured 2026-10-21 while probing plan 837: a `useEffect` push on mount
-      (with `onAction`) painted `toast-1` with no `toast-1-action` at all, so the
-      card showed the label but no control; the provider's queue-prune effect from
-      the mount render runs after the push registered the handler and filters it
-      out. Repro is 12 lines (mount-effect push, wait for the card, look for the
-      action). Needs a prune that cannot outrun a registration — a functional
-      update against the current queue, or pruning on the store's removal path
-      instead of an effect (owner: components)
+    - [x] A toast pushed while its provider mounts loses its action control —
+      plan 838; measured 2026-10-21 while probing plan 837: a `useEffect` push on
+      mount (with `onAction`) painted `toast-1` with no `toast-1-action` at all,
+      because the provider's render-scoped prune ran after the push registered the
+      handler and deleted it. The handler map is now pruned in the change-stream
+      callback that receives the new queue, so a registration cannot be outrun and
+      the map still stays within `max` entries. 2 native cases (Toast 28 → 30: the
+      mount push keeps its control; the handler is forgotten when its card leaves
+      the queue), the mount case red on the old source and the prune case red with
+      the prune removed; docs, `COMPONENTS.md`, `PLAN.md` D30 and the index synced
+      (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
