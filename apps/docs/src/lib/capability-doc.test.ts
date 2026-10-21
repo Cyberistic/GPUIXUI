@@ -311,12 +311,17 @@ describe("docs/gpuix-capabilities.md", () => {
       .map(cells);
 
     const svg = pageRows.find((row) => (row[0] ?? "").startsWith("Inline SVG"));
-    expect(svg, "the page's measured table has no inline-SVG row").toBeDefined();
+    expect(
+      svg,
+      "the page's measured table has no inline-SVG row",
+    ).toBeDefined();
     expect(svg?.[1]).toContain("one tint");
     expect(svg?.[1]).toContain("content-surfaces");
     expect(svg?.[2]).toContain("one `<svg>` per colour");
 
-    const image = pageRows.find((row) => (row[0] ?? "").startsWith("Image bytes"));
+    const image = pageRows.find((row) =>
+      (row[0] ?? "").startsWith("Image bytes"),
+    );
     expect(image, "the page's measured table has no image row").toBeDefined();
     expect(image?.[1]).toContain("layout effect");
     expect(image?.[1]).toContain("content-surfaces");
