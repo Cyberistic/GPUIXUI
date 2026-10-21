@@ -36,6 +36,7 @@ import {
 import {
   decorativeSurfacesAreVisible,
   edgeLessBrand,
+  flatActionBrand,
   report,
 } from "./decorative.example.js";
 import { statusEdgeAlpha, statusTone, statusTones } from "./styles.js";
@@ -287,5 +288,12 @@ describe("the documented example", () => {
     expect(decorativeSurfacesAreVisible(edgeLessBrand)).toBe(false);
     expect(report(edgeLessBrand)).toContain("divider: border on card is 1.00");
     expect(report(lightTheme)).toEqual([]);
+  });
+
+  it("reports the brand whose tonal action is its toolbar", () => {
+    expect(decorativeSurfacesAreVisible(flatActionBrand)).toBe(false);
+    expect(report(flatActionBrand)).toContain(
+      "filledAction: secondary on muted is 1.00",
+    );
   });
 });

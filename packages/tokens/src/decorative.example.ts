@@ -16,6 +16,15 @@ export const edgeLessBrand = extendTheme(lightTheme, {
   colors: { border: lightTheme.colors.card },
 });
 
+/**
+ * A brand whose secondary action is its own toolbar strip. The variant paints no
+ * border, so a tonal button in a muted toolbar is a label with no button around
+ * it — the same defect as the states, one control over.
+ */
+export const flatActionBrand = extendTheme(lightTheme, {
+  colors: { secondary: lightTheme.colors.muted },
+});
+
 /** A failure written the way a theme editor shows it. */
 export const report = (theme: Theme): ReadonlyArray<string> =>
   decorativeFailures(theme).map(
