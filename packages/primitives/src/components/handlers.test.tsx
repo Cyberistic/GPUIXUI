@@ -98,7 +98,13 @@ const iconButton: Probe = {
     const focus = nothing();
     return read(
       renderIconButton(
-        { ...handlers, disabled, label: "Delete", icon: null, onActivate: change },
+        {
+          ...handlers,
+          disabled,
+          label: "Delete",
+          icon: null,
+          onActivate: change,
+        },
         testTheme,
         track(focus),
       ),
@@ -182,7 +188,11 @@ const field = (
   render: (handlers, disabled) => {
     const change = nothing();
     const focus = nothing();
-    return read(render({ ...handlers, disabled }, track(focus), change), change, focus);
+    return read(
+      render({ ...handlers, disabled }, track(focus), change),
+      change,
+      focus,
+    );
   },
 });
 
