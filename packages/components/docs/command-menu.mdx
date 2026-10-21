@@ -54,6 +54,12 @@ Closing the palette — `Escape` or running a command — returns focus to the
 control that held it before the palette opened, through the dialog's recorded
 opener (plan 589).
 
+A command that opens its own modal — a `Dialog`, `Drawer` or `ConfirmDialog` —
+passes that opener on. The palette closes in the same commit the new modal
+opens, so the new modal captured the palette's own search field; the palette
+names that field against its opener as it closes, and the modal restores there
+instead of to a control that vanished (plan 827).
+
 | Key | Result |
 | ---- | ------ |
 | type | filters; the highlight resets to the first enabled match |

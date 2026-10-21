@@ -177,7 +177,13 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   to**: a menu row that opens a modal unmounts with its menu in the same commit,
   so the closing menu names its trigger as that row's focus successor and the
   modal restores to the trigger instead of to a vanished row (plan `826`,
-  `internal/focus-successor.ts`).
+  `internal/focus-successor.ts`). The same handover covers a **whole surface**
+  that closes into another modal: a command palette that opens a dialog captures
+  its own search field as that dialog's opener, so the palette's close names the
+  field against the control that opened the palette and the dialog restores
+  there. The mark is durable until the modal that captured it restores, consumed
+  by that read, and bounded — it is keyed by the id of an element that has
+  vanished, which no later modal can capture (plan `827`).
   **A layer answers for its own surface**: the runtime reports
   `mouseDownOutside` by bounds, not by tree, so a nested panel painted beyond an
   ancestor's box is announced as an outside press for that ancestor. Each layer

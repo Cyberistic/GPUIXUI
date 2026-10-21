@@ -33,6 +33,12 @@ import {
   type ComboboxOption,
 } from "../combobox.js";
 import {
+  CommandMenu,
+  CommandMenuInput,
+  CommandMenuList,
+  type CommandAction,
+} from "../command-menu.js";
+import {
   Dialog,
   DialogClose,
   DialogContent,
@@ -387,6 +393,31 @@ const DialogFromMenu = () => {
   );
 };
 
+/** A palette action that opens a dialog: the palette closes in the same commit. */
+const DialogFromCommand = () => {
+  const [palette, setPalette] = useState(false);
+  const [dialog, setDialog] = useState(false);
+  const actions: ReadonlyArray<CommandAction> = [
+    { id: "edit", label: "Edit item", perform: () => setDialog(true) },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <Button testId="open-palette" onClick={() => setPalette(true)}>
+        Commands
+      </Button>
+      <CommandMenu open={palette} onOpenChange={setPalette} actions={actions}>
+        <CommandMenuInput />
+        <CommandMenuList />
+      </CommandMenu>
+      <Dialog open={dialog} onOpenChange={setDialog}>
+        <DialogContent label="Edit item" testId="command-dialog" size="sm">
+          <DialogTitle>Edit item</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 /** The toast store updates through its runtime: let the microtasks drain. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
@@ -661,6 +692,28 @@ describe("composition", () => {
 
     expect(isShown(scene, "edit-dialog")).toBe(false);
     expect(focusedTestId(scene)).toEqual(Option.some("menu-trigger"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the palette's opener when a command's dialog closes", async () => {
+    const scene = renderComponent(<DialogFromCommand />);
+    clickCentreOf(scene, "open-palette");
+    finishMotion(scene);
+    expect(focusedTestId(scene)).toEqual(Option.some("command-input"));
+
+    scene.renderer.simulateKeystrokes("enter");
+    finishMotion(scene);
+    expect(isShown(scene, "command-dialog")).toBe(true);
+
+    // A person dismisses the dialog in a later task than the palette's close.
+    await nextTask();
+
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "command-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("open-palette"));
 
     scene.unmount();
   });

@@ -110,6 +110,11 @@ The opener is captured before the surface mounts, so a control inside the
 content that carries `autoFocus` (a form field, say) does not become the saved
 opener. The promise holds for that content too (plan 638).
 
+A modal opened while another modal closes inherits the closing modal's opener:
+the command palette, a menu or a dialog that opens this one in the same commit
+marks the control it was holding against the element it would have returned to,
+and this surface restores there (plan 827).
+
 ## Sizing and theming
 
 The surface paints `colors.popover` / `colors.popoverForeground` with

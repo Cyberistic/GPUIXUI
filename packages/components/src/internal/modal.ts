@@ -24,7 +24,7 @@ import {
   pushDismissLayer,
 } from "./dismiss-layer.js";
 import { claimEvent, isEventClaimed } from "./event-claim.js";
-import { focusSuccessor } from "./focus-successor.js";
+import { markFocusSuccessor, takeFocusSuccessor } from "./focus-successor.js";
 import { isDismiss, isTab } from "./key.js";
 import { ownsSurface } from "./pointer.js";
 import { useOverlayHost, type OverlayHost } from "./overlay-host.js";
@@ -101,14 +101,14 @@ export const useModalFocus = (
   // The surface mounts in the same commit that opens the modal, before the
   // renderer applies any native focus change — including a child's `autoFocus`.
   // Capture the opener at render time; the effect below waits for `contentId`,
-  // by which point that focus has already moved (plan 638). A row that opened
-  // this modal unmounted with its menu before this render, and the menu named
-  // its trigger as that row's successor (plan 826).
+  // by which point that focus has already moved (plan 638). A row or a surface
+  // that opened this modal closed in the same commit, and named what it was
+  // leaving behind as that element's successor (plans 826, 827).
   const [previousFocus] = useState<number | null>(() => {
     const focused = renderer?.getFocusedElementId?.() ?? null;
     return focused === null
       ? null
-      : Option.getOrElse(focusSuccessor(focused), () => focused);
+      : Option.getOrElse(takeFocusSuccessor(focused), () => focused);
   });
   const host = useOverlayHost();
   const hostRef = useRef<OverlayHost>(host);
@@ -129,17 +129,32 @@ export const useModalFocus = (
       renderer?.focusElement?.(initial);
     }
     return () => {
+      // A surface that closed in the same commit handed its own target on: this
+      // modal captured one of its controls, which is leaving with it (plan 827).
+      // Prefer the record even when the control still exists — a surface in its
+      // exit motion is still mounted, and focusing it loses the keyboard later.
+      const inherited =
+        previousFocus === null
+          ? Option.none<number>()
+          : takeFocusSuccessor(previousFocus);
+      const opener = Option.getOrElse(inherited, () => previousFocus);
       // A destroyed opener must not be focused: `getElementBounds` is the
       // renderer's own existence check, and it is null once the element is gone.
       // A confirmation mounted with its dialog has no opener at all, so it hands
       // focus to the enclosing surface rather than to nothing (plan 730).
       const usable =
-        previousFocus !== null &&
-        previousFocus !== contentId &&
-        renderer?.getElementBounds?.(previousFocus) !== null;
-      const target = usable ? previousFocus : hostRef.current.contentId;
+        opener !== null &&
+        opener !== contentId &&
+        renderer?.getElementBounds?.(opener) !== null;
+      const target = usable ? opener : hostRef.current.contentId;
       if (target === null || target === undefined || target === contentId) {
         return;
+      }
+      // The element holding the keyboard now leaves with this surface; name it
+      // against the target for the modal that captured it (plan 827).
+      const leaving = renderer?.getFocusedElementId?.() ?? null;
+      if (leaving !== null && leaving !== target) {
+        markFocusSuccessor(leaving, target);
       }
       renderer?.focusElement?.(target);
     };

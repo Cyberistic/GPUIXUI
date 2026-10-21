@@ -1559,16 +1559,27 @@ retired once both branches are one
       `overlay-dialog` + `modal-focus-trap` green; docs, `docs/component-api.md`,
       both menu pages, `COMPONENTS.md`, `PLAN.md` D30 and the index synced
       (owner: components)
-    - [ ] A dialog opened from a command action loses the keyboard when it
-      closes — measured 2026-10-21 while verifying plan 826: a `CommandMenu`
-      action whose `perform` opens a `Dialog` closes the palette and opens the
-      dialog in one commit; on Escape the dialog closes and the focused host is
-      `None`, where the palette's own close would have returned to
-      `open-palette`. The plan-826 focus-successor mark cannot be written by the
-      command row because the target is the **palette's** opener, which
-      `useModalFocus` keeps private. A fix needs the modal to expose its captured
-      opener to the command root, or the palette's close to mark before the new
-      dialog captures (owner: components)
+    - [x] A dialog opened from a command action loses the keyboard when it
+      closes — plan 827; measured 2026-10-21 while verifying plan 826: a
+      `CommandMenu` action whose `perform` opens a `Dialog` closes the palette
+      and opens the dialog in one commit, so the dialog captured the palette's
+      own search field as its opener; on Escape the dialog closed and the
+      focused host was `None`, where the palette's own close would have returned
+      to `open-palette`. The plan-826 one-task mark could not carry it: only the
+      closing surface knows its restore target, and the new modal restores
+      seconds later. Every `useModalFocus` cleanup now marks the element it is
+      leaving behind against the target it focuses, and a restore prefers a
+      recorded successor even when the captured element still exists (a closing
+      surface is in its exit motion). Marks are consumed on read and the store
+      keeps the newest eight, so a stale mark cannot retarget a later modal —
+      superseding plan 826's one-task lifetime. 6 helper cases (3 new) + 1
+      composite case red at `HEAD` (`None`), 13/13 after; the composite case
+      fails with the mark removed, the restore preference removed, and the
+      one-task lifetime put back; unit 527 in 49 files, the modal/menu suites
+      unchanged (the same plan-540 position cases, `command-menu`'s viewport
+      case red at `HEAD` too), `check`/`lint`/`test` exit 0; docs,
+      `docs/component-api.md`, the two component pages, `COMPONENTS.md`,
+      `PLAN.md` D30/D32 and the index synced (owner: components)
     - [x] A press on a toast belongs to the toast — plan 820; measured
       2026-10-21: a toast raised from inside an open dialog was painted **under**
       the dialog's veil and its own action never ran (0 calls) while the press

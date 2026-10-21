@@ -1,13 +1,19 @@
 /**
  * Where focus goes when the element holding it is about to disappear.
  *
- * A menu row can open a modal from `onSelect`, and the row unmounts with its menu
- * in the same commit — before the modal captures its opener. The closing overlay
- * marks its trigger as the row's successor, and `useModalFocus` substitutes it.
- * The mark lives one task, so a stale one can never retarget a later modal (the
- * rule `event-claim.ts` uses for its claim, plan 587).
+ * A row, or a whole palette, can open a modal and close in the same commit: the
+ * modal captures a control of the closing surface as its opener, and the surface
+ * knows where its own focus should have gone. Each cleanup marks the element it
+ * is leaving behind against the target it focuses (`useModalFocus`), and the
+ * modal that captured the mark prefers it at capture and at restore (plan 827).
+ *
+ * A mark is keyed by the native id of an element that has vanished, and a modal
+ * can only capture an element that exists, so a mark can only apply to the modal
+ * that captured it before it vanished. It is consumed by the read and the store
+ * keeps the newest few, so it never retargets a later modal and never grows.
  */
 
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
 interface FocusSuccessor {
@@ -15,20 +21,25 @@ interface FocusSuccessor {
   readonly to: number;
 }
 
-let successor: Option.Option<FocusSuccessor> = Option.none();
+/** How many unread marks are kept: enough for a burst of closing overlays. */
+const LIMIT = 8;
 
-/** Mark `to` as where focus returns once `from` disappears. */
+let successors: ReadonlyArray<FocusSuccessor> = [];
+
+/** Mark `to` as where focus goes once `from` disappears. */
 export const markFocusSuccessor = (from: number, to: number): void => {
-  const marked: FocusSuccessor = { from, to };
-  successor = Option.some(marked);
-  setTimeout(() => {
-    successor = Option.filter(successor, (current) => current !== marked);
-  }, 0);
+  successors = Arr.take(
+    Arr.prepend(
+      Arr.filter(successors, (current) => current.from !== from),
+      { from, to },
+    ),
+    LIMIT,
+  );
 };
 
-/** The successor marked for `from`, while the mark is still in its task. */
-export const focusSuccessor = (from: number): Option.Option<number> =>
-  Option.map(
-    Option.filter(successor, (current) => current.from === from),
-    (current) => current.to,
-  );
+/** The successor marked for `from`; the mark is consumed by the read. */
+export const takeFocusSuccessor = (from: number): Option.Option<number> => {
+  const marked = Arr.findFirst(successors, (current) => current.from === from);
+  successors = Arr.filter(successors, (current) => current.from !== from);
+  return Option.map(marked, (current) => current.to);
+};
