@@ -6,8 +6,9 @@ description: A live editor for the library's semantic tokens — preview, copy a
 import { contrastPairs } from "@gpuixui/tokens";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
-real time. The editor reads its defaults from `@gpuixui/tokens` and emits the
-same `createTheme` shape the library consumes; it invents no palette of its own.
+real time. The editor reads its defaults from `@gpuixui/tokens` — the base is
+the platform style the sidebar switch selected — and emits the same
+`createTheme` shape the library consumes; it invents no palette of its own.
 
 <ThemeEditor />
 
@@ -16,8 +17,21 @@ same `createTheme` shape the library consumes; it invents no palette of its own.
 The editor edits the shadcn-core roles — `background`, `foreground`, `card`,
 `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`,
 `input` and `ring` — plus `radius.md` and the `sans` family. Light and dark are
-independent; pick the mode, edit, and the preview follows. Edits persist to the
-URL (shareable) and to `localStorage`; **Reset** restores the built-in themes.
+independent; pick the mode, edit, and the preview follows. Only the roles you
+touch are stored as your edits, so they persist to the URL (shareable) and to
+`localStorage` while everything else keeps following the selected style;
+**Reset** clears the edits back to that style.
+
+## Starting from a platform
+
+The editor is the copy-and-own contract in practice. Choose **Windows** in the
+sidebar and the preview and inputs start from Windows's roles, radii and family;
+change the accent and **Copy theme** prints the whole resolved theme, the
+Windows values you kept and the ones you replaced. The code is an ordinary
+`createTheme` module — the same shape [Theming](/docs/theming#take-one-and-make-it-yours)
+describes — so it can ship as your own style. Switching the platform afterwards
+re-bases the preview without discarding your edits, because an untouched role
+was never pinned.
 
 ## The token bridge
 
@@ -63,15 +77,15 @@ call reports five independent failures:
   `selection`, but a change to a surface under it can still bury a selected run.
 
 The same role check guards the URL and `localStorage`: a persisted state that
-carries a value the renderer cannot paint is rejected, and the editor falls back to
-the built-in themes instead of restoring an edit that would paint black in
+carries a value the renderer cannot paint is rejected, and the editor falls back
+to the selected style instead of restoring an edit that would paint black in
 silence. A theme that merely misses a contrast, decorative, series or selection
 floor is a design choice the readout reports, not a malformed state.
 
 ## Copy theme
 
-**Copy theme** emits a `createTheme` module — one theme per mode — in the exact
-format `@gpuixui/tokens` consumes, plus a one-line usage note. Running the same
-audit on the result is up to the consumer; `auditTheme`, `contrastFailures`,
-`decorativeFailures`, `seriesFailures` and `selectionFailures` are public for
-exactly that.
+**Copy theme** emits a `createTheme` module — one theme per mode, with the values
+the preview resolved — in the exact format `@gpuixui/tokens` consumes, plus a
+one-line usage note. Running the same audit on the result is up to the consumer;
+`auditTheme`, `contrastFailures`, `decorativeFailures`, `seriesFailures` and
+`selectionFailures` are public for exactly that.

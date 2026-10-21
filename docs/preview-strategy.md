@@ -134,6 +134,16 @@ The exception is the dashboard block: its `--dash-*` palette is its own, because
 the landing renders the same markup in a light and a dark window. It is labelled
 as a browser reproduction and is excluded from the literal guard.
 
+The theme editor follows the switch too, with one difference: it stores only the
+roles a reader changed and resolves those over `platformThemes(platform, look)`
+for the mode on screen. Switching the platform therefore re-bases the editor's
+preview and its inputs while the edits stay, and **Copy theme** prints the
+resolved values — what a reader copies is what they saw. `theme-editor.test.tsx`
+renders the same surface over the Windows style and fails if the colour inputs
+still print the identity's roles; `theme-editor-logic.test.ts` holds the pins to
+the base in both directions and keeps the persistence boundary (`parseState`)
+rejecting a pinned value the renderer cannot paint.
+
 ## The component page template
 
 Every page in `content/docs/components/` follows this order. Sections that do not

@@ -40,60 +40,82 @@ export const editableRoles = [
 
 export type EditableRole = (typeof editableRoles)[number];
 
-/** The subset of a theme the editor edits. */
-export interface TokenEdits {
-  readonly colors: Record<EditableRole, string>;
-  readonly radiusMd: number;
-  readonly fontSans: string;
+/**
+ * What a reader changed: a value per role they touched, over the base theme the
+ * platform switch resolves. An untouched role is absent, so the base shows
+ * through — which is what lets the switch re-base the preview without throwing
+ * the edits away.
+ */
+export interface ThemePins {
+  readonly colors: Partial<Record<EditableRole, string>>;
+  readonly radiusMd?: number;
+  readonly fontSans?: string;
 }
 
 /** The editable state for both modes; each mode is independent. */
-export type EditorState = Record<ThemeMode, TokenEdits>;
+export type EditorState = Record<ThemeMode, ThemePins>;
 
-/** Extract the editable subset from a built-in theme. */
-export const editsFromTheme = (theme: Theme): TokenEdits => ({
-  colors: Object.fromEntries(
-    editableRoles.map((role) => [role, theme.colors[role]]),
-  ) as Record<EditableRole, string>,
-  radiusMd: theme.radius.md,
-  fontSans: theme.typography.sans,
-});
+/** No edits: the base theme, whole. */
+export const noPins = (): ThemePins => ({ colors: {} });
 
-/** The editor's starting point: the built-in light and dark themes. */
+/** The editor's starting point: no edits over the base theme of each mode. */
 export const defaultState = (): EditorState => ({
-  light: editsFromTheme(themes.light),
-  dark: editsFromTheme(themes.dark),
+  light: noPins(),
+  dark: noPins(),
 });
 
 /**
  * Resolve the edits into a complete `Theme` the preview can render. Uses the
  * library's own `extendTheme`, so the preview and the copied `createTheme` file
- * are the same theme by construction.
+ * are the same theme by construction: `base` is the platform style the switch
+ * selected, and every role the reader did not touch stays that style's.
  */
-export const resolveTheme = (mode: ThemeMode, edits: TokenEdits): Theme =>
-  extendTheme(themes[mode], {
-    colors: edits.colors,
-    radius: { md: edits.radiusMd },
-    typography: { sans: edits.fontSans },
+export const resolveTheme = (
+  mode: ThemeMode,
+  pins: ThemePins,
+  base: Theme = themes[mode],
+): Theme =>
+  extendTheme(base, {
+    colors: pins.colors,
+    ...(pins.radiusMd === undefined ? {} : { radius: { md: pins.radiusMd } }),
+    ...(pins.fontSans === undefined
+      ? {}
+      : { typography: { sans: pins.fontSans } }),
   });
 
-/** The `createTheme` config the copy output emits, as data (not a string). */ export const themeConfig =
-  (
-    mode: ThemeMode,
-    edits: TokenEdits,
-  ): {
-    mode: ThemeMode;
-    name: string;
-    colors: Record<EditableRole, string>;
-    radius: { md: number };
-    typography: { sans: string };
-  } => ({
-    mode,
-    name: "My theme",
-    colors: edits.colors,
-    radius: { md: edits.radiusMd },
-    typography: { sans: edits.fontSans },
-  });
+/** The editable roles' values in a resolved theme, as the copy output prints them. */
+const editableValues = (theme: Theme): Record<EditableRole, string> => ({
+  background: theme.colors.background,
+  foreground: theme.colors.foreground,
+  card: theme.colors.card,
+  popover: theme.colors.popover,
+  primary: theme.colors.primary,
+  secondary: theme.colors.secondary,
+  muted: theme.colors.muted,
+  accent: theme.colors.accent,
+  destructive: theme.colors.destructive,
+  border: theme.colors.border,
+  input: theme.colors.input,
+  ring: theme.colors.ring,
+});
+
+/** The `createTheme` config the copy output emits, as data (not a string). */
+export const themeConfig = (
+  mode: ThemeMode,
+  theme: Theme,
+): {
+  mode: ThemeMode;
+  name: string;
+  colors: Record<EditableRole, string>;
+  radius: { md: number };
+  typography: { sans: string };
+} => ({
+  mode,
+  name: "My theme",
+  colors: editableValues(theme),
+  radius: { md: theme.radius.md },
+  typography: { sans: theme.typography.sans },
+});
 
 /**
  * The whole theme contract for an edit, as the library's own gate reports it: a
@@ -101,10 +123,14 @@ export const resolveTheme = (mode: ThemeMode, edits: TokenEdits): Theme =>
  * surface too close to what it sits on, a data-series colour too close to its
  * plot or to its neighbour, and a selection wash that hides itself or the text
  * it covers. `auditTheme` reads all five in one call, so the editor cannot show
- * some reports and leave the others silent.
+ * some reports and leave the others silent. The base is the platform style the
+ * preview is painted over, so the audit measures what the reader sees.
  */
-export const auditReport = (mode: ThemeMode, edits: TokenEdits): ThemeAudit =>
-  auditTheme(resolveTheme(mode, edits));
+export const auditReport = (
+  mode: ThemeMode,
+  pins: ThemePins,
+  base: Theme = themes[mode],
+): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
 /** Which of the audit's five reports a finding came from. */
 export type AuditKind =
@@ -213,53 +239,61 @@ export const auditFindings = (
 ];
 
 /**
- * True when every editable role is a colour GPUix can paint — the audit's own
- * role check, read at the persistence boundary. A stored edit that carries a
- * value the runtime ignores would paint the previous colour or black in
- * silence, so it is rejected instead of restored.
+ * True when the resolved theme paints every role — the audit's own role check,
+ * read at the persistence boundary. A stored edit that carries a value the
+ * runtime ignores would paint the previous colour or black in silence, so it is
+ * rejected instead of restored. The built-in theme is the base, because whether
+ * a colour parses must not depend on which platform style is showing.
  */
-export const paintsEveryRole = (mode: ThemeMode, edits: TokenEdits): boolean =>
-  auditTheme(resolveTheme(mode, edits)).invalidRoles.length === 0;
+export const paintsEveryRole = (mode: ThemeMode, pins: ThemePins): boolean =>
+  auditTheme(resolveTheme(mode, pins)).invalidRoles.length === 0;
 
-const isTokenEdits = (value: unknown): value is TokenEdits => {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isKnownRole = (key: string): key is EditableRole =>
+  editableRoles.some((role) => role === key);
+
+const isPinnedColour = ([role, colour]: readonly [string, unknown]): boolean =>
+  isKnownRole(role) && typeof colour === "string";
+
+const isPins = (value: unknown): value is ThemePins => {
+  if (!isRecord(value)) return false;
+  const { colors, radiusMd, fontSans } = value;
+
+  if (colors !== undefined) {
+    if (!isRecord(colors)) return false;
+    if (!Object.entries(colors).every(isPinnedColour)) return false;
+  }
   if (
-    typeof record.radiusMd !== "number" ||
-    !Number.isFinite(record.radiusMd)
+    radiusMd !== undefined &&
+    (typeof radiusMd !== "number" || !Number.isFinite(radiusMd) || radiusMd < 0)
   ) {
     return false;
   }
-  if (typeof record.fontSans !== "string" || record.fontSans.length === 0) {
-    return false;
-  }
-  if (typeof record.colors !== "object" || record.colors === null) return false;
-  const colors = record.colors as Record<string, unknown>;
-  return editableRoles.every((role) => typeof colors[role] === "string");
+  if (fontSans !== undefined && typeof fontSans !== "string") return false;
+  return true;
 };
 
-const isPaintableEdits = (
-  mode: ThemeMode,
-  value: unknown,
-): value is TokenEdits => isTokenEdits(value) && paintsEveryRole(mode, value);
+const isPaintablePins = (mode: ThemeMode, value: unknown): value is ThemePins =>
+  isPins(value) && paintsEveryRole(mode, value);
 
 /**
  * Decode a persisted editor state (from the URL or localStorage) at the
- * boundary. Returns `undefined` for anything that is not a complete, valid
- * `EditorState`, so a malformed value falls back to the defaults instead of
- * poisoning the preview. A theme that merely misses a contrast or decorative
- * floor is a design choice the editor reports, not a malformed state.
+ * boundary. Returns `undefined` for anything that is not a readable pin set, so
+ * a malformed value falls back to the defaults instead of poisoning the
+ * preview. A theme that merely misses a contrast or decorative floor is a design
+ * choice the editor reports, not a malformed state.
  */
 export const parseState = (value: unknown): EditorState | undefined => {
-  if (typeof value !== "object" || value === null) return undefined;
-  const record = value as Record<string, unknown>;
+  if (!isRecord(value)) return undefined;
   if (
-    !isPaintableEdits("light", record.light) ||
-    !isPaintableEdits("dark", record.dark)
+    !isPaintablePins("light", value.light) ||
+    !isPaintablePins("dark", value.dark)
   ) {
     return undefined;
   }
-  return { light: record.light, dark: record.dark };
+  return { light: value.light, dark: value.dark };
 };
 
 /** Parse a persisted JSON string, falling back to `undefined` on bad input. */
@@ -276,19 +310,23 @@ const colorLines = (colors: Record<EditableRole, string>): string =>
     .map((role) => `      ${role}: ${JSON.stringify(colors[role])},`)
     .join("\n");
 
-const modeBlock = (mode: ThemeMode, edits: TokenEdits): string =>
-  `  ${mode}: createTheme({\n    mode: ${JSON.stringify(mode)},\n    name: "My theme",\n    colors: {\n${colorLines(edits.colors)}\n    },\n    radius: { md: ${edits.radiusMd} },\n    typography: { sans: ${JSON.stringify(edits.fontSans)} },\n  }),`;
+const modeBlock = (mode: ThemeMode, theme: Theme): string => {
+  const config = themeConfig(mode, theme);
+  return `  ${mode}: createTheme({\n    mode: ${JSON.stringify(mode)},\n    name: "My theme",\n    colors: {\n${colorLines(config.colors)}\n    },\n    radius: { md: ${config.radius.md} },\n    typography: { sans: ${JSON.stringify(config.typography.sans)} },\n  }),`;
+};
 
 /**
  * The copy output: a valid `createTheme` module in the library's own format,
- * one theme per mode, with a one-line usage note.
+ * one theme per mode, with a one-line usage note. It prints the values the
+ * preview resolved — the base style plus the reader's edits — so what a reader
+ * copies is what they saw, including the platform styles they did not touch.
  */
-export const themeSource = (state: EditorState): string =>
+export const themeSource = (resolved: Readonly<Record<ThemeMode, Theme>>): string =>
   `import { createTheme } from "@gpuixui/tokens";
 
 // Usage: <ThemeProvider theme={theme[activeMode]} /> from "@gpuixui/tokens/react".
 export const theme = {
-${modeBlock("light", state.light)}
-${modeBlock("dark", state.dark)}
+${modeBlock("light", resolved.light)}
+${modeBlock("dark", resolved.dark)}
 };
 `;

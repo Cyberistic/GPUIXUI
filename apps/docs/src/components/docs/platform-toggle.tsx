@@ -145,11 +145,20 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
 
 /** The platform and look the page is showing. */
 export function usePlatform(): PlatformState {
-  const value = useContext(PlatformContext);
+  const value = usePlatformOptional();
   if (value === null) {
     throw new Error("usePlatform: no PlatformProvider above this component");
   }
   return value;
+}
+
+/**
+ * The platform and look, or `null` where no switch is above the component. A
+ * preview must not render without one (it would paint the site's palette); the
+ * theme editor may, because its own base is then the built-in theme it shows.
+ */
+export function usePlatformOptional(): PlatformState | null {
+  return useContext(PlatformContext);
 }
 
 /** One group of pressed buttons: the same look for both axes. */

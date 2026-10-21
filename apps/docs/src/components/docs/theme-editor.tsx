@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import type { Theme, ThemeMode } from "@gpuixui/tokens";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { themes, type Theme, type ThemeMode } from "@gpuixui/tokens";
+import { platformThemes } from "../../lib/platform";
 import { toCssVars } from "../../lib/theme-css";
+import { usePlatformOptional } from "./platform-toggle";
 import {
   auditFindings,
   auditReport,
@@ -55,6 +57,29 @@ function ThemePreview({ theme }: { theme: Theme }) {
 
 /** Live editor for the library's semantic tokens, with a shareable URL. */
 export function ThemeEditor() {
+  const platform = usePlatformOptional();
+  const bases = useMemo(
+    () =>
+      platform === null
+        ? themes
+        : platformThemes(platform.platform, platform.look),
+    [platform],
+  );
+
+  return <ThemeEditorSurface bases={bases} />;
+}
+
+/**
+ * The editor itself, over an explicit base per mode. Keeping the base a prop is
+ * what makes "the preview follows the platform switch" testable: the same
+ * editor renders Windows's roles or the built-in identity depending on it, and
+ * the reader's pins are applied over whichever one it is handed.
+ */
+export function ThemeEditorSurface({
+  bases,
+}: {
+  readonly bases: Readonly<Record<ThemeMode, Theme>>;
+}) {
   const [state, setState] = useState<EditorState>(defaultState);
   const [mode, setMode] = useState<ThemeMode>("light");
   const [copied, setCopied] = useState(false);
@@ -76,23 +101,23 @@ export function ThemeEditor() {
     window.history.replaceState(null, "", url.toString());
   }, []);
 
-  const edits = state[mode];
+  const pins = state[mode];
+  const base = bases[mode];
 
   const setColor = (role: EditableRole, value: string) =>
     commit({
       ...state,
-      [mode]: { ...edits, colors: { ...edits.colors, [role]: value } },
+      [mode]: { ...pins, colors: { ...pins.colors, [role]: value } },
     });
 
   const setRadius = (value: number) =>
-    commit({ ...state, [mode]: { ...edits, radiusMd: value } });
+    commit({ ...state, [mode]: { ...pins, radiusMd: value } });
 
   const setFont = (value: string) =>
-    commit({ ...state, [mode]: { ...edits, fontSans: value } });
+    commit({ ...state, [mode]: { ...pins, fontSans: value } });
 
   const reset = () => {
-    const defaults = defaultState();
-    setState(defaults);
+    setState(defaultState());
     localStorage.removeItem(STORAGE_KEY);
     const url = new URL(window.location.href);
     url.searchParams.delete(URL_PARAM);
@@ -100,14 +125,18 @@ export function ThemeEditor() {
   };
 
   const copy = () => {
+    const resolved = {
+      light: resolveTheme("light", state.light, bases.light),
+      dark: resolveTheme("dark", state.dark, bases.dark),
+    };
     navigator.clipboard
-      .writeText(themeSource(state))
+      .writeText(themeSource(resolved))
       .then(() => setCopied(true))
       .catch(() => setCopied(false));
   };
 
-  const resolved = resolveTheme(mode, edits);
-  const findings = auditFindings(auditReport(mode, edits));
+  const resolved = resolveTheme(mode, pins, base);
+  const findings = auditFindings(auditReport(mode, pins, base));
 
   return (
     <div className="gx-theme-editor not-prose">
@@ -147,7 +176,7 @@ export function ThemeEditor() {
                     aria-label={`${role} color`}
                     onChange={(event) => setColor(role, event.target.value)}
                     type="color"
-                    value={edits.colors[role]}
+                    value={pins.colors[role] ?? base.colors[role]}
                   />
                 </label>
                 <input
@@ -156,7 +185,7 @@ export function ThemeEditor() {
                   onChange={(event) => setColor(role, event.target.value)}
                   spellCheck={false}
                   type="text"
-                  value={edits.colors[role]}
+                  value={pins.colors[role] ?? base.colors[role]}
                 />
               </div>
             ))}
@@ -172,9 +201,9 @@ export function ThemeEditor() {
                 min={0}
                 onChange={(event) => setRadius(Number(event.target.value))}
                 type="range"
-                value={edits.radiusMd}
+                value={pins.radiusMd ?? base.radius.md}
               />
-              <span className="gx-te-range-value">{edits.radiusMd}px</span>
+              <span className="gx-te-range-value">{pins.radiusMd ?? base.radius.md}px</span>
             </label>
           </fieldset>
 
@@ -188,7 +217,7 @@ export function ThemeEditor() {
                 onChange={(event) => setFont(event.target.value)}
                 spellCheck={false}
                 type="text"
-                value={edits.fontSans}
+                value={pins.fontSans ?? base.typography.sans}
               />
               <datalist id="gx-te-fonts">
                 <option value=".SystemUIFont" />
@@ -237,9 +266,12 @@ export function ThemeEditor() {
       </div>
 
       <p className="gx-component-note">
-        Browser preview of the semantic tokens from <code>@gpuixui/tokens</code>
-        . The shipped components read these roles through GPUix, not CSS
-        variables; the bridge above only exists for this preview.
+        Browser preview of the semantic tokens from <code>@gpuixui/tokens</code>.
+        The shipped components read these roles through GPUix, not CSS
+        variables; the bridge above only exists for this preview. The base is the
+        platform style the switch selected — switch it and the preview re-bases
+        while your edits stay; <strong>Reset</strong> clears them back to that
+        style.
       </p>
     </div>
   );

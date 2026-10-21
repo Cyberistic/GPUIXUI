@@ -1,40 +1,51 @@
 import { auditTheme, createTheme, extendTheme, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
+import { platformThemes } from "../../lib/platform";
 import {
   auditFindings,
   auditReport,
   decodeState,
   defaultState,
   editableRoles,
-  editsFromTheme,
+  noPins,
   paintsEveryRole,
   parseState,
   resolveTheme,
   themeConfig,
   themeSource,
   type EditorState,
+  type ThemePins,
 } from "./theme-editor-logic";
 
 describe("theme-editor bridge", () => {
   it("resolves edits into a complete theme without dropping non-edited roles", () => {
-    const edits = editsFromTheme(themes.dark);
-    const edited = {
-      ...edits,
-      colors: { ...edits.colors, primary: "#123456" },
-    };
-    const resolved = resolveTheme("dark", edited);
+    const resolved = resolveTheme("dark", {
+      colors: { primary: "#123456" },
+    });
 
     expect(resolved.colors.primary).toBe("#123456");
     // Non-edited roles inherit from the base dark theme.
     expect(resolved.colors.success).toBe(themes.dark.colors.success);
   });
 
-  it("copied createTheme config reproduces the preview theme", () => {
-    const edits = editsFromTheme(themes.dark);
-    const edited = { ...edits, colors: { ...edits.colors, ring: "#AABBCC" } };
+  it("takes the base theme as the whole of every role the reader did not pin", () => {
+    // The platform switch re-bases the editor, so a pin has to survive a base
+    // change and an untouched role has to follow it. If the editor copied the
+    // base into its state instead, switching Windows would change nothing.
+    const windows = platformThemes("win32");
+    const pinned: ThemePins = { colors: { primary: "#123456" } };
 
-    const resolved = resolveTheme("dark", edited);
-    const copied = createTheme(themeConfig("dark", edited));
+    const resolved = resolveTheme("dark", pinned, windows.dark);
+
+    expect(resolved.colors.primary).toBe("#123456");
+    expect(resolved.colors.background).toBe(windows.dark.colors.background);
+    expect(resolved.colors.background).not.toBe(themes.dark.colors.background);
+  });
+
+  it("copied createTheme config reproduces the preview theme", () => {
+    const pins: ThemePins = { colors: { ring: "#AABBCC" } };
+    const resolved = resolveTheme("dark", pins);
+    const copied = createTheme(themeConfig("dark", resolved));
 
     for (const role of editableRoles) {
       expect(copied.colors[role]).toBe(resolved.colors[role]);
@@ -43,37 +54,71 @@ describe("theme-editor bridge", () => {
     expect(copied.typography.sans).toBe(resolved.typography.sans);
 
     // The source string is the same config, formatted.
-    expect(themeSource(defaultState())).toContain("import { createTheme }");
-    expect(themeSource({ ...defaultState(), dark: edited })).toContain(
-      'ring: "#AABBCC"',
+    expect(
+      themeSource({ light: resolveTheme("light", noPins()), dark: resolved }),
+    ).toContain("import { createTheme }");
+    expect(
+      themeSource({ light: resolveTheme("light", noPins()), dark: resolved }),
+    ).toContain('ring: "#AABBCC"');
+  });
+
+  it("prints the resolved platform values, not only the reader's pins", () => {
+    // What a reader copies is what they saw. A pinned-only output would emit
+    // the library identity for every role the platform painted.
+    const windows = platformThemes("win32");
+    const source = themeSource({
+      light: resolveTheme("light", noPins(), windows.light),
+      dark: resolveTheme("dark", noPins(), windows.dark),
+    });
+
+    expect(source).toContain(
+      `background: ${JSON.stringify(windows.dark.colors.background)}`,
+    );
+    expect(source).not.toContain(
+      `background: ${JSON.stringify(themes.dark.colors.background)}`,
     );
   });
 });
 
 describe("theme-editor persistence boundary", () => {
-  it("round-trips a valid state", () => {
+  it("round-trips a valid state, including the empty one Reset writes", () => {
     const state = defaultState();
     expect(parseState(JSON.parse(JSON.stringify(state)))).toEqual(state);
+
+    const pinned: EditorState = {
+      light: { colors: { primary: "#123456" }, radiusMd: 6, fontSans: "Inter" },
+      dark: { colors: { ring: "#AABBCC" } },
+    };
+    expect(parseState(JSON.parse(JSON.stringify(pinned)))).toEqual(pinned);
   });
 
   it("rejects malformed states instead of poisoning the preview", () => {
     expect(parseState(null)).toBeUndefined();
-    expect(parseState({ light: {}, dark: {} })).toBeUndefined();
+    expect(parseState({ light: { colors: {} } })).toBeUndefined();
 
-    const badHex = {
-      ...defaultState(),
-      light: {
-        ...defaultState().light,
-        colors: { ...defaultState().light.colors, primary: "red" },
-      },
-    } satisfies EditorState;
+    const badHex: EditorState = {
+      light: { colors: { primary: "red" } },
+      dark: { colors: {} },
+    };
     expect(parseState(badHex)).toBeUndefined();
 
-    const missingRole = {
-      ...defaultState(),
-      dark: { ...defaultState().dark, radiusMd: Number.NaN },
+    const unknownRole = {
+      light: { colors: { notARole: "#123456" } },
+      dark: { colors: {} },
     };
-    expect(parseState(missingRole)).toBeUndefined();
+    expect(parseState(unknownRole)).toBeUndefined();
+
+    const badRadius = {
+      light: { colors: {}, radiusMd: Number.NaN },
+      dark: { colors: {} },
+    };
+    expect(parseState(badRadius)).toBeUndefined();
+
+    const badFont = {
+      light: { colors: {}, fontSans: 12 },
+      dark: { colors: {} },
+    };
+    expect(parseState(badFont)).toBeUndefined();
   });
 
   it("decodes a persisted JSON string, and rejects malformed JSON", () => {
@@ -88,38 +133,26 @@ describe("theme-editor persistence boundary", () => {
     (role) => {
       // The boundary and the audit read one rule, so a stored theme can never
       // carry a value the preview would paint black in silence.
-      const base = defaultState();
-      const candidate: EditorState = {
-        ...base,
-        light: {
-          ...base.light,
-          colors: { ...base.light.colors, [role]: "not-a-colour" },
-        },
-      };
+      const pinned: ThemePins = { colors: { [role]: "not-a-colour" } };
 
-      expect(paintsEveryRole("light", candidate.light)).toBe(false);
-      expect(parseState(candidate)).toBeUndefined();
+      expect(paintsEveryRole("light", pinned)).toBe(false);
+      expect(
+        parseState({ light: pinned, dark: { colors: {} } }),
+      ).toBeUndefined();
     },
   );
 });
 
 describe("theme-editor audit readout", () => {
   it("passes both built-in themes", () => {
-    expect(auditFindings(auditReport("light", defaultState().light))).toEqual(
-      [],
-    );
-    expect(auditFindings(auditReport("dark", defaultState().dark))).toEqual([]);
+    expect(auditFindings(auditReport("light", noPins()))).toEqual([]);
+    expect(auditFindings(auditReport("dark", noPins()))).toEqual([]);
   });
 
   it("names a pair an edit breaks, with the measured ratio and the floor", () => {
-    const edits = defaultState().dark;
-    const broken = {
-      ...edits,
-      colors: {
-        ...edits.colors,
-        // The label on a primary fill, painted in the fill's own colour.
-        primary: themes.dark.colors.primaryForeground,
-      },
+    const broken: ThemePins = {
+      // The label on a primary fill, painted in the fill's own colour.
+      colors: { primary: themes.dark.colors.primaryForeground },
     };
 
     const primary = auditFindings(auditReport("dark", broken)).filter(
@@ -134,11 +167,7 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports an unmeasurable pair instead of counting it as passed", () => {
-    const edits = defaultState().dark;
-    const translucent = {
-      ...edits,
-      colors: { ...edits.colors, ring: "#00000080" },
-    };
+    const translucent: ThemePins = { colors: { ring: "#00000080" } };
 
     const ring = auditFindings(auditReport("dark", translucent)).filter(
       (finding) =>
@@ -152,10 +181,8 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a divider an edit makes invisible, which no contrast pair covers", () => {
-    const edits = defaultState().light;
-    const broken = {
-      ...edits,
-      colors: { ...edits.colors, border: themes.light.colors.background },
+    const broken: ThemePins = {
+      colors: { border: themes.light.colors.background },
     };
     const findings = auditFindings(auditReport("light", broken));
 
@@ -172,8 +199,7 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a role the renderer cannot paint, instead of painting it black in silence", () => {
-    const edits = defaultState().dark;
-    const typo = { ...edits, colors: { ...edits.colors, primary: "#12345" } };
+    const typo: ThemePins = { colors: { primary: "#12345" } };
 
     const findings = auditFindings(auditReport("dark", typo)).filter(
       (finding) => finding.kind === "role",

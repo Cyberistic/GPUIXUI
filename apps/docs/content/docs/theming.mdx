@@ -196,6 +196,11 @@ shapes rather than only a colour swatch: the [Button](/docs/components/button),
 render one, and the menu's open/closed states come from the same rules the
 component ships.
 
+[Theme](/docs/themes) follows it too: the editor starts from the selected
+style's roles, radii and family, and switching re-bases its preview without
+discarding what you edited — only the roles you touched are pinned. That is the
+[copy-and-own contract](#take-one-and-make-it-yours) with a live output.
+
 ### The look picker
 
 Beside it, **Look** applies one of the authored styles `@gpuixui/tokens` ships —

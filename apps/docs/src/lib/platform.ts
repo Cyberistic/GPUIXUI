@@ -104,3 +104,17 @@ export const resolvePlatformTheme = (
   const base = platformTheme(themes[mode], platform);
   return look === "native" ? base : applyStyle(base, retroStyles[look]);
 };
+
+/**
+ * The theme editor's two bases: the selected platform style (and authored look)
+ * in each mode. The editor pins only what a reader changes, so a switch of the
+ * platform re-bases the preview while the edits stay — the same
+ * `extendTheme(platformStyle, edits)` a consumer writes by hand.
+ */
+export const platformThemes = (
+  platform: PlatformName,
+  look: LookName = "native",
+): Readonly<Record<ThemeMode, Theme>> => ({
+  light: resolvePlatformTheme(platform, "light", look),
+  dark: resolvePlatformTheme(platform, "dark", look),
+});
