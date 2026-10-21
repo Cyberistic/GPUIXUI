@@ -206,12 +206,16 @@ cannot render half of itself. Each level paints the `shadow` role at its designe
 strength — 8%, 12% and 16% over a pale canvas, 40%, 65% and 80% over a dark one —
 so retinting that one role retints every shadow a theme inherits. The high-contrast
 themes carry the same geometry in their own role's tint.
-Overlay layering uses the `overlay` scrim colour; `elevation.overlay` is reserved
-and empty so the shape stays stable. Dark shadows are stronger because contrast
-between surfaces is lower. A shadow is not measured by the contrast contract: it
-is a blurred geometry whose visible contribution depends on its offset and blur,
-so a flat composite would overstate it. It is held instead to one shadow per
-level, tinted by the `shadow` role (see §9 for the surfaces that *are* measured).
+Overlay layering is paint order, not a shadow or a weight: the runtime has no
+`zIndex`, so a surface paints above the page by being mounted after it, and the
+`overlay` scrim role is what recedes the content behind a modal. §Layering in
+`docs/tokens.md` is the model — the five mount layers, the topmost-layer
+dismissal stack, and why `elevation.overlay` stays a reserved, empty level. Dark
+shadows are stronger because contrast between surfaces is lower. A shadow is not
+measured by the contrast contract: it is a blurred geometry whose visible
+contribution depends on its offset and blur, so a flat composite would overstate
+it. It is held instead to one shadow per level, tinted by the `shadow` role (see
+§9 for the surfaces that *are* measured).
 
 ## 8. Interaction states
 
@@ -341,6 +345,7 @@ design system cannot compensate for a missing role.
 | no inherited `color` | every `<text>` sets `color` explicitly |
 | focus has two paint paths | `keyboardFocusRing` is the `focusVisible` outline the runtime paints after Tab; a programmatic focus before any key (a mouse-opened overlay) does not paint it, so that path keeps `focusRing`'s shadow |
 | elevation is one shadow per level by design | `boxShadow` accepts a list, but a level is designed as one shadow |
+| no `zIndex` in the published API | paint order is tree order; an overlay paints above the page by being mounted after it, the dismiss stack decides what Escape closes, and there is no numeric `z` token (`docs/tokens.md` §Layering) |
 | `letterSpacing` absent | no display tracking or all-caps tracking |
 | no OS appearance query | the app owns the mode |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |

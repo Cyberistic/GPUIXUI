@@ -965,6 +965,65 @@ the role's hue and its strength, holds every shipped theme to its own role, and
 proves a brand's retint reaches every inherited level while an explicit one
 survives.
 
+## Layering
+
+There is no `z` scale and no stacking token. The pinned `@gpuix/native@0.11.0`
+`StyleDesc` has no `zIndex` field, so the renderer has one stacking rule: **paint
+order is tree order**. A surface paints above the page by being rendered after
+it, and the only way to put one thing over another is to mount it later. A
+numeric scale here would be a token the runtime ignores — the one thing a design
+system must not ship.
+
+What the library defines instead is the order an application **mounts** its
+surfaces in, one layer at a time:
+
+1. **inline** — the page itself.
+2. **anchored** — `DropdownMenu`, `ContextMenu`, `NavigationMenu`, `Popover`,
+   `PreviewCard`, `Combobox` and the picker panels. Each positions itself
+   against its own anchor through `FloatingLayer`; between two anchored
+   surfaces, tree order decides.
+3. **tip** — `Tooltip`, on the runtime's own tip layer. The runtime owns its
+   open/close and its Escape, so it is not on the component dismiss stack.
+4. **modal** — `Dialog`, `Drawer`, `ConfirmationDialog` and `CommandMenu`, over
+   the `overlay` scrim at window coordinates. A modal covers every anchored
+   surface mounted before it.
+5. **notice** — `ToastViewport`, mounted **last in the app root** so a
+   notification paints over an open dialog. The `Toast` page repeats this; it is
+   the one mounting order a consumer must get right.
+
+Two rules follow:
+
+- **Render late, not high.** An overlay cannot raise itself after the fact, so
+  mount it after the content it may cover. A dialog opened inside a sidebar is
+  rendered from the window root, not from the sidebar's subtree.
+- **Dismissal is a stack, not a weight.** `packages/components/src/internal/dismiss-layer.ts`
+  pushes each open overlay and offers Escape and outside presses to the
+  **topmost** layer only, so nesting dismisses outside-in — a popover inside a
+  dialog closes the popover first — and one keystroke cannot close two surfaces.
+  The event is the unit of consumption, not the layer.
+
+Two differently named tokens are easy to mix up here:
+
+- `overlay` is the **modal scrim colour** (`#00000073` light, `#000000A6` dark),
+  painted behind a modal's content and measured as a decorative surface over
+  `card` and `popover` (`decorative.ts`). It is what makes a modal recede.
+- `elevation.overlay` is a **reserved, empty elevation level**. It lifts nothing:
+  `elevationShadow(theme, "overlay")` returns `undefined`, and a surface that
+  names it paints flat. Floating surfaces take `elevation.md` (menus and
+  popovers) or `elevation.lg` (dialogs and command palettes) — see §Elevation.
+  The level is kept empty so the level shape stays stable; filling it is a design
+  decision recorded in `TODO.md`, not a silent default.
+
+The repo's own source-built `darwin-x64` binding carries a local `zIndex` patch
+(`apps/playground/patches/gpuix-zindex.patch`) so a probe can measure occlusion.
+It is not the published API and library code never writes against it;
+`docs/gpuix-capabilities.md` records both the absence and the patch.
+
+`packages/tokens/src/layering.test.ts` holds this page to the model: the five
+layers in order, the topmost-layer dismissal rule, the scrim/elevation
+distinction, the inventory rows each layer names, and the package shipping no
+numeric stacking token.
+
 ## Borders, icons and identity marks
 
 | Token | Pixels |
@@ -1359,6 +1418,12 @@ or dropped is named rather than passing silently.
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
+- No `zIndex` in the published API, so there is no numeric stacking token: paint
+  order is tree order and the mounting rules are §Layering. The repo's
+  source-built binding carries a local `zIndex` patch for a probe; library code
+  never writes against it.
+- No responsive breakpoints: the runtime has no media queries, so a layout
+  responds to window size in the application, not through a token.
 - No `letterSpacing` in the runtime.
 - No OS appearance detection; the application selects the mode and contrast, and
   also which platform style to render.

@@ -34,11 +34,16 @@ export interface BoxShadow {
 export interface Elevation {
   /** Resting cards and raised rows. */
   readonly sm: BoxShadow[];
-  /** Menus, popovers and tooltips. */
+  /** Menus and popovers. */
   readonly md: BoxShadow[];
   /** Dialogs and command palettes. */
   readonly lg: BoxShadow[];
-  /** Reserved for surfaces that need an additional inset ring. */
+  /**
+   * Reserved and empty: it lifts nothing, so a surface that names it paints
+   * flat. Overlay *layering* is paint order (there is no `zIndex` to raise a
+   * surface with), and the scrim behind a modal is the `overlay` colour role —
+   * neither is a shadow. Floating surfaces take `md` or `lg`.
+   */
   readonly overlay: BoxShadow[];
 }
 
