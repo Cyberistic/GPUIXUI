@@ -1,0 +1,109 @@
+---
+title: Architecture
+description: The packages, the direction dependencies run, and where a new component, token or example belongs.
+---
+
+GPUIxUI is a TypeScript monorepo of small packages around one idea: a component
+is a **typed React component that renders through GPUix**, and everything it
+needs to look right is data in a theme. The packages are layered so a lower
+layer never imports a higher one, and the documentation app never enters the
+runtime at all.
+
+## The packages
+
+| Package | Responsibility | Depends on |
+| ------- | -------------- | ---------- |
+| `@gpuixui/tokens` | Semantic colour roles, type, spacing, radii, density, elevation; light/dark, high contrast, platform styles | — |
+| `@gpuixui/tw` | The Tailwind-subset recipe registry; compiles class strings to a GPUix `StyleDesc` | `tokens` |
+| `@gpuixui/icons` | Icon markup, size scale and accessibility rules | `tokens` |
+| `@gpuixui/primitives` | Tier 1: layout, type, actions, inputs, selection and indicators | `tokens`, `tw`, `icons` |
+| `@gpuixui/components` | Tier 2: cards, overlays, menus, tabs, pickers, feedback | `tokens`, `tw`, `keyboard` |
+| `@gpuixui/keyboard` | Accelerator grammar, scoped keymaps, event matching, command registry | — |
+| `@gpuixui/motion` | Renderer-neutral springs, easing, timelines and inertia | — |
+| `@gpuixui/runtime` | The pinned GPUix capability matrix and typed refusals | — |
+| `@gpuixui/testing` | Shared harnesses: render helpers, state replay, smoke utilities | — |
+| `@gpuixui/config` | Shared TypeScript, lint and format configuration | — |
+| `@gpuixui/deploy` | The Cloudflare Worker that publishes this docs site | — |
+
+`@gpuixui/components` does not depend on `@gpuixui/primitives` today: it keeps a
+small internal button stand-in instead of reaching up for the primitive. That is
+recorded as an interlock in `TODO.md`, not hidden behind a re-export.
+
+## The direction
+
+```
+tokens ──▶ tw ──▶ primitives ──▶ (components)
+   └──────▶ icons ──▶ primitives
+keyboard, motion, runtime, testing   stand alone
+```
+
+Three rules keep that graph acyclic:
+
+1. **Tokens may not import anything in the library.** A token value is plain
+   data, so a theme can be built and tested without a renderer.
+2. **A styling layer may not import a component.** `tw` compiles strings;
+   primitives call it; components call it. Nothing calls back down.
+3. **The native runtime may not depend on the docs site.** This app imports
+   `@gpuixui/*`, never the reverse, so shipping a component never pulls in MDX,
+   Fumadocs or a browser bundle.
+
+## The rendering pipeline
+
+A primitive does not hold a colour. It picks a class string, the recipe registry
+compiles that string against the theme, and the result is the `StyleDesc` GPUix
+paints:
+
+```
+Button variant + size ──▶ className recipe ──▶ classesToStyle(theme) ──▶ StyleDesc
+```
+
+A caller's `className` and `style` are merged last, so an app can override any
+resting appearance without forking the component. The three tiers of the registry
+— static utilities, derived token arithmetic (`h-md`, `px-inset-*`) and
+compile-time numeric `calc()` — are documented in `packages/tw`.
+
+## Effect at the boundaries
+
+Domain logic is written in Effect and native JavaScript stops at entrypoints.
+The pattern in this repo:
+
+- **Errors are values** — `Schema.TaggedError` for anything a caller may handle;
+  a defect is reserved for an impossible state.
+- **Unknown input is decoded** — `Schema` at the edge (persisted state, URL
+  parameters, API or SDK responses), plain values inside.
+- **Services** use `Context.Service` and are composed with `Layer`; the runtime
+  is executed once, at the entrypoint, not inside a component.
+- **Time and randomness come from the runtime** (`Clock`, `Random`), which is
+  what lets the toast queue and the countdown test deterministically.
+
+The docs site is a browser app and follows its own React idiom; the library
+packages are the Effect-first surface.
+
+## Testing lanes
+
+| Lane | Command | What it can prove |
+| ---- | ------- | ----------------- |
+| Unit | `nub run --filter <pkg> test` | pure logic, style resolution, schema decoding |
+| Behaviour | `nub run --filter <pkg> test:behaviour` | real GPUix renderer: focus, keys, paint |
+| Native smoke | `nub apps/playground/dist/smoke/run.js --only <id>` | a capability in the actual runtime |
+| Docs | `nub run --filter @gpuixui/docs test` | page contracts, the theme bridge, package docs mount |
+| Build | `nub run --filter @gpuixui/docs build` | the site compiles and renders server-side |
+
+A browser test cannot prove a native interaction; where the runtime lacks a
+capability, the limitation is recorded with evidence instead of mocked.
+
+## Where a change goes
+
+- **A token or role** → `@gpuixui/tokens`, with the contrast contract updated if
+  the role is text or a boundary.
+- **A new visual utility** → `@gpuixui/tw`'s registry, with the recipe oracle
+  extended; never a literal in a component.
+- **A foundational control** → `@gpuixui/primitives`, plus a docs page in its
+  `docs/` directory, an example and a runtime suite.
+- **A composed pattern** → `@gpuixui/components`, with a behaviour suite and a
+  page under `packages/components/docs`.
+- **A page-level recipe** → this site's `Blocks` section, not a package.
+- **A runtime capability claim** → `@gpuixui/runtime`'s matrix, with evidence.
+
+These rules are the ones `COMPONENTS.md` and the package plans refer to; if a
+change needs an exception, it is recorded rather than assumed.

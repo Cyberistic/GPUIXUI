@@ -15,6 +15,7 @@ page TOC and a previous/next pager.
 content/docs/           MDX pages and their meta.json navigation
   index.mdx             Introduction (served at /docs)
   installation.mdx      Requirements, nub, first component
+  architecture.mdx      The package graph, the recipe pipeline and where a change goes
   theming.mdx           Semantic roles, themes, overrides
   dark-mode.mdx         App-owned mode switching
   primitives/           The Tier 1 section index (its pages come from the packages)

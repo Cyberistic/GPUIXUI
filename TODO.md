@@ -681,9 +681,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ### Docs information architecture (`docs-site`)
 
-`[ ]` `[░░░░░░░░░░]` 0/4
+`[ ]` `[██░░░░░░░░]` 1/4
 
-`[ ]` Architecture page — the package graph, the boundaries and where a new component or token belongs
+`[x]` Architecture page — `/docs/architecture` names all 11 packages, the dependency direction, the recipe pipeline, the Effect boundaries, the testing lanes and where a change goes; `apps/docs/src/lib/architecture.test.ts` fails when a package is added without a row or the page leaves the sidebar
 `[ ]` Layouts, Workspace and Data display pages — the composition lanes the component inventory names, with live examples as they land
 `[ ]` Examples and API reference pages — the example registry once the playground mounts it, plus a generated public-export reference
 `[ ]` License and attribution page — rendered from `LICENSES/` once the inventory is complete
