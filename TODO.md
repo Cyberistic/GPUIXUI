@@ -1637,8 +1637,9 @@ retired once both branches are one
       of Popover, PreviewCard and NotificationCentre moved into their roots so the
       close can measure them. 5 composite cases (including the DatePicker, which
       composes Popover) + 1 popover case + 2 pins, all five mark cases red at
-      `HEAD`, five mark mutations and a capture mutation; composition 20/20,
-      Popover 32, full native suite 1063/20 of 1083 (the same
+      `HEAD`, five mark mutations, a capture mutation and an effect-time-capture
+      mutation; composition 21/21,
+      Popover 32, full native suite 1064/20 of 1084 (the same
       plan-540 classes), unit 528 in 49 files, `check`/`lint`/`test` exit 0,
       scoped smoke `overlay-dialog` + `modal-focus-trap` green, full headless
       17/20 with the three recorded binding failures; docs, `docs/component-api.md`

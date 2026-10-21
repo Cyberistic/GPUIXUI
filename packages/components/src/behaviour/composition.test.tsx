@@ -544,6 +544,39 @@ const DialogFromNav = () => {
   );
 };
 
+/**
+ * The popover control's dialog, with the **dialog painted before** the popover.
+ * The leaving control is captured on the closing render, so a dialog whose focus
+ * effect runs first cannot hide it (plan 832).
+ */
+const DialogFirstThenPopover = () => {
+  const [panel, setPanel] = useState(false);
+  const [dialog, setDialog] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <Dialog open={dialog} onOpenChange={setDialog}>
+        <DialogContent label="Advanced" testId="early-dialog" size="sm">
+          <DialogTitle>Advanced</DialogTitle>
+        </DialogContent>
+      </Dialog>
+      <Popover open={panel} onOpenChange={setPanel}>
+        <PopoverTrigger testId="early-trigger">Filter</PopoverTrigger>
+        <PopoverContent testId="early-panel">
+          <Button
+            testId="early-advanced"
+            onClick={() => {
+              setPanel(false);
+              setDialog(true);
+            }}
+          >
+            Advanced
+          </Button>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
+
 /** A date picker whose selection opens a dialog; the picker closes in the same commit. */
 const DialogFromDatePicker = () => {
   const [open, setOpen] = useState(false);
@@ -1021,6 +1054,25 @@ describe("composition", () => {
 
     expect(isShown(scene, "combo-dialog")).toBe(false);
     expect(focusedTestId(scene)).toEqual(Option.some("role-trigger"));
+
+    scene.unmount();
+  });
+
+  it("keeps the hand-off when the dialog is painted before the popover", async () => {
+    const scene = renderComponent(<DialogFirstThenPopover />);
+    clickCentreOf(scene, "early-trigger");
+    finishMotion(scene);
+
+    clickCentreOf(scene, "early-advanced");
+    finishMotion(scene);
+    expect(isShown(scene, "early-dialog")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "early-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("early-trigger"));
 
     scene.unmount();
   });
