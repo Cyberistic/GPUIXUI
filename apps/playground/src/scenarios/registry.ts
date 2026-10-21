@@ -117,6 +117,12 @@ export const registry = [
     capability: "table",
   },
   {
+    id: "data-grid-fixed-header",
+    title:
+      "Table: a fixed header with one shared horizontal scroll (no sticky in the runtime)",
+    capability: "table",
+  },
+  {
     id: "workspace-tab-drag",
     title: "Workspace: tabs, drag between panes and split resize",
     capability: "workspace",

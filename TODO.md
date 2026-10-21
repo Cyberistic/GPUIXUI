@@ -399,7 +399,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 17/17
+`[x]` `[██████████]` 18/18
 
 `[x]` Rebuild the 0.11.0 `darwin-x64` binding from the pinned upstream revision
       (B1 re-opened by the version bump): `build-native-binding.sh` now fetches
@@ -538,6 +538,13 @@ a workaround for two live sessions sharing one worktree; see
       `1` each). `SplitPane` gained an optional controlled `size`, so
       `panel-resize` and `workspace-tab-drag` re-passed (`--only docking-nested
       --only panel-resize --only workspace-tab-drag`).
+`[x]` Land the `data-grid-fixed-header` Tier 3 feasibility probe — the fixed
+      header and the shared horizontal offset a grid needs. The runtime has no
+      sticky (a sticky child inside the scroller moves with the rows, asserted),
+      so the header is a sibling above the row scroller and holds its painted y;
+      one `overflowX` scroller wraps both, so a header cell and its column's
+      cells move together. 15 assertions / 25 checks; one negative control
+      measured (no `overflowX`: `expected a value, got none`, exit `1`).
 
 ## Phase C — Tier 1–2 components
 
@@ -915,7 +922,7 @@ Both are specified in ; each fix starts with a plan under .
 `[x]` `packages/primitives`: every `OTPField` cell was a tab stop; the group now has one roving stop on the cell the code has reached (or the focused cell), proven natively as Tab-in/Tab-out (salvage 076)
 `[x]` `packages/primitives`: `stepNumber` added raw floats, so a 0.1 step reported `0.30000000000000004`; the move is now rounded to the finer of the value's and step's decimal places, with an integer step left exact at 1e15 (salvage 077)
 `[ ]` `packages/primitives`: `Text`'s `clamp` is decided by the first identical string the runtime lays out (salvage 082)
-`[ ]` `packages/primitives`: no `IconButton` (icon-only button) part (salvage 086)
+`[x]` `packages/primitives`: no `IconButton` (icon-only button) part (salvage 086) — `IconButton` narrows `Button` to the icon-only case with a **required** `label`, an `icon` slot that can never become the name, and an always-square box; ghost by default for toolbars. It is `renderButton(iconButtonProps(props), …)`, so activation, busy and disabled stay `Button`'s one implementation. 7 unit tests + 5 native (the accessibility tree names it with no image node; the painted box measures 32×32 at `md`), an example, a docs page and a `COMPONENTS.md` row. Both directions measured: dropping `square` fails `expected 1256 to be 32`, blanking `label` fails the name case
 `[ ]` `packages/primitives`: value callbacks are not consistently named (`onValueChange` vs `onChange`) (salvage 088)
 `[ ]` `packages/primitives`: state-aware `style` is adopted only by the fields; the controls, group roots and overlays, plus a focus/tab-order matrix over every focusable control, remain (salvage 079, 080, 081, 084, 089, 090)
 `[ ]` `packages/primitives`: docs still advise putting a `Label` beside a standalone checkbox/switch, which does not name it (salvage 087)
@@ -950,8 +957,18 @@ Both are specified in ; each fix starts with a plan under .
       `sidebar=340 editor=260`, exit `1` each). Its measured limitation — a
       split's `max` is the caller's number, not the container's — is recorded in
       the README. `--only docking-nested`, green on 0.11.0.
-`[ ]` `apps/playground`: no data-grid or editor feasibility probe yet
-      (salvage 130; docking landed above)
+`[x]` `apps/playground`: data-grid feasibility measured — the
+      `data-grid-fixed-header` scenario proves the only fixed-header pattern the
+      runtime supports: the header is a **sibling above** the row scroller (it
+      keeps its painted y while the rows scroll), while a `position: "sticky"`
+      child *inside* the scroller moves by exactly the scroll amount, i.e. the
+      runtime paints no sticky. One `overflowX` scroller wraps header and rows,
+      so a horizontal wheel moves a header cell and its column's cells by the
+      same x and they stay aligned. 15 assertions (25 checks with the paint and
+      offset guards); one negative control measured (no `overflowX` scroller:
+      `scroll offset of grid-hscroll: expected a value, got none`, exit `1`).
+      `--only data-grid-fixed-header`, green on 0.11.0.
+`[ ]` `apps/playground`: no editor feasibility probe yet (salvage 130)
 `[ ]` `apps/playground`: native probe backlog — content surfaces (svg/img/diff/canvas), cross-element drag and file drops, the shipped Tier 1 controls in the suite, search highlights, drag auto-scroll, horizontal scroll and tab overflow, tab-strip focus, nested panels, command palette, tabbed workspace panes (salvage 161-163, 168-177). **Text selection landed** (`text-selection`, salvage 163)
 `[x]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178) — `packages/testing/src/native.ts` exports `NativeRenderer`/`NativeElement` (method signatures only, so the package still imports no GPUix type) and `createTestHost`, which owns the `testId` → element lookup, the nearest-painted-ancestor fallback for a `<virtual-list>`/`<anchored>`, the subtree text join, the style decode and the drag synthesis. `apps/playground/src/smoke/host.ts` is deleted — a real `TestRenderer` satisfies the port structurally, so the runner calls `Native.createTestHost(root.renderer)`. 10 fake-renderer tests; both directions measured (dropping the ancestor fallback fails `aims input at the nearest ancestor that paints` and the drag case). Headless re-run green: `--only modal-focus-trap --only panel-resize --only scroll-container`
 `[ ]` `packages/components`: Tier 2 behaviour gaps — remaining: List row subscriptions and icon adoption (salvage 324, 339).

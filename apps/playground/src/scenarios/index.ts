@@ -24,6 +24,7 @@ import { scrollHorizontalScenario } from "./scroll-horizontal.js";
 import { panelScenario } from "./panel.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
+import { dataGridScenario } from "./data-grid.js";
 import { workspaceScenario } from "./workspace.js";
 import { dockingScenario } from "./docking.js";
 import { shortcutScenario } from "./shortcuts.js";
@@ -55,6 +56,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "virtual-list-window": virtualListScenario,
   "table-select-sort": tableSelectSortScenario,
   "table-column-resize": tableColumnResizeScenario,
+  "data-grid-fixed-header": dataGridScenario,
   "workspace-tab-drag": workspaceScenario,
   "docking-nested": dockingScenario,
   "window-key-shortcut": shortcutScenario,
