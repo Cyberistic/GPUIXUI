@@ -123,7 +123,9 @@ describe("the theme page", () => {
     const reports = Object.keys(auditTheme(themes.light)).filter(
       (key) => key !== "passed",
     );
-    expect(audit).toContain(`${numberWords[reports.length]} independent failures`);
+    expect(audit).toContain(
+      `${numberWords[reports.length]} independent failures`,
+    );
     expect(audit).toContain("auditTheme");
     expect(audit).toContain("invalidNumbers");
     expect(audit).toContain("invalidShadowColors");

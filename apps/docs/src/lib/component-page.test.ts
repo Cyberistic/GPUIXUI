@@ -136,7 +136,8 @@ describe("the component section index", () => {
     // "How to read a page" is guidance, and a row naming a heading no page
     // carries sends a reader looking for something that does not exist.
     const index = source("index.mdx");
-    const table = /## How to read a page\n([\s\S]*?)\n\n/.exec(index)?.[1] ?? "";
+    const table =
+      /## How to read a page\n([\s\S]*?)\n\n/.exec(index)?.[1] ?? "";
     const offered = [...table.matchAll(/^\| ([^|]+) \|/gm)]
       .map((match) => match[1]?.trim() ?? "")
       .filter((cell) => cell !== "Section" && !/^-+$/.test(cell))

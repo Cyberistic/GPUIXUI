@@ -99,6 +99,21 @@ const { rows, malformed } = parseLimits(doc);
 const rowFor = (phrase: string): LimitRow | undefined =>
   rows.filter((row) => row.label.includes(phrase)).at(0);
 
+/** The rows of `/docs/runtime`'s measured table, as cells. */
+const measuredRows = (): ReadonlyArray<ReadonlyArray<string>> => {
+  const start = runtimePage.indexOf("## Measured in a window");
+  const end = runtimePage.indexOf("\n## ", start + 1);
+  return runtimePage
+    .slice(start, end === -1 ? undefined : end)
+    .split("\n")
+    .filter((line) => line.startsWith("|") && !/^\|[\s:|-]+\|$/.test(line))
+    .map(cells);
+};
+
+/** The measured row whose label starts with `label`, or `undefined`. */
+const measuredRow = (label: string) =>
+  measuredRows().find((row) => (row[0] ?? "").startsWith(label));
+
 /** The matrix entries, read the way the module declares them. */
 const parseMatrix = (
   source: string,
@@ -259,17 +274,7 @@ describe("docs/gpuix-capabilities.md", () => {
   });
 
   it("publishes the pointer-capture rule on /docs/runtime", () => {
-    const start = runtimePage.indexOf("## Measured in a window");
-    const end = runtimePage.indexOf("\n## ", start + 1);
-    const section = runtimePage.slice(start, end === -1 ? undefined : end);
-    const pageRows = section
-      .split("\n")
-      .filter((line) => line.startsWith("|") && !/^[\s:|-]+$/.test(line))
-      .map(cells);
-
-    const capture = pageRows.find((row) =>
-      (row[0] ?? "").startsWith("Pointer capture"),
-    );
+    const capture = measuredRow("Pointer capture");
     expect(
       capture,
       "the page's measured table has no pointer-capture row",
@@ -302,15 +307,7 @@ describe("docs/gpuix-capabilities.md", () => {
   });
 
   it("publishes what an SVG and an image can draw on /docs/runtime", () => {
-    const start = runtimePage.indexOf("## Measured in a window");
-    const end = runtimePage.indexOf("\n## ", start + 1);
-    const section = runtimePage.slice(start, end === -1 ? undefined : end);
-    const pageRows = section
-      .split("\n")
-      .filter((line) => line.startsWith("|") && !/^[\s:|-]+$/.test(line))
-      .map(cells);
-
-    const svg = pageRows.find((row) => (row[0] ?? "").startsWith("Inline SVG"));
+    const svg = measuredRow("Inline SVG");
     expect(
       svg,
       "the page's measured table has no inline-SVG row",
@@ -319,9 +316,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(svg?.[1]).toContain("content-surfaces");
     expect(svg?.[2]).toContain("one `<svg>` per colour");
 
-    const image = pageRows.find((row) =>
-      (row[0] ?? "").startsWith("Image bytes"),
-    );
+    const image = measuredRow("Image bytes");
     expect(image, "the page's measured table has no image row").toBeDefined();
     expect(image?.[1]).toContain("layout effect");
     expect(image?.[1]).toContain("content-surfaces");
@@ -346,17 +341,7 @@ describe("docs/gpuix-capabilities.md", () => {
   });
 
   it("publishes the clipboard limit on /docs/runtime", () => {
-    const start = runtimePage.indexOf("## Measured in a window");
-    const end = runtimePage.indexOf("\n## ", start + 1);
-    const section = runtimePage.slice(start, end === -1 ? undefined : end);
-    const pageRows = section
-      .split("\n")
-      .filter((line) => line.startsWith("|") && !/^[\s:|-]+$/.test(line))
-      .map(cells);
-
-    const clipboard = pageRows.find((row) =>
-      (row[0] ?? "").startsWith("Clipboard"),
-    );
+    const clipboard = measuredRow("Clipboard");
     expect(
       clipboard,
       "the page's measured table has no clipboard row",
@@ -364,6 +349,32 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(clipboard?.[1]).toContain("clipboard-lifecycle");
     expect(clipboard?.[1]).toContain("onChange");
     expect(clipboard?.[2]).toContain("read-only field");
+  });
+
+  it("records the pointer selection a window measured, with the probe behind it", () => {
+    // The only selection proof was synthetic: the headless `text-selection`
+    // scenario drives the renderer's own `dragSelect`, so "a drag selects" had
+    // never been produced by a pointer. `selection-lifecycle` measured it in a
+    // window, the run `getSelectedText()` reports, and the geometry a
+    // selectable line owes the hit test.
+    const selection = rowFor("Text selection");
+    expect(selection?.verdict).toBe("supported");
+    expect(selection?.evidence).toContain("selection-lifecycle");
+    expect(selection?.evidence).toContain("getSelectedText");
+    expect(selection?.evidence).toContain("text-selection");
+    expect(selection?.workaround).toContain("alignSelf");
+    expect(selection?.workaround).toContain("initiated");
+  });
+
+  it("publishes the measured pointer selection on /docs/runtime", () => {
+    const selection = measuredRow("Text selection");
+    expect(
+      selection,
+      "the page's measured table has no text-selection row",
+    ).toBeDefined();
+    expect(selection?.[1]).toContain("selection-lifecycle");
+    expect(selection?.[1]).toContain("getSelectedText");
+    expect(selection?.[2]).toContain("alignSelf");
   });
 
   it("leaves the uncertain rows uncertain", () => {
@@ -380,6 +391,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("scroll-lifecycle");
     expect(runtimePage).toContain("pointer-capture");
     expect(runtimePage).toContain("content-surfaces");
+    expect(runtimePage).toContain("selection-lifecycle");
     expect(runtimePage).toContain("clipboard-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
@@ -389,17 +401,7 @@ describe("docs/gpuix-capabilities.md", () => {
     // The doc row is the durable record; the page is what a component author
     // reads before wiring a scrollbar. Naming the two listeners is not enough
     // — the page has to say which one is the absolute, clamped position.
-    const start = runtimePage.indexOf("## Measured in a window");
-    const end = runtimePage.indexOf("\n## ", start + 1);
-    const section = runtimePage.slice(start, end === -1 ? undefined : end);
-    const pageRows = section
-      .split("\n")
-      .filter((line) => line.startsWith("|") && !/^\|[\s:|-]+\|$/.test(line))
-      .map(cells);
-
-    const scroll = pageRows.find((row) =>
-      (row[0] ?? "").startsWith("Scroll event"),
-    );
+    const scroll = measuredRow("Scroll event");
     expect(
       scroll,
       "the page's measured table has no scroll-event row",
