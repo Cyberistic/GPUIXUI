@@ -276,6 +276,44 @@ per-element, and an element that draws its own focus look opts out with
 A failed probe still writes its report and captures, so a regression is visible,
 not just red.
 
+### `font-registration-late` — measured on 0.11.0 here
+
+The typings for `registerFont` say a family that did not exist when the text
+naming it was first laid out "has already fallen back to another font". That is
+true of the frame it describes, but it leaves the practical question open: does
+the text stay the fallback forever, or does the next layout pick the file up?
+This probe measures the second half.
+
+The view names `GpuixTestSquare` and declares **no** `fonts`, so the first paint
+is the fallback. The probe measures the word's painted width, installs the file
+through the renderer (`AsyncSmokeHost.registerFont`), presses a re-layout control
+whose handler flips the sample's tint (so the node really re-renders), and
+measures again. A second sample names a family nothing ever installs, so it must
+not move — otherwise the difference would be noise rather than the file.
+
+| Sample | Before the install | After the install + re-layout |
+| ------ | ------------------ | ----------------------------- |
+| `late-face` (`GpuixTestSquare`) | 44px (fallback) | **81px** (4em at 20px, rounded) |
+| `late-control` (`GpuixTestMissing`) | 44px | 44px |
+
+Four checks: the control family paints the fallback, the next layout paints the
+installed face (80 ± 1), the face was **not** painted before the install, and the
+control does not move. Negative control, measured: declaring
+`fonts: [SQUARE_FACE]` (the face known at mount, so the first paint is already
+81px) fails `the face was not painted before it was installed` and exits `1`.
+
+The consequence is not "register whenever you like": registering after the first
+paint still costs a fallback frame, so the documented order stays the right one.
+What this measures is that the fallback is **not permanent** — a repaint re-lays
+the text out against the family the renderer now knows. `packages/tokens` says
+the opposite in four places (the `fonts.ts` header, `docs/tokens.md`, the package
+README and the `COMPONENTS.md` row); the correction is recorded as an interlock
+in `TODO.md` because those files are not this workstream's.
+
+The capture pair is `.artifacts/live/late-before.png` and `late-after.png`: the
+first two samples are ordinary text, the face sample becomes a solid rectangle
+once the install has been repainted.
+
 ### `register-font` — measured on 0.11.0 here
 
 Plan `052` shipped `registerFonts`, but a unit test cannot show the face
@@ -308,12 +346,10 @@ Two consequences:
 1. A theme may name a family the machine did not have, and the runtime resolves
    it from the **file** — so a consumer's own typeface travels with the
    application, which is what plan `052` needed.
-2. **Order matters in a window**: the face has to be registered before the text
-   that names the family is first laid out, which is the order the pinned
-   `@gpuix/native` typings state. Upstream's `fonts.test.tsx` shows the
-   `TestRenderer` re-shaping text that already named the family; that path is
-   unmeasured in a window, and `TODO.md` tracks the contradiction between the
-   typings and `packages/tokens/src/fonts.ts`'s header.
+2. **Register before the first layout.** Registering later still costs a frame of
+   fallback text; `font-registration-late` measured that the text then re-shapes
+   on the next repaint (44px → 81px), so the fallback is not permanent but the
+   first frame is. The pinned typings say only the first half.
 
 The fixture is `GpuixTestSquare`, GPUix's generated test face
 (`references/gpuix/packages/react/src/__tests__/make-square-font.py`). Its bytes
@@ -466,7 +502,9 @@ narrower. Each deviation is deliberate and measured:
   fails with `linux mono family: expected "Menlo", got "DejaVu Sans Mono"`,
   exit `1`; restored, green. Hard-coding `side="bottom"` in the floating layer
   fails `side=right sits one gap right of the anchor: expected 326 ± 1, got 200`
-  (plan `156` §8).
+  (plan `156` §8). Declaring `GpuixTestSquare` at mount in
+  `font-registration-late` fails `the face was not painted before it was
+  installed` (exit `1`), which is that probe's negative control.
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

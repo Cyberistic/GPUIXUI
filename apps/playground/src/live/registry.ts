@@ -29,6 +29,12 @@ export interface LiveProbeMeta {
  * face is proved by its **metrics** — the installed family lays the sample word
  * out at its own advances, and a family no runtime knows lays it out at the
  * fallback's width.
+ *
+ * `font-registration-late` precedes `register-font` on purpose: it measures what
+ * happens when a face arrives *after* the first layout, and a probe that
+ * installed the same family earlier in the run would leave it known at mount and
+ * void the measurement. Its own "the face was not painted before it was
+ * installed" check fails if that order is ever broken.
  */
 export const liveRegistry = [
   {
@@ -41,6 +47,12 @@ export const liveRegistry = [
     id: "keyboard-focus-dim",
     title: "Focus: the runtime dims other focusables, and one element opts out",
     capability: "focus",
+  },
+  {
+    id: "font-registration-late",
+    title:
+      "Text: a face installed after the first layout paints on the next re-layout",
+    capability: "text",
   },
   {
     id: "register-font",

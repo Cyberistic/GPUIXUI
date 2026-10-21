@@ -26,7 +26,14 @@ export type LiveRenderer = Pick<
   | "focusNext"
   | "getPaintedText"
   | "simulateKeyUp"
+  | "registerFont"
 >;
+
+/**
+ * The renderer surface that installs a font file, unnamed so a fake can stand in
+ * for a real renderer in a unit test.
+ */
+export type LiveFontRegistrar = Pick<GpuixRenderer, "registerFont">;
 
 /** What the host needs from the runner. */
 export interface LiveHostOptions {
@@ -72,6 +79,20 @@ const treeOf = (
   call("getTree", () => app.call("getTree", {})).pipe(
     Effect.map((result) => Option.fromNullishOr(result.tree)),
   );
+
+/**
+ * Installs a font file in a renderer, after the first paint.
+ *
+ * The renderer takes a Node `Buffer`; a probe names bytes, so the conversion
+ * lives here at the platform boundary and the probe stays platform-free.
+ */
+export const fontInstaller =
+  (registrar: LiveFontRegistrar): Smoke.AsyncSmokeHost["registerFont"] =>
+  (bytes) =>
+    named(
+      "registerFont",
+      sync(() => registrar.registerFont(Buffer.from(bytes))),
+    );
 
 /** An `AsyncSmokeHost` over a connected window. */
 export const createLiveHost = ({
@@ -135,6 +156,7 @@ export const createLiveHost = ({
           sync(() => renderer.focusElement(node.id)),
         );
       }),
+    registerFont: fontInstaller(renderer),
     waitFor: (testId) =>
       call(`waitFor ${testId}`, () => at(testId).waitFor()).pipe(Effect.asVoid),
     capture: (name) =>

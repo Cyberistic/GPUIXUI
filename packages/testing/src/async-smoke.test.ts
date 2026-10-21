@@ -31,6 +31,7 @@ const inertHost: AsyncSmokeHost = {
   keyUp: () => Effect.void,
   focusNext: () => Effect.void,
   focusElement: () => Effect.void,
+  registerFont: () => Effect.void,
   waitFor: () => Effect.void,
   capture: () => Effect.void,
   pixels: () =>

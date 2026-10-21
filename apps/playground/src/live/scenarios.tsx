@@ -22,6 +22,7 @@ import { palettes } from "../palettes.js";
 import type { LiveProbeId } from "./registry.js";
 import {
   MISSING_FAMILY,
+  SQUARE_BYTES,
   SQUARE_FACE,
   SQUARE_FAMILY,
   SQUARE_SIZE,
@@ -232,6 +233,92 @@ const RegisterFontProbe = (): ReactNode => {
       <FaceSample testId="face-default" />
       <FaceSample testId="face-missing" family={MISSING_FAMILY} />
       <FaceSample testId="face-registered" family={SQUARE_FAMILY} />
+    </div>
+  );
+};
+
+/**
+ * Text naming a family the renderer does not know yet, and a control that
+ * repaints it.
+ *
+ * Nothing installs the face before this view mounts — that is the measurement.
+ * The probe installs it afterwards and presses the re-layout control, so the
+ * second width is the same text laid out again by a runtime that now knows the
+ * family. The tint alternates on every press, so the node's style really
+ * changes: a re-render that skips an unchanged node could not hide the
+ * measurement behind a reconciler bail-out.
+ */
+const LateRegistrationProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [relayouts, setRelayouts] = useState(0);
+  const tint =
+    relayouts % 2 === 0
+      ? theme.colors.foreground
+      : theme.colors.mutedForeground;
+  const sample = {
+    ...textStyle(theme, "body"),
+    fontSize: SQUARE_SIZE,
+    color: tint,
+  };
+  return (
+    <div
+      testId="font-late-probe"
+      style={{
+        width: 720,
+        height: 320,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The face arrives after this text first painted.
+      </text>
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <text
+          testId="late-face"
+          style={{ ...sample, fontFamily: SQUARE_FAMILY }}
+        >
+          {SQUARE_WORD}
+        </text>
+      </div>
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <text
+          testId="late-control"
+          style={{ ...sample, fontFamily: MISSING_FAMILY }}
+        >
+          {SQUARE_WORD}
+        </text>
+      </div>
+      <div
+        testId="late-relayout"
+        role="button"
+        tabIndex={0}
+        onClick={() => setRelayouts((count) => count + 1)}
+        style={{
+          width: 240,
+          padding: theme.spacing.md,
+          borderRadius: theme.radius.md,
+          backgroundColor: theme.colors.muted,
+        }}
+      >
+        <text
+          testId="late-relayouts"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`relayouts=${relayouts}`}
+        </text>
+      </div>
     </div>
   );
 };
@@ -564,6 +651,69 @@ const registerFontSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * Registers the face after the text naming it has painted, then re-lays it out.
+ *
+ * The documented order is still "create the renderer, register, then render",
+ * because that is the only order with no fallback frame in between. This probe
+ * asks the sharper question the typings answer conservatively — a family that
+ * arrives later "has already fallen back" — by measuring whether the *next*
+ * layout picks the file up. It does: the same node repainted after the install
+ * paints the installed advances, so a late registration costs a repaint, not a
+ * permanently wrong typeface.
+ */
+const lateRegistrationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("late-face");
+
+    const before = yield* paintedWidth(ctx, "late-face");
+    const controlBefore = yield* paintedWidth(ctx, "late-control");
+    yield* ctx.host.capture("late-before");
+
+    // The control names a family nothing ever installs, so a width change there
+    // would make the measurement below meaningless.
+    yield* ctx.expectEqual(
+      "the control family paints the fallback",
+      Math.abs(controlBefore - SQUARE_WORD_WIDTH) > 5,
+      true,
+    );
+
+    yield* ctx.host.registerFont(SQUARE_BYTES);
+    yield* ctx.host.click("late-relayout");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the re-layout control repaints the view",
+      yield* ctx.host.text("late-relayouts"),
+      "relayouts=1",
+    );
+
+    const after = yield* paintedWidth(ctx, "late-face");
+    const controlAfter = yield* paintedWidth(ctx, "late-control");
+    yield* ctx.host.capture("late-after");
+
+    // The claim: the repaint lays the text out against the face installed a
+    // moment earlier. This is the measurand the typings' "already fallen back"
+    // warning does not describe: the fallback is not permanent, it is what the
+    // next layout replaces.
+    yield* ctx.expectNear(
+      "the next layout paints the face installed after the first one",
+      after,
+      SQUARE_WORD_WIDTH,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the face was not painted before it was installed",
+      Math.abs(before - SQUARE_WORD_WIDTH) > 5,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the never-installed control sample does not move",
+      controlAfter,
+      controlBefore,
+      1,
+    );
+  });
+
 const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("input-field");
@@ -638,6 +788,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "keyboard-focus-dim",
     view: () => <FocusDimProbe />,
     steps: focusDimSteps,
+  },
+  "font-registration-late": {
+    id: "font-registration-late",
+    view: () => <LateRegistrationProbe />,
+    steps: lateRegistrationSteps,
   },
   "register-font": {
     id: "register-font",

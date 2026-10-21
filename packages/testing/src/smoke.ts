@@ -305,6 +305,19 @@ export interface AsyncSmokeHost {
   readonly focusElement: (
     testId: string,
   ) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Installs a font file in the renderer **after** the first paint.
+   *
+   * A runner registers a probe's declared faces before the view mounts, which is
+   * the documented order. This verb exists for the other order: a probe mounts
+   * text naming an unknown family, installs it here, forces a re-layout and
+   * measures whether the painted advances changed. It is the only way to turn
+   * "a late family does not re-shape text" from a claim in the typings into a
+   * measurement.
+   */
+  readonly registerFont: (
+    bytes: Uint8Array,
+  ) => Effect.Effect<void, SmokeHostError>;
   /** Waits until `testId` paints, so a probe never races its mount. */
   readonly waitFor: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /**
