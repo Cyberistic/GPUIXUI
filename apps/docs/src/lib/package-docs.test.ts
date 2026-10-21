@@ -99,11 +99,12 @@ describe("the package docs collections", () => {
 
   /**
    * The curated pages the site writes in place of the package's page. The site
-   * goes deeper on these three and owns their URL, so the package file is
-   * shadowed by design — and the list must stay true in both directions.
+   * goes deeper on these and owns their URL, so the package file is shadowed by
+   * design — and the list must stay true in both directions.
    */
   const curated = new Set([
     "/docs/components/dialog",
+    "/docs/components/dropdown-menu",
     "/docs/components/popover",
     "/docs/components/tabs",
   ]);

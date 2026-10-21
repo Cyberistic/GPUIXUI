@@ -7,6 +7,12 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import {
+  enabledEntries,
+  highlightAfter,
+  menuEntries,
+  type MenuEntry,
+} from "./menu-preview";
 
 /**
  * Browser previews for the docs pages.
@@ -393,6 +399,217 @@ const TabsDemo = () => {
   );
 };
 
+const DropdownMenuDemo = () => {
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState<MenuEntry["id"] | null>(null);
+  const [showHidden, setShowHidden] = useState(false);
+  const [lastAction, setLastAction] = useState("nothing yet");
+  const anchor = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const surface = useRef<HTMLDivElement>(null);
+  const rows = useRef(new Map<MenuEntry["id"], HTMLButtonElement>());
+  /** What to focus once the open render commits: a row, or the surface. */
+  const initialFocus = useRef<MenuEntry["id"] | "surface" | null>(null);
+
+  /** Opening by pointer leaves the surface focused with no row highlighted,
+   * which is the desktop convention the native component follows. Opening by
+   * keyboard lands on a row, so the next Enter runs it. */
+  const openWith = (target: MenuEntry["id"] | "surface") => {
+    initialFocus.current = target;
+    setOpen(true);
+  };
+
+  const focusRow = (id: MenuEntry["id"]) => {
+    rows.current.get(id)?.focus();
+  };
+
+  const activate = (entry: MenuEntry) => {
+    if (entry.id === "hidden") {
+      setShowHidden(!showHidden);
+      return; // a checkbox row does not close the menu
+    }
+    setLastAction(entry.label);
+    setOpen(false);
+    setHighlight(null);
+    trigger.current?.focus();
+  };
+
+  const move = (delta: 1 | -1) => {
+    const next = highlightAfter(highlight, delta);
+    if (next !== null) focusRow(next);
+  };
+
+  const dismiss = () => {
+    setOpen(false);
+    setHighlight(null);
+    trigger.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const target = initialFocus.current;
+    initialFocus.current = null;
+    if (target === "surface") surface.current?.focus();
+    else if (target !== null) focusRow(target);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setOpen(false);
+      setHighlight(null);
+      trigger.current?.focus();
+    };
+    const onPress = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (anchor.current?.contains(target) === true) return;
+      setOpen(false);
+      setHighlight(null);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onPress);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onPress);
+    };
+  }, [open]);
+
+  const onMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const { key } = event;
+    if (key === "ArrowDown" || key === "ArrowUp") {
+      event.preventDefault();
+      move(key === "ArrowDown" ? 1 : -1);
+      return;
+    }
+    if (key === "Home" || key === "End") {
+      event.preventDefault();
+      const target = key === "Home" ? enabledEntries[0] : enabledEntries.at(-1);
+      if (target !== undefined) focusRow(target.id);
+      return;
+    }
+    if (key === "Enter" || key === " ") {
+      const entry = menuEntries.find((candidate) => candidate.id === highlight);
+      if (entry === undefined) return;
+      event.preventDefault();
+      activate(entry);
+      return;
+    }
+    if (key === "Escape") {
+      event.preventDefault();
+      dismiss();
+      return;
+    }
+    if (key === "Tab") {
+      // A menu is not modal: Tab closes it and lets the focus move on.
+      setOpen(false);
+      setHighlight(null);
+    }
+  };
+
+  const row = (entry: MenuEntry) => (
+    <button
+      aria-selected={entry.id === "hidden" ? showHidden : undefined}
+      className="gx-menu-row"
+      data-highlighted={highlight === entry.id}
+      data-tone={entry.tone}
+      disabled={entry.disabled}
+      key={entry.id}
+      onClick={() => activate(entry)}
+      onFocus={() => setHighlight(entry.id)}
+      ref={(element) => {
+        if (element === null) rows.current.delete(entry.id);
+        else rows.current.set(entry.id, element);
+      }}
+      role={entry.id === "hidden" ? "menuitemcheckbox" : "menuitem"}
+      tabIndex={-1}
+      type="button"
+    >
+      <span>{entry.label}</span>
+      {entry.id === "hidden" ? (
+        <span aria-hidden="true" className="gx-menu-check">
+          {showHidden ? "✓" : ""}
+        </span>
+      ) : null}
+    </button>
+  );
+
+  const destructive = menuEntries.find((entry) => entry.tone === "destructive");
+
+  return (
+    <div className="gx-demo-menu">
+      <div className="gx-menu-file">
+        <div>
+          <p className="gx-menu-file-title">ata-schema.json</p>
+          <p className="gx-menu-file-meta">Edited 2 min ago</p>
+        </div>
+        <div className="gx-menu-anchor" ref={anchor}>
+          <button
+            aria-expanded={open}
+            className="gx-btn gx-btn-secondary gx-btn-sm"
+            onClick={() => {
+              if (open) {
+                setOpen(false);
+                setHighlight(null);
+                return;
+              }
+              openWith("surface");
+            }}
+            onKeyDown={(event) => {
+              if (
+                event.key === "ArrowDown" ||
+                event.key === "Enter" ||
+                event.key === " "
+              ) {
+                event.preventDefault();
+                if (open) dismiss();
+                else openWith(enabledEntries[0]?.id ?? "surface");
+                return;
+              }
+              if (event.key === "ArrowUp") {
+                event.preventDefault();
+                openWith(enabledEntries.at(-1)?.id ?? "surface");
+                return;
+              }
+              if (event.key === "Escape" && open) {
+                event.preventDefault();
+                dismiss();
+              }
+            }}
+            ref={trigger}
+            type="button"
+          >
+            Actions
+          </button>
+          {open ? (
+            <div
+              aria-label="File actions"
+              className="gx-menu"
+              onKeyDown={onMenuKeyDown}
+              ref={surface}
+              role="menu"
+              tabIndex={-1}
+            >
+              <p aria-hidden="true" className="gx-menu-label">
+                File actions
+              </p>
+              {menuEntries.filter((entry) => entry !== destructive).map(row)}
+              <div className="gx-menu-separator" role="separator" />
+              {destructive === undefined ? null : row(destructive)}
+            </div>
+          ) : null}
+        </div>
+      </div>
+      <p className="gx-menu-readout">
+        Last action: <b>{lastAction}</b> · Hidden files:{" "}
+        <b>{showHidden ? "shown" : "hidden"}</b>
+      </p>
+    </div>
+  );
+};
+
 const buttonSource = `import { Button } from "@gpuixui/primitives";
 
 export function ProjectActions() {
@@ -547,11 +764,51 @@ export function AppFrame() {
   );
 }`;
 
+const dropdownMenuSource = `import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@gpuixui/components/dropdown-menu";
+import { useState } from "react";
+
+export function FileActions({ name }: { name: string }) {
+  const [showHidden, setShowHidden] = useState(false);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger variant="secondary" size="sm">
+        Actions
+      </DropdownMenuTrigger>
+      <DropdownMenuContent label="File actions" align="end">
+        <DropdownMenuItem onSelect={() => rename(name)}>Rename</DropdownMenuItem>
+        <DropdownMenuItem disabled>Duplicate</DropdownMenuItem>
+        <DropdownMenuCheckboxItem
+          checked={showHidden}
+          onCheckedChange={setShowHidden}
+        >
+          Show hidden files
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem tone="destructive" onSelect={() => remove(name)}>
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}`;
+
 export const demos: Readonly<Record<string, Demo>> = {
   "button-variants": { render: ButtonRow, source: buttonSource },
   "button-sizes": { render: ButtonSizes, source: sizeSource },
   "button-states": { render: ButtonStates, source: stateSource },
   "dialog-demo": { render: DialogDemo, source: dialogSource },
+  "dropdown-menu-demo": {
+    render: DropdownMenuDemo,
+    source: dropdownMenuSource,
+  },
   "layout-shell": {
     render: LayoutShell,
     source: shellSource,

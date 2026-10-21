@@ -56,7 +56,10 @@ checks that the primitives index links every page in the section.
 
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source. Curated today: Button, Dialog,
-Popover, Tabs.
+Dropdown menu, Popover, Tabs. `src/lib/component-preview.test.ts` holds the
+preview registry from both sides: every `<ComponentPreview name>` on a page names
+a registered demo, and every demo is mounted by a page (a key nobody renders is
+dead code, and a typo throws in the browser rather than failing the build).
 
 ### The status strip is generated, not written
 

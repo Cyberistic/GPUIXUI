@@ -6,6 +6,7 @@
     "---Overlays---",
     "dialog",
     "popover",
+    "dropdown-menu",
     "---Navigation---",
     "tabs"
   ]

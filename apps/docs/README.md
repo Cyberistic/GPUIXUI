@@ -38,6 +38,7 @@ blocks/dashboard.mdx         An activity dashboard composed from the library
 components/index.mdx         The filterable component index
 components/button.mdx        Curated: previews, install, source (the package page keeps the API)
 components/dialog.mdx        Curated: a real confirmation workflow
+components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/popover.mdx       Curated: anchored placement
 components/tabs.mdx          Curated: the measured indicator
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
@@ -69,6 +70,7 @@ src/components/landing/data.ts      The landing page's content, as data
 src/components/docs/component-preview.tsx The Preview/Code component preview
 src/components/docs/preview-surface.tsx   A preview carrying the resolved theme's variables
 src/components/docs/demos.tsx             The browser renderings and their source strings
+src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic
 src/components/docs/sources.ts            The real source files the Code tab shows
 src/components/docs/component-source.tsx  The copyable source block
 src/components/docs/install.tsx           The nub / manual install tabs

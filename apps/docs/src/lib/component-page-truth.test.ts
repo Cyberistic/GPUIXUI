@@ -65,6 +65,12 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/dialog.tsx",
   },
   {
+    file: "dropdown-menu.mdx",
+    row: "Dropdown menus",
+    suite: "packages/components/src/behaviour/dropdown-menu.test.tsx",
+    source: "packages/components/src/dropdown-menu.tsx",
+  },
+  {
     file: "popover.mdx",
     row: "Popovers",
     suite: "packages/components/src/behaviour/popover.test.tsx",

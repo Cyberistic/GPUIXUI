@@ -1,0 +1,196 @@
+---
+title: Dropdown menu
+description: A list of actions anchored to the control that opened it.
+---
+
+`DropdownMenu` is the action menu for a toolbar row, a file row or a header: a
+short list, one decision, then it closes. The surface is GPUix's anchored layer,
+so the component absorbs what that layer does not do — it snaps but never flips,
+and it centres a panel on its containing block — and owns the open state, the
+highlight, the dismissal rules and the return of focus.
+
+It is not a popover: a menu is a list of commands with menu keyboard semantics,
+not a panel of content. Nor is it modal — `Tab` leaves it and the window stays
+usable.
+
+<ComponentPreview name="dropdown-menu-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="DropdownMenu" />
+
+<ComponentSource name="dropdown-menu-demo" file="packages/components/src/dropdown-menu.tsx" />
+
+## Usage
+
+A realistic file row: the trigger rides beside the thing it acts on, and the
+menu names itself.
+
+```tsx
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@gpuixui/components/dropdown-menu";
+
+<DropdownMenu>
+  <DropdownMenuTrigger variant="secondary" size="sm">
+    Actions
+  </DropdownMenuTrigger>
+  <DropdownMenuContent label="File actions" align="end">
+    <DropdownMenuItem onSelect={() => rename(file)}>Rename</DropdownMenuItem>
+    <DropdownMenuItem disabled>Duplicate</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem tone="destructive" onSelect={() => remove(file)}>
+      Delete
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>;
+```
+
+`onSelect` runs the action **and then** closes the menu. A row that only marks a
+setting uses `DropdownMenuCheckboxItem`, which stays open so several settings can
+be changed in one visit.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `DropdownMenu` | open state, the dismiss layer and the positioning root |
+| `DropdownMenuTrigger` | a button that toggles the menu, with `aria-expanded` |
+| `DropdownMenuContent` | the floating `role="menu"` surface, rendered while open |
+| `DropdownMenuItem` | one action; `onSelect` runs, then the menu closes |
+| `DropdownMenuCheckboxItem` | an on/off row that keeps the menu open |
+| `DropdownMenuSub` / `SubTrigger` / `SubContent` | a second level of actions |
+| `DropdownMenuGroup` / `DropdownMenuLabel` | a named group of rows |
+| `DropdownMenuSeparator` | a hairline between groups |
+
+`DropdownMenuContent` takes `label` — the menu's accessible name — plus `side`,
+`align`, `sideOffset` (default `4`) and `collisionPadding` (default `8`, the
+margin kept from the window edge when the surface snaps). A surface that would
+cover its trigger opens on the opposite side when that side has room.
+
+## Highlight is focus
+
+The highlighted row **is** the focused row. Every arrow move focuses the row, and
+every row that takes focus becomes the highlight, so a row can never look chosen
+while `Enter` would run a different one. A pointer hover does not move the
+highlight; a click runs the row directly.
+
+Opening by pointer leaves the focus on the surface with no row highlighted, which
+is the desktop convention. Opening by keyboard lands on a row.
+
+## Keyboard
+
+| Key | Result |
+| ---- | ------ |
+| `Enter` / `Space` / `ArrowDown` on the trigger | opens on the first enabled row |
+| `ArrowUp` on the trigger | opens on the last enabled row |
+| `ArrowDown` / `ArrowUp` | next/previous enabled row, wrapping |
+| `Home` / `End` | first / last enabled row |
+| `Enter` / `Space` | runs the highlighted row and closes |
+| letter keys | jumps to the next row starting with the typed prefix |
+| `Escape` | closes and returns focus to the trigger |
+| `Tab` | closes and lets the focus move on — a menu is not modal |
+| `ArrowRight` on a submenu trigger | opens the submenu on its first row |
+| `ArrowLeft` / `Escape` inside a submenu | closes one level, focus back on its trigger |
+
+Disabled rows are skipped by every arrow key, by `Home`/`End` and by type-ahead,
+and a click on one does nothing. The type-ahead prefix lives for **500 ms** after
+the last keystroke, ignores surrounding whitespace and matches from the start of
+the label — not as a fuzzy substring. A row whose children are not plain text
+takes `textValue` so it can still be typed at.
+
+## API reference
+
+### DropdownMenu
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `open` | `boolean` | uncontrolled |
+| `defaultOpen` | `boolean` | `false` |
+| `onOpenChange` | `(open: boolean) => void` | none |
+
+### DropdownMenuContent
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `label` | `string` (required) | the menu's accessible name |
+| `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` |
+| `align` | `"start" \| "center" \| "end"` | `"start"` |
+| `sideOffset` | `number` | `4` |
+| `collisionPadding` | `number` | `8` |
+
+### DropdownMenuItem
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `onSelect` | `() => void` | none — runs, then closes |
+| `disabled` | `boolean` | `false` |
+| `tone` | `"default" \| "destructive"` | `"default"` |
+| `textValue` | `string` | the plain text children |
+| `style` | `StyleDesc \| (state: MenuItemState) => StyleDesc` | none |
+
+The row's `style` sees `{ disabled, highlighted }`, and the checkbox row's sees
+`{ checked, disabled, highlighted }`, so a caller can paint from the live state
+without owning the highlight.
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| surface | `popover` and `popoverForeground`, `radius.md`, `border` |
+| lift | the `md` elevation step |
+| row height | `controlHeight(theme, "sm")` — **28px** at the comfortable density |
+| highlight | `hover`, plus a 2px left bar in `accent` |
+| destructive row | `statusTone(theme, "destructive").foreground` — the role measured as page text |
+| trigger | the button roles and the keyboard-only ring |
+
+The destructive row is a tone, not a confirmation. Pair it with a **confirmation
+dialog** when the action cannot be undone.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | `useGpuix` for the renderer's focus calls |
+| `@gpuix/react/floating` | `FloatingLayer` positioning while open |
+| `@gpuixui/tw` | the `MENU_*` and `MENU_CONTENT` recipes the surface and rows compile |
+| `effect` | `Match` for the key dispatch and the type-ahead branch |
+| this package | the shared dismiss stack, the local button stand-in and the menu row core |
+
+## Accessibility and limitations
+
+- `role="menu"` names the surface; rows are `menuitem` or `menuitemcheckbox`,
+  and the trigger carries `aria-expanded`.
+- **No `aria-haspopup`, `aria-controls`, `aria-checked` or
+  `aria-activedescendant`** in `@gpuix/native@0.11.0` — `HostProps` publishes only
+  `aria-label`, `aria-description`, `aria-expanded`, `aria-selected`,
+  `aria-valuetext` and `aria-level`. The checkbox row therefore reports
+  `aria-selected`, and the trigger-to-surface link is positional, not semantic.
+- One level of submenus is tested. A deeper submenu follows the same rule but no
+  suite exercises it, and submenus open only to the right; there is no left flip.
+- The root surface flips from measured bounds once per open. A surface taller than
+  both sides can still cover its trigger, and `align="center"` is clamped by the
+  snap margin near a window edge.
+- Type-ahead is a prefix match with no fuzzy scoring.
+- The preview above is a browser reproduction: it follows the same focus,
+  highlight and dismissal rules, but the shipped component runs through GPUix.
+
+## Related
+
+- **Popover** — a floating panel rather than a list of actions.
+- **Context menu** — the same rows, positioned at the pointer instead.
+- **Command menu** — a searchable action list inside a dialog.
+- **Confirmation dialog** — the modal guard in front of a destructive action.
+
+## Status
+
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 35 native
+behaviour tests, both themes. The runtime publishes no `aria-haspopup`,
+`aria-checked` or `aria-activedescendant`, so the component reports the checked
+row state through `aria-selected` and links trigger to surface positionally. A
+pointer-open menu keeps the focus on the surface; Escape and choosing a row return
+it to the trigger.
