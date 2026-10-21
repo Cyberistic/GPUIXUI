@@ -10,29 +10,36 @@
 # are enough. See .agents/adr/0003-darwin-x64-source-build.md and
 # .agents/slop/plans/140-gpuix-native-darwin-x64-build.md.
 #
+# The source revision is pinned here and fetched from upstream, because the
+# read-only reference clone can lag behind the version the repo installs: the
+# napi surface is version-specific (`isTerminal` only exists from 0.11.0 on), so
+# a binding built from a different revision does not satisfy the installed
+# `@gpuix/native`. `GPUIX_REV` overrides the pin for a deliberate bump.
+#
 # apps/playground/patches/gpuix-zindex.patch adds `StyleDesc.zIndex` (paint and
 # hit order) to the pinned source; step 4 applies it idempotently.
 #
-# The zed submodule comes from the GPUix fork (`remorses/zed`) at the commit
-# pinned by references/gpuix, not from upstream; the transform patch is ported to
-# that revision. `GPUIX_TRANSFORM=1` additionally applies
-# patches/gpui/0001-transform.patch (GPUI `Style::transform`) to the scratch zed
-# checkout. It is off by default and step 5 also reverts a stale application, so
-# a build always matches the flag. See plan 538.
+# The zed submodule comes from the GPUix fork (`remorses/zed`) at the commit the
+# pinned revision carries; the transform patch is ported to that revision.
+# `GPUIX_TRANSFORM=1` additionally applies patches/gpui/0001-transform.patch
+# (GPUI `Style::transform`) to the scratch zed checkout. It is off by default
+# and step 5 also reverts a stale application, so a build always matches the
+# flag. See plan 538.
 #
 # Everything lands under .agents/slop/scratch/ (agent state, gitignored); only
 # the final .node is copied into node_modules (also gitignored).
 #
 # Usage:  sh apps/playground/scripts/build-native-binding.sh
 #         GPUIX_TRANSFORM=1 sh apps/playground/scripts/build-native-binding.sh
+#         GPUIX_REV=<sha> sh apps/playground/scripts/build-native-binding.sh
 set -eu
 
 root=$(cd "$(dirname "$0")/../../.." && pwd)
 scratch="$root/.agents/slop/scratch/gpuix-build"
-ref="$root/references/gpuix"
 app="$root/apps/playground"
 
-[ -d "$ref" ] || { echo "missing reference clone at $ref" >&2; exit 1; }
+gpuix_url=https://github.com/remorses/gpuix.git
+gpuix_rev=${GPUIX_REV:-2e31b47ff6432ceebe70e7fc7b0f51a76d7d30cf}
 
 case "$(uname -m)" in
   x86_64) target=x86_64-apple-darwin ;;
@@ -54,24 +61,34 @@ fi
 PATH="$CARGO_HOME/bin:$PATH"
 
 # 2. The pinned GPUix source, plus its zed submodule from the GPUix fork.
-if [ ! -d "$scratch/gpuix/packages/native" ]; then
+if [ ! -d "$scratch/gpuix/.git" ]; then
   rm -rf "$scratch/gpuix"
-  cp -R "$ref" "$scratch/gpuix"
-  rm -rf "$scratch/gpuix/zed"
+  mkdir -p "$scratch/gpuix"
+  git -C "$scratch/gpuix" init -q
+  git -C "$scratch/gpuix" config extensions.partialClone origin
+  git -C "$scratch/gpuix" remote add origin "$gpuix_url"
 fi
+git -C "$scratch/gpuix" fetch -q --filter=blob:none --depth=1 origin "$gpuix_rev"
+# --force: steps 3 and 4 re-apply the local changes, so a rebuild always starts
+# from the pinned tree rather than from a patched one.
+git -C "$scratch/gpuix" checkout -q --force --detach FETCH_HEAD
+head=$(git -C "$scratch/gpuix" rev-parse HEAD)
+[ "$head" = "$gpuix_rev" ] || {
+  echo "gpuix is at $head, not the pinned $gpuix_rev" >&2; exit 1; }
 
 # The pinned revision lives in the GPUix gitlink, its URL in .gitmodules, so a
 # submodule bump needs no edit here. A blobless shallow fetch of the exact commit
 # keeps the scratch checkout reproducible without cloning Zed's history.
 zed="$scratch/gpuix/zed"
-rev=$(git -C "$ref" ls-tree HEAD zed | awk '{print $3}')
-url=$(git -C "$ref" config -f .gitmodules submodule.zed.url)
+rev=$(git -C "$scratch/gpuix" ls-tree HEAD zed | awk '{print $3}')
+url=$(git -C "$scratch/gpuix" config -f .gitmodules submodule.zed.url)
 [ -n "$rev" ] || { echo "cannot read the pinned zed revision" >&2; exit 1; }
 [ -n "$url" ] || { echo "cannot read the zed submodule url" >&2; exit 1; }
 
 if [ ! -d "$zed/.git" ] || [ ! -f "$zed/crates/gpui/Cargo.toml" ]; then
   rm -rf "$zed"
-  git init -q "$zed"
+  mkdir -p "$zed"
+  git -C "$zed" init -q
   git -C "$zed" config extensions.partialClone origin
   git -C "$zed" remote add origin "$url"
   git -C "$zed" fetch -q --filter=blob:none --depth=1 origin "$rev"
@@ -92,8 +109,8 @@ if ! grep -q 'runtime_shaders' "$manifest"; then
 fi
 
 # 4. The zIndex extension: `StyleDesc.zIndex` orders paint and hit testing.
-#    The reference clone is read-only, so the change travels as a patch and is
-#    applied after the copy. Reverse-dry-run first, so a rebuild is idempotent.
+#    The change travels as a patch and is applied after the checkout.
+#    Reverse-dry-run first, so a rebuild is idempotent.
 patch_file="$root/apps/playground/patches/gpuix-zindex.patch"
 if ( cd "$scratch/gpuix" && git apply --reverse --check "$patch_file" 2>/dev/null ); then
   echo "gpuix-zindex.patch already applied"
@@ -115,8 +132,7 @@ if [ "${GPUIX_TRANSFORM:-0}" = "1" ]; then
   elif git -C "$zed" apply --3way "$transform_patch"; then
     echo "applied $(basename "$transform_patch")"
   else
-    echo "cannot apply $transform_patch to $zed" >&2
-    exit 1
+    echo "cannot apply $transform_patch to $zed" >&2; exit 1
   fi
 elif git -C "$zed" apply --reverse --check "$transform_patch" 2>/dev/null; then
   git -C "$zed" apply --reverse --3way "$transform_patch" || {
@@ -128,9 +144,13 @@ fi
 ( cd "$scratch/gpuix/packages/native" &&
   CARGO_PROFILE_RELEASE_LTO=false cargo build --release --locked --target "$target" )
 
-# 7. Install the artifact where the package's own loader looks for it.
-lib="$scratch/gpuix/packages/native/target/$target/release/libgpuix_native.dylib"
+# 7. Install the artifact where the package's own loader looks for it: the
+#    loader tries ./gpuix-native.darwin-universal.node, the (unpublished)
+#    @gpuix/native-darwin-universal package, then ./gpuix-native.darwin-x64.node.
 dest="$app/node_modules/@gpuix/native"
 [ -d "$dest" ] || { echo "run 'nub install' first: $dest is missing" >&2; exit 1; }
+lib="$scratch/gpuix/packages/native/target/$target/release/libgpuix_native.dylib"
+dest=$(cd "$dest" && pwd -P)
 cp "$lib" "$dest/gpuix-native.darwin-x64.node"
+cp "$lib" "$scratch/gpuix-native.darwin-x64.node"
 echo "installed $dest/gpuix-native.darwin-x64.node"
