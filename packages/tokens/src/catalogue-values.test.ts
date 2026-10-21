@@ -1,19 +1,22 @@
 /**
- * Holds every value `docs/tokens.md` prints to the package that carries it.
+ * Holds every value `docs/tokens.md` and the package README print to the tokens
+ * that carry them.
  *
  * The bug this guards: the catalogue is the page a consumer treats as the token
  * reference — it prints each role's light and dark hex, every palette ramp, the
- * platform chrome palettes, the type metrics and every scale. `docs.test.ts`
- * holds only its *shape* (a role has a row, the counts agree), so a palette edit
- * could change `lightColors.primary` and leave the page printing the previous
- * value: a reader copies a hex the library no longer ships, and nothing fails.
- * The platform chrome table and the elevation table had no reader at all.
+ * platform chrome palettes, the type metrics and every scale — and the README
+ * prints each platform's and look's family, radius and density. `docs.test.ts`
+ * holds only the catalogue's *shape* (a role has a row, the counts agree), so a
+ * palette edit could change `lightColors.primary` and leave the page printing
+ * the previous value: a reader copies a hex the library no longer ships, and
+ * nothing fails. The platform chrome table, the elevation table and the README's
+ * tables had no reader at all.
  *
- * Each check compares the printed cell with the exported value, and the row set
- * with the exported keys, so a value that moves and a token that is added or
- * dropped are both named. `node:fs` is deliberate, as in `docs.test.ts`: this
- * checks the repository's own Markdown, and the package keeps zero runtime
- * dependencies.
+ * Each check compares the printed cell with the exported value, and the printed
+ * row set with the exported keys, so a value that moves and a token that is
+ * added or dropped are both named. `node:fs` is deliberate, as in
+ * `docs.test.ts`: this checks the repository's own Markdown, and the package
+ * keeps zero runtime dependencies.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -34,7 +37,13 @@ import {
   type BoxShadow,
   type Elevation,
 } from "./elevation.js";
-import { isPlatformName, platformNames, platformStyles } from "./platforms.js";
+import {
+  isPlatformName,
+  platformNames,
+  platformStyles,
+  type PlatformStyle,
+} from "./platforms.js";
+import { isRetroName, retroNames, retroStyles } from "./retro.js";
 import {
   avatarSize,
   borderWidth,
@@ -47,10 +56,12 @@ import {
 import { statusTones } from "./styles.js";
 import { typography, type TextStyle } from "./typography.js";
 
-const doc = readFileSync(
-  new URL("../../../docs/tokens.md", import.meta.url),
-  "utf8",
-);
+const read = (path: string): string =>
+  readFileSync(new URL(path, import.meta.url), "utf8");
+
+/** The two documents a consumer reads: the token catalogue and the README. */
+const catalogue = read("../../../docs/tokens.md");
+const readme = read("../README.md");
 
 /** A Markdown table: its header cells and its body rows, each cell trimmed. */
 interface DocTable {
@@ -67,10 +78,9 @@ const cells = (line: string): ReadonlyArray<string> =>
     .split("|")
     .map((cell) => cell.trim());
 
-/** Every table in the page, split on the blank line between blocks. */
-const docTables: ReadonlyArray<DocTable> = doc
-  .split(/\n{2,}/)
-  .flatMap((block) => {
+/** Every table in a document, split on the blank line between blocks. */
+const tablesIn = (markdown: string): ReadonlyArray<DocTable> =>
+  markdown.split(/\n{2,}/).flatMap((block) => {
     const lines = block.split("\n").filter((line) => line.startsWith("|"));
     const header = lines[0];
     if (header === undefined || lines.length < 2) {
@@ -82,17 +92,19 @@ const docTables: ReadonlyArray<DocTable> = doc
 
 /** The one table matching a description, failing by name when it is gone. */
 const docTable = (
+  markdown: string,
   description: string,
   matches: (candidate: DocTable) => boolean,
 ): DocTable => {
-  const found = docTables.find(matches);
-  expect(found, `docs/tokens.md no longer has ${description}`).toBeDefined();
+  const found = tablesIn(markdown).find(matches);
+  expect(found, `${description} is no longer in the document`).toBeDefined();
   return found ?? { header: [], rows: [] };
 };
 
 /** The table whose header is exactly `header`, in order. */
-const headed = (header: ReadonlyArray<string>): DocTable =>
+const headed = (markdown: string, header: ReadonlyArray<string>): DocTable =>
   docTable(
+    markdown,
     `the table "${header.join(" | ")}"`,
     (candidate) =>
       candidate.header.length === header.length &&
@@ -109,13 +121,17 @@ const plain = (cell: string): string => cell.replace(/`/g, "").trim();
 const numbers = (cell: string): ReadonlyArray<number> =>
   (cell.match(/-?\d+/g) ?? []).map(Number);
 
+const isColourRole = (value: string): value is keyof ThemeColors =>
+  colorRoles.some((role) => role === value);
+
 /** A role table as `role → printed values`, in the page's order. */
 const printedColours = (
+  markdown: string,
   header: ReadonlyArray<string>,
   columns: number,
 ): ReadonlyMap<string, ReadonlyArray<string>> =>
   new Map(
-    headed(header).rows.map((row) => [
+    headed(markdown, header).rows.map((row) => [
       code(row[0] ?? ""),
       row.slice(1, 1 + columns).map(code),
     ]),
@@ -137,12 +153,49 @@ const colourDrift = (
     );
   });
 
-const isColourRole = (value: string): value is keyof ThemeColors =>
-  colorRoles.some((role) => role === value);
+/**
+ * Every row of a `Platform | sans | mono | radius.md | density` table that does
+ * not print its style. The catalogue also prints the density's `md` height, so
+ * a height the cell carries is checked too.
+ */
+const styleDrift = (
+  rows: ReadonlyArray<ReadonlyArray<string>>,
+  styleOf: (name: string) => PlatformStyle | undefined,
+): ReadonlyArray<string> =>
+  rows.flatMap((row) => {
+    const name = code(row[0] ?? "");
+    const style = styleOf(name);
+    if (style === undefined) {
+      return [`${name}: not a style the package ships`];
+    }
+    const printed = [
+      code(row[1] ?? ""),
+      code(row[2] ?? ""),
+      numbers(row[3] ?? "")[0],
+      code(row[4] ?? ""),
+    ];
+    const carried = [style.sans, style.mono, style.radius.md, style.density];
+    const height = numbers(row[4] ?? "")[0];
+    const heightDrift =
+      height === undefined ||
+      height === densityPresets[style.density].controlHeight.md
+        ? []
+        : [
+            `${name}: printed a ${height}px control, density is ${style.density}`,
+          ];
+
+    return printed.join() === carried.join()
+      ? heightDrift
+      : [`${name}: printed ${printed.join(" / ")}`];
+  });
 
 describe("the catalogue's colour roles", () => {
   it("prints the value each theme carries, light and dark", () => {
-    const printed = printedColours(["Role", "Light", "Dark", "Use"], 2);
+    const printed = printedColours(
+      catalogue,
+      ["Role", "Light", "Dark", "Use"],
+      2,
+    );
 
     expect([...printed.keys()]).toEqual([...colorRoles]);
     expect(
@@ -154,7 +207,11 @@ describe("the catalogue's colour roles", () => {
   });
 
   it("prints the value each high-contrast theme carries", () => {
-    const printed = printedColours(["Role", "HC light", "HC dark", "Use"], 2);
+    const printed = printedColours(
+      catalogue,
+      ["Role", "HC light", "HC dark", "Use"],
+      2,
+    );
 
     expect([...printed.keys()]).toEqual([...colorRoles]);
     expect(
@@ -167,7 +224,7 @@ describe("the catalogue's colour roles", () => {
 
   it("prints each palette ramp's steps", () => {
     const printed = new Map(
-      headed(["Ramp", "Steps"]).rows.map((row) => [
+      headed(catalogue, ["Ramp", "Steps"]).rows.map((row) => [
         code(row[0] ?? ""),
         [...(row[1] ?? "").matchAll(/(\d+)\s+`(#[0-9A-Fa-f]{6})`/g)].map(
           (match) => `${match[1]} ${match[2]}`,
@@ -202,7 +259,7 @@ describe("the catalogue's platform chrome", () => {
   ] as const;
 
   it("prints the roles each platform repaints, and `base` for the ones it inherits", () => {
-    const printed = headed([
+    const rows = headed(catalogue, [
       "Role",
       "macOS light",
       "macOS dark",
@@ -212,7 +269,7 @@ describe("the catalogue's platform chrome", () => {
       "Windows dark",
     ]).rows;
 
-    const drift = printed.flatMap((row) => {
+    const drift = rows.flatMap((row) => {
       const role = code(row[0] ?? "");
       if (!isColourRole(role)) {
         return [`${role}: not a colour role`];
@@ -231,55 +288,21 @@ describe("the catalogue's platform chrome", () => {
 
     expect(drift).toEqual([]);
   });
-
-  it("prints each platform's family, radius and density", () => {
-    const rows = headed([
-      "Platform",
-      "`sans`",
-      "`mono`",
-      "`radius.md`",
-      "density",
-    ]).rows;
-
-    expect(rows.map((row) => code(row[0] ?? ""))).toEqual([...platformNames]);
-    const drift = rows.flatMap((row) => {
-      const name = code(row[0] ?? "");
-      const style = isPlatformName(name) ? platformStyles[name] : undefined;
-      if (style === undefined) {
-        return [`${name}: not a platform style`];
-      }
-      const expected = [
-        style.sans,
-        style.mono,
-        style.radius.md,
-        style.density,
-        densityPresets[style.density].controlHeight.md,
-      ];
-      const printedValues = [
-        code(row[1] ?? ""),
-        code(row[2] ?? ""),
-        numbers(row[3] ?? "")[0],
-        code(row[4] ?? ""),
-        numbers(row[4] ?? "")[0],
-      ];
-      return printedValues.join() === expected.join()
-        ? []
-        : [`${name}: printed ${printedValues.join(" / ")}`];
-    });
-
-    expect(drift).toEqual([]);
-  });
 });
 
 describe("the catalogue's typography", () => {
   it("prints each role's size, leading and weight", () => {
     const printed = new Map(
-      headed(["Role", "Size", "Line height", "Weight", "Use"]).rows.map(
-        (row) => [
-          code(row[0] ?? ""),
-          numbers(`${row[1] ?? ""} ${row[2] ?? ""} ${row[3] ?? ""}`),
-        ],
-      ),
+      headed(catalogue, [
+        "Role",
+        "Size",
+        "Line height",
+        "Weight",
+        "Use",
+      ]).rows.map((row) => [
+        code(row[0] ?? ""),
+        numbers(`${row[1] ?? ""} ${row[2] ?? ""} ${row[3] ?? ""}`),
+      ]),
     );
     const roles = Object.entries(typography).flatMap(([role, style]) =>
       typeof style === "object" ? [[role, style] as const] : [],
@@ -301,12 +324,18 @@ describe("the catalogue's typography", () => {
 });
 
 describe("the catalogue's scales", () => {
-  /** The two `Token | Pixels` tables: the spacing scale and the dotted scales. */
-  const scalarTables = docTables.filter(
-    (candidate) => candidate.header.join("|") === "Token|Pixels",
-  );
-  const dotted = (candidate: DocTable): boolean =>
-    (candidate.rows[0]?.[0] ?? "").includes(".");
+  /**
+   * A `Token | Pixels` table. The two that exist are told apart by whether the
+   * first token names a group (`borderWidth.thin`) or a bare step (`2xs`).
+   */
+  const scalarTable = (dotted: boolean, description: string): DocTable =>
+    docTable(
+      catalogue,
+      description,
+      (candidate) =>
+        candidate.header.join("|") === "Token|Pixels" &&
+        (candidate.rows[0]?.[0] ?? "").includes(".") === dotted,
+    );
 
   /** A `Token | Pixels` table as `token → pixels` pairs. */
   const printedScalars = (candidate: DocTable): ReadonlyArray<string> =>
@@ -315,10 +344,7 @@ describe("the catalogue's scales", () => {
     );
 
   it("prints the spacing scale", () => {
-    const table = docTable(
-      "the spacing table",
-      (candidate) => scalarTables.includes(candidate) && !dotted(candidate),
-    );
+    const table = scalarTable(false, "the spacing table");
 
     expect(printedScalars(table)).toEqual(
       Object.entries(spacing).map(([step, value]) => `${step} ${value}`),
@@ -326,7 +352,7 @@ describe("the catalogue's scales", () => {
   });
 
   it("prints the radius scale", () => {
-    const printed = headed(["Token", "Pixels", "Use"]).rows;
+    const printed = headed(catalogue, ["Token", "Pixels", "Use"]).rows;
 
     expect(
       printed.map((row) => `${code(row[0] ?? "")} ${numbers(row[1] ?? "")[0]}`),
@@ -336,10 +362,7 @@ describe("the catalogue's scales", () => {
   });
 
   it("prints the border, icon and avatar scales", () => {
-    const table = docTable(
-      "the border and icon table",
-      (candidate) => scalarTables.includes(candidate) && dotted(candidate),
-    );
+    const table = scalarTable(true, "the border and icon table");
     const scales = [
       ...Object.entries(borderWidth).map(
         ([step, value]) => [`borderWidth.${step}`, value] as const,
@@ -359,6 +382,7 @@ describe("the catalogue's scales", () => {
 
   it("prints every density preset and marks the default", () => {
     const rows = docTable(
+      catalogue,
       "the density table",
       (candidate) => candidate.header[0] === "Preset",
     ).rows;
@@ -408,7 +432,7 @@ describe("the catalogue's scales", () => {
             )
             .join(", ");
     const printed = new Map(
-      headed([
+      headed(catalogue, [
         "Level",
         "Light",
         "Dark",
@@ -450,7 +474,7 @@ describe("the catalogue's scales", () => {
 describe("the catalogue's status tones", () => {
   it("names each tone's solid, soft and readable roles", () => {
     const printed = new Map(
-      headed([
+      headed(catalogue, [
         "Tone",
         "Solid",
         "Soft surface",
@@ -468,5 +492,46 @@ describe("the catalogue's status tones", () => {
     });
 
     expect(drift).toEqual([]);
+  });
+});
+
+describe("the README's style tables", () => {
+  const styleOf = (name: string): PlatformStyle | undefined =>
+    isPlatformName(name) ? platformStyles[name] : undefined;
+  const lookOf = (name: string): PlatformStyle | undefined =>
+    isRetroName(name) ? retroStyles[name] : undefined;
+
+  it("prints each platform's family, radius and density", () => {
+    const rows = docTable(
+      readme,
+      "the README platform table",
+      (candidate) => candidate.header[0] === "Platform",
+    ).rows;
+
+    expect(rows.map((row) => code(row[0] ?? ""))).toEqual([...platformNames]);
+    expect(styleDrift(rows, styleOf)).toEqual([]);
+  });
+
+  it("prints each authored look's family, radius and density", () => {
+    const rows = docTable(
+      readme,
+      "the README look table",
+      (candidate) => candidate.header[0] === "Look",
+    ).rows;
+
+    expect(rows.map((row) => code(row[0] ?? ""))).toEqual([...retroNames]);
+    expect(styleDrift(rows, lookOf)).toEqual([]);
+  });
+
+  it("quotes the value the table carries in an inline comment", () => {
+    /** A style's role, or a phrase that fails the check when it is missing. */
+    const quoted = (value: string | undefined): string =>
+      value ?? "the style carries no value";
+    const lines = [
+      `platformStyles.darwin.colors.dark.primary; // "${quoted(platformStyles.darwin.colors.dark.primary)}"`,
+      `retroStyles.aero.colors.dark.primary; // "${quoted(retroStyles.aero.colors.dark.primary)}"`,
+    ];
+
+    expect(lines.filter((line) => !readme.includes(line))).toEqual([]);
   });
 });

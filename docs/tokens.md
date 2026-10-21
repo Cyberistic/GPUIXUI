@@ -1281,16 +1281,17 @@ every decorative placement. `resolveRetroBrand` is executed and held to the
 audit, and the provenance prose, the catalogue table and the inventory row are
 held to the table the package ships.
 
-`packages/tokens/src/catalogue-values.test.ts` holds **the values this page
-prints** to the package, so the reference cannot teach a theme the library no
-longer ships: both colour tables and the high-contrast pair, every palette ramp
-step, the platform chrome table (a cell reading `base` must be a role that style
-inherits, and a repainted role must print that style's value), each platform's
-families, radius and density, every type role's size, leading and weight, the
-spacing, radius, border, icon and avatar scales, each density preset, each
-elevation level's one shadow, and each status tone's roles. The printed row set
-is compared with the exports too, so a token that is added or dropped is named
-rather than passing silently.
+`packages/tokens/src/catalogue-values.test.ts` holds **the values the catalogue
+and the README print** to the package, so a document cannot teach a theme the
+library no longer ships: both colour tables and the high-contrast pair, every
+palette ramp step, the platform chrome table (a cell reading `base` must be a
+role that style inherits, and a repainted role must print that style's value),
+each platform's and authored look's families, radius and density in both
+documents, the value an inline README comment quotes, every type role's size,
+leading and weight, the spacing, radius, border, icon and avatar scales, each
+density preset, each elevation level's one shadow, and each status tone's roles.
+The printed row set is compared with the exports too, so a token that is added
+or dropped is named rather than passing silently.
 
 ## Limitations and future work
 

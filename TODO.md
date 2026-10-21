@@ -385,21 +385,27 @@ The components workstream can now delete its `paths` mapping (interlock row).
 and the union plan index are on `main` (commit `458fe10`); `main` now compiles
 `@gpuixui/tokens` from source, so `primitives`, `components` and `docs-site` can
 merge it and drop their structural copies
-`[x]` Hold the catalogue's printed **values** to the package — `docs/tokens.md` is
+`[x]` Hold the documents' printed **values** to the package — `docs/tokens.md` is
 the page that says a token absent from it is not public, and `docs.test.ts` held
 only its shape (a row exists, the counts agree), so a palette edit could leave
-the page printing the previous hex and nothing failed. `catalogue-values.test.ts`
-now compares every printed cell with the export and the printed row set with the
+the page printing the previous hex and nothing failed. The package README had the
+same hole for its platform and look tables. `catalogue-values.test.ts` now
+compares every printed cell with the export and the printed row set with the
 exported keys: both colour tables, the high-contrast pair, every palette ramp
 step, the platform chrome table (`base` must mean "inherited", a repainted role
-must print that style's value), each platform's families/radius/density, every
-type role's size/leading/weight, the spacing, radius, border, icon and avatar
-scales, each density preset (and which one is marked default), each elevation
-level's one shadow, and each status tone's roles. Directions measured: a changed
-page hex names `light primary`; a changed `lightColors.primary` names the same
-pair with the carried value; a changed platform cell, elevation offset and a
-comfortable height each fail by name. 12 cases; docs in `docs/tokens.md`
-§Verification and the `Design tokens` inventory row
+must print that style's value), each platform's families/radius/density in both
+documents, each authored look's family/radius/density in the README, the value an
+inline README snippet quotes, every type role's size/leading/weight, the spacing,
+radius, border, icon and avatar scales, each density preset (and which one is
+marked default), each elevation level's one shadow, and each status tone's roles.
+Directions measured: a changed page hex names `light primary`; a changed
+`lightColors.primary` names the same pair with the carried value; a changed
+platform cell, elevation offset, comfortable height, README look family, README
+platform density and README quoted hex each fail by name. 14 cases; docs in
+`docs/tokens.md` §Verification and the `Design tokens` inventory row. It also
+caught the `Focus state` row citing `style.test.ts` and `controls.runtime.test.tsx`
+without their directories — paths that resolve nowhere — now `src/core/style.test.ts`
+and `runtime/controls.runtime.test.tsx`
 `[x]` Guard the design-system rows in `COMPONENTS.md` — `packages/tokens/src/inventory.test.ts` fails when a row loses one of its four columns, leaves the status vocabulary, or says `done` without naming a test file that exists (all three directions measured). It found seven `done` rows claiming a capability with no named proof; each now cites the file that proves it (`color.test.ts`, `contrast.test.ts`, `focus.test.ts`, `scale.test.ts`, `styles.test.ts`, `theme.test.ts`, `typography.test.ts`, `react.test.tsx`, the two `apps/docs` guards, and the playground's registry guard for the gallery), and two rows move to `done` on evidence: `Design tokens` (the 21/21 native gallery closed the last gap) and `Theme extension` (the gallery switches the provider's value dark → light → high contrast in the renderer and every role repaints, so the switch is no longer a server-render claim)
 `[x]` Ship the persisted-choice contract (salvage 065/067/068) — seven ordered indexes (`themeModes`, `themeContrasts`, `platformNames`, `retroNames`, `densityNames`, `controlSizes`, `statusTones`) own their unions, each with a guard that narrows `unknown`; `guards.test.ts` holds every index to the records it selects (a mode without both contrast variants, a platform without a style, a preset without a metric per size, a tone without its own soft roles) and executes `persisted-choices.example.ts`, and the package's own suites read the indexes instead of retyping the unions. Two directions measured: dropping `dark` from `themeModes` fails the record check and the stored-choice case; a guard that accepts any string fails the rejection case
 `[x]` Guard the documents' imports — `docs.test.ts` reads `README.md` and `docs/tokens.md`, collects every name imported from `@gpuixui/tokens`, and fails when one is not a declared export (proven with `isThemeModez`)
