@@ -5,8 +5,10 @@
  * highlights a disabled row (so Enter does nothing while the highlight claims it
  * would); Enter firing twice or not closing; focus not returning to the trigger
  * after Enter or Escape; a press on the open trigger flickering the menu back open;
- * a checkbox row toggling the wrong way; and a destructive row painted in the
- * solid `destructive` fill role, which no contrast pair measures as text.
+ * a checkbox row toggling the wrong way; a destructive row painted in the
+ * solid `destructive` fill role, which no contrast pair measures as text; and a
+ * disabled row dimmed with a 50% fade, which composites its label into its own
+ * fill instead of painting the measured `disabledForeground` role.
  *
  * Keyboard-opening regression: a menu opened from the trigger landed on the
  * surface with nothing highlighted, so Enter ran nothing and ArrowDown/ArrowUp on
@@ -22,8 +24,10 @@
  * `onSelect` never ran. Only the keyboard path was covered.
  */
 
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
+import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
@@ -402,6 +406,33 @@ describe("DropdownMenu", () => {
     expect(menu.renderer.findByTestId("menu")).toBeUndefined();
 
     menu.unmount();
+  });
+
+  it("paints a disabled row with the measured disabled pair, not a fade", () => {
+    Arr.forEach(
+      [
+        ["dark", darkTheme],
+        ["light", lightTheme],
+      ] as const,
+      ([mode, theme]) => {
+        const menu = renderComponent(<FileActions onSelect={vi.fn()} />, mode);
+        clickCentreOf(menu, "trigger");
+
+        const style = menu.renderer.findByTestId("duplicate")?.style;
+
+        expect(style?.color).toBe(theme.colors.disabledForeground);
+        // A 50% fade composited this label into the row's own fill, which a
+        // high-contrast theme can no longer read at its 3:1.
+        expect(style?.opacity).not.toBe(0.5);
+        const ratio = contrastRatio(
+          theme.colors.disabledForeground,
+          theme.colors.popover,
+        );
+        expect(ratio ?? 0).toBeGreaterThanOrEqual(contrastFloors.disabled);
+
+        menu.unmount();
+      },
+    );
   });
 
   it("closes on Escape, on an outside press, and on a second press of the trigger", async () => {

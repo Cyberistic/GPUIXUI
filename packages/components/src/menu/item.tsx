@@ -17,6 +17,7 @@ import {
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import { MENU_GROUP, MENU_ITEM, MENU_LABEL, MENU_SEPARATOR } from "@gpuixui/tw";
+import { Match } from "effect";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import {
@@ -87,20 +88,32 @@ export const menuRowStyle = (
   active: boolean,
   disabled: boolean,
   className?: string,
-): Props["style"] => ({
-  ...overlaySurfaceStyle(MENU_ITEM, className, theme),
-  height: controlHeight(theme, "sm"),
-  borderLeftWidth: theme.borderWidth.strong,
-  borderColor: active ? theme.colors.accent : theme.colors.popover,
-  backgroundColor: active ? theme.colors.hover : undefined,
-  ...(tone === "destructive"
-    ? { color: statusTone(theme, "destructive").foreground }
-    : {}),
-  cursor: disabled ? "not-allowed" : "pointer",
-  opacity: disabled ? 0.5 : 1,
-  hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
-  active: disabled ? undefined : { backgroundColor: theme.colors.active },
-});
+): Props["style"] => {
+  const color = disabled
+    ? theme.colors.disabledForeground
+    : Match.value(tone).pipe(
+        Match.when("destructive", () =>
+          statusTone(theme, "destructive").foreground,
+        ),
+        Match.when("default", () => undefined),
+        Match.exhaustive,
+      );
+
+  return {
+    ...overlaySurfaceStyle(MENU_ITEM, className, theme),
+    height: controlHeight(theme, "sm"),
+    borderLeftWidth: theme.borderWidth.strong,
+    borderColor: active ? theme.colors.accent : theme.colors.popover,
+    backgroundColor: active ? theme.colors.hover : undefined,
+    // The 50% fade composited a disabled label into its own fill, which a
+    // high-contrast theme asks 3:1 of; the `disabled`/`disabledForeground` pair
+    // is the one `contrastPairs` measures on the popover.
+    ...(color === undefined ? {} : { color }),
+    cursor: disabled ? "not-allowed" : "pointer",
+    hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
+    active: disabled ? undefined : { backgroundColor: theme.colors.active },
+  };
+};
 
 /** The row body: leading slot, flexible label, trailing slot. */
 const Row = ({

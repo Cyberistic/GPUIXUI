@@ -209,18 +209,22 @@ The surface paints `colors.popover` / `colors.popoverForeground`, `radius.md`,
 `borderWidth.thin` in `colors.border`, the `md` elevation and `spacing.xs` padding,
 with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
 `label` type role, and highlight with `colors.hover` plus a 2px left bar in
-`colors.accent`.
+`colors.accent`. A disabled row paints `colors.disabledForeground` — the role
+`contrastPairs` measures on the popover — and drops its hover and press fills.
+It is **not** faded: a 50% fade composites the label into the row's own fill,
+which a high-contrast theme can no longer read at the 3:1 it asks of the pair.
 
 ## Style by state
 
 A row takes a `StyleDesc` or a function of its state: `MenuItemState`
 (`{ disabled, highlighted }`) or `MenuCheckboxItemState`
 (`{ checked, disabled, highlighted }`). `highlighted` is the row the menu's real
-focus is on.
+focus is on. A state the row already paints correctly — the disabled colour pair
+above — needs no override.
 
 ```tsx
 <DropdownMenuItem
-  style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+  style={(state) => ({ cursor: state.disabled ? "default" : "pointer" })}
 >
   Rename
 </DropdownMenuItem>
