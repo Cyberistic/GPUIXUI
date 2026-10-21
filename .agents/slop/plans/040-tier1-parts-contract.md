@@ -6,7 +6,9 @@
 **Blocks:** the `TODO.md` row "`packages/primitives` adopts the same contract for
 Tier 1"; components' `internal/button.tsx` stand-in can only be retired once
 `Button` is exported from this package.
-**Status:** planned. Not started.
+**Status:** in progress. Step 1 landed (commit `26f96a5c`); Step 2 landed for
+`Input` + `TextArea` (commit `dd6d1d51`), `NumberField`/`OTPField` still to do —
+their unit suites cannot load until B1 is fixed.
 
 ---
 
@@ -137,7 +139,12 @@ nub run --filter @gpuixui/primitives test
 Expected today: `5 failed | 23 passed`, 288 tests passing. Record the number in
 the commit body of every later step; it must never go down.
 
-### Step 1 — `Button` and `Toggle` take `StateStyle`
+### Step 1 — `Button` and `Toggle` take `StateStyle` — **landed**
+
+> Landed as `26f96a5c`. `ButtonState { disabled, focused }`,
+> `ToggleState { disabled, focused, selected }`; both resolve with
+> `resolveStyle` after every role decision. Three new tests; proven to fail by
+> dropping the merge. Suite 291 passing.
 
 - Files: `src/components/Button.tsx`, `src/components/Toggle.tsx`,
   `src/components/Button.test.tsx`, `src/components/Toggle.test.tsx`,
@@ -151,7 +158,15 @@ the commit body of every later step; it must never go down.
   while the focus flag is set, `disabled` true while disabled) and its result is
   the *last* word on a property the recipe also sets.
 
-### Step 2 — field parts take `StateStyle<FieldState>`
+### Step 2 — field parts take `StateStyle<FieldState>` — **half landed**
+
+> `Input` + `TextArea` landed as `dd6d1d51`: `FieldState { disabled, focused,
+> invalid }` is exported from `Input.tsx` beside `FieldProps` (not a separate
+> `field-state.ts` — one place, no extra module), the shared `fieldChrome`
+> resolves it, and `TextArea` now reuses `fieldHostProps`' style instead of
+> compiling the recipe twice. `NumberField` and `OTPField` keep `StyleDesc` until
+> their suites can load again (B1); when they gain it, import `FieldState` from
+> `Input.js`.
 
 - Files: `Input.tsx`, `TextArea.tsx`, `NumberField.tsx`, `OTPField.tsx`,
   `fields.test.tsx`, `NumberField.test.tsx`, `OTPField.test.tsx`, their docs.
