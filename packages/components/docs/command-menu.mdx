@@ -84,6 +84,30 @@ order — no hidden fuzzy pass and no reordering. Disabled actions stay visible 
 cannot be run by click or `Enter`; the initial highlight lands on the first
 enabled match.
 
+## Recents
+
+The component records nothing itself. Pass `recents` — action ids, most recent
+first — and an **empty** query shows them under one `Recent` heading, in that
+order, then the remaining actions in declaration order:
+
+```tsx
+<CommandMenu
+  open={open}
+  onOpenChange={setOpen}
+  actions={actions}
+  recents={recentIds}
+>
+  ...
+</CommandMenu>;
+```
+
+The caller records a use in the action's own `perform`, which keeps the history
+where the actions already live. Unknown and repeated ids are dropped, so a stale
+list cannot duplicate or invent a row. A typed query ignores recents and ranks
+normally; a custom `filter` opts out of recents entirely. A recent action is the
+same row object with its group replaced by `Recent`, so `perform` runs once and
+`disabled` is respected.
+
 ## Controlled only
 
 `open` is required. A command palette is opened by an application shortcut
@@ -107,21 +131,24 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 - The `<input>` is the host element until `@gpuixui/primitives` lands; it is the
   documented stand-in, not a styled wrapper.
 - Ranking is **per group**, not global: a group's heading stays where the caller
-  declared it even when another group holds the best match. There is no
-  recent-commands memory and no per-query history.
+  declared it even when another group holds the best match. Recents are
+  caller-owned data (`recents`), shown only for an empty query with the default
+  filter; the component keeps no history of its own.
 - No `aria-activedescendant`: the highlight is visible but the input does not
   point assistive technology at the active row.
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (14 tests):
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (18 tests):
 focus landing on the input, typing filtering the list while focus stays put,
 ArrowDown + Enter running the second match and closing, a clicked row, the empty
 label, a custom filter, a disabled action refusing to run, Escape closing, a
 non-contiguous query matching initials, ranking deciding the default `Enter`
 target, group order surviving ranking, an empty query keeping declaration order,
-a caller-supplied empty state, and the input's placeholder/name coming from the
-part.
+recents shown first under one heading with the first one highlighted, unknown and
+repeated recent ids dropped, recents ignored once a query is typed, a recent row
+running once and closing, a caller-supplied empty state, and the input's
+placeholder/name coming from the part.
 
 `src/menu/fuzzy.test.ts` (12 tests) covers empty and whitespace queries, case and
 trim, word-start versus mid-word scores, separator boundaries, subsequence and

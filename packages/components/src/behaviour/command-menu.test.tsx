@@ -70,9 +70,11 @@ const actions = (
 const Palette = ({
   perform,
   filter,
+  recents,
 }: {
   readonly perform: (id: string) => void;
   readonly filter?: (action: CommandAction, query: string) => boolean;
+  readonly recents?: ReadonlyArray<string>;
 }) => {
   const [open, setOpen] = useState(true);
   return (
@@ -81,6 +83,7 @@ const Palette = ({
       onOpenChange={setOpen}
       actions={actions(perform)}
       filter={filter}
+      {...(recents === undefined ? {} : { recents })}
     >
       <CommandMenuInput />
       <CommandMenuList />
@@ -319,6 +322,78 @@ describe("CommandMenu", () => {
       ],
     ).toBe(true);
     expect(palette.renderer.getAllText()).toContain("Toggle sidebar");
+
+    palette.unmount();
+  });
+
+  it("shows recent actions first under one heading for an empty query", () => {
+    const palette = renderComponent(
+      <Palette perform={vi.fn()} recents={["save", "sidebar"]} />,
+    );
+
+    const texts = palette.renderer.getAllText();
+    const recent = texts.indexOf("Recent");
+    const save = texts.indexOf("Save");
+    const sidebar = texts.indexOf("Toggle sidebar");
+    const navigation = texts.indexOf("Navigation");
+
+    expect(recent).toBeGreaterThanOrEqual(0);
+    expect(save).toBeGreaterThan(recent);
+    expect(sidebar).toBeGreaterThan(save);
+    expect(navigation).toBeGreaterThan(sidebar);
+    expect(texts.filter((text) => text === "Save")).toHaveLength(1);
+    expect(texts.filter((text) => text === "Recent")).toHaveLength(1);
+
+    // The first recent row is the highlight, so Enter runs it.
+    expect(
+      palette.renderer.findByTestId("command-save")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+
+    palette.unmount();
+  });
+
+  it("drops unknown and repeated recent ids", () => {
+    const palette = renderComponent(
+      <Palette perform={vi.fn()} recents={["nope", "save", "save"]} />,
+    );
+
+    const texts = palette.renderer.getAllText();
+    expect(texts.filter((text) => text === "Save")).toHaveLength(1);
+    expect(texts).not.toContain("nope");
+    expect(texts).toContain("Open file");
+    expect(texts).toContain("Toggle sidebar");
+
+    palette.unmount();
+  });
+
+  it("ignores recents once a query is typed", () => {
+    const palette = renderComponent(
+      <Palette perform={vi.fn()} recents={["sidebar"]} />,
+    );
+
+    type(palette, "sa");
+
+    const texts = palette.renderer.getAllText();
+    expect(texts).not.toContain("Recent");
+    expect(texts).toContain("Save");
+    expect(texts).not.toContain("Export as PDF");
+
+    palette.unmount();
+  });
+
+  it("runs a recent row once and closes", () => {
+    const perform = vi.fn();
+    const palette = renderComponent(
+      <Palette perform={perform} recents={["save"]} />,
+    );
+
+    clickCentreOf(palette, "command-save");
+
+    expect(perform).toHaveBeenCalledTimes(1);
+    expect(perform).toHaveBeenCalledWith("save");
+    expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
 
     palette.unmount();
   });

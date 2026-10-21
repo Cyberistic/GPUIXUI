@@ -25,7 +25,9 @@ import {
   COMMAND_SHORTCUT,
 } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import {
   createContext,
   Fragment,
@@ -98,6 +100,12 @@ export interface CommandMenuProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly actions: ReadonlyArray<CommandAction>;
+  /**
+   * Action ids, most recently used first. With an empty query and the default
+   * filter they are shown under one "Recent" heading, in this order; a typed
+   * query keeps the normal ranking.
+   */
+  readonly recents?: ReadonlyArray<string>;
   /** Replace the default ranked fuzzy match; accepted rows keep declaration order. */
   readonly filter?: (action: CommandAction, query: string) => boolean;
   readonly children?: PartChildren;
@@ -112,6 +120,29 @@ const defaultMatches = (
     fuzzyMatches(actions, query, (action) => action.label),
     (action) => action.group,
   );
+
+/**
+ * The empty-query list: the caller's recent ids first, one heading, and the rest
+ * in declaration order. Unknown and repeated ids are dropped, so a stale
+ * recents list cannot duplicate or invent a row.
+ */
+const withRecents = (
+  actions: ReadonlyArray<CommandAction>,
+  recents: ReadonlyArray<string>,
+): ReadonlyArray<CommandAction> => {
+  const ids = HashSet.fromIterable(recents);
+  const recent = Arr.flatMap(Arr.dedupe(recents), (id) =>
+    Option.match(
+      Arr.findFirst(actions, (action) => action.id === id),
+      { onNone: () => [], onSome: (action) => [action] },
+    ),
+  );
+  if (Arr.isReadonlyArrayEmpty(recent)) return actions;
+  return Arr.appendAll(
+    Arr.map(recent, (action) => ({ ...action, group: "Recent" })),
+    Arr.filter(actions, (action) => !HashSet.has(ids, action.id)),
+  );
+};
 
 /** The specs `menu/logic.ts` navigates over: filtered position and disabled. */
 const specs = (
@@ -137,6 +168,7 @@ export const CommandMenu = ({
   open,
   onOpenChange,
   actions,
+  recents,
   filter,
   children,
 }: CommandMenuProps) => {
@@ -147,10 +179,14 @@ export const CommandMenu = ({
   );
   const input = useRef<PublicInstance | null>(null);
 
+  const recent =
+    Str.isEmpty(Str.trim(query)) && recents !== undefined
+      ? withRecents(actions, recents)
+      : undefined;
   const matches =
-    filter === undefined
-      ? defaultMatches(actions, query)
-      : Arr.filter(actions, (action) => filter(action, query));
+    filter !== undefined
+      ? Arr.filter(actions, (action) => filter(action, query))
+      : (recent ?? defaultMatches(actions, query));
   const rows = specs(matches);
 
   // The stored index may point at a filtered-out row after typing. Fall back to
@@ -453,6 +489,7 @@ export const commandMenuMeta = {
   gpuixSupport: "partial",
   limitations: [
     "ranking is per group, not global, so a group's heading never repeats; a custom filter opts out and keeps declaration order",
+    "recents are caller-owned data (`recents` action ids) shown only for an empty query with the default filter; the component records nothing itself",
     "the input is the GPUix <input> host element until @gpuixui/primitives lands",
     "the active row is highlighted, not focused, so typing keeps working; screen readers get aria-selected but no aria-activedescendant",
   ],
