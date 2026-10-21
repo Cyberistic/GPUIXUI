@@ -1,7 +1,10 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildWorkspaceSymbolIndex, repoRoot } from "./public-symbols-source";
+import {
+  namedImports,
+  readRepo,
+  typescriptSnippets,
+  unresolvedImports,
+} from "./doc-snippets.test-util";
 
 /**
  * The getting-started page is the one page a reader copies from, so its code
@@ -15,49 +18,15 @@ import { buildWorkspaceSymbolIndex, repoRoot } from "./public-symbols-source";
  * the table that says who owns it.
  */
 
-const read = (path: string): string =>
-  readFileSync(join(repoRoot, path), "utf8");
+const read = (path: string): string => readRepo(path);
 
 const page = read("apps/docs/content/docs/getting-started.mdx");
 
 /** The page's fenced TypeScript snippets, in reading order. */
-const snippets = [...page.matchAll(/```tsx\n([\s\S]*?)```/g)].map(
-  (match) => match[1] ?? "",
-);
-
-interface NamedImport {
-  readonly specifier: string;
-  readonly names: ReadonlyArray<string>;
-}
+const snippets = typescriptSnippets(page);
 
 /** Every named import the page writes. */
-const imports: ReadonlyArray<NamedImport> = snippets.flatMap((snippet) =>
-  [...snippet.matchAll(/import\s*\{([\s\S]*?)\}\s*from\s*"([^"]+)"/g)].map(
-    (match) => ({
-      specifier: match[2] ?? "",
-      names: (match[1] ?? "")
-        .split(",")
-        .map((name) => name.trim())
-        .filter((name) => name !== ""),
-    }),
-  ),
-);
-
-/** The names each published specifier exports, read from the source. */
-const published = buildWorkspaceSymbolIndex(repoRoot)
-  .packages.flatMap((pkg) => pkg.symbols)
-  .flatMap((symbol) =>
-    symbol.specifiers.map((specifier) => ({
-      specifier,
-      name: symbol.name,
-    })),
-  )
-  .reduce((bySpecifier, { specifier, name }) => {
-    const names = bySpecifier.get(specifier) ?? new Set<string>();
-    names.add(name);
-    bySpecifier.set(specifier, names);
-    return bySpecifier;
-  }, new Map<string, Set<string>>());
+const imports = namedImports(snippets);
 
 describe("the getting-started page", () => {
   it("sits in the Getting Started section, directly after Installation", () => {
@@ -78,19 +47,7 @@ describe("the getting-started page", () => {
     // The parser must see the snippets; a silent zero would pass every check.
     expect(snippets.length).toBeGreaterThanOrEqual(3);
     expect(imports.length).toBeGreaterThanOrEqual(5);
-
-    const missing = imports.flatMap(({ names, specifier }) => {
-      if (!specifier.startsWith("@gpuixui/")) return [];
-      const available = published.get(specifier);
-      if (available === undefined) {
-        return [`${specifier} is not a published entry point`];
-      }
-      return names
-        .filter((name) => !available.has(name))
-        .map((name) => `${specifier} does not export ${name}`);
-    });
-
-    expect(missing).toEqual([]);
+    expect(unresolvedImports(imports)).toEqual([]);
   });
 
   it("teaches the run command the root manifest declares", () => {

@@ -1,7 +1,13 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildWorkspaceSymbolIndex, repoRoot } from "./public-symbols-source";
+import {
+  namedImports,
+  readRepo,
+  typescriptSnippets,
+  unresolvedImports,
+} from "./doc-snippets.test-util";
+import { repoRoot } from "./public-symbols-source";
 
 /**
  * The installation page is the first page a reader follows, so every command on
@@ -13,9 +19,6 @@ import { buildWorkspaceSymbolIndex, repoRoot } from "./public-symbols-source";
  * commands, and this does the same for the page before it.
  */
 
-const read = (path: string): string =>
-  readFileSync(join(repoRoot, path), "utf8");
-
 interface Manifest {
   readonly name: string;
   readonly scripts?: Readonly<Record<string, string>>;
@@ -25,21 +28,21 @@ interface Manifest {
   };
 }
 
-const manifest = (path: string): Manifest => JSON.parse(read(path)) as Manifest;
+const manifest = (path: string): Manifest =>
+  JSON.parse(readRepo(path)) as Manifest;
 
-const page = read("apps/docs/content/docs/installation.mdx");
+const page = readRepo("apps/docs/content/docs/installation.mdx");
 const root = manifest("package.json");
+const snippets = typescriptSnippets(page);
+const imports = namedImports(snippets);
 
 /** Every workspace package, by manifest name. */
 const workspaceManifests: ReadonlyArray<Manifest> = readdirSync(
   join(repoRoot, "packages"),
-).flatMap((entry) => {
-  try {
-    return [manifest(`packages/${entry}/package.json`)];
-  } catch {
-    return [];
-  }
-});
+  { withFileTypes: true },
+).flatMap((entry) =>
+  entry.isDirectory() ? [manifest(`packages/${entry.name}/package.json`)] : [],
+);
 
 /** `nub add @gpuixui/<name>@workspace:*` targets. */
 const added: ReadonlyArray<string> = [
@@ -59,35 +62,14 @@ const runs: ReadonlyArray<Run> = [
   script: match[3] ?? "",
 }));
 
-/** The page's fenced TypeScript snippets, in reading order. */
-const snippets = [...page.matchAll(/```tsx\n([\s\S]*?)```/g)].map(
-  (match) => match[1] ?? "",
-);
-
-/** The names each `@gpuixui/*` entry point publishes. */
-const published = buildWorkspaceSymbolIndex(repoRoot)
-  .packages.flatMap((pkg) => pkg.symbols)
-  .flatMap((symbol) =>
-    symbol.specifiers.map((specifier) => ({
-      specifier,
-      name: symbol.name,
-    })),
-  )
-  .reduce((bySpecifier, { specifier, name }) => {
-    const names = bySpecifier.get(specifier) ?? new Set<string>();
-    names.add(name);
-    bySpecifier.set(specifier, names);
-    return bySpecifier;
-  }, new Map<string, Set<string>>());
-
 describe("the installation page", () => {
   it("pins the toolchain the repository pins", () => {
-    const nodeVersion = read(".node-version").trim();
+    const nodeVersion = readRepo(".node-version").trim();
     const manager = root.devEngines?.packageManager;
 
     expect(nodeVersion.length).toBeGreaterThan(0);
     expect(page).toContain(nodeVersion);
-    expect(manager).toBeDefined();
+    expect(manager?.name).toBeDefined();
     expect(page).toContain(manager?.name ?? "");
   });
 
@@ -118,31 +100,7 @@ describe("the installation page", () => {
   });
 
   it("imports only names the packages publish", () => {
-    const imports = snippets.flatMap((snippet) =>
-      [
-        ...snippet.matchAll(
-          /import\s*\{([\s\S]*?)\}\s*from\s*"(@gpuixui\/[^"]+)"/g,
-        ),
-      ].map((match) => ({
-        specifier: match[2] ?? "",
-        names: (match[1] ?? "")
-          .split(",")
-          .map((name) => name.trim())
-          .filter((name) => name !== ""),
-      })),
-    );
-
     expect(imports.length).toBeGreaterThanOrEqual(2);
-    const missing = imports.flatMap(({ names, specifier }) => {
-      const available = published.get(specifier);
-      if (available === undefined) {
-        return [`${specifier} is not a published entry point`];
-      }
-      return names
-        .filter((name) => !available.has(name))
-        .map((name) => `${specifier} does not export ${name}`);
-    });
-
-    expect(missing).toEqual([]);
+    expect(unresolvedImports(imports)).toEqual([]);
   });
 });
