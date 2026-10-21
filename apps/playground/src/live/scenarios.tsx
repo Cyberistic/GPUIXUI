@@ -5268,6 +5268,203 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * The clipboard in a window: whether the platform's own copy and paste reach a
+ * shipped field, and whether the application can see the keys at all.
+ *
+ * The runtime publishes no clipboard API — no write, no read — so a "copy"
+ * action that must reach the OS can only be the platform's text-input action.
+ * The probe types into nothing, selects with `cmd-a`, copies with `cmd-c` and
+ * pastes into a second field with `cmd-v`, so the value the second field reports
+ * through `onChange` is the system clipboard's, round-tripped by GPUI itself.
+ * It writes **its own marker** to the clipboard and never reads what was there.
+ */
+const ClipboardProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  // A marker unique to this mount: a previous run leaves its own text on the
+  // system clipboard, so a fixed string could pass a paste check without the
+  // copy having run at all.
+  const [source, setSource] = useState(
+    () => `gpuix clipboard ${Math.random().toString(36).slice(2, 8)}`,
+  );
+  const [target, setTarget] = useState("");
+  const [keys, setKeys] = useState<ReadonlyArray<string>>([]);
+
+  useWindowKey((event) => {
+    if (event.modifiers?.cmd !== true) return;
+    const key = event.key;
+    if (key === undefined) return;
+    setKeys((seen) => (Arr.contains(seen, key) ? seen : Arr.append(seen, key)));
+  });
+
+  return (
+    <div
+      testId="clipboard-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The platform's clipboard inside a window: select, copy, paste into the
+        second field, and cut it back out.
+      </text>
+      <PrimitiveThemeProvider theme={palettes.dark}>
+        <Input
+          testId="clipboard-source"
+          label="Source"
+          value={source}
+          onChange={setSource}
+        />
+        <Input
+          testId="clipboard-target"
+          label="Target"
+          value={target}
+          onChange={setTarget}
+        />
+      </PrimitiveThemeProvider>
+      <div
+        testId="clipboard-other"
+        tabIndex={0}
+        role="button"
+        style={{
+          padding: theme.spacing.sm,
+          borderRadius: theme.radius.sm,
+          backgroundColor: theme.colors.muted,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          another focus
+        </text>
+      </div>
+      <text
+        testId="clipboard-source-value"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {source}
+      </text>
+      <text
+        testId="clipboard-target-value"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {target}
+      </text>
+      <text
+        testId="clipboard-keys"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`keys=${Arr.join(keys, ",")}`}
+      </text>
+    </div>
+  );
+};
+
+const clipboardSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("clipboard-source");
+    // The window handler is registered from an effect, so the first frame can
+    // paint before it is in place.
+    yield* Effect.sleep(SETTLE);
+    const marker = yield* ctx.host.text("clipboard-source-value");
+    yield* ctx.expectContains(
+      "the source holds this mount's marker",
+      marker,
+      "gpuix clipboard ",
+    );
+    yield* ctx.expectEqual(
+      "the target starts empty",
+      yield* ctx.host.text("clipboard-target-value"),
+      "",
+    );
+
+    // Select all and copy in the source, then paste into the empty target.
+    yield* ctx.host.click("clipboard-source");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the source takes the focus",
+      Option.getOrElse(
+        Option.fromNullishOr(yield* ctx.host.focused()),
+        () => "none",
+      ),
+      "clipboard-source",
+    );
+    yield* ctx.host.key("cmd-a");
+    yield* ctx.host.key("cmd-c");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the field's select and copy reach no window handler",
+      yield* ctx.host.text("clipboard-keys"),
+      "keys=",
+    );
+    yield* ctx.host.click("clipboard-target");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("cmd-v");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "paste delivers the copied text into the second field",
+      yield* ctx.host.text("clipboard-target-value"),
+      marker,
+    );
+    yield* ctx.expectEqual(
+      "copying leaves the source as it was",
+      yield* ctx.host.text("clipboard-source-value"),
+      marker,
+    );
+    yield* ctx.host.capture("clipboard-pasted");
+
+    // Cut it back out: the platform's own cut must reach `onChange` too.
+    yield* ctx.host.key("cmd-a");
+    yield* ctx.host.key("cmd-x");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "cut empties the field it ran in",
+      yield* ctx.host.text("clipboard-target-value"),
+      "",
+    );
+    // The control: a cmd key reaches the window handler from a focusable control
+    // that has no key handler of its own, so the empty log below cannot be a
+    // broken registration.
+    yield* ctx.host.click("clipboard-other");
+    yield* ctx.host.key("cmd-k");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a cmd key reaches the window handler from a control with no handler",
+      yield* ctx.host.text("clipboard-keys"),
+      "keys=k",
+    );
+
+    yield* ctx.expectEqual(
+      "the field keeps every clipboard key from the window handler",
+      yield* ctx.host.text("clipboard-keys"),
+      "keys=k",
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -5395,6 +5592,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "pointer-capture",
     view: () => <PointerCaptureProbe />,
     steps: pointerCaptureSteps,
+  },
+  "clipboard-lifecycle": {
+    id: "clipboard-lifecycle",
+    view: () => <ClipboardProbe />,
+    steps: clipboardSteps,
   },
   "select-lifecycle": {
     id: "select-lifecycle",

@@ -33,11 +33,11 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-six probes a real window can prove, of which eight mount shipped
+twenty-seven probes a real window can prove, of which eight mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the popover and the modal focus rule), four mount
-`@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), one mounts the
-runtime's own `Select` parts, and the rest prove the runtime itself (focus,
+`@gpuixui/primitives` (the Input, Checkbox, Slider and Tooltip), one more mounts
+the runtime's own `Select` parts, and the rest prove the runtime itself (focus,
 paint, fonts, placement, content surfaces, pointer capture, the window's own
 wheel, a split pane, a virtual list and the app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
@@ -1199,6 +1199,50 @@ it in those surfaces and added the headless twin
 (`runtime/value.runtime.test.tsx`); this probe pins the window behaviour so a
 runtime change fails here instead of moving the components silently.
 
+### `clipboard-lifecycle` — measured on 0.11.0 here
+
+A desktop library needs copy and paste on every surface it ships — a log viewer's
+selected line, a table's row, a code view's block, a path in a field — and the
+pinned binding publishes **no clipboard API**: `index.d.ts` and
+`host.d.ts` carry no read and no write. The only clipboard a consumer can reach
+is the platform's own text-input action inside a focused `<input>`/`<textarea>`.
+The probe mounts two shipped `Input`s and drives the whole loop with real keys:
+select all (`cmd-a`), copy (`cmd-c`), paste into the second field (`cmd-v`), then
+select-all and cut (`cmd-x`) it back out. The value the second field reports
+through `onChange` is the system clipboard's, round-tripped by GPUI.
+
+The marker is **unique to each mount** (`gpuix clipboard` plus six random
+characters): a fixed string would let a paste pass on the previous run's
+clipboard without the copy having run at all. The app-level key log has its own
+control — a `cmd-k` from a focusable control that has no key handler — so an
+empty log cannot be mistaken for a broken handler registration.
+
+| State | Measured |
+| ----- | -------- |
+| at rest | the source holds this mount's marker, the target is empty |
+| the source is pressed | the focus lands on `clipboard-source` |
+| `cmd-a`, `cmd-c` in the source | the window handler sees **nothing** — the field claims both keys |
+| `cmd-v` in the target | its `onChange` reports the marker, and the source is unchanged |
+| `cmd-a`, `cmd-x` in the target | its `onChange` reports `""` |
+| `cmd-k` from a plain focusable control | reaches the window handler (`keys=k`), so the empty log above is the field's, not a dead seam |
+| after the whole sequence | the log is still `keys=k` — the field keeps every clipboard key from the application |
+
+Nine checks. Negative control measured: dropping `cmd-c` fails
+`paste delivers the copied text into the second field` with the **previous**
+run's marker (`expected "gpuix clipboard q6uuii", got "gpuix clipboard
+pt6c88"`, exit `1`); restored, green twice in a row. Evidence:
+`.artifacts/live/clipboard-pasted.png`.
+
+The consequence for Tier 3/4, and the reason this is a limitation rather than a
+pass: the platform's action belongs to the focused field, so an application
+cannot hand over the text of a **selected** `<text>`, a table row or a `<code>`
+block — there is no write to the clipboard to call, and `cmd-c` from such a
+surface never reaches the window handler. The honest workaround is a read-only
+`<input>` holding the text to copy (a selectable field whose own clipboard
+action works, as measured above) or a selectable text area; a "copy" button that
+promised the OS clipboard would be a fake. The probe writes only its own marker
+to the system clipboard and never reads what was there.
+
 ### `select-lifecycle` — measured on 0.11.0 here
 
 The runtime's `Select` is the one overlay surface a window had never painted:
@@ -1368,7 +1412,13 @@ narrower. Each deviation is deliberate and measured:
   the probe measures; in `command-palette`, expecting the first row instead of
   the highlighted one fails
   `Enter runs the highlighted action, not the first one: expected "ran=new-file
-  runs=1", got "ran=open-settings runs=1"` (exit `1`).
+  runs=1", got "ran=open-settings runs=1"` (exit `1`). In `select-lifecycle`,
+  dropping `sideOffset` fails `the list keeps the gap it was given below the
+  trigger` (`expected 6 ± 1, got 0`) and enabling the disabled row fails the
+  wrap case (`expected "value=daily changes=3", got "value=archived
+  changes=3"`). In `clipboard-lifecycle`, dropping `cmd-c` pastes the previous
+  run's marker (`expected "gpuix clipboard q6uuii", got "gpuix clipboard
+  pt6c88"`) — each exit `1`.
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

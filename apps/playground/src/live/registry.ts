@@ -187,6 +187,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "clipboard-lifecycle",
+    title:
+      "Input: the platform's copy, paste and cut reach a shipped field, and only some of them reach the application",
+    capability: "input",
+  },
+  {
     id: "select-lifecycle",
     title:
       "Overlay: the runtime's Select opens its list below the trigger, selects by press and by key, skips a disabled row and dismisses on Escape or an outside press",
