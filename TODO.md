@@ -432,6 +432,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source | licensing | pending |
 | **Evidence for `/docs/updates`**: a packaged app (one real packager format) plus a fixture update feed, to prove `checkUpdate`, signature verification and `downloadAndInstall`; the page states they are declared, never executed (plan 633) | release / CI owner | pending — needs packaging, which no workstream owns yet |
 | **Evidence for `/docs/automation`**: one playground scenario served over `enableAutomation` so a test process can `launch` it, use a `Locator`, capture a frame and assert a real end-to-end run; the page states the gap until then (plan 634 §11.6) | playground | pending — thesis: the harness already mounts the real renderer, so the ask is one scenario plus a pipe |
+| **`floating-placement` asserts border-box geometry against `getElementBounds`' content box.** The panel has `padding: 8` + `borderWidth: 1`, so its reported origin is 9 px past the box edge: `side=bottom sits one gap below the anchor` reports 175 against 166, and the centre/snap checks are out by the same convention. The placement itself measured exact through the scenario's own view (plan 636 §9.3). Correct the four expectations to the content-box convention (or subtract `padding + borderWidth`) so the scenario can prove placement again | playground | pending — blocks the docs' tier-V evidence for Overlay placement, which now cites the recorded measurement instead |
+| **A floating surface that does not correct the measured centre.** `PreviewCardContent` and GPUix's `TooltipContent` pass `align="center"` straight through, so a card or tip is half its own width left of the trigger's centre; `/docs/overlay-placement` states the limitation and links the corrected surfaces. Either adopt `usePlacement` in Preview card or record why the card keeps the runtime's centre | components | pending — the docs page is honest either way; a fix moves the row to `measured` |
 
 ## Phase D — data and workspace components
 
@@ -473,7 +475,30 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 202/202
+`[x]` `[██████████]` 203/203
+
+`[x]` **Overlay placement has a page (plan 636)** — every floating surface is
+      placed by the same five `@gpuix/react/floating` props, and the site
+      documented paint order but never placement: measured 2026-10-21,
+      `placement` reached Spinner's limitations, `positioning` Select's,
+      `collision` Dropdown menu's, `side offset` Preview card's, `fit` the
+      Architecture page, `anchor point` Slider's keyboard section, and
+      `reposition`/`repositioning` returned nothing. `/docs/overlay-placement`
+      renders the five props with their real defaults, the nine `<anchored>`
+      translations, the twelve surfaces and which three correct the measured
+      centre and snap defects (Popover, Dropdown menu, Combobox), the two
+      defects' real sources, the one-shot measurement rule and eight absences.
+      `src/lib/placement.ts` re-derives every prop, default, mapping and
+      per-file mechanism from the installed `@gpuix/react@0.10.0` implementation
+      and every component source in both directions; `position` and `overlay`
+      stay exact aliases on Styling and Component API because the new title and
+      included source carry both tokens. Scoped `floating-placement` exits `1`
+      for a **pre-existing** assertion defect (the scenario compares the
+      runtime's content-box bounds with a border-box expectation, 9 px off for
+      its padded panel); the geometry itself re-measured exact — cross-team row
+      below. 154 files / 1 941 docs tests, 117-page `smoke:build` with both
+      production queries, scoped axe (2 schemes) and all root gates green; §9 of
+      the plan records six codified directions and two hand-run ones.
 
 `[x]` **Events and input have a page (plan 635)** — the runtime sends one
       `EventPayload` to all 23 host handlers and the site documented none of it:

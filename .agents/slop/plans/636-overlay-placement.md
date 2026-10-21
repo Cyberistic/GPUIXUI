@@ -436,3 +436,133 @@ by query and URL.
   here: stop and record the measured conflict instead of widening the alias.
 - Any gate fails for a reason outside `apps/docs`: stop and record it as a
   cross-team row.
+
+---
+
+## 9. Implementation record (2026-10-21)
+
+### 9.1 What landed, and where it differs from the plan
+
+The page, the four tables, the two search modules and the guard landed as
+specified. Four decisions differ from §2/§3 and are recorded here:
+
+1. **Sidebar position is after Accessibility, not Component API.**
+   `accessibility-page.test.ts` asserts Accessibility sits directly after
+   Component API — a promise plan 565 made and the suite still holds. The new
+   page therefore sits between Accessibility and Events, the same neighbourhood:
+   `component-api → accessibility → overlay-placement → events`. The suite
+   asserts that exact neighbour instead of the plan's original sentence.
+2. **`position` and `overlay` are pinned as exact page aliases on their existing
+   owners.** The new page's included `placement.ts` source uses "position" and
+   "positioning" constantly, and its title carries the `overlay` token. Left
+   alone, `position` returned `/docs/overlay-placement` (measured) and `overlay`
+   returned it too, breaking plan 591's pin and plan 589's `overlay` owner. The
+   fix is an exact alias on Styling (`position`) and on Component API
+   (`overlay`), not a ranker rule and not a weaker title. The new page's own
+   alias table is unchanged otherwise.
+3. **`alignOffset`'s mapping row reads `offset` as its value.** The installed
+   layer passes a computed `offset` (`{x}` or `{y}`), not the prop directly, so
+   the row and the guard record the real expression rather than an ideal one.
+4. **The matrix has twelve rows, not eight.** §2.3 named eight surfaces; the
+   guard's rule 4 requires a row for **every** file containing `usePlacement(`,
+   `FloatingLayer` or `<anchored`. Dialog and Drawer are `fixed` window-origin
+   veils and `MenuSubContent` is `pointer`, so they are rows with their real
+   mechanism. Select and Tooltip are `@gpuix/react`-owned `pass-through` rows.
+
+`centreCorrected` and `flipsOnce` are **derived** from `correction`
+(`measured` is the only mechanism that measures), so the two booleans cannot
+disagree with the file they describe.
+
+### 9.2 The measured search gap, closed
+
+`overlay-placement.test.ts` runs all 21 planned queries through the real
+`search()` merge; each returns `/docs/overlay-placement`. The measured
+before/after for the words §1 recorded:
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `placement` | Spinner limitations | Overlay placement |
+| `positioning` | Select limitations | Overlay placement |
+| `side` | `/docs/components/drawer` | Overlay placement |
+| `align` | Stack theming | Overlay placement |
+| `sideOffset` | Preview card variants | Overlay placement |
+| `collision` | Dropdown menu sizes | Overlay placement |
+| `fit` | `/docs/architecture` | Overlay placement |
+| `reposition` | nothing | Overlay placement |
+| `position` | `/docs/styling` | `/docs/styling` (pinned alias) |
+| `overlay` | `/docs/component-api` | `/docs/component-api` (pinned alias) |
+
+### 9.3 The scenario run — a pre-existing assertion defect, recorded
+
+`nub apps/playground/dist/smoke/run.js --only floating-placement` (after a fresh
+`nub run --filter playground build`) exits **1** on this host, with a failure
+this plan did not cause and the page does not hide:
+
+```
+FAIL floating-placement  side=bottom sits one gap below the anchor
+expected 166 ± 1, got 175
+```
+
+Root cause, measured with the real `TestRenderer` through the scenario's own
+view (a scratch driver, deleted afterwards): `getElementBounds` reports the
+**content-box origin** — `padding + border` inside the element's box — and the
+scenario's panel has `padding: 8` + `borderWidth: 1`, so a border-box origin of
+166 reports 175 and an `align="start"` x of 200 reports 209. The same offset
+explains the centre and snap assertions, which are also written in border-box
+coordinates.
+
+The placement geometry itself is correct and measures exactly:
+
+| Case | Border-box origin (bounds − 9) | Expected |
+| ---- | ------------------------------ | -------- |
+| bottom / start | y 166, x 200 | anchor bottom 160 + gap 6, anchor left 200 |
+| right / start | x 326, y 120 | anchor right 320 + gap 6, anchor top 120 |
+| right / center | y 60, height 80 → end 140 | anchor centre y 140 (the measured defect) |
+| edge snap | y 712, bottom 792 | window 800 − collision 8, over the trigger at 730 (no flip) |
+
+So the **rules** the page states are measured; the **scenario assertions** are
+nine pixels out for a padded panel. The fix belongs to the playground
+workstream (`apps/playground/src/scenarios/floating.tsx`), recorded in
+`TODO.md`. The page's Evidence section therefore cites the recorded measurement
+(plan 156 §8, re-measured in plan 323) and does not claim a green scenario run.
+
+### 9.4 Forced directions run (and reverted)
+
+The six rule directions are codified as passing cases in
+`overlay-placement.test.ts` — each injects the changed declaration/source and
+asserts the message by name:
+
+1. drop `align?: FloatingAlign` → `align is documented and not declared on
+   FloatingContentProps`
+2. `collisionPadding = 4` in the layer copy → `collisionPadding defaults to 4;
+   the page says 8`
+3. `fit: "switch"` → `the layer no longer passes fit: "snap"`
+4. `usePlacement(` prepended to `preview-card.tsx` → the pass-through mechanism
+   message naming the file
+5. a new file with `usePlacement(` and no row → `…/new-surface.tsx places a
+   surface and has no placement row`
+6. `arrow?: number` added to `AnchoredProps` → `AnchoredProps declares an arrow,
+   which the page says does not exist`
+
+Two directions were also run by hand against the real tree and reverted:
+
+- `## One-shot measurement` removed → the page suite failed on the heading list.
+- `position` added to the new page's alias block → `uses a term for one page
+  only` failed (`position` is pinned on Styling), proving the pin is load-bearing.
+
+### 9.5 Gates run
+
+- `nub exec vitest run src/overlay-placement.test.ts src/lib/page-aliases.test.ts
+  src/lib/search-docs.test.ts src/mdx-components.test.ts` — 687 passed.
+- `nub run --filter docs check-types` — exit `0`.
+- `nub run lint`, `nub run fmt` — exit `0`.
+- `nub run --filter docs test` — **154 files / 1 941 tests passed**.
+- `nub run --filter docs smoke:build` — exit `0`, **117 pages**, 1 512 anchors,
+  both production queries (`sideOffset`, `flip`) answered
+  `/docs/overlay-placement`.
+- `nub scripts/smoke-a11y.ts --no-build --only /docs/overlay-placement` — exit
+  `0`, 1 page × 2 schemes, 0 violations.
+- `nub run check` — exit `0`.
+- `nub run test` — exit `0`: tokens 197, testing 19, icons 19, playground 11,
+  components 308, primitives 282, docs 1 941.
+
