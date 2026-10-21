@@ -54,9 +54,9 @@ defect is in the guard, not in the palette.
 
 | Document | Headings | Anchors out | Dead today |
 | -------- | -------- | ----------- | ---------- |
-| `docs/tokens.md` | 50 | 18 | 0 |
+| `docs/tokens.md` | 46 | 19 | 0 |
 | `docs/design-system.md` | 13 | 2 | 0 |
-| `packages/tokens/README.md` | 15 | 1 (none: 0) | 0 |
+| `packages/tokens/README.md` | 21 | 0 | 0 |
 
 No document has two headings with the same text, so the GitHub/Fumadocs
 duplicate suffix (`-1`) is not needed today; the guard must still state the rule
@@ -97,7 +97,7 @@ least obvious.
 ## 4. Files to change
 
 1. `packages/tokens/src/docs-links.test.ts` — the slug helper, the anchor helper
-   and two cases.
+   and three cases.
 2. `.agents/slop/plans/README.md` — the plan row, plus the closing paragraph.
 3. `TODO.md` — a ticked row and the workstream counter (`377/452` → `378/453`).
 
@@ -130,9 +130,13 @@ const headingAnchors = (source: string): ReadonlyArray<string> =>
     slug(match[1] ?? ""),
   );
 
-/** The `#anchor` half of every link target, with the document it names. */
-const anchorTargets = (target: string): string | undefined =>
-  target.startsWith("#") ? target.slice(1) : target.split("#")[1];
+/** The `#anchor` of a link target, or `undefined` when it names none. A
+ * same-page anchor has an empty file — `#focus` splits to `["", "focus"]` — so
+ * the file half is not the test. */
+const anchorOf = (target: string): string | undefined => {
+  const [, anchor] = target.split("#");
+  return anchor === undefined || anchor === "" ? undefined : anchor;
+};
 
 /**
  * The anchors in `source` that the document they point at does not declare.
@@ -143,12 +147,12 @@ const anchorTargets = (target: string): string | undefined =>
 const missingAnchors = (
   document: string,
   source: string,
-  guarded: ReadonlyMap<string, string>,
+  headings: ReadonlyMap<string, string>,
 ): ReadonlyArray<string> => {
   const directory = document.split("/").slice(0, -1).join("/");
   return linkTargets(source).flatMap((target) => {
-    const anchor = anchorTargets(target);
-    if (anchor === undefined || anchor === "") {
+    const anchor = anchorOf(target);
+    if (anchor === undefined) {
       return [];
     }
     const [file = ""] = target.split("#");
@@ -157,18 +161,18 @@ const missingAnchors = (
         ? document
         : new URL(`${directory === "" ? "" : `${directory}/`}${file}`, root)
             .pathname.replace(root.pathname, "");
-    const headings = guarded.get(targetDocument);
-    if (headings === undefined) {
+    const targetSource = headings.get(targetDocument);
+    if (targetSource === undefined) {
       return [];
     }
-    return headingAnchors(headings).includes(anchor)
+    return headingAnchors(targetSource).includes(anchor)
       ? []
       : [`${document} -> ${targetDocument}#${anchor}`];
   });
 };
 
-/** The guarded documents by repository-relative path. */
-const guardedDocuments = new Map(
+/** The guarded documents by repository-relative path, read once. */
+const guarded = new Map(
   documents.map((document) => [
     document,
     readFileSync(new URL(document, root), "utf8"),
@@ -179,33 +183,62 @@ const guardedDocuments = new Map(
 `linkTargets` already returns every `](…)` target, so the two helpers share one
 reader. Keep the existing `missingLinks` untouched.
 
-## 6. Step 2 — the two cases
+The `anchorOf` shape is the one trap in this plan: the first cut tested
+`file === ""` and therefore returned `undefined` for every same-page anchor —
+`#focus` splits to `["", "focus"]` — so the guard passed all 17 in-page anchors
+vacuously while the three cross-document ones were checked. The §7 mutation 1
+found it (the `Text selection` rename stayed green), which is why a same-page case
+is part of the fixture below.
+
+## 6. Step 2 — the cases
 
 ```ts
 describe("document anchors", () => {
   it("resolves every in-page and cross-document anchor", () => {
-    const missing = [...guardedDocuments].flatMap(([document, source]) =>
-      missingAnchors(document, source, guardedDocuments),
+    const missing = [...guarded].flatMap(([document, source]) =>
+      missingAnchors(document, source, guarded),
     );
 
     expect(missing).toEqual([]);
   });
 
   it("catches an anchor a renamed heading orphaned", () => {
-    const renamed = "# Catalogue\n\n## Selection of text\n\nthe wash";
-    const fixture = new Map([["docs/tokens.md", renamed]]);
+    const fixture = new Map([
+      ["docs/tokens.md", "# Tokens\n\n## Selection\n\nthe wash"],
+      ["docs/design-system.md", "# Design\n\n## 9. Accessibility\n"],
+    ]);
+
+    expect(
+      missingAnchors("docs/tokens.md", "[focus](#focus)", fixture),
+    ).toEqual(["docs/tokens.md -> docs/tokens.md#focus"]);
+    expect(
+      missingAnchors(
+        "docs/design-system.md",
+        "[selection](./tokens.md#text-selection)",
+        fixture,
+      ),
+    ).toEqual(["docs/design-system.md -> docs/tokens.md#text-selection"]);
+    expect(
+      missingAnchors(
+        "docs/design-system.md",
+        "[selection](./tokens.md#selection) and [focus](./tokens.md#focus)",
+        new Map([
+          ...fixture,
+          ["docs/tokens.md", "# Tokens\n\n## Selection\n\n## Focus\n"],
+        ]),
+      ),
+    ).toEqual([]);
+  });
+
+  it("strips the punctuation a heading's slug drops", () => {
+    const fixture = new Map([
+      ["docs/tokens.md", "## 9. Accessibility\n\n## Custom typefaces are unavailable in 0.10.0"],
+    ]);
 
     expect(
       missingAnchors(
         "docs/tokens.md",
-        "[Text selection](#text-selection)",
-        fixture,
-      ),
-    ).toEqual(["docs/tokens.md -> docs/tokens.md#text-selection"]);
-    expect(
-      missingAnchors(
-        "docs/tokens.md",
-        "[Text selection](#selection-of-text)",
+        "[a](#9-accessibility) and [b](#custom-typefaces-are-unavailable-in-0100)",
         fixture,
       ),
     ).toEqual([]);
@@ -213,8 +246,9 @@ describe("document anchors", () => {
 });
 ```
 
-Case 2 is the one that proves the guard can fail without touching a real
-document; the §7 mutations prove it against the shipped pages.
+Cases 2 and 3 prove the guard can fail without touching a real document — one per
+branch (same-page, cross-document) and one for the slug rule; the §7 mutations
+prove it against the shipped pages.
 
 ## 7. Test plan
 
@@ -222,8 +256,8 @@ document; the §7 mutations prove it against the shipped pages.
 nub run --filter @gpuixui/tokens test src/docs-links.test.ts
 ```
 
-Expected after: one file, five cases green (the three existing link cases and the
-two anchor cases).
+Expected after: one file, six cases green (the three existing link cases and the
+three anchor cases).
 
 **Prove every case in both directions** (apply the mutation, run the file,
 restore):
@@ -234,8 +268,8 @@ restore):
    evidence.
 2. Rename `## Find highlighting` → `## Match highlighting` in `docs/tokens.md`:
    case 1 reports **three** entries (two same-page and
-   `docs/design-system.md -> docs/tokens.md#find-highlighting`), which proves the
-   cross-document branch runs.
+   `docs/design-system.md -> docs/tokens.md#find-highlighting`), which proves both
+   branches run.
 3. Rename `## 9. Accessibility` → `## 9. Accessibility and contrast` in
    `docs/design-system.md`: case 1 fails on
    `docs/tokens.md -> docs/design-system.md#9-accessibility`, which proves a link
@@ -243,7 +277,7 @@ restore):
 4. Change `#custom-typefaces-are-unavailable-in-0100` to
    `#custom-typefaces-are-unavailable-in-0-10-0`: case 1 fails, which proves the
    slug rule strips the dots rather than trusting the author.
-5. Restore every file: all five cases pass.
+5. Restore every file: all six cases pass.
 
 Then the gates:
 
@@ -273,8 +307,9 @@ that were run (none) in the execution record.
 ## 9. Acceptance
 
 - `docs-links.test.ts` resolves every in-page and cross-document anchor in the
-  three guarded documents against the headings they name, and one case proves the
-  guard fails on a renamed heading in a fixture.
+  three guarded documents against the headings they name, and two cases prove the
+  guard fails on a renamed heading — one per branch — while a third holds the slug
+  rule.
 - Each of the four §7 mutations fails the file and the tree is restored
   afterwards.
 - `nub run --filter @gpuixui/tokens test`, `nub run check`, `nub run lint` and
@@ -291,22 +326,30 @@ Executed on 2026-10-21 on `agent/tokens-theme`.
   `## Text selection` to `## Selection of text` left the package suite green at
   **226 files / 7154 tests** while the Limitations link pointed at a heading that
   no longer existed.
-- `docs-links.test.ts` gained `slug`, `headingAnchors`, `anchorTargets`,
-  `missingAnchors` and `guardedDocuments`, plus two cases: every shipped anchor
-  resolves, and a fixture whose heading is renamed is reported as
-  `docs/tokens.md -> docs/tokens.md#text-selection`.
+- `docs-links.test.ts` gained `slug`, `headingAnchors`, `anchorOf`,
+  `missingAnchors` and a module-level `guarded` map, plus three cases: every
+  shipped anchor resolves, a renamed heading is reported on both branches
+  (same-page `#focus` and cross-document `./tokens.md#text-selection`), and the
+  two headings whose slugs differ from their text resolve.
+- The plan's own first cut had the branch inverted — `anchorOf` returned
+  `undefined` when the file half was empty, so all 17 in-page anchors passed
+  vacuously and only the three cross-document ones were checked. §7 mutation 1
+  caught it (the same-page rename stayed green), the helper was corrected and the
+  fixture grew the same-page case.
 - Every §7 mutation was applied alone, the file run and the tree restored: the
-  `Text selection` rename failed with the one entry; `Find highlighting` →
-  `Match highlighting` reported three entries including the cross-document
+  `Text selection` rename failed with
+  `docs/tokens.md -> docs/tokens.md#text-selection`; `Find highlighting` →
+  `Match highlighting` reported three entries including
   `docs/design-system.md -> docs/tokens.md#find-highlighting`; the
   `9. Accessibility` rename reported
-  `docs/tokens.md -> docs/design-system.md#9-accessibility`; and the
-  `0-10-0` respelling failed because the slug strips the dots. The restored tree
-  passes.
+  `docs/tokens.md -> docs/design-system.md#9-accessibility`; and the `0-10-0`
+  respelling reported
+  `docs/tokens.md -> docs/tokens.md#custom-typefaces-are-unavailable-in-0-10-0`.
+  The restored tree passes.
 - No anchor, heading, token value, pair, floor, metric, role or shipped theme
   moved.
-- `nub run --filter @gpuixui/tokens test` → **226 files / 7156 tests** green
-  (226 / 7154 before; two cases added). `nub run check`, `nub run lint` and
+- `nub run --filter @gpuixui/tokens test` → **225 files / 7156 tests** green
+  (225 / 7154 before; three cases added). `nub run check`, `nub run lint` and
   `nub run test` clean.
 - **No native scenario was run**: no runtime code or token value moves, and this
   worktree has no `apps/playground/dist` build (`BLOCKERS.md` B1).

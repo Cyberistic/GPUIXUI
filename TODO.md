@@ -54,7 +54,19 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 377/452
+`[x]` `[████████░░]` 378/453
+
+`[x]` Own the anchors the catalogue and the design system link to — the three
+documents write 21 anchors (19 distinct, in-page and cross-document) and
+`docs-links.test.ts` stripped `#anchor` outright, so renaming `## Text selection`
+left the package green at 226 files / 7154 tests while the Limitations link aimed
+at a heading no longer there. The guard now derives every heading's text slug
+(`## 9. Accessibility` → `#9-accessibility`), resolves each anchor against the
+document it is written in or the guarded sibling it names, and reports an
+orphaned one; the plan's own first cut returned `undefined` for a same-page
+anchor and the mutation caught it, which is why both branches have a fixture.
+No anchor, heading, colour, pair, floor, metric, role or shipped theme moves
+(plan 825)
 
 `[x]` Own the two catalogue sentences that state a figure beside a derived
 claim — `docs.test.ts` derives §Text selection's *set* of affected fills (through
