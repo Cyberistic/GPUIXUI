@@ -475,7 +475,18 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 203/203
+`[~]` `[█████████░]` 203/204
+
+`[~]` **The frame loop and process lifecycle have a page (plan 637)** — the
+      runtime ships `render`/`createRenderer`/`createRoot`/`startFrameLoop`/
+      `resetRender`, the paced 8 ms tick contract and a macOS `THROTTLE` clamp,
+      and no page owned any of it: measured 2026-10-21, `requiresTick`,
+      `resetRender`, `cpu`, `throttle`, `taskpolicy` and
+      `requestAnimationFrame` returned nothing, while `frame loop` and
+      `startFrameLoop` landed on Automation. `/docs/frame-loop` owns the loop,
+      the remount rule (correcting Window's "a second `render()` throws"), the
+      three-call recipe and the clamp, with `src/lib/frame-loop.ts` guarded in
+      both directions against the installed runtime.
 
 `[x]` **Overlay placement has a page (plan 636)** — every floating surface is
       placed by the same five `@gpuix/react/floating` props, and the site
