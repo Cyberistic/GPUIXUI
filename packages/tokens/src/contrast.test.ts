@@ -8,11 +8,19 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  contrastFailures,
   contrastFloors,
   contrastPairs,
   contrastRatio,
   highContrastFloors,
 } from "./contrast.js";
+import { lightColors } from "./color.js";
+import {
+  darkTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
+  lightTheme,
+} from "./theme.js";
 
 describe("contrastRatio", () => {
   it("reports the extremes of the scale", () => {
@@ -73,5 +81,53 @@ describe("contrast floors", () => {
       ({ foreground, background }) => `${foreground}/${background}`,
     );
     expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+describe("contrastFailures", () => {
+  it("passes every shipped theme", () => {
+    expect(contrastFailures(lightTheme)).toEqual([]);
+    expect(contrastFailures(darkTheme)).toEqual([]);
+    expect(
+      contrastFailures(highContrastLightTheme, highContrastFloors),
+    ).toEqual([]);
+    expect(contrastFailures(highContrastDarkTheme, highContrastFloors)).toEqual(
+      [],
+    );
+  });
+
+  it("reports the pair a bad value breaks, with its ratio and floor", () => {
+    const broken = {
+      colors: { ...lightColors, mutedForeground: lightColors.muted },
+    };
+    const failures = contrastFailures(broken);
+    const muted = failures.find(
+      ({ foreground }) => foreground === "mutedForeground",
+    );
+
+    expect(muted?.background).toBe("muted");
+    expect(muted?.floor).toBe(contrastFloors.secondary);
+    expect(muted?.ratio).toBeCloseTo(1, 5);
+  });
+
+  it("reports an unmeasurable pair instead of skipping it", () => {
+    const translucent = {
+      colors: { ...lightColors, mutedForeground: "#191D2580" },
+    };
+    const failures = contrastFailures(translucent);
+
+    expect(
+      failures.some(
+        (failure) =>
+          failure.foreground === "mutedForeground" &&
+          failure.ratio === undefined,
+      ),
+    ).toBe(true);
+  });
+
+  it("holds a high-contrast theme to the raised floors", () => {
+    // The default floors pass this theme; the AAA floors do not, because its
+    // secondary text was designed for the default theme's 4.5:1.
+    expect(contrastFailures(lightTheme, highContrastFloors)).not.toEqual([]);
   });
 });

@@ -16,6 +16,7 @@ import {
   alpha,
   blend,
   colorRoles,
+  contrastFailures,
   contrastFloors,
   contrastPairs,
   contrastRatio,
@@ -452,24 +453,25 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
 value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
-`contrastFloors` and `highContrastFloors` are the floors the shipped themes meet,
-and `contrastPairs` is the role pairs they apply to. A brand theme can run the
-same check the built-in themes pass:
+`contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
+— an empty array means the theme is readable. `contrastFloors` and
+`highContrastFloors` are the floors the shipped themes meet, and `contrastPairs`
+is the role pairs they apply to. A brand theme runs the same check the built-in
+themes pass:
 
 ```ts
-import {
-  contrastFloors,
-  contrastPairs,
-  contrastRatio,
-  type Theme,
-} from "@gpuixui/tokens";
+import { contrastFailures, type Theme } from "@gpuixui/tokens";
 
-export const meetsFloors = (theme: Theme): boolean =>
-  contrastPairs.every(({ foreground, background, floor }) => {
-    const ratio = contrastRatio(theme.colors[foreground], theme.colors[background]);
-    return ratio !== undefined && ratio >= contrastFloors[floor];
-  });
+export const isReadable = (theme: Theme): boolean =>
+  contrastFailures(theme).length === 0;
+
+// A pair failure names both roles, the measured ratio and the floor:
+// { foreground: "mutedForeground", background: "muted", ratio: 1, floor: 4.5 }
 ```
+
+A pair whose values are translucent or not hex is reported with `ratio:
+undefined` rather than skipped, because an unverifiable pair is not a pass. To
+measure one by hand, composite it first and use `contrastRatio`.
 
 ## Fonts
 

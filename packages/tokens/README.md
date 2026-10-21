@@ -213,12 +213,12 @@ translucent colour's ratio depends on what is behind it. `contrastFloors`,
 so a brand can run the same check.
 
 ```ts
-import { contrastFloors, contrastPairs, contrastRatio } from "@gpuixui/tokens";
+import { contrastFailures, createTheme } from "@gpuixui/tokens";
 
-const passes = contrastPairs.every(({ foreground, background, floor }) => {
-  const ratio = contrastRatio(theme.colors[foreground], theme.colors[background]);
-  return ratio !== undefined && ratio >= contrastFloors[floor];
-});
+const brand = createTheme({ mode: "dark", colors: { primary: "#7C5CFF" } });
+const failures = contrastFailures(brand);
+// [] — the theme is readable. Otherwise each entry names both roles, the
+// measured ratio and the floor it missed.
 ```
 
 ## Fonts

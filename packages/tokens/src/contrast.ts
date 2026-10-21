@@ -170,3 +170,49 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "ring", background: "card", floor: "boundary" },
   { foreground: "ring", background: "popover", floor: "boundary" },
 ];
+
+/** One role pair that does not meet its floor. */
+export interface ContrastFailure {
+  /** The role carrying text, an icon or a boundary. */
+  readonly foreground: keyof ThemeColors;
+  /** The role painted behind it. */
+  readonly background: keyof ThemeColors;
+  /**
+   * The measured ratio, or `undefined` when the pair could not be measured
+   * because a value is translucent or not hex. An unmeasurable pair is reported
+   * rather than skipped: a pair nobody can verify is not a pass.
+   */
+  readonly ratio: number | undefined;
+  /** The floor it had to reach. */
+  readonly floor: number;
+}
+
+/**
+ * Every role pair in a theme's colours that misses its floor.
+ *
+ * An empty array means the theme meets the contract. Runs the same pairs the
+ * built-in themes are tested against, so a brand theme is held to the floors
+ * the library publishes rather than to a second set.
+ *
+ * @example
+ * ```ts
+ * import { contrastFailures, type Theme } from "@gpuixui/tokens";
+ *
+ * const failures = contrastFailures(brandTheme);
+ * failures.length === 0; // the theme is readable
+ * ```
+ */
+export function contrastFailures(
+  theme: { readonly colors: ThemeColors },
+  floors: ContrastFloors = contrastFloors,
+): readonly ContrastFailure[] {
+  return contrastPairs.flatMap(({ foreground, background, floor }) => {
+    const ratio = contrastRatio(
+      theme.colors[foreground],
+      theme.colors[background],
+    );
+    return ratio !== undefined && ratio >= floors[floor]
+      ? []
+      : [{ foreground, background, ratio, floor: floors[floor] }];
+  });
+}
