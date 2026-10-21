@@ -91,7 +91,16 @@ state of its own.
 - **Options are data.** No option groups, no rich option content, no compound
   escape hatch in the public API; use `RadioGroup` for rich options.
 - The list's dismissal and positioning are GPUix's; this package cannot change
-  the open animation or the outside-click rules.
+  the open animation or the outside-click rules. **Measured on 0.11.0:** the
+  layer snaps into the window (`fit: "snap"` with an 8px margin), so a trigger at
+  the bottom edge opens a list that sits inside it instead of painting off it.
+- **A list taller than the window does not scroll.** The content sets no
+  maximum height and no overflow, and GPUix's `SelectScrollUpButton`/
+  `SelectScrollDownButton` are empty elements in 0.11.0; the runtime measured a
+  40-option list with its tail outside the window and **no scroller anywhere in
+  its ancestry**, so arrowing to a row past the edge cannot reveal it. Keep a
+  select's list short, or reach for a `Combobox`/`SearchInput` composition for a
+  long one.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
 - No multi-select.
 
@@ -105,7 +114,10 @@ state of its own.
   clicked option in the real renderer; exactly one row paints the mark, and the
   mark moves to the row that becomes selected (negative control measured:
   rendering the label alone fails `expected [] to have a length of 1`). Open
-  state and dismissal are GPUix's.
+  state and dismissal are GPUix's. Two placement cases measure the limits above:
+  a bottom-edge trigger's list is painted inside the window in order, and a
+  40-option list's last row sits past the window edge with no scroll offset in
+  any ancestor.
 
 ```sh
 nub run --filter @gpuixui/primitives test

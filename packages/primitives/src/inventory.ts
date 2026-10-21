@@ -345,6 +345,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "Options are data: no groups, rich options or compound escape hatch",
       "No search or type-ahead and no multi-select",
+      "A list taller than the window does not scroll (measured)",
       "Open animation, positioning and dismissal are the runtime's",
     ],
     source: ["src/components/Select.tsx"],

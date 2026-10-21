@@ -17,6 +17,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { Box } from "../src/components/Box.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { Select } from "../src/components/Select.js";
@@ -25,7 +26,7 @@ import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { a11yNode, type Bounds, type Runtime } from "./harness.js";
-import { SURFACE, Surface, openWindow, testTheme } from "./fixture.js";
+import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
@@ -255,6 +256,107 @@ it("opens a Select's list and paints its options", async () => {
   runtime.clickElement(triggerOf(runtime, "sel"));
   expect(runtime.allText()).toContain("Pear");
   expect(runtime.allText()).toContain("Apple");
+});
+
+/** The row an option label sits in. */
+const optionRowId = (runtime: Runtime, label: string): number =>
+  Option.getOrElse(
+    Option.fromNullishOr(textElement(runtime, label).parentId),
+    () => expect.fail(`the ${label} option has no row`),
+  );
+
+/** The painted box of the row an option label sits in. */
+const optionRow = (runtime: Runtime, label: string): Bounds =>
+  Option.getOrElse(runtime.boundsOfId(optionRowId(runtime, label)), () =>
+    expect.fail(`the ${label} row painted no box`),
+  );
+
+/** Every ancestor of an element, nearest first, bounded so a cycle cannot hang. */
+const ancestorsOf = (
+  runtime: Runtime,
+  id: number,
+  depth = 0,
+): ReadonlyArray<number> => {
+  if (depth > 8) return [];
+  const parent = Option.flatMap(
+    Option.fromNullishOr(runtime.renderer.getElement(id)),
+    (element) => Option.fromNullishOr(element.parentId),
+  );
+  return Option.match(parent, {
+    onNone: (): ReadonlyArray<number> => [],
+    onSome: (parentId) => [
+      parentId,
+      ...ancestorsOf(runtime, parentId, depth + 1),
+    ],
+  });
+};
+
+it("keeps an open list inside the window when its trigger sits at the bottom", async () => {
+  // GPUix's `<anchored>` snaps the layer into the window (`fit: "snap"`,
+  // `snapMargin` 8). The old docs said the list "neither flips off a window
+  // edge nor scrolls"; this measures the first half, so the page teaches the
+  // runtime that is pinned.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box tone="background" style={{ height: 700 }} />
+      <Select
+        testId="sel"
+        label="Fruit"
+        placeholder="Pick one"
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  const apple = optionRow(runtime, "Apple");
+  const pear = optionRow(runtime, "Pear");
+
+  expect(apple.y).toBeGreaterThanOrEqual(0);
+  expect(pear.y + pear.height).toBeLessThanOrEqual(WINDOW.height);
+  // Snapped above the trigger rather than painted off the bottom edge.
+  expect(apple.y).toBeLessThan(pear.y);
+});
+
+it("does not scroll a list taller than the window", async () => {
+  // Measured, not assumed: `SelectScrollUpButton`/`SelectScrollDownButton` are
+  // empty divs in 0.11.0 and the content sets no maxHeight/overflow, so a long
+  // list is snapped but its tail still sits outside the window. The page
+  // records this as a limitation instead of promising a scroll.
+  const runtime = await openWindow();
+  const options = Arr.map(Arr.range(1, 40), (index) => ({
+    value: `option-${index}`,
+    label: `Option ${index}`,
+  }));
+  runtime.render(
+    <Surface>
+      <Box tone="background" style={{ height: 700 }} />
+      <Select
+        testId="sel"
+        label="Long"
+        placeholder="Pick one"
+        options={options}
+      />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  const last = optionRow(runtime, "Option 40");
+  const first = optionRow(runtime, "Option 1");
+
+  expect(first.y).toBeGreaterThanOrEqual(0);
+  expect(last.y + last.height).toBeGreaterThan(WINDOW.height);
+  // And there is no scroller to reach it with: no ancestor of the tail reports
+  // a scroll offset, so arrowing to the last row cannot reveal it either.
+  expect(
+    Arr.getSomes(
+      Arr.map(ancestorsOf(runtime, optionRowId(runtime, "Option 40")), (id) =>
+        Option.fromNullishOr(runtime.renderer.getScrollOffset(id)),
+      ),
+    ),
+  ).toEqual([]);
 });
 
 it("selects a Select option by clicking it", async () => {
