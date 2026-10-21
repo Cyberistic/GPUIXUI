@@ -2,8 +2,9 @@
  * Combobox example: assigning a reviewer and labelling a task.
  *
  * The single picker closes on select and shows one name; the multi picker stays
- * open and reports an ordered array. Both use the same option shape and the same
- * ranking from `combobox/logic.ts`.
+ * open and reports an ordered array; the third picker creates a reviewer from a
+ * query nobody matches. All use the same option shape and ranking from
+ * `combobox/logic.ts`.
  */
 
 import { useState } from "react";
@@ -39,13 +40,20 @@ const Picker = ({
   multiple,
   options,
   onValueChange,
+  onCreate,
 }: {
   readonly label: string;
   readonly multiple?: boolean;
   readonly options: ReadonlyArray<ComboboxOption>;
   readonly onValueChange: (value: ComboboxSelection) => void;
+  readonly onCreate?: (query: string) => void;
 }) => (
-  <Combobox multiple={multiple} options={options} onValueChange={onValueChange}>
+  <Combobox
+    multiple={multiple}
+    options={options}
+    onValueChange={onValueChange}
+    {...(onCreate === undefined ? {} : { onCreate })}
+  >
     <ComboboxTrigger label={label} />
     <ComboboxContent>
       <ComboboxInput label={`Search ${label.toLowerCase()}`} />
@@ -55,11 +63,25 @@ const Picker = ({
   </Combobox>
 );
 
-/** Two comboboxes: one value, then several. */
+/** Two comboboxes: one value, then several, plus a creatable one. */
 export const ComboboxExample = () => {
   const theme = useTheme();
   const [reviewer, setReviewer] = useState<string | null>(null);
   const [chosen, setChosen] = useState<ReadonlyArray<string>>([]);
+  const [people, setPeople] =
+    useState<ReadonlyArray<ComboboxOption>>(reviewers);
+  const [invited, setInvited] = useState("none");
+
+  /** The create contract: add the option, then select it. */
+  const createReviewer = (query: string): void => {
+    setPeople((current) =>
+      current.some((option) => option.value === query)
+        ? current
+        : [...current, { value: query, label: query }],
+    );
+    setReviewer(query);
+    setInvited(query);
+  };
 
   return (
     <Card style={{ maxWidth: 460 }}>
@@ -67,7 +89,8 @@ export const ComboboxExample = () => {
         <CardTitle>Task details</CardTitle>
         <CardDescription>
           Reviewer: {reviewer ?? "none"} · labels:{" "}
-          {chosen.length === 0 ? "none" : chosen.join(", ")}
+          {chosen.length === 0 ? "none" : chosen.join(", ")} · created:{" "}
+          {invited}
         </CardDescription>
       </CardHeader>
       <div
@@ -115,6 +138,30 @@ export const ComboboxExample = () => {
               color: theme.colors.foreground,
             }}
           >
+            Invite a reviewer
+          </text>
+          <Picker
+            label="Invite a reviewer"
+            options={people}
+            onCreate={createReviewer}
+            onValueChange={(value) =>
+              setReviewer(typeof value === "string" ? value : null)
+            }
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.xs,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "label"),
+              color: theme.colors.foreground,
+            }}
+          >
             Labels
           </text>
           <Picker
@@ -132,7 +179,8 @@ export const ComboboxExample = () => {
             color: theme.colors.mutedForeground,
           }}
         >
-          Try “ca”: Calendar, Camera, then Vacation — prefix matches first.
+          Try “ca”: Calendar, Camera, then Vacation — prefix matches first. Type
+          a name nobody matches into “Invite a reviewer” to create it.
         </text>
       </div>
     </Card>

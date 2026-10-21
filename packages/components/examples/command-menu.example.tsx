@@ -1,8 +1,9 @@
 /**
- * Command menu example: a ⌘K-style palette over three groups.
+ * Command menu example: a ⌘K-style palette over three groups, with recents.
  *
  * The palette is controlled; the button below stands in for the application
- * shortcut, which belongs to the app — the component binds no global keys.
+ * shortcut, which belongs to the app — the component binds no global keys. The
+ * app owns the recent ids, because only the app knows what a use is.
  */
 
 import { useState } from "react";
@@ -22,11 +23,17 @@ export const CommandMenuExample = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [ran, setRan] = useState("none");
+  const [recents, setRecents] = useState<ReadonlyArray<string>>([]);
 
+  /** The app records a use; the palette itself keeps no history. */
   const perform =
-    (label: string): (() => void) =>
-    () =>
+    (id: string, label: string): (() => void) =>
+    () => {
       setRan(label);
+      setRecents((current) =>
+        [id, ...current.filter((entry) => entry !== id)].slice(0, 3),
+      );
+    };
 
   const actions: ReadonlyArray<CommandAction> = [
     {
@@ -34,41 +41,41 @@ export const CommandMenuExample = () => {
       label: "Go to Components",
       group: "Navigation",
       shortcut: "⌘1",
-      perform: perform("Go to Components"),
+      perform: perform("go-components", "Go to Components"),
     },
     {
       id: "go-tokens",
       label: "Go to Tokens",
       group: "Navigation",
       shortcut: "⌘2",
-      perform: perform("Go to Tokens"),
+      perform: perform("go-tokens", "Go to Tokens"),
     },
     {
       id: "new-file",
       label: "New file",
       group: "File",
       shortcut: "⌘N",
-      perform: perform("New file"),
+      perform: perform("new-file", "New file"),
     },
     {
       id: "save",
       label: "Save",
       group: "File",
       shortcut: "⌘S",
-      perform: perform("Save"),
+      perform: perform("save", "Save"),
     },
     {
       id: "toggle-sidebar",
       label: "Toggle sidebar",
       group: "View",
-      perform: perform("Toggle sidebar"),
+      perform: perform("toggle-sidebar", "Toggle sidebar"),
     },
     {
       id: "zoom-reset",
       label: "Reset zoom",
       group: "View",
       disabled: true,
-      perform: perform("Reset zoom"),
+      perform: perform("zoom-reset", "Reset zoom"),
     },
   ];
 
@@ -94,10 +101,16 @@ export const CommandMenuExample = () => {
             color: theme.colors.mutedForeground,
           }}
         >
-          Try “op”, then ↑ and Enter.
+          Try “op”, then ↑ and Enter. Reopen it: the last commands you ran are
+          under “Recent”.
         </text>
       </div>
-      <CommandMenu open={open} onOpenChange={setOpen} actions={actions}>
+      <CommandMenu
+        open={open}
+        onOpenChange={setOpen}
+        actions={actions}
+        recents={recents}
+      >
         <CommandMenuInput />
         <CommandMenuList />
         <CommandMenuEmpty />
