@@ -52,7 +52,10 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
 1. **Frontmatter** — `title`, `description`.
 2. **What it is** — including what it is *not*.
 3. **Usage** — a TSX snippet importing from the public package root.
-4. **Variants / sizes / states** — a table from the real unions.
+4. **Variants / sizes / states** — every union the component exposes, read from
+   the real types. Where the variants are props, the API table's `Type` column is
+   that table; where a state needs its own explanation (what `pressed` paints,
+   why a range clamps), a sentence above or below it.
 5. **API** — prop, type, default, consequence.
 6. **Keyboard** — the `core/keyboard.ts` contract, or "not focusable".
 7. **Accessibility** — the role and `aria-*` GPUix 0.10.0 actually supports.

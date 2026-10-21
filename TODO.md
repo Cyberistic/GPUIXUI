@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 29/30
+`[x]` `[██████████]` 30/31
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -301,6 +301,13 @@ violet fill (`#7C5CFF`) with the dark theme's on-colour at 4.24:1: the brand now
 owns its white label (`#6A45F0`), the house platform theme carries a
 mode-appropriate ring, and `theme.test.ts`/`platforms.test.ts` assert both checks.
 Docs in `docs/tokens.md` §Checking your own theme and `docs/design-system.md` §9
+`[x]` Guard the token catalogue against drift — `docs.test.ts` reads
+`docs/tokens.md` (the page that says a token absent from it is not public) and
+fails when a public export has no line in it, a colour role is missing from
+either colour table, a type role has no row, or the documented role/pair counts
+disagree with `colorRoles`/`contrastPairs`. It found six undocument exports —
+`darkColors`, the two high-contrast colour sets, `lightElevation`,
+`darkElevation` and `defaultDensity` — now in the catalogue
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Add `avatarSize` (20/26/32/40) so the Avatar component drops its local
 diameter table; a fixed scale, not a theme group
@@ -669,7 +676,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Adopt the keyboard-only ring and delete the manual focus tracking: `components/src/{inline-edit,time-picker,search-input,tabs,date-picker,field,list,accordion,breadcrumb,tag-input,color-picker,mention-input,hotkey-recorder,collapsible,context-menu}.tsx`, `components/src/internal/button.tsx`, `primitives/src/core/{selection,style}.ts`, `primitives/src/components/internal.ts` | components, primitives | **primitives half shipped; components pending** — `core/focus.ts` (`keyboardRing`) declares the `focusVisible` outline at rest and every primitive uses it: Button, Toggle, Checkbox, Switch, RadioGroup, Input/TextArea (`fieldChrome`), NumberField, OTPField, Slider's track, RangeSlider's thumbs and Rating's stars. No primitive merges a shadow ring on focus any more; `internal.ts`'s `focusRingStyle` is deleted. The components package still paints the shadow while focused. Keep tokens' `focusRing` only for a mouse-opened overlay's programmatic focus (the probe's measured gap) |
 | The `focus-visible` live probe carries its own copy of the outline (`apps/playground/src/live/scenarios.tsx` `focusVisibleRing`) | playground | pending — replace it with `keyboardFocusRing` from `@gpuixui/tokens` so the probe paints the shipped helper, not a local duplicate |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | **resolved for the pages** — every package docs directory is a Fumadocs collection: `/docs/components` (39 pages), `/docs/primitives` (28) and `/docs/icons` (1), all in the sidebar and search; the example registry waits on the playground mounting them |
-| Seven primitives pages carry no `## API` section although the package's own page contract (`packages/primitives/docs/README.md` §Page contract) requires one: `meter.mdx`, `number-field.mdx`, `otp-field.mdx`, `range-slider.mdx`, `rating.mdx`, `slider.mdx`, `toggle.mdx`. Found while mounting the collection; docs-site cannot add the prop tables because the pages are the primitives workstream's source of truth | primitives | open — add the real prop/type/default/consequence table to each; every other primitive page has one |
+| Seven primitives pages carried no `## API` section although the package's own page contract (`packages/primitives/docs/README.md` §Page contract) requires one: `meter.mdx`, `number-field.mdx`, `otp-field.mdx`, `range-slider.mdx`, `rating.mdx`, `slider.mdx`, `toggle.mdx` | primitives | **resolved** — each page's prop table now lives under `## API` (their "Variants, sizes and states" heading was the table under another name), and `packages/primitives/src/docs.test.ts` holds all 28 pages to the contract: required sections in order, the `Prop/Type/Default/Consequence` header, a usage snippet importing the package root, frontmatter, and the index. It failed on exactly those seven pages before the fix |
 | Keep `packages/components/docs/*.mdx` valid as MDX: quoted YAML frontmatter, no raw `<tag>` in prose | components | open — `mention-input.mdx`, `color-picker.mdx` and `tag-input.mdx` were fixed by docs-site to mount the collection; `apps/docs/src/lib/package-docs.test.ts` fails on a regression |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Correct `docs/component-api.md` §2: "`onValueChange` is the only change callback name" is wrong for boolean parts — base-gpui uses `on_checked_change`, so primitives adopts `onCheckedChange` alongside `onValueChange` (plan 040 §2.1) | components | pending |
