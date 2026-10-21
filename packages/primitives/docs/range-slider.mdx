@@ -82,7 +82,7 @@ act on the end the user is holding. The focused thumb paints the ring.
 - The group is `role="group"` with `aria-label`; each thumb is `role="slider"`
   (AccessKit `Slider` and `Group`, verified in the real renderer).
 - Each thumb announces its own value through `aria-valuetext`. There is no
-  `aria-valuenow`/`min`/`max` in GPUix 0.10.0, so the two values reach a screen
+  `aria-valuenow`/`min`/`max` in `@gpuix/native` 0.11.0, so the two values reach a screen
   reader but the range does not.
 - The default names — `"Budget minimum"`, `"Budget maximum"` — are derived from
   `label`, so a group with one name is never two unnamed sliders.

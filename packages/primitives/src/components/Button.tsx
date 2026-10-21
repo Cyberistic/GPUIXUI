@@ -1,10 +1,13 @@
 /**
  * `Button` — the primary action.
  *
- * The published `@gpuix/react` has **no `./button`** (plan 020 §1.5), so the
- * keyboard contract is ours: `core/keyboard.ts` decides, and the decision is
- * wired here exactly the way the platform behaves (Enter on key down, Space on
- * key up, a held key ignored).
+ * The pinned `@gpuix/react` 0.11.0 ships a headless `Button`/`buttonProps`, but
+ * this component keeps its own keyboard contract (`core/keyboard.ts` decides,
+ * and the decision is wired here exactly the way the platform behaves: Enter on
+ * key down, Space on key up, a held key ignored), because the recipe, `loading`,
+ * the `StateStyle<ButtonState>` parts contract and the runtime probes all sit on
+ * this one implementation. Adopting the headless primitive is a tracked decision
+ * in `TODO.md`, not a claim that the runtime lacks one.
  *
  * Focus is a keyboard-only outline: the button declares `keyboardRing`
  * (tokens' `focusVisible`) at rest and the runtime paints it after Tab, never
@@ -19,11 +22,11 @@
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
-import type { EventPayload } from "@gpuix/react";
+import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
-import { decideActivation } from "../core/keyboard.js";
+import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
 import { buttonClass } from "../recipe/index.js";
@@ -95,7 +98,8 @@ export const renderButton = (
   };
   const onKey =
     (phase: "down" | "up") =>
-    (event: EventPayload): void => {
+    (event: KeyEvent): void => {
+      if (swallowKeyDefault(event.key ?? "", phase)) event.preventDefault();
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         activate();
     };

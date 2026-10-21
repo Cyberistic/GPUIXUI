@@ -3,7 +3,7 @@ title: Slider
 description: A value on a track, by click, drag or keyboard.
 ---
 
-`Slider` is one value inside a closed range. GPUix 0.10.0 publishes **no slider
+`Slider` is one value inside a closed range. `@gpuix/native` 0.11.0 publishes **no slider
 host element** (plan 020 §1.5), so the track, the fill and the thumb are this
 package's: a `div` tree, the arithmetic in `core/value.ts` and the paint in
 `core/style.ts`. It is not a disguised `<input type="range">` — there is no such
@@ -102,7 +102,7 @@ slider is a single tab stop, and the focus ring is painted on the thumb.
 ## Accessibility
 
 - Role: `slider` (AccessKit `Slider` — verified in the real renderer).
-- The value is announced through **`aria-valuetext`**; GPUix 0.10.0 has no
+- The value is announced through **`aria-valuetext`**; `@gpuix/native` 0.11.0 has no
   `aria-valuenow`, `aria-valuemin` or `aria-valuemax`, so a screen reader hears
   the value but not the range. Give the slider a `label`, and a `formatValue`
   when the number alone is ambiguous (`"62%"`, `"$40"`).

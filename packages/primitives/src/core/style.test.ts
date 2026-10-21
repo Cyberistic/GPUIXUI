@@ -293,15 +293,16 @@ describe("surfaceStyle", () => {
     ).toBeUndefined();
   });
 
-  it("draws a border only when asked, and never a border style the runtime lacks", () => {
+  it("draws a border only when asked, and never invents a border style", () => {
     const bordered = surfaceStyle({ tone: "card", border: true }, testTheme);
     expect(
       surfaceStyle({ tone: "card" }, testTheme).borderWidth,
     ).toBeUndefined();
     expect(bordered.borderWidth).toBe(testTheme.borderWidth.thin);
     expect(bordered.borderColor).toBe(testTheme.colors.border);
-    // GPUix 0.10.0 `StyleDesc` has no `borderStyle`; setting one would be a
-    // silent no-op.
+    // 0.11.0's `StyleDesc` does accept `borderStyle: "dashed"`, but the surface
+    // resolver chooses no style — a dashed border is the caller's `style` prop,
+    // so a theme change cannot silently dash every card.
     expect(Object.keys(bordered)).not.toContain("borderStyle");
   });
 

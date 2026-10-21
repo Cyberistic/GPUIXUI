@@ -9,7 +9,7 @@
  * like a radio group's item.
  *
  * The value is **one string**, contiguous from the first cell, so a caller never
- * juggles an array. There is no `onPaste` in 0.10.0: a pasted code reaches this
+ * juggles an array. There is no `onPaste` in `@gpuix/native` 0.11.0: a pasted code reaches this
  * component as one multi-character `onChange`, and `applyOtpInput` fills it
  * forward from the cell that received it — a behaviour identical to typing the
  * same characters quickly.

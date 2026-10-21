@@ -72,8 +72,10 @@ elevation from the theme's shadow list, of which GPUix paints the first entry.
 
 - No `role`, `tabIndex` or event props: the public API is a container, not a
   host-element re-export. Compose a host element when you need semantics.
-- No gradient, background image or border-style control: the runtime's
-  `StyleDesc` supports solid roles only.
+- No gradient or border-style prop: `Box` resolves the theme's solid surface
+  roles. GPUix 0.11.0's `StyleDesc` does accept a linear-gradient `background`
+  and `borderStyle: "dashed"`, so this is a gap in `Box`'s API, not a runtime
+  absence — pass them through `style` today.
 - One shadow per element — the runtime paints a single `boxShadow`.
 
 ## Verification

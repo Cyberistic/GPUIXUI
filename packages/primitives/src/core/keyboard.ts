@@ -12,10 +12,10 @@
  * browser button does, and a repeat event never activates.
  *
  * **Limitation:** these decisions are pure, so they cannot swallow the platform
- * default — the component's own `onKeyDown` (which receives `KeyEvent`) calls
- * `preventDefault()`. A Space key down is therefore not swallowed here. It does
- * nothing on our controls, but in a scroll container the runtime may also scroll
- * — recorded in `COMPONENTS.md`.
+ * default on their own — the component's `onKeyDown` receives a `KeyEvent`
+ * (0.11.0) and calls `preventDefault()` on a Space **press**, because the
+ * platform would otherwise scroll or type while activation waits for the
+ * release. `swallowKeyDefault` is that decision.
  */
 
 import * as Arr from "effect/Array";
@@ -29,6 +29,16 @@ export type KeyPhase = "down" | "up";
 
 export const ENTER_KEY = "enter";
 export const SPACE_KEY = "space";
+
+/**
+ * Whether the platform's default action must not run for this key event.
+ *
+ * Only a Space **press**: the control activates on the release, so the press
+ * must not also scroll a container or type into a field. Enter needs no
+ * swallow — its default is the control's activation, which we run ourselves.
+ */
+export const swallowKeyDefault = (key: KeyName, phase: KeyPhase): boolean =>
+  key === SPACE_KEY && phase === "down";
 
 /**
  * Whether a key event activates a button-like control.

@@ -8,9 +8,9 @@ and the examples registry is what `apps/playground` mounts natively.
 Each page follows the same contract: what it is, usage, variants/sizes/states,
 API, keyboard, accessibility, theming, limitations, verification, related. Every
 claim is traceable to the source, `COMPONENTS.md`'s `Runtime (041)` notes or
-`.agents/slop/plans/041-tier1-runtime-verification.md` §9. A capability GPUix
-0.10.0 does not have is written as a limitation with the alternative in use —
-never as a promise.
+`.agents/slop/plans/041-tier1-runtime-verification.md` §9. A capability the
+pinned runtime does not have is written as a limitation with the alternative in
+use — never as a promise.
 
 ## Pages
 
@@ -59,7 +59,7 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
    why a range clamps), a sentence above or below it.
 5. **API** — prop, type, default, consequence.
 6. **Keyboard** — the `core/keyboard.ts` contract, or "not focusable".
-7. **Accessibility** — the role and `aria-*` GPUix 0.10.0 actually supports.
+7. **Accessibility** — the role and `aria-*` the pinned runtime actually supports.
 8. **Theming** — the semantic roles the resolver reads.
 9. **Limitations** — measured gaps and the honest alternative.
 10. **Verification** — the suites and the command that ran them.

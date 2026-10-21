@@ -6,6 +6,7 @@ import {
   decideMove,
   decidePage,
   decideToggle,
+  swallowKeyDefault,
 } from "./keyboard.js";
 
 /**
@@ -16,10 +17,10 @@ import {
  * on the way down so the control fires before the user has committed, a radio
  * group that walks off its own end.
  *
- * `@gpuix/native` 0.10.0's `EventPayload` carries no `defaultPrevented` and no
- * way to swallow the platform default, so the contract is a plain boolean:
- * "should this event activate?". That limitation is why there is no
- * `preventDefault` field to assert on.
+ * The decisions stay pure booleans — "should this event activate?" — so a
+ * component can use them from any handler. Swallowing the platform default is a
+ * separate decision (`swallowKeyDefault`) because it needs the event itself;
+ * `@gpuix/native` 0.11.0's `KeyEvent` carries `preventDefault`.
  */
 
 describe("decideActivation", () => {
@@ -44,6 +45,21 @@ describe("decideActivation", () => {
   it("ignores unrelated keys", () => {
     expect(decideActivation("a", "down", false)).toBe(false);
     expect(decideActivation("escape", "down", false)).toBe(false);
+  });
+});
+
+describe("swallowKeyDefault", () => {
+  it("swallows a Space press, whose default would scroll or type", () => {
+    expect(swallowKeyDefault("space", "down")).toBe(true);
+  });
+
+  it("leaves the Space release alone: it is the activation", () => {
+    expect(swallowKeyDefault("space", "up")).toBe(false);
+  });
+
+  it("leaves Enter and unrelated keys alone", () => {
+    expect(swallowKeyDefault("enter", "down")).toBe(false);
+    expect(swallowKeyDefault("tab", "down")).toBe(false);
   });
 });
 

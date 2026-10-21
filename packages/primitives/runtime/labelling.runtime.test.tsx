@@ -52,9 +52,7 @@ it("does not name a checkbox, switch or input from a Label beside it", async () 
   );
 
   // The label paints its text; no control borrowed it as a name.
-  expect(Option.isSome(a11yNode(runtime.a11y(), { role: "Label" }))).toBe(
-    true,
-  );
+  expect(Option.isSome(a11yNode(runtime.a11y(), { role: "Label" }))).toBe(true);
   expect(runtime.allText()).toContain("Notifications");
   // None of the controls borrowed it: each is present and unnamed.
   expect(named(runtime, "CheckBox", "Notifications")).toBe(false);

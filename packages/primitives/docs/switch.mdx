@@ -74,11 +74,14 @@ The knob. `Switch` renders it; a caller's `children` are its content.
 | held key | repeat events do nothing |
 | Tab | reaches the switch when it is not disabled |
 
+A Space **press** calls `preventDefault()`, so a scroll container does not
+also scroll while the control waits for the release.
+
 ## Accessibility
 
 - Role: `Switch`.
 - State is announced through **`aria-valuetext`** (`checked` / `unchecked`);
-  there is no `aria-checked` in 0.10.0.
+  there is no `aria-checked` in `@gpuix/native` 0.11.0.
 - `disabled` removes the tab stop; no `aria-disabled`.
 - The name comes from `label`; there is no `aria-labelledby`.
 

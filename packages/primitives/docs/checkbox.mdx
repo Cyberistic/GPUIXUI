@@ -105,11 +105,14 @@ clearing.
 | held key | repeat events do nothing |
 | Tab | reaches the box when it is not disabled |
 
+A Space **press** calls `preventDefault()`, so a scroll container does not
+also scroll while the control waits for the release.
+
 ## Accessibility
 
 - Role: `CheckBox` in the runtime's accessibility tree.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
-  `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
+  `mixed`), because `@gpuix/native` 0.11.0 has no `aria-checked` (plan 020 §1.4).
 - `disabled` removes the tab stop; there is no `aria-disabled`.
 - The visible name is a separate `Label`, but it does not name the box: there is
   no `aria-labelledby`, so the box's own `label` prop is its accessible name —

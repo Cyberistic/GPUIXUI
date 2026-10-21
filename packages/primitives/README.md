@@ -75,16 +75,17 @@ none paints a literal and none scripts hover or press
 
 ### What GPUix does not provide, and what this package does instead
 
-| Capability | GPUix 0.10.0 | Here |
+| Capability | GPUix 0.11.0 | Here |
 | ---------- | ------------ | ---- |
 | `focusVisible` / `outline*` | **present** | every control declares the keyboard outline at rest (`keyboardRing` → `focusVisible`); the runtime paints it after Tab and never after a mouse press |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | absent | a slider drag only tracks while the pointer is over the track; click-to-position and the keyboard are the precise paths |
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once |
-| scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed |
+| scrollbar tint | present | `ScrollArea` tints the platform thumb through `scrollbarColor`/`scrollbarWidth` (measured in `runtime/layout.runtime.test.tsx`) and sets the overflow axes |
+| fade mask | absent | no edge fade: the scroller paints a hard edge |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
-| `./button` | not published | `Button` implements the keyboard contract itself (`core/keyboard.ts`) |
+| `./button` | published (headless) | `Button` keeps this package's contract — the recipe, `loading`, `StateStyle<ButtonState>` — and does not wrap the headless one yet (tracked in `TODO.md`) |
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
@@ -122,12 +123,12 @@ function (`renderButton`, `renderCheckbox`, …) instead. The glue in between
 type checker and by the native runtime, not by these suites.
 
 **Verified in the real runtime** (`nub run --filter @gpuixui/primitives test:runtime`):
-the suites in `runtime/` mount the components in the GPUix 0.10.0
+the suites in `runtime/` mount the components in the GPUix 0.11.0
 `TestRenderer` and assert only on what the frame produced — painted text,
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **13 files, 119 tests, all passing** —
+runtime-proven too. Measured 2026-10-21: **15 files, 146 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -148,7 +149,7 @@ the two-direction proof are in
   published binary — no `darwin-x64` release exists;
 - the ring's **paint** is the playground's `focus-visible` probe (plan 053): the
   test renderer reports the declared `focusVisible` style, not pixels;
-- scrollbar tint, rotation and colour interpolation are absent from 0.10.0, so
+- rotation and colour interpolation are absent from 0.11.0, so
   the alternatives listed above are the honest ones, not a placeholder.
 
 **What the element-tree suites cannot reach and the runtime now covers:** the

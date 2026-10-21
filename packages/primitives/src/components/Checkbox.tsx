@@ -18,11 +18,11 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import type { KeyEvent, StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { accessibleName } from "../core/a11y.js";
-import { decideActivation } from "../core/keyboard.js";
+import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import {
   selectionMarkColor,
   type SelectionAccent,
@@ -181,7 +181,8 @@ export const renderCheckbox = (
   };
   const onKey =
     (phase: "down" | "up") =>
-    (event: EventPayload): void => {
+    (event: KeyEvent): void => {
+      if (swallowKeyDefault(event.key ?? "", phase)) event.preventDefault();
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
     };

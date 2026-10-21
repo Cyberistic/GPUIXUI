@@ -3,7 +3,7 @@
  *
  * The bug this suite guards is the one an element-tree test can see: a value
  * control must announce its value through `aria-valuetext` (there is no
- * `aria-valuenow` in GPUix 0.10.0), must not invent the attributes the runtime
+ * `aria-valuenow` in `@gpuix/native` 0.11.0), must not invent the attributes the runtime
  * ignores, must keep its keyboard contract even while painting a ring, and must
  * drop both its tab stop and its key handling when disabled. The pointer
  * geometry and the native focus movement are the runtime suite's job

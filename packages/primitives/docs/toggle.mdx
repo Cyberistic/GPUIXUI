@@ -53,12 +53,13 @@ different states.
 | a held key | ignored, so it does not repeat |
 
 A click activates as well. The toggle is one tab stop and paints the focus ring
-while it holds focus.
+while it holds focus. A Space **press** calls `preventDefault()`, so a scroll
+container does not also scroll while the toggle waits for the release.
 
 ## Accessibility
 
 - Role: `button` (AccessKit `Button`).
-- **GPUix 0.10.0 has no `aria-pressed`**, so the state is announced through
+- **`@gpuix/native` 0.11.0 has no `aria-pressed`**, so the state is announced through
   `aria-valuetext` — `"pressed"` or `"not pressed"` — exactly like `Checkbox`
   uses that channel for its state. A screen reader therefore hears a button with
   a value, not a pressed button. That is the limitation of the runtime, and the

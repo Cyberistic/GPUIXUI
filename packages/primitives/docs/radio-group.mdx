@@ -89,7 +89,9 @@ and renders the row, which is why the two paths cannot diverge.
 
 Arrows and Home/End **select as they move** and take focus with them, matching
 the platform radio contract. The tab stop is the selection: a controlled
-`value` change from the parent moves the tab stop with it.
+`value` change from the parent moves the tab stop with it. Space selects on the
+**release** (the press is swallowed, so a scroll container does not also scroll);
+Enter selects on the press.
 
 ## Accessibility
 

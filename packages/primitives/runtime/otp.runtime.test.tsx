@@ -6,7 +6,7 @@
  * contiguous string, focus follows the character into the next cell, arrows and
  * Backspace move it, and every cell is a named text input inside a named group.
  *
- * **Not proven here:** a real clipboard paste. `@gpuix/native` 0.10.0 exposes no
+ * **Not proven here:** a real clipboard paste. `@gpuix/native` 0.11.0 exposes no
  * `onPaste` and the `TestRenderer` has no clipboard simulation, so the paste
  * branch is proven only as a pure rule (`core/otp.test.ts`: a multi-character
  * edit fills forward) and is documented as unverified in the docs page. It is

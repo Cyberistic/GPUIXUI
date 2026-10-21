@@ -242,7 +242,7 @@ compiled `StyleDesc` is byte-for-byte the pre-migration output.
 
 What the numeric runtime cannot express, and therefore stays out:
 
-- **`col-span-*` / `row-span-*`** — `@gpuix/native@0.10.0`'s `StyleDesc` has no
+- **`col-span-*` / `row-span-*`** — `@gpuix/native@0.11.0`'s `StyleDesc` has no
   `gridColumn` / `gridRow` key (only `gridColumnMin` / `gridRowMin`, the
   min-content track sizing), so there is no place for a span. Layouts that need
   ragged placement belong in a wrapping `Stack`.

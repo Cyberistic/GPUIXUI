@@ -28,12 +28,13 @@ import {
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { KeyEvent, PublicInstance, StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import {
   decideAbsolute,
   decideActivation,
   decideMove,
+  swallowKeyDefault,
 } from "../core/keyboard.js";
 import type {
   SelectionAccent,
@@ -222,11 +223,17 @@ export const renderRadioGroup = (
       onNone: () => false,
       onSome: navigate,
     });
-  const onKeyDown = (event: EventPayload): void => {
+  const onKeyDown = (event: KeyEvent): void => {
     const key = event.key ?? "";
+    if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
     if (decideActivation(key, "down", event.isHeld === true))
       select(activeIndex);
+  };
+  // Space selects on the release, the way a platform radio does; Enter has
+  // already selected on the press, and this handler ignores it.
+  const onKeyUp = (event: KeyEvent): void => {
+    if (decideActivation(event.key ?? "", "up", false)) select(activeIndex);
   };
   const group = mergeStyle(
     recipeTw.classesToStyle(
@@ -247,6 +254,7 @@ export const renderRadioGroup = (
       aria-label={accessibleName(props.label)}
       testId={props.testId}
       onKeyDown={onKeyDown}
+      onKeyUp={onKeyUp}
       style={group}
     >
       {Arr.map(options, (option, index) => {

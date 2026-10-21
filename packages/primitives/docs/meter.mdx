@@ -87,8 +87,8 @@ behaviour and no tab stop.
 ## Accessibility
 
 - Role: `meter` (AccessKit `Meter` — verified in the real renderer).
-- The measurement is announced through **`aria-valuetext`**, because GPUix
-  0.10.0 has no `aria-valuenow`/`min`/`max`.
+- The measurement is announced through **`aria-valuetext`**, because `@gpuix/native`
+  0.11.0 has no `aria-valuenow`/`min`/`max`.
 - The name comes from `label`. Without one the meter is unnamed; give it the
   measurement's subject ("Disk usage").
 - `MeterLabel` is visible text, not a second name.

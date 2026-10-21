@@ -8,7 +8,7 @@
  * The runtime's `<input>` reports the **accumulated** text after an edit, so a
  * paste arrives as one multi-character change while ordinary typing arrives one
  * character at a time. `applyOtpInput` handles both from the cell that was
- * edited. There is no `onPaste` and no caret API in 0.10.0, so the field cannot
+ * edited. There is no `onPaste` and no caret API in `@gpuix/native` 0.11.0, so the field cannot
  * tell a paste from several fast keystrokes — it does not need to, because the
  * distribution is the same.
  *

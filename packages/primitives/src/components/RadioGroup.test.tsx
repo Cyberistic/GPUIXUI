@@ -5,7 +5,7 @@
  * selection but native focus stayed on the old radio, so the platform's
  * "selection follows focus" contract was broken and a ring would have sat on
  * the wrong item. It also holds the group to the supported accessibility
- * subset: GPUix 0.10.0 has no `aria-checked`, so state is announced through
+ * subset: `@gpuix/native` 0.11.0 has no `aria-checked`, so state is announced through
  * `aria-valuetext`.
  */
 
@@ -68,6 +68,26 @@ describe("RadioGroup", () => {
     );
     expect(expectSome(hostProp(element, "role"))).toBe("radiogroup");
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
+    expect(onSelect).toHaveBeenCalledWith("beta");
+  });
+
+  it("selects on the Space release, not on the press before it", () => {
+    // The bug guarded: the group handled only the press, where Space is not an
+    // activation, so Space did nothing although the docs promise it selects.
+    const onSelect = vi.fn();
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("beta"),
+      1,
+      unfocused,
+      radioHandlers(onSelect),
+    );
+    const press = keyEvent("space");
+    expectSome(hostHandler(element, "onKeyDown"))(press);
+    expect(onSelect).toHaveBeenCalledTimes(0);
+    expect(press.prevented).toBe(true);
+    expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
     expect(onSelect).toHaveBeenCalledWith("beta");
   });
 

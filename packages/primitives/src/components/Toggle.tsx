@@ -5,7 +5,7 @@
  * mode"), a toggle sets a *mode* for the next action ("bold", "grid view",
  * "snap"), and it lives in a toolbar beside other actions.
  *
- * **The accessibility limitation:** GPUix 0.10.0 has no `aria-pressed`, so the
+ * **The accessibility limitation:** `@gpuix/native` 0.11.0 has no `aria-pressed`, so the
  * state reaches assistive technology through `aria-valuetext` (`"pressed"` /
  * `"not pressed"`), the same channel Checkbox and Switch use. A screen reader
  * hears a button with a value, not a pressed button; the docs page says so.
@@ -20,12 +20,12 @@
  */
 
 import type { ReactElement, ReactNode } from "react";
-import type { EventPayload } from "@gpuix/react";
+import type { KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { keyboardRing } from "../core/focus.js";
-import { decideActivation } from "../core/keyboard.js";
+import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
@@ -91,7 +91,8 @@ export const renderToggle = (
   };
   const onKey =
     (phase: "down" | "up") =>
-    (event: EventPayload): void => {
+    (event: KeyEvent): void => {
+      if (swallowKeyDefault(event.key ?? "", phase)) event.preventDefault();
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
     };

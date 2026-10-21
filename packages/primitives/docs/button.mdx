@@ -3,9 +3,12 @@ title: Button
 description: The primary action — clickable and keyboard-activatable, with busy and disabled states.
 ---
 
-`Button` is the action primitive. `@gpuix/react` 0.10.0 publishes **no**
-`./button` subpath, so this component owns the keyboard contract itself
-(`core/keyboard.ts`) instead of wrapping a headless one.
+`Button` is the action primitive. `@gpuix/react` 0.11.0 publishes a headless
+`Button`/`buttonProps`; this component keeps its own activation contract
+(`core/keyboard.ts`: Enter on key down, Space on key up, a held key ignored) and
+adds the recipe, `loading`, and the parts contract on top, so the keyboard rules
+it ships are the ones its tests and runtime probes measure. Adopting the
+headless primitive is tracked in `TODO.md` rather than assumed.
 
 ## Usage
 
@@ -73,6 +76,8 @@ import { Button, Stack } from "@gpuixui/primitives";
 
 `disabled` and `loading` refuse both. A `disabled` button is not tabbable; a
 `loading` one is, so a keyboard user is not dropped from the page mid-action.
+A Space **press** calls `preventDefault()`, so the platform default (scrolling a
+container) does not run while activation waits for the release.
 
 ## Accessibility
 
@@ -110,8 +115,12 @@ refuses activation.
   declaration, and the playground's `focus-visible` probe holds the paint
   (plan 053).
 - No `aria-disabled` and no `aria-pressed`/toggle-button state.
-- An icon-only button must pass `label`; the component cannot infer one.
+- An icon-only button must pass `label`; use `IconButton`, whose required prop is
+  the name.
 - No native button element: the runtime exposes a `div` with role and handlers.
+- Duplicates the runtime's headless `Button`: `@gpuix/react` 0.11.0 ships
+  `Button`/`buttonProps`, and this component predates it. Adoption is a tracked
+  decision (`TODO.md`), not an assumption that the runtime has no button.
 
 ## Verification
 

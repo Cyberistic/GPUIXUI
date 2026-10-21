@@ -122,7 +122,7 @@ and does not delete a second character.
 - The field is a named `Group` and each cell is a named `TextInput`
   ("Verification code digit 1" …). A screen reader can read every cell and the
   group's name.
-- There is no `aria-labelledby` in 0.10.0, so each cell carries its own
+- There is no `aria-labelledby` in `@gpuix/native` 0.11.0, so each cell carries its own
   `aria-label` written from the group's `label`; a `Label` beside the field is
   the visible name.
 - The group is one tab stop, on the cell the code has reached (or the cell that
@@ -141,7 +141,7 @@ No literal colour, size or radius is named.
 
 ## Limitations
 
-- **Paste is unverified.** `@gpuix/native` 0.10.0 has no `onPaste` and the
+- **Paste is unverified.** `@gpuix/native` 0.11.0 has no `onPaste` and the
   `TestRenderer` has no clipboard simulation. A multi-character `onChange`
   fills forward from the receiving cell — proven as a pure rule — but the real
   clipboard path has not been observed; it is documented as unverified rather

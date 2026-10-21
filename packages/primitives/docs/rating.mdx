@@ -66,7 +66,7 @@ the ring is always on the star the value came from.
 - Roles: `radiogroup` with the group's `label`, and one `radio` per star
   (AccessKit `RadioGroup` / `RadioButton`).
 - Each star's name is `"N of max"` and its state is announced through
-  **`aria-valuetext`** (`"checked"` / `"unchecked"`), because GPUix 0.10.0 has no
+  **`aria-valuetext`** (`"checked"` / `"unchecked"`), because `@gpuix/native` 0.11.0 has no
   `aria-checked`.
 - `readOnly` keeps the group visible to assistive technology but removes it from
   the tab order; `disabled` also paints it muted.
@@ -83,7 +83,7 @@ retints — so a theme change repaints both states. The star size is
 ## Limitations
 
 - **Whole stars only.** Half stars would need clipping or a transform, neither of
-  which exists in GPUix 0.10.0; a caller that needs a finer score can keep it in
+  which exists in `@gpuix/native` 0.11.0; a caller that needs a finer score can keep it in
   state and paint the label beside the stars.
 - **No hover preview.** A hover-filled preview needs per-star hover state and a
   re-render per movement; the runtime gives hover styles but not a cheap
