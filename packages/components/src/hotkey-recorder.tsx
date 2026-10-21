@@ -37,7 +37,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
   currentPlatform,
-  focusRing,
+  keyboardRing,
   useTheme,
 } from "./internal/theme.js";
 
@@ -84,7 +84,6 @@ export const HotkeyRecorder = ({
 }: HotkeyRecorderProps) => {
   const theme = useTheme();
   const [recording, setRecording] = useState(false);
-  const [focused, setFocused] = useState(false);
   // A press on the clear control must not also start recording on the root.
   const skipStart = useRef(false);
 
@@ -132,12 +131,8 @@ export const HotkeyRecorder = ({
         }
         if (isActivation(event)) start();
       }}
-      onFocus={(event) => {
-        setFocused(true);
-        rest.onFocus?.(event);
-      }}
+      onFocus={(event) => rest.onFocus?.(event)}
       onBlur={(event) => {
-        setFocused(false);
         setRecording(false);
         onBlur?.(event);
       }}
@@ -145,7 +140,7 @@ export const HotkeyRecorder = ({
         mergeStyles(recipeStyle(cn(HOTKEY_RECORDER, className), theme), {
           minHeight: controlHeight(theme, "md"),
           opacity: disabled ? 0.5 : 1,
-          ...(focused ? focusRing(theme) : {}),
+          ...keyboardRing(theme),
         }),
         resolveStyle(style, { recording, disabled }),
       )}

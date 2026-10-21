@@ -40,7 +40,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
-import { focusRing, useTheme } from "./internal/theme.js";
+import { keyboardRing, useTheme } from "./internal/theme.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
@@ -203,7 +203,6 @@ export const ContextMenuTrigger = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const { openAt, openFromKeyboard, setTrigger } = useContextMenuContext();
-  const [focused, setFocused] = useState(false);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -247,14 +246,8 @@ export const ContextMenuTrigger = ({
         if (isMenuKey(event)) openFromKey();
         onKeyDown?.(event);
       }}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
+      onFocus={(event) => onFocus?.(event)}
+      onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(
         {
           display: "flex",
@@ -267,7 +260,7 @@ export const ContextMenuTrigger = ({
           color: theme.colors.cardForeground,
           cursor: disabled ? "not-allowed" : "default",
           opacity: disabled ? 0.5 : 1,
-          ...(focused && !disabled ? focusRing(theme) : {}),
+          ...(disabled ? {} : keyboardRing(theme)),
         },
         style,
       )}

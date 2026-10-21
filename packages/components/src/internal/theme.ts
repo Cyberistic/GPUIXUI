@@ -21,6 +21,7 @@ import {
   darkTheme,
   elevationShadow,
   focusRing,
+  keyboardFocusRing,
   lightTheme,
   statusTone,
   textStyle,
@@ -37,12 +38,35 @@ export {
   darkTheme,
   elevationShadow,
   focusRing,
+  keyboardFocusRing,
   lightTheme,
   statusTone,
   textStyle,
 };
 export type { PlatformName, StatusTone, Theme };
 export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
+
+/**
+ * The focus ring every interactive part declares **at rest**.
+ *
+ * `@gpuix/native@0.11.0` paints a `focusVisible` outline only for keyboard
+ * focus, so a part no longer tracks focus to draw a ring: it states the ring as
+ * a resting style and the runtime decides whether a press or a Tab shows it. The
+ * outline takes no layout space, so measured geometry does not change while a
+ * control holds focus. `invalid` swaps the line to `destructive`, matching the
+ * primitive package's `keyboardRing` policy.
+ */
+export const keyboardRing = (theme: Theme, invalid = false): StyleDesc => {
+  const { focusVisible } = keyboardFocusRing(theme);
+  return invalid
+    ? {
+        focusVisible: {
+          ...focusVisible,
+          outlineColor: theme.colors.destructive,
+        },
+      }
+    : { focusVisible };
+};
 
 /** The four status tones Alert, Badge and Toast expose. */
 export type Tone = "info" | "success" | "warning" | "danger";

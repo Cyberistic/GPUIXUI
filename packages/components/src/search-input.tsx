@@ -28,7 +28,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
+import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
 
 /** {@link SearchInput} props. */
 export interface SearchInputProps extends Omit<
@@ -104,7 +104,6 @@ export const SearchInput = ({
         mergeStyles(recipeStyle(cn(SEARCH_INPUT, className), theme), {
           height: controlHeight(theme, "md"),
           opacity: disabled ? 0.5 : 1,
-          ...(focused ? focusRing(theme) : {}),
         }),
         resolveStyle(style, state),
       )}
@@ -134,7 +133,9 @@ export const SearchInput = ({
           setFocused(false);
           rest.onBlur?.(event);
         }}
-        style={recipeStyle(SEARCH_INPUT_CONTROL, theme)}
+        style={mergeStyles(recipeStyle(SEARCH_INPUT_CONTROL, theme), {
+          ...(disabled ? {} : keyboardRing(theme)),
+        })}
       />
       {value === "" ? null : (
         <div
@@ -147,6 +148,7 @@ export const SearchInput = ({
             if (event.key === "enter" || event.key === "space") clear();
           }}
           style={mergeStyles(recipeStyle(SEARCH_INPUT_CLEAR, theme), {
+            ...(disabled ? {} : keyboardRing(theme)),
             hover: {
               backgroundColor: theme.colors.accent,
               color: theme.colors.accentForeground,

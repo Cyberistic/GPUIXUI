@@ -121,9 +121,10 @@ owns that state and decides what "not set" means.
 The field paints `colors.input` with `colors.inputForeground` text, a
 `borderWidth.thin` border in `colors.border` and `radius.md`; the separator and
 clear glyph use `colors.mutedForeground`; hover on the clear control uses
-`colors.accent` / `colors.accentForeground`; the focus ring is the zero-blur
-`colors.ring`, because 0.10.0 has no `outline`. Both themes are asserted in the
-theme matrix.
+`colors.accent` / `colors.accentForeground`. Focus is the runtime's
+`focusVisible` outline in `colors.ring`, declared at rest by each segment input
+and by the clear control — the group never takes focus, so it paints no ring.
+Both themes are asserted in the theme matrix.
 
 ## Style by state
 

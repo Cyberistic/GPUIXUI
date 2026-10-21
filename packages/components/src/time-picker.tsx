@@ -63,7 +63,7 @@ import {
   parseIsoTime,
   type TimeOfDay,
 } from "./time-picker/time.js";
-import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
+import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
 
 /** The two segments a time is entered in. */
 export type TimeSegment = "hours" | "minutes";
@@ -80,7 +80,6 @@ interface TimePickerContextValue {
   readonly edit: (segment: TimeSegment, raw: string) => void;
   readonly handleKeyDown: (segment: TimeSegment, event: EventPayload) => void;
   readonly normalize: () => void;
-  readonly setFocused: (focused: boolean) => void;
   readonly clear: () => void;
   readonly registerHours: (instance: PublicInstance | null) => void;
 }
@@ -155,7 +154,6 @@ export const TimePicker = ({
       onSome: (time) => padSegment(time.minutes),
     }),
   );
-  const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useControllableState<string | null>({
     value,
     defaultValue: defaultValue ?? null,
@@ -256,7 +254,6 @@ export const TimePicker = ({
         edit,
         handleKeyDown,
         normalize,
-        setFocused,
         clear,
         registerHours: (instance) => {
           hoursInput.current = instance;
@@ -272,7 +269,6 @@ export const TimePicker = ({
           {
             height: controlHeight(theme, "md"),
             opacity: disabled ? 0.5 : 1,
-            ...(focused && !disabled ? focusRing(theme) : {}),
           },
         )}
       >
@@ -312,7 +308,6 @@ export const TimePickerSegment = ({
     edit,
     handleKeyDown,
     normalize,
-    setFocused,
     registerHours,
   } = useTimePicker();
   const text = segment === "hours" ? hoursText : minutesText;
@@ -327,20 +322,19 @@ export const TimePickerSegment = ({
     tabIndex: disabled ? -1 : 0,
     onChange: (event) => edit(segment, event.value ?? ""),
     onKeyDown: (event) => handleKeyDown(segment, event),
-    onFocus: () => {
-      setFocusedSegment(true);
-      setFocused(true);
-    },
+    onFocus: () => setFocusedSegment(true),
     onBlur: () => {
       normalize();
       setFocusedSegment(false);
-      setFocused(false);
     },
-    style: mergeStyles(recipeStyle(TIME_PICKER_SEGMENT, theme), {
-      width: SEGMENT_WIDTH,
-      backgroundColor: undefined,
-      ...resolveStyle(style, state),
-    }),
+    style: mergeStyles(
+      mergeStyles(recipeStyle(TIME_PICKER_SEGMENT, theme), {
+        width: SEGMENT_WIDTH,
+        backgroundColor: undefined,
+        ...(disabled ? {} : keyboardRing(theme)),
+      }),
+      resolveStyle(style, state),
+    ),
   };
 
   return (
@@ -394,6 +388,7 @@ export const TimePickerClear = ({
         if (event.key === "enter" || event.key === "space") clear();
       }}
       style={mergeStyles(recipeStyle(TIME_PICKER_CLEAR, theme), {
+        ...keyboardRing(theme),
         hover: {
           backgroundColor: theme.colors.accent,
           color: theme.colors.accentForeground,

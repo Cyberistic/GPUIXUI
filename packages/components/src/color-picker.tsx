@@ -31,7 +31,7 @@ import { isActivation } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
-  focusRing,
+  keyboardRing,
   useTheme,
   type Theme,
 } from "./internal/theme.js";
@@ -93,7 +93,6 @@ export const ColorPicker = ({
     onChange: onValueChange,
   });
   const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useState(false);
   const swatches = swatchesProp ?? defaultSwatches(theme);
   const valid = Option.isSome(normalizeHex(draft));
 
@@ -185,15 +184,11 @@ export const ColorPicker = ({
           readOnly={disabled}
           onSubmit={() => commit()}
           onChange={(event) => setDraft(event.value ?? "")}
-          onFocus={() => setFocused(true)}
-          onBlur={() => {
-            setFocused(false);
-            commit();
-          }}
+          onBlur={() => commit()}
           style={mergeStyles(recipeStyle(COLOR_PICKER_INPUT, theme), {
             height: controlHeight(theme, "md"),
             borderColor: valid ? theme.colors.border : theme.colors.destructive,
-            ...(focused ? focusRing(theme) : {}),
+            ...keyboardRing(theme, !valid),
           })}
         />
       </div>

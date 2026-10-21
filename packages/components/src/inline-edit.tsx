@@ -28,7 +28,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { isActivation, isDismiss, isEnter } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
+import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
 
 /** {@link InlineEdit} props. */
 export interface InlineEditProps extends Omit<InputProps, "value" | "style"> {
@@ -83,7 +83,6 @@ export const InlineEdit = ({
     onChange: onEditingChange,
   });
   const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useState(false);
   const [input, setInput] = useState<PublicInstance | undefined>(undefined);
   const display = useRef<PublicInstance | null>(null);
   // Enter can arrive twice (keyDown and submit); one finish per edit.
@@ -156,19 +155,13 @@ export const InlineEdit = ({
         onKeyDown={(event: KeyEvent) => {
           if (isActivation(event)) start();
         }}
-        onFocus={(event) => {
-          setFocused(true);
-          onFocus?.(event);
-        }}
-        onBlur={(event) => {
-          setFocused(false);
-          onBlur?.(event);
-        }}
+        onFocus={(event) => onFocus?.(event)}
+        onBlur={(event) => onBlur?.(event)}
         style={mergeStyles(
           mergeStyles(recipeStyle(cn(INLINE_EDIT_DISPLAY, className), theme), {
             minHeight: controlHeight(theme, "sm"),
             opacity: disabled ? 0.5 : 1,
-            ...(focused ? focusRing(theme) : {}),
+            ...keyboardRing(theme),
             hover: { backgroundColor: theme.colors.accent },
           }),
           resolveStyle(style, state),
@@ -202,7 +195,7 @@ export const InlineEdit = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(INLINE_EDIT_INPUT, className), theme), {
           height: controlHeight(theme, "md"),
-          ...focusRing(theme),
+          ...keyboardRing(theme),
         }),
         resolveStyle(style, state),
       )}

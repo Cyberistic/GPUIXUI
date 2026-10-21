@@ -60,8 +60,9 @@ Clicking the clear control (or pressing Escape) empties the field, calls
 The container paints `colors.background`, a `borderWidth.thin` border in
 `colors.border`, `radius.md`, `spacing.md` horizontal padding and
 `controlHeight(theme, "md")`. The clear control is 18×18 with `radius.sm` and a
-`colors.accent` hover. Focus draws the zero-blur `colors.ring` ring, because
-0.10.0 has no `outline`.
+`colors.accent` hover; the clear control declares the same keyboard outline the
+input does. Focus is the runtime's `focusVisible` outline in `colors.ring`,
+declared at rest, so a Tab paints it and a mouse press does not.
 
 ## Style by state
 

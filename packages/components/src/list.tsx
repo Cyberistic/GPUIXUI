@@ -65,7 +65,7 @@ import {
   typedChar,
 } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { focusRing, useTheme } from "./internal/theme.js";
+import { keyboardRing, useTheme } from "./internal/theme.js";
 import { useTypeahead } from "./internal/typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
 
@@ -701,7 +701,7 @@ export const ListItem = ({
             : {}),
           // No `focusVisible` in 0.10.0: the active row is ringed whenever it
           // is the active one, keyboard or click.
-          ...(isActive ? focusRing(theme) : {}),
+          ...keyboardRing(theme),
         }),
         resolveStyle(style, state),
       )}

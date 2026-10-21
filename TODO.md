@@ -752,6 +752,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` Consistency, keyboard, themes, composability pass
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
+  - [ ] `packages/components/docs` still cites `@gpuix/native@0.10.0` 66 times (owner: components). The repo runs 0.11.0, so each claim needs re-verification, not a find-and-replace: some gaps closed (`onLayout` exists, `focusVisible` paints) and some did not (no `aria-current`, no `transform`). Re-measure against `HostProps`/`StyleDesc` and record the version each verdict was taken on.
 
 ### Docs information architecture (`docs-site`)
 
@@ -786,7 +787,7 @@ Both are specified in ; each fix starts with a plan under .
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
 
-`[ ]` `[░░░░░░░░░░]` 0/19
+`[ ]` `[░░░░░░░░░░]` 0/23
 
 `[ ]` `packages/primitives`: blank and text-only accessible names — a blank explicit label must be absent rather than an empty `aria-label`, a `Button`/`Toggle` named by its text child must publish that text, and `Text` must carry heading/code semantics (salvage 026, 058, 059)
 `[ ]` `packages/primitives`: `Tooltip` content is not published as an accessible description on its trigger (salvage 071)
@@ -807,3 +808,7 @@ Both are specified in ; each fix starts with a plan under .
 `[ ]` `packages/tokens`: `alpha` emits an unparseable colour for `NaN`, the README has no drift guard, and persisted unions have no runtime narrowing guards (salvage 065, 067, 068, 072, 077)
 `[ ]` `packages/tokens`: the soft status edge is mixed with `alpha(tone, 0.3)` instead of a role held to its contrast floor (salvage 090)
 `[ ]` `packages/tokens`: elevation levels paint literal shadow colours instead of the `shadow` role, so a brand cannot retint them (salvage 085)
+`[ ]` `apps/playground`: floating layers' left/right sides (and the `align="center"` half-panel offset) are never measured by the live suite (salvage 095, 098)
+`[ ]` `apps/playground`: no Tier 3/4 feasibility probes exist for the data-grid, docking and editor packages (salvage 130)
+`[ ]` `apps/playground`: native probe backlog — content surfaces (svg/img/diff/canvas), cross-element drag and file drops, text selection, the shipped Tier 1 controls in the suite, search highlights, drag auto-scroll, horizontal scroll and tab overflow, tab-strip focus, nested panels, command palette, tabbed workspace panes (salvage 161-163, 168-177)
+`[ ]` `packages/testing`: hoist the native renderer adapter out of `apps/playground/src/smoke/host.ts` into a structural `Native` port, with fake-renderer tests (salvage 178)

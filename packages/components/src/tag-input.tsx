@@ -38,7 +38,7 @@ import {
 } from "./internal/parts.js";
 import { addTokens, removeToken, splitDraft } from "./tag-input/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
+import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
 
 /** The rules a tag part follows; throws outside a {@link TagInput}. */
 interface TagInputContextValue {
@@ -48,7 +48,6 @@ interface TagInputContextValue {
   readonly editDraft: (text: string) => void;
   readonly addDraft: () => void;
   readonly remove: (value: string) => void;
-  readonly setFocused: (focused: boolean) => void;
 }
 
 const TagInputContext = createContext<TagInputContextValue | undefined>(
@@ -97,7 +96,6 @@ export const TagInput = ({
 }: TagInputProps) => {
   const theme = useTheme();
   const [draft, setDraft] = useState("");
-  const [focused, setFocused] = useState(false);
   assertParts(tagInputRoot, children);
 
   const add = (incoming: ReadonlyArray<string>): void => {
@@ -129,7 +127,6 @@ export const TagInput = ({
     editDraft,
     addDraft: commit,
     remove: (token) => onValueChange(removeToken(value, token)),
-    setFocused,
   };
 
   return (
@@ -142,7 +139,6 @@ export const TagInput = ({
           mergeStyles(recipeStyle(cn(TAG_INPUT_ROOT, className), theme), {
             minHeight: controlHeight(theme, "md"),
             opacity: disabled ? 0.5 : 1,
-            ...(focused ? focusRing(theme) : {}),
           }),
           style,
         )}
@@ -178,7 +174,7 @@ export const TagInputField = ({
   ...rest
 }: TagInputFieldProps) => {
   const theme = useTheme();
-  const { draft, disabled, editDraft, addDraft, setFocused } = useTagInput();
+  const { draft, disabled, editDraft, addDraft } = useTagInput();
 
   return (
     <input
@@ -191,17 +187,12 @@ export const TagInputField = ({
         if (isEnter(event)) addDraft();
       }}
       onSubmit={() => addDraft()}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
+      onFocus={(event) => onFocus?.(event)}
+      onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TAG_INPUT_FIELD, className), theme), {
           height: controlHeight(theme, "sm"),
+          ...keyboardRing(theme),
         }),
         resolveStyle(style, { disabled }),
       )}

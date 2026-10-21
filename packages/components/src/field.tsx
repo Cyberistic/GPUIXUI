@@ -36,7 +36,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
+import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
 
 /** What a {@link FieldInput} inherits from the field around it. */
 interface FieldContextValue {
@@ -262,7 +262,7 @@ export const FieldInput = ({
               ? theme.colors.destructive
               : theme.colors.border,
           ...(isDisabled ? { cursor: "not-allowed" } : {}),
-          ...(focused && !isInvalid && !isDisabled ? focusRing(theme) : {}),
+          ...(isDisabled ? {} : keyboardRing(theme, isInvalid)),
         }),
         resolveStyle(style, state),
       )}

@@ -18,13 +18,12 @@
 import type { KeyEvent, Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
-import { useState } from "react";
 import { isActivation } from "./key.js";
 import {
   alpha,
   controlHeight,
   controlPaddingX,
-  focusRing,
+  keyboardRing,
   textStyle,
   useTheme,
   type Theme,
@@ -148,7 +147,6 @@ export const Button = ({
   ...rest
 }: ButtonProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(false);
 
   return (
     <div
@@ -156,19 +154,13 @@ export const Button = ({
       tabIndex={disabled ? -1 : 0}
       {...rest}
       {...activation(disabled, onClick, onKeyDown)}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
+      onFocus={(event) => onFocus?.(event)}
+      onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(
         {
           ...controlStyle(theme, variant, size),
           ...disabledStyle(disabled),
-          ...(focused ? focusRing(theme) : {}),
+          ...keyboardRing(theme),
         },
         style,
       )}
@@ -192,7 +184,6 @@ export const IconButton = ({
   ...rest
 }: IconButtonProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(false);
   const side = controlHeight(theme, size);
 
   return (
@@ -202,14 +193,8 @@ export const IconButton = ({
       tabIndex={disabled ? -1 : 0}
       {...rest}
       {...activation(disabled, onClick, onKeyDown)}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
+      onFocus={(event) => onFocus?.(event)}
+      onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(
         {
           ...textStyle(theme, "label"),
@@ -227,7 +212,7 @@ export const IconButton = ({
           },
           active: { backgroundColor: theme.colors.active },
           ...disabledStyle(disabled),
-          ...(focused ? focusRing(theme) : {}),
+          ...keyboardRing(theme),
         },
         style,
       )}

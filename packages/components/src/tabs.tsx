@@ -72,7 +72,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
+import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
 import { indicatorBox, measuredBox, type TabBox } from "./tabs/indicator.js";
 import { selectsOnFocus, type TabsActivation } from "./tabs/logic.js";
 
@@ -634,7 +634,7 @@ export const TabsTrigger = ({
                 backgroundColor: isSelected ? undefined : theme.colors.hover,
                 color: theme.colors.foreground,
               },
-          ...(focused ? focusRing(theme) : {}),
+          ...keyboardRing(theme),
         }),
         resolveStyle(style, state),
       )}

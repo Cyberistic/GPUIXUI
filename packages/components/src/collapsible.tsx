@@ -29,7 +29,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { focusRing, useTheme } from "./internal/theme.js";
+import { keyboardRing, useTheme } from "./internal/theme.js";
 
 /** The rules a collapsible part follows; throws outside a root. */
 interface CollapsibleContextValue {
@@ -145,7 +145,7 @@ export const CollapsibleTrigger = ({
           cursor: "pointer",
           hover: { backgroundColor: theme.colors.hover },
           active: { backgroundColor: theme.colors.active },
-          ...(focused ? focusRing(theme) : {}),
+          ...keyboardRing(theme),
         }),
         resolveStyle(style, state),
       )}

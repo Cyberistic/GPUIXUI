@@ -67,7 +67,9 @@ With a `testId`, the parts are addressable as `${testId}-swatch-${index}`,
 
 Swatches are the colours you pass (defaults from the theme); the grid uses
 `border`/`foreground` for selected edges, the field uses `background`,
-`inputForeground`, `border`/`destructive` and `focusRing`, and the preview uses
+`inputForeground`, `border`/`destructive` and the keyboard-only `focusVisible`
+outline (`colors.ring`, or `colors.destructive` while the draft is not a hex
+colour), and the preview uses
 `border`. A custom theme changes the defaults and the shell — see
 [Theming](/docs/theming).
 

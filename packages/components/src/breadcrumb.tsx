@@ -27,7 +27,6 @@ import {
   Fragment,
   isValidElement,
   useContext,
-  useState,
   type ReactNode,
 } from "react";
 import { collapse, type Crumb } from "./breadcrumb/logic.js";
@@ -39,7 +38,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { focusRing, useTheme } from "./internal/theme.js";
+import { keyboardRing, useTheme } from "./internal/theme.js";
 
 /** The rules a breadcrumb part follows; throws outside a root. */
 interface BreadcrumbContextValue {
@@ -239,7 +238,6 @@ export const BreadcrumbLink = ({
   ...rest
 }: BreadcrumbLinkProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(false);
 
   if (current) {
     return <BreadcrumbPage {...rest} className={className} style={style} />;
@@ -258,18 +256,12 @@ export const BreadcrumbLink = ({
         if (isActivation(event)) onSelect?.();
         onKeyDown?.(event);
       }}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
+      onFocus={(event) => onFocus?.(event)}
+      onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(BREADCRUMB_LINK, className), theme), {
           hover: { color: theme.colors.foreground },
-          ...(focused ? focusRing(theme) : {}),
+          ...keyboardRing(theme),
         }),
         style,
       )}

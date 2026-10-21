@@ -50,7 +50,7 @@ import {
   type MentionQuery,
 } from "./mention/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlHeight, focusRing, useTheme } from "./internal/theme.js";
+import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
 
 /** The rules a mention part follows; throws outside a {@link MentionInput}. */
 interface MentionContextValue {
@@ -132,7 +132,6 @@ export const MentionInput = ({
   const [dismissed, setDismissed] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const [visible, setVisible] = useState<ReadonlyArray<string>>([]);
-  const [focused, setFocused] = useState(false);
   assertParts(mentionRoot, children);
 
   const open = dismissed ? Option.none() : mentionQuery(text);
@@ -186,7 +185,6 @@ export const MentionInput = ({
             {
               height: controlHeight(theme, "md"),
               opacity: disabled ? 0.5 : 1,
-              ...(focused ? focusRing(theme) : {}),
             },
           )}
         >
@@ -216,9 +214,9 @@ export const MentionInput = ({
                 setDismissed(true);
               }
             }}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            style={recipeStyle(MENTION_INPUT_CONTROL, theme)}
+            style={mergeStyles(recipeStyle(MENTION_INPUT_CONTROL, theme), {
+              ...(disabled ? {} : keyboardRing(theme)),
+            })}
           />
         </div>
         {children}

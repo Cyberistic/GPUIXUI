@@ -49,8 +49,8 @@ The rules are pure (`src/tag-input/logic.ts`: `splitDraft`, `addTokens`,
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `TagInput` | `div` with `role="group"`, the field surface and focus ring | `value` (required), `onValueChange` (required), `label` (required), `max?`, `allowDuplicates?`, `disabled?`, children |
-| `TagInputField` | `<input>` | input props minus `value`/`onChange`/`onSubmit`, `style?: StateStyle<TagInputFieldState>` |
+| `TagInput` | `div` with `role="group"` and the field surface | `value` (required), `onValueChange` (required), `label` (required), `max?`, `allowDuplicates?`, `disabled?`, children |
+| `TagInputField` | `<input>`, the node that takes focus and declares the keyboard outline | input props minus `value`/`onChange`/`onSubmit`, `style?: StateStyle<TagInputFieldState>` |
 | `TagInputChip` | chip `div` with a removal `role="button"` | `value` (required), `style?: StateStyle<TagInputChipState>` |
 
 `TagInputFieldState` and `TagInputChipState` are `{ disabled }`.
