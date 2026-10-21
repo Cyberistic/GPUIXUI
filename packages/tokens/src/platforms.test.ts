@@ -124,6 +124,18 @@ describe("platformTheme", () => {
     expect(themed.typography.body).toEqual(lightTheme.typography.body);
   });
 
+  it("keeps every role a component reads", () => {
+    // A platform style is a partial: it may change a value, never drop a role.
+    themedPlatforms.forEach(({ label, theme, base }) => {
+      expect(Object.keys(theme.colors).toSorted(), label).toEqual(
+        Object.keys(base.colors).toSorted(),
+      );
+      expect(Object.keys(theme.radius).toSorted(), label).toEqual(
+        Object.keys(base.radius).toSorted(),
+      );
+    });
+  });
+
   it("picks the chrome for the base theme's mode", () => {
     const light = platformTheme(lightTheme, "linux");
     const dark = platformTheme(darkTheme, "linux");
