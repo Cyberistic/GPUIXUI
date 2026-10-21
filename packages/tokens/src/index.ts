@@ -1,4 +1,5 @@
 export * from "./audit.js";
+export * from "./brand-text.js";
 export * from "./color.js";
 export * from "./contrast.js";
 export * from "./decorative.js";

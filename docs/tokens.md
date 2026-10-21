@@ -17,6 +17,8 @@ import {
   applyStyle,
   auditTheme,
   blend,
+  brandText,
+  brandTextSurfaces,
   colorRoles,
   contrastFailures,
   contrastFloors,
@@ -312,6 +314,64 @@ perceptibility floor on every strip it can sit on (see
 `secondary` is `#E1E5EC` rather than the `muted` value it used to be. A runnable
 example spreads the three fills onto a control; see
 [`src/action-states.example.ts`](../packages/tokens/src/action-states.example.ts).
+
+## Brand text
+
+A link, a text action, a breadcrumb's current page — brand-coloured **text** —
+is not the `primary` role. `primary` is designed as a surface: it carries
+`primaryForeground`, and the contrast table measures that pair. Written as text
+it was measured by nothing (only the mark contract reads it, at the 3:1 a bar or
+a dot needs), and the fill role is under the 4.5:1 text floor in most shipped
+styles:
+
+| Where the brand is written | Theme | Ratio |
+| -------------------------- | ----- | ----- |
+| `primary` on the `active` wash a pressed link tints | base light | **4.30:1** |
+| `primary` on `active` | macOS dark | **3.10:1** |
+| `primary` on `popover` | macOS dark | 3.81:1 |
+| `primary` on `active` | Linux light | 3.44:1 |
+| `primary` on the page | Windows XP (Luna) light | 4.31:1 |
+| `primary` on `active` | Windows 7 (Aero) light | 3.83:1 |
+
+`brandText(theme)` returns a colour for them instead of a second palette:
+
+```ts
+import { brandText, type Theme } from "@gpuixui/tokens";
+
+const link = { color: brandText(theme) };
+```
+
+It returns the theme's own `primary` when that already clears the floor on every
+surface a link can sit on — the base dark theme does, so its links are its brand
+— and otherwise moves the brand toward the theme's `foreground` in 2% steps
+until the least readable placement clears. It never goes past `foreground`,
+which is the most readable text role a theme has, and a brand value that cannot
+be measured (translucent, or not a colour the renderer paints) is returned
+unchanged rather than replaced by a guess.
+
+`brandTextSurfaces` is the set it is held to: the four page surfaces a reader
+reads on (`background`, `card`, `popover`, `muted`) plus the two washes a
+hovered and a pressed link tint behind itself (`hover`, `active`) — the wash is a
+surface with text on it, so it is measured like one.
+
+The floor follows the theme's own contrast variant through `contrastFloorsFor`,
+the rule the audit's contrast report already uses: 4.5:1 for a default theme,
+7:1 for a high-contrast one. The high-contrast dark brand measures 6.94:1 as
+text, so it steps once there even though the same value would pass a default
+theme.
+
+The other text a component writes in a status colour — a required marker, a
+field error, an inline warning — is not `brandText`'s job: a status tone has its
+own readable role, `statusTone(theme, tone).foreground`, measured as page text
+on `background`, `card` and `popover`. What neither helper does is treat a solid
+fill role (`primary`, `destructive`) as text; a component that still does is
+recorded in `TODO.md` → Interlocks.
+
+`packages/tokens/src/brand-text.test.ts` holds all 16 shipped, high-contrast,
+platform and authored themes to the floor on all six surfaces, proves the
+derivation is minimal and stays between the brand and the theme's foreground,
+holds a high-contrast theme to its own 7:1, and executes
+[`src/brand-text.example.ts`](../packages/tokens/src/brand-text.example.ts).
 
 ## Data series
 
@@ -1899,6 +1959,18 @@ opaque hex, each channel moves from the action's role toward the theme's
 foreground, the press moves further than the hover and stops short of the
 foreground, the three actions stay distinct, and a brand's own `primary` carries
 its own hover.
+
+`packages/tokens/src/brand-text.test.ts` covers the brand as **text**: every
+shipped, high-contrast, platform and authored theme is held to its own variant's
+text floor on all six surfaces a link can sit on, the fill role is measured below
+that floor on the pressed wash (4.30:1 in the base light theme, 3.10:1 in macOS
+dark) so the derivation has a premise, a brand that already reads is returned
+unchanged while the base light one moves, a high-contrast theme is held to 7:1
+rather than 4.5:1, the result is opaque and stays between the brand and the
+theme's foreground channel by channel, a pale brand follows its own override, an
+unmeasurable brand is returned unchanged instead of replaced, the derivation
+stops at the theme's own foreground when even that misses the floor, and the
+documented example's three link states are executed.
 
 `packages/tokens/src/retro.test.ts` covers the authored looks: `retroStyles`
 describes exactly `retroNames`, the guard rejects a renamed or misspelt look, each

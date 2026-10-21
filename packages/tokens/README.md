@@ -199,6 +199,25 @@ const pressed = filledPressed(theme, "primary");
 
 Ghost and subtle surfaces keep the `hover` / `active` washes.
 
+## Brand text
+
+`primary` is a fill, not a text colour: it is designed to carry
+`primaryForeground`, and as text it is under the 4.5:1 a link needs — the base
+light brand measures 4.30:1 on the wash a pressed link tints behind itself and
+macOS dark 3.10:1. `brandText(theme)` returns the brand where it already reads
+and otherwise steps it toward the theme's `foreground` until the least readable
+of the six surfaces a link can sit on clears the theme's floor (4.5:1 default,
+7:1 high contrast).
+
+```ts
+import { brandText } from "@gpuixui/tokens";
+
+const link = { color: brandText(theme) };
+```
+
+Status text — a required marker, a field error — is
+`statusTone(theme, tone).foreground`, the tone's readable role.
+
 ## Data series
 
 Charts and legends read a categorical scale, not a semantic role — a series

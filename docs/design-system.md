@@ -74,6 +74,19 @@ own categories carries `series`. See `docs/tokens.md` §Data series.
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library.
 
+**A fill role is not a text role.** `primary` is designed as a surface — it
+carries `primaryForeground`, and that is the pair the contrast table measures.
+Written as text it fails the 4.5:1 a reader needs: the base light brand is
+4.30:1 on the wash a pressed link tints behind itself, macOS dark 3.10:1, Linux
+light 3.44:1. So a link or any brand-coloured run paints `brandText(theme)`,
+which returns the brand where it already reads and otherwise steps it toward the
+theme's `foreground` until the least readable of the six surfaces it can sit on
+(page, card, popover, muted toolbar, and the hover and press washes) clears the
+floor the theme's variant asks for — 4.5:1 default, 7:1 high contrast. The same
+rule covers status text: a required marker or a field error paints
+`statusTone(theme, tone).foreground`, the tone's readable role, never the solid
+fill. See `docs/tokens.md` §Brand text.
+
 ## 4. Light and dark
 
 Dark mode is designed, not inverted:
@@ -245,6 +258,7 @@ it. It is held instead to one shadow per level, tinted by the `shadow` role (see
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible; held to `contrastFloors.disabled` so the state stays visible rather than to a readability floor |
 | invalid | the `destructive` role as the field's edge and as its `focusVisible` line; the fill and text roles do not change, so the value and placeholder stay readable |
+| link | `brandText(theme)` — the brand derived into a text colour that reads on all six surfaces it can sit on, with `hover` / `active` washes behind it; never the raw `primary` fill role |
 | loading | a mark — `primary`, or a status tone's readable role — never the disabled fade: a busy control keeps its label, its tab stop and its announcement |
 | focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
 | dimmed | `keyboardFocusDimOpacity` — every other focusable keeps 40% of itself while one control has keyboard focus; a control whose text must stay readable opts out with `keyboardFocusDim: false` |
@@ -365,6 +379,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | text typed into an input, on `input` | 7:1 | 7:1 |
 | secondary text on background/card/muted/popover and on a selected row | 4.5:1 | 7:1 |
 | on-colour text, placeholder | 4.5:1 | 7:1 |
+| brand text — a link or text action — on background, card, popover, muted and the hover/active washes it tints (`brandText`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text on `background`/`card`/`popover` (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own fill and on `background`/`card`/`popover` (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
@@ -414,6 +429,12 @@ own control face moved with the contract.
 Also not measured, deliberately: the elevation tint. A shadow is a blurred
 geometry, so a flat ratio overstates what the eye receives; its contract is the
 one-shadow rule and the role-owned tint, guarded by `elevation.test.ts`.
+
+One pair class is measured by a helper rather than by the table, because it is
+**derived** rather than stored: a link's colour. `primary` is a fill, so
+`brandText(theme)` returns the brand where it already reads and steps it toward
+the theme's foreground where it does not, and `brand-text.test.ts` holds all 16
+shipped styles to the floor on the six surfaces a link can sit on (§3).
 
 Nothing else escapes: `coverage.test.ts` holds every role in `colorRoles` to at
 least one measurement, so a role cannot ship unmeasured — it found
