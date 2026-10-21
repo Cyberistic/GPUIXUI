@@ -1770,9 +1770,12 @@ ignore. Palette edits must keep all of it green.
 measure a translucent or unparseable colour, the two floor sets, and that a
 break to the text inside an input, to secondary text on `background`, `card` or
 `popover`, or to a control boundary on a `muted` or `secondary` strip is
-reported by name. `theme.test.ts` runs the audit over the
-documented brand theme, so a documented brand that loses its on-colour fails the
-suite.
+reported by name. Its `the invalid state's edge` suite holds the edge an invalid
+control paints on all six strips a control sits on — four through the mark
+contract, two through `contrastPairs` — reports an edge painted in the field's
+own fill, and sweeps every shipped colour set. `theme.test.ts` runs the audit over
+the documented brand theme, so a documented brand that loses its on-colour fails
+the suite.
 
 `packages/tokens/src/decorative.test.ts` covers the surfaces that carry no text:
 every divider, skeleton, veil, status-edge, scrollbar, state-wash and
