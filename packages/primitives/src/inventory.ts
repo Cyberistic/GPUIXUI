@@ -434,6 +434,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "Cannot rotate: a discrete lit-dot step instead",
+      "The trail is the accent at reduced opacity, not a separate quiet role",
       "No smooth animation and no size scale",
       "No inline placement inside a text run",
     ],

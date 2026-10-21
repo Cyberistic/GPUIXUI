@@ -609,22 +609,24 @@ export const progressFillClass = (tone: ProgressTone): string =>
 /** The class string a spinner's row resolves to. */
 export const spinnerGroupClass = "flex flex-row items-center gap-2xs";
 
-/** The colour role each spinner accent paints on the lit dot. */
+/** The colour role each spinner accent paints on every dot. */
 const SPINNER_ACCENT_CLASS: Readonly<Record<SpinnerAccent, string>> = {
   primary: "bg-primary",
   destructive: "bg-destructive",
   muted: "bg-muted-foreground",
+  "on-primary": "bg-primary-foreground",
+  "on-secondary": "bg-secondary-foreground",
+  "on-destructive": "bg-destructive-foreground",
 };
 
-/** The class string a spinner dot resolves from its state. */
-export const spinnerDotClass = (
-  active: boolean,
-  accent: SpinnerAccent,
-): string =>
-  cn(
-    "shrink-0 rounded-full",
-    active ? SPINNER_ACCENT_CLASS[accent] : "bg-muted-foreground",
-  );
+/**
+ * The class string a spinner dot resolves from its accent.
+ *
+ * The trail fades through the dot's `opacity` rather than a second role, so an
+ * indicator inside a filled control paints that fill's on-colour throughout.
+ */
+export const spinnerDotClass = (accent: SpinnerAccent): string =>
+  cn("shrink-0 rounded-full", SPINNER_ACCENT_CLASS[accent]);
 
 /** The class string a skeleton's resting shape resolves from. */
 export const skeletonClass = (spec: {

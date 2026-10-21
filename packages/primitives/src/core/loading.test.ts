@@ -10,6 +10,7 @@ import {
   pulseOpacity,
   skeletonSize,
   skeletonStyle,
+  SPINNER_ACCENTS,
   SPINNER_SEGMENTS,
   spinnerDotStyle,
   spinnerDots,
@@ -111,29 +112,37 @@ describe("spinnerDots", () => {
     expect(active.opacity).toBe(1);
   });
 
-  it("tints the lit dot with the accent and the rest with the muted role", () => {
+  it("paints the accent on every dot and fades the trail with opacity", () => {
+    // A trail painted in the muted role put a grey dot on a filled control,
+    // where only that fill's on-colour is legible; the accent is the dot, and
+    // the step is the opacity.
     const dots = spinnerDots(0);
     const lit = Arr.filter(dots, (dot) => dot.active);
     const rest = Arr.filter(dots, (dot) => !dot.active);
-    const spec = { size: 6, accent: "primary" } as const;
-    const litPaint = Arr.map(lit, (dot) =>
-      spinnerDotStyle(spec, dot, testTheme),
-    );
-    const restPaint = Arr.map(rest, (dot) =>
-      spinnerDotStyle(spec, dot, testTheme),
-    );
+    const spec = { size: 6, accent: "on-primary" } as const;
+    const paint = Arr.map(dots, (dot) => spinnerDotStyle(spec, dot, testTheme));
+
     expect(
       Arr.every(
-        litPaint,
-        (s) => s.backgroundColor === testTheme.colors.primary,
+        paint,
+        (s) => s.backgroundColor === testTheme.colors.primaryForeground,
       ),
     ).toBe(true);
-    expect(
-      Arr.every(
-        restPaint,
-        (s) => s.backgroundColor === testTheme.colors.mutedForeground,
-      ),
-    ).toBe(true);
+    expect(Arr.every(lit, (dot) => dot.opacity === 1)).toBe(true);
+    expect(Arr.every(rest, (dot) => dot.opacity < 1)).toBe(true);
+  });
+
+  it("resolves a fill's on-colour for every filled accent", () => {
+    const dot = { active: true, opacity: 1 };
+    const colourOf = (accent: (typeof SPINNER_ACCENTS)[number]): unknown =>
+      spinnerDotStyle({ size: 6, accent }, dot, testTheme).backgroundColor;
+
+    expect(colourOf("on-primary")).toBe(testTheme.colors.primaryForeground);
+    expect(colourOf("on-secondary")).toBe(testTheme.colors.secondaryForeground);
+    expect(colourOf("on-destructive")).toBe(
+      testTheme.colors.destructiveForeground,
+    );
+    expect(colourOf("muted")).toBe(testTheme.colors.mutedForeground);
   });
 });
 

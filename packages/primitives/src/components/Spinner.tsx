@@ -53,11 +53,12 @@ export const renderSpinner = (
     recipeTw.classesToStyle(cn(spinnerGroupClass, className), theme).style,
     style,
   );
-  const dotStyle = (active: boolean, opacity: number): StyleDesc =>
-    mergeStyle(
-      recipeTw.classesToStyle(spinnerDotClass(active, accent), theme).style,
-      { width: dot, height: dot, opacity },
-    );
+  const dotStyle = (opacity: number): StyleDesc =>
+    mergeStyle(recipeTw.classesToStyle(spinnerDotClass(accent), theme).style, {
+      width: dot,
+      height: dot,
+      opacity,
+    });
   return (
     <div
       role="status"
@@ -66,7 +67,7 @@ export const renderSpinner = (
       style={group}
     >
       {Arr.map(spinnerDots(step, 3), (point, index) => (
-        <div key={index} style={dotStyle(point.active, point.opacity)} />
+        <div key={index} style={dotStyle(point.opacity)} />
       ))}
     </div>
   );

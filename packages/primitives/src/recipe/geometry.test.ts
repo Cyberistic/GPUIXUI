@@ -270,7 +270,7 @@ describe("spinner and skeleton recipes", () => {
 
     const point = { active: true, opacity: 1 };
     expect(
-      mergeStyle(compiled(spinnerDotClass(true, "primary")), {
+      mergeStyle(compiled(spinnerDotClass("primary")), {
         width: 12,
         height: 12,
         opacity: 1,
@@ -334,7 +334,7 @@ describe("the geometry recipes register no unsupported classes", () => {
       progressTrackClass("md"),
       progressFillClass("primary"),
       spinnerGroupClass,
-      spinnerDotClass(true, "primary"),
+      spinnerDotClass("primary"),
       skeletonClass({ circle: true }),
     ];
     const unsupported = Arr.flatMap(

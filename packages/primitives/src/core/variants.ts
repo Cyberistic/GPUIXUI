@@ -13,6 +13,7 @@
 
 import type { StyleDesc } from "@gpuix/react";
 import { alpha } from "@gpuixui/tokens";
+import type { SpinnerAccent } from "./loading.js";
 import type { PrimitiveTheme } from "./theme.js";
 import type { ControlVariant } from "./style.js";
 
@@ -104,6 +105,25 @@ export const buttonVariants: Record<ButtonVariant, ControlVariant> = {
   destructive,
   link,
 };
+
+const FILLED_SPINNER_ACCENT: Readonly<
+  Partial<Record<ButtonVariant, SpinnerAccent>>
+> = {
+  primary: "on-primary",
+  secondary: "on-secondary",
+  destructive: "on-destructive",
+};
+
+/**
+ * The spinner accent that reads on a button variant's fill.
+ *
+ * A filled action paints its own on-colour, which the contrast table already
+ * measures on that fill; a variant that paints no fill keeps the brand accent,
+ * which the mark contract measures on the page. A busy brand button used to
+ * paint a brand spinner on a brand fill (1.00:1).
+ */
+export const variantSpinnerAccent = (variant: ButtonVariant): SpinnerAccent =>
+  FILLED_SPINNER_ACCENT[variant] ?? "primary";
 
 /**
  * A field: an input, a textarea, a select trigger.

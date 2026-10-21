@@ -45,8 +45,9 @@ import { Button, Stack } from "@gpuixui/primitives";
 - `square` — equal width and height, no horizontal padding: an icon-only button.
 - `fullWidth` — stretches to its parent.
 - `disabled` — refuses click and keys, and leaves the tab order.
-- `loading` — shows a spinner, announces `Loading`, refuses activation, and
-  **stays focusable**.
+- `loading` — shows a spinner in the variant's own on-colour (a busy primary
+  button paints `primaryForeground`, not a brand dot on a brand fill), announces
+  `Loading`, refuses activation, and **stays focusable**.
 
 ## API
 
@@ -134,13 +135,17 @@ refuses activation.
 
 - `src/core/keyboard.test.ts` — the Enter/Space/held rules as pure decisions.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
-  loading description, and a `style` callback receiving the live state and
-  winning over the recipe.
+  loading description, a busy filled button handing its spinner the fill's
+  on-colour, and a `style` callback receiving the live state and winning over
+  the recipe.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the button's own action, and a busy button installs no press handler.
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name.
+- `runtime/loading.runtime.test.tsx` — a busy primary button's spinner dots paint
+  `primaryForeground` and a secondary one's paint `secondaryForeground` in a real
+  window.
 - `runtime/examples.runtime.test.tsx` — the form example's busy action creates a
   progress state.
 

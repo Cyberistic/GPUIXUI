@@ -84,8 +84,22 @@ export const skeletonStyle = (
 export const pulseOpacity = (step: number, dim = 0.6, full = 1): number =>
   step % PULSE_STEPS === 0 ? full : dim;
 
-/** How a spinner dot is tinted: the brand, a destructive action, or quiet. */
-export const SPINNER_ACCENTS = ["primary", "destructive", "muted"] as const;
+/**
+ * How a spinner dot is tinted: the brand, a destructive action, quiet — or, on
+ * a filled control, the colour that sits on that fill.
+ *
+ * The last three exist because an indicator drawn **inside** a filled button
+ * must paint that fill's on-colour: a brand spinner on a brand button is
+ * 1.00:1, which is the one place a busy indicator would disappear.
+ */
+export const SPINNER_ACCENTS = [
+  "primary",
+  "destructive",
+  "muted",
+  "on-primary",
+  "on-secondary",
+  "on-destructive",
+] as const;
 export type SpinnerAccent = (typeof SPINNER_ACCENTS)[number];
 
 export interface SpinnerSpec {
@@ -123,9 +137,21 @@ const accentColor = (accent: SpinnerAccent, theme: PrimitiveTheme): string =>
     ? theme.colors.destructive
     : accent === "muted"
       ? theme.colors.mutedForeground
-      : theme.colors.primary;
+      : accent === "on-primary"
+        ? theme.colors.primaryForeground
+        : accent === "on-secondary"
+          ? theme.colors.secondaryForeground
+          : accent === "on-destructive"
+            ? theme.colors.destructiveForeground
+            : theme.colors.primary;
 
-/** One dot of the indicator. The lit dot takes the accent, the rest the muted role. */
+/**
+ * One dot of the indicator.
+ *
+ * Every dot paints the accent; the trail fades through **opacity** rather than
+ * turning grey, so a spinner inside a filled control keeps the fill's on-colour
+ * on its whole row instead of painting a muted dot on a brand fill.
+ */
 export const spinnerDotStyle = (
   spec: SpinnerSpec,
   dot: SpinnerDot,
@@ -136,9 +162,7 @@ export const spinnerDotStyle = (
   flexShrink: 0,
   borderRadius: theme.radius.full,
   opacity: dot.opacity,
-  backgroundColor: dot.active
-    ? accentColor(spec.accent, theme)
-    : theme.colors.mutedForeground,
+  backgroundColor: accentColor(spec.accent, theme),
 });
 
 /**

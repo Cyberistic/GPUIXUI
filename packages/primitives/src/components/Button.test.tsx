@@ -14,8 +14,11 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton, type ButtonState } from "./Button.js";
+import type { ButtonVariant } from "../core/variants.js";
 import { keyEvent } from "./testing/event.js";
 import {
+  elementChildren,
+  elementProp,
   expectSome,
   hostHandler,
   hostProp,
@@ -101,6 +104,26 @@ describe("Button", () => {
     expect(onActivate).toHaveBeenCalledTimes(0);
     expect(expectSome(hostProp(loading, "tabIndex"))).toBe(0);
     expect(expectSome(hostProp(loading, "aria-description"))).toBe("Loading");
+  });
+
+  it("gives a busy button a spinner that reads on its fill", () => {
+    // The bug: a filled button rendered the default brand spinner on its own
+    // brand fill (1.00:1), so the busy indicator disappeared.
+    const accentOf = (variant: ButtonVariant): unknown =>
+      expectSome(
+        elementProp(
+          elementChildren(resting({ variant, loading: true }))[0] ??
+            expect.fail("the busy button drew no spinner"),
+          "accent",
+        ),
+      );
+
+    expect(accentOf("primary")).toBe("on-primary");
+    expect(accentOf("secondary")).toBe("on-secondary");
+    expect(accentOf("destructive")).toBe("on-destructive");
+    expect(accentOf("outline")).toBe("primary");
+    expect(accentOf("ghost")).toBe("primary");
+    expect(accentOf("link")).toBe("primary");
   });
 
   it("takes a disabled button out of the tab order", () => {

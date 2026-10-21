@@ -17,6 +17,7 @@ import { expect, it } from "vitest";
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { Button } from "../src/components/Button.js";
 import {
   Progress,
   ProgressIndicator,
@@ -297,16 +298,20 @@ it("moves a Spinner's lit dot instead of rotating it", async () => {
     </Surface>,
   );
   const dots = childrenOf(runtime, "sp");
-  // The lit dot is the one painted with the accent role; the runtime cannot
-  // rotate, so the dot index is the whole animation.
+  // Every dot takes the accent and the trail fades through opacity, so the lit
+  // dot is the opaque one. The runtime cannot rotate: the index is the whole
+  // animation.
+  expect(
+    Arr.every(
+      dots,
+      (id) =>
+        styleOf(runtime, id)["backgroundColor"] === testTheme.colors.primary,
+    ),
+  ).toBe(true);
   const litIndex = (): number =>
     Option.getOrElse(
-      Arr.findFirstIndex(
-        dots,
-        (id) =>
-          styleOf(runtime, id)["backgroundColor"] === testTheme.colors.primary,
-      ),
-      () => expect.fail("no Spinner dot took the accent role"),
+      Arr.findFirstIndex(dots, (id) => styleOf(runtime, id)["opacity"] === 1),
+      () => expect.fail("no Spinner dot is fully opaque"),
     );
   const indexes = await sample(runtime, litIndex, 5);
   expect(new Set(indexes).size).toBeGreaterThan(1);
@@ -315,4 +320,39 @@ it("moves a Spinner's lit dot instead of rotating it", async () => {
       a11yNode(runtime.a11y(), { role: "Status", label: "Working" }),
     ),
   ).toBe(true);
+});
+
+it("paints a loading button's spinner in its fill's on-colour", async () => {
+  // The bug guarded: a busy brand button rendered a brand spinner on its own
+  // brand fill (1.00:1), so the indicator vanished exactly where it mattered.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="primary-btn" variant="primary" loading>
+          Save
+        </Button>
+        <Button testId="secondary-btn" variant="secondary" loading>
+          Save
+        </Button>
+      </Stack>
+    </Surface>,
+  );
+  const dotColours = (testId: string): ReadonlyArray<unknown> => {
+    const spinner = childrenOf(runtime, testId)[0] ?? expect.fail("no spinner");
+    return Arr.map(
+      childrenOfId(runtime, spinner),
+      (id) => styleOf(runtime, id)["backgroundColor"],
+    );
+  };
+  expect(dotColours("primary-btn")).toEqual([
+    testTheme.colors.primaryForeground,
+    testTheme.colors.primaryForeground,
+    testTheme.colors.primaryForeground,
+  ]);
+  expect(dotColours("secondary-btn")).toEqual([
+    testTheme.colors.secondaryForeground,
+    testTheme.colors.secondaryForeground,
+    testTheme.colors.secondaryForeground,
+  ]);
 });

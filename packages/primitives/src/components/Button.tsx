@@ -32,7 +32,7 @@ import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import type { ButtonVariant } from "../core/variants.js";
+import { variantSpinnerAccent, type ButtonVariant } from "../core/variants.js";
 import { buttonClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
@@ -157,7 +157,11 @@ export const renderButton = (
       style={style}
     >
       {props.loading === true ? (
-        <Spinner size={theme.iconSize.sm} label="Loading" />
+        <Spinner
+          size={theme.iconSize.sm}
+          accent={variantSpinnerAccent(variant)}
+          label="Loading"
+        />
       ) : (
         props.leading
       )}

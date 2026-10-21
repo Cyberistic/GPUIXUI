@@ -5,8 +5,12 @@ description: An activity indicator built from three dots, because the runtime ca
 
 `Spinner` is the activity indicator for work with no known proportion. The pinned
 runtime's `motion` cannot rotate, so there is no spinning arc: three dots advance
-a lit position every 120 ms and the trail fades. A `Progress` with no `value` is
-the other honest option.
+a lit position every 120 ms and the trail fades through opacity. A `Progress`
+with no `value` is the other honest option.
+
+It is also the indicator a busy `Button` draws, and there its dots must paint the
+**fill's on-colour** rather than the brand: a brand spinner on a brand button is
+1.00:1, so the busy state would disappear exactly where it matters.
 
 ## Usage
 
@@ -24,13 +28,18 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `size` | `number` | `theme.iconSize.md` | the dot side in pixels |
-| `accent` | `primary \| destructive \| muted` | `"primary"` | the lit dot's colour role |
+| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive` | `"primary"` | the role every dot paints; the `on-*` accents are the fill's on-colour |
 | `label` | `string` | `"Loading"` | accessible name announced as a status |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
 `size` accepts a number because a spinner inside a `Button` often needs to match
 the button's own icon size rather than a named icon step.
+
+The three `on-*` accents exist for that case: `variantSpinnerAccent(variant)`
+maps a filled button to the on-colour its own label uses, and a variant with no
+fill (outline, ghost, link) keeps the brand accent, which the mark contract
+measures on the page.
 
 ## Keyboard
 
@@ -46,7 +55,10 @@ Not focusable. Activity is status, not an action.
 ## Theming
 
 `spinnerDots` decides the lit index and each dot's opacity; `spinnerDotStyle`
-resolves size and colour from the accent role. The gap is `spacing["2xs"]`.
+resolves size and colour from the accent role on **every** dot. The step is the
+opacity (1 for the lit dot, fading to 0.2), not a second colour, so an indicator
+inside a filled control keeps its on-colour along the whole row. The gap is
+`spacing["2xs"]`.
 
 ## Limitations
 
@@ -54,14 +66,21 @@ resolves size and colour from the accent role. The gap is `spacing["2xs"]`.
 - No smooth animation: the lit dot jumps by design, and the runtime paints no
   intermediate position for this component.
 - No size scale: pass pixels or an icon size's number.
+- The trail is the accent at reduced opacity rather than a separate quiet role;
+  a caller who wants a grey trail is asking for a different mark, not a fade.
 - No inline placement inside a text run; put it in a `Stack`.
 
 ## Verification
 
-- `src/core/loading.test.ts` — the lit index and fade across steps.
+- `src/core/loading.test.ts` — the lit index and fade across steps, the accent on
+  every dot, and each `on-*` accent resolving to its fill's on-colour.
+- `src/components/Button.test.tsx` — a busy filled button hands the spinner
+  `on-primary`/`on-secondary`/`on-destructive`, and a variant with no fill keeps
+  `primary`.
 - `runtime/loading.runtime.test.tsx` — the lit dot's index changes over real
-  time, the accent role reaches the paint, and AccessKit reports `Status` with
-  the label.
+  time (the opaque dot is the lit one), every dot paints the accent, a loading
+  primary button's dots paint `primaryForeground` and a secondary one's paint
+  `secondaryForeground`, and AccessKit reports `Status` with the label.
 - `runtime/examples.runtime.test.tsx` — the feedback example mounts it.
 
 ```sh
