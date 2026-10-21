@@ -109,35 +109,45 @@ carries an evidenced limitation. The capability evidence lives in
 
 ## Tier 1 — foundational
 
+All 27 rows below live in `packages/primitives` (icons in `packages/icons`). Each
+has: source, a unit suite, an example in `examples/` mounted by
+`runtime/examples.runtime.test.tsx`, a page in `packages/primitives/docs/`, and a
+runtime-verified interaction measured in the 0.10.0 `TestRenderer` (plan `041` §9,
+plan `055` §7 — 13 files, 119 tests). "GPUix support" is the verdict for the
+pinned runtime, not for the reference clone. Where the runtime has no API for a
+capability, the row names the alternative in use — nothing here is a decorative
+placeholder.
+
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Text / typography | todo | yes | `<text>` host element. API-shape work, not implementation. |
-| Icons | todo | yes | `<svg>` (tintable monochrome) + `<img>` provided. The icon *set* and sizing rules are ours. API-shape work, not implementation. |
-| Separators | todo | yes | `div` + border. API-shape work, not implementation. |
-| Spacers | todo | yes | `div`. API-shape work, not implementation. |
-| Stack / layout primitives | todo | yes | flexbox + grid provided. API-shape work, not implementation. |
-| Boxes / containers | todo | yes | `div`. API-shape work, not implementation. |
-| Scrollable containers | todo | yes | `overflow: "scroll"` gives a native scroll container. API-shape work, not implementation. |
-| Buttons | todo | ? | `Button` is on `references/gpuix` `main` but **not in published 0.10.0** (verified). Our own keyboard contract is required — plan `030` §3.4. Variants merged here: Floating action button and Copy button (adabraka `floating_action_button`, `copy_button`). |
-| Button groups | todo | ? | Variants merged here: Toggle Group (base-gpui `ToggleGroup`) and Segmented control (adabraka `segmented_nav`) — pressed-state variants, not separate rows. |
-| Labels | todo | ? | `<text>` exists; control association needs `aria-labelledby`, which GPUix does not expose (verified). |
-| Text inputs | todo | yes | `<input>` host element. API-shape work, not implementation. |
-| Text areas | todo | yes | `<textarea>` host element. API-shape work, not implementation. |
-| Checkboxes | todo | ? | No checkbox host element; `aria-checked` is unsupported. Variant merged here: Checkbox Group (base-gpui `CheckboxGroup`). |
-| Radio groups | todo | ? | No radio host element; roving-focus keyboard contract is ours. |
-| Selects | todo | yes | `Select` + parts published. API-shape work, not implementation. |
-| Switches | todo | ? | Distinct from Toggle (on/off state vs momentary pressed mode). |
-| Progress | todo | ? | `div` + width/opacity `motion`. |
-| Tooltips | todo | yes | `Tooltip` + parts published. API-shape work, not implementation. |
-| Skeletons | todo | ? | `div` + opacity `motion` (GPUix animates opacity only — verified). |
-| Loading indicators | todo | ? | **No rotation** in `motion` (verified); use an indeterminate sweep (width/left) or a discrete step cycle. |
-| Slider | todo | ? | No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
-| Range slider | todo | ? | Two-thumb variant of Slider; its own runtime for min/max ordering and thumb crossing. No host element. |
-| Meter | todo | ? | Distinct from Progress: a value in a range, not task completion. No host element. |
-| Number Field | todo | ? | `<input>` exists (API-shape for the text part); stepper buttons, drag-to-scrub, clamping and locale formatting are ours. |
-| OTP Field | todo | ? | `<input>` exists; segmented rendering, paste distribution and keyboard movement are ours. |
-| Toggle | todo | ? | Momentary pressed mode, distinct from Switches. No `Button` in published 0.10.0; built on `div` + the shared keyboard contract. |
-| Rating | todo | ? | Radio-group-like input; no host element. Reuses the radio roving-focus contract. |
+| Text / typography | done | yes | `<text>` plus the type scale; six roles (`display`…`caption`, `code`, `codeBlock`), four tone roles, `align`/`truncate`/`clamp`/`selectable`; the mono roles take the monospace family. No heading semantics (the a11y dump has no heading role) and no rich text — one run, one role; compose several `Text` nodes. Runtime: `layout.runtime.test.tsx` paints and measures the type. |
+| Icons | done | yes | `Icon` renders a 24x24 monochrome SVG tinted by `style.color`; 30+ Lucide-grid names, `ICON_SIZES`/`iconPixels` resolve from the token scale. `color` is required (an untinted SVG is black and invisible in dark mode); a decorative icon is `role="presentation"` and only a `label` promotes it to `role="img"`; the wrapper sets `pointerEvents: none` so it cannot swallow a control's press. `registry.test.ts` (7 checks) enforces self-contained markup. |
+| Separators | done | yes | A 1px rule on the theme's border role, horizontal or vertical, with an optional spacing inset. Solid only (the runtime paints solid borders), no draggable splitter. A vertical rule needs a definite height from its parent. |
+| Spacers | done | yes | A flex item that holds a fixed or flexible gap from the spacing scale. It is not a margin: a parent that positions its children absolutely ignores it, and a flexible spacer needs a definite main-axis size. |
+| Stack / layout primitives | done | yes | `Stack` over flexbox (row/column, gap, align, justify, wrap) with the `useStack` rule set unit-tested. No media queries or breakpoints in the runtime, no `order`/`basis` per child (give the child a `Box` with `grow`). |
+| Boxes / containers | done | yes | `Box` = padding/radius/border/background/elevation on a `div`, with `useBox` resolving the surface. One shadow per element; no gradients, background images or border styles. Not a focusable control: no `role`, `tabIndex` or handlers. |
+| Scrollable containers | done | partial | `ScrollArea` sets the overflow axes; `onScroll` reports deltas. **No scrollbar tint or width** (`scrollbarColor`/`scrollbarWidth` are unreleased) and **no fade mask**; there is no absolute scroll position, so a "scroll to N" position belongs to the row refs or `<virtual-list>`. No virtualisation here. |
+| Buttons | done | partial | A `div` with a role and handlers — 0.10.0 publishes no `Button` — plus our own keyboard contract (`core/keyboard.ts`: Enter activates on down, Space on up, a held key is ignored) and `loading`/`disabled` blocking. `variant`/`size`/`square`/`fullWidth`; an icon-only button must pass `label`. No `focusVisible` (a press shows the ring), no `aria-disabled`/`aria-pressed`. Runtime: click, Enter, Space, held key, disabled and busy refusals in `controls.runtime.test.tsx`. |
+| Button groups | done | partial | `ButtonGroup` clips the group to one rounded container and inserts the theme's gap; `label` names it for assistive technology. Only the container is rounded — children keep their own radius. No overflow-to-menu behaviour. |
+| Labels | done | partial | `Label` paints the label role and `labelledBy(name)` returns the `{ label }` a control writes once. **No `aria-labelledby`**, no `for`/`htmlFor`: there is no click-to-focus, and the name is written in two places when the label and the control are separate. `required` is presentational; validate with `Schema` at the boundary. |
+| Text inputs | done | partial | `Input` over the host `<input>`, with the theme's native text theme (caret, selection, placeholder, fonts), invalid state and an optional label. No `type`/`maxLength`/`inputMode`/`pattern`, no prefix/suffix or mask; `disabled` is emulated (read-only + out of the tab order + disabled roles) because the host has no `disabled` prop; no `aria-describedby`. |
+| Text areas | done | partial | `TextArea` over `<textarea>` with `rows`/`maxRows` (auto-grow up to the cap, then scroll). No rich text, no character counter, **no submit-on-Enter by design**. Disabled is the same read-only emulation as `Input`. |
+| Checkboxes | done | partial | Three states (unchecked/checked/indeterminate) over the shared selection model, click and Space-up, disabled and destructive accent. **No `aria-checked`**: the state is announced through `aria-valuetext` (`mixed` for indeterminate). No label-inside composition and no custom mark. |
+| Radio groups | done | partial | `RadioGroup` with options as data, a roving tab stop that follows the selection, arrows that wrap and skip disabled options, Home/End, and a named `role="radiogroup"`. No type-ahead, no compound `RadioGroupItem`, and an option `description` is not associated for assistive technology. |
+| Selects | done | yes | Wraps GPUix's published `Select` parts and themes the trigger, list surface and rows; open state, positioning and dismissal are the runtime's. Options are data — no option groups, rich options, search/type-ahead or multi-select. |
+| Switches | done | partial | An immediate on/off over the same three-state paint and keyboard contract as the checkbox, with the knob moved by `justifyContent`. No slide animation (no colour interpolation in `motion`), no pending state, and no `aria-checked` — the visible label carries the meaning. |
+| Progress | done | partial | Determinate fill (clamped 0–100, `Number.NaN` reads as empty) and an indeterminate discrete step; four tones, two sizes. **No `aria-valuenow`** — the value is announced as `aria-valuetext` (`"42%"`, `"loading"`). No buffer value, stacked segments or in-track label. |
+| Tooltips | done | yes | Wraps GPUix's published `Tooltip` and sets the delay; the surface and its open/close timing are the runtime's. The trigger must be a focusable host element. No arrow, no `aria-describedby`, no wrapping content (that is a popover). |
+| Skeletons | done | partial | A `div` on the skeleton role with an opacity pulse driven by `motion`. **No shimmer sweep** — `motion` animates opacity/width/height and there is no gradient translation. No list-shape generation and no reduced-motion switch; compose the blocks you need. |
+| Loading indicators | done | partial | `Spinner` advances a discrete lit-dot step on a timer because the runtime **cannot rotate** (`motion` has no transform). No smooth animation, no size scale (pass pixels or an icon size number) and no inline placement inside a text run. |
+| Slider | done | partial | Click-to-position plus arrows/Home/End with a value step, one thumb whose centre lands on the filled fraction. **No pointer capture** — a drag stops when the pointer leaves the track — and **no `aria-valuenow`/`min`/`max`**, so the range is not announced. The thumb cannot host a custom glyph. |
+| Range slider | done | partial | Two thumbs over the same track geometry with min/max ordering and thumb-crossing rules in `core/value.ts`; each thumb is a tab stop. Same pointer-capture and `aria-valuenow` gaps as `Slider`; the thumbs cannot be given custom glyphs. |
+| Meter | done | partial | A value in a range, distinct from task progress: no indeterminate mode and no completion semantics. No `aria-valuenow`/`min`/`max`, no threshold segments or tick marks, and the fill does not animate between values. |
+| Number Field | done | partial | Host `<input>` plus stepper buttons, typed decimal clamping, arrow/PageUp/PageDown steps and locale-free formatting. **No `type="number"`/`inputMode`**, no drag-to-scrub and no grouping separators; `autoFocus` paints no ring on mount (the runtime focuses without a focus event). |
+| OTP Field | done | partial | One cell per character over real `<input>`s, contiguous code, arrows that move between cells, digit-only input and backspace-to-previous. **Paste is unverified** (no `onPaste` in the runtime), arrows are handled on key up (no repeat), clearing a middle character shifts the rest, and there is no letter-casing rule. |
+| Toggle | done | partial | A momentary pressed mode distinct from `Switch`, over the shared button contract; `pressed` is caller-owned. **No `aria-pressed`** — the visual state is the state, so pair it with a label that reads correctly either way. No `loading` state. |
+| Rating | done | partial | Whole stars only (no half stars: no clipping or transform), roving focus with arrows/Home/End, explicit clearing via Delete/Backspace, read-only and disabled modes. **No hover preview** — per-star hover state would need a re-render per pointer move. |
+
 
 ## Tier 2 — composition and feedback
 

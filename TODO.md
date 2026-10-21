@@ -39,13 +39,19 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[x]` `[█████░░░░░]` 5/9
+`[x]` `[█████████░░░]` 9/13
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[x]` Land the `@gpuixui/tw` extension registry, luma `cn-*` aliases and state
 variants (plan 524)
-`[ ]` Land the primitives package
+`[x]` Land the primitives package — `packages/primitives` (27 Tier 1 rows over 19
+components plus `core/`, `recipe/`, docs, examples and the runtime suites) and
+`packages/icons`; the Tier 1 inventory rows in `COMPONENTS.md` now record the real
+status, support verdict and limitations instead of `todo`
+`[ ]` Give `packages/primitives`' test theme fixture the `avatarSize` group once
+`@gpuixui/tokens` lands the avatar diameter scale (the fixture is a `Theme`, so a
+new required group is a compile error here) — owner: primitives
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix
 `[x]` Land the docs shell and the component page pattern in Fumadocs — the
@@ -249,10 +255,12 @@ shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `focusRing`, `elevation` and hand-mixed `tone` palette are gone; `internal/theme.ts`
 re-exports the token helpers and keeps only the `danger` → `destructive` mapping
 (plan 157)
-`[ ]` Cross-team: `primitives` still carries its local focus-ring and
-first-shadow helpers (`primitives/src/core/style.ts`) — delete them now that
-`focusRing` and `elevationShadow` are in tokens (owner: `primitives`; plan 157
-records the components half)
+`[x]` Cross-team: `primitives` still carries its local focus-ring and
+first-shadow helpers (`primitives/src/core/style.ts`) — **resolved**: `style.ts`
+already resolved the ring and elevation through `@gpuixui/tokens`; the last copy
+(`core/selection.ts`) now calls `focusRing(theme).boxShadow` too, and
+`core/theme.test.ts` scans the package source to keep the row geometry defined
+once (owner: primitives; plan 157 records the components half)
 `[x]` Components carry no structural copy of `@gpuixui/tokens` and import the
 package directly (plan 157)
 `[!]` Tokens' `src/react.tsx` is compiled inside the components program when

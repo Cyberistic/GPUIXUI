@@ -3,7 +3,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
+import { focusRing } from "@gpuixui/tokens";
 import { controlStyle } from "./style.js";
+import { selectionBoxStyle, switchTrackStyle } from "./selection.js";
 import { buttonVariants } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
 import type { PrimitiveTheme } from "./theme.js";
@@ -29,9 +31,13 @@ import type { PrimitiveTheme } from "./theme.js";
  */
 
 const coreDir = fileURLToPath(new URL(".", import.meta.url));
+const sourceDir = fileURLToPath(new URL("../", import.meta.url));
 
 /** The fixture is the one file whose subject is a colour. */
 const COLOUR_FILES = [join("testing", "theme.fixture.ts")];
+
+/** The fixture's subjects are obviously-fake shadow metrics, too. */
+const SHADOW_FILES = [join("testing", "theme.fixture.ts")];
 
 const isSource = (name: string): boolean =>
   name.endsWith(".ts") && !name.endsWith(".test.ts") && !name.endsWith(".d.ts");
@@ -46,6 +52,9 @@ const walk = (dir: string): ReadonlyArray<string> =>
   );
 
 const COLOUR_LITERAL = /#[0-9a-fA-F]{3,8}\b/g;
+
+/** The one property only `@gpuixui/tokens`' `focusRing` may set. */
+const SPREAD_RADIUS = /spreadRadius\s*:/;
 
 /** The theme with every density number changed, and nothing else. */
 const spacious: PrimitiveTheme = {
@@ -73,6 +82,40 @@ describe("the theme is the only source of colour", () => {
       ),
     );
     expect(offenders).toEqual([]);
+  });
+});
+
+describe("the focus ring has one definition", () => {
+  const scanned = Arr.filter(
+    walk(sourceDir),
+    (path) => !Arr.some(SHADOW_FILES, (allowed) => path.endsWith(allowed)),
+  );
+
+  it("finds no local focus-ring geometry in the package's source", () => {
+    // The walk must reach the file that used to carry a local ring, or the scan
+    // proves nothing.
+    expect(Arr.some(scanned, (path) => path.endsWith("selection.ts"))).toBe(
+      true,
+    );
+    const offenders = Arr.filter(scanned, (path) =>
+      SPREAD_RADIUS.test(readFileSync(path, "utf8")),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("paints the shared ring on a focused selection control", () => {
+    const spec = {
+      state: "checked",
+      size: "md",
+      accent: "primary",
+      focused: true,
+    } as const;
+    expect(selectionBoxStyle(spec, testTheme).boxShadow).toEqual(
+      focusRing(testTheme).boxShadow,
+    );
+    expect(switchTrackStyle(spec, testTheme).boxShadow).toEqual(
+      focusRing(testTheme).boxShadow,
+    );
   });
 });
 
