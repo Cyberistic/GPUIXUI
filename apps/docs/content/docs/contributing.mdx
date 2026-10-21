@@ -22,20 +22,39 @@ nub run check
 Node 24.18.0 and [`nub`](https://nub.dev) are pinned. Use `nub` for every
 workspace command.
 
-## Work in a worktree
+## Work in one tree
 
-One writer per tree. Agents work in their own `git worktree` under
-`workspaces/<workstream>/` on branch `agent/<workstream>`; the shared checkout's
-`main` is the integration branch. Resolve conflicts in your own branch, never on
-`main`.
+One writer per tree. The swarm works on `master` in the shared checkout, and
+every commit is made with `scripts/swarm-commit.sh "<message>" <paths…>`, which
+serialises the index so five agents cannot stage each other's work. An agent that
+needs isolation uses a `git worktree` under `workspaces/<workstream>/` on branch
+`agent/<workstream>` and merges its own branch into `master`; either way,
+conflicts are resolved in the branch that owns them, never on the integration
+branch.
 
 ## Checks
 
 ```sh
-nub run check        # tests-can-fail gate, lint, format, types
-nub run test         # unit tests
-nub run test:behaviour
+nub run check                                  # tests-can-fail gate, lint, format, types
+nub run test                                   # every package's suite
+nub run --filter @gpuixui/components test:behaviour   # the components' native behaviour suites
+nub run --filter @gpuixui/primitives test:runtime     # the primitives measured in the renderer
+nub run --filter @gpuixui/docs test            # the docs guards: links, inventory, snippets
+nub run --filter playground smoke              # the native smoke suite, headless
 ```
+
+A `--filter` names the package as its own `package.json` does, and the script has
+to be one that manifest declares: `nub run` at the root only knows the root's
+scripts, which is why the behaviour suite is `--filter @gpuixui/components`.
+
+The **live** suite opens real windows and is not part of `check`:
+
+```sh
+nub run --filter playground build && nub apps/playground/dist/live/run.js --only <id>
+```
+
+Treat it as a release gate. While iterating, run the one scenario a change
+touches; `--list` prints the ids.
 
 A test must be able to fail. `nub run check:tests` rejects a test that asserts
 nothing, compares a value with itself, or asserts back what the test stubbed.
@@ -45,11 +64,13 @@ and passes with it, proven in both directions.
 ## What a component ships with
 
 - One responsibility, a typed public API and sensible defaults.
-- Predicted variants and sizes, with every interaction state.
+- Predictable variants and sizes, with every interaction state.
 - A behaviour test that runs in the real GPUix renderer.
 - At least one working example.
-- A docs page under `apps/docs/content/docs/components` in the Preview/Code
-  pattern, with an API table and the measured limitations.
+- A docs page the package owns: `packages/<package>/docs/<component>.mdx`, which
+  the site mounts at `/docs/<package>/<component>`. The curated file in
+  `apps/docs/content/docs/components` is optional — it wins that URL and adds a
+  live preview, the install block and the copyable source.
 - An inventory row in `COMPONENTS.md`.
 
 A browser preview is documentation. It never replaces the native test, and it is
