@@ -13,14 +13,19 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { describe, expect, it } from "vitest";
-import { markFocusSuccessor, takeFocusSuccessor } from "./focus-successor.js";
+import { beforeEach, describe, expect, it } from "vitest";
+import {
+  clearFocusSuccessors,
+  markFocusSuccessor,
+  takeFocusSuccessor,
+} from "./focus-successor.js";
 
 /** Cross a real task: a one-task lifetime would have dropped the mark here. */
 const settle = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 0));
 
 describe("focus successor", () => {
+  beforeEach(clearFocusSuccessors);
   it("returns the marked element for the element that is disappearing", () => {
     markFocusSuccessor(4, 9);
     expect(takeFocusSuccessor(4)).toEqual(Option.some(9));
@@ -56,5 +61,13 @@ describe("focus successor", () => {
     markFocusSuccessor(4, 9);
     markFocusSuccessor(4, 12);
     expect(takeFocusSuccessor(4)).toEqual(Option.some(12));
+  });
+
+  it("forgets every mark when a new renderer starts", () => {
+    // Host ids restart with a renderer, so a mark from one scene must not be
+    // readable by a modal in the next (plan 830).
+    markFocusSuccessor(4, 9);
+    clearFocusSuccessors();
+    expect(takeFocusSuccessor(4)).toEqual(Option.none());
   });
 });

@@ -1613,6 +1613,17 @@ retired once both branches are one
       native suite 1041 passed / 20 failed of 1061 with the same 20 baseline
       failures; docs, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D30 and the index
       synced (owner: components)
+    - [x] A modal opened from a toast action returns focus where the toast was
+      raised — plan 830; measured 2026-10-21: the action unmounts with its card
+      in the same commit, so the dialog captured it as its opener and Escape left
+      the focused host on nothing. The card records the focused host when it
+      arrives and names its action against that origin before the caller's
+      handler runs; the behaviour teardown also forgets successors, because host
+      ids restart with each renderer and a stale mark made the new composite case
+      pass at `HEAD` when the whole file ran. 1 composite case red at `HEAD`,
+      14/14 after, three mutations; unit 528 in 49 files, scoped smoke
+      `overlay-dialog` + `modal-focus-trap` green, full headless 17/20 with the
+      three recorded binding failures (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

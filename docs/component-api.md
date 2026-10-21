@@ -183,7 +183,13 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   field against the control that opened the palette and the dialog restores
   there. The mark is durable until the modal that captured it restores, consumed
   by that read, and bounded — it is keyed by the id of an element that has
-  vanished, which no later modal can capture (plan `827`).
+  vanished, which no later modal can capture (plan `827`). A **toast action** is
+  the same vanishing opener: the action runs a handler that may open a modal and
+  then leaves with its card, so the card records the focused host when it arrives
+  and names the action against that origin before the handler runs; the modal
+  captures the raising control and restores there, while a second live card's
+  dismiss control still wins (plans `770`, `830`). The behaviour harness forgets
+  every mark between tests because native host ids restart with each renderer.
   **A layer answers for its own surface**: the runtime reports
   `mouseDownOutside` by bounds, not by tree, so a nested panel painted beyond an
   ancestor's box is announced as an outside press for that ancestor. Each layer

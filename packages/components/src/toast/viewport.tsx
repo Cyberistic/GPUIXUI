@@ -30,6 +30,7 @@ import {
 } from "react";
 import { Button, IconButton } from "../internal/button.js";
 import { registerPressSurface } from "../internal/dismiss-layer.js";
+import { markFocusSuccessor } from "../internal/focus-successor.js";
 import { HoverGroupContext, type HoverGroup } from "../internal/hover-group.js";
 import { MotionSurface, motionProps } from "../internal/motion.js";
 import { useNativeFocusId } from "../internal/native-focus.js";
@@ -122,11 +123,17 @@ const ToastCard = ({
   const [actionHost, setActionHost] = useState<number | null>(null);
   const [dismissHost, setDismissHost] = useState<number | null>(null);
   const focusedHost = useNativeFocusId(true);
+  const renderer = useGpuix().renderer;
+  // Where the user was when this notification arrived: a control that runs an
+  // action keeps no host once its card leaves, so the modal it opened returns
+  // here instead of to nothing (plan 830).
+  const [origin] = useState<number | null>(
+    () => renderer?.getFocusedElementId?.() ?? null,
+  );
   // The card is a painted overlay surface, not a dismiss layer: a press on its
   // own controls belongs to the toast, so an overlay underneath never treats it
   // as an outside press (plan 820). `ownsSurface` reads the host at event time.
   const surface = useRef<PublicInstance | null>(null);
-  const renderer = useGpuix().renderer;
   useEffect(
     () =>
       registerPressSurface(ownsSurface(renderer, () => surface.current?.id)),
@@ -280,6 +287,21 @@ const ToastCard = ({
                 ref={attachAction}
                 onClick={() => {
                   focusNeighbour();
+                  // A neighbour that took focus is a live opener, so it wins
+                  // (plan 770). With no neighbour this action leaves with its
+                  // card: name the place the user came from before the modal
+                  // captures this control (plan 830).
+                  const leaving =
+                    actionHost !== null &&
+                    renderer?.getFocusedElementId?.() === actionHost;
+                  if (
+                    leaving &&
+                    origin !== null &&
+                    origin !== actionHost &&
+                    renderer?.getElementBounds?.(origin) !== null
+                  ) {
+                    markFocusSuccessor(actionHost, origin);
+                  }
                   onSelect();
                   dismiss(toast.id);
                 }}

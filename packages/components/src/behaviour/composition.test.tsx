@@ -418,6 +418,48 @@ const DialogFromCommand = () => {
   );
 };
 
+/** A toast action that opens a dialog: the action leaves with its card. */
+const DialogFromToast = () => {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        width: 1200,
+        height: 760,
+      }}
+    >
+      <Button
+        testId="raise"
+        onClick={() =>
+          toast.push(
+            { title: "Saved", tone: "success", action: { label: "Undo" } },
+            { onAction: () => setOpen(true) },
+          )
+        }
+      >
+        Raise
+      </Button>
+      {/* Before the dialog on purpose (plan 820 §7). */}
+      <ToastViewport />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Undo" testId="undo-dialog" size="sm">
+          <DialogTitle>Undo</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const DialogFromToastPage = () => (
+  <ToastProvider>
+    <DialogFromToast />
+  </ToastProvider>
+);
+
 /** The toast store updates through its runtime: let the microtasks drain. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
@@ -714,6 +756,30 @@ describe("composition", () => {
 
     expect(isShown(scene, "command-dialog")).toBe(false);
     expect(focusedTestId(scene)).toEqual(Option.some("open-palette"));
+
+    scene.unmount();
+  });
+
+  it("returns focus to the toast's origin when its action's dialog closes", async () => {
+    const scene = renderComponent(<DialogFromToastPage />);
+    clickCentreOf(scene, "raise");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "toast-1")).toBe(true);
+    expect(focusedTestId(scene)).toEqual(Option.some("raise"));
+
+    clickCentreOf(scene, "toast-1-action");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "undo-dialog")).toBe(true);
+
+    // A person dismisses the dialog in a later task than the toast's close.
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    expect(isShown(scene, "undo-dialog")).toBe(false);
+    expect(focusedTestId(scene)).toEqual(Option.some("raise"));
 
     scene.unmount();
   });
