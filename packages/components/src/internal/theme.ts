@@ -25,6 +25,7 @@ import {
   keyboardFocusRing,
   lightTheme,
   statusTone,
+  targetSize,
   textStyle,
   type PlatformName,
   type StatusTone,
@@ -43,6 +44,7 @@ export {
   keyboardFocusRing,
   lightTheme,
   statusTone,
+  targetSize,
   textStyle,
 };
 export type { PlatformName, StatusTone, Theme };

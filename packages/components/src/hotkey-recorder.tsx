@@ -39,6 +39,7 @@ import {
   controlHeight,
   currentPlatform,
   keyboardRing,
+  targetSize,
   useTheme,
 } from "./internal/theme.js";
 
@@ -174,6 +175,9 @@ export const HotkeyRecorder = ({
             if (isActivation(event)) clear();
           }}
           style={mergeStyles(recipeStyle(HOTKEY_RECORDER_CLEAR, theme), {
+            width: targetSize.minimum,
+            height: targetSize.minimum,
+            flexShrink: 0,
             hover: { backgroundColor: theme.colors.accent },
           })}
         >

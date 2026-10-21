@@ -74,10 +74,11 @@ last.
 
 The container paints `colors.background`, a `borderWidth.thin` border in
 `colors.border`, `radius.md`, `spacing.md` horizontal padding and
-`controlHeight(theme, "md")`. The clear control is 18×18 with `radius.sm` and a
-`colors.accent` hover; the clear control declares the same keyboard outline the
-input does. Focus is the runtime's `focusVisible` outline in `colors.ring`,
-declared at rest, so a Tab paints it and a mouse press does not.
+`controlHeight(theme, "md")`. The clear control paints a 24px square (the
+pressable-target floor — the glyph inside is 16px) with `radius.sm` and a
+`colors.accent` hover; it declares the same keyboard outline the input does.
+Focus is the runtime's `focusVisible` outline in `colors.ring`, declared at rest,
+so a Tab paints it and a mouse press does not.
 
 ## Style by state
 

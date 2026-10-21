@@ -68,6 +68,7 @@ import {
   controlHeight,
   keyboardRing,
   selectionWash,
+  targetSize,
   useTheme,
 } from "./internal/theme.js";
 
@@ -396,6 +397,9 @@ export const TimePickerClear = ({
       }}
       style={mergeStyles(recipeStyle(TIME_PICKER_CLEAR, theme), {
         ...keyboardRing(theme),
+        width: targetSize.minimum,
+        height: targetSize.minimum,
+        flexShrink: 0,
         hover: { backgroundColor: theme.colors.accent },
       })}
     >

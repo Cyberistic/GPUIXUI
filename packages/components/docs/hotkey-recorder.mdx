@@ -56,7 +56,9 @@ macOS keeps `ctrl` rather than being silently rewritten to `mod`.
 
 `HotkeyRecorder` takes the GPUix host props (`testId`, `aria-*`) and merges
 `style` last. When `testId` is given, the clear control is
-`${testId}-clear`.
+`${testId}-clear`. It paints a 24px square — the pressable-target floor, with a
+16px glyph inside — so a dense toolbar cannot shrink the press box under the
+floor.
 
 ## Theming
 

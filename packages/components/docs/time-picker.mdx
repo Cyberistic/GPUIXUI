@@ -120,7 +120,8 @@ owns that state and decides what "not set" means.
 
 Every part takes the GPUix host props and merges `style` last. The root's `testId`
 is the base for the parts: `<testId>-hours`, `<testId>-minutes` and
-`<testId>-clear`.
+`<testId>-clear`. The clear control paints a 24px square — the pressable-target
+floor, with a 16px glyph inside — and takes the keyboard outline the segments do.
 
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |

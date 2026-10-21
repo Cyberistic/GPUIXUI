@@ -43,6 +43,7 @@ import {
   controlHeight,
   keyboardRing,
   selectionWash,
+  targetSize,
   useTheme,
 } from "./internal/theme.js";
 
@@ -252,6 +253,9 @@ export const TagInputChip = ({
             if (isActivation(event)) remove(value);
           }}
           style={mergeStyles(recipeStyle(TAG_INPUT_CHIP_REMOVE, theme), {
+            width: targetSize.minimum,
+            height: targetSize.minimum,
+            flexShrink: 0,
             hover: { backgroundColor: theme.colors.accent },
           })}
         >
