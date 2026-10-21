@@ -35,7 +35,10 @@ describe("the status strip", () => {
   });
 
   it("renders nothing on a page the inventory has no row for", () => {
-    expect(render("Grid")).toBe("");
+    // `ThemeProvider` is the argued exemption: a provider is not a component.
+    // `Grid` was the other until its Tier 1 row landed, so it must render now.
+    expect(render("ThemeProvider")).toBe("");
+    expect(render("Grid")).not.toBe("");
   });
 
   it("reads the row the inventory holds today", () => {

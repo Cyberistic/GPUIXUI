@@ -77,12 +77,12 @@ and a trailing plural, and names the few titles whose row reads differently
 reads the inventory, so a row that moves to `done` moves on the page in the same
 commit with no docs change.
 
-A page the inventory has no row for renders no strip rather than a guess. The two
-are argued in the module — `ThemeProvider` is a provider, not a component, and
-the Tier 1 table has no `Grid` row (recorded in `TODO.md` → Interlocks) —
-and `inventory-status.test.ts` fails when a new page needs an entry, when an
-alias names a row that is gone, when an exemption outlives its page, or when a
-title two rows could answer would report the wrong verdict.
+A page the inventory has no row for renders no strip rather than a guess. The
+argued exemption is `ThemeProvider`, a provider rather than a component, and
+`inventory-status.test.ts` fails when a new page needs an entry, when an alias
+names a row that is gone, when an exemption outlives its page, or when a title
+two rows could answer would report the wrong verdict. `Grid` was the second
+exemption until its Tier 1 row landed; the strip now reports it.
 
 Because the package writes Markdown and the site compiles MDX, the packages'
 files must satisfy both: valid YAML frontmatter and no raw `<tag>` outside code.

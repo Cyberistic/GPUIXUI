@@ -35,19 +35,14 @@ export const renamedRows: Readonly<Record<string, string>> = {
 /**
  * Package pages the inventory has no row for, with the reason.
  *
- * Both are honest gaps rather than exceptions to the rule: a provider is not a
- * component, and the Tier 1 table has no Grid row. `TODO.md` → Interlocks
- * records the missing row; the guard fails if a third page lands here without
- * being argued in this table.
+ * The one entry is honest rather than an exception to the rule: a provider is
+ * not a component. `Grid` was the second until its Tier 1 row landed, and the
+ * guard fails if a third page lands here without being argued in this table.
  */
 export const withoutRow: ReadonlyArray<{
   readonly title: string;
   readonly reason: string;
 }> = [
-  {
-    title: "Grid",
-    reason: "COMPONENTS.md has no Grid row (TODO.md → Interlocks)",
-  },
   {
     title: "ThemeProvider",
     reason: "a provider, not a component: it has no inventory row",
