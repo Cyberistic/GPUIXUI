@@ -188,7 +188,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   submenu chosen while a deeper level is open. A submenu trigger announces
   `aria-expanded` only — 0.10.0 has no `aria-haspopup`.
 - `Shift+F10` opens at the trigger's bottom-left, not at a text caret; a
-  keyboard-opened menu returns focus to its trigger on Escape and activation.
+  keyboard-opened menu returns focus to its trigger on Escape and activation. A
+  modal opened from a row's action returns focus to the pressed region when it
+  closes, because the row unmounted with the menu (plan 826).
 
 - Focus cues are seeded by `autoFocus` and then follow the renderer's focused
   host (a 50 ms sample while the part is enabled), so `Tab`, a programmatic focus

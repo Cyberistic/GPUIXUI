@@ -173,7 +173,11 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   a popover, menu or confirmation mounted together with its dialog, and a
   submenu inside a menu, are still the top layer (plans `730`, `732`). A modal
   additionally ranks its **initial focus** and returns focus to the enclosing
-  surface (plan `730`).
+  surface (plan `730`). **A modal's opener is the element the user will return
+  to**: a menu row that opens a modal unmounts with its menu in the same commit,
+  so the closing menu names its trigger as that row's focus successor and the
+  modal restores to the trigger instead of to a vanished row (plan `826`,
+  `internal/focus-successor.ts`).
   **A layer answers for its own surface**: the runtime reports
   `mouseDownOutside` by bounds, not by tree, so a nested panel painted beyond an
   ancestor's box is announced as an outside press for that ancestor. Each layer

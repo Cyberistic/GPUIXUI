@@ -242,7 +242,10 @@ layer recognises a press inside its own or any enclosing surface and lets it
 reach the row. A press outside every menu surface closes the whole menu.
 
 A row is chosen by pointer as well as by keyboard: clicking it runs the action
-once and closes every level.
+once and closes every level. A modal opened from a row's action (a dialog, drawer
+or confirmation) returns focus to **this menu's trigger** when it closes: the row
+unmounts with the menu, so the menu names its trigger as the row's successor
+(plan 826).
 
 `Escape` and `ArrowLeft` close **one** level: the submenu disappears, focus
 returns to its trigger, and the parent menu stays open. Choosing a submenu action

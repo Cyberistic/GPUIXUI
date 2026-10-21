@@ -1543,16 +1543,22 @@ retired once both branches are one
       48 files, `check`/`lint`/`test` exit 0, scoped smoke `overlay-dialog` and
       `modal-focus-trap` green; docs, `docs/component-api.md`, `COMPONENTS.md`,
       `PLAN.md` D30 and the index synced (owner: components)
-    - [ ] A dialog opened from a menu row loses the keyboard when it closes —
-      measured 2026-10-21 while probing plan 824: a `DropdownMenuItem`
-      `onSelect` opens a `Dialog`; on Escape the dialog closes and the focused
-      host is `None`. `useModalFocus` captures the opener at the surface's first
-      render (plan 638), which is the menu **row**, and the row unmounts with the
-      menu, so the restore finds no bounds and a root dialog has no enclosing
-      surface to fall back to (plan 730). The natural target is the menu trigger,
-      which the menu restores to in a layout effect that runs after the capture.
-      Needs a decision: a successor mark written by the row before `onSelect`, or
-      a capture that can resolve a dead opener (plan 824 §7) (owner: components)
+    - [x] A dialog opened from a menu row returns focus to the menu trigger —
+      plan 826; measured 2026-10-21 while probing plan 824: a `DropdownMenuItem`
+      `onSelect` opened a `Dialog`; on Escape the dialog closed and the focused
+      host was `None`, because `useModalFocus` captured the opener at the
+      surface's first render — the menu row — and the row unmounted with the
+      menu, before the modal's capture. The closing menu now names its trigger as
+      the vanishing element's **focus successor** (`internal/focus-successor.ts`,
+      a one-task mark like the event claim), and `useModalFocus` substitutes it
+      when it captures; the Dropdown and Context menu roots mark in `close`, so a
+      submenu row is covered by the root's chain. 3 helper cases + 1 composite
+      case red at `HEAD` (`None`), 12/12 after, both halves proven necessary;
+      unit 524 in 49 files; menu/dialog suites unchanged (the same plan-540
+      position cases), `check`/`lint`/`test` exit 0, scoped smoke
+      `overlay-dialog` + `modal-focus-trap` green; docs, `docs/component-api.md`,
+      both menu pages, `COMPONENTS.md`, `PLAN.md` D30 and the index synced
+      (owner: components)
     - [x] A press on a toast belongs to the toast — plan 820; measured
       2026-10-21: a toast raised from inside an open dialog was painted **under**
       the dialog's veil and its own action never ran (0 calls) while the press
