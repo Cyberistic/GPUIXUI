@@ -241,6 +241,21 @@ and `mutedForeground` clears the secondary floor on all three. A ghost button or
 a menu row tints its surface and leaves its label in its resting role, so a wash
 that drifted toward its text would be unreadable with nothing else noticing.
 
+**Disabled ships two ways today, and only one of them is the contract.** A
+disabled field, a select's value and a fieldset legend paint the role pair —
+`disabled` behind `disabledForeground` — which is what `contrastFloors.disabled`
+measures. The rest of the library fades the whole control with a 50% opacity: the
+`disabled:opacity-50` utility in the `@gpuixui/tw` recipes and in
+`packages/primitives/src/recipe/index.ts`, the `opacity = 0.5` helpers in
+`packages/primitives/src/core/style.ts`, and a menu row's own `opacity` in
+`packages/components/src/menu/item.tsx`. That share is `disabledOpacity`, and
+`disabledFadeFailures` measures the fade by compositing it — twice, because the
+label is faded over the *faded* fill. Measured: a filled action's label lands at
+1.51:1–2.83:1, and in a high-contrast theme at 1.74:1–2.23:1, under the 3:1 that
+variant's disabled floor asks for, so the fade cannot carry the state there. The
+role pair is therefore the contract and the fade is the deviation; replacing it
+is recorded in `TODO.md` → Interlocks.
+
 A filled action's hover and press are **derived, not stored roles**: each moves
 the fill a step toward the theme's foreground, so it darkens in a light theme
 and lightens in a dark one. Deriving keeps the state opaque — a half-alpha fill

@@ -370,7 +370,11 @@ The contract covers the state WCAG exempts as well: `disabledForeground` is
 measured on the fill that disables it and on `background`, `card` and `popover`
 at `contrastFloors.disabled` (1.5:1; 3:1 in a high-contrast theme). That is not a
 readability claim — an inactive label is designed quiet — it only says a disabled
-control can still be seen as one rather than as an empty box.
+control can still be seen as one rather than as an empty box. The other mechanism
+a control can use, fading itself by `disabledOpacity` (the `disabled:opacity-50`
+in the recipes), is measured by `disabledFadeFailures`, which composites the
+label over the faded fill; it clears the default floor in every theme but cannot
+reach a high-contrast theme's 3:1, which is why the role pair is the contract.
 
 ```ts
 import { auditTheme } from "@gpuixui/tokens";
@@ -401,6 +405,10 @@ Each report is also a function of its own:
 - `selectionFailures(theme, floors?)` composites the `selection` wash over each
   surface body text is selected from and lists a wash the reader cannot see and
   one that hides the text it selects; see §Text selection.
+- `disabledFadeFailures(theme, floor?)` composites the disabled fade a control
+  applies (`disabledOpacity`) and lists a label that disappears into the faded
+  fill; the role pair is measured by `contrastFailures`, this is the other
+  mechanism.
 
 `contrastRatio(foreground, background)` is the WCAG 2.1 ratio behind the second
 check — `undefined` for a translucent or non-hex value rather than a guess.

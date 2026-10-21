@@ -769,6 +769,41 @@ platform and authored theme clears it; the tightest is Linux dark's unavailable
 label on a popover at 1.76:1. It is a backstop, not a design target: the floor
 exists so a theme that erases the state fails by name instead of shipping it.
 
+#### The fade a disabled control paints
+
+The role pair is one of two mechanisms in the workspace. The `@gpuixui/tw`
+recipes and the primitives' core styles instead fade the whole control with
+`disabled:opacity-50` / `opacity = 0.5`, which `contrastRatio` refuses: a
+translucent control shows whatever is behind it, so no role pair can measure the
+result. `disabledOpacity` is that share (`0.5`, a design constant rather than a
+`Theme` group — a brand that lowered it would make the library's own disabled
+state disappear), and `disabledFadeFailures(theme, floor?)` measures the fade by
+compositing it.
+
+Each `DisabledFadePair` names a control the fade is applied to — `fill`, `label`
+and the `over` surface — for the three filled actions on the page and a field on
+`background`, `card` and `popover`; `disabledFadePairs` is that table. The
+measurement composites twice, because the
+label is faded over the *faded* fill: a disabled filled button shows half its
+fill over the page, then half its label over that, which is why the label falls
+so much further than the fill. A `DisabledFadeFailure` carries the pair, the
+composited `ratio` (or `undefined` when a role is translucent) and the floor.
+
+```ts
+import { disabledFadeFailures, lightTheme } from "@gpuixui/tokens";
+
+disabledFadeFailures(lightTheme); // [] — every faded label clears 1.5:1
+```
+
+The floor is the default `contrastFloors.disabled` in **every** variant, and that
+is the point rather than an oversight: a high-contrast theme fades a filled
+action's label to between 1.74:1 and 2.23:1, under the 3:1 its own variant asks
+of the role pair, and no share a component can pick fixes that. So the fade
+cannot carry the state in a high-contrast theme — which is the measured reason
+the role pair is the contract and the fade is the deviation to be replaced
+(`TODO.md` → Interlocks). `disabled.test.ts` holds every shipped, platform and
+authored theme to the floor, the composite, the erased-label case and that gap.
+
 ### Decorative surfaces
 
 Five surfaces carry no text and are not an essential boundary, so WCAG's floors
