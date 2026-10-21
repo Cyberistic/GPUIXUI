@@ -15,6 +15,7 @@ import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
+import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
 import { Separator, Spacer } from "../src/components/Separator.js";
@@ -186,6 +187,82 @@ it("forwards a ScrollArea's scroll deltas to the caller", async () => {
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
   expect(deltas).toContain(-100);
+});
+
+it("scrolls a focused ScrollArea with the keyboard", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        label="Rows"
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.keyDown("s", "down");
+  expect(runtime.focused()).toStrictEqual(Option.some("s"));
+  const row = testTheme.density.rowHeight;
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: 0, y: -row }),
+  );
+  runtime.keyDown("s", "pagedown");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: 0, y: -(row + 60) }),
+  );
+  runtime.keyDown("s", "home");
+  expect(runtime.scrollOffset("s")).toStrictEqual(Option.some({ x: 0, y: 0 }));
+  // End is an overshoot the runtime clamps to the content's end (400 - 60).
+  runtime.keyDown("s", "end");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: 0, y: -340 }),
+  );
+  expect(
+    Option.isSome(a11yNode(runtime.a11y(), { role: "Group", label: "Rows" })),
+  ).toBe(true);
+});
+
+it("leaves a field's own arrow keys alone inside a ScrollArea", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 120, width: 240 }}
+        viewportTestId="s"
+      >
+        <Input label="Note" testId="field" />
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.keyDown("field", "down");
+  expect(runtime.focused()).toStrictEqual(Option.some("field"));
+  expect(runtime.scrollOffset("s")).toStrictEqual(Option.some({ x: 0, y: 0 }));
+});
+
+it("reports a ScrollArea's absolute offset, whatever moved it", async () => {
+  const runtime = await openWindow();
+  const offsets: number[] = [];
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        onScrollChange={(event) => offsets.push(event.scrollY ?? 0)}
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.keyDown("s", "pagedown");
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(offsets).toContain(-60);
 });
 
 it("tints and sizes the platform's scrollbar", async () => {

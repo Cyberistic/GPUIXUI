@@ -136,12 +136,20 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No Scrollbar/Thumb/Corner parts: the platform paints one native thumb",
       "No fade mask at the edges",
-      "onScroll reports deltas only; there is no absolute offset",
+      "No smooth scrolling: a key jumps the offset",
     ],
-    source: ["src/components/ScrollArea.tsx", "src/core/style.ts"],
+    source: [
+      "src/components/ScrollArea.tsx",
+      "src/core/scroll.ts",
+      "src/core/style.ts",
+    ],
     docs: "docs/scroll-area.mdx",
     example: layoutExample,
-    tests: ["src/components/presentational.test.tsx", layoutRuntime],
+    tests: [
+      "src/components/presentational.test.tsx",
+      "src/core/scroll.test.ts",
+      layoutRuntime,
+    ],
   },
   {
     name: "Buttons",

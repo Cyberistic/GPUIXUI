@@ -178,16 +178,44 @@ describe("layout containers", () => {
 
   it("an implicit viewport carries the area's onScroll and thumb colour", () => {
     const onScroll = () => {};
+    const onScrollChange = () => {};
     const part = scrollPart(
-      { axis: "vertical", onScroll, scrollbarWidth: 9 },
+      { axis: "vertical", onScroll, onScrollChange, scrollbarWidth: 9 },
       testTheme,
     );
     const viewport = renderScrollAreaViewport({}, part);
     expect(hostProp(viewport, "onScroll")).toStrictEqual(Option.some(onScroll));
+    expect(hostProp(viewport, "onScrollChange")).toStrictEqual(
+      Option.some(onScrollChange),
+    );
     expect(expectSome(stringIn(viewport, "scrollbarColor"))).toBe(
       testTheme.colors.scrollbar,
     );
     expect(expectSome(numberIn(viewport, "scrollbarWidth"))).toBe(9);
+  });
+
+  it("makes the viewport a keyboard scroll region", () => {
+    const part = scrollPart(
+      { axis: "vertical", label: "Properties" },
+      testTheme,
+    );
+    const viewport = renderScrollAreaViewport({}, part);
+    expect(expectSome(hostProp(viewport, "tabIndex"))).toBe(0);
+    expect(expectSome(hostProp(viewport, "role"))).toBe("group");
+    expect(expectSome(hostProp(viewport, "aria-label"))).toBe("Properties");
+  });
+
+  it("opts out of the tab stop without losing the absolute-offset callback", () => {
+    const onScrollChange = () => {};
+    const viewport = renderScrollAreaViewport(
+      { focusable: false },
+      scrollPart({ axis: "vertical", onScrollChange }, testTheme),
+    );
+    expect(hostProp(viewport, "tabIndex")).toStrictEqual(Option.none());
+    expect(hostProp(viewport, "role")).toStrictEqual(Option.none());
+    expect(hostProp(viewport, "onScrollChange")).toStrictEqual(
+      Option.some(onScrollChange),
+    );
   });
 
   it("wraps plain children in one implicit viewport", () => {

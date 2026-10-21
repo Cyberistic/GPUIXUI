@@ -83,6 +83,7 @@ none paints a literal and none scripts hover or press
 | pointer capture | absent | a slider drag only tracks while the pointer is over the track; click-to-position and the keyboard are the precise paths |
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once |
 | scrollbar tint | present | `ScrollArea` tints the platform thumb through `scrollbarColor`/`scrollbarWidth` (measured in `runtime/layout.runtime.test.tsx`) and sets the overflow axes |
+| absolute scroll offset | present (`onScrollChange`, `scrollTo`) | `ScrollArea` forwards `onScrollChange` and is a keyboard scroll region (arrows, PageUp/PageDown, Home/End) through the renderer, measured in a window |
 | fade mask | absent | no edge fade: the scroller paints a hard edge |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
 | `./button` | published (headless) | `Button` keeps this package's contract — the recipe, `loading`, `StateStyle<ButtonState>` — and does not wrap the headless one yet (tracked in `TODO.md`) |
