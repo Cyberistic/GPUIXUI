@@ -32,6 +32,7 @@ import {
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { useDismissDepth } from "./internal/dismiss-scope.js";
 import { isMenuKey } from "./internal/key.js";
 import {
   assertParts,
@@ -140,12 +141,14 @@ export const ContextMenu = ({
   );
   const menu = useMenuState(close);
 
+  const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer((event) =>
-      close(event.eventType === "keyDown" ? "dismiss" : "outside"),
+    return pushDismissLayer(
+      (event) => close(event.eventType === "keyDown" ? "dismiss" : "outside"),
+      depth,
     );
-  }, [close, open]);
+  }, [close, depth, open]);
 
   const openAt = useCallback((next: Point) => {
     restoreFocus.current = false;

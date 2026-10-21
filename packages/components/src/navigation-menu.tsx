@@ -44,6 +44,7 @@ import {
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import {
   isDismiss,
   isDown,
@@ -337,6 +338,7 @@ export const NavigationMenu = ({
       if (current !== null) focusTrigger(current);
     };
   });
+  const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (open === null) return;
     return pushDismissLayer((event) => {
@@ -346,8 +348,8 @@ export const NavigationMenu = ({
       }
       stopHover();
       setOpen(null);
-    });
-  }, [open, setOpen, stopHover]);
+    }, depth);
+  }, [depth, open, setOpen, stopHover]);
 
   const context = useMemo<NavigationMenuContextValue>(
     () => ({
@@ -601,7 +603,7 @@ export const NavigationMenuContent = ({
         style,
       )}
     >
-      {children}
+      <DismissScope>{children}</DismissScope>
     </FloatingLayer>
   );
 };

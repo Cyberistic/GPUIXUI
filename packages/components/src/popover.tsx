@@ -43,6 +43,7 @@ import {
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import { isDismiss, isTab } from "./internal/key.js";
 import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
@@ -203,6 +204,7 @@ export const PopoverContent = ({
   // A popover is a dismiss layer so a dialog underneath does not also close on
   // the same event. Escape restores focus to the trigger; an outside press must
   // not, because it already moved focus to whatever was pressed.
+  const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
@@ -217,8 +219,8 @@ export const PopoverContent = ({
       queueMicrotask(() => {
         dismissedByOutsidePress.current = false;
       });
-    });
-  }, [dismissedByOutsidePress, open, renderer, trigger]);
+    }, depth);
+  }, [depth, dismissedByOutsidePress, open, renderer, trigger]);
 
   if (!open) return null;
 
@@ -256,7 +258,7 @@ export const PopoverContent = ({
         style,
       )}
     >
-      {children}
+      <DismissScope>{children}</DismissScope>
     </FloatingLayer>
   );
 };

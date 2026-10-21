@@ -29,6 +29,7 @@ import {
   type RefObject,
 } from "react";
 import { pushDismissLayer } from "../internal/dismiss-layer.js";
+import { useDismissDepth } from "../internal/dismiss-scope.js";
 import { claimEvent } from "../internal/event-claim.js";
 import { isDown, isLeft, isRight, isUp } from "../internal/key.js";
 import {
@@ -219,6 +220,8 @@ export const MenuSubContent = ({
 
   const menu = useMenuState(close);
 
+  const depth = useDismissDepth();
+
   // The trigger stays focusable while its submenu is open. Down/Up and the
   // row's own focus event use this to enter the submenu at the right edge.
   useLayoutEffect(() => {
@@ -272,12 +275,12 @@ export const MenuSubContent = ({
       if (event.eventType === "mouseDownOutside" && insideSurface(event))
         return;
       closeRef.current(event.eventType === "keyDown" ? "dismiss" : "outside");
-    });
+    }, depth);
     return () => {
       pop();
       release();
     };
-  }, [insideSurface, open, parentClaim, setOpen]);
+  }, [depth, insideSurface, open, parentClaim, setOpen]);
 
   useLayoutEffect(() => {
     if (open || !restoreFocus.current) return;

@@ -17,6 +17,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { isEventClaimed } from "../internal/event-claim.js";
 import { dismissTopLayer } from "../internal/dismiss-layer.js";
+import { DismissScope } from "../internal/dismiss-scope.js";
 import {
   isActivation,
   isDismiss,
@@ -117,7 +118,7 @@ export const MenuSurface = ({
         style,
       )}
     >
-      {children}
+      <DismissScope>{children}</DismissScope>
     </div>
   );
 };

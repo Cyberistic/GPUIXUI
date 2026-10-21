@@ -3,9 +3,10 @@
  *
  * The bugs these guard: two Escape handlers firing on one keystroke (a popover
  * inside a dialog closing both layers), an outside press closing an overlay that
- * is not topmost, a closed overlay leaving its handler on the stack to be
- * dismissed later, and one key dispatch counted twice because the runtime builds
- * a payload per handler.
+ * is not topmost, a nested surface losing the first Escape because React ran the
+ * child's effect before the parent's, a closed overlay leaving its handler on the
+ * stack to be dismissed later, and one key dispatch counted twice because the
+ * runtime builds a payload per handler.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -35,8 +36,8 @@ describe("dismiss layer stack", () => {
   it("dismisses the topmost layer only", () => {
     const outer = vi.fn();
     const inner = vi.fn();
-    const removeOuter = pushDismissLayer(outer);
-    const removeInner = pushDismissLayer(inner);
+    const removeOuter = pushDismissLayer(outer, 1);
+    const removeInner = pushDismissLayer(inner, 2);
 
     expect(dismissTopLayer(event())).toBe(true);
     expect(inner).toHaveBeenCalledTimes(1);
@@ -47,11 +48,58 @@ describe("dismiss layer stack", () => {
     expect(dismissLayerCount()).toBe(0);
   });
 
+  it("puts the deeper surface on top even when it pushed first", () => {
+    // Both open in one first render: React runs the popover's layout effect
+    // before the dialog's, so the depth — not the push — must order them.
+    const dialog = vi.fn();
+    const popover = vi.fn();
+    const removePopover = pushDismissLayer(popover, 2);
+    const removeDialog = pushDismissLayer(dialog, 1);
+
+    expect(dismissTopLayer(event())).toBe(true);
+    expect(popover).toHaveBeenCalledTimes(1);
+    expect(dialog).not.toHaveBeenCalled();
+
+    removePopover();
+    removeDialog();
+  });
+
+  it("lets the deeper layer close before its container, then reaches it", () => {
+    const dialog = vi.fn();
+    const popover = vi.fn();
+    const removePopover = pushDismissLayer(popover, 2);
+    const removeDialog = pushDismissLayer(dialog, 1);
+
+    dismissTopLayer(event());
+    removePopover();
+    dismissTopLayer(event());
+
+    expect(popover).toHaveBeenCalledTimes(1);
+    expect(dialog).toHaveBeenCalledTimes(1);
+
+    removeDialog();
+  });
+
+  it("keeps push order between layers at the same depth", () => {
+    // Siblings: neither contains the other, so the later one is on top.
+    const first = vi.fn();
+    const second = vi.fn();
+    const removeFirst = pushDismissLayer(first, 1);
+    const removeSecond = pushDismissLayer(second, 1);
+
+    expect(dismissTopLayer(event())).toBe(true);
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(first).not.toHaveBeenCalled();
+
+    removeSecond();
+    removeFirst();
+  });
+
   it("consumes an event once, so one keystroke cannot close two layers", () => {
     const outer = vi.fn();
     const inner = vi.fn();
-    const removeOuter = pushDismissLayer(outer);
-    const removeInner = pushDismissLayer(inner);
+    const removeOuter = pushDismissLayer(outer, 1);
+    const removeInner = pushDismissLayer(inner, 2);
     const press = event();
 
     expect(dismissTopLayer(press)).toBe(true);
@@ -66,8 +114,8 @@ describe("dismiss layer stack", () => {
   it("lets the next event reach the layer that is now topmost", () => {
     const outer = vi.fn();
     const inner = vi.fn();
-    const removeOuter = pushDismissLayer(outer);
-    const removeInner = pushDismissLayer(inner);
+    const removeOuter = pushDismissLayer(outer, 1);
+    const removeInner = pushDismissLayer(inner, 2);
 
     dismissTopLayer(event());
     removeInner();
@@ -81,8 +129,8 @@ describe("dismiss layer stack", () => {
   it("treats one key dispatch as one event across handlers' payloads", () => {
     const outer = vi.fn();
     const inner = vi.fn();
-    const removeOuter = pushDismissLayer(outer);
-    const removeInner = pushDismissLayer(inner);
+    const removeOuter = pushDismissLayer(outer, 1);
+    const removeInner = pushDismissLayer(inner, 2);
 
     // The same Escape reaches the input and the dialog as two objects that share
     // the dispatch id; only the first call may dismiss a layer.
@@ -98,8 +146,8 @@ describe("dismiss layer stack", () => {
   it("counts the next dispatch separately, even with the same key payload shape", () => {
     const first = vi.fn();
     const second = vi.fn();
-    const removeFirst = pushDismissLayer(first);
-    const removeSecond = pushDismissLayer(second);
+    const removeFirst = pushDismissLayer(first, 1);
+    const removeSecond = pushDismissLayer(second, 2);
 
     expect(dismissTopLayer(keystroke(1))).toBe(true);
     removeSecond();
@@ -112,7 +160,7 @@ describe("dismiss layer stack", () => {
 
   it("forgets the last dispatch once the stack empties", () => {
     const closed = vi.fn();
-    const remove = pushDismissLayer(closed);
+    const remove = pushDismissLayer(closed, 1);
 
     expect(dismissTopLayer(keystroke(1))).toBe(true);
     remove();
@@ -120,7 +168,7 @@ describe("dismiss layer stack", () => {
     // A fresh renderer numbers its keystrokes from its own start; a stale id
     // must not swallow the first Escape of the next stack.
     const next = vi.fn();
-    const removeNext = pushDismissLayer(next);
+    const removeNext = pushDismissLayer(next, 1);
     expect(dismissTopLayer(keystroke(1))).toBe(true);
     expect(next).toHaveBeenCalledTimes(1);
 
@@ -130,8 +178,8 @@ describe("dismiss layer stack", () => {
   it("drops a removed layer instead of dismissing it later", () => {
     const closed = vi.fn();
     const open = vi.fn();
-    const removeClosed = pushDismissLayer(closed);
-    const removeOpen = pushDismissLayer(open);
+    const removeClosed = pushDismissLayer(closed, 1);
+    const removeOpen = pushDismissLayer(open, 1);
 
     removeClosed();
     dismissTopLayer(event());

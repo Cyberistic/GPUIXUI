@@ -47,6 +47,7 @@ import {
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
+import { DismissScope } from "./internal/dismiss-scope.js";
 import { overlaySurfaceStyle } from "./internal/overlay.js";
 import { useTheme, type Theme } from "./internal/theme.js";
 
@@ -276,7 +277,7 @@ export const DrawerContent = ({
           onKeyDown={handleKeyDown}
           style={mergeStyles(surfaceStyle(theme, box, className), style)}
         >
-          {children}
+          <DismissScope>{children}</DismissScope>
           {showClose ? (
             <IconButton
               label="Close drawer"

@@ -12,6 +12,7 @@ import { useGpuix } from "@gpuix/react";
 import { Match } from "effect";
 import { useLayoutEffect, useRef } from "react";
 import { useControllableState } from "./controllable.js";
+import { useDismissDepth } from "./dismiss-scope.js";
 import { dismissTopLayer, pushDismissLayer } from "./dismiss-layer.js";
 import { isDismiss, isTab } from "./key.js";
 
@@ -48,10 +49,11 @@ export const useModalState = ({
     };
   });
 
+  const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer(() => dismiss.current());
-  }, [open]);
+    return pushDismissLayer(() => dismiss.current(), depth);
+  }, [depth, open]);
 
   return { open, setOpen };
 };

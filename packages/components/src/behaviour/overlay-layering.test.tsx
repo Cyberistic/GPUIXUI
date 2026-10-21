@@ -6,6 +6,8 @@
  * stack rules in isolation; this suite proves them end to end — a dialog, a
  * popover and a menu open at once form one dismiss stack, and each Escape
  * consumes exactly the top layer, outside-in: dialog, then popover, then menu.
+ * The first case opens the popover and the dialog in one commit, where a stack
+ * ordered by push would put the container on top.
  */
 
 import { describe, expect, it } from "vitest";
@@ -73,6 +75,39 @@ describe("overlay layering", () => {
 
     // One keystroke reaches the popover's handler and the dialog's: the shared
     // stack must dismiss only the popover, which is what is on top.
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("popover-panel")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog-panel")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined();
+
+    nested.unmount();
+  });
+
+  it("puts a popover declared open inside a dialog above it in the first render", () => {
+    // Both surfaces open in one commit. React runs the popover's layout effect
+    // before the dialog's, so a stack ordered by push would hand the first
+    // Escape to the dialog — the container — and unmount the popover with it.
+    const nested = renderComponent(
+      <Dialog defaultOpen>
+        <DialogContent label="Dialog" testId="dialog-panel">
+          <Popover defaultOpen>
+            <PopoverTrigger testId="popover-trigger">Details</PopoverTrigger>
+            <PopoverContent testId="popover-panel">
+              <text>Popover</text>
+            </PopoverContent>
+          </Popover>
+        </DialogContent>
+      </Dialog>,
+    );
+
+    expect(nested.renderer.findByTestId("popover-panel")).toBeDefined();
+    expect(nested.renderer.findByTestId("dialog-panel")).toBeDefined();
+
+    // The key starts inside the popover and bubbles into the dialog, which is
+    // the path a reader's Escape takes.
+    focus(nested, "popover-panel");
     nested.renderer.simulateKeystrokes("escape");
     expect(nested.renderer.findByTestId("popover-panel")).toBeUndefined();
     expect(nested.renderer.findByTestId("dialog-panel")).toBeDefined();

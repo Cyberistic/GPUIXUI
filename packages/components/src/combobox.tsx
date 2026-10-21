@@ -73,6 +73,7 @@ import {
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -246,14 +247,15 @@ export const Combobox = ({
   // An open popup is a dismiss layer, so a combobox inside a dialog closes on
   // Escape before the dialog does: the stack consumes the event once and the
   // dialog's own layer is never reached.
+  const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
       restoreFocus.current = event.eventType === "keyDown";
       setOpen(false);
       setQuery("");
-    });
-  }, [open]);
+    }, depth);
+  }, [depth, open]);
 
   return (
     <ComboboxContext.Provider
@@ -459,7 +461,7 @@ export const ComboboxContent = ({
         style,
       )}
     >
-      {children}
+      <DismissScope>{children}</DismissScope>
     </HeadlessContent>
   );
 };

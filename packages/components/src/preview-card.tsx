@@ -31,6 +31,7 @@ import {
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import { isDismiss } from "./internal/key.js";
 import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
@@ -264,6 +265,7 @@ export const PreviewCardContent = ({
 
   // One dismiss layer for the card, as Popover does: Escape closes the topmost
   // overlay only, and returns focus to the trigger.
+  const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
@@ -272,8 +274,8 @@ export const PreviewCardContent = ({
         const target = trigger.current;
         if (target !== null) renderer?.focusElement?.(target.id);
       }
-    });
-  }, [open, renderer, trigger]);
+    }, depth);
+  }, [depth, open, renderer, trigger]);
 
   if (!open) return null;
 
@@ -310,7 +312,7 @@ export const PreviewCardContent = ({
         style,
       )}
     >
-      {children}
+      <DismissScope>{children}</DismissScope>
     </FloatingLayer>
   );
 };

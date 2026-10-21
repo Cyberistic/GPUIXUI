@@ -46,6 +46,7 @@ import {
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
+import { DismissScope } from "./internal/dismiss-scope.js";
 import {
   handleModalKeyDown,
   useModalFocus,
@@ -277,7 +278,7 @@ export const DialogContent = ({
             style,
           )}
         >
-          {children}
+          <DismissScope>{children}</DismissScope>
           {showClose ? (
             <IconButton
               label="Close"

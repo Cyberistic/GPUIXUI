@@ -77,6 +77,13 @@ Open dialogs share one dismiss stack (`src/internal/dismiss-layer.ts`): Escape a
 outside presses are consumed by the **topmost** overlay only, so a popover inside a
 dialog closes the popover first. One event cannot close two layers.
 
+"Topmost" is the **deepest** surface, not the one that opened last. A surface
+tells the stack how deeply it is nested (`src/internal/dismiss-scope.tsx`), so a
+popover declared open inside a dialog is above that dialog even though both
+surfaces mount in one commit — React runs a child's layout effect first, and push
+order alone would hand the first Escape to the container. Two surfaces at the same
+depth keep push order: the later one is above.
+
 ## Keyboard
 
 | Key | Effect |

@@ -31,6 +31,7 @@ import {
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import { isEventClaimed } from "./internal/event-claim.js";
 import { isActivation, isDown, isUp } from "./internal/key.js";
 import {
@@ -139,12 +140,13 @@ export const DropdownMenu = ({
 
   const menu = useMenuState(close);
 
+  const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
       close(event.eventType === "keyDown" ? "dismiss" : "outside");
-    });
-  }, [close, open]);
+    }, depth);
+  }, [close, depth, open]);
 
   useLayoutEffect(() => {
     if (open) {
@@ -319,7 +321,7 @@ export const DropdownMenuContent = ({
         style,
       )}
     >
-      {children}
+      <DismissScope>{children}</DismissScope>
     </FloatingLayer>
   );
 };

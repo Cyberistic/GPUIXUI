@@ -17,21 +17,29 @@
  * identifies it. `preventDefault` alone would stop the platform default but not
  * the second overlay's own handler.
  *
- * The stack is ordered by push. An overlay opened by a trigger pushes after the
- * surface it sits in, which is every real nesting. Two overlays that are both
- * open in the first render push child-first (React runs a child's effect first),
- * so the parent is briefly topmost; open the inner one after mount when both
- * must be open, or give it the first Escape.
+ * The stack is ordered by **containment depth**, not by when an overlay pushed:
+ * React runs a child's layout effect before its parent's, so two surfaces open
+ * in one first render would otherwise put the parent on top and hand it the
+ * first Escape. Each surface declares the depth it sits at (`dismiss-scope.tsx`
+ * provides it to the children it renders), and a layer pushed at the same depth
+ * by the same commit keeps push order — the later one is above.
  */
 
 import type { EventPayload } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 
 /** A layer's dismiss handler: it must close only the overlay that pushed it. */
 export type DismissHandler = (event: EventPayload) => void;
 
-let layers: ReadonlyArray<DismissHandler> = [];
+/** An open overlay, with the containment depth of the surface it owns. */
+interface Layer {
+  readonly onDismiss: DismissHandler;
+  readonly depth: number;
+}
+
+let layers: ReadonlyArray<Layer> = [];
 const handled = new WeakSet<EventPayload>();
 
 /**
@@ -54,14 +62,27 @@ const consume = (event: EventPayload): boolean => {
   return false;
 };
 
+const byDepth: Order.Order<Layer> = Order.mapInput(
+  Order.Number,
+  (layer: Layer) => layer.depth,
+);
+
+/** The deepest open surface; among equally deep ones, the last pushed. */
+const topmost = (): Option.Option<DismissHandler> =>
+  Option.map(Arr.last(Arr.sort(layers, byDepth)), (layer) => layer.onDismiss);
+
 /**
- * Make `onDismiss` the topmost layer. Returns the removal function, which the
+ * Make `onDismiss` the layer at `depth`. Returns the removal function, which the
  * overlay calls when it closes or unmounts.
  */
-export const pushDismissLayer = (onDismiss: DismissHandler): (() => void) => {
-  layers = Arr.append(layers, onDismiss);
+export const pushDismissLayer = (
+  onDismiss: DismissHandler,
+  depth: number,
+): (() => void) => {
+  const layer: Layer = { onDismiss, depth };
+  layers = Arr.append(layers, layer);
   return () => {
-    layers = Arr.filter(layers, (candidate) => candidate !== onDismiss);
+    layers = Arr.filter(layers, (candidate) => candidate !== layer);
     if (Arr.length(layers) === 0) dismissedKeystroke = Option.none();
   };
 };
@@ -73,7 +94,7 @@ export const pushDismissLayer = (onDismiss: DismissHandler): (() => void) => {
  */
 export const dismissTopLayer = (event: EventPayload): boolean => {
   if (consume(event)) return false;
-  return Option.match(Arr.last(layers), {
+  return Option.match(topmost(), {
     onNone: () => false,
     onSome: (onDismiss) => {
       onDismiss(event);
