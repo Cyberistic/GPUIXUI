@@ -424,6 +424,7 @@ references without buying correctness.
 | [834](./834-bezier-easing-storage.md) | The cubic-bezier easing a stored edit cannot carry | F | 685, 713, 727, 744, 758, 794 | done |
 | [835](./835-persisted-row-decoder.md) | The persisted row the design system says the package decodes | F | 067, 068, 305, 380, 529, 755 | done |
 | [836](./836-motion-easing-index.md) | The easing names every union owns an index for, except this one | F | 019, 064, 067, 068, 096, 305, 364, 519, 834 | done |
+| [838](./838-stored-edit-decoder.md) | The stored edit the package can write but not read back | F | 071, 321, 380, 383, 727, 744, 758, 794, 834, 835 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4426,6 +4427,21 @@ guard narrows a **name** only: a cubic-bezier tuple stays a value
 `themeMetricFailures` governs. The catalogue's "constrained by `MotionEasing`
 itself" sentence was true of authored code and false of a stored value and now
 states both halves. No value moves.
+
+838 decodes the artifact the documents tell a consumer to store. Plan 835 gave
+the *choice* row a decoder, but the thing the catalogue, design system and README
+call a stored edit — the `{ base, overrides }` pair `themeEdit` writes — still
+had a cast for its only load path, and `extendTheme` spreads only what it is
+given: a typo'd group or a stringified `spacing` is dropped without a word, and
+the ten checks cannot see the hole because the numeric walk measures numbers and
+a string is not a metric. `themeEditFromRow(value)` narrows the base through
+`themeChoiceFromRow` and holds every override group and member to the kind
+`ThemeOverrides` declares and the index that owns it, refusing the pair with
+`undefined` so a settings screen keeps the theme it has instead of restoring one
+that lost the edit; values stay the checks' job, and a well-formed override that
+misses a floor still decodes and is reported. `elevationShapeFields` moved to
+`elevation.ts` so the decoder and the numeric contract count the same five
+fields, and no colour, pair, floor, metric, role or shipped theme moves.
 
 ## How to use a plan
 

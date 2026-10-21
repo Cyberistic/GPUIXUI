@@ -1052,7 +1052,11 @@ The extension mechanism is deliberately small:
   cubic-bezier tuple in the edit, and the diff carries the tuple. The overrides
   are relative to the exact base, not its mode, so the
   stored artifact is a `ThemeEdit`: `themeEdit(choice, edited)` records the
-  base's `ThemeChoice` and `applyThemeEdit(edit)` resolves it back.
+  base's `ThemeChoice` and `applyThemeEdit(edit)` resolves it back. A stored pair
+  is decoded, never cast: `themeEditFromRow(value)` narrows the base with
+  `themeChoiceFromRow` and refuses an override group or member the merge would
+  drop, so the settings screen keeps the theme it has instead of restoring one
+  that lost the edit.
 
 A choice that survives a restart — the mode, the contrast variant, the density,
 the platform style — arrives as `unknown`. Narrow it with `isThemeMode`,

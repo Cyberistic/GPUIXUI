@@ -221,8 +221,10 @@ not merely its mode, so a stored edit is a `ThemeEdit` — the base's
 `ThemeChoice` plus the overrides: `themeEdit(choice, edited)` resolves the choice
 before it diffs, so the pair cannot name another base, and `applyThemeEdit(edit)`
 replays it. A cubic-bezier easing is a value the diff carries, so an editor that
-stores an edit keeps a tuple. A runnable example lives in
-[`src/theme-diff.example.ts`](./src/theme-diff.example.ts).
+stores an edit keeps a tuple. A stored pair is decoded by `themeEditFromRow(value)`,
+which narrows the base through `themeChoiceFromRow` and refuses a group the merge
+would drop rather than restoring a theme that lost the edit. A runnable example
+lives in [`src/theme-diff.example.ts`](./src/theme-diff.example.ts).
 
 A filled control reads its states from `filledControl(theme, family)` — the
 resting, hover and pressed fills and the one foreground readable on all three —

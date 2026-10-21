@@ -35,6 +35,19 @@ export interface ElevationShape {
 }
 
 /**
+ * The fields one elevation entry carries, in documentation order. The numeric
+ * contract lists them and the stored-edit decoder holds an entry to all five,
+ * so a sixth field cannot leave either check counting five.
+ */
+export const elevationShapeFields = [
+  "offsetX",
+  "offsetY",
+  "blurRadius",
+  "spreadRadius",
+  "alpha",
+] as const satisfies ReadonlyArray<keyof ElevationShape>;
+
+/**
  * Elevation levels. A level is a list so a web renderer can composite several
  * shadows; the native runtime paints **one** shadow per element, so a shipped
  * level carries at most one entry and a consumer reads it with

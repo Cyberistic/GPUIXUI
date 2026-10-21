@@ -1306,8 +1306,11 @@ the way the AAA scrim already veils with light (plan `099`). A black tint
 measured **1.000:1** at every level on that canvas, and **1.030:1** at the
 tightest on the card; `elevation-rationale.test.ts` derives both figures, the
 alphas and the geometry the set keeps from the identity dark set's own levels.
-`elevationSurfaces` is the
-six persistent page surfaces a raised element floats over — the canvas, a card,
+`elevationShapeFields` is the five fields one entry carries, in the order above,
+and `elevationLevels` is the four levels — the two indexes `metricMembers` and
+the stored-edit decoder read, so a diagnostics table or a decoded level never
+retypes them. `elevationSurfaces` is the six persistent page surfaces a raised
+element floats over — the canvas, a card,
 the quiet `muted` panel, the `input` fill a flipped popover opens over, the
 `selected` fill a context menu or preview card opens over and a floating
 surface — and every defined level is measured
@@ -2359,6 +2362,17 @@ reproduces it while every group keeps the member set the base declares. A
 different `mode` and an added scale member are the two themes the pair cannot
 express; `themeEdit` returns `undefined` there and the caller keeps its theme
 object.
+
+A stored pair comes back as `unknown`, so the package decodes it:
+`themeEditFromRow(value)` narrows the base through `themeChoiceFromRow` and
+holds every override group and member to the kind `ThemeOverrides` declares and
+to the index that owns it. A group the merge cannot read — a typo'd `colour`, a
+stringified `spacing` — is refused with `undefined`, because `extendTheme` drops
+it silently and no check reports the result: the numeric walk measures numbers,
+so a string spacing is not a metric. Values stay the checks' job, so a well-formed
+override that misses a floor still decodes and
+`themeFailures(applyThemeEdit(edit))` names it. An absent artifact is the
+identity; a non-row is `undefined`.
 
 ```ts
 import {

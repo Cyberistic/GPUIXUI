@@ -14,7 +14,7 @@
 
 import {
   elevationLevels,
-  lightElevation,
+  elevationShapeFields,
   type Elevation,
 } from "./elevation.js";
 import { motionLevels, motionPhases, type MotionEasing } from "./motion.js";
@@ -75,8 +75,8 @@ export const metricRules = [
 /** The rule a metric missed. */
 export type MetricRule = (typeof metricRules)[number];
 
-/** The numeric fields of one elevation shape, taken from the shipped level. */
-const shadowFields = Object.keys(lightElevation.sm[0] ?? {});
+/** The numeric fields of one elevation shape, from the interface's one index. */
+const shadowFields = elevationShapeFields;
 
 /** The fields of a type role that carry a number. */
 const typeFields = ["fontSize", "lineHeight", "fontWeight"] as const;

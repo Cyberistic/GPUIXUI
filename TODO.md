@@ -54,7 +54,19 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 384/459
+`[x]` `[████████░░]` 385/460
+
+`[x]` Decode the artifact the documents tell a consumer to store — the catalogue,
+design system and README all call a stored edit a `ThemeEdit`, but its only load
+path was a cast, and `extendTheme` drops an override group it cannot merge: a
+typo'd `colour` or a stringified `spacing` restored the base while
+`themeFailures` returned `[]` (the numeric walk measures numbers, so a string is
+not a metric); `themeEditFromRow(value)` narrows the base through
+`themeChoiceFromRow`, holds every group and member to the kind `ThemeOverrides`
+declares and the index that owns it, and refuses the pair rather than restoring
+an edit that vanished, while a well-formed value that misses a floor still
+decodes and the ten checks name it; `elevationShapeFields` now owns the five
+fields both the decoder and `metricMembers` count (plan 838)
 
 `[x]` Give the named easings the index and guard every other union has —
 `MotionEasing` was five literal names with no index and no boundary guard while
