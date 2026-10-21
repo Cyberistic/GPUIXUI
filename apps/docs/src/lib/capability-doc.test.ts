@@ -99,9 +99,9 @@ const { rows, malformed } = parseLimits(doc);
 const rowFor = (phrase: string): LimitRow | undefined =>
   rows.filter((row) => row.label.includes(phrase)).at(0);
 
-/** The rows of `/docs/runtime`'s measured table, as cells. */
-const measuredRows = (): ReadonlyArray<ReadonlyArray<string>> => {
-  const start = runtimePage.indexOf("## Measured in a window");
+/** The rows of one `/docs/runtime` table, as cells. */
+const sectionRows = (heading: string): ReadonlyArray<ReadonlyArray<string>> => {
+  const start = runtimePage.indexOf(heading);
   const end = runtimePage.indexOf("\n## ", start + 1);
   return runtimePage
     .slice(start, end === -1 ? undefined : end)
@@ -112,7 +112,15 @@ const measuredRows = (): ReadonlyArray<ReadonlyArray<string>> => {
 
 /** The measured row whose label starts with `label`, or `undefined`. */
 const measuredRow = (label: string) =>
-  measuredRows().find((row) => (row[0] ?? "").startsWith(label));
+  sectionRows("## Measured in a window").find((row) =>
+    (row[0] ?? "").startsWith(label),
+  );
+
+/** The typings-gap row whose label starts with `label`, or `undefined`. */
+const typingsRow = (label: string) =>
+  sectionRows("## Not in the typings").find((row) =>
+    (row[0] ?? "").startsWith(label),
+  );
 
 /** The matrix entries, read the way the module declares them. */
 const parseMatrix = (
@@ -375,6 +383,78 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(selection?.[1]).toContain("selection-lifecycle");
     expect(selection?.[1]).toContain("getSelectedText");
     expect(selection?.[2]).toContain("alignSelf");
+  });
+
+  it("records the typings gaps a component composes around", () => {
+    // `COMPONENTS.md`'s rows relied on five absences the record never named, so
+    // a plan reading only the record could pass `href`, `fieldset`, `onPaste`
+    // or `onContextMenu` and see nothing happen — and could promise an
+    // announced toast on a runtime with no live region.
+    const links = rowFor("Links and anchors");
+    expect(links?.verdict).toBe("not supported");
+    expect(links?.evidence).toContain("ElementType");
+    expect(links?.evidence).toContain("HostProps");
+    expect(links?.workaround).toContain("pressable");
+
+    const grouping = rowFor("Form grouping");
+    expect(grouping?.verdict).toBe("not supported");
+    expect(grouping?.evidence).toContain("fieldset");
+
+    const contextMenu = rowFor("Context menu event");
+    expect(contextMenu?.verdict).toBe("supported, with limits");
+    expect(contextMenu?.evidence).toContain("onAuxClick");
+    expect(contextMenu?.evidence).toContain("context-menu-lifecycle");
+
+    const paste = rowFor("Paste event");
+    expect(paste?.verdict).toBe("not supported");
+    expect(paste?.evidence).toContain("onChange");
+
+    const aria = rowFor("the `aria-*` subset");
+    expect(aria?.verdict).toBe("supported, with limits");
+    expect(aria?.evidence).toContain("aria-valuetext");
+    // Every attribute the inventory's pages call absent must be named here, so a
+    // component page and the record cannot disagree about what can be announced.
+    const unnamed = [
+      "aria-checked",
+      "aria-pressed",
+      "aria-haspopup",
+      "aria-current",
+      "aria-disabled",
+      "aria-labelledby",
+      "aria-live",
+    ].filter((attribute) => !(aria?.evidence ?? "").includes(attribute));
+    expect(unnamed, "the aria row does not name these absences").toEqual([]);
+  });
+
+  it("publishes the typings gaps on /docs/runtime", () => {
+    // The durable record is what a plan cites; the page is what a reader of the
+    // docs cites. A link that looks like an anchor is the same lie as a chart
+    // that looks like canvas drawing.
+    const links = typingsRow("Links");
+    expect(links, "the page has no links row").toBeDefined();
+    expect(links?.[1]).toContain("no `href`");
+    expect(links?.[2]).toContain("pressable");
+
+    const grouping = typingsRow("Form grouping");
+    expect(grouping, "the page has no form-grouping row").toBeDefined();
+    expect(grouping?.[1]).toContain("fieldset");
+
+    const contextMenu = typingsRow("Context-menu event");
+    expect(contextMenu, "the page has no context-menu row").toBeDefined();
+    expect(contextMenu?.[1]).toContain("onAuxClick");
+    expect(contextMenu?.[1]).toContain("context-menu-lifecycle");
+
+    const paste = typingsRow("Paste event");
+    expect(paste, "the page has no paste row").toBeDefined();
+    expect(paste?.[2]).toContain("onChange");
+
+    const accessibility = typingsRow("Accessibility attributes");
+    expect(
+      accessibility,
+      "the page has no accessibility-attribute row",
+    ).toBeDefined();
+    expect(accessibility?.[1]).toContain("aria-live");
+    expect(accessibility?.[2]).toContain("aria-valuetext");
   });
 
   it("leaves the uncertain rows uncertain", () => {

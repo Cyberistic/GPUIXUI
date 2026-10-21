@@ -97,7 +97,12 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Clipboard keys inside a focused field | supported, with limits | the platform's text actions run in the field: **measured** by `clipboard-lifecycle` against a marker unique to each mount — select-all → copy → paste → cut all reach the input's `onChange`, so a paste cannot pass on the previous run's clipboard | copy and paste are the user's own actions inside a field; an application-level clipboard needs a runtime change |
 | File drops | unverified | `onFileDrop` is declared on `HostProps`; no probe mounts a drop | accept a path through `promptForPaths` until a probe measures a drop |
 | Virtualized list | supported, with limits | `<virtual-list>` retains thousands of rows and paints a window (~9 rows in the probe) | read the painted window, not the index |
-| `role` and the `aria-*` subset | supported, with limits | `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-labelledby`, `aria-describedby`, `aria-orientation`, `aria-controls`, `aria-disabled` | name each control through its own `label`/`aria-label`; put a numeric value in `aria-valuetext`; there is no `labelledby` relationship |
+| Links and anchors (`href`) | not supported | `ElementType` has no `a`, and `HostProps` declares no `href`; the inventory's Breadcrumb, Navigation Menu and Lists rows record the same absence | render a pressable `<text>` (the library's link-styled button) and show the destination beside it. There is no visited state, no middle-click and no pointer cursor |
+| Form grouping (`fieldset` / `legend`) | not supported | `ElementType` has no `fieldset`; the shipped `Fieldset` is a `role="group"` div with a legend-styled text | compose the group from a div and a text; a group-level disabled state is not announced either, because there is no `aria-disabled` |
+| Context menu event (`onContextMenu`) | supported, with limits | `HostProps` declares no `onContextMenu`; a right press arrives as `onAuxClick`, which `isRightClick` distinguishes. The shipped `ContextMenu` uses that path — 17 native cases and, **measured**, `context-menu-lifecycle`: the surface lands at the press point | handle `onAuxClick` and place your own surface at the pointer, as the shipped `ContextMenu` does |
+| Paste event (`onPaste`) | not supported | `HostProps` declares no `onPaste`; the platform's paste runs inside a focused field and reaches `onChange` with the new value, **measured** by `clipboard-lifecycle` | read the pasted text from the new value in `onChange`. There is no paste payload, caret or insert-at-selection API, so an `OTPField`'s paste is unverified |
+| Live regions (`aria-live`, `aria-atomic`) | not supported | the `aria-*` set below is closed and has no live-region attribute, so a container cannot declare one; `Toast` paints `role="status"` as a marker and does not claim an announcement, and `Countdown` and `MessageScroller` document the same gap | move the focus to the new message, or name the control that changed; do not present a toast or a ticking countdown as announced |
+| `role` and the `aria-*` subset | supported, with limits | `role` plus exactly seven `aria-*` attributes: `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-labelledby`, `aria-describedby`, `aria-orientation`, `aria-controls`, `aria-disabled`, `aria-pressed`, `aria-haspopup`, `aria-current`, `aria-activedescendant`, `aria-live` or `aria-atomic` | name each control through its own `label`/`aria-label`; put a numeric value in `aria-valuetext`; there is no `labelledby` relationship, no pressed or checked state and no live region |
 
 ## 4. Accessibility and motion, cross-cutting
 
@@ -134,6 +139,11 @@ short, never the carrier of meaning.
   `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`, `content-surfaces`,
   `selection-lifecycle`, `clipboard-lifecycle`), because a measured gap is absent
   from the typings rather than merely hard to find.
+- The five absences the typings alone prove — links (`href`), `fieldset`,
+  `onContextMenu`, `onPaste` and the closed `aria-*` set — are held from both
+  sides too: a row dropped from this file, a page row dropped from
+  `/docs/runtime`, or an `aria-*` absence the inventory names but this file does
+  not, fails by name.
 - The probe measurements themselves are asserted by the suite
   (`apps/playground`), not here: this document records the verdict and points at
   the evidence.

@@ -49,6 +49,21 @@ path and the alternative — is
 This page publishes the subset a reader of the docs needs; that document is what
 a component plan cites.
 
+## Not in the typings
+
+The matrix above is built from `@gpuixui/runtime`'s own keys. These five are
+different: the pinned typings declare neither the host nor the prop, so there is
+nothing to pass and no probe to run — a component composes the alternative
+instead. `COMPONENTS.md`'s rows rely on each of them.
+
+| Capability | What the pinned typings have instead | Use instead |
+| --- | --- | --- |
+| Links (`href`) | `ElementType` has no `a`, and `HostProps` declares no `href`; the Breadcrumb, Navigation Menu and Lists inventory rows record the same absence | render a pressable `<text>` (the link-styled button) and show the destination in the copy; there is no visited state, middle-click or pointer cursor |
+| Form grouping (`fieldset` / `legend`) | `ElementType` has no `fieldset`; the shipped `Fieldset` is a `role="group"` div with a legend-styled text | compose it from a div and a text; a group-level disabled state is not announced either, because there is no `aria-disabled` |
+| Context-menu event (`onContextMenu`) | `HostProps` declares no `onContextMenu`; a right press arrives as `onAuxClick`, which `isRightClick` distinguishes — the shipped `ContextMenu` uses that path, and `context-menu-lifecycle` measured a right press opening the surface at the press point | handle `onAuxClick` and place your own surface at the pointer |
+| Paste event (`onPaste`) | `HostProps` declares no `onPaste`; a paste runs inside a focused field and reaches `onChange` with the new value (`clipboard-lifecycle`) | read the pasted text from the new value in `onChange`; there is no paste payload, caret or insert-at-selection API |
+| Accessibility attributes | the closed set is `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext` and `aria-level` — no checked or pressed state, no `aria-labelledby`, and no `aria-live` | name the control itself, put a numeric value in `aria-valuetext`, and do not present a toast or a countdown as announced |
+
 ## What to do instead
 
 The unsupported rows are not decorative placeholders — each has a named gap and a
