@@ -32,12 +32,11 @@ const printedTotals = (): ReadonlyArray<string> =>
 
 /** The run block's capability list: the tokens after `capabilities:`. */
 const reportedCapabilities = (): ReadonlyArray<string> => {
-  const block = /scenarios passed · capabilities:([\s\S]*?)```/.exec(readme);
-  return block === null
-    ? []
-    : Arr.fromIterable(block[1].matchAll(/([a-z-]+)=verified/g)).map(
-        (match) => match[1],
-      );
+  const [, list = ""] =
+    /scenarios passed · capabilities:([\s\S]*?)```/.exec(readme) ?? [];
+  return Arr.fromIterable(list.matchAll(/([a-z-]+)=verified/g)).map(
+    (match) => match[1] ?? "",
+  );
 };
 
 /** What the runner prints: every capability some scenario covers, in order. */

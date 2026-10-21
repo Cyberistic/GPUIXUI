@@ -474,7 +474,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 44/44
+`[x]` `[██████████]` 45/45
 
 `[x]` Land the `pointer-capture` live probe and settle what a drag control may
       rely on — GPUix arms pointer capture on left mouse down **only** for an
@@ -960,6 +960,16 @@ a workaround for two live sessions sharing one worktree; see
       `editor=verified` dropped from the list: the capability case fails), and
       `nub run check:tests` accepts it. Evidence: `apps/playground/README.md`
       §Structure and §What is proven here
+
+`[x]` Fix the inert `SmokeHost` fixture — `src/test-support.ts` never gained
+      `fileDrop` when the verb joined the `SmokeHost` contract, so
+      `nub run --filter @gpuixui/testing check-types` (and therefore the
+      repo-wide `check-types` gate) failed with TS2741 while every runtime test
+      stayed green. The fixture now reports the empty drop, and the package's
+      `check-types` and 47 tests pass. The guard is the contract itself: a
+      structural interface member added without the fixture is a compile error
+      (measured before the line, gone after). It is also why this row exists —
+      nothing ran `check-types` for this package since `file-drop` landed
 
 ## Phase C — Tier 1–2 components
 
