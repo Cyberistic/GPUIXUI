@@ -3,6 +3,8 @@ title: Theme
 description: A live editor for the library's semantic tokens — preview, copy and share.
 ---
 
+import { contrastPairs } from "@gpuixui/tokens";
+
 Edit the semantic tokens the library ships and watch them apply to a preview in
 real time. The editor reads its defaults from `@gpuixui/tokens` and emits the
 same `createTheme` shape the library consumes; it invents no palette of its own.
@@ -29,8 +31,9 @@ cannot. The bridge exists only for this preview.
 ## Contrast
 
 The editor measures the theme against the same contract `@gpuixui/tokens` tests
-its own themes on: `contrastFailures` checks 24 role pairs — body text at 7:1,
-secondary text at 4.5:1, boundaries and focus rings at 3:1 — and the readout
+its own themes on: `contrastFailures` checks {contrastPairs.length} role pairs —
+body text at 7:1, secondary text at 4.5:1, boundaries and focus rings at 3:1 —
+and the readout
 under the preview names every pair an edit breaks, with its measured ratio. A
 translucent value is reported as **unmeasurable** rather than counted as a pass,
 because its contrast depends on the surface behind it. Copy theme carries the

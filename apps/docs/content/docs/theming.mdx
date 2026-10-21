@@ -100,14 +100,21 @@ import { createTheme } from "@gpuixui/tokens";
 export const acme = createTheme({
   mode: "dark",
   name: "Acme",
-  colors: { primary: "#7C5CFF", ring: "#9B8CFF" },
+  colors: {
+    primary: "#6A45F0",
+    primaryForeground: "#FFFFFF",
+    ring: "#9B8CFF",
+  },
   radius: { md: 8 },
   density: "compact",
 });
 ```
 
 Only what changes is written. Every other role is inherited, so a brand cannot
-accidentally drop a role a component reads.
+accidentally drop a role a component reads. A brand that overrides a fill owns
+its on-colour too: the dark theme pairs a light fill with dark text, so that
+violet on the base's `primaryForeground` reaches 4.24:1, under the 4.5:1 floor.
+`contrastFailures` is how that is caught before it ships.
 
 ## Density
 
