@@ -561,13 +561,15 @@ Three facts shape the API:
   retried.
 - **Before the first layout that names the family.** Register, then render.
   GPUix lays text out against the faces it has: a family that did not exist when
-  the text naming it was first laid out has already fallen back to another font
-  (the `registerFont` doc in the pinned `@gpuix/native` 0.11.0), and switching
-  the theme to the face afterwards does not re-shape that text. The renderer
-  exists before the first render, so this is an ordering rule, not a lifecycle
-  hook: installing from a mount effect runs after the children that paint the
-  text. The React renderer exposes `registerFont` optionally (the browser
-  renderer has none), so guard for its absence at that boundary.
+  the text naming it was first laid out paints the fallback. That fallback is not
+  permanent — the next layout re-lays the text out against the face the renderer
+  now knows (measured: 44px → 81px on the next repaint, the playground's
+  `font-registration-late` probe) — so the rule buys the **first frame**, not a
+  face the runtime refuses afterwards. The renderer exists before the first
+  render, so this is an ordering rule, not a lifecycle hook: installing from a
+  mount effect runs after the children that paint the text and shows one
+  fallback frame. The React renderer exposes `registerFont` optionally (the
+  browser renderer has none), so guard for its absence at that boundary.
 
 The face reaches components through the theme rather than through the runtime:
 
@@ -580,13 +582,14 @@ textStyle(theme, "body").fontFamily; // "Inter"
 
 The library ships no bundled family yet, so there is no font licence obligation
 today; a consumer's own typeface travels the same route. The runnable example is
-in [`src/fonts.test.ts`](../packages/tokens/src/fonts.test.ts), and the native
-proof is the playground's `register-font` probe: a registered face lays the
-sample word out at its own advances while an unknown family paints the
-fallback's, so the paint is the file
-([`apps/playground/README.md`](../apps/playground/README.md)). That probe
-registers before its first paint — the order above; the failure the order avoids
-is still unmeasured (§Limitations).
+in [`src/fonts.test.ts`](../packages/tokens/src/fonts.test.ts), and both orders
+are measured in a window. The playground's `register-font` probe proves the
+recommended one: a registered face lays the sample word out at its own advances
+while an unknown family paints the fallback's, so the paint is the file.
+`font-registration-late` then proves the fallback is a frame, not a verdict — a
+word that painted 44px with no face declared paints 81px on the next layout
+after the file is installed mid-session, while a family nothing installs stays
+at 44px ([`apps/playground/README.md`](../apps/playground/README.md)).
 
 ## Spacing
 
@@ -1036,11 +1039,10 @@ its own hover.
   families reach the renderer (`Menlo`, `DejaVu Sans Mono`, `Consolas`) from the
   style report, which is the paint proof the table has.
 - Fonts must be registered before the first layout that names them: a family the
-  runtime learns about later has already fallen back (the pinned
-  `@gpuix/native@0.11.0` `registerFont` doc), so the guideline is "create the
-  renderer, register, then render". That late-registration failure is not yet
-  measured in a window — the live probe only covers the successful order
-  (`TODO.md` → Interlocks).
+  runtime learns about later paints the fallback until the next layout, which
+  re-lays the text out against it (measured: 44px → 81px). The guideline stays
+  "create the renderer, register, then render" because that first frame is the
+  one the reader sees — the fallback is not permanent.
 - `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
   for a programmatic focus **after** a Tab, but not for a programmatic focus
   before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s

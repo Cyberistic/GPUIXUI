@@ -7,12 +7,12 @@
  *
  * The runtime surface is declared structurally: `@gpuixui/tokens` keeps zero
  * dependencies, `@gpuix/react`'s renderer satisfies the interface, and a test
- * can pass a fake. It lives at the application boundary, and the order is part
- * of the contract: create the renderer, install the files, then render. GPUix
- * lays text out against the faces it already has, and a family that did not
- * exist when the text naming it was first laid out has already fallen back to
- * another font (the pinned `@gpuix/native` 0.11.0 `registerFont` doc), so a
- * theme switched to the face afterwards does not re-shape that text.
+ * can pass a fake. It lives at the application boundary. GPUix lays text out
+ * against the faces it already has, so a family that did not exist when the
+ * text naming it was first laid out paints the fallback. The order is still
+ * create the renderer, register, then render — it is what saves that frame. The
+ * fallback is not permanent: the next layout picks the file up, measured by the
+ * playground's `font-registration-late` probe at 44px → 81px on the repaint.
  */
 
 /** The part of a renderer that installs a font file. */
@@ -63,8 +63,10 @@ const installedWith = (registrar: FontRegistrar): WeakSet<Uint8Array> => {
  * it — and is not remembered, so a corrected file can be retried.
  *
  * Call it after the renderer exists and before the first render that names a
- * family: a family the runtime learns about only after text naming it was first
- * laid out has already fallen back.
+ * family, so the first paint already has the face. Installing late is not
+ * permanent harm — the next layout re-lays the text out against the family the
+ * renderer now knows (measured at 44px → 81px by the `font-registration-late`
+ * probe) — but it costs a frame painted in the fallback.
  *
  * @example
  * ```ts

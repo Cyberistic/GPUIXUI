@@ -14,11 +14,11 @@ import { textStyle } from "./styles.js";
 import { extendTheme, lightTheme } from "./theme.js";
 
 /**
- * The three places a consumer learns how to install a face. `node:fs` is
- * deliberate, as in `docs.test.ts`: this checks the repository's own prose, and
- * the package keeps zero runtime dependencies.
+ * The places a consumer learns how to install a face. `node:fs` is deliberate,
+ * as in `docs.test.ts`: this checks the repository's own prose, and the package
+ * keeps zero runtime dependencies.
  */
-const surfaces = {
+const sourceFiles = {
   "src/fonts.ts": readFileSync(new URL("./fonts.ts", import.meta.url), "utf8"),
   "docs/tokens.md": readFileSync(
     new URL("../../../docs/tokens.md", import.meta.url),
@@ -26,6 +26,27 @@ const surfaces = {
   ),
   "README.md": readFileSync(new URL("../README.md", import.meta.url), "utf8"),
 } as const;
+
+/**
+ * The design-system inventory states the same capability in one table row. It
+ * is read on its own so a deleted row fails the presence check below rather
+ * than quietly shrinking the prose sweep.
+ */
+const inventorySurface = (): Record<string, string> => {
+  const file = readFileSync(
+    new URL("../../../COMPONENTS.md", import.meta.url),
+    "utf8",
+  );
+  const row = file
+    .split("\n")
+    .find((line) => line.startsWith("| Custom fonts |"));
+  return row === undefined ? {} : { "COMPONENTS.md": row };
+};
+
+const surfaces = (): Record<string, string> => ({
+  ...sourceFiles,
+  ...inventorySurface(),
+});
 
 /** A renderer that records the bytes it was handed. */
 const recordingRegistrar = () => {
@@ -117,27 +138,35 @@ describe("registerFonts", () => {
 });
 
 /**
- * Guards the registration-order contract.
+ * Guards the registration-order contract and its measured second half.
  *
  * The bug this holds: `fonts.ts` and both docs told consumers that "rendering
  * before registration is fine — GPUix re-shapes text that already named the
- * family", and the README installed the face from a mount effect. The pinned
- * `@gpuix/native` 0.11.0 declares the opposite on `registerFont` — a family that
- * did not exist when the text naming it was first laid out "has already fallen
- * back to another font" — so the library was teaching the one order that
- * silently paints the fallback. A surface that returns to that claim, or stops
- * naming the order, fails here.
+ * family", so the library was teaching the one order that paints a fallback
+ * frame. The first correction then over-corrected the other way: all four
+ * surfaces said a late install "does not re-shape that text" / "leaves the
+ * fallback on screen", and the playground's `font-registration-late` probe
+ * measured the opposite (44px → 81px on the next layout). Both absolutes are
+ * wrong, so a surface fails here for the original advice or for claiming the
+ * fallback is permanent.
  */
 describe("registration order", () => {
   /** The retracted advice, in the words each surface used. */
   const retracted = [
     "re-shapes text",
+    "does not re-shape",
     "Rendering before registration is fine",
     "before or after the first render",
+    "leaves the fallback on screen",
+    "stay the fallback",
   ];
 
+  it("records the capability in the inventory", () => {
+    expect(Object.keys(inventorySurface())).toEqual(["COMPONENTS.md"]);
+  });
+
   it("no longer promises that text is re-shaped after registration", () => {
-    const offenders = Object.entries(surfaces).flatMap(([name, text]) =>
+    const offenders = Object.entries(surfaces()).flatMap(([name, text]) =>
       retracted
         .filter((claim) => text.includes(claim))
         .map((claim) => `${name}: "${claim}"`),
@@ -147,15 +176,41 @@ describe("registration order", () => {
   });
 
   it("states the order in every place a consumer reads it", () => {
-    const silent = Object.entries(surfaces)
+    const silent = Object.entries(surfaces())
       .filter(([, text]) => !text.includes("first laid out"))
       .map(([name]) => name);
 
     expect(silent).toEqual([]);
   });
 
+  it("names the repaint, so a late install is not described as permanent loss", () => {
+    const silent = Object.entries(surfaces())
+      .filter(([, text]) => !text.includes("next layout"))
+      .map(([name]) => name);
+
+    expect(silent).toEqual([]);
+  });
+
+  it("cites the measured widths rather than asserting the repaint", () => {
+    const silent = Object.entries(surfaces())
+      .filter(([, text]) => !(text.includes("44px") && text.includes("81px")))
+      .map(([name]) => name);
+
+    expect(silent).toEqual([]);
+  });
+
+  it("keeps the recommended order, because the first frame is the fallback", () => {
+    const unclear = Object.entries(surfaces())
+      .filter(
+        ([, text]) => !text.toLowerCase().includes("register, then render"),
+      )
+      .map(([name]) => name);
+
+    expect(unclear).toEqual([]);
+  });
+
   it("shows registration before the first render in the README", () => {
-    const fonts = surfaces["README.md"];
+    const fonts = surfaces()["README.md"] ?? "";
     const section = fonts.slice(
       fonts.indexOf("## Fonts"),
       fonts.indexOf("\n## ", fonts.indexOf("## Fonts") + 1),

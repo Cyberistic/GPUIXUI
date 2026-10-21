@@ -307,11 +307,16 @@ remembered, so a corrected file can be retried.
 
 Order matters: install the files **before the first render that names the
 family**. A family that did not exist when text naming it was first laid out has
-already fallen back to another font, so registering from a mount effect — after
-the children that paint the text — leaves the fallback on screen. Create the
-renderer, register, then render. `registerFont` is optional on a renderer (the
-browser renderer installs none), so guard for its absence where the same code
-can also run in a browser.
+fallen back, so registering from a mount effect — after the children that paint
+the text — costs a first frame in the fallback. Create the renderer, register,
+then render. `registerFont` is optional on a renderer (the browser renderer
+installs none), so guard for its absence where the same code can also run in a
+browser.
+
+The fallback is a frame, not a verdict: the runtime re-lays text out on the
+**next layout**, so a face installed later paints from the next repaint on
+(measured in a window: 44px → 81px). Install first because it is the frame the
+reader sees, not because a late install loses the face.
 
 The face reaches components through the theme, not through the runtime:
 
@@ -376,8 +381,9 @@ persisted theme at its own boundary, where `Schema` belongs.
   gallery proves the platform **mono** families reach the renderer from its style
   report.
 - Fonts must be registered before the first layout that names them; a family the
-  runtime learns about later has already fallen back. The live probe covers the
-  successful order, not the late one.
+  runtime learns about later paints the fallback until the next layout, which
+  re-lays the text out against it. The recommendation is still "create the
+  renderer, register, then render"; both orders are measured in a window.
 - There is no runtime theme schema; theme objects authored in TypeScript are
   trusted at compile time. Persisted themes are decoded by the application.
 - No OS appearance detection; the app selects the mode and contrast.
