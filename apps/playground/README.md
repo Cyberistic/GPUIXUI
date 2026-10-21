@@ -19,9 +19,9 @@ owns each id, title and capability and imports nothing native, so `--list` and
 the argument guard run on a host with no binding; `src/scenarios/index.ts` owns
 the one `view`/`steps` implementation per id and is imported only after the
 preflight. `Record<ScenarioId, ScenarioBody>` makes a missing implementation a
-compile error. Each scenario is one capability, one view, one `steps` effect: the eleven
+compile error. Each scenario is one capability, one view, one `steps` effect: the twelve
 core capabilities (including the three theme-gallery scenarios, the modal
-contract and floating placement), the Tier 3/4 probes
+contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
 `tree-view`, `log-viewer`, `workspace-tab-drag`), the app-level shortcut probe
 (`window-key-shortcut`) and
@@ -68,7 +68,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (21/21 green); -> 2 on a host with no binding
+# -> 0 here (22/22 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -187,12 +187,32 @@ renders. Three facts, two of them defects to design around:
 | `align="center"` | **not centred**: it ends the panel at the anchor's centre line, short by half the panel's own size on both axes (`anchored.rs` wraps the layer in a full-size zero box and also positions it from the anchor point). `start`/`end` are exact; a component must compensate with a known-size `alignOffset` or avoid `center` |
 | window edge | `fit="snap"` clamps the panel to `window − snapMargin`; it **does not flip**. A bottom-side menu near the bottom ends up over its trigger, so the component must choose `side="top"` itself |
 
+## Text selection
+
+`text-selection` mounts the shipped `Text` primitive twice and drags across each
+line with the renderer's own `dragSelect`. It is not a pointer `drag`: selection
+listeners are registered during **paint**, so a hand-rolled down/move/up with no
+flush between the steps selects nothing, and a probe built that way would pass or
+fail for reasons unrelated to `Text`.
+
+| Line | `selectable` | Result |
+| ---- | ------------ | ------ |
+| `hello selectable world` | yes (`userSelect: "text"`) | the whole line reaches `getSelectedText()` |
+| `chrome must not select` | no (the default) | the same drag selects nothing, and `clearSelection` drops the previous one |
+
+So a log viewer, message row or code block can be copied by dragging, while a
+toolbar or gutter cannot be swept into the clipboard. Negative controls,
+measured: marking the chrome line `selectable` fails
+`a drag over the chrome line selects nothing`; dropping `selectable` from the
+first line fails `a drag over the selectable line produces a selection`
+(`expected a value, got none`) — both exit `1`, restored green.
+
 ## Evidence on this host
 
-The suite is **21/21 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **22/22 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-21/21 scenarios passed · capabilities: layout=verified text=verified
+22/22 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -203,6 +223,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | Capability | Measured on this host (0.11.0 unless noted) |
 | ---------- | ----------------------- |
 | layout, text, input | exact bounds; `getAllText`/`getPaintedText`; `onChange`/`onSubmit` |
+| text selection | `dragSelect` fills `getSelectedText()` for `selectable` text and nothing for chrome; `clearSelection` empties it |
 | focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
@@ -523,10 +544,10 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The eleven core capabilities (including the token gallery, the modal contract
-  and floating placement), the Tier 3/4 probes
+- The twelve core capabilities (including the token gallery, the modal contract,
+  floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (21/21), with a written report and screenshots.
+  (22/22), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
@@ -543,7 +564,10 @@ narrower. Each deviation is deliberate and measured:
   installed` (exit `1`), which is that probe's negative control. Mapping the
   left layer to `side="right"` in `floating-sides` fails
   `side=left ends one gap left of its anchor: expected 254 ± 1, got 546`
-  (exit `1`).
+  (exit `1`). In `text-selection`, marking the chrome line `selectable` fails
+  `a drag over the chrome line selects nothing`, and dropping `selectable` from
+  the content line fails `a drag over the selectable line produces a selection`
+  (`expected a value, got none`) — exit `1` each.
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

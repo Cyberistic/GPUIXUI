@@ -15,6 +15,7 @@ import type { PlaygroundScenario, ScenarioBody } from "../types.js";
 import { registry, type ScenarioId } from "./registry.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
+import { textSelectionScenario } from "./selection.js";
 import { inputScenario } from "./input.js";
 import { focusScenario } from "./focus.js";
 import { overlayScenario } from "./overlay.js";
@@ -40,6 +41,7 @@ import {
 export const implementations: Record<ScenarioId, ScenarioBody> = {
   "layout-flex": layoutScenario,
   "text-native": textScenario,
+  "text-selection": textSelectionScenario,
   "input-edit": inputScenario,
   "focus-traversal": focusScenario,
   "overlay-dialog": overlayScenario,

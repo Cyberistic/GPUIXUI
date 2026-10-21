@@ -34,16 +34,22 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 ## Adapting a host
 
 A consumer adapts its renderer to `Smoke.SmokeHost` — an input surface (click,
-key, wheel, drag) and an inspection surface (text, bounds, scroll offset, the
-runtime's own painted style, screenshot). The adapter is the only place a GPUix
-type appears; scenarios see plain values.
+key, wheel, drag, text selection) and an inspection surface (text, bounds,
+scroll offset, the selected text, the runtime's own painted style, screenshot).
+The adapter is the only place a GPUix type appears; scenarios see plain values.
+
+`dragSelect(from, to)` is separate from `drag` on purpose: the runtime registers
+its selection listeners during **paint**, so a hand-rolled down/move/up with no
+flush between the steps selects nothing. `selectedText()` reads the joined
+selection and `clearSelection()` drops it, so a probe can prove that content
+copies and chrome opts out.
 
 `paintedStyle(testId)` is the **runtime's own style report**, decoded into a
-`StyleSnapshot` at the adapter boundary: `backgroundColor`/`color`/`fontFamily`/
-`fontSize`/`boxShadow` as `Option`s. A property the runtime did not report is
-`None`; a payload whose property type changed fails the whole decode (`null`),
-deliberately — a runtime that changed its style report is a defect a scenario
-must see, never something to coerce.
+`StyleSnapshot` at the adapter boundary: `backgroundColor`/`borderRadius`/`color`/
+`fontFamily`/`fontSize`/`boxShadow` as `Option`s. A property the runtime did not
+report is `None`; a payload whose property type changed fails the whole decode
+(`null`), deliberately — a runtime that changed its style report is a defect a
+scenario must see, never something to coerce.
 
 ## Adapting a window
 

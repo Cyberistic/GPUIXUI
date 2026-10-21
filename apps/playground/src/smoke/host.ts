@@ -142,6 +142,13 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
       onSome: (point) =>
         renderer.nativeSimulateScrollWheel(point.x, point.y, deltaX, deltaY),
     }),
+  dragSelect: (from, to) => {
+    renderer.dragSelect(from.x, from.y, to.x, to.y);
+  },
+  selectedText: () => renderer.getSelectedText(),
+  clearSelection: () => {
+    renderer.clearSelection();
+  },
   drag: (testId, deltaX, deltaY, steps) =>
     Option.match(center(renderer, testId), {
       onNone: () => {},

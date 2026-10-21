@@ -57,6 +57,11 @@ export const registry = [
     capability: "text",
   },
   {
+    id: "text-selection",
+    title: "Text selection: selectable content copies, chrome opts out",
+    capability: "text",
+  },
+  {
     id: "input-edit",
     title: "Input editing, onChange and onSubmit",
     capability: "input",

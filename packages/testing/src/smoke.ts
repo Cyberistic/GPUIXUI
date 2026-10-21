@@ -182,6 +182,19 @@ export interface SmokeHost {
   /** Native focus traversal (`window.focus_prev`). */
   readonly focusPrevious: () => void;
   readonly wheel: (testId: string, deltaX: number, deltaY: number) => void;
+  /**
+   * Drags a text selection between two window points.
+   *
+   * The runtime registers its selection listeners during **paint**, so this is
+   * not `drag`: a hand-rolled down/move/up with no flush between them selects
+   * nothing. The renderer's own `dragSelect` exists for that reason, and a probe
+   * measures text selection through it rather than through pointer events.
+   */
+  readonly dragSelect: (from: Offset, to: Offset) => void;
+  /** The joined text currently selected, or `null` for no selection. */
+  readonly selectedText: () => string | null;
+  /** Drops the selection, so a probe can prove an element selects nothing. */
+  readonly clearSelection: () => void;
   readonly drag: (
     testId: string,
     deltaX: number,
