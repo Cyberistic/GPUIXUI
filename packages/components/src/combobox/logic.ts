@@ -1,5 +1,5 @@
 /**
- * Combobox option ranking and multi-selection membership.
+ * Combobox option ranking, multi-selection membership and the "create" row.
  *
  * The ranking is ours rather than the renderer's so the order is testable and
  * stable: an exact prefix beats a word prefix, which beats a substring, and
@@ -75,14 +75,43 @@ export const filterOptions = (
   );
 };
 
-/** Add `value` to the selection, or remove it when it is already selected. */
-export const toggledSelection = (
-  selected: ReadonlyArray<string>,
-  value: string,
-): ReadonlyArray<string> =>
-  Arr.contains(selected, value)
-    ? Arr.filter(selected, (candidate) => candidate !== value)
-    : Arr.append(selected, value);
+/**
+ * The value the "create" row carries. A NUL cannot appear in a typed query, so
+ * the sentinel cannot collide with an option the caller declared.
+ */
+const CREATE_ROW_PREFIX = "\u0000create\u0000";
+
+/** Whether `value` is the synthetic create row rather than a caller option. */
+export const isCreateRow = (value: string): boolean =>
+  Str.startsWith(CREATE_ROW_PREFIX)(value);
+
+/** The row value for a query the caller may create. */
+export const createRowValue = (query: string): string =>
+  `${CREATE_ROW_PREFIX}${query}`;
+
+/** The query a create row carries. */
+export const createRowQuery = (value: string): string =>
+  Str.slice(CREATE_ROW_PREFIX.length)(value);
+
+/**
+ * Whether the query should offer a create row: it has text, no option matched,
+ * and the caller supplied a handler. Offering it only when nothing matches keeps
+ * the row from competing with a real result the user can pick instead.
+ */
+export const offersCreate = (
+  visible: ReadonlyArray<ComboboxOption>,
+  query: string,
+  canCreate: boolean,
+): boolean =>
+  canCreate &&
+  !Str.isEmpty(Str.trim(query)) &&
+  Arr.isReadonlyArrayEmpty(visible);
+
+/** Add `value` to the selection, or remove it when it is already selected. */ export const toggledSelection =
+  (selected: ReadonlyArray<string>, value: string): ReadonlyArray<string> =>
+    Arr.contains(selected, value)
+      ? Arr.filter(selected, (candidate) => candidate !== value)
+      : Arr.append(selected, value);
 
 /**
  * The label shown on a single-select trigger. The component converts its

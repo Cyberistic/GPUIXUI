@@ -1,18 +1,23 @@
 /**
- * Combobox ranking and selection.
+ * Combobox ranking, selection and the create row.
  *
  * The bugs these guard: ranking sorted substring matches before prefix matches,
  * so typing `ca` highlighted `Vacation` above `Calendar`; a tie reordered the
  * caller's list, so the highlighted row jumped between renders; a blank query
- * filtered everything out instead of showing the full list; and toggling a
- * value that was already selected added it a second time.
+ * filtered everything out instead of showing the full list; toggling a value
+ * that was already selected added it a second time; and a create row that
+ * offered itself over a real match, or lost the query's spaces in the round trip.
  */
 
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
+  createRowQuery,
+  createRowValue,
   filterOptions,
+  isCreateRow,
   labelOf,
+  offersCreate,
   selectedLabel,
   toggledSelection,
   type ComboboxOption,
@@ -81,6 +86,28 @@ describe("filterOptions", () => {
 
   it("is empty when nothing matches", () => {
     expect(filterOptions(catalogue, "zzz")).toEqual([]);
+  });
+});
+
+describe("the create row", () => {
+  it("round-trips a query, including spaces and quotes", () => {
+    const value = createRowValue('Release "beta" 2');
+    expect(createRowQuery(value)).toBe('Release "beta" 2');
+    expect(isCreateRow(value)).toBe(true);
+  });
+
+  it("does not mistake a caller value for the create row", () => {
+    expect(isCreateRow("c1")).toBe(false);
+    expect(createRowQuery(createRowValue("zzz"))).toBe("zzz");
+  });
+
+  it("is offered only for a non-blank query with no match", () => {
+    expect(offersCreate([], "zzz", true)).toBe(true);
+    expect(offersCreate([], "   ", true)).toBe(false);
+    expect(offersCreate(filterOptions(catalogue, "ca"), "ca", true)).toBe(
+      false,
+    );
+    expect(offersCreate([], "zzz", false)).toBe(false);
   });
 });
 

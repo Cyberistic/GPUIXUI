@@ -104,6 +104,31 @@ The search input keeps focus; the highlighted row is visual. **No
 `aria-activedescendant`** exists in 0.10.0, so assistive technology does not get
 the input→row relationship; `aria-selected` on the rows is the supported signal.
 
+## Creating a value
+
+`onCreate` turns the field into a combobox that can mint an option. When the
+query matches **nothing**, the popup gains one last row — `Create "…"` by
+default, or whatever `createLabel` returns — and choosing it reports the trimmed
+query:
+
+```tsx
+<Combobox
+  options={people}
+  onCreate={(name) => setPeople((current) => [...current, { value: name, label: name }])}
+>
+  ...
+</Combobox>;
+```
+
+The root does not invent a selection from the query: only the caller can add the
+option and decide whether to select it, so `onCreate` and `onValueChange` are
+separate contracts. The popup closes and returns focus to the trigger. Offering
+the row only when nothing matches keeps it from competing with a real result;
+it is single-select only, and `children` still compose the same parts.
+
+Selecting a created query does not call `onValueChange`; add the option and set
+the value from `onCreate` for a controlled combobox.
+
 ## Theming
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in
@@ -128,7 +153,10 @@ same shape for a row composed by hand.
 
 ## Limitations
 
-- No async option loading, no "create new option", no grouping headers in v1.
+- No async option loading and no grouping headers in v1.
+- **Create-new is single-select and match-nothing only:** the row appears when
+  the query matches no option, not merely when it is not an exact label. The
+  root reports the query and leaves the selection alone.
 - The popup is an anchored layer, not a portal. The runtime snaps it inside the
   window but does not flip it, so the component opens it on the opposite side
   when snapping would cover the trigger; `align="center"` is measured from the
@@ -139,18 +167,20 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (20 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
 add/remove with order, the disabled row, Escape restoring focus,
 prefix-before-substring ranking, both themes, the pointer path — selecting an
 option, toggling several while skipping a disabled one, closing on an outside
-press — a caller-supplied empty state, and the trigger's placeholder/name coming
-from the part.
+press — a caller-supplied empty state, the trigger's placeholder/name coming
+from the part, and the create row: offered for an unmatched query, reported
+once with the trimmed query while the selection stays put, suppressed when an
+option matches, the query is blank, no handler is given, or the mode is multiple.
 
-`src/combobox/logic.test.ts` covers the ranking table, `labelOf` and
-`toggledSelection`.
+`src/combobox/logic.test.ts` covers the ranking table, `labelOf`,
+`toggledSelection` and the create-row round trip.
 
 ```sh
 nub run --filter @gpuixui/components test

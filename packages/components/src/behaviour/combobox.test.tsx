@@ -50,6 +50,7 @@ const Picker = ({
   empty,
   triggerPlaceholder,
   triggerLabel = "Assign reviewer",
+  onCreate,
 }: {
   readonly onValueChange?: (
     value: string | null | ReadonlyArray<string>,
@@ -59,6 +60,7 @@ const Picker = ({
   readonly empty?: string;
   readonly triggerPlaceholder?: string;
   readonly triggerLabel?: string;
+  readonly onCreate?: (query: string) => void;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <Combobox
@@ -73,6 +75,7 @@ const Picker = ({
       }
       multiple={multiple}
       onValueChange={onValueChange}
+      {...(onCreate === undefined ? {} : { onCreate })}
     >
       <ComboboxTrigger
         label={triggerLabel}
@@ -218,6 +221,69 @@ describe("Combobox", () => {
     expect(picker.renderer.getAllText()).toContain("No matches");
 
     picker.unmount();
+  });
+
+  it("offers a create row for an unmatched query and reports it once", async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker onCreate={onCreate} onValueChange={onValueChange} />,
+    );
+    await open(picker);
+
+    type(picker, "zzz");
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-create")).toBeDefined();
+    expect(picker.renderer.getAllText()).toContain('Create "zzz"');
+
+    picker.renderer.simulateKeystrokes("enter");
+    await settle();
+
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onCreate).toHaveBeenCalledWith("zzz");
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
+
+    // The root reports the query; only the caller can add the option, so no
+    // selection is invented.
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(picker.renderer.getAllText()).toContain("Select…");
+
+    picker.unmount();
+  });
+
+  it("offers no create row when an option matches or the query is blank", async () => {
+    const matching = renderComponent(<Picker onCreate={() => undefined} />);
+    await open(matching);
+    type(matching, "vac");
+    await settle();
+    expect(matching.renderer.findByTestId("combobox-create")).toBeUndefined();
+    expect(matching.renderer.getAllText()).toContain("Vacation");
+    matching.unmount();
+
+    const blank = renderComponent(<Picker onCreate={() => undefined} />);
+    await open(blank);
+    expect(blank.renderer.findByTestId("combobox-create")).toBeUndefined();
+    blank.unmount();
+  });
+
+  it("offers no create row without a handler or in multiple mode", async () => {
+    const noHandler = renderComponent(<Picker />);
+    await open(noHandler);
+    type(noHandler, "zzz");
+    await settle();
+    expect(noHandler.renderer.findByTestId("combobox-create")).toBeUndefined();
+    noHandler.unmount();
+
+    const multiple = renderComponent(
+      <Picker multiple onCreate={() => undefined} />,
+    );
+    await open(multiple);
+    type(multiple, "zzz");
+    await settle();
+    expect(multiple.renderer.findByTestId("combobox-create")).toBeUndefined();
+    multiple.unmount();
   });
 
   it("replaces the value in single mode", async () => {
