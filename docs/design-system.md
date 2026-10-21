@@ -223,8 +223,14 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 
-The test runs for every shipped colour set and is part of the normal test suite.
-It can fail: a palette edit that reduces contrast fails the gate.
+The test runs for every shipped colour set — light, dark, both high-contrast
+variants and all six platform themes — and is part of the normal test suite. It
+can fail: a palette edit that reduces contrast fails the gate.
+
+The contract is public, so a brand theme runs the same check:
+`contrastRatio(foreground, background)` measures two opaque roles, and
+`contrastPairs` with `contrastFloors` / `highContrastFloors` names the pairs and
+the floors. Nothing about the requirement is private to this repo.
 
 Not covered, deliberately:
 

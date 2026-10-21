@@ -798,6 +798,23 @@ const rows = colorRoles.map((role) => ({
 The other groups are already plain data with their own keys: `typography`,
 `spacing`, `radius`, `densityPresets`, `borderWidth`, `iconSize` and `palette`.
 
+`platformStyles` builds a platform comparison table the same way, so a generated
+page cannot disagree with what the library ships:
+
+```ts
+import { platformStyles, type PlatformName } from "@gpuixui/tokens";
+
+const platforms = ["darwin", "linux", "win32"] as const;
+
+const rows = platforms.map((platform: PlatformName) => ({
+  label: platformStyles[platform].label,
+  accentLight: platformStyles[platform].colors.light.primary,
+  accentDark: platformStyles[platform].colors.dark.primary,
+  radius: platformStyles[platform].radius.md,
+  density: platformStyles[platform].density,
+}));
+```
+
 ## Verification
 
 Contrast is enforced by `packages/tokens/src/color.test.ts`:
