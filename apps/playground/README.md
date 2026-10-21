@@ -1457,7 +1457,9 @@ narrower. Each deviation is deliberate and measured:
   wrap case (`expected "value=daily changes=3", got "value=archived
   changes=3"`). In `clipboard-lifecycle`, dropping `cmd-c` pastes the previous
   run's marker (`expected "gpuix clipboard q6uuii", got "gpuix clipboard
-  pt6c88"`) — each exit `1`.
+  pt6c88"`) — each exit `1`. In `selection-lifecycle`, dropping `selectable`
+  fails `a pointer drag paints the selection wash` (`expected true, got false`,
+  exit `1`).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).
