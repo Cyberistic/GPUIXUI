@@ -5,8 +5,8 @@
 # Every 30 minutes (launchd StartInterval 1800), one tick:
 #   1. records progress into .agents/slop/swarm-status.log;
 #   2. counts live agent sessions and starts new ones until at least MIN_AGENTS
-#      are running, each in its own git worktree on its own branch, each pointed
-#      at MISSION.md, the plan set and the next unclaimed task in its workstream.
+#      are running, all in the shared checkout on master, each pointed at
+#      MISSION.md and the next unclaimed task in its workstream.
 #
 # It is idempotent (a tick with MIN_AGENTS healthy agents starts nothing) and
 # crash-safe (a dead session is replaced on the next tick). It runs at most one
@@ -87,7 +87,9 @@ acquire_lock() {
 
 release_lock() { rm -rf "$LOCK"; }
 
-agent_dir() { echo "$REPO/workspaces/$1"; }
+# Every agent works in the same checkout on master. Path ownership in each
+# prompt is what keeps them apart; scripts/swarm-commit.sh serialises commits.
+agent_dir() { echo "$REPO"; }
 agent_pid() { cat "$STATE/$1.pid" 2>/dev/null; }
 
 agent_alive() {
@@ -108,11 +110,8 @@ live_agents() {
 }
 
 plan_count() {
-  # Plans live on each workstream's branch, so the aggregate counts distinct
-  # plan files across the shared checkout and every worktree.
-  find "$REPO/.agents/slop/plans" "$REPO"/workspaces/*/.agents/slop/plans \
-    -name '*.md' ! -name 'README.md' 2>/dev/null |
-    xargs -n1 basename 2>/dev/null | sort -u | wc -l | tr -d ' '
+  find "$REPO/.agents/slop/plans" -name '*.md' ! -name 'README.md' 2>/dev/null |
+    wc -l | tr -d ' '
 }
 
 plans_in() {
@@ -144,46 +143,39 @@ snapshot() {
       "$live" "$MIN_AGENTS" "$(plan_count)" "$(todo_progress)" \
       "$(component_progress)" \
       "$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo none)"
-    for ws in $WORKSTREAMS; do
-      printf '  %s %s plans=%s\n' "$ws" \
-        "$(git -C "$REPO" log -1 --format='%h %s' "agent/$ws" 2>/dev/null || echo 'no branch yet')" \
-        "$(plans_in "$REPO/workspaces/$ws")"
-    done
+    printf '  master %s\n' "$(git -C "$REPO" log -1 --format='%h %s' 2>/dev/null || echo none)"
   } >>"$STATUS_LOG"
 }
 
-ensure_worktree() {
-  local ws="$1" dir
-  dir=$(agent_dir "$ws")
-  if [ -e "$dir/.git" ]; then return 0; fi
-  mkdir -p "$REPO/workspaces"
-  if git -C "$REPO" show-ref --verify --quiet "refs/heads/agent/$ws"; then
-    git -C "$REPO" worktree add "$dir" "agent/$ws" >>"$SUPERVISOR_LOG" 2>&1
-  else
-    git -C "$REPO" worktree add -b "agent/$ws" "$dir" HEAD >>"$SUPERVISOR_LOG" 2>&1
-  fi
+ensure_checkout() {
+  git -C "$REPO" checkout -q master >>"$SUPERVISOR_LOG" 2>&1 || return 1
+  git -C "$REPO" pull --ff-only -q origin master >>"$SUPERVISOR_LOG" 2>&1 || true
 }
 
 write_runner() {
   local ws="$1" dir="$2" runner="$STATE/run-$ws.sh" prompt="$STATE/prompt-$ws.md"
 
   cat >"$prompt" <<PROMPT
-You are the **$ws** agent of the GPUIXUI swarm, working in $dir.
+You are the **$ws** agent of the GPUIXUI swarm, working in $REPO on **master**.
 
-Read these first, in order: MISSION.md, AGENTS.md, PLAN.md, TODO.md,
-COMPONENTS.md, and .agents/slop/plans/README.md.
+Read these first, in order: MISSION.md, AGENTS.md, TODO.md, COMPONENTS.md.
+PLAN.md is background, not a gate.
 
-**Your first deliverable is planning.** If the plan set for your workstream is
-missing or incomplete, write high-detail implementation plans under
-.agents/slop/plans/ — one per phase and one per package — each self-contained
-for a weaker executor: the exact files to create or change, the exact commands
-to run, the expected result of each, STOP conditions, and a test plan. Index
-them in .agents/slop/plans/README.md. **Do not start implementation before
-those plans exist.**
+**Implement and test now.** Claim the next unclaimed task in your workstream,
+write the code, and land a test that can fail without it. Write a plan only for
+a multi-day change or a runtime capability gap; never for a task you can finish
+this turn. Do not create plan-per-task files.
 
-Then: claim the next unclaimed task in your workstream, implement it to the bar
-in AGENTS.md (code + a test that can fail + an example + a docs page + a
-COMPONENTS.md row), tick it in TODO.md, and commit on your branch.
+Done means: the code, a test that can fail, an example, a docs page, and a
+COMPONENTS.md row for a component; code, a test, and the TODO.md tick otherwise.
+
+**Shared checkout.** Four other agents write in this same directory on master.
+Own only your paths and never edit another workstream's files. Stage only your
+paths (\`git add <paths>\`, never \`git add -A\`) and commit with
+\`scripts/swarm-commit.sh "<message>" <paths...>\`, which serialises the index
+across the five of you; retry once on a lock timeout. Push master after each
+coherent unit (\`git push origin master\`); on rejection, \`git pull --rebase\`
+then push.
 
 **Verification is scoped.** While iterating, run only the scenarios your change
 touches:
@@ -194,9 +186,8 @@ touches:
 A live run opens a real window; the full live suite takes ~9 minutes. Never run
 \`--all\` while iterating. A new or changed scenario is verified with
 \`--only <id>\`; the full headless suite is the end-of-task check for a
-cross-cutting change. The full live suite is a **merge/release gate**: run it
-only before merging the branch, or when the plan explicitly needs a live
-capability total. Derive the scenario count from the registry instead of
+cross-cutting change. The full live suite is a **release gate**: run it only
+before a release, or when the task explicitly needs a live capability total. Derive the scenario count from the registry instead of
 paying for a full live run. Record the exact scenario ids you ran.
 
 Your workstream: $(workstream_scope "$ws")
@@ -205,8 +196,8 @@ Own only the paths in your workstream. Another agent owns everything else; if
 you need a change outside your paths, record it as a task in TODO.md instead of
 editing it. Commit often with meaningful messages. Never claim a test passed
 unless it ran.
-BLOCKERS: read ~/GPUIXUI/BLOCKERS.md first. If one of them applies to your workstream it takes priority over your normal queue: fix it, and write its plan under .agents/slop/plans/ before implementing. If neither applies, continue. Do not wait for a human.
-Push: commit often with meaningful messages, and push your branch to origin regularly (at least once per coherent unit of work) so progress is visible remotely. Never push to master.
+BLOCKERS: read ~/GPUIXUI/BLOCKERS.md first. If one applies to your workstream it takes priority over your queue: fix it, and plan only if it will not fit in a turn. If none applies, continue. Do not wait for a human.
+Push: commit often with meaningful messages and push master at least once per coherent unit of work.
 PROMPT
 
   cat >"$runner" <<RUNNER
@@ -261,15 +252,12 @@ RUNNER
 start_agent() {
   local ws="$1" dir runner
   dir=$(agent_dir "$ws")
-  ensure_worktree "$ws" || { log "cannot create worktree for $ws"; return 1; }
-  # Reference clones are gitignored, so a worktree does not get a copy. Link the
-  # shared read-only clones in, so every agent can read them at ./references.
-  [ -e "$dir/references" ] || ln -s "$REPO/references" "$dir/references" 2>/dev/null
+  ensure_checkout || { log "cannot sync master for $ws"; return 1; }
   write_runner "$ws" "$dir"
   runner="$STATE/run-$ws.sh"
   nohup /bin/bash "$runner" >>"$STATE/$ws.log" 2>&1 &
   echo $! >"$STATE/$ws.pid"
-  log "started $ws (pid $(cat "$STATE/$ws.pid")) in $dir"
+  log "started $ws (pid $(cat "$STATE/$ws.pid")) in the shared checkout"
 }
 
 main() {
