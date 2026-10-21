@@ -1559,6 +1559,16 @@ retired once both branches are one
       `overlay-dialog` + `modal-focus-trap` green; docs, `docs/component-api.md`,
       both menu pages, `COMPONENTS.md`, `PLAN.md` D30 and the index synced
       (owner: components)
+    - [ ] A dialog opened from a command action loses the keyboard when it
+      closes — measured 2026-10-21 while verifying plan 826: a `CommandMenu`
+      action whose `perform` opens a `Dialog` closes the palette and opens the
+      dialog in one commit; on Escape the dialog closes and the focused host is
+      `None`, where the palette's own close would have returned to
+      `open-palette`. The plan-826 focus-successor mark cannot be written by the
+      command row because the target is the **palette's** opener, which
+      `useModalFocus` keeps private. A fix needs the modal to expose its captured
+      opener to the command root, or the palette's close to mark before the new
+      dialog captures (owner: components)
     - [x] A press on a toast belongs to the toast — plan 820; measured
       2026-10-21: a toast raised from inside an open dialog was painted **under**
       the dialog's veil and its own action never ran (0 calls) while the press
