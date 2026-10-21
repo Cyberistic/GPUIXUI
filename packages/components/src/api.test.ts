@@ -28,16 +28,29 @@ import { inventory } from "./inventory.js";
 
 const repoRoot = new URL("../../../", import.meta.url);
 
-/** The Tier 2 table of §8: implemented parts, not the planned shape table. */
-const tier2Table = (): string => {
-  const contract = readFileSync(
+/** The contract document, read once per test that needs a section of it. */
+const contract = (): string =>
+  readFileSync(
     fileURLToPath(new URL("docs/component-api.md", repoRoot)),
     "utf8",
   );
-  const start = contract.indexOf("### Tier 2 — composition and feedback");
-  const end = contract.indexOf("**Planned Tier 2 additions**");
+
+/** A `##` section's text, from its heading to the next one. */
+const section = (heading: string): string => {
+  const markdown = contract();
+  const start = markdown.indexOf(heading);
+  if (start < 0) return "";
+  const next = markdown.indexOf("\n## ", start + heading.length);
+  return next < 0 ? markdown.slice(start) : markdown.slice(start, next);
+};
+
+/** The Tier 2 table of §8: implemented parts, not the planned shape table. */
+const tier2Table = (): string => {
+  const tier2 = section("## 8. Parts by component");
+  const start = tier2.indexOf("### Tier 2 — composition and feedback");
+  const end = tier2.indexOf("**Planned Tier 2 additions**");
   if (start < 0 || end <= start) return "";
-  return contract.slice(start, end);
+  return tier2.slice(start, end);
 };
 
 /** One row's component name and the parts it names in backticks. */
@@ -86,6 +99,15 @@ const isExportedPart = (name: string): boolean =>
   );
 
 describe("component API contract", () => {
+  it("names the boolean change callback beside the value one", () => {
+    const controlled = section("## 2. Controlled and uncontrolled");
+    expect(controlled).toContain("onValueChange");
+    expect(controlled).toContain("onCheckedChange");
+    expect(contract()).toContain(
+      "| `.on_checked_change(f)` | `onCheckedChange` |",
+    );
+  });
+
   it("has a §8 parts row for every shipped component", () => {
     expect(tier2Table()).not.toBe("");
     const missing = Arr.filter(inventory, (meta) =>

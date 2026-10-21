@@ -52,7 +52,11 @@ history. No landed component currently deviates.
 - `defaultValue` is the uncontrolled initial value. `value` and `defaultValue`
   are mutually exclusive; a component that receives both logs one warning and
   ignores `defaultValue`.
-- `onValueChange(value)` fires on request and is the only change callback name.
+- `onValueChange(value)` fires on request for value-shaped parts.
+- Boolean parts use `onCheckedChange(checked)` — base-gpui's
+  `on_checked_change` — because "value" is not a boolean. A part that already
+  shipped an `onChange` alias keeps it as deprecated; new work names neither
+  callback `onChange`.
 - The resolution lives in exactly one hook — `useControllableState` from
   `@gpuix/react/floating` (published in 0.10.0) or this package's
   `internal/controllable.ts` wrapper. Do not write a second implementation.
@@ -129,6 +133,7 @@ supported alternative (`aria-selected`, `aria-valuetext`, a required `label`).
 | `TabsRoot > TabsList > TabsTab` | `Tabs > TabsList > TabsTrigger` |
 | `.value(v)` / `.default_value(v)` | `value` / `defaultValue` |
 | `.on_value_change(f)` | `onValueChange` |
+| `.on_checked_change(f)` | `onCheckedChange` |
 | `.style_with_state(\|state, part\| …)` | `style` as `StateStyle<PartState>` **or** `children(state)` |
 | `TabsTabStyleState { active, disabled, … }` | exported `TabsTriggerState` type |
 | `actions.rs` + `.key_context(..)` + `.on_action(..)` | `tabIndex` + `onKeyDown` + the primitives keyboard contract |
