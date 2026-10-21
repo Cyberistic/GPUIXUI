@@ -35,14 +35,18 @@ export const namedImports = (
         names: (match[1] ?? "")
           .split(",")
           .map((name) => name.trim())
-          .filter((name) => name !== ""),
+          // A `type` name is erased at runtime, and the symbol index describes
+          // values; an inline type import cannot be resolved against it.
+          .filter((name) => name !== "" && !name.startsWith("type ")),
       }),
     ),
   );
 
 /** The names each published entry point exports, read from the package source. */
-export const publishedNames = (): ReadonlyMap<string, ReadonlySet<string>> =>
-  buildWorkspaceSymbolIndex(repoRoot)
+let publishedCache: ReadonlyMap<string, ReadonlySet<string>> | undefined;
+
+export const publishedNames = (): ReadonlyMap<string, ReadonlySet<string>> => {
+  publishedCache ??= buildWorkspaceSymbolIndex(repoRoot)
     .packages.flatMap((pkg) => pkg.symbols)
     .flatMap((symbol) =>
       symbol.specifiers.map((specifier) => ({
@@ -56,6 +60,8 @@ export const publishedNames = (): ReadonlyMap<string, ReadonlySet<string>> =>
       bySpecifier.set(specifier, names);
       return bySpecifier;
     }, new Map<string, Set<string>>());
+  return publishedCache;
+};
 
 /**
  * Every import a page writes that its entry point does not export.

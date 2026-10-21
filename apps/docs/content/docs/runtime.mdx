@@ -76,7 +76,8 @@ working alternative.
 
 ```tsx
 import { motion } from "@gpuix/react";
-import { useSpring, layoutSpring } from "@gpuixui/motion/react";
+import { layoutSpring } from "@gpuixui/motion";
+import { useSpring } from "@gpuixui/motion/react";
 
 function Grow({ open }: { open: boolean }) {
   const { value } = useSpring(open ? 100 : 0, layoutSpring);
