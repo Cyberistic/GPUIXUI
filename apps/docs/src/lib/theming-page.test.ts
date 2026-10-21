@@ -373,61 +373,52 @@ interface RoleRow {
 }
 
 /**
- * The role rows the page prints, read the way a reader reads them. The table is
- * a subset — the page names the families that matter on a page and links the
- * full catalogue — so the guard holds the cells it prints, not its length.
+ * The role rows the page prints, read the way a reader reads them. Each cell is
+ * the theme's own value interpolated at render time, so a palette edit reaches
+ * the page instead of leaving the previous hex in the table.
  */
 const colourRows = (body: string): ReadonlyArray<RoleRow> =>
   section(body, "Colour roles")
     .split("\n")
     .flatMap((line) => {
       const match =
-        /^\|\s*`([A-Za-z]+)`\s*\|\s*`(#[0-9A-Fa-f]{6})`\s*\|\s*`(#[0-9A-Fa-f]{6})`\s*\|/.exec(
+        /^\|\s*`([A-Za-z]+)`\s*\|\s*\{themes\.light\.colors\.([A-Za-z]+)\}\s*\|\s*\{themes\.dark\.colors\.([A-Za-z]+)\}\s*\|/.exec(
           line,
         );
       const [, role, light, dark] = match ?? [];
       return role === undefined || light === undefined || dark === undefined
         ? []
-        : [{ role, light: light.toUpperCase(), dark: dark.toUpperCase() }];
+        : [{ role, light, dark }];
     });
 
-/** A theme's roles as `role → hex`, without an index-signature cast. */
-const roleColours = (theme: Theme): ((role: string) => string | undefined) => {
-  const byRole = new Map<string, string>(Object.entries({ ...theme.colors }));
-  return (role) => byRole.get(role);
-};
-
 describe("the theming page's colour-role table", () => {
-  it("prints the palette the package ships", () => {
-    // A palette edit is exactly when a hand-written table rots, and nothing else
-    // reads this one: the token catalogue has its own guard. A stale cell taught
-    // the previous value for both `borderStrong` shades after the dark palettes
-    // moved.
+  it("prints the palette the package ships, from the package itself", () => {
+    // A palette edit is exactly when a hand-written table rots, and the table
+    // taught the previous `accent` and `borderStrong` shades after the palettes
+    // moved. Each cell now interpolates the role it names, so the guard holds
+    // the page to the shape rather than to a copy of the values: a cell that
+    // prints a literal, or names a different role in its light and dark cells,
+    // fails here.
     const rows = colourRows(page("theming.mdx"));
     const roles = new Set<string>(colorRoles);
-    const light = roleColours(themes.light);
-    const dark = roleColours(themes.dark);
 
     expect(rows.length).toBeGreaterThanOrEqual(12);
 
-    const mismatched = rows.flatMap((row) => {
-      const expectedLight = light(row.role);
-      const expectedDark = dark(row.role);
-      return [
-        ...(roles.has(row.role) ? [] : [`${row.role}: is not a colour role`]),
-        ...(expectedLight?.toUpperCase() === row.light
-          ? []
-          : [
-              `${row.role}: light prints ${row.light}, the theme has ${expectedLight}`,
-            ]),
-        ...(expectedDark?.toUpperCase() === row.dark
-          ? []
-          : [
-              `${row.role}: dark prints ${row.dark}, the theme has ${expectedDark}`,
-            ]),
-      ];
-    });
+    const mismatched = rows.flatMap((row) => [
+      ...(roles.has(row.role) ? [] : [`${row.role}: is not a colour role`]),
+      ...(row.light === row.role
+        ? []
+        : [`${row.role}: the light cell reads ${row.light}`]),
+      ...(row.dark === row.role
+        ? []
+        : [`${row.role}: the dark cell reads ${row.dark}`]),
+    ]);
 
     expect(mismatched).toEqual([]);
+    // No literal can return to the light or dark column: the values are the
+    // theme's, so there is nothing here to fall behind.
+    expect(section(page("theming.mdx"), "Colour roles")).not.toMatch(
+      /#[0-9A-Fa-f]{6}/,
+    );
   });
 });
