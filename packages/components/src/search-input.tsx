@@ -29,7 +29,12 @@ import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  keyboardRing,
+  selectionWash,
+  useTheme,
+} from "./internal/theme.js";
 
 /** {@link SearchInput} props. */
 export interface SearchInputProps extends Omit<
@@ -138,6 +143,7 @@ export const SearchInput = ({
         }}
         style={mergeStyles(recipeStyle(SEARCH_INPUT_CONTROL, theme), {
           ...(disabled ? {} : keyboardRing(theme)),
+          ...selectionWash(theme),
         })}
       />
       {value === "" ? null : (

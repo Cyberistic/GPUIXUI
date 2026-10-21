@@ -39,7 +39,12 @@ import {
 } from "./internal/parts.js";
 import { addTokens, removeToken, splitDraft } from "./tag-input/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  keyboardRing,
+  selectionWash,
+  useTheme,
+} from "./internal/theme.js";
 
 /** The rules a tag part follows; throws outside a {@link TagInput}. */
 interface TagInputContextValue {
@@ -194,6 +199,7 @@ export const TagInputField = ({
         mergeStyles(recipeStyle(cn(TAG_INPUT_FIELD, className), theme), {
           height: controlHeight(theme, "sm"),
           ...keyboardRing(theme),
+          ...selectionWash(theme),
         }),
         resolveStyle(style, { disabled }),
       )}

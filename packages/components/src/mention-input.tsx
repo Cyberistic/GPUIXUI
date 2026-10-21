@@ -50,7 +50,12 @@ import {
   type MentionQuery,
 } from "./mention/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  keyboardRing,
+  selectionWash,
+  useTheme,
+} from "./internal/theme.js";
 
 /** The rules a mention part follows; throws outside a {@link MentionInput}. */
 interface MentionContextValue {
@@ -216,6 +221,7 @@ export const MentionInput = ({
             }}
             style={mergeStyles(recipeStyle(MENTION_INPUT_CONTROL, theme), {
               ...(disabled ? {} : keyboardRing(theme)),
+              ...selectionWash(theme),
             })}
           />
         </div>

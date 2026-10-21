@@ -70,6 +70,19 @@ export const keyboardRing = (theme: Theme, invalid = false): StyleDesc => {
     : { focusVisible };
 };
 
+/**
+ * The wash behind text a reader selects.
+ *
+ * `@gpuix/native@0.11.0` defaults `selectionColor` to the theme's accent at 35%,
+ * a colour no token contract measures. Every selectable host states the theme's
+ * own `selection` role instead — the one `selectionFailures` holds to a
+ * visibility and a legibility floor. The property inherits, so one declaration
+ * covers the host's subtree.
+ */
+export const selectionWash = (theme: Theme): StyleDesc => ({
+  selectionColor: theme.colors.selection,
+});
+
 /** The four status tones Alert, Badge and Toast expose. */
 export type Tone = "info" | "success" | "warning" | "danger";
 

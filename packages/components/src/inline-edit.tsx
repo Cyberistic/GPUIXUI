@@ -28,7 +28,12 @@ import { useControllableState } from "./internal/controllable.js";
 import { isActivation, isDismiss, isEnter } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  keyboardRing,
+  selectionWash,
+  useTheme,
+} from "./internal/theme.js";
 
 /** {@link InlineEdit} props. */
 export interface InlineEditProps extends Omit<InputProps, "value" | "style"> {
@@ -196,6 +201,7 @@ export const InlineEdit = ({
         mergeStyles(recipeStyle(cn(INLINE_EDIT_INPUT, className), theme), {
           height: controlHeight(theme, "md"),
           ...keyboardRing(theme),
+          ...selectionWash(theme),
         }),
         resolveStyle(style, state),
       )}

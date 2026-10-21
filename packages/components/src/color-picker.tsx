@@ -32,6 +32,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
   keyboardRing,
+  selectionWash,
   useTheme,
   type Theme,
 } from "./internal/theme.js";
@@ -189,6 +190,7 @@ export const ColorPicker = ({
             height: controlHeight(theme, "md"),
             borderColor: valid ? theme.colors.border : theme.colors.destructive,
             ...keyboardRing(theme, !valid),
+            ...selectionWash(theme),
           })}
         />
       </div>

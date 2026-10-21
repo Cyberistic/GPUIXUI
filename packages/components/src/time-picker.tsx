@@ -64,7 +64,12 @@ import {
   parseIsoTime,
   type TimeOfDay,
 } from "./time-picker/time.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  keyboardRing,
+  selectionWash,
+  useTheme,
+} from "./internal/theme.js";
 
 /** The two segments a time is entered in. */
 export type TimeSegment = "hours" | "minutes";
@@ -333,6 +338,7 @@ export const TimePickerSegment = ({
         width: SEGMENT_WIDTH,
         backgroundColor: undefined,
         ...(disabled ? {} : keyboardRing(theme)),
+        ...selectionWash(theme),
       }),
       resolveStyle(style, state),
     ),

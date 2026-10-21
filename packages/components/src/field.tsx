@@ -39,6 +39,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
   keyboardRing,
+  selectionWash,
   statusTone,
   useTheme,
 } from "./internal/theme.js";
@@ -278,6 +279,7 @@ export const FieldInput = ({
               : theme.colors.border,
           ...(isDisabled ? { cursor: "not-allowed" } : {}),
           ...(isDisabled ? {} : keyboardRing(theme, isInvalid)),
+          ...selectionWash(theme),
         }),
         resolveStyle(style, state),
       )}
