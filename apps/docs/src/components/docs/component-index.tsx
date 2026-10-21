@@ -10,8 +10,9 @@ import { filterEntries } from "../../lib/component-index";
  * is already rendered: the unfiltered list is the complete section.
  *
  * The query matches a page's name, its purpose, its lane, the parts it
- * documents and the limits it records — so a reader who knows the part they
- * want, or the capability a component lacks, finds the page from here.
+ * documents, the props and prop types its API table declares and the limits it
+ * records — so a reader who knows the part, the prop or the capability a
+ * component lacks finds the page from here.
  */
 export function ComponentIndex() {
   const [query, setQuery] = useState("");
@@ -21,12 +22,12 @@ export function ComponentIndex() {
     <div className="not-prose my-6">
       <label className="block">
         <span className="sr-only">
-          Filter components by name, part or purpose
+          Filter components by name, part, prop or purpose
         </span>
         <input
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Filter by name, part or limit — try “search”, “DialogFooter”, “aria-current”"
+          placeholder="Filter by name, part, prop or limit — try “search”, “DialogFooter”, “onCheckedChange”"
           type="search"
           value={query}
         />

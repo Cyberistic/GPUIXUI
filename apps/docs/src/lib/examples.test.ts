@@ -138,6 +138,8 @@ describe("matching an example to its page", () => {
         url: "/docs/primitives/a-one",
         section: "Primitives",
         parts: [],
+        props: [],
+        types: [],
         limitations: "",
       },
       {
@@ -146,6 +148,8 @@ describe("matching an example to its page", () => {
         url: "/docs/primitives/a-two",
         section: "Primitives",
         parts: [],
+        props: [],
+        types: [],
         limitations: "",
       },
     ];

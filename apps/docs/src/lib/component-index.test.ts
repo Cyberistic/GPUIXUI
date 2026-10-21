@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   buildIndex,
@@ -6,6 +6,7 @@ import {
   limitationsOf,
   pageUrl,
   partsOf,
+  propsOf,
   type ComponentEntry,
   type ComponentPage,
 } from "./component-index";
@@ -45,11 +46,15 @@ const entry = (
   description = "",
   parts: ReadonlyArray<string> = [],
   limitations = "",
+  props: ReadonlyArray<string> = [],
+  types: ReadonlyArray<string> = [],
 ): ComponentEntry => ({
   title,
   description,
   section,
   parts,
+  props,
+  types,
   limitations,
   url: `/docs/${section.toLowerCase()}/${title.toLowerCase()}`,
 });
@@ -154,6 +159,99 @@ describe("the filter", () => {
   it("finds a page by the name of a part it documents", () => {
     expect(filterEntries(entries, "dialogfooter")).toEqual([entries[2]]);
   });
+
+  it("finds a page by a prop or a prop type its API table declares", () => {
+    const switchRow = entry(
+      "Switch",
+      "Primitives",
+      "An on/off control.",
+      [],
+      "",
+      ["onCheckedChange", "style"],
+      ["StateStyle", "SwitchState"],
+    );
+    const withApi = [...entries, switchRow];
+
+    expect(filterEntries(withApi, "oncheckedchange")).toEqual([switchRow]);
+    expect(filterEntries(withApi, "statestyle")).toEqual([switchRow]);
+    expect(filterEntries(withApi, "switch")).toEqual([switchRow]);
+  });
+
+  it("still needs every term once a prop matches", () => {
+    const switchRow = entry(
+      "Switch",
+      "Primitives",
+      "An on/off control.",
+      [],
+      "",
+      ["onCheckedChange"],
+    );
+
+    expect(filterEntries([switchRow], "oncheckedchange primitives")).toEqual([
+      switchRow,
+    ]);
+    expect(filterEntries([switchRow], "oncheckedchange dialog")).toEqual([]);
+  });
+});
+
+describe("the props a page documents", () => {
+  it("reads the prop names and the named types from an API table", () => {
+    const source = [
+      "## API",
+      "",
+      "| Prop | Type | Default | Consequence |",
+      "| ---- | ---- | ------- | ----------- |",
+      "| `checked` | `boolean` | — | controlled |",
+      "| `onCheckedChange` | `(next: boolean) => void` | none | the next boolean |",
+      "| `style` | `StateStyle<SwitchState>` | — | merged last |",
+    ].join("\n");
+
+    expect(propsOf(source)).toEqual({
+      props: ["checked", "onCheckedChange", "style"],
+      types: ["StateStyle", "SwitchState"],
+    });
+  });
+
+  it("splits a paired row and skips the part the table is headed by", () => {
+    const source = [
+      "## API reference",
+      "",
+      "| `Dialog` prop | Type | Default |",
+      "| ------------- | ---- | ------- |",
+      "| `open` | `boolean` | — |",
+      "| `onOpenChange` / `onClose` | `(open: boolean) => void` | — |",
+    ].join("\n");
+
+    expect(propsOf(source)).toEqual({
+      props: ["open", "onOpenChange", "onClose"],
+      types: [],
+    });
+  });
+
+  it("ignores a table outside an API section, and one inside a fence", () => {
+    const source = [
+      "## Usage",
+      "",
+      "| `notAProp` | `boolean` |",
+      "",
+      "## API",
+      "",
+      "```md",
+      "| `fenced` | `boolean` |",
+      "```",
+      "",
+      "| `open` | `boolean` |",
+    ].join("\n");
+
+    expect(propsOf(source).props).toEqual(["open"]);
+  });
+
+  it("reads nothing from a page that documents no props", () => {
+    expect(propsOf("## Usage\n\nA `Switch` in a sentence.")).toEqual({
+      props: [],
+      types: [],
+    });
+  });
 });
 
 describe("the parts a page documents", () => {
@@ -192,6 +290,19 @@ describe("the parts a page documents", () => {
     ].join("\n");
 
     expect(partsOf(source)).toEqual(["Dialog", "DialogContent"]);
+  });
+
+  it("reads the composition table the curated template uses", () => {
+    const source = [
+      "## Composition",
+      "",
+      "| Part | Responsibility |",
+      "| ---- | -------------- |",
+      "| `Dialog` | owns the state |",
+      "| `DialogFooter` | the actions |",
+    ].join("\n");
+
+    expect(partsOf(source)).toEqual(["Dialog", "DialogFooter"]);
   });
 
   it("reads nothing from a section that documents no parts", () => {
@@ -265,6 +376,48 @@ describe("the real index", () => {
 
     expect(found.length).toBeGreaterThan(0);
     expect(found.map((row) => row.url)).toContain("/docs/components/tabs");
+  });
+
+  it("finds a component by the parts a curated page composes", () => {
+    const found = filterEntries(componentIndex, "DialogFooter").map(
+      (row) => row.url,
+    );
+
+    expect(found).toEqual(["/docs/components/dialog"]);
+  });
+
+  it("finds a component by a prop its page documents", () => {
+    const found = filterEntries(componentIndex, "onCheckedChange");
+
+    expect(found.map((row) => row.url)).toContain("/docs/primitives/switch");
+  });
+
+  it("finds the pages whose props take a named type", () => {
+    const found = filterEntries(componentIndex, "StateStyle").map(
+      (row) => row.url,
+    );
+
+    expect(found).toContain("/docs/primitives/switch");
+    // A second axis needs more than one page: a single hit would be the title.
+    expect(found.length).toBeGreaterThan(1);
+  });
+
+  it("keeps every query the Components page shows resolvable", () => {
+    const page = readFileSync(
+      new URL("../../content/docs/components/index.mdx", import.meta.url),
+      "utf8",
+    );
+    const intro = page.slice(0, page.indexOf("<ComponentIndex"));
+    const examples = [...intro.matchAll(/`([^`]+)`/g)].flatMap((match) =>
+      match[1] === undefined ? [] : [match[1]],
+    );
+
+    expect(examples.length).toBeGreaterThanOrEqual(4);
+    expect(
+      examples.filter(
+        (term) => filterEntries(componentIndex, term).length === 0,
+      ),
+    ).toEqual([]);
   });
 
   it("lists only parts the library actually exports", () => {

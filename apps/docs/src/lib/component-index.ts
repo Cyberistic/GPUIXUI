@@ -27,6 +27,10 @@ export interface ComponentEntry {
   readonly section: string;
   /** The compound parts the page documents, e.g. `DialogFooter`. */
   readonly parts: ReadonlyArray<string>;
+  /** The props the page's API table documents, e.g. `onCheckedChange`. */
+  readonly props: ReadonlyArray<string>;
+  /** The named types those props take, e.g. `StateStyle`. */
+  readonly types: ReadonlyArray<string>;
   /** What the page says the component cannot do. */
   readonly limitations: string;
 }
@@ -112,15 +116,18 @@ const sectionsOf = (source: string): ReadonlyArray<PageSection> =>
  * The compound parts a page documents.
  *
  * The pages name their parts in three ways: a parts table (`## Parts`,
- * `## Anatomy`), an API table headed by the part's name (`| `Dialog` prop |`),
- * and a heading per part (`### DialogContent`, or `### `CheckboxIndicator``).
+ * `## Anatomy`, or the curated template's `## Composition`), an API table headed
+ * by the part's name (`| `Dialog` prop |`), and a heading per part
+ * (`### DialogContent`, or `### `CheckboxIndicator``).
  * All three are read, so a reader who searches "DialogFooter" finds the page
  * that documents it.
  */
 export const partsOf = (source: string): ReadonlyArray<string> => {
   const names = sectionsOf(source).flatMap((section) => {
     const isParts =
-      section.heading === "Parts" || section.heading === "Anatomy";
+      section.heading === "Parts" ||
+      section.heading === "Anatomy" ||
+      section.heading === "Composition";
     const isApi =
       section.heading === "API" || section.heading === "API reference";
     if (!isParts && !isApi) return [];
@@ -155,6 +162,72 @@ const notAPart = new Set([
   "Consequence",
   "Responsibility",
 ]);
+
+/** The props a page documents, and the named types those props take. */
+export interface PageProps {
+  readonly props: ReadonlyArray<string>;
+  readonly types: ReadonlyArray<string>;
+}
+
+/** A fenced block is an example, not documentation: its `|` rows are not tables. */
+const withoutCodeFences = (text: string): string =>
+  text.replace(/^```[\s\S]*?^```/gm, "");
+
+/** A table row's cells, trimmed. A padded cell names a part, not a prop. */
+const tableCells = (text: string): ReadonlyArray<ReadonlyArray<string>> =>
+  [...withoutCodeFences(text).matchAll(/^\|(.+)\|\s*$/gm)].map((match) =>
+    (match[1] ?? "").split("|").map((cell) => cell.trim()),
+  );
+
+/** The identifiers inside one cell's code spans, split on `/` for pairs. */
+const codeNames = (cell: string): ReadonlyArray<string> =>
+  [...cell.matchAll(/`([^`]+)`/g)].flatMap((match) =>
+    (match[1] ?? "")
+      .split("/")
+      .map((name) => name.trim())
+      .filter((name) => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name)),
+  );
+
+/** A cell headed "`Dialog` prop" names the part whose props follow it. */
+const partRow = (cell: string): boolean => /^`[^`]+`\s+prop\b/i.test(cell);
+
+/**
+ * The props a page documents, read from its API tables.
+ *
+ * A reader who knows the prop but not the component — "which pages take
+ * `onCheckedChange`?" — has nothing else to search: the sidebar shows names and
+ * the parts table shows parts. The named types come along for the same reason
+ * ("which components take a `StateStyle`?"), limited to capitalised identifiers
+ * so a `boolean` does not match every page in the library.
+ */
+export const propsOf = (source: string): PageProps => {
+  const rows = sectionsOf(source)
+    .filter((section) => /^(API|Props)\b/.test(section.heading))
+    .flatMap((section) => tableCells(section.text));
+
+  const documented = rows
+    .filter(([first = ""]) => first.startsWith("`") && !partRow(first))
+    .reduce<PageProps>(
+      (found, [first = "", second = ""]) => ({
+        props: [...found.props, ...codeNames(first)],
+        types: [
+          ...found.types,
+          ...[...second.matchAll(/`([^`]+)`/g)].flatMap(
+            (match) => match[1]?.match(/\b[A-Z][A-Za-z0-9]*\b/g) ?? [],
+          ),
+        ],
+      }),
+      { props: [], types: [] },
+    );
+
+  return {
+    props: [...new Set(documented.props.filter((name) => !notAProp.has(name)))],
+    types: [...new Set(documented.types)],
+  };
+};
+
+/** Column labels a table repeats, and words that are never a prop. */
+const notAProp = new Set(["Prop", "Props", "Part", "Parts"]);
 
 /**
  * What a page says its component cannot do.
@@ -191,6 +264,7 @@ const entryOf = (page: ComponentPage): ComponentEntry | undefined => {
     url,
     section,
     parts: partsOf(page.source),
+    ...propsOf(page.source),
     limitations: limitationsOf(page.source),
   };
 };
@@ -225,7 +299,8 @@ export const buildIndex = (
  * Every whitespace-separated term must appear in the row, so "search input"
  * finds the search field and not every input, and a term matches the section so
  * "primitives" narrows to that lane. A part name finds the page that
- * documents it, and a limitation finds the pages that carry it.
+ * documents it, a prop or its type finds the page whose API table declares it,
+ * and a limitation finds the pages that carry it.
  */
 export const filterEntries = (
   entries: ReadonlyArray<ComponentEntry>,
@@ -239,7 +314,7 @@ export const filterEntries = (
 
   return entries.filter((entry) => {
     const haystack =
-      `${entry.title} ${entry.description} ${entry.section} ${entry.parts.join(" ")} ${entry.limitations}`.toLowerCase();
+      `${entry.title} ${entry.description} ${entry.section} ${entry.parts.join(" ")} ${entry.props.join(" ")} ${entry.types.join(" ")} ${entry.limitations}`.toLowerCase();
     return terms.every((term) => haystack.includes(term));
   });
 };
