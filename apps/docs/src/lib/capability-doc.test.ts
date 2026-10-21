@@ -457,9 +457,28 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(accessibility?.[2]).toContain("aria-valuetext");
   });
 
+  it("records the file-drop probe that retired the unverified row", () => {
+    // The row said no probe mounts a drop, so a plan was told to route a file
+    // through `promptForPaths` only. The headless `file-drop` scenario dispatches
+    // the renderer's own FileDrop pair, so the payload and the target region are
+    // measured even though a live Finder drop is not automatable.
+    const drops = rowFor("File drops");
+    expect(drops?.verdict).toBe("supported, with limits");
+    expect(drops?.evidence).toContain("file-drop");
+    expect(drops?.evidence).toContain("/tmp/alpha.txt");
+    expect(drops?.evidence).toContain("sibling");
+    expect(drops?.workaround).toContain("promptForPaths");
+  });
+
   it("leaves the uncertain rows uncertain", () => {
-    const unverified = rows.filter((row) => row.verdict === "unverified");
-    expect(unverified.length).toBeGreaterThanOrEqual(3);
+    // Exactly the rows no probe has measured stay unverified; promoting one
+    // without evidence would be the confident lie this record exists to prevent.
+    const unverified = rows
+      .filter((row) => row.verdict === "unverified")
+      .map((row) => row.label);
+    expect(unverified).toHaveLength(2);
+    expect(unverified.join(" ")).toContain("Window backdrop");
+    expect(unverified.join(" ")).toContain("Reduced-motion");
   });
 
   it("publishes the measured gaps on /docs/runtime", () => {
