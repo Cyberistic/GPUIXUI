@@ -276,6 +276,52 @@ per-element, and an element that draws its own focus look opts out with
 A failed probe still writes its report and captures, so a regression is visible,
 not just red.
 
+### `register-font` — measured on 0.11.0 here
+
+Plan `052` shipped `registerFonts`, but a unit test cannot show the face
+*painted*, and a window's renderer reports no style. The proof therefore has to
+be the font's own **metrics**: the probe paints one word three ways at 20px — the
+theme's family, a family no runtime knows, and `GpuixTestSquare` (GPUix's
+generated test face: `A` 1em, `B` 2em, `m` 1em, every glyph a filled square)
+which the runner installs with `registerFonts` before the view's first paint:
+
+| Sample | Family | Painted width |
+| ------ | ------ | ------------- |
+| `face-default` | the theme's `.SystemUIFont` | 42px |
+| `face-missing` | `GpuixTestMissing` (no such family) | 44px |
+| `face-registered` | `GpuixTestSquare` | **80px** (4em at 20px) |
+
+Three checks: the installed family paints its own advances (80 ± 1), the unknown
+family does **not** (naming a family changes nothing on its own — it lands on a
+fallback two pixels off even the theme's own face), and the fallback paints
+something. Negative control, measured: dropping the probe's `fonts` entry makes
+the third row fall back as well and fails
+`the installed family paints the face's own advances`
+(`expected 80 ± 1, got 44`, exit `1`).
+
+The capture is unambiguous (`.artifacts/live/register-font.png`): the first two
+rows are text, the third is one solid rectangle, because every glyph in the
+installed face is a filled square.
+
+Two consequences:
+
+1. A theme may name a family the machine did not have, and the runtime resolves
+   it from the **file** — so a consumer's own typeface travels with the
+   application, which is what plan `052` needed.
+2. **Order matters in a window**: the face has to be registered before the text
+   that names the family is first laid out, which is the order the pinned
+   `@gpuix/native` typings state. Upstream's `fonts.test.tsx` shows the
+   `TestRenderer` re-shaping text that already named the family; that path is
+   unmeasured in a window, and `TODO.md` tracks the contradiction between the
+   typings and `packages/tokens/src/fonts.ts`'s header.
+
+The fixture is `GpuixTestSquare`, GPUix's generated test face
+(`references/gpuix/packages/react/src/__tests__/make-square-font.py`). Its bytes
+are embedded in `src/live/fonts.ts` so the runner needs no asset-copy step, and
+`src/live/fonts.test.ts` decodes them to check the family the file declares, that
+the fallback family is **not** in the file, and that `registerFonts` installs the
+bytes once.
+
 ## Structure
 
 ```
@@ -298,6 +344,11 @@ src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
+src/live/registry.ts     live probe ids + capabilities (imports nothing native)
+src/live/scenarios.tsx   one window view + async steps per live probe
+src/live/fonts.ts        the probe typeface's bytes and its declared advances
+src/live/host.ts         the window → AsyncSmokeHost adapter
+src/live/run.ts          the live CLI (preflight → mount each probe → report)
 ```
 
 ## Deviations from plan `120`, and why

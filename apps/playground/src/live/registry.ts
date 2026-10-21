@@ -24,6 +24,11 @@ export interface LiveProbeMeta {
  * dims the other focusables. Each probe asserts the native focus id of every
  * state and reads the paint out of the captured frame, so the evidence is a
  * check, not a claim.
+ *
+ * `register-font` is plan `052`'s native half: a window reports no style, so a
+ * face is proved by its **metrics** — the installed family lays the sample word
+ * out at its own advances, and a family no runtime knows lays it out at the
+ * fallback's width.
  */
 export const liveRegistry = [
   {
@@ -36,6 +41,12 @@ export const liveRegistry = [
     id: "keyboard-focus-dim",
     title: "Focus: the runtime dims other focusables, and one element opts out",
     capability: "focus",
+  },
+  {
+    id: "register-font",
+    title:
+      "Text: registerFonts makes a family paint, and an unknown family falls back",
+    capability: "text",
   },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 

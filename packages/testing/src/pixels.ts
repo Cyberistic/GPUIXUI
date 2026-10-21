@@ -171,10 +171,7 @@ const unfilter = (
 };
 
 /** Expands 1/2/3-channel rows into RGBA. */
-const toRgba = (
-  rows: Uint8Array,
-  header: Header,
-): Pixels => {
+const toRgba = (rows: Uint8Array, header: Header): Pixels => {
   const data = new Uint8Array(header.width * header.height * 4);
   const byte = (at: number): number => rows[at] ?? 0;
   for (let index = 0; index < header.width * header.height; index += 1) {
@@ -213,11 +210,7 @@ export const decodePng = (
 };
 
 /** The colour at a pixel, or `null` outside the frame. */
-export const pixelAt = (
-  frame: Pixels,
-  x: number,
-  y: number,
-): Rgba | null => {
+export const pixelAt = (frame: Pixels, x: number, y: number): Rgba | null => {
   if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) return null;
   const at = (y * frame.width + x) * 4;
   return new Rgba({
@@ -232,11 +225,13 @@ export const pixelAt = (
 export const hexToRgba = (hex: string): Rgba | null => {
   const digits = hex.startsWith("#") ? hex.slice(1) : hex;
   const expanded = Match.value(digits.length).pipe(
-    Match.when(3, () =>
-      `${digits
-        .split("")
-        .map((digit) => `${digit}${digit}`)
-        .join("")}ff`,
+    Match.when(
+      3,
+      () =>
+        `${digits
+          .split("")
+          .map((digit) => `${digit}${digit}`)
+          .join("")}ff`,
     ),
     Match.when(6, () => `${digits}ff`),
     Match.when(8, () => digits),

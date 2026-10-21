@@ -80,9 +80,7 @@ const blue = new Rgba({ r: 0, g: 0, b: 255, a: 255 });
 describe("decodePng", () => {
   it("decodes RGBA rows with the None filter", () => {
     const frame = decode(
-      png(2, 1, 6, [
-        new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 255]),
-      ]),
+      png(2, 1, 6, [new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 255])]),
     );
     expect(frame.width).toBe(2);
     expect(frame.height).toBe(1);
@@ -93,9 +91,7 @@ describe("decodePng", () => {
   it("applies the Sub filter per channel, not per pixel", () => {
     // Row 1 encodes blue relative to the previous pixel's red: 0-255, 0, 255+1.
     const frame = decode(
-      png(2, 1, 6, [
-        new Uint8Array([1, 255, 0, 0, 255, 1, 0, 255, 0]),
-      ]),
+      png(2, 1, 6, [new Uint8Array([1, 255, 0, 0, 255, 1, 0, 255, 0])]),
     );
     expect(pixelAt(frame, 1, 0)).toEqual(blue);
   });

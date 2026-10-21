@@ -27,6 +27,7 @@ import type * as PlatformError from "effect/PlatformError";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { inflateSync } from "node:zlib";
 import { Report, Runtime, Smoke } from "@gpuixui/testing";
+import { registerFonts, type FontRegistrar } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { Root } from "@gpuix/react";
 import { createElement, Fragment } from "react";
@@ -109,14 +110,25 @@ const unavailable = (error: NoWindowError): string =>
 const mount =
   (
     root: Pick<Root, "render">,
+    registrar: FontRegistrar,
     selected: ReadonlyArray<LiveProbe>,
   ): ((scenario: { readonly id: string }) => Effect.Effect<void>) =>
   (scenario) =>
     Effect.gen(function* () {
-      const view = Option.flatMap(
-        Arr.findFirst(selected, (probe) => probe.id === scenario.id),
-        (probe) => Option.some(probe.view),
+      const probe = Arr.findFirst(
+        selected,
+        (candidate) => candidate.id === scenario.id,
       );
+      // Before the first paint: a family the runtime did not know when the text
+      // was laid out has already fallen back.
+      const fonts = Option.match(probe, {
+        onNone: () => [],
+        onSome: (found) => found.fonts ?? [],
+      });
+      yield* Effect.sync(() => {
+        registerFonts(registrar, fonts);
+      });
+      const view = Option.map(probe, (found) => found.view);
       yield* Effect.sync(() =>
         root.render(
           createElement(
@@ -200,17 +212,15 @@ export const program = (
       // The filesystem is the Effect service; zlib has no Effect equivalent, so
       // the runner injects it and the decoder stays platform-free.
       readCapture: (name) =>
-        fileSystem
-          .readFile(path.join(captures, `${name}.png`))
-          .pipe(
-            Effect.mapError(
-              (cause) =>
-                new Smoke.SmokeHostError({
-                  verb: `read capture ${name}`,
-                  cause,
-                }),
-            ),
+        fileSystem.readFile(path.join(captures, `${name}.png`)).pipe(
+          Effect.mapError(
+            (cause) =>
+              new Smoke.SmokeHostError({
+                verb: `read capture ${name}`,
+                cause,
+              }),
           ),
+        ),
       inflate: (bytes) => inflateSync(bytes),
     });
     const startedAt = yield* Clock.currentTimeMillis;
@@ -218,7 +228,7 @@ export const program = (
       host,
       selected,
       { host: hostLabel(), startedAt },
-      mount(root, selected),
+      mount(root, renderer, selected),
     );
 
     yield* fileSystem.writeFileString(

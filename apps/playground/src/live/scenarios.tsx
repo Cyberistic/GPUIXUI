@@ -9,26 +9,24 @@
 import type { ReactNode } from "react";
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
-import type { StyleDesc } from "@gpuix/react";
-import { textStyle, type Theme } from "@gpuixui/tokens";
+import { keyboardFocusRing, textStyle, type FontSource } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import type { LiveProbeId } from "./registry.js";
+import {
+  MISSING_FAMILY,
+  SQUARE_FACE,
+  SQUARE_FAMILY,
+  SQUARE_SIZE,
+  SQUARE_WORD,
+  SQUARE_WORD_WIDTH,
+} from "./fonts.js";
 
 /** Long enough for one paint after an input reaches the window. */
 const SETTLE = Duration.millis(40);
 
-/** The focus ring plan `053` proposes: an outline the runtime paints itself. */
-const focusVisibleRing = (theme: Theme): StyleDesc => ({
-  focusVisible: {
-    outlineWidth: theme.borderWidth.strong,
-    outlineColor: theme.colors.ring,
-    outlineOffset: 0,
-  },
-});
-
-/** One focusable sample; every sample carries the same proposed ring. */
+/** One focusable sample; every sample carries the ring the library ships. */
 const Sample = ({
   testId,
   label,
@@ -47,7 +45,7 @@ const Sample = ({
         padding: theme.spacing.lg,
         borderRadius: theme.radius.md,
         backgroundColor: theme.colors.muted,
-        ...focusVisibleRing(theme),
+        ...keyboardFocusRing(theme),
       }}
     >
       <text
@@ -168,9 +166,79 @@ const FocusDimProbe = (): ReactNode => {
   );
 };
 
+/** One sample of `SQUARE_WORD` at the probe's size, in `family` or the default. */
+const FaceSample = ({
+  testId,
+  family,
+}: {
+  readonly testId: string;
+  readonly family?: string;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div style={{ display: "flex", flexDirection: "row" }}>
+      <text
+        testId={testId}
+        style={{
+          ...textStyle(theme, "body"),
+          fontFamily: family,
+          fontSize: SQUARE_SIZE,
+          color: theme.colors.foreground,
+        }}
+      >
+        {SQUARE_WORD}
+      </text>
+    </div>
+  );
+};
+
+/**
+ * The same word three ways: the theme's family, a family no runtime knows, and
+ * the family the runner registered before this view first painted.
+ *
+ * The unknown name is the control: it proves the family *string* changes
+ * nothing on its own, so a width difference in the third row is the font file,
+ * not the style.
+ */
+const RegisterFontProbe = (): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId="register-font-probe"
+      style={{
+        width: 720,
+        height: 320,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The third word paints the installed face's own advances.
+      </text>
+      <FaceSample testId="face-default" />
+      <FaceSample testId="face-missing" family={MISSING_FAMILY} />
+      <FaceSample testId="face-registered" family={SQUARE_FAMILY} />
+    </div>
+  );
+};
+
 /** What a probe module supplies; the registry supplies the metadata. */
 export interface LiveProbeBody {
   readonly id: LiveProbeId;
+  /**
+   * The faces the runner installs with `registerFonts` before the probe's first
+   * paint, in the documented order: a family the runtime did not know when the
+   * text was laid out has already fallen back.
+   */
+  readonly fonts?: ReadonlyArray<FontSource>;
   readonly view: () => ReactNode;
   readonly steps: Smoke.AsyncSmokeScenario["steps"];
 }
@@ -189,7 +257,9 @@ const paintedPixels = (
   name: string,
   colour: Pixels.Rgba,
 ): Effect.Effect<number, Smoke.SmokeHostError> =>
-  Effect.map(ctx.host.pixels(name), (frame) => Pixels.countColour(frame, colour));
+  Effect.map(ctx.host.pixels(name), (frame) =>
+    Pixels.countColour(frame, colour),
+  );
 
 const focusedAfterPaint = (
   ctx: Smoke.AsyncSmokeContext,
@@ -318,11 +388,7 @@ const focusDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("keyboard");
     const dimmed = yield* mutedPixels(ctx, "keyboard");
 
-    yield* ctx.expectEqual(
-      "some fills are painted at rest",
-      plain > 0,
-      true,
-    );
+    yield* ctx.expectEqual("some fills are painted at rest", plain > 0, true);
     yield* ctx.expectEqual(
       "the runtime dims another focusable while one has keyboard focus",
       dimmed < plain,
@@ -333,6 +399,48 @@ const focusDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "only the default sample dims, not the opted-out one",
       dimmed > plain / 2,
+      true,
+    );
+  });
+
+/** The painted width of `testId`, failing by name when the runtime omitted it. */
+const paintedWidth = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<number, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+  Effect.gen(function* () {
+    const bounds = yield* ctx.expectSome(
+      `the runtime paints ${testId}`,
+      Option.fromNullishOr(yield* ctx.host.bounds(testId)),
+    );
+    return bounds.width;
+  });
+
+const registerFontSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("register-font-probe");
+
+    const fallback = yield* paintedWidth(ctx, "face-default");
+    const missing = yield* paintedWidth(ctx, "face-missing");
+    const registered = yield* paintedWidth(ctx, "face-registered");
+    yield* ctx.host.capture("register-font");
+
+    yield* ctx.expectNear(
+      "the installed family paints the face's own advances",
+      registered,
+      SQUARE_WORD_WIDTH,
+      1,
+    );
+    // The control: a family the runtime does not know must not paint the
+    // installed face's advances, so the row above can only come from the file.
+    yield* ctx.expectEqual(
+      "an unknown family does not paint the installed face",
+      Math.abs(missing - SQUARE_WORD_WIDTH) > 5,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the fallback face paints the sample word",
+      fallback > 0,
       true,
     );
   });
@@ -348,5 +456,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "keyboard-focus-dim",
     view: () => <FocusDimProbe />,
     steps: focusDimSteps,
+  },
+  "register-font": {
+    id: "register-font",
+    fonts: [SQUARE_FACE],
+    view: () => <RegisterFontProbe />,
+    steps: registerFontSteps,
   },
 };
