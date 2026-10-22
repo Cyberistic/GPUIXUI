@@ -9,6 +9,7 @@ import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.t
 import field from "../../../../../packages/components/src/field.tsx?raw";
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
 import tabs from "../../../../../packages/components/src/tabs.tsx?raw";
+import toast from "../../../../../packages/components/src/toast.tsx?raw";
 
 /**
  * The real component implementation, shown under Installation as `?raw`.
@@ -28,6 +29,7 @@ export const componentSources = {
   field,
   popover,
   tabs,
+  toast,
 } as const;
 
 export type ComponentSourceName = keyof typeof componentSources;

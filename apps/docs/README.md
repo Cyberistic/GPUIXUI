@@ -52,6 +52,7 @@ components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
 components/popover.mdx       Curated: anchored placement
 components/tabs.mdx          Curated: the measured indicator
+components/toast.mdx         Curated: the bounded queue, one action, the hold
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
 testing.mdx                  The two test lanes, the check model and the report
 contributing.mdx             The checks, the worktree rules, the component checklist
@@ -353,7 +354,7 @@ suite actually runs.
 
 The copies are checked on every page the site mounts, not only the curated ones:
 `src/lib/page-snippets.test.ts` resolves each `@gpuixui/*` import in every `ts`
-and `tsx` fence — 131 pages, the site's own 39 plus the 92 the packages ship —
+and `tsx` fence — 132 pages, the site's own 40 plus the 92 the packages ship —
 against the package source, so a renamed export fails the docs suite instead of
 reaching a reader as working code. One defect on a page this app does not own is
 recorded with its owner in that guard, and the entry fails once the page is

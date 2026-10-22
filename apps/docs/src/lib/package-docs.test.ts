@@ -113,6 +113,7 @@ describe("the package docs collections", () => {
     "/docs/components/field",
     "/docs/components/popover",
     "/docs/components/tabs",
+    "/docs/components/toast",
   ]);
 
   it("never shadow a page outside the curated overrides", () => {

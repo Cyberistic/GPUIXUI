@@ -2087,6 +2087,305 @@ export const AccountFields = () => (
   </>
 );`;
 
+interface PreviewToast {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly tone: "info" | "success" | "warning" | "danger";
+  readonly actionLabel?: string;
+  /** Milliseconds until it dismisses itself; zero keeps it. */
+  readonly duration?: number;
+}
+
+const toastGlyph = {
+  info: "ℹ",
+  success: "✓",
+  warning: "⚠",
+  danger: "✕",
+} as const;
+
+/** One card, with the preview's own auto-dismiss clock. */
+const ToastCardPreview = ({
+  toast,
+  onDismiss,
+  onAction,
+}: {
+  readonly toast: PreviewToast;
+  readonly onDismiss: () => void;
+  readonly onAction?: () => void;
+}) => {
+  const dismiss = useRef(onDismiss);
+
+  useEffect(() => {
+    dismiss.current = onDismiss;
+  }, [onDismiss]);
+
+  useEffect(() => {
+    if (toast.duration === 0) return undefined;
+    const handle = setTimeout(() => dismiss.current(), toast.duration ?? 5_000);
+    return () => clearTimeout(handle);
+  }, [toast.duration, toast.id]);
+
+  return (
+    <div className={`gx-toast-card gx-toast-${toast.tone}`}>
+      <span aria-hidden="true" className="gx-toast-bar" />
+      <div className="gx-toast-body">
+        <span aria-hidden="true" className="gx-toast-glyph">
+          {toastGlyph[toast.tone]}
+        </span>
+        <div className="gx-toast-copy">
+          <p className="gx-toast-title">{toast.title}</p>
+          {toast.description === undefined ? null : (
+            <p className="gx-toast-desc">{toast.description}</p>
+          )}
+        </div>
+        {toast.actionLabel === undefined ? null : (
+          <button className="gx-toast-action" onClick={onAction} type="button">
+            {toast.actionLabel}
+          </button>
+        )}
+        <button
+          aria-label="Dismiss"
+          className="gx-toast-dismiss"
+          onClick={onDismiss}
+          type="button"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/** A publish/undo workflow, capped at three cards like the store. */
+const ToastWorkflow = () => {
+  const [toasts, setToasts] = useState<ReadonlyArray<PreviewToast>>([]);
+  const nextId = useRef(0);
+
+  const push = (draft: Omit<PreviewToast, "id">) => {
+    nextId.current += 1;
+    const toast = { ...draft, id: String(nextId.current) };
+    setToasts((current) => [...current, toast].slice(-3));
+  };
+
+  const dismiss = (id: string) =>
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+
+  return (
+    <div className="gx-toast-demo">
+      <div className="gx-toast-stage">
+        <p className="gx-demo-label">Workspace</p>
+        <p className="gx-toast-lede">
+          Publish the page, then undo it from the toast.
+        </p>
+        <div className="gx-toast-actions">
+          <button
+            className="gx-btn gx-btn-primary"
+            onClick={() =>
+              push({
+                title: "Changes published",
+                description: "The site rebuilds in about a minute.",
+                tone: "success",
+                actionLabel: "Undo",
+                duration: 8_000,
+              })
+            }
+            type="button"
+          >
+            Publish changes
+          </button>
+          <button
+            className="gx-btn gx-btn-secondary"
+            onClick={() =>
+              push({
+                title: "Disk almost full",
+                description: "1.2 GB left on this volume.",
+                tone: "warning",
+              })
+            }
+            type="button"
+          >
+            Fill the disk
+          </button>
+        </div>
+        <p className="gx-toast-hint">
+          A fourth toast drops the oldest. An action runs once and dismisses.
+        </p>
+      </div>
+      <div
+        aria-label="Notifications"
+        className="gx-toast-viewport"
+        role="status"
+      >
+        {toasts.map((toast) => (
+          <ToastCardPreview
+            key={toast.id}
+            onAction={
+              toast.actionLabel === undefined
+                ? undefined
+                : () => {
+                    dismiss(toast.id);
+                    push({
+                      title: "Changes restored",
+                      description: "The previous version is live again.",
+                      tone: "info",
+                    });
+                  }
+            }
+            onDismiss={() => dismiss(toast.id)}
+            toast={toast}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const toastToneSamples: ReadonlyArray<PreviewToast> = [
+  {
+    id: "info",
+    title: "Update available",
+    description: "Version 2.4 is ready to install.",
+    tone: "info",
+    duration: 0,
+  },
+  {
+    id: "success",
+    title: "Changes published",
+    description: "The site rebuilds in about a minute.",
+    tone: "success",
+    actionLabel: "Undo",
+    duration: 0,
+  },
+  {
+    id: "warning",
+    title: "Disk almost full",
+    description: "1.2 GB left on this volume.",
+    tone: "warning",
+    duration: 0,
+  },
+  {
+    id: "danger",
+    title: "Upload failed",
+    description: "The connection closed before the file finished.",
+    tone: "danger",
+    duration: 0,
+  },
+];
+
+/** The four tones, held open so their colour and glyph can be compared. */
+const ToastTones = () => {
+  const [dismissed, setDismissed] = useState<ReadonlyArray<string>>([]);
+  const dismiss = (id: string) => setDismissed((current) => [...current, id]);
+
+  return (
+    <div className="gx-toast-demo gx-toast-tones">
+      <div
+        aria-label="Notifications"
+        className="gx-toast-viewport"
+        role="status"
+      >
+        {toastToneSamples
+          .filter((toast) => !dismissed.includes(toast.id))
+          .map((toast) => (
+            <ToastCardPreview
+              key={toast.id}
+              onAction={
+                toast.actionLabel === undefined
+                  ? undefined
+                  : () => dismiss(toast.id)
+              }
+              onDismiss={() => dismiss(toast.id)}
+              toast={toast}
+            />
+          ))}
+      </div>
+    </div>
+  );
+};
+
+const toastWorkflowSource = `import { Duration } from "effect";
+import { Button } from "@gpuixui/primitives";
+import {
+  ToastProvider,
+  ToastViewport,
+  useToast,
+} from "@gpuixui/components/toast";
+
+const PublishBar = () => {
+  const toast = useToast();
+
+  const restore = () => {
+    // Undo is the app's work; the toast only reports the press.
+  };
+
+  return (
+    <Button
+      onActivate={() =>
+        toast.push(
+          {
+            title: "Changes published",
+            description: "The site rebuilds in about a minute.",
+            tone: "success",
+            action: { label: "Undo" },
+            duration: Duration.seconds(8),
+          },
+          { onAction: restore },
+        )
+      }
+    >
+      Publish changes
+    </Button>
+  );
+};
+
+export const App = () => (
+  <ToastProvider>
+    <PublishBar />
+    {/* The viewport is last: the runtime paints in order. */}
+    <ToastViewport />
+  </ToastProvider>
+);`;
+
+const toastTonesSource = `import { Duration } from "effect";
+import { Button } from "@gpuixui/primitives";
+import {
+  ToastProvider,
+  ToastViewport,
+  useToast,
+  type ToastApi,
+} from "@gpuixui/components/toast";
+
+const notify = (toast: ToastApi) => {
+  // duration: 0 keeps a card that the reader must dismiss.
+  toast.push({ title: "Update available", tone: "info", duration: 0 });
+  toast.push({ title: "Saved", tone: "success", duration: 0 });
+  toast.push({
+    title: "Disk almost full",
+    description: "1.2 GB left on this volume.",
+    tone: "warning",
+    duration: 0,
+  });
+  toast.push({
+    title: "Upload failed",
+    description: "The connection closed before the file finished.",
+    tone: "danger",
+    duration: Duration.seconds(0),
+  });
+};
+
+const ToneSamples = () => {
+  const toast = useToast();
+  return <Button onActivate={() => notify(toast)}>Show the four tones</Button>;
+};
+
+export const App = () => (
+  <ToastProvider>
+    <ToneSamples />
+    <ToastViewport />
+  </ToastProvider>
+);`;
+
 export const demos: Readonly<Record<string, Demo>> = {
   "accordion-demo": { render: AccordionDemo, source: accordionDemoSource },
   "accordion-composition": {
@@ -2139,4 +2438,6 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "popover-demo": { render: PopoverDemo, source: popoverSource },
   "tabs-demo": { render: TabsDemo, source: tabsSource },
+  "toast-tones": { render: ToastTones, source: toastTonesSource },
+  "toast-workflow": { render: ToastWorkflow, source: toastWorkflowSource },
 };

@@ -147,6 +147,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     shadowed: "packages/components/docs/tabs.mdx",
     source: "packages/components/src/tabs.tsx",
   },
+  {
+    file: "toast.mdx",
+    row: "Toasts / notifications",
+    suite: "packages/components/src/behaviour/toast.test.tsx",
+    shadowed: "packages/components/docs/toast.mdx",
+    source: "packages/components/src/toast.tsx",
+  },
 ];
 
 const body = (page: CuratedPage): string =>
@@ -427,6 +434,66 @@ describe("the curated component pages", () => {
     // The retracted shapes: a field that validates itself, or a faded control.
     expect(text).not.toContain("validates on every keystroke and");
     expect(text).not.toContain("fades the whole control");
+  });
+
+  it("hold the toast queue's bounds and its card paint to the source", () => {
+    // The three rules a toast must not lose are arithmetic, not styling: a
+    // fourth push drops the oldest, ids are a monotonic counter (a reused id
+    // would let a stale timer dismiss the next toast), and a card can be held
+    // by the pointer or focus but resumes with the time left. The page prints
+    // them beside the browser rendering, so both are read from the store and
+    // the viewport that ship.
+    const toast = pages.find((page) => page.file === "toast.mdx");
+    expect(toast, "the toast page is not in the curated set").toBeDefined();
+    if (toast === undefined) return;
+
+    const store = read("packages/components/src/toast/store.ts");
+    const model = read("packages/components/src/toast/model.ts");
+    const viewport = read("packages/components/src/toast/viewport.tsx");
+    const recipes = read("packages/tw/src/recipes.ts");
+
+    expect(store).toContain("const DEFAULT_MAX = 3;");
+    expect(store).toContain("const DEFAULT_DURATION = Duration.seconds(5);");
+    expect(store).toContain("String(current.seq + 1)");
+    expect(store).toContain("Arr.drop(appended, overflow)");
+
+    expect(model).toContain('"info"');
+    expect(model).toContain('"success"');
+    expect(model).toContain('"warning"');
+    expect(model).toContain('"danger"');
+    expect(model).toContain("title: Schema.NonEmptyString");
+
+    expect(viewport).toContain('role="status"');
+    expect(viewport).toContain('aria-label="Notifications"');
+    expect(viewport).toContain('pointerEvents: present ? "auto" : "none"');
+    expect(viewport).toContain("held.current.focus > 0");
+    expect(viewport).toContain(
+      "Math.max(0, held.current.focus + (value ? 1 : -1))",
+    );
+    expect(viewport).toContain("width: 3");
+    expect(viewport).toContain("actionFor(toast.id)");
+    expect(viewport).toContain("onSelect();");
+    expect(viewport).not.toContain("aria-live");
+
+    expect(recipes).toContain("w-[380px]");
+    expect(recipes).toContain("bg-popover");
+    expect(recipes).toContain("shadow-md");
+
+    const text = body(toast).replace(/\s+/g, " ");
+    expect(text).toContain("pushing a fourth drops the oldest");
+    expect(text).toContain("never reused");
+    expect(text).toContain("at most one action");
+    expect(text).toContain("draws nothing");
+    expect(text).toContain("remaining");
+    expect(text).toContain("No `aria-live` and no `aria-atomic`");
+    expect(text).toContain("No progress indicator");
+    expect(text).toContain("380px");
+    expect(text).toContain("16 native behaviour tests");
+    expect(text).toContain("Render the viewport **last**");
+    // The retracted shapes: an escape path and an announcement the runtime
+    // cannot make.
+    expect(text).not.toContain("Escape dismisses the toast");
+    expect(text).not.toContain("announced by aria-live");
   });
 
   it("describe the alert's tone paint and the announcement it does not claim", () => {

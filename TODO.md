@@ -3453,7 +3453,46 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 123/123
+`[x]` `[██████████]` 124/124
+
+`[x]` Curate the **Toast** page and hold the queue's bounds and the hold to the
+source — `/docs/components/toast` served the package page (strategy 4: no
+preview), so the library's notification workflow had nothing a reader could
+press even though MISSION lists toasts among the feedback layer. The curated
+page shadows `packages/components/docs/toast.mdx` and teaches the rules a
+screenshot cannot show: the queue keeps 3 and a fourth push drops the oldest,
+ids are a monotonic counter (a reused id would let a stale timer dismiss the
+next toast), an action's label is data while its handler travels beside the
+draft, a label with no handler draws nothing, one press runs once and dismisses,
+and a card pauses its clock on hover or focus and resumes with the **remaining**
+time. It states the measured gaps too — no `aria-live`/`aria-atomic`, no
+progress indicator, no `zIndex` (render the viewport last), not portalled — and
+the paint (`popover`/`popoverForeground`, `border`, `radius.md`, the `md`
+elevation, the tone bar and glyph, 380px). Two browser previews:
+`toast-workflow` pushes a success toast with Undo, caps the stack at three,
+auto-dismisses on a real timer and returns an info card on Undo;
+`toast-tones` holds the four tones open with working dismiss. The page says the
+preview reproduces the push, the cap and the dismissal but not the hold.
+`component-page-truth.test.ts` gained the page's registry entry and
+`hold the toast queue's bounds and its card paint to the source`, which reads
+`store.ts` (`DEFAULT_MAX`, `DEFAULT_DURATION`, the `seq + 1` id, the overflow
+drop), `model.ts` (the four tone literals, a non-empty title), `viewport.tsx`
+(`role="status"`, the `Notifications` label, pointer events off/on, the shared
+focus count, the 3px tone bar, `actionFor` + `select` then `dismiss`, and no
+`aria-live`) and the `TOAST_CARD` recipe (`w-[380px]`, `bg-popover`,
+`shadow-md`), then holds the page to the substantive sentences. There is a
+second finding here: the index rejected a `ToastAction` row because the barrel
+does not re-export that class, so the page documents the action shape through
+`ToastInput.action` instead. The curated-source registry gained `toast`,
+`meta.json` lists it under Feedback, the index/`/docs/theming` switch
+list/strategy "Curated today" line and the README ledger name the page, and the
+package-docs curated set shadows it. Directions measured: restoring "Escape
+dismisses the toast" fails the retraction case by name (the `ToastAction` row
+was measured failing `lists only parts the library actually exports` before the
+row moved); the full docs suite is green (73 files / 676 tests) with
+`check-types` and `build` green. Verified in the dev server: the page renders
+both previews, the strip prints `done · yes` and 16 native tests, and
+`?platform=win32` repaints the cards (`--popover` `#2D2D2D`).
 
 `[x]` Curate the **Field** page and hold its one message slot and its state paint
 to the source — `/docs/components/field` served the package page (strategy 4: no
