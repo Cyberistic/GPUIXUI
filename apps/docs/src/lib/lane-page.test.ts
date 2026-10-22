@@ -177,6 +177,30 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("data-grid-frozen-column");
     expect(dataPage).toContain("onScrollChange");
     expect(dataPage).toContain("ref");
+    // The window measured the consequence the arithmetic could not: the mirror
+    // lands in the same frame, because `scrollTo` paints synchronously.
+    expect(frozen).toContain("frozen-column-lifecycle");
+    expect(frozen).toContain("same frame");
+    expect(dataPage).toContain("frozen-column-lifecycle");
+    expect(dataPage).toContain("same frame");
+  });
+
+  it("teaches the sort and selection a window measured, and the press its centre decides", () => {
+    // MISSION names table sort/selection among the critical interactions, and
+    // the page described them as an intention ("a set of row ids") with no
+    // measurement behind them. `table-lifecycle` measured the shape a table must
+    // use, including the one constraint that silently breaks a sortable header:
+    // a press is aimed at the element's painted centre, so a clipped one sorts
+    // nothing.
+    const table = rowFor(record, "Table sort and selection");
+
+    expect(table).toContain("supported, with limits");
+    expect(table).toContain("table-lifecycle");
+    expect(table).toContain("centre");
+    expect(dataPage).toContain("table-lifecycle");
+    expect(dataPage).toContain("holds the focus");
+    expect(dataPage).toContain("survives the sort");
+    expect(dataPage).toContain("painted **centre**");
   });
 
   it("re-anchors a paginated list whose loading void is the anchor", () => {

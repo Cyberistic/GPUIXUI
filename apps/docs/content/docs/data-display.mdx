@@ -111,7 +111,20 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   would otherwise mirror back. Both panes clamp together (`-1440` for 60 × 28px
   rows in a 240px pane), the row under the reader keeps its `y` across panes, a
   press on a frozen cell selects the row for the whole grid, and a horizontal
-  wheel pans the data pane alone — a frozen column does not pan.
+  wheel pans the data pane alone — a frozen column does not pan. In a window the
+  mirror lands in the **same frame** as the wheel, for that synchronous reason
+  (`frozen-column-lifecycle`).
+- **Sort and selection are keyed by record, and a window measured both** — a
+  press selects the record it hit **and that row holds the focus**, so the next
+  key reaches that row's own handler with no synthetic focus; `down` roves focus
+  and selection together; a header press sorts by the column it hit and a second
+  press flips the direction while the selected **record** survives the sort. The
+  header is a sibling above the row scroller, and one `overflowX` box around
+  both keeps a header cell and its column aligned after a pan. One measured
+  constraint: a press is aimed at the element's painted **centre**, so a
+  sortable header whose centre is clipped by the horizontal viewport sorts
+  nothing — keep sortable columns inside the frame, or pan the header before
+  expecting a press to land (`table-lifecycle`).
 
 ## Gaps, with the evidence
 
