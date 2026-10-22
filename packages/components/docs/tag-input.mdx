@@ -61,14 +61,20 @@ controlled list.
 
 ## Theming
 
-The group uses `background`, `border`, `radius.md`, `controlHeight` and
-`focusRing`; chips use `muted` / `mutedForeground` and `radius.sm`; the remove
-control paints a 24px square — the pressable-target floor, with a 16px glyph
-inside — shows an `accent` hover and declares the keyboard-only outline, so a
-reader who Tabs to it can see the control. Disabled is `opacity` plus a
-`readOnly` field (0.11.0 has no `aria-disabled`), and the field declares no
-outline then. A custom theme changes all of it — see
-[Theming](/docs/theming).
+The group paints `background` with a 1px edge in `border`, a **6px radius** and
+**6px / 2px** padding from the recipe's fixed shadcn metrics (ADR 0006), and a
+minimum height from the density's `controlHeight`. Chips paint `muted` /
+`mutedForeground` at a 4px radius; the remove control paints a 24px square — the
+pressable-target floor, with a 14px glyph inside — shows an `accent` hover and
+declares the keyboard-only outline, so a reader who Tabs to it can see the
+control. A platform style repaints and re-heights the group but never rounds or
+pads it differently.
+
+Disabled is a `readOnly` field with `tabIndex: -1` and no outline, and the group
+at 50% opacity (chips at 60%): 0.11.0 has no `aria-disabled`. Every edit path is
+refused while it is disabled — the removal controls are not rendered, and `Enter`
+or a comma cannot commit the draft the field was still carrying when the caller
+disabled it. A custom theme changes all of it — see [Theming](/docs/theming).
 
 ## Accessibility
 
@@ -78,6 +84,8 @@ outline then. A custom theme changes all of it — see
 - Removing a chip by keyboard is possible by tabbing to its control and pressing
   `Enter`/`Space`.
 - The group's disabled state is visual: there is no `aria-disabled` in 0.11.0.
+  The field and the removal controls leave the tab order, and no edit path
+  answers while the group is disabled.
 
 ## Limitations
 
@@ -92,10 +100,13 @@ outline then. A custom theme changes all of it — see
 
 `src/tag-input/logic.test.ts` (10 pure tests) covers splitting, trimming,
 duplicates, the cap and first-match removal.
-`src/behaviour/tag-input.test.tsx` (8 native tests) covers rendering, Enter,
-comma commit, duplicates, the removal control, `max`, disabled and a caller that
-refuses a change. `src/behaviour/focus-ring.test.tsx` holds the removal control
-to the keyboard outline and the disabled field to declaring none.
+`src/behaviour/tag-input.test.tsx` (9 native tests) covers rendering, Enter,
+comma commit, duplicates, the removal control, `max`, disabled (the tab order and
+the draft a caller disables mid-edit), and a caller that refuses a change.
+`src/behaviour/focus-ring.test.tsx` holds the removal control to the keyboard
+outline and the disabled field to declaring none.
+`src/tag-input-page.test.ts` holds this page's metrics and disabled rule to the
+compiled recipe and the source.
 
 ```sh
 nub run --filter @gpuixui/components test

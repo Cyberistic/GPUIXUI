@@ -55,6 +55,24 @@ value, while `onValueChange` still fires — the classic contract, tested.
 Clicking the clear control (or pressing Escape) empties the field, calls
 `onClear`, and returns focus to the input so typing can continue immediately.
 
+## Disabled
+
+A disabled field is `readOnly`, painted at 50% opacity, and **out of the tab
+order**: 0.11.0 publishes no `disabled` on a host input, so `readOnly` is what
+stops typing and `tabIndex: -1` is what keeps the field and its clear target out
+of a `Tab` traversal.
+
+Every edit path is refused while it is disabled. The field's own guard runs
+before the clear, so `Escape` does nothing and neither `onValueChange` nor
+`onClear` fires. A read-only host still receives keys, which is why the guard
+sits on the edit path rather than on the host: a field disabled while it holds
+the focus keeps that focus, and a key must not become an edit again.
+
+The clear target stays painted — the field still shows its query — but it
+advertises no press it would refuse: no hover wash, no keyboard outline, and a
+`not-allowed` cursor, the rule `internal/button.tsx` states for a disabled
+action.
+
 ## API
 
 `SearchInput` takes the input's own `aria-*` and key handlers and merges `style`
@@ -73,10 +91,13 @@ last.
 ## Theming
 
 The container paints `colors.background`, a `borderWidth.thin` border in
-`colors.border`, `radius.md`, `spacing.md` horizontal padding and
-`controlHeight(theme, "md")`. The clear control paints a 24px square (the
-pressable-target floor — the glyph inside is 16px) with `radius.sm` and a
-`colors.accent` hover; it declares the same keyboard outline the input does.
+`colors.border`, a **6px radius** and **8px** horizontal padding from the
+recipe's fixed shadcn metrics (ADR 0006), and its height follows
+`controlHeight(theme, "md")` — so a platform style repaints and re-heights the
+field but never rounds or pads it differently. The clear control paints a 24px
+square (the pressable-target floor — the `sm` glyph inside is 14px) with a 4px
+radius and a `colors.accent` hover; it declares the same keyboard outline the
+input does, and neither the hover nor the outline while the field is disabled.
 Focus is the runtime's `focusVisible` outline in `colors.ring`, declared at rest,
 so a Tab paints it and a mouse press does not.
 
@@ -101,6 +122,8 @@ cue: the flag is presentational, and nothing here depends on the event
 
 - The input carries the caller's `aria-label` (or the field's label); the clear
   control is a labelled button.
+- A disabled field and its clear target leave the tab order and both answer
+  nothing (see [Disabled](#disabled)).
 - **No debounce.** Debouncing is the consumer's: fire the query from
   `onValueChange` through your own Effect schedule. A component-level timer would
   both hide the policy and break the repo's clock rule.
@@ -111,10 +134,13 @@ cue: the flag is presentational, and nothing here depends on the event
 
 ## Verification
 
-`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (7 tests):
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (10 tests):
 real keystrokes reaching `onValueChange`, the clear control appearing only with
 text, clearing and returning focus, Enter submitting, Escape clearing once, the
-controlled contract, and a caller `ref` composed with the internal one.
+controlled contract, a caller `ref` composed with the internal one, a disabled
+field and its target leaving the tab order, and the disabled field refusing both
+its clear target and Escape. `src/search-input-page.test.ts` holds this page's
+metrics and disabled rule to the compiled recipe and the source.
 
 The field merges its own focus ref with the caller's, so `ref` receives the same
 `<input>` instance that clearing focuses.

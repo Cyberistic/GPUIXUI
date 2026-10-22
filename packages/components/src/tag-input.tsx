@@ -113,11 +113,15 @@ export const TagInput = ({
   };
 
   const commit = (): void => {
+    // A disabled group refuses every edit path, so neither the tokens nor the
+    // draft move: Enter, a submit and a cleared draft all arrive here.
+    if (disabled) return;
     add(splitDraft(draft));
     setDraft("");
   };
 
   const editDraft = (text: string): void => {
+    if (disabled) return;
     const segments = Str.split(",")(text);
     if (Arr.length(segments) < 2) {
       setDraft(text);
@@ -136,7 +140,10 @@ export const TagInput = ({
     disabled,
     editDraft,
     addDraft: commit,
-    remove: (token) => onValueChange(removeToken(value, token)),
+    remove: (token) => {
+      if (disabled) return;
+      onValueChange(removeToken(value, token));
+    },
   };
 
   return (
@@ -211,6 +218,9 @@ export const TagInputField = ({
         // hint is painted, because the host's own placeholder is a fixed grey.
         theme={nativeTextTheme(theme, "background")}
         readOnly={disabled}
+        // A disabled field leaves the tab order: the host has no `disabled`,
+        // and `readOnly` still takes focus.
+        tabIndex={disabled ? -1 : 0}
         value={draft}
         onChange={(event) => editDraft(event.value ?? "")}
         onKeyDown={(event: KeyEvent) => {

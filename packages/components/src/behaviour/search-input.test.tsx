@@ -5,7 +5,10 @@
  * control offered on an empty field; clearing that forgot to give focus back to
  * the field; Enter that submitted nothing; Escape that swallowed the key on an
  * empty field; a controlled field that changed its own display when the consumer
- * said no; and a caller `ref` that the internal focus ref silently replaced.
+ * said no; a caller `ref` that the internal focus ref silently replaced; and a
+ * **disabled** field that could still be emptied through Escape or its clear
+ * target — a read-only host still delivers keys, so the guard belongs on the
+ * field's own edit path rather than on whether the host can be focused.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -24,16 +27,22 @@ const Search = ({
   onSubmit,
   onClear,
   value,
+  defaultValue,
+  disabled,
 }: {
   readonly onValueChange?: (value: string) => void;
   readonly onSubmit?: (value: string) => void;
   readonly onClear?: () => void;
   readonly value?: string;
+  readonly defaultValue?: string;
+  readonly disabled?: boolean;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <SearchInput
       testId="search"
       value={value}
+      defaultValue={defaultValue}
+      disabled={disabled}
       onValueChange={onValueChange}
       onSubmit={onSubmit}
       onClear={onClear}
@@ -141,6 +150,75 @@ describe("SearchInput", () => {
     type(search, "abc");
     clickCentreOf(search, "search-clear");
     expect(focusedTestId(search)).toEqual(Option.some("search"));
+
+    search.unmount();
+  });
+
+  it("keeps a disabled field and its clear target out of the tab order", () => {
+    const search = renderComponent(<Search disabled defaultValue="abc" />);
+
+    expect(search.renderer.findByTestId("search")?.customProps?.tabIndex).toBe(
+      -1,
+    );
+    expect(
+      search.renderer.findByTestId("search-clear")?.customProps?.tabIndex,
+    ).toBe(-1);
+
+    // The target is still painted — the field shows its query — but it must
+    // not advertise a press it refuses.
+    expect(search.renderer.findByTestId("search-clear")?.style.hover).toBe(
+      undefined,
+    );
+    expect(search.renderer.findByTestId("search-clear")?.style.cursor).toBe(
+      "not-allowed",
+    );
+
+    search.unmount();
+  });
+
+  it("refuses the clear target while disabled", () => {
+    const onClear = vi.fn();
+    const onValueChange = vi.fn();
+    const search = renderComponent(
+      <Search
+        disabled
+        defaultValue="abc"
+        onClear={onClear}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    clickCentreOf(search, "search-clear");
+
+    expect(onClear).not.toHaveBeenCalled();
+    expect(onValueChange).not.toHaveBeenCalled();
+    // The query is still there: the hint returns only on an empty field.
+    expect(search.renderer.getAllText()).not.toContain("Search…");
+
+    search.unmount();
+  });
+
+  it("refuses Escape while disabled", () => {
+    const onClear = vi.fn();
+    const onValueChange = vi.fn();
+    const search = renderComponent(
+      <Search
+        disabled
+        defaultValue="abc"
+        onClear={onClear}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    // A read-only host still receives keys, so Escape reaches the field.
+    search.renderer.focusElement(
+      search.renderer.findByTestId("search")?.id ?? -1,
+    );
+    search.renderer.simulateKeystrokes("escape");
+
+    expect(onClear).not.toHaveBeenCalled();
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(search.renderer.getAllText()).not.toContain("Search…");
 
     search.unmount();
   });

@@ -3,8 +3,10 @@
  *
  * The bugs these guard: a comma that leaves a stray draft, a duplicate token, a
  * cap that truncates existing tokens, Backspace that removes when a draft is
- * present, a disabled chip that still removes, and a draft that stops the field
- * from keeping focus.
+ * present, a disabled chip that still removes, a draft that stops the field from
+ * keeping focus, and a **disabled** group that still committed the draft its
+ * field was carrying (a caller disables the field while saving, and Enter used to
+ * add a token to a group that refuses every edit).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -160,7 +162,34 @@ describe("TagInput", () => {
     expect(tags.renderer.findByTestId("tag-field")?.customProps?.readOnly).toBe(
       true,
     );
+    expect(tags.renderer.findByTestId("tag-field")?.customProps?.tabIndex).toBe(
+      -1,
+    );
     expect(removeControlOf(tags, "chip-design")).toBeUndefined();
+
+    tags.unmount();
+  });
+
+  it("refuses a draft committed after the field is disabled", () => {
+    const onValueChange = vi.fn();
+    const tags = renderComponent(<Harness onValueChange={onValueChange} />);
+
+    type(tags, "design");
+    // The caller disables the field while the draft is still in it: Enter used
+    // to commit that draft into a group that refuses every edit.
+    tags.rerender(<Harness onValueChange={onValueChange} disabled />);
+    tags.renderer.focusElement(
+      tags.renderer.findByTestId("tag-field")?.id ?? -1,
+    );
+    tags.renderer.simulateKeystrokes("enter");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(tags.renderer.findByTestId("chip-design")).toBeUndefined();
+    // The refused commit did not clear the draft either: it is still in the
+    // field, ready for a caller that re-enables it.
+    expect(tags.renderer.findByTestId("tag-field")?.customProps?.value).toBe(
+      "design",
+    );
 
     tags.unmount();
   });

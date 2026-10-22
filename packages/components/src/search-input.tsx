@@ -101,6 +101,10 @@ export const SearchInput = ({
   const setInput = useMergedRef<PublicInstance | null>(attach, ref);
 
   const clear = (): void => {
+    // A disabled field refuses every edit path — Escape and the clear target
+    // alike. The target stays painted so the query still reads, and
+    // `internal/button.tsx` states the same rule for a disabled action.
+    if (disabled) return;
     if (value === "") return;
     setValue("");
     onClear?.();
@@ -145,6 +149,9 @@ export const SearchInput = ({
           testId={testId}
           value={value}
           readOnly={disabled}
+          // A disabled field leaves the tab order: the runtime has no
+          // `disabled` on a host input, and `readOnly` still takes focus.
+          tabIndex={disabled ? -1 : 0}
           onChange={(event) => {
             onChange?.(event);
             setValue(event.value ?? "");
@@ -182,7 +189,12 @@ export const SearchInput = ({
             width: targetSize.minimum,
             height: targetSize.minimum,
             flexShrink: 0,
-            hover: { backgroundColor: theme.colors.accent },
+            // A disabled target answers nothing, so it must not advertise a
+            // press either: the house rule for a disabled action.
+            cursor: disabled ? "not-allowed" : "pointer",
+            hover: disabled
+              ? undefined
+              : { backgroundColor: theme.colors.accent },
           })}
         >
           <Icon name="x" size="sm" color={theme.colors.mutedForeground} />
