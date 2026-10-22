@@ -26,8 +26,9 @@ export const surfaceBudget = {
   // a pure rule (`list/origin.ts`), because the row a key came from is a rule
   // worth testing on its own rather than through a renderer. 89 → 91 when the
   // motion seam landed (`internal/presence.tsx` and the public `motion.tsx`,
-  // plan 600 Phase 0).
-  modules: 91,
+  // plan 600 Phase 0). 91 → 93 when TypingText landed (`typing-text.tsx` and the
+  // timing rule beside it, plan 600's first text effect).
+  modules: 93,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   bytes: 640 * 1024,
   /** Packages the entry's own modules import. */

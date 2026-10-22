@@ -54,6 +54,7 @@ import { TagInputExample } from "./tag-input.example.js";
 import { TimePickerExample } from "./time-picker.example.js";
 import { TimelineExample } from "./timeline.example.js";
 import { ToastExample } from "./toast.example.js";
+import { TypingTextExample } from "./typing-text.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
@@ -99,4 +100,5 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "time-picker": TimePickerExample,
   timeline: TimelineExample,
   toast: ToastExample,
+  "typing-text": TypingTextExample,
 };

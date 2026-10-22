@@ -317,6 +317,12 @@ runtime has no `aria-valuenow`, so a popup spinbutton could not announce its
 value. The field root, its two segments, the separator and the clear control are
 the honest parts.
 
+### Animated primitives (plan 600)
+
+| Component | Parts | base-gpui guide | Source |
+| --------- | ----- | --------------- | ------ |
+| Typing text | `TypingText` | — | plan 600 |
+
 **Planned Tier 2 additions** — none. The last reserved family, Chat and
 Message (plan `207`), landed with its parts unchanged, so every part table above
 is implemented. A new reservation goes here with its parts fixed before the

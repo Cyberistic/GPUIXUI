@@ -48,6 +48,7 @@ export * from "./tag-input.js";
 export * from "./timeline.js";
 export * from "./time-picker.js";
 export * from "./toast.js";
+export * from "./typing-text.js";
 
 export type { PartChildren } from "./internal/parts.js";
 

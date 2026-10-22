@@ -50,32 +50,53 @@ const countBehaviourTests = (relative: string): number =>
   );
 
 /** The Tier 2 rows of `COMPONENTS.md`, parsed from its markdown table. */
-const tier2Rows = (): ReadonlyArray<Row> => {
+const rowsBetween = (
+  startHeading: string,
+  endHeading: string,
+): ReadonlyArray<Row> => {
   const markdown = readFileSync(
     fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
     "utf8",
   );
-  const start = markdown.indexOf("## Tier 2");
-  const end = markdown.indexOf("## Tier 3");
-  if (start < 0 || end < 0 || end <= start) return [];
-
-  return Arr.flatMap(markdown.slice(start, end).split("\n"), (line) => {
-    if (!line.startsWith("|")) return [];
-    const cells = Arr.map(line.split("|").slice(1, -1), (cell) => cell.trim());
-    if (cells.length < 3) return [];
-    const name = cells[0] ?? "";
-    if (name === "Component" || name.startsWith("---") || name === "")
-      return [];
-    return [
-      {
-        name,
-        status: cells[1] ?? "",
-        support: cells[2] ?? "",
-        notes: cells[3] ?? "",
-      },
-    ];
-  });
+  const start = markdown.indexOf(startHeading);
+  if (start < 0) return [];
+  const rest = markdown.slice(start + startHeading.length);
+  const end = endHeading === "" ? -1 : rest.indexOf(endHeading);
+  return Arr.flatMap(
+    (end < 0 ? rest : rest.slice(0, end)).split("\n"),
+    (line) => {
+      if (!line.startsWith("|")) return [];
+      const cells = Arr.map(line.split("|").slice(1, -1), (cell) =>
+        cell.trim(),
+      );
+      if (cells.length < 3) return [];
+      const name = cells[0] ?? "";
+      if (name === "Component" || name.startsWith("---") || name === "")
+        return [];
+      return [
+        {
+          name,
+          status: cells[1] ?? "",
+          support: cells[2] ?? "",
+          notes: cells[3] ?? "",
+        },
+      ];
+    },
+  );
 };
+
+const tier2Rows = (): ReadonlyArray<Row> =>
+  rowsBetween("## Tier 2", "## Tier 3");
+
+/** The animated primitives plan 600 lands, held to the same contract. */
+const animatedRows = (): ReadonlyArray<Row> =>
+  rowsBetween("## Animated primitives (plan 600)", "");
+
+/** Every `COMPONENTS.md` row that belongs to this package's inventory. */
+const packageRows = (): ReadonlyArray<Row> => [
+  ...tier2Rows(),
+  ...animatedRows(),
+];
 
 const duplicates = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.filter(values, (value, index) => values.indexOf(value) !== index);
@@ -104,7 +125,7 @@ describe("inventory", () => {
   });
 
   it("agrees with its COMPONENTS.md row", () => {
-    const rows = tier2Rows();
+    const rows = packageRows();
     const problems = Arr.flatMap(inventory, (meta) => {
       const row = Arr.findFirst(
         rows,
@@ -131,9 +152,9 @@ describe("inventory", () => {
     expect(problems).toEqual([]);
   });
 
-  it("has a record for every Tier 2 row that is no longer todo", () => {
+  it("has a record for every package row that is no longer todo", () => {
     const problems = Arr.filter(
-      Arr.filter(tier2Rows(), (row) => row.status !== "todo"),
+      Arr.filter(packageRows(), (row) => row.status !== "todo"),
       (row) => !Arr.some(inventory, (meta) => meta.name === row.name),
     ).map(
       (row) => `${row.name}: row is ${row.status} with no inventory record`,
@@ -150,14 +171,14 @@ describe("inventory", () => {
     ]).toEqual([]);
   });
 
-  it("has no duplicate Tier 2 row names", () => {
-    const names = Arr.map(tier2Rows(), (row) => row.name);
+  it("has no duplicate package row names", () => {
+    const names = Arr.map(packageRows(), (row) => row.name);
 
     expect(duplicates(names)).toEqual([]);
   });
 
-  it("states the real native test count in every Tier 2 row", () => {
-    const rows = tier2Rows();
+  it("states the real native test count in every package row", () => {
+    const rows = packageRows();
     const problems = Arr.flatMap(
       Arr.filter(inventory, (meta: ComponentMeta) => meta.status === "done"),
       (meta: ComponentMeta) => {

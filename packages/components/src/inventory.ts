@@ -1,9 +1,10 @@
 /**
- * The Tier 2 inventory: one record per implemented component.
+ * The component inventory: one record per implemented component.
  *
  * Each module owns its record, so the inventory cannot drift from the code it
  * describes; this file only collects them. `inventory.test.ts` checks the records
- * against the files on disk and the rows in `COMPONENTS.md`.
+ * against the files on disk and the rows in `COMPONENTS.md` — the Tier 2 table
+ * and the animated-primitives table plan 600 fills.
  */
 
 import { accordionMeta } from "./accordion.js";
@@ -47,6 +48,7 @@ import { tagInputMeta } from "./tag-input.js";
 import { timelineMeta } from "./timeline.js";
 import { timePickerMeta } from "./time-picker.js";
 import { toastMeta } from "./toast.js";
+import { typingTextMeta } from "./typing-text.js";
 
 /** One component's inventory record. */
 export interface ComponentMeta {
@@ -108,4 +110,5 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   timelineMeta,
   timePickerMeta,
   toastMeta,
+  typingTextMeta,
 ];

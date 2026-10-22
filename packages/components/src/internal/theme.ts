@@ -31,6 +31,7 @@ import {
   textStyle,
   type PlatformName,
   type StatusTone,
+  type TextRole,
   type Theme,
 } from "@gpuixui/tokens";
 
@@ -51,7 +52,7 @@ export {
   targetSize,
   textStyle,
 };
-export type { PlatformName, StatusTone, Theme };
+export type { PlatformName, StatusTone, TextRole, Theme };
 export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 
 /**

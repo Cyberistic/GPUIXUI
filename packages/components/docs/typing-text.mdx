@@ -1,0 +1,117 @@
+---
+title: Typing text
+description: A string that arrives a character at a time, with the whole string as its name.
+---
+
+`TypingText` reveals the string it is given one character at a time and then
+stops. It is not a typewriter the caller drives: the component owns the reveal
+clock, and a new `text` retypes from the beginning.
+
+## Usage
+
+```tsx
+import { TypingText } from "@gpuixui/components";
+
+<TypingText text="Deploying to production…" speed={35} />;
+```
+
+The reveal runs on a real-time timer, not on the renderer's motion clock. That
+is deliberate: the runtime can tween a numeric style value, but it cannot
+animate the characters of a text node, so the frame is the string itself. A
+renderer whose clock is paused does not hold the reveal.
+
+## Motion and reduced motion
+
+The effect is motion, so it obeys the same preference as the overlays:
+
+```tsx
+import { MotionProvider } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <TypingText text="Deploying to production…" />
+</MotionProvider>;
+```
+
+Under `"reduced"` the whole string paints on the first frame and `onComplete`
+runs once. `speed={0}` is the same outcome without a provider, for a caller that
+wants the component's timing but not its journey.
+
+`@gpuix/native@0.11.0` exposes no reduced-motion query — the capability record
+marks detection `not supported` — so the application supplies the preference,
+exactly as it supplies the theme mode.
+
+## Characters, not code units
+
+A character is a code point: `"a🎉b"` is three characters and four UTF-16 code
+units. The reveal counts code points, so an emoji never appears as half a glyph
+on its way in. `typing-text/logic.ts` owns that rule and `visibleText` clamps a
+count past the end.
+
+## Caret
+
+`caret` paints a 2px rule in the `primary` role after the text, as tall as the
+type role's line height, and drops it when the last character lands. The rule is
+a sibling of the text block, so on a string that wraps it sits after the block
+rather than at the end of the last line — the runtime exposes no caret position
+and no per-glyph measurement. Leave `caret` off for long paragraphs.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `text` | `string` | — | Required. A new value retypes from the first character. |
+| `speed` | `number` | `45` | Milliseconds between characters; `0` paints the whole string at once. |
+| `delay` | `number` | `0` | Milliseconds before the first character. |
+| `caret` | `boolean` | `false` | Paint the caret rule until the text is complete. |
+| `label` | `string` | the whole `text` | The accessible name. |
+| `onComplete` | `() => void` | — | Runs once after the last character. |
+| `role` | `TextRole` | `"body"` | Any theme type role (`h1`, `bodyStrong`, `code`, …). |
+| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
+| `style` | `StateStyle<TypingTextState>` | — | `TypingTextState` is `{ revealed, complete, reducedMotion }`. |
+
+`TypingText` takes the GPUix host props (`testId`, `role`, `aria-*`) and merges
+`style` last. A non-finite or negative `speed` or `delay` falls back to the
+default rather than scheduling a timer that never fires; `typingTiming` is the
+rule and it is tested on its own.
+
+## Accessibility
+
+- The `<text>` element carries the **whole** string as `aria-label` from the
+  first frame. A screen reader never hears a partial word, and `label` can name
+  the effect instead (`"Message from the deploy bot"`).
+- There is no live region in `@gpuix/native@0.11.0` (no `aria-live`), so the
+  reveal is not announced step by step. That is the desired behaviour for
+  decoration; a status that must be announced belongs in a region the platform
+  already reports, not in a typing effect.
+- The caret is decorative: it carries no text and no name, and the accessible
+  name does not depend on it.
+- Reduced motion removes the journey, not the content: the string is present on
+  the first frame.
+
+## Limitations
+
+- The reveal is real time, so it is not synchronised with a surface tween on the
+  renderer's clock.
+- The caret cannot follow the end of a wrapped line (no caret position).
+- There is no per-glyph paint or measurement, so no per-character stagger,
+  gradient fill or measured text width.
+- There is no pause/resume or skip-to-end control; a caller that needs one owns
+  the state and passes a shorter `text` (or `speed={0}`).
+
+## Related
+
+- [Countdown](/docs/components/countdown) — a duration rendered as clock text by
+  the application's clock.
+- [Motion](/docs/motion) — the physics package behind the library's timing.
+- [Toast](/docs/components/toast) — a surface that enters and leaves with the
+  same reduced-motion policy.
+
+## Verification
+
+`src/behaviour/typing-text.test.tsx` renders the component in the real GPUix
+renderer (6 tests): the first frame is not the whole string while the name is,
+a parent re-render does not replay, a changed string retypes from nothing, the
+reduced preference paints at once and completes once, `speed={0}` does the same
+without a provider, and the caret is painted then dropped. The timing and
+code-point rules are the unit suite beside the logic
+(`src/typing-text/logic.test.ts`).

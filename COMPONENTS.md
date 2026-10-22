@@ -304,3 +304,19 @@ placeholder.
 | File upload | todo | ? | Picker provided (`promptForPaths`); the drop surface, progress and validation are ours. `onFileDrop` exists. |
 | Video / audio player + waveform | todo | ? | **No media host element** (verified: not in `ElementType`). Playback needs a platform surface — **unverified**; a waveform can be drawn as one tinted `<svg>` layer per colour (measured by `content-surfaces`; `<canvas>` paints nothing). |
 | Crop area | todo | ? | Draggable handles over `<img>`; crop geometry and constraints are ours. No custom-paint requirement unless the mask is drawn — **unverified**. |
+
+## Animated primitives (plan 600)
+
+The motion workstream's catalogue. Each row is a component in
+`@gpuixui/components` with its own docs page in that package's collection;
+`@gpuixui/motion` owns the physics and the reduced-motion policy, and the
+surfaces compose both through `src/internal/presence.tsx`. A primitive that
+would need `transform` either fades and travels an inset offset instead, or is
+declined with evidence — the runtime has no such style key (upstream issue
+#102). `packages/components/src/inventory.test.ts` holds every row here to the
+same contract as the Tier 2 table.
+
+| Component | Status | GPUix support | Notes / limitations |
+| --------- | ------ | ------------- | ------------------- |
+| Typing text | done | yes | `TypingText` reveals a string a character at a time on a real-time timer, because the runtime cannot animate the characters of a text node. A character is a code point, so an emoji is never split (`typing-text/logic.ts`, `src/typing-text/logic.test.ts`); a changed string retypes, the same string does not replay, a non-finite or negative pace falls back rather than scheduling a timer that never fires, and the whole string is the accessible name from the first frame. `caret` paints a 2px rule in the `primary` role until the last character lands; it sits after the text block, not at the end of a wrapped line. Under `MotionProvider preference="reduced"` (or `speed={0}`) the string paints at once and `onComplete` runs once. 6 native behaviour tests. |
+
