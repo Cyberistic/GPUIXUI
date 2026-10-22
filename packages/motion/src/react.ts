@@ -45,6 +45,9 @@ export interface MotionOptions {
    * The value the **first** run starts from. Default: the target, so a hook
    * mounted at rest paints without an entry run. Read once at mount; a later
    * change is ignored because the current presentation is the truth after it.
+   *
+   * A value it cannot read is no value: the start is the target, so the first
+   * published frame is a number the runtime can paint.
    */
   readonly initial?: number;
 }
@@ -98,6 +101,25 @@ const settleBefore = (
 ): MotionFrame => motion.sample(performance.now() - origin, reducedMotion);
 
 /**
+ * The value a hook's first run starts from.
+ *
+ * The caller supplies the target and, optionally, the value the first run
+ * starts from. Both are numbers a caller computed — a measured height, a count
+ * that has not arrived — so one it cannot read is replaced here: an unreadable
+ * `initial` is **no initial**, so the start is the target (the documented
+ * default, so a hook mounted at rest paints without an entry run), and an
+ * unreadable target is **no target**, so the start is `0`.
+ *
+ * The retained `MotionValue` repaired the same value to `0` on its own, so the
+ * hook and the value it drives could disagree about the first frame: the hook
+ * published the caller's `NaN` and the runtime drew it as nothing.
+ */
+const startValue = (target: number, initial: number | undefined): number => {
+  if (initial !== undefined && Number.isFinite(initial)) return initial;
+  return Number.isFinite(target) ? target : 0;
+};
+
+/**
  * The retained-motion hook: animates `target` with `transition` on a monotonic
  * `performance.now()` clock. `transition` must be a stable reference (pass a
  * memoized value or one of {@link useSpring}/{@link useTransition}).
@@ -107,7 +129,7 @@ export const useMotion = (
   transition: Transition,
   options: MotionOptions = {},
 ): MotionState => {
-  const [start] = useState(() => options.initial ?? target);
+  const [start] = useState(() => startValue(target, options.initial));
   const [motion] = useState(() => new MotionValue(start));
   const [origin] = useState(() => performance.now());
   const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(start));

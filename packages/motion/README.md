@@ -89,7 +89,9 @@ Pass `options.reducedMotion` from your platform's reduced-motion preference; it
 completes immediately at the target. `options.initial` gives the first run a
 start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` counts
 up on mount — and is read once, because the presentation on screen is the truth
-after it.
+after it. A start or a target it cannot read is no value: the start is the
+target, so the first published frame is a number the runtime can paint rather
+than the `NaN` it draws as nothing.
 
 The hooks own one clock, so they **sample once before retargeting**: a run that
 has come to rest is not advanced while nothing moves, and handing the retained
@@ -143,6 +145,14 @@ samplers that apply a caller's curve — `MotionValue`'s tween, `sampleKeyframes
 and `Sequence.sample` — fall back to the linear progress when the curve answers a
 value that cannot be painted, because a frame a curve cannot read is not a curve.
 The run keeps its start, its end and its completion edge either way.
+
+The hooks' first frame is a value the runtime paints, so it gets the same rule:
+`options.initial` and the target are numbers the caller computed, and one that
+cannot be read is replaced before the frame is published — an unreadable
+`initial` is no initial (the start is the target) and an unreadable target is no
+target (the start is `0`). The retained `MotionValue` repaired the same value on
+its own, so the hook and the value it drives could disagree about the frame the
+caller sees first.
 
 ## The runtime's declarative timing
 
