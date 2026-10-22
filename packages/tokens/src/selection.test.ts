@@ -395,7 +395,7 @@ describe("the tones the wash is painted on", () => {
   const tones = (all: ReadonlyArray<string>, measured: ReadonlyArray<string>) =>
     all.filter((tone) => !measured.includes(tone));
 
-  const measuredOn = [...washedTones] as ReadonlyArray<string>;
+  const measuredOn: ReadonlyArray<string> = [...washedTones];
 
   const placements = [
     ...shippedThemes,
