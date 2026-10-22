@@ -166,11 +166,12 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (19 tests):
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (20 tests):
 focus landing on the input, focus returning to the opener when the palette closes,
 typing filtering the list while focus stays put, ArrowDown + Enter running the
-second match and closing, a clicked row, the empty label, a custom filter, a
-disabled action refusing to run, Escape closing, a
+second match and closing, a clicked row, a surface that reopens inside its own
+exit tween with a fresh query and the input focused, the empty label, a custom
+filter, a disabled action refusing to run, Escape closing, a
 non-contiguous query matching initials, ranking deciding the default `Enter`
 target, group order surviving ranking, an empty query keeping declaration order,
 recents shown first under one heading with the first one highlighted, unknown and
