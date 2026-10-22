@@ -260,10 +260,14 @@ Two border roles:
   toolbar strip, a secondary fill and a floating surface (a dialog's footer or a
   popover's form, where the ring was measured before the edge) — and on the
   `hover`/`active` wash a bordered control tints while it is hovered or pressed,
-  because the secondary action keeps that edge while its fill moves. That last
-  strip found four shipped misses (both base themes, high-contrast dark and Linux
+  because the secondary action keeps that edge while its fill moves. That strip
+  found four shipped misses (both base themes, high-contrast dark and Linux
   light), so the edge is perceivable in every state without relying on fill
-  alone.
+  alone. It is also what carries an action inside a message: an `Alert` fills
+  its tone's soft tint and its description holds the action, and the neutral
+  fill band shares the pale tints' lightness (a `secondary` action reads
+  1.01–1.04:1 on the green and amber tints), so the four tints joined the same
+  contract — thirteen of the sixteen styles missed it, the worst at 2.23:1.
 
 A **field is carried by its edge, not its fill.** A field sits on the page, a
 card, a popover and a `muted` toolbar, and in the light palettes the page
@@ -304,7 +308,7 @@ control over, and it found the shipped alias: light `secondary` *was* `muted`, s
 a secondary button in a toolbar was a label with no button around it, and each
 platform window was 1.015–1.049:1 from it. The base light fill is now `#E1E5EC`,
 its pressed wash `#D6DBE4` (so a resting control is not the value of a pressed
-ghost) and `borderStrong` `#727D8C` (so the boundary keeps its 3:1 on the new
+ghost) and `borderStrong` `#6A7483` (so the boundary keeps its 3:1 on the new
 fill and on the pressed wash); each affected platform style and look owns its control face. §9 lists the
 placement, `docs/tokens.md` §Decorative surfaces the measurements.
 
@@ -581,7 +585,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card`/`popover`/a `muted` strip and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a message in a muted sidebar, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
-| focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those same strips (a floating surface included), on the field, and on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
+| focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint (an action inside a message), and on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the `hover`/`active` wash a row tints under the pointer | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
@@ -696,8 +700,8 @@ it. The base fill, its pressed wash, `borderStrong` and every affected style's
 own control face moved with the contract. The boundary half of the same table
 found the state the fill changes into: a bordered control keeps `borderStrong`
 while its fill moves to the wash, and both base themes, high-contrast dark and
-Linux light were under the floor there — the four values moved to `#727D8C`,
-`#788494`, `#A7A7A7` and `#7E7C79`.
+Linux light were under the floor there — the four values moved stronger, and the
+message-tint pairs moved the neutral edge again.
 
 The elevation tint is measured on the same floor, as a **ceiling**: the deepest
 level is composited over the four strips a raised surface can fall on, so a

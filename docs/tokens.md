@@ -158,7 +158,7 @@ tool never has to copy the palette out of this page.
 | `destructiveSoft` | `#FFC6C6` | `#7E1D21` | soft destructive surface |
 | `destructiveSoftForeground` | `#5C1619` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
-| `borderStrong` | `#727D8C` | `#788494` | essential control boundaries |
+| `borderStrong` | `#6A7483` | `#949EAB` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#606A79` | `#858E9F` | placeholder text |
@@ -553,7 +553,7 @@ getTheme("light"); // the default light theme, unchanged
 | `destructiveSoft` | `#FF9E9E` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#6E7683` | `#7A7A7A` | dividers and decorative borders |
-| `borderStrong` | `#4A4F58` | `#A7A7A7` | essential control boundaries |
+| `borderStrong` | `#454A53` | `#A7A7A7` | essential control boundaries |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
@@ -637,7 +637,7 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `hover` | `#E2E2E8` | `#35353B` | `#E3E2DF` | `#343434` | `#E0E0E0` | `#333333` |
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
-| `borderStrong` | `#7C7C82` | `#8A8A90` | `#7E7C79` | `#A0A0A0` | `#757575` | `#9A9A9A` |
+| `borderStrong` | `#75757A` | `#9C9CA1` | `#76746F` | `#A0A0A0` | `#757575` | `#9D9D9D` |
 | `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
@@ -1235,7 +1235,7 @@ named colour, an `hsl()`-family function). Shorthand hex is measured.
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 93 pairs cover the text role
+the caller remembering to say so. The 97 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1291,8 +1291,8 @@ element's fill moves to the wash, so the edge is measured there too. It found
 four shipped misses — the base light theme's pressed secondary button at
 2.88:1, the base dark theme's at 2.86:1, high-contrast dark at 4.15:1 against
 its 4.5 floor, and Linux light at 2.96:1 hovered and 2.77:1 pressed — so those
-four `borderStrong` values moved to `#727D8C`, `#788494`, `#A7A7A7` and
-`#7E7C79`, and every other pair they carry still clears its floor.
+four `borderStrong` values moved stronger, and every other pair they carry
+still clears its floor.
 
 A **floating** surface is the last strip that story was missing. The ring was
 already measured on `popover` — a focused control in a dialog wears it — while
@@ -1301,8 +1301,7 @@ the edge around that same control was measured on every strip *but* `popover`:
 `secondary` and therefore paints `borderStrong`, and it sits on the `popover`
 fill `DIALOG_CONTENT` paints. A popover holding a form is the same composition.
 Every shipped, high-contrast, platform and authored style clears the floor
-there, the tightest being the base dark theme at 3.95:1 — an edge drawn in a
-neutral on a neutral fill is the hardest placement the boundary has.
+there, the tightest being Linux dark's popover at 4.48:1.
 
 A **field** is the fourth border case, and the one the table reaches last. A
 field can land on the page, a card, a popover or a `muted` toolbar, and in the
@@ -1377,11 +1376,29 @@ is drawn on those washes, not on the page, and nothing measured it there. A bran
 whose edge matched the row it sits in therefore shipped an outlined action with
 no outline in the one place a list puts it, with every strip the control rests on
 passing. Both washes joined the boundary pairs, and every shipped, high-contrast,
-platform and authored style clears the floor, the tightest being macOS light's
-hovered row at 3.08:1 — a neutral edge on a blue-tinted wash, eight hundredths
-above it. `contrast.test.ts`'s `the edge of a control inside a row's wash` suite
+platform and authored style clears the floor, the tightest being the authored
+Windows XP look's selected row at 3.18:1. `contrast.test.ts`'s `the edge of a control inside a row's wash` suite
 reads the slot, both washes and the default action's edge, reports an edge equal
 to its wash at 1.00:1 and sweeps all 16 styles.
+
+A **message's own tint** is the boundary's last strip. An alert fills its tone's
+soft role — `ALERT_TONES` paints `bg-infoSoft`, `bg-successSoft`,
+`bg-warningSoft` or `bg-destructiveSoft`, with `danger` mapped to the
+destructive tone — and its description is a container, so the documented "Try
+again" action is a plain `Button` on that tint, whose default variant paints
+`borderStrong`. Nothing measured it: the edge answered on the page, a card, a
+field, a toolbar, a segmented panel, a floating surface and the washes a control
+tints, and on none of the four tints a message paints. The edge is what carries
+the control there for the same reason it does on a field — the neutral fill band
+is one lightness and the pale green and amber tints share it (a `secondary`
+action reads 1.01–1.04:1 on them in the light styles), so only the boundary can
+be seen. Thirteen of the sixteen styles missed the floor, the worst being the
+base dark theme's edge on `warningSoft` at 2.23:1; the values moved by the
+smallest step that clears all four tints, and the tightest shipped placement is
+macOS light's red message tint at 3.09:1. `contrast.test.ts`'s `a control's edge
+on a message's own tint` suite reads the alert's tones, its description and the
+default action's edge, reports an edge painted in the tint it sits on at
+1.00:1, and sweeps all 16 styles.
 
 `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
@@ -1700,7 +1717,7 @@ muted toolbar a label with no button around it; macOS light's window sat
 dark platform and look palettes landed at 1.021–1.049:1 on their lighter
 popovers. The base light `secondary` is now `#E1E5EC` (one neutral step above
 `muted`), its `active` wash moved to `#D6DBE4` so a resting control is not the
-same value as a pressed ghost, `borderStrong` darkened to `#727D8C` to keep its
+same value as a pressed ghost, `borderStrong` darkened to `#6A7483` to keep its
 3:1 on the new fill, and each affected platform style and authored look carries
 its own control face.
 

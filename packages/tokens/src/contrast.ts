@@ -424,6 +424,25 @@ export const contrastPairs: readonly ContrastPair[] = [
   // rests on passed.
   { foreground: "borderStrong", background: "accent", floor: "boundary" },
   { foreground: "borderStrong", background: "selected", floor: "boundary" },
+  // A control also sits on a **message's own tint**, the one strip this table
+  // missed. An `Alert` paints its tone's `xSoft` fill (`ALERT_TONES`) and its
+  // description is a container, so the documented action —
+  // `<Button onClick={retry}>Try again</Button>`, the default variant, which
+  // paints `borderStrong` — draws its edge on the tint. The edge is what
+  // identifies a control there, as it does on a field: the neutral fill band is
+  // one lightness and the pale tints share it (a `secondary` action reads
+  // 1.01–1.04:1 on the green and amber tints of the light styles), so only the
+  // boundary can carry the control. Measured, thirteen of the sixteen styles
+  // missed it, the worst being the base dark theme's edge on `warningSoft` at
+  // 2.23:1; the values moved by the smallest step that clears all four.
+  { foreground: "borderStrong", background: "infoSoft", floor: "boundary" },
+  { foreground: "borderStrong", background: "successSoft", floor: "boundary" },
+  { foreground: "borderStrong", background: "warningSoft", floor: "boundary" },
+  {
+    foreground: "borderStrong",
+    background: "destructiveSoft",
+    floor: "boundary",
+  },
   // A failed validation swaps a control's edge — and the focus line it paints
   // while invalid — to the `destructive` role, so that role is a boundary on
   // every strip a control sits on. The page, card, popover and `muted` strips

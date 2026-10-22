@@ -1440,7 +1440,7 @@ describe("a control boundary on the strip it sits on", () => {
     expect(recipe(recipes, "POPOVER_CONTENT")).toContain("bg-popover");
   });
 
-  it("clears the boundary floor on a floating surface, with dark tightest", () => {
+  it("clears the boundary floor on a floating surface", () => {
     const measured = [
       ...Object.values(themes),
       ...Object.values(highContrastThemes),
@@ -1462,13 +1462,14 @@ describe("a control boundary on the strip it sits on", () => {
       ),
     ).toEqual([]);
 
-    // The dark base theme is the tightest placement, and the catalogue prints
-    // it: an edge on a popover is the hardest neutral-on-neutral pair here.
+    // A neutral edge on a floating surface is a strong pair now that the edge
+    // that also has to answer on a message's tint moved up; the tightest of the
+    // sixteen is Linux dark's popover.
     const tightest = measured.reduce((low, placement) =>
       (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
     );
-    expect(tightest.theme).toBe("Dark");
-    expect(tightest.ratio).toBeCloseTo(3.95, 2);
+    expect(tightest.theme).toBe("Dark · Linux");
+    expect(tightest.ratio).toBeCloseTo(4.48, 2);
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -1476,7 +1477,145 @@ describe("a control boundary on the strip it sits on", () => {
         new URL("../../../docs/tokens.md", import.meta.url),
         "utf8",
       ).replace(/\s+/g, " "),
-    ).toContain(`base dark theme at ${printedRatio(tightest.ratio)}`);
+    ).toContain(`Linux dark's popover at ${printedRatio(tightest.ratio)}`);
+  });
+});
+
+/**
+ * Guards the edge a control paints on a **message's own tint**.
+ *
+ * The bug this holds: `contrastPairs` measured `borderStrong` on every strip a
+ * control rests on — the page, a card, a field, a toolbar, a filled panel, a
+ * floating surface, the washes a bordered control tints and the washes a row
+ * paints under it — and on none of the four soft status tints a message is
+ * painted on. An `Alert` fills its tone's `xSoft` role and its description is a
+ * container, so the documented action (`<Button onClick={retry}>Try again</Button>`,
+ * the default variant) draws the strong edge on that tint. Measured, thirteen of
+ * the sixteen styles missed the 3:1 floor there — the worst being the base dark
+ * theme's edge on `warningSoft` at 2.23:1 — so a palette could ship a button
+ * with no outline inside the one component built to be noticed, while every
+ * strip the button rested on passed. The middle of the range is where the
+ * gradient meets the label, so a boundary is what identifies the control: the
+ * neutral fill band is one lightness in each mode and the pale tints share it
+ * (a `secondary` action reads 1.01–1.04:1 on the green and amber tints of the
+ * light styles), which is the same reason a field is carried by its edge.
+ */
+describe("a control's edge on a message's own tint", () => {
+  const tints = [
+    "infoSoft",
+    "successSoft",
+    "warningSoft",
+    "destructiveSoft",
+  ] as const;
+
+  it("measures the strong boundary on each soft status tint", () => {
+    const missing = tints
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "borderStrong" &&
+              pair.background === background &&
+              pair.floor === "boundary",
+          ),
+      )
+      .map((background) => `borderStrong/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the painters that put a default action inside an alert", () => {
+    // The pairs only mean something while the composition still exists: the
+    // alert fills its tone's soft role, its description is a container, and the
+    // documented action is the default variant — the one that owns the edge.
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const alert = readFileSync(
+      new URL("../../components/src/alert.tsx", import.meta.url),
+      "utf8",
+    );
+    const button = readFileSync(
+      new URL("../../components/src/internal/button.tsx", import.meta.url),
+      "utf8",
+    );
+    const page = readFileSync(
+      new URL("../../components/docs/alert.mdx", import.meta.url),
+      "utf8",
+    );
+
+    const tones = recipes.slice(
+      recipes.indexOf("export const ALERT_TONES"),
+      recipes.indexOf("export const ALERT_ICON"),
+    );
+    tints.forEach((tint) => expect(tones).toContain(`bg-${tint}`));
+    expect(alert).toContain("ALERT_TONES[value]");
+    expect(alert).toContain("AlertDescription");
+    expect(button).toContain('variant = "secondary"');
+    expect(button).toContain("borderColor: theme.colors.borderStrong");
+    expect(page).toContain('<Alert tone="danger">');
+    expect(page).toContain("<Button onClick={retry}>Try again</Button>");
+  });
+
+  it("reports an edge that disappears into the tint it sits on", () => {
+    tints.forEach((background) => {
+      const broken = {
+        colors: { ...lightColors, borderStrong: lightColors[background] },
+      };
+
+      expect(
+        contrastFailures(broken).find(
+          ({ foreground, background: strip }) =>
+            foreground === "borderStrong" && strip === background,
+        ),
+      ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+    });
+  });
+
+  it("keeps the edge findable on every tint in every shipped theme", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const placements = shipped.flatMap((theme) =>
+      tints.map((background) => ({
+        name: `${theme.name}/borderStrong/${background}`,
+        ratio: contrastRatio(
+          theme.colors.borderStrong,
+          theme.colors[background],
+        ),
+        floor: contrastFloorsFor(theme).boundary,
+      })),
+    );
+    const hidden = placements.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+
+    expect(hidden).toEqual([]);
+    // The pale red tint is the hardest of the four for a neutral edge: macOS
+    // light's, at 3.09:1 against the 3:1 floor.
+    expect(tightest.name).toBe(
+      `${platformTheme(themes.light, "darwin").name}/borderStrong/destructiveSoft`,
+    );
+    expect(tightest.ratio).toBeCloseTo(3.09, 2);
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`red message tint at ${printedRatio(tightest.ratio)}`);
   });
 });
 
@@ -1694,12 +1833,13 @@ describe("the edge of a control inside a row's wash", () => {
     );
 
     expect(hidden).toEqual([]);
-    // A neutral edge on a wash a light palette tints blue is the hardest of the
-    // sixteen: macOS light's hovered row, at 3.08:1 against the 3:1 floor.
+    // A neutral edge on a wash a light palette tints is the hardest of the
+    // sixteen now that the popover and tint strips moved the edge up: the
+    // authored Windows XP look's selected row, at 3.18:1 against the 3:1 floor.
     expect(tightest.name).toBe(
-      `${platformTheme(themes.light, "darwin").name}/borderStrong/accent`,
+      `${retroTheme(themes.light, "luna").name}/borderStrong/selected`,
     );
-    expect(tightest.ratio).toBeCloseTo(3.08, 2);
+    expect(tightest.ratio).toBeCloseTo(3.18, 2);
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -1707,7 +1847,7 @@ describe("the edge of a control inside a row's wash", () => {
         new URL("../../../docs/tokens.md", import.meta.url),
         "utf8",
       ).replace(/\s+/g, " "),
-    ).toContain(`hovered row at ${printedRatio(tightest.ratio)}`);
+    ).toContain(`selected row at ${printedRatio(tightest.ratio)}`);
   });
 });
 
