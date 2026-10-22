@@ -2928,7 +2928,7 @@ no code layer paints, so a broken instrument cannot pass as "nothing painted".
 | hiding the ink again | back to 0 |
 | typing into the transparent field | `chars` and `lines` in the readout follow the keys, so the field really edits |
 | the code layer after an edit | differs from the untouched reference — the display is a live view of the same value, not a picture |
-| the caret | **no caret is painted** — with the ink on, the glyphs are identical on both sides of the focus, and five frames 120 ms apart over a focused plain field differ by 0 pixels; the control field's text does paint, so the box and the focus are real |
+| the caret | **no caret is painted** — the probe asks for the window's activation at mount, focuses a plain opaque control field, moves the caret with an arrow key and samples five frames 120 ms apart: they differ by 0 pixels, while that field's own text paints and a press focuses it |
 | the scroll offset of a longer file | `scrollOffset` reports **no offset** for the field, so an app cannot mirror the field's scroll into the code view |
 
 **Verdict: the composition is not an editor in 0.11.0.** A reader can type into

@@ -187,8 +187,7 @@ const coloursRow = new Uint8Array([
   0, 255, 0, 0, 255, 0, 0, 255, 255, 0, 255, 0, 255, 255, 255, 255, 255,
 ]);
 
-const colourFrame = () =>
-  decode(png(4, 2, 6, [coloursRow, coloursRow]));
+const colourFrame = () => decode(png(4, 2, 6, [coloursRow, coloursRow]));
 
 const at = (x: number, y: number, width: number, height: number) =>
   new PixelRegion({ x, y, width, height });
@@ -240,8 +239,11 @@ describe("countDifferingPixels", () => {
     const frame = colourFrame();
     const left = crop(frame, at(0, 0, 2, 1));
     const right = crop(frame, at(2, 0, 2, 1));
-    expect(left === null || right === null ? null : countDifferingPixels(left, right))
-      .toBe(2);
+    expect(
+      left === null || right === null
+        ? null
+        : countDifferingPixels(left, right),
+    ).toBe(2);
   });
 
   it("refuses two captures of different shapes", () => {

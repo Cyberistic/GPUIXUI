@@ -70,7 +70,8 @@ export type OverlayInk = "transparent" | "visible";
  * the app's arithmetic once the runtimes agree — but a fixture that gave them
  * different metrics would have no chance of it.
  */
-export const overlayMetrics = (theme: Theme): StyleDesc => textStyle(theme, "code");
+export const overlayMetrics = (theme: Theme): StyleDesc =>
+  textStyle(theme, "code");
 
 /** The code layer the field sits over, and the reference beside it. */
 export const overlayCodeStyle = (theme: Theme): StyleDesc => ({

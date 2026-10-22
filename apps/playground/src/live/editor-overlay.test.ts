@@ -41,7 +41,10 @@ describe("the editor-overlay fixture", () => {
     // A field with a fill hides the layer beneath it, which is the whole
     // composition; the visible control changes the glyph colour only.
     expect(
-      Arr.map(INKS, (ink) => overlayFieldStyle(lightTheme, ink).backgroundColor),
+      Arr.map(
+        INKS,
+        (ink) => overlayFieldStyle(lightTheme, ink).backgroundColor,
+      ),
     ).toEqual(["transparent", "transparent"]);
   });
 
@@ -56,10 +59,14 @@ describe("the editor-overlay fixture", () => {
     expect(visible.color).not.toBe(code.color);
   });
 
-
   it("scales a logical box into the capture's pixels", () => {
     const region = overlayRegion(
-      { x: 10, y: 20, width: OVERLAY_FRAME.width, height: OVERLAY_FRAME.height },
+      {
+        x: 10,
+        y: 20,
+        width: OVERLAY_FRAME.width,
+        height: OVERLAY_FRAME.height,
+      },
       2,
     );
     expect(region.x).toBe(20);

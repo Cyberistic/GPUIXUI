@@ -308,10 +308,7 @@ export const crop = (frame: Pixels, region: PixelRegion): Pixels | null => {
   const data = new Uint8Array(width * height * 4);
   for (let row = 0; row < height; row += 1) {
     const source = ((top + row) * frame.width + left) * 4;
-    data.set(
-      frame.data.subarray(source, source + width * 4),
-      row * width * 4,
-    );
+    data.set(frame.data.subarray(source, source + width * 4), row * width * 4);
   }
   return new Pixels({ width, height, data });
 };

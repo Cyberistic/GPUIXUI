@@ -13590,7 +13590,10 @@ const EditorOverlayProbe = (): ReactNode => {
       }}
     >
       <Toolbar>
-        <Pressable testId="overlay-ink-visible" onClick={() => setInk("visible")}>
+        <Pressable
+          testId="overlay-ink-visible"
+          onClick={() => setInk("visible")}
+        >
           <text style={{ color: theme.colors.foreground }}>Show the ink</text>
         </Pressable>
         <Pressable
@@ -13599,13 +13602,13 @@ const EditorOverlayProbe = (): ReactNode => {
         >
           <text style={{ color: theme.colors.foreground }}>Hide it</text>
         </Pressable>
+        {/* A focus sink: a press here takes the focus off the field, which is
+            what a capture of the resting overlay needs. */}
         <Pressable testId="overlay-neutral" onClick={() => undefined}>
           <text style={{ color: theme.colors.foreground }}>Focus here</text>
         </Pressable>
       </Toolbar>
-      <div
-        style={{ display: "flex", flexDirection: "row", gap: OVERLAY_GAP }}
-      >
+      <div style={{ display: "flex", flexDirection: "row", gap: OVERLAY_GAP }}>
         <div testId="overlay-editor" style={box}>
           {stack(value, "overlay-code")}
           <textarea
@@ -13844,12 +13847,10 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.key("z");
     yield* ctx.expectEqual(
       "typed text reaches the app through the transparent field",
-      yield* settleUntil(
-        ctx.host.text("overlay-readout"),
-        (value) =>
-          value.includes(
-            `chars=${Str.length(OVERLAY_SOURCE) + Str.length(OVERLAY_MARK)} `,
-          ),
+      yield* settleUntil(ctx.host.text("overlay-readout"), (value) =>
+        value.includes(
+          `chars=${Str.length(OVERLAY_SOURCE) + Str.length(OVERLAY_MARK)} `,
+        ),
       ),
       `ink=transparent chars=${
         Str.length(OVERLAY_SOURCE) + Str.length(OVERLAY_MARK)
@@ -13886,7 +13887,8 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
-export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {  "focus-visible": {
+export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
+  "focus-visible": {
     id: "focus-visible",
     view: () => <FocusVisibleProbe />,
     steps: focusVisibleSteps,
