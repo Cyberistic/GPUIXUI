@@ -802,6 +802,9 @@ describe("the curated component pages", () => {
     const source = read(pagination.source);
     const logic = read("packages/components/src/pagination/logic.ts");
     const button = read("packages/components/src/internal/button.tsx");
+    const primitiveButton = read(
+      "packages/primitives/src/components/Button.tsx",
+    );
 
     // One window function with both knobs, and the branch that keeps a
     // single hidden page as the page itself.
@@ -824,7 +827,8 @@ describe("the curated component pages", () => {
     expect(source).toContain('label="More pages"');
     expect(source).toContain('role="navigation"');
     expect(source).toContain('aria-label="Pagination"');
-    expect(button).toContain("tabIndex={disabled ? -1 : 0}");
+    expect(button).toContain("disabled={disabled}");
+    expect(primitiveButton).toContain("disabled === true ? -1 : 0");
 
     const text = body(pagination).replace(/\s+/g, " ");
     // The crops the page prints, and the rule that explains them.
@@ -1610,6 +1614,44 @@ describe("the curated component pages", () => {
     expect(disagreeing).toEqual([]);
   });
 
+  it("holds the disabled control's pointer focus to the source", () => {
+    // A window focuses the element a pointer pressed even when it is disabled
+    // and out of the tab order, so a press on the month nav parked the keyboard
+    // there and every later arrow moved nothing. The fix is that both
+    // containers answer the movement keys — a page that teaches only the grid's
+    // key table would not explain why the nav row carries them.
+    const page = pages.find(
+      (candidate) => candidate.file === "date-picker.mdx",
+    );
+    expect(
+      page,
+      "the date-picker page is not in the curated set",
+    ).toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    expect(source).toContain("onKeyDown={moveByKey}");
+    expect(source).toContain("onKeyDown={handleKeyDown}");
+    expect(source).toContain(
+      "const handleKeyDown = (event: KeyEvent): void => {\n    moveByKey(event);",
+    );
+    expect(source).toContain(
+      "disabled={!canBrowseMonth(viewMonth, 1, bounds)}",
+    );
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain(
+      "A **disabled** month control still takes the pointer's focus",
+    );
+    expect(text).toContain(
+      "`date-picker-lifecycle` measured the disabled next-month control",
+    );
+    expect(text).toContain(
+      "Both the grid and the nav row answer the movement keys",
+    );
+    expect(text).toContain("`Enter` and `Space` stay the grid's");
+  });
+
   it("state the runtime support verdict the inventory records", () => {
     // The status word was held to the inventory; the support verdict beside it
     // was not, so a page could drop `partial` and read as a component the
@@ -1973,7 +2015,9 @@ describe("the curated component pages", () => {
     const text = body(page).replace(/\s+/g, " ");
     expect(text).toContain("No `aria-controls`");
     expect(text).toContain("ships no indicator");
-    expect(text).toContain("5 native behaviour tests");
+    expect(text).toContain(
+      `${nativeCases(page.suite ?? "")} native behaviour tests`,
+    );
     expect(text).toContain("unmounts");
     expect(text).toContain("8px inline");
     expect(text).toContain("first open paints the body at zero");
@@ -2268,7 +2312,9 @@ describe("the curated component pages", () => {
     expect(text).toContain("No `aria-valuenow`");
     expect(text).toContain("No caret position");
     expect(text).toContain("declared at rest");
-    expect(text).toContain("10 native behaviour tests");
+    expect(text).toContain(
+      `${nativeCases(page.suite ?? "")} native behaviour tests`,
+    );
     // The retracted claim: the traversal does run the segment's `onFocus` on
     // 0.11.0 (re-measured on `tooltip-lifecycle` and `tabs-lifecycle`), so a page
     // must not rest the ring on the event's absence.

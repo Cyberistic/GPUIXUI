@@ -128,6 +128,14 @@ One cell is the tab stop: the focused day while the surface is open, opening on
 the chosen day (or on `today` when none is set) and clamped into the bounds. The
 arrow keys move real focus, so the highlight and the focus are the same cell.
 
+A **disabled** month control still takes the pointer's focus: the runtime focuses
+the element a press landed on, even when it is `disabled` and out of the tab
+order, and `date-picker-lifecycle` measured the disabled next-month control
+holding it at its bound. Both the grid and the nav row answer the movement keys
+for that reason — an arrow delivered to a month control moves the calendar and
+pulls real focus back to a day. `Enter` and `Space` stay the grid's: on a month
+control they are that control's own press.
+
 ## API reference
 
 ### `DatePicker`
@@ -256,7 +264,7 @@ whole, while `@gpuix/native@0.11.0` publishes no `aria-current` for today, no
 `aria-disabled` for an unavailable day and no `aria-haspopup` on the trigger. The
 package's own `docs/date-picker.mdx` records the same limits.
 
-`src/behaviour/date-picker.test.tsx` runs **16 native behaviour tests** in the
+`src/behaviour/date-picker.test.tsx` runs **18 native behaviour tests** in the
 real GPUix renderer on the pinned runtime: opening and focusing a day, a choice
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 `PageDown` browsing without changing the value, `Escape` focus-return, the
