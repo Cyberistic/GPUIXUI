@@ -189,6 +189,11 @@ export const registry = [
     capability: "virtual-list",
   },
   {
+    id: "virtual-list-rows",
+    title: "Virtual list measures each row's own height",
+    capability: "virtual-list",
+  },
+  {
     id: "virtualized-table",
     title: "Table inside <virtual-list>: window, click, selection",
     capability: "table",

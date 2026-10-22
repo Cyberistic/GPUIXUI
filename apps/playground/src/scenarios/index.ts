@@ -26,6 +26,7 @@ import { tabOverflowScenario } from "./tab-overflow.js";
 import { panelScenario } from "./panel.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { virtualListWindowedScenario } from "./virtual-list-windowed.js";
+import { virtualListRowsScenario } from "./virtual-list-rows.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { dataGridScenario } from "./data-grid.js";
 import { workspaceScenario } from "./workspace.js";
@@ -65,6 +66,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "panel-resize": panelScenario,
   "virtual-list-window": virtualListScenario,
   "virtual-list-windowed": virtualListWindowedScenario,
+  "virtual-list-rows": virtualListRowsScenario,
   "table-select-sort": tableSelectSortScenario,
   "table-column-resize": tableColumnResizeScenario,
   "data-grid-fixed-header": dataGridScenario,

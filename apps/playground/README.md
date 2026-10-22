@@ -23,9 +23,9 @@ compile error. Each scenario is one capability, one view, one `steps` effect: th
 core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `data-grid-fixed-header`,
-`virtualized-table`, `virtual-list-windowed`, `tree-view`, `log-viewer`,
-`workspace-tab-drag`, `docking-nested`, `drag-autoscroll`, `search-highlights`,
-`tab-overflow`, `editor-surface`), the app-level
+`virtualized-table`, `virtual-list-windowed`, `virtual-list-rows`, `tree-view`,
+`log-viewer`, `workspace-tab-drag`, `docking-nested`, `drag-autoscroll`,
+`search-highlights`, `tab-overflow`, `editor-surface`), the app-level
 shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
@@ -82,7 +82,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (33/33 green); -> 2 on a host with no binding
+# -> 0 here (34/34 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -372,6 +372,33 @@ Negative controls, measured: dropping the reveal's `scrollToItem` fails
 the window renders) and mounting one row beyond the window fails
 `the row after the window is never mounted` — exit `1` each; restored, green.
 
+## The virtual list's variable rows
+
+Every virtual-list probe declared fixed-height rows, so "rows do not need equal
+heights" was the runtime's claim rather than a measurement. A table with a
+wrapped description, a tree with a two-line label and an expandable row all
+depend on that path. `virtual-list-rows` declares 400 rows whose heights cycle
+24 / 48 / 72px, so a uniform row would be visible in the first painted box.
+
+| Step | Check |
+| ---- | ----- |
+| mount | the first three painted rows measure 24, 48 and 72, and each starts where the previous one ended |
+| `Reveal 150` | that row paints, lands at the viewport's top edge, and keeps its own cycle height — the estimate positioned a row nothing had measured |
+| `Grow row 0` (+40px), reader at row 150 | the painted rows are unchanged **and** the offset is unchanged: a row outside the window is not remeasured until it paints again, so nothing the reader can see moves |
+| `Back to top` | row 0 paints 64px tall and row 1 moved down by the growth |
+
+15 checks, `--only virtual-list-rows`, green on 0.11.0. The third row of that
+table is the one a data grid needs to know: a row that changes height while it
+is outside the window is invisible to the reader until it enters the window, so
+an expandable row must be measured when it is on screen (which is also why a
+streamed row only grows its own slice — `log-viewer` measures the tail case).
+
+Negative controls, measured: a uniform 32px row fails
+`the first row keeps its declared height` (`expected 24, got 32`); ignoring the
+grow fails `the grown first row paints its new height` (`expected 64, got 24`);
+dropping the reveal's `scrollToItem` fails `the revealed row is painted` — exit
+`1` each; restored, green.
+
 ## The example gallery
 
 `packages/components/examples/index.ts` is the registry of the 39 screens the
@@ -402,10 +429,10 @@ mounting every page from one component fails
 
 ## Evidence on this host
 
-The suite is **33/33 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **34/34 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-33/33 scenarios passed · capabilities: layout=verified text=verified
+34/34 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -424,7 +451,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down and `deltaX` negative to scroll right (the opposite of the DOM); an `overflowX` strip clamps exactly at `contentWidth − viewportWidth` |
 | panel | pointer capture + inclusive clamp |
-| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes |
+| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes. Rows may differ in height: each is measured and stacked (`virtual-list-rows`), and a row that grows while outside the window is not remeasured until it paints |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
 | data grid | a header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
 | search highlights | a `highlight` spec paints a wash per match, and `SmokeHost.highlights()` (the renderer's `getPaintedHighlights`) reports each wash's run, `[start, end)` and boxes: three for `alpha`, two for `beta`, and none once the query is case-sensitive `ALPHA` or a whole-word `alp` — the insensitive/word-off queries mark them again. One `activeIndex` marks exactly one wash `active`. `ranges: [[0, 5)]` marks the same region `indexOf` would. A wash is a quad, so `text`/`paintedText` never report it |
@@ -1597,7 +1624,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (33/33), with a written report and screenshots.
+  (34/34), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls
