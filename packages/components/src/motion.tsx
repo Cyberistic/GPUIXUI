@@ -2,8 +2,8 @@
  * The motion preference: one provider, one hook.
  *
  * GPUix exposes no reduced-motion query (`docs/gpuix-capabilities.md` records
- * the detection as unverified), so the application owns the flag exactly as it
- * owns the theme mode. Every animated surface reads it — a dialog, a drawer, a
+ * the detection as `not supported`), so the application owns the flag exactly as
+ * it owns the theme mode. Every animated surface reads it — a dialog, a drawer, a
  * popover, a menu, a toast, an accordion panel, the tab pill and a preview card.
  *
  * ```tsx

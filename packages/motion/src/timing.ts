@@ -4,8 +4,8 @@
  * GPUix executes a tween — `initial` → `animate`, and `exit` while leaving —
  * over a duration and an easing it is told, in seconds. It does not choose
  * either, and it has no reduced-motion preference of its own (the capability
- * matrix records the detection as unverified). This module is the one place the
- * library's timing is named: four levels shared by every surface, one easing per
+ * record marks the detection `not supported`). This module is the one place the
+ * library's timing is named: five levels shared by every surface, one easing per
  * phase, and the preference policy that collapses a timing to an instant
  * assignment instead of a transition.
  *
