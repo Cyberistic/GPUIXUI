@@ -99,6 +99,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/command-menu.tsx",
   },
   {
+    file: "confirm-dialog.mdx",
+    row: "Confirmation dialogs",
+    suite: "packages/components/src/behaviour/confirm-dialog.test.tsx",
+    shadowed: "packages/components/docs/confirm-dialog.mdx",
+    source: "packages/components/src/confirm-dialog.tsx",
+  },
+  {
     file: "dialog.mdx",
     row: "Dialogs",
     suite: "packages/components/src/behaviour/dialog.test.tsx",
@@ -136,6 +143,21 @@ const status = (page: CuratedPage): string => {
   const text = body(page);
   const start = text.indexOf("## Status");
   return start === -1 ? "" : text.slice(start);
+};
+
+/**
+ * The `<Button …>…</Button>` block that carries a `testId`.
+ *
+ * Read by position rather than with a regex: a pattern literal containing a
+ * quote is still mis-scanned by `scripts/check-tests.ts`, which then reports
+ * every later test in the file as assertionless (`TODO.md` → Harness).
+ */
+const elementBlock = (source: string, testId: string): string => {
+  const marker = `testId="${testId}"`;
+  const at = source.indexOf(marker);
+  const from = at === -1 ? -1 : source.lastIndexOf("<Button", at);
+  const end = at === -1 ? -1 : source.indexOf("</Button>", at);
+  return from === -1 || end === -1 ? "" : source.slice(from, end);
 };
 
 /** Every `it(` in a suite file: the native cases the page counts. */
@@ -218,6 +240,76 @@ describe("the curated component pages", () => {
     expect(wrong).toEqual([]);
   });
 
+  it("hold the confirmation's safety decisions to the source", () => {
+    // A confirmation is safe because of two decisions in code, and neither is
+    // visible in a screenshot: Cancel must own the initial focus, or Enter on
+    // an untouched dialog destroys something; and confirm must report rather
+    // than close, or a failed save vanishes with the surface. The page also
+    // teaches the busy mark, which must stay the named `loader` icon — 0.11.0
+    // has no transform, so a page that promised a spinner would sell a
+    // behaviour the runtime cannot paint.
+    const confirm = pages.find((page) => page.file === "confirm-dialog.mdx");
+    expect(
+      confirm,
+      "the confirmation dialog page is not in the curated set",
+    ).toBeDefined();
+    if (confirm === undefined) return;
+
+    const source = read(confirm.source);
+    expect(source).toContain("initialFocus={() => cancel.current?.id ?? null}");
+    expect(source).toContain("dismissible={!loading}");
+
+    const cancel = elementBlock(source, "confirm-cancel");
+    const accept = elementBlock(source, "confirm-accept");
+    expect(cancel, "the cancel action no longer holds the ref").toContain(
+      "ref={cancel}",
+    );
+    expect(cancel).toContain("onOpenChange(false)");
+    // The whole point: the confirm path never closes. A handler that set the
+    // open state here would hide the failure the caller has to render.
+    expect(accept).toContain("onClick={onConfirm}");
+    expect(accept).not.toContain("onOpenChange");
+
+    expect(source).toContain('name="loader"');
+    expect(source).toContain('label="In progress"');
+    expect(source).toContain("actionOnColor(theme, variant)");
+    // The mark takes the action's own label role; the page names the role and
+    // the button source proves it, rather than the page printing a colour.
+    expect(read("packages/components/src/internal/button.tsx")).toContain(
+      'Match.when("secondary", () => theme.colors.secondaryForeground)',
+    );
+
+    // The surface is the dialog's own, at `sm`, with no close control: a page
+    // that taught a third exit would contradict `showClose={false}`.
+    expect(source).toContain('size="sm"');
+    expect(source).toContain("showClose={false}");
+    const dialog = read("packages/components/src/dialog.tsx").replace(
+      /\s+/g,
+      " ",
+    );
+    expect(dialog).toContain("sm: 360");
+    const call = dialog.indexOf("overlaySurfaceStyle(DIALOG_CONTENT");
+    expect(
+      call === -1 ? "" : dialog.slice(call, dialog.indexOf(")", call) + 1),
+      "the dialog surface no longer names the elevation level it paints",
+    ).toContain('"lg"');
+
+    const text = body(confirm).replace(/\s+/g, " ");
+    expect(text).toContain("Cancel holds the initial focus");
+    // The substance, not only the marker: the caller owns the close, which is
+    // why a failed save can stay on screen.
+    expect(text).toContain("The caller runs the work and closes the dialog");
+    expect(text).toContain("so a failure can stay visible");
+    expect(text).toContain("does **not** spin");
+    expect(text).toContain("In progress");
+    expect(text).toContain("360px");
+    expect(text).toContain("`elevation.lg`");
+    // The retracted shape: a confirm that closes itself, or a busy mark that
+    // animates. Neither is a behaviour the component or the runtime has.
+    expect(text).not.toContain("closes after confirming");
+    expect(text).not.toContain("spins beside the label");
+  });
+
   it("describe the alert's tone paint and the announcement it does not claim", () => {
     // The package page the curated page displaces said the root is "a live
     // region, announced when it appears". The runtime's aria set has no live
@@ -229,10 +321,12 @@ describe("the curated component pages", () => {
     if (alert === undefined) return;
 
     const recipes = read("packages/tw/src/recipes.ts");
-    const base = /export const ALERT_BASE =\s*"([^"]*)"/.exec(recipes)?.[1] ?? "";
+    const base =
+      /export const ALERT_BASE =\s*"([^"]*)"/.exec(recipes)?.[1] ?? "";
     const tones =
-      /export const ALERT_TONES = \{([\s\S]*?)\} as const;/.exec(recipes)?.[1] ??
-      "";
+      /export const ALERT_TONES = \{([\s\S]*?)\} as const;/.exec(
+        recipes,
+      )?.[1] ?? "";
 
     expect(base).toContain("p-3");
     expect(base).toContain("rounded-md");
@@ -244,15 +338,18 @@ describe("the curated component pages", () => {
     // renamed in `ALERT_TONES` cannot leave the table teaching the old paint.
     const text = body(alert).replace(/\s+/g, " ");
     const declared = new Map(
-      [...tones.matchAll(/(\w+):\s*"bg-(\w+) text-(\w+) border-(\w+)\/30"/g)].map(
-        (match) => [
-          match[1] ?? "",
-          {
-            surface: match[2] ?? "",
-            title: match[3] ?? "",
-            edge: match[4] ?? "",
-          },
-        ] as const,
+      [
+        ...tones.matchAll(/(\w+):\s*"bg-(\w+) text-(\w+) border-(\w+)\/30"/g),
+      ].map(
+        (match) =>
+          [
+            match[1] ?? "",
+            {
+              surface: match[2] ?? "",
+              title: match[3] ?? "",
+              edge: match[4] ?? "",
+            },
+          ] as const,
       ),
     );
     const printed = new Map(
@@ -260,14 +357,17 @@ describe("the curated component pages", () => {
         ...body(alert).matchAll(
           /^\| `(\w+)`(?: \(default\))? \| `(\w+)` \| `(\w+)` \| `(\w+)` at 30% \|$/gm,
         ),
-      ].map((match) => [
-        match[1] ?? "",
-        {
-          surface: match[2] ?? "",
-          title: match[3] ?? "",
-          edge: match[4] ?? "",
-        },
-      ] as const),
+      ].map(
+        (match) =>
+          [
+            match[1] ?? "",
+            {
+              surface: match[2] ?? "",
+              title: match[3] ?? "",
+              edge: match[4] ?? "",
+            },
+          ] as const,
+      ),
     );
 
     expect(declared.size).toBe(4);
@@ -285,9 +385,10 @@ describe("the curated component pages", () => {
     expect(source).toContain('role="alert"');
     expect(source).toContain('testId="alert-dismiss"');
 
-    const live = read("docs/gpuix-capabilities.md")
-      .split("\n")
-      .find((line) => line.startsWith("| Live regions")) ?? "";
+    const live =
+      read("docs/gpuix-capabilities.md")
+        .split("\n")
+        .find((line) => line.startsWith("| Live regions")) ?? "";
     expect(live).toContain("not supported");
 
     expect(text).toContain('role="alert"');

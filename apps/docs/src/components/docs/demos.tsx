@@ -1253,6 +1253,248 @@ const AlertComposition = () => {
   );
 };
 
+/**
+ * The busy mark the confirm action paints while `loading`.
+ *
+ * The shipped mark is `@gpuixui/icons`' `loader` at `size="sm"`, in the action's
+ * own label role and named "In progress". The preview draws the same spokes and
+ * freezes them, because the runtime has no transform — a rotating mark would be
+ * a behaviour the library cannot ship.
+ */
+const ConfirmBusyMark = () => (
+  <svg
+    aria-label="In progress"
+    className="gx-confirm-busy"
+    role="img"
+    viewBox="0 0 24 24"
+  >
+    <path
+      d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
+/** `ConfirmDialog`'s surface: the dialog's `sm`, without a close control. */
+const PreviewConfirm = ({
+  title,
+  description,
+  confirmLabel,
+  tone,
+  loading,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  readonly title: string;
+  readonly description: string;
+  readonly confirmLabel: string;
+  readonly tone: "default" | "danger";
+  readonly loading: boolean;
+  readonly error?: string;
+  readonly onCancel: () => void;
+  readonly onConfirm: () => void;
+}) => {
+  const cancel = useRef<HTMLButtonElement>(null);
+  // The contract the component exists for: focus lands on Cancel, so Enter on an
+  // untouched dialog cancels instead of destroying something.
+  useEffect(() => {
+    if (!loading) cancel.current?.focus();
+  }, [loading]);
+
+  return (
+    <div
+      className="gx-dialog-backdrop"
+      onClick={loading ? undefined : onCancel}
+      role="presentation"
+    >
+      <div
+        aria-label={title}
+        aria-modal="true"
+        className="gx-dialog gx-confirm"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+      >
+        <h2 className="gx-dialog-title">{title}</h2>
+        <p className="gx-dialog-desc">{description}</p>
+        {error === undefined ? null : (
+          <div className="gx-confirm-error">
+            <PreviewAlert
+              description={error}
+              title="Archive failed"
+              tone="danger"
+            />
+          </div>
+        )}
+        <div className="gx-dialog-actions">
+          <button
+            className="gx-btn gx-btn-secondary"
+            disabled={loading}
+            onClick={onCancel}
+            ref={cancel}
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            className={`gx-btn ${tone === "danger" ? "gx-btn-destructive" : "gx-btn-primary"}`}
+            disabled={loading}
+            onClick={onConfirm}
+            type="button"
+          >
+            {loading ? <ConfirmBusyMark /> : null}
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The workflow the component encodes: Cancel first, a confirm that reports
+ * instead of closing, and a failure the reader can see and retry.
+ *
+ * The first attempt always fails, so the preview shows the reason `onConfirm`
+ * does not close the dialog: the error stays in the body until the caller
+ * decides what happens next.
+ */
+const ConfirmDialogDemo = () => {
+  const [open, setOpen] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "saving" | "failed" | "archived">(
+    "idle",
+  );
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    if (phase !== "saving") return;
+    const timer = setTimeout(() => {
+      if (attempt === 0) {
+        setAttempt(1);
+        setPhase("failed");
+        return;
+      }
+      setPhase("archived");
+      setOpen(false);
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [phase, attempt]);
+
+  useEffect(() => {
+    if (!open || phase === "saving") return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, phase]);
+
+  return (
+    <div className="gx-confirm-demo">
+      <div className="gx-demo-row">
+        <button
+          className="gx-btn gx-btn-destructive"
+          onClick={() => {
+            setAttempt(0);
+            setPhase("idle");
+            setOpen(true);
+          }}
+          type="button"
+        >
+          Archive project
+        </button>
+        {phase === "archived" ? (
+          <span className="gx-confirm-status">
+            Archived — restore it from the archive within 30 days.
+          </span>
+        ) : null}
+      </div>
+      {open ? (
+        <PreviewConfirm
+          confirmLabel={phase === "failed" ? "Try again" : "Archive project"}
+          description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
+          error={
+            phase === "failed"
+              ? "The workspace service timed out. Nothing was archived, so the project is still here."
+              : undefined
+          }
+          loading={phase === "saving"}
+          onCancel={() => {
+            setOpen(false);
+            setPhase("idle");
+          }}
+          onConfirm={() => setPhase("saving")}
+          title="Archive this project?"
+          tone="danger"
+        />
+      ) : null}
+    </div>
+  );
+};
+
+/** The two tones and the loading state, on one surface. */
+const ConfirmDialogStates = () => {
+  const [state, setState] = useState<"default" | "danger" | "loading">(
+    "danger",
+  );
+  const [shown, setShown] = useState(true);
+  const states = [
+    { key: "default", label: "Default tone" },
+    { key: "danger", label: "Danger tone" },
+    { key: "loading", label: "Loading" },
+  ] as const;
+
+  return (
+    <div className="gx-confirm-states">
+      <div className="gx-confirm-stage">
+        {shown ? (
+          <PreviewConfirm
+            confirmLabel="Archive project"
+            description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
+            loading={state === "loading"}
+            onCancel={() => setShown(false)}
+            onConfirm={() => setState("loading")}
+            title="Archive this project?"
+            tone={state === "default" ? "default" : "danger"}
+          />
+        ) : (
+          <button
+            className="gx-btn gx-btn-secondary"
+            onClick={() => {
+              setState("danger");
+              setShown(true);
+            }}
+            type="button"
+          >
+            Show the dialog again
+          </button>
+        )}
+      </div>
+      <div className="gx-demo-column">
+        <p className="gx-demo-label">State</p>
+        <div className="gx-demo-row">
+          {states.map((state_) => (
+            <button
+              className={`gx-btn gx-btn-sm ${state === state_.key ? "gx-btn-secondary" : "gx-btn-outline"}`}
+              key={state_.key}
+              onClick={() => {
+                setState(state_.key);
+                setShown(true);
+              }}
+              type="button"
+            >
+              {state_.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const alertTonesSource = `import {
   Alert,
   AlertContent,
@@ -1322,6 +1564,98 @@ export const UploadAlerts = () => {
   );
 };`;
 
+const confirmDialogSource = `import { useState } from "react";
+import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertTitle,
+} from "@gpuixui/components/alert";
+import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
+import { Button } from "@gpuixui/primitives";
+
+export const ArchiveProject = () => {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [archived, setArchived] = useState(false);
+
+  const archive = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await archiveProject();
+      setOpen(false);
+      setArchived(true);
+    } catch {
+      // The dialog stays open: the caller owns the close, so a failed save is
+      // never hidden by a surface that vanished mid-flight.
+      setError("The workspace service timed out. Nothing was archived.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Button variant="destructive" onClick={() => setOpen(true)}>
+        Archive project
+      </Button>
+      {archived ? (
+        <Alert tone="info">
+          <AlertContent>
+            <AlertTitle>Project archived</AlertTitle>
+            <AlertDescription>
+              Restore it from the archive within 30 days.
+            </AlertDescription>
+          </AlertContent>
+        </Alert>
+      ) : null}
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Archive this project?"
+        description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
+        confirmLabel={error === null ? "Archive project" : "Try again"}
+        tone="danger"
+        loading={saving}
+        onConfirm={() => void archive()}
+      >
+        {error === null ? null : (
+          <Alert tone="danger">
+            <AlertContent>
+              <AlertTitle>Archive failed</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </AlertContent>
+          </Alert>
+        )}
+      </ConfirmDialog>
+    </>
+  );
+};`;
+
+const confirmStatesSource = `import { useState } from "react";
+import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
+
+export const ConfirmStates = () => {
+  const [state, setState] = useState<"default" | "danger" | "loading">(
+    "default",
+  );
+
+  return (
+    <ConfirmDialog
+      open
+      onOpenChange={() => setState("default")}
+      title="Archive this project?"
+      description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
+      confirmLabel="Archive project"
+      tone={state === "default" ? "default" : "danger"}
+      loading={state === "loading"}
+      onConfirm={() => setState("loading")}
+    />
+  );
+};`;
+
 export const demos: Readonly<Record<string, Demo>> = {
   "alert-tones": { render: AlertTones, source: alertTonesSource },
   "alert-composition": {
@@ -1341,6 +1675,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "command-menu-demo": {
     render: CommandMenuDemo,
     source: commandMenuSource,
+  },
+  "confirm-dialog-demo": {
+    render: ConfirmDialogDemo,
+    source: confirmDialogSource,
+  },
+  "confirm-dialog-states": {
+    render: ConfirmDialogStates,
+    source: confirmStatesSource,
   },
   "dialog-demo": { render: DialogDemo, source: dialogSource },
   "dropdown-menu-demo": {

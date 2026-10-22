@@ -1,0 +1,217 @@
+---
+title: Confirmation dialog
+description: The safe workflow for an action that cannot be undone.
+---
+
+`ConfirmDialog` is the dialog for an action that cannot be undone. It is not a
+styled box around two buttons: it encodes two safety decisions.
+
+- **Cancel holds the initial focus**, so `Enter` on an untouched dialog cancels
+  instead of destroying something.
+- **Confirm only reports.** The caller runs the work and closes the dialog
+  through `open` when it succeeds, so a failure can stay visible.
+
+Measured on `@gpuix/native@0.11.0`. The preview is a browser rendering of the
+recipe; the Code tab and the source accordion are the real usage.
+
+<ComponentPreview name="confirm-dialog-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="ConfirmDialog" />
+
+<ComponentSource name="confirmDialog" file="packages/components/src/confirm-dialog.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertTitle,
+} from "@gpuixui/components/alert";
+import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
+import { Button } from "@gpuixui/primitives";
+import { useState } from "react";
+
+export const ArchiveProject = () => {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const archive = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await archiveProject();
+      setOpen(false);
+    } catch {
+      setError("The workspace service timed out. Nothing was archived.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Button variant="destructive" onClick={() => setOpen(true)}>
+        Archive project
+      </Button>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Archive this project?"
+        description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
+        confirmLabel={error === null ? "Archive project" : "Try again"}
+        tone="danger"
+        loading={saving}
+        onConfirm={() => void archive()}
+      >
+        {error === null ? null : (
+          <Alert tone="danger">
+            <AlertContent>
+              <AlertTitle>Archive failed</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </AlertContent>
+          </Alert>
+        )}
+      </ConfirmDialog>
+    </>
+  );
+};
+```
+
+The dialog is **controlled only**: `open` and `onOpenChange` are required,
+because the component cannot know when the caller's work finished. Render the
+failure in `children` — the slot between the description and the actions — so
+the reader sees why the dialog is still there.
+
+## The two safety decisions
+
+| Step | What happens |
+| ---- | ------------ |
+| open | focus lands on **Cancel**, not on the destructive action |
+| `Enter` untouched | cancels: `onOpenChange(false)`, `onConfirm` never runs |
+| confirm clicked | `onConfirm()` reports once and the dialog **stays open** |
+| `loading` | both actions are disabled, the busy mark is painted, and Escape and an outside press are ignored |
+| close | the caller sets `open` to `false` after its work succeeds |
+
+`loading` keeps the dialog open on purpose. Point it at the work the caller
+owns, render the failure in the body, and close only on success — the preview
+above fails its first attempt so both halves are visible.
+
+## Composition
+
+There are no sub-components to assemble: a confirmation has one shape.
+
+| Piece | Responsibility |
+| ----- | -------------- |
+| `ConfirmDialog` | the workflow: the two actions, the busy state and the controlled open state |
+| the surface | the package's `DialogContent` at `size="sm"` — 360px — with `showClose={false}`, so there is no third way out besides Cancel and Escape |
+| the header | `DialogTitle` and `DialogDescription`: the question, then the consequence |
+| `children` | the slot between the description and the actions — a field, an "I understand" checkbox, or the failure the caller renders |
+| the footer | Cancel first, then the confirm action, right-aligned |
+
+Compose `Dialog` directly when the flow needs its own layout, a form header or a
+trigger inside the surface. A confirmation is the two-action case, and this
+component is the whole of it.
+
+<ComponentPreview name="confirm-dialog-states" />
+
+## Keyboard
+
+| Key | Where | Contract |
+| --- | ----- | -------- |
+| `Enter` | the focused action | activates it; on open that is **Cancel** |
+| `Space` | the focused action | activates it, and the press does not also scroll the surface |
+| `Tab` / `Shift+Tab` | the surface | cycles the two actions, wrapping at each end (the dialog traps focus) |
+| `Escape` | the surface | cancels, unless `loading` |
+| — | an outside press | cancels, unless `loading` |
+
+Escape and an outside press go through the shared dismiss stack, so a popover
+opened from inside the confirmation closes first and one keystroke cannot close
+both.
+
+## API reference
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `open` | `boolean` (required) | — | the controlled open state; the caller owns it, including the close |
+| `onOpenChange` | `(open: boolean) => void` (required) | — | reports Cancel, Escape and an outside press |
+| `title` | `string` (required) | — | the dialog's accessible name and its heading |
+| `description` | `string` (required) | — | the consequence, as one paragraph of supporting copy |
+| `confirmLabel` | `string` | `"Confirm"` | the confirm action's label; change it to `"Try again"` after a failure |
+| `cancelLabel` | `string` | `"Cancel"` | the cancel action's label |
+| `tone` | `"default" \| "danger"` | `"default"` | `"danger"` paints the destructive action variant |
+| `loading` | `boolean` | `false` | disables both actions, paints the busy mark, and ignores Escape and an outside press |
+| `onConfirm` | `() => void` (required) | — | runs once when the confirm action is activated; it never closes the dialog |
+| `children` | `ReactNode` | — | extra body between the description and the actions |
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| veil | `overlay` — the theme's scrim, not a literal black |
+| surface | the dialog's `popover` and `popoverForeground`, its `elevation.lg` lift beside the recipe's 1px ring, and the recipe's fixed 32px corners |
+| heading | `popoverForeground`: 16px at weight 500 |
+| description | `mutedForeground` at 14/20 |
+| Cancel | the local `Button`'s default `secondary` variant: the `secondary` fill, the `foreground` label and the measured `borderStrong` edge |
+| Confirm | `primary` with `primaryForeground`, or for `tone="danger"` the `destructive` and `destructiveForeground` pair |
+| busy mark | the confirm action's own label role (`actionOnColor`), so it stays legible on either fill |
+| disabled actions | the neutral `disabled` fill with the `disabledForeground` label, not a fade |
+
+The surface keeps the dialog recipe's fixed metrics — a platform switch repaints
+it but never reshapes it (ADR 0006). The two actions are the package's local
+`Button`, so their heights come from the theme's `density.controlHeight` and a
+platform switch does resize them.
+
+## Accessibility and limitations
+
+- `role="dialog"`, named by the required `title`. The title is the accessible
+  name, not a separate label prop.
+- Focus enters the dialog and then moves to Cancel; closing returns it to
+  whatever opened the dialog.
+- **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.11.0` — the
+  same limitation as Dialog, with the evidence on that page.
+- The busy mark is an `@gpuixui/icons` `loader` drawn beside the confirm label
+  and named **"In progress"**, so it reaches the accessibility tree as an image.
+  The action keeps its own name. The mark does **not** spin: the runtime has no
+  transform, so a frozen icon is the honest alternative to animating one.
+- The runtime has no live region, so the busy state is not announced when it
+  appears. Keep the action's label truthful, or move focus to the message the
+  work produced.
+- There is no built-in runner, timeout or retry policy. The caller owns the
+  promise, the `loading` flag and the close.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `effect` | `Match` picks the button variant the tone names |
+| `@gpuix/react` | the host props the dialog parts take, and the `PublicInstance` type Cancel's ref holds |
+| `@gpuixui/icons` | the `loader` mark the busy state paints |
+| this package | `dialog` (the surface, focus, Tab trap and dismiss stack), `internal/button` and `internal/theme` |
+
+No overlay package and no global state: the confirm workflow is two actions on
+the package's own dialog.
+
+## Related
+
+- **Dialog** — the general modal, for forms and flows that need their own layout.
+- **Alert** — where the failure or the outcome goes; the preview renders one in
+  the dialog body.
+- **Toast** — the transient confirmation after the work succeeds.
+- **Dropdown menu** — where an irreversible action is usually reached from.
+
+## Status
+
+`done` in `COMPONENTS.md`, with the runtime support marked `partial`: 7 native
+behaviour tests in `packages/components/src/behaviour/confirm-dialog.test.tsx`
+hold Cancel's initial focus, Enter cancelling without confirming, a confirm that
+reports once and leaves the dialog open, both actions and Escape inert while
+loading, the busy mark as the `loader` icon in the action's label role and named
+"In progress", the destructive tone's own label role on that mark, and the
+destructive fill itself. The two gaps the strip records are the dialog's
+`@gpuix/native@0.11.0` attributes (`aria-modal`, `aria-labelledby`) and the
+frozen busy mark.

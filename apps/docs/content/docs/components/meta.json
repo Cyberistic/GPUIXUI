@@ -9,6 +9,7 @@
     "alert",
     "---Overlays---",
     "dialog",
+    "confirm-dialog",
     "popover",
     "dropdown-menu",
     "command-menu",

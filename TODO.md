@@ -3210,7 +3210,51 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 109/109
+`[x]` `[██████████]` 110/110
+
+`[x]` Curate the **Confirmation dialog** page and hold its two safety decisions to
+the source — `/docs/components/confirm-dialog` served
+`packages/components/docs/confirm-dialog.mdx` (strategy 4: no preview, no install
+block, no copyable source) while the component encodes the pair MISSION names for
+"dialog open/close/confirm". The curated page shadows it and teaches the two
+decisions rather than the shape: Cancel holds the initial focus so `Enter` on an
+untouched dialog cancels, and `onConfirm` reports without closing so a failed
+save stays on screen; the workflow table, the dialog surface at `sm` with
+`showClose={false}` (no third exit), the keyboard contract (Enter, Tab trap,
+Escape and an outside press, both ignored while `loading`), all ten props, and
+the roles each part reads (Cancel is the local `Button`'s default `secondary`
+variant with the measured `borderStrong` edge; confirm is `primary` or
+`destructive`; the busy mark takes `actionOnColor`, and a disabled action paints
+the neutral `disabled`/`disabledForeground` pair rather than a fade). Two browser
+previews: `confirm-dialog-demo` runs the workflow and fails its first attempt, so
+the reason the confirm does not close the dialog is visible and "Try again"
+succeeds; `confirm-dialog-states` switches the two tones and the loading state.
+The page states both measured limits — no `aria-modal`/`aria-labelledby` on
+0.11.0, and a `loader` mark named "In progress" that does **not** spin (no
+transform) — and the 7 native cases that prove them.
+`component-page-truth.test.ts` gained the page's registry entry and one case,
+`hold the confirmation's safety decisions to the source`: it reads
+`initialFocus={() => cancel.current?.id ?? null}`, `dismissible={!loading}`, the
+cancel `<Button>`'s ref and `onOpenChange(false)`, the accept `<Button>`'s
+`onClick={onConfirm}` with no `onOpenChange`, the `loader`/`In progress` mark,
+`actionOnColor`, `size="sm"`, `showClose={false}`, the dialog's `sm: 360` and its
+`overlaySurfaceStyle(DIALOG_CONTENT, …, "lg")` call, and holds the page to the
+substantive sentences ("The caller runs the work and closes the dialog", "does
+**not** spin") while rejecting the retracted "closes after confirming". The
+curated-page, displacement, preview-registry, sidebar, index, theming-switch,
+strategy and ledger guards picked the page up (the index's curated list, the
+`/docs/theming` switch list, `docs/preview-strategy.md`'s "Curated today",
+`meta.json` and the apps/docs README all name it). Directions measured: deleting
+the caller-closes sentence fails with `expected … to contain 'The caller runs the
+work and closes the dialog'`; planting "closes after confirming" fails the
+retracted-claim assertion; restored, 15/15. The new case sits above the alert
+case because that one's printed-table regex begins on its own indented line and
+still desyncs `scripts/check-tests.ts` (the harness row in `TODO.md`), so a test
+placed after it is reported assertionless. Suite 72 files / 652 tests,
+`check-types`, `build`, `check:tests` and lint green; verified in the dev server:
+`/docs/components/confirm-dialog` renders both previews and the browser-preview
+note, `/docs/components` marks the row **Browser preview**, and
+`/api/search?query=ConfirmDialog` returns the page and its headings.
 
 `[x]` Teach the **role the card's edge really paints** — the curated Card page said
 the outline edge was the `input` role, "not the `border` role", and its Theming

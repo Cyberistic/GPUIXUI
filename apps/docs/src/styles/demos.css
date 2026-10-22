@@ -505,6 +505,67 @@
   margin-top: 18px;
 }
 
+/* ---- confirm dialog: mirrors components/src/confirm-dialog.tsx ----
+   The dialog's `sm` surface with no close control. Cancel is the local
+   `Button`'s default `secondary` variant, so it paints the measured boundary
+   role; Confirm is `primary` or, for `tone="danger"`, the `destructive` fill.
+   While `loading` both actions paint the neutral disabled pair rather than a
+   fade, because a fade composites a filled action's label into its own fill. */
+.gx-confirm-demo {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+}
+
+.gx-confirm {
+  width: min(360px, 100%);
+}
+
+.gx-confirm-states {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.gx-confirm-stage {
+  position: relative;
+  width: 400px;
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+}
+
+.gx-confirm .gx-btn-secondary {
+  border-color: var(--border-strong);
+}
+
+.gx-confirm .gx-btn:disabled {
+  background: var(--disabled);
+  color: var(--disabled-foreground);
+  opacity: 1;
+}
+
+.gx-confirm-error {
+  margin-bottom: 16px;
+}
+
+.gx-confirm .gx-alert {
+  width: auto;
+}
+
+.gx-confirm-busy {
+  width: 14px;
+  height: 14px;
+}
+
+.gx-confirm-status {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
 /* ---- popover: mirrors components/src/popover.tsx ---- */
 .gx-demo-popover {
   display: flex;

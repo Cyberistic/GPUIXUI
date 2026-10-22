@@ -45,6 +45,7 @@ components/alert.mdx         Curated: four tones, the composition, no announceme
 components/button.mdx        Curated: previews, install, source (the package page keeps the API)
 components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
 components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
+components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the frozen busy mark
 components/dialog.mdx        Curated: a real confirmation workflow
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/popover.mdx       Curated: anchored placement
