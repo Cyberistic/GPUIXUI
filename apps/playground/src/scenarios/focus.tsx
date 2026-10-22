@@ -16,6 +16,13 @@
  *   does **not** itself traverse in the `TestRenderer`, so traversal is
  *   asserted through the runtime's `focusNext`/`focusPrevious`.
  *
+ * **The traversal half is the `TestRenderer`'s, not a window's.** A real
+ * window's `Tab` traversal focuses the element and delivers no `onFocus`, so a
+ * component may not derive a state from it — the live `tabs-lifecycle` and
+ * `tooltip-lifecycle` probes read `focuses=0` and a tip that stays closed, and
+ * `README.md` records why. This scenario proves the offscreen channel works;
+ * it is not evidence that a traversal reaches a handler in an app.
+ *
  * The ring is painted from React state, not a `focusVisible` style: GPUix
  * 0.10.0 has no `:focus-visible` equivalent in `StyleDesc`, so a component
  * library must own this itself. Writing `focusVisible` in `style` would be
