@@ -150,16 +150,6 @@ The scrim being a role is the one deliberate departure from shadcn's
 `bg-black/30`: a literal black cannot follow a high-contrast theme, and the
 `overlay` role does.
 
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react` | `useGpuix`, `useWindowSize`, host props |
-| `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
-| `@gpuixui/icons` | the `x` glyph in the close control |
-| `@gpuixui/tw` | the `DIALOG_*` recipes |
-| this package | `internal/modal.ts` (open state, focus, Tab trap) and `internal/dismiss-layer.ts` (Escape layering) |
-
 ## Accessibility and limitations
 
 - `role="dialog"` with the required `label` as its accessible name.
@@ -175,6 +165,16 @@ The scrim being a role is the one deliberate departure from shadcn's
 - The top-right close control is an `@gpuixui/icons` `x` glyph inside an
   `IconButton` named `Close` — an icon and an accessible name, not a text glyph.
 - A dialog is not resizable, draggable or multi-window. One dialog per surface.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | `useGpuix`, `useWindowSize`, host props |
+| `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
+| `@gpuixui/icons` | the `x` glyph in the close control |
+| `@gpuixui/tw` | the `DIALOG_*` recipes |
+| this package | `internal/modal.ts` (open state, focus, Tab trap) and `internal/dismiss-layer.ts` (Escape layering) |
 
 ## Related
 

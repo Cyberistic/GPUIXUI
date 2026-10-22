@@ -185,8 +185,9 @@ that brand, so only the new line can fail the gate.
 ## The component page template
 
 Every page in `content/docs/components/` follows this order. Sections that do not
-apply (no sizes, no keyboard path) are **omitted, not faked**; the limitation is
-recorded instead.
+apply (no sizes, no variants) are **omitted, not faked**; the limitation is
+recorded instead. A **Keyboard** section is always present: when a component has
+no keyboard path, it says so rather than leaving the reader to guess.
 
 | Section | Contents |
 | ------- | -------- |

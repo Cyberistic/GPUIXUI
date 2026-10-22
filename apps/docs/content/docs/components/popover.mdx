@@ -113,16 +113,6 @@ is an ordinary button — `Enter` and `Space` toggle it.
 Shadows are a single theme step rather than a shadcn `shadow-lg` literal, so the
 popover and a dialog lift by the same rule.
 
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react` | `useGpuix` for the renderer's focus calls |
-| `@gpuix/react/floating` | `FloatingLayer` positioning, `useControllableState`, `mergeStyles` |
-| `@gpuixui/tw` | the `POPOVER_CONTENT` recipe |
-| `effect` | `Match` for the dismiss-key dispatch |
-| this package | the shared dismiss stack and the local button stand-in |
-
 ## Accessibility and limitations
 
 - `aria-expanded` is on the trigger.
@@ -137,6 +127,16 @@ popover and a dialog lift by the same rule.
   snap margin wins at the edges.
 - An outside press hands focus to whatever was pressed, so focus is not restored
   to the trigger on that path. Escape is the keyboard path that restores it.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | `useGpuix` for the renderer's focus calls |
+| `@gpuix/react/floating` | `FloatingLayer` positioning, `useControllableState`, `mergeStyles` |
+| `@gpuixui/tw` | the `POPOVER_CONTENT` recipe |
+| `effect` | `Match` for the dismiss-key dispatch |
+| this package | the shared dismiss stack and the local button stand-in |
 
 ## Related
 

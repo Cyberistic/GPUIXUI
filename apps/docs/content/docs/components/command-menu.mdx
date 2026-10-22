@@ -155,15 +155,6 @@ one family.
 The preview above paints from those roles, so the sidebar's platform switch
 repaints and re-shapes it with every other preview on the site.
 
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react` | host props, events and the `PublicInstance` the input ref holds |
-| `@gpuix/react/floating` | `mergeStyles` for the parts' style contract |
-| `@gpuixui/tw` | the `COMMAND_*` recipes |
-| `effect` | `Array`, `HashSet`, `Option` and `String` for the matching fold |
-
 ## Accessibility and limitations
 
 - The dialog is named `"Command menu"`, the input is `"Search commands"`, and
@@ -181,6 +172,15 @@ repaints and re-shapes it with every other preview on the site.
   follow the same topmost-layer rule as every other overlay.
 - `shortcut` is a label. Nothing is bound, and a palette without an app-level
   shortcut is a palette nobody can open.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | host props, events and the `PublicInstance` the input ref holds |
+| `@gpuix/react/floating` | `mergeStyles` for the parts' style contract |
+| `@gpuixui/tw` | the `COMMAND_*` recipes |
+| `effect` | `Array`, `HashSet`, `Option` and `String` for the matching fold |
 
 ## Related
 

@@ -10,6 +10,15 @@ import { describe, expect, it } from "vitest";
  * package's own pages are exempt: they are the component's doc file, not a
  * curated page.
  *
+ * `Keyboard` is on the list because MISSION.md requires keyboard notes on every
+ * component page and the policy's table has a `Keyboard` row; this guard was
+ * behind its own policy and would have let a page ship without one.
+ *
+ * The policy's template table is parsed, so the two cannot disagree on a
+ * section's name or order. That cross-check found a second drift: the table put
+ * Accessibility and limitations before Dependencies (MISSION.md's order), while
+ * every curated page and the guard had the two the other way round.
+ *
  * The section index is held to the same folder: it names every curated page (it
  * had listed four after the fifth landed) and its "How to read a page" table
  * can only offer a section some page actually uses. It also states how a reader
@@ -54,13 +63,28 @@ const required = [
   "Installation",
   "Usage",
   "Composition",
+  "Keyboard",
   "API reference",
   "Theming",
-  "Dependencies",
   "Accessibility and limitations",
+  "Dependencies",
   "Related",
   "Status",
 ] as const;
+
+const policy = readFileSync(new URL("docs/preview-strategy.md", repo), "utf8");
+
+/** The `Section` column of the policy's component-page template table. */
+const policySections = (): ReadonlyArray<string> => {
+  const start = policy.indexOf("## The component page template");
+  const end = policy.indexOf("\n## ", start + 1);
+  return policy
+    .slice(start, end === -1 ? undefined : end)
+    .split("\n")
+    .filter((line) => line.startsWith("|") && !/^\|[\s:|-]+\|$/.test(line))
+    .map((line) => line.replace(/^\|/, "").split("|")[0]?.trim() ?? "")
+    .filter((label) => label !== "" && label !== "Section");
+};
 
 describe("the curated component pages", () => {
   it("exist, so the folder cannot empty out unnoticed", () => {
@@ -83,6 +107,30 @@ describe("the curated component pages", () => {
     });
 
     expect(missing).toEqual([]);
+  });
+
+  it("requires the sections its policy declares, in the policy's order", () => {
+    // The guard was behind its own policy: `docs/preview-strategy.md`'s template
+    // table has a `Keyboard` row, MISSION.md requires keyboard notes on every
+    // component page, and the required list omitted it — so a page could drop its
+    // keyboard contract and stay green. The table is parsed rather than trusted,
+    // so a renamed or reordered row fails here too.
+    const declared = policySections();
+    const undeclared = required.filter((section) => !declared.includes(section));
+    expect(
+      undeclared,
+      "the template policy has no row for these required sections",
+    ).toEqual([]);
+
+    const positions = required.map((section) => declared.indexOf(section));
+    const ascending = positions.every(
+      (position, index) =>
+        index === 0 || position > (positions[index - 1] ?? -1),
+    );
+    expect(
+      ascending,
+      "the guard's section order disagrees with the policy",
+    ).toBe(true);
   });
 
   it("open with a preview and a sentence saying what the component is not", () => {

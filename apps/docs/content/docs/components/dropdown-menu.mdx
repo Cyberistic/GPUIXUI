@@ -151,16 +151,6 @@ without owning the highlight.
 The destructive row is a tone, not a confirmation. Pair it with a **confirmation
 dialog** when the action cannot be undone.
 
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react` | `useGpuix` for the renderer's focus calls |
-| `@gpuix/react/floating` | `FloatingLayer` positioning while open |
-| `@gpuixui/tw` | the `MENU_*` and `MENU_CONTENT` recipes the surface and rows compile |
-| `effect` | `Match` for the key dispatch and the type-ahead branch |
-| this package | the shared dismiss stack, the local button stand-in and the menu row core |
-
 ## Accessibility and limitations
 
 - `role="menu"` names the surface; rows are `menuitem` or `menuitemcheckbox`,
@@ -178,6 +168,16 @@ dialog** when the action cannot be undone.
 - Type-ahead is a prefix match with no fuzzy scoring.
 - The preview above is a browser reproduction: it follows the same focus,
   highlight and dismissal rules, but the shipped component runs through GPUix.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | `useGpuix` for the renderer's focus calls |
+| `@gpuix/react/floating` | `FloatingLayer` positioning while open |
+| `@gpuixui/tw` | the `MENU_*` and `MENU_CONTENT` recipes the surface and rows compile |
+| `effect` | `Match` for the key dispatch and the type-ahead branch |
+| this package | the shared dismiss stack, the local button stand-in and the menu row core |
 
 ## Related
 

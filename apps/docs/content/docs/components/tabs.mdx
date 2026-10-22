@@ -142,15 +142,6 @@ Selection is painted per trigger rather than by a shared sliding indicator: the
 native side has no measured overlay, and the browser demo's sliding bar is a
 preview-only affordance. `COMPONENTS.md` records the native gap.
 
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react` | host props, events, `PublicInstance` for the roving tab stop |
-| `@gpuix/react/floating` | `mergeStyles`, `useControllableState` |
-| `@gpuixui/tw` | the `TABS_*` recipes |
-| `effect` | `Match`, `Array` and `Option` for the selection fold |
-
 ## Accessibility and limitations
 
 - `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
@@ -163,6 +154,15 @@ preview-only affordance. `COMPONENTS.md` records the native gap.
   list — measured in the real renderer.
 - Vertical tabs are a layout and keyboard choice, not an ARIA attribute; the
   attribute is unavailable in this runtime.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | host props, events, `PublicInstance` for the roving tab stop |
+| `@gpuix/react/floating` | `mergeStyles`, `useControllableState` |
+| `@gpuixui/tw` | the `TABS_*` recipes |
+| `effect` | `Match`, `Array` and `Option` for the selection fold |
 
 ## Related
 
