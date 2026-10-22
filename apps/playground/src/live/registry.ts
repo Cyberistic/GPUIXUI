@@ -217,6 +217,12 @@ export const liveRegistry = [
     capability: "overlay",
   },
   {
+    id: "combobox-lifecycle",
+    title:
+      "Overlay: the shipped Combobox takes focus in its search field, filters by typed query, skips a disabled row and dismisses on Escape or an outside press",
+    capability: "overlay",
+  },
+  {
     id: "virtual-tree-lifecycle",
     title:
       "Tree: a 4 000-row file tree paints only its window, opens in place, moves real focus by key and reveals a deep index",

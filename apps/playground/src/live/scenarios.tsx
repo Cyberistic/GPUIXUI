@@ -27,6 +27,12 @@ import {
   type Theme,
 } from "@gpuixui/tokens";
 import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
   CommandMenu,
   CommandMenuEmpty,
   CommandMenuInput,
@@ -141,6 +147,7 @@ import {
   voidRow,
   type PageDirection,
 } from "./loading-row.js";
+import { REVIEWERS } from "./combobox.js";
 import { listAnchorOf } from "./host.js";
 import {
   TRANSCRIPT_PAGE_ROWS,
@@ -3838,6 +3845,283 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
     yield* ctx.host.capture("message-scroller-rerolled");
+  });
+
+/**
+ * `combobox-lifecycle` — the shipped `Combobox` in a real window.
+ *
+ * The component wraps GPUix's headless combobox, so focus, the active row and
+ * the keyboard are the runtime's; its 21 behaviour tests run in a
+ * `TestRenderer`, where `renderer.focusElement` lands immediately. A window is
+ * the only place that proves the popup takes the focus from a press, that a
+ * typed query filters the painted rows, that a disabled row is skipped by the
+ * arrow path, and that Escape/outside press close it without stealing the
+ * focus back.
+ */
+const ComboboxProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [value, setValue] = useState<string | null>(null);
+  const [changes, setChanges] = useState(0);
+  const [presses, setPresses] = useState(0);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: 420,
+        gap: 8,
+      }}
+    >
+      <text
+        testId="cb-readout"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`value=${value ?? "none"} changes=${changes} presses=${presses}`}
+      </text>
+      <div style={{ display: "flex", flexDirection: "row", gap: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: 420,
+            gap: 8,
+          }}
+        >
+          <Combobox
+            options={REVIEWERS}
+            onValueChange={(next) => {
+              setValue(typeof next === "string" ? next : null);
+              setChanges((current) => current + 1);
+            }}
+          >
+            <ComboboxTrigger
+              testId="cb-trigger"
+              label="Assign reviewer"
+              placeholder="Assign reviewer"
+            />
+            <ComboboxContent>
+              <ComboboxInput />
+              <ComboboxList />
+              <ComboboxEmpty />
+            </ComboboxContent>
+          </Combobox>
+        </div>
+        <Pressable
+          testId="cb-outside"
+          onClick={() => setPresses((current) => current + 1)}
+        >
+          Outside control
+        </Pressable>
+      </div>
+    </div>
+  );
+};
+
+const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("cb-trigger");
+    yield* Effect.sleep(SETTLE);
+
+    // 1. Closed at rest.
+    yield* ctx.expectEqual(
+      "the combobox starts closed with nothing chosen",
+      yield* ctx.host.text("cb-readout"),
+      "value=none changes=0 presses=0",
+    );
+    yield* ctx.expectEqual(
+      "the trigger shows its placeholder",
+      yield* ctx.host.text("cb-trigger"),
+      "Assign reviewer",
+    );
+    yield* ctx.expectEqual(
+      "a closed combobox paints no list",
+      yield* paintedAt(ctx, "combobox-content"),
+      false,
+    );
+
+    // 2. A press opens the list below the trigger and moves focus in.
+    const trigger = yield* paintedBox(ctx, "cb-trigger");
+    yield* ctx.host.click("cb-trigger");
+    yield* Effect.sleep(SETTLE);
+    const surface = yield* paintedBox(ctx, "combobox-content");
+    yield* ctx.expectEqual(
+      "the search field takes the focus when the list opens",
+      yield* focusedId(ctx),
+      "combobox-input",
+    );
+    yield* ctx.expectNear(
+      "the list opens one gap below the trigger",
+      surface.y,
+      trigger.y + trigger.height + 4,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the list starts on the trigger's edge",
+      surface.x,
+      trigger.x,
+      2,
+    );
+    yield* Effect.sleep(Duration.millis(200));
+    yield* ctx.expectEqual(
+      "the first option paints while the query is empty",
+      yield* paintedAt(ctx, "combobox-option-ada"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the last option paints while the query is empty",
+      yield* paintedAt(ctx, "combobox-option-margaret"),
+      true,
+    );
+    yield* ctx.host.capture("combobox-open");
+
+    // 3. Typing filters by the component's ranking.
+    yield* ctx.host.key("g");
+    yield* ctx.host.key("r");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "typing keeps the matching row",
+      yield* paintedAt(ctx, "combobox-option-grace"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "typing drops the rows that do not match",
+      Arr.every(
+        yield* Effect.all(
+          [
+            paintedAt(ctx, "combobox-option-ada"),
+            paintedAt(ctx, "combobox-option-alan"),
+            paintedAt(ctx, "combobox-option-linus"),
+            paintedAt(ctx, "combobox-option-margaret"),
+          ],
+          { concurrency: "unbounded" },
+        ),
+        (present) => !present,
+      ),
+      true,
+    );
+    yield* ctx.host.capture("combobox-filtered");
+
+    // 4. Enter selects the highlighted match, closes and restores focus.
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter selects the highlighted match",
+      yield* ctx.host.text("cb-readout"),
+      "value=grace changes=1 presses=0",
+    );
+    yield* ctx.expectEqual(
+      "the trigger paints the chosen label",
+      yield* ctx.host.text("cb-trigger"),
+      "Grace Hopper",
+    );
+    yield* ctx.expectEqual(
+      "choosing closes the list",
+      yield* paintedAt(ctx, "combobox-content"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "choosing returns the focus to the trigger",
+      yield* focusedId(ctx),
+      "cb-trigger",
+    );
+
+    // 5. Arrows move the highlight and skip the disabled row.
+    yield* ctx.host.click("cb-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "three arrows skip the disabled row and Enter chooses the next",
+      yield* ctx.host.text("cb-readout"),
+      "value=linus changes=2 presses=0",
+    );
+    yield* ctx.host.capture("combobox-selected");
+
+    // 6. A query that only matches a disabled row chooses nothing.
+    yield* ctx.host.click("cb-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("a");
+    yield* ctx.host.key("l");
+    yield* ctx.host.key("a");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the disabled row still paints",
+      yield* paintedAt(ctx, "combobox-option-alan"),
+      true,
+    );
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter cannot choose a disabled row",
+      yield* ctx.host.text("cb-readout"),
+      "value=linus changes=2 presses=0",
+    );
+    yield* ctx.expectEqual(
+      "a refused choice leaves the list open",
+      yield* paintedAt(ctx, "combobox-content"),
+      true,
+    );
+
+    // 7. Escape closes and returns the focus; the value is untouched.
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape closes the list",
+      yield* paintedAt(ctx, "combobox-content"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "Escape returns the focus to the trigger",
+      yield* focusedId(ctx),
+      "cb-trigger",
+    );
+    yield* ctx.expectEqual(
+      "Escape leaves the chosen value alone",
+      yield* ctx.host.text("cb-readout"),
+      "value=linus changes=2 presses=0",
+    );
+
+    // 8. The empty state, and an outside press that dismisses without focus.
+    yield* ctx.host.click("cb-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("z");
+    yield* ctx.host.key("z");
+    yield* ctx.host.key("z");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a query that matches nothing paints no row",
+      yield* paintedAt(ctx, "combobox-option-ada"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "the empty slot paints its message",
+      yield* ctx.host.text("combobox-empty"),
+      "No matches",
+    );
+    yield* ctx.host.capture("combobox-empty");
+
+    yield* ctx.host.click("cb-outside");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an outside press reaches its control",
+      yield* ctx.host.text("cb-readout"),
+      "value=linus changes=2 presses=1",
+    );
+    yield* ctx.expectEqual(
+      "an outside press dismisses the list",
+      yield* paintedAt(ctx, "combobox-content"),
+      false,
+    );
   });
 
 /**
@@ -8536,6 +8820,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "select-lifecycle",
     view: () => <SelectProbe />,
     steps: selectSteps,
+  },
+  "combobox-lifecycle": {
+    id: "combobox-lifecycle",
+    view: () => <ComboboxProbe />,
+    steps: comboboxSteps,
   },
   "selection-lifecycle": {
     id: "selection-lifecycle",

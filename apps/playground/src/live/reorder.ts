@@ -58,8 +58,6 @@ export const moveRow = <A>(
 ): ReadonlyArray<A> =>
   pipe(
     Arr.get(order, from),
-    Option.flatMap((value) =>
-      Arr.insertAt(Arr.remove(order, from), to, value),
-    ),
+    Option.flatMap((value) => Arr.insertAt(Arr.remove(order, from), to, value)),
     Option.getOrElse(() => order),
   );

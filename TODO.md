@@ -513,7 +513,31 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 59/59
+`[x]` `[██████████]` 60/60
+
+`[x]` Land the `combobox-lifecycle` live probe and measure **the picker a
+      window had never driven** — the shipped `Combobox` wraps GPUix's headless
+      combobox, so focus, the active row and the keyboard are the runtime's, and
+      its 21 behaviour tests ran in a `TestRenderer` where `focusElement` lands
+      immediately. Measured on 0.11.0: the list paints one 4px gap below the
+      trigger on its start edge and the focus enters `combobox-input`; typing
+      `gr` leaves only `combobox-option-grace` painted; `Enter` selects it
+      (`value=grace changes=1`), repaints the trigger and returns the focus;
+      three `down`s skip the disabled `alan` and `Enter` chooses `linus`;
+      typing `ala` paints the disabled row, and `Enter` changes nothing and
+      leaves the list open; `Escape` closes and restores focus; `zzz` paints
+      `No matches`; an outside press beside the list reaches its control
+      (`presses=1`) and dismisses. 27 checks, `--only combobox-lifecycle`, green
+      on 0.11.0. One measured rule: the arrow highlight is React state, so a key
+      acting on it needs a frame — three arrows and an `Enter` sent back-to-back
+      read the pre-arrow highlight (`value=grace` instead of `linus`). Two
+      negative controls measured (enabling the disabled row:
+      `expected "value=linus changes=2", got "value=alan changes=2"`; dropping
+      the settle before `Enter`: `got "value=grace changes=1"`, exit `1` each).
+      `src/live/combobox.test.ts` (2 cases) holds the option order and the
+      `ala`-only query the probe's checks stand on. Evidence:
+      `apps/playground/README.md` §`combobox-lifecycle`,
+      `.artifacts/live/combobox-*.png`
 
 `[x]` Land the `message-scroller-lifecycle` live probe and measure **a shipped
       scroller that must not yank its reader** — the component's pin rule

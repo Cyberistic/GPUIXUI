@@ -37,10 +37,10 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-thirty-five probes a real window can prove, of which nine mount shipped
+thirty-six probes a real window can prove, of which ten mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
-the command palette, the tabs, the popover, the message scroller and the modal
-focus rule), five mount
+the command palette, the tabs, the popover, the message scroller, the combobox
+and the modal focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
@@ -1711,6 +1711,54 @@ with `down`+`Enter` (`value=monthly changes=2`) and closes on `Escape` with the
 focus back on its trigger. Negative control, measured: deriving the row locators
 from a constant fails `a press on the shipped trigger opens its list` with
 `expected true, got false` (exit `1`); restored, 36 checks green.
+
+### `combobox-lifecycle` — measured on 0.11.0 here
+
+The shipped `Combobox` in a real window. Its 21 behaviour tests run in a
+`TestRenderer`, where `renderer.focusElement` lands immediately; a window is the
+only place that proves the popup takes the focus from a press, that a typed query
+filters the painted rows, that the arrow path skips a disabled row, and that
+`Escape`/an outside press close it without stealing the focus back. Unlike the
+`Select` wrapper, every part the probe addresses is exported test-id-able: the
+trigger takes one, a row is `combobox-option-<value>`, and the surface, input and
+empty slot have fixed ids.
+
+The option order is the measurement: `ada`, `grace`, a disabled `alan`, then
+`linus` and `margaret`. Three arrows from the top walk `ada` → `grace` → past
+`alan` → `linus`.
+
+| State | Measured |
+| ----- | -------- |
+| at rest | the trigger paints `Assign reviewer`, the readout is `value=none changes=0 presses=0`, and no list is in the tree |
+| one press on the trigger | the list paints one `4`px gap below the trigger on its start edge and the focus moves **into the search field** (`combobox-input`) |
+| typing `gr` | only `combobox-option-grace` paints; the other four rows are gone |
+| `Enter` | selects the highlighted match (`value=grace changes=1`), the trigger repaints `Grace Hopper`, the list unpaints and the focus returns to the trigger |
+| three `down`s then `Enter` | skips the disabled row and chooses `linus` (`value=linus changes=2`) |
+| typing `ala` | the disabled `Alan Turing` row paints; `Enter` changes nothing and leaves the list open |
+| `Escape` | closes the list, returns the focus to the trigger and leaves `linus` selected |
+| typing `zzz` | no row paints and the empty slot reads `No matches` |
+| an outside press | reaches the control beside the list (`presses=1`) and dismisses it |
+
+27 checks, `--only combobox-lifecycle`, green on 0.11.0.
+
+One timing rule came out of it, and it is the component's, not the harness's:
+the arrow highlight is React state, so a key that acts on the highlight must
+arrive after a frame. Three `down`s and an `Enter` sent back-to-back read the
+pre-arrow highlight — measured as `value=grace` instead of `linus` when the
+settle before `Enter` was dropped. A person's key repeat is far slower than a
+frame; an automation script is not.
+
+Two negative controls measured, each exit `1`: enabling the disabled row fails
+`three arrows skip the disabled row and Enter chooses the next` with
+`expected "value=linus changes=2", got "value=alan changes=2"`, and dropping the
+settle between the last arrow and `Enter` fails the same check with
+`got "value=grace changes=1"`. Also measured while building: the first outside
+control sat under the open list, so the press reached the list (`presses=0`);
+the target now sits beside the combobox.
+
+Evidence: `.artifacts/live/combobox-open.png`,
+`.artifacts/live/combobox-filtered.png`, `.artifacts/live/combobox-selected.png`,
+`.artifacts/live/combobox-empty.png`.
 
 ### `virtual-tree-lifecycle` — measured on 0.11.0 here
 
