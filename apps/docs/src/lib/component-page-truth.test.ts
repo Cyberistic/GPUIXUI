@@ -214,6 +214,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/tabs.tsx",
   },
   {
+    file: "time-picker.mdx",
+    row: "Time pickers",
+    suite: "packages/components/src/behaviour/time-picker.test.tsx",
+    shadowed: "packages/components/docs/time-picker.mdx",
+    source: "packages/components/src/time-picker.tsx",
+  },
+  {
     file: "toast.mdx",
     row: "Toasts / notifications",
     suite: "packages/components/src/behaviour/toast.test.tsx",
@@ -1761,6 +1768,103 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("`spacing.md`");
     // …and the retracted gap: a disabled field that a pointer could still clear.
     expect(text).not.toContain("press handler is still bound");
+  });
+
+  it("holds the time field's clock, its clamp and its hint seam to the source", () => {
+    // A time field can drift in four silent ways: an arrow that carries at the
+    // hour but not at midnight, a typed segment that clamps the value while its
+    // text keeps the out-of-range digits, a fixed geometry the platform switch
+    // cannot move, or a hint painted by the host instead of the published seam
+    // (the host's placeholder is a fixed grey that ignores the theme). Each is
+    // read from the module that decides it, not trusted to the page.
+    const page = pages.find(
+      (candidate) => candidate.file === "time-picker.mdx",
+    );
+    expect(
+      page,
+      "the time-picker page is not in the curated set",
+    ).toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    const clock = read("packages/components/src/time-picker/time.ts");
+    // One clock: typing, arrows and midnight all go through `addMinutes`.
+    expect(clock).toContain("(((time.hours * 60 + time.minutes + amount) % 1440) + 1440) % 1440");
+    expect(source).toContain('Match.when("up", () => shift(segment === "hours" ? 60 : step))');
+    expect(source).toContain('Match.when("down", () => shift(segment === "hours" ? -60 : -step))');
+    // The text clamps in the same edit as the value, and erasing clears both.
+    expect(source).toContain("Number(digits) > max ? padSegment(clamped) : digits");
+    expect(source).toContain("if (digits === \"\") {");
+    expect(source).toContain("composeIsoTime(nextHours, nextMinutes)");
+    // A disabled field is read-only, dimmed and out of the tab order; there is
+    // no `aria-disabled` in 0.11.0 for the page to promise.
+    expect(source).toContain("readOnly: disabled");
+    expect(source).toContain("tabIndex: disabled ? -1 : 0");
+    expect(source).toContain("opacity: disabled ? 0.5 : 1");
+    expect(source).not.toContain("aria-disabled=");
+    // The field is the density's `md` box; the segment and the clear target are
+    // the component's own fixed metrics.
+    expect(source).toContain("const SEGMENT_WIDTH = 26;");
+    expect(source).toContain('height: controlHeight(theme, "md")');
+    expect(source).toContain("width: targetSize.minimum");
+    expect(source).toContain("height: targetSize.minimum");
+    expect(source).toContain("renderer?.focusElement?.(instance.id)");
+    expect(source).toContain("resolveStyle(style, state)");
+    expect(source).toContain("activationHandlers(clear)");
+    // The hint is the published seam, over the field's own fill.
+    expect(source).toContain("fieldHint(");
+    expect(source).toContain("renderFieldHint(");
+    expect(source).toContain('nativeTextTheme(theme, "input")');
+    // No spinbutton: the two segments are real `<input>` hosts inside a group,
+    // because the runtime has no `aria-valuenow` to announce.
+    expect(source).toContain("const props: InputProps = {");
+    expect(source).toContain('"aria-label": `${groupLabel} ${segment}`');
+    expect(source).toContain('role="group"');
+
+    const recipes = read("packages/tw/src/recipes.ts");
+    expect(recipes).toContain(
+      '"flex flex-row items-center gap-0.5 px-1.5 bg-input border border-border rounded-md"',
+    );
+    expect(recipes).toContain(
+      '"text-sm font-sans text-input-foreground text-center h-full p-0"',
+    );
+    expect(recipes).toContain(
+      '"text-sm font-sans text-muted-foreground select-none"',
+    );
+    expect(recipes).toContain("cursor-pointer");
+
+    // The preview draws those metrics and takes the height from the theme.
+    const css = read("apps/docs/src/styles/demos.css");
+    const fieldStart = css.indexOf(".gx-time-field {");
+    const field = css.slice(fieldStart, css.indexOf("}", fieldStart));
+    expect(field).toContain("var(--control-height-md)");
+    expect(field).toContain("background: var(--input)");
+    const segmentStart = css.indexOf(".gx-time-segment {");
+    const segment = css.slice(segmentStart, css.indexOf("}", segmentStart));
+    expect(segment).toContain("width: 26px");
+    const clearStart = css.indexOf(".gx-time-clear {");
+    const clear = css.slice(clearStart, css.indexOf("}", clearStart));
+    expect(clear).toContain("var(--target-size)");
+    expect(clear).not.toContain("width: 18px");
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("24-hour");
+    expect(text).toContain("one clock");
+    expect(text).toContain("wrapping from `23:59` to `00:00`");
+    expect(text).toContain("`density.controlHeight.md`");
+    expect(text).toContain("26px");
+    expect(text).toContain("6px");
+    expect(text).toContain("24px");
+    expect(text).toContain("`placeholder`");
+    expect(text).toContain("No `aria-valuenow`");
+    expect(text).toContain("No caret position");
+    expect(text).toContain("declared at rest");
+    expect(text).toContain("10 native behaviour tests");
+    // The retracted claim: the traversal does run the segment's `onFocus` on
+    // 0.11.0 (re-measured on `tooltip-lifecycle` and `tabs-lifecycle`), so a page
+    // must not rest the ring on the event's absence.
+    expect(text).not.toContain("focuses=0");
+    expect(text).not.toContain("does not run its `onFocus`");
   });
 
   it("hold the tip's clock and its trigger rule to the runtime", () => {

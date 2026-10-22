@@ -62,6 +62,7 @@ components/search-input.mdx  Curated: the Escape rule, the 24px clear target, th
 components/select.mdx        Curated: the 320px list, the row that reveals itself
 components/switch.mdx        Curated: the left-inset slide, the 24px band, the cleared dependent
 components/tabs.mdx          Curated: the measured indicator
+components/time-picker.mdx   Curated: one clock behind typing, arrows and midnight
 components/toast.mdx         Curated: the bounded queue, one action, the hold
 components/tooltip.mdx       Curated: the tip's clock, the traversal that never opens it
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
@@ -106,6 +107,8 @@ src/components/docs/combobox-preview.ts The combobox preview's ranking, highligh
 src/components/docs/combobox-demo.tsx     The combobox's two browser renderings and their source strings
 src/components/docs/date-picker-preview.ts The picker preview's grid, month arithmetic and clamped key moves
 src/components/docs/date-picker-demo.tsx  The date picker's two browser renderings and their source strings
+src/components/docs/time-picker-preview.ts The time field's clock, its segment clamp and its blur padding
+src/components/docs/time-picker-demo.tsx  The time picker's two browser renderings and their source strings
 src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss stack and filter rules
 src/components/docs/drawer-demo.tsx       The drawer's two browser renderings and their source strings
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules

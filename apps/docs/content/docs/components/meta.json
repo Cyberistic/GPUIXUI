@@ -17,6 +17,7 @@
     "field",
     "form",
     "date-picker",
+    "time-picker",
     "select",
     "combobox",
     "search-input",

@@ -1,0 +1,262 @@
+---
+title: Time picker
+description: One time of day, entered as an HH:mm hour and minute field — 24-hour, clamped per segment, and one clock behind typing and the arrow keys.
+---
+
+`TimePicker` is a field with two labelled segments — hours and minutes — and an
+optional clear control. The public value is `HH:mm` in 24-hour form, or `null`
+for "no time": never a `Date`, never a locale string, never a timestamp. The
+repo has no i18n layer, so AM/PM is a message-catalogue decision rather than a
+prop this control can honor.
+
+It is a **field, not a trigger with a popup**. The two segments are real GPUix
+`<input>` hosts, not an invented `role="spinbutton"`: `@gpuix/native@0.11.0`
+publishes `aria-valuetext` but no `aria-valuenow`, so a custom spinbutton could
+not announce its own value while a text input announces one natively.
+
+<ComponentPreview name="time-picker-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="TimePicker" />
+
+<ComponentSource name="timePicker" file="packages/components/src/time-picker.tsx" />
+
+## Usage
+
+```tsx
+import {
+  TimePicker,
+  TimePickerClear,
+  TimePickerSegment,
+  TimePickerSeparator,
+} from "@gpuixui/components/time-picker";
+import { Button } from "@gpuixui/primitives";
+import { useState } from "react";
+
+export const DeploymentWindow = () => {
+  const [opens, setOpens] = useState<string | null>("09:30");
+  const [saved, setSaved] = useState<string | null>(null);
+
+  return (
+    <>
+      <TimePicker
+        clearable
+        label="Opens at"
+        minuteStep={15}
+        onValueChange={(next) => {
+          setOpens(next);
+          setSaved(null);
+        }}
+        value={opens}
+      >
+        <TimePickerSegment segment="hours" />
+        <TimePickerSeparator />
+        <TimePickerSegment segment="minutes" />
+        <TimePickerClear />
+      </TimePicker>
+      {/* `opens` is `HH:mm` or `null`; the app decides what "not set" means. */}
+      <Button disabled={opens === null} onClick={() => setSaved(opens)}>
+        {saved === null ? "Save window" : `Saved ${saved}`}
+      </Button>
+    </>
+  );
+};
+```
+
+`value` is the controlled form and `undefined` makes the field uncontrolled, so
+a picker with a `defaultValue` still reports every change through
+`onValueChange`. A controlled field whose consumer ignores a change snaps back to
+the prop on the next render, exactly like the native component.
+
+## States
+
+<ComponentPreview name="time-picker-states" />
+
+| State | What the field shows |
+| ----- | -------------------- |
+| empty | both segments paint their `HH` / `MM` hints in the `placeholder` role; no clear control |
+| set | two padded digits in `inputForeground`; Clear appears only when `clearable` |
+| quarter-hour | the same field with `minuteStep={15}`: arrows move 15 minutes, typed minutes still accept `00..59` |
+| midnight | `23:59` + `ArrowUp` is `00:00`; `00:00` + `ArrowDown` is `23:59` |
+| disabled | read-only, half opacity, out of the tab order, no clear control, no focus ring |
+
+The table is the state set, not a size scale: the field has one height — the
+theme's `density.controlHeight.md` — and no variants.
+
+## The clock
+
+Every edit goes through one clock function, so hours and minutes cannot disagree
+at an hour edge or at midnight.
+
+- **Typing keeps the last two digits** of the segment (the host has no
+  `maxLength`). A number above the segment's maximum clamps immediately: `99` in
+  hours becomes `23`, in minutes `59`. The text and the value never disagree.
+- **One typed segment completes the value**, with the other segment read as
+  zero. Typing `9` in hours reports `09:00` while the minutes segment still shows
+  nothing, which keeps the second keystroke predictable.
+- **Erasing a segment clears the whole time** — `null` and both segments empty. A
+  half-erased time is not a value.
+- **Blur pads both segments** to two digits, and a blank one becomes `00`.
+- **Arrows** move hours by a whole hour and minutes by `minuteStep`, carrying
+  through `09:59 + 1` = `10:00` and wrapping from `23:59` to `00:00` in either
+  direction. An empty field steps from midnight.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `TimePicker` | the value, the text state, the clock, the field chrome and the group name |
+| `TimePickerSegment` | one real `<input>`: `segment="hours"` (`00..23`) or `"minutes"` (`00..59`) |
+| `TimePickerSeparator` | a static, non-focusable `:` |
+| `TimePickerClear` | the reset control; renders only with `clearable` and a value |
+
+`TimePickerSegment`, `TimePickerSeparator` and `TimePickerClear` are declared
+directly inside `TimePicker`. A part declared outside its parent throws with a
+message naming the parent rather than painting a field with no state. The root
+owns the value and the group name; each part owns its own place, so a caller can
+reorder the two segments or omit the clear control.
+
+`TimePicker` is not a date field: it holds a time of day, so it composes beside
+**Date picker** when a form needs both. For a duration or a count, the Number
+field is the control.
+
+## Keyboard
+
+| Key | Where | Contract |
+| --- | ----- | -------- |
+| digits | a segment | edits that segment; out-of-range digits clamp in the text and the value |
+| `ArrowUp` / `ArrowDown` | hours | ± one hour, carrying and wrapping across midnight |
+| `ArrowUp` / `ArrowDown` | minutes | ± `minuteStep` minutes (default 1), carrying and wrapping |
+| `Tab` / `Shift+Tab` | the field | moves between the two segments, then out of the field |
+| `Enter` / `Space` | the clear control | clears, reports `null` and returns the focus to the hours segment |
+
+The clear control is a `role="button"` with its own tab stop and the same
+keyboard ring the segments declare.
+
+## API reference
+
+### `TimePicker`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `string \| null` | — | the controlled `HH:mm`; `undefined` makes the field uncontrolled |
+| `defaultValue` | `string \| null` | `null` | the opening time when uncontrolled |
+| `onValueChange` | `(value: string \| null) => void` | none | every accepted edit, including the clear path |
+| `label` | `string` | `"Time"` | the group's accessible name, and the prefix of each segment's name |
+| `minuteStep` | `number` | `1` | the arrow-key step, normalised to an integer in `1..59` |
+| `clearable` | `boolean` | `false` | renders the clear control while a time is set |
+| `disabled` | `boolean` | `false` | both segments become `readOnly`, leave the tab order, and no clear is rendered |
+| `testId` | `string` | `"time-picker"` | the base id of the parts: `-hours`, `-minutes`, `-clear` |
+| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `children` | `ReactNode` | none | the segments, separator and clear control, directly inside |
+
+### `TimePickerSegment`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `segment` | `"hours" \| "minutes"` | required | which half this input edits, and the maximum it clamps to |
+| `style` | `StateStyle<TimePickerSegmentState>` | the recipe | a style, or a function of `{ disabled, focused }` |
+
+### `TimePickerSeparator`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | `":"` | the painted separator; it takes no focus |
+
+### `TimePickerClear`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `label` | `string` | `"Clear time"` | the control's accessible name |
+
+Every part also takes the GPUix host props and merges `style` last.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| field fill | `input` |
+| field edge | `border`, `borderWidth.thin` |
+| segment value | `inputForeground` |
+| segment hint | `placeholder` |
+| separator | `mutedForeground` |
+| clear glyph | `mutedForeground` |
+| clear hover wash | `accent`, with the `accentForeground` label |
+| focus ring | `ring` at `borderWidth.strong`, declared at rest on each segment and on the clear control |
+| disabled field | half opacity, with the `input` / `inputForeground` pair it keeps |
+
+The platform switch re-heights the field through the platform's
+`density.controlHeight.md` (macOS 28, Linux 36, Windows 32). Three metrics stay
+fixed like the carousel's dot: the segment is **26px** wide (`SEGMENT_WIDTH`),
+the recipe's corner is **6px** (`rounded-md` in the registry), and the clear
+control is the shared **24px** press target around its 18px drawing. The field
+paints no shadow, so a theme's elevation levels do not reach it.
+
+The `focused` flag reaches a press, a click and a programmatic focus. The ring
+does not depend on it: each segment declares the keyboard ring at rest, so a
+`Tab` traversal paints the cue whether or not the flag moved. The flag is
+presentational, for a caller's `style` function.
+
+## Accessibility and limitations
+
+- The field is a labelled `role="group"`; each segment carries
+  `aria-label="<label> hours"` / `"<label> minutes"` and announces its value
+  natively.
+- **No `aria-valuenow` and no spinbutton role** in `@gpuix/native@0.11.0`. The
+  arrows are an enhancement, not the only way to enter a time.
+- **No `aria-disabled`** in `@gpuix/native@0.11.0`. `disabled` is `readOnly` on
+  both segments plus the dimmed field, removed tab stops and no clear control;
+  the state is visible and unreachable but not announced as disabled.
+- **Fixed 24-hour display.** No AM/PM, no locale, no seconds and no timezone:
+  the value is a time of day, not an instant. A locale or a 12-hour clock needs a
+  real message catalogue, not a prop that silently does nothing.
+- **`minuteStep` is arrows-only.** It is not a validation rule, so a schedule
+  that wants quarter hours still lets a consumer type `09:07` deliberately.
+- **No caret position.** GPUix exposes no caret or selection position, so after a
+  programmatic clamp the component cannot place the caret itself; the host does.
+- **The clear control is conditional.** It needs `clearable` *and* a value, so a
+  field that must always offer a reset composes its own, or keeps a value.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the parts, the clock arithmetic and the field's state |
+| `@gpuixui/primitives/hint` | the published hint seam that paints the `HH` / `MM` hints |
+| `@gpuix/react` | the host inputs, the key event and the renderer's focus call |
+| `@gpuix/react/floating` | `mergeStyles` / `resolveStyle` for the segment's style by state |
+| `@gpuixui/icons` | the clear control's `x` glyph |
+| `@gpuixui/tw` | the `TIME_PICKER_*` class recipes and `cn` |
+| `effect` | `Match`, `Option` and `String` in the clock module |
+
+`@gpuixui/tokens` is reached through this package's `internal/theme.ts`, which
+re-exports the token helpers; the component imports no token module directly.
+
+## Related
+
+- **Date picker** — the day half of a scheduling field; compose the two rather
+  than folding a timestamp into either.
+- **Field** — a label, hint and message around this control when a form owns the
+  validation.
+- **Number field** — the same arrow-and-clamp idea for a quantity rather than a
+  time of day.
+- **Search input** — the field chrome and clear affordance this control follows.
+
+## Status
+
+`done` in `COMPONENTS.md` with a **`yes`** runtime verdict: the two segments are
+real host inputs, so the value, the caret and the platform's own text session are
+the runtime's, and the measured limits are the absent `aria-valuenow`,
+`aria-disabled` and caret API rather than a missing surface.
+
+`src/behaviour/time-picker.test.tsx` runs **10 native behaviour tests** in the
+real GPUix renderer on the pinned runtime: typed hours and typed minutes reaching
+`onValueChange`, out-of-range clamping, arrow carry and midnight wrap,
+`minuteStep`, blur padding, the clear rules, the disabled field, the controlled
+contract, the parts laid out where the caller put them, and no clear when the
+part is not composed. `src/time-picker/time.test.ts` (12 tests) proves the clock
+the preview reproduces: canonical parsing, formatting, a round-trip of all 1440
+minutes, hour carry in both directions, day wrap, the strict and clamping segment
+parsers, padding, step normalisation, the last-two-digits rule and segment
+composition. Both themes are asserted in the native matrix.

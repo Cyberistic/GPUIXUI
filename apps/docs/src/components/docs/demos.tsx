@@ -86,6 +86,12 @@ import {
   tipStatesSource,
   tooltipSource,
 } from "./tooltip-demo";
+import {
+  TimePickerStates,
+  TimePickerWorkflow,
+  timePickerStatesSource,
+  timePickerWorkflowSource,
+} from "./time-picker-demo";
 
 /**
  * Browser previews for the docs pages.
@@ -2558,4 +2564,12 @@ export const demos: Readonly<Record<string, Demo>> = {
   "toast-workflow": { render: ToastWorkflow, source: toastWorkflowSource },
   "tooltip-demo": { render: TooltipDemo, source: tooltipSource },
   "tooltip-states": { render: TooltipStates, source: tipStatesSource },
+  "time-picker-states": {
+    render: TimePickerStates,
+    source: timePickerStatesSource,
+  },
+  "time-picker-workflow": {
+    render: TimePickerWorkflow,
+    source: timePickerWorkflowSource,
+  },
 };

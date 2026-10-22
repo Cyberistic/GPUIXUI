@@ -51,6 +51,17 @@ agree in the default style and differ where a platform's `radius.md` is 8. The
 carousel page prints the fixed metric, and its preview is a rendering like every
 other.
 
+A **time picker's focus** is drawn one level up from the native ring. The
+component declares the runtime's `focusVisible` outline on each segment and on
+the clear control, so the ring hugs the 26px input that took the focus; the
+preview draws one `:focus-within` outline around the `.gx-time-field` group,
+because a browser `<input>` cannot declare the runtime's outline at rest. Both
+rings exist, sit inside the same field box and take `colors.ring`; they differ in
+which box they wrap. Nothing else about the field is an approximation: the
+height comes from the platform's density, the segment width and the clear
+target are the component's own constants, and the clock the preview runs is the
+component's.
+
 ### Strategy 1 is real: the GPUix web build
 
 `@gpuix/native@0.11.0` ships a second target beside the `.node` binding: a
@@ -271,7 +282,7 @@ the install block and the copyable source.
 Curated today: Accordion, Alert, Button, Card, Carousel, Checkbox, Combobox,
 Command menu, Confirmation dialog, Date picker, Dialog, Drawer, Dropdown menu,
 Field and inline validation, Form, List, Popover, Search input, Select, Switch,
-Tabs, Tooltip, Toast.
+Tabs, Time picker, Tooltip, Toast.
 `src/lib/component-preview.test.ts` holds the preview registry from both sides:
 every `<ComponentPreview name>` on a page names a registered demo, and every demo
 is mounted by a page (a key nobody renders is dead code, and a typo throws in the
