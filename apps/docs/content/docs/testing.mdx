@@ -166,7 +166,7 @@ Four of those are measured facts rather than conveniences:
 | `hover` | moves the pointer onto an element without pressing |
 | `drag` | a real pointer drag, button held |
 | `wheel` | a wheel over an element's centre |
-| `key` | a key **down**, delivered by the automation protocol |
+| `key` | a key **down**; a printable character is inserted, but no native text edit runs |
 | `keyUp` | releases a held key, for a control that activates on release |
 | `scrollOffset` | the window's scroll handle for an element |
 | `scrollToItem` | reveals a `<virtual-list>` row by index |
@@ -185,6 +185,15 @@ the automation protocol, which delivers a key **down and no key up** — a contr
 that activates on release (Space on a button, checkbox or switch, the platform's
 own rule) is only provable with `keyUp`. And a window's renderer reports no
 style, so `paintedStyle` has no twin: a live probe proves paint from `pixels`.
+
+`key` is not an editor either: it inserts a printable character but runs **no
+native text edit** for a named key, so `Backspace`/`Delete` cannot be driven
+through the platform's editor from a window. The shipped `OTPField` refuses to
+delete twice for exactly that reason — a filled cell stays filled when no edit
+ran — and its native single-delete guard is
+`packages/primitives/runtime/otp.runtime.test.tsx`, while `otp-keys-lifecycle`
+measured the window half (the automation's Backspace runs no edit, and the
+field's key-up leaves the code alone rather than clearing a second cell).
 
 ## The report
 

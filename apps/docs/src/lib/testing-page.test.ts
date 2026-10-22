@@ -26,6 +26,13 @@ import {
  * one probe prints `unverified`, and a capability the run never touched gets no
  * line at all. A reader who ran one probe read a green line as a capability
  * total, so the old sentence is the regression these cases guard.
+ *
+ * The window `key` row is held to `otp-keys-lifecycle` too. It said only that
+ * the verb sends a key down, so a probe author could plan a `Backspace` the
+ * automation runs no native edit for and read the refusal as a defect. The
+ * page must state both the insertion and the missing edit, and the filled
+ * `OTPField` cell that refuses to delete twice, or the next window probe
+ * plans a deletion it cannot drive.
  */
 
 /** True when the value is a plain object, the shape a manifest or a meta file has. */
@@ -95,6 +102,13 @@ const paintSection = (): string => {
   const start = pageText.indexOf("## Reading a frame");
   const end = pageText.indexOf("## Replaying a runtime");
   return start < 0 || end < start ? "" : pageText.slice(start, end);
+};
+
+/** The page's window table, from its heading to the report section. */
+const windowSection = (): string => {
+  const start = page.indexOf("### In a window");
+  const end = page.indexOf("## The report");
+  return start < 0 || end < start ? "" : page.slice(start, end);
 };
 
 /** The page's report section, from its heading to the next one. */
@@ -220,6 +234,36 @@ describe("the testing page", () => {
     expect(section).toContain("clamps it to the frame");
     expect(section).toContain("not the same shape");
     expect(section).toContain("`editor-overlay`");
+  });
+
+  it("states the edit a named key does not run", () => {
+    // `otp-keys-lifecycle` measured the other half of the verb: the automation
+    // inserts a printable character but runs no native text edit for a named
+    // key, so the platform's Backspace/Delete cannot be driven from a window.
+    // The shipped OTPField turns that into a refusal rather than a wrong edit,
+    // and the offscreen runtime suite proves the single-delete guard. A page
+    // that says only "a key down" sends a probe author after a deletion it
+    // cannot drive.
+    const probe = readRepo("apps/playground/src/live/scenarios.tsx");
+    expect(probe).toContain(
+      '"a window\'s automation Backspace runs no native edit"',
+    );
+    expect(probe).toContain('"the key-up of a filled cell deletes nothing"');
+
+    const row =
+      windowSection()
+        .split("\n")
+        .find((line) => line.startsWith("| `key` |")) ?? "";
+    expect(row, "the window table has no key row").not.toBe("");
+    expect(row).toContain("**down**");
+    expect(row).toContain("no native text edit");
+
+    expect(pageText).toContain("cannot be driven");
+    expect(pageText).toContain("`OTPField`");
+    expect(pageText).toContain("`otp-keys-lifecycle`");
+    expect(pageText).toContain(
+      "packages/primitives/runtime/otp.runtime.test.tsx",
+    );
   });
 
   it("resolves every import it prints against the package's own exports", () => {
