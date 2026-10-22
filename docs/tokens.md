@@ -46,6 +46,7 @@ import {
   indicatorRoles,
   indicatorSurfaces,
   invalidColorRoles,
+  invalidScales,
   isControlSize,
   isDensityName,
   isPlatformName,
@@ -939,6 +940,53 @@ under the sizes. `numbers.test.ts` runs all three audits, proves none of the
 colour reports can see their defects, and holds all 16 shipped, platform and
 authored themes to an empty report — the shipped scale's tightest role is the
 display step at 28/36, well clear of the floor.
+
+### Scale order
+
+`invalidNumbers` asks whether one number can be laid out. It cannot ask whether
+two adjacent steps still describe two sizes, and a scale is selected by name:
+`size="sm"` against `md` and `lg`, `radius="xl"` against a card's `lg`,
+`textStyle(theme, "h3")` under an `h2`. A brand that computes a scale from a
+factor, forwards a stored value or edits a single rung can repeat or invert a
+pair while every number stays finite, positive and pressable.
+
+`invalidScales(theme)` reports every step that does not exceed the step before
+it, naming both steps:
+
+| Scale | Steps, in order |
+| ----- | --------------- |
+| `spacing` | `2xs` → `xs` → `sm` → `md` → `lg` → `xl` → `2xl` → `3xl` → `4xl` → `5xl` |
+| `radius` | `none` → `sm` → `md` → `lg` → `xl` → `full` |
+| `borderWidth` | `thin` → `strong` |
+| `iconSize` | `xs` → `sm` → `md` → `lg` → `xl` |
+| `typography` | `caption` → `label` → `body` → `h3` → `h2` → `h1` → `display`, by role size |
+| `density` | `controlHeight` and `controlPaddingX`, `sm` → `md` → `lg` |
+
+`bodyStrong` shares `body`'s size and differs by weight, and the two mono roles
+are a separate family rather than rungs of the size ladder, so neither is
+compared. A value that is not finite is skipped here and reported once by
+`invalidNumbers`, which owns it.
+
+```ts
+import { extendTheme, invalidScales, lightTheme } from "@gpuixui/tokens";
+
+invalidScales(lightTheme); // []
+invalidScales(extendTheme(lightTheme, { radius: { xl: 8 } }));
+// [{ group: "radius", path: "xl", value: 8,
+//    previous: { path: "lg", value: 8 } }]
+```
+
+The rule found one shipped style: the Windows platform carried `lg: 8` and
+`xl: 8`, so `radius="xl"` and `radius="lg"` painted the same surface and the
+larger step named nothing. It is `xl: 10` now, and the platform scale is
+`2/4/8/10` (§Platform styles).
+
+`invalidScales` is not one of `auditTheme`'s ten reports yet. The docs site's
+theme readout words each report it prints, so folding this in is one coordinated
+change with that page — recorded in `TODO.md` → Interlocks. Run it beside
+`auditTheme` until then: `src/scales.example.ts` is a brand whose `sm` control is
+taller than its `lg`, and `scales.test.ts` proves the audit passes it while
+three steps are out of order.
 
 ### Contrast
 

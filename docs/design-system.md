@@ -190,7 +190,7 @@ Density is a **theme** property, not a component prop:
 
 The default is `comfortable`; a platform style carries the preset its native
 windows use — macOS `compact`, Windows `comfortable`, GNOME `spacious`. Radius
-scales follow the same rule: macOS 4/6/10/14, Linux 4/6/9/12, Windows 2/4/8/8,
+scales follow the same rule: macOS 4/6/10/14, Linux 4/6/9/12, Windows 2/4/8/10,
 against the default 4/6/8/12.
 
 It changes control height, horizontal padding and row height only. Type sizes
@@ -207,6 +207,16 @@ shipping a target a pointer cannot reliably hit. A row is the same box one level
 down — a `dense` list row is built at exactly `rowHeight` and takes a press — so
 `rowHeight` is reported as `pressable` under the same floor. An icon-sized part
 needs an inset; §9 has the rule.
+
+Every one of these scales is a **ladder**, and its order is part of the
+contract: a brand's `sm` control stays shorter than its `md`, which stays
+shorter than its `lg`; a radius step stays rounder than the one below it; a
+heading stays larger than its body text. `invalidScales(theme)` reports a step
+that repeats or inverts its neighbour — the gap `invalidNumbers` cannot see,
+because each value on its own is layable. It found the Windows style's `xl`
+radius equal to its `lg`, so a dialog and a card there were equally square; `xl`
+is 10 now. `invalidScales` is not one of the audit's reports yet; §11 says why
+and what to run.
 
 ## 7. Radii, borders and elevation
 
@@ -635,6 +645,17 @@ a selection wash that hides the body or secondary text inside it, an indicator
 mark nobody can find, a disabled label the fade erases, and a label the
 keyboard dim erases while another control holds the focus; run it over the
 resolved theme before it ships and assert `passed` in the package's own tests.
+
+One contract sits beside the gate rather than inside it: `invalidScales(theme)`
+holds every named ladder to its order — spacing, radii, border weights, icons,
+the type hierarchy and the control sizes — because a scale is selected by name,
+and a brand whose `sm` control is taller than its `lg` has a `size` prop that
+lies while every value is still layable. The audit's report list is printed by
+the docs site's readout, which words each report, so folding this in is one
+coordinated change with that page (`TODO.md` → Interlocks); until then a brand
+runs `invalidScales` beside `auditTheme`. §6 and
+[`tokens.md`](./tokens.md#scale-order) carry the rule and the shipped style it
+corrected.
 
 ## 12. Non-goals
 

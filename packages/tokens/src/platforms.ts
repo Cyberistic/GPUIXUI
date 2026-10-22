@@ -206,7 +206,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     label: "Windows",
     sans: systemUiFont,
     mono: "Consolas",
-    radius: { none: 0, sm: 2, md: 4, lg: 8, xl: 8, full: 9999 },
+    radius: { none: 0, sm: 2, md: 4, lg: 8, xl: 10, full: 9999 },
     density: "comfortable",
     contrast: "default",
     colors: {

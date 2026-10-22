@@ -488,6 +488,13 @@ Each report is also a function of its own:
   a control height and a row height must reach `targetSize.minimum`, because the
   library builds the control box at that height and a `dense` list row at the
   row height, reserving no extra hit area on either.
+- `invalidScales(theme)` lists every named step that does not exceed the one
+  before it — spacing, radii, border weights, icon sizes, the type hierarchy and
+  the control heights and paddings. Every value can be layable while the name
+  still lies: a `sm` control taller than its `lg`, or a dialog as square as a
+  card. It is not one of the audit's ten reports yet (the docs readout words each
+  report it prints), so run it beside `auditTheme`; it found the Windows style's
+  `xl` radius equal to its `lg`.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
   translucent.

@@ -12,6 +12,7 @@ export * from "./numbers.js";
 export * from "./platforms.js";
 export * from "./retro.js";
 export * from "./scale.js";
+export * from "./scales.js";
 export * from "./selection.js";
 export * from "./series.js";
 export * from "./styles.js";
