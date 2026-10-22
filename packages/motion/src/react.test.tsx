@@ -82,10 +82,14 @@ const ReducedTWEENFrame = ({
   readonly target: number;
   readonly initial?: number;
 }) => {
-  const { value } = useTransition(target, { durationMs: 300 }, {
-    initial,
-    reducedMotion: true,
-  });
+  const { value } = useTransition(
+    target,
+    { durationMs: 300 },
+    {
+      initial,
+      reducedMotion: true,
+    },
+  );
   return <>{String(value)}</>;
 };
 
@@ -171,7 +175,9 @@ describe("the first published frame", () => {
     expect(renderToStaticMarkup(<ReducedCOASTFrame />)).toBe("50");
     // The skipped run still completes; a mount that asked for no journey does
     // not report one.
-    expect(renderToStaticMarkup(<ReducedCompletion initial={0} />)).toBe("true");
+    expect(renderToStaticMarkup(<ReducedCompletion initial={0} />)).toBe(
+      "true",
+    );
     expect(renderToStaticMarkup(<ReducedCompletion initial={100} />)).toBe(
       "false",
     );
