@@ -79,6 +79,13 @@ page labels the accordion with is the file the registry's `?raw` import reads,
 and that file exists — and reads the registry from the other side, so a key no
 page mounts is not shipped dead.
 
+**An install block resolves too.** `<Install packageName importName>` writes the
+`nub add` command and the import line as strings, so `src/lib/install-block.test.ts`
+resolves both props through the workspace symbol index: the package must be an
+entry point the workspace publishes, and the name must be one that entry point
+exports. A renamed package or a misspelled export would otherwise teach a
+command that cannot resolve on the section a reader follows first.
+
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source. Curated today: Button, Command menu,
 Dialog, Dropdown menu, Popover, Tabs. `src/lib/component-preview.test.ts` holds
