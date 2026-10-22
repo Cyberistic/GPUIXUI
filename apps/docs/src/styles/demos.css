@@ -2377,3 +2377,193 @@
   color: var(--primary);
   font-weight: 600;
 }
+
+/* ---- search input: mirrors components/src/search-input.tsx's SEARCH_* ----
+   The field is `bg-background border border-input` with the `md` density
+   height, and its 8px padding, 6px radius and 14/20 type compile from the
+   default registry (ADR 0006), so the platform switch re-heights it and does
+   not round it. The clear control is the shipped 24px press target around a
+   12px glyph (the recipe's 18px drawing), and the field returns the focus to
+   the input after a clear. */
+.gx-search {
+  width: 100%;
+  justify-content: center;
+}
+
+.gx-search-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(460px, 100%);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-search-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.gx-search-meta {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: var(--control-height-md);
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--input-foreground);
+}
+
+.gx-search-field:focus-within {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-search-field[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gx-search-mark {
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--muted-foreground);
+}
+
+.gx-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--input-foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-search-input::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-search-input:disabled {
+  cursor: not-allowed;
+}
+
+.gx-search-clear {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-search-clear:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-search-clear:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-search-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--row-height);
+  padding: 0 8px;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.gx-search-row:hover {
+  background: var(--hover);
+}
+
+.gx-search-row-name {
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-search-row-region {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-search-empty {
+  padding: 10px 8px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-search-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--placeholder);
+}
+
+.gx-search-states {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: min(440px, 100%);
+}
+
+.gx-search-state {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-search-state-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.gx-search-toolbar {
+  display: flex;
+  padding: 10px;
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--muted);
+}

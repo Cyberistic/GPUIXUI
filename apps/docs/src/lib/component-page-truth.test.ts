@@ -165,6 +165,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/primitives/src/components/Select.tsx",
   },
   {
+    file: "search-input.mdx",
+    row: "Search inputs",
+    suite: "packages/components/src/behaviour/search-input.test.tsx",
+    shadowed: "packages/components/docs/search-input.mdx",
+    source: "packages/components/src/search-input.tsx",
+  },
+  {
     file: "tabs.mdx",
     row: "Tabs",
     suite: "packages/components/src/behaviour/tabs.test.tsx",
@@ -1213,6 +1220,83 @@ describe("the curated component pages", () => {
     expect(text).toContain("`filledHover`");
     expect(text).toContain("`filledPressed`");
     expect(text).toContain("`iconSize`");
+  });
+
+  it("hold the search field's clear rule and its fixed metrics to the source", () => {
+    // Three decisions a screenshot cannot show: Escape clears only a non-empty
+    // field (an empty one must leave the key to an enclosing dialog), a clear
+    // returns the focus to the input, and the clear control is a 24px target
+    // around an 18px drawing while the field's radius and padding are the
+    // recipe's fixed metrics rather than theme tokens. The last one is a
+    // correction: the package page this page displaces called them `radius.md`
+    // and `spacing.md`, so a platform switch was said to reshape a field that
+    // only re-heights.
+    const page = pages.find(
+      (candidate) => candidate.file === "search-input.mdx",
+    );
+    expect(
+      page,
+      "the search-input page is not in the curated set",
+    ).toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    expect(source).toContain('if (value === "") return;');
+    expect(source).toContain("if (isDismiss(event)) clear();");
+    expect(source).toContain("onSubmit={() => onSubmit?.(value)}");
+    expect(source).toContain("renderer?.focusElement?.(instance.id)");
+    expect(source).toContain("readOnly={disabled}");
+    expect(source).toContain("opacity: disabled ? 0.5 : 1");
+    expect(source).toContain("textHint(");
+    expect(source).toContain("renderHint(");
+    expect(source).toContain('nativeTextTheme(theme, "background")');
+    expect(source).toContain('role="button"');
+    expect(source).toContain('aria-label="Clear search"');
+    expect(source).toContain("width: targetSize.minimum");
+    expect(source).toContain("height: targetSize.minimum");
+    expect(source).toContain("tabIndex={disabled ? -1 : 0}");
+    // The disabled clear control keeps its press handler: the page records the
+    // gap instead of teaching a disabled field as inert.
+    expect(source).toContain("onClick={clear}");
+
+    // No timer: the field reports every edit and the caller schedules.
+    expect(source).not.toContain("setTimeout");
+    expect(source).not.toContain("setInterval");
+
+    // The recipe's fixed geometry, read from the suite that pins it.
+    const recipeTest = read("packages/components/src/recipe/recipe.test.ts");
+    const searchRecipe = recipeTest.slice(
+      recipeTest.indexOf('describe("SearchInput recipe"'),
+    );
+    expect(searchRecipe).toContain("paddingLeft: 8");
+    expect(searchRecipe).toContain("paddingRight: 8");
+    expect(searchRecipe).toContain("borderRadius: 6");
+    expect(searchRecipe).toContain(
+      "backgroundColor: darkTheme.colors.background",
+    );
+    expect(searchRecipe).toContain("borderColor: darkTheme.colors.border");
+    expect(searchRecipe).toContain("width: 18");
+    const recipes = read("packages/tw/src/recipes.ts");
+    expect(recipes).toContain(
+      '"flex flex-row items-center gap-2 px-2 bg-background border border-input rounded-md"',
+    );
+    expect(recipes).toContain("size-[18px]");
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("does nothing on an empty field");
+    expect(text).toContain("`submit` event");
+    expect(text).toContain("returns the focus");
+    expect(text).toContain("24px");
+    expect(text).toContain("6px");
+    expect(text).toContain("8px");
+    expect(text).toContain("14/20");
+    expect(text).toContain("fixed");
+    expect(text).toContain("paints the hint itself");
+    expect(text).toContain("press handler is still bound");
+    expect(text).toContain("7 native behaviour tests");
+    // The retracted shape: radius and padding as theme tokens.
+    expect(text).not.toContain("`radius.md`");
+    expect(text).not.toContain("`spacing.md`");
   });
 
   it("hold the tip's clock and its trigger rule to the runtime", () => {

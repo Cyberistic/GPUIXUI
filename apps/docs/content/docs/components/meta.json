@@ -15,6 +15,7 @@
     "field",
     "select",
     "combobox",
+    "search-input",
     "---Overlays---",
     "dialog",
     "confirm-dialog",

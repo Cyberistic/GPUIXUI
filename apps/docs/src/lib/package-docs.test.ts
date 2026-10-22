@@ -114,6 +114,7 @@ describe("the package docs collections", () => {
     "/docs/components/field",
     "/docs/components/list",
     "/docs/components/popover",
+    "/docs/components/search-input",
     "/docs/components/tabs",
     "/docs/components/toast",
   ]);

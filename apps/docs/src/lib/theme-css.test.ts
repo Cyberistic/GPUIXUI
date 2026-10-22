@@ -222,6 +222,7 @@ describe("preview style sheets", () => {
       ".gx-btn-sm",
       ".gx-btn-lg",
       ".gx-field",
+      ".gx-search-field",
       ".gx-tab",
     ]
       .filter((selector) => !block(css, selector).includes("--control-height"))
@@ -237,6 +238,16 @@ describe("preview style sheets", () => {
 
     expect(row).toContain("--row-height");
     expect(row).toContain("--spacing-md");
+  });
+
+  it("read a search field's clear target from the shared floor", () => {
+    // The shipped clear control is a 24px press target around the recipe's
+    // 18px drawing, so a preview that copied the drawing's size would paint a
+    // control smaller than the one a reader can press in the app.
+    const clear = block(read("../styles/demos.css"), ".gx-search-clear");
+
+    expect(clear).toContain("--target-size");
+    expect(clear).not.toContain("width: 18px");
   });
 
   it("carry no library colour literal outside the defaults", () => {

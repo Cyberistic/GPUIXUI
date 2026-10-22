@@ -11,6 +11,7 @@ import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.t
 import field from "../../../../../packages/components/src/field.tsx?raw";
 import list from "../../../../../packages/components/src/list.tsx?raw";
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
+import searchInput from "../../../../../packages/components/src/search-input.tsx?raw";
 import select from "../../../../../packages/primitives/src/components/Select.tsx?raw";
 import tabs from "../../../../../packages/components/src/tabs.tsx?raw";
 import toast from "../../../../../packages/components/src/toast.tsx?raw";
@@ -36,6 +37,7 @@ export const componentSources = {
   field,
   list,
   popover,
+  searchInput,
   select,
   tabs,
   toast,

@@ -45,6 +45,12 @@ import {
   selectStatesSource,
 } from "./select-demo";
 import {
+  SearchStates,
+  SearchWorkflow,
+  searchStatesSource,
+  searchWorkflowSource,
+} from "./search-input-demo";
+import {
   TooltipDemo,
   TooltipStates,
   tipStatesSource,
@@ -2484,6 +2490,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "popover-demo": { render: PopoverDemo, source: popoverSource },
   "select-states": { render: SelectStates, source: selectStatesSource },
   "select-workflow": { render: SelectDemo, source: selectDemoSource },
+  "search-input-states": {
+    render: SearchStates,
+    source: searchStatesSource,
+  },
+  "search-input-workflow": {
+    render: SearchWorkflow,
+    source: searchWorkflowSource,
+  },
   "tabs-demo": { render: TabsDemo, source: tabsSource },
   "toast-tones": { render: ToastTones, source: toastTonesSource },
   "toast-workflow": { render: ToastWorkflow, source: toastWorkflowSource },
