@@ -86,6 +86,7 @@ src/components/docs/component-index.tsx   The filterable index on /docs/componen
 src/components/docs/examples-index.tsx    The generated registry on /docs/examples
 src/components/docs/api-reference.tsx     The entry-point table and the symbol index
 src/components/docs/type-scale.tsx        The typography specimen, from the theme
+src/components/docs/theme-matrix.tsx      The built-in themes, generated from the token package
 src/components/docs/token-scales.tsx      The spacing/radius/density specimens on /docs/theming
 src/components/docs/platform-toggle.tsx   The platform and look switch, and its provider
 src/components/docs/license-table.tsx     LICENSES/*.md, rendered

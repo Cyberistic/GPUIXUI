@@ -122,7 +122,8 @@ a field error already paint.
 
 ## Built-in themes
 
-Four themes ship, and `getTheme` selects one by mode and contrast:
+The built-in themes ship with the package, and `getTheme` selects one by mode
+and contrast:
 
 ```tsx
 import { getTheme } from "@gpuixui/tokens";
@@ -131,12 +132,16 @@ const theme = getTheme("dark"); // darkTheme
 const accessible = getTheme("dark", "high"); // high-contrast dark
 ```
 
+<ThemeMatrix />
+
+Each theme is also published by name:
+
 | Theme | Export |
 | ----- | ------ |
 | Light | `lightTheme`, `themes.light` |
 | Dark | `darkTheme`, `themes.dark` |
-| High-contrast light | `highContrastLightTheme`, `highContrastThemes.light` |
-| High-contrast dark | `highContrastDarkTheme`, `highContrastThemes.dark` |
+| High contrast light | `highContrastLightTheme`, `highContrastThemes.light` |
+| High contrast dark | `highContrastDarkTheme`, `highContrastThemes.dark` |
 
 ## Override a theme
 
@@ -187,7 +192,8 @@ saturated violet, which is dark enough for both jobs there. The base theme's
 
 `auditTheme(theme)` is how that is caught before it ships: one call reports the
 label pair, every boundary and decorative surface, the series, the selection
-wash and each mark. `packages/tokens/src/brand-theme.example.ts` is both themes
+wash, each mark and the dim the runtime casts while Tab is elsewhere.
+`packages/tokens/src/brand-theme.example.ts` is both themes
 as a working file, type-checked and audited by the package's suite.
 
 ## Density
@@ -330,8 +336,9 @@ things a brand owns when it overrides a fill:
   paints its own card changes the number, which is why the pairing is yours.
 - **The measurement.** `auditTheme(theme)` runs every contract the package runs
   on its own themes — roles, shadows, text pairs, decorative surfaces, the
-  series, the selection wash and the marks — and reports each failure by name,
-  so the check a brand runs is the check the library runs on itself.
+  series, the selection wash, the marks and the keyboard dim — and reports each
+  failure by name, so the check a brand runs is the check the library runs on
+  itself.
 
 `packages/tokens/src/platforms.example.ts` is the working version of this
 snippet (`resolveHouseTheme`), executed by the package's suite in both modes.

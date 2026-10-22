@@ -3,6 +3,8 @@ title: Dark mode
 description: Switch light, dark and high-contrast themes from application state — GPUIxUI ships no hidden OS-mode listener.
 ---
 
+import { contrastFloors } from "@gpuixui/tokens";
+
 Dark mode is a resolved theme, not a CSS class. The application decides the mode,
 picks a `Theme`, and gives it to `ThemeProvider`. Every component below reads the
 semantic roles, so one provider swap changes the whole window.
@@ -24,14 +26,11 @@ export function Root() {
 }
 ```
 
-`getTheme(mode, contrast)` returns one of the four built-in themes:
+`getTheme(mode, contrast)` returns one of the built-in themes. The two axes are
+the package's own `themeModes` and `themeContrasts`, so a mode or a contrast
+variant the library adds appears here with no docs change:
 
-| Call | Theme |
-| ---- | ----- |
-| `getTheme("light")` | light |
-| `getTheme("dark")` | dark |
-| `getTheme("light", "high")` | high-contrast light |
-| `getTheme("dark", "high")` | high-contrast dark |
+<ThemeMatrix />
 
 ## Why the app owns it
 
@@ -86,6 +85,7 @@ switch this site uses.
 ## Tokens and contrast
 
 Every colour role is part of the theme contract. A brand theme may change values
-but should keep the full role set; `borderStrong` is held to 3:1 for essential
-control boundaries, and body text uses the foreground roles. When adding a
-theme, verify both modes instead of assuming a colour works on both.
+but should keep the full role set; `borderStrong` is held to
+{contrastFloors.boundary}:1 for essential control boundaries, and body text uses
+the foreground roles. When adding a theme, verify both modes instead of assuming
+a colour works on both.
