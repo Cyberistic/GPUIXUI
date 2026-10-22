@@ -6046,6 +6046,12 @@ numbers).
       on the leaked root; restored, 25/25. Docs: `docs/combobox.mdx` §Motion,
       §Limitations and §Verification, the row in `docs/component-api.md` §11, and
       the `Comboboxes` inventory row.
+`[ ]` Add the combobox popup's **§Motion** to the curated page
+      (`apps/docs/content/docs/components/combobox.mdx`) — the package page
+      (`packages/components/docs/combobox.mdx` §Motion) and the per-surface table
+      in `docs/component-api.md` §11 carry the entry-only rule, and the curated
+      page only embeds the source, so a reader of the site learns the popup's
+      arrival nowhere. Owner: docs-site.
 `[x]` Hold the **leaving-surface pointer contract** across the family, not one surface at
       a time. Fixing the context menu exposed two more gaps and no guard: the
       submenu's `anchored` host kept `occlude` for its leap (a deferred host's box
