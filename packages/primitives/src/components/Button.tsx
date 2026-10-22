@@ -160,7 +160,12 @@ export const renderButton = (
       aria-label={accessibleName(props.label) ?? childrenName(props.children)}
       aria-description={props.loading === true ? "Loading" : undefined}
       tabIndex={
-        props.disabled === true && props.loading !== true ? undefined : 0
+        // A busy button stays focusable so a keyboard reader is not dropped
+        // mid-action; a disabled one leaves the tab order whether or not it is
+        // also busy, because it declares no ring and refuses every key — a stop
+        // with no cue. The two props together are the common
+        // `disabled={pending} loading={pending}` pair.
+        props.disabled === true ? undefined : 0
       }
       testId={props.testId}
       onClick={composePress(busy, props.onClick, activate)}

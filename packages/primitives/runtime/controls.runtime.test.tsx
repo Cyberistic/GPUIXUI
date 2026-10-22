@@ -215,6 +215,26 @@ it("paints a checked Checkbox's feedback as the theme's opaque derived fill", as
   );
 });
 
+it("skips a disabled busy Button in the tab order", async () => {
+  // The bug: `loading` won the tab-stop condition, so a button that was
+  // disabled **and** busy stayed a stop — while the disabled rule declares no
+  // ring, so a Tab traversal landed on a control with no cue that refuses every
+  // key. `disabled={pending} loading={pending}` is the common pair.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="busy" disabled loading>
+          Save
+        </Button>
+        <Button testId="after">Cancel</Button>
+      </Stack>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(runtime.focused()).toStrictEqual(Option.some("after"));
+});
+
 it("paints a disabled filled Button with the measured pair, not a fade", async () => {
   // The bug: a disabled filled action faded itself to 50%, which composites the
   // label into the surface behind the control — under the disabled floor on the

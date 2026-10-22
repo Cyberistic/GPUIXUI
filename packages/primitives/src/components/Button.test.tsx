@@ -261,8 +261,19 @@ describe("Button", () => {
   });
 
   it("takes a disabled button out of the tab order", () => {
+    // The bug: `loading` won the tab-stop condition, so a button that was
+    // disabled **and** busy (the `disabled={pending} loading={pending}` pair)
+    // stayed in the tab order — while the disabled rule declares no ring, so
+    // Tab landed on a control with no cue that refuses every key.
     expect(hostProp(resting({ disabled: true }), "tabIndex")).toStrictEqual(
       Option.none(),
+    );
+    expect(
+      hostProp(resting({ disabled: true, loading: true }), "tabIndex"),
+    ).toStrictEqual(Option.none());
+    // Loading alone still keeps its stop: the action is the reader's place.
+    expect(hostProp(resting({ loading: true }), "tabIndex")).toStrictEqual(
+      Option.some(0),
     );
   });
 
