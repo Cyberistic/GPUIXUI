@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { columnDrag } from "./column-drag.test-util";
 
@@ -1762,6 +1763,7 @@ describe("docs/gpuix-capabilities.md", () => {
       ["cmd-c", "a key chord the pasted-code probe pressed"],
       ["cmd-v", "a key chord the pasted-code probe pressed"],
       ["cmd-shift", "a chord the modifier-selection probe pressed"],
+      ["cmd-home", "a chord the keyboard-scroll probe pressed"],
       ["wrow-60", "a row marker the windowed list probe checked for"],
       ["row-alpha", "a row marker the reorder probe dragged"],
       ["row-delta", "a row marker the reorder probe dropped onto"],
@@ -2462,6 +2464,76 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(nested?.[1]).toContain("<virtual-list>");
     expect(nested?.[2]).toContain("onScrollChange");
     expect(nested?.[2]).toContain("non-scrolling");
+  });
+
+  it("records the keyboard a scroll region answers, in a window's delivery path", () => {
+    // The primitive's page and its runtime suite taught the arrows,
+    // PageUp/PageDown, Home and End from `runtime.keyDown(elementId, …)` — a
+    // verb that names the element, which a window does not have. A window
+    // delivers a key to the **focused** element and the viewport's handler
+    // stands down unless the focus is its own, so the traversal is the half the
+    // offscreen suite cannot prove. The geometry is the fixture's own, so the
+    // record cannot print a stale clamp.
+    const fixture = read("apps/playground/src/live/keyboard-scroll.ts");
+    const literal = (name: string): number => {
+      const found = new RegExp(`export const ${name} = (\\d+);`).exec(
+        fixture,
+      )?.[1];
+      expect(
+        found,
+        `the fixture's ${name} is no longer a literal`,
+      ).toBeDefined();
+      return Number(found ?? NaN);
+    };
+    const box = (name: string): { width: number; height: number } => {
+      const found = new RegExp(
+        `export const ${name} = \\{ width: (\\d+), height: (\\d+) \\} as const;`,
+      ).exec(fixture);
+      expect(found, `the fixture's ${name} is no longer a literal`).not.toBeNull();
+      return { width: Number(found?.[1] ?? NaN), height: Number(found?.[2] ?? NaN) };
+    };
+
+    const vertical = box("VERTICAL_VIEWPORT");
+    const horizontal = box("HORIZONTAL_VIEWPORT");
+    const line = themes.dark.density.rowHeight;
+    const verticalEnd =
+      literal("VERTICAL_ROWS") * literal("VERTICAL_ROW_HEIGHT") +
+      literal("FIELD_SLOT") -
+      vertical.height;
+    const horizontalEnd =
+      literal("HORIZONTAL_COLUMNS") * literal("HORIZONTAL_COLUMN_WIDTH") -
+      horizontal.width;
+    expect(verticalEnd).toBeGreaterThan(line);
+    expect(horizontalEnd).toBeGreaterThan(line);
+
+    const keyboard = rowFor("Keyboard scrolling");
+    expect(keyboard?.verdict).toBe("supported");
+    expect(keyboard?.evidence).toContain("keyboard-scroll-lifecycle");
+    expect(keyboard?.evidence).toContain("getFocusedElementId");
+    expect(keyboard?.evidence).toContain("focusable={false}");
+    // A line is the theme's row, a page is the viewport, and the third page
+    // clamps at the content's end. The two geometry markers are the row's own
+    // statements of the end, so a duplicate number cannot stand in for them.
+    expect(keyboard?.evidence).toContain(`end is \`-${verticalEnd}\``);
+    expect(keyboard?.evidence).toContain(`end \`-${horizontalEnd}\``);
+    expect(keyboard?.evidence).toContain(`-${line}`);
+    expect(keyboard?.evidence).toContain(`-${line + vertical.height}`);
+    expect(keyboard?.evidence).toContain(`-${vertical.height}`);
+    expect(keyboard?.evidence).toContain(`-${verticalEnd}`);
+    expect(keyboard?.evidence).toContain(`-${line + horizontal.width}`);
+    expect(keyboard?.evidence).toContain(`-${horizontalEnd}`);
+
+    const page = measuredRow("Keyboard scrolling");
+    expect(
+      page,
+      "the page's measured table has no keyboard-scrolling row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("keyboard-scroll-lifecycle");
+    expect(page?.[1]).toContain("getFocusedElementId");
+    expect(page?.[1]).toContain(`-${line + vertical.height}`);
+    expect(page?.[1]).toContain(`-${verticalEnd}`);
+    expect(page?.[1]).toContain(`-${horizontalEnd}`);
+    expect(page?.[2]).toContain("density.rowHeight");
   });
 
   it("publishes the same matrix the code narrows on", () => {
