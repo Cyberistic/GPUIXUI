@@ -35,6 +35,37 @@ export const parseNumericText = (text: string): Option.Option<number> => {
 };
 
 /**
+ * A caller's reading of the text its own `formatValue` painted.
+ *
+ * `formatValue` is display-only: a grouped `1,234` or a locale `1,5` is not
+ * decimal notation, so the field cannot read it back on its own. This is the
+ * counterpart — the text as the caller's format means it, or `None` for text
+ * that is not a number in it.
+ */
+export type ParseValue = (text: string) => Option.Option<number>;
+
+/**
+ * The value a field's text means: the caller's reading first, then decimal.
+ *
+ * A field with no text has no value whatever a parser says — an empty box is a
+ * hint, not a zero — and a parser that answers a number the field cannot lay
+ * out is not a reading, so only finite numbers survive. Text the caller's
+ * parser declines still reads as decimal, which is what keeps a grouped field
+ * editable by hand.
+ */
+export const parseNumberText = (
+  text: string,
+  parseValue?: ParseValue,
+): Option.Option<number> => {
+  if (!Str.isNonEmpty(Str.trim(text))) return Option.none();
+  const own: Option.Option<number> =
+    parseValue === undefined
+      ? Option.none()
+      : Option.filter(parseValue(text), Number.isFinite);
+  return Option.isSome(own) ? own : parseNumericText(text);
+};
+
+/**
  * The bounds a range can actually use.
  *
  * A bound that cannot be laid out is not a bound: `Math.min(NaN, value)` is

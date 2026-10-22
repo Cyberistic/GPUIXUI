@@ -516,7 +516,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "Decimal text only: grouping separators and Infinity are rejected",
+      "Decimal text by default: a grouped or locale display is read through the formatValue/parseValue pair, never guessed",
       "No type=number, inputMode or drag-to-scrub",
       "autoFocus paints no ring on mount",
       "Enter is the runtime's Submit action, not a keydown; onSubmit is the channel",
@@ -530,6 +530,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     example: "examples/number-field.example.tsx",
     tests: [
       "src/components/NumberField.test.tsx",
+      "src/core/number.test.ts",
       "runtime/number-field.runtime.test.tsx",
     ],
   },

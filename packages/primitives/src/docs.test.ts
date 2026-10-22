@@ -855,6 +855,42 @@ describe("the primitives docs page contract", () => {
     ).toEqual([false, false]);
   });
 
+  it("pairs a display format with a reading of it", () => {
+    // The bug guarded: `formatValue` is display-only, and the page taught that a
+    // locale decimal "needs `formatValue` for display and parsing before the
+    // value reaches the field" — a route the field never had. A field showing a
+    // grouped "1,234" therefore dropped every keystroke (measured in a window:
+    // no change at all). The page now names the `parseValue` counterpart, and
+    // both suites that prove it are cited.
+    const page = read("number-field.mdx");
+    const api = Option.getOrElse(bodyOf(page, "API"), () => "");
+    const runtime = readFileSync(
+      fileURLToPath(
+        new URL("../runtime/number-field.runtime.test.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+    const core = readFileSync(
+      fileURLToPath(new URL("./core/number.test.ts", import.meta.url)),
+      "utf8",
+    );
+    expect({
+      row: api.includes("| `parseValue` |"),
+      displayOnly: api.includes("display-only"),
+      retracted: page.includes("display and parsing"),
+      reading: page.includes("consulted before the decimal grammar"),
+      edited: runtime.includes("reads back the display format"),
+      unit: core.includes('describe("parseNumberText"'),
+    }).toEqual({
+      row: true,
+      displayOnly: true,
+      retracted: false,
+      reading: true,
+      edited: true,
+      unit: true,
+    });
+  });
+
   it("states the invalid state the checkbox group paints", () => {
     // The bug guarded: the API table said `invalid` "paints every box and its
     // ring destructive", while a checked box keeps its accent fill — only an

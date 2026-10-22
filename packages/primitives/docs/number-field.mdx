@@ -82,7 +82,8 @@ import {
 | `ref` / `aria-id` / `onLayout` | host address | none | land on the inner `<input>`, the element a form focuses — not the chrome |
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on mount |
-| `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
+| `formatValue` | `(value: number) => string` | fixed decimals | the display text, display-only; pair it with `parseValue` when the format is not decimal |
+| `parseValue` | `(text: string) => Option<number>` | none | reads the text `formatValue` painted; tried first, then decimal; an empty field is never a value |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc`; resolved against the live state and merged last |
 | `children` | `ReactNode` | input + steppers | the parts to draw |
@@ -112,6 +113,40 @@ so the field commits from that action and reports the same event through
 A step is exact at decimal precision: stepping `0.2` by `0.1` reports `0.3`, not
 the binary `0.30000000000000004`, because the move is rounded to the finer of
 the value's and the step's decimal places. An integer step is untouched.
+
+### A display format is also a reading
+
+`formatValue` paints; it does not teach the field to read. A grouped `1,234` or a
+comma decimal `1,5` is not decimal notation, so a field showing one used to drop
+every keystroke typed into it (measured: no change reported at all). `parseValue`
+is the counterpart — it reads the text the caller's own format painted, and it is
+consulted before the decimal grammar, so text it declines still reads as decimal
+and a grouped field stays editable by hand. Both the edit path and the commit
+path use it, so `Enter` reformats through `formatValue` exactly as the value
+arrived.
+
+```tsx
+import * as Option from "effect/Option";
+
+const grouped = (value: number): string => value.toLocaleString("en-US");
+const readGrouped = (text: string): Option.Option<number> => {
+  const digits = text.replaceAll(",", "");
+  return /^-?\d+(?:\.\d+)?$/.test(digits)
+    ? Option.some(Number(digits))
+    : Option.none();
+};
+
+<NumberField
+  label="Budget"
+  defaultValue={1234}
+  formatValue={grouped}
+  parseValue={readGrouped}
+/>;
+```
+
+A blank field has no value whatever a parser answers, and a parser that answers
+`NaN` or `Infinity` is not a reading: only finite numbers reach the value
+channel, and the decimal grammar still gets its turn.
 
 ## Keyboard
 
@@ -179,9 +214,10 @@ so a caller that composes its own parts still gets the hint.
   arrow. `core/value.ts` states the same rule for a slider. A bound that is
   itself non-finite is not a bound, so one bad `max` cannot take the value with
   it.
-- **Decimal text only.** `1,5`, `0x10` and `Infinity` are rejected rather than
-  guessed at; a locale decimal needs `formatValue` for display and parsing
-  before the value reaches the field.
+- **Decimal text only, unless the caller reads its own format.** `1,5`, `0x10`
+  and `Infinity` are rejected rather than guessed at; a grouped or locale display
+  reaches the field through the `formatValue`/`parseValue` pair, because the
+  grammar cannot know that `1,234` and `1,5` are different formats.
 - **No `type="number"`, `inputMode` or `maxLength`.** The host input takes
   `value`, `readOnly`, `theme` and its events — nothing else, and a cap cannot be
   laid on top: the runtime applies a field's `value` only when it changes, so a
@@ -204,8 +240,10 @@ so a caller that composes its own parts still gets the hint.
 - `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
   noisy-free decimal steps (ten 0.1 steps reach 1 exactly), a large integer step
   that rounding must not erase, Home/End only with a bound, a value that is not a
-  number read as a bound, and fixed-decimal text that keeps no negative zero and
-  expands past the platform's `1e21` exponential bound.
+  number read as a bound, the `formatValue`/`parseValue` reading (a grouped and a
+  comma-decimal parser, the decimal fallback, a blank field, an unpaintable
+  answer), and fixed-decimal text that keeps no negative zero and expands past
+  the platform's `1e21` exponential bound.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
   raw edit report, the submit channel (commit first, no listener while
   disabled), steppers as presentation, one tab stop, disabled/invalid,
@@ -229,7 +267,10 @@ so a caller that composes its own parts still gets the hint.
   comparison folded the draft on every render and React threw "Too many
   re-renders"); **Enter arrives as the runtime's Submit action** — the draft
   reformats to `precision` and `onSubmit` reports once (measured 2026-10-22;
-  without the field's listener the text stayed `1.5` and the report never came).
+  without the field's listener the text stayed `1.5` and the report never came);
+  **a grouped display is read back** — a field showing `1,234` reports `12345`
+  after typing `5` and commits as `12,345` through the `parseValue` pair
+  (measured 2026-10-22; without `parseValue` the field reported no change at all).
   Measured in a window 2026-10-17.
 
 ```sh

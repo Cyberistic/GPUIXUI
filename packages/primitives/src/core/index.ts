@@ -37,10 +37,11 @@ export {
   clampNumeric,
   decideNumberKey,
   formatNumber,
+  parseNumberText,
   parseNumericText,
   stepNumber,
 } from "./number.js";
-export type { NumberRange } from "./number.js";
+export type { NumberRange, ParseValue } from "./number.js";
 
 export {
   clampRating,

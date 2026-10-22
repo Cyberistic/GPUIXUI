@@ -17,11 +17,13 @@ import {
   formatNumber,
   initNumberDraft,
   numberDraftText,
+  parseNumberText,
   parseNumericText,
   stepNumber,
   syncNumberDraft,
   withNumberDraftText,
   type NumberRange,
+  type ParseValue,
 } from "./number.js";
 
 const RANGE: NumberRange = { min: 0, max: 100, step: 1 };
@@ -50,6 +52,57 @@ describe("parseNumericText", () => {
     expect(parseNumericText("1,5")).toStrictEqual(Option.none());
     expect(parseNumericText("0x10")).toStrictEqual(Option.none());
     expect(parseNumericText("Infinity")).toStrictEqual(Option.none());
+  });
+});
+
+describe("parseNumberText", () => {
+  const grouped: ParseValue = (text) => {
+    const cleaned = text.replaceAll(",", "");
+    return /^[+-]?\d+(?:\.\d+)?$/.test(cleaned)
+      ? Option.some(Number(cleaned))
+      : Option.none();
+  };
+  const commaDecimal: ParseValue = (text) => {
+    const cleaned = text.replace(",", ".");
+    return /^[+-]?\d+(?:\.\d+)?$/.test(cleaned)
+      ? Option.some(Number(cleaned))
+      : Option.none();
+  };
+
+  it("reads the format a caller's formatValue painted", () => {
+    // The bug guarded: `formatValue` is display-only, so a grouped "1,234" or a
+    // locale "1,5" is not decimal notation — the field reported no change for
+    // every keystroke typed into it.
+    expect(parseNumberText("1,234", grouped)).toStrictEqual(Option.some(1234));
+    expect(parseNumberText("1,5", commaDecimal)).toStrictEqual(
+      Option.some(1.5),
+    );
+    expect(parseNumberText("1,2345", grouped)).toStrictEqual(
+      Option.some(12345),
+    );
+  });
+
+  it("still reads decimal text the caller's parser declines", () => {
+    expect(parseNumberText("12", grouped)).toStrictEqual(Option.some(12));
+    expect(parseNumberText(" -.5 ", grouped)).toStrictEqual(Option.some(-0.5));
+    expect(parseNumberText("12", commaDecimal)).toStrictEqual(Option.some(12));
+  });
+
+  it("keeps an empty field empty whatever a parser answers", () => {
+    const always: ParseValue = () => Option.some(0);
+    expect(parseNumberText("", always)).toStrictEqual(Option.none());
+    expect(parseNumberText("   ", always)).toStrictEqual(Option.none());
+  });
+
+  it("does not let a parser hand the field an unpaintable number", () => {
+    // A parser answering NaN or Infinity is not a reading: the value channel
+    // carries finite numbers only, and the decimal grammar still gets its turn.
+    const broken: ParseValue = () => Option.some(Number.NaN);
+    expect(parseNumberText("12", broken)).toStrictEqual(Option.some(12));
+    expect(parseNumberText("twelve", broken)).toStrictEqual(Option.none());
+    expect(
+      parseNumberText("twelve", () => Option.some(Number.POSITIVE_INFINITY)),
+    ).toStrictEqual(Option.none());
   });
 });
 

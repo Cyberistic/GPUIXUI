@@ -43,11 +43,12 @@ import {
   formatNumber,
   initNumberDraft,
   numberDraftText,
-  parseNumericText,
+  parseNumberText,
   stepNumber,
   syncNumberDraft,
   withNumberDraftText,
   type NumberRange,
+  type ParseValue,
 } from "../core/number.js";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
@@ -111,8 +112,18 @@ export interface NumberFieldProps
    * here. No listener is installed while `disabled`.
    */
   readonly onSubmit?: (event: EventPayload) => void;
-  /** Overrides the display text; the value still parses with `core/number.ts`. */
+  /**
+   * Overrides the display text. Display-only: when the format its decimal
+   * grammar cannot read (grouped, locale), pair it with `parseValue`.
+   */
   readonly formatValue?: (value: number) => string;
+  /**
+   * Reads text `formatValue` painted. A grouped `1,234` or a locale `1,5` is
+   * not decimal notation, so a field whose display the decimal grammar cannot
+   * read is not editable without this counterpart. Text it declines still reads
+   * as decimal; an empty field is never a value.
+   */
+  readonly parseValue?: ParseValue;
   /** Extra style, resolved against the field's live state and merged last. */
   readonly style?: StateStyle<FieldState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -458,6 +469,10 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   );
   const display = (value: number): string =>
     props.formatValue?.(value) ?? formatNumber(value, props.precision ?? 0);
+  // One reading for typing and for committing: a caller's format is theirs to
+  // read back, and text it declines still reads as decimal.
+  const read = (text: string): Option.Option<number> =>
+    parseNumberText(text, props.parseValue);
   // The owner's value moved: fold it into the draft, so a controlled field
   // shows what its owner says — a value that arrives after mount included —
   // while the text being typed survives only while it still means that value.
@@ -480,13 +495,13 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     },
     onTextChange: (next) => {
       setDraft((current) => withNumberDraftText(current, next));
-      Option.match(parseNumericText(next), {
+      Option.match(read(next), {
         onNone: () => {},
         onSome: (parsed) => state.set(clampNumeric(parsed, range)),
       });
     },
     onCommit: () =>
-      Option.match(parseNumericText(text), {
+      Option.match(read(text), {
         onNone: () => setDraft((current) => commitNumberDraft(current)),
         onSome: (parsed) => {
           state.set(clampNumeric(parsed, range));

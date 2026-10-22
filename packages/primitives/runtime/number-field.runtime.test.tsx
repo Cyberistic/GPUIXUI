@@ -320,6 +320,40 @@ it("commits the draft on Enter and reports it through onSubmit", async () => {
   expect(submitted).toHaveBeenCalledTimes(1);
 });
 
+it("reads back the display format its caller's formatValue painted", async () => {
+  // The bug guarded: `formatValue` is display-only, and a grouped "1,234" is
+  // not decimal notation — so every keystroke typed into a field that showed a
+  // grouped number was dropped (measured before `parseValue`: zero reported
+  // changes after typing "5"). `parseValue` is the counterpart that reads the
+  // text the caller's own format painted, and committing reformats through it.
+  const field = recorder();
+  const grouped = (value: number): string => value.toLocaleString("en-US");
+  const readGrouped = (text: string): Option.Option<number> => {
+    const digits = text.replaceAll(",", "").trim();
+    return /^[+-]?\d+(?:\.\d+)?$/.test(digits)
+      ? Option.some(Number(digits))
+      : Option.none();
+  };
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Amount"
+      autoFocus
+      defaultValue={1234}
+      formatValue={grouped}
+      parseValue={readGrouped}
+      onChange={field.onChange}
+    />,
+  );
+  expect(textOf(runtime, "Amount")).toBe("1,234");
+  runtime.type("5");
+  expect(lastValue(field.values)).toBe(12345);
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
+  runtime.flush();
+  expect(textOf(runtime, "Amount")).toBe("12,345");
+});
+
 it("shows the value its owner pushes", async () => {
   // The bug guarded: a controlled field kept the text it was given, so a value
   // the owner pushed was never seen by the user.
