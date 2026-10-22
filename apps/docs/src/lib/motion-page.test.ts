@@ -493,6 +493,33 @@ describe("the motion page", () => {
     expect(pageText).toContain("/docs/runtime#measured-in-a-window");
   });
 
+  it("teaches the coast's declaration rule from the value's own guard", () => {
+    // The page taught the `animate` no-op and said only that `coast` starts a
+    // decay, so a reader building `inertia()` inline on a render could not learn
+    // why that is safe — or why a coast after `set` starts again. Both halves are
+    // the class's guard: an inertia mode is compared with its release velocity
+    // and physics before the run is reset, and `set` clears the retained release
+    // velocity, so the same speed afterwards cannot match the retired run.
+    const value = readRepo("packages/motion/src/motion.ts");
+    const coast = value.slice(
+      value.indexOf("coast(inertia: Inertia"),
+      value.indexOf("sample(elapsedMs", value.indexOf("coast(inertia: Inertia")),
+    );
+    expect(coast).toContain('this.mode.kind === "inertia"');
+    expect(coast).toContain("this.initialVelocity === release");
+    expect(coast).toContain("sameInertia(this.mode.inertia, inertia)");
+
+    const clear = value.slice(
+      value.indexOf("set(value: number): void {"),
+      value.indexOf("animate(target: number"),
+    );
+    expect(clear).toContain("this.initialVelocity = 0;");
+
+    expect(pageText).toContain("re-declaring the inertia already in flight");
+    expect(pageText).toContain("starts from the presentation");
+    expect(pageText).toContain("a coast after `set` or `animate`");
+  });
+
   it("keeps the missing transform key tied to the record's verdict", () => {
     expect(recordRow("Per-element `transform`")).toContain("| not supported |");
     expect(pageText).toContain("no `transform` key");

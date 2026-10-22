@@ -157,6 +157,13 @@ export const [moving, settled] = [first.active, last.complete];
 - An `animate` call that repeats the current target **and** an equal transition
   is a no-op, so re-declaring `springTransition(layoutSpring)` on a render does
   not restart the run.
+- A `coast` is compared by its declaration the same way: re-declaring the
+  inertia already in flight with the same release velocity is a no-op, so a
+  render that builds `inertia()` again does not relaunch the run at full speed
+  from the sample on screen (which would overshoot its rest and never settle).
+  Another release velocity, a changed time constant or a different bound is a
+  new gesture and starts from the presentation — and so is a coast after `set`
+  or `animate`, because each retires the run it cancelled.
 - `sample` clamps a non-monotonic time to the last sample, so a clock that steps
   backwards cannot rewind the paint.
 - `complete` is true only on the sample that finishes the run; `active` says
