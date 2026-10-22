@@ -31,6 +31,7 @@ const VALUE_CONTROLS = [
   "Rating.tsx",
   "Select.tsx",
   "Slider.tsx",
+  "TextArea.tsx",
 ] as const;
 
 const read = (name: string): string =>

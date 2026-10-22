@@ -12,7 +12,13 @@ import type { StyleDesc } from "@gpuix/react";
 import type { ValueState } from "../core/state.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { fieldHostProps, type FieldProps } from "./Input.js";
-import { useControlState, useFocus, type FocusState } from "./internal.js";
+import {
+  useControlState,
+  useFocus,
+  valueChange,
+  type FocusState,
+  type ValueChangeProps,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /**
@@ -20,12 +26,13 @@ import { useTheme } from "./ThemeProvider.js";
  * into a submit and the newline never arrives (plan 046). A caller who wants
  * submit-on-Enter wants an `Input`.
  */
-export type TextAreaProps = Omit<FieldProps, "onSubmit"> & {
-  /** Minimum visible rows. The runtime grows the field to fit. */
-  readonly minRows?: number;
-  /** Rows after which the field scrolls instead of growing. */
-  readonly maxRows?: number;
-};
+export type TextAreaProps = Omit<FieldProps, "onSubmit"> &
+  ValueChangeProps<string> & {
+    /** Minimum visible rows. The runtime grows the field to fit. */
+    readonly minRows?: number;
+    /** Rows after which the field scrolls instead of growing. */
+    readonly maxRows?: number;
+  };
 
 /** A textarea's height is rows, not a control height, so it re-bases padding. */
 export const renderTextArea = (
@@ -60,7 +67,7 @@ export const TextArea = (props: TextAreaProps): ReactElement => {
   const field = useControlState(
     props.value,
     props.defaultValue ?? "",
-    props.onChange,
+    valueChange(props),
   );
   return renderTextArea(props, theme, field.value, focus, field.set);
 };

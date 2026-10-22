@@ -219,6 +219,32 @@ it("edits a TextArea across lines", async () => {
   expect(last).toContain("\n");
 });
 
+it("runs a TextArea's onValueChange and not the deprecated alias", async () => {
+  // The bug this guards: `TextArea` read `props.onChange` directly, so the
+  // documented `onValueChange` never fired — a caller who migrated off the
+  // deprecated alias stopped being notified, and every other value control
+  // routed through `valueChange` already. `src/components/change.test.ts` now
+  // includes this file's component in its contract sweep.
+  const runtime = await openWindow();
+  const field = recorder();
+  let aliased = 0;
+  runtime.render(
+    <Surface>
+      <TextArea
+        testId="area"
+        autoFocus
+        onValueChange={field.onChange}
+        onChange={() => {
+          aliased += 1;
+        }}
+      />
+    </Surface>,
+  );
+  runtime.type("a");
+  expect(lastValue(field.values)).toBe("a");
+  expect(aliased).toBe(0);
+});
+
 /** The `<text>` node painting `label`, if the last frame painted it. */
 const textElement = (runtime: Runtime, label: string) =>
   Option.getOrElse(

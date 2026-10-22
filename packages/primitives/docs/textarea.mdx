@@ -82,11 +82,15 @@ rather than chrome; see `Input` §Theming for the measurement.
 
 - `src/components/fields.test.tsx` — rows, chrome and the absence of `onSubmit`
   in the public props.
+- `src/components/change.test.ts` — the textarea routes its props through the
+  shared `valueChange` precedence rule, so `onValueChange` runs and the
+  deprecated `onChange` alias only runs alone.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the textarea's own tracking.
 - `runtime/fields.runtime.test.tsx` — height follows `rows`; a newline is
   accepted; the probe in plan 046 measured that adding `onSubmit` costs the
-  newline, which is why it is not in the type.
+  newline, which is why it is not in the type; typing reports `onValueChange`
+  and not the deprecated alias when both are passed.
 
 ```sh
 nub run --filter @gpuixui/primitives test
