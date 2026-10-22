@@ -16,6 +16,7 @@
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import type {
   Bounds,
@@ -24,7 +25,7 @@ import type {
   SmokeHost,
   StyleSnapshot,
 } from "./smoke.js";
-import { StyleSnapshot as Snapshot } from "./smoke.js";
+import { A11yNode, A11yTree, StyleSnapshot as Snapshot } from "./smoke.js";
 
 /** One element in the renderer's retained tree, as this port reads it. */
 export interface NativeElement {
@@ -47,6 +48,15 @@ export interface NativeRenderer {
   readonly getElement: (id: number) => NativeElement | null | undefined;
   readonly getElementBounds: (id: number) => Bounds | null;
   readonly getPaintedText: () => ReadonlyArray<string>;
+  /**
+   * The raw accessibility dump.
+   *
+   * `unknown`, not the installed `string`: the pinned `index.d.ts` declares a
+   * string while the JS returns the parsed `A11yTreeDump` object (measured —
+   * a `String.includes` on the result throws `self.includes is not a function`),
+   * so the adapter decodes what is really there instead of trusting the typings.
+   */
+  readonly getA11yTree: () => unknown;
   readonly getFocusedElementId: () => number | null;
   readonly nativeSimulateClick: (x: number, y: number) => void;
   readonly nativeSimulateMouseDown: (x: number, y: number) => void;
@@ -78,6 +88,39 @@ export interface NativeRenderer {
   readonly captureScreenshot: (absolutePath: string) => void;
   readonly advanceTime: (milliseconds: number) => void;
 }
+
+/**
+ * GPUI's debug a11y dump, as the renderer actually returns it.
+ *
+ * `nodes` is keyed by an ephemeral letter and only a node with an `aria` record
+ * is in the platform's tree, so the flattening here is the boundary's decision:
+ * a scenario sees the described nodes and never the keys.
+ */
+const A11yDump = Schema.Struct({
+  root: Schema.OptionFromOptionalKey(Schema.String),
+  nodes: Schema.OptionFromOptionalKey(
+    Schema.Record(
+      Schema.String,
+      Schema.Struct({ aria: Schema.OptionFromOptionalKey(A11yNode) }),
+    ),
+  ),
+});
+
+/** The dump as an `A11yTree`, or `null` when its shape is not the pinned one. */
+const a11yTreeOf = (dump: unknown): A11yTree | null =>
+  Option.match(Schema.decodeUnknownOption(A11yDump)(dump), {
+    onNone: () => null,
+    onSome: (decoded) =>
+      A11yTree.make({
+        root: decoded.root,
+        nodes: Arr.getSomes(
+          Arr.map(
+            R.values(Option.getOrElse(decoded.nodes, () => ({}))),
+            (node) => node.aria,
+          ),
+        ),
+      }),
+  });
 
 /** One wash as the renderer reports it, before this port narrows it. */
 export interface RawHighlight {
@@ -174,6 +217,7 @@ export const createTestHost = (renderer: NativeRenderer): SmokeHost => ({
       onSome: (id) => subtreeText(renderer, id),
     }),
   paintedText: () => renderer.getPaintedText(),
+  a11yTree: () => a11yTreeOf(renderer.getA11yTree()),
   bounds: (testId) =>
     Option.match(elementId(renderer, testId), {
       onNone: () => null,

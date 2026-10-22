@@ -44,7 +44,8 @@ const painted: Readonly<Record<number, Bounds>> = {
   1: { x: 0, y: 0, width: 200, height: 100 },
 };
 
-const fake = (focusedId: number | null = 6) => {
+/** The renderer the cases share; `fake` wraps it in a host. */
+const fakeRenderer = (focusedId: number | null = 6) => {
   const calls: Array<string> = [];
   const byId = new Map(elements.map((element) => [element.id, element]));
   const renderer: NativeRenderer = {
@@ -80,13 +81,58 @@ const fake = (focusedId: number | null = 6) => {
         rects: [{ x: 1, y: 2, width: 3, height: 4 }],
       },
     ],
+    // The pinned `index.d.ts` says string; the runtime returns this object.
+    getA11yTree: () => ({
+      root: "a",
+      nodes: {
+        a: {
+          aria: {
+            role: "Button",
+            label: "Delete note",
+            author_id: "notes.delete",
+            on_action: ["Click"],
+          },
+        },
+        b: {},
+      },
+    }),
     captureScreenshot: (absolutePath) => calls.push(`shot ${absolutePath}`),
     advanceTime: (milliseconds) => calls.push(`advance ${milliseconds}`),
   };
+  return { renderer, calls };
+};
+
+const fake = (focusedId: number | null = 6) => {
+  const { renderer, calls } = fakeRenderer(focusedId);
   return { host: createTestHost(renderer), calls };
 };
 
 describe("createTestHost", () => {
+  it("decodes the a11y dump into the nodes the platform describes", () => {
+    const { host } = fake();
+    const tree = host.a11yTree();
+    expect(tree?.root).toEqual(Option.some("a"));
+    const nodes = tree?.nodes ?? [];
+    // The dump keys nodes by an ephemeral letter and lists one with no `aria`:
+    // a scenario must see the described node and never the key.
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0]?.role).toEqual(Option.some("Button"));
+    expect(nodes[0]?.label).toEqual(Option.some("Delete note"));
+    expect(nodes[0]?.author_id).toEqual(Option.some("notes.delete"));
+    expect(nodes[0]?.on_action).toEqual(Option.some(["Click"]));
+    expect(nodes[0]?.selected).toEqual(Option.none());
+  });
+
+  it("reports an a11y dump it cannot decode as absent", () => {
+    // The typings declare a string, so a renderer that really returns one is
+    // the shape change this guards: absence, never a coerced empty tree.
+    const host = createTestHost({
+      ...fakeRenderer().renderer,
+      getA11yTree: () => "text: painted",
+    });
+    expect(host.a11yTree()).toBeNull();
+  });
+
   it("reports a highlight wash with the run and the boxes it painted", () => {
     const { host } = fake();
     expect(host.highlights()).toEqual([

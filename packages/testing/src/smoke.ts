@@ -185,6 +185,38 @@ export class StyleSnapshot extends Schema.Class<StyleSnapshot>("StyleSnapshot")(
 ) {}
 
 /**
+ * One node's accessibility description, as GPUI's debug dump reports it.
+ *
+ * Every field is optional because the platform describes what it can: a role
+ * always comes with an `aria` record, while `value`, `selected` and `on_action`
+ * appear only for the nodes that have them. The wire names (`author_id`,
+ * `on_action`) are kept as the platform spells them.
+ */
+export class A11yNode extends Schema.Class<A11yNode>("A11yNode")({
+  role: Schema.OptionFromOptionalKey(Schema.String),
+  label: Schema.OptionFromOptionalKey(Schema.String),
+  description: Schema.OptionFromOptionalKey(Schema.String),
+  value: Schema.OptionFromOptionalKey(Schema.String),
+  author_id: Schema.OptionFromOptionalKey(Schema.String),
+  expanded: Schema.OptionFromOptionalKey(Schema.Boolean),
+  selected: Schema.OptionFromOptionalKey(Schema.Boolean),
+  level: Schema.OptionFromOptionalKey(Schema.Number),
+  on_action: Schema.OptionFromOptionalKey(Schema.Array(Schema.String)),
+}) {}
+
+/**
+ * A painted frame's accessibility tree.
+ *
+ * `nodes` is flattened on purpose: the dump keys nodes by an ephemeral letter
+ * (`a`, `b`, …), which the platform documents as meaningless, so a scenario
+ * selects by role rather than by key.
+ */
+export class A11yTree extends Schema.Class<A11yTree>("A11yTree")({
+  root: Schema.OptionFromOptionalKey(Schema.String),
+  nodes: Schema.Array(A11yNode),
+}) {}
+
+/**
  * The only way a scenario touches the runtime.
  *
  * `apps/playground` adapts a real renderer to this interface; a scenario never
@@ -198,6 +230,15 @@ export class StyleSnapshot extends Schema.Class<StyleSnapshot>("StyleSnapshot")(
 export interface SmokeHost {
   readonly text: (testId: string) => string | null;
   readonly paintedText: () => ReadonlyArray<string>;
+  /**
+   * The renderer's accessibility dump from the last painted frame.
+   *
+   * The only channel that sees a `role` or an `aria-*` attribute: those never
+   * appear in `paintedText`, and a component's claim that assistive technology
+   * can read it is otherwise untestable. A window's automation protocol exposes
+   * no equivalent, so this is a `TestRenderer` fact.
+   */
+  readonly a11yTree: () => A11yTree | null;
   readonly bounds: (testId: string) => Bounds | null;
   /**
    * The style the runtime applied to `testId`, decoded; `null` when the id is

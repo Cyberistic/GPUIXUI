@@ -82,6 +82,15 @@ travels, and `hover` moves the pointer onto the element's centre **without
 pressing** — the only way to drive the enter/leave pair a tooltip or a
 hover style listens for, since any press also fires the press handlers.
 
+`a11yTree()` is the offscreen renderer's accessibility dump, decoded into
+`Smoke.A11yTree`: the platform's `role`, `label`, `description`, `value`,
+`author_id`, `expanded`, `selected`, `level` and `on_action` per node, with the
+dump's ephemeral node keys flattened away. The port types the raw dump as
+`unknown` because the pinned `index.d.ts` says `string` while the JS returns the
+parsed object; a dump the adapter cannot decode reports `null`, never an empty
+tree. Only a node with a role is in the dump, and a window's automation protocol
+has no a11y verb, so this is a `TestRenderer` measurement.
+
 A `<virtual-list>` is addressed in rows, not pixels: `scrollToItem(testId,
 index)` reveals a row that is not mounted, and `listAnchor(testId)` reads the
 renderer's `[itemIndex, offsetInItem, viewportHeight]` anchor (or `null` for

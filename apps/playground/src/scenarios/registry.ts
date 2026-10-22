@@ -167,6 +167,11 @@ export const registry = [
     capability: "workspace",
   },
   {
+    id: "a11y-tree",
+    title: "Accessibility: role and aria-* reach the renderer's a11y tree",
+    capability: "focus",
+  },
+  {
     id: "theme-color-roles",
     title: "Theme: every colour role paints and the switch re-paints",
     capability: "theme",

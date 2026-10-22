@@ -26,7 +26,8 @@ contract, floating placement and text selection), the Tier 3/4 probes
 `data-grid-frozen-column`, `virtualized-table`, `virtual-list-windowed`,
 `virtual-list-rows`, `virtual-list-expand`, `tree-view`, `log-viewer`,
 `workspace-tab-drag`, `dock-reflow`, `docking-nested`, `drag-autoscroll`,
-`search-highlights`, `tab-overflow`, `editor-surface`), the app-level
+`search-highlights`, `tab-overflow`, `editor-surface`, `a11y-tree`), the
+app-level
 shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
@@ -83,7 +84,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (37/37 green); -> 2 on a host with no binding
+# -> 0 here (38/38 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -442,6 +443,50 @@ a 56px detail leaves a whole row of viewport free and fails
 `expand-fixture.test.ts` guards the geometry those two checks depend on (3
 cases).
 
+## The accessibility tree
+
+The library tells a reader what assistive technology is told — the tooltip's
+`aria-description`, a row's `aria-selected`, a dialog's role — and nothing had
+ever read the tree those claims are about: `paintedText` cannot see an attribute,
+and a window's automation protocol has no a11y verb. The offscreen renderer
+exposes `getA11yTree()`, so `@gpuixui/testing` decodes its dump into
+`Smoke.A11yTree` and `a11y-tree` mounts one node per shape the closed aria set
+offers.
+
+| Shape | What the platform reports |
+| ----- | ------------------------- |
+| `role="button"` + `aria-label` / `aria-description` / `aria-id`, `onClick`, `tabIndex` | role `Button`, `label=Save project`, `description=Writes the file`, `author_id=file.save`, actions `Click` and `Focus` |
+| `role="option"` + `aria-selected` / `aria-expanded` | role `ListBoxOption`, `selected=true`, `expanded=true` |
+| `role="heading"` + `aria-level={2}` | role `Heading`, `level=2` |
+| `role="progressbar"` + `aria-valuetext="42%"` | role `ProgressIndicator`, `value=42%` |
+| `<text>Hello accessibility</text>` | a `Label` node whose `value` is that text |
+| `role="none"` with an `aria-label` | **no node** |
+| a div with `aria-label` and no role | **no node** |
+| the window | a `Window` node |
+
+19 checks, `--only a11y-tree`, green on 0.11.0.
+
+Two measured rules a component plan has to carry:
+
+1. **The ARIA token is not the role you get back.** `option` arrives as
+   `ListBoxOption` and `progressbar` as `ProgressIndicator`; a test that asserts
+   the token it passed fails against a correct tree.
+2. **A node needs a role to exist at all.** An `aria-label` on a roleless `div`
+   is silently absent, and `role="none"` is dropped, so an element that must be
+   announced needs both a role and the label. A window's automation protocol has
+   no a11y verb, so this stays a `TestRenderer` measurement.
+
+The dump's own shape is a boundary: the pinned `index.d.ts` declares
+`getA11yTree(): string` while the JS returns the parsed object, so the port types
+it `unknown` and `createTestHost` decodes it — a dump it cannot decode reports
+`null` rather than an empty tree, and `native.test.ts` guards both the decode and
+that absence. Nodes are flattened: the dump keys them by an ephemeral letter.
+
+Negative controls, measured: removing the button's `role` fails
+`the tree describes "Save project"` (`expected a value, got none`); dropping its
+`aria-description` fails `aria-description reaches the tree`
+(`expected "Writes the file", got ""`) — exit `1` each; restored, green.
+
 ## Dock reflow: `onLayout` reports the width a sibling takes
 
 `docking-nested` pins a **fixed-width** split, because a split's `max` is the
@@ -541,10 +586,10 @@ mounting every page from one component fails
 
 ## Evidence on this host
 
-The suite is **37/37 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **38/38 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-37/37 scenarios passed · capabilities: layout=verified text=verified
+38/38 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -557,6 +602,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | ---------- | ----------------------- |
 | layout, text, input | exact bounds; `getAllText`/`getPaintedText`; `onChange`/`onSubmit` |
 | text selection | `dragSelect` fills `getSelectedText()` for `selectable` text and nothing for chrome; `clearSelection` empties it |
+| accessibility | the offscreen renderer's `getA11yTree()` describes `role` and all seven `aria-*` props (the token mapped to the platform's role name), a node with no role is absent, and a `<text>` is a `Label` with its content (`a11y-tree`) |
 | focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
@@ -1691,6 +1737,7 @@ src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/docking.tsx   nested splits, a caller-owned sidebar and a tabbed pane
 src/scenarios/dock-reflow.tsx a pane's onLayout reports the width a sibling takes
+src/scenarios/a11y-tree.tsx  role and aria-* read back from the a11y tree
 src/scenarios/data-grid.tsx a fixed header over a vertical scroller, one shared x offset
 src/scenarios/search-highlights.tsx the runtime's find: query, case, word and ranges
 src/scenarios/editor.tsx    a textarea that edits lines, <code> and <diff> read-only
@@ -1737,7 +1784,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (37/37), with a written report and screenshots.
+  (38/38), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

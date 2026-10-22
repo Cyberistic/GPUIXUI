@@ -492,7 +492,34 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 52/52
+`[x]` `[██████████]` 53/53
+
+`[x]` Land the `a11y-tree` headless scenario and measure **what assistive
+      technology is told** — the library documents `aria-description`, an
+      `aria-selected` row, a dialog role and a roving tree, and nothing had ever
+      read the tree those claims are about: `paintedText` cannot see an
+      attribute and a window's automation protocol has no a11y verb. The
+      offscreen renderer's `getA11yTree()` is now a host verb:
+      `@gpuixui/testing` decodes its dump into `Smoke.A11yTree`/`A11yNode`
+      (`Schema`, Options, ephemeral node keys flattened), the port types the raw
+      dump `unknown` because the pinned `index.d.ts` says `string` while the JS
+      returns the parsed object, and a dump that does not decode reports `null`
+      rather than an empty tree (`native.test.ts`, 2 new cases). Measured on
+      0.11.0: the ARIA token becomes the **platform's role name** (`button` →
+      `Button`, `option` → `ListBoxOption`, `heading` → `Heading`,
+      `progressbar` → `ProgressIndicator`); `aria-label`/`aria-description`/
+      `aria-id` reach `label`/`description`/`author_id`;
+      `aria-selected`/`aria-expanded`/`aria-level`/`aria-valuetext` reach
+      `selected`/`expanded`/`level`/`value`; `onClick`+`tabIndex` surface as the
+      `Click` and `Focus` actions; a `<text>` is a `Label` with its content; and
+      **a node needs a role to exist at all** — a div carrying only an
+      `aria-label` paints no node and `role="none"` is dropped. 19 checks,
+      `--only a11y-tree`, green on 0.11.0; full headless suite re-run 38/38. Two
+      negative controls measured (dropping the button's `role`: `the tree
+      describes "Save project" — expected a value, got none`; dropping its
+      `aria-description`: `aria-description reaches the tree — expected "Writes
+      the file", got ""`, exit `1` each). Evidence:
+      `apps/playground/README.md` §The accessibility tree
 
 `[x]` Land the `dock-reflow` headless scenario and measure **the re-clamp signal
       a dock needs** — `docking-nested` pins a fixed-width split because a
@@ -1546,6 +1573,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | `/docs/themes`'s **Text selection** bullet still describes the old contract: it says `selectionFailures` measures "the four content surfaces body text can be selected from" against "two floors", while `selectionPairs` now also carries `mutedForeground` on the page, a card and a popover at the secondary floor (the tokens workstream measured it and moved the palettes' secondary text). The readout itself needs no new line — the editor never edits `selection`, and `formatSelectionFailure` already words any pair the report returns | docs-site | **resolved** — the bullet now interpolates the pair count (`{selectionPairs.length}`) and both floors (`{contrastFloors.body}` / `{contrastFloors.secondary}`) from the package, names the four content surfaces plus the `mutedForeground` line on the three prose surfaces, and says the caption or second line under a heading is measured too. `theming-page.test.ts` gained a case holding the page to `selectionPairs`: the import must carry `selectionPairs` and `contrastFloors`, every surface the report composites over must be named, both floors must be interpolated, and the retracted "four content surfaces" sentence must not return (measured: the case failed on the import before the fix, and fails on the old sentence if restored) |
 
+| Cite the measured **accessibility tree** where the record promises an AT path — `docs/gpuix-capabilities.md` §3's aria row lists the closed set (`role` plus seven `aria-*` attributes) and the fourteen absences, and says the tooltip's tip text "reaches a screen reader as the trigger's `aria-description`", while nothing had read the tree. The playground's `a11y-tree` (19 checks, 0.11.0) measured the mapping: the token becomes the platform's role name, `aria-label`/`description`/`id`, `selected`/`expanded`/`level`/`valuetext` reach their fields, `onClick`+`tabIndex` surface as `Click`/`Focus`, a `<text>` is a `Label`, and a node needs a role to exist (a div with only an `aria-label` is absent; `role="none"` is dropped). It is a `TestRenderer` fact: a window's automation protocol has no a11y verb | docs-site (capability record + `/docs/runtime`), and primitives for the shipped `Tooltip` row's claim | open — §3 owes the measurement and §5's owed-probe list owes `a11y-tree`; the Tooltips inventory row's "reaches a screen reader" can cite this at the runtime level (the wrapper's own node is the next step). Evidence: `apps/playground/README.md` §The accessibility tree |
 | Record the **expandable-row** rule the runtime measured — the capability record's Virtualized list row covers the rows' heights (`virtual-list-rows`) but says nothing about a row that grows **while it is painted**, which is what an expandable row or an expandable table row is. The playground's `virtual-list-expand` (18 checks on 0.11.0) measured: the row re-measures on the next frame with no scroll and no offset change; the rows below shift by the growth and a press lands on the shifted row; the measured height is remembered across the window round-trip; the grown height joins `scrollToItem`'s arithmetic; and the list paints whole rows, so a growth that leaves less than a row of the 240px viewport drops the following row out of the painted window until a scroll | docs-site (capability record + `/docs/runtime`), and the Tier 3 Expandable rows component | open — the record owes the row and §5's owed-probe list owes `virtual-list-expand`; §3 also owes `dock-reflow` beside the split-pane row (a pane's `onLayout` re-fires on a sibling reflow, reports the painted box, and also reports a stale pass and unchanged panes). `COMPONENTS.md`'s Virtualized lists, Expandable rows, Resizable split panes and Docking layouts rows carry the measurements already. Evidence: `apps/playground/README.md` §An expanded row, §Dock reflow |
 
 ## Phase D — data and workspace components
