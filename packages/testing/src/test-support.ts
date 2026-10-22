@@ -21,6 +21,7 @@ import {
 export const nullHost: SmokeHost = {
   text: () => null,
   paintedText: () => [],
+  a11yTree: () => null,
   bounds: () => null,
   paintedStyle: () => null,
   focused: () => null,
