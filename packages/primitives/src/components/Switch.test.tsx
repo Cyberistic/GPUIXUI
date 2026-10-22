@@ -185,6 +185,32 @@ describe("SwitchThumb", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("lands the thumb instead of sliding it when motion is off", () => {
+    // The bug guarded: the slide ran for every reader, because the runtime
+    // exposes no reduced-motion preference and nothing passed one down. The
+    // positions are still two, so the state is still visible — only the travel
+    // between them is gone.
+    const thumb = (reducedMotion: boolean): ReactElement =>
+      thumbOf(
+        renderSwitch(
+          { reducedMotion },
+          testTheme,
+          checked(true),
+          idle,
+          vi.fn(),
+        ),
+      );
+    const slide = (reducedMotion: boolean): number =>
+      expectSome(
+        Schema.decodeUnknownOption(Schema.Struct({ duration: Schema.Number }))(
+          expectSome(elementProp(thumb(reducedMotion), "transition")),
+        ),
+      ).duration;
+    expect(slide(false)).toBeGreaterThan(0);
+    expect(slide(true)).toBe(0);
+    expect(animatedLeft(thumb(true))).toBe(animatedLeft(thumb(false)));
+  });
+
   it("draws the caller's glyph inside the knob", () => {
     const thumb = thumbOf(
       renderSwitch(

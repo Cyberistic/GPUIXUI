@@ -65,7 +65,9 @@ keeps the text floor on both fills.
   button paints `primaryForeground`, not a brand dot on a brand fill), announces
   `Loading`, refuses activation, and **stays focusable**. A disabled busy button
   paints the neutral pair, so its spinner moves to `on-disabled`
-  (`disabledForeground`).
+  (`disabledForeground`). `reducedMotion` reaches that spinner, because the busy
+  state is the only part of a button that moves; the runtime exposes no
+  reduced-motion preference, so the caller passes its own.
 
 ## API
 
@@ -77,6 +79,7 @@ keeps the text floor on both fills.
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
+| `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `() => void` | none | click or activating key; not called while busy |

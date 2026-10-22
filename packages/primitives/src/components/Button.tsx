@@ -60,8 +60,16 @@ export interface ButtonProps extends InteractionProps {
   readonly square?: boolean;
   readonly fullWidth?: boolean;
   readonly disabled?: boolean;
-  /** Busy: shows a spinner and blocks activation, but stays focusable. */
+  /**
+   * Busy: shows a spinner and blocks activation, but stays focusable.
+   */
   readonly loading?: boolean;
+  /**
+   * Hold the busy spinner's lit dot. The runtime exposes no reduced-motion
+   * preference, so the caller passes its own; it reaches the spinner and
+   * nothing else, because a button paints no other motion.
+   */
+  readonly reducedMotion?: boolean;
   readonly leading?: ReactNode;
   readonly trailing?: ReactNode;
   /** Accessible name. Required when the button has only an icon. */
@@ -167,6 +175,7 @@ export const renderButton = (
           size={theme.iconSize.sm}
           accent={variantSpinnerAccent(variant, props.disabled)}
           label="Loading"
+          reducedMotion={props.reducedMotion}
         />
       ) : (
         props.leading

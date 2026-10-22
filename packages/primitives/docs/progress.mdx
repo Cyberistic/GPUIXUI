@@ -73,6 +73,7 @@ root uses — there is no second paint path.
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
 | `label` | `string` | none | accessible name, and `ProgressLabel`'s default text |
+| `reducedMotion` | `boolean` | `false` | holds the indeterminate segment at its resting offset and schedules no interval; no effect when `value` is set |
 | `children` | `ReactNode` | the track | the parts to draw |
 | `style` | `StyleDesc` | — | merged last, on the root frame |
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
@@ -108,6 +109,15 @@ tone's role. Height is a spacing step and both ends are `radius.full`, so a
 density or radius change moves the whole family. The label and value parts use
 the `caption` type role in the `muted` text tone.
 
+`reducedMotion` is the caller's: the runtime exposes no reduced-motion
+preference, so the host application reads the platform setting and passes it
+down. An indeterminate bar then paints its segment at the resting offset with
+no interval running; a determinate bar is unaffected because it never animated.
+
+```tsx
+<Progress label="Saving" reducedMotion={prefersReducedMotion} />
+```
+
 ## Limitations
 
 - No `aria-valuenow` (above).
@@ -115,6 +125,7 @@ the `caption` type role in the `muted` text tone.
   cannot interpolate position beyond the motion API this package does not import.
 - No buffer/secondary value and no stacked segments. The label and value parts
   sit beside the track; painting text *inside* the bar is not a part.
+- The reduced-motion preference is the caller's to supply (above).
 
 ## Verification
 
@@ -123,12 +134,14 @@ the `caption` type role in the `muted` text tone.
   without a value animates.
 - `src/components/Progress.test.tsx` — the tree-level track/fill, the clamped
   fill width, the value part agreeing with it, the indeterminate lead, the tone
-  on both the determinate and the indeterminate fill, a custom composition, and
-  the root frame's style merge.
+  on both the determinate and the indeterminate fill, a custom composition, the
+  root frame's style merge, and the lead held at the resting offset under
+  `reducedMotion`.
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
   and −5 to `"0%"`, the fill tracks the value inside the track, the
-  indeterminate segment moves over real time in its own tone, and a step counter
-  that is not running stays still.
+  indeterminate segment moves over real time in its own tone, a step counter
+  that is not running stays still, and a `reducedMotion` bar's lead width is one
+  value across six samples.
 
 ```sh
 nub run --filter @gpuixui/primitives test

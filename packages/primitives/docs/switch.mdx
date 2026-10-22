@@ -52,6 +52,7 @@ const theme = useTheme();
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name |
+| `reducedMotion` | `boolean` | `false` | the thumb lands on its position instead of sliding there |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the switch's own; yours runs first |
 | `style` | `StateStyle<SwitchState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
@@ -100,13 +101,16 @@ selection spec. The track is the thumb's positioning context and the knob is an
 absolutely positioned child, placed by its `left` inset — the resting inset when
 off, the inset plus the travel when on. The runtime has no `transform`, but it
 can interpolate a `left` inset, so the component hands that same value to
-`motion` and the thumb slides (150 ms, `easeOut`) instead of jumping. Disabled
-adds half opacity and removes feedback — the `pointerEvents: "none"` guard on the
-track removes the blocking, not its hitbox, so the hover and press refinements
-still paint. `invalid` gives an off-switch the destructive border, the same role
-a checkbox uses. The target is `switchTargetStyle`, and it carries the focus: the
-shared keyboard outline is declared at rest (`controlRing`), which the runtime
-paints after keyboard focus only; a disabled switch declares none.
+`motion` and the thumb slides (150 ms, `easeOut`) instead of jumping.
+`reducedMotion` keeps the same two insets and paints them with a zero duration —
+the runtime exposes no reduced-motion preference, so the caller passes its own.
+Disabled adds half opacity and removes feedback — the `pointerEvents: "none"`
+guard on the track removes the blocking, not its hitbox, so the hover and press
+refinements still paint. `invalid` gives an off-switch the destructive border,
+the same role a checkbox uses. The target is `switchTargetStyle`, and it carries
+the focus: the shared keyboard outline is declared at rest (`controlRing`),
+which the runtime paints after keyboard focus only; a disabled switch declares
+none.
 
 `style` takes a `StateStyle<SwitchState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, checked, invalid }` and returns one. The result
@@ -119,8 +123,9 @@ the recipe also sets.
   is visible text only — it does not name the switch — so pass the same string
   as the switch's own `label` prop, or spread `labelledBy(name)`. A glyph on the
   knob is decoration, not a state label.
-- The slide is 150 ms and always runs: the runtime exposes no reduced-motion
-  preference, so there is no opt-out.
+- The slide is 150 ms. The preference is the caller's, because the runtime
+  exposes none: `reducedMotion` paints the same two positions with a zero
+  duration, so the thumb lands rather than travels.
 - No loading or pending state; disable it while a request is in flight.
 
 ## Verification
@@ -130,9 +135,10 @@ the recipe also sets.
   border when `invalid`; the keyboard ring.
 - `src/components/Switch.test.tsx` — the knob's geometry from the theme scale,
   the declared slide (the `left` inset and the motion target agree, and the two
-  targets differ by the travel), a custom glyph inside it, the pointer guard that
-  keeps the glyph from taking the press, and a `style` callback receiving the
-  live state and winning.
+  targets differ by the travel), the slide's duration falling to zero under
+  `reducedMotion` with the targets unchanged, a custom glyph inside it, the
+  pointer guard that keeps the glyph from taking the press, and a `style`
+  callback receiving the live state and winning.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus are
   composed with the switch's own, and a disabled switch installs none.
 - `runtime/switch.runtime.test.tsx` — the knob's paint is still at the resting

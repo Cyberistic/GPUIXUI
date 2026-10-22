@@ -6,6 +6,10 @@
  * dots whose lit dot advances one place per step and whose trail fades — the
  * discrete-step alternative the capability map allows. A `Progress` bar with no
  * `value` is the other option.
+ *
+ * `reducedMotion` is the caller's answer to a preference the runtime does not
+ * expose: the dots stay a status indicator but hold one frame and schedule no
+ * interval.
  */
 
 import type { ReactElement } from "react";
@@ -18,6 +22,7 @@ import {
   type SpinnerAccent,
 } from "../core/loading.js";
 import { accessibleName } from "../core/a11y.js";
+import { stillFrame } from "../core/motion.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { spinnerDotClass, spinnerGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -31,6 +36,11 @@ export interface SpinnerProps {
   readonly accent?: SpinnerAccent;
   /** Accessible name. Defaults to "Loading". */
   readonly label?: string;
+  /**
+   * Hold the lit dot and schedule no interval. The runtime exposes no
+   * reduced-motion preference, so the caller passes its own.
+   */
+  readonly reducedMotion?: boolean;
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -42,6 +52,7 @@ export const renderSpinner = (
     size,
     accent = "primary",
     label = "Loading",
+    reducedMotion,
     style,
     className,
     testId,
@@ -67,13 +78,20 @@ export const renderSpinner = (
       testId={testId}
       style={group}
     >
-      {Arr.map(spinnerDots(step, 3), (point, index) => (
-        <div key={index} style={dotStyle(point.opacity)} />
-      ))}
+      {Arr.map(
+        spinnerDots(stillFrame(step, reducedMotion), 3),
+        (point, index) => (
+          <div key={index} style={dotStyle(point.opacity)} />
+        ),
+      )}
     </div>
   );
 };
 
 /** A three-dot activity indicator. */
 export const Spinner = (props: SpinnerProps): ReactElement =>
-  renderSpinner(props, useTheme(), useStep(SPINNER_SEGMENTS, 120));
+  renderSpinner(
+    props,
+    useTheme(),
+    useStep(SPINNER_SEGMENTS, 120, props.reducedMotion !== true),
+  );

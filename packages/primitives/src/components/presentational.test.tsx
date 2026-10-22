@@ -375,6 +375,36 @@ describe("loading", () => {
     expect(new Set(opacities).size).toBeGreaterThan(1);
   });
 
+  it("holds a skeleton on its resting frame when the reader asked for less motion", () => {
+    // The bug guarded: the caller's preference reached nothing, so a reader who
+    // asked not to see motion still got a block pulsing every 700 ms.
+    const opacityAt = (step: number, reducedMotion?: boolean): number =>
+      expectSome(
+        numberIn(renderSkeleton({ reducedMotion }, testTheme, step), "opacity"),
+      );
+    const resting = opacityAt(0);
+    expect(opacityAt(1)).not.toBe(resting);
+    expect(opacityAt(1, true)).toBe(resting);
+    expect(opacityAt(5, true)).toBe(resting);
+  });
+
+  it("holds a spinner's lit dot when the reader asked for less motion", () => {
+    // The same rule on the second timed indicator: the dots stay a status
+    // report, but no frame after the first is painted.
+    const opacitiesAt = (
+      step: number,
+      reducedMotion?: boolean,
+    ): ReadonlyArray<number> =>
+      Arr.map(
+        elementChildren(renderSpinner({ reducedMotion }, testTheme, step)),
+        (dot) => expectSome(numberIn(dot, "opacity")),
+      );
+    const resting = opacitiesAt(0);
+    expect(opacitiesAt(1)).not.toStrictEqual(resting);
+    expect(opacitiesAt(1, true)).toStrictEqual(resting);
+    expect(opacitiesAt(7, true)).toStrictEqual(resting);
+  });
+
   it("keeps a skeleton circle round with only one side given", () => {
     // The bug: the missing side fell back to the body line height, so a
     // 40-wide avatar placeholder painted a 40x20 ellipse.

@@ -30,6 +30,7 @@ import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
+import { stillTransition } from "../core/motion.js";
 import {
   switchTargetStyle,
   switchThumbInset,
@@ -60,6 +61,8 @@ import { useTheme } from "./ThemeProvider.js";
 interface SwitchPart {
   readonly spec: SelectionSpec;
   readonly theme: PrimitiveTheme;
+  /** The caller's reduced-motion preference, honoured by the thumb's slide. */
+  readonly reducedMotion: boolean;
 }
 
 const SwitchContext = createContext<SwitchPart | null>(null);
@@ -90,6 +93,11 @@ export interface SwitchProps extends CheckedChangeProps, InteractionProps {
    * same string, or spread `labelledBy(name)`.
    */
   readonly label?: string;
+  /**
+   * Skip the thumb's slide. The runtime exposes no reduced-motion preference,
+   * so the caller passes its own and the thumb jumps to its position instead.
+   */
+  readonly reducedMotion?: boolean;
   /** Extra style, resolved against the switch's live state and merged last. */
   readonly style?: StateStyle<SwitchState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -119,12 +127,14 @@ const THUMB_SLIDE: MotionTransition = { duration: 0.15, ease: "easeOut" };
  * whole of its position. `motion` animates that inset: the runtime has no
  * transform, and a `left` inset is one of the box values it can interpolate, so
  * the thumb slides instead of jumping. `initial: false` keeps the first paint
- * at rest — only a state change animates.
+ * at rest — only a state change animates. `reducedMotion` paints the same two
+ * insets with no duration, so the thumb lands rather than travels.
  */
 export const renderSwitchThumb = (
   props: SwitchThumbProps,
   spec: SelectionSpec,
   theme: PrimitiveTheme,
+  reducedMotion = false,
 ): ReactElement => {
   const thumb = recipeTw.classesToStyle(
     cn(switchThumbClass(spec), props.className),
@@ -144,7 +154,7 @@ export const renderSwitchThumb = (
     <motion.div
       initial={false}
       animate={{ left }}
-      transition={THUMB_SLIDE}
+      transition={stillTransition(THUMB_SLIDE, reducedMotion)}
       style={style}
     >
       {props.children}
@@ -158,7 +168,7 @@ export const SwitchThumb = (props: SwitchThumbProps): ReactElement => {
   if (part === null) {
     throw new Error("SwitchThumb must be used inside Switch");
   }
-  return renderSwitchThumb(props, part.spec, part.theme);
+  return renderSwitchThumb(props, part.spec, part.theme, part.reducedMotion);
 };
 
 export const renderSwitch = (
@@ -224,8 +234,19 @@ export const renderSwitch = (
       style={target}
     >
       <div style={track}>
-        <SwitchContext.Provider value={{ spec, theme }}>
-          {renderSwitchThumb({ children: props.children }, spec, theme)}
+        <SwitchContext.Provider
+          value={{
+            spec,
+            theme,
+            reducedMotion: props.reducedMotion === true,
+          }}
+        >
+          {renderSwitchThumb(
+            { children: props.children },
+            spec,
+            theme,
+            props.reducedMotion === true,
+          )}
         </SwitchContext.Provider>
       </div>
     </div>

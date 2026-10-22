@@ -322,6 +322,51 @@ it("moves a Spinner's lit dot instead of rotating it", async () => {
   ).toBe(true);
 });
 
+it("holds every indicator still when the reader asked for less motion", async () => {
+  // The bug guarded: `@gpuix/native` exposes no reduced-motion preference, so
+  // nothing passed one down and all three timed indicators kept waking the
+  // tree and moving — a reader who asked not to see motion saw it anyway.
+  // The frames a running interval would change are the skeleton's opacity, the
+  // spinner's dot opacities and the indeterminate bar's lead width.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Skeleton testId="sk" width={100} height={20} reducedMotion />
+        <Spinner testId="sp" label="Working" reducedMotion />
+        <Progress testId="pg" label="Uploading" reducedMotion />
+      </Stack>
+    </Surface>,
+  );
+  const progressLeadWidth = (): string => {
+    const track = Arr.head(childrenOf(runtime, "pg"));
+    const lead = Option.flatMap(track, (id) =>
+      Arr.head(childrenOfId(runtime, id)),
+    );
+    const width = Option.flatMap(lead, (id) =>
+      Option.fromNullishOr(styleOf(runtime, id)["width"]),
+    );
+    return Option.match(width, {
+      onNone: () => "none",
+      onSome: (value) => String(value),
+    });
+  };
+  const frame = (): string =>
+    [
+      String(styleOf(runtime, idOf(runtime, "sk"))["opacity"]),
+      Arr.map(childrenOf(runtime, "sp"), (id) =>
+        String(styleOf(runtime, id)["opacity"]),
+      ).join(","),
+      progressLeadWidth(),
+    ].join("|");
+  const frames = await sample(runtime, frame, 6);
+  expect(new Set(frames).size).toBe(1);
+  // ...and each one is still an indicator rather than an empty box: three dots
+  // in the status row and a segment inside the track.
+  expect(childrenOf(runtime, "sp")).toHaveLength(3);
+  expect(progressLeadWidth()).not.toBe("none");
+});
+
 it("moves a disabled busy button's spinner onto the neutral pair", async () => {
   // The bug guarded: a disabled filled action paints `disabled` behind
   // `disabledForeground`, but the spinner kept the action's on-colour — white

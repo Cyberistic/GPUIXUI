@@ -161,6 +161,25 @@ describe("Progress", () => {
     expect(leadWidth(0)).not.toBe(leadWidth(1));
   });
 
+  it("holds the moving segment when the reader asked for less motion", () => {
+    // The bug guarded: `reducedMotion` stopped the timer but the segment still
+    // painted whatever step the renderer held, so a reader who asked not to see
+    // motion saw the bar advance on the next unrelated re-render.
+    const leadWidth = (step: number, reducedMotion?: boolean): string =>
+      expectSome(
+        hostStyleString(
+          elementChildren(
+            trackOf(renderProgress({ reducedMotion }, testTheme, step)),
+          )[0] ?? expect.fail("no lead"),
+          "width",
+        ),
+      );
+    expect(leadWidth(0, true)).toBe(leadWidth(0));
+    expect(leadWidth(3, true)).toBe(leadWidth(0));
+    expect(leadWidth(7, true)).toBe(leadWidth(0));
+    expect(leadWidth(3)).not.toBe(leadWidth(0));
+  });
+
   it("paints its tone on the fill, determinate or not", () => {
     // The bug guarded: the indeterminate bar ignored the tone and painted the
     // primary role, so a destructive task and a successful one looked the same

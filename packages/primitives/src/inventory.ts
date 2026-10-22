@@ -363,7 +363,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No aria-checked: pair it with a visible label",
-      "The slide always runs: the runtime exposes no reduced-motion preference",
+      "The slide is 150ms; reducedMotion lands the thumb (the runtime exposes no preference)",
       "No loading or pending state",
     ],
     source: [
@@ -387,6 +387,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "No aria-valuenow: the value is announced as aria-valuetext",
       "The indeterminate segment is a discrete step, not a smooth sweep",
       "No buffer value, stacked segments or in-track label",
+      "reducedMotion holds the indeterminate segment; the preference is the caller's",
     ],
     source: ["src/components/Progress.tsx", "src/core/style.ts"],
     docs: "docs/progress.mdx",
@@ -420,7 +421,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No shimmer sweep: motion animates opacity, width and height only",
-      "No list-shape generation and no reduced-motion switch",
+      "No list-shape generation; reducedMotion holds one frame (the preference is the caller's)",
     ],
     source: ["src/components/Skeleton.tsx", "src/core/loading.ts"],
     docs: "docs/skeleton.mdx",
@@ -439,6 +440,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "The trail is the accent at reduced opacity, not a separate quiet role",
       "No smooth animation and no size scale",
       "No inline placement inside a text run",
+      "reducedMotion holds the lit dot; the preference is the caller's",
     ],
     source: ["src/components/Spinner.tsx", "src/core/loading.ts"],
     docs: "docs/spinner.mdx",

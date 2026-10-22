@@ -27,6 +27,7 @@ import {
   progressAnimates,
   SPINNER_SEGMENTS,
 } from "../core/loading.js";
+import { stillFrame } from "../core/motion.js";
 import {
   progressPercent,
   type ProgressSpec,
@@ -48,6 +49,12 @@ export interface ProgressProps {
   readonly size?: ProgressSpec["size"];
   /** Accessible name, e.g. "Uploading". */
   readonly label?: string;
+  /**
+   * Hold the indeterminate segment and schedule no interval. The runtime
+   * exposes no reduced-motion preference, so the caller passes its own. A
+   * determinate bar never animates, so this changes nothing on it.
+   */
+  readonly reducedMotion?: boolean;
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -241,7 +248,11 @@ export const renderProgress = (
   step: number,
 ): ReactElement => {
   const { label, style, className, children, testId } = props;
-  const part = progressPart(props, theme, step);
+  const part = progressPart(
+    props,
+    theme,
+    stillFrame(step, props.reducedMotion),
+  );
   return (
     <div
       role="progressbar"
@@ -270,6 +281,7 @@ export const renderProgress = (
  * Only an indeterminate bar animates, so only an indeterminate bar runs the
  * step timer: a determinate bar draws a fixed fill, and a timer that wakes the
  * tree for a segment it never paints is cost with nothing to show for it.
+ * `reducedMotion` stops the timer the same way.
  */
 export const Progress = (props: ProgressProps): ReactElement =>
   renderProgress(
@@ -278,6 +290,7 @@ export const Progress = (props: ProgressProps): ReactElement =>
     useStep(
       SPINNER_SEGMENTS,
       120,
-      progressAnimates(Option.fromNullishOr(props.value)),
+      progressAnimates(Option.fromNullishOr(props.value)) &&
+        props.reducedMotion !== true,
     ),
   );

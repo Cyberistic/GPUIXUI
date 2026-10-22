@@ -38,6 +38,7 @@ may be an ellipse on purpose).
 | `height` | `number \| string` | body line height | the block's height |
 | `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius |
 | `circle` | `boolean` | `false` | full radius; the missing side mirrors the other, so one explicit size stays a circle |
+| `reducedMotion` | `boolean` | `false` | paints the full-opacity frame and schedules no pulse |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
@@ -60,21 +61,32 @@ skeleton.
 `skeletonSize` rule the component uses. The pulse alternates opacity `1` /
 `0.6` every 700 ms.
 
+`reducedMotion` is the caller's, not the runtime's: GPUix 0.11.0 exposes no
+reduced-motion preference, so a host application reads the platform setting it
+already knows and passes it down. With it set, the block keeps the skeleton
+role but paints one frame and schedules no interval.
+
+```tsx
+<Skeleton height={14} width="70%" reducedMotion={prefersReducedMotion} />
+```
+
 ## Limitations
 
 - **No shimmer sweep**: the runtime's `motion` animates opacity, width, height,
   insets and radius — not a moving gradient — so a shimmer would be a fake.
 - No automatic count or list-shape generation; compose the blocks you need.
-- No reduced-motion switch: the pulse is a plain interval.
+- The reduced-motion preference is the caller's to supply (above).
 
 ## Verification
 
 - `src/core/loading.test.ts` — the two pulse states, the block geometry, and
   the circle's mirrored side (one explicit side, neither, and both).
 - `src/components/presentational.test.tsx` — the component paints a width-only
-  circle at equal width and height.
+  circle at equal width and height, and `reducedMotion` holds the full-opacity
+  frame no matter which step arrives.
 - `runtime/loading.runtime.test.tsx` — opacity samples take both `1` and `0.6`
-  in the real renderer.
+  in the real renderer; a `reducedMotion` block's opacity is one value across
+  six samples.
 
 ```sh
 nub run --filter @gpuixui/primitives test

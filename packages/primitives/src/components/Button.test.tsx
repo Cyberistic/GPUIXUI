@@ -215,6 +215,27 @@ describe("Button", () => {
     expect(accentOf("link")).toBe("primary");
   });
 
+  it("hands the busy spinner the caller's reduced-motion preference", () => {
+    // The bug guarded: the button's busy state is a spinner, so a reader who
+    // asked not to see motion still got three dots advancing every 120 ms
+    // inside the action that was already reporting itself as busy.
+    const preference = (reducedMotion: boolean): Option.Option<unknown> =>
+      elementProp(
+        elementChildren(resting({ loading: true, reducedMotion }))[0] ??
+          expect.fail("the busy button drew no spinner"),
+        "reducedMotion",
+      );
+    expect(preference(true)).toStrictEqual(Option.some(true));
+    expect(preference(false)).toStrictEqual(Option.some(false));
+    // Omitted stays omitted, so the spinner's own default decides.
+    const omitted = elementProp(
+      elementChildren(resting({ loading: true }))[0] ??
+        expect.fail("the busy button drew no spinner"),
+      "reducedMotion",
+    );
+    expect(omitted).toStrictEqual(Option.none());
+  });
+
   it("moves a disabled busy button's spinner onto the neutral pair", () => {
     // The bug: a disabled filled action paints `disabled` behind
     // `disabledForeground`, but its spinner kept the action's on-colour — white

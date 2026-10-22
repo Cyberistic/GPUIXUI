@@ -30,6 +30,7 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | `size` | `number` | `theme.iconSize.md` | the dot side in pixels |
 | `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-disabled` | `"primary"` | the role every dot paints; the `on-*` accents are the fill's on-colour |
 | `label` | `string` | `"Loading"` | accessible name announced as a status |
+| `reducedMotion` | `boolean` | `false` | holds the lit dot and schedules no interval |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
@@ -64,6 +65,18 @@ opacity (1 for the lit dot, fading to 0.2), not a second colour, so an indicator
 inside a filled control keeps its on-colour along the whole row. The gap is
 `spacing["2xs"]`.
 
+`reducedMotion` is the caller's: the runtime exposes no reduced-motion
+preference, so the host application reads the platform setting and passes it
+down. The dots keep the accent and the status role — they hold the first frame
+and no interval is scheduled, so the indicator is still there to be seen.
+
+```tsx
+<Spinner label="Loading projects" reducedMotion={prefersReducedMotion} />
+```
+
+A busy `Button` forwards its own `reducedMotion` to this spinner, so one
+preference covers the action and the indicator inside it.
+
 ## Limitations
 
 - **Cannot rotate** (above).
@@ -73,6 +86,7 @@ inside a filled control keeps its on-colour along the whole row. The gap is
 - The trail is the accent at reduced opacity rather than a separate quiet role;
   a caller who wants a grey trail is asking for a different mark, not a fade.
 - No inline placement inside a text run; put it in a `Stack`.
+- The reduced-motion preference is the caller's to supply (above).
 
 ## Verification
 
@@ -87,7 +101,8 @@ inside a filled control keeps its on-colour along the whole row. The gap is
   time (the opaque dot is the lit one), every dot paints the accent, a loading
   primary button's dots paint `primaryForeground` and a secondary one's paint
   `secondaryForeground`, a disabled busy primary button's dots paint
-  `disabledForeground`, and AccessKit reports `Status` with the label.
+  `disabledForeground`, and AccessKit reports `Status` with the label. A
+  `reducedMotion` spinner paints one frame across six samples.
 - `runtime/examples.runtime.test.tsx` — the feedback example mounts it.
 
 ```sh

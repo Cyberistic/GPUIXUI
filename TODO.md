@@ -1450,6 +1450,23 @@ a workaround for two live sessions sharing one worktree; see
       fails `cites plan 099, which does not exist`, and the tree passes as it is.
       The guards section also says three suites, not two. 679 unit / 194 runtime
       / 21 icons
+`[x]` `packages/primitives`: every **animated** primitive now honours a caller's
+      **reduced-motion** preference — `Skeleton`'s pulse, `Spinner`'s lit dot,
+      `Progress`'s indeterminate segment and a `Switch`'s thumb all ran on their
+      own clock, and the inventory honestly said so ("the runtime exposes no
+      reduced-motion preference"), which left a reader who asked for less motion
+      nothing to pass. `core/motion.ts` owns the two rules (`stillFrame`: an
+      indicator paints its resting frame; `stillTransition`: an interpolated part
+      paints a zero duration) and the components take `reducedMotion`, stop their
+      interval, and keep the indicator — the dots, the block, the segment and the
+      thumb's two positions are all still there. A busy `Button` forwards its own
+      flag to the spinner it draws, because that is the only part of an action
+      that moves. Proof: the three element-tree cases and the switch's duration
+      case fail with the fold removed (`holds a skeleton on its resting frame…`,
+      `holds the moving segment…`; measured, restored green), and the runtime
+      suite samples the skeleton, spinner and bar six times in a window and reads
+      one frame. Docs on the five pages, the five `COMPONENTS.md` rows and the
+      four inventory records. 686 unit / 195 runtime
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness
