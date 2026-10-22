@@ -224,6 +224,34 @@ describe("the theme page", () => {
   });
 });
 
+describe("the preview policy's audit count", () => {
+  it("prints the number of reports the gate returns", () => {
+    // The policy is the file a page author reads before writing a preview, and
+    // it said "all nine `auditTheme` reports" after the gate returned ten, while
+    // `/docs/themes` printed ten from the gate's own keys. The count is derived
+    // from those keys here too, so the policy cannot fall behind the package.
+    const policy = readFileSync(
+      new URL("../../../../docs/preview-strategy.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const reports = Object.keys(auditTheme(themes.light)).filter(
+      (key) => key !== "passed",
+    );
+    const current = numberWords[reports.length];
+
+    expect(current).toBeDefined();
+    expect(policy).toContain(`all ${current} \`auditTheme\` reports`);
+
+    // And it may not keep a previous count beside the current one.
+    const stale = numberWords.filter(
+      (word) =>
+        word !== current &&
+        policy.includes(`all ${word} \`auditTheme\` reports`),
+    );
+    expect(stale).toEqual([]);
+  });
+});
+
 describe("the theming page's indicator marks", () => {
   it("describes the contract a mark is held to, not only its colours", () => {
     // A mark is neither text nor a boundary, so the page has to name the report

@@ -34,6 +34,40 @@ this site uses **3 for the paint and geometry, and 2 for the runtime**:
 A preview is never the authority. If a preview and the component disagree, the
 component is right and the preview is a bug.
 
+### Strategy 1 is real: the GPUix web build
+
+`@gpuix/native@0.11.0` ships a second target beside the `.node` binding: a
+`browser` entry (`browser.mjs`) over a **19.2 MiB** wasm renderer. It is not the
+headless test renderer. It is GPUI's browser platform: it creates its own
+`<canvas>`, appends it to `<body>`, paints through WebGPU with a WebGL2 fallback,
+and drives the same retained tree the native window does.
+
+That makes strategy 1 available for the first time — a docs route could show the
+real library instead of a drawing of it — but it is a **whole-page** surface,
+not a preview inside a page, because the platform is a singleton with three
+measured constraints:
+
+- **One document-owned canvas and one top-level window per page load.** A second
+  `init()` fails with `GPUIX web is already running`, and a closed window cannot
+  be reopened. Leaving a live surface therefore means a reload.
+- **The document must be cross-origin isolated.** The wasm instantiates
+  `WebAssembly.Memory` with `shared: true`, so it needs
+  `Cross-Origin-Opener-Policy: same-origin` and
+  `Cross-Origin-Embedder-Policy: require-corp`; without them `SharedArrayBuffer`
+  does not exist and the module does not start.
+- **WebGPU first, WebGL2 fallback.** A browser with neither backend gets no
+  surface at all, so a live route owes a plain-text fallback rather than a blank
+  canvas.
+
+**The site does not mount it.** No page imports the browser build; every preview
+on the site is still the labelled DOM reproduction above. Plan
+`440-live-gpuix-web-surface` is the spike that would change that, and
+`src/lib/gpuix-web.test.ts` holds this status to the tree in both directions:
+the policy cannot claim the surface is unmounted once a route imports the build,
+and it cannot claim it is mounted while none does. The guard also reads the
+installed package, so the size, the memory requirement and the browser entry it
+quotes cannot drift silently.
+
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those
@@ -172,13 +206,13 @@ still print the identity's roles; `theme-editor-logic.test.ts` holds the pins to
 the base in both directions and keeps the persistence boundary (`parseState`)
 rejecting a pinned value the renderer cannot paint.
 
-The readout under the preview is the whole audit, not a contrast check: all nine
+The readout under the preview is the whole audit, not a contrast check: all ten
 `auditTheme` reports are flattened into one list (`auditFindings`), each worded
 for a reader, because a theme that paints a divider into itself, drops a `NaN`
 radius, erases a disabled label or hides a chart series is still broken and none
 of those is a text pair. The page prints the number as a word derived from the
-gate's own keys, so a tenth report cannot land while `/docs/themes` promises
-nine, and every report has a case in `theme-editor-logic.test.ts` — the cases for
+gate's own keys, so an eleventh report cannot land while `/docs/themes` promises
+ten, and every report has a case in `theme-editor-logic.test.ts` — the cases for
 the reports no contrast pair covers also prove the colour reports stay silent on
 that brand, so only the new line can fail the gate.
 
