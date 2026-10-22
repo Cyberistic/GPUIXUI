@@ -16,15 +16,21 @@
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { lightTheme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import * as primitives from "./index.js";
 import { inventory } from "./inventory.js";
 import { decideNumberKey } from "./core/number.js";
+import { TEXT_TONES } from "./core/style.js";
+import { renderText } from "./components/Text.js";
+import { hostProp } from "./components/testing/element.js";
 
 const docsDir = new URL("../docs/", import.meta.url);
 const repoRoot = new URL("../../../", import.meta.url);
@@ -63,6 +69,30 @@ const bodyOf = (source: string, heading: string): Option.Option<string> =>
   Option.map(
     Arr.findFirst(sections(source), (section) => section.heading === heading),
     (section) => section.body,
+  );
+
+/**
+ * The backticked names in a section's first table column, header excluded.
+ *
+ * A page's role and tone tables are the sets a reader copies into code, so a
+ * test compares them with the sets the package resolves rather than trusting
+ * the prose beside them.
+ */
+const tableNames = (source: string, heading: string): ReadonlyArray<string> =>
+  Arr.flatMap(
+    Arr.drop(
+      Arr.filter(
+        Option.getOrElse(bodyOf(source, heading), () => "").split("\n"),
+        Str.startsWith("|"),
+      ),
+      2,
+    ),
+    (line) => {
+      const cell = /^\|\s*([^|]*)/.exec(line)?.[1] ?? "";
+      return Arr.filterMap([...cell.matchAll(/`([^`]+)`/g)], (match) =>
+        match[1] === undefined ? Result.failVoid : Result.succeed(match[1]),
+      );
+    },
   );
 
 /**
@@ -360,6 +390,50 @@ const contract: ReadonlyArray<{
 describe("the primitives docs page contract", () => {
   it("has at least one page", () => {
     expect(Arr.length(pages)).toBeGreaterThan(0);
+  });
+
+  it("lists every type role and tone the theme resolves", () => {
+    // The bug guarded: `text.mdx` opened by saying a `Text` "is not a heading
+    // element in the accessibility tree" while its own Accessibility section —
+    // and `renderText` — publish `role="heading"` with the level, and the
+    // inventory row still counted "six roles, four tone roles" against a scale
+    // of ten and five. Both pages are derived here from the source that paints
+    // them, so a new role or tone fails until they are named.
+    const page = read("text.mdx");
+    const roles = Arr.filter(
+      R.keys(lightTheme.typography),
+      (key) => key !== "sans" && key !== "mono",
+    );
+    expect(Arr.sort(tableNames(page, "Roles"), Order.String)).toStrictEqual(
+      Arr.sort(roles, Order.String),
+    );
+    expect(Arr.sort(tableNames(page, "Tones"), Order.String)).toStrictEqual(
+      Arr.sort(TEXT_TONES, Order.String),
+    );
+    // The page's opening claim and its Accessibility section must agree, and
+    // the element must still carry the role the section promises.
+    expect(page).not.toContain("not a heading element");
+    expect(page).toContain('role="heading"');
+    expect(
+      hostProp(renderText({ role: "h2" }, lightTheme), "role"),
+    ).toStrictEqual(Option.some("heading"));
+    // The inventory row enumerates the same two sets, so it cannot fall behind.
+    // Two rows carry this label — the capability map's and the Tier 1
+    // inventory's — and only the latter is the component record.
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = Arr.findFirst(
+      catalogue.split("\n"),
+      (line) =>
+        Str.startsWith("| Text / typography |")(line) &&
+        Str.includes("| done |")(line),
+    );
+    const cell = Option.getOrElse(row, () => "");
+    expect(
+      Arr.filter([...roles, ...TEXT_TONES], (name) => !cell.includes(name)),
+    ).toEqual([]);
   });
 
   it("imports only names the package exports", () => {

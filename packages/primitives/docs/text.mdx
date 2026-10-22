@@ -5,8 +5,10 @@ description: One run of type, named by a theme role and a semantic tone.
 
 `Text` names a role from the theme's type scale and a tone that decides its
 colour. It adds no behaviour: the runtime has one `text` host element, so every
-typographic role is the same element with a different resolved `StyleDesc`. It is
-not a heading element in the accessibility tree — see Limitations.
+typographic role is the same element with a different resolved `StyleDesc`. The
+semantics a role carries are published on that element — a heading role sets
+`role="heading"` with its level, and a code role the code role — so the page's
+Accessibility section is the contract, not a caveat.
 
 ## Usage
 
