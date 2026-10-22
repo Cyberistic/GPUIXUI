@@ -153,7 +153,9 @@ describe("the styling page", () => {
     expect(page).toContain("`border-input`");
     expect(page).toContain("`border` role");
     expect(page).toContain("`border-strong`");
-    expect(page).not.toContain("the field's **fill** role, not the border role");
+    expect(page).not.toContain(
+      "the field's **fill** role, not the border role",
+    );
   });
 
   it("refuses every class it calls refused, for the reason it names", () => {

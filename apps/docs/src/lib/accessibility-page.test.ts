@@ -54,12 +54,10 @@ const numberWords = [
 const published = [
   ...new Set(
     [
-      ...read(
-        "apps/docs/node_modules/@gpuix/native/dist/host.d.ts",
-      ).matchAll(/"aria-([a-z]+)"\?:/g),
-    ].flatMap((match) =>
-      match[1] === undefined ? [] : [`aria-${match[1]}`],
-    ),
+      ...read("apps/docs/node_modules/@gpuix/native/dist/host.d.ts").matchAll(
+        /"aria-([a-z]+)"\?:/g,
+      ),
+    ].flatMap((match) => (match[1] === undefined ? [] : [`aria-${match[1]}`])),
   ),
 ].toSorted();
 
@@ -128,9 +126,7 @@ describe("the accessibility page", () => {
     ].filter((name) => !prints(name));
     expect(missing).toEqual([]);
 
-    expect(page).toContain(
-      "automation protocol has no accessibility verb",
-    );
+    expect(page).toContain("automation protocol has no accessibility verb");
     expect(page).toContain(
       "nub apps/playground/dist/smoke/run.js --only a11y-tree",
     );
@@ -166,9 +162,12 @@ describe("the accessibility page", () => {
   it("keeps the announcement gap on the pages that document it", () => {
     const named = ["toast", "countdown", "message-scroller"];
     const silent = named.filter(
-      (name) => !read(`packages/components/docs/${name}.mdx`).includes("aria-live"),
+      (name) =>
+        !read(`packages/components/docs/${name}.mdx`).includes("aria-live"),
     );
-    expect(silent, "a page stopped documenting the live-region gap").toEqual([]);
+    expect(silent, "a page stopped documenting the live-region gap").toEqual(
+      [],
+    );
 
     const unlinked = named.filter(
       (name) => !page.includes(`](/docs/components/${name})`),

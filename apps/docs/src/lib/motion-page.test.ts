@@ -273,7 +273,9 @@ describe("the motion page", () => {
     expect(phases.size).toBe(3);
     expect(printedPhaseRows.size).toBe(phases.size);
     expect(
-      [...printedPhaseRows].filter(([phase, ease]) => ease !== phases.get(phase)),
+      [...printedPhaseRows].filter(
+        ([phase, ease]) => ease !== phases.get(phase),
+      ),
     ).toEqual([]);
 
     // The unit the function converts to is the runtime's: the levels are

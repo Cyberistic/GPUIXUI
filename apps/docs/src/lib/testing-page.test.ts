@@ -77,9 +77,9 @@ const rowOf = (name: string): string =>
 
 /** The names `pixels.ts` exports, which is what the `Pixels` namespace holds. */
 const pixelExports = (): ReadonlyArray<string> =>
-  [...pixels.matchAll(/^export (?:class|const|function) ([A-Za-z0-9_]+)/gm)].map(
-    (match) => match[1] ?? "",
-  );
+  [
+    ...pixels.matchAll(/^export (?:class|const|function) ([A-Za-z0-9_]+)/gm),
+  ].map((match) => match[1] ?? "");
 
 /** The page's paint section, from its heading to the next one. */
 const paintSection = (): string => {

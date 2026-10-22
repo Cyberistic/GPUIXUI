@@ -727,7 +727,9 @@ describe("the palette a preview paints", () => {
       new URL("../components/docs/platform-toggle.tsx", import.meta.url),
       "utf8",
     );
-    return /resolvePlatformTheme\(\s*platform,\s*([A-Za-z]+),/.exec(source)?.[1];
+    return /resolvePlatformTheme\(\s*platform,\s*([A-Za-z]+),/.exec(
+      source,
+    )?.[1];
   };
 
   it("states the mode the previews resolve, from the module that decides it", () => {
@@ -742,19 +744,23 @@ describe("the palette a preview paints", () => {
     expect(body).toContain("{previewMode}");
     expect(body).toContain("light/dark switch");
     expect(body).toContain("#built-in-themes");
-    expect(body).not.toMatch(/previews? (render|paint)s? (the|a) dark palette/i);
+    expect(body).not.toMatch(
+      /previews? (render|paint)s? (the|a) dark palette/i,
+    );
   });
 
   it("resolves that mode in the provider, not a literal of its own", () => {
     // A second literal is the drift this guard exists for: changing the mode in
     // the provider alone would leave the page teaching the old one.
     expect(resolvedMode()).toBe("previewMode");
-    expect(resolvePlatformTheme("darwin", previewMode, "native").name).toContain(
-      "Dark",
-    );
+    expect(
+      resolvePlatformTheme("darwin", previewMode, "native").name,
+    ).toContain("Dark");
     expect(
       resolvePlatformTheme("win32", previewMode, "luna").colors.background,
-    ).not.toBe(resolvePlatformTheme("win32", "light", "luna").colors.background);
+    ).not.toBe(
+      resolvePlatformTheme("win32", "light", "luna").colors.background,
+    );
   });
 });
 
