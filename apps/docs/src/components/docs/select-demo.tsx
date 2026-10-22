@@ -143,13 +143,6 @@ const PreviewSelect = ({
     return () => window.removeEventListener("mousedown", onPress);
   }, [open]);
 
-  const firstEnabled = (): string | null => {
-    const [first] = flatten(entries).filter(
-      (option) => option.disabled !== true,
-    );
-    return first === undefined ? null : first.value;
-  };
-
   /** Where an opening key lands: the chosen row, or the nearest enabled edge. */
   const openTarget = (delta: 1 | -1): string | null => {
     const chosen = flatten(entries).find(
@@ -249,7 +242,7 @@ const PreviewSelect = ({
         data-size={size}
         disabled={disabled}
         id={id}
-        onClick={() => (open ? close(true) : openOn(value ?? firstEnabled()))}
+        onClick={() => (open ? close(true) : openOn(openTarget(1)))}
         onKeyDown={onTriggerKeyDown}
         ref={trigger}
         type="button"
