@@ -11,6 +11,8 @@ import {
   skeletonSize,
   skeletonStyle,
   SPINNER_ACCENTS,
+  SPINNER_DOTS,
+  SPINNER_FADE_FLOOR,
   SPINNER_SEGMENTS,
   spinnerDotStyle,
   spinnerDots,
@@ -125,6 +127,26 @@ describe("spinnerDots", () => {
       );
     expect(active(0)).not.toBe(active(1));
     expect(active(3)).toBe(active(0));
+  });
+
+  it("fades the trail to its floor and lights one dot per step of a turn", () => {
+    // The bug guarded: the fade divided the trail's distance by the *bar's*
+    // eight segments, so with three dots the dimmest trail dot was 0.75 and the
+    // documented 0.2 floor was unreachable. The period was eight steps too, so
+    // the eighth frame stepped the lit dot backwards (1 -> 0). The fade now
+    // spans the row and a turn is the row's own length.
+    expect(SPINNER_FADE_FLOOR).toBe(0.2);
+    const opacities = Arr.map(spinnerDots(0), (dot) => dot.opacity);
+    expect(Math.min(...opacities)).toBe(SPINNER_FADE_FLOOR);
+    // Lit, the dot ahead (the fade's far end), then the one just behind it.
+    expect(opacities).toStrictEqual([1, 0.2, 0.5]);
+    const lit = Arr.map(Arr.range(0, SPINNER_DOTS - 1), (step) =>
+      Option.getOrElse(
+        Arr.findFirstIndex(spinnerDots(step), (dot) => dot.active),
+        () => -1,
+      ),
+    );
+    expect(lit).toStrictEqual([0, 1, 2]);
   });
 
   it("keeps every dot visible and the active one fully opaque", () => {

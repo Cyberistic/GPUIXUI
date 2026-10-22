@@ -18,8 +18,14 @@ import type { PrimitiveTheme, RadiusStep } from "./theme.js";
 /** How many steps a pulse visits before repeating. */
 export const PULSE_STEPS = 2;
 
-/** How many steps a spinner or an indeterminate bar visits before repeating. */
+/** How many steps an indeterminate bar visits before repeating. */
 export const SPINNER_SEGMENTS = 8;
+
+/** How many dots a spinner paints, and therefore the steps it visits before repeating. */
+export const SPINNER_DOTS = 3;
+
+/** The dimmest a trail dot paints, as a share of the accent. */
+export const SPINNER_FADE_FLOOR = 0.2;
 
 export interface SkeletonSpec {
   readonly width?: number | string;
@@ -139,18 +145,29 @@ export interface SpinnerDot {
 /**
  * Which dot is lit at a given step, and how the rest fade.
  *
- * The active dot moves one place per step and the trailing dot is brightest, so
- * the row reads as travelling even though nothing rotates.
+ * The active dot moves one place per step and the trail fades toward
+ * {@link SPINNER_FADE_FLOOR} at the farthest dot, so the row reads as travelling
+ * even though nothing rotates. The fade spans the row (`count - 1` places)
+ * rather than a fixed step budget: with three dots, dividing by the bar's eight
+ * segments left every trail dot brighter than 0.7 and the lit index stepping
+ * backwards once per timer cycle.
  */
 export const spinnerDots = (
   step: number,
-  count = 3,
-  segments = SPINNER_SEGMENTS,
+  count = SPINNER_DOTS,
 ): ReadonlyArray<SpinnerDot> => {
-  const active = ((step % count) + count) % count;
-  return Arr.map(Arr.range(0, count - 1), (index) => ({
+  const dots = Math.max(
+    1,
+    Math.trunc(Number.isFinite(count) ? count : SPINNER_DOTS),
+  );
+  const active = ((step % dots) + dots) % dots;
+  const span = Math.max(1, dots - 1);
+  return Arr.map(Arr.range(0, dots - 1), (index) => ({
     active: index === active,
-    opacity: Math.max(0.2, 1 - ((active - index + count) % count) / segments),
+    opacity: Math.max(
+      SPINNER_FADE_FLOOR,
+      1 - ((active - index + dots) % dots) / span,
+    ),
   }));
 };
 

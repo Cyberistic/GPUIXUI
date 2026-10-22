@@ -18,7 +18,7 @@ import * as Arr from "effect/Array";
 import { iconPixels } from "@gpuixui/icons";
 import { cn } from "@gpuixui/tw";
 import {
-  SPINNER_SEGMENTS,
+  SPINNER_DOTS,
   spinnerDots,
   type SpinnerAccent,
 } from "../core/loading.js";
@@ -85,12 +85,9 @@ export const renderSpinner = (
       testId={testId}
       style={group}
     >
-      {Arr.map(
-        spinnerDots(stillFrame(step, reducedMotion), 3),
-        (point, index) => (
-          <div key={index} style={dotStyle(point.opacity)} />
-        ),
-      )}
+      {Arr.map(spinnerDots(stillFrame(step, reducedMotion)), (point, index) => (
+        <div key={index} style={dotStyle(point.opacity)} />
+      ))}
     </div>
   );
 };
@@ -100,5 +97,8 @@ export const Spinner = (props: SpinnerProps): ReactElement =>
   renderSpinner(
     props,
     useTheme(),
-    useStep(SPINNER_SEGMENTS, 120, props.reducedMotion !== true),
+    // One step per dot: the timer's cycle is the row's own length, so a full
+    // turn lights 0, 1, 2 and repeats — never 0, 1, 2, 0, 1, 2, 0, 1, which
+    // stepped the lit dot backwards when the eight-segment bar period wrapped.
+    useStep(SPINNER_DOTS, 120, props.reducedMotion !== true),
   );
