@@ -137,9 +137,11 @@ theme, so a custom theme repaints every row with no code change — see
 
 ## Limitations
 
-- **Reasoning mounts and unmounts instantly.** The runtime's motion needs a
-  numeric height and an automatic-height reveal needs a measured first paint, so
-  the panel is the shipped `Collapsible`'s rule, not an animation.
+- **Reasoning grows through a measured height.** The panel is the shipped
+  `Collapsible`, so it reveals through `AutoHeight`: the body reports the height
+  it paints and the clipping box tweens to it (`normal`, 200 ms) plus a fade. Its
+  first open paints at zero for one frame while it measures, and it cannot scale
+  or slide because the runtime has no `transform`.
 - **No clipboard write.** `onCopy` is the consumer's path; the library cannot
   read or write the clipboard.
 - **A citation is a row, not a link.** There is no anchor element, so opening an

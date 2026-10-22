@@ -506,7 +506,7 @@ export const messageMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "the reasoning panel mounts and unmounts instantly: 0.11.0 motion needs a numeric height (the Collapsible rule)",
+    "the reasoning panel grows through `Collapsible`'s measured height (`AutoHeight`), so its first open paints at zero for a frame before it grows",
     "no aria-labelledby or aria-describedby, so a tool call's result and a citation's href are not associated with the row that names them",
     "no clipboard write, so Copy is the consumer's handler; the runtime's own path is a read-only field the user copies",
     "a citation is a labelled row, not a link: there is no anchor element, and opening an href is the consumer's callback surface",

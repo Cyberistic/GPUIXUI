@@ -461,7 +461,7 @@ export const drawerMeta = {
   gpuixSupport: "partial",
   limitations: [
     "no swipe-to-dismiss: 0.11.0 has no drag host feature",
-    "no slide animation: motion has no transform, and width/left would reflow the content",
+    "the surface fades and travels 12px from its own edge rather than sliding its full width: the runtime has no transform, and width/left would reflow the content",
     "no aria-modal or aria-labelledby in 0.11.0: the surface is named with aria-label",
     "the veil is an anchored element at window coordinates: the styled Dialog is a local overlay, not `@gpuix/react/dialog`'s portalled surface",
     "sizes are layout constants: tokens carry no drawer-size role",

@@ -575,7 +575,7 @@ export const accordionMeta = {
   gpuixSupport: "yes",
   limitations: [
     "the indicator is an icon swap: 0.11.0's StyleDesc has no transform",
-    "sections mount and unmount instantly; no height animation",
+    "the panel grows through `AutoHeight`'s measured height, so its first open paints at zero for a frame before it grows",
   ],
   docs: "docs/accordion.mdx",
   example: "examples/accordion.example.tsx",
