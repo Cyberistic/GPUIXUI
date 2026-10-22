@@ -419,6 +419,10 @@ describe("Box recipe", () => {
       { tone: "accent", grow: true },
       { tone: "selected", shrink: true, fullWidth: true },
       { tone: "skeleton", fullHeight: true },
+      { tone: "card", padding: "lg", paddingX: "sm" },
+      { tone: "card", paddingY: "md" },
+      { tone: "card", border: true, borderStyle: "dashed" },
+      { tone: "card", aspectRatio: 16 / 9, fullWidth: true },
     ];
     Arr.forEach(cases, (spec) => {
       expect(recipeTw.classesToStyle(boxClass(spec), testTheme).style).toEqual(

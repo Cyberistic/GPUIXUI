@@ -57,6 +57,44 @@ it("pads the surface by the theme's spacing step", async () => {
   expect(first.width).toBe(next.width);
 });
 
+it("pads each axis by the step it was given, and paints the edge it was given", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="card"
+        padding="lg"
+        paddingX="sm"
+        paddingY="md"
+        border
+        borderStyle="dashed"
+        aspectRatio={2}
+        style={{ width: 200 }}
+        testId="dashed"
+      >
+        <Box tone="none" style={{ height: 10 }} testId="inner" />
+      </Box>
+    </Surface>,
+  );
+  const outer = boundsOf(runtime, "dashed");
+  const inner = boundsOf(runtime, "inner");
+  // The frame's border sits outside the padding, so both offsets include it.
+  const edge = testTheme.borderWidth.thin;
+  expect(inner.x - outer.x).toBe(testTheme.spacing.sm + edge);
+  expect(inner.y - outer.y).toBe(testTheme.spacing.md + edge);
+  expect(outer.width - (inner.x - outer.x) - inner.width).toBe(
+    testTheme.spacing.sm + edge,
+  );
+  // A ratio of 2 fills the axis without a definite size: 200 wide → 100 tall.
+  expect(outer.width).toBe(200);
+  expect(outer.height).toBe(100);
+  const element = Option.getOrElse(runtime.element("dashed"), () =>
+    expect.fail("the runtime painted no box for dashed"),
+  );
+  expect(element.style.borderStyle).toBe("dashed");
+  expect(element.style.aspectRatio).toBe(2);
+});
+
 it("separates a row Stack's children by the theme's gap", async () => {
   const runtime = await openWindow();
   runtime.render(

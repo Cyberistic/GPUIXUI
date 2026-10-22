@@ -2933,6 +2933,32 @@ a workaround for two live sessions sharing one worktree; see
       entry (both directions measured — dropping `scrollRegion` reports
       `[ 'scrollRegion' ]`, and the pre-task page reports
       `[ 'star', 'starName' ]`)
+`[x]` `packages/primitives`: `Box` now paints the **box it describes** — it
+      exposed one `padding` for all four sides, a solid edge and no ratio while
+      GPUix 0.11.0's `StyleDesc` paints per-side padding, `borderStyle:
+      "dashed"` and `aspectRatio`. `paddingX`/`paddingY` override their own
+      sides (the whole-side step stays on the other), `borderStyle="dashed"`
+      paints the runtime's one alternate edge (only with `border`, because a
+      style without a border is not a rule), and `aspectRatio` fills whichever
+      axis has no definite size; a non-finite, zero or negative ratio is dropped
+      rather than painted as a square. The axis padding travels as four side
+      classes (`p-` stays the shorthand when neither axis is named), the dashed
+      edge and the free-number ratio through the primitives' own registry
+      (`border-dashed`, `aspect-ratio-<n>`), so the recipe and `surfaceStyle`
+      resolve the same `StyleDesc`. Proof: `core/style.test.ts` (the axis
+      precedence, dashed only on a border, the ratio guard),
+      `presentational.test.tsx` (the element tree), `recipe.test.ts`'s Box oracle
+      (four new specs) and `runtime/layout.runtime.test.tsx` (a dashed 2:1 box
+      paints at 200×100 with `sm` horizontal and `md` vertical padding around the
+      child, measured off the window). Directions measured: restoring the old
+      `paddingSides`, dropping the dashed branch and dropping the `aspect-ratio`
+      utility fails four unit cases by name and the window case; restored, 903
+      unit and 268 runtime tests green. The `layout` example adopts the props
+      (axis-padded header/footer, a dashed drop target and a 1:1 swatch).
+      Docs: `docs/box.mdx` §Usage/§API/§Theming/§Limitations/§Verification, the
+      `Boxes / containers` inventory record and the `COMPONENTS.md` row; a
+      gradient stays delegated to `style` because it needs a semantic gradient
+      group, not two literal ends.
 `[x]` `packages/primitives`: give `ButtonGroup` its **second axis** — the shadcn
       reference takes `orientation`, and the primitive only ever laid a row, so a
       column of attached actions had to be hand-built outside the group and lost

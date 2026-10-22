@@ -20,7 +20,11 @@ import type {
   StackSpec,
 } from "../core/layout.js";
 import type { SelectionAccent, SelectionState } from "../core/selection.js";
-import { clampLines } from "../core/style.js";
+import {
+  clampLines,
+  paintableAspectRatio,
+  paddingSides,
+} from "../core/style.js";
 import type {
   ProgressTone,
   ScrollSpec,
@@ -272,14 +276,32 @@ const ELEVATION_SHADOW: Readonly<Record<ElevationLevel, string | undefined>> = {
   overlay: undefined,
 };
 
+/** The padding classes a `Box` resolves: one shorthand or four sides. */
+const boxPaddingClass = (spec: BoxSpec): string | undefined => {
+  const sides = paddingSides(spec);
+  if (spec.paddingX === undefined && spec.paddingY === undefined) {
+    return sides.top === undefined ? undefined : `p-${sides.top}`;
+  }
+  return cn(
+    sides.top === undefined ? undefined : `pt-${sides.top}`,
+    sides.right === undefined ? undefined : `pr-${sides.right}`,
+    sides.bottom === undefined ? undefined : `pb-${sides.bottom}`,
+    sides.left === undefined ? undefined : `pl-${sides.left}`,
+  );
+};
+
 /** The class string a `Box` resolves from its surface and layout spec. */
 export const boxClass = (spec: BoxSpec): string =>
   cn(
     "flex flex-col",
     SURFACE_BG[spec.tone],
-    spec.padding === undefined ? undefined : `p-${spec.padding}`,
+    boxPaddingClass(spec),
     spec.radius === undefined ? undefined : `rounded-${spec.radius}`,
     spec.border === true && "border border-border",
+    spec.border === true && spec.borderStyle === "dashed" && "border-dashed",
+    paintableAspectRatio(spec.aspectRatio) === undefined
+      ? undefined
+      : `aspect-ratio-${spec.aspectRatio}`,
     spec.elevation === undefined ? undefined : ELEVATION_SHADOW[spec.elevation],
     spec.shrink === true ? "shrink-1" : "shrink-0",
     spec.grow === true && "flex-grow",

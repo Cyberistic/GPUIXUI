@@ -368,17 +368,64 @@ describe("surfaceStyle", () => {
     ).toBeUndefined();
   });
 
-  it("draws a border only when asked, and never invents a border style", () => {
+  it("draws a border only when asked, and a dashed edge only when named", () => {
     const bordered = surfaceStyle({ tone: "card", border: true }, testTheme);
     expect(
       surfaceStyle({ tone: "card" }, testTheme).borderWidth,
     ).toBeUndefined();
     expect(bordered.borderWidth).toBe(testTheme.borderWidth.thin);
     expect(bordered.borderColor).toBe(testTheme.colors.border);
-    // 0.11.0's `StyleDesc` does accept `borderStyle: "dashed"`, but the surface
-    // resolver chooses no style — a dashed border is the caller's `style` prop,
-    // so a theme change cannot silently dash every card.
-    expect(Object.keys(bordered)).not.toContain("borderStyle");
+    // The default edge is the runtime's solid one; only an explicit dashed
+    // border declares a style, and a style without a border is not a rule.
+    expect(bordered.borderStyle).toBeUndefined();
+    expect(
+      surfaceStyle(
+        { tone: "card", border: true, borderStyle: "solid" },
+        testTheme,
+      ).borderStyle,
+    ).toBeUndefined();
+    expect(
+      surfaceStyle(
+        { tone: "card", border: true, borderStyle: "dashed" },
+        testTheme,
+      ).borderStyle,
+    ).toBe("dashed");
+    expect(
+      surfaceStyle({ tone: "card", borderStyle: "dashed" }, testTheme)
+        .borderStyle,
+    ).toBeUndefined();
+  });
+
+  it("lets an axis override the padding without losing the other sides", () => {
+    const both = surfaceStyle(
+      { tone: "card", padding: "lg", paddingX: "sm" },
+      testTheme,
+    );
+    expect(both.padding).toBeUndefined();
+    expect(both.paddingTop).toBe(testTheme.spacing.lg);
+    expect(both.paddingBottom).toBe(testTheme.spacing.lg);
+    expect(both.paddingLeft).toBe(testTheme.spacing.sm);
+    expect(both.paddingRight).toBe(testTheme.spacing.sm);
+
+    const axisOnly = surfaceStyle({ tone: "card", paddingY: "md" }, testTheme);
+    expect(axisOnly.padding).toBeUndefined();
+    expect(axisOnly.paddingTop).toBe(testTheme.spacing.md);
+    expect(axisOnly.paddingBottom).toBe(testTheme.spacing.md);
+    expect(axisOnly.paddingLeft).toBeUndefined();
+    expect(axisOnly.paddingRight).toBeUndefined();
+  });
+
+  it("paints a ratio only when the renderer can divide by it", () => {
+    expect(
+      surfaceStyle({ tone: "card", aspectRatio: 16 / 9 }, testTheme)
+        .aspectRatio,
+    ).toBeCloseTo(16 / 9);
+    Arr.forEach([0, -2, Number.NaN, Number.POSITIVE_INFINITY], (ratio) => {
+      expect(
+        surfaceStyle({ tone: "card", aspectRatio: ratio }, testTheme)
+          .aspectRatio,
+      ).toBeUndefined();
+    });
   });
 
   it("raises a surface with the theme's shadow colour", () => {

@@ -24,6 +24,7 @@ import { pipe } from "effect";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { switchThumbOffset } from "../core/selection.js";
+import { paintableAspectRatio } from "../core/style.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
 
 /** A class-string step name → the theme key it resolves to. */
@@ -201,6 +202,18 @@ export const recipeTw = createTw({
     "font-mono": (theme) => ({ fontFamily: theme.typography.mono }),
     "h-px": (theme) => ({ height: theme.borderWidth.thin }),
     "w-px": (theme) => ({ width: theme.borderWidth.thin }),
+    // The runtime paints one border style for every side. `solid` is the
+    // default, so only the dashed class carries a declaration.
+    "border-dashed": () => ({ borderStyle: "dashed" }),
+    // A ratio is a free number, not a scale step, so it travels in the class:
+    // `aspect-ratio-1.5`. An unreadable value resolves to nothing and lands in
+    // the compiler's `unsupported` list rather than painting a square.
+    "aspect-ratio": (_theme, value) => {
+      const ratio = paintableAspectRatio(
+        value === undefined ? undefined : Number(value),
+      );
+      return ratio === undefined ? undefined : { aspectRatio: ratio };
+    },
     "shrink-1": () => ({ flexShrink: 1 }),
     "min-w-full": () => ({ minWidth: "100%" }),
     "overflow-x-hidden": () => ({ overflowX: "hidden" }),

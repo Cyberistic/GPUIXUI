@@ -8,7 +8,9 @@
  *
  * The resting appearance is a Tailwind recipe (`recipe/boxClass`), compiled
  * through `@gpuixui/tw`; the caller's `className` is joined last so it wins
- * conflicts exactly as `cn` resolves them.
+ * conflicts exactly as `cn` resolves them. Padding takes one step for all four
+ * sides, or `paddingX`/`paddingY` for the two axes; a border can be dashed and
+ * a box can hold an aspect ratio, both of which the runtime paints.
  */
 
 import type { ReactElement, ReactNode } from "react";

@@ -18,7 +18,6 @@ import {
   Spacer,
   Stack,
   Text,
-  useTheme,
 } from "../src/index.js";
 
 /** One property row: a name and its value. */
@@ -39,7 +38,6 @@ const properties: ReadonlyArray<{
 
 /** A property inspector: a fixed header, a scrolling body and a footer. */
 export const LayoutExample = (): ReactElement => {
-  const theme = useTheme();
   return (
     <Box
       tone="card"
@@ -48,23 +46,21 @@ export const LayoutExample = (): ReactElement => {
       testId="layout-example"
       style={{ width: 340, height: 420, overflow: "hidden" }}
     >
-      <Stack
-        direction="row"
-        align="center"
-        justify="between"
-        gap="sm"
-        style={{
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          paddingTop: theme.spacing.sm,
-          paddingBottom: theme.spacing.sm,
-        }}
-      >
-        <Text role="h3">Inspector</Text>
-        <Text role="caption" tone="muted">
-          {properties.length} properties
-        </Text>
-      </Stack>
+      <Box tone="none" fullWidth paddingX="md" paddingY="sm">
+        <Stack direction="row" align="center" gap="sm" fullWidth>
+          <Box
+            tone="accent"
+            radius="sm"
+            aspectRatio={1}
+            style={{ width: 12 }}
+          />
+          <Text role="h3">Inspector</Text>
+          <Spacer />
+          <Text role="caption" tone="muted">
+            {properties.length} properties
+          </Text>
+        </Stack>
+      </Box>
 
       <Separator orientation="horizontal" />
 
@@ -82,30 +78,35 @@ export const LayoutExample = (): ReactElement => {
               <Text role="code">{property.value}</Text>
             </Grid>
           ))}
+          <Box
+            tone="none"
+            border
+            borderStyle="dashed"
+            radius="md"
+            paddingX="sm"
+            paddingY="sm"
+            testId="layout-example-drop"
+          >
+            <Text role="caption" tone="muted">
+              Drop a layer here
+            </Text>
+          </Box>
         </Stack>
       </ScrollArea>
 
       <Separator orientation="horizontal" />
 
-      <Stack
-        direction="row"
-        align="center"
-        gap="sm"
-        style={{
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          paddingTop: theme.spacing.sm,
-          paddingBottom: theme.spacing.sm,
-        }}
-      >
-        <Text role="caption" tone="muted">
-          Read-only
-        </Text>
-        <Spacer />
-        <Text role="caption" tone="primary">
-          Reset all
-        </Text>
-      </Stack>
+      <Box tone="none" fullWidth paddingX="md" paddingY="sm">
+        <Stack direction="row" align="center" gap="sm" fullWidth>
+          <Text role="caption" tone="muted">
+            Read-only
+          </Text>
+          <Spacer />
+          <Text role="caption" tone="primary">
+            Reset all
+          </Text>
+        </Stack>
+      </Box>
     </Box>
   );
 };

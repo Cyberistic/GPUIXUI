@@ -81,6 +81,31 @@ describe("layout containers", () => {
     expect(styleProp(bare, "backgroundColor")).toStrictEqual(Option.none());
   });
 
+  it("let one axis pad apart from the other, and paint a dashed edge", () => {
+    const element = renderBox(
+      {
+        tone: "card",
+        padding: "lg",
+        paddingX: "sm",
+        border: true,
+        borderStyle: "dashed",
+        aspectRatio: 2,
+      },
+      testTheme,
+    );
+    expect(styleProp(element, "padding")).toStrictEqual(Option.none());
+    expect(numberIn(element, "paddingTop")).toStrictEqual(
+      Option.some(testTheme.spacing.lg),
+    );
+    expect(numberIn(element, "paddingLeft")).toStrictEqual(
+      Option.some(testTheme.spacing.sm),
+    );
+    expect(stringIn(element, "borderStyle")).toStrictEqual(
+      Option.some("dashed"),
+    );
+    expect(numberIn(element, "aspectRatio")).toStrictEqual(Option.some(2));
+  });
+
   it("lay their children out in one direction, on the theme's spacing", () => {
     const element = renderStack(
       { direction: "row", gap: "xl", justify: "between" },

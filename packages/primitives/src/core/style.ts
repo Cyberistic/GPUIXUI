@@ -328,14 +328,66 @@ const surfaces: Record<SurfaceTone, Paint> = {
   skeleton: (theme) => theme.colors.skeleton,
 };
 
+/** The two edge styles the runtime paints. */
+export const BORDER_STYLES = ["solid", "dashed"] as const;
+export type BorderStyle = (typeof BORDER_STYLES)[number];
+
 export interface SurfaceSpec {
   readonly tone: SurfaceTone;
   /** A step on the theme's spacing scale, or absent for no padding. */
   readonly padding?: SpaceStep;
+  /** A step on the theme's spacing scale, or absent to keep `padding`. */
+  readonly paddingX?: SpaceStep;
+  /** A step on the theme's spacing scale, or absent to keep `padding`. */
+  readonly paddingY?: SpaceStep;
   readonly radius?: RadiusStep;
   readonly border?: boolean;
+  /**
+   * The edge a border paints. Defaults to the runtime's solid, and does nothing
+   * without `border`: a style is not a rule.
+   */
+  readonly borderStyle?: BorderStyle;
+  /**
+   * Width divided by height. The runtime fills in whichever axis has no
+   * definite size, so a thumbnail needs one side, not two.
+   *
+   * A ratio the renderer cannot divide by (`NaN`, `0`, a negative) is dropped
+   * rather than painted as a square.
+   */
+  readonly aspectRatio?: number;
   readonly elevation?: ElevationLevel;
 }
+
+/** The padding each side resolves to, after `paddingX`/`paddingY` override. */
+export interface PaddingSides {
+  readonly top?: SpaceStep;
+  readonly right?: SpaceStep;
+  readonly bottom?: SpaceStep;
+  readonly left?: SpaceStep;
+}
+
+/** `padding` sets all four sides; an axis prop overrides only its own. */
+export const paddingSides = ({
+  padding,
+  paddingX,
+  paddingY,
+}: Pick<SurfaceSpec, "padding" | "paddingX" | "paddingY">): PaddingSides =>
+  paddingX === undefined && paddingY === undefined
+    ? { top: padding, right: padding, bottom: padding, left: padding }
+    : {
+        top: paddingY ?? padding,
+        right: paddingX ?? padding,
+        bottom: paddingY ?? padding,
+        left: paddingX ?? padding,
+      };
+
+/** A ratio the renderer can divide by, or nothing. */
+export const paintableAspectRatio = (
+  aspectRatio: number | undefined,
+): number | undefined =>
+  aspectRatio !== undefined && Number.isFinite(aspectRatio) && aspectRatio > 0
+    ? aspectRatio
+    : undefined;
 
 export const surfaceStyle = (
   spec: SurfaceSpec,
@@ -346,12 +398,29 @@ export const surfaceStyle = (
     flexDirection: "column",
     backgroundColor: paint(surfaces[spec.tone], theme),
   };
-  if (spec.padding !== undefined) style.padding = theme.spacing[spec.padding];
+  const sides = paddingSides(spec);
+  if (spec.paddingX === undefined && spec.paddingY === undefined) {
+    if (sides.top !== undefined) style.padding = theme.spacing[sides.top];
+  } else {
+    if (sides.top !== undefined) style.paddingTop = theme.spacing[sides.top];
+    if (sides.right !== undefined)
+      style.paddingRight = theme.spacing[sides.right];
+    if (sides.bottom !== undefined)
+      style.paddingBottom = theme.spacing[sides.bottom];
+    if (sides.left !== undefined) style.paddingLeft = theme.spacing[sides.left];
+  }
   if (spec.radius !== undefined) style.borderRadius = theme.radius[spec.radius];
   if (spec.border === true) {
     style.borderWidth = theme.borderWidth.thin;
     style.borderColor = theme.colors.border;
+    if (spec.borderStyle === "dashed") style.borderStyle = "dashed";
   }
+  Option.map(
+    Option.fromNullishOr(paintableAspectRatio(spec.aspectRatio)),
+    (ratio) => {
+      style.aspectRatio = ratio;
+    },
+  );
   if (spec.elevation !== undefined) {
     Option.map(
       Option.fromNullishOr(elevationShadow(theme, spec.elevation)),

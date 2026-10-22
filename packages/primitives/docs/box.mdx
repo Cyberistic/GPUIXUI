@@ -19,6 +19,17 @@ import { Box, Text } from "@gpuixui/primitives";
 </Box>;
 ```
 
+Padding can differ per axis, a border can be dashed, and a ratio fills the side
+that has no definite size:
+
+```tsx
+<Box tone="none" paddingX="md" paddingY="sm" border borderStyle="dashed">
+  <Text role="caption" tone="muted">Drop a layer here</Text>
+</Box>;
+
+<Box tone="muted" radius="md" aspectRatio={1} style={{ width: 48 }} />;
+```
+
 ## Tones
 
 | `tone` | Background role | Use for |
@@ -37,9 +48,13 @@ import { Box, Text } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `tone` | `SurfaceTone` | — (required) | which semantic background is painted |
-| `padding` | spacing step | none | padding on all sides from the theme scale |
+| `padding` | spacing step | none | padding on all four sides, from the theme scale |
+| `paddingX` | spacing step | none | padding on the left and right, overriding `padding` there |
+| `paddingY` | spacing step | none | padding on the top and bottom, overriding `padding` there |
 | `radius` | `none \| sm \| md \| lg \| xl \| full` | none | corner radius |
 | `border` | `boolean` | `false` | one thin border on the `border` role |
+| `borderStyle` | `"solid" \| "dashed"` | `"solid"` | the edge style; no effect without `border` |
+| `aspectRatio` | `number` | none | width ÷ height; fills whichever axis has no definite size. A non-finite, zero or negative ratio is dropped |
 | `elevation` | `sm \| md \| lg \| overlay` | none | the theme's first shadow at that level |
 | `grow` | `boolean` | `false` | takes leftover space on the parent's main axis |
 | `shrink` | `boolean` | `false` | may shrink below its content |
@@ -51,6 +66,11 @@ import { Box, Text } from "@gpuixui/primitives";
 
 `shrink` is deliberately `false` by default: chrome must not squash, which is the
 opposite of the browser's flex default and the right one for application layout.
+
+`paddingX`/`paddingY` compose with `padding`: the whole-side step stays on the
+other axis, and the axis prop wins on its own. `aspectRatio` needs one definite
+side — give it `fullWidth` or a `style` width, and the runtime computes the
+height (or the reverse).
 
 ## Keyboard
 
@@ -68,23 +88,33 @@ composed component such as `ButtonGroup`.
 Surface tones resolve through `surfaceStyle` in `src/core/style.ts`. Padding,
 radius and border width come from `spacing`, `radius` and `borderWidth`;
 elevation from the theme's shadow list, of which GPUix paints the first entry.
+The dashed edge is the runtime's `borderStyle`, not a second border width.
 
 ## Limitations
 
 - No `role`, `tabIndex` or event props: the public API is a container, not a
   host-element re-export. Compose a host element when you need semantics.
-- No gradient or border-style prop: `Box` resolves the theme's solid surface
-  roles. GPUix 0.11.0's `StyleDesc` does accept a linear-gradient `background`
-  and `borderStyle: "dashed"`, so this is a gap in `Box`'s API, not a runtime
-  absence — pass them through `style` today.
+- **No gradient prop.** GPUix 0.11.0 accepts a linear-gradient `background`, but
+  a gradient has two ends and this system has one colour role per surface; a
+  `Box` gradient would need a semantic gradient token group before a call site
+  could name its colours instead of passing two literals. Pass one through
+  `style` until such a group exists.
+- **One border style for every side.** The runtime's `borderStyle` applies to
+  all four sides; per-side styles and dotted edges are not paint values it
+  exposes. `dashed` is the one alternate it paints.
 - One shadow per element — the runtime paints a single `boxShadow`.
 
 ## Verification
 
+- `src/core/style.test.ts` — tone resolution, padding and its axis overrides,
+  the dashed edge only on an explicit border, a ratio the renderer can divide
+  by, and "the caller's style wins".
 - `src/components/presentational.test.tsx` — tone resolution, padding, radius,
-  border and "the caller's style wins".
+  border, the axis padding and dashed edge on the element tree.
 - `runtime/layout.runtime.test.tsx` — padding and tone survive layout in real
-  GPUix; density moves height and leaves colour alone.
+  GPUix, per-axis padding paints at the measured offsets, a ratio fills the
+  missing side, and `borderStyle` reaches the painted element; density moves
+  height and leaves colour alone.
 
 ```sh
 nub run --filter @gpuixui/primitives test

@@ -138,7 +138,8 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "yes",
     limitations: [
       "One shadow per element: the runtime paints a single boxShadow",
-      "No gradient or border-style prop: pass them through style (the runtime paints a linear gradient and a dashed border)",
+      "No gradient prop: a gradient has two ends and the theme has one colour role per surface, so it needs a semantic gradient group before a caller can name it (pass one through style)",
+      "One border style for every side: the runtime paints solid or dashed, not per-side or dotted",
       "Not focusable: no role, tabIndex or handlers",
     ],
     source: ["src/components/Box.tsx", "src/core/style.ts"],
