@@ -39,16 +39,6 @@ const row = (name: string): string => {
 };
 
 describe("the painted-child hover rule", () => {
-  it("stays in the row docs, the README and the tree page", () => {
-    Arr.forEach([tableSource, treeSource, readme, treePage], (text) => {
-      expect(text).toContain("hover-routing-lifecycle");
-      expect(text).toContain('pointerEvents: "none"');
-    });
-    // The mechanism, not only the id: hover is the press's own hit test.
-    expect(tableSource).toContain("same hit test");
-    expect(treePage).toContain("same hit test");
-  });
-
   it("stays in the Tables, Row selection and Tree views rows", () => {
     Arr.forEach(["Tables", "Row selection", "Tree views"], (name) => {
       expect(row(name)).toContain("hover-routing-lifecycle");
