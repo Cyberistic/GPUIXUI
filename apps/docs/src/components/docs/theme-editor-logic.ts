@@ -144,7 +144,7 @@ export const auditReport = (
   base: Theme = themes[mode],
 ): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
-/** Which of the audit's nine reports a finding came from. */
+/** Which of the audit's ten reports a finding came from. */
 export type AuditKind =
   | "role"
   | "shadow"
