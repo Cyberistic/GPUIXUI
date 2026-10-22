@@ -444,6 +444,12 @@ export const liveRegistry = [
       "Table: a modified press carries the chord, shift ranges from the anchor, cmd toggles one record, cmd-shift adds the range, and a second press still reports one click",
     capability: "table",
   },
+  {
+    id: "rtl-text",
+    title:
+      "Text: a Hebrew run paints right to left against a Latin control, and a non-joiner changes an Arabic run's advance, so the platform shapes and mirrors the string",
+    capability: "text",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

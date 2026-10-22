@@ -564,6 +564,15 @@ import {
   TRUNCATION_WIDTH,
 } from "./truncation.js";
 import {
+  directionOf,
+  readEndInk,
+  RTL_FONT_SIZE,
+  RTL_IDS,
+  RTL_SAMPLES,
+  shaped,
+  shapingOf,
+} from "./rtl-text.js";
+import {
   inkBounds,
   thumbCentreAt,
   VERTICAL_FRACTION,
@@ -19473,6 +19482,164 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * Whether the runtime shapes and mirrors a right-to-left string by itself.
+ *
+ * The samples are controlled: each run ends in a capital `T` after short
+ * letters, so the end its crossbar reaches is the one thing the layouts
+ * disagree about. The Latin run is the reader's own control — its order is not
+ * in question — and the Arabic pair holds the same four letters with and
+ * without non-joiners.
+ */
+const RtlTextProbe = (): ReactNode => {
+  const theme = useTheme();
+  const sample = {
+    ...textStyle(theme, "body"),
+    fontSize: RTL_FONT_SIZE,
+    lineHeight: RTL_FONT_SIZE + 8,
+    color: theme.colors.foreground,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.spacing.md,
+  };
+  const label = {
+    ...textStyle(theme, "caption"),
+    color: theme.colors.mutedForeground,
+    width: 180,
+  };
+  return (
+    <div
+      testId="rtl-probe"
+      style={{
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text testId={RTL_IDS.caption} style={label}>
+        Right-to-left text: a trailing capital T lands on the left in a
+        right-to-left run, and a non-joiner changes an Arabic run's advance.
+      </text>
+      <div style={row}>
+        <text style={label}>Latin control</text>
+        <text testId={RTL_IDS.latin} style={sample}>
+          {RTL_SAMPLES.latin}
+        </text>
+      </div>
+      <div style={row}>
+        <text style={label}>Hebrew</text>
+        <text testId={RTL_IDS.hebrew} style={sample}>
+          {RTL_SAMPLES.hebrew}
+        </text>
+      </div>
+      <div style={row}>
+        <text style={label}>Hebrew, LTR base</text>
+        <text testId={RTL_IDS.hebrewLtr} style={sample}>
+          {RTL_SAMPLES.hebrewLtr}
+        </text>
+      </div>
+      <div style={row}>
+        <text style={label}>Arabic</text>
+        <text testId={RTL_IDS.arabicJoined} style={sample}>
+          {RTL_SAMPLES.arabicJoined}
+        </text>
+        <text testId={RTL_IDS.arabicSeparated} style={sample}>
+          {RTL_SAMPLES.arabicSeparated}
+        </text>
+      </div>
+    </div>
+  );
+};
+
+const rtlTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(RTL_IDS.latin);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.hover(RTL_IDS.caption);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("rtl-text");
+    const frame = yield* ctx.host.pixels("rtl-text");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+    const ink = palettes.dark.colors.foreground;
+
+    /** The box a sample painted and the ink height at each end of it. */
+    const read = (id: string) =>
+      Effect.gen(function* () {
+        const box = yield* ctx.expectSome(
+          `${id} reports its painted box`,
+          Option.fromNullishOr(yield* ctx.host.bounds(id)),
+        );
+        const ends = yield* ctx.expectSome(
+          `${id} paints its glyphs`,
+          readEndInk(frame, box, scale, ink),
+        );
+        return ends;
+      });
+
+    // 1. The reader's control: a Latin run whose order is not in question.
+    const latin = yield* read(RTL_IDS.latin);
+    yield* ctx.expectEqual(
+      "a Latin run puts its capital T at the right, so the reader can see the end",
+      directionOf(latin),
+      "ltr",
+    );
+
+    // 2. The Hebrew run differs only in script; a right-to-left paragraph puts
+    //    the same neutral at its visual left.
+    const hebrew = yield* read(RTL_IDS.hebrew);
+    yield* ctx.expectEqual(
+      "a Hebrew run's capital T lands on the left, so the runtime lays it out right to left",
+      directionOf(hebrew),
+      "rtl",
+    );
+
+    // 3. The same Hebrew run in an LTR paragraph: the crossbar moves back, so
+    //    the previous reading was the text's direction, not a right-aligned box.
+    const hebrewLtr = yield* read(RTL_IDS.hebrewLtr);
+    yield* ctx.expectEqual(
+      "the same Hebrew run behind a Latin letter puts its capital T on the right",
+      directionOf(hebrewLtr),
+      "ltr",
+    );
+
+    // 4. The Arabic pair: only the join controls differ.
+    const joinedBox = yield* ctx.expectSome(
+      "the joined Arabic run reports its box",
+      Option.fromNullishOr(yield* ctx.host.bounds(RTL_IDS.arabicJoined)),
+    );
+    const separatedBox = yield* ctx.expectSome(
+      "the separated Arabic run reports its box",
+      Option.fromNullishOr(yield* ctx.host.bounds(RTL_IDS.arabicSeparated)),
+    );
+    yield* read(RTL_IDS.arabicJoined);
+    yield* read(RTL_IDS.arabicSeparated);
+    const shaping = shapingOf(joinedBox.width, separatedBox.width);
+    yield* ctx.expectEqual(
+      "both Arabic runs are wider than a single glyph",
+      joinedBox.width > RTL_FONT_SIZE && separatedBox.width > RTL_FONT_SIZE,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a non-joiner changes the Arabic run's advance, so the platform shapes it",
+      shaped(shaping),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "joining narrows the run, so the shaper chose forms for the letters",
+      shaping.separated > shaping.joined,
+      true,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -19815,5 +19982,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "modifier-select-lifecycle",
     view: () => <ModifierSelectProbe />,
     steps: modifierSelectSteps,
+  },
+  "rtl-text": {
+    id: "rtl-text",
+    view: () => <RtlTextProbe />,
+    steps: rtlTextSteps,
   },
 };

@@ -681,7 +681,37 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 102/102
+`[x]` `[██████████]` 103/103
+
+`[x]` Measure what the platform does with a **right-to-left string** — the
+      capability record publishes RTL layout as `not supported` because the
+      runtime takes no direction input, and names the string half *unmeasured*:
+      whether the platform shapes Arabic and lays a Hebrew run out from the
+      right at all, or paints isolated letters in logical order. A consumer
+      shipping Arabic or Hebrew has to know which half it owns. The `rtl-text`
+      live probe answers both from one frame: each sample ends in a capital `T`
+      after short letters, and the crossbar in the top three rows of the ink box
+      says which end it reached. `nnT` reads **0/92** (right, the Latin control);
+      `ייT` reads **92/0** (left — a right-to-left base direction); and `aייT`,
+      the same Hebrew run behind a Latin letter so the paragraph's base is LTR,
+      reads **0/92** again — so the platform reads direction rather than
+      right-aligning a box. For shaping, `سلام` lays out at **58 pt** while
+      `س‌ل‌ا‌م` — the same four letters with zero-width non-joiners — lays out at
+      **79 pt**, a **21 pt** widening, so the shaper chose forms for the joined
+      run. 19 checks, `--only rtl-text`, green on 0.11.0 (~0.5 s). Fixture:
+      `src/live/rtl-text.ts` (`crossbarSide`/`directionOf`, `shapingOf`/`shaped`,
+      `readEndInk`) + `rtl-text.test.ts` (14 cases: the reader held to a drawn
+      frame at both device scales, a blank/outside/unreadable region refused, a
+      run with no top ink left `unresolved` rather than a named side, the two
+      shaping ends, and the README's ends, advances and check count). Three
+      negative controls measured, exit `1`, restored green: expecting the Hebrew
+      run to read LTR fails `a Hebrew run's capital T lands on the left`
+      (`expected "ltr", got "rtl"`); dropping the leading `a` fails the LTR-base
+      check (`expected "ltr", got "rtl"`); making the "separated" sample the
+      joined one fails `a non-joiner changes the Arabic run's advance`
+      (`expected true, got false`). Evidence: `apps/playground/README.md`
+      §`rtl-text`, `.artifacts/live/rtl-text.png`. Publishing the result in the
+      capability record is the interlock row below (docs-site owns those files).
 
 `[x]` Measure a **modified press** on a list — Tier 3's *row selection* names a
       selected record, and a file list or grid adds the three chorded presses a
@@ -4314,7 +4344,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Record the **modifier press** a list selects with — `docs/gpuix-capabilities.md` §3 and `/docs/runtime` describe the pointer as a plain press plus wheel, drag and hover, and no row says the runtime delivers the held set on a click; the playground's `modifier-select-lifecycle` (22 checks, 0.11.0) measured a `shift` range, a `cmd` toggle and a `cmd-shift` union arriving through `clickWith`, the four flags as the payload reports them, and that the chosen rows paint the `selected` fill. Two rules a component plan needs: the anchor is the row a **plain** press left (a range press keeps it, a toggle moves it), and a **double press cannot be synthesized** (`simulateClick`/the locator hard-code `click_count: 1`), so a file tree that opens on a double press needs a keyboard path. `/docs/testing`'s pointer-verb list is also owed `clickWith` | docs-site (the capability record, `/docs/runtime`, `/docs/testing`) | **resolved 2026-10-22** — the record's §3 gains **Modifier press and chord selection** (`supported, with limits`) with the probe's own readouts (`selected=3,4,5,6 anchor=3` for the `shift` range, `flags=cmd:true,ctrl:false,alt:false,shift:false` on the `cmd` press, `selected=4,5,6,7` after a plain press moved the anchor, the `selected` fill, and `click_count: 1` on the second press), the two rules (read the four flags; a plain press moves the anchor, `shift` keeps it and a `cmd` toggle moves it) and the double-press workaround. `/docs/runtime#measured-in-a-window` publishes the row, §5 owes `modifier-select-lifecycle`, `/docs/testing`'s `clickWith` row gains the paragraph a probe author plans around (the chord through `Smoke.formatModifiers`, the four flags, the hard-coded `click_count: 1`), and `/docs/data-display` carries the chord and the anchor where a table is designed. Guards: `capability-doc.test.ts`'s case holds the record and the page (a renamed row or a deleted page row fails by name), `lane-page.test.ts` holds the data-display sentence, and `testing-page.test.ts` reads the probe's own assertion strings plus the page's paragraph. Directions measured: deleting the page row fails all three cases (`the page's measured table has no modifier-press row`, the lane case and the testing case); restoring the record's label to `Chord selection` fails the record case; restored, the docs suite is green (89 files / 853 tests) |
 | Cite the **`modifier-select-lifecycle` selection contract** where tables describe selection — `COMPONENTS.md`'s *Row selection* row and the Tier 5 *File / folder selection* row name single-record selection only, and `packages/components/docs/*.mdx` for a list or tree has no sentence about a chord; a component plan reading them would reimplement the anchor rule or assume a double-press callback. The measured contract is the playground's `modifier-select-lifecycle` (`apps/playground/README.md` §`modifier-select-lifecycle`) | components (`COMPONENTS.md` rows and the list/tree pages) | open — the playground's probe and host verb are landed; this row is the prose half |
 | Correct the **stale fixture comment** in `apps/docs/src/lib/theme-css.test.ts` — it calls its `lookSeries` fixture "a look's own table, which no shipped style declares", while `retroStyles.luna` now ships `lunaSeries` (the tokens change of 2026-10-22). The case itself reads each look's declaration (`retroStyles[name].series?.light`), so it is green both ways and only the comment teaches the pre-change tree | docs-site (`apps/docs/src/lib/theme-css.test.ts`) | **resolved 2026-10-22** — the fixture's comment now says it is a table this case declares itself, while the shipped looks are read from their own `series` above; no assertion changed and `theme-css.test.ts` stays green (13/13) |
+| Publish the **measured right-to-left string result** — `docs/gpuix-capabilities.md` §3's *Right-to-left layout* row and `/docs/runtime` name the string half unmeasured ("whether the platform shapes an RTL **string** on its own is unmeasured"), and the playground's `rtl-text` probe has now measured it on 0.11.0: a trailing capital `T` lands on the **left** in `ייT` (92/0 ink in the end bands) and on the **right** in `nnT` and in `aייT` (0/92), so the platform reads the first strong character's direction and lays the Hebrew run out right-to-left; and `سلام` (58 pt) against the same letters with zero-width non-joiners (79 pt) proves context-sensitive Arabic shaping. The missing capability stays *expressing* a layout direction (no `direction` field, physical edges, physical overlay sides); the row's "unmeasured" clause should become the measurement and its workaround sentence keep the mirror-by-hand rule. Evidence: `apps/playground/README.md` §`rtl-text`, 19 checks green, three negative controls | docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`, `/docs/layouts`) | **measured — needs publishing** (owner: docs-site); the probe and its evidence are landed in `apps/playground` |
 | The **Timeline dot's contrast pair is stale on master** — `packages/components/src/behaviour/timeline.test.tsx` pins the light theme's two `muted` ratios at `[1.06419327…, 1.23014422…]`; the first still matches, the second now measures **1.15686122…**, so `nub run --filter @gpuixui/components test:behaviour` is red for a component whose paint did not change (measured 2026-10-22 17:14 by the motion turn; the failure reads `expected [ 1.064193271496126, …(1) ] to deeply equal [ Array(2) ]` with the dot on the card). Either the tokens pass that moved `muted` re-derives the pair or the Timeline owner re-reads the dot on the new wash — the test must keep requiring the dot to be visible on both fills rather than dropping the assertion | tokens-theme + components (`timeline.test.tsx`) | open — a palette change outside the motion workstream's paths; the numbers above are measured |
+
+| Measure the **syntax palette's painted pixels** in a window — the tokens package now ships `syntaxColors(theme)` in four tables and `nativeTextTheme` hands it to a `<code>` host, but the claim that a highlighted run paints that colour is structural (a source read), not a pixel read. The runtime's tokenizer decides which run is a token, so a probe needs a source whose keyword is unambiguous and a capture that finds the shipped keyword colour inside the block, with a negative control at the runtime's own default palette. The components package's `CodeBlock` already passes the seam, so this measures the palette and not the component | playground (`apps/playground/src/live/`) | open — `docs/tokens.md` §Syntax palette and `COMPONENTS.md`'s row name the structural guard and this owed probe |
+| Update the **Code block's recorded limitation** — `packages/components/src/code-block.tsx`'s `codeBlockMeta.limitations` says "syntax colours are the runtime's built-in light/dark syntax palette; no token group owns them yet", and `COMPONENTS.md`'s Tier 5 Code block row says "syntax colours are the runtime's own palette". A token group owns them now (`syntaxColors`, handed over by `nativeTextTheme`, which the block already passes), so both records are stale | components (owns `code-block.tsx` and its Tier 5 row) | open — tokens' half is `syntaxColors` + `syntax.test.ts` |
 
 ## Phase D — data and workspace components
 

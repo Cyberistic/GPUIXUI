@@ -12,6 +12,7 @@
  * single range and fails the second one.
  */
 import { readFileSync } from "node:fs";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -38,11 +39,21 @@ const readme = readFileSync(
   "utf8",
 );
 
-/** The `modifierSelectSteps` effect, bounded by the bodies table. */
+/** The `modifierSelectSteps` effect, bounded by the next declaration. */
 const steps = (() => {
   const start = scenarios.indexOf("const modifierSelectSteps");
-  const end = scenarios.indexOf("/** The bodies", start + 1);
-  return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
+  if (start === -1) return "";
+  const ends = Arr.filter(
+    [
+      scenarios.indexOf("\nconst ", start + 1),
+      scenarios.indexOf("/** The bodies", start + 1),
+    ],
+    (end) => end > start,
+  );
+  return scenarios.slice(
+    start,
+    Arr.reduce(ends, scenarios.length, (first, end) => Math.min(first, end)),
+  );
 })();
 
 /** The count the README prints for this probe, if any. */

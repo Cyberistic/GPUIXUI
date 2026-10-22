@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-68 probes a real window can prove, of which fifteen mount shipped
+69 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -55,8 +55,8 @@ own wheel and size, a split pane, a virtual list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
 handler, a field's hint and value ink, a configurable data grid, a generated
-SVG pattern, a property inspector beside its preview and a table's chorded
-selection).
+SVG pattern, a property inspector beside its preview, a table's chorded
+selection and right-to-left text shaping).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -3843,6 +3843,79 @@ Two negative controls measured, exit `1` each, then restored green:
   is right and the anchor is wrong, which is exactly the defect a screenshot
   cannot see.
 
+### `rtl-text` — measured on 0.11.0 here
+
+**Does the platform shape and mirror an RTL string by itself?** The runtime
+publishes no direction input — `StyleDesc` has no `direction`/`writingDirection`
+and every edge is physical — so the library documents layout direction as the
+app's, and `docs/gpuix-capabilities.md` calls the *string* half unmeasured. A
+consumer shipping Arabic or Hebrew needs that half: a word painted as isolated
+letters in logical order is not usable text, while a shaped, right-to-left run
+means only the layout has to be mirrored by hand.
+
+A window reports no style, so both answers come from one capture:
+
+- **Direction** is the end a trailing capital `T` reaches. The run keeps only
+  short letters beside it, so the crossbar in the top three rows of the line is
+  the marker. `nnT` is the control — its order is not in question. `ייT` starts
+  with a strong right-to-left letter, so a bidi layout puts the `T` at the
+  **left**. `aייT` is the same Hebrew run with a Latin letter first, which makes
+  the paragraph's base direction left-to-right, so the `T` must return to the
+  **right** if the platform is reading direction rather than right-aligning a
+  box.
+- **Shaping** is the advance of `سلام` against `س‌ل‌ا‌م`, the same four letters
+  separated by zero-width non-joiners. A shaper that joins the letters lays the
+  two strings out at different widths; a painter that draws each letter alone
+  cannot.
+
+The probe reads the top rows at each end of the ink's own box, in exact ink, at
+the capture's device scale. An end with no top ink at all is `unresolved`, not
+"left": the default a bare ratio would return.
+
+| Sample | Left end | Right end | Painted width | Answer |
+| ------ | -------- | --------- | ------------- | ------ |
+| `nnT` (Latin control) | **0** | **92** | 46 pt | the `T` is on the right — Latin is left-to-right |
+| `ייT` (Hebrew, RTL base) | **92** | **0** | 30.5 pt | the `T` is on the left — the run is laid out right-to-left |
+| `aייT` (Hebrew, LTR base) | **0** | **92** | 48 pt | the same Hebrew run returns the `T` to the right — direction is read, not assumed |
+| `سلام` (joined Arabic) | — | — | **58 pt** | shaping is applied |
+| `س‌ل‌ا‌م` (non-joined) | — | — | **79 pt** | the non-joiners widen the run by **21 pt** |
+
+19 checks, `--only rtl-text`, green on 0.11.0 (~0.5 s). Fixture:
+`src/live/rtl-text.ts` — `crossbarSide`/`directionOf` for the marker end,
+`shapingOf`/`shaped` for the advance difference, and `readEndInk`, which finds
+the ink box and counts the top rows of each end band; `rtl-text.test.ts` holds
+the reader to a drawn frame where the crossbar is known, at both device scales,
+refuses a blank or unreadable region, and holds a run with no top ink to
+`unresolved` rather than a named side. Evidence:
+`.artifacts/live/rtl-text.png`.
+
+What it settles:
+
+1. **The platform runs bidi and shaping.** The marker moves ends when the base
+   direction changes, and the non-joiners change the Arabic run's advance, so
+   Hebrew and Arabic paint as the scripts' readers expect without the library
+   writing a text engine.
+2. **The layout is still the app's to mirror.** Nothing here lays out a
+   right-to-left *interface*: insets, dividers, overlay sides and glyph
+   direction remain physical, so a consumer keeps one direction-aware helper and
+   physical overlay placement, as `docs/gpuix-capabilities.md` teaches.
+3. **Text direction follows the first strong character**, which is why a
+   consumer cannot force a direction by passing a string: the same Hebrew run in
+   an English sentence lays out left-to-right, and a mixed line needs its own
+   review rather than a component prop.
+
+Three negative controls measured, exit `1` each, then restored green:
+
+- expecting the Hebrew run to read left-to-right fails `a Hebrew run's capital T
+  lands on the left` with **`expected "ltr", got "rtl"`** — the measurement is
+  the direction, not a default.
+- dropping the leading `a` from the LTR-base sample fails `the same Hebrew run
+  behind a Latin letter puts its capital T on the right` — the base direction is
+  what moved the marker, not the script.
+- making the "separated" Arabic sample the joined one fails `a non-joiner
+  changes the Arabic run's advance` (`expected true, got false`) — the width
+  difference is the join controls, not two different strings.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -4058,8 +4131,8 @@ narrower. Each deviation is deliberate and measured:
   Measured alone since then: `inspector-lifecycle`,
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
   `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle`,
-  `slider-vertical-lifecycle` and `modifier-select-lifecycle` (ten probes, each
-  run alone).
+  `slider-vertical-lifecycle`, `modifier-select-lifecycle` and `rtl-text`
+  (eleven probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
