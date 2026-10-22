@@ -4,7 +4,7 @@
  * The module count is exact: the entry's graph is the package's import cost, and
  * a new family, a moved module or a deleted one must be a deliberate change to
  * this record rather than an accident of a commit. The byte ceiling carries a
- * little headroom over the measured size (657,408 bytes on 2026-10-22) so prose
+ * little headroom over the measured size (682,665 bytes on 2026-10-22) so prose
  * edits do not need a bump while a bulk addition does.
  *
  * `packages` is every package the package's **own** modules import. A new name
@@ -31,10 +31,11 @@ export const surfaceBudget = {
   // (`counting-number.tsx` and its formatting rule), 95 → 96 for AutoHeight
   // (`auto-height.tsx`, plan 600's measured reveal), 96 → 98 for RotatingText
   // (`rotating-text.tsx` and its index rule), 98 → 100 for SplittingText
-  // (`splitting-text.tsx` and the split rule beside it).
-  modules: 100,
+  // (`splitting-text.tsx` and the split rule beside it), 100 → 102 for
+  // HighlightText (`highlight-text.tsx` and the mark rule beside it).
+  modules: 102,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
-  bytes: 660 * 1024,
+  bytes: 690 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

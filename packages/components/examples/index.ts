@@ -36,6 +36,7 @@ import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
 import { FieldExample } from "./field.example.js";
 import { FieldsetExample } from "./fieldset.example.js";
+import { HighlightTextExample } from "./highlight-text.example.js";
 import { FormExample } from "./form.example.js";
 import { HotkeyRecorderExample } from "./hotkey-recorder.example.js";
 import { InlineEditExample } from "./inline-edit.example.js";
@@ -86,6 +87,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "empty-state": EmptyStateExample,
   field: FieldExample,
   fieldset: FieldsetExample,
+  "highlight-text": HighlightTextExample,
   form: FormExample,
   "hotkey-recorder": HotkeyRecorderExample,
   "inline-edit": InlineEditExample,

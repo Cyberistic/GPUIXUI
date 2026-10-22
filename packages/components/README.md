@@ -269,6 +269,7 @@ duration: `docs/component-api.md` §11.
 | `src/counting-number.tsx`, `src/counting-number/logic.ts` | CountingNumber: a number interpolated by `@gpuixui/motion` and painted each frame |
 | `src/rotating-text.tsx`, `src/rotating-text/logic.ts` | RotatingText: a phrase rotation on an interval, one fade per step |
 | `src/splitting-text.tsx`, `src/splitting-text/logic.ts` | SplittingText: a phrase revealed unit by unit, each unit fading and rising (plan 600) |
+| `src/highlight-text.tsx`, `src/highlight-text/logic.ts` | HighlightText: a marker wash swept across a query's matches by the runtime's `highlight` layer (plan 600) |
 | `src/internal/dismiss-layer.ts`, `src/internal/dismiss-scope.tsx` | the overlay stack: the deepest open surface wins, one event closes one overlay; the scope gives each surface its containment depth |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
 | `src/core/runtime.ts` | the shared state model: `createRuntime({ initial, reduce, query })` with a pure command fold (`run`); no React, no GPUix (plan 201) |
