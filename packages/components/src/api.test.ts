@@ -168,8 +168,8 @@ describe("component API contract", () => {
     // edit "not implemented" long after all three shipped, so the spec a
     // consumer reads denied components they could already import. A part in
     // that table must move to its §8 row in the same change that ships it.
-    expect(Arr.length(planned)).toBeGreaterThan(0);
-
+    // The table is empty now (Chat and Message were the last reservation,
+    // plan 207); the check still runs over any row a later plan reserves.
     const landed = Arr.flatMap(planned, (row) =>
       Arr.filter(row.parts, isExportedPart).map(
         (part) =>

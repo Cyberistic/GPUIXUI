@@ -269,6 +269,8 @@ row in the same change.
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 | Message scroller | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | — | plan 206 |
+| Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | — | plan 207 |
+| Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | — | plan 207 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the
@@ -276,13 +278,11 @@ runtime has no `aria-valuenow`, so a popup spinbutton could not announce its
 value. The field root, its two segments, the separator and the clear control are
 the honest parts.
 
-**Planned Tier 2 additions** (not implemented; the parts are fixed here so the
-implementation cannot invent a shape):
-
-| Component | Parts | Source |
-| --------- | ----- | ------ |
-| Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | plan 207 |
-| Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
+**Planned Tier 2 additions** — none. The last reserved family, Chat and
+Message (plan `207`), landed with its parts unchanged, so every part table above
+is implemented. A new reservation goes here with its parts fixed before the
+implementation starts, and `src/api.test.ts` refuses a reserved part the package
+already exports.
 
 ## 9. Landed deviations and migration
 

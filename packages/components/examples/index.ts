@@ -19,6 +19,7 @@ import { BadgeExample } from "./badge.example.js";
 import { BreadcrumbExample } from "./breadcrumb.example.js";
 import { CardExample } from "./card.example.js";
 import { CarouselExample } from "./carousel.example.js";
+import { ChatExample } from "./chat.example.js";
 import { CollapsibleExample } from "./collapsible.example.js";
 import { ColorPickerExample } from "./color-picker.example.js";
 import { ComboboxExample } from "./combobox.example.js";
@@ -39,6 +40,7 @@ import { InlineEditExample } from "./inline-edit.example.js";
 import { KeyboardShortcutsExample } from "./keyboard-shortcuts.example.js";
 import { ListExample } from "./list.example.js";
 import { MentionInputExample } from "./mention-input.example.js";
+import { MessageExample } from "./message.example.js";
 import { MessageScrollerExample } from "./message-scroller.example.js";
 import { NavigationMenuExample } from "./navigation-menu.example.js";
 import { PaginationExample } from "./pagination.example.js";
@@ -61,6 +63,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   breadcrumb: BreadcrumbExample,
   card: CardExample,
   carousel: CarouselExample,
+  chat: ChatExample,
   collapsible: CollapsibleExample,
   "color-picker": ColorPickerExample,
   combobox: ComboboxExample,
@@ -81,6 +84,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "keyboard-shortcuts": KeyboardShortcutsExample,
   list: ListExample,
   "mention-input": MentionInputExample,
+  message: MessageExample,
   "message-scroller": MessageScrollerExample,
   "navigation-menu": NavigationMenuExample,
   pagination: PaginationExample,

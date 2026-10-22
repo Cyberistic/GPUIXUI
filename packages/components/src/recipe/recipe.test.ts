@@ -143,6 +143,34 @@ import {
   POPOVER_CONTENT,
 } from "@gpuixui/tw";
 import {
+  CHAT_COMPOSER,
+  CHAT_COMPOSER_ATTACHMENTS,
+  CHAT_COMPOSER_FIELD,
+  CHAT_COMPOSER_HINT,
+  CHAT_COMPOSER_ROW,
+  CHAT_EMPTY,
+  CHAT_EMPTY_DESCRIPTION,
+  CHAT_EMPTY_TITLE,
+  CHAT_ERROR,
+  CHAT_ERROR_TEXT,
+  CHAT_MESSAGES,
+  CHAT_ROOT,
+  MESSAGE_ACTIONS,
+  MESSAGE_BUBBLE,
+  MESSAGE_BUBBLES,
+  MESSAGE_CONTENT,
+  MESSAGE_REASONING,
+  MESSAGE_REASONING_CONTENT,
+  MESSAGE_REASONING_TRIGGER,
+  MESSAGE_ROOT,
+  MESSAGE_SOURCE,
+  MESSAGE_SOURCES,
+  MESSAGE_STREAMING,
+  MESSAGE_TOOL_CALL,
+  MESSAGE_TOOL_CALL_HEAD,
+  MESSAGE_TOOL_CALL_NAME,
+  MESSAGE_TOOL_CALL_RESULT,
+  MESSAGE_TOOL_CALL_STATUS,
   COLOR_PICKER_CELL,
   COLOR_PICKER_FIELD,
   COLOR_PICKER_INPUT,
@@ -1773,6 +1801,261 @@ describe("MessageScroller recipe", () => {
   });
 });
 
+describe("Message recipe", () => {
+  it("resolves the row, its body and the three variant strips", () => {
+    expect(style(MESSAGE_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      gap: 12,
+      alignSelf: "stretch",
+      paddingLeft: 4,
+      paddingRight: 4,
+    });
+    expect(style(MESSAGE_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      flexGrow: 1,
+      minWidth: 0,
+    });
+    expect(style(MESSAGE_BUBBLE)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      borderRadius: 8,
+      paddingTop: 8,
+      paddingBottom: 8,
+      paddingLeft: 12,
+      paddingRight: 12,
+      fontSize: 14,
+      lineHeight: 20,
+    });
+    expect(style(MESSAGE_BUBBLES.user)).toEqual({
+      backgroundColor: darkTheme.colors.muted,
+    });
+    expect(style(MESSAGE_BUBBLES.assistant)).toEqual({
+      backgroundColor: "transparent",
+    });
+    expect(style(MESSAGE_BUBBLES.system)).toEqual({
+      backgroundColor: "transparent",
+      fontSize: 12,
+      lineHeight: 16,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+
+  it("resolves the reasoning panel", () => {
+    expect(style(MESSAGE_REASONING)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      backgroundColor: darkTheme.colors.card,
+      paddingTop: 8,
+      paddingBottom: 8,
+      paddingLeft: 12,
+      paddingRight: 12,
+    });
+    expect(style(MESSAGE_REASONING_TRIGGER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+      fontSize: 12,
+      lineHeight: 16,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(MESSAGE_REASONING_CONTENT)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+
+  it("resolves a tool call, its head, name, status and result", () => {
+    expect(style(MESSAGE_TOOL_CALL)).toEqual(style(MESSAGE_REASONING));
+    expect(style(MESSAGE_TOOL_CALL_HEAD)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+    });
+    expect(style(MESSAGE_TOOL_CALL_NAME)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(MESSAGE_TOOL_CALL_STATUS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(MESSAGE_TOOL_CALL_RESULT)).toEqual(
+      style(MESSAGE_REASONING_CONTENT),
+    );
+  });
+
+  it("resolves the citation list, the streaming marker and the action row", () => {
+    expect(style(MESSAGE_SOURCES)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+    });
+    expect(style(MESSAGE_SOURCE)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(MESSAGE_STREAMING)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(MESSAGE_ACTIONS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    });
+  });
+});
+
+describe("Chat recipe", () => {
+  it("resolves the conversation column and its transcript", () => {
+    expect(style(CHAT_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+      minHeight: 0,
+      flexGrow: 1,
+    });
+    expect(style(CHAT_MESSAGES)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      minHeight: 0,
+      flexGrow: 1,
+    });
+  });
+
+  it("resolves the empty panel and its copy", () => {
+    expect(style(CHAT_EMPTY)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+      paddingTop: 32,
+      paddingBottom: 32,
+      textAlign: "center",
+    });
+    expect(style(CHAT_EMPTY_TITLE)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(CHAT_EMPTY_DESCRIPTION)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+
+  it("resolves the failed-reply row", () => {
+    expect(style(CHAT_ERROR)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      backgroundColor: darkTheme.colors.card,
+      paddingTop: 8,
+      paddingBottom: 8,
+      paddingLeft: 12,
+      paddingRight: 12,
+    });
+    expect(style(CHAT_ERROR_TEXT)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      flexGrow: 1,
+    });
+  });
+
+  it("resolves the composer surface, its row, field, attachments and hint", () => {
+    expect(style(CHAT_COMPOSER)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      backgroundColor: darkTheme.colors.background,
+      padding: 8,
+    });
+    expect(style(CHAT_COMPOSER_ROW)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-end",
+      gap: 8,
+    });
+    expect(style(CHAT_COMPOSER_FIELD)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: sans,
+      flexGrow: 1,
+      paddingLeft: 8,
+      paddingRight: 8,
+      paddingTop: 4,
+      paddingBottom: 4,
+      backgroundColor: "transparent",
+      color: darkTheme.colors.inputForeground,
+    });
+    expect(style(CHAT_COMPOSER_ATTACHMENTS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 6,
+    });
+    expect(style(CHAT_COMPOSER_HINT)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+  });
+});
+
 describe("merge order", () => {
   it("lets the caller's className win over the recipe", () => {
     expect(style(cn(CARD_BASE, "rounded-none")).borderRadius).toBe(0);
@@ -1814,6 +2097,10 @@ describe("merge order", () => {
     expect(style(cn(TIME_PICKER_ROOT, "rounded-none")).borderRadius).toBe(0);
     expect(style(cn(COLOR_PICKER_ROOT, "flex-row")).flexDirection).toBe("row");
     expect(style(cn(MESSAGE_SCROLLER_ROOT, "gap-4")).gap).toBe(16);
+    expect(style(cn(MESSAGE_ROOT, "gap-4")).gap).toBe(16);
+    expect(style(cn(CHAT_COMPOSER_FIELD, "bg-muted")).backgroundColor).toBe(
+      darkTheme.colors.muted,
+    );
     expect(
       style(cn(NAVIGATION_MENU_CONTENT, "rounded-none")).borderRadius,
     ).toBe(0);
@@ -1999,6 +2286,36 @@ describe("no unsupported classes", () => {
       MESSAGE_SCROLLER_ROOT,
       MESSAGE_SCROLLER_VIEWPORT,
       MESSAGE_SCROLLER_ITEM,
+      MESSAGE_ROOT,
+      MESSAGE_CONTENT,
+      MESSAGE_BUBBLE,
+      MESSAGE_BUBBLES.user,
+      MESSAGE_BUBBLES.assistant,
+      MESSAGE_BUBBLES.system,
+      MESSAGE_REASONING,
+      MESSAGE_REASONING_TRIGGER,
+      MESSAGE_REASONING_CONTENT,
+      MESSAGE_TOOL_CALL,
+      MESSAGE_TOOL_CALL_HEAD,
+      MESSAGE_TOOL_CALL_NAME,
+      MESSAGE_TOOL_CALL_STATUS,
+      MESSAGE_TOOL_CALL_RESULT,
+      MESSAGE_SOURCES,
+      MESSAGE_SOURCE,
+      MESSAGE_STREAMING,
+      MESSAGE_ACTIONS,
+      CHAT_ROOT,
+      CHAT_MESSAGES,
+      CHAT_EMPTY,
+      CHAT_EMPTY_TITLE,
+      CHAT_EMPTY_DESCRIPTION,
+      CHAT_ERROR,
+      CHAT_ERROR_TEXT,
+      CHAT_COMPOSER,
+      CHAT_COMPOSER_ROW,
+      CHAT_COMPOSER_FIELD,
+      CHAT_COMPOSER_ATTACHMENTS,
+      CHAT_COMPOSER_HINT,
     ];
     const unsupported = Arr.flatMap(
       recipes,

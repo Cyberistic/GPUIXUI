@@ -606,3 +606,113 @@ export const MESSAGE_SCROLLER_VIEWPORT =
 /** `message-scroller.tsx` — one message row. */
 export const MESSAGE_SCROLLER_ITEM =
   "flex flex-col gap-1 shrink-0 self-stretch pb-1.5";
+
+/** `message.tsx` — one conversation row. The variant's direction and alignment
+ * are state, and stay in `style`. */
+export const MESSAGE_ROOT = "flex flex-row gap-3 self-stretch px-1";
+
+/** `message.tsx` — the column beside the avatar. */
+export const MESSAGE_CONTENT = "flex flex-col gap-2 min-w-0 flex-grow";
+
+/** `message.tsx` — the body box. Its fill and type come from the variant. */
+export const MESSAGE_BUBBLE =
+  "flex flex-col gap-2 rounded-lg px-3 py-2 text-sm";
+
+/** `message.tsx` — the body box per variant: a user message is a soft bubble,
+ * an assistant's is plain prose, and a system note is small muted copy. */
+export const MESSAGE_BUBBLES = {
+  user: "bg-muted",
+  assistant: "bg-transparent",
+  system: "bg-transparent text-xs text-muted-foreground",
+} as const;
+
+/** `message.tsx` — the variant's author line. */
+export const MESSAGE_AUTHOR =
+  "text-xs font-medium font-sans text-muted-foreground";
+
+/** `message.tsx` — the reasoning panel. */
+export const MESSAGE_REASONING =
+  "flex flex-col gap-1 rounded-md border border-border bg-card px-3 py-2";
+
+/** `message.tsx` — the reasoning disclosure trigger. */
+export const MESSAGE_REASONING_TRIGGER =
+  "flex flex-row items-center justify-between gap-2 text-xs font-medium font-sans text-muted-foreground";
+
+/** `message.tsx` — the reasoning body. */
+export const MESSAGE_REASONING_CONTENT =
+  "text-xs font-sans text-muted-foreground";
+
+/** `message.tsx` — one tool call. */
+export const MESSAGE_TOOL_CALL =
+  "flex flex-col gap-1 rounded-md border border-border bg-card px-3 py-2";
+
+/** `message.tsx` — a tool call's name and status row. */
+export const MESSAGE_TOOL_CALL_HEAD =
+  "flex flex-row items-center justify-between gap-2";
+
+/** `message.tsx` — the tool's name. */
+export const MESSAGE_TOOL_CALL_NAME =
+  "text-xs font-medium font-sans text-foreground";
+
+/** `message.tsx` — the tool's status line. */
+export const MESSAGE_TOOL_CALL_STATUS =
+  "flex flex-row items-center gap-1 text-xs font-sans text-muted-foreground";
+
+/** `message.tsx` — the tool's result. */
+export const MESSAGE_TOOL_CALL_RESULT =
+  "text-xs font-sans text-muted-foreground";
+
+/** `message.tsx` — the citation list. */
+export const MESSAGE_SOURCES = "flex flex-col gap-1";
+
+/** `message.tsx` — one citation. */
+export const MESSAGE_SOURCE =
+  "flex flex-row items-center gap-1 text-xs font-sans text-muted-foreground";
+
+/** `message.tsx` — the streaming indicator. */
+export const MESSAGE_STREAMING =
+  "flex flex-row items-center gap-1.5 text-xs font-sans text-muted-foreground";
+
+/** `message.tsx` — the action row. */
+export const MESSAGE_ACTIONS = "flex flex-row items-center gap-1";
+
+/** `chat.tsx` — the conversation column. */
+export const CHAT_ROOT = "flex flex-col gap-3 min-h-0 flex-grow";
+
+/** `chat.tsx` — the scroller inside the conversation. */
+export const CHAT_MESSAGES = "flex flex-col gap-1.5 min-h-0 flex-grow";
+
+/** `chat.tsx` — the empty-conversation panel. */
+export const CHAT_EMPTY =
+  "flex flex-col items-center justify-center gap-1 py-8 text-center";
+
+/** `chat.tsx` — the empty panel's title. */
+export const CHAT_EMPTY_TITLE = "text-sm font-medium font-sans text-foreground";
+
+/** `chat.tsx` — the empty panel's description. */
+export const CHAT_EMPTY_DESCRIPTION = "text-xs font-sans text-muted-foreground";
+
+/** `chat.tsx` — the failed-reply row above the composer. */
+export const CHAT_ERROR =
+  "flex flex-row items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2";
+
+/** `chat.tsx` — the failed-reply copy. The tone's role is painted in `style`. */
+export const CHAT_ERROR_TEXT = "text-xs font-sans flex-grow";
+
+/** `chat.tsx` — the composer surface. */
+export const CHAT_COMPOSER =
+  "flex flex-col gap-2 rounded-lg border border-border bg-background p-2";
+
+/** `chat.tsx` — the composer's field-and-actions row. */
+export const CHAT_COMPOSER_ROW = "flex flex-row items-end gap-2";
+
+/** `chat.tsx` — the composer field. The focus ring and selection wash stay in
+ * `style`. */
+export const CHAT_COMPOSER_FIELD =
+  "text-sm font-sans flex-grow px-2 py-1 bg-transparent text-input-foreground";
+
+/** `chat.tsx` — the attachment row above the field. */
+export const CHAT_COMPOSER_ATTACHMENTS = "flex flex-row flex-wrap gap-1.5";
+
+/** `chat.tsx` — the keyboard hint under the row. */
+export const CHAT_COMPOSER_HINT = "text-xs font-sans text-muted-foreground";

@@ -1,0 +1,178 @@
+---
+title: Message
+description: One row of a conversation, with reasoning, tool calls, citations and wiring-free actions.
+---
+
+`Message` is one row of a transcript: an avatar, a body and the four slots a
+reply can carry. The behaviour is ported from **shadcn/ui's AI Elements
+`message`** ([source](https://ui.shadcn.com/docs/ai-elements/base/message), MIT); the
+implementation is ours and runs on GPUix host elements. Compose it inside
+[Message Scroller](/docs/components/message-scroller), or use
+[Chat](/docs/components/chat) for the whole conversation.
+
+## Anatomy
+
+```
+[avatar]  You                                    ← variant="user", mirrored
+          ┌───────────────────────────────┐
+          │ The layout pass is done.      │      ← soft bubble
+          └───────────────────────────────┘
+
+[avatar]  Assistant                              ← variant="assistant"
+          ▸ Reasoning                            ← collapsed by default
+          Three fixes landed.                    ← plain prose
+          ┌ read_file ────────────── Done ┐
+          │ CHANGELOG.md                   │      ← tool call + result
+          └────────────────────────────────┘
+          Sources
+          🔗 CHANGELOG.md                        ← citation + address
+          ● Streaming…                           ← while tokens arrive
+          Copy  Retry  Helpful  Not helpful      ← only what you wire
+```
+
+## Usage
+
+```tsx
+import {
+  MessageActions,
+  MessageAvatar,
+  MessageContent,
+  MessageRoot,
+} from "@gpuixui/components";
+
+<MessageRoot variant={message.role}>
+  <MessageAvatar />
+  <MessageContent
+    reasoning={message.reasoning}
+    toolCalls={message.tools}
+    sources={message.sources}
+    streaming={message.streaming}
+  >
+    <text>{message.body}</text>
+    <MessageActions onCopy={copy} onRetry={retry} />
+  </MessageContent>
+</MessageRoot>;
+```
+
+The runnable build is `examples/message.example.tsx`, which the native playground
+mounts. It has every slot and one row with no handlers, so the empty action row
+is visible.
+
+## Variants
+
+| `variant` | Avatar name | Body | Layout |
+| --------- | ----------- | ---- | ------ |
+| `user` | `"You"` | soft `muted` bubble | mirrored: avatar on the outer edge |
+| `assistant` (default) | `"Assistant"` | plain prose | leading: avatar first |
+| `system` | `"System"` | small `mutedForeground` copy | leading, centred |
+
+`variant` lives on the root and every part reads it through context, so a part
+is never handed a second copy of it. `MessageAvatar name` overrides the derived
+name; `MessageRoot label` overrides the row's accessible name.
+
+## Slots
+
+A slot is **data, not a boolean**: supply it and it renders, omit it and nothing
+does. There is no `showReasoning` to keep in sync with the content.
+
+| Slot | Type | Rendering |
+| ---- | ---- | --------- |
+| `reasoning` | `string` | a `Collapsible`, closed by default; opens on press or Enter/Space |
+| `toolCalls` | `ReadonlyArray<MessageToolCall>` | one panel per call: name, status, result |
+| `sources` | `ReadonlyArray<MessageSource>` | a list named `Sources`; `href` becomes the row's description |
+| `streaming` | `boolean` | a `primary` dot and `streamingLabel` (`"Streaming…"`) |
+
+`MessageToolCall.status` is `"running" | "complete" | "error"` and prints
+`Running` / `Done` / `Failed`. A failed call also paints the `destructive` mark
+glyph; the **word** carries the meaning, because no status role is measured as
+text on the muted strip a user bubble sits on.
+
+`MessageActions` renders **nothing** until a handler is supplied — `onCopy`,
+`onRetry`, `onFeedback("helpful" | "not-helpful")`. The component never guesses
+an action, and `onCopy` is yours because the runtime publishes no clipboard
+write (the capability record's workaround is a read-only field the user copies).
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
+merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `MessageRoot` | `role="group"` named by `label` or the variant | `variant?`, `label?`, `className?`, children |
+| `MessageAvatar` | the shipped `Avatar` at `sm` | `name?`, `src?`, `className?` |
+| `MessageContent` | the slot column and the variant's body box | `reasoning?`, `toolCalls?`, `sources?`, `streaming?`, `streamingLabel?`, `reasoningLabel?`, `sourcesLabel?`, `className?`, `style?: StateStyle<MessageContentState>` |
+| `MessageActions` | a `role="group"` action row, or `null` | `onCopy?`, `onRetry?`, `onFeedback?`, `copyLabel?`, `retryLabel?`, `helpfulLabel?`, `notHelpfulLabel?`, `className?` |
+
+`MessageActions` goes **inside** `MessageContent`; `MessageAvatar` and
+`MessageContent` go directly inside `MessageRoot`. A misplaced part of the same
+family throws with both names, like every compound component here.
+
+`MessageContentState` is `{ variant, streaming }`, so a style callback can react
+to the row's variant and its stream.
+
+## Theming
+
+The user bubble paints `muted`; an assistant body paints nothing, so the surface
+behind it (a card, the page) shows through; system copy paints
+`mutedForeground`. Reasoning, tool calls and the error row use `card` with a
+`border` edge; the streaming dot paints `primary`, a mark the token contract
+measures on every plot surface. Colours, radius, spacing and type come from the
+theme, so a custom theme repaints every row with no code change — see
+[Theming](/docs/theming).
+
+## Accessibility
+
+- The row is a `group` named by `label` or its variant (`You`, `Assistant`,
+  `System`), so a reader can tell the speakers apart without seeing the layout.
+- The reasoning trigger is a button with `aria-expanded`; its body is absent
+  while closed, so nothing inside is focusable until it opens.
+- Citations are a named `list` of `listitem`s. The address is the row's
+  `aria-description`; there is no `aria-labelledby`, so the visible label and the
+  name are one string.
+- The avatar is an image named by the author. It is decorative in practice;
+  omit `MessageAvatar` if your transcript already names the speaker.
+- No `aria-labelledby`/`aria-describedby` in `@gpuix/native@0.11.0`, so a tool
+  result is not associated with its call by the accessibility tree.
+
+## Limitations
+
+- **Reasoning mounts and unmounts instantly.** The runtime's motion needs a
+  numeric height and an automatic-height reveal needs a measured first paint, so
+  the panel is the shipped `Collapsible`'s rule, not an animation.
+- **No clipboard write.** `onCopy` is the consumer's path; the library cannot
+  read or write the clipboard.
+- **A citation is a row, not a link.** There is no anchor element, so opening an
+  `href` is the consumer's callback surface.
+- **Expanding reasoning does not re-pin the transcript.** The height change
+  leaves the reader's scroll position alone (that is the point); a reader at the
+  very end may need the scroller's Jump to latest to see the moved tail.
+- **The body is one run.** Rich replies arrive as a `<markdown>` element from
+  the consumer; the part renders whatever you put inside it.
+
+## Verification
+
+`src/chat/logic.test.ts` proves the status machine the sibling `Chat` shares
+(12 tests), and `src/behaviour/message.test.tsx` measures every claim above in
+the real GPUix renderer (12 tests): the three variant names and directions, the
+user bubble's `muted` fill and the assistant's plain strip in both themes,
+reasoning closed until its trigger is pressed, each tool status with exactly one
+error glyph, the citation list and its descriptions, the streaming marker's
+appearance and disappearance, the action row's absence without handlers and its
+per-handler controls, and both misplaced-part rejections.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
+x64, or this Intel Mac, where the locally built `darwin-x64` binding is
+installed.
+
+## Related
+
+- **Chat** — the conversation scaffold around these rows.
+- **Message Scroller** — the viewport that follows the tail and counts what
+  arrived while a reader is scrolled up.
+- **Avatar** — the identity mark `MessageAvatar` composes.
+- **Collapsible** — the disclosure `reasoning` mounts.

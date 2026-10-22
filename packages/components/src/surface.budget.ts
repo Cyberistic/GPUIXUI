@@ -4,7 +4,7 @@
  * The module count is exact: the entry's graph is the package's import cost, and
  * a new family, a moved module or a deleted one must be a deliberate change to
  * this record rather than an accident of a commit. The byte ceiling carries
- * ~9% over the measured 561,459 bytes so prose edits do not need a bump while a
+ * ~9% over the measured 596,751 bytes so prose edits do not need a bump while a
  * bulk addition does.
  *
  * `packages` is every package the package's **own** modules import. A new name
@@ -17,7 +17,9 @@
  */
 export const surfaceBudget = {
   /** Modules in the entry's own package — `src/index.ts` and everything it reaches. */
-  modules: 85,
+  // 85 → 88 when Chat and Message landed (plan 207): `chat.tsx`,
+  // `chat/logic.ts` and `message.tsx`.
+  modules: 88,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   bytes: 600 * 1024,
   /** Packages the entry's own modules import. */
