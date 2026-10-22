@@ -292,8 +292,14 @@ Two border roles:
   `hover`/`active` wash a bordered control tints while it is hovered or pressed,
   because the secondary action keeps that edge while its fill moves. That strip
   found four shipped misses (both base themes, high-contrast dark and Linux
-  light), so the edge is perceivable in every state without relying on fill
-  alone. It is also what carries an action inside a message: an `Alert` fills
+  light), and the pointer half found one more: the secondary action's fill is
+  **derived** (`filledHover`/`filledPressed`), so those two washes are not the
+  fill it paints and the pair table cannot name it — the edge was under the floor
+  in fifteen of the sixteen styles on the pressed fill (Luna dark **2.16:1**) and
+  twelve hovered, so every `borderStrong` moved the smallest step that clears
+  its derived fills as well as its role strips. The edge is perceivable in every
+  state without relying on fill alone. It is also what carries an action inside a
+  message: an `Alert` fills
   its tone's soft tint and its description holds the action, and the neutral
   fill band shares the pale tints' lightness (a `secondary` action reads
   1.01–1.04:1 on the green and amber tints), so the four tints joined the same
@@ -338,8 +344,9 @@ control over, and it found the shipped alias: light `secondary` *was* `muted`, s
 a secondary button in a toolbar was a label with no button around it, and each
 platform window was 1.015–1.049:1 from it. The base light fill is now `#E1E5EC`,
 its pressed wash `#D6DBE4` (so a resting control is not the value of a pressed
-ghost) and `borderStrong` `#6A7483` (so the boundary keeps its 3:1 on the new
-fill and on the pressed wash); each affected platform style and look owns its control face. §9 lists the
+ghost) and `borderStrong` `#616A79` (so the boundary keeps its 3:1 on the new
+fill, on the pressed wash and on the derived pointer fills the components'
+`secondary` paints); each affected platform style and look owns its control face. §9 lists the
 placement, `docs/tokens.md` §Decorative surfaces the measurements.
 
 Elevation is a semantic level, not a literal shadow: `sm` for a card raised with
@@ -732,7 +739,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
 | a filled role's derived pointer step (`filledHover` / `filledPressed` through `actionFeedbackPlacements`) against the fill it replaces | 1.05:1 | 1.05:1 |
-| focus ring on background, card, popover, muted and secondary, on the `input`/`selected`/`hover`/`active`/`accent` surfaces a control can sit inside, and on the four soft status tints an action inside a message draws it on — the line is separated from the control's own fill by one `borderWidth.strong`, so the gap shows the strip behind it and a filled action's own brand face is never a ring surface (§8); and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint, on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
+| focus ring on background, card, popover, muted and secondary, on the `input`/`selected`/`hover`/`active`/`accent` surfaces a control can sit inside, and on the four soft status tints an action inside a message draws it on — the line is separated from the control's own fill by one `borderWidth.strong`, so the gap shows the strip behind it and a filled action's own brand face is never a ring surface (§8); and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint, on the `hover`/`active` wash a bordered control tints, on the derived pointer fills of the one action that paints an edge (`filledHover`/`filledPressed("secondary")`, held by `styles.test.ts`), and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
@@ -893,9 +900,13 @@ light, Windows light and the dark platform/look popovers sat 1.004–1.049:1 fro
 it. The base fill, its pressed wash, `borderStrong` and every affected style's
 own control face moved with the contract. The boundary half of the same table
 found the state the fill changes into: a bordered control keeps `borderStrong`
-while its fill moves to the wash, and both base themes, high-contrast dark and
-Linux light were under the floor there — the four values moved stronger, and the
-message-tint pairs moved the neutral edge again.
+while its fill moves, and both base themes, high-contrast dark and
+Linux light were under the floor on the role washes — the four values moved
+stronger, and the message-tint pairs moved the neutral edge again. The pointer
+fills are derived, so a role pair cannot name them; `styles.test.ts` measures the
+edge there instead, and it found fifteen of the sixteen styles under the floor on
+the pressed fill (Luna dark **2.16:1**), so every style's `borderStrong` took the
+smallest step that clears its derived fills too.
 
 The elevation tint is measured on the same floor, as a **ceiling**: every level a
 component raises a surface to is composited over the strips it can fall on — the

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   filledActionStyles,
@@ -353,6 +354,98 @@ describe("action state example", () => {
  * high-contrast themes (under 7), so the step has to stop where the label's
  * floor starts.
  */
+/**
+ * Guards the edge the one bordered action paints on its **derived** pointer
+ * fills.
+ *
+ * `packages/components`' `Button` adds `border border-strong` to the primitives'
+ * fill-only `secondary` recipe, and that variant's hover and press are
+ * `filledHover`/`filledPressed` — not the `hover`/`active` role washes the
+ * boundary pairs name. The edge was measured on every strip except the two it is
+ * actually drawn on, and at the palette before this contract it was under the
+ * 3:1 boundary floor in twelve of the sixteen styles hovered and fifteen pressed
+ * (Luna dark 2.16:1), with every report empty because a derived fill is not a
+ * role a pair can name.
+ */
+describe("the edge a filled action keeps", () => {
+  const painter = readFileSync(
+    new URL("../../components/src/internal/button.tsx", import.meta.url),
+    "utf8",
+  );
+
+  it("reads the one variant that paints an edge, and the default it is", () => {
+    expect(painter).toContain('secondary: "border border-strong"');
+    expect(painter).toContain('variant = "secondary"');
+    ["primary", "ghost", "danger"].forEach((variant) => {
+      expect(painter, variant).not.toContain(`${variant}: "border`);
+    });
+  });
+
+  it("clears the boundary floor on both fills in every shipped style", () => {
+    const placements = shippedStyles.flatMap((theme) =>
+      [filledHover(theme, "secondary"), filledPressed(theme, "secondary")].map(
+        (fill, index) => ({
+          name: `${theme.name} ${index === 0 ? "hover" : "pressed"}`,
+          ratio: contrastRatio(theme.colors.borderStrong, fill),
+          floor: contrastFloorsFor(theme).boundary,
+        }),
+      ),
+    );
+    placements.forEach(({ name, ratio, floor }) => {
+      expect(ratio, `${name} (needs ${floor}:1)`).toBeDefined();
+      expect(ratio, `${name} (needs ${floor}:1)`).toBeGreaterThanOrEqual(floor);
+    });
+  });
+
+  it("prints the tightest derived placement", () => {
+    const tightest = shippedStyles
+      .map((theme) => ({
+        name: theme.name,
+        ratio: contrastRatio(
+          theme.colors.borderStrong,
+          filledPressed(theme, "secondary"),
+        ),
+      }))
+      .reduce((low, next) =>
+        (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+      );
+
+    expect(tightest.name).toBe("Dark · Windows");
+    expect(tightest.ratio?.toFixed(2)).toBe("3.00");
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`pressed fill at ${tightest.ratio?.toFixed(2)}:1`);
+  });
+
+  it("reports the palette this contract moved", () => {
+    // The shipped light edge before the derivation was measured: chosen for the
+    // resting fill (3.74:1) and under the floor the moment the fill moved.
+    const before = extendTheme(lightTheme, {
+      colors: { borderStrong: "#6A7483" },
+    });
+    expect(
+      contrastRatio(
+        before.colors.borderStrong,
+        before.colors.secondary,
+      )?.toFixed(2),
+    ).toBe("3.74");
+    expect(
+      contrastRatio(
+        before.colors.borderStrong,
+        filledPressed(before, "secondary"),
+      )?.toFixed(2),
+    ).toBe("2.62");
+    // The shipped value is the smallest step that clears both; the sweep above
+    // is what fails when a palette edit forgets the pointer state.
+    expect(lightTheme.colors.borderStrong).toBe("#616A79");
+  });
+});
+
 describe("filled role fills", () => {
   it("keeps every role's label on its floor in every shipped style", () => {
     expect(shippedStyles.length).toBeGreaterThanOrEqual(16);

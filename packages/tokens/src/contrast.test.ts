@@ -1860,13 +1860,13 @@ describe("a control boundary on the strip it sits on", () => {
     ).toEqual([]);
 
     // A neutral edge on a floating surface is a strong pair now that the edge
-    // that also has to answer on a message's tint moved up; the tightest of the
-    // sixteen is Linux dark's popover.
+    // that also has to answer on a message's tint and on a derived pointer fill
+    // moved up; the tightest of the sixteen is Windows light's popover.
     const tightest = measured.reduce((low, placement) =>
       (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
     );
-    expect(tightest.theme).toBe("Dark · Linux");
-    expect(tightest.ratio).toBeCloseTo(4.48, 2);
+    expect(tightest.theme).toBe("Light · Windows");
+    expect(tightest.ratio).toBeCloseTo(5.42, 2);
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -1874,7 +1874,7 @@ describe("a control boundary on the strip it sits on", () => {
         new URL("../../../docs/tokens.md", import.meta.url),
         "utf8",
       ).replace(/\s+/g, " "),
-    ).toContain(`Linux dark's popover at ${printedRatio(tightest.ratio)}`);
+    ).toContain(`Windows light's popover at ${printedRatio(tightest.ratio)}`);
   });
 });
 
@@ -2004,12 +2004,10 @@ describe("a control's edge on a message's own tint", () => {
     );
 
     expect(hidden).toEqual([]);
-    // The pale red tint is the hardest of the four for a neutral edge: macOS
-    // light's, at 3.09:1 against the 3:1 floor.
-    expect(tightest.name).toBe(
-      `${platformTheme(themes.light, "darwin").name}/borderStrong/destructiveSoft`,
-    );
-    expect(tightest.ratio).toBeCloseTo(3.09, 2);
+    // The dark styles' soft tints are the hardest of the four for the lightened
+    // edge: the base dark theme's warning tint, at 3.29:1 against the 3:1 floor.
+    expect(tightest.name).toBe(`${themes.dark.name}/borderStrong/warningSoft`);
+    expect(tightest.ratio).toBeCloseTo(3.29, 2);
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -2017,7 +2015,7 @@ describe("a control's edge on a message's own tint", () => {
         new URL("../../../docs/tokens.md", import.meta.url),
         "utf8",
       ).replace(/\s+/g, " "),
-    ).toContain(`red message tint at ${printedRatio(tightest.ratio)}`);
+    ).toContain(`warning tint at ${printedRatio(tightest.ratio)}`);
   });
 });
 
@@ -2380,13 +2378,13 @@ describe("the edge of a control inside a row's wash", () => {
     );
 
     expect(hidden).toEqual([]);
-    // A neutral edge on a wash a light palette tints is the hardest of the
-    // sixteen now that the popover and tint strips moved the edge up: the
-    // authored Windows XP look's selected row, at 3.07:1 against the 3:1 floor.
+    // A neutral edge on a row wash is the hardest of the sixteen now that the
+    // popover, tint and derived-fill placements moved the edge up: Linux
+    // light's selected row, at 3.96:1 against the 3:1 floor.
     expect(tightest.name).toBe(
-      `${retroTheme(themes.light, "luna").name}/borderStrong/selected`,
+      `${platformTheme(themes.light, "linux").name}/borderStrong/selected`,
     );
-    expect(tightest.ratio).toBeCloseTo(3.07, 2);
+    expect(tightest.ratio).toBeCloseTo(3.96, 2);
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(

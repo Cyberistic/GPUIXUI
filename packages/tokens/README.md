@@ -252,6 +252,14 @@ states of all four roles against the fill each replaces, inside the
 role, state)` is the derivation for a stored theme, and answers `undefined` for
 a role the theme lost.
 
+The one action that also paints an **edge** is `secondary`: the components
+package adds `border border-strong` to the primitive's fill-only recipe, and no
+role pair can name a derived fill, so `styles.test.ts` holds `borderStrong` to
+`contrastFloorsFor(theme).boundary` on both pointer fills in every shipped style.
+It was under the floor in twelve styles hovered and fifteen pressed — the Luna
+dark at **2.16:1** — before `borderStrong` moved the smallest step that clears
+them; the tightest is now Windows dark's pressed fill at 3.00:1.
+
 ## Pointer states
 
 A row's pointer state is a **wash**, and a wash that replaces another wash has
