@@ -3516,6 +3516,32 @@ fill fails three cases by name (both full-object comparisons, printing
       both fail on the old part (`otp-cell-4` reported as `after`) and pass with
       it. Docs: `docs/otp-field.mdx` §Keyboard/§Accessibility/§Verification and
       the OTP Field inventory row.
+`[x]` `packages/primitives`: a **right or middle press moved a slider** — the
+      runtime delivers `mouseDown` for all three buttons while `onClick` is the
+      primary button's own, and `Slider`/`RangeSlider` treated any press as a
+      value gesture: a context-menu press set the value, armed the drag and let
+      the next move apply again, with no `onClick` to observe it. Both now read
+      `core/pointer.ts`'s `primaryButton` (the rule `NumberField`'s scrub already
+      had, now shared). `runtime/value.runtime.test.tsx` presses both shapes
+      with the right and middle buttons and moves after them; it fails on the
+      old handler (`expected [ 75 ] to strictly equal []`) and passes with it.
+      The same pass stopped a **range slider reporting spans that did not
+      change**: a tuple is rebuilt on every interaction, so `Object.is` never
+      matched and a drag held at a bound streamed identical `onValueChange`
+      calls. `Slider.test.tsx` holds the key path and the window case holds three
+      moves at a bound (one report, not four). Docs: `docs/slider.mdx` §Pointer
+      behaviour, `docs/range-slider.mdx` §Keyboard/§Verification and both Tier 1
+      rows.
+`[x]` `packages/primitives`: a **spinner's trail barely faded and its light
+      stepped backwards** — `spinnerDots` divided the trail's distance by the
+      indeterminate bar's eight segments, so with three dots the dimmest trail
+      dot was 0.75 and the documented 0.2 floor was unreachable, and the timer
+      wrapped at eight steps while the row has three, so the eighth frame moved
+      the lit dot backwards (1 → 0). The fade now spans the row (`count - 1`
+      places, floor 0.2) and the timer advances one step per dot. `loading.test.ts`
+      holds the floor, the exact three-dot fade and a turn that lights each dot
+      once. Docs: `docs/spinner.mdx` §Theming/§Verification and the Loading
+      indicators row.
 `[x]` `packages/primitives`: `NumberField` gained the **drag-to-scrub** its
       docs recorded as unbuilt — a press on either stepper that travels scrubs
       the value one `step` per `SCRUB_PIXELS_PER_STEP` (4px) of vertical travel
