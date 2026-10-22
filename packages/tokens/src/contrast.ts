@@ -265,6 +265,21 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "popover",
     floor: "body",
   },
+  // And on a **muted strip**, the fourth page a message sits on: a field error
+  // under a settings form in a muted sidebar, an inline warning in a toolbar.
+  // `decorativeSurfaces` already places the tone's soft tint and its edge on
+  // `muted` ("a soft badge in a muted sidebar"), so the strip was a measured
+  // *surface* for everything about a message except the text painted straight
+  // on it — the role a `FieldError` and a `Text tone="destructive"` use with no
+  // tint of their own.
+  { foreground: "infoSoftForeground", background: "muted", floor: "body" },
+  { foreground: "successSoftForeground", background: "muted", floor: "body" },
+  { foreground: "warningSoftForeground", background: "muted", floor: "body" },
+  {
+    foreground: "destructiveSoftForeground",
+    background: "muted",
+    floor: "body",
+  },
   {
     foreground: "accentForeground",
     background: "accent",

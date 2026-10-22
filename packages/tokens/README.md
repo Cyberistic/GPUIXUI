@@ -189,7 +189,9 @@ The soft surface and its 30%-alpha edge are both **decorative** — the message'
 text carries the meaning — so `decorativeFailures` holds the tint to 1.05:1 on
 the four strips a message sits on (page, card, popover, muted toolbar) and the
 edge to the same floor on the tint it bounds. The label is text, so it is in the
-contrast table instead: `xSoftForeground` on `xSoft` at the body floor.
+contrast table instead: `xSoftForeground` on `xSoft` at the body floor, and on
+every strip a message can be written on — the page, a card, a popover and a
+`muted` toolbar, because a `FieldError` paints the role with no fill of its own.
 
 A runnable example lives in
 [`src/status-tone.example.ts`](./src/status-tone.example.ts).

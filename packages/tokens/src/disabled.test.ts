@@ -263,7 +263,10 @@ describe("the pages that teach the disabled state", () => {
       "disabled:bg-disabled disabled:text-disabled-foreground",
     );
     expect(painters.menuRow).toContain("theme.colors.disabledForeground");
-    expect(painters.componentButton).toContain("opacity: disabled ? 0.5 : 1");
+    // The fade's share is the token constant, not a literal: the components
+    // package's `Button` paints `disabledOpacity` on its unfilled path and the
+    // measured pair on a filled one.
+    expect(painters.componentButton).toContain("disabledOpacity");
     expect(painters.twRecipes).toContain("disabled:opacity-50");
   });
 

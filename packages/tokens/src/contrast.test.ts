@@ -138,9 +138,20 @@ describe("contrast floors", () => {
  * with nothing to notice.
  */
 describe("status text on a surface", () => {
-  it("measures every tone's readable text on background, card and popover", () => {
+  /** The strips a status message's text can be painted straight onto. */
+  const statusTextStrips = ["background", "card", "popover", "muted"] as const;
+
+  it("measures every tone's readable text on the four strips a message sits on", () => {
+    // A `FieldError` and a `Text tone="destructive"` paint the tone's readable
+    // role with **no tint of their own** (`FIELD_ERROR` is a bare
+    // `text-destructive`; the component swaps in `statusTone(...).foreground`),
+    // so the strip behind the message is the surface the text is read on. The
+    // decorative table already places each tone's soft tint and its edge on
+    // `muted` ("a soft badge in a muted sidebar") while the text half stopped at
+    // the three page surfaces — an inline warning in a muted toolbar was a tint
+    // and an edge with no measured label.
     const missing = statusTones.flatMap((tone) =>
-      ["background", "card", "popover"]
+      statusTextStrips
         .filter(
           (background) =>
             !contrastPairs.some(
@@ -153,6 +164,24 @@ describe("status text on a surface", () => {
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("holds the painter that puts status text on the strip", () => {
+    const field = readFileSync(
+      new URL("../../components/src/field.tsx", import.meta.url),
+      "utf8",
+    );
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+
+    // The message slot paints the tone's readable role over the strip, and its
+    // recipe has no fill of its own — which is exactly why the strip is the
+    // surface the pair has to measure.
+    expect(field).toContain('statusTone(theme, "destructive").foreground');
+    const errorRecipe = recipe(recipes, "FIELD_ERROR");
+    expect(errorRecipe).not.toContain("bg-");
   });
 
   it("reports status text painted invisible on a popover", () => {
@@ -170,6 +199,62 @@ describe("status text on a surface", () => {
           background === "popover",
       ),
     ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+  });
+
+  it("reports an inline warning swallowed by the muted strip it sits in", () => {
+    const broken = {
+      colors: { ...lightColors, muted: lightColors.warningSoftForeground },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "warningSoftForeground" && background === "muted",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+  });
+
+  it("clears the body floor on every strip, tightest on Luna's toolbar", () => {
+    const styles = [
+      themes.light,
+      themes.dark,
+      highContrastThemes.light,
+      highContrastThemes.dark,
+      ...platformNames.flatMap((platform) => [
+        platformTheme(themes.light, platform),
+        platformTheme(themes.dark, platform),
+      ]),
+      ...retroNames.flatMap((look) => [
+        retroTheme(themes.light, look),
+        retroTheme(themes.dark, look),
+      ]),
+    ];
+    const placements = styles.flatMap((theme) =>
+      statusTones.map((tone) => ({
+        theme: theme.name,
+        tone,
+        ratio: contrastRatio(
+          theme.colors[`${tone}SoftForeground`],
+          theme.colors.muted,
+        ),
+      })),
+    );
+    expect(styles).toHaveLength(16);
+    expect(
+      placements
+        .filter(
+          ({ ratio }) =>
+            ratio === undefined || ratio < contrastFloorsFor(themes.light).body,
+        )
+        .map(({ theme, tone }) => `${theme} ${tone}`),
+    ).toEqual([]);
+    // The catalogue prints this placement, so a palette edit moves both.
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+    expect(
+      `${tightest.theme} ${tightest.tone} ${printedRatio(tightest.ratio)}`,
+    ).toBe("Light · Windows XP (Luna) warning 8.78:1");
   });
 });
 

@@ -548,7 +548,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted and the hover/active washes it tints (`brandText`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
-| status text on `background`/`card`/`popover` and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
+| status text on `background`/`card`/`popover`/a `muted` strip and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a message in a muted sidebar, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
 | focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those same strips (a floating surface included), on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
@@ -596,6 +596,14 @@ inside one, so a brand that tints its field fill could swallow the colon between
 two time segments with every report empty; the pair is measured now at the
 secondary floor, and the tightest shipped placement is Windows XP (Luna) light's
 line inside its own fill at 7.64:1.
+
+The **status text** is measured the same way, on every strip a message can be
+written on. A `FieldError` paints the tone's readable role and no fill of its
+own, so the strip its form sits on is the surface it is read against: the page, a
+card, a popover and a `muted` sidebar are all in the table, and the muted strip
+was the one missing — the decorative half already put that tone's tint and edge
+there. The tightest placement in the library is Luna light's warning text on its
+beige toolbar at 8.78:1, so no palette moved.
 
 The surfaces that carry no text are measured too, because "subtle" is not
 "invisible": a divider, a skeleton fill, the modal veil, a status message's soft

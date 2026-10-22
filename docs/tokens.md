@@ -279,10 +279,18 @@ that follows from it. The label on the soft surface is text, so it is in the
 contrast table instead: `xSoftForeground` on `xSoft` at the body floor.
 
 `foreground` is the role to paint a status message **as text**, whether it sits
-on the tone's soft surface (an Alert) or directly on `background`/`card` (a field
-error, an inline warning). Both surfaces are in the contrast contract, so the
-message never borrows the solid fill role — which reads as a fill, not as text,
-and is measured for the on-colour it carries, not for the page behind it.
+on the tone's soft surface (an Alert) or directly on `background`/`card`, a
+popover or a `muted` strip (a field error, an inline warning, a destructive menu
+row, a message in a muted sidebar). Every one of those strips is in the contrast
+contract, so the message never borrows the solid fill role — which reads as a
+fill, not as text, and is measured for the on-colour it carries, not for the page
+behind it. The muted strip is the one that was missing: a `FieldError` paints the
+tone's readable role with no fill of its own (`FIELD_ERROR` is a bare
+`text-destructive`, and the component swaps in `statusTone(...).foreground`), so
+the strip its form sits on is the surface it is read against — and the decorative
+table already put that tone's tint and edge on `muted`. All four placements are
+measured now; the tightest in the library is Luna light's warning text on its
+beige toolbar at 8.78:1.
 
 A runnable example spreads the result onto a container and its text; see
 [`src/status-tone.example.ts`](../packages/tokens/src/status-tone.example.ts).
@@ -1155,7 +1163,7 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 83 pairs cover the text role
+— an empty array means the theme is readable. The 87 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1165,8 +1173,9 @@ colour picker's hex field), so the value and its placeholder are measured on
 and a selected row, the selected row's title on that selection and the
 `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash
 it tints, every status and soft-status pair, each status tone's readable text
-as **page** text on `background`, `card` and `popover` (a field error, an inline
-warning or a destructive menu row is not on the tone's own tinted surface),
+as **page** text on `background`, `card`, `popover` and a `muted` strip (a field
+error, an inline warning or a destructive menu row is not on the tone's own
+tinted surface, and a form in a muted sidebar has none of the three page fills),
 the unavailable label on the fill that disables it, on the three page
 surfaces and on the two group strips a disabled control sits in (`muted`,
 `secondary`), accent and selected, the state washes,
@@ -1370,7 +1379,8 @@ to `disabledAction(theme)` in `core/style.ts`, the recipe's disabled bucket is
 (`packages/components/src/menu/item.tsx`) paints `disabledForeground`. Two
 painters still fade the whole control: the `@gpuixui/tw` recipes'
 `disabled:opacity-50`, and the components package's own `Button`
-(`packages/components/src/internal/button.tsx`, `opacity: disabled ? 0.5 : 1`).
+(`packages/components/src/internal/button.tsx`, `opacity: disabledOpacity` — the
+token constant, not a copied share).
 An unfilled action — `outline`, `ghost`, `link`, a `Toggle` — has no fill to
 collapse into and fades with them, and a **field** keeps the fade because its
 fill is `input` and the faded label clears the floor on every content surface it
