@@ -47,6 +47,7 @@ import { GravityStarsExample } from "./gravity-stars.example.js";
 import { HexagonExample } from "./hexagon.example.js";
 import { HighlightTextExample } from "./highlight-text.example.js";
 import { FormExample } from "./form.example.js";
+import { GlyphExample } from "./glyph.example.js";
 import { HotkeyRecorderExample } from "./hotkey-recorder.example.js";
 import { ImageZoomExample } from "./image-zoom.example.js";
 import { InlineEditExample } from "./inline-edit.example.js";
@@ -125,6 +126,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   hexagon: HexagonExample,
   "highlight-text": HighlightTextExample,
   form: FormExample,
+  glyph: GlyphExample,
   "hotkey-recorder": HotkeyRecorderExample,
   "image-zoom": ImageZoomExample,
   "inline-edit": InlineEditExample,

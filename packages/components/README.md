@@ -60,14 +60,14 @@ them. Measured 2026-10-22 with
 
 | Surface | Modules | Source |
 | ------- | ------: | -----: |
-| the package's own graph | 159 | 999 KiB |
-| `@gpuixui/tokens` it reaches | 25 | 258 KiB |
+| the package's own graph | 163 | 1029 KiB |
+| `@gpuixui/tokens` it reaches | 25 | 267 KiB |
 | `@gpuixui/tw` | 9 | 104 KiB |
-| `@gpuixui/primitives` (the `hint` subpath only) | 5 | 49 KiB |
+| `@gpuixui/primitives` (the `hint` subpath only) | 5 | 51 KiB |
 | `@gpuixui/motion` (`./timing`) | 8 | 34 KiB |
 | `@gpuixui/icons` | 5 | 16 KiB |
 | `@gpuixui/keyboard` | 8 | 12 KiB |
-| **total** | **219** | **≈1.4 MiB** |
+| **total** | **223** | **≈1.5 MiB** |
 
 The table counts the workspace source a consumer compiles. `react`, `effect` and
 `@gpuix/react` are dependencies the app already holds, so their bytes are not in

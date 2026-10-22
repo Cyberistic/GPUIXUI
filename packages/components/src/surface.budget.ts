@@ -76,7 +76,10 @@ export const surfaceBudget = {
   // (`sliding-text.tsx`, the slide rule beside it, and `internal/text-swap.ts`,
   // the half RollingText now reads its state machine and timing from too).
   // 159 → 161 for GradientText (`gradient-text.tsx` and the ramp rule beside it).
-  modules: 161,
+  // 161 → 163 for Glyph (`glyph.tsx` and the wall rule beside it): the one
+  // background pattern the runtime paints as text rather than as one mask, so
+  // its cells are hosts rather than a path.
+  modules: 163,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -92,7 +95,10 @@ export const surfaceBudget = {
   // pattern frame included); 976 KiB measured with ImageZoom, under the ceiling.
   // 988 KiB measured with MotionGrid: the ceiling moved 990 → 1030 KiB then,
   // because the next family would otherwise have had two kilobytes to fit in.
-  bytes: 1030 * 1024,
+  // 1 029 KiB measured with Glyph (the wall's logic and its text hosts, the
+  // marked figures above), so the ceiling moved 1030 → 1070 KiB for the next
+  // family's headroom.
+  bytes: 1070 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

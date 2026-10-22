@@ -39,6 +39,7 @@ import { fireworksMeta } from "./fireworks.js";
 import { formMeta } from "./form.js";
 import { gradientMeta } from "./gradient.js";
 import { gradientTextMeta } from "./gradient-text.js";
+import { glyphMeta } from "./glyph.js";
 import { gravityStarsMeta } from "./gravity-stars.js";
 import { hexagonMeta } from "./hexagon.js";
 import { highlightTextMeta } from "./highlight-text.js";
@@ -133,6 +134,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   formMeta,
   gradientMeta,
   gradientTextMeta,
+  glyphMeta,
   gravityStarsMeta,
   hexagonMeta,
   highlightTextMeta,

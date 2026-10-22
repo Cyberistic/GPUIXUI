@@ -365,6 +365,7 @@ the honest parts.
 | Gradient | `Gradient` (one part) | — | plan 600 |
 | Gradient text | `GradientText` (one part) | — | plan 600 |
 | Gravity stars | `GravityStars` (one part) | — | plan 600 |
+| Glyph | `Glyph` (one part) | — | plan 600 |
 | Hexagon | `Hexagon` (one part) | — | plan 600 |
 | Topography | `Topography` (one part) | — | plan 600 |
 | Stars | `Stars` (one part) | — | plan 600 |

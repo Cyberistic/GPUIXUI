@@ -39,6 +39,7 @@ export * from "./form.js";
 export * from "./gradient.js";
 export * from "./gradient-text.js";
 export * from "./gravity-stars.js";
+export * from "./glyph.js";
 export * from "./hexagon.js";
 export * from "./highlight-text.js";
 export * from "./hotkey-recorder.js";
