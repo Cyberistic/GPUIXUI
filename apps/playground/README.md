@@ -717,12 +717,24 @@ before it rests. Three measured shapes of that, all fixed by polling:
 
 `src/live/settle.ts` holds the one poll — `settleUntil(read, holds)` re-reads
 until the state arrives, `settleNumber(read)` waits for a box to stop moving —
-and `settleGone`/`boxAxis` in `scenarios.tsx` are its host-shaped wrappers. The
-poll is **bounded** (40ms × 50, ~2s): an overlay that never dismisses still fails,
-and the assertion after it names the value it settled on, so a steady-state defect
-cannot hide behind a wait. `settle.test.ts` (6 cases) holds the semantics —
-including that `settleNumber` returns the resting value rather than the mid-tween
-one it was waiting to leave.
+and `settleGone`/`settlePainted`/`boxAxis` in `scenarios.tsx` are its
+host-shaped wrappers. The poll is **bounded** (40ms × 50, ~2s): an overlay that
+never dismisses still fails, and the assertion after it names the value it
+settled on, so a steady-state defect cannot hide behind a wait. `settle.test.ts`
+(6 cases) holds the semantics — including that `settleNumber` returns the
+resting value rather than the mid-tween one it was waiting to leave.
+
+Three more shapes of the same lesson, measured after the presence wiring gave
+every overlay a tween:
+
+- the popover's gap was read 40ms into its 200ms entry (`expected 6 ± 1, got
+  0.5`), so the gap is now taken from a settled `y`;
+- the context menu's keyboard-placed surface was read on its entry offset
+  (`expected 204 ± 1, got 201`), so both axes are settled;
+- the header menu's Escape check used a one-shot `gone` and saw the 200ms exit
+  still painted, so it waits with `settleGone` — and a check that expects a
+  surface to *survive* polls for the painted state with `settlePainted`, so it
+  does not spend the whole budget on a surface doing the right thing.
 
 ### `focus-visible` — measured on 0.11.0 here
 
@@ -1280,12 +1292,12 @@ scoped to its trigger.
 | `ArrowDown` ×2 | focus moves row by row: `context-rename`, then `context-delete` |
 | `Enter` | `last=delete`, the surface unpaints, `closes=1` |
 | right press, then `Escape` | unpainted and `closes=2`, and the focus reads **`none`** |
-| `Shift+F10` on the focused trigger | `opens=3`; the surface's left edge is the trigger's, its top the trigger's bottom — the keyboard route places from the trigger's own bounds, not the pointer |
+| `Shift+F10` on the focused trigger | `opens=3`; the surface's left edge is the trigger's, its top the trigger's bottom — the keyboard route places from the trigger's own bounds, not the pointer, and both axes are read at rest (`201` mid-entry, `204` at rest) |
 | `Escape` | focus is back on `context-trigger` — the keyboard route restores it |
 | right press a sibling (menu closed) | nothing opens |
 | right press the trigger, then the sibling | the open surface dismisses; `opens` stays 4, so the outside press opened no second menu |
 
-24 checks, `--only context-menu-lifecycle`, green on 0.11.0. The probe needed a
+22 checks, `--only context-menu-lifecycle`, green on 0.11.0. The probe needed a
 new host verb: `AsyncSmokeHost.rightClick(testId)` presses the element's centre
 with button 2 through the protocol's locator (`host.ts`'s `rightPress`), and its
 unit test holds the button number — a primary press would silently turn the
@@ -1444,14 +1456,14 @@ checks are about the compensation rather than about the runtime's raw behaviour.
 
 | Step | Check |
 | ---- | ----- |
-| press the trigger | the panel paints below the trigger, on its start edge, one measured gap down |
+| press the trigger | the panel paints below the trigger, on its start edge, one measured gap down (the gap is read at rest: the entry tween first painted `0.5` for `6`) |
 | press the `align="center"` trigger | the panel's centre is the trigger's centre line (the runtime would centre on the containing block) |
 | press a trigger 40px from the window's bottom | the panel opens **above** it, and `Escape` returns the focus to that trigger |
 | `Escape` on the default panel | the panel unpaints and the focus is back on its trigger |
 | press outside | the press reaches the control it landed on (`presses=1`) and the panel unpaints |
-| press inside the panel | the panel stays open |
+| press inside the panel | the panel stays open (polled for the painted state, so a surviving surface does not spend the poll's budget) |
 
-18 checks. Two negative controls, measured: dropping `align="center"` fails
+17 checks. Two negative controls, measured: dropping `align="center"` fails
 `a centred panel is centred on its trigger` (`expected 127.5 ± 1, got 192`, exit
 `1`), and moving the low trigger up the window fails `a panel with no room below
 opens above its trigger` (`expected true, got false`, exit `1`) — both restored,
@@ -1474,23 +1486,18 @@ what holds the focus while the surface is open.
 | ---- | ------------------------------ | --------------------- |
 | control: nothing focusable inside | the modal's own surface | **the opener** |
 | the modal focused a field itself (`initialFocus`) | the field | **the opener** |
-| a field took the focus at mount (`autoFocus`) | the modal's own surface | **nothing** |
+| a field took the focus at mount (`autoFocus`) | the modal's own surface | **the opener** |
 
-8 checks. The control comes first, so the third row is about the field and not
+6 checks. The control comes first, so the third row is about the field and not
 about modals in general.
 
-The mechanism, measured rather than inferred: `autoFocus` takes the focus during
-the commit that mounts the field, **before** the modal's focus effect records
-who held it. The modal therefore saves the *field* as its restore target, and
-`getElementBounds` reports that field as gone by the time the surface unmounts —
-so the restore is skipped and the focus ends up nowhere. A field the modal
-focuses itself (`initialFocus`) is focused *after* the modal has recorded the
-opener, so the restore works.
-
-That is why the shipped `CommandMenu` loses the focus: its search field carries
-`autoFocus` **and** the modal's `initialFocus`. The fix is the components
-workstream's (`TODO.md`); these two checks pin the measurement and flip to
-`restore-auto-trigger` with it.
+The mechanism, measured rather than inferred: the modal records who held the
+focus **in the render that opens it**, before the surface's children exist, so
+a child's `autoFocus` cannot become the restore target. That is the rule in
+`packages/components/src/internal/modal.ts`, and it makes the third row hold
+for a consumer's own field, not just for the shipped `CommandMenu` — which
+still focuses its search field through `initialFocus` after the opener is
+recorded.
 
 ### `content-surfaces` — measured on 0.11.0 here
 
@@ -2360,13 +2367,13 @@ Measured:
 | Step | Result |
 | ---- | ------ |
 | mount | name 200px, trigger cell at the name cell's end (200 → 216 at the window's padding), status clipped |
-| press `columns…` | the panel paints **below** the trigger's box and starts at the trigger's own `x` (±2) |
+| press `columns…` | the panel paints **below** the trigger's box and starts at the trigger's own `x` (±2) — read once the panel paints (`settledBox`), not on the frame before its entry |
 | wheel the header −100 | the trigger moves −100 and the panel moves **−100 in the same read** |
-| Escape | the panel unpaints and the focus returns to the trigger |
+| Escape | the panel unpaints (the check waits for the exit tween: a one-shot read saw it still painted) and the focus returns to the trigger |
 | Enter (keyboard open) | focus lands on the first item, `status` |
 | Enter again | `hidden=status changes=1`, the status header unpaints |
 | a column after the anchor | the trigger's `x` is unchanged |
-| press the trigger again | the menu still opens after the header shrank |
+| press the trigger again | the menu still opens after the header shrank (the check waits for the painted panel: a one-shot read saw nothing) |
 
 Four facts a column menu can be built on:
 

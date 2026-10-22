@@ -2400,9 +2400,12 @@ const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
     const trigger = yield* paintedBox(ctx, "popover-trigger");
     const panel = yield* paintedBox(ctx, "popover-panel");
+    // The panel enters with a few pixels of travel on its entry axis, so the
+    // gap is read at rest: a mid-tween read reported `0.5` for `6`.
+    const panelY = yield* settleNumber(boxAxis("y")(ctx, "popover-panel"));
     yield* ctx.expectEqual(
       "the panel opens below its trigger",
-      panel.y >= trigger.y + trigger.height,
+      panelY >= trigger.y + trigger.height,
       true,
     );
     yield* ctx.expectNear(
@@ -2413,7 +2416,7 @@ const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.expectNear(
       "the panel keeps the measured gap below the trigger",
-      panel.y - (trigger.y + trigger.height),
+      panelY - (trigger.y + trigger.height),
       6,
       1,
     );
@@ -2492,8 +2495,8 @@ const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
       "a press inside the panel leaves it open",
-      yield* unpainted("popover-panel"),
-      false,
+      yield* settlePainted(ctx, "popover-panel"),
+      true,
     );
   });
 
@@ -2911,6 +2914,25 @@ const settleGone = (
     (gone) => gone,
   );
 
+/**
+ * Waits until `testId` paints, and reports whether it did.
+ *
+ * The mirror of {@link settleGone} for a check that expects a surface to
+ * survive its input: polling for the painted state stops as soon as the frame
+ * arrives, where polling for its absence spends the whole budget on a surface
+ * that is doing exactly what it should.
+ */
+const settlePainted = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<boolean, Smoke.SmokeHostError> =>
+  settleUntil(
+    Effect.map(ctx.host.bounds(testId), (bounds) =>
+      Option.isSome(Option.fromNullishOr(bounds)),
+    ),
+    (painted) => painted,
+  );
+
 /** The painted `x` or `y` of `testId`; `NaN` while it paints nothing. */
 const boxAxis =
   (field: "x" | "y") =>
@@ -2924,6 +2946,24 @@ const boxAxis =
         onSome: (box) => box[field],
       }),
     );
+
+/**
+ * The painted box of `testId` once it paints, failing by name if it never does.
+ *
+ * A surface mounts before its entry tween paints it, so a box read on the frame
+ * after the press can miss a surface that is arriving.
+ */
+const settledBox = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<
+  Smoke.Bounds,
+  Smoke.SmokeAssertionError | Smoke.SmokeHostError
+> =>
+  Effect.gen(function* () {
+    yield* settlePainted(ctx, testId);
+    return yield* paintedBox(ctx, testId);
+  });
 
 /** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
@@ -5299,16 +5339,23 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text("context-readout"),
       "opens=3",
     );
-    const fromKeyboard = yield* paintedBox(ctx, "context-menu");
+    // The surface enters with a few pixels of travel on its entry axis, so both
+    // axes are read at rest: a mid-tween read reported `y=201` for `204`.
+    const fromKeyboardX = yield* settleNumber(
+      boxAxis("x")(ctx, "context-menu"),
+    );
+    const fromKeyboardY = yield* settleNumber(
+      boxAxis("y")(ctx, "context-menu"),
+    );
     yield* ctx.expectNear(
       "the keyboard surface starts at the trigger's left edge",
-      fromKeyboard.x,
+      fromKeyboardX,
       trigger.x,
       1,
     );
     yield* ctx.expectNear(
       "the keyboard surface starts under the trigger",
-      fromKeyboard.y,
+      fromKeyboardY,
       trigger.y + trigger.height,
       1,
     );
@@ -5868,15 +5915,13 @@ const modalFocusRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
-    // The measured gap: `autoFocus` took the focus before the modal recorded
-    // who held it, so the modal's restore target is the field — which is gone
-    // by the time the surface unmounts, and the focus ends up nowhere.
-    // The components workstream owns the fix (TODO); this check pins the
-    // measurement and flips to `restore-auto-trigger` with it.
+    // The modal records the opener in the render that opens it, before the
+    // field exists, so `autoFocus` cannot steal the restore target: the focus
+    // comes back to the trigger.
     yield* ctx.expectEqual(
-      "a field that took the focus at mount leaves the focus nowhere when the modal closes",
+      "a field that took the focus at mount gives it back to the opener",
       yield* focusedAfterPaint(ctx),
-      "none",
+      "restore-auto-trigger",
     );
   });
 
@@ -10702,11 +10747,7 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
 
     const readout = () => ctx.host.text("header-readout");
-    const box = (testId: string) => paintedBox(ctx, testId);
-    const gone = (testId: string) =>
-      Effect.map(ctx.host.bounds(testId), (bounds) =>
-        Option.isNone(Option.fromNullishOr(bounds)),
-      );
+    const box = (testId: string) => settledBox(ctx, testId);
 
     yield* ctx.expectContains(
       "the header starts with every column visible",
@@ -10763,7 +10804,7 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
       "Escape unpaints the menu",
-      yield* gone("header-menu"),
+      yield* settleGone(ctx, "header-menu"),
       true,
     );
     yield* ctx.expectEqual(
@@ -10791,7 +10832,7 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.expectEqual(
       "the hidden column's header unpaints",
-      yield* gone(headerCellId("status")),
+      yield* settleGone(ctx, headerCellId("status")),
       true,
     );
     yield* ctx.expectNear(
@@ -10804,9 +10845,10 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     // 6. A press on the trigger still opens the menu after the relayout.
     yield* ctx.host.click(HEADER_TRIGGER);
     yield* Effect.sleep(SETTLE);
-    yield* ctx.expectSome(
+    yield* ctx.expectEqual(
       "a press still opens the menu after the header shrank",
-      Option.fromNullishOr(yield* ctx.host.bounds("header-menu")),
+      yield* settlePainted(ctx, "header-menu"),
+      true,
     );
     yield* ctx.host.key("escape");
     yield* ctx.host.capture("header-menu");
