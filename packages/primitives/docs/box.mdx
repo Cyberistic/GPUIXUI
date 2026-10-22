@@ -44,6 +44,7 @@ import { Box, Text } from "@gpuixui/primitives";
 | `grow` | `boolean` | `false` | takes leftover space on the parent's main axis |
 | `shrink` | `boolean` | `false` | may shrink below its content |
 | `fullWidth` / `fullHeight` | `boolean` | `false` | `100%` on that axis |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged **last**, so it wins property by property |
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator for automation |

@@ -92,6 +92,7 @@ keeps the text floor on both fills.
 | `ref` | `Ref<PublicInstance>` | — | the element itself: a trigger anchors the surface it opens to it |
 | `aria-expanded` / `aria-selected` | `boolean` | — | announced state — an open menu or popover, and the current page |
 | other host props | `ActionHostProps` | — | forwarded unchanged (`onMouseDown`/`onMouseMove`/`onMouseUp`, `onLayout`, `autoFocus`, …) |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<ButtonState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |

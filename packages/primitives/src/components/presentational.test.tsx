@@ -138,6 +138,23 @@ describe("layout containers", () => {
     );
   });
 
+  it("lets a caller add a class to the gap a spacer draws", () => {
+    // The bug guarded: `Spacer` was the one primitive without the caller's
+    // `className` escape hatch, so a layout could not adjust the gap it owns.
+    // The class is compiled after the fixed step and `style` is still last.
+    const element = renderSpacer({ size: "lg", className: "mt-1" }, testTheme);
+    expect(numberIn(element, "marginTop")).toStrictEqual(Option.some(4));
+    expect(numberIn(element, "width")).toStrictEqual(
+      Option.some(testTheme.spacing.lg),
+    );
+    expect(
+      numberIn(
+        renderSpacer({ className: "mt-1", style: { marginTop: 9 } }, testTheme),
+        "marginTop",
+      ),
+    ).toStrictEqual(Option.some(9));
+  });
+
   it("forward the automation id the caller gave them", () => {
     const labelled = renderSeparator(
       { orientation: "horizontal", label: "or", testId: "labelled" },

@@ -74,6 +74,7 @@ Fragments and arrays are transparent, so items can be grouped freely.
 | `label` | `string` | none | accessible name for the group |
 | `description` | `string` | none | announced help for the group (`aria-description`); a blank one publishes nothing |
 | `ref` / `aria-id` / `onLayout` | host address | none | land on the row that holds the tab stop, so a form can focus the current choice |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<RadioGroupState>` | — | resolved against the live state, merged last on the group |
 | `itemStyle` | `StateStyle<RadioItemState>` | — | resolved per option row against that row's state, merged last |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own, on the element that owns each: keys on the root, the press and focus on the option row |

@@ -59,7 +59,12 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
    the real types. Where the variants are props, the API table's `Type` column is
    that table; where a state needs its own explanation (what `pressed` paints,
    why a range clamps), a sentence above or below it.
-5. **API** — prop, type, default, consequence.
+5. **API** — prop, type, default, consequence. Every component takes the
+   caller's `className` (compiled through the recipe registry, after the
+   component's own rules) and `style` (merged last); the section names both.
+   `Select` is the one exception, because its root paints only a width: the page
+   says so and teaches `triggerStyle`/`itemStyle` instead. `src/docs.test.ts`
+   fails when a page's API section never names `className`.
 6. **Keyboard** — the `core/keyboard.ts` contract, or "not focusable".
 7. **Accessibility** — the role and `aria-*` the pinned runtime actually supports.
 8. **Theming** — the semantic roles the resolver reads.

@@ -23,6 +23,7 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import * as primitives from "./index.js";
+import { inventory } from "./inventory.js";
 import { decideNumberKey } from "./core/number.js";
 
 const docsDir = new URL("../docs/", import.meta.url);
@@ -304,6 +305,34 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("documents the caller's className on every primitive page", () => {
+    // The bug guarded: the tw migration gave every primitive a compiled
+    // Tailwind escape hatch joined after its recipe, and sixteen pages never
+    // grew the row — a reader of `/docs/primitives/button` found `style` and
+    // `testId` but not the prop that reaches the recipe. `Spacer` was the one
+    // component without the prop, so it gained one rather than an exception
+    // here; `Select` is the documented exception, because its root paints only
+    // the wrapper's width and its seams are the trigger and the rows.
+    const withoutClassName = ["docs/select.mdx"];
+    const missing = Arr.filterMap(inventory, (record) => {
+      if (!Str.startsWith("docs/")(record.docs)) return Result.failVoid;
+      if (Arr.contains(withoutClassName, record.docs)) return Result.failVoid;
+      const path = fileURLToPath(new URL(record.docs, packageRoot));
+      if (!existsSync(path))
+        return Result.succeed(`${record.docs}: page does not exist`);
+      const api = Option.getOrElse(
+        bodyOf(readFileSync(path, "utf8"), "API"),
+        () => "",
+      );
+      return Str.includes("`className`")(api)
+        ? Result.failVoid
+        : Result.succeed(
+            `${record.docs}: the API section never names className`,
+          );
+    });
+    expect(missing).toEqual([]);
+  });
+
   it("does not deny a prop its own API table lists", () => {
     expect(
       Arr.flatMap(pages, (page) =>
@@ -333,7 +362,9 @@ describe("the primitives docs page contract", () => {
     );
 
     expect({
-      closedInWindow: keyboard.includes("`Tab` traversal leaves the tip closed"),
+      closedInWindow: keyboard.includes(
+        "`Tab` traversal leaves the tip closed",
+      ),
       evidence: keyboard.includes("tooltip-lifecycle"),
       headlessHalf: keyboard.includes("`TestRenderer`"),
       retracted: source.includes("A `Tab` traversal opens the tip"),

@@ -65,12 +65,14 @@ export interface SpacerProps {
   /** A fixed gap on the spacing scale. Omit for a flexible filler. */
   readonly size?: keyof PrimitiveTheme["spacing"];
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the fixed gap so it wins conflicts. */
+  readonly className?: string;
   /** Stable locator for automation. */
   readonly testId?: string;
 }
 
 export const renderSpacer = (
-  { size, style, testId }: SpacerProps,
+  { size, style, className, testId }: SpacerProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const fixed: StyleDesc =
@@ -82,7 +84,15 @@ export const renderSpacer = (
           width: theme.spacing[size],
           height: theme.spacing[size],
         };
-  return <div testId={testId} style={mergeStyle(fixed, style)} />;
+  return (
+    <div
+      testId={testId}
+      style={mergeStyle(
+        mergeStyle(fixed, recipeTw.classesToStyle(cn(className), theme).style),
+        style,
+      )}
+    />
+  );
 };
 
 /** Empty space: a fixed gap, or a flexible filler that pushes siblings apart. */

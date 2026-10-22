@@ -73,6 +73,7 @@ colour and the caller's `className`/`style` still win.
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
 | `clamp` | `number` | none | clip after N lines |
 | `selectable` | `boolean` | `false` | `userSelect: "text"` plus the theme's `selection` wash; off for chrome, on for content |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the string (or inline nodes) |

@@ -46,6 +46,7 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `description` | `string` | none | announced help for the group (`aria-description`); a blank one publishes nothing |
 | `ref` / `aria-id` / `onLayout` | host address | none | land on the star that holds the tab stop |
 | `invalid` | `boolean` | `false` | failed validation: chosen stars paint destructive and the ring turns destructive |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<RatingState>` | — | resolved against the live state, merged last |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the rating's own: the press and focus on the star it landed on, keys on the group root |
 | `testId` | `string` | — | stable locator on the group |

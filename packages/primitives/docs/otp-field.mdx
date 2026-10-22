@@ -95,6 +95,7 @@ import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
 | `description` | `string` | none | announced help, carried by **every** cell (`aria-description`); a blank one publishes nothing |
 | `ref` / `aria-id` / `onLayout` | host address | none | land on the **first cell**, the element a form focuses |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc` on the group; resolved against the live state and merged last |
 | `children` | `ReactNode` | `length` cells | the cell parts to draw |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with each cell's own, on every cell; a disabled field keeps them observable |

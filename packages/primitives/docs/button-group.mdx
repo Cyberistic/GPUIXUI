@@ -43,6 +43,7 @@ package's actions is not reshaped.
 | `mode` | `"attached" \| "separated"` | `"attached"` | zero gap + clipped group, or a spaced row |
 | `gap` | spacing step | `"sm"` | the gap in separated mode |
 | `label` | `string` | none | the group's accessible name, written as `aria-label` |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last, e.g. `justifyContent: "flex-end"` |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the buttons |

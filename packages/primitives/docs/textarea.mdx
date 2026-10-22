@@ -39,10 +39,10 @@ const help = "Markdown is not interpreted.";
 
 Shared props: `value`, `defaultValue`, `onValueChange`, `placeholder`, `readOnly`,
 `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `description`,
-`tabIndex`, `style`, `testId`, the runtime's `ref` / `aria-id` / `onLayout` host
-props, and the five composed host handlers from `InteractionProps`
-(`onClick`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`): yours runs first and
-the field still tracks focus and edits.
+`tabIndex`, `style`, `className`, `testId`, the runtime's `ref` / `aria-id` /
+`onLayout` host props, and the five composed host handlers from
+`InteractionProps` (`onClick`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`):
+yours runs first and the field still tracks focus and edits.
 
 Its height is rows, not a control height, so the component re-bases vertical
 padding to the density's horizontal padding step to keep the text inset square.

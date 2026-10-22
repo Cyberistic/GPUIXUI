@@ -82,6 +82,11 @@ paints nothing but its width. An automation host presses `triggerTestId` and
 clicks `itemTestId(value)`, rather than walking the root's children and reading
 painted label text.
 
+`Select` takes no `className`: its root paints only that width, so a class
+there would reach nothing. The styling seams are `triggerStyle`, `itemStyle` and
+the trigger's own recipe — the same roles the page names under Theming. Every
+other primitive takes a `className` joined after its recipe.
+
 ## Keyboard
 
 Owned by GPUix's Select: the trigger opens with Enter/Space, the arrows move the

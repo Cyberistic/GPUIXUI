@@ -83,6 +83,7 @@ import {
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc`; resolved against the live state and merged last |
 | `children` | `ReactNode` | input + steppers | the parts to draw |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own on the input and both steppers; a disabled field keeps them observable |

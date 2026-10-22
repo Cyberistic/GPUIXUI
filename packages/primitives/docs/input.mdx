@@ -55,6 +55,7 @@ two (see §Accessibility).
 | `aria-id` | `string` | none | author id exposed as `AXIdentifier` / UIA AutomationId |
 | `onLayout` | `(event) => void` | none | the element's painted box, after the first paint and each resize |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; yours runs first |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<FieldState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
 
