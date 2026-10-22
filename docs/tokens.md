@@ -1882,8 +1882,9 @@ unfilled one reaches the fade through the branch below. Two painters fade the
 whole control: the `@gpuixui/tw` recipes' `disabled:opacity-50`, and the
 primitives' own parts in `packages/primitives/src/core/style.ts` — the unfilled
 control, a slider's thumb and a rating's star. That file writes the share out as
-`0.5` rather than importing `disabledOpacity`, and `disabled.test.ts` reads every
-written share against the constant, so moving one cannot leave the other behind.
+`0.5` rather than importing `disabledOpacity`, and `disabled.test.ts` reads the
+share in either form — the number it writes or the constant it imports — against
+the constant, so moving one cannot leave the other behind.
 An unfilled
 action — `outline`, `ghost`, `link`, a `Toggle` — has no fill to
 collapse into and fades with them, and a **field** keeps the fade because its

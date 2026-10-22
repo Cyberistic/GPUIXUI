@@ -69,6 +69,32 @@ const looks = retroNames.flatMap((look) => [
 const measured = (fill: string, over: string): boolean =>
   disabledFadePairs.some((pair) => pair.fill === fill && pair.over === over);
 
+/** The import that makes the name in `fadeShares` the package's constant. */
+const tokenImport =
+  /import\s*\{[^}]*\bdisabledOpacity\b[^}]*\}\s*from\s*"@gpuixui\/tokens"/;
+
+/**
+ * The share a fade writes, in either form the primitive cores may use: the
+ * number the constant equals, or the constant itself.
+ *
+ * A name is only the package's share when the file imports it — a local
+ * `disabledOpacity` of another value would otherwise pass the guard behind the
+ * right word — so a naming painter that imports nothing reads as
+ * `not-the-constant` and fails the count. The import landed after this guard:
+ * reading the number alone failed the package's own constant in three places.
+ */
+const fadeShares = (
+  source: string,
+): ReadonlyArray<number | "not-the-constant"> =>
+  [...source.matchAll(/style\.opacity = (disabledOpacity|[\d.]+)/g)].map(
+    ([, written]) =>
+      written === "disabledOpacity"
+        ? tokenImport.test(source)
+          ? disabledOpacity
+          : "not-the-constant"
+        : Number(written),
+  );
+
 describe("disabledOpacity", () => {
   it("is a design constant rather than a theme group", () => {
     expect(disabledOpacity).toBe(0.5);
@@ -407,7 +433,7 @@ describe("the pages that teach the disabled state", () => {
     expect(painters.control).toContain(
       "variant.filledAction === undefined ? undefined : disabledAction(theme)",
     );
-    expect(painters.control).toContain(`style.opacity = ${disabledOpacity}`);
+    expect(painters.control).toContain("style.opacity = ");
     expect(painters.twRecipes).toContain("disabled:opacity-50");
   });
 
@@ -487,11 +513,10 @@ describe("the pages that teach the disabled state", () => {
   it("reads the share each fade actually writes", () => {
     // `disabledOpacity` is the share `disabledFadeFailures` composites, so a
     // fade that writes another number is a mechanism the contract does not
-    // measure. The primitives write the value out rather than import it, which
-    // is why every written share is compared to the constant instead of a name.
-    const shares = [
-      ...painters.control.matchAll(/style\.opacity = ([\d.]+)/g),
-    ].map(([, value]) => Number(value));
+    // measure. The primitives may write the number out or import the constant;
+    // either form is held to the same share, and a name that is not imported
+    // from this package is not the share at all.
+    const shares = fadeShares(painters.control);
     expect(shares.length, "the fades in the primitives' core style").toBe(3);
     shares.forEach((share, index) => {
       expect(share, `primitive fade ${index + 1}`).toBe(disabledOpacity);
@@ -500,6 +525,30 @@ describe("the pages that teach the disabled state", () => {
     expect(recipeShare?.[1], "the tw recipe's fade").toBe(
       String(disabledOpacity * 100),
     );
+  });
+
+  it("reads the fade's share whether it is written or imported", () => {
+    // The package exports the constant for exactly this fade, and the guard
+    // read only the number: importing it failed this suite in three places, so
+    // the import could not land. Both forms are read now, and neither lets a
+    // different share through — a typed number, or a name that is not the
+    // package's import (a local copy of another value behind the right word).
+    const imported = 'import { disabledOpacity } from "@gpuixui/tokens";\n';
+    expect(fadeShares(`${imported}style.opacity = 0.5;`)).toEqual([
+      disabledOpacity,
+    ]);
+    expect(fadeShares(`${imported}style.opacity = disabledOpacity;`)).toEqual([
+      disabledOpacity,
+    ]);
+    expect(fadeShares(`${imported}style.opacity = 0.4;`)).toEqual([0.4]);
+    expect(fadeShares("style.opacity = disabledOpacity;")).toEqual([
+      "not-the-constant",
+    ]);
+    expect(
+      fadeShares(
+        'import { disabledOpacity } from "./disabled.js";\nstyle.opacity = disabledOpacity;',
+      ),
+    ).toEqual(["not-the-constant"]);
   });
 
   it("holds the components action to a translation, not a second painter", () => {
@@ -548,7 +597,7 @@ describe("the pages that teach the disabled state", () => {
       painters.control.indexOf("} else {", start),
     );
     expect(branch).toContain("disabledAction(theme)");
-    expect(branch).toContain(`style.opacity = ${disabledOpacity}`);
+    expect(fadeShares(branch)).toEqual([disabledOpacity]);
 
     Object.entries(pages).forEach(([page, text]) => {
       expect(text, page).toContain("filled variant");
