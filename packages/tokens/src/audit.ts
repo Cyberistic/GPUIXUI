@@ -48,6 +48,47 @@ import {
 } from "./series.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
+/**
+ * The numeric groups a theme must carry. Every other group is additive — a
+ * colour role or an elevation level can arrive later and its absence is a report
+ * — but a numeric group is a breaking change: the components read every step in
+ * it, so a theme stored by a release that predates one is not a theme this
+ * library can paint.
+ */
+const numericGroups = [
+  "spacing",
+  "radius",
+  "borderWidth",
+  "iconSize",
+  "typography",
+  "density",
+] as const;
+
+/**
+ * Refuse a theme that is missing a numeric group, naming it.
+ *
+ * A stored theme is decoded or cast, so the type cannot catch this: without the
+ * guard the first report reads `Object.entries(undefined)` and the consumer sees
+ * `TypeError: Cannot convert undefined or null to object` with no hint which
+ * group their release lost. Throwing is deliberate — this is an invariant of the
+ * gate's input rather than a theme state the reports can describe.
+ */
+const requireGroups = (theme: {
+  readonly [group in (typeof numericGroups)[number]]?: unknown;
+}): void => {
+  const missing = numericGroups.filter((group) => theme[group] === undefined);
+  if (missing.length === 0) {
+    return;
+  }
+  throw new Error(
+    `a theme must carry every numeric group: ${missing
+      .map((group) => `\`${group}\``)
+      .join(", ")} ${
+      missing.length === 1 ? "is" : "are"
+    } missing. A group is a breaking change, so a theme stored by an older release must be rebuilt from a shipped one with \`extendTheme\`.`,
+  );
+};
+
 /** A theme, or anything shaped like one, for the checks that only read colours. */
 type ColourSource = { readonly colors: Partial<ThemeColors> };
 
@@ -105,9 +146,11 @@ export interface ThemeAudit {
  * An incomplete theme does not crash the gate. A theme restored from storage can
  * predate a colour role or an elevation level the library has added since, so
  * `invalidRoles` and `invalidShadows` name the absence and the contracts that
- * measure a pair report it unmeasurable; `passed` is false either way. The
- * numeric groups are read as they are, because a group is a breaking change
- * rather than an additive one.
+ * measure a pair report it unmeasurable; `passed` is false either way. A
+ * **numeric group** is the one absence the reports cannot describe — the
+ * components read every step in it — so a theme missing one is refused with an
+ * error naming the group, because a group is a breaking change rather than an
+ * additive one and such a theme must be rebuilt from a shipped one.
  *
  * `passed` is the only passing result — a report nobody checked is not a pass.
  *
@@ -127,6 +170,7 @@ export function auditTheme(
     NumberSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): ThemeAudit {
+  requireGroups(theme);
   const invalidRoles = invalidColorRoles(theme);
   const invalidShadows = invalidShadowColors(theme);
   const numbers = invalidNumbers(theme);

@@ -190,3 +190,55 @@ describe("a complete theme", () => {
     expect(shipped.filter((theme) => !auditTheme(theme).passed)).toEqual([]);
   });
 });
+
+/**
+ * The gate's other half of the incomplete-theme rule, and the bug this holds:
+ * `docs/tokens.md` and this file said a missing numeric group was read "as the
+ * groups a theme carries", while `invalidNumbers` opened `theme.typography` and
+ * the consumer saw `TypeError: Cannot convert undefined or null to object` — no
+ * group, no sentence, no way to know which release their theme predated. Adding
+ * a group is a breaking change rather than an additive one, so absence here is
+ * not a theme the reports can describe: the gate refuses it and names the group.
+ */
+describe("an absent numeric group", () => {
+  const numericGroups = [
+    "spacing",
+    "radius",
+    "borderWidth",
+    "iconSize",
+    "typography",
+    "density",
+  ] as const;
+
+  it("is refused with the group's name instead of a TypeError", () => {
+    numericGroups.forEach((group) => {
+      const stored = omit(lightTheme, group);
+
+      expect(() => auditTheme(stored as Theme), group).toThrow(
+        `\`${group}\` is missing`,
+      );
+    });
+  });
+
+  it("names every missing group at once", () => {
+    const stored = omit(omit(lightTheme, "density"), "typography");
+
+    expect(() => auditTheme(stored as Theme)).toThrow(
+      "`typography`, `density` are missing",
+    );
+  });
+
+  it("reads a theme whose groups are all there, and whose groups are additive", () => {
+    // The refusal is the numeric half only: a stored theme missing a colour role
+    // or an elevation level is still an audit that returns, with the absence in
+    // the report (the suites above hold that half).
+    const stored = {
+      ...lightTheme,
+      colors: colorsWithout(lightTheme, "primary"),
+      elevation: elevationWithout(lightTheme, "md"),
+    };
+
+    expect(() => auditTheme(stored)).not.toThrow();
+    expect(auditTheme(stored).passed).toBe(false);
+  });
+});

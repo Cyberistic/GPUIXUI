@@ -751,8 +751,9 @@ than throwing — `invalidColorRoles` returns the role with `value: undefined`,
 every contract that measures a pair reports it unmeasurable — so the gate returns
 a failing report that names the role instead of a `TypeError`
 (`docs/tokens.md` §Paint-ready values). A numeric group is not treated this way:
-adding one is a breaking change rather than an additive one, so the number report
-reads the groups the theme carries.
+adding one is a breaking change rather than an additive one, so the gate refuses
+a theme missing one and names the group, because the components read every step
+in it — such a theme is rebuilt from a shipped one with `extendTheme`.
 
 A value it cannot **lay out** is the third: a style batch is JSON, so `NaN` and
 `Infinity` arrive as `null`, the property is dropped, and the element paints as

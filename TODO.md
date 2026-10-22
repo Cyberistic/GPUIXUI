@@ -282,7 +282,9 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 110/110
+`[x]` `[██████████]` 111/111
+
+`[x]` Refuse a theme that **lost a numeric group** instead of failing with a `TypeError` — `auditTheme`'s JSDoc promised "an incomplete theme does not crash the gate", and `docs/tokens.md`/`docs/design-system.md` went further: a missing numeric group was "read as the groups a theme carries". It was not: `invalidNumbers` opened `theme.typography` (and every other group) directly, so a theme stored by a release that predates a group — the one way a complete theme becomes incomplete — reached the consumer as `TypeError: Cannot convert undefined or null to object`, naming neither the group nor the release. The reports cannot describe that absence (the components read every step in a group and a group is a breaking change, not an additive one), so the gate now **refuses** it up front with an actionable message (`a theme must carry every numeric group: \`typography\` is missing. … must be rebuilt from a shipped one with \`extendTheme\`.`), while the additive absences it already handles — a colour role, an elevation level — still come back as a failing report rather than a throw. `incomplete.test.ts` gains `an absent numeric group` (3 cases): each of the six groups refused by name, two groups named at once, and a theme missing only a role and a level still returning an audit with `passed: false`. Directions measured: deleting the `requireGroups` call fails the first two by name, and the additive case holds the other half. Docs in `docs/tokens.md` §Paint-ready values and `docs/design-system.md` §9 now state the refusal and quote the message.
 
 `[x]` Measure the **edge a soft badge keeps inside the row wash it sits on** — `decorativeSurfaces` carried each tone's 30% edge on its own `xSoft` tint and the four strips a message sits on (page, card, popover, muted), and on **none** of the washes a row tints under itself: a tone badge is the one status message painted *inside* a row (the List example's status column puts one in the row's `trailing` slot), its recipe keeps the tone's edge (`border border-success/30` and siblings, `packages/tw/src/recipes.ts`) while `list.tsx` tints `accent` under the pointer, `active` while pressed and fills `selected` once chosen — so a brand whose tone edge matched its row wash shipped a pill with no boundary while every strip it rested on passed. On a wash the edge *is* the badge: the tint is a pale surface by design and a row's wash is a pale surface too, so the boundary is what carries it (the tint stays measured on the four strips a message occupies, where it is the surface). Sixteen placements joined `decorativeSurfaces` (4 tones × `hover`/`active`/`selected`/`accent`) and no palette moved — every shipped, high-contrast, platform and authored style already cleared the floor, the tightest being Luna light's `warning` edge on its `active` wash at **1.09:1** (which moves the catalogue's printed tightest strip from 1.11 on `muted`). `decorative.test.ts` gains three cases and widens its tightest suite to all nine placements per tone: the wash coverage, a painter case that reads the Badge recipe's tone edges and `list.tsx`'s three washes so a placement cannot outlive its paint, and a brand whose `warning` edge is the light `active` wash reported at 1.00:1; the printed tightest is computed over every strip, so a palette edit moves the sentence. Four directions measured: dropping the wash placements fails the coverage and brand cases by name, removing a badge's `border border-success/30` fails the painter case (`edgeLess: ['success']`), and taking the hover wash out of `list.tsx` fails it as `unwashed: ['accent']`. Docs in `docs/tokens.md` §Decorative surfaces, `docs/design-system.md` §7/§9, the `Status tones`/`Contrast contract` inventory rows and the package README.
 `[x]` Measure the **edge a control paints on a message's own tint** — `contrastPairs` held `borderStrong` on every strip a control rests on (page, card, field, toolbar, `secondary`, floating surface, the washes it tints, the washes a row paints under it) and on none of the four soft status tints a message is painted on. An `Alert` fills its tone's `xSoft` role (`ALERT_TONES`) and its description is a container, so the documented action — `<Button onClick={retry}>Try again</Button>`, the default variant, which paints `borderStrong` — draws its edge on that tint; thirteen of the sixteen styles missed the 3:1 floor there, the worst being the base dark theme's edge on `warningSoft` at **2.23:1**, so a palette could ship a button with no outline inside the one component built to be noticed while every strip it rested on passed. The edge is the carrier on a tint for the reason a field is: the neutral fill band is one lightness in each mode and the pale tints share it (a `secondary` action reads 1.01–1.04:1 on the green and amber tints of the light styles), so only the boundary can be seen. Four pairs joined `contrastPairs` (93 → 97) at the boundary floor, and the values moved by the smallest step that clears all four tints — light `#727D8C` → `#6A7483`, dark `#788494` → `#949EAB`, high-contrast light `#4A4F58` → `#454A53`, macOS light `#7C7C82` → `#75757A` and dark `#8A8A90` → `#9C9CA1`, Linux light `#7E7C79` → `#76746F`, Windows dark `#9A9A9A` → `#9D9D9D`, Luna dark `#7E9CBF` → `#83A1C3`, Aero light `#5E7A93` → `#5A768F` and dark `#7F98AC` → `#889FB2`. `contrast.test.ts`'s `a control's edge on a message's own tint` suite holds the coverage, reads the alert's tones, its description and the default action's edge so the pairs cannot outlive the paint, reports an edge painted in the tint it sits on at 1.00:1, sweeps all 16 styles to the printed 3.09 (macOS light's red tint) and reads the catalogue's sentence; `catalogue-values.test.ts` holds every moved value the page prints. The two tightest claims the palette move shifted are re-derived too (the floating surface's 3.95 → 4.48 on Linux dark's popover, the row wash's 3.08 → 3.18 on the authored Windows XP look). Directions measured: removing a pair fails the coverage and the erased-edge cases by name, restoring the base dark value fails the sweep (`warningSoft`), and a stale printed `3.10` fails the page case. The docs site's `.gx-demo` preview defaults mirror the dark roles and `theme-css.test.ts` holds them to the package, so `apps/docs/src/styles/demos.css`'s `--border-strong` moved with the value (a one-line mirror of the token, not a design change; the docs-site half of any future palette move is still its owner's). Docs in `docs/tokens.md` §Contrast, `docs/design-system.md` §7/§9 and the `Contrast contract` inventory row.
@@ -3526,7 +3528,43 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 125/125
+`[x]` `[██████████]` 126/126
+
+`[x]` Curate the **Select** page and hold its 320px list and its reveal to the
+source — `/docs/primitives/select` carries the API and the measured gaps but no
+rendering a reader can press, and the site had no picker preview at all. The
+curated page at `/docs/components/select` (which does not shadow the primitives
+page — they are different sections, like Button) teaches the decisions a
+screenshot cannot show: options are data because the trigger needs their labels
+before the list opens, a group is a painted caption and a rule while the runtime
+receives one flat list, a disabled row is skipped and the ends wrap, and the
+**rows reveal themselves** through `revealScroll` because GPUix never scrolls its
+own highlight (`scrollIntoView` only reaches a direct child, so a grouped row
+would reveal nothing). It states the 320px cap as the component's — the
+runtime's content sets no maximum height and its scroll-button parts are empty in
+`@gpuix/native@0.11.0` — and the trigger's `keyboardFocusDim: false`, because it
+shows the chosen value rather than a glyph. Two browser previews:
+`select-workflow` is a "New workspace" card (grouped regions, a machine list with
+a disabled row, a live readout) and `select-states` shows the three sizes and the
+rest / empty / invalid / disabled triggers, every one of them openable. The row
+arithmetic lives in `src/components/docs/select-preview.ts` so it is testable:
+`select-preview.test.ts` (6 cases) fails when a disabled row in the middle is not
+skipped, when the ends stop wrapping, when an opening arrow does not start at its
+edge, and when a group is walked as a level. `component-page-truth.test.ts` gained
+the page and `hold the select's list cap and its reveal to the source`, which
+reads `Select.tsx` (`maxHeight: 320`, `overflowY: "scroll"`, `revealScroll`,
+`renderer.scrollTo`, the `check` mark in `popoverForeground` from
+`state.selected`, `keepContent`, `controlRing`, `isSelectGroup`) and
+`core/scroll.ts`, then holds the page to those claims and refuses the retracted
+"cannot reach the tail". The sidebar (`meta.json` Forms), the Components index
+sentence, `/docs/theming`'s switch list, `docs/preview-strategy.md`'s "Curated
+today" line, `sources.ts` and the app README ledger name the page, so the two
+existing registry guards covered it with no new exemption. Directions measured:
+the full docs suite is 685 tests (684 pass) with the one failure
+`link-integrity` on two **untracked** `packages/components/docs` pages owned by
+the components workstream (`bubbles.mdx` links `/docs/components/progress`,
+`page-transition.mdx` links `/docs/components/motion`); `check-types` and `build`
+are green and `/docs/components/select` renders both previews.
 
 `[x]` Curate the **Toast** page and hold the queue's bounds and the hold to the
 source — `/docs/components/toast` served the package page (strategy 4: no
