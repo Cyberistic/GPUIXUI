@@ -42,13 +42,13 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-59 probes a real window can prove, of which fifteen mount shipped
+60 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
-combobox, the nested overlay stack and the modal focus rule), five mount
-`@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
+combobox, the nested overlay stack and the modal focus rule), six mount
+`@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text and Tooltip), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
@@ -1967,6 +1967,55 @@ user's own gesture on a selectable surface, or a read-only field holding the
 text. The probe writes only its own marker to the system clipboard and never
 reads what was there.
 
+### `otp-paste-lifecycle` — measured on 0.11.0 here
+
+A one-time code is the one field a person almost never types: it arrives from a
+password manager or a mail client, so a code field whose paste fills one cell and
+drops the rest is broken on the only path most readers use. The pinned runtime
+publishes **no paste event** — `HostProps` has no `onPaste` — so
+`packages/primitives`' `OTPField` states the other half in its header: a pasted
+code arrives as one multi-character `onChange`, and `applyOtpInput` fills it
+forward from the cell that received it. The capability record still says the
+field's paste is **unverified** in a window, because `clipboard-lifecycle`
+measured a plain `<input>` and no scenario had mounted the code field. This probe
+closes that gap with the same platform keys: it copies a marker from a shipped
+`Input` (`cmd-a`, `cmd-c`), pastes it into a shipped six-cell `OTPField`
+(`cmd-v`) and reads the value the caller receives and the cells the field paints
+through the package's own `otpCells`.
+
+The two markers are unique to the mount. The nine-character one is generated so
+its first character differs from the character in the third cell it will be
+pasted over, because `applyOtpInput` strips a reported prefix that matches the
+cell — the runtime can append a paste to the field's text — and a replacement
+paste beginning with that character would be stripped as if it were typed.
+
+| State | Measured |
+| ----- | -------- |
+| at rest | the field reports an empty code, six empty cells, no completion and no edit |
+| the source is pressed, `cmd-a`, `cmd-c` | the six-character marker is on the platform clipboard |
+| first cell pressed, `cmd-v` | the code is the marker, the six cells each hold one character, `completes=1 edits=1`, and the focus moves to the sixth cell |
+| a nine-character marker copied and pasted over the full code | the code truncates to six characters, the cells keep one each, and `completes` stays **1**: replacing a finished code is not a second completion |
+| the third cell pressed, `cmd-v` | the first two characters are kept, the run fills forward from the third cell, and the focus returns to the sixth |
+
+10 checks, `--only otp-paste-lifecycle`, green on 0.11.0 (617 ms, and 643 ms on
+a second run). Negative
+control measured: expecting the nine-character paste to remain the code fails
+`a longer paste truncates to six cells and is not a second completion` with
+`expected "value=wzcrj7cgr cells=w,z,c,r,j,7 completes=1 edits=2", got
+"value=wzcrj7 cells=w,z,c,r,j,7 completes=1 edits=2"` — so the check reads the
+field's distribution and not a text prop that would pass either way. Evidence:
+`.artifacts/live/otp-pasted.png`.
+
+The consequence: the field's header and `core/otp.ts` describe the paste path
+correctly on this host — the runtime delivers the clipboard as one
+multi-character `onChange`, the cells fill forward from the one that took it, a
+longer paste truncates at six, and replacing a finished code does not fire
+`onComplete` twice. The capability record's `OTPField` paste line can move from
+**unverified** to measured (the docs-site half), and no application has to
+handle paste itself. The probe also surfaced a React warning in the field's
+default cell list (`Each child in a list should have a unique "key" prop`),
+recorded as an interlock for the package that owns the field.
+
 ### `selection-lifecycle` — measured on 0.11.0 here
 
 Text selection had one proof, and it was synthetic: the headless
@@ -3546,7 +3595,8 @@ narrower. Each deviation is deliberate and measured:
   were one-shot frame reads in the probes — see §A probe waits for a settled
   paint, which records all three measured shapes and the waits that replaced
   them. The full live suite is the release gate, and this line is its result.
-  Measured alone since then: `inspector-lifecycle` (one probe, run alone).
+  Measured alone since then: `inspector-lifecycle` and
+  `otp-paste-lifecycle` (two probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

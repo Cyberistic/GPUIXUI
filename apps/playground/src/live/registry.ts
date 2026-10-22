@@ -229,6 +229,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "otp-paste-lifecycle",
+    title:
+      "Input: a code pasted into a shipped OTPField fills its cells from the cell that took it, truncates to six, and completes once",
+    capability: "input",
+  },
+  {
     id: "selection-lifecycle",
     title:
       "Text: a real pointer drag over the shipped Text paints the selection, getSelectedText reports it, Cmd+C copies it, and a default node opts out",

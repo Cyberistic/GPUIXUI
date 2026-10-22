@@ -87,6 +87,7 @@ import {
   Button,
   Checkbox,
   Input,
+  OTPField,
   RangeSlider,
   Select as PrimitiveSelect,
   Slider,
@@ -140,6 +141,19 @@ import {
   formatEdges,
   type Edges,
 } from "./chrome.js";
+import {
+  OTP_PASTE_FIELD,
+  OTP_PASTE_LENGTH,
+  OTP_PASTE_LONGER,
+  OTP_PASTE_LONGER_VALUE,
+  OTP_PASTE_READOUT,
+  OTP_PASTE_SOURCE,
+  OTP_PASTE_SOURCE_VALUE,
+  otpPasteCellId,
+  otpPasteMarker,
+  otpPasteOver,
+  otpPasteReadout,
+} from "./otp-paste.js";
 import {
   BAR_PIXEL,
   MARGIN_PIXEL,
@@ -9771,6 +9785,210 @@ const clipboardSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * A one-time code pasted in a window.
+ *
+ * `OTPField` claims a pasted code arrives as one multi-character `onChange`
+ * because the runtime publishes no paste event, and nothing had measured that
+ * claim in a window — the capability record says the field's paste is
+ * unverified. The probe copies a marker from a shipped `Input` with the
+ * platform's own select-all and copy, pastes it into a shipped `OTPField` with
+ * `cmd-v`, and reads the value the caller receives: six cells filled from the
+ * cell that took the paste, one completion, and the focus in the last cell. A
+ * longer paste is truncated, pasting into a full code is not a second
+ * completion, and pasting into the third cell rewrites from there.
+ */
+const OtpPasteProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [source] = useState(() => otpPasteMarker(Math.random));
+  const [longer] = useState(() =>
+    otpPasteMarker(
+      Math.random,
+      9,
+      Str.slice(0, 1)(source) + Str.slice(2, 3)(source),
+    ),
+  );
+  const [code, setCode] = useState("");
+  const [completes, setCompletes] = useState(0);
+  const [edits, setEdits] = useState(0);
+  return (
+    <div
+      testId="otp-paste-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A one-time code pasted with the platform's own copy and paste: six cells
+        fill from the cell that took it, a longer code truncates, and a full
+        code completes once.
+      </text>
+      <PrimitiveThemeProvider theme={palettes.dark}>
+        <Input
+          testId={OTP_PASTE_SOURCE}
+          label="Six-character clipboard"
+          value={source}
+        />
+        <Input
+          testId={OTP_PASTE_LONGER}
+          label="Nine-character clipboard"
+          value={longer}
+        />
+        <OTPField
+          testId={OTP_PASTE_FIELD}
+          label="Code"
+          length={OTP_PASTE_LENGTH}
+          value={code}
+          onValueChange={(next) => {
+            setCode(next);
+            setEdits((count) => count + 1);
+          }}
+          onComplete={() => setCompletes((count) => count + 1)}
+        />
+      </PrimitiveThemeProvider>
+      <text
+        testId={OTP_PASTE_SOURCE_VALUE}
+        style={{ ...textStyle(theme, "code"), color: theme.colors.foreground }}
+      >
+        {source}
+      </text>
+      <text
+        testId={OTP_PASTE_LONGER_VALUE}
+        style={{ ...textStyle(theme, "code"), color: theme.colors.foreground }}
+      >
+        {longer}
+      </text>
+      <text
+        testId={OTP_PASTE_READOUT}
+        style={{ ...textStyle(theme, "code"), color: theme.colors.foreground }}
+      >
+        {otpPasteReadout({ value: code, completes, edits })}
+      </text>
+    </div>
+  );
+};
+
+const otpPasteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(OTP_PASTE_READOUT);
+    yield* Effect.sleep(SETTLE);
+    const marker = yield* ctx.host.text(OTP_PASTE_SOURCE_VALUE);
+    const longer = yield* ctx.host.text(OTP_PASTE_LONGER_VALUE);
+    yield* ctx.expectEqual(
+      "the short clipboard marker is one six-cell code",
+      Str.length(marker),
+      OTP_PASTE_LENGTH,
+    );
+    yield* ctx.expectEqual(
+      "the longer clipboard marker is nine characters",
+      Str.length(longer),
+      9,
+    );
+    yield* ctx.expectEqual(
+      "the code starts empty",
+      yield* ctx.host.text(OTP_PASTE_READOUT),
+      otpPasteReadout({ value: "", completes: 0, edits: 0 }),
+    );
+
+    // Copy the six-character marker with the platform's own keys.
+    yield* ctx.host.click(OTP_PASTE_SOURCE);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("cmd-a");
+    yield* ctx.host.key("cmd-c");
+    yield* Effect.sleep(SETTLE);
+
+    // Paste it into the first cell.
+    yield* ctx.host.click(otpPasteCellId(0));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the first cell takes the focus",
+      Option.getOrElse(
+        Option.fromNullishOr(yield* ctx.host.focused()),
+        () => "none",
+      ),
+      otpPasteCellId(0),
+    );
+    yield* ctx.host.key("cmd-v");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a pasted code fills the six cells and completes once",
+      yield* ctx.host.text(OTP_PASTE_READOUT),
+      otpPasteReadout({ value: marker, completes: 1, edits: 1 }),
+    );
+    yield* ctx.expectEqual(
+      "the paste leaves the focus in the last cell",
+      Option.getOrElse(
+        Option.fromNullishOr(yield* ctx.host.focused()),
+        () => "none",
+      ),
+      otpPasteCellId(OTP_PASTE_LENGTH - 1),
+    );
+
+    // Copy a nine-character marker and paste it over the full code.
+    yield* ctx.host.click(OTP_PASTE_LONGER);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("cmd-a");
+    yield* ctx.host.key("cmd-c");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click(otpPasteCellId(0));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("cmd-v");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a longer paste truncates to six cells and is not a second completion",
+      yield* ctx.host.text(OTP_PASTE_READOUT),
+      otpPasteReadout({
+        value: Str.takeLeft(OTP_PASTE_LENGTH)(longer),
+        completes: 1,
+        edits: 2,
+      }),
+    );
+    yield* ctx.expectEqual(
+      "the truncating paste still lands on the last cell",
+      Option.getOrElse(
+        Option.fromNullishOr(yield* ctx.host.focused()),
+        () => "none",
+      ),
+      otpPasteCellId(OTP_PASTE_LENGTH - 1),
+    );
+
+    // Paste over the third cell: the run fills forward and keeps the first two.
+    yield* ctx.host.click(otpPasteCellId(2));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the third cell takes the focus",
+      Option.getOrElse(
+        Option.fromNullishOr(yield* ctx.host.focused()),
+        () => "none",
+      ),
+      otpPasteCellId(2),
+    );
+    yield* ctx.host.key("cmd-v");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a paste into the third cell rewrites from there and keeps the first two",
+      yield* ctx.host.text(OTP_PASTE_READOUT),
+      otpPasteReadout({
+        value: otpPasteOver(Str.takeLeft(OTP_PASTE_LENGTH)(longer), 2, longer),
+        completes: 1,
+        edits: 3,
+      }),
+    );
+    yield* ctx.host.capture("otp-pasted");
+  });
+
 /** The line the selection probe selects: a word a failure can name. */
 const SELECTION_LINE = "hello live selection world";
 
@@ -16464,6 +16682,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "clipboard-lifecycle",
     view: () => <ClipboardProbe />,
     steps: clipboardSteps,
+  },
+  "otp-paste-lifecycle": {
+    id: "otp-paste-lifecycle",
+    view: () => <OtpPasteProbe />,
+    steps: otpPasteSteps,
   },
   "select-lifecycle": {
     id: "select-lifecycle",
