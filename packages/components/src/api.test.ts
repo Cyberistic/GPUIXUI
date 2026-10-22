@@ -80,6 +80,18 @@ const rows: ReadonlyArray<{
   readonly parts: ReadonlyArray<string>;
 }> = Arr.filterMap(tier2Table().split("\n"), rowOf);
 
+/** The §8 reservation table: parts fixed before their component lands. */
+const plannedTable = (): string => {
+  const tier2 = section("## 8. Parts by component");
+  const start = tier2.indexOf("**Planned Tier 2 additions**");
+  return start < 0 ? "" : tier2.slice(start);
+};
+
+const planned: ReadonlyArray<{
+  readonly name: string;
+  readonly parts: ReadonlyArray<string>;
+}> = Arr.filterMap(plannedTable().split("\n"), rowOf);
+
 const partsOf = (name: string): Option.Option<ReadonlyArray<string>> =>
   Option.map(
     Arr.findFirst(rows, (row) => row.name === name),
@@ -149,5 +161,22 @@ describe("component API contract", () => {
     );
 
     expect(problems).toEqual([]);
+  });
+
+  it("keeps a planned part out of the package until its row lands", () => {
+    // The reservation table called Tag / token input, Countdown and Inline
+    // edit "not implemented" long after all three shipped, so the spec a
+    // consumer reads denied components they could already import. A part in
+    // that table must move to its §8 row in the same change that ships it.
+    expect(Arr.length(planned)).toBeGreaterThan(0);
+
+    const landed = Arr.flatMap(planned, (row) =>
+      Arr.filter(row.parts, isExportedPart).map(
+        (part) =>
+          `${row.name}: §8 plans ${part}, which the package already exports`,
+      ),
+    );
+
+    expect(landed).toEqual([]);
   });
 });

@@ -283,9 +283,6 @@ implementation cannot invent a shape):
 | --------- | ----- | ------ |
 | Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | plan 207 |
 | Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
-| Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
-| Countdown | `Countdown` | plan 205 |
-| Inline edit | `InlineEdit` | plan 205 |
 
 ## 9. Landed deviations and migration
 

@@ -1255,6 +1255,7 @@ a workaround for two live sessions sharing one worktree; see
     - [x] Navigation Menu — plan 320: 6 parts, 10 native tests; both-direction proof
     - [x] Message scroller — plan 206: pinned follow over a 1px tail sentinel, no yank when scrolled up, unread count, jump-to-latest, streamed growth; 11 rule + 10 native tests + 1 theme-matrix case; both-direction proof (behaviour 437, unit 296). Non-virtualized viewport recorded as the limitation (`<virtual-list>` takes an item count, not compound children)
     - [x] Tier 2 gap cluster complete: all twelve landed with code, a native test, an example, a docs page and an inventory row; after plan 206 the suite is behaviour 437, unit 296
+    - [x] The §8 reservation table in `docs/component-api.md` called `TagInput`, `Countdown` and `InlineEdit` "not implemented" long after all three shipped, so the spec denied components a consumer could already import. The table now reserves only `Chat` and `Message` (plan 207), and `src/api.test.ts`'s `keeps a planned part out of the package until its row lands` case fails on any planned part the package exports (measured: restoring the three rows fails it with all five names). 5 unit tests in the file
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
