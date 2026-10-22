@@ -165,6 +165,17 @@ width-only strip `axis="horizontal"`. The painted box is what both numbers come
 from, so a resized scroller pages the frame it is now, not the one it was
 mounted in.
 
+A window measured the **delivery path**, not only the arithmetic
+(`keyboard-scroll-lifecycle`, 62 checks on 0.11.0). A key reaches the focused
+element and bubbles. The viewport's handler stands down unless the focus is
+its own, so the traversal that reaches the stop is part of the contract: no key
+moves a region the reader has not tabbed into. From there a `down` moved one
+density row (`-32`), `PageDown` one painted viewport (`-192` from `-32`), a
+third page clamped at the content's end (`-320`), `Cmd+Home` moved nothing (a
+chord belongs to the platform), a sideways region paged by the width it shows
+(`-352`, its end `-1120`), and a `focusable={false}` region is skipped by the
+traversal and answers no key.
+
 ```tsx
 <ScrollArea axis="vertical" style={{ height: 240 }} label="Rows">
   <Stack direction="column" gap="sm">{rows}</Stack>
@@ -237,6 +248,13 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
   no label drops the stop, the role and the name; the viewport declares the
   keyboard ring and a non-focusable one declares none; the frame's
   padding/radius stay off the viewport.
+- `keyboard-scroll-lifecycle` (a window, 62 checks on 0.11.0) — the delivery
+  path the offscreen verbs cannot prove: a traversal has to reach the stop
+  before a key moves anything, one line is the theme's `density.rowHeight`,
+  a page is the painted viewport (its height vertically, its width sideways),
+  a chord is the platform's, a field inside keeps its arrows, and a
+  `focusable={false}` region is skipped. Evidence:
+  `apps/playground/README.md` §`keyboard-scroll-lifecycle`.
 - `runtime/layout.runtime.test.tsx` — a wheel with `deltaY -100` leaves the
   viewport's offset at `y -100` and the caller's `onScroll` receives `-100`;
   keyboard Down/PageDown/Home/End move the painted offset; `onScrollChange`

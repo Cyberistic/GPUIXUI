@@ -1223,6 +1223,101 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("cites the window that measured a scroll region's keyboard", () => {
+    // Bug guarded: the page and the Scrollable containers row taught the
+    // keyboard contract from the offscreen suites alone, which reach a key
+    // through `runtime.keyDown(elementId, …)` — a verb a window does not have.
+    // A window delivers a key to the focused element and bubbles, so the
+    // traversal that reaches the stop is part of the contract, and a reader
+    // planning a scroll region could not learn it. The printed offsets are
+    // derived from the probe's own fixture, so a moved geometry fails here
+    // rather than leaving the page teaching a step the window no longer shows.
+    const page = read("scroll-area.mdx");
+    const keyboard = Option.getOrElse(bodyOf(page, "Keyboard"), () => "");
+    const verification = Option.getOrElse(
+      bodyOf(page, "Verification"),
+      () => "",
+    );
+    const fixture = readFileSync(
+      fileURLToPath(
+        new URL("apps/playground/src/live/keyboard-scroll.ts", repoRoot),
+      ),
+      "utf8",
+    );
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const readme = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = Option.getOrElse(
+      Arr.findFirst(
+        catalogue.split("\n"),
+        Str.startsWith("| Scrollable containers | done"),
+      ),
+      () => "",
+    );
+    // The page is wrapped prose, so a sentence is held flat: a paragraph's
+    // line breaks are the page's, not the contract's.
+    const flat = Str.replace(/\s+/g, " ");
+    const count = (pattern: RegExp): number => {
+      const match = pattern.exec(fixture);
+      return match === null ? Number.NaN : Number(match[1]);
+    };
+    const line = lightTheme.density.rowHeight;
+    const vertical = count(/VERTICAL_VIEWPORT = \{ width: \d+, height: (\d+)/);
+    const verticalContent =
+      count(/VERTICAL_ROWS = (\d+)/) * count(/VERTICAL_ROW_HEIGHT = (\d+)/) +
+      count(/FIELD_SLOT = (\d+)/);
+    const sideways = count(
+      /HORIZONTAL_VIEWPORT = \{ width: (\d+), height: \d+/,
+    );
+    const sidewaysContent =
+      count(/HORIZONTAL_COLUMNS = (\d+)/) *
+      count(/HORIZONTAL_COLUMN_WIDTH = (\d+)/);
+
+    const contract = flat(keyboard);
+    expect({
+      lane: contract.includes("`keyboard-scroll-lifecycle`"),
+      traversal: contract.includes("stands down unless the focus is its own"),
+      line: contract.includes(`(\`-${line}\`)`),
+      page: contract.includes(`(\`${-line - vertical}\` from \`-${line}\`)`),
+      clamp: contract.includes(`(\`${vertical - verticalContent}\`)`),
+      sideways:
+        contract.includes(`\`${-line - sideways}\``) &&
+        contract.includes(`\`${sideways - sidewaysContent}\``),
+      skipped: contract.includes(
+        "`focusable={false}` region is skipped by the traversal",
+      ),
+      verified: verification.includes("`keyboard-scroll-lifecycle`"),
+      checks: verification.includes("62 checks on 0.11.0"),
+      evidence: verification.includes("§`keyboard-scroll-lifecycle`"),
+      heading: readme.includes("### `keyboard-scroll-lifecycle`"),
+      registry: registry.includes('id: "keyboard-scroll-lifecycle"'),
+      row: row.includes("`keyboard-scroll-lifecycle`"),
+    }).toEqual({
+      lane: true,
+      traversal: true,
+      line: true,
+      page: true,
+      clamp: true,
+      sideways: true,
+      skipped: true,
+      verified: true,
+      checks: true,
+      evidence: true,
+      heading: true,
+      registry: true,
+      row: true,
+    });
+  });
+
   it("cites the window that measured a button's activation", () => {
     // Bug guarded: the Button page's Keyboard section and its inventory row
     // taught the Enter/Space rule from `core/keyboard.test.ts` and the
