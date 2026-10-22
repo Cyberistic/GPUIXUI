@@ -1376,12 +1376,14 @@ The role pair is the contract, and a filled action already paints it: the
 primitives resolve `paintsFilledSurface` (`primary`, `secondary`, `destructive`)
 to `disabledAction(theme)` in `core/style.ts`, the recipe's disabled bucket is
 `disabled:bg-disabled disabled:text-disabled-foreground`, and a menu row
-(`packages/components/src/menu/item.tsx`) paints `disabledForeground`. Two
-painters still fade the whole control: the `@gpuixui/tw` recipes'
-`disabled:opacity-50`, and the components package's own `Button`
-(`packages/components/src/internal/button.tsx`, `opacity: disabledOpacity` — the
-token constant, not a copied share).
-An unfilled action — `outline`, `ghost`, `link`, a `Toggle` — has no fill to
+(`packages/components/src/menu/item.tsx`) paints `disabledForeground`. The
+components package's own `Button` splits the same way: a filled variant wears
+`disabledAction(theme)` and pins its hover and press to the resting fill, while a
+ghost keeps the fade (`packages/components/src/internal/button.tsx`). That
+leaves one painter fading the whole control — the `@gpuixui/tw` recipes'
+`disabled:opacity-50` — and the components' `Button` fading its ghost at
+`disabledOpacity`, the token constant rather than a copied share. An unfilled
+action — `outline`, `ghost`, `link`, a `Toggle` — has no fill to
 collapse into and fades with them, and a **field** keeps the fade because its
 fill is `input` and the faded label clears the floor on every content surface it
 sits on (§The fade is a page mechanism). A fade is

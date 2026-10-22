@@ -264,9 +264,11 @@ describe("the pages that teach the disabled state", () => {
     );
     expect(painters.menuRow).toContain("theme.colors.disabledForeground");
     // The fade's share is the token constant, not a literal: the components
-    // package's `Button` paints `disabledOpacity` on its unfilled path and the
-    // measured pair on a filled one.
-    expect(painters.componentButton).toContain("disabledOpacity");
+    // package's `Button` paints the measured pair on a filled variant and keeps
+    // `disabledOpacity` on a ghost, so both mechanisms the page teaches are in
+    // the file.
+    expect(painters.componentButton).toContain("disabledAction(theme)");
+    expect(painters.componentButton).toContain("opacity: disabledOpacity");
     expect(painters.twRecipes).toContain("disabled:opacity-50");
   });
 
