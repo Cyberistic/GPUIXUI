@@ -95,6 +95,25 @@ none paints a literal and none scripts hover or press
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
+### The painted hint is a published seam
+
+GPUix shapes an empty host's placeholder itself, in a fixed `#8F8F8F` that no
+theme value reaches (`COMPONENTS.md` → Text inputs). The fields therefore hand
+the host no `placeholder` and paint the words instead, through one seam
+published from the package root so a second package facing the same runtime
+paints the same hint rather than keeping a copy:
+
+- `fieldHint` — `fieldHint(field, theme, value, spec)` returns an
+  `Option<FieldHint>`: `None` for a blank hint or a field that already has a
+  value, and a faded paint while the field is disabled;
+- `hintFrame` — `hintFrame(theme, spec)` is the full-inset frame over the host,
+  with `pointerEvents: "none"` so a press lands on the host underneath;
+- `renderFieldHint` — `renderFieldHint(hint, testId)` paints one `<text>` named
+  `${testId}-hint`.
+
+`spec` is `{ size, align, origin }`: `origin: "field"` measures from the
+field's border box and `"content"` from a host already inside that chrome.
+
 ## Documentation and examples
 
 Every Tier 1 component has a page and a composed example beside the source:

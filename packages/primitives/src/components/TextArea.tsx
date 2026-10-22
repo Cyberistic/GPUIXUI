@@ -12,13 +12,8 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type { ValueState } from "../core/state.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import {
-  fieldFrame,
-  fieldHint,
-  fieldHostProps,
-  renderFieldHint,
-  type FieldProps,
-} from "./Input.js";
+import { fieldFrame, fieldHostProps, type FieldProps } from "./Input.js";
+import { fieldHint, renderFieldHint } from "./hint.js";
 import {
   useControlState,
   useFocus,

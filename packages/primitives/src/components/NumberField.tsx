@@ -62,7 +62,7 @@ import {
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
-import { fieldHint, renderFieldHint } from "./Input.js";
+import { fieldHint, renderFieldHint } from "./hint.js";
 import {
   composeEvent,
   mergeRefs,

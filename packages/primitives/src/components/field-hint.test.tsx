@@ -14,20 +14,26 @@
  * rather than staying full-opacity beside a faded box.
  */
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { disabledOpacity } from "@gpuixui/tokens";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
-  fieldChrome,
+  fieldHint as publishedFieldHint,
+  hintFrame as publishedHintFrame,
+  renderFieldHint as publishedRenderFieldHint,
+} from "../index.js";
+import { fieldChrome, renderInput, type FieldProps } from "./Input.js";
+import {
   fieldHint,
   hintFrame,
   renderFieldHint,
-  renderInput,
   type FieldHint,
-  type FieldProps,
-} from "./Input.js";
+} from "./hint.js";
 import {
   numberFieldPart,
   renderNumberFieldInput,
@@ -210,5 +216,55 @@ describe("a field's hint", () => {
     expect(
       expectSome(elementProp(label ?? expect.fail("no label"), "testId")),
     ).toBe("qty-hint");
+  });
+});
+
+describe("the published hint seam", () => {
+  // The rule is a runtime fact, not one field's paint: `@gpuixui/components`
+  // faces the same fixed `#8F8F8F` and paints its own hinted hosts. It can
+  // only call this seam if the package root publishes it, so a root that stops
+  // exporting one of the three parts leaves that package with a second copy
+  // (the two-copy state `TODO.md` → Interlocks records).
+  it("publishes the frame, the hint and its element from the package root", () => {
+    expect(publishedFieldHint).toBe(fieldHint);
+    expect(publishedHintFrame).toBe(hintFrame);
+    expect(publishedRenderFieldHint).toBe(renderFieldHint);
+
+    const hint = expectSome(
+      publishedFieldHint({ placeholder: "Search projects" }, testTheme, "", {
+        size: "md",
+        align: "center",
+        origin: "field",
+      }),
+    );
+    const element = publishedRenderFieldHint(hint, "search");
+    const [label] = elementChildren(element);
+    expect(
+      expectSome(elementProp(label ?? expect.fail("no label"), "testId")),
+    ).toBe("search-hint");
+    expect(
+      expectSome(elementProp(label ?? expect.fail("no label"), "children")),
+    ).toBe("Search projects");
+
+    const frame = publishedHintFrame(testTheme, {
+      size: "md",
+      align: "center",
+      origin: "field",
+    });
+    expect(frame.pointerEvents).toBe("none");
+  });
+
+  it("documents the seam where a consumer reads the package", () => {
+    // A published seam nothing names is one no second package finds.
+    const readme = readFileSync(
+      fileURLToPath(new URL("../../README.md", import.meta.url)),
+      "utf8",
+    );
+    expect(
+      Arr.filter(
+        ["fieldHint", "hintFrame", "renderFieldHint"],
+        (name) => !readme.includes(`\`${name}\``),
+      ),
+    ).toEqual([]);
   });
 });

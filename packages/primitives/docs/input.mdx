@@ -124,7 +124,9 @@ with a fixed `#8F8F8F` (`custom_elements/input.rs`), so `nativeTextTheme`'s
 input, so a press through the hint still focuses the field. The hint fades with
 the field's disabled paint (`disabledOpacity`). A theme's `placeholder` role is
 now the colour the reader sees, and it is the role `contrastPairs` holds to the
-secondary floor on the field's fill.
+secondary floor on the field's fill. The paint is one **published seam** —
+`fieldHint`, `hintFrame` and `renderFieldHint` from the package root — so another
+package with its own hinted hosts paints the same hint instead of keeping a copy.
 
 An `invalid` field keeps its `input` fill and paints only the **edge** — the
 border and the focus line — in `destructive`. The solid role is designed to
@@ -212,8 +214,10 @@ sixty, marks the field invalid and the action refuses to save.
 - `src/components/field-hint.test.tsx` — the hint's contract in the element tree:
   no placeholder reaches any host, the words paint in the `placeholder` role at
   the body metrics, a value or a blank placeholder shows none, the hint fades by
-  the same share as the field chrome, and the frame is paint-only at the field's
-  own text origin.
+  the same share as the field chrome, the frame is paint-only at the field's
+  own text origin, and the three parts are published from the package root and
+  named in the README, so a second package can call the seam instead of copying
+  it.
 - `runtime/field-hint.runtime.test.tsx` — the same hint measured in a window:
   its painted colour is the theme's `placeholder`, its box starts at the field's
   text origin and sits inside the field, a press through it focuses the host, a
