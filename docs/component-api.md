@@ -82,13 +82,16 @@ a public state object instead:
   State names come from `base-gpui`'s per-part structs — `active`, `checked`,
   `closed`, `disabled`, `focused`, `highlighted`, `invalid`, `open`,
   `orientation`, `selected` — and are the only vocabulary allowed.
-- **`focused` is the one member the runtime cannot always deliver.** A `Tab`
-  traversal focuses the element without running its focus handler (measured by
-  the playground's `tabs-lifecycle` on 0.11.0), so a `style` callback keyed on
-  `focused` sees a pointer press, a click or a programmatic `focusElement` —
-  not a traversal, and not a keyboard user's arrival. The focus **cue** does not
-  depend on the flag: every part declares `keyboardRing` at rest, so the runtime
-  paints the `focusVisible` outline after a `Tab`. Six parts carry the
+- **`focused` arrives on every path, and is still not the cue.** A `Tab`
+  traversal focuses the element and delivers its focus handler — re-measured on
+  0.11.0 by the playground's `tabs-lifecycle` (`focuses=1`) and
+  `tooltip-lifecycle` (the tip opens on the traversal). The earlier reading of
+  `focuses=0` took the frame before the event landed, so a `style` callback
+  keyed on `focused` sees a press, a click, a traversal or a programmatic
+  `focusElement`. It stays presentational: the focus **cue** is the ring every
+  part declares at rest (`keyboardRing`), so the runtime paints the
+  `focusVisible` outline even when a caller's callback repaints the part. Six
+  parts carry the
   flag — `AccordionTrigger`, `CollapsibleTrigger`, `TabsTrigger`, `SearchInput`,
   `FieldInput`, `TimePickerSegment` — and `api.test.ts` holds each one to the
   ring, so a part cannot ship the flag as its only focus feedback.

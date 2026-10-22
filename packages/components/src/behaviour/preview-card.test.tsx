@@ -120,7 +120,7 @@ describe("PreviewCard", () => {
     }
   });
 
-  it("does not open from a focus event alone", () => {
+  it("does not open from a focus event alone, by policy", () => {
     const card = renderComponent(<Workspace />);
 
     try {
@@ -128,8 +128,8 @@ describe("PreviewCard", () => {
         card.renderer.findByTestId("trigger")?.id ?? -1,
       );
 
-      // A `Tab` traversal never delivers this event in a window; keeping the
-      // open path off it means the headless suite measures what a window does.
+      // The event does arrive in a window; the card keeps its open path off it
+      // deliberately, so focus alone leaves it closed.
       expect(card.renderer.findByTestId("preview")).toBeUndefined();
     } finally {
       card.unmount();

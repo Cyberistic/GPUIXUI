@@ -1,14 +1,12 @@
 /**
  * The row a key event acts on.
  *
- * The bug this guards: a window's `Tab` traversal focuses a row without running
- * its focus handler (measured by the playground's `tabs-lifecycle` on a trigger
- * of this shape), so the row a reader is on may not be the row the list
- * recorded. Moving from the recorded row re-anchors the first arrow at the top
- * of the list, and Enter runs nothing. The renderer cannot produce "focused with
- * no focus event" in its test host — its key send focuses the target — so this
- * rule is proven here, as a pure function, and the component passes it the
- * event's own element id.
+ * The bug this guards: the row a reader is on is not necessarily the row the list
+ * recorded — a controlled selection, a filter, or a key that arrives at the list
+ * itself all leave the record stale or absent — so moving from the recorded row
+ * re-anchors the first arrow at the top of the list and Enter runs nothing. The
+ * event names the row it came from, so this rule prefers it as a pure function
+ * and the component only supplies the event's element id.
  */
 
 import * as Option from "effect/Option";

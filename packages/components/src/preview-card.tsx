@@ -1,5 +1,5 @@
 /**
- * PreviewCard: a rich card shown on hover or focus.
+ * PreviewCard: a rich card shown on hover, or on a press.
  *
  * Positioning is GPUix's `FloatingLayer` (as in Popover) and dismissal shares
  * the package's dismiss stack, so Escape closes only the topmost overlay.
@@ -7,10 +7,10 @@
  * The card is **hoverable**: it may contain a link or a small action, which is
  * what separates it from a tooltip. The pointer may travel from the trigger into
  * the content; leaving both schedules the close. A press opens it at once and a
- * second press closes it — a `Tab` traversal reaches the trigger but delivers no
- * focus event in a window (measured by `tabs-lifecycle`), so the press is the
- * keyboard path a reader has. The delays are props so tests need no 300 ms
- * sleep.
+ * second press closes it. Focus does not open it: a traversal does deliver
+ * `onFocus` (re-measured by `tabs-lifecycle`), so this is a policy choice — a
+ * preview under every traversal is intrusive — and the trigger's `Enter`/`Space`
+ * is the keyboard path. The delays are props so tests need no 300 ms sleep.
  */
 
 import type { KeyEvent, PublicInstance } from "@gpuix/react";
@@ -217,7 +217,8 @@ export const PreviewCardTrigger = ({
         // The press that dismissed the card owns this click: toggling here
         // would re-open what the same gesture just closed. Any other press is
         // explicit, so it opens now rather than after the hover delay — the
-        // keyboard path, since a `Tab` traversal delivers no focus event.
+        // trigger's `Enter`/`Space` is the keyboard path, and a focus event
+        // does not open the card by policy.
         if (dismissedByOutsidePress.current) {
           dismissedByOutsidePress.current = false;
           return;

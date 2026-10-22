@@ -63,13 +63,13 @@ clock while the pointer is on it **or** a control has reported focus, and resume
 only when both have left; the pause keeps the remaining time, so the two reasons
 compose without restarting the countdown.
 
-**The focus half is bounded by the runtime.** GPUix focuses an element on a `Tab`
-traversal *without running its focus handler* (measured by the playground's
-`tabs-lifecycle`), so a keyboard user arriving at a card's dismiss or action
-control does not pause the clock; a press or a programmatic `focusElement` does
-deliver the event and does pause it. Give an actionable toast that a keyboard
-user must reach `duration: 0` (persistent, dismissed by the reader) or a long
-duration rather than relying on the hold.
+**A traversal holds the clock too.** GPUix delivers the focus event on a `Tab`
+traversal (re-measured on 0.11.0 by the playground's `tabs-lifecycle`,
+`focuses=1`), so a keyboard reader who reaches a card's dismiss or action control
+pauses it exactly as the pointer does. The hold still begins only once focus
+arrives, so an actionable toast that a keyboard user must reach should carry
+`duration: 0` (persistent, dismissed by the reader) or a long duration when the
+time to reach it matters.
 
 Tones are `info` (default), `success`, `warning` and `danger`; each paints the
 3px left bar and an icon (`info`, `success`, `warning`, `error`) from
@@ -99,9 +99,9 @@ toast.push(
   hidden array.
 - A focus event on the action holds the auto-dismiss clock exactly like the
   dismiss control; the two controls share one hold count, so moving focus between
-  them does not resume the timer. A `Tab` traversal delivers no such event (see
-  above), so an Undo a keyboard user must be able to reach should carry
-  `duration: 0`.
+  them does not resume the timer. A `Tab` traversal delivers the event (see
+  above), so reaching the action by keyboard holds it; `duration: 0` is still the
+  route for an Undo that must survive however long the reader takes to get there.
 - `useToast().actionFor(id)` returns the handler as an `Option`, for a consumer
   that renders its own content.
 
@@ -145,11 +145,10 @@ palette Alert and Badge use). Width is 380px.
   but the card does not animate it.
 - Hovering a card pauses its clock, and so does a focus event on either of its
   controls; the clock resumes with the remaining time once both the pointer and
-  focus have left. **A `Tab` traversal does not deliver that event** — the
-  runtime moves focus without running the handler — so a keyboard user's arrival
-  is not a hold the component can see. Use `duration: 0` for a toast that must
-  wait for a keyboard reader. A consumer that needs a custom hold can call
-  `pause`/`resume` from `useToast()`.
+  focus have left. A `Tab` traversal delivers that event (re-measured on 0.11.0),
+  so a keyboard reader's arrival holds the clock; a toast can still dismiss
+  before they reach it, so use `duration: 0` for one that must wait. A consumer
+  that needs a custom hold can call `pause`/`resume` from `useToast()`.
 - Not portalled: the viewport is an absolutely positioned element in its parent,
   so put it at the app root.
 - Disposal is deferred one microtask (`toast/lifecycle.ts`) so a React
@@ -167,8 +166,9 @@ palette Alert and Badge use). Width is 380px.
   stacking order, dismissing one card, `dismissAll`, the page staying clickable
   through the viewport, both themes, the queue still working after a dismiss,
   hover pausing a card's auto-dismiss, a focus event pausing it, that hold
-  surviving the pointer leaving (a window's `Tab` traversal delivers no focus
-  event, so the suite measures the handler path, and the page states the limit), the action running once and dismissing, no control for an
+  surviving the pointer leaving (the suite measures the focus handler, which a
+  window's traversal delivers — re-measured on 0.11.0), the action running once
+  and dismissing, no control for an
   unhandled label, no control without an action, the action holding focus, and a
   timer that fires while the motion clock is frozen (with its negative control:
   a 30 s toast still there after the same wait) — proving the timer is Effect

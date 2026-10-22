@@ -3,9 +3,10 @@
  *
  * The activation rule is the one thing that genuinely differs between the two
  * modes; every index question (next enabled trigger, wrap, first/last) belongs
- * to `internal/collection.ts`. The move anchor is here because the runtime does
- * not deliver `onFocus` for a Tab traversal (measured in a window on 0.11.0), so
- * the anchor cannot be state alone.
+ * to `internal/collection.ts`. The move anchor is here because the key's own
+ * element is the precise origin — a traversal does deliver `onFocus` (measured
+ * in a window on 0.11.0), but the recorded row can be stale or absent — so the
+ * anchor cannot be state alone.
  */
 
 import { pipe } from "effect";
@@ -28,7 +29,7 @@ export const selectsOnFocus = (activation: TabsActivation): boolean =>
 export interface MoveAnchors {
   /** The trigger whose key event reached the list, when the runtime named it. */
   readonly keyOrigin: Option.Option<string>;
-  /** The row `onFocus` recorded; a window may never send one. */
+  /** The row a focus event recorded; a key from the rail arrives with none. */
   readonly active: Option.Option<string>;
   /** The selected value: there is always one, so a move never starts from nothing. */
   readonly selected: string;
@@ -36,9 +37,10 @@ export interface MoveAnchors {
 
 /**
  * The index an arrow move starts from: the trigger that sent the key, then the
- * row `onFocus` recorded, then the selection. A window focuses a trigger on a Tab
- * traversal without delivering `onFocus`, so without the key origin and the
- * selection fallback the first arrow re-anchors at the first enabled tab.
+ * row a focus event recorded, then the selection. A traversal does deliver
+ * `onFocus` (re-measured on 0.11.0), but the key's own element is the precise
+ * origin, and a key that reaches the rail without naming a row still moves from
+ * the selection rather than re-anchoring at the first enabled tab.
  */
 export const moveOrigin = (
   { keyOrigin, active, selected }: MoveAnchors,

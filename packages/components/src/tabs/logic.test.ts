@@ -3,10 +3,10 @@
  *
  * The bugs these guard: `activation="manual"` selected a tab as soon as the arrow
  * keys moved focus, so Enter had nothing left to do and every visited panel
- * rendered anyway — manual mode behaved exactly like automatic. And a Tab
- * traversal into the strip focuses the selected trigger without delivering
- * `onFocus` (measured in a window on 0.11.0), so a move that anchors on recorded
- * focus alone re-anchored at the first enabled tab instead of moving on.
+ * rendered anyway — manual mode behaved exactly like automatic. And a move that
+ * anchored on recorded focus alone re-anchored at the first enabled tab when no
+ * focus event had recorded the row the reader is on (a key that reaches the
+ * rail, or one sent before the event lands).
  */
 
 import * as Arr from "effect/Array";
@@ -58,7 +58,7 @@ describe("moveOrigin", () => {
     );
   });
 
-  it("starts from the selection when a traversal delivered no focus event", () => {
+  it("starts from the selection when no focus event recorded a row", () => {
     expect(origin({ selected: "danger" })).toEqual(Option.some(2));
   });
 

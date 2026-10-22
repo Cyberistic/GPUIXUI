@@ -66,9 +66,10 @@ of its own, so it inherits the card or panel around it.
 `CollapsibleTrigger` takes a `StyleDesc` or a function of
 `CollapsibleTriggerState` (`{ open, closed, focused, disabled }`).
 
-`focused` arrives only when the runtime sends a focus event: a `Tab` traversal
-focuses the part without running its handler, so a callback keyed on it sees a
-press or a programmatic focus. The ring declared at rest is the keyboard cue
+`focused` arrives on every focus path — a press, a click, a `Tab` traversal or a
+programmatic focus; the traversal delivers the event (re-measured on 0.11.0 by
+the playground's `tabs-lifecycle`, `focuses=1`). The ring declared at rest is
+still the keyboard cue: the flag is presentational, not the cue
 (`docs/component-api.md` §3).
 
 ```tsx

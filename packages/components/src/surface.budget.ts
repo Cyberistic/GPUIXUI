@@ -19,8 +19,8 @@ export const surfaceBudget = {
   /** Modules in the entry's own package — `src/index.ts` and everything it reaches. */
   // 85 → 88 when Chat and Message landed (plan 207): `chat.tsx`,
   // `chat/logic.ts` and `message.tsx`. 88 → 89 when the list's key origin became
-  // a pure rule (`list/origin.ts`), because a window's `Tab` traversal reports
-  // no focus event and the move origin had to be testable on its own.
+  // a pure rule (`list/origin.ts`), because the row a key came from is a rule
+  // worth testing on its own rather than through a renderer.
   modules: 89,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   bytes: 600 * 1024,

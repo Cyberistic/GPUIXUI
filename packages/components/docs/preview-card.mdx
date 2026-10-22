@@ -63,10 +63,11 @@ glance. A custom theme changes it with no code change — see
 ## Accessibility
 
 - The trigger is a button, and the press path is the keyboard path: reach it
-  with `Tab`, then press `Enter` or `Space`. A `Tab` traversal itself does not
-  open the card — the runtime focuses the trigger without delivering a focus
-  event (measured by the playground's `tabs-lifecycle` for a trigger of this
-  shape), so an open-on-focus rule would be a claim the runtime cannot keep.
+  with `Tab`, then press `Enter` or `Space`. The card deliberately does not open
+  on focus: a `Tab` traversal does deliver `onFocus` (re-measured on 0.11.0 by
+  the playground's `tabs-lifecycle`, `focuses=1`), so open-on-focus would work —
+  it is a policy choice, because a preview that opens on every traversal covers
+  the page a reader is only passing through.
 - `Escape` closes and returns focus to the trigger, through the shared dismiss
   stack — a preview inside a dialog closes only itself.
 - The card is a named `group`; it is not auto-focused on hover (that would steal
@@ -80,9 +81,10 @@ glance. A custom theme changes it with no code change — see
   the two delay props, and `0` is supported.
 - **No pointer-type signal**: touch has no hover, so the press-to-toggle path is
   the honest touch interaction.
-- **A `Tab` traversal does not open the card.** GPUix focuses the trigger
-  without running its focus handler, so the card opens on hover or a press and
-  never on focus alone; a reader who wants it without hovering presses it.
+- **A `Tab` traversal opens nothing, by policy.** A traversal does deliver
+  `onFocus` (re-measured on 0.11.0), so the card could open on focus; it opens on
+  hover or a press instead, because a preview that appears under every `Tab` is
+  intrusive. A reader who wants it without hovering presses the trigger.
 - Not auto-focused on hover; a purely hover-driven user never focuses the card.
 - A `disabled` trigger stays out of the tab order and opens nothing from its
   hover or press paths.

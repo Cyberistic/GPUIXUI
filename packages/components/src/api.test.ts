@@ -1,9 +1,10 @@
 /**
  * The public API contract in `docs/component-api.md`, checked against code.
  *
- * §8 is the parts spec, and §3 is the state vocabulary: `focused` is the one
- * member a window cannot always deliver, so the six parts that expose it are
- * held to the ring that carries the cue, and their pages to the caveat.
+ * §8 is the parts spec, and §3 is the state vocabulary: `focused` arrives on
+ * every focus path, so the six parts that expose it are held to the ring that
+ * carries the cue — the flag is presentational, not the cue — and their pages to
+ * the measured rule.
  *
  * The bug these guard: §8 is the spec a consumer reads, and §9 claims every
  * shipped Tier 2 component exports the parts its row names — but nothing read
@@ -176,15 +177,16 @@ describe("component API contract", () => {
     expect(problems).toEqual([]);
   });
 
-  it("states the focus a traversal cannot deliver, and keeps the cue on the ring", () => {
-    // A `Tab` traversal focuses an element without running its focus handler
-    // (measured by `tabs-lifecycle`), so a `focused` StateStyle flag is not the
-    // focus feedback a keyboard user gets. The cue is the ring, declared at
-    // rest; this holds the spec's sentence and every part that carries the flag
-    // to that rule, so a new part cannot ship `focused` as its only feedback.
+  it("states the focus a traversal delivers, and keeps the cue on the ring", () => {
+    // A `Tab` traversal focuses an element and delivers its focus handler
+    // (re-measured by `tabs-lifecycle`; the earlier `focuses=0` read the frame
+    // before the event landed), so a `focused` StateStyle flag does arrive for a
+    // keyboard user. It is still not the cue: the ring, declared at rest, is.
+    // This holds the spec's sentence and every part that carries the flag to
+    // that rule, so a new part cannot ship `focused` as its only feedback.
     const vocabulary = section("## 3. State-aware styling");
 
-    expect(vocabulary).toContain("without running its focus handler");
+    expect(vocabulary).toContain("delivers its focus handler");
     expect(vocabulary).toContain("keyboardRing");
 
     const flagged = Arr.filter(partFiles, (file) =>
@@ -202,12 +204,12 @@ describe("component API contract", () => {
 
     expect(missingRing).toEqual([]);
 
-    // The pages a reader reads must repeat the caveat: a state list is API, and
-    // a callback keyed on `focused` silently never fires in a window.
+    // The pages a reader reads must state the measured rule: the event arrives
+    // on a traversal, and the flag is still not the cue.
     const silentPage = Arr.filter(
       flagged,
       (file) =>
-        !Str.includes("arrives only when the runtime sends a focus event")(
+        !Str.includes("the traversal delivers the event")(
           sourceOf(`../docs/${Str.replace(/\.tsx$/, ".mdx")(file)}`),
         ),
     );

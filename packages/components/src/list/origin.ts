@@ -1,13 +1,11 @@
 /**
  * The row a key event acts on.
  *
- * A window's `Tab` traversal focuses a row **without running its focus
- * handler** — the playground's `tabs-lifecycle` measured that on a trigger of
- * this shape, and the Tabs list needed the same rule. So the row the reader is
- * on is not necessarily the row a focus event recorded: a list that moved from
- * the recorded row would re-anchor its first arrow at the top and run Enter on
- * nothing. The element that sent the key is the truth; the recorded row is the
- * fallback for a key that arrives from the list itself.
+ * A focus event does deliver the row a reader arrives on (re-measured on 0.11.0),
+ * but the recorded row is not the truth a key should move from: it can be stale
+ * after a controlled selection or a filter, and a key that arrives at the list
+ * itself names no row at all. The element that sent the key is the precise
+ * origin; the recorded row is the fallback for a key that has no row of its own.
  */
 
 import * as Arr from "effect/Array";
