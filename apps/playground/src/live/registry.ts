@@ -558,6 +558,12 @@ export const liveRegistry = [
       "Content: fill stretches a bitmap, contain letterboxes it, cover crops it, scaleDown centres its own size, none anchors it top-left, and an absent prop paints contain",
     capability: "content",
   },
+  {
+    id: "grid-focus-lifecycle",
+    title:
+      "Focus: a grid is one tab stop, arrows move real focus with a clamped roving cell, and Tab re-enters at the cell the reader pressed",
+    capability: "focus",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

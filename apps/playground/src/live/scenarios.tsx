@@ -832,6 +832,18 @@ import {
   roundSamples,
   type FitCase,
 } from "./image-fit.js";
+import {
+  cellId,
+  formatReadout,
+  GRID_COLUMNS,
+  GRID_FOCUS_IDS,
+  GRID_ROWS,
+  gridKeyOf,
+  GridFocusReadout,
+  initialReadout,
+  moveIndex,
+  tabIndexOf,
+} from "./grid-focus.js";
 import { bandPoint, leftOf, RING_OFFSET } from "./ring-offset.js";
 import {
   decodeReadout,
@@ -24738,6 +24750,298 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("column-resize");
   });
 
+/**
+ * The roving-focus grid a data grid, a tree or a toolbar builds.
+ *
+ * One cell carries `tabIndex: 0` — the app's remembered cell — and every other
+ * cell carries `-1`, so the widget is one stop in the traversal. An arrow key
+ * arrives at the focused cell's own handler, the app moves real focus with
+ * `renderer.focusElement`, and the remembered cell becomes the one Tab enters
+ * at. A press activates a cell and moves the memory there, so a reader who
+ * leaves and returns lands where they were.
+ */
+const GridFocusProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const renderer = useGpuix().renderer;
+  const [readout, setReadout] = useState<GridFocusReadout>(initialReadout);
+  const roving = useRef(0);
+  const cellIds = useRef<ReadonlyArray<{ readonly index: number; readonly elementId: number }>>(
+    [],
+  );
+
+  const cellStyle = {
+    width: 64,
+    height: 32,
+    display: "flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: theme.colors.card,
+    border: `${theme.borderWidth.thin} solid ${theme.colors.border}`,
+    borderRadius: theme.radius.sm,
+  };
+
+  /** Keeps the cell's native id, the handle `focusElement` takes. */
+  const register = useCallback(
+    (index: number, instance: PublicInstance | null) => {
+      const kept = Arr.filter(cellIds.current, (entry) => entry.index !== index);
+      cellIds.current =
+        instance === null
+          ? kept
+          : Arr.append(kept, { index, elementId: instance.id });
+    },
+    [],
+  );
+
+  /** Moves real focus to a cell and remembers it, the app's half of the model. */
+  const moveTo = useCallback(
+    (index: number) => {
+      Option.match(
+        Arr.findFirst(cellIds.current, (entry) => entry.index === index),
+        {
+          onNone: () => {},
+          onSome: (entry) => renderer?.focusElement?.(entry.elementId),
+        },
+      );
+      roving.current = index;
+      setReadout(
+        (current) => new GridFocusReadout({ ...current, roving: index }),
+      );
+    },
+    [renderer],
+  );
+
+  const onKey = useCallback(
+    (key: string) => {
+      Option.match(gridKeyOf(key), {
+        onNone: () => {},
+        onSome: (gridKey) => moveTo(moveIndex(roving.current, gridKey)),
+      });
+    },
+    [moveTo],
+  );
+
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.md,
+  };
+  const stop = {
+    ...textStyle(theme, "body"),
+    color: theme.colors.mutedForeground,
+    padding: theme.spacing.sm,
+  };
+
+  return (
+    <div testId={GRID_FOCUS_IDS.probe} style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        One tab stop for the grid, arrows moving real focus, and the remembered
+        cell restored when a traversal comes back.
+      </text>
+      <div
+        testId={GRID_FOCUS_IDS.before}
+        tabIndex={0}
+        role="button"
+        onClick={() => {}}
+        style={stop}
+      >
+        <text style={stop}>Before the grid</text>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.xs,
+        }}
+      >
+        {Arr.map(Arr.range(0, GRID_ROWS - 1), (row) => (
+          <div
+            key={`row-${row}`}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: theme.spacing.xs,
+            }}
+          >
+            {Arr.map(Arr.range(0, GRID_COLUMNS - 1), (column) => {
+              const index = row * GRID_COLUMNS + column;
+              return (
+                <div
+                  key={cellId(row, column)}
+                  testId={cellId(row, column)}
+                  ref={(instance) => register(index, instance)}
+                  tabIndex={tabIndexOf(index, readout.roving)}
+                  role="button"
+                  aria-label={`Row ${row + 1}, column ${column + 1}`}
+                  onClick={() =>
+                    setReadout(
+                      (current) =>
+                        new GridFocusReadout({
+                          roving: index,
+                          activations: current.activations + 1,
+                        }),
+                    )
+                  }
+                  onKeyDown={(event) => onKey(event.key ?? "")}
+                  style={cellStyle}
+                >
+                  <text style={textStyle(theme, "body")}>
+                    {`${row + 1}.${column + 1}`}
+                  </text>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <div
+        testId={GRID_FOCUS_IDS.after}
+        tabIndex={0}
+        role="button"
+        onClick={() => {}}
+        style={stop}
+      >
+        <text style={stop}>After the grid</text>
+      </div>
+      <text testId={GRID_FOCUS_IDS.readout} style={textStyle(theme, "caption")}>
+        {formatReadout(readout)}
+      </text>
+    </div>
+  );
+};
+
+const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(GRID_FOCUS_IDS.probe);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(GRID_FOCUS_IDS.readout);
+    const cell = (row: number, column: number) => cellId(row, column);
+    const focusCell = (label: string, row: number, column: number) =>
+      Effect.flatMap(focusedAfterPaint(ctx), (focused) =>
+        ctx.expectEqual(label, focused, cell(row, column)),
+      );
+    const enterFromBefore = Effect.gen(function* () {
+      yield* ctx.host.focusElement(GRID_FOCUS_IDS.before);
+      yield* ctx.host.key("tab");
+    });
+
+    yield* ctx.expectContains(
+      "the grid opens on its first cell with nothing activated",
+      yield* readout(),
+      formatReadout(initialReadout),
+    );
+    yield* ctx.host.focusElement(GRID_FOCUS_IDS.before);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the control before the grid takes the focus",
+      yield* focusedId(ctx),
+      GRID_FOCUS_IDS.before,
+    );
+
+    // 1. One tab stop: the traversal enters at the cell the app remembers.
+    yield* enterFromBefore;
+    yield* focusCell(
+      "Tab enters the grid at its remembered cell, not the first cell",
+      0,
+      0,
+    );
+
+    // 2. Arrows move real focus, and the roving stop follows the move.
+    yield* ctx.host.key("right");
+    yield* focusCell("Right moves focus one cell along the row", 0, 1);
+    yield* ctx.expectContains(
+      "the remembered cell follows the move",
+      yield* readout(),
+      "roving=r0c1",
+    );
+    yield* ctx.host.key("right");
+    yield* focusCell("Right reaches the row's last cell", 0, 2);
+    yield* ctx.host.key("right");
+    yield* focusCell("Right clamps at the row's end", 0, 2);
+
+    // 3. The vertical axis and the row's ends.
+    yield* ctx.host.key("down");
+    yield* focusCell("Down moves focus one cell down", 1, 2);
+    yield* ctx.host.key("home");
+    yield* focusCell("Home reaches the row's first cell", 1, 0);
+    yield* ctx.host.key("end");
+    yield* focusCell("End reaches the row's last cell", 1, 2);
+    yield* ctx.host.key("up");
+    yield* focusCell("Up moves focus one cell up", 0, 2);
+    yield* ctx.host.key("up");
+    yield* focusCell("Up clamps at the grid's top edge", 0, 2);
+
+    // 4. Tab leaves after one press, and a press moves the remembered cell.
+    yield* ctx.host.key("tab");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Tab leaves the grid after one press rather than walking its cells",
+      yield* focusedId(ctx),
+      GRID_FOCUS_IDS.after,
+    );
+    yield* enterFromBefore;
+    yield* focusCell(
+      "Tab re-enters at the cell the reader left, not the first cell",
+      0,
+      2,
+    );
+
+    yield* ctx.host.click(cell(2, 1));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press activates its cell and becomes the widget's remembered cell",
+      yield* readout(),
+      "roving=r2c1 activations=1",
+    );
+    yield* enterFromBefore;
+    yield* focusCell(
+      "the pressed cell is where Tab re-enters",
+      2,
+      1,
+    );
+
+    // 5. A cell that is not a tab stop is still reachable by the app — and it
+    //    keeps a place in the traversal, ordered *before* the zero-index stops,
+    //    so a Tab from it lands on the control before the grid.
+    yield* ctx.host.focusElement(cell(2, 2));
+    yield* Effect.sleep(SETTLE);
+    yield* focusCell(
+      "the app focuses a cell its roving tab stop excluded",
+      2,
+      2,
+    );
+    yield* ctx.host.key("tab");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a negative tab index is ordered before the grid's stops, not removed from the chain",
+      yield* focusedId(ctx),
+      GRID_FOCUS_IDS.before,
+    );
+
+    // The remembered stop itself leaves forwards and backwards, one press each.
+    yield* enterFromBefore;
+    yield* focusCell("the remembered stop is reachable again", 2, 1);
+    yield* ctx.host.key("shift-tab");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Shift+Tab leaves the grid backwards after one press",
+      yield* focusedId(ctx),
+      GRID_FOCUS_IDS.before,
+    );
+
+    yield* ctx.host.capture("grid-focus");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -25175,5 +25479,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "image-fit",
     view: () => <ImageFitProbe />,
     steps: imageFitSteps,
+  },
+  "grid-focus-lifecycle": {
+    id: "grid-focus-lifecycle",
+    view: () => <GridFocusProbe />,
+    steps: gridFocusSteps,
   },
 };

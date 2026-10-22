@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-87 probes a real window can prove, of which eighteen mount shipped
+88 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -4835,6 +4835,57 @@ Negative control, measured: declaring `fill` on the `contain` sample fails
 `imagefit-contain leaves the page at its top edge` (`expected true, got false`,
 exit `1`); restored, green.
 
+### `grid-focus-lifecycle` — measured on 0.11.0 here
+
+**Does a roving-focus widget hold in a window?** The inventory's *Keyboard
+navigation* row is `?`: the runtime has focus handles, but the model a data grid,
+a tree or a toolbar uses — **one tab stop for the whole widget**, arrows moving
+real focus between cells, the remembered cell restored on re-entry — is composed
+by the caller. The probe mounts a 3×3 grid whose remembered cell carries
+`tabIndex: 0` and whose other eight carry `-1`, with a focusable control either
+side, then drives the traversal and the keys on 0.11.0.
+
+| Step | Measured |
+| ---- | -------- |
+| Tab from the control before the grid | enters at the remembered cell (`r0c0` initially), not at the first cell |
+| `Right`, `Down`, `Home`, `End`, `Up` | each moves real focus one cell and the remembered cell follows (`roving=r0c1`) |
+| `Right` at a row's end, `Up` at the top | **clamps** at the edge rather than wrapping |
+| Tab from the remembered stop | leaves to the control after the grid **in one press** — the nine cells are not nine stops |
+| a press on `r2c1` | activates that cell and becomes the remembered one (`roving=r2c1 activations=1`) |
+| Tab after a press | re-enters at the pressed cell instead of the first cell |
+| `focusElement` on `gridfocus-r2c2` | focuses a cell the roving stop excluded |
+| Tab from `gridfocus-r2c2` | lands on `grid-focus-before`: a `-1` cell is **ordered before** the zero-index stops, not removed from the chain |
+| `Shift+Tab` from the remembered stop | leaves backwards to the control before the grid |
+
+What it settles for a component:
+
+1. **The roving model works, with one measured caveat.** A widget really is one
+   forward stop, arrows really move native focus, and the app's remembered cell
+   really is where Tab re-enters. But `tabIndex: -1` is a sort key, not an
+   exclusion: the runtime orders a negative cell **before** the zero-index stops.
+   The caveat is invisible while focus only moves through the app's own arrows
+   (the model's contract); a component that programmatically focuses a non-roving
+   cell has to expect Tab from it to leave to the widget's *first* zero stop.
+2. **`focusElement` reaches a cell the traversal excluded.** The app can move
+   focus into any painted cell; `tabIndex` only orders the traversal.
+3. **The model is app state, not a runtime feature.** The grid remembers the
+   cell, moves focus and repaints; the runtime contributes key delivery, the
+   focus handle and the ordering above. A component therefore ships the roving
+   index, not a hook that waits for one.
+
+20 checks, `--only grid-focus-lifecycle`, green on 0.11.0 here (~1 s). Fixture:
+`src/live/grid-focus.ts` (the ids, the 3×3 geometry, `moveIndex`/`tabIndexOf`,
+`gridKeyOf`, the readout) + `grid-focus.test.ts` (7 cases: the geometry, each
+axis, every clamp, `Home`/`End`, the key filter, the one-zero rule, the readout,
+the registry entry, this section and the printed count). The view and steps live
+in `src/live/scenarios.tsx`. Evidence: `.artifacts/live/grid-focus.png`.
+
+Two negative controls measured, exit `1` each, restored green: making every cell
+`tabIndex: 0` fails `Tab leaves the grid after one press rather than walking its
+cells` (`expected "grid-focus-after", got "gridfocus-r1c0"`), and wrapping
+`Right` at a row's end fails `Right clamps at the row's end`
+(`expected "gridfocus-r0c2", got "gridfocus-r0c0"`).
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5056,8 +5107,8 @@ narrower. Each deviation is deliberate and measured:
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
-  `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box` and
-  `image-fit` (twenty-nine probes, each run alone).
+  `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
+  `image-fit` and `grid-focus-lifecycle` (thirty probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
