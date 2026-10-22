@@ -55,7 +55,10 @@ const dotFill = (theme: Theme, status: TimelineStatus): string =>
     ? theme.colors.primary
     : status === "complete"
       ? theme.colors.foreground
-      : theme.colors.muted;
+      : // The muted *surface* role is a fill: at 1.06:1 on the page it drew a
+        // dot nobody could see. A dot is a mark, so it takes the muted text
+        // role `indicatorRoles` holds to the mark floor.
+        theme.colors.mutedForeground;
 
 /** {@link Timeline} props. */
 export interface TimelineProps extends Omit<Props, "children"> {

@@ -2,12 +2,16 @@
  * Timeline behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a rail that keeps drawing past the last event, a status
- * that paints the wrong dot, a current event that is never announced, and a
- * style callback that cannot see `last`.
+ * that paints the wrong dot, a current event that is never announced, a style
+ * callback that cannot see `last`, and an upcoming dot painted in the `muted`
+ * surface role — 1.06:1 on the page, a dot nobody could see.
  */
 
+import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
+import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import {
@@ -116,10 +120,66 @@ describe("Timeline", () => {
       darkTheme.colors.primary,
     );
     expect(dotOf(history, "deploy")?.style.backgroundColor).toBe(
-      darkTheme.colors.muted,
+      darkTheme.colors.mutedForeground,
     );
 
     history.unmount();
+  });
+
+  it("paints every dot in a mark a reader can see on the page and a card", () => {
+    // The upcoming dot painted `muted` — a *surface* role. At 1.06:1 on the
+    // page it drew a dot nobody could see, and no mark contract measures that
+    // role. A dot is a mark, so each fill has to clear the non-text floor on
+    // every strip a timeline is drawn on.
+    const probes = [lightTheme, darkTheme].map((theme) => {
+      const history = renderComponent(<History />, theme.mode);
+      const dots = ["build", "tests", "deploy"].map(
+        (id) => dotOf(history, id)?.style.backgroundColor,
+      );
+      history.unmount();
+      return { theme, dots };
+    });
+
+    expect(probes.map(({ dots }) => dots)).toEqual([
+      [
+        lightTheme.colors.foreground,
+        lightTheme.colors.primary,
+        lightTheme.colors.mutedForeground,
+      ],
+      [
+        darkTheme.colors.foreground,
+        darkTheme.colors.primary,
+        darkTheme.colors.mutedForeground,
+      ],
+    ]);
+
+    const strips = ["background", "card"] as const;
+    const measurements = Arr.flatMap(probes, ({ theme, dots }) =>
+      Arr.flatMap(strips, (strip) =>
+        Arr.map(dots, (dot) => ({
+          where: `${theme.name} ${strip}`,
+          ratio: P.isString(dot)
+            ? contrastRatio(dot, theme.colors[strip])
+            : undefined,
+        })),
+      ),
+    );
+    expect(
+      Arr.filter(
+        measurements,
+        (measurement) =>
+          (measurement.ratio ?? Infinity) < contrastFloors.boundary,
+      ),
+      "a dot a reader cannot find on the strip it is drawn on",
+    ).toEqual([]);
+
+    // The premise: the role the upcoming dot used to paint is a surface, and it
+    // is under the mark floor on the page in both shipped themes.
+    expect(
+      probes.map(({ theme }) =>
+        contrastRatio(theme.colors.muted, theme.colors.background),
+      ),
+    ).toEqual([1.064193271496126, 1.230144227242232]);
   });
 
   it("draws a connector after every event but the last", () => {
