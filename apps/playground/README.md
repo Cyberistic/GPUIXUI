@@ -1,7 +1,7 @@
 # apps/playground — the native GPUix playground
 
 **Status: Phase B, implemented and verified** (plans `120`, `140`, `150`). One
-app, four jobs:
+app, five jobs:
 
 1. **The playground** — a real GPUix window showing every scenario, so a human
    can drive each primitive by hand. The shell's palette switch paints the same
@@ -11,7 +11,11 @@ app, four jobs:
 3. **The live window runner** — the probes a window can prove (focus routing,
    keyboard input, paint) driven through `@gpuix/native/automation`, producing
    `live-report.json` plus one PNG per paint state.
-4. **The evidence source for the docs** — scenario ids, readouts and screenshots
+4. **The terminal-mode probe** — the same view rendered into a pty with
+   `render(<App />, { terminal: true })`, driven through a real terminal's
+   escape stream, producing decoded frame PNGs (the capability record's
+   *Terminal rendering* row had no probe before it).
+5. **The evidence source for the docs** — scenario ids, readouts and screenshots
    are what `apps/docs` links to instead of faking a native preview.
 
 The **registry is the single source of truth**: `src/scenarios/registry.ts`
@@ -59,6 +63,7 @@ nub run dev:playground              # from the repo root: opens the playground w
 nub run --filter playground smoke   # the native smoke suite, headless
 nub run --filter playground build && nub apps/playground/dist/live/run.js --list
 nub run --filter playground build && nub apps/playground/dist/live/run.js --only focus-visible
+nub run --filter playground build && nub apps/playground/dist/terminal/run.js  # the pty probe
 ```
 
 `--only` is **repeatable** in both runners; with none, the runner selects every
@@ -3062,6 +3067,76 @@ Two negative controls were measured, exit `1` each, then restored green:
 
 Capture: `.artifacts/live/table-filtered.png`.
 
+## Terminal mode: the pty probe
+
+`docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
+runtime runs the same view on a kitty-graphics terminal platform
+(`render(<App />, { terminal: true })`) — and until this probe existed nothing
+here had painted one. A terminal frame is not a window: the automation protocol
+cannot see it, so the app is the instrument and the pty's escape stream is the
+evidence.
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/terminal/run.js                       # both scenarios
+nub apps/playground/dist/terminal/run.js --only terminal-input # one of them
+nub apps/playground/dist/terminal/run.js --list                # derived ids
+```
+
+`src/terminal/main.tsx` renders a page whose colour says what the app read — the
+rest page is red, the native-window page is green, the pressed page is blue — and
+one centred word. `src/terminal/run.ts` starts it inside a **100×40-cell pty**
+and decodes the frames the platform writes back with `parseKittyStream`
+(`src/terminal/kitty.ts`): kitty graphics sends each frame as zlib-compressed
+RGBA in base64, chunked across APC continuations, and the platform reuses one
+image id and placement for every frame of the window.
+
+Two details of the harness are load-bearing:
+
+- **The pty is macOS `script`, and its stdin must be a plain pipe.** libuv hands
+  a child a socketpair; `script` calls `tcgetattr` on stdin and treats the
+  `ENOTSUP` a socket returns as fatal (`script: tcgetattr/ioctl: Operation not
+  supported on socket`). The runner therefore spawns `cat | script`, forwards
+  writes through the `cat`, and sizes the pty with `stty` inside the child.
+  `effect/process`'s spawner uses the same socketpair, so this one boundary uses
+  the platform's own spawner; everything after it is Effect.
+- **Ctrl-C is the quit gesture**, and the restore only appears after it: the
+  platform leaves ctrl-c unhandled in the terminal's text contexts, restores the
+  terminal on exit, and replays its logs to stderr afterwards.
+
+Measured on 0.11.0 here (`--only terminal-render --only terminal-input`, 2/2,
+~4–6 s):
+
+| State | What the stream proves |
+| ----- | ---------------------- |
+| handshake | the alternate screen entered and the cursor hidden; mouse (`?1003h`, `?1016h`), kitty keyboard (`>31u`), bracketed paste (`?2004h`) and in-band resize (`?2048h`) enabled; the window titled `GPUIX` |
+| first frame | one inline transfer (`t=d`, `f=32`, `o=z`, `q=2`) inside a `?2026h` synchronized-update batch, **800×640** — the 100×40 grid at the platform's fallback 8×16 cell |
+| page | **510 864 of 512 000** pixels (99.78%) are exactly `#D9432B`, 0.00% are the native-window page, so `isTerminal()` reads true in the app |
+| text | **508** exact-white ink pixels; the ink's box is centred within 2px horizontally and 8px vertically of the frame's centre |
+| key | a kitty keyboard event (`ESC[116u`, `t`) reaches the app-level handler and repaints the **whole** page `#2B43D9`, with **0** rest-page pixels left |
+| quit | ctrl-c exits `0`; the stream then leaves the alternate screen, shows the cursor, disables the four protocols, pops the keyboard flags and deletes the image (`a=d`) |
+
+Exit codes are the suite's: `0` passed, `1` a check failed, `2` no evidence (no
+frame at all, an unknown argument, or a host without the macOS pty wrapper).
+Artifacts: `.artifacts/terminal/frame.png`, `.artifacts/terminal/pressed.png`,
+`.artifacts/terminal-report.json`.
+
+Two decoder defects this probe found and `src/terminal/kitty.test.ts` now holds:
+a completed transfer **replaced** the frame list instead of appending, so a run
+that had repainted read as "no page frame at all"; and an image delete carries
+no `;<payload>`, so the original APC grammar never saw the restore. Both
+directions were measured — reverting either fails its kitty case by name.
+
+The paint check was measured failing too: with `TERMINAL_REST_FILL` one hex
+digit off (`#D9432C`), `terminal-render` reports
+`expected at least 0.9 of the frame in #d9432b, got 0.000` and `terminal-input`
+reports `no press frame`, both `FAIL`, exit `1`; restored, 2/2.
+
+The harness is macOS-only in this runner (`script` + `stty`): the runtime's
+terminal platform also targets Linux, and a Linux wrapper is not a claim this
+probe makes. Terminal host elements are a different matter — there is no PTY
+*element*, which is the Tier 4 row's honest limitation.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -3146,6 +3221,11 @@ src/live/table-filter.ts the filtered-grid fixture: the label match, the selecti
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
+src/terminal/logic.ts    the three page colours and the word the pty probe measures
+src/terminal/app.tsx     the terminal-mode view: one page, one word, one key count
+src/terminal/main.tsx    the terminal-mode entry (`render(…, { terminal: true })`)
+src/terminal/kitty.ts    the kitty-graphics escape stream → frames and protocol facts
+src/terminal/run.ts      the pty CLI (spawn → key → quit → report) and its frame rules
 ```
 
 ## Deviations from plan `120`, and why
@@ -3182,8 +3262,14 @@ narrower. Each deviation is deliberate and measured:
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls
   are named in §The example gallery.
-- The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
-  it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
+- The terminal-mode probe proves the runtime paints a view into a pty:
+  `terminal-render` and `terminal-input` (2/2 on 0.11.0) decode the platform's
+  kitty frames to an 800×640 page with 99.78% exact fill and 508 ink pixels,
+  drive a kitty key that repaints the whole page, and watch ctrl-c restore the
+  terminal and delete the image. §Terminal mode records the numbers and the two
+  decoder defects it found; a one-digit page colour change fails both scenarios
+  with the measured pixels (exit `1`).
+- The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes  it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
   (`swatch background: expected "#11141A", got "#191D25"`, exit `1`). Removing
   the Tab trap makes `modal-focus-trap` fail with

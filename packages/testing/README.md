@@ -28,7 +28,7 @@ import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 | `Runtime` | `detectRuntime` (never fails), `bindingHint`, `RuntimeStatus` |
 | `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union; the async twin `AsyncSmokeHost`/`AsyncSmokeScenario`/`runAsyncScenarios` for a real window |
 | `Native`  | `createTestHost` over the structural `NativeRenderer`/`NativeElement` port: the synchronous offscreen host, with the `testId` lookups, ancestor-bounds fallback, subtree text join, style decode and drag synthesis this package can test without a renderer |
-| `Pixels`  | `decodePng` (inflate injected), `pixelAt`, `countColour`, `hexToRgba`, `crop`, `countDifferingPixels`, `PixelRegion`, `Pixels`, `Rgba` — paint evidence from a captured frame |
+| `Pixels`  | `decodePng` (inflate injected), `encodePng` (deflate injected), `pixelAt`, `countColour`, `boundsOfColour`, `hexToRgba`, `crop`, `countDifferingPixels`, `PixelRegion`, `Pixels`, `Rgba` — paint evidence from a captured frame |
 | `State`   | `runCommands` — replay a component runtime's commands and query the final state |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 
@@ -71,7 +71,12 @@ two frames of the same box changed by: `Pixels.crop` cuts a region out of a
 capture (clamped to the frame, `null` when it lies outside) and
 `Pixels.countDifferingPixels` counts the pixels that differ, `null` when the two
 frames are not the same shape. The editor-overlay probe uses the pair to prove a
-field painted nothing over the code beneath it. The inflate function is injected
+field painted nothing over the code beneath it. `Pixels.boundsOfColour` is the
+bound of a paint rather than a count — the terminal probe uses it to prove a
+word's ink is centred in its frame. A frame that arrives as raw RGBA (the kitty
+graphics protocol a terminal sends) becomes a file with `Pixels.encodePng`, one
+`None` filter per row; it fails on a byte count that does not fill its size
+rather than writing a broken PNG. The inflate and deflate functions are injected
 by the runner, so this package still imports no platform or GPUix module.
 
 A tween is measured on the **motion clock**, not on wall time: a paint on a

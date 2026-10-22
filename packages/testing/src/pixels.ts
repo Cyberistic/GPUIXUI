@@ -9,6 +9,7 @@
  * 0/2/4/6. Any other encoding is a typed `PngDecodeError`, never a guess.
  */
 import { Match } from "effect";
+import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 
 /** One straight (non-premultiplied) 8-bit RGBA colour. */
@@ -221,6 +222,104 @@ export const decodePng = (
   return rows instanceof PngDecodeError ? rows : toRgba(rows, header);
 };
 
+/** Why a frame cannot be written as a PNG. */
+export class PngEncodeError extends Schema.TaggedError<PngEncodeError>()(
+  "PngEncodeError",
+  { reason: Schema.String },
+) {
+  get message(): string {
+    return `PNG encode failed: ${this.reason}`;
+  }
+}
+
+const CRC_TABLE: ReadonlyArray<number> = Arr.map(
+  Arr.range(0, 255),
+  (n) =>
+    (Arr.reduce(
+      Arr.range(1, 8),
+      n,
+      (crc) => ((crc & 1) === 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1) >>> 0,
+    ) ^
+      0) >>>
+    0,
+);
+
+const crc32 = (bytes: Uint8Array): number =>
+  (Arr.reduce(
+    Arr.fromIterable(bytes),
+    0xffffffff,
+    (crc, byte) => (crc >>> 8) ^ (CRC_TABLE[(crc ^ byte) & 0xff] ?? 0),
+  ) ^
+    0xffffffff) >>>
+  0;
+
+const writeUint32 = (target: Uint8Array, at: number, value: number): void => {
+  new DataView(target.buffer, target.byteOffset, target.byteLength).setUint32(
+    at,
+    value >>> 0,
+    false,
+  );
+};
+
+const pngChunk = (type: string, data: Uint8Array): Uint8Array => {
+  const typeBytes = new TextEncoder().encode(type);
+  const out = new Uint8Array(12 + data.length);
+  writeUint32(out, 0, data.length);
+  out.set(typeBytes, 4);
+  out.set(data, 8);
+  const crcInput = new Uint8Array(4 + data.length);
+  crcInput.set(typeBytes, 0);
+  crcInput.set(data, 4);
+  writeUint32(out, 8 + data.length, crc32(crcInput));
+  return out;
+};
+
+/**
+ * Encodes a frame as an 8-bit RGBA PNG, one `None` filter per row.
+ *
+ * The terminal renderer hands a frame over as raw RGBA in the kitty graphics
+ * protocol, so this is how a terminal capture becomes a file a reader can look
+ * at — and how a probe that reads raw frames can still leave the same PNG
+ * evidence a window capture does. `deflate` is injected, like `inflate` above,
+ * so the encoder is platform-free.
+ */
+export const encodePng = (
+  frame: Pixels,
+  deflate: (bytes: Uint8Array) => Uint8Array,
+): PngEncodeError | Uint8Array => {
+  if (frame.data.length !== frame.width * frame.height * 4) {
+    return new PngEncodeError({
+      reason: `frame carries ${frame.data.length} bytes, expected ${frame.width * frame.height * 4} for ${frame.width}x${frame.height} RGBA`,
+    });
+  }
+  const header = new Uint8Array(13);
+  writeUint32(header, 0, frame.width);
+  writeUint32(header, 4, frame.height);
+  header.set([8, 6, 0, 0, 0], 8);
+  const stride = frame.width * 4;
+  const rows = new Uint8Array((stride + 1) * frame.height);
+  for (let row = 0; row < frame.height; row += 1) {
+    const target = row * (stride + 1);
+    rows[target] = 0;
+    rows.set(frame.data.subarray(row * stride, (row + 1) * stride), target + 1);
+  }
+  const parts = [
+    Uint8Array.from(SIGNATURE),
+    pngChunk("IHDR", header),
+    pngChunk("IDAT", deflate(rows)),
+    pngChunk("IEND", new Uint8Array(0)),
+  ];
+  const out = new Uint8Array(
+    Arr.reduce(parts, 0, (total, part) => total + part.length),
+  );
+  let at = 0;
+  for (const part of parts) {
+    out.set(part, at);
+    at += part.length;
+  }
+  return out;
+};
+
 /** The colour at a pixel, or `null` outside the frame. */
 export const pixelAt = (frame: Pixels, x: number, y: number): Rgba | null => {
   if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) return null;
@@ -280,6 +379,47 @@ export const countColour = (frame: Pixels, colour: Rgba): number => {
     }
   }
   return count;
+};
+
+/**
+ * The rectangle `colour` paints, or `null` when it paints nothing.
+ *
+ * The bound of a paint, not a count: a probe asserting that a run was laid out
+ * in the middle of its frame reads the ink's box rather than guessing where a
+ * pixel might fall.
+ */
+export const boundsOfColour = (
+  frame: Pixels,
+  colour: Rgba,
+): PixelRegion | null => {
+  let left = frame.width;
+  let top = frame.height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < frame.height; y += 1) {
+    for (let x = 0; x < frame.width; x += 1) {
+      const at = (y * frame.width + x) * 4;
+      if (
+        frame.data[at] === colour.r &&
+        frame.data[at + 1] === colour.g &&
+        frame.data[at + 2] === colour.b &&
+        frame.data[at + 3] === colour.a
+      ) {
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x);
+        bottom = Math.max(bottom, y);
+      }
+    }
+  }
+  return right < 0 || bottom < 0
+    ? null
+    : new PixelRegion({
+        x: left,
+        y: top,
+        width: right - left + 1,
+        height: bottom - top + 1,
+      });
 };
 
 /** A rectangle in a capture's own pixels (device-scaled, not logical). */

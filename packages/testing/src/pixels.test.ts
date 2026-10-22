@@ -10,17 +10,22 @@ import { crc32, deflateSync, inflateSync } from "node:zlib";
 import { describe, expect, it } from "@effect/vitest";
 import {
   PngDecodeError,
+  PngEncodeError,
   PixelRegion,
+  Pixels,
+  boundsOfColour,
   countColour,
   countDifferingPixels,
   crop,
   decodePng,
+  encodePng,
   hexToRgba,
   pixelAt,
   Rgba,
 } from "./pixels.js";
 
 const inflate = (bytes: Uint8Array): Uint8Array => inflateSync(bytes);
+const deflate = (bytes: Uint8Array): Uint8Array => deflateSync(bytes);
 
 const uint32 = (value: number): Uint8Array => {
   const out = new Uint8Array(4);
@@ -272,5 +277,48 @@ describe("hexToRgba", () => {
   it("refuses a malformed value instead of decoding nonsense", () => {
     expect(hexToRgba("#ff00")).toBeNull();
     expect(hexToRgba("#gggggg")).toBeNull();
+  });
+});
+
+describe("encodePng", () => {
+  it("round-trips a frame through the decoder", () => {
+    const frame = colourFrame();
+    const bytes = encodePng(frame, deflate);
+    expect(bytes).not.toBeInstanceOf(PngEncodeError);
+    if (bytes instanceof PngEncodeError) return;
+    const decoded = decode(bytes);
+    expect(decoded.width).toBe(4);
+    expect(decoded.height).toBe(2);
+    expect(pixelAt(decoded, 0, 0)).toEqual(red);
+    expect(pixelAt(decoded, 3, 1)).toEqual(
+      new Rgba({ r: 255, g: 255, b: 255, a: 255 }),
+    );
+  });
+
+  it("refuses a frame whose bytes do not fill its size", () => {
+    const bytes = encodePng(
+      new Pixels({
+        width: 2,
+        height: 2,
+        data: new Uint8Array(4),
+      }),
+      deflate,
+    );
+    expect(bytes).toBeInstanceOf(PngEncodeError);
+  });
+});
+
+describe("boundsOfColour", () => {
+  it("reports the box a colour paints", () => {
+    const bounds = boundsOfColour(colourFrame(), red);
+    expect(bounds).toEqual(
+      new PixelRegion({ x: 0, y: 0, width: 1, height: 2 }),
+    );
+  });
+
+  it("has no box for a colour the frame does not carry", () => {
+    expect(
+      boundsOfColour(colourFrame(), new Rgba({ r: 1, g: 2, b: 3, a: 255 })),
+    ).toBeNull();
   });
 });
