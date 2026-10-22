@@ -2514,4 +2514,46 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(wrong).toEqual([]);
     expect(rows).toHaveLength(matrix.length);
   });
+
+  it("records the dashed edge the primitives expose, not the one it passes through", () => {
+    // The row said `@gpuixui/tw` compiles no dashed utility "so these pass
+    // through `style` (its own `box.mdx` says so)". The tw half is still true
+    // — the package compiles no dashed class — but the primitives' `Box` takes
+    // `borderStyle="dashed"` (with `paddingX`/`paddingY` for the two axes) as
+    // typed props, and its own page documents them. So a dashed edge was no
+    // longer an API gap, and the record sent a reader to a page that says the
+    // opposite.
+    const row = rowFor("Per-corner radii");
+    expect(row?.evidence).toContain(
+      "@gpuixui/tw` compiles no dashed, per-corner or per-side utility",
+    );
+    expect(row?.evidence).toContain(
+      "the per-corner radii and the per-side widths pass through `style`",
+    );
+    expect(row?.evidence).toContain('borderStyle="dashed"');
+    expect(row?.evidence).toContain("`paddingX`/`paddingY`");
+    // The retracted advice: a dashed edge is not a `style`-only capability,
+    // and the primitives' own page no longer says it is.
+    expect(row?.evidence).not.toContain("(its own `box.mdx` says so)");
+    expect(row?.evidence).not.toContain("so these pass through `style`");
+
+    // The record's claim holds only while the package publishes it.
+    const box = read("packages/primitives/src/components/Box.tsx");
+    const layout = read("packages/primitives/src/core/style.ts");
+    const recipe = read("packages/primitives/src/recipe/index.ts");
+    const registry = read("packages/primitives/src/recipe/registry.ts");
+    const boxPage = read("packages/primitives/docs/box.mdx");
+    expect(box).toContain("a border can be dashed");
+    expect(layout).toContain("readonly borderStyle?: BorderStyle;");
+    expect(recipe).toContain('spec.borderStyle === "dashed"');
+    expect(registry).toContain(
+      '"border-dashed": () => ({ borderStyle: "dashed" })',
+    );
+    expect(boxPage).toContain("The dashed edge is the runtime's `borderStyle`");
+    expect(boxPage).toContain("`dashed` is the one alternate it paints.");
+
+    // And the tw half the record keeps: the package compiles no dashed class.
+    expect(read("packages/tw/src/utilities.ts")).not.toContain("dashed");
+    expect(read("packages/tw/src/registry.ts")).not.toContain("dashed");
+  });
 });
