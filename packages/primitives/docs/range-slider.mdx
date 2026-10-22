@@ -87,6 +87,11 @@ Each thumb is its own tab stop and answers:
 A press moves native focus to the thumb it grabbed, so the arrows that follow
 act on the end the user is holding. The focused thumb paints the ring.
 
+Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
+Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
+moving by word — belongs to the platform or the application and is left alone,
+default action included; Shift is not a chord, so `Shift+Space` is still a press.
+
 ## Accessibility
 
 - The group is `role="group"` with `aria-label`; each thumb is `role="slider"`

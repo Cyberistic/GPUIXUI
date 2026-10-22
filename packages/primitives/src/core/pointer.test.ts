@@ -68,17 +68,37 @@ const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
 
 /** The fill a control's press paints, read off a painter's own answer. */
 const painters: ReadonlyArray<readonly [string, (theme: Theme) => string]> = [
-  ["Button ghost", (theme) => buttonVariants.ghost.active(theme).backgroundColor ?? ""],
-  ["Button outline", (theme) => buttonVariants.outline.active(theme).backgroundColor ?? ""],
-  ["Button link", (theme) => buttonVariants.link.active(theme).backgroundColor ?? ""],
-  ["Toggle at rest", (theme) => toggleVariants.default.rest.active(theme).backgroundColor ?? ""],
+  [
+    "Button ghost",
+    (theme) => buttonVariants.ghost.active(theme).backgroundColor ?? "",
+  ],
+  [
+    "Button outline",
+    (theme) => buttonVariants.outline.active(theme).backgroundColor ?? "",
+  ],
+  [
+    "Button link",
+    (theme) => buttonVariants.link.active(theme).backgroundColor ?? "",
+  ],
+  [
+    "Toggle at rest",
+    (theme) => toggleVariants.default.rest.active(theme).backgroundColor ?? "",
+  ],
   [
     "an empty checkbox",
-    (theme) => selectionBoxStyle({ state: "unchecked", size: "md", accent: "primary" }, theme).active?.backgroundColor ?? "",
+    (theme) =>
+      selectionBoxStyle(
+        { state: "unchecked", size: "md", accent: "primary" },
+        theme,
+      ).active?.backgroundColor ?? "",
   ],
   [
     "an empty switch",
-    (theme) => switchTrackStyle({ state: "unchecked", size: "md", accent: "primary" }, theme).active?.backgroundColor ?? "",
+    (theme) =>
+      switchTrackStyle(
+        { state: "unchecked", size: "md", accent: "primary" },
+        theme,
+      ).active?.backgroundColor ?? "",
   ],
   [
     "a number field's stepper",
@@ -92,9 +112,9 @@ describe("the wash a control's press paints", () => {
     // than a repair, and the case below could not say what it fixed.
     const macos = platformTheme(themes.light, "darwin");
 
-    expect(
-      contrastRatio(macos.colors.active, macos.colors.hover),
-    ).toBeLessThan(decorativeFloor);
+    expect(contrastRatio(macos.colors.active, macos.colors.hover)).toBeLessThan(
+      decorativeFloor,
+    );
     expect(pressWash(macos)).not.toBe(macos.colors.active);
   });
 

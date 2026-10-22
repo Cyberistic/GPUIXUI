@@ -49,6 +49,7 @@ import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
+import { isPlainKey } from "../core/keyboard.js";
 import {
   applyOtpInput,
   decideOtpKey,
@@ -279,7 +280,7 @@ export const renderOtpFieldInput = (
       }}
       onSubmit={part.onSubmit}
       onKeyUp={composeEvent<KeyEvent>(part.interaction.onKeyUp, (event) => {
-        if (disabled) return;
+        if (disabled || !isPlainKey(event.modifiers)) return;
         handlers.onKey(index, event.key ?? "");
       })}
       onClick={composeEvent<EventPayload>(part.interaction.onClick, () => {

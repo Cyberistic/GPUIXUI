@@ -117,6 +117,11 @@ Any other key is left alone, so a slider inside a form does not swallow it. The
 slider is a single tab stop, and the focus ring is declared on the track — the
 element that holds focus — not on the thumb.
 
+Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
+Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
+moving by word — belongs to the platform or the application and is left alone,
+default action included; Shift is not a chord, so `Shift+Space` is still a press.
+
 ## Accessibility
 
 - Role: `slider` (AccessKit `Slider` — verified in the real renderer).

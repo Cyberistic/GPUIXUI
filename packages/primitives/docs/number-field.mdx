@@ -173,6 +173,11 @@ The spin buttons are pointer affordances, **not tab stops**: the field is one
 tab stop and the arrows are the keyboard path, as in a native spinner. A click
 on a stepper returns focus to the input so the next arrow works.
 
+Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
+Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
+moving by word — belongs to the platform or the application and is left alone,
+default action included; Shift is not a chord, so `Shift+Space` is still a press.
+
 ## Accessibility
 
 - The input is a `TextInput` with the name from `label`; the steppers are

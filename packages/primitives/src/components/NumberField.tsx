@@ -36,6 +36,7 @@ import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
+import { isPlainKey } from "../core/keyboard.js";
 import {
   clampNumeric,
   commitNumberDraft,
@@ -306,7 +307,7 @@ export const renderNumberFieldInput = (
         onKeyDown={composeEvent<KeyEvent>(
           part.interaction.onKeyDown,
           (event) => {
-            if (disabled) return;
+            if (disabled || !isPlainKey(event.modifiers)) return;
             Option.match(
               decideNumberKey(part.current, part.range, event.key ?? ""),
               {

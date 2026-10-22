@@ -134,6 +134,11 @@ therefore moves one cell rather than repeating. Backspace on a filled cell is
 the native edit and arrives through `onValueChange`; the key-up handler knows this
 and does not delete a second character.
 
+Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
+Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
+moving by word — belongs to the platform or the application and is left alone,
+default action included; Shift is not a chord, so `Shift+Space` is still a press.
+
 ## Accessibility
 
 - The field is a named `Group` and each cell is a named `TextInput`

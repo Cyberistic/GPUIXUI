@@ -16,6 +16,7 @@
 
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -194,6 +195,51 @@ describe("the activation contract", () => {
     handler(part, "onKeyUp")(keyEvent("space"));
     expect(part.activations()).toBe(1);
   });
+});
+
+/**
+ * The chord rule: a key carrying Ctrl, Alt or Cmd belongs to the platform or to
+ * an application shortcut, and a control that reads it as its own key steals
+ * that action. `Ctrl+Space` is the macOS input-source switch, `Cmd+Enter` a
+ * common form shortcut: a focused action must not fire on either, and it must
+ * not swallow the chord's default on the way.
+ */
+describe("a chord belongs to the platform", () => {
+  const CHORDS = [
+    { shift: false, ctrl: true, alt: false, cmd: false },
+    { shift: false, ctrl: false, alt: true, cmd: false },
+    { shift: false, ctrl: false, alt: false, cmd: true },
+  ] as const;
+
+  it.each(PARTS)("ignores every shortcut chord on %s", (_name, make) => {
+    const part = make();
+    const swallowed = Arr.map(CHORDS, (modifiers) => {
+      const space = keyEvent("space", { modifiers });
+      handler(part, "onKeyDown")(space);
+      handler(part, "onKeyUp")(keyEvent("space", { modifiers }));
+      handler(part, "onKeyDown")(keyEvent("enter", { modifiers }));
+      handler(part, "onKeyUp")(keyEvent("enter", { modifiers }));
+      return space.prevented;
+    });
+    expect(swallowed).toStrictEqual([false, false, false]);
+    expect(part.activations()).toBe(0);
+  });
+
+  it.each(PARTS)(
+    "still activates %s on a Shift press, which is not a chord",
+    (_name, make) => {
+      const part = make();
+      handler(
+        part,
+        "onKeyDown",
+      )(
+        keyEvent("enter", {
+          modifiers: { shift: true, ctrl: false, alt: false, cmd: false },
+        }),
+      );
+      expect(part.activations()).toBe(1);
+    },
+  );
 });
 
 describe("a rating's activating key", () => {

@@ -108,6 +108,11 @@ does, so walking the toolbar must not change it. A Space **press** calls
 the same rule: it moves focus to the matching option and leaves the mode alone,
 and the prefix accumulates for half a second so `un` can mean *Underline*.
 
+Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
+Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
+moving by word — belongs to the platform or the application and is left alone,
+default action included; Shift is not a chord, so `Shift+Space` is still a press.
+
 ## Accessibility
 
 - The container is a named `group`; each option is a named button. The row's

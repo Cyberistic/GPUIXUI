@@ -28,7 +28,11 @@ import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { accessibleName } from "../core/a11y.js";
-import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
+import {
+  decideActivation,
+  isPlainKey,
+  swallowKeyDefault,
+} from "../core/keyboard.js";
 import {
   defaultMessages,
   starWord,
@@ -269,7 +273,7 @@ export const renderRating = (
       aria-description={accessibleName(props.description)}
       testId={props.testId}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, (event) => {
-        if (!interactive) return;
+        if (!interactive || !isPlainKey(event.modifiers)) return;
         const key = event.key ?? "";
         if (swallowKeyDefault(key, "down")) event.preventDefault();
         Option.match(decideRating(value, max, key, half), {
@@ -280,7 +284,7 @@ export const renderRating = (
           selectFocused();
       })}
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, (event) => {
-        if (!interactive) return;
+        if (!interactive || !isPlainKey(event.modifiers)) return;
         if (decideActivation(event.key ?? "", "up", false)) selectFocused();
       })}
       onMouseLeave={interactive ? hover.onHoverEnd : undefined}

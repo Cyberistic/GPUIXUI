@@ -268,6 +268,33 @@ it("scrolls a focused ScrollArea with the keyboard", async () => {
   ).toBe(true);
 });
 
+it("leaves a chorded scroll key to the platform", async () => {
+  // The bug this guards: the viewport read only `event.key`, so `Cmd+End` and
+  // `Alt+Down` — a document shortcut and a word move — scrolled the region as
+  // a plain key. A chord is not a scroll key; the plain keys still are.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        label="Rows"
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.keyDown("s", "cmd-end");
+  expect(runtime.scrollOffset("s")).toStrictEqual(Option.some({ x: 0, y: 0 }));
+  runtime.keyDown("s", "alt-down");
+  expect(runtime.scrollOffset("s")).toStrictEqual(Option.some({ x: 0, y: 0 }));
+  runtime.keyDown("s", "down");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: 0, y: -testTheme.density.rowHeight }),
+  );
+});
+
 it("pages a sideways ScrollArea by the width it shows", async () => {
   // The bug guarded: a page step was the scroller's height and moved only the
   // vertical axis, so `axis="horizontal"` had no key that moved more than a

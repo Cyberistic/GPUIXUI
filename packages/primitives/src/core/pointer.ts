@@ -26,7 +26,11 @@
  * the same colour, so the two cannot drift.
  */
 
-import { pointerWash, type ThemeColors, type ThemeContrast } from "@gpuixui/tokens";
+import {
+  pointerWash,
+  type ThemeColors,
+  type ThemeContrast,
+} from "@gpuixui/tokens";
 
 /**
  * The fill a control paints while the pointer is down.

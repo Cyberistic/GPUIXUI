@@ -28,6 +28,7 @@ import {
   decideAbsolute,
   decideActivation,
   decideMove,
+  isPlainKey,
   swallowKeyDefault,
 } from "../core/keyboard.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
@@ -191,6 +192,7 @@ export const renderCheckboxGroup = (
     Option.match(activeIndex, { onNone: () => {}, onSome: toggle });
   };
   const onKeyDown = (event: KeyEvent): void => {
+    if (!isPlainKey(event.modifiers)) return;
     const key = event.key ?? "";
     if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
@@ -206,6 +208,7 @@ export const renderCheckboxGroup = (
   // Space toggles on the release, the way a platform checkbox does; Enter has
   // already toggled on the press, and this handler ignores it.
   const onKeyUp = (event: KeyEvent): void => {
+    if (!isPlainKey(event.modifiers)) return;
     if (decideActivation(event.key ?? "", "up", false)) activate();
   };
   const group = mergeStyle(

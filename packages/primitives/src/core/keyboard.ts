@@ -42,6 +42,40 @@ export const swallowKeyDefault = (key: KeyName, phase: KeyPhase): boolean =>
   key === SPACE_KEY && phase === "down";
 
 /**
+ * The modifier chord a key event carried, as `@gpuix/native` reports it.
+ *
+ * Absent fields read as false, so a fixture can name only the modifier it is
+ * about.
+ */
+export interface KeyChord {
+  readonly shift?: boolean;
+  readonly ctrl?: boolean;
+  readonly alt?: boolean;
+  readonly cmd?: boolean;
+}
+
+/**
+ * Whether a key event is a plain press a control may read as its own.
+ *
+ * A chord carrying Ctrl, Alt or Cmd belongs to the platform or to an
+ * application shortcut, and a control that reads it as its own key steals that
+ * action: `Cmd+A` would make a radio group choose the option whose label starts
+ * with "a" and an OTP field type one, and `Ctrl+Space` — the input-source
+ * switch on macOS — would activate whatever button has focus. Shift is not a
+ * chord: it is how a capital letter is typed, and `Shift+Space` is still a
+ * button's press.
+ *
+ * This is the rule every handler applies **before** `swallowKeyDefault`: a
+ * chord's default action is exactly what must keep running. The pinned runtime
+ * already applies it to its own default actions — Escape, Tab traversal and a
+ * dialog's dismissal all skip a command modifier (`hasCommandModifier` in
+ * `@gpuix/native`'s `renderer-state`) — so a control reading a chord was the
+ * one place the platform's rule did not hold.
+ */
+export const isPlainKey = (chord: KeyChord | undefined): boolean =>
+  chord?.ctrl !== true && chord?.alt !== true && chord?.cmd !== true;
+
+/**
  * Whether a key event activates a button-like control.
  *
  * @param key the key name from the event

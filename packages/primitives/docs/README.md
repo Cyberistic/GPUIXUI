@@ -88,6 +88,15 @@ Three suites hold rules no single page owns:
   tab stop and paints no ring. `Select` is absent because its trigger and items
   are GPUix's own components, so the element tree never holds their host nodes;
   its ring and stops are pinned on its page and in the runtime suite.
+- `src/components/activation.test.tsx` + `src/components/keyboard-chords.test.tsx`
+  — the keyboard contract every control shares. The first holds one activation
+  per interaction (Enter on the press, Space on the release, a held key
+  ignored); the second holds the chord rule: a key carrying Ctrl, Alt or Cmd is
+  a platform or application shortcut (`Cmd+A`, `Ctrl+Space`, `Alt+Arrow`), so a
+  control ignores it and keeps the chord's default action — while Shift is not a
+  chord. Each case measures both directions: the chord does nothing **and** the
+  plain key still acts. The scroll region's chord is in
+  `runtime/layout.runtime.test.tsx`, because its handler reads the renderer.
 - `src/components/keyboard-dim.test.tsx` — the runtime dims every other
   focusable element to 40% while one has keyboard focus, so a control whose own
   text is **content** (a field's value and placeholder, an OTP cell's digit, a

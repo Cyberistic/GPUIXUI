@@ -39,7 +39,11 @@ import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
-import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
+import {
+  decideActivation,
+  isPlainKey,
+  swallowKeyDefault,
+} from "../core/keyboard.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   variantSpinnerAccent,
@@ -183,6 +187,7 @@ export const renderButton = (
   const onKey =
     (phase: "down" | "up") =>
     (event: KeyEvent): void => {
+      if (!isPlainKey(event.modifiers)) return;
       if (swallowKeyDefault(event.key ?? "", phase)) event.preventDefault();
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         activate(event);

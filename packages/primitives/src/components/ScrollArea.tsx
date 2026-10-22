@@ -55,6 +55,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
+import { isPlainKey } from "../core/keyboard.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { scrollTarget } from "../core/scroll.js";
 import type { ScrollSpec } from "../core/style.js";
@@ -303,6 +304,9 @@ const useScrollKeyboard = (axis: ScrollSpec["axis"], theme: PrimitiveTheme) => {
   const { renderer } = useGpuix();
   const target = useRef<number | null>(null);
   const onKeyDown = (event: KeyEvent): void => {
+    // A chord belongs to the platform or an application shortcut: `Cmd+Home`
+    // must not scroll this region, and the keys it carries are not the region's.
+    if (!isPlainKey(event.modifiers)) return;
     const id = target.current;
     if (id === null || renderer === null) return;
     // GPUI bubbles a key from the focused element up, so the element that owns

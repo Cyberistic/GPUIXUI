@@ -45,6 +45,7 @@ import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
+import { isPlainKey } from "../core/keyboard.js";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import {
@@ -480,7 +481,7 @@ export const renderSlider = (
       onMouseMove={handlers.onPointerMove}
       onMouseUp={handlers.onPointerUp}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, (event) => {
-        if (props.disabled === true) return;
+        if (props.disabled === true || !isPlainKey(event.modifiers)) return;
         Option.match(decideValueKey(value, range, event.key ?? ""), {
           onNone: () => {},
           onSome: handlers.onValueChange,
@@ -584,7 +585,7 @@ export const renderRangeSlider = (
         focus.onBlur(index),
       ),
       onKeyDown: composeEvent<KeyEvent>(props.onKeyDown, (event) => {
-        if (props.disabled === true) return;
+        if (props.disabled === true || !isPlainKey(event.modifiers)) return;
         const end = index === 0 ? "start" : "end";
         Option.match(decideValueKey(value, range, event.key ?? ""), {
           onNone: () => {},

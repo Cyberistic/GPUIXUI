@@ -1048,6 +1048,48 @@ it("reaches a radio option by the prefix a reader types, and starts the buffer o
   expect(announced(runtime, "Alpine")).toBe("checked");
 });
 
+it("leaves a shortcut chord's key to the platform", async () => {
+  // The bug this guards: every control read only `event.key`, so a chord meant
+  // for the platform or the application acted as a plain key — `Cmd+A` on a
+  // radio group chose the option whose label starts with "a", and `Cmd+Enter`
+  // on a focused action activated it. The runtime's own default actions already
+  // skip a chord (`hasCommandModifier` in the pinned renderer), so a control's
+  // keys must too. Both directions are measured: the plain key still acts.
+  const runtime = await openWindow();
+  let activations = 0;
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button
+          testId="b"
+          onActivate={() => {
+            activations += 1;
+          }}
+        >
+          Save
+        </Button>
+      </Stack>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        defaultValue="beta"
+        options={[
+          { value: "alpha", label: "Alpha" },
+          { value: "beta", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.keyDown("b", "cmd-enter");
+  expect(activations).toBe(0);
+  runtime.keyDown("b", "enter");
+  expect(activations).toBe(1);
+  runtime.keyDown("rg", "cmd-a");
+  expect(announced(runtime, "Beta")).toBe("checked");
+  runtime.keyDown("rg", "a");
+  expect(announced(runtime, "Alpha")).toBe("checked");
+});
+
 it("exposes a named RadioGroup of named RadioButtons", async () => {
   const runtime = await openWindow();
   runtime.render(

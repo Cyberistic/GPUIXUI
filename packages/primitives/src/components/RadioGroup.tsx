@@ -26,6 +26,7 @@ import {
   decideAbsolute,
   decideActivation,
   decideMove,
+  isPlainKey,
   swallowKeyDefault,
 } from "../core/keyboard.js";
 import { rovingIndex } from "../core/roving.js";
@@ -217,6 +218,7 @@ export const renderRadioGroup = (
       onSome: navigate,
     });
   const onKeyDown = (event: KeyEvent): void => {
+    if (!isPlainKey(event.modifiers)) return;
     const key = event.key ?? "";
     if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
@@ -232,6 +234,7 @@ export const renderRadioGroup = (
   // Space selects on the release, the way a platform radio does; Enter has
   // already selected on the press, and this handler ignores it.
   const onKeyUp = (event: KeyEvent): void => {
+    if (!isPlainKey(event.modifiers)) return;
     if (decideActivation(event.key ?? "", "up", false)) select(stopIndex);
   };
   const group = mergeStyle(

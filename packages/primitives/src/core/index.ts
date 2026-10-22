@@ -33,11 +33,12 @@ export {
   decideToggle,
   decideTypeAhead,
   ENTER_KEY,
+  isPlainKey,
   isTypeAheadKey,
   SPACE_KEY,
   TYPE_AHEAD_RESET_MS,
 } from "./keyboard.js";
-export type { KeyName, KeyPhase, Orientation } from "./keyboard.js";
+export type { KeyChord, KeyName, KeyPhase, Orientation } from "./keyboard.js";
 
 export { initValueState, setValue, withValue } from "./state.js";
 export type { ControlMode, ValueState } from "./state.js";

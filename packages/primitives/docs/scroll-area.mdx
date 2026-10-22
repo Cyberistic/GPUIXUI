@@ -183,6 +183,11 @@ see where the focus landed. The declaration sits on the viewport — the element
 that holds the focus — never on the frame around it, and `focusable={false}`
 removes the ring with the stop.
 
+Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
+Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
+moving by word — belongs to the platform or the application and is left alone,
+default action included; Shift is not a chord, so `Shift+Space` is still a press.
+
 ## Accessibility
 
 The viewport is a `group`, and it carries a name even when the caller gives

@@ -116,6 +116,11 @@ walks the options that share it. The prefix accumulates for half a second
 of replacing the match, and a prefix that matches nothing retries its last
 character so a fast `qx` still means `x`.
 
+Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
+Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
+moving by word — belongs to the platform or the application and is left alone,
+default action included; Shift is not a chord, so `Shift+Space` is still a press.
+
 ## Accessibility
 
 - Roles: `RadioGroup` and `RadioButton` in AccessKit.

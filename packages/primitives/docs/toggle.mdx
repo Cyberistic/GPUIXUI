@@ -72,6 +72,11 @@ outline while it can act; a disabled toggle declares none. A Space **press**
 calls `preventDefault()`, so a scroll container does not also scroll while the
 toggle waits for the release.
 
+Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
+Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
+moving by word — belongs to the platform or the application and is left alone,
+default action included; Shift is not a chord, so `Shift+Space` is still a press.
+
 ## Accessibility
 
 - Role: `button` (AccessKit `Button`).

@@ -7,6 +7,7 @@ import {
   decidePage,
   decideToggle,
   decideTypeAhead,
+  isPlainKey,
   isTypeAheadKey,
   swallowKeyDefault,
   TYPE_AHEAD_RESET_MS,
@@ -204,6 +205,31 @@ describe("decideTypeAhead", () => {
   it("reports nothing for a group with no match or no options", () => {
     expect(decideTypeAhead(labels, 0, "z")).toEqual(Option.none());
     expect(decideTypeAhead([], 0, "a")).toEqual(Option.none());
+  });
+});
+
+describe("isPlainKey", () => {
+  it("reads an event with no chord as the control's own key", () => {
+    expect(isPlainKey(undefined)).toBe(true);
+    expect(isPlainKey({})).toBe(true);
+    expect(isPlainKey({ ctrl: false, alt: false, cmd: false })).toBe(true);
+  });
+
+  it("keeps Shift, which is how a capital is typed", () => {
+    expect(isPlainKey({ shift: true })).toBe(true);
+    expect(
+      isPlainKey({ shift: true, ctrl: false, alt: false, cmd: false }),
+    ).toBe(true);
+  });
+
+  it("leaves every shortcut chord to the platform", () => {
+    // Cmd+A selects all, Ctrl+Space switches the input source on macOS, and
+    // Alt+arrow moves by word: a control that read one of these as its own key
+    // would act on a shortcut it does not own.
+    expect(isPlainKey({ cmd: true })).toBe(false);
+    expect(isPlainKey({ ctrl: true })).toBe(false);
+    expect(isPlainKey({ alt: true })).toBe(false);
+    expect(isPlainKey({ ctrl: true, shift: true })).toBe(false);
   });
 });
 
