@@ -11,6 +11,7 @@
     "---Forms---",
     "field",
     "select",
+    "combobox",
     "---Overlays---",
     "dialog",
     "confirm-dialog",

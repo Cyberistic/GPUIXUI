@@ -99,6 +99,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/card.tsx",
   },
   {
+    file: "combobox.mdx",
+    row: "Comboboxes",
+    suite: "packages/components/src/behaviour/combobox.test.tsx",
+    shadowed: "packages/components/docs/combobox.mdx",
+    source: "packages/components/src/combobox.tsx",
+  },
+  {
     file: "command-menu.mdx",
     row: "Command menus",
     suite: "packages/components/src/behaviour/command-menu.test.tsx",
@@ -495,6 +502,91 @@ describe("the curated component pages", () => {
     // The retracted shape: the keyboard gap the reveal closed.
     expect(text).not.toContain("cannot reach the tail");
     expect(text).not.toContain("does not scroll the highlight");
+  });
+
+  it("hold the combobox's ranking and its create row to the source", () => {
+    // A combobox looks like a select with a search field, so the rules that
+    // matter are the ones the drawing cannot show: the ranking is ours (GPUix's
+    // filter only removes rows), the cap is the component's (the runtime sets no
+    // maximum height), a disabled row is painted a role rather than faded, and
+    // the create row is offered only when nothing matches. Each is read from the
+    // file that ships it, so the page cannot teach a list the component does not
+    // build.
+    const combobox = pages.find((page) => page.file === "combobox.mdx");
+    expect(
+      combobox,
+      "the combobox page is not in the curated set",
+    ).toBeDefined();
+    if (combobox === undefined) return;
+
+    const logic = read("packages/components/src/combobox/logic.ts");
+    const source = read(combobox.source);
+    const recipes = read("packages/tw/src/recipes.ts");
+
+    // The ranking's four rules, in the order the page prints them.
+    const rank = logic.slice(logic.indexOf("const rank ="));
+    const order = [
+      "Str.startsWith(query)(label)",
+      "wordStarts(label, query)",
+      "Str.includes(query)(label)",
+      'normalise(option.description ?? "")',
+    ].map((rule) => rank.indexOf(rule));
+    expect(order.every((at) => at > -1)).toBe(true);
+    // Ascending: prefix, then word prefix, then substring, then description.
+    expect(order[0]).toBeLessThan(order[1] ?? -1);
+    expect(order[1]).toBeLessThan(order[2] ?? -1);
+    expect(order[2]).toBeLessThan(order[3] ?? -1);
+    // Ties keep declaration order rather than the runtime's own order.
+    expect(logic).toContain("byRankThenDeclaration");
+    expect(logic).toContain("Order.mapInput(Order.Number");
+
+    // The runtime receives the ranked list, and the adapter owns the query.
+    expect(source).toContain("filter={null}");
+    expect(source).toContain("inputValue={query}");
+    expect(source).toContain('autoHighlight="always"');
+
+    // The create row: text, no match, single mode. The caller adds the option.
+    expect(logic).toContain("Arr.isReadonlyArrayEmpty(visible)");
+    expect(source).toContain("onCreate !== undefined && !multiple");
+
+    // The cap is the component's, and the list scrolls.
+    expect(source).toContain("maxHeight: 280");
+    expect(source).toContain('overflowY: "scroll"');
+
+    // A selected row reports its own state; a disabled row names its roles.
+    expect(source).toContain("aria-selected={selected}");
+    expect(source).toContain("theme.colors.disabledForeground");
+    expect(source).toContain("isCreateRow(value)");
+
+    // The trigger is a field on the page's own fill, not a field's `input` fill.
+    // The recipe is sliced by position: a pattern literal holding a quote is
+    // still mis-scanned by `scripts/check-tests.ts` (TODO.md → Harness).
+    const declaration = (name: string): string => {
+      const at = recipes.indexOf(`export const ${name} =`);
+      if (at === -1) return "";
+      const end = recipes.indexOf("\n\n", at);
+      return recipes.slice(at, end === -1 ? undefined : end);
+    };
+    const trigger = declaration("COMBOBOX_TRIGGER");
+    expect(trigger).toContain("bg-background");
+    expect(trigger).toContain("border-strong");
+    const content = declaration("COMBOBOX_CONTENT");
+    expect(content).toContain("bg-popover");
+    expect(content).toContain("shadow-md");
+
+    const text = body(combobox).replace(/\s+/g, " ");
+    expect(text).toContain("starts with the query");
+    expect(text).toContain("a word inside the label starts with the query");
+    expect(text).toContain("the description contains the query");
+    expect(text).toContain("280px");
+    expect(text).toContain("No `aria-activedescendant`");
+    expect(text).toContain("offered only when nothing matches");
+    expect(text).toContain("22 native behaviour tests");
+    expect(text).toContain("`partial`");
+    // The retracted shapes: a runtime ranking, or a faded disabled row.
+    expect(text).not.toContain("the runtime ranks");
+    expect(text).not.toContain("faded disabled");
+    expect(text).not.toContain("loads options asynchronously");
   });
 
   it("hold the toast queue's bounds and its card paint to the source", () => {

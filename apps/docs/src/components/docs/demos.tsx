@@ -15,6 +15,12 @@ import {
   type CommandAction,
 } from "./command-preview";
 import {
+  ComboboxDemo,
+  ComboboxMultiple,
+  comboboxDemoSource,
+  comboboxMultipleSource,
+} from "./combobox-demo";
+import {
   enabledEntries,
   highlightAfter,
   menuEntries,
@@ -2418,6 +2424,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "command-menu-demo": {
     render: CommandMenuDemo,
     source: commandMenuSource,
+  },
+  "combobox-multiple": {
+    render: ComboboxMultiple,
+    source: comboboxMultipleSource,
+  },
+  "combobox-workflow": {
+    render: ComboboxDemo,
+    source: comboboxDemoSource,
   },
   "confirm-dialog-demo": {
     render: ConfirmDialogDemo,

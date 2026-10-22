@@ -1725,3 +1725,237 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- combobox: mirrors components/src/combobox.tsx's COMBOBOX_* recipes ----
+   The trigger is `bg-background` with the measured `borderStrong` edge (not a
+   field's `input` fill), the popup is the `md` elevation over `popover`, and a
+   row is a two-line box whose description is the muted role. A disabled row
+   names `disabledForeground` rather than fading, because a fade composites the
+   label into the popover fill that no contrast pair holds. */
+.gx-demo-combobox {
+  width: 100%;
+  justify-content: center;
+}
+
+.gx-combobox-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(420px, 100%);
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-combobox-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.gx-combobox-meta {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-combobox-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* The popup is positioned against the control, so the root is the anchor. */
+  position: relative;
+}
+
+.gx-combobox-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-combobox {
+  position: relative;
+  width: 100%;
+}
+
+.gx-combobox-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: var(--control-height-md);
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-combobox-trigger:hover:not(:disabled),
+.gx-combobox-trigger[aria-expanded="true"] {
+  background: var(--hover);
+}
+
+.gx-combobox-trigger[data-placeholder="true"] {
+  color: var(--muted-foreground);
+}
+
+.gx-combobox-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-combobox-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gx-combobox-trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-combobox-caret {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-combobox-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-width: 220px;
+  max-height: 280px;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 12px 28px var(--shadow);
+}
+
+.gx-combobox-search {
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--input);
+  color: var(--input-foreground);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+}
+
+.gx-combobox-search:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+}
+
+.gx-combobox-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-combobox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--control-height-sm);
+  padding: 4px 8px;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--popover-foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-combobox-row[data-highlighted="true"] {
+  background: var(--hover);
+}
+
+.gx-combobox-row:disabled {
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+}
+
+.gx-combobox-row:disabled[data-highlighted="true"] {
+  background: transparent;
+}
+
+.gx-combobox-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.gx-combobox-row-label {
+  font-size: 13px;
+}
+
+.gx-combobox-row-description {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-combobox-row:disabled .gx-combobox-row-description {
+  color: var(--disabled-foreground);
+}
+
+.gx-combobox-row[aria-selected="true"] .gx-combobox-row-label {
+  font-weight: 600;
+}
+
+.gx-combobox-check {
+  color: var(--primary);
+  font-size: 11px;
+}
+
+.gx-combobox-create {
+  color: var(--primary);
+  font-size: 12.5px;
+}
+
+.gx-combobox-empty {
+  margin: 0;
+  padding: 12px 8px;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-combobox-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--placeholder);
+}
+
+.gx-combobox-readout b {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.gx-combobox-states {
+  max-width: 480px;
+}

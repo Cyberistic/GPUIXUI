@@ -45,6 +45,7 @@ components/accordion.mdx     Curated: the two modes, the chevron swap, the unmou
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
 components/button.mdx        Curated: previews, install, source (the package page keeps the API)
 components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
+components/combobox.mdx      Curated: the ranked list, the disabled row, the create row
 components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
 components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the frozen busy mark
 components/dialog.mdx        Curated: a real confirmation workflow
@@ -88,6 +89,8 @@ src/components/not-found.tsx        The 404 inside the docs chrome
 src/components/docs/component-preview.tsx The Preview/Code component preview
 src/components/docs/preview-surface.tsx   A preview carrying the resolved theme's variables
 src/components/docs/demos.tsx             The browser renderings and their source strings
+src/components/docs/combobox-preview.ts The combobox preview's ranking, highlight and selection model
+src/components/docs/combobox-demo.tsx     The combobox's two browser renderings and their source strings
 src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic
 src/components/docs/command-preview.ts    The palette preview's matcher and group ranking
 src/components/docs/select-preview.ts     The select preview's data and arrow arithmetic

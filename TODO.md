@@ -3555,7 +3555,46 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 126/126
+`[x]` `[██████████]` 127/127
+
+`[x]` Curate the **Combobox** page and hold its ranking and its create row to
+the source — `/docs/components/combobox` served the package page (strategy 4: no
+preview), so the library's searchable picker had nothing a reader could press
+even though MISSION lists comboboxes among the Tier 2 pickers. The curated page
+shadows `packages/components/docs/combobox.mdx` and teaches the four decisions a
+drawing cannot show: the ranking is ours because GPUix's `filter` can only
+remove rows (`filter={null}` with an adapter-owned `inputValue`), a disabled row
+stays visible while the arrows skip it (`disabledForeground`, never a fade),
+multiple mode appends so the reported array is the order chosen, and the create
+row appears only when nothing matches — reporting the query while the caller adds
+the option. It states the measured 280px cap as the component's (the runtime's
+content sets no maximum height) and the `align="center"` quirk. Two browser
+previews: `combobox-workflow` (assign a reviewer, with prefix-before-description
+ranking, one disabled row and a live create row) and `combobox-multiple` (triage
+labels, append/remove order and a disabled trigger). The row arithmetic lives in
+`src/components/docs/combobox-preview.ts` so it is testable:
+`combobox-preview.test.ts` (10 cases) fails when a disabled row becomes
+reachable, the ranks reorder, a pick is sorted instead of appended, or the create
+row is offered over a real match. `component-page-truth.test.ts` gained the page
+and `hold the combobox's ranking and its create row to the source`, which reads
+`combobox/logic.ts` (the four rank checks in order, `byRankThenDeclaration`,
+`Arr.isReadonlyArrayEmpty`), `combobox.tsx` (`filter={null}`,
+`inputValue={query}`, `autoHighlight="always"`, `maxHeight: 280`,
+`overflowY: "scroll"`, `aria-selected`, `disabledForeground`, the single-mode
+create guard) and the `COMBOBOX_TRIGGER`/`COMBOBOX_CONTENT` recipes, then holds
+the page to those claims. The sidebar (`meta.json` Forms), the Components index
+sentence, `/docs/theming`'s switch list, the strategy's "Curated today" line,
+`sources.ts` and the app README ledger name the page, and `package-docs.test.ts`
+took the shadow. Directions measured: rewording the description rank fails
+`expected … to contain 'the description contains the query'`, and dropping the
+match-nothing rule fails the preview case with `expected true to be false`. The
+full docs suite is 696 tests with the one pre-existing `link-integrity` failure
+on two **untracked** components pages owned by the components workstream
+(`bubbles.mdx` → `/docs/components/progress` and `page-transition.mdx` →
+`/docs/components/motion`); `check-types` and `build` are green. Verified in the
+dev server: `/docs/components/combobox` renders both previews, and
+`?platform=win32` repaints the card (`--background` `#202020`,
+`--control-height-md` 32px).
 
 `[x]` Curate the **Select** page and hold its 320px list and its reveal to the
 source — `/docs/primitives/select` carries the API and the measured gaps but no
