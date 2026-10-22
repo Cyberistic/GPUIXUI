@@ -150,7 +150,7 @@ src/lib/component-index-data.ts     The index, from every docs collection at bui
 src/lib/patterns.ts                 The one source of the patterns and their parts
 src/lib/licenses.ts                 The LICENSES/*.md parse
 src/lib/licenses-data.ts            The licence records, at build time
-src/lib/platform.ts                 The platform and look switch: parse, label, resolve
+src/lib/platform.ts                 The platform and look switch: parse, label, resolve, and the mode a preview paints
 src/lib/platform-storage.ts         The remembered platform/look choice, per axis
 src/lib/theme-css.ts                Theme → CSS variables, shared with every preview
 src/lib/live-batch.ts               /live's mutation batch, styled by the primitives' resolver

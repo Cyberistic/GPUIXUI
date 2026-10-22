@@ -4,6 +4,7 @@ description: Semantic colour roles, typography, spacing, radius and density — 
 ---
 
 import { colorRoles, contrastFloors, indicatorSurfaces, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
+import { previewMode } from "@/lib/platform";
 
 A GPUIxUI theme is plain data. Components never carry a colour literal; they read
 a semantic role such as `colors.primary`, `spacing.md` or `radius.md` from the
@@ -258,6 +259,13 @@ shapes rather than only a colour swatch: the [Button](/docs/components/button),
 [Popover](/docs/components/popover) and [Tabs](/docs/components/tabs) pages each
 render one, and the menu's open/closed states come from the same rules the
 component ships.
+
+A preview renders the selected style's **{previewMode}** palette, whatever the
+site's own light/dark switch says. A preview is a picture of the library's
+identity, and that identity is its dark theme; the switch a reader came here to
+compare is the platform. Both palettes are on this page — [Built-in
+themes](#built-in-themes) prints every one — and [Theme](/docs/themes) edits
+them side by side.
 
 [Theme](/docs/themes) follows it too: the editor starts from the selected
 style's roles, radii and family, and switching re-bases its preview without

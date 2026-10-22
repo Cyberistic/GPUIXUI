@@ -18,6 +18,7 @@ import {
   platformLabel,
   platformOrder,
   platformParam,
+  previewMode,
   resolvePlatformTheme,
   type LookName,
 } from "../../lib/platform";
@@ -113,7 +114,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   );
 
   const theme = useMemo(
-    () => resolvePlatformTheme(platform, "dark", look),
+    () => resolvePlatformTheme(platform, previewMode, look),
     [platform, look],
   );
   const value = useMemo<PlatformState>(

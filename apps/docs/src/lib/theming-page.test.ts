@@ -20,7 +20,12 @@ import {
   type Theme,
 } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
-import { lookLabel, lookOrder, resolvePlatformTheme } from "./platform";
+import {
+  lookLabel,
+  lookOrder,
+  previewMode,
+  resolvePlatformTheme,
+} from "./platform";
 
 /**
  * The two theming pages state facts about `@gpuixui/tokens` that the package
@@ -706,6 +711,50 @@ describe("the theming pages' series surfaces", () => {
     expect(seriesColors(themes.dark).length).toBeGreaterThan(1);
     expect(audit).toContain("{seriesColors(themes.dark).length}");
     expect(audit).not.toMatch(/\b(five|\d+) categorical colours\b/);
+  });
+});
+
+describe("the palette a preview paints", () => {
+  /** Prose wraps, so the sentence is read flat. */
+  const flat = (text: string): string => text.replace(/\s+/g, " ");
+
+  /**
+   * The provider's `resolvePlatformTheme` call, so the mode the site states is
+   * the mode the preview resolves.
+   */
+  const resolvedMode = (): string | undefined => {
+    const source = readFileSync(
+      new URL("../components/docs/platform-toggle.tsx", import.meta.url),
+      "utf8",
+    );
+    return /resolvePlatformTheme\(\s*platform,\s*([A-Za-z]+),/.exec(source)?.[1];
+  };
+
+  it("states the mode the previews resolve, from the module that decides it", () => {
+    // The site has a light/dark switch of its own (Fumadocs' theme provider) and
+    // the previews do not follow it: a reader in light mode saw dark previews
+    // and nothing on the page said why, or that both palettes are printed
+    // elsewhere on it. The word is interpolated from `previewMode`, so the page
+    // cannot outlive the provider's decision.
+    const body = flat(page("theming.mdx"));
+
+    expect(previewMode).toBe("dark");
+    expect(body).toContain("{previewMode}");
+    expect(body).toContain("light/dark switch");
+    expect(body).toContain("#built-in-themes");
+    expect(body).not.toMatch(/previews? (render|paint)s? (the|a) dark palette/i);
+  });
+
+  it("resolves that mode in the provider, not a literal of its own", () => {
+    // A second literal is the drift this guard exists for: changing the mode in
+    // the provider alone would leave the page teaching the old one.
+    expect(resolvedMode()).toBe("previewMode");
+    expect(resolvePlatformTheme("darwin", previewMode, "native").name).toContain(
+      "Dark",
+    );
+    expect(
+      resolvePlatformTheme("win32", previewMode, "luna").colors.background,
+    ).not.toBe(resolvePlatformTheme("win32", "light", "luna").colors.background);
   });
 });
 

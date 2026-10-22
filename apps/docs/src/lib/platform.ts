@@ -89,6 +89,18 @@ export const lookFromSearch = (search: string): LookName | undefined =>
 export const lookSearch = (look: LookName): string => look;
 
 /**
+ * The mode every browser preview resolves.
+ *
+ * The docs site has its own light/dark switch (Fumadocs' theme provider), and a
+ * preview deliberately does not follow it: a preview is a picture of the
+ * library's identity, which is its dark theme, and the platform switch is the
+ * axis a reader came to compare. The site therefore resolves one mode everywhere
+ * and says which — `/docs/theming` prints this value rather than typing "dark",
+ * so a page and the provider cannot disagree.
+ */
+export const previewMode: ThemeMode = "dark";
+
+/**
  * The theme a preview shows: the library's platform variant over one of its
  * built-in modes, then the authored look over that when one is chosen.
  *
@@ -98,7 +110,7 @@ export const lookSearch = (look: LookName): string => look;
  */
 export const resolvePlatformTheme = (
   platform: PlatformName,
-  mode: ThemeMode = "dark",
+  mode: ThemeMode = previewMode,
   look: LookName = "native",
 ): Theme => {
   const base = platformTheme(themes[mode], platform);

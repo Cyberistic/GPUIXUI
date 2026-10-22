@@ -288,6 +288,13 @@ and Aero — which are styles of the same shape, not a fifth platform (the
 mission's toggle stays macOS · Linux · Windows · Default). Each is written to the
 URL (`?platform=…&look=…`) so a link carries what the reader saw.
 
+One axis is deliberately fixed: a preview paints the library's own dark identity
+(`previewMode` in `src/lib/platform.ts`), not the docs site's light/dark mode.
+The site's mode is a reading preference and the preview's subject is the platform
+style, so the switch keeps one axis — and `/docs/theming` prints the mode it
+paints rather than leaving a reader in light mode to wonder why the previews did
+not change.
+
 The site's own palette is the one thing that is not a library theme, so it is
 held to the library's contract instead: `src/styles/app.css` declares the
 Fumadocs variables once for `:root` and once for `.dark`, and
