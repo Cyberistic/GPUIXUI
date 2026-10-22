@@ -1874,7 +1874,8 @@ describe("the curated component pages", () => {
     // run. Two claims are the wrapper's own: the surface must be the theme's
     // popover (the runtime mounts its own `#1A1A1A` behind a caller that sets
     // no fill) and the trigger's `aria-description` is the assistive path,
-    // because a `Tab` traversal never runs the handler that opens the tip.
+    // because a `Tab` traversal never runs the handler that opens the tip
+    // (`apps/playground/src/live/focus-delivery.test.ts` holds that direction).
     const tooltip = pages.find((page) => page.file === "tooltip.mdx");
     expect(tooltip, "the tooltip page is not in the curated set").toBeDefined();
     if (tooltip === undefined) return;
