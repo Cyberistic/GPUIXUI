@@ -142,10 +142,10 @@ after the recipe, so a callback is the last word:
 - `src/components/IconButton.test.tsx` — the label is the name, the box is
   square at the density height, ghost is the default, the activation contract
   and busy/disabled refusals hold, the activation event reaches `onActivate` as
-  it does on `Button`, the busy spinner receives the caller's
-  `reducedMotion`, the tooltip trigger pair reaches its `Button`, and the
-  caller's `style` wins; a trigger's `ref` and `aria-expanded` reach the element
-  too.
+  it does on `Button`, an attached group squares its corners, the busy spinner
+  receives the caller's `reducedMotion`, the tooltip trigger pair reaches its
+  `Button`, and the caller's `style` wins; a trigger's `ref` and `aria-expanded`
+  reach the element too.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus are
   composed with the button's own, and a disabled icon button installs none.
 - `src/docs.test.ts` — the page and the mounted example tint every glyph from a
