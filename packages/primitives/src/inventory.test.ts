@@ -155,10 +155,13 @@ const announceProblems = ({
  * Problems with the tooltip record and row after the keyboard path was
  * re-measured in a window.
  *
- * The regression: the first `tooltip-lifecycle` run read the frame before
- * React's `onFocus` arrived, so both the record and the row taught that a `Tab`
- * traversal never opens the tip and hover was the only open path. The re-run
- * measured the activation, so neither document may carry the old limit.
+ * The regression runs in two directions. One window run read the frame before
+ * React's `onFocus` arrived, and the documents were corrected to promise a
+ * keyboard open path; three clean runs at HEAD then found the event never
+ * arrives and the tip stays closed, so the promise is the defect now. Both
+ * documents must record the window's gap, cite the probe, and keep the half a
+ * `TestRenderer` does deliver rather than claiming a keyboard path a reader
+ * with a pointer can never use.
  */
 const tooltipProblems = (): ReadonlyArray<string> =>
   Option.match(
@@ -172,18 +175,23 @@ const tooltipProblems = (): ReadonlyArray<string> =>
           (line) =>
             `Tooltips: the record still teaches the retracted "${line}"`,
         ),
+        ...(Arr.some(meta.limitations, (line) =>
+          line.includes("hover is the only open path"),
+        )
+          ? []
+          : ["Tooltips: the record does not state the window's measured gap"]),
         ...Option.match(rowFor(meta), {
           onNone: () => ["Tooltips: no COMPONENTS.md row"],
           onSome: (row) => [
             ...(row.notes.includes("tooltip-lifecycle")
               ? []
               : ["Tooltips: the row cites no measured probe"]),
-            ...(row.notes.includes("traversal opens")
-              ? []
-              : ["Tooltips: the row does not record the keyboard open path"]),
-            ...(row.notes.includes("does not open")
-              ? ["Tooltips: the row still teaches the retracted limit"]
+            ...(row.notes.includes("`Tab` traversal opens it too")
+              ? ["Tooltips: the row still promises the retracted open path"]
               : []),
+            ...(row.notes.includes("stays closed")
+              ? []
+              : ["Tooltips: the row does not record the window's closed tip"]),
           ],
         }),
       ],
@@ -264,8 +272,9 @@ describe("Tier 1 inventory", () => {
 
   it("records the tooltip's measured keyboard path", () => {
     // Measured in a real window by the playground's `tooltip-lifecycle` probe,
-    // re-run on 2026-10-22: the shipped wrapper opens on a `Tab` traversal
-    // (14 checks), because the traversal runs React's `onFocus`.
+    // three clean runs on 0.11.0 on 2026-10-22: the traversal focuses the
+    // trigger and the tip stays closed (`focuses=0`), so the record and the row
+    // must teach the pointer as the window's only open path.
     expect(tooltipProblems()).toEqual([]);
   });
 

@@ -1,6 +1,6 @@
 ---
 title: Tooltip
-description: A short label on hover or keyboard focus — a themed wrapper over GPUix's Tooltip.
+description: A short label on hover — a themed wrapper over GPUix's Tooltip.
 ---
 
 `Tooltip` reuses `@gpuix/react/tooltip` for the anchored layer, the open delay
@@ -92,12 +92,18 @@ A **controlled** tip is the caller's: Escape and a press still ask to close
 about the keyboard path changes with `open` — the trigger is still the focus
 target.
 
-**A `Tab` traversal opens the tip** — measured in a real window: the traversal
-focuses the trigger and React's `onFocus` runs, so the keyboard path works. The
-trigger has to be focusable, because a host with no `tabIndex` never receives
-the focus to open from. Escape then closes the tip and leaves the focus on the
-trigger, so a keyboard reader can dismiss it and keep going.
-Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
+**In a window, a `Tab` traversal leaves the tip closed.** Measured three times on
+0.11.0 (2026-10-22): the traversal focuses the trigger — the renderer's
+`getFocusedElementId` reports it — but React's `onFocus` never runs, and the
+runtime opens a tip only from that event, so hover is the only open path a
+window offers. Escape has nothing to dismiss after a traversal. The offscreen
+`TestRenderer` *does* dispatch `onFocus` on a traversal
+(`runtime/fields.runtime.test.tsx` and the mounted examples open from the
+keyboard there), which is why a headless suite cannot stand in for the window.
+A keyboard reader still reaches the words through the trigger's
+`aria-description` (below), and the information must be available without
+hovering.
+Evidence: `apps/playground/README.md` §`tooltip-lifecycle` (14 checks).
 
 ## Accessibility
 
@@ -119,8 +125,8 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
   own `label`.
 - A tooltip is **supplementary**: the same information must be reachable without
   hovering (visible text, or the control's name).
-- A mouse-opened and a keyboard-opened tip look identical: the runtime reports
-  focus, not *how* the trigger was focused.
+- The open path a window offers is the pointer, so treat the tip as a pointer
+  convenience and never as the only place a name or an instruction exists.
 
 ## Theming
 
@@ -160,6 +166,11 @@ cannot see and no contrast pair measures.
   receives the focus that opens the tip, and a component only works if it
   forwards `TooltipTriggerProps` (`Button`, `IconButton`, `Toggle`, `Checkbox`
   and `Switch` do).
+- **A window has no keyboard open path**: a `Tab` traversal focuses the trigger
+  without running its `onFocus` (three runs on 0.11.0, 2026-10-22), and the tip
+  opens only from that event, so hover is the only route in a window. The
+  `TestRenderer` dispatches the event, which is why the headless suite opens it
+  from the keyboard.
 - No `aria-describedby`: a non-string tip has no description unless `description`
   is passed, and an element with no `role` is absent from the accessibility tree,
   so its description is never announced.
@@ -188,17 +199,18 @@ cannot see and no contrast pair measures.
   real export of the package, which is how this page's `Icon` (an
   `@gpuixui/icons` glyph) stopped being taught as a primitive.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus in
-  the `TestRenderer` from a host trigger **and from the `IconButton`,
-  `Checkbox` and `Switch` it wraps**, dismisses on click, keeps its content
-  inside the anchoring frame, paints the popover role, and the a11y tree reports
-  the tip as the trigger's `description`. A controlled tip paints while its
-  owner says `open`, reports a press's close request to `onOpenChange` and stays
-  painted until `open` flips; a `defaultOpen` tip paints at mount with no
-  interaction.
+  the `TestRenderer` (which does dispatch `onFocus` on a traversal) from a host
+  trigger **and from the `IconButton`, `Checkbox` and `Switch` it wraps**,
+  dismisses on click, keeps its content inside the anchoring frame, paints the
+  popover role, and the a11y tree reports the tip as the trigger's
+  `description`. A controlled tip paints while its owner says `open`, reports a
+  press's close request to `onOpenChange` and stays painted until `open` flips;
+  a `defaultOpen` tip paints at mount with no interaction.
 - The `tooltip-lifecycle` live probe (`apps/playground/README.md`) — the same
-  wrapper in a **real window** (14 checks on 0.11.0): a `Tab` traversal opens the
-  tip and Escape closes it with the focus on the trigger; hover opens it above
-  the trigger, leaving closes it, and a second hover opens it for Escape.
+  wrapper in a **real window** (14 checks on 0.11.0): a `Tab` traversal focuses
+  the trigger and leaves the tip closed, so there is nothing for Escape to
+  dismiss; hover opens it above the trigger, leaving closes it, and a second
+  hover opens it for Escape.
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
   hover.
 

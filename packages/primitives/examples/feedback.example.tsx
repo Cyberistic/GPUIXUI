@@ -5,7 +5,8 @@
  * has not arrived, a spinner for work in progress, and a tooltip that explains
  * a metric without occupying the card. The trigger is the icon action a reader
  * would reach for: `IconButton` forwards the trigger pair, so the tip opens on
- * hover and on keyboard focus and its text is the trigger's description.
+ * hover — the window's only open path — and its text is the trigger's
+ * description.
  */
 
 import { Icon } from "@gpuixui/icons";

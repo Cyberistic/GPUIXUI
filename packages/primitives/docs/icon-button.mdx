@@ -131,8 +131,10 @@ after the recipe, so a callback is the last word:
   pressed state.
 - No tooltip of its own, but it is a `Tooltip` trigger: it forwards
   `TooltipTriggerProps` (`onMouseEnter`/`onMouseLeave` and `aria-description`),
-  so wrapping it opens the tip on hover and on keyboard focus and announces the
-  tip's text. The `label` stays required — a tip is a description, not a name.
+  so wrapping it opens the tip on hover and announces the tip's text. Hover is
+  the window's only open path: a `Tab` traversal focuses the button without
+  running its `onFocus`, and the runtime opens a tip only from that event. The
+  `label` stays required — a tip is a description, not a name.
 - The glyph is not sized by `size`; pass `icon={<Icon size="sm" … />}` to match a
   smaller button.
 - No native button element: the runtime exposes a `div` with role and handlers.

@@ -1,5 +1,5 @@
 /**
- * `Tooltip` — a short label on hover or keyboard focus.
+ * `Tooltip` — a short label on hover.
  *
  * GPUix 0.11.0 ships the whole mechanism — the anchored layer, the open delay,
  * the dismiss-on-escape and the provider defaults (see `docs/gpuix-capabilities.md`) — so this is
@@ -13,11 +13,15 @@
  * element publishes it directly; this package's `Button`/`IconButton`/`Toggle` forward
  * it from their own `TooltipTriggerProps`, so an action or a mode is a trigger.
  *
- * **Limitation:** the runtime dispatches a hover to the element carrying the
+ * **Limitations:** the runtime dispatches a hover to the element carrying the
  * listener, so the trigger's host element must be the focusable one — a
  * component that forwards neither the trigger handlers nor `tabIndex` cannot
- * open the tip. The runtime reports focus without saying how it arrived, so a
- * tooltip opened by a mouse press looks the same as one opened by Tab.
+ * open the tip. The runtime opens a tip from the focus event, and a window's
+ * `Tab` traversal moves the focus without running the trigger's `onFocus`
+ * (measured three times on 0.11.0), so hover is the only open path a window
+ * offers; the offscreen `TestRenderer` does dispatch the event. The runtime
+ * reports focus without saying how it arrived, so a mouse-opened and a
+ * keyboard-opened tip would look the same.
  *
  * The open state is the runtime's unless the caller takes it: `open` makes the
  * tip paint only while it is `true`, and `onOpenChange` reports every request
@@ -171,6 +175,6 @@ export const renderTooltip = (
   </GpuixTooltip>
 );
 
-/** A short label shown when its trigger is hovered or focused. */
+/** A short label shown when its trigger is hovered. */
 export const Tooltip = (props: TooltipProps): ReactElement =>
   renderTooltip(props, useTheme());

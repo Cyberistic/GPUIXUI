@@ -319,11 +319,12 @@ describe("the primitives docs page contract", () => {
   });
 
   it("records the tooltip's measured keyboard path", () => {
-    // Bug guarded: the first `tooltip-lifecycle` run read the frame before
-    // React's `onFocus` arrived, so the page taught that a `Tab` traversal never
-    // opens the tip and that hover was the only open path. Re-run on 2026-10-22
-    // the shipped wrapper opens on a traversal (14 checks), so the page has to
-    // claim that path and must not reintroduce the retracted limit.
+    // Bug guarded: one window run read the frame before React's `onFocus`
+    // arrived, so the page was corrected to teach that a `Tab` traversal opens
+    // the tip. Three clean runs at HEAD then read the opposite — the traversal
+    // focuses the trigger and the tip stays closed (`tooltip-lifecycle` asserts
+    // `focuses=0` and no open) — so the page must record the window's gap while
+    // keeping the half the `TestRenderer` does deliver.
     const source = read("tooltip.mdx");
     const keyboard = Option.getOrElse(bodyOf(source, "Keyboard"), () => "");
     const limitations = Option.getOrElse(
@@ -332,15 +333,17 @@ describe("the primitives docs page contract", () => {
     );
 
     expect({
-      opens: keyboard.includes("A `Tab` traversal opens the tip"),
+      closedInWindow: keyboard.includes("`Tab` traversal leaves the tip closed"),
       evidence: keyboard.includes("tooltip-lifecycle"),
-      retracted: source.includes("does not open it in a real window"),
-      hoverOnly: limitations.includes("only open path"),
+      headlessHalf: keyboard.includes("`TestRenderer`"),
+      retracted: source.includes("A `Tab` traversal opens the tip"),
+      limit: limitations.includes("no keyboard open path"),
     }).toEqual({
-      opens: true,
+      closedInWindow: true,
       evidence: true,
+      headlessHalf: true,
       retracted: false,
-      hoverOnly: false,
+      limit: true,
     });
   });
 
