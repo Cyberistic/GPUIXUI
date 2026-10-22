@@ -1,6 +1,7 @@
 import {
   densityNames,
   densityPresets,
+  elevationLevels,
   platformTheme,
   themes,
   type Theme,
@@ -8,7 +9,7 @@ import {
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { elevationLevels, TokenScalesBody } from "./token-scales";
+import { TokenScalesBody } from "./token-scales";
 
 /**
  * The geometry specimens.
@@ -16,8 +17,8 @@ import { elevationLevels, TokenScalesBody } from "./token-scales";
  * The page claims to show the spacing, radius, border, icon and density scales,
  * so the guard is that every step the theme has is rendered with its own value —
  * a step added to `@gpuixui/tokens` and left out here would be a public token no
- * docs page shows. The elevation list is local, so it is held to the theme's
- * levels instead of being trusted.
+ * docs page shows. The elevation order is the package's `elevationLevels`; the
+ * specimen and the source guard keep it that way.
  */
 
 const render = (theme: Theme): string =>
@@ -61,9 +62,26 @@ describe("the token scales", () => {
   });
 
   it("lists every elevation level the theme has", () => {
-    expect([...elevationLevels].toSorted()).toEqual(
-      Object.keys(theme.elevation).toSorted(),
+    expect([...elevationLevels]).toEqual(Object.keys(theme.elevation));
+  });
+
+  it("paints the levels in the package's order", () => {
+    const drawn = [...rows(markup).keys()].filter((key) =>
+      key.startsWith("elevation."),
     );
+
+    expect(drawn).toEqual(elevationLevels.map((level) => `elevation.${level}`));
+  });
+
+  it("reads the elevation order from the package, not a local list", () => {
+    const source = readFileSync(
+      new URL("./token-scales.tsx", import.meta.url),
+      "utf8",
+    );
+    const imports = source.slice(0, source.indexOf('from "@gpuixui/tokens"'));
+
+    expect(imports).toMatch(/\belevationLevels\b/);
+    expect(source).not.toMatch(/\bconst\s+elevationLevels\b/);
   });
 
   it("paints one shadow for each populated elevation level", () => {
