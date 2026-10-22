@@ -7,7 +7,8 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import { nodesWithRole } from "../internal/a11y.js";
+import * as Option from "effect/Option";
+import { a11yNodes, nodesWithRole } from "../internal/a11y.js";
 import { clickCentreOf } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
@@ -121,6 +122,22 @@ describe("Breadcrumb", () => {
     expect(
       nodesWithRole(trail.renderer, "image").map((node) => node.name),
     ).toContain("More");
+
+    trail.unmount();
+  });
+
+  it("announces the current page as selected, the stand-in for aria-current", () => {
+    const trail = renderComponent(<Trail />);
+
+    // `0.11.0` has no `aria-current`; the current page publishes the
+    // selection the Stepper, Timeline and Pagination already use, so a reader
+    // is told which crumb is the page and not only which colour it paints.
+    const selected = a11yNodes(trail.renderer).filter((node) =>
+      Option.contains(node.selected, true),
+    );
+    expect(selected.map((node) => [node.role, node.name])).toEqual([
+      ["label", "components"],
+    ]);
 
     trail.unmount();
   });

@@ -43,7 +43,7 @@ import {
 | `BreadcrumbList` | `role="list"` and the collapse |
 | `BreadcrumbItem` | one `role="listitem"` |
 | `BreadcrumbLink` | a link (`role="link"`) with Enter/Space and `onSelect` |
-| `BreadcrumbPage` | the current page: plain text, no tab stop |
+| `BreadcrumbPage` | the current page: plain text, no tab stop, announced as selected |
 | `BreadcrumbSeparator` | the glyph between entries; not focusable |
 
 ## Collapse rule
@@ -86,18 +86,22 @@ Links and separators use the `caption` type role; links are
 
 - `role="navigation"` with `aria-label="Breadcrumb"`, `role="list"`, and
   `role="listitem"` on the entries.
-- **No `aria-current`** in `@gpuix/native@0.11.0`: the current page is marked by
-  `BreadcrumbPage` (text, not a link) and by colour, not by an attribute.
+- **No `aria-current`** in `@gpuix/native@0.11.0`, so the current page carries
+  `aria-selected="true"` — the substitution Pagination, Stepper and Timeline
+  already publish. It is still text with no tab stop and no link role; the
+  attribute is what tells a reader which crumb is the page, so the trail does
+  not rely on colour alone.
 - The collapsing ellipsis is a text node with `aria-label="More"`; it is not a
   button and not in the tab order.
 - Separators are `role="presentation"`.
 
 ## Verification
 
-`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (5 tests):
+`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (6 tests):
 the trail and its separator count, selecting a link but not the current page,
-Enter activation, collapsing the middle while keeping both ends, and the
-ellipsis staying out of the tab order.
+Enter activation, collapsing the middle while keeping both ends, the ellipsis
+staying out of the tab order, and exactly the current page announced as
+selected in the accessibility tree.
 
 `src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8 and
 budgets 3–6.

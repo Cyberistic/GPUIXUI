@@ -3943,6 +3943,20 @@ numbers).
 `[x]` `packages/components`: the confirmation dialog's busy mark was the **last painted text stand-in** in the package — a `<text>` carrying `…`, sized by the font and announced as a horizontal ellipsis, while every other chrome mark (`✕`, `▾`, `✓`, `‹`, `⌄`) had already moved to `@gpuixui/icons`. The confirm action now paints the `loader` icon beside its label, in the action's own label role (`primaryForeground`, or `destructiveForeground` for the danger tone), named "In progress"; the mark is frozen, because 0.11.0 has no transform, and the page says so instead of the old "no `Spinner` primitive exists yet" — a claim that stopped being true when `@gpuixui/primitives` shipped one. The package's own icon sweep could not see the glyph (`/[✕✓⌕▾›‹⌃⌄▸]/` has no ellipsis, and a placeholder may legitimately end in one), so it now also reads a painted `…` — an ellipsis standing alone as an element's content — with a fixture case proving the sweep tells a painted `…` from the copy in `"Search…"`. Proof: `src/behaviour/confirm-dialog.test.tsx` gains two native cases (the busy mark is an `<svg>` in the label role and named "In progress"; the destructive tone paints its own label role), measured failing against the old source (`expected [ … ] to not include '…'`), and the sweep fails by file name (`confirm-dialog.tsx`) with the glyph planted. Docs: `docs/confirm-dialog.mdx` (the loading row, the limitation and the suite count), `docs/drawer.mdx`'s cross-reference and the `Confirmation dialogs` inventory row. The `CONFIRM_DIALOG_BUSY` recipe in `@gpuixui/tw` now has no consumer in this package; it stays published and covered by the package's recipe oracle until the tw owner drops it
 `[x]` `packages/components`: the both-theme matrix was left half-landed — `src/behaviour/theme-matrix.test.tsx` had eight new cases (Carousel, Chat, InlineEdit, MentionInput, PreviewCard, TagInput and two more) but no `Countdown` import, so one case failed with `ReferenceError: Countdown is not defined`, and the InlineEdit case mounted two controls as a **fragment**, where the render root paints one child only, so the display's `<text>` was never in the tree. Both are finished: the import is there, and the two controls sit under one host element (the rule the playground README records); the InlineEdit assertion now filters to the `<text>` elements that carry a style, the measured shape a GPUix `<text>` has. The behaviour suite is green again (52 files / 555 tests)
 
+`[x]` `packages/components`: the **Breadcrumb's current page was colour-only** — `BreadcrumbPage`
+      painted the `foreground` role against the links' `mutedForeground` and declared no state, so a
+      reader using assistive technology heard three equally ordinary crumbs and could not tell which
+      one was the page; the page, the inventory record and the source all said "no `aria-current` in
+      0.11.0" and stopped there, although Pagination, Stepper and Timeline already answer the same
+      absence with `aria-selected`. The current page now carries `aria-selected="true"` (forced after
+      the caller's props, because the part *is* the current page) and nothing else changed: it is still
+      a `<text>` with no tab stop and no link role. Proof: `src/behaviour/breadcrumb.test.tsx`'s
+      `announces the current page as selected, the stand-in for aria-current` reads the accessibility
+      tree and requires exactly one selected node, the `label` named `components` — measured failing
+      without the attribute (`[]` where the label is required); breadcrumb suite 5 → 6. Docs in
+      `docs/breadcrumb.mdx` §Anatomy/§Accessibility/§Verification, `breadcrumbMeta.limitations` and
+      the `COMPONENTS.md` row; the live probes are unaffected (no behaviour change).
+
 ## Animated primitives (plan 600)
 
 `[~]` `[███░░░░░░░]` 3/8

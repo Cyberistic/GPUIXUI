@@ -289,6 +289,9 @@ export const BreadcrumbPage = ({
   return (
     <text
       {...rest}
+      // No `aria-current` in 0.11.0; `aria-selected` is the substitution
+      // Stepper, Timeline and Pagination already publish.
+      aria-selected
       style={mergeStyles(
         recipeStyle(cn(BREADCRUMB_PAGE, className), theme),
         style,
@@ -362,7 +365,7 @@ export const breadcrumbMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no aria-current in 0.11.0; the current page is marked by BreadcrumbPage and colour only",
+    "no aria-current in 0.11.0; the current page publishes aria-selected, the stand-in Pagination/Stepper/Timeline use",
     "maxItems reads direct children, so a custom wrapper element is counted as one entry",
   ],
   docs: "docs/breadcrumb.mdx",
