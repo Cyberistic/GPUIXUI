@@ -48,6 +48,8 @@ export interface VirtualRowsController {
   readonly windowStart: number;
   /** Every mounted absolute index, in paint order. */
   readonly mounted: ReadonlyArray<number>;
+  /** The rows a scroll offset would mount — the window a scroll is about to take. */
+  readonly mountedAt: (offset: number) => ReadonlyArray<number>;
   /** The scroll offset the window is computed from, in pixels. */
   readonly scrollOffset: number;
   /** Move the window to the offset the runtime's scroll anchor reports. */
@@ -127,6 +129,7 @@ export const useVirtualRows = ({
     window,
     windowStart: window.start,
     mounted,
+    mountedAt: calculator.indicesAt,
     scrollOffset: offset,
     setScrollOffset,
     reveal: revealTo,

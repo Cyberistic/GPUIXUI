@@ -227,6 +227,9 @@ export type {
   VirtualTableProps,
 } from "./virtual/table.js";
 
+export { VirtualTree } from "./virtual/tree.js";
+export type { VirtualTreeProps } from "./virtual/tree.js";
+
 export { KeyValue, DEFAULT_LABEL_WIDTH } from "./surfaces/key-value.js";
 export type { KeyValueEntry, KeyValueProps } from "./surfaces/key-value.js";
 

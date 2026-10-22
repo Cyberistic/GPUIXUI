@@ -5686,8 +5686,6 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Link the **virtual tree's page** from the data-display lane — `@gpuixui/data` now ships `VirtualTree` with `packages/data/docs/virtual-tree.mdx` and the `virtual-tree` example, but `/docs/data-display`'s surface table stops at the plain tree and `Virtualization`, so a reader planning a large hierarchy has no route to the windowed form. The lane page should add a **Virtual tree** row (or extend the tree row) linking `/docs/data-display/virtual-tree`, and `lane-page.test.ts` can hold it to the package export and the example registration the way it holds the frozen-column and virtualization links | docs-site (`apps/docs/content/docs/data-display/index.mdx`, `lane-page.test.ts`) | open — owner: docs-site. The package half is landed: `VirtualTree` is a root export, `docs/virtual-tree.mdx` has `title: Virtual trees`, `virtual-tree` is in the example registry, and `packages/data/src/behaviour/virtual-tree.test.tsx` (7 cases) is green |
 
-| Link the **virtual tree's page** from the data-display lane — `@gpuixui/data` now ships `VirtualTree` with `packages/data/docs/virtual-tree.mdx` and the `virtual-tree` example, but `/docs/data-display`'s surface table stops at the plain tree and `Virtualization`, so a reader planning a large hierarchy has no route to the windowed form. The lane page should add a **Virtual tree** row (or extend the tree row) linking `/docs/data-display/virtual-tree`, and `lane-page.test.ts` can hold it to the package export and the example registration the way it holds the frozen-column and virtualization links | docs-site (`apps/docs/content/docs/data-display/index.mdx`, `lane-page.test.ts`) | open — owner: docs-site. The package half is landed: `VirtualTree` is a root export, `docs/virtual-tree.mdx` has `title: Virtual trees`, `virtual-tree` is in the example registry, and `packages/data/src/behaviour/virtual-tree.test.tsx` (7 cases) is green |
-
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3
@@ -5936,24 +5934,6 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` `[█████░░░░░]` 1/2
 
 `[ ]` Tier 5 specialised components where justified
-  - [x] **Virtualized hierarchical data** — `@gpuixui/data` ships `VirtualTree`:
-    the tree's flattening, cursor and keyboard over the runtime's `itemCount`
-    window, so a 4 000-row hierarchy retains and paints only the rows around the
-    viewport. `tree/row` and `tree/use-tree` are the one row paint and keyboard
-    controller both trees share, so the inset, type-ahead, chevron press rule and
-    reveal focus cannot drift. Four measured rules are in the composition: a
-    cursor move mounts its row before the focus moves; a reveal moves the window
-    before the scroll; the window follows `getListScrollTop`, not the lagging
-    `onVisibleRange`; and a mounted tab stop always exists — a wheel or collapse
-    that unmounts the cursor's row moves the cursor to the viewport's top row,
-    focusing it only when the tree held the focus. 7 native behaviour cases mount
-    the 40-directory × 99-file example: only a window is retained in React (the
-    far row is in neither `getAllText` nor the frame), expand-all makes 4 000
-    rows, `End` moves the window then focuses the last row, a caller's reveal
-    re-takes the focus after the press, a wheel leaves a mounted focused tab
-    stop, `Right` expands in place, and a collapse that hides the cursor's row
-    keeps a live keyboard stop. Docs `packages/data/docs/virtual-tree.mdx`;
-    example `virtual-tree.example.tsx`. Owner: data.
   - [x] **Virtualized hierarchical data** — `@gpuixui/data` ships `VirtualTree`:
     the tree's flattening, cursor and keyboard over the runtime's `itemCount`
     window, so a 4 000-row hierarchy retains and paints only the rows around the

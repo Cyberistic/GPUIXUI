@@ -17,6 +17,7 @@ import { TableExample } from "./table.example.js";
 import { TreeExample } from "./tree.example.js";
 import { VirtualListExample } from "./virtual-list.example.js";
 import { VirtualTableExample } from "./virtual-table.example.js";
+import { VirtualTreeExample } from "./virtual-tree.example.js";
 
 /** One mountable screen per data surface. */
 export const examples: Readonly<Record<string, ComponentType>> = {
@@ -27,5 +28,6 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   chart: ChartExample,
   "virtual-list": VirtualListExample,
   "virtual-table": VirtualTableExample,
+  "virtual-tree": VirtualTreeExample,
   surfaces: SurfacesExample,
 };

@@ -1,0 +1,164 @@
+---
+title: Virtual trees
+description: A hierarchy of thousands of rows that retains and paints only one window, with the tree keyboard, roving tab stop and reveal rules the plain tree already measured.
+---
+
+`TreeView` paints every row it is given. That is the right shape for a workspace
+tree of dozens of rows and the wrong one for a file tree with thousands: the
+runtime's children-mode `<virtual-list>` keeps every row in the React tree and
+only skips its build and paint, so the frame carries the whole set.
+`VirtualTree` keeps the tree's model and composes it with the list's
+**`itemCount`** window: only the rows around the viewport are retained, and the
+component owns `windowStart`.
+
+```tsx
+import { VirtualTree, useExpandedRows } from "@gpuixui/data";
+
+const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
+
+<VirtualTree
+  aria-label="Workspace files"
+  height={320}
+  rows={tree.rows}
+  cursor={tree.cursor}
+  onCursorChange={tree.setCursor}
+  labelOf={labelOf}
+  onActivate={(row) => open(row.node)}
+/>;
+```
+
+The full screen is `packages/data/examples/virtual-tree.example.tsx` — forty
+directories of ninety-nine files, four thousand rows when every directory is
+open, mounted by the native playground as the `virtual-tree` example.
+
+## Behaviour
+
+`VirtualTree` is the plain tree's keyboard and cursor with one more rule. Every
+key, the type-ahead seam, the active paint, the 16px depth inset and the chevron
+that takes no press are shared through `tree/use-tree` and `tree/row`, so the two
+trees cannot disagree:
+
+| Key | Effect |
+| --- | --- |
+| `Up` / `Down` | move the cursor over the flattened rows, clamping at both ends |
+| `Home` / `End` | the first and last row of the whole set — the window moves to it |
+| `Right` | open a closed branch; on an open branch, step into its first child |
+| `Left` | close an open branch; otherwise step out to the parent |
+| `Enter` / `Space` | flip the branch under the cursor |
+| a printable character | type-ahead over the whole set, through the published `@gpuixui/components/typeahead` rule |
+
+The window rules are the reason this is a component rather than a loop:
+
+- **A cursor move mounts its row before the focus moves.** A row outside the
+  mounted window does not exist to focus, and the runtime cannot build a row
+  outside the window it was given. When a key names a row outside the window —
+  `End`, a type-ahead match, a caller's `reveal` — the window moves to that row's
+  position in the same render, and the shared controller focuses it in the layout
+  effect after that commit (`virtual-tree-lifecycle`).
+- **A reveal is the same move, driven by the caller.** `tree.reveal(key)` opens
+  the path to a node and moves the cursor; `VirtualTree` then moves the window
+  before it scrolls, because `scrollToItem` on an unmounted row paints nothing.
+- **The tab stop is always a mounted row.** The runtime unmounts a row when the
+  window leaves it, and a focused row that unmounts takes the tree's keyboard
+  with it. A wheel that takes the cursor's row out of the window moves the
+  cursor to the row at the viewport's top edge; a collapse that hides the
+  cursor's row moves it the same way. The focus follows only when the tree
+  already held it, so scrolling over an unfocused tree does not steal the focus
+  from the rest of the window.
+- **The window follows the scroll anchor, not the reported range.**
+  `onVisibleRange` lags the paint by one gesture, so the window reads
+  `getListScrollTop` and hands the offset to `@tanstack/virtual-core`.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `rows` | `TreeRow<T>[]` | — | the **whole** flattened set, in paint order |
+| `labelOf` | `(node: T) => string` | — | the row's accessible name and what type-ahead matches |
+| `cursor` | `TreeCursor` | — | the caller's cursor; omit it for an uncontrolled tree |
+| `onCursorChange` | `(cursor: TreeCursor) => void` | — | reports every cursor a key, a press or a window move produces |
+| `defaultCursor` | `TreeCursor` | nothing open | the uncontrolled tree's start |
+| `onActivate` | `(row: TreeRow<T>) => void` | — | a press or Enter on a row |
+| `renderRow` | `(row: TreeRow<T>) => ReactNode` | `labelOf` as text | paints a row's content after its inset and chevron |
+| `height` | `number` | — | the viewport height; the window is computed from it |
+| `rowHeight` | `number` | the density's `rowHeight` | every row paints exactly this height |
+| `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
+| `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report, for a readout or pagination |
+| `testId` | `string` | — | the tree; each row is `${testId}-row-${key}` and its chevron slot `${testId}-row-${key}-slot` |
+
+`useExpandedRows` is the same controller the plain tree uses: `rows`, `cursor`,
+`expanded`, `active`, `setCursor`, `setActive`, `toggle`, `setExpanded`,
+`expandAll`, `collapseAll`, `reveal`, `pressKey` and `typeAhead`.
+
+## Why not just `TreeView` inside `VirtualList`?
+
+Because `TreeView` paints all of its rows and owns its own scroller. Children
+mode over the flattened rows gives a smaller paint bill but still retains every
+React row — 4 000 of them in the probe — and the tree's focus rules assume the
+row it focuses exists. `VirtualTree` composes the same row paint with the window,
+and adds the one rule a window needs: a cursor move can mount its row.
+
+## Accessibility
+
+- The frame is `role="tree"` and each mounted row `role="treeitem"`, with
+  `aria-level`, `aria-selected` and `aria-expanded` on a branch. Set
+  `aria-label` on the tree.
+- Only the mounted window is in the accessibility tree. A reader cannot reach a
+  row that is scrolled out, which is why a reveal moves the window instead of
+  just setting a cursor.
+- One tab stop, on the cursor's row. The window keeps that row mounted as
+  described under Behaviour, so the stop is live after a wheel or a collapse.
+- There is no `aria-activedescendant` in the pinned runtime, so the tree uses
+  roving `tabIndex` rather than keeping focus on one container.
+
+## Limitations
+
+- **One row height.** The windowed mode positions rows from `rowHeight`; a tree
+  whose rows vary in height uses `VirtualList` in children mode, where the
+  runtime measures each row (`virtual-list-rows`).
+- **A scrolling window moves the cursor.** The runtime unmounts the focused row,
+  and a tree without a mounted tab stop cannot take the next key. The cursor
+  follows the viewport's top row when the window leaves it; a consumer that
+  wants a selection independent of focus composes `selection/logic` over the
+  flattened keys.
+- **One active row.** The package does not ship a multi-select tree.
+- **No drag reorder.** The runtime has no drag host feature
+  (`drag-reorder`); a reorderable tree owns its pointer gesture.
+- The docs site cannot render this component live — it is a GPUix host tree, not
+  DOM. The code above is the real source.
+
+## Verification
+
+`src/behaviour/virtual-tree.test.tsx` (7 tests) mounts the shipped example in
+the real renderer and measures both the window and the tree:
+
+- the forty collapsed rows retain only a window, and the far directory is in
+  neither the frame nor React's tree;
+- expanding every directory makes four thousand rows while fewer than thirty
+  directories are mounted and the far file is absent;
+- `End` moves the window to the last row **and** the focus follows it — the row
+  the first window never mounted;
+- a caller's reveal opens the path, moves the window and takes the focus off the
+  press on the next tick;
+- a wheel that takes the cursor's row away leaves a mounted tab stop with the
+  focus on it;
+- `Right` opens a branch in place without moving the window;
+- a collapse that hides the cursor's row moves the cursor to the viewport's top
+  row, which stays a live keyboard stop.
+
+```sh
+nub run --filter @gpuixui/data test
+nub run --filter @gpuixui/data test:behaviour
+```
+
+The rules the composition rests on were measured by the playground's
+`virtual-list-windowed`, `virtual-tree-lifecycle`, `virtual-list-rows` and
+`virtual-list-expand` scenarios on `@gpuix/native@0.11.0`.
+
+## Related
+
+- **Tree views** — the plain tree, its controller and its keyboard contract.
+- **Virtualization** — the list seam, the window arithmetic and the fixed-height
+  rule.
+- **Expandable rows** — why a row that grows belongs outside a fixed-estimate
+  window.

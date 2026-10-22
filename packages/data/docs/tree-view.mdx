@@ -148,9 +148,11 @@ inset is `TREE_INDENT` (16).
 
 - One active row. A tree that chooses several composes `selection/logic` over
   the flattened keys; the package does not ship a multi-select tree.
-- The tree does not virtualize itself. A large tree composes `VirtualList` in
+- The tree does not virtualize itself. A small tree composes `VirtualList` in
   children mode over `rows` — the flattening is already flat — and the depth
-  inset is all a row needs.
+  inset is all a row needs. A tree of thousands composes
+  [VirtualTree](/docs/data-display/virtual-tree), which keeps only the window
+  around the viewport.
 - A row that changes height while painted re-measures on the next frame
   (`virtual-list-expand`), so a tree with expanding *row bodies* sizes its
   viewport against the open height.
@@ -193,3 +195,5 @@ nub run --filter @gpuixui/data test:behaviour
 - **Table** — the same row composition with columns and a fixed header.
 - **Expandable rows** — the flat-list version of folding a panel open.
 - **Virtualized lists** — the window a large tree composes.
+- **Virtual trees** — the same hierarchy over the windowed list, keeping only
+  the rows around the viewport.

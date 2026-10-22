@@ -19,7 +19,9 @@ const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
 const logic = read("./logic.ts");
+const controller = read("./use-tree.ts");
 const treeView = read("./tree-view.tsx");
+const virtualTree = read("../virtual/tree.tsx");
 const components = read("../../../components/package.json");
 
 describe("the tree's type-ahead", () => {
@@ -27,11 +29,15 @@ describe("the tree's type-ahead", () => {
     expect(logic).toContain(
       'import { typeaheadMatchIndex } from "@gpuixui/components/typeahead"',
     );
-    expect(treeView).toContain(
+    expect(controller).toContain(
       'import { typedChar, useTypeahead } from "@gpuixui/components/typeahead"',
     );
     // The subpath a surface outside the components package reaches it through.
     expect(components).toContain('"./typeahead": "./src/typeahead.ts"');
+    // Both trees route their keys through the one controller, so neither can
+    // grow a buffer of its own beside it.
+    expect(treeView).toContain("useTree({");
+    expect(virtualTree).toContain("useTree({");
   });
 
   it("keeps no second window, buffer or character rule", () => {
@@ -44,10 +50,14 @@ describe("the tree's type-ahead", () => {
     ];
     Arr.forEach(copies, (copy) => {
       expect(logic).not.toContain(copy);
+      expect(controller).not.toContain(copy);
       expect(treeView).not.toContain(copy);
+      expect(virtualTree).not.toContain(copy);
     });
     // The 500 ms window is named in one place only.
     expect(logic).not.toMatch(/500/);
+    expect(controller).not.toMatch(/500/);
     expect(treeView).not.toMatch(/500/);
+    expect(virtualTree).not.toMatch(/500/);
   });
 });

@@ -4,7 +4,8 @@ Data presentation rendered by GPUix through React — the table core, the
 sort/selection/filter controller it runs on, column configuration with resizing,
 the virtualized list over the runtime's own `<virtual-list>`, the virtualized
 table that composes it with a fixed header, the **tree** with its expansion and
-cursor model, the **expandable table row** that opens a detail panel under itself, the
+cursor model, the **windowed tree** that retains one window of a hierarchy, the
+**expandable table row** that opens a detail panel under itself, the
 **charts** (bar, stacked, line, donut and sparkline, one tinted `<svg>` mask per
 series), and the **data surfaces** (a key-value list, a statistic card, a property
 panel, a toolbar and the advanced filter's predicate tree), and the **frozen
@@ -36,6 +37,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. A tree's chevron is an `<svg>` that takes no press, so the row answers; a checkbox in a row paints, so it takes its own. |
 | A fill takes the row's hover too | `hover-routing-lifecycle` | The native `hover` refinement's hovered set is the **same hit test** the press takes. A filled `<text>` or `<div>` in a row takes the row's hover wash and hears its own enter; an unfilled label leaves both to the row; `pointerEvents: "none"` removes the fill's hitbox while the child still runs its own listener. A decorative pill in a cell opts out so the row keeps its feedback. |
 | Arrow keys move real native focus | `virtual-tree-lifecycle` | A tree holds **one** tab stop and moves `renderer.focusElement` in a layout effect **after** the `tabIndex` commit. A call from the key handler moved nothing: the row was still outside the tab order. A 16px depth inset is the hierarchy's only paint. |
+| A windowed tree keeps its tab stop mounted | `virtual-tree-lifecycle`, `virtual-list-windowed` | `VirtualTree` moves the window to a row before focusing it, and a wheel or collapse that unmounts the cursor's row moves the cursor to the viewport's top row — the runtime unmounts the focused row, and a tree without a mounted tab stop cannot take the next key. |
 | A painted row that grows re-measures | `virtual-list-expand` | An expandable row opens a **sibling** detail row (no row span on 0.11.0): the rows below shift by the growth, and a fixed-estimate `itemCount` window cannot express it — use the plain table or the list's children mode. |
 | `<svg source>` is one tinted mask | `chart-raster`, `content-surfaces` | A chart is **one `<svg>` per series**, each carrying its series in the plot's viewBox and tinted through `style.color`; labels and the legend are text. A translucent mark that must sit over another uses the raster route (`setImagePixels`), not two masks. |
 | A list builds only a window | `virtual-list-lifecycle`, `virtual-list-windowed` | `VirtualList` wraps the host element: children mode retains every React child and skips build/paint off screen; `itemCount` + `estimatedItemHeight` + `windowStart` retains only the app's slice. A list sizes its viewport from a definite height. |
@@ -57,9 +59,9 @@ src/
   grid-core   the @tanstack/table-core features and constructGrid
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
   virtual/    VirtualList over the runtime's <virtual-list>, both modes;
-              VirtualTable, useVirtualRows, the window calculator
-  tree/       the flattening, the cursor contract, TreeView and
-              useExpandedRows; type-ahead reads
+              VirtualTable, VirtualTree, useVirtualRows and the window calculator
+  tree/       the flattening, the cursor contract, TreeView, the shared row and
+              keyboard controller, useExpandedRows; type-ahead reads
               @gpuixui/components/typeahead
   chart/      the geometry, the one-tint-per-series markup, the five charts
               and the legend
@@ -272,6 +274,28 @@ or steps into it; Left closes it or steps out; a printable character jumps to th
 first row after the cursor whose label starts with the prefix. `reveal(key)` opens
 the path to a node and moves the cursor to it.
 
+A tree of thousands uses **`VirtualTree`**: the same rows and keyboard over the
+runtime's `itemCount` window, so only the rows around the viewport are retained.
+A cursor move to a row outside the window moves the window first, then focuses
+the row; a wheel or a collapse that unmounts the cursor's row moves the cursor to
+the viewport's top row, so the tree always keeps one live tab stop. Rows paint
+exactly `rowHeight`, and a variable-height tree composes `VirtualList` in
+children mode instead. The page is `docs/virtual-tree.mdx`.
+
+```tsx
+const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
+
+<VirtualTree
+  aria-label="Workspace files"
+  height={320}
+  rows={tree.rows}
+  cursor={tree.cursor}
+  onCursorChange={tree.setCursor}
+  labelOf={(node) => node.name}
+  onActivate={(row) => open(row.node)}
+/>
+```
+
 An **expandable row** opens a detail panel under itself. The panel is a sibling
 row, not a spanning cell — 0.11.0 has no row span — so it is as wide as the
 table's content and pushes the rows below it:
@@ -312,10 +336,11 @@ palette every chart paints from.
 
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the
-workspace **tree**, the **expandable-rows** table, the **charts** and the
-**data surfaces** over one object — are `examples/table.example.tsx`,
-`examples/virtual-list.example.tsx`, `examples/virtual-table.example.tsx`,
-`examples/tree.example.tsx`, `examples/expandable-rows.example.tsx`,
+workspace **tree**, the 4 000-row **windowed tree**, the **expandable-rows**
+table, the **charts** and the **data surfaces** over one object — are
+`examples/table.example.tsx`, `examples/virtual-list.example.tsx`,
+`examples/virtual-table.example.tsx`, `examples/tree.example.tsx`,
+`examples/virtual-tree.example.tsx`, `examples/expandable-rows.example.tsx`,
 `examples/chart.example.tsx` and `examples/surfaces.example.tsx`.
 
 ## The data surfaces
@@ -381,6 +406,7 @@ in the primitives' registry and a column width is data.
 | Virtualized lists (`VirtualList`, both host modes) | shipped, window-verified |
 | Virtualized table (`VirtualTable`, `useVirtualRows`) | shipped, window-verified |
 | Trees (`TreeView`, `useExpandedRows`, `tree/logic`) | shipped, window-verified |
+| Windowed trees (`VirtualTree` over the `itemCount` window) | shipped, window-verified |
 | Expandable rows (`TableExpandableRow`, `TableDetailRow`) | shipped, window-verified |
 | Data surfaces (`KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`, `AdvancedFilter`) | shipped, window-verified |
 | Pinned / frozen columns (`FrozenTable`) | shipped, window-verified (`data-grid-frozen-column`, `frozen-column-lifecycle`) |

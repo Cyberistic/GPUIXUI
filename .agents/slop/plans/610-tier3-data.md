@@ -224,7 +224,22 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   belongs in the plain table or the list's children mode, not a fixed-estimate
   window. 13 unit + 12 behaviour cases, two docs pages and two examples; headless
   `data-tree-core` and `data-expandable-rows-core` are 1/1 on 0.11.0.
-- Evidence: `nub run --filter @gpuixui/data test` (98) and `test:behaviour` (42)
+- **Virtualized hierarchical data landed (Tier 5)**: `VirtualTree` composes the
+  tree model with the `itemCount` window (`packages/data/src/virtual/tree.tsx`),
+  and `tree/row` + `tree/use-tree` are the one row paint and keyboard controller
+  `TreeView` and `VirtualTree` share. Four measured rules are in the paint: a
+  cursor move mounts its row before the focus moves; a reveal moves the window
+  before the scroll; the window follows `getListScrollTop`, not the lagging
+  `onVisibleRange`; and a mounted tab stop always exists — a wheel or collapse
+  that unmounts the cursor's row moves it to the viewport's top row, focusing it
+  only when the tree held the focus. 7 native behaviour cases mount the
+  40-directory × 99-file example (only a window is retained, `End` reveals the
+  last row and focuses it, a caller's reveal re-takes focus after the press, a
+  wheel leaves a focused tab stop, `Right` expands in place, a collapse keeps a
+  live keyboard stop). Page `docs/virtual-tree.mdx`, example
+  `virtual-tree.example.tsx`, and the Tier 5 row is `done`. Directions measured:
+  dropping the window reveal fails the `End`/reveal/collapse cases by name.
+- Evidence: `nub run --filter @gpuixui/data test` (126) and `test:behaviour` (67)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
   and `--only data-tree-core` and `--only data-expandable-rows-core` (1/1 each).
   Frozen columns are the open TODO row.
