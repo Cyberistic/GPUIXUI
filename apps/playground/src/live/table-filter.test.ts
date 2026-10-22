@@ -93,9 +93,9 @@ describe("the filter a grid applies", () => {
     expect(filterReadout("", filterRows(""), Option.none(), 0)).toBe(
       "rows=120 query=none selected=none offset=0",
     );
-    expect(
-      filterReadout("1", filterRows("1"), Option.some(12), -200),
-    ).toBe("rows=39 query=1 selected=item-12 offset=-200");
+    expect(filterReadout("1", filterRows("1"), Option.some(12), -200)).toBe(
+      "rows=39 query=1 selected=item-12 offset=-200",
+    );
     expect(filterReadout("  ", filterRows("  "), Option.none(), 0)).toContain(
       "query=none",
     );

@@ -14080,8 +14080,8 @@ const MultiPaneEditorProbe = (): ReactNode => {
           color: theme.colors.mutedForeground,
         }}
       >
-        Two files in one split: typing stays in the pane holding the session, and
-        the splitter resizes them without touching either buffer.
+        Two files in one split: typing stays in the pane holding the session,
+        and the splitter resizes them without touching either buffer.
       </text>
       <Toolbar>
         <Pressable
@@ -14211,12 +14211,7 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "typing follows the session: the right buffer changed, the left did not",
       yield* readout(),
-      multiPaneReadout(
-        leftTyped,
-        rightTyped,
-        "both",
-        MULTI_PANE.initial,
-      ),
+      multiPaneReadout(leftTyped, rightTyped, "both", MULTI_PANE.initial),
     );
 
     // 4. The splitter resizes the panes, and neither buffer nor the session moves.
@@ -14254,12 +14249,7 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "a drag past the maximum stops at the pane's bound",
       yield* readout(),
-      multiPaneReadout(
-        leftTyped,
-        rightResized,
-        "both",
-        MULTI_PANE.max,
-      ),
+      multiPaneReadout(leftTyped, rightResized, "both", MULTI_PANE.max),
     );
     yield* ctx.expectNear(
       "the widest pane still leaves the right editor painted",
@@ -14272,12 +14262,7 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "a drag past the minimum stops at the pane's bound",
       yield* readout(),
-      multiPaneReadout(
-        leftTyped,
-        rightResized,
-        "both",
-        MULTI_PANE.min,
-      ),
+      multiPaneReadout(leftTyped, rightResized, "both", MULTI_PANE.min),
     );
     yield* ctx.host.capture("multi-pane-split");
 
@@ -14323,12 +14308,7 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "the restored field takes the text session again",
       yield* readout(),
-      multiPaneReadout(
-        leftTyped,
-        `${rightResized}d`,
-        "both",
-        MULTI_PANE.min,
-      ),
+      multiPaneReadout(leftTyped, `${rightResized}d`, "both", MULTI_PANE.min),
     );
     yield* ctx.host.capture("multi-pane-reopened");
   });
@@ -14353,7 +14333,9 @@ const TableFilterProbe = (): ReactNode => {
   const field = useRef<PublicInstance | null>(null);
   const rowIds = useRef(HashMap.empty<number, number>());
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Option.Option<number>>(Option.none());
+  const [selected, setSelected] = useState<Option.Option<number>>(
+    Option.none(),
+  );
   const [offset, setOffset] = useState(0);
   const rows = filterRows(query);
 

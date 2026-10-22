@@ -82,10 +82,7 @@ export const stepRow = (
       Option.flatMap(
         Arr.findFirstIndex(rows, (row) => row === current),
         (at) =>
-          Arr.get(
-            rows,
-            Math.min(rows.length - 1, Math.max(0, at + delta)),
-          ),
+          Arr.get(rows, Math.min(rows.length - 1, Math.max(0, at + delta))),
       ),
   });
 
