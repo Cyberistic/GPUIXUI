@@ -1,13 +1,7 @@
 ---
 title: Code block
-description: Source, terminal output or a log, tokenized by @tanstack/highlight and painted as coloured text runs.
+description: Source or output, tokenized by @tanstack/highlight.
 ---
-
-`CodeBlock` paints code with `@tanstack/highlight`, a pure tokenizer: it feeds
-the source and a language id in, and paints **one `<text>` run per token** with
-the colour the token package's syntax palette gives that token's role. The block
-owns everything around those runs — the header, the padding, the edge, the gutter
-and the copy action — because the runtime paints text runs, not markup.
 
 ## Usage
 
@@ -22,166 +16,9 @@ import { CodeBlock } from "@gpuixui/components/code-block";
 />;
 ```
 
-The language id is what the tokenizer highlights with. When it is omitted, the
-block reads `path`'s extension (`src/app.tsx` → `tsx`, `run.sh` → `bash`) and
-stays quiet for an extension no grammar knows.
+## Examples
 
-## Header
-
-```tsx
-// The path is the title, and its extension the language label.
-<CodeBlock code={source} path="src/theme.ts" />
-
-// A caller's title and language win over the path.
-<CodeBlock code={output} title="Install" language="bash" />
-```
-
-The header paints only when it has something to say — a title, a language or a
-copy action. A block with none is the bare card.
-
-## Languages
-
-The block highlights whatever `@tanstack/highlight` ships:
-
-`apache`, `cmake`, `cpp`, `csharp`, `css`, `dart`, `diff`, `dockerfile`, `ejs`,
-`env`, `go`, `html`, `http`, `java`, `js`, `json`, `jsx`, `kotlin`, `lua`,
-`markdown`, `mermaid`, `nginx`, `perl`, `php`, `plaintext`, `python`, `ruby`,
-`rust`, `scheme`, `shell`, `sql`, `svelte`, `swift`, `toml`, `ts`, `tsrx`,
-`tsx`, `vue`, `yaml`.
-
-A handful of common aliases resolve through the tokenizer's own table — `bash`/`sh`/`zsh`
-are `shell`, `typescript`/`mjs` are `js`, `md` is `markdown`, `py` is `python` —
-so the header's label can be the name a reader knows while the grammar is the one
-the tokenizer has. There is no `c` grammar; the block's extension map sends `.c`
-and `.h` to `cpp`. A language the tokenizer does not ship — `brainfuck`, say —
-**falls back to plain text**: one run per line in the body colour, with no syntax
-highlighting.
-
-## Line numbers
-
-```tsx
-<CodeBlock code={source} language="ts" lineNumbers />
-```
-
-Numbers are the block's own gutter: it numbers from 1 in a right-aligned column,
-and the numbers are not part of the accessible name or the painted source.
-
-## Long sources
-
-The block paints every row it is given unless `height` caps it, in which case the
-rows scroll vertically. For a snippet inside a page, cap it:
-
-```tsx
-<CodeBlock code={log} title="build.log" language="bash" height={240} />
-```
-
-A block with no cap that is longer than the page is better wrapped in
-[`ScrollFade`](/docs/components/scroll-fade), which paints the edges as the
-reader scrolls and takes the surface colour the card sits on:
-
-```tsx
-import { ScrollFade } from "@gpuixui/components/scroll-fade";
-import { useTheme } from "@gpuixui/components";
-
-const theme = useTheme();
-
-<ScrollFade style={{ height: 240 }} color={theme.colors.background}>
-  <CodeBlock code={log} language="bash" />
-</ScrollFade>;
-```
-
-## Empty source
-
-An empty or whitespace-only source paints a placeholder instead of an empty
-card, and says so to assistive readers:
-
-```tsx
-<CodeBlock code="" emptyLabel="Paste a snippet to inspect" />
-```
-
-## Copy action
-
-```tsx
-import { useState } from "react";
-import { CodeBlock } from "@gpuixui/components/code-block";
-
-const [mirror, setMirror] = useState("");
-
-// The runtime publishes no clipboard write, so the caller owns the path: the
-// source lands in a read-only field the platform lets a reader copy from.
-<>
-  <CodeBlock code={source} path="src/app.tsx" onCopy={setMirror} />
-  <input value={mirror} readOnly />
-</>;
-```
-
-`@gpuix/native@0.11.0` publishes **no clipboard write** (measured in the
-capability record). The block therefore does not pretend: `onCopy` receives the
-source and the caller decides how it reaches the clipboard — commonly by writing
-it into a read-only field the platform lets a reader copy from. The action is the
-package's `CopyButton`: it acknowledges the **press** for 1.2 s, arrives its
-checked glyph on the house entrance and returns to its copy name; it does not
-claim a write finished.
-
-## Motion
-
-The block arrives with the house entrance — a fade and a 4 px rise — the same
-seam every overlay uses. `level` picks the house duration (`fast` 160 ms,
-`normal` 200 ms, `slow` 320 ms, `notice` 500 ms) and `level="none"` paints it at
-rest:
-
-```tsx
-import { CodeBlock, MotionProvider } from "@gpuixui/components";
-
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <CodeBlock code={source} level="none" />
-</MotionProvider>;
-```
-
-The runtime exposes no reduced-motion preference, so the application owns it;
-`MotionProvider preference="reduced"` zeroes the duration and the block paints
-the resting frame in the frame it appears. There is no scale, slide or blur — the
-runtime has no `transform` (upstream issue #102) and no filter.
-
-## API
-
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `code` | `string` | — | The source. Tokenized into runs and split into lines here. |
-| `title` | `string` | — | The header's title. Falls back to `path`. |
-| `path` | `string` | — | The file the snippet came from: a fallback title and the language hint. |
-| `language` | `string` | path's extension | The tokenizer's language id (`"tsx"`, `"rust"`, `"bash"`). |
-| `lineNumbers` | `boolean` | `false` | Number every row in the block's gutter. |
-| `height` | `number` | — | Cap the rows in pixels and scroll them vertically. |
-| `level` | `MotionLevel \| "none"` | `"normal"` | The entrance's duration; `"none"` paints at rest. |
-| `emptyLabel` | `string` | `"No code"` | What an empty source paints. |
-| `copyLabel` | `string` | `"Copy"` | The copy action's name. |
-| `copiedLabel` | `string` | `"Copied"` | The name the action carries after a press. |
-| `onCopy` | `(code: string) => void` | — | The clipboard path. Omit it and no copy action paints. |
-| `className` | `string` | — | A Tailwind class string for the card, merged last. |
-| `style` | `StateStyle<CodeBlockState>` | — | The card's style, or a function of `{ hasCode, reducedMotion }`. |
-
-`CodeBlockState` is exported for a state-aware `style`. The internal parts carry
-`<testId>-title`, `-language`, `-copy`, `-source`, `-empty`; the `testId` (default
-`code-block`) lands on the card.
-
-## Accessibility
-
-The card is a `group` named by its title (or "Code") and described by its line
-count and language — for example `12 lines of tsx`. That description is the only
-account of the source a reader gets: the runs are `role="presentation"`, so a
-screen reader cannot read the code itself. The copy action is a focusable button
-whose name changes to `copiedLabel` while it acknowledges the press.
-
-## Theming
-
-The card, the ink and the gutter paint the theme's roles, and each token run
-paints the theme's syntax palette: the block resolves `syntaxColors(theme)` and
-maps each token class to a role through `code-block/tokenize.ts`, so a light
-theme's code no longer arrives with the runtime's dark-default colours. A brand
-owns the palette through `syntax`, which **replaces the table whole** — every
-role the block can resolve — so spread the resolved table and edit the one you
-mean:
+### Theme the syntax palette
 
 ```tsx
 import { ThemeProvider } from "@gpuixui/components";
@@ -196,55 +33,33 @@ const brand = extendTheme(theme, {
 </ThemeProvider>;
 ```
 
-Every token stays measured: `auditTheme(brand).syntax` reports any role that
-misses its floor on the page the block paints, and the tokens' `syntax.test.ts`
-holds the shipped tables. What the tokenizer decides is which run is a token;
-what the palette decides is the colour that run paints.
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `code` | `string` | — |
+| `title` | `string` | falls back to `path` |
+| `path` | `string` | — |
+| `language` | `string` | path's extension |
+| `lineNumbers` | `boolean` | `false` |
+| `height` | `number` | — |
+| `level` | `MotionLevel \| "none"` | `"normal"` |
+| `emptyLabel` | `string` | `"No code"` |
+| `copyLabel` | `string` | `"Copy"` |
+| `copiedLabel` | `string` | `"Copied"` |
+| `onCopy` | `(code: string) => void` | — |
+| `className` | `string` | — |
+| `style` | `StateStyle<CodeBlockState>` | — |
 
 ## Limitations
 
-- **The code text is not exposed to assistive technology.** The runs are
-  presentational; the block publishes the name and the line count instead.
-- **The tokenizer decides what a run is, not the palette.** Which characters
-  count as a keyword, a string or a comment is `@tanstack/highlight`'s grammar;
-  the palette only names the colour. A grammar the tokenizer does not ship
-  paints plain text.
-- **The gutter width is an estimate.** The runtime's own code metrics stay
-  theirs; the block derives its gutter from the code type size and the widest
-  line number.
-- **No per-line highlight, wrap toggle or diff markers.** A diff belongs in the
-  runtime's own `<diff>` host.
-- **No clipboard write.** The copy action calls `onCopy` and acknowledges the
-  press; the write is the caller's.
-- **A capped block is not a keyboard scroll region.** It scrolls by wheel and
-  scrollbar; a keyboard reader scrolls the page instead.
-- **Long lines scroll horizontally inside the block.** They never wrap, and the
-  runtime has no wrap switch for the block.
-
-## Verification
-
-`src/code-block/tokenize.test.ts` holds the tokenizer: a TypeScript snippet's
-token boundaries and roles, the class→role→colour mapping, the plain-text
-fallback, the runs concatenating back to the source (with a negative control that
-drops the last run), and the line split across a run. `src/behaviour/code-block.test.tsx`
-renders the block in the real GPUix renderer (10 tests): the source painted as
-runs with no character lost, the path as the title and its extension as the
-language, the gutter's numbers, the accessible name and line description, the
-placeholder an empty source paints, the copy press and its acknowledgement
-window, the 4 px entrance measured on the motion clock with `level="none"` and
-the reduced preference at rest, the height cap, and the group the accessibility
-tree receives. The decisions are `src/code-block/logic.test.ts`: the extension
-map, the header's fallbacks and blank values, the row count for every line
-ending and trailing newline, the empty source, and the name and description
-text. `src/code-block-page.test.ts` holds this page, the record and the
-inventory row to the tokenizer the block actually calls.
+- The code text is not exposed to assistive technology.
+- `@tanstack/highlight` decides what a run is; the palette only colours it.
+- A language the tokenizer does not ship falls back to plain text.
+- No clipboard write; `onCopy` hands the source to the caller.
 
 ## Related
 
-- [Scroll fade](/docs/components/scroll-fade) — the edges a long block fades while
-  the reader scrolls it.
+- [Scroll fade](/docs/components/scroll-fade) — the edges a long block fades.
 - [Reveal](/docs/components/reveal) — the entrance this block shares.
-- [Message](/docs/components/message) — the same no-clipboard honesty in a
-  message's copy action.
-- [Empty state](/docs/components/empty-state) — the page-level empty case, where a
-  code block shows a placeholder for a missing snippet.
+- [Empty state](/docs/components/empty-state) — the page-level empty case.

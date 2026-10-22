@@ -1,11 +1,7 @@
 ---
 title: Countdown
-description: A remaining duration as clock text — without owning a timer.
+description: A remaining duration as clock text.
 ---
-
-`Countdown` renders **one remaining duration it is given**. It does not tick, and
-that is deliberate: an Effect `Clock` (or the app's clock) owns time, and a
-renderer timer would keep running after unmount and drift from the app's state.
 
 ## Usage
 
@@ -16,86 +12,21 @@ import { Countdown } from "@gpuixui/components";
 // 01:30
 ```
 
-The application ticks and re-renders. An Effect fiber at the boundary is the
-recommended pattern (this is the example's own code):
-
-```tsx
-const fiber = Effect.runFork(
-  Effect.forever(
-    Effect.sleep(Duration.seconds(1)).pipe(
-      Effect.flatMap(() =>
-        Effect.sync(() => setRemaining((value) => Math.max(0, value - 1000))),
-      ),
-    ),
-  ),
-);
-// cleanup: Effect.runFork(Fiber.interrupt(fiber))
-```
-
-The runnable build is `examples/countdown.example.tsx`, which the native
-playground mounts.
-
-## Formats
-
-| Remaining | Output |
-| --------- | ------ |
-| `90_000` ms | `01:30` |
-| `3_600_000` ms | `01:00:00` |
-| `90_000_000` ms (25 h) | `25:00:00` — hours are uncapped |
-| `90_000_000` ms with `showDays` | `1d 01:00:00` |
-| `3_600_000` ms with `showDays` | `01:00:00` — no day prefix without a full day |
-| `0` or negative | `00:00` |
-
-Seconds are **floored**, not rounded: `59_999` ms is `00:59`. The format is fixed
-and locale-free (the repo has no i18n layer); `showDays` treats a day as 24
-hours, not as a calendar day.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `remainingMs` | `number` | — | Required. Negative values render `00:00`. |
-| `label` | `string` | — | The accessible name; the value stays the text. |
-| `showDays` | `boolean` | `false` | Adds the `Nd ` prefix once a full day remains. |
-| `style` | `StateStyle<CountdownState>` | — | `CountdownState` is `{ remainingMs, expired }`. |
-
-`Countdown` takes the GPUix host props (`testId`, `role`, `aria-*`) and merges
-`style` last.
-
-## Theming
-
-`caption` type; `foreground` while time remains and `mutedForeground` once
-expired. The component has no colour of its own, so a custom theme changes it
-with no code change — see [Theming](/docs/theming).
-
-## Accessibility
-
-- The text is the value; `label` becomes the accessible name, so a screen reader
-  hears "Offer ends in" rather than only "01:30".
-- There is no live-region announcement in `@gpuix/native@0.11.0` (no `aria-live`
-  on a host element), so changes are not pushed to a screen reader. A countdown
-  that must announce changes needs the application's own announcement strategy.
-- The expired colour is visual; the accessible name does not become "expired".
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `remainingMs` | `number` (required) | — |
+| `label` | `string` | — |
+| `showDays` | `boolean` | `false` |
+| `style` | `StateStyle<CountdownState>` | — |
 
 ## Limitations
 
-- **No timer inside the component** — by design, not as a missing feature.
-- Fixed locale-free format; no "2 hours ago", no localised units.
-- No live-region announcement in `0.11.0` (no `aria-live`), so a change is read
-  when the label is focused, not pushed.
-- No progress bar or ring; pair it with `Progress` when one exists.
-
-## Verification
-
-`src/countdown/logic.test.ts` (9 pure tests) covers splitting, flooring,
-clamping, the hour cap and the day prefix. `src/behaviour/countdown.test.tsx`
-(5 native tests) covers the rendered text, a re-render with a new value, the
-expired role, the accessible name and both themes.
-
-```sh
-nub run --filter @gpuixui/components test
-nub run --filter @gpuixui/components test:behaviour
-```
+- No timer inside the component; the application ticks and re-renders.
+- Fixed locale-free format; no localised units.
+- No `aria-live`, so a change is read when focused, not pushed.
+- No progress bar or ring.
 
 ## Related
 

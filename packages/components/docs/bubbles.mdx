@@ -1,12 +1,7 @@
 ---
 title: Bubbles
-description: A decorative field of bubbles rising through a clipped box for a hero, a launch panel or a loading surface.
+description: A decorative field of rising bubbles.
 ---
-
-`Bubbles` paints a bounded box of circles that rise out of the bottom, fade in
-as they climb and end their rise above the top edge. It is decoration: it
-publishes no accessibility node, takes no pointer input, and names nothing. The
-content in front of it owns the words and the presses.
 
 ## Usage
 
@@ -21,134 +16,29 @@ import { Bubbles } from "@gpuixui/components/bubbles";
 </div>;
 ```
 
-The field **measures itself**, so the box has to be bounded — a height, or an
-absolute inset like the one above. Before the first layout it paints nothing,
-because there is no box to place a bubble in yet.
-
-## How a rise works
-
-The runtime has no `transform` (upstream issue #102) and no 2D canvas, so a
-bubble cannot scale, wobble or warp. What it can do is travel: the runtime tweens
-`top` and `left`, and `opacity` is the one paint value it animates natively. A
-bubble is therefore an absolutely positioned circle that:
-
-- starts with its **top edge at the box's bottom**, completely out of the clipped
-  box, at zero opacity;
-- travels to a point where its **bottom edge is above the box**, fading in to its
-  own peak on the way;
-- sways a few pixels sideways, clamped so it never leaves the measured width.
-
-The layout is a pure function of the measured box and one seed
-(`bubbles/logic.ts`):
-
-- **deterministic** — the same seed paints the same field, so a decorative
-  background does not reshuffle between mounts;
-- **out of step** — every bubble runs `0.7…1.3` of `riseMs` and waits up to `0.9`
-  of that first, so the field never rises in unison;
-- **inside the box** — a bubble's resting place and the far end of its sway stay
-  within the measured width;
-- **a small peak** — each bubble carries its own opacity, between 6% and 18%, so
-  the field reads as depth rather than as dots.
-
-## Laps
-
-The runtime tweens a target **once**, so a rise is one lap. When the tween
-reports `onMotionComplete` the element is re-keyed and a fresh bubble mounts at
-the bottom, heading for the same off-stage end. Both ends are off-stage, so the
-restart has no frame a reader can see — the field keeps rising for as long as it
-is mounted.
-
-```tsx
-import { Bubbles } from "@gpuixui/components/bubbles";
-import { useTheme } from "@gpuixui/components";
-
-const theme = useTheme();
-
-<Bubbles
-  count={16}
-  seed={2}
-  // The three decisions the field leaves to its caller.
-  color={theme.colors.accent}
-  minSize={8}
-  maxSize={22}
-  riseMs={5_000}
-/>;
-```
-
-## Reduced motion
-
-`MotionProvider preference="reduced"` paints every bubble at its own seeded
-resting place rather than deleting the field — the decoration stays, the rise
-goes. No bubble then has a motion target at all, so no lap can restart. The
-entrance fade is zeroed the same way the overlays are.
-
-```tsx
-import { Bubbles, MotionProvider } from "@gpuixui/components";
-
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <Bubbles count={24} />
-</MotionProvider>;
-```
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `count` | `number` | `24` | `0` paints none; the cap is `60`, because each bubble is its own native tween. |
-| `seed` | `number` | `1` | The layout seed. The same seed paints the same field; a non-finite value is the house seed. |
-| `minSize` | `number` | `6` | The smallest bubble, in pixels. A value below 1 falls back. |
-| `maxSize` | `number` | `28` | The largest bubble. An inverted pair is read low-to-high. |
-| `color` | `string` | theme `primary` | The bubble colour; a bubble paints it as a 1px ring and a fill at its own opacity. |
-| `riseMs` | `number` | `7_000` | The base time for one rise. Below 1.2 s the field stutters and falls back; 60 s is the cap. |
-| `level` | `MotionLevel` | `"slow"` | The entrance fade. `MotionProvider` zeroes it under the reduced preference. |
-| `className` | `string` | — | A Tailwind class string, merged last. |
-| `style` | `StyleDesc` | — | The box's style, or a function of `{ count, reducedMotion, width, height }`. Give it a height. |
-
-Every bubble carries an internal id (`bubble-0`, …) and a `testId` on the field
-lands on the clipped box.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `count` | `number` | `24` |
+| `seed` | `number` | `1` |
+| `minSize` | `number` | `6` |
+| `maxSize` | `number` | `28` |
+| `color` | `string` | theme `primary` |
+| `riseMs` | `number` | `7_000` |
+| `level` | `MotionLevel` | `"slow"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<BubblesState>` | — |
 
 ## Limitations
 
-- **A rise, not a shape.** No `transform` and no filter, so a bubble travels
-  without scaling, wobbling or breaking its outline; a circle is the only shape
-  it paints.
-- **A lap restarts at the bottom.** The runtime tweens one target at a time, so a
-  completed rise mounts a fresh element rather than turning around. Both ends sit
-  outside the clipped box, which is why the restart is not visible.
-- **The box must be bounded by the caller.** The field measures itself; a box
-  with no height paints no bubbles.
-- **A hidden field keeps animating.** The runtime exposes no visibility query, so
-  unmount the field (or pass `count={0}`) when it is off screen.
-- **A resize re-draws the field.** The layout follows the new box from the same
-  seed, and every rise restarts — a tween cannot be resumed at an arbitrary
-  progress.
-- **No accessibility node.** The field adds no role and no name; give the content
-  in front of it its own.
-- **One tween per bubble.** `count` is capped at 60 so a field cannot turn into a
-  thousand native animations.
-
-## Verification
-
-Eight native behaviour cases in `src/behaviour/bubbles.test.tsx` (8 tests)
-measure the real renderer: the bubbles laid out along the box the field measured,
-the rise handed to the runtime from below the box to above it, a completed rise
-starting another lap at the bottom, the same seed painting the same field, the
-reduced preference painting the resting field with no motion target,
-`count={0}` painting none, no accessibility node and no pointer input, and the
-entrance at the house `slow` level. The arithmetic is `src/bubbles/logic.test.ts`
-(9 tests): determinism, every resting bubble inside the box, both ends of a rise
-off-stage, the sway clamped to the width, a bubble larger than its box, the
-opacity range, the per-bubble times and waits, and an unmeasured or capped field.
-The clamps it shares with the mote and star fields are
-`src/internal/scatter.test.ts`.
+- A rise, not a shape: bubbles travel without scaling or wobbling.
+- The box must be bounded by the caller.
+- A hidden field keeps animating; unmount it when off screen.
+- No accessibility node; the content owns the words.
 
 ## Related
 
-- [Stars](/docs/components/stars) — the same field arithmetic, twinkling in place
-  instead of rising.
-- [Particles](/docs/components/particles) — the same field arithmetic, drifting
-  in two directions.
-- [Reveal](/docs/components/reveal) — the entrance a field's content can join.
-- [Empty state](/docs/components/empty-state) — the content this field sits
-  behind.
-- [Progress](/docs/primitives/progress) — the other way to say "still working".
+- [Stars](/docs/components/stars) — the same field arithmetic, twinkling in place.
+- [Particles](/docs/components/particles) — the same field arithmetic, drifting.
+- [Empty state](/docs/components/empty-state) — the content this field sits behind.

@@ -3,29 +3,15 @@ title: Alert
 description: A persistent, in-flow message about the current context.
 ---
 
-`Alert` reports something about the state the user is looking at: a warning about
-missing data, a failure with an action, a notice that stays until the condition
-changes. It is **in the flow** — it occupies its own place in the layout.
-
-Choose by lifetime, not by looks:
-
-| Surface | Lifetime | Where it lives |
-| ------- | -------- | -------------- |
-| `Alert` | until the state changes | in the layout, where the problem is |
-| Toast | a few seconds, or until dismissed | floating, over the corner |
-| Dialog | until the user answers | modal, blocking everything |
+<ComponentPreview name="alert-tones" />
 
 ## Usage
-
-`Alert` is a compound: the root paints the tone and owns `role="alert"`, and the
-parts fill it.
 
 ```tsx
 import {
   Alert,
   AlertContent,
   AlertDescription,
-  AlertLink,
   AlertTitle,
 } from "@gpuixui/components/alert";
 
@@ -39,98 +25,19 @@ import {
 </Alert>;
 ```
 
-Add the icon and the dismiss control only when the message needs them:
+## Composition
 
-```tsx
-<Alert tone="info">
-  <AlertIcon>i</AlertIcon>
-  <AlertContent>
-    <AlertTitle>Update available</AlertTitle>
-    <AlertDescription>0.11.0 is ready. Installing restarts the app.</AlertDescription>
-  </AlertContent>
-  <AlertDismiss onDismiss={() => setDismissed(true)} />
-</Alert>
+```text
+Alert
+├── AlertIcon
+├── AlertContent
+│   ├── AlertTitle
+│   ├── AlertDescription
+│   └── AlertLink
+└── AlertDismiss
 ```
-
-`AlertDescription` is a container, so an action belongs inside it:
-
-```tsx
-<Alert tone="danger">
-  <AlertContent>
-    <AlertTitle>Upload failed</AlertTitle>
-    <AlertDescription>
-      <Button onClick={retry}>Try again</Button>
-    </AlertDescription>
-  </AlertContent>
-</Alert>
-```
-
-A **text** action uses `AlertLink`, which paints the brand derived against the
-message's own tint instead of the page's link colour:
-
-```tsx
-<Alert tone="warning">
-  <AlertContent>
-    <AlertTitle>3 tokens are missing</AlertTitle>
-    <AlertDescription>
-      The platform themes fall back to the default palette.
-    </AlertDescription>
-    <AlertLink onSelect={openTokenSettings}>Open the token settings</AlertLink>
-  </AlertContent>
-</Alert>
-```
-
-## Anatomy
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `Alert` | the root: `role="alert"`, the tone surface, the row layout and the tone context |
-| `AlertIcon` | the leading icon, in the tone's readable colour |
-| `AlertContent` | the growing column between the icon and the dismiss control |
-| `AlertTitle` | the heading, `bodyStrong` in the tone's colour |
-| `AlertDescription` | body prose in the page foreground; may hold an action |
-| `AlertLink` | a text action, in the brand derived for the message's own tint |
-| `AlertDismiss` | the focusable dismiss button |
-
-## Tones
-
-| `tone` | Surface | Heading |
-| ------ | ------- | ------- |
-| `info` (default) | `infoSoft` | `infoSoftForeground` |
-| `success` | `successSoft` | `successSoftForeground` |
-| `warning` | `warningSoft` | `warningSoftForeground` |
-| `danger` | `destructiveSoft` | `destructiveSoftForeground` |
-
-The tone paints the surface, the border and the heading; the **description stays
-in the page's foreground colour**, because body prose has to stay readable rather
-than match the tone. Badge, Alert and the toast viewport read the same
-`statusTone` roles from `@gpuixui/tokens` (plan 157), so a status cannot look
-different in two places.
-
-`AlertLink` is the one run that cannot use the page's link colour: the message is
-filled with the tone's soft role, and the shared brand (`brandText`) is derived
-for page surfaces and the washes a link tints — measured, it is under the text
-floor on **29 of the 64** tint placements across the shipped styles, macOS dark's
-brand on `warningSoft` at **3.43:1**. The part therefore derives against the
-tint it sits on (`brandTextOn` through `messageLink`), keeping as much of the
-brand as that surface allows, and paints no wash of its own — the underline is
-the pointer cue, so the tint is the only surface the colour is read on.
-
-The same surface decides the **selection wash**. `selectionColor` inherits down
-a subtree, so the root declares it once and a selectable run in the description
-is washed over the tint. The theme's designed `selection` role is authored for
-the content tones: measured, it leaves the copy under the body floor in **30 of
-the 32** dark tint placements (Windows dark's `warningSoft` at **5.21:1**), so
-the root derives the wash against its own fill instead (`selectionOn` through
-`messageSelection`). Every light tint carries the designed role unchanged, and
-the derivation moves a dark one toward the page by the smallest step that keeps
-the wash a visible cue and the copy readable. A caller `style` still wins, so a
-message with no selectable copy can state the designed role itself.
 
 ## API
-
-Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
-pointer and key handlers) and **merges `style` last**.
 
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
@@ -139,63 +46,12 @@ pointer and key handlers) and **merges `style` last**.
 | `AlertDismiss` | `onDismiss` | `() => void` (required) | — |
 | `AlertDismiss` | `label` | `string` | `"Dismiss"` |
 
-A part rendered outside `Alert` throws `Alert parts must be used inside Alert` —
-the tone context is the contract. (The test renderer catches render errors, so
-this is a code guarantee rather than a behaviour-suite assertion.)
-
-## Accessibility
-
-- The root is `role="alert"` — a **marker in the accessibility tree**, not a
-  promise of an announcement: the pinned runtime's `aria-*` set is closed with no
-  `aria-live`, so nothing is announced when the alert appears
-  (`docs/gpuix-capabilities.md` → Live regions). Make the `AlertTitle` say what
-  changed, or move the focus to the message, when the change must be noticed.
-- The dismiss control is a focusable `role="button"` with `label` as its
-  accessible name, activated by Enter or Space as well as a click. Its `testId` is
-  `alert-dismiss`.
-- `AlertLink` is a focusable `role="link"` activated by Enter or Space as well as
-  a click, and it reaches the 24px target floor. It is a block-level row, so it
-  starts its own line rather than sitting inline in a sentence.
-- `AlertIcon` is decorative: it carries no role, so the title must say what the
-  state is.
-- Colour is never the only signal — every alert has an `AlertTitle`.
-- A part outside its root fails loudly instead of rendering with the wrong tone.
-
 ## Limitations
 
-- **No live-region announcement is possible on 0.11.0.** `role="alert"` reaches
-  the accessibility tree (the suite asserts it), but the runtime publishes no
-  `aria-live`, so an alert is not read out when it appears; a real screen reader's
-  announcement has no mechanism to measure. What to do instead: put the state in
-  the title and move the focus to the message when the reader must notice it.
-- The dismiss control is this package's local stand-in for
-  `@gpuixui/primitives`' `IconButton` (`TODO.md` → Interlocks); it is replaced when
-  that package lands.
-- No automatic timeout: an alert stays until the state changes or the user
-  dismisses it. That is deliberate — a message that vanishes on its own is a
-  toast.
-- The docs site cannot render this component live. The code above is the real
-  source.
-
-## Verification
-
-`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (13 tests): the
-parts render in order inside one alert region, every tone paints its root surface
-and title colour, the description keeps the page foreground, the icon takes the
-tone colour and is optional, the theme is read rather than a constant, there is no
-dismiss control unless `AlertDismiss` is composed, a click and an Enter fire it
-once, its accessible name is the default or `label`, an action in the description
-receives its click, a consumer `style` wins, a link action paints the colour
-derived for the message's own tint in both themes, and it activates by click and
-Enter and publishes `role="link"`. `src/internal/theme.test.ts` holds
-`messageLink` to the sixteen shipped styles and names the macOS dark placement the
-shared page colour cannot read; `src/behaviour/selection.test.tsx` reads this
-root's derived wash back off the renderer for every tone in both themes and holds
-the designed role failing on a dark tint.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
+- `role="alert"` is a marker, not an announcement: no `aria-live` exists.
+- Put the state in the title and move the focus when it must be noticed.
+- No automatic timeout; an alert stays until dismissed.
+- A part outside `Alert` throws.
 
 ## Related
 

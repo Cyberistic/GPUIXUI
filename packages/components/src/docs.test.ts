@@ -101,8 +101,10 @@ const mdxProblems = (page: string, source: string): ReadonlyArray<string> => {
     return YAML_RESERVED.test(value) && !quoted ? [`${page}: ${value}`] : [];
   });
 
+  // A capitalised tag is a registered MDX component (`<ComponentPreview>`);
+  // a lowercase one (`<div>`, `<span>`) is a raw tag MDX would misread.
   const jsx = Arr.map(
-    Arr.filter(prose(source).split("\n"), (line) => /<[A-Za-z/]/.test(line)),
+    Arr.filter(prose(source).split("\n"), (line) => /<[a-z/]/.test(line)),
     (line) => `${page}: ${line.trim()}`,
   );
 

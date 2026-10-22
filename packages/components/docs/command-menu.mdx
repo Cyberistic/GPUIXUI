@@ -1,11 +1,11 @@
 ---
 title: Command menu
-description: A searchable action list in a dialog — the ⌘K palette.
+description: A searchable action list in a dialog.
 ---
 
-`CommandMenu` puts a filterable list of actions in a modal surface. It composes
-the parts instead of reinventing them: **Dialog** owns the surface and Escape,
-the GPUix `<input>` owns typing, and `menu/logic.ts` owns which row is active.
+<ComponentPreview name="command-menu-demo" />
+
+## Usage
 
 ```tsx
 import {
@@ -22,177 +22,35 @@ import {
 </CommandMenu>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `CommandMenu` | the dialog, the query and the ranked matches; `open` is controlled |
-| `CommandMenuInput` | the search field: typing, arrows/Home/End, Enter, Escape |
-| `CommandMenuList` | the scrolling match column: group headings, rows and the key hint |
-| `CommandMenuItem` | one runnable row; the list renders one per match |
-| `CommandMenuEmpty` | shown only when nothing matches; its children are the message |
-
-The root owns the query and the matches because ranking needs the whole action
-set: `actions` stays a root prop, and the list renders the rows it derives.
-`CommandMenuItem` is exported for a caller that composes its own list over the
-same ranked matches.
-
-Groups are rendered in the caller's order; a heading appears when `group` changes
-between consecutive matches. `shortcut` is **display only** — the component binds
-no keys.
-
-## Focus and the highlight
-
-The search input keeps focus the whole time. The active row is **highlighted,
-not focused**: focusing a row would take typing away from the input after the
-first arrow key. That is why this palette does not reuse the menu registry, only
-the pure `menu/logic.ts` arithmetic.
-
-The dialog focuses the input through its `initialFocus`, and closing returns the
-focus to whatever opened the palette. The input deliberately carries no
-`autoFocus`: a field that focuses itself before the modal records the opener
-becomes the restore target, so the opener would be left with no focus.
-
-| Key | Result |
-| ---- | ------ |
-| type | filters; the highlight resets to the first enabled match |
-| `ArrowDown` / `ArrowUp` | move the highlight, wrapping and skipping disabled rows |
-| `Home` / `End` | first/last enabled row |
-| `Enter` | runs the highlighted action and closes |
-| `Escape` | closes |
-| `Tab` | follows the dialog's trap |
-
-`Enter` arrives as the input's `submit` event, not a key-down — measured in
-0.11.0 — which is also why Space types a space instead of activating a row.
-
-## Filtering
-
-The default matcher is a case-insensitive **subsequence**: the query's characters
-must appear in order in the label, not necessarily together. Initials work.
-
-| Query | Matches |
-| ----- | ------- |
-| `opfl` | **Op**en **f**i**l**e — a non-contiguous match |
-| `open` | `Open file` ranks above `Reopen file` — a word start beats a mid-word run |
-| `of` | `Open file` ranks above `Proofread` — the `f` starts a word |
-
-Scoring is deterministic: ten points per matched character, eight more when the
-character starts a word, and two per character in the current consecutive run.
-The palette then ranks **within each group** and keeps the caller's group order,
-so a heading never repeats because a lower group happened to score higher.
-Equal scores keep declaration order; an empty query shows every action in
-declaration order.
-
-Pass `filter` to replace all of it with a boolean predicate. A custom filter
-receives the action and the raw query, and its accepted rows stay in declaration
-order — no hidden fuzzy pass and no reordering. Disabled actions stay visible and
-cannot be run by click or `Enter`; the initial highlight lands on the first
-enabled match.
-
-## Recents
-
-The component records nothing itself. Pass `recents` — action ids, most recent
-first — and an **empty** query shows them under one `Recent` heading, in that
-order, then the remaining actions in declaration order:
-
-```tsx
-<CommandMenu
-  open={open}
-  onOpenChange={setOpen}
-  actions={actions}
-  recents={recentIds}
->
-  ...
-</CommandMenu>;
+```text
+CommandMenu
+├── CommandMenuInput
+├── CommandMenuList
+│   └── CommandMenuItem
+└── CommandMenuEmpty
 ```
-
-The caller records a use in the action's own `perform`, which keeps the history
-where the actions already live. Unknown and repeated ids are dropped, so a stale
-list cannot duplicate or invent a row. A typed query ignores recents and ranks
-normally; a custom `filter` opts out of recents entirely. A recent action is the
-same row object with its group replaced by `Recent`, so `perform` runs once and
-`disabled` is respected.
-
-## Controlled only
-
-`open` is required. A command palette is opened by an application shortcut
-(⌘K, Ctrl+P) rather than by a control inside the component, so ownership of the
-state belongs to the app. Render it once at the app root.
-
-## Motion
-
-The palette is a dialog surface, so it inherits the dialog's motion: a fade plus
-an 8px rise (`slow`, 320 ms), with focus restored to the opener as it closes.
-`MotionProvider` supplies the reduced-motion preference
-(`docs/component-api.md` §11).
 
 ## API
 
-`CommandMenu` is controlled: `open` and `onOpenChange` are required. Every part
-takes the GPUix host props and merges `style` last.
-
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `CommandMenu` | the composed `Dialog` surface | `open: boolean` (required), `onOpenChange: (open: boolean) => void` (required), `actions: ReadonlyArray<CommandAction>` (required — `id`, `label`, `group?`, `shortcut?`, `disabled?`, `perform`), `recents?: ReadonlyArray<string>`, `filter?: (action: CommandAction, query: string) => boolean` |
-| `CommandMenuInput` | host `<input>` | `placeholder?: string` (default `"Type a command…"`), `label?: string` (default `"Search commands"`) |
-| `CommandMenuList` | scrolling match column | — (renders the root's ranked matches) |
-| `CommandMenuItem` | one runnable row | `action: CommandAction` (required) |
-| `CommandMenuEmpty` | the no-match message | `children?: ReactNode` (default `No matching commands`) |
+| `CommandMenu` | the composed `Dialog` surface | `open` (required), `onOpenChange` (required), `actions` (required), `recents?`, `filter?` |
+| `CommandMenuInput` | host `<input>` | `placeholder?`, `label?` |
+| `CommandMenuList` | the scrolling match column | — |
+| `CommandMenuItem` | one runnable row | `action` (required) |
+| `CommandMenuEmpty` | the no-match message | `children?` |
 
-## Theming
+## Limitations
 
-The surface is the dialog's: `colors.popover` / `colors.popoverForeground`, a
-32px radius, a 1px `foreground` ring at 5% and the theme's `lg` elevation beside
-it. The input uses `colors.input` / `colors.inputForeground` with a
-`borderWidth.thin` border in `colors.border` and `radius.md`. Rows are the shared
-menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
-
-## Accessibility and limitations
-
-- The dialog is named `"Command menu"`; the input is `"Search commands"`; rows
-  are `role="option"` with `aria-selected` for the highlight.
-- **No `aria-activedescendant` or `aria-controls`** in 0.11.0: the relationship
-  between the input and the highlighted row is visual only for assistive
-  technology.
-- The `<input>` is the host element until `@gpuixui/primitives` lands; it is the
-  documented stand-in, not a styled wrapper, and it declares the keyboard-only
-  `focusVisible` outline itself so the palette's field shows the focus it holds.
-- Ranking is **per group**, not global: a group's heading stays where the caller
-  declared it even when another group holds the best match. Recents are
-  caller-owned data (`recents`), shown only for an empty query with the default
-  filter; the component keeps no history of its own.
-- No `aria-activedescendant`: the highlight is visible but the input does not
-  point assistive technology at the active row.
-
-## Verification
-
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (20 tests):
-focus landing on the input, focus returning to the opener when the palette closes,
-typing filtering the list while focus stays put, ArrowDown + Enter running the
-second match and closing, a clicked row, a surface that reopens inside its own
-exit tween with a fresh query and the input focused, the empty label, a custom
-filter, a disabled action refusing to run, Escape closing, a
-non-contiguous query matching initials, ranking deciding the default `Enter`
-target, group order surviving ranking, an empty query keeping declaration order,
-recents shown first under one heading with the first one highlighted, unknown and
-repeated recent ids dropped, recents ignored once a query is typed, a recent row
-running once and closing, a caller-supplied empty state, the input declaring the
-keyboard outline (`src/behaviour/focus-ring.test.tsx`), and the input's
-name and its placeholder painted as the hint rather than handed to the host.
-
-`src/menu/fuzzy.test.ts` (12 tests) covers empty and whitespace queries, case and
-trim, word-start versus mid-word scores, separator boundaries, subsequence and
-non-subsequence queries, over-long queries, repeated letters, declaration
-indices, group order, in-group ranking, stable ties and empty groups.
-`src/behaviour/overlay-elevation.test.tsx` reads the dialog surface's composed
-`lg` elevation beside its ring.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
+- `open` is controlled; the app owns the shortcut that opens it.
+- No `aria-activedescendant` or `aria-controls`; the highlight is visual.
+- `shortcut` is display only; the component binds no keys.
+- Ranking is per group, not global.
 
 ## Related
 
 - **Dialog** — the modal surface this composes.
 - **Dropdown menu** — a small action list anchored to a control.
-- **Combobox** — filtering applied to a value rather than to actions.
+- **Combobox** — filtering applied to a value rather than actions.

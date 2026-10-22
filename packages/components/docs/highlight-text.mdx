@@ -1,13 +1,7 @@
 ---
 title: Highlight text
-description: A phrase whose matches a marker wash sweeps across, painted by the runtime's own highlight layer.
+description: A phrase whose matches a marker wash sweeps across.
 ---
-
-`HighlightText` marks the matches of a query — or the ranges a caller supplies —
-with a wash painted **behind** the glyphs. The wash is the runtime's `highlight`
-property: `@gpuix/native@0.11.0` paints it as a quad per visual row, so the text
-stays the theme's body colour and the mark is a paint layer rather than a second
-copy of the string.
 
 ## Usage
 
@@ -17,116 +11,30 @@ import { HighlightText } from "@gpuixui/components/highlight-text";
 <HighlightText text="Native by default" query="native" />;
 ```
 
-Every occurrence is marked, case-insensitively by default. The sweep starts on
-mount and advances one code point per `stepMs`, so the wash reads as a marker
-crossing the phrase.
-
-## Finding the marks
-
-`query` is matched as literal text — it is not a pattern — and `caseSensitive`
-and `wholeWord` narrow it. A word boundary is refused when the neighbouring
-character is a letter, a number, a combining mark or `_`, which is the runtime's
-own rule for its `wholeWord` search.
-
-```tsx
-<HighlightText text="alpha alphabet" query="alpha" wholeWord />; // one mark
-<HighlightText text="Native native" query="NATIVE" caseSensitive />; // none
-```
-
-Case folding is the regular-expression engine's, per code point. A locale whose
-case mapping changes the string length (Turkish `İ`, for example) needs the
-caller's ranges, because a range indexes UTF-16 units of the phrase.
-
-## Explicit ranges
-
-`ranges` wins over `query`. Each pair is `[start, end)` in the phrase's UTF-16
-code units — the units `indexOf` returns — and the caller owns their meaning:
-
-```tsx
-<HighlightText text="0123456789" ranges={[[2, 5], [7, 9]]} />;
-```
-
-This is the seam for a search index, a diff or an annotated span whose offsets
-were computed elsewhere. A pair that splits a surrogate pair is the runtime's to
-reject; `SplittingText`-style code-point walking is the component's own rule.
-
-## Motion
-
-The sweep is a timer, not a runtime tween: each step shortens the painted
-ranges, and the runtime repaints the wash. A mark grows as **one** range rather
-than a run of per-character quads, because the wash is translucent and abutting
-quads show their seams where kerning overlaps them.
-
-Under `MotionProvider preference="reduced"` — or with `stepMs={0}` — every mark
-paints on the first frame. The resting appearance never depends on the
-preference; only the journey does. The timer is real time, so a paused renderer
-motion clock does not hold the sweep.
-
-## The wash colour
-
-The default is the theme's `selection` role, the one translucent surface the
-contrast contract measures text inside on every content surface. A caller with
-its own marker passes `color`; the runtime accepts any paint-ready colour, so a
-status tone's soft surface (a `warning` match) is expressible.
-
-## Accessibility
-
-The phrase is one text host and therefore one accessible label: a sweep is a
-paint behind the words, and a screen reader hears the whole phrase from the first
-frame. There is no live region in `0.11.0`, so a query that changes after mount
-is not announced; the mark is presentational.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `text` | `string` | — | Required. The phrase to paint. |
-| `query` | `string` | — | The literal substring to mark; every occurrence. |
-| `ranges` | `ReadonlyArray<readonly [number, number]>` | — | Explicit UTF-16 ranges; wins over `query`. |
-| `caseSensitive` | `boolean` | `false` | Match the query's case exactly. |
-| `wholeWord` | `boolean` | `false` | Refuse a match whose neighbours are word characters. |
-| `stepMs` | `number` | `60` | Milliseconds per swept code point; `0` paints at once. A negative or non-finite value falls back. |
-| `color` | `string` | `theme.colors.selection` | The wash colour. |
-| `role` | `TextRole` | `"body"` | Any theme type role (`h1`, `display`, `bodyStrong`, …). |
-| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
-| `style` | `StateStyle<HighlightTextState>` | — | `HighlightTextState` is `{ text, revealed, total, complete, reducedMotion }`. |
-
-`HighlightText` renders a `div` that declares the runtime's `highlight` and one
-`<text>` child; the GPUix host props (`testId`, `aria-*`) go on the `div`.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `text` | `string` (required) | — |
+| `query` | `string` | — |
+| `ranges` | `ReadonlyArray<readonly [number, number]>` | — |
+| `caseSensitive` | `boolean` | `false` |
+| `wholeWord` | `boolean` | `false` |
+| `stepMs` | `number` | `60` |
+| `color` | `string` | `theme.colors.selection` |
+| `role` | `TextRole` | `"body"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<HighlightTextState>` | — |
 
 ## Limitations
 
-- The sweep is a real-time timer, so it is never sampled by the renderer's motion
-  clock: a capture at an arbitrary wall-clock moment lands wherever the timer had
-  reached, not on a named frame.
-- The wash is translucent, so a caller's `color` should be a role the contrast
-  contract covers (`selection`, a state wash or a soft status surface). An opaque
-  colour is painted as a solid block behind the glyphs.
-- Ranges index the phrase's UTF-16 units; a mark cannot cross into another text
-  host.
-- There is no `activeIndex` marker distinction: every mark paints the same wash.
+- The sweep is a real-time timer, not a motion-clock tween.
+- `ranges` index UTF-16 units; `ranges` wins over `query`.
+- The wash is translucent; pick a role the contrast contract covers.
+- Every mark paints the same wash.
 
 ## Related
 
-- [Splitting text](/docs/components/splitting-text) — a phrase revealed unit by
-  unit.
-- [Typing text](/docs/components/typing-text) — a string arriving a character at
-  a time.
-- [Message](/docs/components/message) — chat copy with its own content roles.
-- [Command menu](/docs/components/command-menu) — where a query and its matches
-  already live together.
-
-## Verification
-
-`src/behaviour/highlight-text.test.tsx` renders the component in the real GPUix
-renderer (7 tests): every occurrence marked with a painted box, a sweep that
-starts with no wash and advances one code point, a sweep that finishes on the
-last code point of every mark, the reduced preference painting the whole wash on
-the first frame, explicit ranges beating the query, a whole-word match, and a
-changed query replaying the sweep.
-
-`src/highlight-text/logic.test.ts` holds the rules without a renderer
-(14 tests): case folding both ways, whole-word boundaries at the ends and inside
-a word, non-overlapping matches in order, a literal query that is not a pattern,
-an empty query, ranges beating the query, code-point lengths (an emoji is one
-step), the sweep at zero, partway and past the end, and the pace fallback.
+- [Splitting text](/docs/components/splitting-text) — a phrase revealed unit by unit.
+- [Typing text](/docs/components/typing-text) — a string arriving a character at a time.
+- [Command menu](/docs/components/command-menu) — where a query and its matches live.

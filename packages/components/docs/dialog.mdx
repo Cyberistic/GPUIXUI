@@ -1,11 +1,11 @@
 ---
 title: Dialog
-description: A modal surface that takes the window until it is dismissed.
+description: A modal surface that takes the window until dismissed.
 ---
 
-`Dialog` is the modal primitive: it dims and blocks the window, moves focus into
-its surface, keeps Tab inside it, and returns focus to whatever opened it. Compose
-it from a trigger, a content surface and the header/description/footer parts.
+<ComponentPreview name="dialog-demo" />
+
+## Usage
 
 ```tsx
 import {
@@ -18,7 +18,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@gpuixui/components/dialog";
-import { Button } from "@gpuixui/primitives";
 
 <Dialog>
   <DialogTrigger>Delete workspace</DialogTrigger>
@@ -37,143 +36,39 @@ import { Button } from "@gpuixui/primitives";
 </Dialog>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Dialog` | owns `open`/`defaultOpen`/`onOpenChange`, pushes the dismiss layer |
-| `DialogTrigger` | a button that toggles the dialog, `aria-expanded` included |
-| `DialogContent` | the veil and the surface: focus, Tab, Escape and outside press |
-| `DialogHeader` | title + description block, with room for the close control |
-| `DialogTitle` | the heading (level 2) |
-| `DialogDescription` | one paragraph of supporting copy |
-| `DialogFooter` | right-aligned actions |
-| `DialogClose` | a button that closes the enclosing dialog |
-
-`DialogContent` takes `size` (`sm` 360px, `md` 480px, `lg` 640px), the required
-`label` — the accessible name — `showClose` (default `true`) and `initialFocus`,
-a function returning the native id focus should land on after the surface itself.
-
-## Controlled and uncontrolled
-
-```tsx
-// Uncontrolled: the dialog remembers.
-<Dialog defaultOpen>…</Dialog>;
-
-// Controlled: the app remembers, which async work needs.
-<Dialog open={open} onOpenChange={setOpen}>…</Dialog>;
+```text
+Dialog
+├── DialogTrigger
+└── DialogContent
+    ├── DialogHeader
+    │   ├── DialogTitle
+    │   └── DialogDescription
+    ├── DialogFooter
+    │   └── DialogClose
+    └── (close control)
 ```
-
-The controlled form is authoritative: `onOpenChange` still fires, but the dialog
-does not change its own state. In uncontrolled mode it stores the value itself.
-
-## Dismissal
-
-`dismissible` (default `true`) controls both Escape and an outside press. A dialog
-doing uninterruptible work sets `dismissible={false}` and re-enables it when the
-work settles.
-
-Open dialogs share one dismiss stack (`src/internal/dismiss-layer.ts`): Escape and
-outside presses are consumed by the **topmost** overlay only, so a popover inside a
-dialog closes the popover first. One event cannot close two layers.
-
-"Topmost" is the **deepest** surface, not the one that opened last. A surface
-tells the stack how deeply it is nested (`src/internal/dismiss-scope.tsx`), so a
-popover declared open inside a dialog is above that dialog even though both
-surfaces mount in one commit — React runs a child's layout effect first, and push
-order alone would hand the first Escape to the container. Two surfaces at the same
-depth keep push order: the later one is above.
-
-## Keyboard
-
-| Key | Effect |
-| --- | ------ |
-| `Tab` | move to the next focusable inside the surface, wrapping at the end |
-| `Shift+Tab` | move to the previous focusable, wrapping at the start |
-| `Escape` | close, when `dismissible`; focus returns to the opener |
-| `Enter` / `Space` | activate the focused action |
-
-## Sizing and theming
-
-The surface compiles shadcn's fixed metrics: `colors.popover` /
-`colors.popoverForeground`, a 32px radius, 24px padding and a 1px `foreground`
-ring at 5%. The ring and the recipe's lift share the one `boxShadow` slot, so
-the component composes the theme's `lg` elevation beside the ring and the
-runtime paints the pair — a raised dialog carries the lift **and** its hairline.
-The veil paints `colors.overlay`. The surface caps its height at the window minus
-two `spacing["3xl"]` and scrolls interior overflow, so a long body cannot push
-the actions off screen.
-
-## Accessibility and limitations
-
-- `role="dialog"` with the required `label` as its accessible name.
-- Focus enters the surface on open and returns to the opener on close.
-- **`autoFocus` inside the surface is safe.** The element that held focus is
-  captured in the render that opens the surface, before its children mount, so a
-  field that focuses itself no longer becomes the restore target; the opener gets
-  the focus back when the surface closes (guarded by
-  `src/behaviour/dialog.test.tsx`). `initialFocus` is still the explicit way to
-  choose which control lands focused.
-- **No `aria-modal` and no `aria-labelledby`.** `@gpuix/native@0.11.0` exposes
-  only `aria-label`, `aria-description`, `aria-expanded`, `aria-selected`,
-  `aria-valuetext` and `aria-level` on a host element (see `HostProps` in
-  `@gpuix/native/dist/host.d.ts`), so the dialog's *name* is `label` and its title
-  is a separate heading. Screen readers hear the name, not the heading, as the
-  dialog's label.
-- **The veil is an `anchored` layer at window coordinates.** The styled Dialog is
-  a local overlay and does not use `@gpuix/react/dialog`'s portal (0.11.0
-  publishes `createPortal`; wrapping the headless dialog is a future migration).
-  `position:"absolute"` resolves against the mount parent, so a dialog must be
-  mounted at (or near) the root of the tree. It then paints over the whole
-  window; it does not participate in a scrolling parent's clip.
-- The top-right close control is an icon (`x`) named "Close".
-- A dialog is not resizable, draggable or multi-window. One dialog per surface.
-
-## Motion
-
-The veil fades and the surface rises 8px into place on a `slow` (320 ms) enter;
-closing runs the reverse. It is a fade plus an offset, not a scale — the runtime
-has no `transform`. The surface stays mounted for its exit, so focus is back on
-the opener the moment the dialog closes while the box fades out. `MotionProvider`
-turns it off (`preference="reduced"` paints the resting frame with a zero
-duration); `docs/component-api.md` §11 has the levels and the shared rules.
 
 ## API
 
-| `Dialog` prop | Type | Default |
-| ------------- | ---- | ------- |
-| `open` | `boolean` | — (uncontrolled) |
-| `defaultOpen` | `boolean` | `false` |
-| `onOpenChange` | `(open: boolean) => void` | — |
-| `dismissible` | `boolean` | `true` |
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Dialog` | `open` | `boolean` | — |
+| `Dialog` | `defaultOpen` | `boolean` | `false` |
+| `Dialog` | `onOpenChange` | `(open: boolean) => void` | — |
+| `Dialog` | `dismissible` | `boolean` | `true` |
+| `DialogContent` | `label` | `string` (required) | — |
+| `DialogContent` | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `DialogContent` | `showClose` | `boolean` | `true` |
+| `DialogContent` | `initialFocus` | `() => number \| null` | — |
 
-| `DialogContent` prop | Type | Default |
-| -------------------- | ---- | ------- |
-| `label` | `string` (required) | — |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
-| `showClose` | `boolean` | `true` |
-| `initialFocus` | `() => number \| null` | — |
+## Limitations
 
-`DialogTrigger`, `DialogClose` and `DialogTitle` take the GPUix host props where
-they render one host element plus, for the buttons, the `variant`/`size` of the
-button. Every part merges `style` last.
-
-## Verification
-
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (15 tests): the
-veil measured at the window bounds, a click on a control behind it blocked, a
-leaving surface no longer taking presses, focus entering and returning, Escape
-and backdrop dismissal, Tab wrapping at both ends,
-`role`/`aria-label` in the accessibility dump, both themes reading
-`colors.popover`/`colors.overlay`, a non-dismissible dialog ignoring both
-dismissals, a controlled dialog staying closed, the caller's own close control,
-and a caller content `ref`. Plus `src/internal/dismiss-layer.test.ts` for the
-stack's own rules, and `src/behaviour/overlay-elevation.test.tsx`, which reads
-the composed `lg` elevation beside the ring off the rendered surface.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
+- No `aria-modal` or `aria-labelledby`; the name is `label`.
+- The veil is an anchored layer at window coordinates, not a portal.
+- Not resizable, draggable or multi-window.
+- Focus enters on open and returns to the opener on close.
 
 ## Related
 

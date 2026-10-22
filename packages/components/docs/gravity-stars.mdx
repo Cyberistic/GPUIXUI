@@ -1,13 +1,7 @@
 ---
 title: Gravity stars
-description: A decorative field of stars falling into a seeded well, for a launch panel, a sign-in screen or an empty workspace.
+description: A decorative field of stars falling into a well.
 ---
-
-`GravityStars` paints a bounded box of stars that gather toward one point: each
-star is born on the box's own edge, falls inward while it brightens, fades out at
-the well, and is reborn on the edge. It is decoration: it publishes no
-accessibility node, takes no pointer input, and names nothing. The content in
-front of it owns the words and the presses.
 
 ## Usage
 
@@ -22,139 +16,29 @@ import { GravityStars } from "@gpuixui/components/gravity-stars";
 </div>;
 ```
 
-The field **measures itself**, so the box has to be bounded — a height, or an
-absolute inset like the one above. Before the first layout it paints nothing,
-because there is no box to fall through yet.
-
-## How a fall works
-
-The runtime has no `transform` (upstream issue #102) and no paths, so a star
-cannot orbit or curve. What it can do is move and fade: a star is an absolutely
-positioned dot whose `left`/`top` the runtime tweens, lit by `opacity`, the one
-paint value it animates natively.
-
-The layout is a pure function of the measured box and one seed
-(`gravity-stars/logic.ts`):
-
-- **one well** — seeded inside the middle 30–70% of the box, so every edge has
-  room to feed it;
-- **radial** — the stars divide the circle evenly with a little angle jitter, and
-  each is born where its own ray meets the nearest box edge, so the field leaves
-  from the shape of the surface rather than from a circle;
-- **paced** — a star nearer the well lands sooner, and each waits its own share
-  of the base time, so the field never collapses in one beat.
-
-## The two legs
-
-One tween cannot brighten and dim, so a fall is drawn twice:
-
-1. **approach** — the first `0.6` of the star's time, in to the frame it names
-   while brightening to its own peak;
-2. **plunge** — the rest, in to the well while fading to nothing.
-
-The plunge **retargets** from the frame on screen (`initial: false`), so the
-approach is not replayed. The acceleration is the runtime's `easeIn` curve — a
-fall speeds up as it goes — not a simulated force. When the plunge completes the
-element is re-keyed onto the edge as a fresh star, so the field keeps falling;
-both ends are invisible, so the restart has no frame a reader can see.
-
-```tsx
-import { GravityStars } from "@gpuixui/components/gravity-stars";
-import { useTheme } from "@gpuixui/components";
-
-const theme = useTheme();
-
-<GravityStars
-  count={60}
-  seed={4}
-  // The three decisions the field leaves to its caller.
-  color={theme.colors.accent}
-  minSize={1}
-  maxSize={3}
-  fallMs={2_400}
-/>;
-```
-
-## Reduced motion
-
-`MotionProvider preference="reduced"` paints every star held on its **approach
-frame** rather than deleting the field — the sky stays, the fall goes. No star
-then has a motion target, so nothing restarts. The entrance fade is zeroed the
-same way the overlays are.
-
-```tsx
-import { GravityStars, MotionProvider } from "@gpuixui/components";
-
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <GravityStars count={44} />
-</MotionProvider>;
-```
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `count` | `number` | `36` | `0` paints none; the cap is `160`, because each star is its own native tween. |
-| `seed` | `number` | `1` | The layout seed, including the well's place. The same seed paints the same fall; a non-finite value is the house seed. |
-| `minSize` | `number` | `1` | The smallest star, in pixels. A value below 1 falls back. |
-| `maxSize` | `number` | `3` | The largest star. An inverted pair is read low-to-high. |
-| `color` | `string` | theme `primary` | The star colour; each star paints it at its own peak opacity. |
-| `fallMs` | `number` | `3_000` | The base time for one fall. Below 600 ms the motion reads as a blink and falls back; 20 s is the cap. |
-| `level` | `MotionLevel` | `"slow"` | The entrance fade. `MotionProvider` zeroes it under the reduced preference. |
-| `className` | `string` | — | A Tailwind class string, merged last. |
-| `style` | `StateStyle<GravityStarsState>` | — | The box's style, or a function of `{ count, reducedMotion, width, height }`. Give it a height. |
-
-Every star carries an internal id (`gravity-star-0`, `gravity-star-1`, …) and a
-`testId` on the field lands on the clipped box.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `count` | `number` | `36` |
+| `seed` | `number` | `1` |
+| `minSize` | `number` | `1` |
+| `maxSize` | `number` | `3` |
+| `color` | `string` | theme `primary` |
+| `fallMs` | `number` | `3_000` |
+| `level` | `MotionLevel` | `"slow"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<GravityStarsState>` | — |
 
 ## Limitations
 
-- **Straight legs, not a curve.** No `transform` and no paths, so a star cannot
-  orbit the well, spiral, or trail behind itself; the fall is two straight
-  segments per star.
-- **The speed is fixed at layout.** Acceleration is the runtime's `easeIn`
-  curve, not a force: nothing changes a star's pace while it falls.
-- **The well cannot follow the pointer.** The field is decoration and takes no
-  pointer input, so an interactive pull would steal the presses it exists to sit
-  behind.
-- **Falls restart, they do not loop.** A completed plunge re-keys the element
-  into a fresh star on the edge; both ends sit at zero opacity, so the restart is
-  invisible.
-- **The box must be bounded by the caller.** The field measures itself; a box
-  with no height paints no stars.
-- **A hidden field keeps falling.** The runtime exposes no visibility query, so
-  unmount the field (or pass `count={0}`) when it is off screen.
-- **A resize re-draws the field.** The layout follows the new box from the same
-  seed, and every fall restarts — a tween cannot be resumed at an arbitrary
-  progress.
-- **No accessibility node.** The field adds no role and no name; give the content
-  in front of it its own.
-- **One tween per star.** `count` is capped at 160 so a field cannot turn into a
-  thousand native animations.
-
-## Verification
-
-Eight native behaviour cases in `src/behaviour/gravity-stars.test.tsx` (8 tests)
-measure the real renderer: the stars born on the edge the box measured and aimed
-at one well, the approach target and then the plunge retargeting from the frame
-on screen, a landed star reborn on the edge, the same seed painting the same
-fall, the reduced preference painting the approach frame with no motion target,
-`count={0}` painting none, no accessibility node and no pointer input, and the
-entrance at the house `slow` level. The arithmetic is
-`src/gravity-stars/logic.test.ts` (11 tests): determinism, an unmeasured box, one
-edge birth per star, the shared well, the hand-over frame, every quadrant
-reached, the brightness/fall/delay bands, no single-beat collapse, the two legs'
-split, the stilled frame, and tenth-of-a-pixel geometry. The clamps it shares
-with the other fields are `src/internal/scatter.test.ts`.
+- Straight legs, not a curve; stars cannot orbit the well.
+- The well cannot follow the pointer.
+- The box must be bounded by the caller.
+- No accessibility node; the content owns the words.
 
 ## Related
 
-- [Stars](/docs/components/stars) — the same field arithmetic, twinkling in
-  place.
-- [Particles](/docs/components/particles) — the same field arithmetic, drifting
-  on a warm ping-pong.
-- [Fireworks](/docs/components/fireworks) — the same two-phase life, flying out
-  instead of falling in.
-- [Bubbles](/docs/components/bubbles) — the same off-stage restart, rising
-  instead of falling.
-- [Reveal](/docs/components/reveal) — the entrance a field's content can join.
+- [Stars](/docs/components/stars) — the same field arithmetic, twinkling in place.
+- [Fireworks](/docs/components/fireworks) — the same two-phase life, flying out.
+- [Bubbles](/docs/components/bubbles) — the same off-stage restart, rising.

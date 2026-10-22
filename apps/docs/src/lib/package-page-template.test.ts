@@ -17,13 +17,12 @@ import { packageCollections } from "./collection-routes";
  * kept rendering it as the component's documentation.
  *
  * Only the sections every page can carry are required. A page without sizes,
- * a keyboard path or a theming decision omits that section by design
- * (`docs/preview-strategy.md`), so the guard holds the four that no component
- * page may hide:
+ * a keyboard path, a theming decision or a test ledger omits that section by
+ * design (`docs/preview-strategy.md`), so the guard holds the three that no
+ * component page may hide:
  *
  *   - `## API` — what the props are;
  *   - an accessibility or limitations section — the runtime's budget;
- *   - an evidence section (`## Verification` or `## Testing`) — what ran;
  *   - `## Related` — the sibling, parent or alternative.
  *
  * The known gaps are listed with the workstream that owns the page, and a gap
@@ -64,10 +63,6 @@ const sections: ReadonlyArray<Section> = [
     name: "accessibility or limitations",
     accepts: (heading) =>
       heading.startsWith("Accessibility") || heading === "Limitations",
-  },
-  {
-    name: "evidence",
-    accepts: (heading) => heading === "Verification" || heading === "Testing",
   },
   { name: "Related", accepts: (heading) => heading === "Related" },
 ];

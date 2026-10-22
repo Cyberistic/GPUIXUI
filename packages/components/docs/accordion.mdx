@@ -3,10 +3,9 @@ title: Accordion
 description: Stacked sections where one — or several — can be open.
 ---
 
-`Accordion` is a list of collapsible sections that agree on which ones are open.
-The two modes have genuinely different state: a single optional value, or an
-ordered set. That is modelled as a tagged union in `accordion/logic.ts`, not as a
-list plus a boolean.
+<ComponentPreview name="accordion-demo" />
+
+## Usage
 
 ```tsx
 import {
@@ -16,160 +15,63 @@ import {
   AccordionTrigger,
 } from "@gpuixui/components/accordion";
 
-<Accordion type="single" collapsible={false} defaultValue="what">
+<Accordion type="single" collapsible defaultValue="what">
   <AccordionItem value="what">
     <AccordionTrigger>What is GPUix?</AccordionTrigger>
-    <AccordionContent>A native rendering runtime…</AccordionContent>
+    <AccordionContent>A native rendering runtime.</AccordionContent>
   </AccordionItem>
 </Accordion>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Accordion` | the open state, the mode rules, the divider order |
-| `AccordionItem` | one section, its value and its disabled flag |
-| `AccordionTrigger` | a full-width button with `aria-expanded` and the indicator icon |
-| `AccordionContent` | the body; unmounts while its section is closed |
+```text
+Accordion
+├── AccordionItem
+│   ├── AccordionTrigger
+│   └── AccordionContent
+```
 
-## The two modes
+## Examples
 
-| Mode | Rules |
-| ---- | ----- |
-| `type="single"` | opening another section closes the first; toggling the open one is a no-op unless `collapsible` |
-| `type="single" collapsible` | toggling the open section closes it, leaving nothing open |
-| `type="multiple"` | toggling adds or removes; the order sections were opened in is preserved and duplicates are impossible |
-
-Disabled items are skipped by clicks and keys, and their trigger leaves the tab
-order.
-
-## Controlled and uncontrolled
+### Multiple
 
 ```tsx
-<Accordion type="multiple" defaultValue={["one"]}>…</Accordion>;
-
-<Accordion
-  type="single"
-  collapsible
-  value={openSection}                 // `null` means "nothing open"
-  onValueChange={setOpenSection}
->
-  …
+<Accordion type="multiple" defaultValue={["one"]}>
+  <AccordionItem value="one">…</AccordionItem>
 </Accordion>;
 ```
 
-Single mode reports `string | null` — `null` is how a controlled, collapsible
-accordion expresses "closed". `undefined` is reserved for "uncontrolled", which
-is why it is not used for the closed state. Multiple mode reports the array.
+### Controlled
 
-## Keyboard
-
-The trigger is a button: Tab reaches it, Enter and Space toggle it.
-
-| Key | Effect |
-| --- | ------ |
-| `Enter` / `Space` | toggle the focused section |
-| `↓` / `↑` | focus the next/previous enabled header, wrapping |
-| `Home` / `End` | focus the first/last enabled header |
-
-Arrow movement changes focus only — it never opens or closes a section. Disabled
-headers are skipped, and a control inside an open section keeps its own arrow
-keys because the handler lives on the trigger, not the accordion root.
-
-A repeat event while `Enter` or `Space` is held is ignored, so one keypress
-toggles a section once instead of flipping it on every platform repeat.
+```tsx
+<Accordion
+  type="single"
+  collapsible
+  value={openSection}
+  onValueChange={setOpenSection}
+/>;
+```
 
 ## API
-
-`Accordion` takes the GPUix host props and merges `style` last. The root is a
-discriminated union on `type`, so the value type follows the mode: a `single`
-accordion cannot be given an array.
 
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
 | `Accordion` | `type` | `"single" \| "multiple"` (required) | — |
-| `Accordion` | `collapsible` | `boolean` — single mode only; may the open section close | `false` |
-| `Accordion` | `value` / `defaultValue` | `string \| null` (single) · `ReadonlyArray<string>` (multiple) | — / `null` · `[]` |
-| `Accordion` | `onValueChange` | `(value: string \| null) => void` (single) · `(values: ReadonlyArray<string>) => void` (multiple) | — |
-| `AccordionItem` | `value` | `string` (required) — the id the root reports | — |
+| `Accordion` | `collapsible` | `boolean` | `false` |
+| `Accordion` | `value` / `defaultValue` | `string \| null` (single) · `ReadonlyArray<string>` (multiple) | — |
+| `Accordion` | `onValueChange` | `(value: string \| null) => void` | — |
+| `AccordionItem` | `value` | `string` (required) | — |
 | `AccordionItem` | `disabled` | `boolean` | `false` |
-| `AccordionTrigger` | `style` | `StateStyle<AccordionTriggerState>` — `{ open, disabled, focused }` | recipe |
-| `AccordionContent` | `children` | `ReactNode` — mounted only while its section is open | — |
+| `AccordionTrigger` | `style` | `StateStyle<AccordionTriggerState>` | recipe |
+| `AccordionContent` | `children` | `ReactNode` | — |
 
-Every part also takes `className`, joined after the recipe so it wins conflicts.
+## Limitations
 
-## Theming
-
-Triggers paint the fixed 14/20 `text-sm` step at weight 500 at
-`controlHeight(theme, "lg")` — the height is the theme's, the type is the
-registry's — with the
-theme's `hover` wash behind the row and the label's own `foreground` kept on it —
-the pair `contrastPairs` holds to the body floor. (A brand-coloured hover label
-was 5.61:1 on the base light page and 4.38:1 on Linux light's, under that floor.)
-Sections are separated by a
-`borderWidth.thin` divider in `colors.border`; the last section draws none. The
-indicator is the icon set's `chevron-down`/`chevron-up` (swapped, not rotated)
-because 0.11.0's `StyleDesc` has no `transform` — a rotation is not available.
-
-## Style by state
-
-`AccordionTrigger` takes a `StyleDesc` or a function of `AccordionTriggerState`
-(`{ open, disabled, focused }`).
-
-`focused` reaches a press, a click and a programmatic focus — but not a `Tab`
-traversal: the runtime focuses the element without running its `onFocus` on
-0.11.0 (`tabs-lifecycle` reads `focuses=0`; `tooltip-lifecycle` does not open its
-tip, re-measured 2026-10-22). The ring declared at rest is still the keyboard
-cue: the flag is presentational, and nothing here depends on the event
-(`docs/component-api.md` §3).
-
-```tsx
-<AccordionTrigger
-  style={(state) => ({ opacity: state.open ? 1 : 0.8 })}
-/>
-```
-
-## Accessibility and limitations
-
-- `aria-expanded` on each trigger; the trigger names the section.
-- **No `aria-controls`** in 0.11.0; the relationship is positional.
-- The indicator icon carries `aria-label="Expand"` / `"Collapse"`.
-- Arrow keys move focus between enabled headers; they do not activate them.
-- The panel **grows and collapses** through its measured height (`normal`,
-  200 ms) plus a fade; the body stays mounted for the exit. See **Motion** below.
-
-## Motion
-
-Each open panel is one clipped box whose `height` animates from zero to the
-body's own measured height, plus a fade — the inner box reports that height
-through `onLayout`, so the transition is a real measurement rather than a
-guessed maximum. Closing runs `height` back to zero and fades the body out over
-the same `normal` (200 ms) level; the body stays mounted until that tween ends.
-
-The reveal itself is `AutoHeight`, the package's one measured-height primitive:
-`AccordionContent` names the section's open state and its recipe and leaves the
-measurement, the mount window and the reduced-motion rule to that part. The same
-primitive animates `Collapsible`'s body, so a fix to the reveal reaches every
-disclosure at once (`docs/auto-height.mdx`). `MotionProvider` supplies the
-reduced-motion preference (`docs/component-api.md` §11).
-
-## Verification
-
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (16 tests):
-single mode closing the previous section, the non-collapsible no-op, the
-collapsible close, multiple mode keeping sections, the disabled section, Enter
-activation, a held Enter toggling a section once, the controlled contract
-including the `null` close, arrow / `Home` / `End` movement between headers
-(wrapping past a disabled one, without opening it), the measured hover wash in
-both themes, and a caller header `ref`.
-
-`src/accordion/logic.test.ts` covers the transition table (15 cases), and
-`src/internal/collection.test.ts` covers the shared movement arithmetic.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
+- No `aria-controls`; the trigger–body relationship is positional.
+- A `Tab` traversal focuses the trigger without running its `onFocus`.
+- The body grows and collapses through its measured height.
+- The indicator chevron swaps, it does not rotate.
 
 ## Related
 

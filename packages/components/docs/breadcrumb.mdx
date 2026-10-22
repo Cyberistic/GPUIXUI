@@ -3,10 +3,9 @@ title: Breadcrumb
 description: The trail to the current page, with an optional collapsed middle.
 ---
 
-`Breadcrumb` shows where the current page sits in a hierarchy. The trail is
-declarative — `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage` — and
-`maxItems` collapses the middle while always keeping the first entry and the
-current page.
+<ComponentPreview name="breadcrumb-states" />
+
+## Usage
 
 ```tsx
 import {
@@ -25,97 +24,41 @@ import {
     </BreadcrumbItem>
     <BreadcrumbSeparator />
     <BreadcrumbItem>
-      <BreadcrumbLink onSelect={() => go("GPUIXUI")}>GPUIXUI</BreadcrumbLink>
-    </BreadcrumbItem>
-    <BreadcrumbSeparator />
-    <BreadcrumbItem>
       <BreadcrumbPage>components</BreadcrumbPage>
     </BreadcrumbItem>
   </BreadcrumbList>
 </Breadcrumb>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Breadcrumb` | `role="navigation"`, the `maxItems` budget and an optional separator |
-| `BreadcrumbList` | `role="list"` and the collapse |
-| `BreadcrumbItem` | one `role="listitem"` |
-| `BreadcrumbLink` | a link (`role="link"`) with Enter/Space and `onSelect` |
-| `BreadcrumbPage` | the current page: plain text, no tab stop, announced as selected |
-| `BreadcrumbSeparator` | the glyph between entries; not focusable |
-
-## Collapse rule
-
-`maxItems` below 3 is clamped to 3, so the trail can always show its start, a gap
-and its end. A budget it cannot read — `NaN`, the shape a measured width takes
-when the measurement never arrives — reads as that minimum, because a `NaN`
-budget would otherwise hide the whole tail and leave a trailing ellipsis where
-the current page belongs; an infinite budget means no limit. When the trail fits,
-every entry renders. Otherwise the control keeps the first entry, an ellipsis,
-and the last `maxItems - 2` entries. A hidden entry takes its separator with it —
-the list pairs each separator with the item that follows it.
-
-`BreadcrumbList` reads its **direct** children to do this, which is why the parts
-are plain elements rather than wrappers: a custom component around an item is
-counted as one entry.
-
-## Keyboard
-
-Tab reaches each link in order. Enter and Space fire `onSelect`. The current page
-and the ellipsis are not focusable.
+```text
+Breadcrumb
+└── BreadcrumbList
+    └── BreadcrumbItem
+        ├── BreadcrumbLink
+        ├── BreadcrumbPage
+        └── BreadcrumbSeparator
+```
 
 ## API
 
-Every part takes the GPUix host props and merges `style` last.
-
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Breadcrumb` | `div role="navigation"` | `maxItems?: number` (below 3 clamps to 3, `NaN` reads as 3; absent = no collapse), `separator?: ReactNode` (default `/`) |
-| `BreadcrumbList` | `div role="list"` | — (reads its direct children) |
+| `Breadcrumb` | `div role="navigation"` | `maxItems?` (clamps below 3), `separator?` (default `/`) |
+| `BreadcrumbList` | `div role="list"` | reads its direct children |
 | `BreadcrumbItem` | `div role="listitem"` | — |
-| `BreadcrumbLink` | `div role="link"` | `onSelect?: () => void`, `current?: boolean` |
-| `BreadcrumbPage` | `text` | — (the current page, not focusable) |
+| `BreadcrumbLink` | `div role="link"` | `onSelect?`, `current?` |
+| `BreadcrumbPage` | `text` | the current page, not focusable |
 | `BreadcrumbSeparator` | `text role="presentation"` | — |
 
-## Theming
+## Limitations
 
-Links and separators paint the fixed 12/16 step `text-xs` compiles to, not the
-theme's `caption` role: a brand that restyles `caption` leaves the trail where it
-is. Links are `colors.mutedForeground` and hover to `colors.foreground`; the
-current page is `colors.foreground`. The root has no surface of its own.
-
-## Accessibility and limitations
-
-- `role="navigation"` with `aria-label="Breadcrumb"`, `role="list"`, and
-  `role="listitem"` on the entries.
-- **No `aria-current`** in `@gpuix/native@0.11.0`, so the current page carries
-  `aria-selected="true"` — the substitution Pagination, Stepper and Timeline
-  already publish. It is still text with no tab stop and no link role; the
-  attribute is what tells a reader which crumb is the page, so the trail does
-  not rely on colour alone.
-- The collapsing ellipsis is a text node with `aria-label="More"`; it is not a
-  button and not in the tab order.
+- No `aria-current`; the current page carries `aria-selected`.
+- The collapsing ellipsis is text, not a button.
 - Separators are `role="presentation"`.
-
-## Verification
-
-`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (6 tests):
-the trail and its separator count, selecting a link but not the current page,
-Enter activation, collapsing the middle while keeping both ends, the ellipsis
-staying out of the tab order, and exactly the current page announced as
-selected in the accessibility tree.
-
-`src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8,
-budgets 3–6, a `NaN` budget (the minimum) and an infinite one (no limit).
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
 
 ## Related
 
 - **Tabs** — switching between peers.
 - **Pagination** — moving through a linear result set.
-- **Breadcrumb navigation** in a desktop workspace is the same component.

@@ -1,11 +1,7 @@
 ---
 title: Hexagon
-description: A tiled hexagon outline field generated for its own box, for a desktop hero, a launch panel or an empty state.
+description: A tiled hexagon outline field generated for its box.
 ---
-
-`Hexagon` paints a flat-top hexagon grid behind its content: one generated
-`<svg source>` path, tinted with one theme role, that slowly breathes between
-dim and full. Content passed as children sits above it and keeps its presses.
 
 ## Usage
 
@@ -19,105 +15,27 @@ import { Hexagon } from "@gpuixui/components/hexagon";
 />;
 ```
 
-Give the field a box — a height, padding or a sized flex parent — because the
-grid is generated for the size the field actually has. Before the first layout
-it paints nothing.
-
-## How the grid is painted
-
-The runtime paints `<svg source>` markup as **one mask** in the element's
-`style.color`, so the whole grid is one `<path>` of closed hexagon subpaths
-rather than an element per cell. `svg-pattern` measured where that path lands on
-0.11.0: it is scaled by the element's **width alone**, the view box clips its own
-overflow, and the element does **not** clip the centred content area when it is
-taller than the box.
-
-So the field generates its view box **from its measured box**. The width scale is
-then 1:1 on both axes, and a wide hero cannot leak line art above or below it. A
-resize re-measures and re-generates the grid.
-
-- hexagons are `2r` wide and `√3·r` tall, columns start `1.5r` apart, and odd
-  columns sit half a row lower, so the outlines share edges;
-- the grid starts wholly inside the top-left corner and covers until the right
-  and bottom edges, with the view box clipping the rest;
-- a radius small enough to need more than 900 cells is grown to the radius the
-  cap allows, instead of painting a markup that runs away on a large box;
-- `radius` is clamped to 10–160 px and `stroke` to 0.5–6 px; an unreadable value
-  uses the house value.
-
-## Movement
-
-The runtime has no `transform` (upstream issue #102), so a line-art field cannot
-rotate, pan or scale. The one motion it can honestly offer is a slow breath of
-opacity: the line layer pings between 55% and full on its own `onMotionComplete`,
-because the runtime tweens a target once. `breatheMs` sets one leg (8 s by
-default); the entrance fade is the house `slow` level.
-
-```tsx
-import { Hexagon } from "@gpuixui/components/hexagon";
-
-<Hexagon breatheMs={12_000} level="normal" />;
-```
-
-## Reduced motion
-
-`MotionProvider preference="reduced"` paints the lines at full opacity with no
-breath and zeroes the entrance, so the field is still decoration rather than a
-deleted background.
-
-```tsx
-import { Hexagon, MotionProvider } from "@gpuixui/components";
-
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <Hexagon />
-</MotionProvider>;
-```
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `radius` | `number` | `30` | The hexagon radius (centre to vertex) in pixels, 10–160. A smaller value can be grown to honour the cell cap. |
-| `stroke` | `number` | `1` | Outline weight in pixels, 0.5–6. |
-| `color` | `string` | theme `border` | The one tint the mask paints. |
-| `breatheMs` | `number` | `8_000` | One breath leg in milliseconds, 1–60 s. |
-| `level` | `MotionLevel` | `"slow"` | The entrance fade. `MotionProvider` zeroes it under the reduced preference. |
-| `className` | `string` | — | A Tailwind class string, merged last. |
-| `style` | `StateStyle<HexagonState>` | — | The box's style, or a function of `{ width, height, reducedMotion }`. |
-
-The field's `testId` lands on the box; the line art is `${testId}-lines` and the
-breathing layer `${testId}-breath` while it exists.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `radius` | `number` | `30` |
+| `stroke` | `number` | `1` |
+| `color` | `string` | theme `border` |
+| `breatheMs` | `number` | `8_000` |
+| `level` | `MotionLevel` | `"slow"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<HexagonState>` | — |
 
 ## Limitations
 
-- **One ink.** The runtime paints a markup as one tint, so a multi-colour grid is
-  several `<svg>` elements, not one markup with per-shape colours.
-- **No transform.** The grid cannot rotate, pan or scale (upstream issue #102);
-  the breath is the only motion.
-- **Generated for its box.** A resize re-generates the grid, so the lines do not
-  keep their absolute position across a resize.
-- **The cell cap grows the radius.** A radius that would need more than 900 cells
-  is not honoured exactly; the field draws the smallest grid that fits.
-- **A hidden field keeps breathing.** The runtime exposes no visibility query, so
-  unmount it when it is off screen.
-- **It owns no semantics.** No role and no name: the content in front of it must
-  carry both.
-
-## Verification
-
-Six native behaviour cases in `src/behaviour/hexagon.test.tsx` (6 tests) read
-the real renderer: the view box matching the measured box, the breath turning
-around when a leg completes, the reduced preference painting still and full, the
-field publishing no accessibility node and taking no pointer input, and a resize
-regenerating the grid. The geometry is `src/hexagon/logic.test.ts` (7 tests): the
-view box and cell count, the first hex wholly inside the corner, determinism, the
-cell cap, the authored radius kept when it fits, the fallbacks and clamps, and an
-unmeasured box painting nothing.
+- One ink; a multi-colour grid is several `<svg>` elements.
+- No transform; the breath is the only motion.
+- Generated for its box; a resize re-generates the grid.
+- It owns no semantics; the content must carry them.
 
 ## Related
 
 - [Topography](/docs/components/topography) — the contour field beside it.
-- [Gradient](/docs/components/gradient) — the other background that breathes paint.
-- [Stars](/docs/components/stars) — a decorative field that also holds still under
-  the reduced preference.
+- [Gradient](/docs/components/gradient) — the other background that breathes.
 - [Card](/docs/components/card) — the surface a hexagon field usually sits in.

@@ -1,18 +1,7 @@
 ---
 title: Chat
-description: A conversation scaffold — followed transcript, composer and a status machine.
+description: A conversation scaffold with a composer and status machine.
 ---
-
-`Chat` is the conversation surface: a bounded transcript that follows new
-replies, a composer that sends with Enter and stops with Escape, and a four-state
-status machine that decides what is allowed. The behaviour is ported from
-**shadcn/ui's AI Elements `chat`**
-([source](https://ui.shadcn.com/docs/ai-elements/base/chat), MIT); the
-implementation is ours and runs on GPUix host elements.
-
-`Chat` is a **scaffold, not a client**: it emits `submit`, `stop` and `retry`
-intents and renders whatever rows you give it. Your transport (an HTTP call, a
-local model, a scripted demo) owns the reply.
 
 ## Usage
 
@@ -32,7 +21,6 @@ import {
   onSubmit={send}
   onStop={stop}
   onRetry={retry}
-  error="The reply failed."
 >
   <ChatMessages>
     {messages.map((message) => (
@@ -45,144 +33,31 @@ import {
 </ChatRoot>;
 ```
 
-Give the conversation a bounded height (the root in a flex parent that does, or
-a `style={{ height }}`). The transcript takes the leftover space and the composer
-stays put. The runnable build is `examples/chat.example.tsx`, which the native
-playground mounts: it drives a scripted stream, fails every third send on
-purpose, and shows the retry path.
+## Composition
 
-## Status
-
-`ChatStatus` is `"idle" | "submitting" | "streaming" | "error"` — a schema
-(`ChatStatus`, with `isChatStatus` as its guard), not a loose string.
-
-| State | Composer | Transcript |
-| ----- | -------- | ---------- |
-| `idle` | Send, when the draft is not blank | rows |
-| `submitting` | Stop (when `onStop` is given) | rows |
-| `streaming` | Stop | rows + the streaming marker a row supplies |
-| `error` | Send, plus the failure row and Retry | rows + failure |
-
-The rules live in `chatMove(status, command)`:
-
-| Command | From | To | Emits |
-| ------- | ---- | -- | ----- |
-| `submit` | `idle`, `error` | `submitting` | `submit` |
-| `submit` | `submitting`, `streaming` | unchanged | nothing |
-| `stop` | `submitting`, `streaming` | `idle` | `stop` |
-| `stop` | `idle`, `error` | unchanged | nothing |
-| `retry` | `error` | `submitting` | `retry` |
-| `begin` | `submitting` | `streaming` | nothing |
-| `delta` | `submitting`, `streaming` | `streaming` | nothing |
-| `complete` | `submitting`, `streaming` | `idle` | nothing |
-| `fail` | `submitting`, `streaming` | `error` | nothing |
-
-A busy chat **refuses** a second submit, so a held or repeated Enter cannot send
-two messages, and `stop` never emits a submit. Use the same function for the
-token events you receive (`begin`, `delta`, and then `complete` or `fail`), so
-your status and the transcript cannot disagree.
-
-`isChatBusy` and `canChatSubmit` are the two predicates the composer uses.
-
-## Keyboard
-
-| Key | Where | Effect |
-| --- | ----- | ------ |
-| `Enter` | composer | sends the draft |
-| `Shift+Enter` | composer | opens a new line |
-| `Escape` | composer, while a reply is open | stops the reply |
-
-These are **measured** in `@gpuix/native@0.11.0`, not assumed: a textarea's
-Enter reaches `onSubmit` only when that listener is set (without it the runtime
-consumes Enter as a newline and the app sees no `keydown`), Shift+Enter inserts a
-newline and reaches **no** handler at all, and Escape arrives as a `keydown`.
+```text
+ChatRoot
+├── ChatMessages
+└── ChatComposer
+```
 
 ## API
 
-Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
-merges `style` last.
-
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `ChatRoot` | a `role="region"` named by `label` | `status?`, `defaultStatus?`, `onStatusChange?`, `onSubmit` (required), `onStop?`, `onRetry?`, `error?`, `label?`, `className?`, children |
-| `ChatMessages` | the `MessageScroller` viewport, the empty panel, the failure row outside the scroller and the jump control | `empty?`, `emptyTitle?`, `emptyDescription?`, `className?`, children |
-| `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?`, `onValueChange?`, `label?`, `placeholder?`, `submitLabel?`, `stopLabel?`, `hint?`, `attachments?`, `disabled?`, `className?`, `style?: StateStyle<ChatComposerState>` |
-
-`onSubmit` is the transport. `status` is controlled when supplied and internal
-otherwise; either way `onStatusChange` reports every move the component makes.
-Without `onStop` the composer shows no Stop control rather than one that cannot
-act.
-
-`ChatComposerState` is `{ status, busy, empty, disabled }`.
-
-`ChatMessages` shows an empty panel while it has no rows (`empty` replaces the
-default copy) and a failure row when the status is `error`, with Retry only when
-`onRetry` is supplied. The failure row sits **between the scroller and the jump
-control**, not inside it: a reader scrolled up must still see that the reply
-failed.
-
-## Theming
-
-The composer is a `background` surface with a `border` edge; the failure copy
-paints the destructive tone's measured page role; the transcript paints the
-scroller's roles; the empty panel is `foreground` over `mutedForeground`. Every
-value is a theme role, so a custom theme repaints the conversation — see
-[Theming](/docs/theming).
-
-## Accessibility
-
-- The conversation is a `region` named by `label`; the transcript is the
-  scroller's named `group` with the same name.
-- The field is named by `label` (`"Message"` by default); Send and Stop are real
-  buttons with visible text, so their names need no label prop.
-- The failure row is in the reading order just above the jump control and the
-  composer, outside the scroller, so it is reachable and visible even when the
-  transcript is scrolled to the top. Retry is a button.
-- New rows are **not announced**: `@gpuix/native@0.11.0` has no `aria-live`, so a
-  screen reader is not told that a reply arrived. The status is visible, and the
-  consumer's readout (see the example) is the assistive-technology path.
-- No `aria-labelledby`, so the region name and the field name are written
-  separately.
+| `ChatRoot` | `role="region"` named by `label` | `status?`, `defaultStatus?`, `onStatusChange?`, `onSubmit` (required), `onStop?`, `onRetry?`, `error?`, `label?` |
+| `ChatMessages` | the transcript viewport and empty panel | `empty?`, `emptyTitle?`, `emptyDescription?` |
+| `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?`, `onValueChange?`, `label?`, `placeholder?`, `hint?`, `disabled?` |
 
 ## Limitations
 
-- **The transport is yours.** The component never calls a model; it emits the
-  intent and renders the rows you give it.
-- **No streaming API of its own.** A consumer drives the status with `chatMove`
-  and appends rows; the component renders them.
-- **Shift+Enter is indistinguishable from a paste.** The runtime inserts the
-  newline and delivers no event, so a consumer cannot tell how a line break got
-  there.
-- **The transcript is not virtualized.** It renders every row (the
-  `MessageScroller` contract); a long history is the `<virtual-list>` swap the
-  scroller page records.
-- **No `aria-live`.** New rows are not announced.
-
-## Verification
-
-`src/chat/logic.test.ts` holds the machine with no renderer (12 tests): every
-command from every state, the busy-submit refusal, Stop never emitting a submit,
-and a token that cannot start an idle conversation. `src/behaviour/chat.test.tsx`
-measures the composed parts in the real GPUix renderer (13 tests): the empty
-panel and its replacement, Enter sending and clearing the draft, Shift+Enter
-adding a line without sending, Stop replacing Send and refusing a send, Escape
-stopping the reply and re-enabling Send, the failure row and its Retry (and that
-row staying visible at the top of a long transcript), a disabled field out of the
-tab order in the measured disabled role, the tail following a new row while the
-composer stays put, and a reader who scrolled up being left alone.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
-
-It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
-x64, or this Intel Mac, where the locally built `darwin-x64` binding is
-installed.
+- The transport is yours; the component never calls a model.
+- No streaming API; drive the status with `chatMove`.
+- No `aria-live`; new rows are not announced.
+- The transcript is not virtualized.
 
 ## Related
 
 - **Message** — the row this scaffold repeats.
 - **Message Scroller** — the pinned-follow contract `ChatMessages` composes.
-- **Toast** — the notification surface for a failure the reader should see
-  wherever they are.
-- **Alert** — an in-flow failure that is not tied to a reply.
+- **Toast** — a failure the reader should see wherever they are.
