@@ -34,7 +34,7 @@
  */
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -307,6 +307,16 @@ const run = async (
     };
   } finally {
     child.kill();
+    // Wait for Chrome to let go of the profile, then delete the scratch dir: the
+    // frame is the artefact, not the browser's state.
+    await new Promise<void>((gone) => {
+      if (child.exitCode !== null) gone();
+      else {
+        child.once("exit", () => gone());
+        setTimeout(gone, 2000);
+      }
+    });
+    await rm(profile, { force: true, recursive: true }).catch(() => undefined);
   }
 };
 
