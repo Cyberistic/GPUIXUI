@@ -186,6 +186,38 @@ the default registry (`border-strong` for the picker triggers' strong edge,
 `overlaySurfaceStyle`, while the picker triggers keep their density height and
 the picker surfaces keep their scroll/positioning in `style`.
 
+## Motion
+
+The overlays and the tab rail move: a surface fades and travels a few pixels,
+and the tab pill slides between measured trigger boxes. The split is deliberate —
+the recipe owns the resting appearance, `@gpuixui/motion` owns the timing
+(`motionTiming`: 120/160/200/320/500 ms, ease-out in, ease-in out), and
+`src/internal/presence.tsx` owns the frames and the mount window. The runtime
+executes the tween and has **no `transform`**, so nothing scales, rotates or
+translates — shadcn's `zoom-in-95` stays unsupported rather than faked.
+
+A closed surface stays mounted for its exit tween and unmounts when it ends, so
+a dismissal is immediate in state (`onOpenChange`, focus return) while the box
+fades out. Dialog and the command palette rise 8px on a `slow` enter; the drawer
+travels 12px from its own edge; popovers and menus travel 4–8px out from their
+trigger's side; a toast slides 16px in from the right edge; an accordion panel
+animates to the body's measured height; the tab pill retargets
+`left`/`top`/`width`/`height` from the box on screen.
+
+The preference is the application's, because the runtime exposes none:
+
+```tsx
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <App />
+</MotionProvider>
+```
+
+A reduced run is a zero-duration assignment — the resting frame still paints.
+`src/behaviour/presence.test.tsx` measures the movement, the exit window, the
+reduced negative control, the accordion's measured height and the pill in the
+real renderer. Levels, the per-surface table and the reason presence is a
+duration: `docs/component-api.md` §11.
+
 ## What is here
 
 | Area | State |

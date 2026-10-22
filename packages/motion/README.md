@@ -19,6 +19,7 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `timeline.ts` | Keyframes with offsets, `stagger`, and a keyed `Sequence` driver |
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
+| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds |
 | `react.ts` | `useSpring`, `useTransition`, `useInertia` |
 
 ## Spring
@@ -84,6 +85,29 @@ it a stable `transition` (`instant`, `tween`, or `springTransition`).
 
 Pass `options.reducedMotion` from your platform's reduced-motion preference; it
 completes immediately at the target.
+
+## The runtime's declarative timing
+
+GPUix executes a tween over a duration and an easing it is told. That timing is
+the library's, not each surface's:
+
+```ts
+import { motionTiming } from "@gpuixui/motion/timing";
+
+motionTiming("slow");                    // { duration: 0.32, ease: "easeInOut" }
+motionTiming("normal", { phase: "enter" }); // { duration: 0.2, ease: "easeOut" }
+motionTiming("slow", { preference: "reduced" }); // { duration: 0 } — no journey
+```
+
+The levels are `step` 120 ms, `fast` 160, `normal` 200, `slow` 320 and `notice`
+500; the phases ease out on entry, in on exit and both ways between two resting
+states. `preference` is the application's — the runtime exposes no
+reduced-motion query — and the reduced branch keeps the frames, so a component
+still paints its resting state.
+
+Import the subpath, not the barrel: a consumer that only needs a timing should
+not load the spring and timeline maths (`@gpuixui/components` imports exactly
+`./timing` for this reason).
 
 ## What is deferred to the runtime
 
