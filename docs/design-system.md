@@ -355,7 +355,7 @@ levels.
 | invalid | the `destructive` role as the field's edge and as its `focusVisible` line; the fill and text roles do not change, so the value and placeholder stay readable |
 | link | `brandText(theme)` — the brand derived into a text colour that reads on all eight surfaces it can sit on, with `hover` / `active` washes behind it and the `accent` / `selected` washes a row paints under it; never the raw `primary` fill role |
 | loading | a mark — `primary`, or a status tone's readable role — never the disabled fade: a busy control keeps its label, its tab stop and its announcement |
-| focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
+| focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay); `controlFocusRing(theme, { disabled, invalid })` — what a control declares: the same outline recoloured to `destructive` while invalid, and none at all while disabled (the runtime keeps the focus of an element it disables) |
 | dimmed | `keyboardFocusDimOpacity` — every other focusable keeps 40% of itself while one control has keyboard focus, except that a focused `input`/`textarea` dims nothing (typing is keyboard input too); a control whose text must stay readable opts out with `keyboardFocusDim: false` |
 | text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor (secondary text at the secondary floor) |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
@@ -547,6 +547,14 @@ exactly how a mouse-opened dialog or menu focuses its content. That path keeps
 `focusRing(theme)`, the zero-offset, zero-blur shadow spread by
 `borderWidth.strong`, painted while the overlay holds focus. Both draw outside
 the border box, so neither reflows the layout.
+
+What a *control* declares is `controlFocusRing(theme, { disabled, invalid })`:
+the same outline while it can act, the `destructive` role while it failed
+validation (so its focus line and its edge agree), and **no ring** while it is
+disabled — the runtime does not move the focus off an element that becomes
+disabled, so a declaration made anyway would stay painted on a control that
+refuses every key. The helper is the tokens package's statement of the rule both
+component packages already apply in their own seam.
 
 Selection never relies on colour alone for meaning: selected rows also carry
 `aria-selected` where the runtime exposes it.

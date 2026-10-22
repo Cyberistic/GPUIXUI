@@ -2396,10 +2396,39 @@ const overlayContentStyle = (theme: Theme, focused: boolean) =>
 // }
 ```
 
-Both were measured in a real window on `@gpuix/native@0.11.0` (the playground's
-`focus-visible` live probe): Tab paints the outline and dims the other
-focusables; a mouse press paints neither; a programmatic focus after a Tab has
-been delivered paints the outline. That is why the package keeps the shadow
+`controlFocusRing(theme, { disabled, invalid })` is the ring a **control**
+declares, because a control's own state changes what it may paint. While the
+control can act it is exactly `keyboardFocusRing`. A **failed validation**
+recolours the outline to the `destructive` role — the same role the field's edge
+and its message paint, held to the boundary floor on the strips a control sits on
+— and leaves the width and the offset alone, so an invalid field's focus line and
+its border say the same thing. A **disabled** control declares **no ring at
+all**: the runtime does not move the focus off an element that becomes disabled,
+so a declaration made anyway would stay painted on a control that refuses every
+key. The absence is `undefined`, like `elevationShadow` for the reserved level,
+so a spread paints the control's fill and nothing else.
+
+```tsx
+import { controlFocusRing, type Theme } from "@gpuixui/tokens";
+
+const controlStyle = (
+  theme: Theme,
+  state: { disabled?: boolean; invalid?: boolean },
+) => ({
+  ...controlFocusRing(theme, state),
+  backgroundColor: theme.colors.input,
+});
+```
+
+Both component packages decide that rule in their own seam today
+(`packages/primitives/src/core/focus.ts`, `packages/components/src/internal/theme.ts`);
+this helper is the one home the tokens package publishes for it, and their
+adoption is tracked in `TODO.md`.
+
+Both rings were measured in a real window on `@gpuix/native@0.11.0` (the
+playground's `focus-visible` live probe): Tab paints the outline and dims the
+other focusables; a mouse press paints neither; a programmatic focus after a Tab
+has been delivered paints the outline. That is why the package keeps the shadow
 instead of replacing it outright. Neither ring changes an element's size or
 position.
 

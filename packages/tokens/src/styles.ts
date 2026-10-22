@@ -212,6 +212,61 @@ export function keyboardFocusRing(theme: Theme): KeyboardFocusRing {
   };
 }
 
+/** What a control's own state changes about the ring it declares. */
+export interface ControlFocusState {
+  /**
+   * The control cannot act. Its ring goes with its tab stop: the runtime does
+   * not move the focus off an element that becomes disabled, so a declaration
+   * made anyway stays painted on a control that refuses every key.
+   */
+  readonly disabled?: boolean;
+  /**
+   * The control failed validation. The outline takes the `destructive` role,
+   * the same role the field's edge and the invalid message paint.
+   */
+  readonly invalid?: boolean;
+}
+
+/**
+ * The keyboard ring a **control** declares at rest, once its own state is known:
+ * {@link keyboardFocusRing}, recoloured while invalid and **absent** while
+ * disabled.
+ *
+ * `undefined` rather than an empty object, because a disabled control has no
+ * ring to paint — the same absence {@link elevationShadow} returns for the
+ * reserved overlay level. Spreading it into a style is still the call site:
+ * `{ ...controlFocusRing(theme, { disabled }), backgroundColor }` paints no
+ * ring while disabled and needs no branch.
+ *
+ * The rule is the theme's, not a component's: the colours are the `ring` and
+ * `destructive` roles, and the width is `borderWidth.strong`.
+ * `@gpuixui/primitives` and `@gpuixui/components` decide the same rule in their
+ * own ring seam today; this helper is the one home the tokens package publishes
+ * for it, and their adoption is tracked in `TODO.md`.
+ *
+ * @example
+ * ```tsx
+ * <div style={{ ...controlFocusRing(theme, { invalid }), backgroundColor: theme.colors.input }} />
+ * ```
+ */
+export function controlFocusRing(
+  theme: Theme,
+  state: ControlFocusState = {},
+): KeyboardFocusRing | undefined {
+  if (state.disabled === true) {
+    return undefined;
+  }
+  const ring = keyboardFocusRing(theme);
+  return state.invalid === true
+    ? {
+        focusVisible: {
+          ...ring.focusVisible,
+          outlineColor: theme.colors.destructive,
+        },
+      }
+    : ring;
+}
+
 /**
  * The action families a control paints as a solid fill.
  *

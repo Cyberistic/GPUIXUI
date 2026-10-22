@@ -46,6 +46,21 @@ import {
 const printedRatio = (ratio: number | undefined): string =>
   ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1`;
 
+/**
+ * Whether a painter spreads a keyboard ring into its style.
+ *
+ * The pair a wash is measured for only means something while the element still
+ * declares a ring. Which helper names that declaration is the painter's choice:
+ * `keyboardRing` is the unconditional one, and `controlRing` — or the token
+ * package's `controlFocusRing` once a package adopts it — is the same
+ * declaration with a disabled control left out, because the runtime keeps the
+ * focus of an element it disables and a ring there would sit on a control that
+ * refuses every key. Pinning one helper's name made a rename red; pinning the
+ * declaration keeps the pair alive through it.
+ */
+const declaresKeyboardRing = (source: string): boolean =>
+  /\.\.\.(?:keyboardRing|controlRing|controlFocusRing)\(theme/.test(source);
+
 /** A recipe's class string, read from `@gpuixui/tw`'s source. */
 const recipe = (source: string, name: string): string => {
   const match = new RegExp(`export const ${name} =\\s*"([^"]*)"`).exec(source);
@@ -1509,7 +1524,7 @@ describe("the ring on the fill it hugs", () => {
       "utf8",
     );
 
-    expect(row).toContain("...keyboardRing(theme)");
+    expect(declaresKeyboardRing(row), "list.tsx").toBe(true);
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
     expect(row).toContain("active: { backgroundColor: theme.colors.active }");
@@ -1517,7 +1532,7 @@ describe("the ring on the fill it hugs", () => {
     expect(button).toContain(
       "active: { backgroundColor: theme.colors.active }",
     );
-    expect(button).toContain("...keyboardRing(theme)");
+    expect(declaresKeyboardRing(button), "internal/button.tsx").toBe(true);
   });
 
   it("reports a ring that disappears into the row it surrounds", () => {

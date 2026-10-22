@@ -15,8 +15,9 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { contrastPairs } from "./contrast.js";
 import { focusExample } from "./focus-ring.example.js";
-import { focusRing, keyboardFocusRing } from "./styles.js";
+import { controlFocusRing, focusRing, keyboardFocusRing } from "./styles.js";
 import {
   darkTheme,
   extendTheme,
@@ -78,6 +79,62 @@ describe("keyboardFocusRing", () => {
   });
 });
 
+describe("controlFocusRing", () => {
+  it("is the keyboard ring while the control can act", () => {
+    themes.forEach(([label, theme]) => {
+      expect(controlFocusRing(theme), label).toEqual(keyboardFocusRing(theme));
+      expect(controlFocusRing(theme, { invalid: false }), label).toEqual(
+        keyboardFocusRing(theme),
+      );
+    });
+  });
+
+  it("recolours the outline for an invalid control and leaves its geometry alone", () => {
+    const ring = controlFocusRing(lightTheme, { invalid: true });
+    const rest = keyboardFocusRing(lightTheme).focusVisible;
+
+    expect(ring?.focusVisible.outlineColor).toBe(lightTheme.colors.destructive);
+    expect(ring?.focusVisible.outlineColor).not.toBe(lightTheme.colors.ring);
+    expect(ring?.focusVisible.outlineWidth).toBe(rest.outlineWidth);
+    expect(ring?.focusVisible.outlineOffset).toBe(rest.outlineOffset);
+  });
+
+  it("declares no ring at all for a disabled control", () => {
+    // The runtime does not move the focus off an element that becomes disabled,
+    // so a declaration made anyway would stay painted on a control that refuses
+    // every key. `undefined` is the absence, not an empty ring.
+    expect(controlFocusRing(lightTheme, { disabled: true })).toBeUndefined();
+    expect(
+      controlFocusRing(darkTheme, { disabled: true, invalid: true }),
+    ).toBeUndefined();
+  });
+
+  it("reads the width and the two roles from the theme, not a literal", () => {
+    const brand = extendTheme(lightTheme, {
+      borderWidth: { strong: 3 },
+      colors: { ring: "#0A7F5A", destructive: "#8A1020" },
+    });
+
+    expect(controlFocusRing(brand)?.focusVisible.outlineWidth).toBe(3);
+    expect(controlFocusRing(brand)?.focusVisible.outlineColor).toBe("#0A7F5A");
+    expect(
+      controlFocusRing(brand, { invalid: true })?.focusVisible.outlineColor,
+    ).toBe("#8A1020");
+  });
+
+  it("paints an invalid control's outline from a role the contract measures", () => {
+    // The recolour is only as good as the role: `destructive` is held to the
+    // boundary floor on the strips an invalid control sits on, so the ring is
+    // not a colour nobody checked. This is the premise the recolour rests on.
+    expect(
+      contrastPairs.some(
+        (pair) =>
+          pair.foreground === "destructive" && pair.floor === "boundary",
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("focusRing", () => {
   it("stays the unconditional shadow for a programmatic focus", () => {
     const { boxShadow } = focusRing(lightTheme);
@@ -106,5 +163,22 @@ describe("focus example", () => {
     );
     expect(rest).not.toHaveProperty("boxShadow");
     expect(programmatic).toEqual(focusRing(lightTheme));
+  });
+
+  it("shows a control's two states around the same call", () => {
+    // The example is what a reader copies: a failed validation keeps the
+    // geometry and takes the destructive role, and a disabled control keeps its
+    // quiet fill and declares no `focusVisible` at all.
+    const { invalid, disabled, rest } = focusExample(lightTheme);
+
+    expect(rest.focusVisible).toBeDefined();
+    expect(invalid.focusVisible?.outlineColor).toBe(
+      lightTheme.colors.destructive,
+    );
+    expect(invalid.focusVisible?.outlineWidth).toBe(
+      rest.focusVisible?.outlineWidth,
+    );
+    expect(disabled.focusVisible).toBeUndefined();
+    expect(disabled.backgroundColor).toBe(lightTheme.colors.disabled);
   });
 });

@@ -290,6 +290,23 @@ paints the outline and dims the other focusables, a mouse press paints neither,
 and a programmatic focus after a Tab paints it. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
+A **control** declares its ring through `controlFocusRing(theme, { disabled, invalid })`,
+because its own state changes what it may paint: the same outline while it can
+act, the `destructive` role while it failed validation (so its focus line and
+its edge agree), and **no ring** while it is disabled — the runtime keeps the
+focus of an element it disables, so a declaration made anyway would sit on a
+control that refuses every key. The absence is `undefined`, so a spread paints
+the fill and nothing else.
+
+```tsx
+import { controlFocusRing } from "@gpuixui/tokens";
+
+<div style={{ ...controlFocusRing(theme, { disabled, invalid }), backgroundColor: theme.colors.input }} />;
+```
+
+The two component packages decide that rule in their own seam today; this helper
+is the one home the tokens package publishes for it.
+
 ## Keyboard focus dim
 
 While one element has keyboard focus, GPUix multiplies **every other focusable
