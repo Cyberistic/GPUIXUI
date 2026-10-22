@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { componentIndex } from "../../lib/component-index-data";
-import { filterEntries } from "../../lib/component-index";
+import { filterEntries, verdictMark } from "../../lib/component-index";
 
 /**
  * A filterable index of every component and primitive page.
@@ -10,9 +10,13 @@ import { filterEntries } from "../../lib/component-index";
  * is already rendered: the unfiltered list is the complete section.
  *
  * The query matches a page's name, its purpose, its lane, the parts it
- * documents, the props and prop types its API table declares and the limits it
- * records — so a reader who knows the part, the prop or the capability a
- * component lacks finds the page from here.
+ * documents, the props and prop types its API table declares, the limits it
+ * records and its inventory verdict — so a reader who knows the part, the prop,
+ * the capability a component lacks or that it is only partly supported finds
+ * the page from here.
+ *
+ * A row whose `COMPONENTS.md` verdict is not whole wears that verdict, because
+ * the status strip is on the page the reader has not opened yet.
  */
 export function ComponentIndex() {
   const [query, setQuery] = useState("");
@@ -46,31 +50,42 @@ export function ComponentIndex() {
         </p>
       ) : (
         <ul className="grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2">
-          {matches.map((entry) => (
-            <li className="m-0" key={entry.url}>
-              <a
-                className="block h-full rounded-xl border border-border px-3 py-2 no-underline transition-colors hover:bg-muted/60"
-                href={entry.url}
-              >
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className="font-medium text-foreground">
-                    {entry.title}
-                    {entry.preview ? (
-                      <span className="ml-2 rounded border border-border px-1.5 py-0.5 align-middle font-mono text-[0.65rem] font-normal text-muted-foreground">
-                        Browser preview
-                      </span>
-                    ) : null}
+          {matches.map((entry) => {
+            const mark = verdictMark(entry.verdict);
+            return (
+              <li className="m-0" key={entry.url}>
+                <a
+                  className="block h-full rounded-xl border border-border px-3 py-2 no-underline transition-colors hover:bg-muted/60"
+                  href={entry.url}
+                >
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium text-foreground">
+                      {entry.title}
+                      {entry.preview ? (
+                        <span className="ml-2 rounded border border-border px-1.5 py-0.5 align-middle font-mono text-[0.65rem] font-normal text-muted-foreground">
+                          Browser preview
+                        </span>
+                      ) : null}
+                      {mark === undefined ? null : (
+                        <span
+                          className="ml-2 rounded border border-border px-1.5 py-0.5 align-middle font-mono text-[0.65rem] font-normal text-muted-foreground"
+                          title={mark.detail}
+                        >
+                          {mark.label}
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-mono text-[0.7rem] text-muted-foreground">
+                      {entry.section}
+                    </span>
                   </span>
-                  <span className="font-mono text-[0.7rem] text-muted-foreground">
-                    {entry.section}
+                  <span className="mt-1 block text-sm text-muted-foreground">
+                    {entry.description}
                   </span>
-                </span>
-                <span className="mt-1 block text-sm text-muted-foreground">
-                  {entry.description}
-                </span>
-              </a>
-            </li>
-          ))}
+                </a>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

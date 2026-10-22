@@ -3234,7 +3234,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 110/110
+`[x]` `[██████████]` 111/111
+
+`[x]` Mark the **runtime support verdict on the index row** — `/docs/components`
+told a reader "status is per component, not per page" and then showed 88 rows
+alike: the status and the GPUix support verdict lived in the status strip on the
+page they had not opened and in `COMPONENTS.md`, so scanning for a component the
+runtime covers only in part meant opening pages one by one. `ComponentEntry`
+gained `verdict`, resolved at build time by `component-index-data.ts` through the
+**same** `inventory-status.ts` alias table the strip uses (so `Input` → `Text
+inputs`, and a title two rows could answer still throws instead of guessing), and
+`verdictMark` is silent for `done` on `yes`/`yes (…)` while naming each axis that
+is not whole (`partial`, `todo · unknown`). The index renders it as a badge
+beside the Browser-preview mark and the query indexes the verdict's words, so
+`partial` finds the **59** rows whose support cell says partial and `unknown`
+finds the `?` ones. The index page, `docs/preview-strategy.md` §The status strip
+and `apps/docs/README.md` state where the mark comes from. `component-index.test.ts`
+(+2 real-index cases, 4 fixture cases) holds the resolution and both directions of
+the silence, `component-index.test.tsx` the rendered badge, and
+`component-page.test.ts` the prose. Directions measured: `verdict: undefined` in
+`entryOf` fails 5 cases naming `ThemeProvider` as the only row without one;
+dropping `{mark.label}` from the render fails with all 59 partial rows; removing
+the verdict from the haystack fails the two query cases. Verified in the dev
+server: `/docs/components` paints the `partial` mark on `/docs/primitives/button`
+and none on `/docs/components/card` or `/docs/primitives/select`;
+`/api/search?query=partial` returns the index and its guide. Suite 72 files / 660
+tests, `check-types` and `build` green.
 
 `[x]` Curate the **Confirmation dialog** page and hold its two safety decisions to
 the source — `/docs/components/confirm-dialog` served

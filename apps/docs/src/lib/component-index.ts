@@ -18,6 +18,26 @@ export interface ComponentPage {
   readonly source: string;
 }
 
+/**
+ * The `COMPONENTS.md` row a page reports: its status and its GPUix verdict.
+ *
+ * The row, not the page, decides whether a component is shipped and how much of
+ * it the runtime supports. The index and the page's status strip read the same
+ * two cells, so they cannot disagree.
+ */
+export interface PageVerdict {
+  readonly status: string;
+  readonly support: string;
+}
+
+/**
+ * The inventory row for a page title, or `undefined` when it has none.
+ *
+ * Injected rather than imported: the index stays a function of its pages, and
+ * the data module resolves the title aliases the status strip already uses.
+ */
+export type VerdictOf = (title: string) => PageVerdict | undefined;
+
 /** One row the index renders. */
 export interface ComponentEntry {
   readonly title: string;
@@ -25,6 +45,8 @@ export interface ComponentEntry {
   readonly url: string;
   /** The sidebar section the page belongs to: `Primitives` or `Components`. */
   readonly section: string;
+  /** The inventory row the page reports, when `COMPONENTS.md` has one. */
+  readonly verdict: PageVerdict | undefined;
   /** The compound parts the page documents, e.g. `DialogFooter`. */
   readonly parts: ReadonlyArray<string>;
   /** The props the page's API table documents, e.g. `onCheckedChange`. */
@@ -348,8 +370,53 @@ export const limitationsOf = (source: string): string =>
     .replace(/\s+/g, " ")
     .trim();
 
+/**
+ * The mark a row wears when its inventory verdict is not whole.
+ *
+ * `done` with `yes` support is the shipped component, so it needs no badge: an
+ * unmarked row is complete on both axes. Anything else names the axis that is
+ * not — `partial` support, a `todo` status, a `?` nobody measured — because the
+ * page says status is per component and a reader scanning the list cannot see
+ * the strip on a page they have not opened.
+ */
+export interface VerdictMark {
+  /** The words the row wears, e.g. `partial` or `todo · unknown`. */
+  readonly label: string;
+  /** The inventory cells those words summarise, for the mark's tooltip. */
+  readonly detail: string;
+}
+
+/** The first word of a cell, with `?` read as the absence it stands for. */
+const verdictWord = (cell: string): string => {
+  const first = cell.split(/[\s(]/)[0] ?? "";
+  return first === "?" ? "unknown" : first;
+};
+
+/** The badge a verdict earns, or `undefined` when the row is whole. */
+export const verdictMark = (
+  verdict: PageVerdict | undefined,
+): VerdictMark | undefined => {
+  if (verdict === undefined) return undefined;
+  const words = [
+    verdict.status.startsWith("done") ? undefined : verdictWord(verdict.status),
+    verdict.support.startsWith("yes")
+      ? undefined
+      : verdictWord(verdict.support),
+  ].filter((word): word is string => word !== undefined);
+
+  return words.length === 0
+    ? undefined
+    : {
+        label: words.join(" · "),
+        detail: `status: ${verdict.status} · GPUix support: ${verdict.support}`,
+      };
+};
+
 /** One page's row, or `undefined` when it has no title or is not a component. */
-const entryOf = (page: ComponentPage): ComponentEntry | undefined => {
+const entryOf = (
+  page: ComponentPage,
+  verdictOf: VerdictOf,
+): ComponentEntry | undefined => {
   const url = pageUrl(page.file);
   const section = sectionOf(page.file);
   if (url === undefined || section === undefined) return undefined;
@@ -363,6 +430,7 @@ const entryOf = (page: ComponentPage): ComponentEntry | undefined => {
     description: frontmatterValue(head, "description") ?? "",
     url,
     section,
+    verdict: verdictOf(title),
     parts: partsOf(page.source),
     ...propsOf(page.source),
     limitations: limitationsOf(page.source),
@@ -378,10 +446,11 @@ const entryOf = (page: ComponentPage): ComponentEntry | undefined => {
  */
 export const buildIndex = (
   pages: ReadonlyArray<ComponentPage>,
+  verdictOf: VerdictOf,
 ): ReadonlyArray<ComponentEntry> => {
   const seen = new Set<string>();
   const entries = pages.flatMap((page) => {
-    const entry = entryOf(page);
+    const entry = entryOf(page, verdictOf);
     if (entry === undefined || seen.has(entry.url)) return [];
     seen.add(entry.url);
     return [entry];
@@ -402,7 +471,8 @@ export const buildIndex = (
  * "primitives" narrows to that lane. A part name finds the page that
  * documents it, a prop or its type finds the page whose API table declares it,
  * a limitation finds the pages that carry it, and "preview" finds the pages
- * that open with a browser rendering.
+ * that open with a browser rendering. The inventory verdict is indexed too, so
+ * "partial" finds every component the runtime covers only in part.
  */
 export const filterEntries = (
   entries: ReadonlyArray<ComponentEntry>,
@@ -415,8 +485,12 @@ export const filterEntries = (
   if (terms.length === 0) return entries;
 
   return entries.filter((entry) => {
+    const verdict =
+      entry.verdict === undefined
+        ? ""
+        : `${entry.verdict.status} ${entry.verdict.support} ${verdictMark(entry.verdict)?.label ?? ""}`;
     const haystack =
-      `${entry.title} ${entry.description} ${entry.section} ${entry.parts.join(" ")} ${entry.props.join(" ")} ${entry.types.join(" ")} ${entry.limitations} ${entry.preview ? "browser preview" : ""}`.toLowerCase();
+      `${entry.title} ${entry.description} ${entry.section} ${entry.parts.join(" ")} ${entry.props.join(" ")} ${entry.types.join(" ")} ${entry.limitations} ${verdict} ${entry.preview ? "browser preview" : ""}`.toLowerCase();
     return terms.every((term) => haystack.includes(term));
   });
 };

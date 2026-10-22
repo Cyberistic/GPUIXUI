@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { verdictMark } from "../../lib/component-index";
 import { componentIndex } from "../../lib/component-index-data";
 import { ComponentIndex } from "./component-index";
 
@@ -47,6 +48,27 @@ describe("the component index", () => {
       componentIndex
         .filter((entry) => !entry.preview)
         .filter((entry) => row(entry.url).includes("Browser preview")),
+    ).toEqual([]);
+  });
+
+  it("wears the inventory verdict on the rows that are not whole", () => {
+    // The page says status is per component but the strip is on the page a
+    // reader has not opened; the row itself has to carry the verdict, and a
+    // component the runtime supports whole must not wear a mark.
+    const partial = componentIndex.filter(
+      (entry) => verdictMark(entry.verdict)?.label === "partial",
+    );
+    const whole = componentIndex.filter(
+      (entry) => verdictMark(entry.verdict) === undefined,
+    );
+
+    expect(partial.length).toBeGreaterThan(30);
+    expect(whole.length).toBeGreaterThan(0);
+    expect(
+      partial.filter((entry) => !row(entry.url).includes(">partial<")),
+    ).toEqual([]);
+    expect(
+      whole.filter((entry) => row(entry.url).includes(">partial<")),
     ).toEqual([]);
   });
 

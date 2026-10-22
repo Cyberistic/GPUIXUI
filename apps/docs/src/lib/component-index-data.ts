@@ -2,7 +2,10 @@ import {
   buildIndex,
   type ComponentEntry,
   type ComponentPage,
+  type PageVerdict,
 } from "./component-index";
+import { inventory } from "./inventory-data";
+import { statusForPage } from "./inventory-status";
 
 /**
  * The component index, read at build time.
@@ -10,6 +13,10 @@ import {
  * The site's own component pages come first: a curated page shadows the package
  * page that shares its URL, and `buildIndex` keeps the first row. The packages'
  * files are read as the page count grows, so nothing has to be listed here.
+ *
+ * Each row carries the `COMPONENTS.md` verdict the page's status strip prints,
+ * resolved through the same alias table, so the list can mark a component the
+ * runtime supports only in part.
  */
 const siteFiles = import.meta.glob("../../content/docs/components/**/*.mdx", {
   eager: true,
@@ -32,7 +39,14 @@ const pages = (files: Readonly<Record<string, string>>): ComponentPage[] =>
     source,
   }));
 
-export const componentIndex: ReadonlyArray<ComponentEntry> = buildIndex([
-  ...pages(siteFiles),
-  ...pages(packageFiles),
-]);
+const verdictOf = (title: string): PageVerdict | undefined => {
+  const status = statusForPage(inventory, title);
+  return status.kind === "row"
+    ? { status: status.row.status, support: status.row.support }
+    : undefined;
+};
+
+export const componentIndex: ReadonlyArray<ComponentEntry> = buildIndex(
+  [...pages(siteFiles), ...pages(packageFiles)],
+  verdictOf,
+);

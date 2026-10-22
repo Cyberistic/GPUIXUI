@@ -7,8 +7,11 @@ import {
   pageUrl,
   partsOf,
   propsOf,
+  verdictMark,
   type ComponentEntry,
   type ComponentPage,
+  type PageVerdict,
+  type VerdictOf,
 } from "./component-index";
 import { componentIndex } from "./component-index-data";
 import { packageCollections } from "./collection-routes";
@@ -58,8 +61,12 @@ const entry = (
   types,
   limitations,
   preview,
+  verdict: undefined,
   url: `/docs/${section.toLowerCase()}/${title.toLowerCase()}`,
 });
+
+/** A verdict source that knows no rows: the pure cases do not need one. */
+const noVerdict: VerdictOf = () => undefined;
 
 const root = new URL("../../../../", import.meta.url);
 
@@ -93,22 +100,36 @@ describe("the index's URL mapping", () => {
 
 describe("the index built from pages", () => {
   it("keeps the first page for a URL, so a curated page shadows the package's", () => {
-    const entries = buildIndex([
-      page("content/docs/components/dialog.mdx", "Dialog", "The curated one."),
-      page("packages/components/docs/dialog.mdx", "Dialog", "The package one."),
-    ]);
+    const entries = buildIndex(
+      [
+        page(
+          "content/docs/components/dialog.mdx",
+          "Dialog",
+          "The curated one.",
+        ),
+        page(
+          "packages/components/docs/dialog.mdx",
+          "Dialog",
+          "The package one.",
+        ),
+      ],
+      noVerdict,
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]?.description).toBe("The curated one.");
   });
 
   it("orders primitives before components and each section by title", () => {
-    const entries = buildIndex([
-      page("packages/components/docs/tabs.mdx", "Tabs"),
-      page("packages/primitives/docs/button.mdx", "Button"),
-      page("packages/components/docs/accordion.mdx", "Accordion"),
-      page("packages/icons/docs/icon.mdx", "Icon"),
-    ]);
+    const entries = buildIndex(
+      [
+        page("packages/components/docs/tabs.mdx", "Tabs"),
+        page("packages/primitives/docs/button.mdx", "Button"),
+        page("packages/components/docs/accordion.mdx", "Accordion"),
+        page("packages/icons/docs/icon.mdx", "Icon"),
+      ],
+      noVerdict,
+    );
 
     expect(entries.map((row) => row.title)).toEqual([
       "Button",
@@ -125,10 +146,13 @@ describe("the index built from pages", () => {
   });
 
   it("drops a page with no title instead of listing a blank row", () => {
-    const entries = buildIndex([
-      page("packages/components/docs/card.mdx"),
-      page("packages/components/docs/badge.mdx", "Badge", "A status label."),
-    ]);
+    const entries = buildIndex(
+      [
+        page("packages/components/docs/card.mdx"),
+        page("packages/components/docs/badge.mdx", "Badge", "A status label."),
+      ],
+      noVerdict,
+    );
 
     expect(entries.map((row) => row.title)).toEqual(["Badge"]);
   });
@@ -137,18 +161,81 @@ describe("the index built from pages", () => {
     // The badge is a claim about the page, so it is read from the page: the
     // curated pages open with `<ComponentPreview`, and a package page opens
     // with the native-run note instead (`docs/preview-strategy.md`).
-    const entries = buildIndex([
-      {
-        file: "content/docs/components/dialog.mdx",
-        source:
-          '---\ntitle: Dialog\n---\n\n<ComponentPreview name="dialog-demo" />',
-      },
-      page("packages/components/docs/card.mdx", "Card"),
-    ]);
+    const entries = buildIndex(
+      [
+        {
+          file: "content/docs/components/dialog.mdx",
+          source:
+            '---\ntitle: Dialog\n---\n\n<ComponentPreview name="dialog-demo" />',
+        },
+        page("packages/components/docs/card.mdx", "Card"),
+      ],
+      noVerdict,
+    );
 
     expect(entries.map((row) => [row.title, row.preview])).toEqual([
       ["Card", false],
       ["Dialog", true],
+    ]);
+  });
+});
+
+describe("the verdict a row reports", () => {
+  const rows: Readonly<Record<string, PageVerdict>> = {
+    Button: { status: "done", support: "partial" },
+    Card: { status: "done", support: "yes" },
+    Skeleton: { status: "todo", support: "?" },
+  };
+  const verdicts: VerdictOf = (title) => rows[title];
+  const entries = buildIndex(
+    [
+      page("packages/primitives/docs/button.mdx", "Button"),
+      page("packages/components/docs/card.mdx", "Card"),
+      page("packages/primitives/docs/skeleton.mdx", "Skeleton"),
+      page("packages/components/docs/theme-provider.mdx", "ThemeProvider"),
+    ],
+    verdicts,
+  );
+
+  it("carries the inventory row beside the page, and none when the page has no row", () => {
+    expect(entries.map((row) => [row.title, row.verdict])).toEqual([
+      ["Button", { status: "done", support: "partial" }],
+      ["Skeleton", { status: "todo", support: "?" }],
+      ["Card", { status: "done", support: "yes" }],
+      ["ThemeProvider", undefined],
+    ]);
+  });
+
+  it("marks only the rows whose verdict is not whole", () => {
+    // `done` on `yes` is the shipped component; an unmarked row is complete on
+    // both axes, so a badge always means something.
+    expect(verdictMark({ status: "done", support: "yes" })).toBeUndefined();
+    expect(
+      verdictMark({ status: "done", support: "yes (measured)" }),
+    ).toBeUndefined();
+    expect(verdictMark({ status: "done", support: "partial" })).toEqual({
+      label: "partial",
+      detail: "status: done · GPUix support: partial",
+    });
+    expect(verdictMark(undefined)).toBeUndefined();
+  });
+
+  it("names both axes when neither is whole, reading `?` as unknown", () => {
+    expect(verdictMark({ status: "todo", support: "?" })).toEqual({
+      label: "todo · unknown",
+      detail: "status: todo · GPUix support: ?",
+    });
+    expect(verdictMark({ status: "blocked", support: "partial" })?.label).toBe(
+      "blocked · partial",
+    );
+  });
+
+  it("finds a component by its verdict, so partial support is a query", () => {
+    expect(filterEntries(entries, "partial").map((row) => row.title)).toEqual([
+      "Button",
+    ]);
+    expect(filterEntries(entries, "unknown").map((row) => row.title)).toEqual([
+      "Skeleton",
     ]);
   });
 });
@@ -474,6 +561,39 @@ describe("the real index", () => {
     expect(
       componentIndex.filter((row) => row.preview).map((row) => row.url),
     ).toEqual(curated.map((page) => page.url).toSorted());
+  });
+
+  it("reports the inventory verdict on every page but the argued provider", () => {
+    // The row is what makes a mark honest, so a page the inventory answers
+    // must carry it — the one exemption is the provider, argued in
+    // `inventory-status.ts` and already exempt from its status strip.
+    expect(
+      componentIndex
+        .filter((row) => row.verdict === undefined)
+        .map((row) => row.title),
+    ).toEqual(["ThemeProvider"]);
+  });
+
+  it("marks the components the runtime supports only in part", () => {
+    const button = componentIndex.find(
+      (row) => row.url === "/docs/primitives/button",
+    );
+    const card = componentIndex.find(
+      (row) => row.url === "/docs/components/card",
+    );
+    const partial = componentIndex.filter((row) =>
+      row.verdict?.support.startsWith("partial"),
+    );
+
+    expect(verdictMark(button?.verdict)?.label).toBe("partial");
+    expect(verdictMark(card?.verdict)).toBeUndefined();
+    // The mark is worth a badge only if it is common enough to scan for.
+    expect(partial.length).toBeGreaterThan(30);
+    expect(
+      partial.filter(
+        (row) => !filterEntries(componentIndex, "partial").includes(row),
+      ),
+    ).toEqual([]);
   });
 
   it("finds a component by a part name, which the sidebar cannot show", () => {

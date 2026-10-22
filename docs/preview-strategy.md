@@ -274,6 +274,17 @@ names a row that is gone, when an exemption outlives its page, or when a title
 two rows could answer would report the wrong verdict. `Grid` was the second
 exemption until its Tier 1 row landed; the strip now reports it.
 
+The same row marks the index row, because the strip is on a page the reader has
+not opened yet. `src/lib/component-index-data.ts` resolves every page title
+through that one alias table and `buildIndex` copies the two cells onto the
+entry; `verdictMark` stays silent for `done` on `yes` and names each axis that
+is not whole (`partial`, `todo · unknown`), so the list cannot wear a mark the
+inventory does not support. The query indexes those words too, which is what
+makes `partial` a way to find the components the runtime covers only in part.
+`component-index.test.ts` holds the resolution, both axes and the silent case,
+`component-index.test.tsx` holds the badge on the rendered rows, and
+`component-page.test.ts` requires the index page to say what the mark means.
+
 Because the package writes Markdown and the site compiles MDX, the packages'
 files must satisfy both: valid YAML frontmatter and no raw `<tag>` outside code.
 `src/lib/package-docs.test.ts` holds that line, and a collection fails whole

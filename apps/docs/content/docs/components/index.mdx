@@ -9,10 +9,12 @@ The Tier 2 components are composed from the [primitives](/docs/primitives):
 dialogs, menus, tabs, pickers, tables and the rest of the feedback layer. This
 index covers both lanes — every component and primitive page — and the filter
 matches a page's name, its purpose, its lane, **the parts it documents**, **the
-props and prop types its API table declares** and **the limits it records**. So
+props and prop types its API table declares**, **the limits it records** and
+**its inventory verdict**. So
 `DialogFooter` finds the dialog, `onCheckedChange` finds the switch, `StateStyle`
-finds every page whose props take it, `aria-orientation` finds the tabs, and
-`preview` finds the pages that open with a browser rendering:
+finds every page whose props take it, `aria-orientation` finds the tabs,
+`preview` finds the pages that open with a browser rendering, and `partial`
+finds every component the runtime supports only in part:
 
 <ComponentIndex />
 
@@ -27,6 +29,16 @@ The pages come from two places:
   the page and the package cannot disagree. Those pages open with a note saying
   a browser preview is not available and naming the command that opens the
   companion playground.
+
+**What the marks mean.** A **Browser preview** mark is about the page: it opens
+with a rendering you can press. A **partial** mark is about the component:
+`COMPONENTS.md` records that the pinned runtime supports only part of it, and
+the page's own Status section names the missing part. A **todo** mark is a page
+whose component has not shipped yet, and **unknown** is a `?` nobody measured.
+
+Neither mark is written by hand. The preview is read from the page's own source
+and the verdict from the `COMPONENTS.md` row the status strip already joins, so
+a component that moves to `done` loses its mark in the same commit.
 
 ## How to read a page
 

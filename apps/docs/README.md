@@ -231,7 +231,10 @@ No page restates what the code already says:
 - **Component index** (`/docs/components`) lists every primitives and components
   page from its frontmatter (`component-index.ts`), so the index cannot
   advertise a page that does not exist and a new page appears without a docs
-  edit. A curated page shadows its package page.
+  edit. A curated page shadows its package page, and each row carries the
+  `COMPONENTS.md` status and support verdict the page's status strip prints, so
+  a component the runtime supports only in part is marked in the list and
+  `partial` is a query.
 - **Lane pages** (`/docs/layouts`, `/docs/workspace`, `/docs/data-display`) get
   their rows from the tier tables of `COMPONENTS.md` through `<LaneTable>`, so a
   page cannot call a row shipped while the inventory says `todo`.

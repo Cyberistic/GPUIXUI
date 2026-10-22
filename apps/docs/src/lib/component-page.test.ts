@@ -262,6 +262,26 @@ describe("the component section index", () => {
     expect(index).toContain("`preview` finds");
   });
 
+  it("teaches the verdict mark a row wears, and where it comes from", () => {
+    // The index marks the rows the inventory does not call whole; an
+    // unexplained `partial` beside a component's name reads as a docs bug, and
+    // a hand-written verdict would drift from the row the page prints.
+    const index = source("index.mdx");
+    const component = readFileSync(
+      new URL("../components/docs/component-index.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(component).toContain("verdictMark");
+    expect(index).toContain("**partial**");
+    expect(index).toContain(
+      "finds every component the runtime supports only in part",
+    );
+    expect(index).toContain(
+      "`COMPONENTS.md` row the status strip already joins",
+    );
+  });
+
   it("says how to run the native component, in the note's own words", () => {
     // The index claimed every package page named the example file; the note
     // names the playground command and the Markdown path, so the sentence was
