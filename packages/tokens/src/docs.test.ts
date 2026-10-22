@@ -241,9 +241,10 @@ describe("filled action adoption claim", () => {
    * The catalogue said the derived fills were "shipped and documented" while
    * "the component packages still paint a translucent hover", and named the
    * components package's button — which had already moved to
-   * `filledHover`/`filledPressed`. The page is held to both sources: a package
-   * that adopts the fills must leave the deviation list, and the clause that
-   * remains must name the code that is still there.
+   * `filledHover`/`filledPressed`. Both buttons now paint the derived fills;
+   * the page is held to the sources: a package that adopts the fills must move
+   * off the deviation list, and the clause that remains must name the code that
+   * is still there (the `@gpuixui/tw` recipe).
    */
   const limitation = (() => {
     const start = catalogue.indexOf("- The derived action fills");
@@ -259,11 +260,19 @@ describe("filled action adoption claim", () => {
     expect(limitation).toContain("filledHover");
   });
 
-  it("names the primitive package as the remaining deviation", () => {
+  it("names the primitive package as an adopter", () => {
     const source = read("../../../packages/primitives/src/recipe/index.ts");
 
-    expect(source).toContain("hover:bg-primary/90");
+    expect(source).toContain("hover:fill-primary");
     expect(limitation).toContain("packages/primitives/src/recipe/index.ts");
+    expect(limitation).toContain("hover:fill-<action>");
+  });
+
+  it("names the tw recipe as the remaining deviation", () => {
+    const source = read("../../../packages/tw/src/recipes.ts");
+
+    expect(source).toContain("hover:bg-primary/90");
+    expect(limitation).toContain("packages/tw/src/recipes.ts");
     expect(limitation).toContain("hover:bg-primary/90");
   });
 

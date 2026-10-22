@@ -765,8 +765,8 @@ accent — and `retro.test.ts` holds the result to the same contracts.
 
 ## Checking your own theme
 
-A theme fails silently in nine independent ways, and `auditTheme(theme)` is the
-one call that reports all nine:
+A theme fails silently in ten independent ways, and `auditTheme(theme)` is the
+one call that returns all ten reports:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -774,7 +774,7 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all nine reports below are empty
+audit.passed; // true only when all ten reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.invalidShadows; // elevation shadow colours the renderer cannot paint
 audit.invalidNumbers; // sizes, lengths and shadows the renderer cannot lay out
@@ -784,9 +784,10 @@ audit.series; // data-series colours lost on their plot, against each other, or 
 audit.selection; // a selection wash the reader cannot see, or that hides its text
 audit.indicators; // a progress fill, spinner dot or presence mark lost on its strip
 audit.disabledFade; // a disabled control whose faded label vanishes into the faded fill
+audit.keyboardDim; // a control whose label the runtime's keyboard dim erases
 ```
 
-`passed` is computed from the nine reports, so it cannot drift from them. The
+`passed` is computed from the ten reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -801,12 +802,26 @@ mechanism rather than a readability claim, so `disabledFadeFailures` holds every
 variant to `contrastFloors.disabled` (1.5:1). The fade cannot clear a
 high-contrast theme's 3:1 — §The fade a disabled control paints has the measured
 numbers — which is why that variant paints the disabled role pair instead.
+`keyboardDim` is the other: the dim is a where-can-Tab-go cue rather than a
+reading mode, so `keyboardDimFailures` holds every variant to
+`decorativeFloor` (1.05:1) — §The dim a control paints while Tab is elsewhere
+has the measured numbers.
+
+The dim and the disabled fade are the same composite with two shares (0.4 and
+0.5), and the measured consequence is that **no palette fails the dim alone**:
+the dim's band sits inside the fade's, so a label the dim erases is one the
+fade erases too. What the dim's report adds is the placement and the mechanism —
+the pair that vanished and the strip it vanished on — so a consumer knows which
+control has to declare `keyboardFocusDim: false`. The two reports keep separate
+floors, so they are two contracts rather than one measurement twice: a label
+that lands at 1.45:1 is reported by the fade and not by the dim.
 
 Each report is also a function of its own, for a caller that wants one check.
 The three below are here; the categorical scale is §Data series
 (`seriesFailures`), the selection wash is §Text selection
-(`selectionFailures`) and the fade is §The fade a disabled control paints
-(`disabledFadeFailures`).
+(`selectionFailures`), the fade is §The fade a disabled control paints
+(`disabledFadeFailures`) and the dim is §The dim a control paints while Tab is
+elsewhere (`keyboardDimFailures`).
 
 ### Paint-ready values
 
@@ -1154,10 +1169,18 @@ recognisable, not readable. Dimming a saturated fill toward a light page closes
 it on its label — the tightest shipped placement is Linux light's `primary` over
 `card` at 1.27:1 (`#C8DDF5` on `#A4C6EF`) — so a control whose text must stay
 readable while the focus is elsewhere opts out of the dim rather than asking the
-palette for a contrast the mechanism cannot keep. That adoption, and folding the
-report into `auditTheme`, are interlock rows in `TODO.md`. `focus-dim.test.ts`
-holds the measured values, every shipped, high-contrast, platform and authored
-theme, the erased label, the unmeasurable role and a caller's stricter floor.
+palette for a contrast the mechanism cannot keep. That adoption is an interlock
+row in `TODO.md`.
+
+`keyboardDimFailures` is the gate's tenth report (`audit.keyboardDim`), so a
+brand runs it with the rest. The dim and the disabled fade are the same
+composite with two shares, and the measured consequence is that no palette
+fails the dim alone — the dim's band sits inside the fade's — so what the
+report adds is the placement and the mechanism: which pair vanished and on
+which strip. The two keep separate floors, so a label that lands at 1.45:1 is
+reported by the fade and not by the dim. `focus-dim.test.ts` holds the measured
+values, every shipped, high-contrast, platform and authored theme, the erased
+label, the unmeasurable role and a caller's stricter floor.
 
 ```ts
 import { keyboardDimFailures, lightTheme } from "@gpuixui/tokens";
@@ -2193,15 +2216,19 @@ or dropped is named rather than passing silently.
 - Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. No component consumes it yet.
-- The derived action fills are adopted by the components package's `Button` and
-  `IconButton` (`filledHover` / `filledPressed` in
-  `packages/components/src/internal/button.tsx`), but the primitive package
-  still paints a translucent hover: the `hover:bg-primary/90` and
-  `active:bg-primary/80` classes in `packages/primitives/src/recipe/index.ts`,
-  and the selection role at 0.9 alpha in
-  `packages/primitives/src/core/selection.ts` for a filled checkbox or radio.
-  Adopting the fills there is the primitives workstream's, recorded in
-  `TODO.md` → Interlocks.
+- The derived action fills are adopted by both packages' buttons: the
+  components package's `Button`/`IconButton` (`filledHover` / `filledPressed` in
+  `packages/components/src/internal/button.tsx`) and `packages/primitives`'
+  recipes, which ask their own registry for `hover:fill-<action>` and
+  `active:fill-<action>-pressed` (`packages/primitives/src/recipe/index.ts`).
+  Two deviations remain: the `@gpuixui/tw` `button` recipe the components
+  package compiles against still lifts the fill's alpha
+  (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`), and a filled
+  checkbox or radio paints its selection role at 0.9 alpha in
+  `packages/primitives/src/core/selection.ts`, while a pressed `Toggle` washes
+  its `accent` fill at 0.9/0.8 alpha in `packages/primitives/src/core/variants.ts`
+  — a general-role derived fill the tokens package does not expose yet. All are
+  the owning packages' halves, recorded in `TODO.md` → Interlocks.
 - A field's **resting edge** is the decorative `border` role rather than the
   functional `borderStrong` one: `fieldVariant`
   (`packages/primitives/src/core/variants.ts`) and `FieldInput`

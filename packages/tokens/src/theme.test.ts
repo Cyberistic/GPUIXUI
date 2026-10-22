@@ -280,6 +280,7 @@ describe("theme audit example", () => {
         selection: [],
         indicators: [],
         disabledFade: [],
+        keyboardDim: [],
         passed: true,
       });
     });

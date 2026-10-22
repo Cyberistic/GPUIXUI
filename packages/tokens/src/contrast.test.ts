@@ -20,7 +20,11 @@ import {
   contrastRatio,
   highContrastFloors,
 } from "./contrast.js";
-import { highContrastDarkColors, lightColors } from "./color.js";
+import {
+  highContrastDarkColors,
+  lightColors,
+  type ThemeColors,
+} from "./color.js";
 import { indicatorRoles, indicatorSurfaces } from "./indicator.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
@@ -34,6 +38,10 @@ import {
   platformTheme,
   themes,
 } from "./theme.js";
+
+/** The ratio as the catalogue prints it, or a word when it cannot be measured. */
+const printedRatio = (ratio: number | undefined): string =>
+  ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1`;
 
 describe("contrastRatio", () => {
   it("reports the extremes of the scale", () => {
@@ -253,13 +261,13 @@ describe("the resting role of a floating row on the wash it tints", () => {
   it("reports the pressed wash the two light looks shipped before this pair", () => {
     // Rebuilt from the base red 800 so the numbers are the ones the palettes
     // shipped, not the red 900 both looks now carry.
-    const before = (theme: { readonly colors: typeof lightColors }) => ({
+    const before = (theme: { readonly colors: ThemeColors }) => ({
       colors: {
         ...theme.colors,
         destructiveSoftForeground: lightColors.destructiveSoftForeground,
       },
     });
-    const pressed = (theme: { readonly colors: typeof lightColors }) =>
+    const pressed = (theme: { readonly colors: ThemeColors }) =>
       contrastFailures(before(theme)).find(
         ({ foreground, background }) =>
           foreground === "destructiveSoftForeground" && background === "active",
@@ -279,8 +287,8 @@ describe("the resting role of a floating row on the wash it tints", () => {
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
     );
-    expect(page).toContain(`at ${windows?.ratio.toFixed(2)}:1`);
-    expect(page).toContain(`at ${luna?.ratio.toFixed(2)}:1`);
+    expect(page).toContain(`at ${printedRatio(windows?.ratio)}`);
+    expect(page).toContain(`at ${printedRatio(luna?.ratio)}`);
   });
 
   it("reports a popover's own text painted into its hover wash", () => {
@@ -308,7 +316,7 @@ describe("the resting role of a floating row on the wash it tints", () => {
       ),
     ];
     const measured = shipped.flatMap((theme) =>
-      ["hover", "active"].flatMap((background) =>
+      (["hover", "active"] as const).flatMap((background) =>
         roles.map((foreground) => ({
           name: `${theme.name}/${foreground}/${background}`,
           ratio:

@@ -22,6 +22,7 @@ import {
   highContrastLightTheme,
   highContrastThemes,
   indicatorFailures,
+  keyboardDimFailures,
   lightTheme,
   platformNames,
   platformTheme,
@@ -97,6 +98,7 @@ describe("the floors follow the theme's contrast variant", () => {
       selection: [],
       indicators: [],
       disabledFade: [],
+      keyboardDim: [],
       passed: true,
     });
   });
@@ -203,6 +205,7 @@ describe("every report is part of the gate", () => {
       selection: [],
       indicators: [],
       disabledFade: [],
+      keyboardDim: [],
       passed: true,
     });
   });
@@ -239,5 +242,103 @@ describe("every report is part of the gate", () => {
     expect(
       auditTheme(highContrastLightTheme, highContrastFloors).disabledFade,
     ).toEqual([]);
+  });
+
+  /**
+   * Guards the tenth report: the paint the runtime applies to every focusable
+   * that is not the focused one.
+   *
+   * The bug this holds: `keyboardFocusDim` is on by default in
+   * `@gpuix/native`, so pressing Tab fades every other control, and the
+   * composite is translucent — `contrastRatio` refuses it, so no text pair
+   * measured it. The report was `keyboardDimFailures` on its own, so a theme
+   * gate that ran every contract but that one shipped a control that vanished
+   * while the reader tabbed elsewhere.
+   *
+   * The dim and the disabled fade are the same composite with two shares
+   * (`keyboardFocusDimOpacity` 0.4 and `disabledOpacity` 0.5), and the measured
+   * consequence is that no palette fails the dim alone: the dim's band sits
+   * inside the fade's, so a label the dim erases is one the fade erases too.
+   * What the dim adds is the placement and the mechanism — and its own floor,
+   * which is *not* the fade's, as the second case shows.
+   */
+  it("reports a label the keyboard dim erases", () => {
+    // The enabled pair reads 7.4:1 and the fill is the darkest ink on the
+    // page, so the text contract has nothing to say: `contrastRatio` refuses
+    // the dimmed composite, and no pair in the table is translucent.
+    const erasedWhenDimmed = extendTheme(lightTheme, {
+      colors: { primary: "#000000", primaryForeground: "#999999" },
+    });
+    const audit = auditTheme(erasedWhenDimmed);
+
+    expect(audit.contrast).toEqual([]);
+    expect(audit.indicators).toEqual([]);
+    // The dimmed fill is the label: the composite paints one block.
+    expect(audit.keyboardDim).toContainEqual(
+      expect.objectContaining({
+        fill: "primary",
+        label: "primaryForeground",
+        over: "card",
+        ratio: 1,
+      }),
+    );
+    expect(audit.keyboardDim).toHaveLength(4);
+    expect(audit.keyboardDim.every((failure) => failure.floor === 1.05)).toBe(
+      true,
+    );
+    expect(audit.passed).toBe(false);
+  });
+
+  it("keeps the dim's own floor, which is not the disabled fade's", () => {
+    // The same composite with a lighter label: the disabled fade (1.5:1) still
+    // reports it while the dim (1.05:1) does not, so the two reports are two
+    // contracts and not one measurement twice.
+    const fadedButVisible = extendTheme(lightTheme, {
+      colors: { primary: "#000000", primaryForeground: "#B4B4B4" },
+    });
+
+    expect(keyboardDimFailures(fadedButVisible)).toEqual([]);
+    expect(auditTheme(fadedButVisible).disabledFade.length).toBeGreaterThan(0);
+    expect(auditTheme(fadedButVisible).keyboardDim).toEqual([]);
+  });
+
+  it("computes passed from every report it returns", () => {
+    // The gate's contract: `passed` is the conjunction of the reports, not a
+    // separate opinion. A report that is returned but left out of the
+    // conjunction would let a theme ship with a failure printed beside a true
+    // `passed`. The dim's report cannot be the only failure on a real palette
+    // (the fade's band contains the dim's), so this pins the shape rather than
+    // one isolable palette.
+    const audits = [
+      themes.light,
+      themes.dark,
+      highContrastLightTheme,
+      extendTheme(lightTheme, {
+        colors: { primary: "#000000", primaryForeground: "#999999" },
+      }),
+      invisibleDividers,
+    ].map((theme) => auditTheme(theme));
+
+    const failuresOf = (audit: ReturnType<typeof auditTheme>) =>
+      [
+        audit.invalidRoles,
+        audit.invalidShadows,
+        audit.invalidNumbers,
+        audit.contrast,
+        audit.decorative,
+        audit.series.surfaces,
+        audit.series.distinctness,
+        audit.series.deficiencies,
+        audit.selection,
+        audit.indicators,
+        audit.disabledFade,
+        audit.keyboardDim,
+      ].filter((report) => report.length > 0);
+
+    const disagreeing = audits.filter(
+      (audit) => audit.passed !== (failuresOf(audit).length === 0),
+    );
+
+    expect(disagreeing).toEqual([]);
   });
 });

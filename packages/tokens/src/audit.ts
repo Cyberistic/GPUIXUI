@@ -6,12 +6,13 @@
  * number it cannot lay out is dropped, a text pair below its floor is
  * unreadable, a decorative surface close to its background is invisible, a data
  * series is lost on its plot, the selection wash hides the text it selects, an
- * indicator mark disappears into the strip it is drawn on, and a disabled
- * control faded by `disabledOpacity` loses its label. Each has its own report,
- * and a consumer who forgets one ships the failure it would have caught — which
- * is what the documented gate did, running two of the three and holding every
- * theme to the default floors even when the theme declares the high-contrast
- * variant.
+ * indicator mark disappears into the strip it is drawn on, a disabled control
+ * faded by `disabledOpacity` loses its label, and the keyboard dim the runtime
+ * paints on every other focusable erases a control's label. Each has its own
+ * report, and a consumer who forgets one ships the failure it would have
+ * caught — which is what the documented gate did, running two of the three and
+ * holding every theme to the default floors even when the theme declares the
+ * high-contrast variant.
  */
 
 import {
@@ -33,6 +34,7 @@ import {
   type Elevation,
   type InvalidShadowColor,
 } from "./elevation.js";
+import { keyboardDimFailures, type KeyboardDimFailure } from "./focus-dim.js";
 import { indicatorFailures, type IndicatorFailure } from "./indicator.js";
 import {
   invalidNumbers,
@@ -98,20 +100,24 @@ export interface ThemeAudit {
   readonly indicators: readonly IndicatorFailure[];
   /** Disabled controls whose faded label vanishes into the faded fill. */
   readonly disabledFade: readonly DisabledFadeFailure[];
-  /** True only when all nine reports are empty. */
+  /** Controls whose label the keyboard dim erases while another control has focus. */
+  readonly keyboardDim: readonly KeyboardDimFailure[];
+  /** True only when all ten reports are empty. */
   readonly passed: boolean;
 }
 
 /**
- * Audit a theme against the nine contracts the library holds itself to.
+ * Audit a theme against the ten contracts the library holds itself to.
  *
  * The contrast floors come from the theme's own `contrast` variant, so a
  * high-contrast brand is measured at AAA without the caller naming a floor set;
- * pass `floors` to hold a theme to a different contract. The disabled fade is
- * the one report that does not take them: `disabledFadeFailures` measures a
- * mechanism, not a readability claim, and holds every variant to the same
+ * pass `floors` to hold a theme to a different contract. Two reports do not
+ * take them: `disabledFadeFailures` measures a mechanism rather than a
+ * readability claim, and holds every variant to the same
  * `contrastFloors.disabled` — the fade cannot reach a high-contrast variant's
- * 3:1, which is why that variant paints the role pair instead.
+ * 3:1, which is why that variant paints the role pair instead; and
+ * `keyboardDimFailures` holds every variant to `decorativeFloor` (1.05:1),
+ * because the dim is a where-can-Tab-go cue rather than a reading mode.
  *
  * `passed` is the only passing result — a report nobody checked is not a pass.
  *
@@ -140,6 +146,7 @@ export function auditTheme(
   const selection = selectionFailures(theme, floors);
   const indicators = indicatorFailures(theme, floors);
   const disabledFade = disabledFadeFailures(theme);
+  const keyboardDim = keyboardDimFailures(theme);
   return {
     invalidRoles,
     invalidShadows,
@@ -150,6 +157,7 @@ export function auditTheme(
     selection,
     indicators,
     disabledFade,
+    keyboardDim,
     passed:
       invalidRoles.length === 0 &&
       invalidShadows.length === 0 &&
@@ -161,6 +169,7 @@ export function auditTheme(
       series.deficiencies.length === 0 &&
       selection.length === 0 &&
       indicators.length === 0 &&
-      disabledFade.length === 0,
+      disabledFade.length === 0 &&
+      keyboardDim.length === 0,
   };
 }

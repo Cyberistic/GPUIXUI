@@ -412,7 +412,7 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all nine reports are
+CSS validation and lint, and `passed` is true only when all ten reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
@@ -450,13 +450,17 @@ audit.series; // [] — every chart swatch is perceivable and distinct
 audit.selection; // [] — every selection wash is visible and keeps its text readable
 audit.indicators; // [] — every progress fill, spinner dot and presence mark is visible
 audit.disabledFade; // [] — every faded disabled label still reads against its faded fill
+audit.keyboardDim; // [] — every label the runtime's keyboard dim fades is still visible on its dimmed fill
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 
-`keyboardDimFailures(theme, floor?)` is the one contract the gate does not run
-yet: it measures the dim the runtime paints on every other focusable while one
-has keyboard focus, at `decorativeFloor` (see §Keyboard focus dim). Folding it
-into `auditTheme` is recorded in `TODO.md` → Interlocks.
+`keyboardDimFailures(theme, floor?)` is the tenth report (`audit.keyboardDim`):
+it measures the dim the runtime paints on every other focusable while one has
+keyboard focus, at `decorativeFloor` (see §Keyboard focus dim). The dim and the
+disabled fade are the same composite with two shares, so no palette fails the
+dim alone — the dim's band sits inside the fade's — and what the report adds is
+the placement and the mechanism, so a consumer knows which control has to
+declare `keyboardFocusDim: false`.
 
 Each report is also a function of its own:
 

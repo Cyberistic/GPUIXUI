@@ -378,7 +378,11 @@ placements the three filled actions, a field, a focusable row and a selected row
 sit on; the composite is the disabled fade's, with the label over the *dimmed*
 fill — measured in the `keyboard-focus-dim` window capture, which paints the
 dark `muted` fill `#222730` as `#181C23` and the `foreground` text `#EEF1F5` as
-`#6E7177`.
+`#6E7177`. It is the gate's tenth report (`audit.keyboardDim`): the dim and the
+disabled fade are the same composite with two shares, so no palette fails the
+dim alone — the dim's band sits inside the fade's — and what the report adds is
+the placement and the mechanism, so a consumer knows which control has to
+declare the opt-out.
 
 **Busy is a state of its own, and it is not faded.** A control that is working
 keeps its label at its resting contrast and stays in the tab order — a keyboard
@@ -525,25 +529,28 @@ and a type role's leading must reach its own size, because a shorter one starts
 the next line inside this line's glyph box (§10, `docs/tokens.md` §Numbers).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all nine in one call — `invalidRoles`, `invalidShadows`,
+reports all ten in one call — `invalidRoles`, `invalidShadows`,
 `invalidNumbers`, `contrast`, `decorative`, `series`, `selection`,
-`indicators` and `disabledFade` — and `passed` is true only
+`indicators`, `disabledFade` and `keyboardDim` — and `passed` is true only
 when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
 to AAA without the caller naming a floor set; an explicit `ContrastFloors`
-overrides it. The disabled fade is the one report that ignores those floors: a
-fade is a mechanism, so it is held to `contrastFloors.disabled` in every variant
-(§8 records why the fade cannot carry a high-contrast theme). The parts are
+overrides it. Two reports ignore those floors: the disabled fade is a
+mechanism, so it is held to `contrastFloors.disabled` in every variant
+(§8 records why the fade cannot carry a high-contrast theme), and the keyboard
+dim is a where-can-Tab-go cue rather than a reading mode, so it is held to
+`decorativeFloor` (1.05:1) in every variant (§8). The parts are
 public too: `contrastRatio(foreground, background)`
 measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `highContrastFloors` names the text and boundary pairs and their floors,
 `decorativeFailures(theme, floor?)` measures the subtle surfaces,
 `seriesFailures(theme)` measures a categorical scale — on its plot, against
 itself and after each colour-vision deficiency — while `selectionFailures(theme)`
-measures the body and secondary text a selected run sits in, and
-`indicatorFailures(theme)` measures the marks a component shows. Nothing about
-the requirement is private to this repo.
+measures the body and secondary text a selected run sits in,
+`indicatorFailures(theme)` measures the marks a component shows and
+`keyboardDimFailures(theme)` the label the runtime's keyboard dim erases.
+Nothing about the requirement is private to this repo.
 
 ### Target sizes
 
@@ -620,13 +627,14 @@ roles in the tokens package, not fork components.
 
 Overrides are plain data, so `extendTheme` cannot reject a colour the renderer
 would ignore or a number it cannot lay out. The audit is the gate: `auditTheme(theme)`
-runs all nine checks — an unpaintable role, an unpaintable shadow in a level the
+runs all ten checks — an unpaintable role, an unpaintable shadow in a level the
 brand supplied, a size, length or shadow geometry the renderer would drop, every
 pair below the floor its variant asks for, every decorative surface too close to
 its background, a data series lost on its plot or to a colour-vision deficiency,
-a selection wash that hides the body or secondary text inside it, an indicator mark nobody can find, and a
-disabled label the fade erases; run it over the resolved theme before it ships
-and assert `passed` in the package's own tests.
+a selection wash that hides the body or secondary text inside it, an indicator
+mark nobody can find, a disabled label the fade erases, and a label the
+keyboard dim erases while another control holds the focus; run it over the
+resolved theme before it ships and assert `passed` in the package's own tests.
 
 ## 12. Non-goals
 
