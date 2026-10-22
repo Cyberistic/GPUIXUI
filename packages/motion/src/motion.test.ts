@@ -15,7 +15,7 @@ import {
   transitionEquals,
   tween,
 } from "./motion.js";
-import { layoutSpring, springPhysics } from "./spring.js";
+import { layoutSpring, springPhysics, type SpringPhysics } from "./spring.js";
 
 describe("MotionValue", () => {
   it("springs reach the exact target and report completion", () => {
@@ -133,6 +133,30 @@ describe("MotionValue", () => {
     expect(value.sample(150).value).toBeCloseTo(0.75, 5);
   });
 
+  it("completes a spring whose physics cannot be read", () => {
+    // `SpringPhysics` is structural, so a caller can hand the transition a
+    // physics the sampler cannot read. The retained value used to take the
+    // unreadable rest threshold, so the run never settled and never reported
+    // completion: a hook sampling it every frame churned for the life of the
+    // tree, and the surface never reached its target.
+    const value = new MotionValue(0);
+    value.animate(
+      1,
+      springTransition({
+        mass: 1,
+        stiffness: 260,
+        damping: 28,
+        restDelta: Number.NaN,
+        restSpeed: 0.01,
+      }),
+    );
+
+    const done = value.sample(2000);
+    expect(done.value).toBe(1);
+    expect(done.active).toBe(false);
+    expect(done.complete).toBe(true);
+  });
+
   it("paints no NaN for a curve that cannot read the frame", () => {
     // `Easing` is a caller's function, so a curve can answer `NaN`. The value
     // used to take it straight into the frame — every sample of the run was
@@ -190,6 +214,38 @@ describe("transitionEquals", () => {
         springTransition(
           springPhysics({ stiffness: 200, damping: 20, mass: 2 }),
         ),
+      ),
+    ).toBe(false);
+  });
+
+  it("compares a spring by the physics the sampler reads", () => {
+    // `NaN` compares unequal to itself, so two declarations that differ only
+    // in a field the sampler cannot read read as different — and a run that
+    // never changed was restarted on every render.
+    const unreadable = (damping: number): SpringPhysics => ({
+      mass: 1,
+      stiffness: 260,
+      damping,
+      restDelta: 0.001,
+      restSpeed: 0.01,
+    });
+
+    expect(
+      transitionEquals(
+        springTransition(unreadable(Number.NaN)),
+        springTransition(unreadable(Number.NaN)),
+      ),
+    ).toBe(true);
+    expect(
+      transitionEquals(
+        springTransition(unreadable(Number.NaN)),
+        springTransition(unreadable(28)),
+      ),
+    ).toBe(true);
+    expect(
+      transitionEquals(
+        springTransition(unreadable(Number.NaN)),
+        springTransition(unreadable(40)),
       ),
     ).toBe(false);
   });

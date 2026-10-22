@@ -11,7 +11,7 @@
 import { easeOut, type Easing } from "./easing.js";
 import { sampleInertia, type Inertia, project } from "./inertia.js";
 import { eased } from "./progress.js";
-import { sampleSpring, type SpringPhysics } from "./spring.js";
+import { sampleSpring, springPhysics, type SpringPhysics } from "./spring.js";
 
 /** A duration/easing tween, spring, or immediate assignment. */
 export type Transition =
@@ -71,12 +71,25 @@ export const springTransition = (physics: SpringPhysics): Transition => ({
 
 const easingEquals = (left: Easing, right: Easing): boolean => left === right;
 
-const physicsEquals = (left: SpringPhysics, right: SpringPhysics): boolean =>
-  left.mass === right.mass &&
-  left.stiffness === right.stiffness &&
-  left.damping === right.damping &&
-  left.restDelta === right.restDelta &&
-  left.restSpeed === right.restSpeed;
+/**
+ * Whether two physics declarations mean the same run.
+ *
+ * The comparison reads the physics the sampler reads: two declarations that
+ * differ only in a field the sampler cannot read (`NaN` compares unequal to
+ * itself) sample identically, so treating them as different declarations would
+ * restart a run that never changed.
+ */
+const physicsEquals = (left: SpringPhysics, right: SpringPhysics): boolean => {
+  const a = springPhysics(left);
+  const b = springPhysics(right);
+  return (
+    a.mass === b.mass &&
+    a.stiffness === b.stiffness &&
+    a.damping === b.damping &&
+    a.restDelta === b.restDelta &&
+    a.restSpeed === b.restSpeed
+  );
+};
 
 /** Structural equality so a re-declared transition does not restart a run. */
 export const transitionEquals = (

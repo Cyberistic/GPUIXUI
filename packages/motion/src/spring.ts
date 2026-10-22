@@ -5,6 +5,12 @@
  * Ported from open-gpui `crates/motion/src/spring.rs` (Apache-2.0). Sampling is
  * velocity-aware and retargetable: re-seed `sampleSpring` with a prior sample's
  * value and velocity to change target without losing momentum.
+ *
+ * `SpringPhysics` is structural, so a caller may build one without
+ * {@link springPhysics}: the samplers repair what they are handed, the way
+ * {@link sampleInertia} repairs an `Inertia`. Without that, a `NaN` damping
+ * made every formula answer `NaN` and the spring jumped to its target in one
+ * frame, while a `NaN` rest threshold meant the run never settled at all.
  */
 
 /** Sanitized spring physics parameters. */
@@ -24,7 +30,11 @@ export interface SpringSample {
   readonly settled: boolean;
 }
 
-/** Optional overrides for {@link springPhysics}. */
+/**
+ * The spring fields a caller may set. A value that cannot be read is replaced
+ * with the house default, so {@link springPhysics} and the samplers agree on
+ * what a physics means.
+ */
 export interface SpringPhysicsParams {
   readonly mass?: number;
   readonly stiffness?: number;
@@ -61,16 +71,25 @@ const sanitizeNonNegative = (
     ? Math.min(value, MAX_PHYSICS_VALUE)
     : fallback;
 
+/**
+ * The physics a sample can run with: a field it cannot read takes the house
+ * default, and a readable one is left alone.
+ *
+ * {@link springPhysics} composes this, so the constructor and the samplers
+ * cannot drift — a hand-built physics samples as the built one does.
+ */
+const physicsOf = (fields: SpringPhysicsParams): SpringPhysics => ({
+  mass: sanitizePositive(fields.mass, DEFAULT_MASS),
+  stiffness: sanitizePositive(fields.stiffness, DEFAULT_STIFFNESS),
+  damping: sanitizeNonNegative(fields.damping, DEFAULT_DAMPING),
+  restDelta: sanitizePositive(fields.restDelta, DEFAULT_REST_DELTA),
+  restSpeed: sanitizePositive(fields.restSpeed, DEFAULT_REST_SPEED),
+});
+
 /** Sanitized spring physics from optional parameters. */
 export const springPhysics = (
   params: SpringPhysicsParams = {},
-): SpringPhysics => ({
-  mass: sanitizePositive(params.mass, DEFAULT_MASS),
-  stiffness: sanitizePositive(params.stiffness, DEFAULT_STIFFNESS),
-  damping: sanitizeNonNegative(params.damping, DEFAULT_DAMPING),
-  restDelta: sanitizePositive(params.restDelta, DEFAULT_REST_DELTA),
-  restSpeed: sanitizePositive(params.restSpeed, DEFAULT_REST_SPEED),
-});
+): SpringPhysics => physicsOf(params);
 
 /** Short, subtle affordance motion. */
 export const affordanceSpring: SpringPhysics = springPhysics({
@@ -90,15 +109,29 @@ export const continuitySpring: SpringPhysics = springPhysics({
   damping: 23,
 });
 
-/** Whether the spring has reached its rest thresholds. */
+/** Whether a value is within the rest thresholds of a physics. */
+const withinRest = (
+  rest: SpringPhysics,
+  value: number,
+  target: number,
+  velocity: number,
+): boolean =>
+  Math.abs(value - target) <= rest.restDelta &&
+  Math.abs(velocity) <= rest.restSpeed;
+
+/**
+ * Whether the spring has reached its rest thresholds.
+ *
+ * A threshold that cannot be read takes the house one, so a hand-built physics
+ * answers the same rule the constructor's physics does — a `NaN` threshold
+ * would otherwise read as "never at rest" and the run would never settle.
+ */
 export const atRest = (
   physics: SpringPhysics,
   value: number,
   target: number,
   velocity: number,
-): boolean =>
-  Math.abs(value - target) <= physics.restDelta &&
-  Math.abs(velocity) <= physics.restSpeed;
+): boolean => withinRest(physicsOf(physics), value, target, velocity);
 
 /**
  * Re-seeds a running spring at a new target, keeping the sampled value and
@@ -118,7 +151,8 @@ export const retarget = (
 /**
  * Samples a spring at an explicit elapsed time, returning value and velocity.
  * Non-finite inputs are sanitized to sensible defaults: a `NaN` elapsed time is
- * the start of the run (`0`), while an infinity is the end of it.
+ * the start of the run (`0`), while an infinity is the end of it, and a physics
+ * field that cannot be read takes the house default.
  */
 export const sampleSpring = (
   physics: SpringPhysics,
@@ -127,13 +161,14 @@ export const sampleSpring = (
   velocity: number,
   elapsedMs: number,
 ): SpringSample => {
+  const rest = physicsOf(physics);
   const safeFrom = sanitizeNumber(from, 0);
   const safeTarget = sanitizeNumber(target, safeFrom);
   const safeVelocity = sanitizeNumber(velocity, 0);
   const t = (Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0)) / 1000;
 
   if (t === 0) {
-    const settled = atRest(physics, safeFrom, safeTarget, safeVelocity);
+    const settled = withinRest(rest, safeFrom, safeTarget, safeVelocity);
     return {
       value: settled ? safeTarget : safeFrom,
       velocity: settled ? 0 : safeVelocity,
@@ -143,10 +178,9 @@ export const sampleSpring = (
   }
 
   const displacement = safeFrom - safeTarget;
-  const angularFrequency = Math.sqrt(physics.stiffness / physics.mass);
-  const criticalDamping = 2 * Math.sqrt(physics.stiffness * physics.mass);
-  const dampingRatio =
-    criticalDamping > 0 ? physics.damping / criticalDamping : 1;
+  const angularFrequency = Math.sqrt(rest.stiffness / rest.mass);
+  const criticalDamping = 2 * Math.sqrt(rest.stiffness * rest.mass);
+  const dampingRatio = criticalDamping > 0 ? rest.damping / criticalDamping : 1;
 
   const [sampledDisplacement, sampledVelocity] =
     dampingRatio < 1
@@ -169,7 +203,7 @@ export const sampleSpring = (
 
   const value = sanitizeNumber(safeTarget + sampledDisplacement, safeTarget);
   const outVelocity = sanitizeNumber(sampledVelocity, 0);
-  if (atRest(physics, value, safeTarget, outVelocity)) {
+  if (withinRest(rest, value, safeTarget, outVelocity)) {
     return {
       value: safeTarget,
       velocity: 0,

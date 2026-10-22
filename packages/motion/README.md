@@ -40,7 +40,9 @@ const seed = retarget(mid, 2); // value and velocity carried over, target 2
 ```
 
 Presets: `affordanceSpring`, `layoutSpring`, `continuitySpring`; build your own
-with `springPhysics({ stiffness, damping, mass, restDelta, restSpeed })`.
+with `springPhysics({ stiffness, damping, mass, restDelta, restSpeed })`. A
+physics you write by hand is read the same way — a field that cannot be read
+takes the house default (see [Inputs the runtime can paint](#inputs-the-runtime-can-paint)).
 
 ## The single entry point: `MotionValue.sample(elapsed, reducedMotion)`
 
@@ -114,6 +116,15 @@ is dropped while the readable one beside it still clamps, an inverted pair is
 swapped, and a non-finite position or velocity reads as a standstill. A coast
 therefore always projects a finite rest and settles, instead of painting `NaN` and
 sampling forever.
+
+The spring physics are repaired the same way, because `SpringPhysics` is
+structural: a mass, stiffness, damping or rest threshold that cannot be read
+takes the house default, and a readable one is left alone. Without that, a
+`NaN` damping made every formula answer `NaN` and the spring jumped to its
+target in a single frame, while a `NaN` rest threshold meant the run never
+settled at all — a driver waiting for rest sampled it forever. The constructor
+and the samplers read the physics the same way, so a hand-built spring samples
+as the built one does.
 
 A timeline is repaired at the value the caller supplies: a keyframe whose offset
 or value cannot be read is not a stop (it is dropped, and a set with none answers

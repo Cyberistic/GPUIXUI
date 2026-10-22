@@ -11,6 +11,7 @@ import {
   retarget,
   sampleSpring,
   springPhysics,
+  type SpringPhysics,
 } from "./spring.js";
 
 describe("sampleSpring", () => {
@@ -83,5 +84,95 @@ describe("atRest", () => {
     expect(atRest(layoutSpring, 1, 1.0005, 0)).toBe(true);
     expect(atRest(layoutSpring, 1, 1.05, 0)).toBe(false);
     expect(atRest(layoutSpring, 1, 1, 0.5)).toBe(false);
+  });
+});
+
+/**
+ * `SpringPhysics` is structural, so a caller may hand the sampler a physics it
+ * cannot read. The samplers repair what they are handed — the way
+ * `sampleInertia` repairs an `Inertia` — so a hand-built spring travels,
+ * settles and lands on its target instead of jumping there or never resting.
+ */
+describe("a spring built by hand", () => {
+  const handBuilt = (overrides: Partial<SpringPhysics>): SpringPhysics => ({
+    mass: overrides.mass ?? layoutSpring.mass,
+    stiffness: overrides.stiffness ?? layoutSpring.stiffness,
+    damping: overrides.damping ?? layoutSpring.damping,
+    restDelta: overrides.restDelta ?? layoutSpring.restDelta,
+    restSpeed: overrides.restSpeed ?? layoutSpring.restSpeed,
+  });
+
+  it("settles a run whose rest threshold cannot be read", () => {
+    // `Math.abs(value - target) <= NaN` is false, so the run converged on the
+    // target and never reported itself at rest: a driver waiting for the
+    // spring to settle sampled it for the life of the tree.
+    const unreadable = handBuilt({ restDelta: Number.NaN });
+    const done = sampleSpring(unreadable, 0, 1, 0, 2000);
+
+    expect(done.settled).toBe(true);
+    expect(done.value).toBe(1);
+    expect(done.velocity).toBe(0);
+  });
+
+  it("travels to the target when a physics field cannot be read", () => {
+    // A `NaN` damping or stiffness made every formula answer `NaN`, and the
+    // sanitiser turned that into the target: the surface jumped to its resting
+    // frame instead of moving there.
+    [
+      handBuilt({ mass: Number.NaN }),
+      handBuilt({ stiffness: Number.NaN }),
+      handBuilt({ damping: Number.NaN }),
+    ].forEach((unreadable) => {
+      const middle = sampleSpring(unreadable, 0, 1, 0, 90);
+
+      expect(middle.value).toBeGreaterThan(0);
+      expect(middle.value).toBeLessThan(1);
+
+      const done = sampleSpring(unreadable, 0, 1, 0, 2000);
+      expect(done.settled).toBe(true);
+      expect(done.value).toBe(1);
+    });
+  });
+
+  it("reads the rest rule with a threshold it can read", () => {
+    expect(atRest(handBuilt({ restDelta: Number.NaN }), 1, 1, 0)).toBe(true);
+    expect(atRest(handBuilt({ restSpeed: Number.NaN }), 1, 1, 0)).toBe(true);
+  });
+
+  it("samples as the constructor's own physics does", () => {
+    const readable = {
+      stiffness: 120,
+      damping: 14,
+      mass: 2,
+      restDelta: 0.002,
+      restSpeed: 0.02,
+    };
+    expect(sampleSpring(handBuilt(readable), 0, 1, 0, 90)).toEqual(
+      sampleSpring(springPhysics(readable), 0, 1, 0, 90),
+    );
+  });
+
+  it("takes the house default for a field it cannot read", () => {
+    const houseDamping = springPhysics({
+      stiffness: 120,
+      mass: 2,
+      restDelta: 0.002,
+      restSpeed: 0.02,
+    });
+    expect(
+      sampleSpring(
+        handBuilt({
+          stiffness: 120,
+          damping: Number.NaN,
+          mass: 2,
+          restDelta: 0.002,
+          restSpeed: 0.02,
+        }),
+        0,
+        1,
+        0,
+        90,
+      ),
+    ).toEqual(sampleSpring(houseDamping, 0, 1, 0, 90));
   });
 });
