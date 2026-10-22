@@ -27,6 +27,7 @@ import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { Icon } from "@gpuixui/icons";
+import { IconButton } from "../src/components/IconButton.js";
 import { RadioGroup, RadioGroupItem } from "../src/components/RadioGroup.js";
 import { Text } from "../src/components/Text.js";
 import { Stack } from "../src/components/Stack.js";
@@ -615,6 +616,29 @@ it("stacks a vertical group's actions with no gap and one shared width", async (
     gap: testTheme.spacing.sm,
     widths: attached.widths,
   });
+});
+
+it("keeps a square action square inside a vertical group", async () => {
+  // The claim the page makes: the column shares one width *unless* an action
+  // has an explicit size. A square `IconButton` must stay 32x32 rather than
+  // being stretched to the text action's width beside it.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ButtonGroup orientation="vertical" testId="g">
+        <IconButton
+          testId="zoom"
+          label="Zoom in"
+          icon={<Icon name="plus" color={testTheme.colors.foreground} />}
+        />
+        <Button testId="reset">Reset the whole view</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  const zoom = boundsOf(runtime, "zoom");
+  const reset = boundsOf(runtime, "reset");
+  expect(zoom.width).toBe(zoom.height);
+  expect(zoom.width).toBeLessThan(reset.width);
 });
 
 it("squares an attached group's children so its seams do not show the page", async () => {

@@ -117,8 +117,9 @@ radius is the only one painted on the silhouette.
   paint `borderRadius: 0` while separated children paint the theme's `md` radius
   and sit the `sm` gap apart; a vertical group stacks its actions 0px apart in
   `attached` mode and by the `sm` gap in `separated` mode, with both actions
-  painted at one width despite their different labels; a labelled group is an
-  accessibility `Group` with that name.
+  painted at one width despite their different labels, while a square action in
+  the same column keeps its own 32×32 box; a labelled group is an accessibility
+  `Group` with that name.
 
 ```sh
 nub run --filter @gpuixui/primitives test
