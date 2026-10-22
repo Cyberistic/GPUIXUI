@@ -322,6 +322,25 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "active",
     floor: "secondary",
   },
+  // An unfilled control paints no fill of its own, so the **group strip** it
+  // sits in is its background: the design system's segmented `secondary` panel
+  // (the strip `ring`, `borderStrong` and a disabled label are already measured
+  // on, and the one a `ButtonGroup` or a toolbar option row is drawn in). An
+  // `outline` or `ghost` action keeps `foreground`, and a quiet label or icon
+  // keeps `mutedForeground`, so both roles were read on every strip a control
+  // sits on except this one — a brand whose panel drifted toward its text could
+  // ship a label that disappears inside the group while the edge beside it
+  // passed.
+  {
+    foreground: "foreground",
+    background: "secondary",
+    floor: "body",
+  },
+  {
+    foreground: "mutedForeground",
+    background: "secondary",
+    floor: "secondary",
+  },
   // A selected row is the fourth wash, and it carries a row's **title**, which
   // is body text. The components' `ListItemTitle` overrides its recipe's colour
   // with the row's own role (`theme.colors.selectedForeground`) and paints it on

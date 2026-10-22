@@ -1257,7 +1257,7 @@ named colour, an `hsl()`-family function). Shorthand hex is measured.
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 97 pairs cover the text role
+the caller remembering to say so. The 99 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1294,7 +1294,15 @@ control whose label is neither the page's `foreground` nor a derived fill's
 on-colour: it rests on `secondary` and moves to the `hover`/`active` role while
 keeping `secondaryForeground`, so that label is measured on both washes too.
 Every shipped, high-contrast, platform and authored style clears the floor, the
-tightest being Windows XP (Luna) dark's pressed wash at 7.88:1. A row
+tightest being Windows XP (Luna) dark's pressed wash at 7.88:1. A **group
+panel** is the strip a control sits in without painting a fill of its own: the
+segmented `secondary` panel the ring, the strong boundary and a disabled label
+are already measured on. An `outline` or `ghost` action keeps `foreground` and a
+quiet label or icon keeps `mutedForeground`, so both roles are read there — the
+page ink at the body floor and the quiet one at the secondary floor. Every
+shipped style clears both, the tightest being Windows XP (Luna) light's quiet
+label on its group panel at 4.89:1, while the same look's dark edition holds the
+page ink at 7.62:1. A row
 **floating on a popover** keeps that
 surface's role rather than the page's — a menu or combobox row is
 `popoverForeground` — and a destructive row paints the tone's readable role, so

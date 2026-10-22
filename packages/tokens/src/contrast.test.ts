@@ -151,9 +151,9 @@ describe("contrast floors", () => {
  * individual report did not: `contrastFailures(theme)` defaulted to the default
  * floors, so a brand built from a high-contrast theme passed a check whose
  * floors its own variant does not accept. The brand below is exactly that
- * mistake — `#505050` keeps every pair above 4.5:1 and drops the four washes
- * under 7:1 — and the default-floor call is the passing twin that makes the
- * variant call the failure it is.
+ * mistake — `#505050` keeps every pair above 4.5:1 and drops the four washes and
+ * the group panel under 7:1 — and the default-floor call is the passing twin
+ * that makes the variant call the failure it is.
  */
 describe("the floors a contrast report uses", () => {
   const brand = extendTheme(highContrastLightTheme, {
@@ -173,6 +173,7 @@ describe("the floors a contrast report uses", () => {
       { foreground: "mutedForeground", background: "hover", floor: 7 },
       { foreground: "mutedForeground", background: "active", floor: 7 },
       { foreground: "mutedForeground", background: "accent", floor: 7 },
+      { foreground: "mutedForeground", background: "secondary", floor: 7 },
       { foreground: "mutedForeground", background: "selected", floor: 7 },
     ]);
     expect(
@@ -192,7 +193,7 @@ describe("the floors a contrast report uses", () => {
 
   it("an explicit floor set still overrides the declaration", () => {
     expect(contrastFailures(brand, contrastFloors)).toEqual([]);
-    expect(contrastFailures(brand, highContrastFloors).length).toBe(4);
+    expect(contrastFailures(brand, highContrastFloors).length).toBe(5);
   });
 });
 
@@ -615,6 +616,128 @@ describe("the secondary action's label on the wash it tints", () => {
         "utf8",
       ).replace(/\s+/g, " "),
     ).toContain(`pressed wash at ${tightest.ratio?.toFixed(2)}:1`);
+  });
+});
+
+/**
+ * Guards a control's own label on the group strip it sits in.
+ *
+ * An unfilled action — the `outline` and `ghost` variants — paints no fill of
+ * its own and keeps `foreground`; a quiet label or icon in the same group keeps
+ * `mutedForeground`. `docs/design-system.md` §7 names the segmented `secondary`
+ * panel as one of the strips a control sits on, and `ring`, `borderStrong` and
+ * a disabled label were all measured there while the two text roles were not:
+ * a brand whose panel drifted toward its own ink could ship a label that
+ * disappears inside the group while the edge beside it passed.
+ */
+describe("a control's label on its group strip", () => {
+  const primitives = readFileSync(
+    new URL("../../primitives/src/core/variants.ts", import.meta.url),
+    "utf8",
+  );
+
+  const pairs = [
+    { foreground: "foreground", floor: "body" },
+    { foreground: "mutedForeground", floor: "secondary" },
+  ] as const;
+
+  it("measures both text roles on the segmented panel", () => {
+    const missing = pairs
+      .filter(
+        ({ foreground, floor }) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === foreground &&
+              pair.background === "secondary" &&
+              pair.floor === floor,
+          ),
+      )
+      .map(({ foreground }) => `${foreground}/secondary`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the unfilled variants that keep the page ink", () => {
+    // The pair is only honest while a control in a group paints no fill of its
+    // own: both variants declare `background: undefined` beside the page role,
+    // so the strip behind them is what the label is read on.
+    for (const variant of ["outline", "ghost"] as const) {
+      const declaration = new RegExp(
+        `const ${variant}: ControlVariant = \\{[\\s\\S]*?\\n\\};`,
+      ).exec(primitives)?.[0];
+      expect(declaration, variant).toContain("background: undefined");
+      expect(declaration, variant).toContain(
+        "foreground: (theme) => theme.colors.foreground",
+      );
+    }
+  });
+
+  it("reports a label painted into the panel it sits in", () => {
+    const broken = (role: "foreground" | "mutedForeground") => ({
+      colors: { ...lightColors, secondary: lightColors[role] },
+    });
+
+    expect(
+      contrastFailures(broken("foreground")).find(
+        ({ foreground, background }) =>
+          foreground === "foreground" && background === "secondary",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+    expect(
+      contrastFailures(broken("mutedForeground")).find(
+        ({ foreground, background }) =>
+          foreground === "mutedForeground" && background === "secondary",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.secondary });
+  });
+
+  it("clears the floor in every shipped, platform and authored theme", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const placements = shipped.flatMap((theme) =>
+      pairs.map(({ foreground, floor }) => ({
+        name: `${theme.name}/${foreground}`,
+        ratio: contrastRatio(theme.colors[foreground], theme.colors.secondary),
+        floor: contrastFloorsFor(theme)[floor],
+      })),
+    );
+    const hidden = placements.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = (foreground: (typeof pairs)[number]["foreground"]) =>
+      placements
+        .filter(({ name }) => name.endsWith(`/${foreground}`))
+        .reduce((low, next) =>
+          (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+        );
+
+    expect(hidden).toEqual([]);
+    expect(tightest("foreground").name).toBe(
+      "Dark · Windows XP (Luna)/foreground",
+    );
+    expect(printedRatio(tightest("foreground").ratio)).toBe("7.62:1");
+    expect(tightest("mutedForeground").name).toBe(
+      "Light · Windows XP (Luna)/mutedForeground",
+    );
+    expect(printedRatio(tightest("mutedForeground").ratio)).toBe("4.89:1");
+    // The catalogue prints the quiet label's number this suite measures, so a
+    // palette edit moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(
+      `quiet label on its group panel at ${tightest("mutedForeground").ratio?.toFixed(2)}:1`,
+    );
   });
 });
 

@@ -650,6 +650,10 @@ four through the mark contract and two (`input`, `secondary`) through
 under a control in its `trailing` slot as well — `accent` while the pointer is
 over the row, `selected` once it is chosen — because the default `secondary`
 action owns that edge and a brand could otherwise paint it in the row's colour.
+A control that paints no fill of its own — the `outline` and `ghost` variants —
+keeps `foreground`, and a quiet label or icon `mutedForeground`, so the
+segmented `secondary` group strip is measured as the background of both rather
+than only as the strip its edge and ring are found on.
 The decorative surfaces use `decorativeFloor` (1.05:1), and
 `decorativeSurfaces` names the placements measured — dividers, skeleton fills,
 the modal veil on the strips a modal covers, each status tone's soft tint on the four strips a message sits

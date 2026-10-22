@@ -580,9 +580,9 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
-| body text on background/card/popover/muted and on the accent and selected washes | 7:1 | 7:1 |
+| body text on background/card/popover/muted, on the accent and selected washes, and on the `secondary` group strip a control sits in | 7:1 | 7:1 |
 | text typed into an input, on `input` and on the page role a composite field paints its fill with | 7:1 | 7:1 |
-| secondary text on background/card/muted/popover, on a selected row, and inside a field's own fill (`input`) | 4.5:1 | 7:1 |
+| secondary text on background/card/muted/popover, on a selected row, inside a field's own fill (`input`), and on a control's `secondary` group strip | 4.5:1 | 7:1 |
 | a selected row's title on its own selection and on the `hover`/`active`/`accent` wash it tints (the `selectedForeground` it paints, held to the body floor), the `foreground` a default `Text` keeps on a selected surface, and a chosen row inside a popover resting in its surface's role (`popoverForeground` on `selected`) | 7:1 | 7:1 |
 | on-colour text, placeholder (on `input` and on the page fill) | 4.5:1 | 7:1 |
 | a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
