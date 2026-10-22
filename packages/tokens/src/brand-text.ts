@@ -14,6 +14,16 @@
  * smallest step that clears the floor on every surface a link can sit on. The
  * base theme returns its brand unchanged where it already reads, so the
  * derivation is only visible where the fill role genuinely cannot be read.
+ *
+ * A row is one of those surfaces. The primitives paint `Text tone="primary"`
+ * in the derived colour (and a `Button variant="link"` in it), a `Box` can fill
+ * `accent` or `selected` behind that run, and the components package's list row
+ * tints `accent` under the pointer and fills `selected` once chosen while its
+ * documented `trailing` slot holds an explicit action. Nothing measured brand
+ * text there: the sixteen shipped styles mostly cleared the row through the
+ * derivation already, but the Luna look's dark brand landed at **4.50:1** on the
+ * row it selects — under the 4.5:1 floor — so it steps once now. The two washes
+ * are in the set, so the class cannot recur in a brand.
  */
 
 import { blend } from "./color.js";
@@ -26,8 +36,13 @@ import type { Theme } from "./theme.js";
 
 /**
  * The surfaces a piece of brand-coloured text can sit on: the four page
- * surfaces a reader reads on, plus the two washes a hovered or pressed link
- * tints behind itself.
+ * surfaces a reader reads on, the two washes a hovered or pressed link tints
+ * behind itself, and the two washes a **row** paints under an action in its
+ * `trailing` slot — `accent` while the pointer is over the row, `selected` once
+ * the row is chosen (`packages/components/src/list.tsx`). A list row documents
+ * that slot as the place for an explicit action control, and an action's
+ * `link` variant paints `brandText`, so the row's wash is a surface brand text
+ * is read on rather than decoration.
  */
 export const brandTextSurfaces = [
   "background",
@@ -36,6 +51,8 @@ export const brandTextSurfaces = [
   "muted",
   "hover",
   "active",
+  "accent",
+  "selected",
 ] as const;
 
 /**

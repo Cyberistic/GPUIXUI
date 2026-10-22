@@ -14,6 +14,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { brandText, brandTextSurfaces } from "./brand-text.js";
 import { linkStyles, paleBrand } from "./brand-text.example.js";
 import { alpha } from "./color.js";
@@ -56,6 +57,15 @@ const retroThemes = retroNames.flatMap(
 
 const everyTheme = [...shippedThemes, ...platformThemes, ...retroThemes];
 
+/**
+ * The repository source the row's wash is read from, once, when the suite
+ * loads. `node:fs` is deliberate here for the same reason as in
+ * `field-boundary.test.ts`: this holds the token contract to the two consumer
+ * packages' painters, and `@gpuixui/tokens` keeps no dependency on either.
+ */
+const source = (path: string): string =>
+  readFileSync(new URL(path, import.meta.url), "utf8");
+
 /** The surface a brand-coloured run is least readable on. */
 const worstRatio = (theme: (typeof everyTheme)[number][1], colour: string) =>
   brandTextSurfaces.reduce<number | undefined>((worst, surface) => {
@@ -70,14 +80,16 @@ const channelAt = (colour: string, at: number): number =>
   Number.parseInt(colour.slice(at, at + 2), 16);
 
 describe("the surfaces a brand-coloured run can sit on", () => {
-  it("names the page and the two washes a link tints behind itself", () => {
+  it("names the page, the washes a link tints and the washes a row paints", () => {
     expect([...brandTextSurfaces].sort()).toEqual([
+      "accent",
       "active",
       "background",
       "card",
       "hover",
       "muted",
       "popover",
+      "selected",
     ]);
   });
 
@@ -96,6 +108,98 @@ describe("the surfaces a brand-coloured run can sit on", () => {
       platformTheme(themes.dark, "darwin").colors.popover,
     );
     expect(popover).toBeCloseTo(3.81, 1);
+  });
+});
+
+describe("the washes a row paints under brand text", () => {
+  // The row is the surface a link action is read on: a `Box` fills `accent`
+  // while the pointer is over it and `selected` once it is chosen, the list row
+  // behind its `trailing` slot paints both, and the run inside keeps the
+  // derived brand colour.
+  const surfaces = source("../../primitives/src/core/style.ts");
+  const recipes = source("../../primitives/src/recipe/index.ts");
+  const row = source("../../components/src/list.tsx");
+
+  it("reads the two painters that put brand text on a row", () => {
+    // The surfaces are the box's own tones: a `Text tone="primary"` inside
+    // `surface="accent"` or `surface="selected"` is a supported composition.
+    expect(surfaces).toContain('"accent",\n  "selected",');
+    // ... and the tone is the derived colour, not the fill role.
+    expect(recipes).toContain('primary: "text-brand"');
+    expect(recipes).toContain('link: "text-brand ');
+    // The row that documents its trailing slot as the place for an action
+    // paints both washes under it.
+    expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
+    expect(row).toContain("backgroundColor: theme.colors.selected");
+  });
+
+  it("finds the fill role under the floor on the washes a row paints", () => {
+    // The premise: these are shipped styles, not a hypothetical brand.
+    const darwinDark = platformTheme(themes.dark, "darwin");
+    expect(
+      contrastRatio(darwinDark.colors.primary, darwinDark.colors.accent),
+    ).toBeCloseTo(3.06, 2);
+    const linuxLight = platformTheme(themes.light, "linux");
+    expect(
+      contrastRatio(linuxLight.colors.primary, linuxLight.colors.accent),
+    ).toBeCloseTo(3.67, 2);
+    const lunaDark = retroTheme(themes.dark, "luna");
+    expect(
+      contrastRatio(lunaDark.colors.primary, lunaDark.colors.selected),
+    ).toBeCloseTo(4.45, 2);
+    expect(lunaDark.colors.primary).not.toBe(brandText(lunaDark));
+  });
+
+  it("prints the row-wash measurements on the catalogue page", () => {
+    const page = source("../../../docs/tokens.md").replace(/\s+/g, " ");
+    const darwinDark = platformTheme(themes.dark, "darwin");
+    const lunaDark = retroTheme(themes.dark, "luna");
+    const accent = contrastRatio(
+      darwinDark.colors.primary,
+      darwinDark.colors.accent,
+    );
+    const selected = contrastRatio(
+      lunaDark.colors.primary,
+      lunaDark.colors.selected,
+    );
+    expect(accent).toBeCloseTo(3.06, 2);
+    expect(selected).toBeCloseTo(4.45, 2);
+    expect(page).toContain("the two washes a **row** paints");
+    expect(page).toContain(
+      `| \`primary\` on the \`accent\` wash a hovered row paints | macOS dark | ${(accent ?? 0).toFixed(2)}:1 |`,
+    );
+    expect(page).toContain(
+      `| \`primary\` on \`selected\` | Windows XP (Luna) dark | ${(selected ?? 0).toFixed(2)}:1 |`,
+    );
+  });
+
+  it("holds the derived colour on both row washes in every style", () => {
+    everyTheme.forEach(([label, theme]) => {
+      const text = brandText(theme);
+      const floor = contrastFloorsFor(theme).secondary;
+      (["accent", "selected"] as const).forEach((surface) => {
+        const ratio = contrastRatio(text, theme.colors[surface]);
+        expect(ratio, `${label} on ${surface}`).toBeDefined();
+        expect(ratio ?? 0, `${label} on ${surface}`).toBeGreaterThanOrEqual(
+          floor,
+        );
+      });
+    });
+  });
+
+  it("moves the one shipped brand that landed under the floor on a row", () => {
+    // Coverage is not the only reason: the Luna look's dark brand clears the six
+    // page-and-wash surfaces, and its *derived* colour landed at 4.50:1 on the
+    // row it selects — under the 4.5:1 floor — so this style steps once more.
+    const luna = retroTheme(themes.dark, "luna");
+    const floor = contrastFloorsFor(luna).secondary;
+    expect(contrastRatio("#7CB1FF", luna.colors.selected) ?? 0).toBeLessThan(
+      floor,
+    );
+    expect(brandText(luna)).not.toBe("#7CB1FF");
+    expect(
+      contrastRatio(brandText(luna), luna.colors.selected) ?? 0,
+    ).toBeGreaterThanOrEqual(floor);
   });
 });
 
@@ -189,19 +293,21 @@ describe("brand text", () => {
     expect(brandText(dim)).toBe(dim.colors.foreground);
   });
 
-  it("holds the documented example's three link states to the floor", () => {
+  it("holds the documented example's four link states to the floor", () => {
     const states = linkStyles(lightTheme);
     expect(states.resting.color).toBe(brandText(lightTheme));
     expect(states.hover.backgroundColor).toBe(lightTheme.colors.hover);
     expect(states.pressed.backgroundColor).toBe(lightTheme.colors.active);
-    // The text stays the same derived colour in all three states; what moves is
-    // the wash the link tints behind itself.
+    expect(states.row.backgroundColor).toBe(lightTheme.colors.selected);
+    // The text stays the same derived colour in all four states; what moves is
+    // the wash behind it.
     const over = {
       resting: lightTheme.colors.background,
       hover: lightTheme.colors.hover,
       pressed: lightTheme.colors.active,
+      row: lightTheme.colors.selected,
     } as const;
-    (["resting", "hover", "pressed"] as const).forEach((state) => {
+    (["resting", "hover", "pressed", "row"] as const).forEach((state) => {
       expect(
         contrastRatio(states[state].color, over[state]),
         `${state} link`,

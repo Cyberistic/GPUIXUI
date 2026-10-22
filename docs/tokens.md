@@ -377,6 +377,8 @@ styles:
 | `primary` on `active` | Linux light | 3.44:1 |
 | `primary` on the page | Windows XP (Luna) light | 4.31:1 |
 | `primary` on `active` | Windows 7 (Aero) light | 3.83:1 |
+| `primary` on the `accent` wash a hovered row paints | macOS dark | 3.06:1 |
+| `primary` on `selected` | Windows XP (Luna) dark | 4.45:1 |
 
 `brandText(theme)` returns a colour for them instead of a second palette:
 
@@ -395,9 +397,17 @@ be measured (translucent, or not a colour the renderer paints) is returned
 unchanged rather than replaced by a guess.
 
 `brandTextSurfaces` is the set it is held to: the four page surfaces a reader
-reads on (`background`, `card`, `popover`, `muted`) plus the two washes a
-hovered and a pressed link tint behind itself (`hover`, `active`) — the wash is a
-surface with text on it, so it is measured like one.
+reads on (`background`, `card`, `popover`, `muted`), the two washes a hovered and
+a pressed link tints behind itself (`hover`, `active`), and the two washes a
+**row** paints under an action in its `trailing` slot (`accent` while the pointer
+is over the row, `selected` once it is chosen) — a wash is a surface with text on
+it, so it is measured like one. The row is not decoration: the components
+package's list row documents that slot as the place for an explicit action and
+paints both washes there, the primitives' `Text tone="primary"` paints this
+colour, and a `Box` can fill either wash behind it. Measured across the sixteen
+shipped styles, most already cleared the row through the derivation, but the
+Luna look's dark brand landed at **4.50:1** on the row it selects — under the
+floor — so it steps once more, to 4.55:1.
 
 The floor follows the theme's own contrast variant through `contrastFloorsFor`,
 the rule the audit's contrast report already uses: 4.5:1 for a default theme,
@@ -413,9 +423,11 @@ fill role (`primary`, `destructive`) as text; a component that still does is
 recorded in `TODO.md` → Interlocks.
 
 `packages/tokens/src/brand-text.test.ts` holds all 16 shipped, high-contrast,
-platform and authored themes to the floor on all six surfaces, proves the
-derivation is minimal and stays between the brand and the theme's foreground,
-holds a high-contrast theme to its own 7:1, and executes
+platform and authored themes to the floor on all eight surfaces, reads the
+painters that put a brand run on a row (a box's `accent`/`selected` tones, the
+`text-brand` recipe and the row's two washes), proves the derivation is minimal
+and stays between the brand and the theme's foreground, holds a high-contrast
+theme to its own 7:1, and executes
 [`src/brand-text.example.ts`](../packages/tokens/src/brand-text.example.ts).
 
 ## Data series
@@ -2774,7 +2786,7 @@ its own hover.
 
 `packages/tokens/src/brand-text.test.ts` covers the brand as **text**: every
 shipped, high-contrast, platform and authored theme is held to its own variant's
-text floor on all six surfaces a link can sit on, the fill role is measured below
+text floor on all eight surfaces a link can sit on, the fill role is measured below
 that floor on the pressed wash (4.30:1 in the base light theme, 3.10:1 in macOS
 dark) so the derivation has a premise, a brand that already reads is returned
 unchanged while the base light one moves, a high-contrast theme is held to 7:1

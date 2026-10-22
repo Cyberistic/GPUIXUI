@@ -227,8 +227,9 @@ Ghost and subtle surfaces keep the `hover` / `active` washes.
 light brand measures 4.30:1 on the wash a pressed link tints behind itself and
 macOS dark 3.10:1. `brandText(theme)` returns the brand where it already reads
 and otherwise steps it toward the theme's `foreground` until the least readable
-of the six surfaces a link can sit on clears the theme's floor (4.5:1 default,
-7:1 high contrast).
+of the eight surfaces a link can sit on clears the theme's floor (4.5:1 default,
+7:1 high contrast) — the page surfaces, the washes a link tints, and the
+`accent`/`selected` washes a row paints under an action in its `trailing` slot.
 
 ```ts
 import { brandText } from "@gpuixui/tokens";
