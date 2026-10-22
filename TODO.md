@@ -3300,7 +3300,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 112/112
+`[x]` `[██████████]` 113/113
+
+`[x]` Curate the **Accordion** page and hold its modes, indicator and header row
+to the source — `/docs/components/accordion` served the package page (strategy 4:
+no preview, no install block), so the one Tier 2 disclosure component a settings
+panel is built from had no rendering a reader could press. The curated page
+teaches the three mode rules (single, single `collapsible`, multiple), the part
+table, the keyboard contract (arrows move focus and never toggle; a held
+`Enter` toggles once), all nine props, the header's `lg` control height and
+`hover` wash, and the two measured limits: no `aria-controls` in 0.11.0, and a
+closed body is **unmounted** so a form inside it loses its scroll position. Two
+browser previews: `accordion-demo` (a real single-mode FAQ with arrow/Home/End
+focus movement) and `accordion-composition` (a settings panel with rows and a
+disabled section). `component-page-truth.test.ts` gained the page's registry
+entry and one case that derives the claims: the source must still swap
+`chevron-up`/`chevron-down` with the Expand/Collapse labels and contain no
+`rotate`, paint `height: controlHeight(theme, "lg")` and the `hover` wash, drop a
+disabled header from the tab order (`tabIndex={disabled ? -1 : 0}`), and carry no
+`aria-controls` — and the page must print "No `aria-controls`",
+`density.controlHeight.lg` and "16 native behaviour tests" while carrying neither
+a rotation nor a stale count. Directions measured: printing 15 fails the count
+case (`says 15, suite runs 16`), and replacing the aria sentence with a
+`aria-controls` claim fails the new case by name. Verified in the browser on
+`/docs/components/accordion`: opening section 2 closes section 1
+(`["false","true",…]`), `ArrowDown` moves focus to the next header without
+opening it, and the Advanced row is disabled. Ten curated pages now; the index
+prose, `/docs/theming` switch list, `meta.json`, `package-docs.test.ts`'s
+shadowed set, the strategy's "Curated today" line and the app ledger name it.
+Suite 73 files / 665 tests (the two `inventory-status` cases are the
+`COMPONENTS.md` blank-line row in the interlock table), `check-types` green.
 
 `[x]` Put the **source on every package page**, generated from the module the
 page documents — `MISSION.md` asks every component page for copyable source, and

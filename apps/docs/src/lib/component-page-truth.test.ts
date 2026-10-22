@@ -73,6 +73,13 @@ interface CuratedPage {
 
 const pages: ReadonlyArray<CuratedPage> = [
   {
+    file: "accordion.mdx",
+    row: "Accordions",
+    suite: "packages/components/src/behaviour/accordion.test.tsx",
+    shadowed: "packages/components/docs/accordion.mdx",
+    source: "packages/components/src/accordion.tsx",
+  },
+  {
     file: "alert.mdx",
     row: "Alerts",
     suite: "packages/components/src/behaviour/alert.test.tsx",
@@ -238,6 +245,44 @@ describe("the curated component pages", () => {
     });
 
     expect(wrong).toEqual([]);
+  });
+
+  it("describe the modes, the indicator and the row the source paints", () => {
+    // The accordion's two modes are separate state shapes, its indicator is a
+    // chevron swap rather than a rotation (0.11.0 has no `transform`), and its
+    // header row is the `lg` control height with the hover wash. The page prints
+    // the mode table and the row's roles, so both are read from the source that
+    // paints them instead of trusted.
+    const accordion = pages.find((page) => page.file === "accordion.mdx");
+    expect(
+      accordion,
+      "the accordion page is not in the curated set",
+    ).toBeDefined();
+    if (accordion === undefined) return;
+
+    const source = read(accordion.source);
+    expect(read("packages/components/src/accordion/logic.ts")).toContain(
+      "AccordionState",
+    );
+    // The indicator swaps; a rotated chevron is not a shape the runtime has.
+    expect(source).toContain('name={open ? "chevron-up" : "chevron-down"}');
+    expect(source).toContain('label={open ? "Collapse" : "Expand"}');
+    expect(source).not.toContain("rotate");
+    // The row: the `lg` control height, the hover wash, and no tab stop while
+    // the section is disabled.
+    expect(source).toContain('height: controlHeight(theme, "lg")');
+    expect(source).toContain("backgroundColor: theme.colors.hover");
+    expect(source).toContain("tabIndex={disabled ? -1 : 0}");
+    // The runtime publishes no `aria-controls`, so the page must not teach one.
+    expect(source).not.toContain("aria-controls");
+
+    const text = body(accordion).replace(/\s+/g, " ");
+    expect(text).toContain("No `aria-controls`");
+    expect(text).toContain("`density.controlHeight.lg`");
+    expect(text).toContain("16 native behaviour tests");
+    expect(text).toContain("unmounted");
+    // The retracted shape: a rotation the indicator does not do.
+    expect(text).not.toContain("rotates");
   });
 
   it("hold the confirmation's safety decisions to the source", () => {

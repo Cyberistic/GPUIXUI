@@ -103,6 +103,7 @@ describe("the package docs collections", () => {
    * design — and the list must stay true in both directions.
    */
   const curated = new Set([
+    "/docs/components/accordion",
     "/docs/components/alert",
     "/docs/components/card",
     "/docs/components/command-menu",

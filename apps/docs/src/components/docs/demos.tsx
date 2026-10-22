@@ -1656,7 +1656,238 @@ export const ConfirmStates = () => {
   );
 };`;
 
+const accordionSections = [
+  {
+    value: "surface",
+    label: "What is a GPUix surface?",
+    body: "A GPUix component is not a DOM node with a stylesheet: it is a tree of hosted elements the renderer lays out and paints, and the style is data the app computes.",
+  },
+  {
+    value: "keys",
+    label: "Does Tab reach every section?",
+    body: "Only the header rows are tab stops. Tab reaches the open section's content through its own controls, and a closed section's body is not mounted at all.",
+  },
+  {
+    value: "motion",
+    label: "Why does the panel animate its height?",
+    body: "The body reports its painted height through onLayout, so the collapse is a real measurement rather than a guessed maximum. The runtime has no transform, so the box resizes instead of scaling.",
+  },
+] as const;
+
+/** The native keyboard contract, reproduced so the preview is explorable. */
+const AccordionDemo = () => {
+  const [open, setOpen] = useState<string | null>("surface");
+  const rows = useRef<Array<HTMLButtonElement | null>>([]);
+  const id = useId();
+
+  const focusRow = (index: number) => {
+    const wrapped =
+      (index + accordionSections.length) % accordionSections.length;
+    rows.current[wrapped]?.focus();
+  };
+
+  const move = (event: ReactKeyboardEvent, index: number) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      focusRow(index + 1);
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      focusRow(index - 1);
+    }
+    if (event.key === "Home") {
+      event.preventDefault();
+      focusRow(0);
+    }
+    if (event.key === "End") {
+      event.preventDefault();
+      focusRow(accordionSections.length - 1);
+    }
+  };
+
+  return (
+    <div className="gx-acc">
+      {accordionSections.map((section, index) => {
+        const expanded = open === section.value;
+        return (
+          <div className="gx-acc-item" key={section.value}>
+            <button
+              aria-expanded={expanded}
+              className="gx-acc-trigger"
+              onClick={() => setOpen(expanded ? null : section.value)}
+              onKeyDown={(event) => move(event, index)}
+              ref={(element) => {
+                rows.current[index] = element;
+              }}
+              type="button"
+            >
+              <span>{section.label}</span>
+              <svg
+                aria-hidden="true"
+                className="gx-acc-icon"
+                viewBox="0 0 24 24"
+              >
+                <path d={expanded ? "m18 15-6-6-6 6" : "m6 9 6 6 6-6"} />
+              </svg>
+            </button>
+            {expanded ? (
+              <p className="gx-acc-body" id={`${id}-${section.value}`}>
+                {section.body}
+              </p>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const accordionSettings = [
+  {
+    value: "appearance",
+    label: "Appearance",
+    rows: [
+      ["Theme", "Follow the platform"],
+      ["Density", "Comfortable"],
+      ["Accent", "Iris"],
+    ],
+  },
+  {
+    value: "notifications",
+    label: "Notifications",
+    rows: [
+      ["Build failures", "Immediately"],
+      ["Weekly digest", "Mondays"],
+    ],
+  },
+] as const;
+
+/** A settings panel: one section open, a disabled one below it. */
+const AccordionComposition = () => {
+  const [open, setOpen] = useState<string | null>("appearance");
+  const id = useId();
+
+  return (
+    <div className="gx-acc gx-acc-panel">
+      {accordionSettings.map((section) => {
+        const expanded = open === section.value;
+        return (
+          <div className="gx-acc-item" key={section.value}>
+            <button
+              aria-expanded={expanded}
+              className="gx-acc-trigger"
+              onClick={() => setOpen(expanded ? null : section.value)}
+              type="button"
+            >
+              <span>{section.label}</span>
+              <svg
+                aria-hidden="true"
+                className="gx-acc-icon"
+                viewBox="0 0 24 24"
+              >
+                <path d={expanded ? "m18 15-6-6-6 6" : "m6 9 6 6 6-6"} />
+              </svg>
+            </button>
+            {expanded ? (
+              <div className="gx-acc-body" id={`${id}-${section.value}`}>
+                {section.rows.map(([label, value]) => (
+                  <div className="gx-acc-row" key={label}>
+                    <span>{label}</span>
+                    <span className="gx-acc-value">{value}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+      <div className="gx-acc-item">
+        <button
+          aria-disabled="true"
+          className="gx-acc-trigger gx-acc-disabled"
+          disabled
+          type="button"
+        >
+          <span>Advanced (managed by your administrator)</span>
+          <svg aria-hidden="true" className="gx-acc-icon" viewBox="0 0 24 24">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const accordionDemoSource = `import { useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@gpuixui/components/accordion";
+
+const sections = [
+  ["surface", "What is a GPUix surface?", "A GPUix component is not a DOM node…"],
+  ["keys", "Does Tab reach every section?", "Only the header rows are tab stops…"],
+  ["motion", "Why does the panel animate its height?", "The body reports its painted height…"],
+] as const;
+
+export const Questions = () => {
+  const [open, setOpen] = useState<string | null>("surface");
+
+  return (
+    <Accordion
+      type="single"
+      collapsible
+      value={open}
+      onValueChange={setOpen}
+    >
+      {sections.map(([value, title, body]) => (
+        <AccordionItem key={value} value={value}>
+          <AccordionTrigger>{title}</AccordionTrigger>
+          <AccordionContent>{body}</AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
+};`;
+
+const accordionCompositionSource = `import { useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@gpuixui/components/accordion";
+
+export const SettingsSections = () => {
+  const [open, setOpen] = useState<string | null>("appearance");
+
+  return (
+    <Accordion type="single" collapsible value={open} onValueChange={setOpen}>
+      <AccordionItem value="appearance">
+        <AccordionTrigger>Appearance</AccordionTrigger>
+        <AccordionContent>{appearanceRows}</AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="notifications">
+        <AccordionTrigger>Notifications</AccordionTrigger>
+        <AccordionContent>{notificationRows}</AccordionContent>
+      </AccordionItem>
+      <AccordionItem disabled value="advanced">
+        <AccordionTrigger>Advanced (managed by your administrator)</AccordionTrigger>
+      </AccordionItem>
+    </Accordion>
+  );
+};`;
+
 export const demos: Readonly<Record<string, Demo>> = {
+  "accordion-demo": { render: AccordionDemo, source: accordionDemoSource },
+  "accordion-composition": {
+    render: AccordionComposition,
+    source: accordionCompositionSource,
+    composition: true,
+  },
+
   "alert-tones": { render: AlertTones, source: alertTonesSource },
   "alert-composition": {
     render: AlertComposition,

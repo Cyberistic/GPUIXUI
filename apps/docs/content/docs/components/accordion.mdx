@@ -1,0 +1,177 @@
+---
+title: Accordion
+description: Stacked sections where one — or several — can be open.
+---
+
+`Accordion` is a list of collapsible sections that agree on which ones are open.
+It is **not** a single disclosure (that is
+[Collapsible](/docs/components/collapsible)) and not a tab strip: every header
+stays on screen, and a section's body is unmounted while it is closed.
+
+The claims below were measured on `@gpuix/native@0.11.0`.
+
+<ComponentPreview name="accordion-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Accordion" />
+
+<ComponentSource name="accordion" file="packages/components/src/accordion.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@gpuixui/components/accordion";
+
+<Accordion type="single" collapsible defaultValue="surface">
+  <AccordionItem value="surface">
+    <AccordionTrigger>What is a GPUix surface?</AccordionTrigger>
+    <AccordionContent>
+      A tree of hosted elements the renderer lays out and paints.
+    </AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="motion">
+    <AccordionTrigger>Why does the panel animate?</AccordionTrigger>
+    <AccordionContent>Its measured height is the tween target.</AccordionContent>
+  </AccordionItem>
+</Accordion>;
+```
+
+The full build is the `accordion` example in
+`packages/components/examples/accordion.example.tsx`, which the native
+playground mounts.
+
+## Composition
+
+| Part | Renders | Responsibility |
+| ---- | ------- | -------------- |
+| `Accordion` | a column | the open state, the mode rules and the divider order |
+| `AccordionItem` | a row | one section's `value` and its `disabled` flag |
+| `AccordionTrigger` | a `div` with `role="button"` | the full-width header, `aria-expanded`, the indicator |
+| `AccordionContent` | a box | the body; mounted only while the section is open |
+
+Only `AccordionItem` is required inside `Accordion`; a section without content is
+a header that opens onto nothing.
+
+## The two modes
+
+<ComponentPreview name="accordion-composition" />
+
+| Mode | Opening another section | Toggling the open section |
+| ---- | ----------------------- | ------------------------- |
+| `type="single"` (default `collapsible={false}`) | closes the first | a no-op: one section always stays open |
+| `type="single" collapsible` | closes the first | closes it, leaving nothing open |
+| `type="multiple"` | leaves the first open | removes it; the order sections were opened in is kept |
+
+The two modes are separate state shapes in `accordion/logic.ts` — an optional
+value, or an ordered set — because "opening another" means something different
+in each. A `single` accordion cannot be handed an array, and a `multiple` one
+cannot be handed `null`: the root's props are a union on `type`.
+
+A disabled section is skipped by clicks and keys and leaves the tab order; its
+header still paints, so a reader sees that the section exists.
+
+## Keyboard
+
+| Key | Effect |
+| ---- | ------ |
+| `Tab` | reaches each enabled header, in order |
+| `Enter` / `Space` | toggles the focused section; a held key toggles once |
+| `↓` / `↑` | moves focus to the next/previous enabled header, wrapping |
+| `Home` / `End` | moves focus to the first/last enabled header |
+
+Arrow movement changes focus only — it never opens or closes a section. The
+handler lives on the trigger, not on the accordion root, so a control inside an
+open section keeps its own arrow keys (a picker, a text field, a menu).
+
+## API reference
+
+`Accordion` takes the GPUix host props and merges `className` last.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Accordion` | `type` | `"single" \| "multiple"` | required |
+| `Accordion` | `collapsible` | `boolean` — single mode only | `false` |
+| `Accordion` | `value` | `string \| null` (single) · `ReadonlyArray<string>` (multiple) | — |
+| `Accordion` | `defaultValue` | the same union, for the uncontrolled form | `null` · `[]` |
+| `Accordion` | `onValueChange` | `(value: string \| null) => void` · `(values: ReadonlyArray<string>) => void` | — |
+| `AccordionItem` | `value` | `string` | required |
+| `AccordionItem` | `disabled` | `boolean` | `false` |
+| `AccordionTrigger` | `style` | `StateStyle<{ open, disabled, focused }>` | the recipe |
+| `AccordionContent` | `children` | `ReactNode` | — |
+
+Every part takes `className`, joined after the recipe so it wins conflicts.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| header label | the `label` type role, on the focused/hovered row's own wash |
+| divider | `borderWidth.thin` in `colors.border`; the last section draws none |
+| header height | `density.controlHeight.lg` |
+| indicator | `chevron-down` / `chevron-up` from `@gpuixui/icons`, in `mutedForeground` |
+| body | `mutedForeground` |
+
+The header keeps the resting `foreground` on the `hover` wash — the pair
+`contrastPairs` holds to the body floor. A brand-coloured hover label was 5.61:1
+on the base light page and 4.38:1 on Linux light's, under that floor, which is
+why the wash is the row's only change.
+
+The indicator is a **swap**, not a rotation: `StyleDesc` has no `transform` in
+0.11.0, so a rotated chevron is not available to the component. Each icon carries
+`aria-label="Expand"` / `"Collapse"`.
+
+## Accessibility and limitations
+
+- Each trigger publishes `aria-expanded`; the trigger names its own section.
+- **No `aria-controls`** in 0.11.0: the trigger-to-panel relationship is
+  positional, so a panel cannot be referenced from its header.
+- The indicator's `aria-label` changes with the state, so a reader hears the
+  action rather than a decorative glyph.
+- The panel's height tween is the runtime's own `motion` on a clipped box
+  (`normal`, 200 ms) plus a fade; the body stays mounted until the tween ends.
+  The browser preview on this page expands instantly — that is the
+  approximation, not the component.
+- A closed section's body is **unmounted**, so a form inside it loses its
+  scroll position and its focused child. Keep a section open while it is being
+  edited, or lift the state above the accordion.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the parts, the mode state and the collection arithmetic |
+| `@gpuix/react` | the host element, the event types and the ref |
+| `@gpuix/react/floating` | `mergeStyles` / `resolveStyle` for `style` by state |
+| `@gpuixui/tw` | the `ACCORDION_*` class recipes |
+| `@gpuixui/icons` | the chevron indicator |
+| `effect` | `Match` over the mode, and `Option`/`Array` for the value set |
+
+`@gpuixui/tokens` is reached through this package's `internal/theme.ts`, which
+re-exports the token helpers; the component imports no token module directly.
+
+## Related
+
+- **Collapsible** — one disclosure, no shared state.
+- **Tabs** — peers where exactly one is visible at a time.
+- **Fieldset** — a group of controls with one legend, not a disclosure.
+- **List** — dense navigation that does not hide content.
+
+## Status
+
+`done` · runtime support `yes`.
+
+16 native behaviour tests in
+`packages/components/src/behaviour/accordion.test.tsx` prove single mode closing
+the previous section, the non-collapsible no-op, the collapsible close, multiple
+mode keeping sections, the disabled section, Enter activation, a held Enter
+toggling once, the controlled `null` close, arrow/`Home`/`End` movement wrapping
+past a disabled header without opening it, the measured hover wash in both
+themes, and a caller header `ref`; 15 more cases cover the transition table in
+`src/accordion/logic.test.ts`. The measured height tween is the runtime's
+`motion` on a clipped box, and the row's hover pair is held to the body floor.

@@ -1123,6 +1123,98 @@
   margin: 1rem 0;
 }
 
+/* ---- accordion: mirrors components/src/accordion.tsx ----
+   Header rows are the `label` role at the `lg` control height, separated by a
+   `thin` divider in the `border` role; the indicator is the icon set's
+   chevron, swapped rather than rotated because the runtime has no transform.
+   The panel is the content's own measured height in the native component; here
+   it is a plain block, which the page says is the approximation. */
+.gx-acc {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 520px;
+}
+
+.gx-acc-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 0 12px;
+}
+
+.gx-acc-item + .gx-acc-item {
+  border-top: 1px solid var(--border);
+}
+
+.gx-acc-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--control-height-lg);
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-acc-trigger:hover {
+  background: var(--hover);
+}
+
+.gx-acc-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-acc-trigger.gx-acc-disabled {
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+}
+
+.gx-acc-icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  fill: none;
+  stroke: var(--muted-foreground);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gx-acc-body {
+  margin: 0;
+  padding: 0 4px 10px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.gx-acc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.gx-acc-row + .gx-acc-row {
+  border-top: 1px solid var(--border);
+}
+
+.gx-acc-value {
+  color: var(--foreground);
+}
+
 @media (max-width: 640px) {
   .gx-demo {
     padding: 28px 16px;
