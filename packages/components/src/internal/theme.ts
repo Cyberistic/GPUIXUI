@@ -89,6 +89,20 @@ export const selectionWash = (theme: Theme): StyleDesc => ({
   selectionColor: theme.colors.selection,
 });
 
+/**
+ * A text-entry host keeps its own value readable while another control holds
+ * keyboard focus.
+ *
+ * The runtime dims every other focusable element to
+ * `keyboardFocusDimOpacity` (40%) as a "where can Tab go" cue. On a field that
+ * composites the value and the placeholder into the field's own fill, so the
+ * reader's own text fades while they read it. Every field host declares
+ * `keyboardFocusDim: false` at rest, matching `@gpuixui/primitives`' rule; a
+ * caller's `style` merges last and can put the cue back. The measurement is
+ * `keyboardDimFailures` in `@gpuixui/tokens`.
+ */
+export const keepContent: StyleDesc = { keyboardFocusDim: false };
+
 /** The four status tones Alert, Badge and Toast expose. */
 export type Tone = "info" | "success" | "warning" | "danger";
 

@@ -83,7 +83,12 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, useTheme, type Theme } from "./internal/theme.js";
+import {
+  controlHeight,
+  keepContent,
+  useTheme,
+  type Theme,
+} from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
 /** What a selection callback receives: one value, several, or none. */
@@ -491,6 +496,7 @@ export const ComboboxInput = ({
       }}
       style={mergeStyles(recipeStyle(COMBOBOX_INPUT, theme), {
         height: controlHeight(theme, "sm"),
+        ...keepContent,
       })}
     />
   );

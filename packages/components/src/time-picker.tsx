@@ -67,6 +67,7 @@ import {
 } from "./time-picker/time.js";
 import {
   controlHeight,
+  keepContent,
   keyboardRing,
   selectionWash,
   targetSize,
@@ -341,6 +342,7 @@ export const TimePickerSegment = ({
         backgroundColor: undefined,
         ...(disabled ? {} : keyboardRing(theme)),
         ...selectionWash(theme),
+        ...keepContent,
       }),
       resolveStyle(style, state),
     ),

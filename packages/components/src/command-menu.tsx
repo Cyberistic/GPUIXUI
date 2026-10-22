@@ -46,7 +46,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { controlHeight, selectionWash, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  keepContent,
+  selectionWash,
+  useTheme,
+} from "./internal/theme.js";
 import { MenuLabel, menuRowStyle } from "./menu/item.js";
 import { fuzzyMatches, rankByGroup } from "./menu/fuzzy.js";
 import {
@@ -326,6 +331,7 @@ export const CommandMenuInput = ({
         borderColor: theme.colors.border,
         borderRadius: theme.radius.md,
         ...selectionWash(theme),
+        ...keepContent,
       }}
     />
   );

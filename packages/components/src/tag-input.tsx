@@ -41,6 +41,7 @@ import { addTokens, removeToken, splitDraft } from "./tag-input/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
+  keepContent,
   keyboardRing,
   selectionWash,
   targetSize,
@@ -201,6 +202,7 @@ export const TagInputField = ({
           height: controlHeight(theme, "sm"),
           ...keyboardRing(theme),
           ...selectionWash(theme),
+          ...keepContent,
         }),
         resolveStyle(style, { disabled }),
       )}

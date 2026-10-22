@@ -30,6 +30,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
+  keepContent,
   keyboardRing,
   selectionWash,
   useTheme,
@@ -202,6 +203,7 @@ export const InlineEdit = ({
           height: controlHeight(theme, "md"),
           ...keyboardRing(theme),
           ...selectionWash(theme),
+          ...keepContent,
         }),
         resolveStyle(style, state),
       )}

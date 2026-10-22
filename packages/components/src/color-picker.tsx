@@ -31,6 +31,7 @@ import { isActivation } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
+  keepContent,
   keyboardRing,
   selectionWash,
   useTheme,
@@ -191,6 +192,7 @@ export const ColorPicker = ({
             borderColor: valid ? theme.colors.border : theme.colors.destructive,
             ...keyboardRing(theme, !valid),
             ...selectionWash(theme),
+            ...keepContent,
           })}
         />
       </div>

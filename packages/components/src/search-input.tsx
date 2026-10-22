@@ -31,6 +31,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
+  keepContent,
   keyboardRing,
   selectionWash,
   targetSize,
@@ -145,6 +146,7 @@ export const SearchInput = ({
         style={mergeStyles(recipeStyle(SEARCH_INPUT_CONTROL, theme), {
           ...(disabled ? {} : keyboardRing(theme)),
           ...selectionWash(theme),
+          ...keepContent,
         })}
       />
       {value === "" ? null : (

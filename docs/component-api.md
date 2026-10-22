@@ -92,6 +92,13 @@ a public state object instead:
   `keyboardFocusDim: false` and keep their label (`button.test.tsx` holds the
   declaration and measures the collapse with `keyboardDimFailures`). A ghost
   action has no fill to collapse into, so it keeps the cue.
+- A **text-entry host** is content too: the dim composites the reader's value
+  and placeholder into the field's own fill. Every host spreads `keepContent`
+  from the seam — `FieldInput`, `SearchInput`, `TagInputField`, both
+  `TimePickerSegment`s, `MentionInput`, `ColorPicker`'s hex field,
+  `CommandMenuInput`, `ComboboxInput`, `InlineEdit`'s input and `ChatComposer`'s
+  field — and `keyboard-dim.test.tsx` holds each one. A caller's `style` merges
+  last and can put the cue back.
 
 Which parts have a state, and which do not, is a measured line:
 

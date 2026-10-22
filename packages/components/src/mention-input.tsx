@@ -52,6 +52,7 @@ import {
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
+  keepContent,
   keyboardRing,
   selectionWash,
   useTheme,
@@ -222,6 +223,7 @@ export const MentionInput = ({
             style={mergeStyles(recipeStyle(MENTION_INPUT_CONTROL, theme), {
               ...(disabled ? {} : keyboardRing(theme)),
               ...selectionWash(theme),
+              ...keepContent,
             })}
           />
         </div>

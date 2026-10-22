@@ -73,6 +73,7 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
+  keepContent,
   keyboardRing,
   selectionWash,
   statusTone,
@@ -415,6 +416,7 @@ export const ChatComposer = ({
               ? { color: theme.colors.disabledForeground }
               : keyboardRing(theme)),
             ...selectionWash(theme),
+            ...keepContent,
             minHeight: theme.spacing["2xl"],
           })}
         />
