@@ -7,34 +7,22 @@
  * package's fail-loud rule; it owns no palette of its own.
  */
 
-import {
-  createContext,
-  useContext,
-  type ReactElement,
-  type ReactNode,
-} from "react";
+import type { ReactElement, ReactNode } from "react";
 import {
   ThemeProvider as TokensThemeProvider,
   useTheme as useTokensTheme,
+  useThemePresence,
 } from "@gpuixui/tokens/react";
 import type { Density, PrimitiveTheme } from "../core/index.js";
 import { withDensity } from "./internal.js";
 
-/**
- * Whether this package's provider is above the component.
- *
- * A presence marker, not a second theme: the token provider falls back to the
- * light theme when nothing supplies one, and a primitive must not mistake that
- * fallback for a caller's choice.
- */
-const Provided = createContext(false);
-
-/** Thrown when a primitive renders without this package's `ThemeProvider`. */
+/** Thrown when a primitive renders with no theme provider above it. */
 export class MissingThemeProviderError extends Error {
   constructor() {
     super(
       "useTheme() found no <ThemeProvider>. GPUIxUI primitives never fall back " +
-        "to a default palette; wrap the tree in <ThemeProvider theme={theme}>.",
+        "to a default palette; wrap the tree in <ThemeProvider theme={theme}> " +
+        "from this package or from @gpuixui/tokens/react.",
     );
     this.name = "MissingThemeProviderError";
   }
@@ -66,14 +54,21 @@ export const ThemeProvider = ({
   children,
 }: ThemeProviderProps): ReactElement => (
   <TokensThemeProvider theme={withDensity(theme, density)}>
-    <Provided.Provider value>{children}</Provided.Provider>
+    {children}
   </TokensThemeProvider>
 );
 
-/** The active theme. Fails loudly when this package's provider is absent. */
+/**
+ * The active theme. Fails loudly when no provider is above it.
+ *
+ * The token package reports presence itself (`useThemePresence`), because its
+ * `useTheme` falls back to the light theme: a caller passing that theme on
+ * purpose and no provider at all read the same otherwise. Either provider — this
+ * one or `@gpuixui/tokens/react`'s — therefore satisfies the rule, which is what
+ * lets a tree mixing the two packages wrap once.
+ */
 export const useTheme = (): PrimitiveTheme => {
   const theme = useTokensTheme();
-  const provided = useContext(Provided);
-  if (!provided) throw new MissingThemeProviderError();
+  if (!useThemePresence()) throw new MissingThemeProviderError();
   return theme;
 };

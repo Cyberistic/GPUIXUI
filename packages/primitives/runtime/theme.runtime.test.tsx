@@ -18,7 +18,10 @@
 
 import { expect, it } from "vitest";
 import { darkTheme, densityPresets, lightTheme } from "@gpuixui/tokens";
-import { useTheme as useSharedTheme } from "@gpuixui/tokens/react";
+import {
+  ThemeProvider as TokensThemeProvider,
+  useTheme as useSharedTheme,
+} from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
@@ -87,6 +90,21 @@ it("supplies the shared token context a mixed tree reads", async () => {
     </ThemeProvider>,
   );
   expect(painted(runtime, "shared", "backgroundColor")).toBe(
+    darkTheme.colors.background,
+  );
+});
+
+it("paints a primitive under the token package's provider alone", async () => {
+  // The bug: this package kept a presence marker of its own, so a tree wrapped
+  // only in the provider `@gpuixui/components` uses made every primitive throw
+  // `MissingThemeProviderError`. The shared context answers presence now, so one
+  // wrapper serves a mixed tree.
+  const runtime = await rendered(
+    <TokensThemeProvider theme={darkTheme}>
+      <Box tone="background" testId="box" />
+    </TokensThemeProvider>,
+  );
+  expect(painted(runtime, "box", "backgroundColor")).toBe(
     darkTheme.colors.background,
   );
 });

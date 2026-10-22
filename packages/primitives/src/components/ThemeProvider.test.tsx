@@ -142,12 +142,23 @@ describe("the provider writes the shared token context", () => {
       THEME_CONTEXT.test(readFileSync(path, "utf8")),
     );
     expect(themeContexts).toEqual([]);
-    // The one context the provider keeps is a presence marker — "is this
-    // package's provider above me?" — and it carries no theme.
+  });
+
+  it("asks the token package whether a provider is above it", () => {
+    // The bug: the seam kept its own presence marker, so a tree wrapped only in
+    // `@gpuixui/tokens/react`'s provider — the one `@gpuixui/components` uses —
+    // made every primitive throw. `useThemePresence` answers the same question
+    // from the context both packages write, so either provider satisfies the
+    // fail-loud rule.
     const provider = Option.getOrElse(
-      Arr.findFirst(sources, (path) => path.endsWith("ThemeProvider.tsx")),
+      Arr.findFirst(walk(sourceRoot), (path) =>
+        path.endsWith("ThemeProvider.tsx"),
+      ),
       () => "",
     );
-    expect(readFileSync(provider, "utf8")).toContain("createContext(false)");
+    const source = readFileSync(provider, "utf8");
+
+    expect(source).toContain("useThemePresence()");
+    expect(source).not.toContain("createContext");
   });
 });
