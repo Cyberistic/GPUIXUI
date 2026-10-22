@@ -110,9 +110,16 @@ component remembers the selection.
 
 The rail paints `colors.background`, a `borderWidth.thin` border in `colors.border`
 and `radius.md`. One element — `tabs-indicator` — paints the selected surface in
-`colors.card` behind the selected trigger; unselected triggers are transparent
-with `colors.mutedForeground` and hover with `colors.hover`, and the selected
-label takes `colors.foreground`. Trigger height is `controlHeight(theme, "md")`.
+`colors.selected` behind the selected trigger; unselected triggers are
+transparent with `colors.mutedForeground` and hover with `colors.hover`, and the
+selected label takes `colors.foreground`. Trigger height is
+`controlHeight(theme, "md")`.
+
+The pill is the `selected` **state wash**, not `card`: the selected surface has
+to be visible on the `background` rail, and the decorative contract holds
+`selected` to that floor, while `foreground` on `selected` is a body pair. A
+`card` pill is invisible in the high-contrast light theme, where `card` and
+`background` are the same value (1.00:1).
 
 The selected surface is **measured, not styled per trigger**. Every trigger
 reports its painted box through `onLayout`, and a 1×1 `tabs-origin` swatch
@@ -166,8 +173,10 @@ still the keyboard cue: the flag is presentational, not the cue
 ## Verification
 
 `src/behaviour/tabs.test.tsx` runs in the real GPUix renderer: click switching,
-the shared selected surface's theme role in both themes, its painted box against
-the selected trigger's, its move with the selection, its placement on a vertical
+the shared selected surface's theme role and its contrast on the rail in both
+themes (with the high-contrast premise the fix was measured against), its
+painted box against the selected trigger's, its move with the selection, its
+placement on a vertical
 rail, arrow wrap with a disabled tab, a move that starts from the selection when
 no trigger reported focus, manual activation waiting for Enter,
 Home/End, the controlled contract, a panel whose value matches nothing, a caller

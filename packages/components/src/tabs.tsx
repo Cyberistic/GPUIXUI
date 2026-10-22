@@ -546,7 +546,13 @@ export const TabsList = ({
             }}
             style={{
               position: "absolute",
-              backgroundColor: theme.colors.card,
+              // The pill's whole job is to show which tab is selected, so it
+              // wears the `selected` state wash: `card` equals the rail's own
+              // `background` in the high-contrast light theme (1.00:1), so the
+              // selected tab painted no surface at all. `selected` is held to
+              // the decorative floor on `background`, and the `foreground`
+              // label it carries is a measured body pair on that fill.
+              backgroundColor: theme.colors.selected,
               borderRadius: theme.radius.sm,
               pointerEvents: "none",
             }}

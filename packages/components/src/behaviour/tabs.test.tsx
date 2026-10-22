@@ -18,6 +18,12 @@
  */
 
 import * as Option from "effect/Option";
+import {
+  contrastFloors,
+  contrastRatio,
+  decorativeFloor,
+  getTheme,
+} from "@gpuixui/tokens";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -144,23 +150,61 @@ describe("Tabs", () => {
     tabs.unmount();
   });
 
-  it("paints the shared selected surface from whichever theme is active", () => {
-    const assertTheme = (theme: TestTheme, card: string): void => {
-      const tabs = renderComponent(<Settings />, theme);
+  it("paints the selected surface in a role a reader can see on the rail", () => {
+    const assertTheme = (
+      mode: TestTheme,
+      active: typeof lightTheme,
+    ): void => {
+      const tabs = renderComponent(<Settings />, mode);
       settleMotion(tabs);
 
-      expect(
+      const pill = String(
         tabs.renderer.findByTestId("tabs-indicator")?.style.backgroundColor,
-      ).toBe(card);
+      );
+      const rail = String(
+        tabs.renderer.findByTestId("list")?.style.backgroundColor,
+      );
+      const label = String(
+        tabs.renderer.findByTestId("tab-profile")?.style.color,
+      );
+
+      expect(pill).toBe(active.colors.selected);
+      expect(rail).toBe(active.colors.background);
+      expect(label).toBe(active.colors.foreground);
       expect(
         tabs.renderer.findByTestId("tab-profile")?.style.backgroundColor,
       ).toBeUndefined();
 
+      // The pill's whole job is to show which tab is selected, so it has to be
+      // a surface a reader can find on the rail it sits in…
+      expect(contrastRatio(pill, rail) ?? 0).toBeGreaterThanOrEqual(
+        decorativeFloor,
+      );
+      // …and the `foreground` label it carries is body text on that fill.
+      expect(contrastRatio(label, pill) ?? 0).toBeGreaterThanOrEqual(
+        contrastFloors.body,
+      );
+
       tabs.unmount();
     };
 
-    assertTheme("dark", darkTheme.colors.card);
-    assertTheme("light", lightTheme.colors.card);
+    assertTheme("dark", darkTheme);
+    assertTheme("light", lightTheme);
+  });
+
+  it("does not go back to the card role, which the high-contrast rail shares", () => {
+    // The measured premise: the pill used to paint `card`, and in the
+    // high-contrast light theme `card` and the rail's `background` are the same
+    // value, so the selected tab painted a 1.00:1 surface. `selected` is the
+    // state wash the decorative contract holds to the floor on `background`.
+    const high = getTheme("light", "high");
+
+    expect(contrastRatio(high.colors.card, high.colors.background) ?? 0).toBe(
+      1,
+    );
+    expect(
+      contrastRatio(high.colors.selected, high.colors.background) ?? 0,
+    ).toBeGreaterThanOrEqual(decorativeFloor);
   });
 
   it("draws one selected surface exactly behind the selected trigger", () => {
