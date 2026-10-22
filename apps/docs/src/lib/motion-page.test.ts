@@ -339,6 +339,57 @@ describe("the motion page", () => {
     expect(pageText).toContain("`tween(300, myEasing)`");
   });
 
+  it("places the sequence's end and its stagger rule where a driver waits", () => {
+    // A step's own sample already reads a duration it cannot run as no
+    // duration, but `duration()` added that duration to the step's start, so a
+    // **negative** one landed the sequence's end *before* the step: a driver
+    // waiting for the end stopped with a step unpainted. And `Sequence.stagger`
+    // placed its members directly, so a negative step put one *before* the
+    // group — already running when the sequence began — while the standalone
+    // `stagger()` answered it differently. The page has to teach both rules.
+    expect(timeline).toContain(
+      "const durationOf = (durationMs: number): number =>",
+    );
+    expect(timeline).toContain(
+      "Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0",
+    );
+    expect(timeline).toContain("durationMs: durationOf(durationMs),");
+    expect(timeline).toContain("Math.max(max, step.startMs + step.durationMs)");
+
+    expect(timeline).toContain("const staggerDelay = (");
+    expect(timeline).toContain(
+      "(Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0) * distance;",
+    );
+    expect(timeline).toContain(
+      "): number => staggerDelay(stepMs, index, count, from);",
+    );
+    // The sequence's own group answers the same way, so a member cannot start
+    // before the sequence does.
+    expect(timeline).toContain(
+      'startMs + staggerDelay(stepMs, index, count, "start"),',
+    );
+
+    expect(pageText).toContain(
+      "a duration the step cannot **run** — one that is not a number, or one that is not positive — is no duration at all",
+    );
+    expect(pageText).toContain(
+      "The sequence's own **end** follows the step it still has to run",
+    );
+    expect(pageText).toContain(
+      "`duration()` never lands before a step the sequence still owes",
+    );
+    expect(pageText).toContain(
+      "`complete()` cannot answer `true` while a step is pending",
+    );
+    expect(pageText).toContain("The two stagger entry points answer alike.");
+    expect(pageText).toContain(
+      "for the standalone `stagger()` **and** for `Sequence.stagger`",
+    );
+    expect(pageText).toContain(
+      "the group's members all sit at the group's start",
+    );
+  });
+
   it("documents the initial option the hooks read once at mount", () => {
     // `MotionOptions.initial` is the one hook option that is not a policy:
     // without it a hook mounted at rest runs an entry animation the caller

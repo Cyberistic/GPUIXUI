@@ -207,11 +207,21 @@ them at once — `at`, `append`, `stagger`, `duration`, `sample` and `complete`.
 Each sample is `{ key, state, value }` with `state` one of `pending`, `active`
 or `completed`. It is a driver, not a scheduler: nothing advances without a
 sample, so a sequence can be scrubbed, frozen in a test, or driven by a gesture.
-It repairs a hand-built step too: a start or duration that cannot be read is
-placed at `0`, so a step with no readable duration is **completed on the first
-sample** and `duration()` stays a number; a stagger step that cannot be read —
-non-finite or negative — is no wait rather than a `NaN` delay, so the group
-still ends when its own durations say it does.
+It repairs a hand-built step too: a start that cannot be read is placed at `0`,
+and a duration the step cannot **run** — one that is not a number, or one that
+is not positive — is no duration at all, so a step with no readable duration is
+**completed on the first sample** and `duration()` stays a number.
+
+The sequence's own **end** follows the step it still has to run: a duration the
+step cannot run ends at its start, so `duration()` never lands before a step the
+sequence still owes and `complete()` cannot answer `true` while a step is
+pending.
+
+The two stagger entry points answer alike. A step that is not a wait — one that
+is non-finite or negative — is no wait rather than a `NaN` delay for the
+standalone `stagger()` **and** for `Sequence.stagger`, so a caller cannot get
+two answers for the same input, and no member of a group starts before the
+sequence does: the group's members all sit at the group's start.
 
 ## Inertia
 
