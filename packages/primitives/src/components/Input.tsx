@@ -29,6 +29,7 @@ import {
   useControlState,
   useFocus,
   valueChange,
+  type FieldHostProps,
   type FocusState,
   type InteractionProps,
   type ValueChangeProps,
@@ -43,7 +44,8 @@ export interface FieldState {
 }
 
 /** Props shared by `Input` and `TextArea`. */
-export interface FieldProps extends ValueChangeProps<string>, InteractionProps {
+export interface FieldProps
+  extends ValueChangeProps<string>, InteractionProps, FieldHostProps {
   /** Controlled text. Omit it to let the field hold its own draft. */
   readonly value?: string;
   /** Initial text when uncontrolled. */
@@ -70,6 +72,21 @@ export interface FieldProps extends ValueChangeProps<string>, InteractionProps {
   readonly fullWidth?: boolean;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
+  /**
+   * Announced help after the name — a format hint, or the message for an
+   * `invalid` field.
+   *
+   * There is no `aria-describedby`, so this is not a reference to painted text:
+   * it is the string the field carries as `aria-description`, and a blank one
+   * publishes nothing. A visible `Label` with a `description` paints the same
+   * words for a reader who can see it.
+   */
+  readonly description?: string;
+  /**
+   * The field's place in the runtime's tab order. A disabled field sits at `-1`
+   * whatever this says, because it declares no ring and refuses every key.
+   */
+  readonly tabIndex?: number;
   /** Extra style, resolved against the field's live state and merged last. */
   readonly style?: StateStyle<FieldState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -111,26 +128,38 @@ export const fieldHostProps = (
   state: ValueState<string>,
   focus: FocusState,
   onValueChange: (value: string) => void,
-) => ({
-  value: state.current,
-  placeholder: props.placeholder,
-  readOnly: props.readOnly === true || props.disabled === true,
-  autoFocus: props.disabled === true ? undefined : props.autoFocus,
-  tabIndex: props.disabled === true ? -1 : undefined,
-  theme: nativeTextTheme(theme),
-  testId: props.testId,
-  "aria-label": accessibleName(props.label),
-  style: fieldChrome(props, theme, focus.focused),
-  onChange: (event: EventPayload) => {
-    if (props.disabled !== true) onValueChange(event.value ?? "");
-  },
-  onSubmit: props.disabled === true ? undefined : props.onSubmit,
-  onClick: props.onClick,
-  onKeyDown: props.onKeyDown,
-  onKeyUp: props.onKeyUp,
-  onFocus: composeEvent<EventPayload>(props.onFocus, focus.onFocus),
-  onBlur: composeEvent<EventPayload>(props.onBlur, focus.onBlur),
-});
+) => {
+  const { ref, "aria-id": controlId, onLayout, description, tabIndex } = props;
+  return {
+    // The runtime's host surface the field does not own. A field is addressed by
+    // a form that focuses it, by an automation host that names it, and by a
+    // layout that measures it — none of which the text host can arrange itself.
+    ref,
+    "aria-id": controlId,
+    onLayout,
+    value: state.current,
+    placeholder: props.placeholder,
+    readOnly: props.readOnly === true || props.disabled === true,
+    autoFocus: props.disabled === true ? undefined : props.autoFocus,
+    // A disabled field declares no ring and refuses every key, so a stop there
+    // would have no cue: the disabled rule wins over the caller's order.
+    tabIndex: props.disabled === true ? -1 : tabIndex,
+    theme: nativeTextTheme(theme),
+    testId: props.testId,
+    "aria-label": accessibleName(props.label),
+    "aria-description": accessibleName(description),
+    style: fieldChrome(props, theme, focus.focused),
+    onChange: (event: EventPayload) => {
+      if (props.disabled !== true) onValueChange(event.value ?? "");
+    },
+    onSubmit: props.disabled === true ? undefined : props.onSubmit,
+    onClick: props.onClick,
+    onKeyDown: props.onKeyDown,
+    onKeyUp: props.onKeyUp,
+    onFocus: composeEvent<EventPayload>(props.onFocus, focus.onFocus),
+    onBlur: composeEvent<EventPayload>(props.onBlur, focus.onBlur),
+  };
+};
 
 export const renderInput = (
   props: FieldProps,

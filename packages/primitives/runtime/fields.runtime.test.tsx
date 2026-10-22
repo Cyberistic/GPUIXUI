@@ -17,6 +17,8 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { createRef } from "react";
+import type { PublicInstance } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import { Box } from "../src/components/Box.js";
 import { IconButton } from "../src/components/IconButton.js";
@@ -75,6 +77,64 @@ it("announces a field's own name beside its visible Label", async () => {
   expect(
     Option.isSome(a11yNode(dump, { role: "TextInput", label: "Project name" })),
   ).toBe(true);
+});
+
+it("announces the help a field carries, and the id an automation host uses", async () => {
+  // The help a visible `Label description` paints used to reach nobody: there is
+  // no `aria-describedby`, so the control has to carry the words itself. This is
+  // the runtime's `aria-description` channel, measured on the node.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Input
+        testId="field"
+        label="Owner email"
+        description="We never share it."
+        aria-id="contact-email"
+      />
+    </Surface>,
+  );
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "TextInput", label: "Owner email" }),
+    () => expect.fail("the field painted no TextInput node"),
+  );
+  expect(node.aria?.description).toBe("We never share it.");
+  expect(node.aria?.author_id).toBe("contact-email");
+});
+
+it("hands the caller's ref the field's own element", async () => {
+  // A form focuses the field it failed on, so the caller needs the element, not
+  // its `testId`. The address has to be the runtime's own instance: the ref is
+  // compared with the element the `testId` resolves to.
+  const runtime = await openWindow();
+  const ref = createRef<PublicInstance>();
+  runtime.render(
+    <Surface>
+      <Input testId="field" label="Email" ref={ref} />
+    </Surface>,
+  );
+  const element = Option.getOrElse(runtime.element("field"), () =>
+    expect.fail("the runtime mounted no field"),
+  );
+  expect(ref.current?.id).toBe(element.id);
+});
+
+it("takes a disabled field out of the tab order it was given", async () => {
+  // `tabIndex` is the caller's order, but a disabled field declares no ring and
+  // refuses every key, so a stop there would have no cue.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <Input testId="enabled" label="Enabled" tabIndex={0} />
+        <Input testId="disabled" label="Disabled" disabled tabIndex={0} />
+      </Stack>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("enabled");
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).not.toBe("disabled");
 });
 
 it("edits an Input through the runtime's own text handling", async () => {

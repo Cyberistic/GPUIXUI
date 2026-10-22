@@ -4,9 +4,9 @@
  * A controlled form, not a field sampler: every value lives in the caller, the
  * save button shows the busy state the library supports, and the progress bars
  * appear only while the request is in flight — one reporting work buffered
- * ahead of the value. `Label` carries the visible name
- * and each control carries the same name for assistive technology, because the
- * runtime has no `aria-labelledby` (see `docs/label.mdx`).
+ * ahead of the value. Each field's copy is written once and spread into both the
+ * visible `Label` and the control, because the runtime has neither
+ * `aria-labelledby` nor `aria-describedby` (see `docs/label.mdx`).
  */
 
 import { useState, type ReactElement } from "react";
@@ -34,6 +34,19 @@ const REGIONS = [
   { value: "legacy", label: "Legacy region (read-only)", disabled: true },
 ] as const;
 
+/**
+ * One field's copy, written once.
+ *
+ * The `Label` paints `description`; the field's own prop is what assistive
+ * technology hears, because 0.11.0 has neither `aria-labelledby` nor
+ * `aria-describedby` to connect the two nodes.
+ */
+const copy = (label: string, description: string) => ({ label, description });
+
+const NAME = copy("Project name", "Shown in the workspace switcher.");
+const OWNER = copy("Owner email", "The person who receives access requests.");
+const NOTES = copy("Description", "Markdown is not interpreted.");
+
 /** A form with four controls, a byte-sized progress state and a busy action. */
 export const FormExample = (): ReactElement => {
   const [name, setName] = useState("Atlas");
@@ -60,13 +73,11 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label description="Shown in the workspace switcher.">
-            Project name
-          </Label>
+          <Label description={NAME.description}>{NAME.label}</Label>
           <Input
             value={name}
             onChange={setName}
-            label="Project name"
+            {...NAME}
             placeholder="Atlas"
             autoFocus
             fullWidth
@@ -75,13 +86,11 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label description="The person who receives access requests.">
-            Owner email
-          </Label>
+          <Label description={OWNER.description}>{OWNER.label}</Label>
           <Input
             value={owner}
             onChange={setOwner}
-            label="Owner email"
+            {...OWNER}
             placeholder="you@example.com"
             fullWidth
           />
@@ -99,11 +108,11 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label description="Markdown is not interpreted.">Description</Label>
+          <Label description={NOTES.description}>{NOTES.label}</Label>
           <TextArea
             value={notes}
             onChange={setNotes}
-            label="Description"
+            {...NOTES}
             placeholder="What is this project for?"
             minRows={3}
             maxRows={6}

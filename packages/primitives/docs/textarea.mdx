@@ -14,10 +14,12 @@ arrives (measured by `runtime/fields.runtime.test.tsx`).
 import { Label, TextArea, labelledBy } from "@gpuixui/primitives";
 
 const notes = "Description";
+const help = "Markdown is not interpreted.";
 
-<Label>{notes}</Label>
+<Label description={help}>{notes}</Label>
 <TextArea
   {...labelledBy(notes)}
+  description={help}
   value={value}
   onValueChange={setValue}
   minRows={3}
@@ -36,8 +38,9 @@ const notes = "Description";
 | `maxRows` | `number` | runtime default | rows after which the field scrolls |
 
 Shared props: `value`, `defaultValue`, `onValueChange`, `placeholder`, `readOnly`,
-`disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `style`,
-`testId`, and the five composed host handlers from `InteractionProps`
+`disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `description`,
+`tabIndex`, `style`, `testId`, the runtime's `ref` / `aria-id` / `onLayout` host
+props, and the five composed host handlers from `InteractionProps`
 (`onClick`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`): yours runs first and
 the field still tracks focus and edits.
 
@@ -58,8 +61,13 @@ mean.
 
 - The native element is announced as a multi-line text input.
 - The name comes from `label`; there is no `aria-labelledby`.
-- `invalid` is visual; put the message beside the field in words.
-- As with `Input`, there is no `aria-describedby`.
+- `description` is announced after the name through the runtime's
+  `aria-description`, so the help a visible `Label description` paints has to be
+  handed to the field as well.
+- `invalid` is visual; put the message in `description` so it is announced, and
+  paint the same words beside the field.
+- As with `Input`, there is no `aria-describedby`: the description is a string,
+  not a reference.
 
 ## Theming
 
@@ -80,8 +88,8 @@ rather than chrome; see `Input` §Theming for the measurement.
 
 ## Verification
 
-- `src/components/fields.test.tsx` — rows, chrome and the absence of `onSubmit`
-  in the public props.
+- `src/components/fields.test.tsx` — rows, chrome, the absence of `onSubmit` in
+  the public props, and the address and announced help it shares with `Input`.
 - `src/components/change.test.ts` — the textarea routes its props through the
   shared `valueChange` precedence rule, so `onValueChange` runs and the
   deprecated `onChange` alias only runs alone.

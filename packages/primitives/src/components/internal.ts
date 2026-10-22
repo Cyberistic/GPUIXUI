@@ -7,9 +7,15 @@
  * rotate or interpolate a colour (see `docs/gpuix-capabilities.md`).
  */
 
-import { Children, useEffect, useState, type ReactNode } from "react";
+import { Children, useEffect, useState, type ReactNode, type Ref } from "react";
 import * as Option from "effect/Option";
-import type { EventPayload, KeyEvent, Props, StyleDesc } from "@gpuix/react";
+import type {
+  EventPayload,
+  KeyEvent,
+  Props,
+  PublicInstance,
+  StyleDesc,
+} from "@gpuix/react";
 import {
   initValueState,
   setValue,
@@ -64,6 +70,29 @@ export interface InteractionProps {
   readonly onKeyUp?: (event: KeyEvent) => void;
   readonly onFocus?: (event: EventPayload) => void;
   readonly onBlur?: (event: EventPayload) => void;
+}
+
+/**
+ * The host props a text field hands to its native element.
+ *
+ * A field's value, name, editing state and chrome are the field's, but its
+ * element still has to be addressable from outside: a form focuses the field
+ * that failed, an automation host addresses it by `aria-id`, and a layout
+ * measures its box. Those are the runtime's own host props, so they pass
+ * through instead of becoming a second vocabulary.
+ *
+ * This is deliberately narrower than {@link ActionHostProps}: a text host owns
+ * no disclosure state, so there is no `aria-expanded`/`aria-selected` to
+ * forward, and its tab stop belongs to the field because a disabled field
+ * leaves the order whatever the caller asks for.
+ */
+export interface FieldHostProps {
+  /** The native `<input>`/`<textarea>` — an address to focus, measure or anchor to. */
+  readonly ref?: Ref<PublicInstance>;
+  /** Author id exposed as `AXIdentifier` / UIA AutomationId. */
+  readonly "aria-id"?: string;
+  /** The element's painted box after the first paint and each resize. */
+  readonly onLayout?: (event: EventPayload) => void;
 }
 
 /**

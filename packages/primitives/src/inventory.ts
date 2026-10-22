@@ -229,6 +229,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No aria-labelledby and no for/htmlFor: no click-to-focus",
       "The name is written in two places when the label is separate",
+      "The visible description is not associated: a control announces its own",
       "required is presentational; validate with Schema at the boundary",
     ],
     source: ["src/components/Label.tsx"],
@@ -246,7 +247,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No type, maxLength, inputMode or pattern",
       "disabled is emulated: read-only, out of the tab order, disabled roles",
-      "No prefix/suffix or masks, and no aria-describedby",
+      "No prefix/suffix or masks, and no aria-describedby (description is carried)",
     ],
     source: ["src/components/Input.tsx", "src/components/internal.ts"],
     docs: "docs/input.mdx",
@@ -264,6 +265,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "No submit on Enter, by design",
       "No rich text, markdown preview or character counter",
       "Disabled is the same read-only emulation as Input",
+      "Help is a carried aria-description string, not a reference",
     ],
     source: ["src/components/TextArea.tsx", "src/components/internal.ts"],
     docs: "docs/textarea.mdx",

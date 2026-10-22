@@ -14,12 +14,15 @@ that prop from the same string.
 import { Input, Label, labelledBy } from "@gpuixui/primitives";
 
 const name = "Workspace name";
+const help = "Shown on invitations and in the app switcher.";
 
-<Label description="Shown on invitations and in the app switcher.">
-  {name}
-</Label>
-<Input {...labelledBy(name)} fullWidth />;
+<Label description={help}>{name}</Label>
+<Input {...labelledBy(name)} description={help} fullWidth />;
 ```
+
+`Label`'s `description` is the **visible** help line. The field's own
+`description` is what assistive technology hears, because neither
+`aria-labelledby` nor `aria-describedby` exists to connect the two nodes.
 
 ## API
 
@@ -46,6 +49,9 @@ Not focusable. A label that responds to a click is a button.
 - The control's own `label` prop is its accessible name; there is **no
   `aria-labelledby`**, so the two are separate nodes. A test asserts both exist
   (`fields.runtime.test.tsx`).
+- The help line is visible-only. A field announces the words handed to its own
+  `description` prop (`aria-description`), so a caller who wants help heard
+  passes it to the control as well as painting it here.
 - `required` is a mark, not `aria-required`; validation must also be expressed in
   words and in the control's `invalid` state.
 - `invalid` is colour plus the field's border; it is not announced by itself.
@@ -64,6 +70,9 @@ size or colour.
 - No association by reference (above) — the name is written in two places when
   both the visible label and the control's name are needed. `labelledBy` keeps
   the *control* side to one object, not the pair.
+- The visible description is a second copy: the control announces only the
+  `description` handed to it. A form that paints help on the `Label` and stops
+  there is a field whose help cannot be heard.
 - `required` does not validate anything. Validate with `Schema` at the boundary.
 
 ## Verification

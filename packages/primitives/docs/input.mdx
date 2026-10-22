@@ -15,16 +15,22 @@ wins.
 import { Input, Label, labelledBy } from "@gpuixui/primitives";
 
 const email = "Contact email";
+const help = "Where notifications are delivered.";
 
-<Label description="Where notifications are delivered.">{email}</Label>
+<Label description={help}>{email}</Label>
 <Input
   {...labelledBy(email)}
+  description={help}
   value={value}
   onValueChange={setValue}
   placeholder="you@example.com"
   fullWidth
 />;
 ```
+
+The visible `Label` paints `help`; the field's own `description` is what
+assistive technology hears, because there is no `aria-describedby` to connect the
+two (see §Accessibility).
 
 ## API
 
@@ -43,6 +49,11 @@ const email = "Contact email";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `label` | `string` | none | accessible name; a visible `Label` does not name the field on its own |
+| `description` | `string` | none | announced help after the name, through the runtime's `aria-description`; a blank string publishes nothing |
+| `tabIndex` | `number` | none | the field's place in the runtime's tab order; a `disabled` field is always `-1` |
+| `ref` | `Ref<PublicInstance>` | none | the native `<input>` itself, for a form that focuses the field it failed on |
+| `aria-id` | `string` | none | author id exposed as `AXIdentifier` / UIA AutomationId |
+| `onLayout` | `(event) => void` | none | the element's painted box, after the first paint and each resize |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; yours runs first |
 | `style` | `StateStyle<FieldState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
@@ -50,6 +61,11 @@ const email = "Contact email";
 The five host handlers are `InteractionProps`: your handler runs first with the
 runtime's own event and the field still tracks focus and edits. A disabled field
 is read-only rather than inert, so it keeps them — the value still cannot change.
+
+`ref`, `aria-id` and `onLayout` are the runtime's own host props; a field
+forwards them because the element is addressed from outside it. A text host owns
+no disclosure state, so there is no `aria-expanded` or `aria-selected` here, and
+the tab stop stays the field's own rule.
 
 ## Keyboard
 
@@ -70,7 +86,12 @@ delivered to the focused element.
 - The native element is announced as `TextInput`.
 - The name comes from `label`; there is no `aria-labelledby`, so a visible
   `Label` is not associated by reference.
-- `invalid` is a border colour, not an announced error. Put the message in a
+- `description` is announced as the field's description, after its name and
+  role. It is a string the field carries (`aria-description`), not a reference
+  to painted text, so the visible `Label description` is a second copy written by
+  the caller.
+- `invalid` is a border colour, not an announced error. Put the message in
+  `description` so it is announced, and paint the same words in a
   `Text role="caption" tone="destructive"` beside the field.
 - `readOnly` remains focusable and selectable, which is the platform contract.
 - A `disabled` field is read-only at the host (GPUix has no `disabled` prop), so
@@ -121,12 +142,16 @@ it back.
   025). The component forwards `readOnly`, drops the field from the tab order
   and guards its handlers; the accessibility difference is the limitation above.
 - No masks, formatting or prefix/suffix slots.
-- No `aria-describedby`; help text is adjacent content, not associated.
+- No `aria-describedby`: help is a string the field carries as
+  `aria-description`, so a visible help line and the announced one are written
+  twice. `invalid` still paints an edge rather than announcing the error.
 
 ## Verification
 
 - `src/core/state.test.ts` — controlled/uncontrolled transitions.
-- `src/components/fields.test.tsx` — chrome, invalid state and host props.
+- `src/components/fields.test.tsx` — chrome, invalid state, the element's
+  address (`ref`, `aria-id`, `onLayout`), the announced `description` and the
+  tab order a disabled field refuses.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the field's own tracking, on both fields.
 - `src/components/keyboard-dim.test.tsx` — the fields (`Input`, `TextArea`,
@@ -141,7 +166,10 @@ it back.
   value replaces it, with the whole text theme (`text`, `textFaint`, `bg`) read
   back off the host input (negative control measured: dropping the `theme` prop
   fails with `hint handed the runtime no text theme`), and the `selection` wash
-  reaches both a selectable `Text` and the field.
+  reaches both a selectable `Text` and the field. The field's `description` and
+  `aria-id` are read back off its `TextInput` node in the accessibility tree, the
+  caller's `ref` receives the runtime's own instance, and a disabled field with a
+  tab order is skipped by the traversal.
 
 ```sh
 nub run --filter @gpuixui/primitives test

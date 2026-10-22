@@ -105,6 +105,65 @@ describe("Input", () => {
     expect(hostProp(element, "aria-labelledby")).toStrictEqual(Option.none());
   });
 
+  it("hands the native element an address, its help and its tab order", () => {
+    // Bug guarded: a field was reachable only by its `testId`, and the help a
+    // visible `Label` painted was announced to nobody. A form that focuses the
+    // field it failed on needs the element itself, an automation host needs the
+    // author id, a layout needs the box, and the words need `aria-description`
+    // (0.11.0 has no `aria-describedby`).
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const element = renderInput(
+      {
+        label: "Email",
+        description: "We never share it.",
+        ref,
+        "aria-id": "contact-email",
+        onLayout: layout,
+        tabIndex: 2,
+      },
+      testTheme,
+      controlled(""),
+      idle,
+      vi.fn(),
+    );
+    expect(Option.getOrUndefined(hostProp(element, "ref"))).toBe(ref);
+    expect(expectSome(hostProp(element, "aria-id"))).toBe("contact-email");
+    expect(Option.getOrUndefined(hostHandler(element, "onLayout"))).toBe(
+      layout,
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "We never share it.",
+    );
+    expect(expectSome(hostProp(element, "aria-label"))).toBe("Email");
+    expect(expectSome(hostProp(element, "tabIndex"))).toBe(2);
+  });
+
+  it("publishes nothing rather than an empty description", () => {
+    // The same rule as a blank tooltip: an empty `aria-description` is an
+    // announcement of nothing, which reads as a field with a help text that
+    // cannot be heard.
+    const blank = renderInput(
+      { description: "   " },
+      testTheme,
+      controlled(""),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(blank, "aria-description")).toStrictEqual(Option.none());
+  });
+
+  it("takes the tab stop from a disabled field whatever order it was given", () => {
+    const element = renderInput(
+      { disabled: true, tabIndex: 2 },
+      testTheme,
+      controlled(""),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "tabIndex"))).toBe(-1);
+  });
+
   it("makes a disabled field read-only, untabbable and de-emphasised", () => {
     const element = renderInput(
       { disabled: true, autoFocus: true },
@@ -182,6 +241,32 @@ describe("TextArea", () => {
     expect(expectSome(hostProp(area, "tabIndex"))).toBe(-1);
     expect(hostProp(area, "autoFocus")).toStrictEqual(Option.none());
     expect(chromeOf(area).cursor).toStrictEqual(Option.some("not-allowed"));
+  });
+
+  it("carries the same address and help as the single-line field", () => {
+    // One seam: a `TextArea` is the same `FieldProps` on a different host, so a
+    // form that hands a description to its fields does not lose it on the
+    // multi-line one.
+    const ref = vi.fn();
+    const area = renderTextArea(
+      {
+        label: "Notes",
+        description: "Markdown is not interpreted.",
+        ref,
+        "aria-id": "project-notes",
+        tabIndex: 3,
+      },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    expect(Option.getOrUndefined(hostProp(area, "ref"))).toBe(ref);
+    expect(expectSome(hostProp(area, "aria-id"))).toBe("project-notes");
+    expect(expectSome(hostProp(area, "aria-description"))).toBe(
+      "Markdown is not interpreted.",
+    );
+    expect(expectSome(hostProp(area, "tabIndex"))).toBe(3);
   });
 
   it("lets the rows decide the height instead of a fixed control height", () => {
