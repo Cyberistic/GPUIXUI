@@ -56,8 +56,8 @@ describe("cn", () => {
 });
 
 describe("Input recipe", () => {
-  it("uses shadcn's 36 / 12 / 4 geometry", () => {
-    expect(input.style.height).toBe(36);
+  it("uses the density's 32 / 12 / 4 geometry", () => {
+    expect(input.style.height).toBe(32);
     expect(input.style.paddingLeft).toBe(12);
     expect(input.style.paddingRight).toBe(12);
     expect(input.style.paddingTop).toBe(4);
@@ -95,7 +95,7 @@ describe("Input recipe", () => {
 
 describe("Button recipe", () => {
   it("uses shadcn's default height, padding, gap and type", () => {
-    expect(buttonDefault.style.height).toBe(36);
+    expect(buttonDefault.style.height).toBe(32);
     expect(buttonDefault.style.paddingLeft).toBe(16);
     expect(buttonDefault.style.paddingRight).toBe(16);
     expect(buttonDefault.style.paddingTop).toBe(8);
@@ -108,7 +108,7 @@ describe("Button recipe", () => {
     );
   });
 
-  it("keeps the shadcn size table", () => {
+  it("keeps the density size table", () => {
     const sm = classesToStyle(
       `${BUTTON_BASE} ${BUTTON_VARIANTS.default} ${BUTTON_SIZES.sm}`,
       lightTheme,
@@ -121,12 +121,12 @@ describe("Button recipe", () => {
       `${BUTTON_BASE} ${BUTTON_VARIANTS.default} ${BUTTON_SIZES.icon}`,
       lightTheme,
     );
-    expect(sm.style.height).toBe(32);
+    expect(sm.style.height).toBe(28);
     expect(sm.style.paddingLeft).toBe(12);
-    expect(lg.style.height).toBe(40);
+    expect(lg.style.height).toBe(36);
     expect(lg.style.paddingLeft).toBe(24);
-    expect(icon.style.width).toBe(36);
-    expect(icon.style.height).toBe(36);
+    expect(icon.style.width).toBe(32);
+    expect(icon.style.height).toBe(32);
   });
 
   it("keeps the destructive variant's literal white label", () => {

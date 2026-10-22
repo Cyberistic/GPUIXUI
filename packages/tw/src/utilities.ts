@@ -79,6 +79,13 @@ const LITERAL: Readonly<Record<string, string>> = {
 
 const SPACING = (value: number): number => value * 4;
 
+/** shadcn's control heights, by the density step they resolve to. */
+const CONTROL_HEIGHT: Readonly<Record<string, "sm" | "md" | "lg">> = {
+  "8": "sm",
+  "9": "md",
+  "10": "lg",
+};
+
 const RADIUS: Readonly<Record<string, number>> = {
   none: 0,
   sm: 4,
@@ -252,6 +259,13 @@ export const resolveUtility = (
   if (name === "w-px") return { width: 1 };
 
   if (name.startsWith("h-")) {
+    // shadcn sizes its controls `h-8`/`h-9`/`h-10`; those are the density
+    // scale's three control heights, so a compact theme (macOS) gets 24/28/32
+    // rather than Tailwind's 32/36/40. Other heights stay Tailwind lengths.
+    const control = CONTROL_HEIGHT[name.slice(2)];
+    if (control !== undefined) {
+      return { height: theme.density.controlHeight[control] };
+    }
     const value = lengthValue(name.slice(2), theme);
     return value === undefined ? undefined : { height: value };
   }
@@ -275,6 +289,13 @@ export const resolveUtility = (
     return value === undefined ? undefined : { maxWidth: value };
   }
   if (name.startsWith("size-")) {
+    // `size-9` is the square control (an icon button), so it takes the same
+    // density step as `h-9` rather than Tailwind's fixed 36.
+    const control = CONTROL_HEIGHT[name.slice(5)];
+    if (control !== undefined) {
+      const side = theme.density.controlHeight[control];
+      return { width: side, height: side };
+    }
     const value = lengthValue(name.slice(5), theme);
     return value === undefined ? undefined : { width: value, height: value };
   }
@@ -383,7 +404,13 @@ export const resolveUtility = (
     return value === undefined ? undefined : { gap: value };
   }
   if (name.startsWith("rounded-")) {
-    const radius = RADIUS[name.slice(8)];
+    // The corner is the theme's, not Tailwind's: macOS rounds a control at 6,
+    // the default look at 8. `2xl` folds into `xl` (the theme has no 2xl).
+    const key = name.slice(8);
+    if (key === "full") return { borderRadius: 9999 };
+    // A step the theme names resolves from it; a Tailwind step it does not
+    // (2xl/3xl/4xl, used by the style presets) falls back to Tailwind's value.
+    const radius = theme.radius[key as keyof Theme["radius"]] ?? RADIUS[key];
     return radius === undefined ? undefined : { borderRadius: radius };
   }
   if (name.startsWith("text-")) {

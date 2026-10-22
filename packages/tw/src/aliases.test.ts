@@ -76,7 +76,7 @@ describe("cn-input", () => {
   const newYork = style(INPUT_BASE);
 
   it("resolves the luma geometry", () => {
-    expect(luma.style.height).toBe(36);
+    expect(luma.style.height).toBe(32);
     expect(luma.style.paddingLeft).toBe(12);
     expect(luma.style.paddingRight).toBe(12);
     expect(luma.style.paddingTop).toBe(4);
@@ -120,7 +120,7 @@ describe("cn-button", () => {
 
   it("keeps luma's 32px radius and tighter geometry", () => {
     expect(luma.style.borderRadius).toBe(32);
-    expect(luma.style.height).toBe(36);
+    expect(luma.style.height).toBe(32);
     expect(luma.style.paddingLeft).toBe(12);
     expect(luma.style.gap).toBe(6);
     expect(luma.style.fontSize).toBe(14);
@@ -140,8 +140,8 @@ describe("cn-button", () => {
   });
 
   it("resolves the size table and the icon-side state", () => {
-    expect(style("cn-button cn-button-size-sm").style.height).toBe(32);
-    expect(style("cn-button cn-button-size-lg").style.height).toBe(40);
+    expect(style("cn-button cn-button-size-sm").style.height).toBe(28);
+    expect(style("cn-button cn-button-size-lg").style.height).toBe(36);
     const start = classesToStyle(
       "cn-button cn-button-size-default",
       lightTheme,

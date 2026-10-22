@@ -43,7 +43,10 @@ const toKebab = (name: string): string =>
  * ```
  */
 export const toCssVars = (theme: Theme): CssVars => ({
+  "--radius-sm": `${theme.radius.sm}px`,
   "--radius": `${theme.radius.md}px`,
+  "--radius-lg": `${theme.radius.lg}px`,
+  "--radius-xl": `${theme.radius.xl}px`,
   "--font-sans": cssFontStack(theme.typography.sans),
   "--font-mono": theme.typography.mono,
   "--control-height-sm": `${theme.density.controlHeight.sm}px`,
@@ -53,6 +56,7 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--control-padding-x-md": `${theme.density.controlPaddingX.md}px`,
   "--control-padding-x-lg": `${theme.density.controlPaddingX.lg}px`,
   "--row-height": `${theme.density.rowHeight}px`,
+  "--spacing-sm": `${theme.spacing.sm}px`,
   "--spacing-md": `${theme.spacing.md}px`,
   "--spacing-lg": `${theme.spacing.lg}px`,
   "--icon-size-sm": `${theme.iconSize.sm}px`,

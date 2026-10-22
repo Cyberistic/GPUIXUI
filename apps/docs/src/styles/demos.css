@@ -49,7 +49,7 @@
   --control-padding-x-sm: 8px;
   --control-padding-x-md: 10px;
   --control-padding-x-lg: 12px;
-  --row-height: 32px;
+  --row-height: var(--control-height-sm);
   --spacing-md: 8px;
   --spacing-lg: 12px;
   --icon-size-sm: 14px;
@@ -123,7 +123,7 @@
   width: 460px;
   padding: 12px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .gx-alert-info {
@@ -343,7 +343,7 @@
   flex-direction: column;
   width: 260px;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--card);
   color: var(--foreground);
 }
@@ -3128,7 +3128,7 @@
   height: var(--control-height-md);
   padding: 0 8px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--background);
   color: var(--input-foreground);
 }
@@ -3346,7 +3346,7 @@
   height: var(--control-height-md);
   padding: 0 6px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--input);
   color: var(--input-foreground);
 }
@@ -4669,7 +4669,7 @@
   min-height: var(--control-height-md);
   padding: 2px 6px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--background);
 }
 
@@ -5409,6 +5409,182 @@ button.gx-table-row:focus-visible {
 }
 
 .gx-timeline-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+/* ---- color picker: mirrors components/src/color-picker.tsx's COLOR_PICKER_* ----
+   The root is `flex flex-col gap-2` (8px) and the swatch row
+   `flex flex-wrap gap-1.5` (6px); a cell is `controlHeight(theme, "sm")` square
+   with the recipe's fixed `rounded-md` (6px). The field row holds a `md` preview
+   cell and a real input at the `md` control height with `px-2` and `text-sm`
+   (14/20), painted on the page role (`bg-background`) with the value role
+   `inputForeground`; an invalid draft paints the `destructive` edge and is
+   described as such. The chosen cell carries a strong `foreground` edge and the
+   two-tone pip — the page fill inside the body ink — because `foreground` is
+   one of the six default swatches and a ring alone disappears into it. */
+.gx-color-scene {
+  align-items: stretch;
+  gap: 10px;
+  padding: 24px;
+}
+
+.gx-color-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 380px;
+  max-width: 100%;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-color-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gx-color-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gx-color-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gx-color-swatch[aria-selected="true"] {
+  border: 2px solid var(--foreground);
+}
+
+.gx-color-swatch:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-color-pip {
+  width: var(--spacing-sm);
+  height: var(--spacing-sm);
+  border: 1px solid var(--foreground);
+  border-radius: 9999px;
+  background: var(--background);
+}
+
+.gx-color-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-color-preview {
+  width: var(--control-height-md);
+  height: var(--control-height-md);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.gx-color-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--control-height-md);
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--input-foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-color-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-color-input[data-invalid] {
+  border-color: var(--destructive);
+}
+
+.gx-color-input[data-invalid]:focus-visible {
+  outline-color: var(--destructive);
+}
+
+.gx-color-picker[data-disabled] {
+  opacity: 0.5;
+}
+
+.gx-color-picker[data-disabled] .gx-color-swatch,
+.gx-color-picker[data-disabled] .gx-color-input {
+  cursor: default;
+}
+
+.gx-color-readout {
+  margin: 0;
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.gx-color-chosen-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-color-chosen {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.gx-color-chosen-label {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.gx-color-chosen-label code {
+  color: var(--foreground);
+  font-family: var(--font-mono);
+}
+
+.gx-color-state {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-color-state-label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gx-color-note {
   margin: 0;
   color: var(--muted-foreground);
   font-size: 11.5px;

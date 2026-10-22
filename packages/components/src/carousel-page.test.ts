@@ -103,20 +103,12 @@ describe("the Carousel page", () => {
     expect(text).toContain("`card` fill");
   });
 
-  it("keeps the track's corner on the fixed 8px step, not the theme's radius", () => {
+  it("takes the track's corner from the theme's radius", () => {
     const mac = platformTheme(lightTheme, "darwin");
 
-    // The premise: macOS moves `radius.lg` to 10, so a track that read the
-    // theme's group would round differently on that platform.
-    expect(mac.radius.lg).not.toBe(8);
-    expect(track().borderRadius).toBe(8);
-    expect(track(mac).borderRadius).toBe(8);
-    expect(track(darkTheme).borderRadius).toBe(8);
-
-    const text = section("## Theming").replace(/\s+/g, " ");
-    expect(text).toContain("fixed 8px");
-    expect(text).toContain("`rounded-lg`");
-    expect(text).not.toContain("radius.lg");
+    expect(track(lightTheme).borderRadius).toBe(lightTheme.radius.lg);
+    expect(track(mac).borderRadius).toBe(mac.radius.lg);
+    expect(mac.radius.lg).not.toBe(lightTheme.radius.lg);
   });
 
   it("paints the chevron in the control's own label role", () => {

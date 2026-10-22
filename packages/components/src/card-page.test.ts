@@ -86,19 +86,12 @@ describe("the Card page", () => {
     expect(table).not.toContain("elevation.md");
   });
 
-  it("keeps the recipe's fixed metrics on every platform", () => {
+  it("takes the card's corner from the theme's radius", () => {
     const mac = platformTheme(lightTheme, "darwin");
     const style = surface(CARD_VARIANTS.outline, mac);
 
-    // The premise: macOS ships a 10px `lg`, so a card that read `radius.lg`
-    // would round to 10 there. It stays on the registry's 8px step.
-    expect(mac.radius.lg).not.toBe(8);
-    expect(style.borderRadius).toBe(8);
-
-    const text = section("## Theming");
-    expect(text).toContain("ADR 0006");
-    expect(text).toContain("8px");
-    expect(text).not.toContain("radius.lg");
+    expect(style.borderRadius).toBe(mac.radius.lg);
+    expect(style.borderRadius).not.toBe(lightTheme.radius.lg);
   });
 
   it("states the fixed type steps the title and description paint", () => {
