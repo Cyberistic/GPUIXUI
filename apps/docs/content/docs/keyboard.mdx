@@ -1,0 +1,240 @@
+---
+title: Keyboard & commands
+description: The chord grammar, scope-stacked keymaps, sequences and command registry the library's controls share — and the runtime limits a shortcut must respect.
+---
+
+Every control in the library is reachable by `Tab` and activated by a key. This
+page is the layer that turns a press into a command: `@gpuixui/keyboard`. It is
+not a component — it is the contract the components share, so two shortcuts
+cannot disagree about what `Mod+K` means and a dialog can shadow a global
+binding without either one knowing about the other.
+
+## What the package owns
+
+| Module | Responsibility |
+| ------ | -------------- |
+| decode | `decodeGpuixEvent` — the GPUix event to parsed-chord adapter. GPUix has no DOM event |
+| match | `match` — exact modifier matching for one binding against one event |
+| keymap | `Keymap` and `resolve` — a scope stack as data, first match wins |
+| sequence | `makeSequenceMatcher` — a multi-step matcher (`["g", "g"]`) with an injected clock |
+| registry | `Command` and the `CommandRegistry` Effect service with its layer |
+| display | `formatSymbols` — keycap parts in the platform's order (`⌘`, `K`) |
+| platform | `Platform` and `toTanstackPlatform` — the same names `@gpuixui/tokens` uses |
+| React | `CommandRegistryProvider` and `useCommandRegistry` from `@gpuixui/keyboard/react` |
+
+The grammar itself is **`@tanstack/hotkeys`**: parsing, normalization, exact
+comparison, canonical display and the `Mod` resolution are that package's pure,
+DOM-free API. This package keeps the GPUix adapter, the scope stack, the step
+machine and the registry, so a breaking `0.x` bump touches three small files
+rather than every component.
+
+## The runtime's key path comes first
+
+A shortcut is only as good as the event it receives, and the pinned runtime's
+event path has three measured properties (the probes are named on
+[keyboard in the runtime record](/docs/runtime#measured-in-a-window)):
+
+- **`render({ onKeyDown })` is the only app-level route.** The focused element's
+  own handler runs first, the window handler after it, and
+  `event.modifiers` is set. So a chord a field needs belongs to the field: the
+  root handler is a fallback, not an interceptor.
+- **There is no global or system shortcut.** Keys fire only while the window is
+  focused; a background hotkey needs a runtime change, not a different binding.
+- **A `Tab` traversal moves focus without running React's `onFocus`.** A handler
+  that must know where focus went reads the key event's own `elementId` or
+  `getFocusedElementId`; anything only a focus event would reveal belongs on
+  `aria-description`.
+
+## Decode, then match
+
+GPUix delivers `key` (the logical key name — `"s"`, `"enter"`, `"f1"`),
+`keyChar` (the character the press produced — `"ß"` for Option+S) and the
+modifier flags. There is **no `code`**. Binding identity is the physical key, so
+the adapter reads `key` and the flags and never `keyChar`:
+
+```ts
+import { decodeGpuixEvent, match, type Platform } from "@gpuixui/keyboard";
+import type { EventPayload } from "@gpuix/react";
+
+const platform: Platform = "darwin";
+
+export const isSave = (event: EventPayload): boolean =>
+  match("mod+s", event, platform);
+
+export const chordOf = (event: EventPayload) => decodeGpuixEvent(event, platform);
+```
+
+An Option+letter press decodes to its base key (`Alt+S`, not `Alt+ß`). That is
+the `code` fallback TanStack's DOM matcher performs, already supplied by `key`
+itself. `match` is exact: `Mod+K` does not match `Mod+Shift+K` unless Shift is
+named, and `cmd` stays distinct from `ctrl`.
+
+A consequence to design around: **physical bindings (`Mod+[KeyS]`) parse but can
+never match a GPUix event**, because there is no `code` to compare. They exist
+for forward compatibility, not for this runtime.
+
+## A keymap is a scope stack, as data
+
+A `Keymap` maps a binding to a command id inside a named scope. `resolve` takes
+the scopes that are currently open, **most specific first**, and the first match
+wins — so a dialog's binding shadows the global one, and popping the scope
+restores it without touching either entry:
+
+```ts
+import { resolve, type Keymap, type Platform } from "@gpuixui/keyboard";
+import type { ParsedHotkeyChord } from "@tanstack/hotkeys";
+import * as Option from "effect/Option";
+
+const keymap: Keymap = {
+  bindings: [
+    { hotkey: "mod+k", commandId: "palette", scope: "global" },
+    { hotkey: "mod+enter", commandId: "confirm", scope: "dialog" },
+  ],
+};
+
+export const commandFor = (
+  chord: ParsedHotkeyChord,
+  scopes: ReadonlyArray<string>,
+  platform: Platform,
+): Option.Option<string> => resolve(keymap, scopes, chord, platform);
+```
+
+Absence is an `Option`: the caller decides whether an unmatched chord is a miss
+or a pass-through, and nothing throws.
+
+## Sequences are a step machine
+
+A multi-step binding is a list, and the matcher's clock is injected so the
+timeout is deterministic in a test and the caller's clock in an app. A step that
+does not match the next expected chord but does match the first restarts from
+step two — the Vim `gg` convention — and a partial sequence older than
+`timeoutMs` is abandoned:
+
+```ts
+import { makeSequenceMatcher, type Platform } from "@gpuixui/keyboard";
+import type { ParsedHotkeyChord } from "@tanstack/hotkeys";
+
+const goToTop = makeSequenceMatcher(["g", "g"], {
+  timeoutMs: 1_000,
+  platform: "darwin" satisfies Platform,
+});
+
+export const advance = (chord: ParsedHotkeyChord, now: number): boolean =>
+  goToTop.advance(chord, now);
+```
+
+## The registry resolves; the caller runs
+
+`CommandRegistry` is an Effect `Context.Service`. A command carries its own
+`handler` as an `Effect`, but the registry never runs it: it resolves one event
+to at most one command under the scope stack, and the caller runs the handler at
+its own boundary. A modifier-only press resolves to nothing, so holding Shift
+never fires a command whose chord has no key.
+
+```ts
+import { makeCommandRegistry, type Command } from "@gpuixui/keyboard";
+import { Effect } from "effect";
+
+const commands: ReadonlyArray<Command> = [
+  {
+    id: "palette",
+    title: "Open the command palette",
+    scope: "global",
+    hotkey: "mod+k",
+    handler: Effect.void,
+  },
+];
+
+export const Commands = makeCommandRegistry(commands);
+```
+
+`commandRegistry(commands)` returns the same service as plain data when a test
+does not want a layer.
+
+## In React
+
+The provider supplies one registry to a subtree, and a hook reads the nearest one.
+Mount the handler once at the root — the runtime's one app-level key route — and
+ask the registry what this event means:
+
+```tsx
+import {
+  CommandRegistryProvider,
+  useCommandRegistry,
+} from "@gpuixui/keyboard/react";
+import { Effect } from "effect";
+import type { EventPayload } from "@gpuix/react";
+import type { ReactNode } from "react";
+
+const commands = [
+  {
+    id: "palette",
+    title: "Open the command palette",
+    scope: "global",
+    hotkey: "mod+k",
+    handler: Effect.void,
+  },
+];
+
+/** The app installs this as its one root `onKeyDown` and runs the result itself. */
+export const useShortcutHandler = () => {
+  const registry = useCommandRegistry();
+  return (event: EventPayload) => registry.resolve(event, ["global"], "darwin");
+};
+
+export const App = ({ children }: { readonly children?: ReactNode }) => (
+  <CommandRegistryProvider commands={commands}>
+    {children}
+  </CommandRegistryProvider>
+);
+```
+
+Without a provider the hook returns an empty registry that resolves nothing, so
+an isolated component renders without a context error. The snippet above is the
+wiring, not a shipped component: the shipped
+[`KeyboardShortcuts`](/docs/components/keyboard-shortcuts) sheet and
+[`HotkeyRecorder`](/docs/components/hotkey-recorder) field are the two controls
+that consume this package today, and the recorder captures through
+`decodeGpuixEvent` and displays through `formatSymbols`.
+
+## Display is part of the contract
+
+`formatSymbols("mod+k", platform)` returns keycap parts, not a string, so a
+recorder and a cheat sheet can style each cap without re-parsing: `["⌘", "K"]`
+on macOS and `["Ctrl", "K"]` elsewhere. `default` folds into the non-macOS
+platform, which is where `Mod` is Control.
+
+## Limits to design around
+
+- **No global or system shortcut.** A binding fires only while the window is
+  focused; a background hotkey can only be documented as unavailable.
+- **A focused field sees the key first.** Install one handler at the root and
+  route accelerators from it; a chord the field needs is the field's.
+- **A `Tab` traversal runs no `onFocus`.** Read the key event or
+  `getFocusedElementId`, and publish focus-only information as
+  `aria-description`.
+- **Physical bindings cannot match.** There is no `code` in a GPUix event, so
+  `Mod+[KeyS]` parses and never resolves.
+- **`@tanstack/hotkeys` is `0.x`.** Its surface can change in a minor release;
+  the adapter in this package is the only code that would move.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@tanstack/hotkeys` | the chord grammar, exact comparison, display and sequence types |
+| `@gpuix/react` | the `EventPayload` / `KeyEvent` shape the adapter decodes |
+| `effect` | the `CommandRegistry` service, its layer and the handler's type |
+| `react` | the provider and hook, as an optional peer for the React entry |
+
+## Related
+
+- [Runtime capabilities](/docs/runtime) — the measured event path this layer
+  builds on, including the missing global shortcut and focus event.
+- [Keyboard shortcuts](/docs/components/keyboard-shortcuts) — the shipped cheat
+  sheet that reads a keymap.
+- [Hotkey recorder](/docs/components/hotkey-recorder) — the shipped capture
+  field.
+- [Command menu](/docs/components/command-menu) — the panel a palette command
+  usually opens.
+- [Patterns](/docs/patterns) — how a command, its scope and its dialog compose.
