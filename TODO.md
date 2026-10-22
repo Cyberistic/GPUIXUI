@@ -1702,6 +1702,30 @@ a workaround for two live sessions sharing one worktree; see
       on the verbatim clone (`expected '  Revenue definition  ' to be 'Revenue
       definition'` and `Some` where `None` is required). `docs/tooltip.mdx`
       §Accessibility states the rule. 697 unit / 198 runtime
+`[x]` `packages/primitives`: a **group option row published its label raw** — the
+      `aria-label` on a `RadioGroup`, `CheckboxGroup` and `ToggleGroup` row was
+      `option.label` verbatim, so a padded label reached the accessibility tree
+      with its padding (`"  Yankee  "`) and a blank one published `""` — the
+      empty name `accessibleName` exists to prevent at every other name site,
+      and the state an icon-only option (a blank label plus rich `content`) was
+      left in: it announced nothing instead of falling back to what it paints.
+      `group.tsx` now owns `optionName` (the option's label through
+      `accessibleName`), and the three rows read it. Proof: one unit case per
+      suite reads the row's `aria-label` (`Option.none()` for `"   "`,
+      `Some("Push")` for `"  Push  "`) and the native
+      `runtime/groups.runtime.test.tsx` reads the real tree — both directions
+      measured, the window reporting `[ '   ', '  Yankee  ' ]` where
+      `[ undefined, 'Yankee' ]` is required. Docs: the three pages' Accessibility
+      sections and the `label` API rows. 704 unit / 201 runtime
+`[x]` `packages/primitives`: the **OTP record denied an alphabet the field
+      keeps** — the `COMPONENTS.md` row said "digit-only input" while
+      `normalizeOtp` keeps every letter and digit (`A1B2` types in, and
+      `docs/otp-field.mdx` says so), so the inventory told a consumer that a
+      code the field accepts is impossible. The row now names the alphabet the
+      core keeps, and `src/inventory.test.ts`'s `does not narrow the alphabet
+      the OTP core keeps` holds the row and `src/core/otp.ts` together in both
+      directions (measured: restoring "digit-only" fails it by name; a core that
+      dropped letters fails the other half). 704 unit / 201 runtime
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness

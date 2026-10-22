@@ -24,6 +24,7 @@ import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import { targetSize } from "@gpuixui/tokens";
+import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -77,6 +78,18 @@ export const optionItems = <Props extends GroupItemProps>(
       },
     ];
   });
+
+/**
+ * The name one option row publishes.
+ *
+ * A group row is a control of its own, so its `aria-label` is a name site like
+ * any other and follows the package's rule: trimmed, and **absent** when blank,
+ * because the runtime publishes `""` verbatim and an empty name is not the same
+ * as no name. A blank label used to reach `aria-label` raw, so an icon-only
+ * option announced nothing at all rather than leaving the name to its content.
+ */
+export const optionName = (option: GroupOption): string | undefined =>
+  accessibleName(option.label);
 
 /**
  * The body of one row: the name pair, or the option's rich content.

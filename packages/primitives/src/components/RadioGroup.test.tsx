@@ -380,6 +380,32 @@ describe("RadioGroupItem", () => {
       rows(element).map((row) => expectSome(hostProp(row, "aria-label"))),
     ).toEqual(["Alpha", "Beta", "Gamma"]);
   });
+
+  it("publishes a trimmed row name, and no name at all for a blank label", () => {
+    // The bug guarded: the row's `aria-label` was the option's label verbatim,
+    // so a padded label announced its padding and a blank one published `""` —
+    // an empty name in the accessibility tree rather than no name, which is
+    // what the package's `accessibleName` rule exists to prevent everywhere
+    // else.
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "icon", label: "   " },
+          { value: "alpha", label: "  Alpha  " },
+        ],
+      },
+      testTheme,
+      text(""),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+
+    expect(rows(element).map((row) => hostProp(row, "aria-label"))).toEqual([
+      Option.none(),
+      Option.some("Alpha"),
+    ]);
+  });
 });
 
 // The `Checkbox`/`Switch` halves of the old selection suite moved to their own

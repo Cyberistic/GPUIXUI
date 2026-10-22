@@ -111,8 +111,10 @@ Enter selects on the press.
 - The group's name comes from `label`.
 - Each option announces its selected state through **`aria-valuetext`**
   (`checked` / `unchecked`); there is no `aria-checked`.
-- An option's own `label` is its accessible name; the visible text beside the
-  circle is a separate `Text` (or a `RadioGroupItem`'s children).
+- An option's own `label` is its accessible name — trimmed, and absent when
+  blank, so an icon-only row falls back to the content it paints instead of
+  publishing an empty name; the visible text beside the circle is a separate
+  `Text` (or a `RadioGroupItem`'s children).
 - Disabled options are skipped by the arrows and are not tab stops.
 - Every option declares the keyboard outline on its **row** (the `ring` role, at
   `borderWidth.strong`), because the runtime applies a `focusVisible` refinement

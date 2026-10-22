@@ -46,6 +46,7 @@ import { recipeTw } from "../recipe/registry.js";
 import {
   optionBody,
   optionItems,
+  optionName,
   optionRowStyle,
   useRovingFocus,
   type GroupFocus,
@@ -272,7 +273,7 @@ export const renderRadioGroup = (
             key={option.value}
             ref={handlers.registerItem(index)}
             role="radio"
-            aria-label={option.label}
+            aria-label={optionName(option)}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}
             onClick={composePress(disabled, props.onClick, () => {

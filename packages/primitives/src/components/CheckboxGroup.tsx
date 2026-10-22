@@ -43,6 +43,7 @@ import { renderCheckboxIndicator, selectionValueText } from "./Checkbox.js";
 import {
   optionBody,
   optionItems,
+  optionName,
   optionRowStyle,
   useRovingFocus,
   type GroupFocus,
@@ -249,7 +250,7 @@ export const renderCheckboxGroup = (
             key={option.value}
             ref={handlers.registerItem(index)}
             role="checkbox"
-            aria-label={option.label}
+            aria-label={optionName(option)}
             aria-valuetext={selectionValueText(current)}
             tabIndex={
               disabled

@@ -135,6 +135,30 @@ describe("ToggleGroup", () => {
     ]);
   });
 
+  it("publishes a trimmed row name, and no name at all for a blank label", () => {
+    // The bug guarded: the row's `aria-label` was the option's label verbatim,
+    // so a padded label announced its padding and a blank one published `""` —
+    // an empty name in the accessibility tree rather than no name. An icon-only
+    // option with a blank label was left unnamed instead of falling back to the
+    // content it paints.
+    const element = render(
+      {
+        options: [
+          { value: "icon", label: " " },
+          { value: "italic", label: "  Italic  " },
+        ],
+      },
+      [],
+      Option.none(),
+      handlers(vi.fn()),
+    );
+
+    expect(rows(element).map((row) => hostProp(row, "aria-label"))).toEqual([
+      Option.none(),
+      Option.some("Italic"),
+    ]);
+  });
+
   it("keeps the tab stop on an option a keyboard user can reach", () => {
     const element = render(
       {

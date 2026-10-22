@@ -93,7 +93,7 @@ on its own.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `value` | `string` | — | the value this option adds to the selection |
-| `label` | `string` | — | accessible name, and the visible text unless `children` replaces it |
+| `label` | `string` | — | accessible name (trimmed; blank publishes none), and the visible text unless `children` replaces it |
 | `description` | `string` | none | a caption under the name |
 | `disabled` | `boolean` | `false` | the option cannot be chosen and takes no focus |
 | `children` | `ReactNode` | — | rich content drawn instead of the name pair |
@@ -115,7 +115,10 @@ value: unlike a radio group, a checkbox group has no "selection follows focus".
 
 ## Accessibility
 
-- The container is a named `group`; each option is a named checkbox.
+- The container is a named `group`; each option is a named checkbox. The row's
+  name is the option's `label`, trimmed, and a blank label publishes **no name**
+  rather than an empty one — an icon-only row then falls back to the content it
+  paints instead of announcing nothing.
 - State is announced through **`aria-valuetext`** (`checked` / `unchecked`),
   because `@gpuix/native` 0.11.0 has no `aria-checked`.
 - There is no `aria-multiselectable` in 0.11.0, so nothing claims the group is

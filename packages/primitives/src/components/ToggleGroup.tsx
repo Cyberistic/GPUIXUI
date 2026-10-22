@@ -41,6 +41,7 @@ import { pressedValueText } from "./Toggle.js";
 import {
   optionBody,
   optionItems,
+  optionName,
   useRovingFocus,
   type GroupFocus,
   type GroupHandlers,
@@ -292,7 +293,7 @@ export const renderToggleGroup = (
             key={option.value}
             ref={handlers.registerItem(index)}
             role="button"
-            aria-label={option.label}
+            aria-label={optionName(option)}
             aria-valuetext={pressedValueText(pressed)}
             tabIndex={
               disabled

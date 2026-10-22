@@ -28,7 +28,12 @@ import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
-import { a11yValueOf, type Bounds, type Runtime } from "./harness.js";
+import {
+  a11yNodes,
+  a11yValueOf,
+  type Bounds,
+  type Runtime,
+} from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
 
 /** The row an option painted, found by the name it announces. */
@@ -164,6 +169,36 @@ it("declares the keyboard ring on the option that holds native focus", async () 
   ).toBe("Xray");
   expect(ringed(xray)).toBe(true);
   expect(ringed(boxOf(runtime, "Xray"))).toBe(false);
+});
+
+it("publishes a row's trimmed name, and no name at all for a blank label", async () => {
+  // The bug this guards: the row's `aria-label` was the option's label
+  // verbatim, so a padded label reached the accessibility tree with its padding
+  // and a blank one published an empty name — an icon-only option announced
+  // nothing rather than leaving the name to the content it paints.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <CheckboxGroup
+        label="Many"
+        options={[
+          { value: "icon", label: "   " },
+          { value: "y", label: "  Yankee  " },
+        ]}
+      />
+    </Surface>,
+  );
+  const names = Arr.map(
+    Arr.filter(
+      a11yNodes(runtime.a11y()),
+      (node) => node.aria?.role === "CheckBox",
+    ),
+    (node) => node.aria?.label,
+  );
+
+  // The padded label announced its padding, and the blank one announced an
+  // empty name; the row now publishes the trimmed name, or none at all.
+  expect(names).toEqual([undefined, "Yankee"]);
 });
 
 it("paints every group option at the pressable floor", async () => {

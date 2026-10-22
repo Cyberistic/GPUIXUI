@@ -109,6 +109,30 @@ describe("CheckboxGroup", () => {
     ]);
   });
 
+  it("publishes a trimmed row name, and no name at all for a blank label", () => {
+    // The bug guarded: the row's `aria-label` was the option's label verbatim,
+    // so a padded label announced its padding and a blank one published `""` —
+    // the runtime puts an empty string in the accessibility tree, which is not
+    // the same as no name. An icon-only option whose label a caller left blank
+    // announced nothing at all instead of leaving the name to its content.
+    const element = render(
+      {
+        options: [
+          { value: "icon", label: "   " },
+          { value: "push", label: "  Push  " },
+        ],
+      },
+      [],
+      Option.none(),
+      handlers(vi.fn()),
+    );
+
+    expect(rows(element).map((row) => hostProp(row, "aria-label"))).toEqual([
+      Option.none(),
+      Option.some("Push"),
+    ]);
+  });
+
   it("keeps the tab stop on an option a keyboard user can reach", () => {
     const element = render(
       {

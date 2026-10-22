@@ -181,6 +181,41 @@ const tooltipProblems = (): ReadonlyArray<string> =>
     },
   );
 
+/**
+ * Problems with the OTP field's row after it narrowed the alphabet.
+ *
+ * The regression: the row said "digit-only input" while `normalizeOtp` keeps
+ * every letter and digit — `A1B2` types in, and the page says so. The inventory
+ * told a consumer that a code the field accepts is impossible.
+ */
+const otpAlphabetProblems = (): ReadonlyArray<string> =>
+  Option.match(
+    Arr.findFirst(inventory, (meta) => meta.name === "OTP Field"),
+    {
+      onNone: () => ["OTP Field: no record"],
+      onSome: (meta) => [
+        ...(sourceOf("src/core/otp.ts").includes("A-Za-z")
+          ? []
+          : ["OTP Field: src/core/otp.ts no longer keeps letters"]),
+        ...Option.match(rowFor(meta), {
+          onNone: () => ["OTP Field: no COMPONENTS.md row"],
+          onSome: (row) => [
+            ...(row.notes.includes("digit-only")
+              ? [
+                  "OTP Field: the row says digit-only, and the core keeps letters",
+                ]
+              : []),
+            ...(row.notes.includes("letters and digits")
+              ? []
+              : [
+                  "OTP Field: the row does not name the alphabet the field keeps",
+                ]),
+          ],
+        }),
+      ],
+    },
+  );
+
 describe("Tier 1 inventory", () => {
   it("names files that exist", () => {
     const problems = Arr.flatMap(inventory, (meta) =>
@@ -211,6 +246,10 @@ describe("Tier 1 inventory", () => {
     const problems = Arr.flatMap(ANNOUNCED_VALUES, announceProblems);
 
     expect(problems).toEqual([]);
+  });
+
+  it("does not narrow the alphabet the OTP core keeps", () => {
+    expect(otpAlphabetProblems()).toEqual([]);
   });
 
   it("records the tooltip's measured keyboard path", () => {
