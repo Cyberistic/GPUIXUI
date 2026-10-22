@@ -25,7 +25,7 @@ import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
 import { contrastFloors, highContrastFloors } from "./contrast.js";
 import { platformNames } from "./platforms.js";
-import { retroNames, retroTheme } from "./retro.js";
+import { retroNames, retroStyles, retroTheme } from "./retro.js";
 import {
   brandChartTheme,
   brandSeries,
@@ -117,6 +117,28 @@ describe("the shipped scale", () => {
 
   it("keeps the scale on a platform or authored look's base theme", () => {
     expect(seriesColors(platformTheme(lightTheme, "linux"))).toBe(lightSeries);
+  });
+
+  it("follows the scale a look designs for its own plot surfaces", () => {
+    const luna = retroTheme(lightTheme, "luna");
+
+    expect(luna.series).toBe(retroStyles.luna.series?.light);
+    expect(seriesColors(luna)).toBe(luna.series);
+    expect(seriesColors(luna)).not.toBe(lightSeries);
+    // A mode the look does not name keeps the base's table, and a look that
+    // declares none is the platform case above.
+    expect(retroTheme(darkTheme, "luna").series).toBeUndefined();
+    expect(seriesColors(retroTheme(darkTheme, "luna"))).toBe(darkSeries);
+    expect(retroStyles.aero.series).toBeUndefined();
+  });
+
+  it("keeps a high-contrast base's own scale", () => {
+    // Same rule as the palette: a scale designed for a look's strips is not an
+    // AAA one, so accessibility outranks the look.
+    const accessible = retroTheme(highContrastLightTheme, "luna");
+
+    expect(accessible.series).toBeUndefined();
+    expect(seriesColors(accessible)).toBe(highContrastLightSeries);
   });
 });
 
@@ -238,6 +260,68 @@ describe("the failures name the decision", () => {
     expect(distinctness.some(({ distance }) => distance === undefined)).toBe(
       true,
     );
+  });
+});
+
+describe("the strips a plot is drawn on", () => {
+  it("measures the surface a caller names instead of the default three", () => {
+    // A dark window whose sidebar is white: the shared dark scale is clean on
+    // the page, the card and the popover, and four of its five swatches are
+    // gone on the strip the chart in that sidebar is actually drawn on.
+    const whiteSidebar = extendTheme(darkTheme, {
+      colors: { muted: "#FFFFFF" },
+    });
+
+    expect(seriesFailures(whiteSidebar).surfaces).toEqual([]);
+
+    const measured = seriesFailures(whiteSidebar, { surfaces: ["muted"] });
+    expect(
+      measured.surfaces.map(
+        ({ index, surface, ratio }) =>
+          `${index + 1} on ${surface} is ${ratio?.toFixed(2)}`,
+      ),
+    ).toEqual([
+      "1 on muted is 2.15",
+      "2 on muted is 2.67",
+      "4 on muted is 1.31",
+      "5 on muted is 1.97",
+    ]);
+    expect(measured.surfaces.every(({ floor }) => floor === 3)).toBe(true);
+    expect(seriesSurfaces).toEqual(["background", "card", "popover"]);
+  });
+});
+
+describe("a look owns the scale its own strips need", () => {
+  /**
+   * The four strips a chart is drawn on in a look: its page, a card, a popover
+   * and the quiet toolbar (or status bar) a plot also lands on.
+   */
+  const plotStrips = [...seriesSurfaces, "muted"] as const;
+  const luna = retroTheme(lightTheme, "luna");
+
+  it("measures the shared light table on Luna's toolbar", () => {
+    // The bug this guards: a look could not own a chart scale, so its charts
+    // resolved the table designed for a near-white page. On Luna's `#E0DCCB`
+    // toolbar the shared amber is 2.75:1 — one series nobody can find.
+    const inherited = seriesFailures(
+      { ...luna, series: lightSeries },
+      { surfaces: plotStrips },
+    );
+
+    expect(
+      inherited.surfaces.map(
+        ({ index, surface, ratio }) =>
+          `series ${index + 1} on ${surface} is ${ratio?.toFixed(2)}`,
+      ),
+    ).toEqual(["series 4 on muted is 2.75"]);
+  });
+
+  it("is clean on every strip with the scale the look carries", () => {
+    expect(seriesFailures(luna, { surfaces: plotStrips })).toEqual({
+      surfaces: [],
+      distinctness: [],
+      deficiencies: [],
+    });
   });
 });
 

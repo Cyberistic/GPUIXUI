@@ -15,6 +15,7 @@ import {
   type DensityName,
   type Radius,
 } from "./scale.js";
+import type { SeriesColors } from "./series.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
@@ -64,6 +65,22 @@ export interface PlatformStyle extends PlatformType {
   readonly density: DensityName;
   /** The roles the platform repaints, in each mode. */
   readonly colors: PlatformColors;
+  /**
+   * The categorical scale the look paints its data marks in, per mode. A mode it
+   * omits — and every style that declares none — resolves the base theme's scale
+   * for that mode and contrast variant, which is where the library's own tables
+   * are designed to be read.
+   *
+   * A look that repaints the surfaces a plot is drawn on needs its own: Luna's
+   * beige page (`#ECE9D8`) and deeper toolbar (`#E0DCCB`) swallow the shared
+   * light amber, which measures 2.75:1 on that toolbar — one series a reader
+   * cannot find — so the look carries a scale designed for its own strips.
+   *
+   * It follows the same rule as {@link colors}: a base theme of another contrast
+   * variant keeps its own scale, because a scale designed for a look's surfaces
+   * is not a high-contrast scale.
+   */
+  readonly series?: Readonly<Partial<Record<ThemeMode, SeriesColors>>>;
   /**
    * The contrast variant the palette is designed for. A base theme that needs
    * more keeps its own colours — accessibility outranks the platform look — so

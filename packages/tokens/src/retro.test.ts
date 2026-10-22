@@ -30,6 +30,7 @@ import { platformNames, platformStyles, systemUiFont } from "./platforms.js";
 import { resolveRetroBrand } from "./retro.example.js";
 import { isRetroName, retroNames, retroStyles, retroTheme } from "./retro.js";
 import { densityPresets } from "./scale.js";
+import { lightSeries, seriesFailures, seriesSurfaces } from "./series.js";
 import {
   highContrastDarkTheme,
   highContrastLightTheme,
@@ -95,6 +96,16 @@ describe("retroStyles", () => {
       ),
     );
     expect(empty).toEqual([]);
+  });
+
+  it("declares a chart scale only for the mode whose strips need one", () => {
+    // A look may own its categorical scale; declaring one where the base's
+    // table already separates on the look's strips would be a second place to
+    // keep in step. Luna's beige toolbar is the measured case, and its sweep
+    // below is what holds the values.
+    expect(retroStyles.luna.series?.light).toHaveLength(5);
+    expect(retroStyles.luna.series?.dark).toBeUndefined();
+    expect(retroStyles.aero.series).toBeUndefined();
   });
 
   it("paints each era as its own look, not a renamed platform", () => {
@@ -250,6 +261,62 @@ describe("editing an authored look", () => {
 });
 
 /**
+ * Guards the chart scale a look owns.
+ *
+ * The bug this closes: a look could repaint its page, its card and its popover
+ * and still resolve the shared light table, so a chart in Luna's beige status
+ * bar lost a category — the shared amber is 2.75:1 on that toolbar — while every
+ * other series contract passed. A look declares its own table in the
+ * `PlatformStyle` shape and `applyStyle` passes it to the base theme, and this
+ * sweep holds every look to all four strips a plot is drawn on rather than the
+ * three the library defaults to.
+ */
+describe("authored look series", () => {
+  /** The strips a chart is drawn on in a look: its page, a card, a popover and its quiet toolbar. */
+  const plotStrips = [...seriesSurfaces, "muted"] as const;
+
+  it("measures every plot strip each look paints", () => {
+    const failing = retroThemes.flatMap(({ label, theme }) => {
+      const report = seriesFailures(theme, { surfaces: plotStrips });
+      return [
+        ...report.surfaces.map(
+          ({ index, surface, ratio }) =>
+            `${label}: series ${index + 1} on ${surface} is ${ratio ?? "unmeasurable"}`,
+        ),
+        ...report.distinctness.map(
+          ({ index, other, distance }) =>
+            `${label}: series ${index + 1}/${other + 1} are ${distance ?? "unmeasurable"} apart`,
+        ),
+        ...report.deficiencies.map(
+          ({ deficiency, index, other, distance }) =>
+            `${label}: ${deficiency} series ${index + 1}/${other + 1} are ${distance ?? "unmeasurable"} apart`,
+        ),
+      ];
+    });
+
+    expect(failing).toEqual([]);
+    // A sweep that stopped walking the looks cannot pass.
+    expect(retroThemes.length).toBe(looks.length * themeModes.length);
+  });
+
+  it("reports the shared table on the toolbar the look carries", () => {
+    const luna = retroTheme(themes.light, "luna");
+    const inherited = seriesFailures(
+      { ...luna, series: lightSeries },
+      { surfaces: plotStrips },
+    );
+
+    expect(
+      inherited.surfaces.map(
+        ({ index, surface, ratio }) =>
+          `${index + 1} on ${surface} is ${ratio?.toFixed(2)}`,
+      ),
+    ).toEqual(["4 on muted is 2.75"]);
+    expect(seriesFailures(luna, { surfaces: plotStrips }).surfaces).toEqual([]);
+  });
+});
+
+/**
  * Guards the prose the provenance and the contract live in. A look that is
  * documented as a platform, or with invented dark palettes presented as
  * historical, sends a consumer looking for a toggle entry that does not exist
@@ -330,6 +397,22 @@ describe("retro documentation", () => {
       })
       .filter((row) => !catalogue.includes(row));
     expect(missing).toEqual([]);
+  });
+
+  it("prints the chart scale the look carries", () => {
+    // The scale is five values a consumer copies, so the page prints them and
+    // this reads the line off the table rather than trusting a copy. Prose wraps
+    // and marks the values as code, so both sides are flattened first.
+    const catalogue = read("../../../docs/tokens.md");
+    const scale = retroStyles.luna.series?.light ?? [];
+    const plain = (text: string): string =>
+      text.split(/\s+/).join(" ").replaceAll("`", "");
+
+    expect(scale).toHaveLength(5);
+    expect(plain(catalogue)).toContain(
+      plain(`Luna's light chart scale is ${scale.join(", ")}`),
+    );
+    expect(catalogue).not.toContain("carry no scale of their own");
   });
 });
 

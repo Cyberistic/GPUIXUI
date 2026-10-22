@@ -411,14 +411,16 @@ export function createTheme(config: ThemeConfig): Theme {
  */
 export function applyStyle(base: Theme, style: PlatformStyle): Theme {
   const contrast = base.contrast ?? "default";
+  // A palette — and the scale its plots are drawn in — is designed against the
+  // floors of one contrast variant; a base that needs more keeps its own.
+  const applies = contrast === style.contrast;
   return extendTheme(base, {
     name: `${base.name} · ${style.label}`,
     typography: { sans: style.sans, mono: style.mono },
     radius: style.radius,
     density: style.density,
-    // A palette is designed against the floors of one contrast variant; a base
-    // that needs more keeps its own colours.
-    colors: contrast === style.contrast ? style.colors[base.mode] : undefined,
+    colors: applies ? style.colors[base.mode] : undefined,
+    series: applies ? style.series?.[base.mode] : undefined,
   });
 }
 

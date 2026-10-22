@@ -274,8 +274,13 @@ simulateColorVision(colors[0], "deuteranopia"); // the same swatch to a deuteran
 ```
 
 A brand that wants its own categories carries `series` in `extendTheme`; the
-array replaces the shipped scale whole. `seriesFailures(theme)` reports all three
-contracts and is part of `auditTheme`.
+array replaces the shipped scale whole. A look carries one in the
+`PlatformStyle` shape (`PlatformStyle.series`, per mode), which `applyStyle`
+hands to the base theme under the same rule as the look's palette — Luna's beige
+toolbar swallows the shared light amber at 2.75:1, so that look ships the scale
+its own plot strips need. A plot drawn on a strip that is not one of the three
+defaults names it: `seriesFailures(theme, { surfaces: ["muted"] })`.
+`seriesFailures(theme)` reports all three contracts and is part of `auditTheme`.
 
 ## Focus
 
@@ -635,9 +640,10 @@ Each report is also a function of its own:
   had no surface (the light tints moved one ramp step deeper and the dark ones one
   step lighter, with Luna — whose beige page is at a pale tint's own lightness —
   carrying a lighter tint of its own).
-- `seriesFailures(theme, floors?)` lists every chart swatch lost on its plot, too
-  close to its neighbour, or too close to it for a reader with a colour-vision
-  deficiency, and reports one it cannot measure.
+- `seriesFailures(theme, contract?)` lists every chart swatch lost on its plot,
+  too close to its neighbour, or too close to it for a reader with a colour-vision
+  deficiency, and reports one it cannot measure; `contract.surfaces` names the
+  strips a plot is drawn on when they are not the default three.
 - `selectionFailures(theme, floors?)` composites the `selection` wash over each
   surface text is selected from and lists a wash the reader cannot see and one
   that hides the body or secondary text inside it; the text floors default to the

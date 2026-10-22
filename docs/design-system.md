@@ -69,7 +69,11 @@ variant, every one perceivable on the three plot surfaces (`seriesSurfaces`),
 every pair separated by an OKLab distance (`seriesDistinctnessFloor`), and every
 pair still separated once protanopia, deuteranopia and tritanopia are simulated
 (`seriesDeficiencyFloor`). A chart never hard-codes a hex; a brand that wants its
-own categories carries `series`. See `docs/tokens.md` §Data series.
+own categories carries `series`, a plot drawn on another strip names it
+(`seriesFailures(theme, { surfaces: ["muted"] })`), and a look that repaints the
+surfaces a plot is drawn on ships a scale for them (`PlatformStyle.series` —
+Luna's beige toolbar swallows the shared light amber at 2.75:1). See
+`docs/tokens.md` §Data series and §Authored looks.
 
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library.
@@ -622,7 +626,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | text inside the selection wash (input, page, card, popover, a message bubble's muted fill) | 7:1 | 7:1 |
 | secondary text inside the selection wash (page, card, popover) | 4.5:1 | 7:1 |
 | the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
-| data series on `background`, `card` and `popover` | 3:1 | 4.5:1 |
+| data series on `background`, `card` and `popover` (a look's chart on its own quiet strip is measured by the same report with `surfaces` named) | 3:1 | 4.5:1 |
 | any two data series apart from each other (OKLab distance) | 0.06 | 0.06 |
 | any two data series apart after protanopia, deuteranopia and tritanopia (OKLab distance) | 0.05 | 0.05 |
 

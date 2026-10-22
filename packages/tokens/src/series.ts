@@ -15,8 +15,10 @@
  * The scale is designed per mode and contrast variant because a categorical
  * hue that separates on a pale canvas does not separate on a dark one. A theme
  * may carry its own `series`; {@link seriesColors} otherwise resolves the
- * shipped table for the theme's mode and variant, so a platform or authored
- * look follows its base's palette without another table.
+ * shipped table for the theme's mode and variant, and a look that repaints the
+ * surfaces a plot is drawn on declares its own in the `PlatformStyle` shape
+ * (`applyStyle`), so a look is not stuck with a scale designed for another
+ * page.
  */
 
 import type { ThemeColors } from "./color.js";
@@ -68,8 +70,23 @@ export const highContrastDarkSeries: SeriesColors = [
 ];
 
 /**
- * The surfaces a plot is drawn on, so every series colour is measured where a
- * chart actually paints it: the page, a card and a popover.
+ * One surface a plot is drawn on: any role a chart mark can be painted behind.
+ *
+ * {@link seriesSurfaces} names the three the contract measures unless a caller
+ * says otherwise, and a plot that sits on another strip — a `muted` toolbar, a
+ * `secondary` panel — names it, because a surface nobody measures is a swatch
+ * nobody has checked.
+ */
+export type SeriesSurface = keyof ThemeColors;
+
+/**
+ * The surfaces a plot is drawn on by default, so every series colour is measured
+ * where a chart actually paints it: the page, a card and a popover.
+ *
+ * The library's own plots sit on one of those three. A consumer's chart on a
+ * quieter strip — a status bar, a toolbar, a sidebar — names it through
+ * {@link SeriesContract.surfaces}, which is also how an authored look whose
+ * toolbar swallows a swatch is held to the scale it designs for that toolbar.
  */
 export const seriesSurfaces = ["background", "card", "popover"] as const;
 
@@ -174,7 +191,7 @@ export interface SeriesSurfaceFailure {
   /** The colour that failed. */
   readonly color: string;
   /** The surface it was measured against. */
-  readonly surface: (typeof seriesSurfaces)[number];
+  readonly surface: SeriesSurface;
   /** The measured ratio, or `undefined` when the colour is not opaque hex. */
   readonly ratio: number | undefined;
   /** The floor it had to reach. */
@@ -217,10 +234,17 @@ export interface SeriesReport {
   readonly deficiencies: readonly SeriesVisionFailure[];
 }
 
-/** Floors a caller may tighten when auditing a series. */
-export interface SeriesFloors {
+/** What a caller may tighten about a scale, and the surfaces it is drawn on. */
+export interface SeriesContract {
   /** Contrast against a plot surface. Defaults to the variant's boundary floor. */
   readonly surface?: number;
+  /**
+   * The surfaces a plot is drawn on. Defaults to {@link seriesSurfaces}, the
+   * three content surfaces the library paints a chart on; a caller whose plot
+   * sits on another role — the `muted` strip a status bar paints, a `secondary`
+   * panel — names it here, so its own surface is measured rather than assumed.
+   */
+  readonly surfaces?: readonly SeriesSurface[];
   /** OKLab distance between two series. Defaults to {@link seriesDistinctnessFloor}. */
   readonly distinctness?: number;
   /** OKLab distance after a deficiency simulation. Defaults to {@link seriesDeficiencyFloor}. */
@@ -350,7 +374,9 @@ type SeriesAuditSource = SeriesSource & {
  * separates for a full-colour reader can still collapse into one swatch for a
  * reader who cannot tell its two hues apart. Every option is a floor, so a
  * caller can hold an authored scale to a stricter contract than the variant
- * asks for; the variant still decides the surface default.
+ * asks for; the variant still decides the surface default. The surfaces are the
+ * three the library paints a plot on unless the caller names its own, so a
+ * chart drawn on a quiet strip is measured on the strip it is drawn on.
  *
  * @example
  * ```ts
@@ -359,18 +385,21 @@ type SeriesAuditSource = SeriesSource & {
  * const report = seriesFailures(themes.light);
  * report.surfaces.length === 0; // every swatch is perceivable on a plot
  * report.deficiencies.length === 0; // and no two collapse for a colour-blind reader
+ * // A chart on a quiet strip names the surface it paints:
+ * seriesFailures(themes.light, { surfaces: ["muted"] }).surfaces;
  * ```
  */
 export function seriesFailures(
   theme: SeriesAuditSource,
-  floors: SeriesFloors = {},
+  contract: SeriesContract = {},
 ): SeriesReport {
   const variant = contrastFloorsFor(theme);
-  const surfaceFloor = floors.surface ?? variant.boundary;
-  const distinctnessFloor = floors.distinctness ?? seriesDistinctnessFloor;
-  const deficiencyFloor = floors.deficiency ?? seriesDeficiencyFloor;
+  const surfaces = contract.surfaces ?? seriesSurfaces;
+  const surfaceFloor = contract.surface ?? variant.boundary;
+  const distinctnessFloor = contract.distinctness ?? seriesDistinctnessFloor;
+  const deficiencyFloor = contract.deficiency ?? seriesDeficiencyFloor;
   const series = seriesColors(theme);
-  const surfaces = seriesSurfaces.flatMap((surface) =>
+  const surfaceFailures = surfaces.flatMap((surface) =>
     series.flatMap((color, index) => {
       const ratio = contrastRatio(color, theme.colors[surface]);
       return ratio !== undefined && ratio >= surfaceFloor
@@ -416,5 +445,5 @@ export function seriesFailures(
       }),
     ),
   );
-  return { surfaces, distinctness, deficiencies };
+  return { surfaces: surfaceFailures, distinctness, deficiencies };
 }
