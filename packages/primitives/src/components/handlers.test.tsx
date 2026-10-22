@@ -534,9 +534,13 @@ describe("a caller's handlers on a slider", () => {
 
   it("puts the caller's keys and focus on a range slider's thumbs", () => {
     const onKeyDown = nothing();
+    const onKeyUp = nothing();
+    const onClick = nothing();
     const onFocus = nothing();
+    const onBlur = nothing();
     const onSpanChange = nothing();
     const rangeFocus = nothing();
+    const rangeBlur = nothing();
     const handlers: RangeSliderHandlers = {
       onSpanChange,
       registerTrack: () => {},
@@ -546,7 +550,7 @@ describe("a caller's handlers on a slider", () => {
       onPointerUp: vi.fn(),
     };
     const element = renderRangeSlider(
-      { onKeyDown, onFocus, defaultValue: [20, 80] },
+      { onKeyDown, onKeyUp, onClick, onFocus, onBlur, defaultValue: [20, 80] },
       testTheme,
       initValueState<readonly [number, number]>(
         Option.some([20, 80]),
@@ -555,7 +559,7 @@ describe("a caller's handlers on a slider", () => {
       {
         focusedIndex: Option.none(),
         onFocus: rangeFocus,
-        onBlur: nothing(),
+        onBlur: rangeBlur,
       },
       handlers,
     );
@@ -565,9 +569,19 @@ describe("a caller's handlers on a slider", () => {
     expectSome(hostHandler(thumb, "onKeyDown"))(event);
     expect(onKeyDown).toHaveBeenCalledOnce();
     expect(onSpanChange).toHaveBeenCalledWith([21, 80]);
+    // The bug guarded: the docs promise the caller's whole key pair is
+    // composed, but the range installed only key-down, so an `onKeyUp` was
+    // silently dropped on every thumb.
+    expectSome(hostHandler(thumb, "onKeyUp"))(event);
+    expect(onKeyUp).toHaveBeenCalledOnce();
+    expectSome(hostHandler(thumb, "onClick"))(clickEvent);
+    expect(onClick).toHaveBeenCalledOnce();
     expectSome(hostHandler(thumb, "onFocus"))(clickEvent);
     expect(onFocus).toHaveBeenCalledOnce();
     expect(rangeFocus).toHaveBeenCalledWith(0);
+    expectSome(hostHandler(thumb, "onBlur"))(clickEvent);
+    expect(onBlur).toHaveBeenCalledOnce();
+    expect(rangeBlur).toHaveBeenCalledWith(0);
   });
 });
 

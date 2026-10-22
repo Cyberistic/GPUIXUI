@@ -11,14 +11,18 @@ the design system exists.
 
 ```tsx
 import { Icon } from "@gpuixui/icons";
-import { theme } from "@gpuixui/tokens";
+import { lightTheme } from "@gpuixui/tokens";
 
 // Decoration: takes itself out of the accessibility tree.
-<Icon name="search" color={theme.color.mutedForeground} />
+<Icon name="search" color={lightTheme.colors.mutedForeground} />
 
 // Meaningful on its own: announced as an image.
-<Icon name="warning" color={theme.color.destructive.background} label="Overdue" />
+<Icon name="warning" color={lightTheme.colors.destructive} label="Overdue" />
 ```
+
+An `Icon` needs one tint, so a themed component usually takes it from the
+theme it is already reading (`useTheme()` in `@gpuixui/primitives` returns the
+same `colors` roles).
 
 ## API
 

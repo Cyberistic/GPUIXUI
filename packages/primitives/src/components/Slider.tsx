@@ -208,6 +208,7 @@ interface ThumbPart {
   readonly onFocus: ((event: EventPayload) => void) | undefined;
   readonly onBlur: ((event: EventPayload) => void) | undefined;
   readonly onKeyDown: ((event: KeyEvent) => void) | undefined;
+  readonly onKeyUp: ((event: KeyEvent) => void) | undefined;
 }
 
 /** What a slider's parts read from the slider that owns them. */
@@ -344,6 +345,7 @@ export const renderSliderThumb = (
       onFocus={thumb.onFocus}
       onBlur={thumb.onBlur}
       onKeyDown={thumb.onKeyDown}
+      onKeyUp={thumb.onKeyUp}
       style={resolved}
     >
       {children}
@@ -500,6 +502,7 @@ export const renderRangeSlider = (
             ),
         });
       }),
+      onKeyUp: props.onKeyUp,
     };
   };
   const resolved = recipeTw.classesToStyle(

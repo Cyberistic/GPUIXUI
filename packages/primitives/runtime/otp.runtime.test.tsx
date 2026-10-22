@@ -85,6 +85,46 @@ it("fills the code one key at a time and completes once", async () => {
   expect(field.complete).toStrictEqual(["123456"]);
 });
 
+it("does not complete again when an edit leaves a full code full", async () => {
+  // The bug guarded: `onComplete` fired whenever the new value was `length`
+  // long, so replacing a digit of a finished code reported a second completion
+  // and a form that verifies on it submitted twice.
+  const field = recorder();
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      defaultValue="123456"
+      onChange={field.onChange}
+      onComplete={field.onComplete}
+    />,
+  );
+  runtime.click("otp-cell-6");
+  runtime.type("7");
+  expect(lastValue(field.values)).toBe("123457");
+  expect(field.complete).toStrictEqual([]);
+});
+
+it("completes again after a digit is deleted and retyped", async () => {
+  const field = recorder();
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      defaultValue="12345"
+      onChange={field.onChange}
+      onComplete={field.onComplete}
+    />,
+  );
+  runtime.click("otp-cell-6");
+  runtime.type("6");
+  runtime.keyDown("otp-cell-6", "backspace");
+  runtime.keyUp("otp-cell-6", "backspace");
+  runtime.type("7");
+  expect(lastValue(field.values)).toBe("123457");
+  expect(field.complete).toStrictEqual(["123456", "123457"]);
+});
+
 it("reports Enter as a submit and leaves the code alone", async () => {
   const field = recorder();
   let submitted = 0;

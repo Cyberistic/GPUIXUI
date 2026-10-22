@@ -17,6 +17,8 @@ import { testTheme } from "../core/testing/theme.fixture.js";
 import { iconButtonProps, renderIconButton } from "./IconButton.js";
 import { keyEvent } from "./testing/event.js";
 import {
+  elementChildren,
+  elementProp,
   expectSome,
   hostHandler,
   hostProp,
@@ -105,6 +107,26 @@ describe("IconButton", () => {
     expect(onActivate).toHaveBeenCalledTimes(0);
     expect(expectSome(hostProp(loading, "tabIndex"))).toBe(0);
     expect(expectSome(hostProp(loading, "aria-description"))).toBe("Loading");
+  });
+
+  it("hands the busy spinner the caller's reduced-motion preference", () => {
+    // The bug guarded: `Button` forwarded `reducedMotion` to its spinner while
+    // `IconButton` — the same `Button` with an icon slot — dropped it, so a
+    // toolbar built from icon actions could not honour the preference.
+    const preference = (reducedMotion: boolean): Option.Option<unknown> =>
+      elementProp(
+        elementChildren(
+          resting({
+            label: "Saving",
+            icon: glyph,
+            loading: true,
+            reducedMotion,
+          }),
+        )[0] ?? expect.fail("the busy icon button drew no spinner"),
+        "reducedMotion",
+      );
+    expect(preference(true)).toStrictEqual(Option.some(true));
+    expect(preference(false)).toStrictEqual(Option.some(false));
   });
 
   it("hands the caller's style the live state and lets it win", () => {

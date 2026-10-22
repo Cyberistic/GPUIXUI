@@ -179,7 +179,16 @@ export type { SkeletonProps } from "./Skeleton.js";
 export { Spinner } from "./Spinner.js";
 export type { SpinnerProps } from "./Spinner.js";
 
-export { Select } from "./Select.js";
+export {
+  isSelectGroup,
+  Select,
+  selectContentStyle,
+  selectItemStyle,
+  selectLabelStyle,
+  selectOptions,
+  selectSeparatorStyle,
+  selectTriggerStyle,
+} from "./Select.js";
 export type {
   SelectEntry,
   SelectItemState,

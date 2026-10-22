@@ -23,6 +23,7 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import * as primitives from "./index.js";
+import { decideNumberKey } from "./core/number.js";
 
 const docsDir = new URL("../docs/", import.meta.url);
 const repoRoot = new URL("../../../", import.meta.url);
@@ -360,6 +361,72 @@ describe("the primitives docs page contract", () => {
         (target) => `${target}: linked but missing`,
       ),
     ]).toEqual([]);
+  });
+
+  it("tints the glyph the icon-button page and example show from a theme role", () => {
+    // The bug guarded: the page taught `color="#000000"` in three snippets and
+    // the mounted example painted every glyph black — invisible on the dark
+    // theme and on the filled destructive action, the exact failure `Icon`'s
+    // required `color` exists to prevent.
+    const files = [
+      { name: "docs/icon-button.mdx", source: read("icon-button.mdx") },
+      {
+        name: "examples/icon-button.example.tsx",
+        source: readFileSync(
+          fileURLToPath(
+            new URL("../examples/icon-button.example.tsx", import.meta.url),
+          ),
+          "utf8",
+        ),
+      },
+    ];
+    Arr.forEach(files, ({ name, source }) => {
+      expect(source, name).not.toMatch(/color="#[0-9A-Fa-f]{3,8}"/);
+      expect(source, name).toContain("useTheme()");
+    });
+  });
+
+  it("teaches the number field's real arrow keys", () => {
+    // The bug guarded: the Keyboard table said `ArrowUp` / `ArrowRight` step up
+    // and `ArrowDown` / `ArrowLeft` step down, while `decideNumberKey` answers
+    // only up/down — Left/Right belong to the host text editor's caret, or the
+    // caret could never cross a digit without the number changing.
+    const range = { min: 0, max: 100, step: 1 };
+    const keyboard = Option.getOrElse(
+      bodyOf(read("number-field.mdx"), "Keyboard"),
+      () => "",
+    );
+    const keyRows = Arr.filter(keyboard.split("\n"), (line) =>
+      Str.startsWith("| `")(line),
+    );
+    expect(
+      Arr.filter(keyRows, (row) => /Arrow(Left|Right)/.test(row)),
+      "a table row claims Left/Right step the value",
+    ).toEqual([]);
+    expect(keyboard).toContain("host text editor");
+    expect(
+      Arr.map(["up", "down"], (key) =>
+        Option.isSome(decideNumberKey(50, range, key)),
+      ),
+    ).toEqual([true, true]);
+    expect(
+      Arr.map(["left", "right"], (key) =>
+        Option.isSome(decideNumberKey(50, range, key)),
+      ),
+    ).toEqual([false, false]);
+  });
+
+  it("states the invalid state the checkbox group paints", () => {
+    // The bug guarded: the API table said `invalid` "paints every box and its
+    // ring destructive", while a checked box keeps its accent fill — only an
+    // empty box's border and the row's focus ring take the destructive role.
+    const api = Option.getOrElse(
+      bodyOf(read("checkbox-group.mdx"), "API"),
+      () => "",
+    );
+    expect(api).not.toContain("paints every box and its ring destructive");
+    expect(api).toContain("empty box's border");
+    expect(api).toContain("focus ring");
   });
 
   it("cites only plans that exist", () => {

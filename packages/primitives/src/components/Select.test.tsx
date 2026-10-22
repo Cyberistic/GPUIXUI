@@ -16,6 +16,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { fieldVariant } from "../core/variants.js";
+import * as primitives from "../index.js";
 import {
   isSelectGroup,
   renderSelect,
@@ -310,6 +311,30 @@ describe("Select", () => {
     );
     expect(paint(rest).backgroundColor).toBe(testTheme.colors.card);
     expect(seen).toEqual([{ ...rest, selected: true }, rest]);
+  });
+});
+
+describe("Select's public surface", () => {
+  it("exports the helpers its page names from the package root", () => {
+    // The bug guarded: `docs/select.mdx` teaches `selectTriggerStyle`,
+    // `selectContentStyle` and `selectItemStyle`, and the data helpers flatten a
+    // grouped list — none of them was reachable from `@gpuixui/primitives`,
+    // while every sibling family (radio, checkbox, toggle, rating) publishes
+    // its helpers. A page naming a symbol a consumer cannot import is a dead
+    // end.
+    const family = [
+      "isSelectGroup",
+      "selectOptions",
+      "selectTriggerStyle",
+      "selectContentStyle",
+      "selectLabelStyle",
+      "selectSeparatorStyle",
+      "selectItemStyle",
+    ] as const;
+    expect(
+      Arr.filter(family, (name) => !(name in primitives)),
+      "helpers missing from the package root",
+    ).toEqual([]);
   });
 });
 

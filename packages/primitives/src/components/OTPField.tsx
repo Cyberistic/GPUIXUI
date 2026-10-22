@@ -344,9 +344,14 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
     );
   };
   const apply = (edit: OtpEdit): void => {
-    if (edit.value !== state.value.current) {
+    const previous = state.value.current;
+    if (edit.value !== previous) {
       state.set(edit.value);
-      if (edit.value.length === limit) props.onComplete?.(edit.value);
+      // Completing means the edit turned an unfinished code into a full one.
+      // Replacing a digit of a finished code is still a full code, and a
+      // verifier keyed on this must not run a second time for it.
+      if (previous.length < limit && edit.value.length === limit)
+        props.onComplete?.(edit.value);
     }
     focusCell(edit.focus);
   };

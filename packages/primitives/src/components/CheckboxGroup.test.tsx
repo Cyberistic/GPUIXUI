@@ -11,9 +11,10 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
-import { targetSize } from "@gpuixui/tokens";
+import { keyboardFocusRing, targetSize } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   CheckboxGroupItem,
@@ -300,6 +301,43 @@ describe("CheckboxGroup", () => {
     expect(Option.isSome(hostStyle(box, "focusVisible"))).toBe(false);
     expect(expectSome(hostStyleString(box, "pointerEvents"))).toBe("none");
     expect(expectSome(hostStyle(row, "minHeight"))).toBe(targetSize.minimum);
+  });
+
+  it("marks an invalid group on every empty edge and every row ring", () => {
+    // The bug guarded: the page promised that `invalid` paints "every box and
+    // its ring destructive", while a checked box keeps its accent fill — only
+    // the empty box's border and the row's focus ring take the destructive
+    // role, exactly as the standalone `Checkbox` does.
+    const element = render(
+      { options, invalid: true },
+      ["email"],
+      Option.some(0),
+      handlers(vi.fn()),
+    );
+    const checkedRow = expectSome(Option.fromNullishOr(rows(element)[0]));
+    const emptyRow = expectSome(Option.fromNullishOr(rows(element)[1]));
+    const checkedBox = expectSome(
+      Option.fromNullishOr(elementChildren(checkedRow)[0]),
+    );
+    const emptyBox = expectSome(
+      Option.fromNullishOr(elementChildren(emptyRow)[0]),
+    );
+
+    expect(expectSome(hostStyleString(checkedBox, "backgroundColor"))).toBe(
+      testTheme.colors.primary,
+    );
+    expect(expectSome(hostStyleString(emptyBox, "borderColor"))).toBe(
+      testTheme.colors.destructive,
+    );
+    expect(hostStyle(emptyBox, "backgroundColor")).toStrictEqual(Option.none());
+    Arr.forEach([checkedRow, emptyRow], (row) =>
+      expect(hostStyle(row, "focusVisible")).toStrictEqual(
+        Option.some({
+          ...keyboardFocusRing(testTheme).focusVisible,
+          outlineColor: testTheme.colors.destructive,
+        }),
+      ),
+    );
   });
 });
 

@@ -18,10 +18,13 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
+import * as Tokens from "@gpuixui/tokens";
 import { ICON_NAMES } from "./names.js";
 import { ICON_SIZES } from "./sizes.js";
 
 const page = readFileSync(new URL("../docs/icon.mdx", import.meta.url), "utf8");
+const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+const iconSource = readFileSync(new URL("./Icon.tsx", import.meta.url), "utf8");
 
 /** A frontmatter field's value, or nothing when the field is absent. */
 const frontmatter = (field: string): Option.Option<string> =>
@@ -43,5 +46,44 @@ describe("the icon page", () => {
       ).exec(page);
       expect(row?.[1]).toBe(String(pixels));
     });
+  });
+});
+
+describe("the icons README", () => {
+  it("imports only names @gpuixui/tokens exports", () => {
+    // The bug guarded: the README's first example imported `{ theme }` from
+    // "@gpuixui/tokens", which publishes `lightTheme`/`darkTheme`/`getTheme` —
+    // the package's own usage example failed at its first import.
+    const names = Arr.flatMap(
+      [...readme.matchAll(/import\s+\{([^}]*)\}\s+from\s+"@gpuixui\/tokens"/g)],
+      (match) =>
+        Arr.filter(
+          Arr.map((match[1] ?? "").split(","), (name) => name.trim()),
+          (name) => name !== "",
+        ),
+    );
+    expect(Arr.length(names)).toBeGreaterThan(0);
+    expect(
+      Arr.filter(names, (name) => !(name in Tokens)),
+      "names the README imports that the package does not export",
+    ).toEqual([]);
+  });
+
+  it("teaches the plural role path the theme it names actually has", () => {
+    // The same bug's second half: `theme.color.mutedForeground` and
+    // `theme.color.destructive.background` name a `color` group that does not
+    // exist, and `destructive` is a role string, not an object with a
+    // `.background`.
+    const source = `${readme}\n${iconSource}`;
+    expect(source).not.toMatch(/\.color\./);
+    const roles = Arr.flatMap(
+      [...readme.matchAll(/\.colors\.([A-Za-z]+)/g)],
+      (match) => (match[1] === undefined ? [] : [match[1]]),
+    );
+    expect(Arr.length(roles)).toBeGreaterThan(0);
+    expect(
+      Arr.filter(roles, (role) => !Arr.contains(Tokens.colorRoles, role)),
+      "role paths the README uses that no theme carries",
+    ).toEqual([]);
   });
 });

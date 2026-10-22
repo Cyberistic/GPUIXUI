@@ -44,6 +44,8 @@ export interface IconButtonProps extends InteractionProps {
   readonly disabled?: boolean;
   /** Busy: shows a spinner and blocks activation, but stays focusable. */
   readonly loading?: boolean;
+  /** Holds the busy spinner's lit dot, for a reader who asked for no motion. */
+  readonly reducedMotion?: boolean;
   /** Called for a click or an activating key. Not called while busy or disabled. */
   readonly onActivate?: () => void;
   /** Extra style, resolved against the button's live state and merged last. */
@@ -65,6 +67,7 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => ({
   square: true,
   disabled: props.disabled,
   loading: props.loading,
+  reducedMotion: props.reducedMotion,
   label: props.label,
   leading: props.icon,
   onActivate: props.onActivate,

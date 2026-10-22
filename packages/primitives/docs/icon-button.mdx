@@ -14,19 +14,21 @@ compose several of these inside a `Stack`.
 ## Usage
 
 ```tsx
-import { IconButton, Stack } from "@gpuixui/primitives";
+import { IconButton, Stack, useTheme } from "@gpuixui/primitives";
 import { Icon } from "@gpuixui/icons";
+
+const theme = useTheme();
 
 <Stack direction="row" gap="2xs">
   <IconButton
     label="Delete layer"
-    icon={<Icon name="trash" color="#000000" />}
+    icon={<Icon name="trash" color={theme.colors.destructiveForeground} />}
     variant="destructive"
     onActivate={removeLayer}
   />
   <IconButton
     label="Layer settings"
-    icon={<Icon name="settings" color="#000000" />}
+    icon={<Icon name="settings" color={theme.colors.foreground} />}
     onActivate={openSettings}
   />
 </Stack>;
@@ -46,7 +48,8 @@ sets both sides of the square from `density.controlHeight`.
   `variant` wears the same neutral pair a `Button` does; the default `ghost`
   keeps the fade, since it has no fill to collapse into.
 - `loading` — paints a spinner, announces `Loading`, refuses activation, and
-  **stays focusable** so a keyboard user is not dropped mid-action.
+  **stays focusable** so a keyboard user is not dropped mid-action. The spinner's
+  motion is the caller's: `reducedMotion` holds it still, exactly as on `Button`.
 
 ## API
 
@@ -58,6 +61,7 @@ sets both sides of the square from `density.controlHeight`.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | square side from `density.controlHeight` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
+| `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
 | `onActivate` | `() => void` | none | click or activating key; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
 | `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }` and merged last |
@@ -104,7 +108,7 @@ after the recipe, so a callback is the last word:
 ```tsx
 <IconButton
   label="Delete layer"
-  icon={<Icon name="trash" color="#000000" />}
+  icon={<Icon name="trash" color={theme.colors.foreground} />}
   style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
 />
 ```
@@ -122,9 +126,12 @@ after the recipe, so a callback is the last word:
 
 - `src/components/IconButton.test.tsx` — the label is the name, the box is
   square at the density height, ghost is the default, the activation contract
-  and busy/disabled refusals hold, and the caller's `style` wins.
+  and busy/disabled refusals hold, the busy spinner receives the caller's
+  `reducedMotion`, and the caller's `style` wins.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus are
   composed with the button's own, and a disabled icon button installs none.
+- `src/docs.test.ts` — the page and the mounted example tint every glyph from a
+  theme role, never a hex literal.
 - `runtime/icon-button.runtime.test.tsx` — the accessibility tree names the
   action with no image node, the painted box is a 32px square at `md`, a press
   and Enter each activate once, disabled refuses and leaves the tab order, and a

@@ -107,11 +107,15 @@ the value's and the step's decimal places. An integer step is untouched.
 
 | Key | Effect |
 | --- | ------ |
-| `ArrowUp` / `ArrowRight` | + one step |
-| `ArrowDown` / `ArrowLeft` | − one step |
+| `ArrowUp` | + one step |
+| `ArrowDown` | − one step |
 | `PageUp` / `PageDown` | ± ten steps |
 | `Home` / `End` | `min` / `max` — only when the field has that bound |
 | `Enter` | commit and reformat |
+
+`ArrowLeft` and `ArrowRight` are the host text editor's: they move the caret
+inside the draft, because a numeric field that stepped its value when the caret
+crossed a digit could not be edited.
 
 The spin buttons are pointer affordances, **not tab stops**: the field is one
 tab stop and the arrows are the keyboard path, as in a native spinner. A click
