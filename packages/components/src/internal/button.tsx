@@ -12,7 +12,14 @@
  *
  * Known gap: `@gpuix/native@0.11.0` accepts no `aria-disabled`, so a disabled
  * button conveys its state by leaving the tab order, dropping its handlers and
- * dimming — assistive technology sees a button that does nothing.
+ * painting the disabled appearance — assistive technology sees a button that
+ * does nothing.
+ *
+ * The disabled appearance is two mechanisms, because a fade is a property of the
+ * strip behind the control: a filled action paints the neutral
+ * `disabled`/`disabledForeground` pair the contrast contract measures on every
+ * surface, and a ghost action keeps the measured `disabledOpacity` fade (see
+ * {@link disabledStyle}).
  */
 
 import type { Props, StyleDesc } from "@gpuix/react";
@@ -22,6 +29,8 @@ import { activationHandlers } from "./key.js";
 import {
   controlHeight,
   controlPaddingX,
+  disabledAction,
+  disabledOpacity,
   filledHover,
   filledPressed,
   keyboardRing,
@@ -161,11 +170,54 @@ const activation = (
         ...activationHandlers((event) => onClick?.(event), observe),
       };
 
-/** A control's look when it is disabled: dimmed, and out of the tab order. */
-const disabledStyle = (disabled: boolean): StyleDesc => ({
-  opacity: disabled ? 0.5 : 1,
-  cursor: disabled ? "not-allowed" : "pointer",
-});
+/**
+ * A control's look when it is disabled: out of the tab order, and unavailable in
+ * a way a reader can still see.
+ *
+ * A **filled** action wears the neutral pair `contrastPairs` measures on every
+ * surface a control sits on (`disabled` behind `disabledForeground`). A fade is
+ * the wrong mechanism there: it composites the label into whatever is behind the
+ * action, so the same control reads two colours on two surfaces and lands at
+ * 1.47:1–1.49:1 on the card of four shipped light styles (`disabled.test.ts` in
+ * `@gpuixui/tokens` measures the premise). A **ghost** action has no fill to
+ * collapse into — the dim is the surface behind it — so it keeps the measured
+ * fade at `disabledOpacity`.
+ *
+ * A disabled control must not answer the pointer either, so both paths replace
+ * the hover and press fills with the resting one instead of leaving the
+ * enabled control's feedback in place.
+ */
+const disabledStyle = (
+  theme: Theme,
+  variant: ButtonVariant,
+  disabled: boolean,
+): StyleDesc => {
+  if (!disabled) return { cursor: "pointer" };
+  const paint = paintsSurface(variant) ? disabledAction(theme) : undefined;
+  return paint === undefined
+    ? {
+        opacity: disabledOpacity,
+        cursor: "not-allowed",
+        hover: undefined,
+        active: undefined,
+      }
+    : {
+        ...paint,
+        cursor: "not-allowed",
+        hover: { backgroundColor: paint.backgroundColor },
+        active: { backgroundColor: paint.backgroundColor },
+      };
+};
+
+/** Whether a variant paints a fill of its own; a ghost lets the surface through. */
+const paintsSurface = (variant: ButtonVariant): boolean =>
+  Match.value(variant).pipe(
+    Match.when("primary", () => true),
+    Match.when("secondary", () => true),
+    Match.when("danger", () => true),
+    Match.when("ghost", () => false),
+    Match.exhaustive,
+  );
 
 /**
  * A labelled action. `variant` picks the look, `size` the density-defined
@@ -196,7 +248,7 @@ export const Button = ({
       style={mergeStyles(
         {
           ...controlStyle(theme, variant, size),
-          ...disabledStyle(disabled),
+          ...disabledStyle(theme, variant, disabled),
           ...keyboardRing(theme),
         },
         style,
@@ -249,7 +301,9 @@ export const IconButton = ({
             color: theme.colors.foreground,
           },
           active: { backgroundColor: theme.colors.active },
-          ...disabledStyle(disabled),
+          // An icon action is unfilled, so the measured fade is its disabled
+          // mechanism; the pointer fills go with it.
+          ...disabledStyle(theme, "ghost", disabled),
           ...keyboardRing(theme),
         },
         style,

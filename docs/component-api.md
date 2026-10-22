@@ -117,6 +117,18 @@ a public state object instead:
   `CommandMenuInput`, `ComboboxInput`, `InlineEdit`'s input and `ChatComposer`'s
   field — and `keyboard-dim.test.tsx` holds each one. A caller's `style` merges
   last and can put the cue back.
+- A **disabled action** paints one of two mechanisms, and which one the contract
+  measures decides it. A filled action wears the neutral
+  `disabled`/`disabledForeground` pair (`disabledAction`), the pair
+  `contrastPairs` measures on every surface a control sits on: a fade composites
+  the label into the strip behind it, so the same disabled primary reads two
+  colours on a page and on a card and lands at 1.47:1–1.49:1 on the card of four
+  shipped light styles. A ghost action has no fill to collapse into, so it keeps
+  the fade at the token's `disabledOpacity`. **Neither answers the pointer**:
+  both replace the hover and press fills with the resting one. `internal/button.tsx`
+  owns both paths, `button.test.tsx` holds the pair, the ghost's fade and the
+  still pointer, and every component that disables an action (an edge control, a
+  busy dialog) inherits the rule.
 
 Which parts have a state, and which do not, is a measured line:
 
@@ -325,6 +337,7 @@ the honest parts.
 | Counting number | `CountingNumber` | — | plan 600 |
 | Auto height | `AutoHeight` | — | plan 600 |
 | Rotating text | `RotatingText` | — | plan 600 |
+| Splitting text | `SplittingText` (one part) | — | plan 600 |
 
 **Planned Tier 2 additions** — none. The last reserved family, Chat and
 Message (plan `207`), landed with its parts unchanged, so every part table above

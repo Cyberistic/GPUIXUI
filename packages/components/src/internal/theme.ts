@@ -7,8 +7,9 @@
  * (plan 110 §6).
  *
  * The seam is deliberately thin: `alpha`, `focusRing`, `elevationShadow`,
- * `statusTone` and `nativeTextTheme` are the token package's own helpers
- * (plans 014, 017, 018 and the native-host mapping in `docs/tokens.md`).
+ * `statusTone`, `disabledAction` and `nativeTextTheme` are the token package's
+ * own helpers (plans 014, 017, 018 and the native-host mapping in
+ * `docs/tokens.md`).
  * The only knowledge kept here is the component-level `danger` name, which the
  * token palette calls `destructive`.
  */
@@ -21,6 +22,8 @@ import {
   controlPaddingX,
   currentPlatform,
   darkTheme,
+  disabledAction,
+  disabledOpacity,
   elevationShadow,
   filledHover,
   filledPressed,
@@ -45,6 +48,8 @@ export {
   controlPaddingX,
   currentPlatform,
   darkTheme,
+  disabledAction,
+  disabledOpacity,
   elevationShadow,
   filledHover,
   filledPressed,

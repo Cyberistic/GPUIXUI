@@ -19,6 +19,8 @@ import * as Option from "effect/Option";
 import {
   contrastFloors,
   contrastRatio,
+  disabledAction,
+  disabledOpacity,
   keyboardDimFailures,
 } from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
@@ -122,7 +124,120 @@ describe("Button", () => {
     button.renderer.nativeSimulateKeyDown(element.id, "enter");
 
     expect(onClick).not.toHaveBeenCalled();
-    expect(button.renderer.findByTestId("button")?.style.opacity).toBe(0.5);
+    // The default variant is filled, so it wears the neutral pair rather than a
+    // fade — see `paints a disabled filled action with the measured pair`.
+    expect(
+      button.renderer.findByTestId("button")?.style.opacity,
+    ).toBeUndefined();
+
+    button.unmount();
+  });
+
+  it("paints a disabled filled action with the measured pair, not a fade", () => {
+    // The bug: every disabled action faded itself to 50%. A fade composites the
+    // label into the strip behind the control, so the same disabled primary read
+    // a different colour on a page and a card — and on the card of four shipped
+    // light styles the pair landed at 1.47:1–1.49:1, under the disabled floor
+    // (`disabled.test.ts` in `@gpuixui/tokens` measures that premise). A filled
+    // action now wears the neutral pair the contrast contract measures on every
+    // surface a control can sit on.
+    Arr.forEach(
+      [
+        ["primary", "dark"],
+        ["primary", "light"],
+        ["secondary", "dark"],
+        ["secondary", "light"],
+        ["danger", "dark"],
+        ["danger", "light"],
+      ] as const,
+      ([variant, mode]) => {
+        const theme = mode === "light" ? lightTheme : darkTheme;
+        const paint = disabledAction(theme);
+        const button = renderComponent(
+          <Button testId="button" variant={variant} disabled>
+            Save
+          </Button>,
+          mode,
+        );
+
+        const style = button.renderer.findByTestId("button")?.style;
+        expect(style?.backgroundColor, `${variant} ${mode}`).toBe(
+          paint.backgroundColor,
+        );
+        expect(style?.color, `${variant} ${mode}`).toBe(paint.color);
+        expect(style?.opacity, `${variant} ${mode}`).toBeUndefined();
+        expect(
+          contrastRatio(paint.color, paint.backgroundColor) ?? 0,
+        ).toBeGreaterThanOrEqual(contrastFloors.disabled);
+
+        button.unmount();
+      },
+    );
+  });
+
+  it("keeps the measured fade on a disabled ghost action", () => {
+    // An unfilled action has no fill to collapse into: the dim is the surface
+    // behind it, and the tokens' `disabledFadeFailures` measures that composite.
+    // This is the negative control for the pair above.
+    const button = renderComponent(
+      <Button testId="button" variant="ghost" disabled>
+        Cancel
+      </Button>,
+    );
+
+    hoverCentreOf(button, "button");
+
+    const style = button.renderer.findByTestId("button")?.style;
+    expect(style?.opacity).toBe(disabledOpacity);
+    // The dim is the whole state: there is no fill to move under the pointer.
+    expect(style?.hover).not.toMatchObject({
+      backgroundColor: disabledAction(darkTheme).backgroundColor,
+    });
+    expect(style?.active).not.toMatchObject({
+      backgroundColor: disabledAction(darkTheme).backgroundColor,
+    });
+
+    button.unmount();
+  });
+
+  it("does not repaint a disabled action under the pointer", () => {
+    // A disabled control that tints on hover still answers the pointer, so the
+    // reader is told the control is live. A filled action's hover and press are
+    // the resting fill; a ghost's are absent (the case below).
+    const resting = {
+      backgroundColor: disabledAction(darkTheme).backgroundColor,
+    };
+
+    Arr.forEach(["primary", "secondary", "danger"] as const, (variant) => {
+      const button = renderComponent(
+        <Button testId="button" variant={variant} disabled>
+          Save
+        </Button>,
+      );
+
+      hoverCentreOf(button, "button");
+
+      const style = button.renderer.findByTestId("button")?.style;
+      expect(style?.hover, variant).toMatchObject(resting);
+      expect(style?.active, variant).toMatchObject(resting);
+
+      button.unmount();
+    });
+  });
+
+  it("still answers the pointer on an enabled action", () => {
+    // The control for the case above: the live control keeps its feedback.
+    const button = renderComponent(
+      <Button testId="button" variant="primary">
+        Save
+      </Button>,
+    );
+
+    hoverCentreOf(button, "button");
+
+    expect(button.renderer.findByTestId("button")?.style.hover).toMatchObject({
+      backgroundColor: filledHover(darkTheme, "primary"),
+    });
 
     button.unmount();
   });

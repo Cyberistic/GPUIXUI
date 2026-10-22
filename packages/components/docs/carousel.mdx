@@ -86,7 +86,9 @@ custom theme changes the frame with no code change — see
   runtime's keyboard focus outline at rest, so a `Tab` shows the region the
   arrows will act on while a pointer press shows nothing.
 - Controls are buttons named "Previous slide" / "Next slide"; a control at an
-  edge is disabled (out of the tab order, dimmed) unless `loop`.
+  edge is disabled (out of the tab order, painted with the theme's
+  `disabled`/`disabledForeground` pair) unless `loop`. The control is a filled
+  `secondary` action, so it wears the measured pair rather than a fade.
 - Inactive slides stay in the tree with `display: none`; a screen reader does not
   announce them, and their component state survives.
 - There is no `aria-roledescription="carousel"` or slide-position announcement

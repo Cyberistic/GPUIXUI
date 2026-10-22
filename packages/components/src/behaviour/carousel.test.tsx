@@ -9,7 +9,11 @@
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { contrastFloorsFor, contrastRatio } from "@gpuixui/tokens";
+import {
+  contrastFloorsFor,
+  contrastRatio,
+  disabledAction,
+} from "@gpuixui/tokens";
 import { useState } from "react";
 import {
   Carousel,
@@ -128,7 +132,15 @@ describe("Carousel", () => {
 
     clickCentreOf(gallery, "next");
     expect(onValueChange).not.toHaveBeenCalled();
-    expect(gallery.renderer.findByTestId("next")?.style.opacity).toBe(0.5);
+    // An edge control is disabled: it leaves the tab order and wears the
+    // measured neutral pair rather than a fade (`internal/button.tsx`).
+    const disabled = disabledAction(darkTheme);
+    expect(gallery.renderer.findByTestId("next")?.style.backgroundColor).toBe(
+      disabled.backgroundColor,
+    );
+    expect(gallery.renderer.findByTestId("next")?.style.color).toBe(
+      disabled.color,
+    );
 
     gallery.unmount();
 
