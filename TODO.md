@@ -677,7 +677,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 97/97
+`[x]` `[██████████]` 98/98
 
 `[x]` Measure **a box's own edges and fill** — the `Box` page tells a consumer to
       pass a dashed border, a per-side width and a per-corner radius through
@@ -736,6 +736,32 @@ a workaround for two live sessions sharing one worktree; see
       §`elevation-paint`, `.artifacts/live/elevation-paint.png`; the capability
       record's **`boxShadow`, including `inset`** row now cites the probe and
       records the softness a level has.
+
+`[x]` Measure **what `opacity` paints** — the capability record called the field
+      supported because `StyleDesc` declares it, while two contracts already
+      composite through it (the disabled fade's arithmetic and the skeleton's
+      pulse) and nothing had measured a frame. The `opacity-paint` live probe
+      asks for one share per box and reads the paint: `1` is the fill exactly, `0`
+      the page exactly, `0.5` is **`136,39,37`** — the `255,59,48` fill's channel
+      and the `17,20,26` page's added at the share, inside the byte the frame
+      rounds — `0.25` is **`76,30,31`** and nearer the page on every channel, and
+      `1.5` is the fill, so a share above one clamps instead of brightening. The
+      share reaches the **subtree**: a full-colour line inside a half-opacity
+      parent paints **`0`** pixels of its exact ink where the same line in an
+      opaque parent paints **`1091`**, so a disabled field fades as one thing. A
+      shadow fades with the layer too: an opaque `#0A84FF` shadow under a
+      half-opacity box paints **`13,76,140`**, the shadow mixed with the page at
+      the share, so a ghost surface cannot keep a full shadow. 16 checks,
+      `--only opacity-paint`, green on 0.11.0 (~0.5 s). Fixture:
+      `src/live/opacity.ts` + `opacity.test.ts` (7 cases: the mix at both shares
+      and both ends, a box at another share and one with the operands swapped
+      refused — the failure a bare "it changed" check would pass — the rows kept
+      inside the window, and the README's heading, count and values).
+      `withinBytes`/`mixedAt` are the prediction the probe asserts, so a drifted
+      share fails by the byte it moved. Evidence: `apps/playground/README.md`
+      §`opacity-paint`, `.artifacts/live/opacity-paint.png`; the capability
+      record's **Opacity** row now cites the probe and states the two limits a
+      component composes around (one share fades a subtree; a faded shadow fades).
 
 `[x]` Measure **what a line that does not fit paints** — every table cell, tab
       label, tree row and list title keeps its run on one line, and the capability

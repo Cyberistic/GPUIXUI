@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-64 probes a real window can prove, of which fifteen mount shipped
+65 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3613,6 +3613,57 @@ surface:
 The capability record's **`boxShadow`, including `inset`** row now cites this
 probe.
 
+### `opacity-paint` — measured on 0.11.0 here
+
+**What `StyleDesc.opacity` paints.** The capability record calls it supported
+because the field exists, and two contracts already composite through it: the
+disabled fade (`disabledFadePairs` reasons about a control at a share of its own
+opacity) and the skeleton's pulse. Nothing had measured the paint, and the three
+questions a component needs are not in the typings: is a fill mixed with the page
+at the share it asks for, does the share reach the subtree a parent holds (a
+disabled field's label is a child), and does a shadow under the box fade with it.
+
+| State | Measured |
+| ----- | -------- |
+| `opacity: 1` on a `#FF3B30` box | the fill exactly, so the resting case is not a washed one |
+| `opacity: 0` | the page exactly — an invisible box paints nothing, not a black one |
+| `opacity: 0.5` | **`136,39,37`**: the fill's channel and the page's added at the share (`136`, `39.5`, `37` from a `255,59,48` fill on `17,20,26`), inside the byte the frame's own conversion rounds |
+| `opacity: 0.25` | **`76,30,31`**, and nearer the page than the half box by every channel's distance |
+| `opacity: 1.5` | the fill exactly: a share above one clamps rather than brightening the colour |
+| a child line at full colour inside a half-opacity parent | **0** pixels of its exact ink, where the same line inside an opaque parent paints **`1091`** — a parent's share reaches the ink its child paints, which is what makes a disabled control fade as one thing |
+| an opaque `#0A84FF` shadow under a half-opacity box | **`13,76,140`** — the shadow's channel added to the page's at 0.5 — so the shadow fades with the layer rather than standing at full strength under a faded surface |
+
+16 checks, `--only opacity-paint`, green on 0.11.0 (~0.5 s). Fixture:
+`src/live/opacity.ts` — the ids, the shares, the fill/ink/shadow colours and the
+`mixedAt`/`withinBytes` prediction; `opacity.test.ts` (7 cases) holds the mix at
+both shares and both ends, refuses a box at another share and one whose operands
+are swapped (the failure a bare "it changed" check would pass), keeps the rows
+inside the window, and holds this section's heading, count and printed values.
+
+One negative control was measured, exit `1`, restored green: painting the half
+box at **0.4** fails `a half-opacity box paints the fill mixed with the page at
+half` — the prediction is the share, not merely that the colour moved.
+
+Captures: `.artifacts/live/opacity-paint.png`.
+
+What it settles, for every faded surface in the library:
+
+1. **Opacity is a byte-space mix at the share asked for.** A half box is the
+   fill and the page added at 0.5, not a colour of the runtime's own choosing, so
+   the disabled fade's arithmetic — a control's text role composited at a share
+   of its own opacity — describes what a reader sees.
+2. **A share reaches the subtree.** A parent at 0.5 paints **none** of its
+   child's ink at full colour, so a disabled field is faded as a whole; a control
+   that needs one part to stay legible has to fade per element instead.
+3. **A shadow fades with the layer.** A faded card's shadow is the shadow mixed
+   with the page at the same share, so a "ghost" surface cannot keep a full
+   shadow and look raised.
+4. **`opacity: 1.5` is the fill.** A share above one is clamped, not a
+   brightening, so a caller's animation overshoot cannot paint a colour that
+   never existed in the theme.
+
+The capability record's **Opacity** row now cites this probe.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3826,8 +3877,8 @@ narrower. Each deviation is deliberate and measured:
   paint, which records all three measured shapes and the waits that replaced
   them. The full live suite is the release gate, and this line is its result.
   Measured alone since then: `inspector-lifecycle`,
-  `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`
-  and `elevation-paint` (six probes, each run alone).
+  `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
+  `elevation-paint` and `opacity-paint` (seven probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

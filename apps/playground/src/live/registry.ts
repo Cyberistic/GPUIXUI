@@ -420,6 +420,12 @@ export const liveRegistry = [
       "Content: a box shadow paints the band its offset covers, a blur fades past the edge, a spread paints every side, an inset paints inside, a list paints every entry, and the shipped levels shade the page",
     capability: "content",
   },
+  {
+    id: "opacity-paint",
+    title:
+      "Content: opacity mixes a box with the page in its share's direction, zero is the page, above one is the fill, a parent fades the ink its child paints, and a faded box's shadow fades with it",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

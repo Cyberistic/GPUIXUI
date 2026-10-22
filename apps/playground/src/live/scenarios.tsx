@@ -565,6 +565,21 @@ import {
   ELEVATION_UNREADABLE,
   ELEVATION_WIDTH,
 } from "./elevation.js";
+import {
+  mixedAt,
+  OPACITY_ABOVE_ONE,
+  OPACITY_FILL,
+  OPACITY_HALF,
+  OPACITY_HEIGHT,
+  OPACITY_IDS,
+  OPACITY_INK,
+  OPACITY_QUARTER,
+  OPACITY_SHADOW,
+  OPACITY_SHADOW_OFFSET,
+  OPACITY_SHADOW_SAMPLE,
+  OPACITY_WIDTH,
+  withinBytes,
+} from "./opacity.js";
 /** Long enough for one paint after an input reaches the window. */
 const SETTLE = Duration.millis(40);
 
@@ -17919,6 +17934,207 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * What `opacity` paints: one share per box, a parent that fades the ink its child
+ * paints, and a shadow under a faded box. The checks are the orderings a fade
+ * owes rather than exact bytes, because the runtime composites in its own space.
+ */
+const OpacityProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: 16,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: 40,
+    height: 150,
+  };
+  const box = (opacity: number): StyleDesc => ({
+    width: OPACITY_WIDTH,
+    height: OPACITY_HEIGHT,
+    backgroundColor: OPACITY_FILL,
+    opacity,
+  });
+  /** A box at `opacity` holding a full-colour line, so a parent's share reaches it. */
+  const withInk = (testId: string, inkId: string, opacity: number) => (
+    <div testId={testId} style={box(opacity)}>
+      <text
+        testId={inkId}
+        style={{ ...textStyle(theme, "body"), color: OPACITY_INK }}
+      >
+        GPUIXUI FADES
+      </text>
+    </div>
+  );
+  return (
+    <div testId="opacity-probe" style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Opacity mixes a box with the page, reaches the ink its children paint,
+        and fades the shadow it casts.
+      </text>
+      <div style={{ height: 24 }} />
+      <div style={row}>
+        <div testId={OPACITY_IDS.full} style={box(1)} />
+        <div testId={OPACITY_IDS.half} style={box(OPACITY_HALF)} />
+        <div testId={OPACITY_IDS.quarter} style={box(OPACITY_QUARTER)} />
+        <div testId={OPACITY_IDS.hidden} style={box(0)} />
+        <div testId={OPACITY_IDS.clamped} style={box(OPACITY_ABOVE_ONE)} />
+      </div>
+      <div style={row}>
+        {withInk(OPACITY_IDS.exactParent, OPACITY_IDS.exactInk, 1)}
+        {withInk(OPACITY_IDS.fadedParent, OPACITY_IDS.fadedInk, OPACITY_HALF)}
+        <div
+          testId={OPACITY_IDS.shadow}
+          style={{
+            ...box(OPACITY_HALF),
+            boxShadow: {
+              offsetX: 0,
+              offsetY: OPACITY_SHADOW_OFFSET,
+              blurRadius: 0,
+              spreadRadius: 0,
+              color: OPACITY_SHADOW,
+            },
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(OPACITY_IDS.full);
+    const window = yield* ctx.host.windowSize();
+    yield* ctx.host.capture("opacity-paint");
+    const frame = yield* ctx.host.pixels("opacity-paint");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+    const pageHex = palettes.dark.colors.background;
+    const page = yield* ctx.expectSome(
+      "the page's role is a colour a sample can be compared with",
+      Option.fromNullishOr(Pixels.hexToRgba(pageHex)),
+    );
+    const fill = yield* ctx.expectSome(
+      "the box's fill is a colour a sample can be compared with",
+      Option.fromNullishOr(Pixels.hexToRgba(OPACITY_FILL)),
+    );
+
+    const boxOf = (id: string) =>
+      Effect.gen(function* () {
+        const painted = yield* ctx.host.bounds(id);
+        return yield* ctx.expectSome(
+          `${id} reports its painted box`,
+          Option.fromNullishOr(painted),
+        );
+      });
+
+    const at = (point: PaintPoint) =>
+      ctx.expectSome(
+        "the sampled point is inside the capture",
+        colourAt(frame, point, scale),
+      );
+
+    /** The middle of a box, which no child ink covers. */
+    const middleOf = (id: string) =>
+      Effect.gen(function* () {
+        const painted = yield* boxOf(id);
+        return yield* at({
+          x: painted.x + 4,
+          y: painted.y + painted.height - 4,
+        });
+      });
+
+    // 1. The two ends: a share of one is the fill, a share of zero is the page.
+    const opaque = yield* middleOf(OPACITY_IDS.full);
+    const hidden = yield* middleOf(OPACITY_IDS.hidden);
+    yield* ctx.expectEqual(
+      "a box at opacity 1 paints its own fill",
+      isColour(opaque, OPACITY_FILL),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a box at opacity 0 paints nothing over the page",
+      isColour(hidden, pageHex),
+      true,
+    );
+
+    // 2. A share mixes the fill with the page, in the share's direction.
+    const half = yield* middleOf(OPACITY_IDS.half);
+    const quarter = yield* middleOf(OPACITY_IDS.quarter);
+    yield* ctx.expectEqual(
+      "a half-opacity box paints the fill mixed with the page at half",
+      withinBytes(half, mixedAt(fill, page, OPACITY_HALF)),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a quarter-opacity box reads nearer the page than a half-opacity one",
+      distanceFrom(quarter, page) < distanceFrom(half, page),
+      true,
+    );
+
+    // 3. A share above one is not a brighter colour: it is the fill.
+    const clamped = yield* middleOf(OPACITY_IDS.clamped);
+    yield* ctx.expectEqual(
+      "an opacity above one paints the fill at full strength",
+      isColour(clamped, OPACITY_FILL),
+      true,
+    );
+
+    // 4. A parent's share reaches the ink its child paints.
+    const exactParent = yield* boxOf(OPACITY_IDS.exactParent);
+    const fadedParent = yield* boxOf(OPACITY_IDS.fadedParent);
+    const exactInk = yield* ctx.expectSome(
+      "the opaque box's ink is inside the capture",
+      countPaint(frame, exactParent, scale, OPACITY_INK),
+    );
+    const fadedInk = yield* ctx.expectSome(
+      "the faded box's ink is inside the capture",
+      countPaint(frame, fadedParent, scale, OPACITY_INK),
+    );
+    yield* ctx.expectEqual(
+      "an opaque box paints its child's ink at full colour",
+      exactInk > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a half-opacity parent fades the ink its child paints",
+      fadedInk,
+      0,
+    );
+
+    // 5. A shadow under a faded box fades with it, and stays a shadow.
+    const shadow = yield* boxOf(OPACITY_IDS.shadow);
+    const shade = yield* at({
+      x: shadow.x + shadow.width / 2,
+      y: shadow.y + shadow.height + OPACITY_SHADOW_SAMPLE,
+    });
+    yield* ctx.expectEqual(
+      "a faded box's shadow is no longer its own colour",
+      isColour(shade, OPACITY_SHADOW),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "the faded shadow still paints away from the page",
+      differs(shade, page),
+      true,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -18241,5 +18457,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "elevation-paint",
     view: () => <ElevationProbe />,
     steps: elevationSteps,
+  },
+  "opacity-paint": {
+    id: "opacity-paint",
+    view: () => <OpacityProbe />,
+    steps: opacitySteps,
   },
 };
