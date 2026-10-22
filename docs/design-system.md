@@ -537,8 +537,8 @@ tonal action painted the same box in the variant a reader selects *for* clarity,
 and high-contrast light's disabled face was also 1.03:1 from the `accent` a
 checked toggle wears. The quiet step (`#F2F2F2` / `#1A1A1A`) clears all five.
 The strip behind the control is deliberately not measured: the base light
-theme's `disabled` *is* its `muted`, the base dark theme's is its `popover` and
-toolbar, and both high-contrast variants' is now their `muted` — a quiet fill on
+theme's `disabled` *is* its `muted`, the base dark theme's is its `popover`, and
+both high-contrast variants' is their `muted` — a quiet fill on
 a quiet strip is the design, a quiet fill on an enabled face is the defect.
 
 **Keyboard focus dims every other control, and that is a paint too.** While one
@@ -557,9 +557,10 @@ is elsewhere opts out of the dim. `keyboardDimFailures` measures the 40
 placements the three filled actions, a field (both of its fills, its value and
 its placeholder), a focusable row and a selected row sit on; the composite is
 the disabled fade's, with the label over the *dimmed*
-fill — measured in the `keyboard-focus-dim` window capture, which paints the
-dark `muted` fill `#222730` as `#181C23` and the `foreground` text `#EEF1F5` as
-`#6E7177`. The lowest field placement is macOS light's
+fill — the `keyboard-focus-dim` window capture measured both the share and that
+model; against the shipped dark palette the pair is the `muted` fill `#1E222A`
+painted as `#161A20` and the `foreground` text `#EEF1F5` as `#6C7075` over it.
+The lowest field placement is macOS light's
 composite hint on a muted strip at **1.68:1**, still above the cue's floor.
 It is the gate's tenth report (`audit.keyboardDim`): the dim and the
 disabled fade are the same composite with two shares, so no palette fails the
@@ -640,8 +641,9 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
-| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
+| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, rail, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
+| a bar's rail (`muted`) on background, card and popover — never on the muted strip it is made of | 1.05:1 | 1.05:1 |
 | a disabled action's fill against each face an enabled control wears (`primary`, `secondary`, `destructive`, `accent`, `input`) | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 | text inside the selection wash (input, page, card, popover, a message bubble's muted fill) | 7:1 | 7:1 |
@@ -658,9 +660,9 @@ can fail: a palette edit that reduces contrast fails the gate.
 A **message bubble** is the fifth content surface in the selection contract. A
 user message is painted on the `muted` fill and its body copy keeps
 `foreground`, so a selectable run inside it is washed over the bubble rather
-than the page. Measured, Aero dark's 30% share left it at 6.55:1; the look
+than the page. Measured, Aero dark's 30% share left it at 6.74:1; the look
 carries the 24% its siblings use (7.49:1), and the tightest bubble in the
-library is Windows XP (Luna) dark at 7.12:1. The bubble paints no secondary
+library is Windows XP (Luna) dark at 7.20:1. The bubble paints no secondary
 line of its own, so it is measured for the body role alone.
 
 A **saturated state tone** is not a selection surface. A box also paints
@@ -684,7 +686,7 @@ a composite field paints the page role, so its value and placeholder sit on
 light's placeholder at 4.35:1 on its own window and macOS light's inherited value
 at 4.49:1 on its, both under the 4.5:1 floor, so those values moved (§7). The
 faint role then had to clear the same floor on a **chrome stripe**: a `<diff>`
-hunk header is `muted` and its text is the faint role, which measured 4.03:1 on
+hunk header is `muted` and its text is the faint role, which measured 4.29:1 on
 the dark base's own toolbar, so the whole faint scale moved a step. The caret
 joined the mark contract on the same fill: `indicatorSurfaces` names `input` as
 its last strip, because the native text host paints the caret there.
@@ -731,11 +733,18 @@ repaints `foreground` or authors its own tint is measured there.
 The surfaces that carry no text are measured too, because "subtle" is not
 "invisible": a divider, a skeleton fill, the modal veil, a status message's soft
 tint and its edge, the scrollbar thumb, the wash a row is hovered, pressed,
-selected or accented with, the resting fill of a tonal action, the face a
+selected or accented with, the resting fill of a tonal action, the rail a bar
+draws its value inside, the face a
 disabled control wears and the shadow of a
 raised surface are held to 1.05:1 against what they are painted on. A loading
 dialog's skeleton is measured on the dialog's own `popover` fill, not only on
-the page, a card and a muted list. The veil is composited over its surface rather than rejected as
+the page, a card and a muted list. The rail is measured on the page, a card and
+a popover — never on the `muted` strip it is made of — and the five dark quiet
+surfaces moved a step so a bar in a dialog has a total to read: the base dark
+theme's `muted` **was** its `popover` at 1.000:1, and Windows dark's rail was
+1.014:1 on its card, macOS dark's 1.028:1 and Aero dark's 1.013:1 on their
+dialogs. The tightest rail is Windows 7 (Aero) dark's on its dialog fill at
+1.052:1. The veil is composited over its surface rather than rejected as
 translucent, and it is measured on every content strip a window holds behind a
 modal — a card, a popover, a sidebar's `muted` toolbar, a segmented `secondary`
 panel, a field's `input` fill, the `selected` wash a chosen row wears and the

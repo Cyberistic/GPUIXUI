@@ -9,12 +9,13 @@
  * on the surface behind the control, so no role pair measures it.
  *
  * The factor is the runtime's, not a theme's: `keyboardFocusDimOpacity` records
- * what `0.11.0` paints, measured from the `keyboard-focus-dim` window capture
- * (the dark theme's `muted` fill `#222730` paints `#181C23` over the page, and
- * its `foreground` text `#EEF1F5` paints `#6E7177` over that fill — both
- * `blend(colour, behind, 1 - 0.4)`, and the text over the *dimmed* fill rather
+ * what `0.11.0` paints, measured from the `keyboard-focus-dim` window capture —
+ * the share, and the fact that the text composites over the *dimmed* fill rather
  * than over the page, which is the composite this module shares with the
- * disabled fade).
+ * disabled fade. The colours a reader sees are the shipped palette's: the dark
+ * `muted` fill `#1E222A` paints `#161A20` over the page, and its `foreground`
+ * text `#EEF1F5` paints `#6C7075` over that fill — both
+ * `blend(colour, behind, 1 - 0.4)`.
  */
 
 import type { ThemeColors } from "./color.js";

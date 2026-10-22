@@ -3668,6 +3668,36 @@ a workaround for two live sessions sharing one worktree; see
       README's capability table, the `Selects` inventory record (`yes` →
       `partial`) and the `COMPONENTS.md` row.
 
+`[x]` `packages/primitives`: **the slider had no second axis** — `Slider` and
+      `RangeSlider` read a pointer's `x` and always laid a row, so a level, a
+      fader or a vertical band had to be faked outside the part model. Both now
+      take `orientation="vertical"`: `core/value.ts` reads a vertical track from
+      its **bottom** (`verticalPointerValue`, so the ceiling is the maximum),
+      `core/style.ts` turns the track, rail, fill and thumb onto the other axis
+      (the control's height becomes the track's width, the thumb's half-side
+      pull is vertical), and the recipes compile to the same `StyleDesc` the
+      geometry oracle resolves. The runtime has no `column-reverse` — measured in
+      the TestRenderer, where it paints a top-down column — so `SliderTrack`
+      flattens and mirrors its parts and packs them to the floor, keeping the
+      caller's composition order start-to-end. Proof: `core/value.test.ts` (the
+      inverted mapping, the clamps, a degenerate box and a non-finite position),
+      `core/style.test.ts` (all four vertical parts), `recipe/geometry.test.ts`
+      (the compiled vertical recipes equal the oracle), `Slider.test.tsx` (the
+      default composition's column, rail, fill share and vertical thumb pull,
+      and a vertical range's second segment), `runtime/value.runtime.test.tsx`
+      (a real click at 25% from the bottom reports 25 with the thumb centred on
+      it, a drag that leaves the track reaches 100 and stops on release, the
+      arrows move a vertical value, and a vertical range moves the end a press
+      grabbed) and `docs.test.ts` (both pages keep the prop, its two limits and
+      the painter's axis). Three directions measured: un-inverting the pointer
+      fails all three window cases by name, dropping the mirror fails the thumb
+      centre case, and removing the page's API row fails the docs case. Docs:
+      `docs/slider.mdx`/`docs/range-slider.mdx` §API/§Theming/§Accessibility/
+      §Limitations/§Verification, `examples/value.example.tsx` (a vertical
+      master level), the two inventory records and the two `COMPONENTS.md` rows.
+      `aria-orientation` stays absent (0.11.0 publishes no such attribute), which
+      both pages state.
+
 `[x]` `packages/components`: the focus cue was missing on four focusable parts and
       painted on parts that could not act. A colour swatch, a chip's remove
       control, the command palette's field and the combobox trigger/search field

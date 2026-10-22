@@ -266,7 +266,12 @@ export const darkColors = {
   primaryForeground: palette.neutral[950],
   secondary: palette.neutral[800],
   secondaryForeground: palette.neutral[200],
-  muted: palette.neutral[850],
+  // A step between the card and the floating `popover` fill, which was this
+  // role's own value: two surfaces that share a fill cannot hold a bar's rail,
+  // so a `Progress` in a dialog painted one colour with no track (1.000:1). The
+  // quiet surface stays above the card, and the rail is measured on the page, a
+  // card and a popover (`decorative.ts`).
+  muted: "#1E222A",
   // A step lighter than the grey ramp's 400: secondary text also sits under the
   // text-selection wash, which costs it contrast on every surface it covers.
   mutedForeground: "#C1C7D1",

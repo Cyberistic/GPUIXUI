@@ -107,7 +107,10 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     popover: "#1C3250",
     input: "#0B1626",
     secondary: "#3A4A5E",
-    muted: "#1B2F4A",
+    // The bar rail is `muted`, measured on the page, a card and this popover;
+    // the inherited step sat 1.045:1 from the popover. A step darker clears both
+    // without touching the look's navy page.
+    muted: "#1B2E49",
     mutedForeground: "#B4C6DD",
     hover: "#223A58",
     active: "#2A4464",
@@ -170,7 +173,9 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     popover: "#1C3040",
     input: "#0A141C",
     secondary: "#33475A",
-    muted: "#1D2F3D",
+    // The bar rail is `muted`; the inherited step sat 1.013:1 from this popover
+    // and 1.097:1 from the card, so a bar in a dialog had no track.
+    muted: "#1A2C3C",
     mutedForeground: "#BCCEDF",
     hover: "#25394A",
     active: "#2D4356",

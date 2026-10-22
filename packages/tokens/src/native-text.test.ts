@@ -597,7 +597,7 @@ describe("the diff host's colours", () => {
     // Measured before the fix: the dark base's placeholder on its own toolbar,
     // and every light style's on the platform toolbars and the two looks.
     expect(contrastRatio("#7C8595", darkTheme.colors.muted)).toBeCloseTo(
-      4.03,
+      4.29,
       2,
     );
     expect(

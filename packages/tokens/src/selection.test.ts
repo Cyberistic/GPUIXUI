@@ -147,7 +147,7 @@ describe("every theme the library ships", () => {
     );
     const tightest = Math.min(...ratios);
 
-    expect(tightest).toBeCloseTo(7.12, 2);
+    expect(tightest).toBeCloseTo(7.2, 2);
     expect(read("../../../docs/tokens.md")).toContain(tightest.toFixed(2));
   });
 });
@@ -174,7 +174,7 @@ describe("selectionFailures", () => {
     // The regression: the fifth content surface is the `muted` bubble a chat
     // user message is painted on (`MESSAGE_BUBBLES.user` is `bg-muted`), and a
     // selectable `Text` inside it washes its run over that fill. Aero dark's
-    // 30% wash took the bubble's body text to 6.55:1 against the 7:1 floor.
+    // 30% wash took the bubble's body text to 6.74:1 against the 7:1 floor.
     const before = {
       colors: {
         ...retroTheme(themes.dark, "aero").colors,
@@ -186,7 +186,7 @@ describe("selectionFailures", () => {
     );
 
     expect(failure?.floor).toBe(7);
-    expect(failure?.ratio).toBeCloseTo(6.55, 2);
+    expect(failure?.ratio).toBeCloseTo(6.74, 2);
     expect(selectionFailures(retroTheme(themes.dark, "aero"))).toEqual([]);
   });
 

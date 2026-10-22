@@ -3,8 +3,9 @@
  * skeleton fills, the modal veil, a status message's soft surface and its edge,
  * the scrollbar thumb, the wash a control tints its surface with while it is
  * hovered, pressed, selected or accented, the fill a tonal action rests on, the
- * face a control wears while it is unavailable, the derived hover and press a
- * filled role paints, and the shadow a raised surface drops.
+ * rail a bar draws its value inside, the face a control wears while it is
+ * unavailable, the derived hover and press a filled role paints, and the shadow a
+ * raised surface drops.
  *
  * WCAG's text and non-text floors do not cover them — they are decorative, and
  * the veil's job is to suppress what is behind it — so they have no floor at all
@@ -16,11 +17,12 @@
  * sits in is a status message with no surface; an edge that matches its tint is
  * a message with no boundary; a hover that matches the row it tints is a menu
  * with no feedback; a tonal action painted in its toolbar's own colour is a
- * label a reader cannot tell is a button; a disabled control painted in the face
+ * label a reader cannot tell is a button; a rail that matches the fill a bar sits
+ * on is a bar with no total; a disabled control painted in the face
  * of the one it replaced looks available; a filled action's derived step that
  * lands on the fill it replaces is an action that does not answer the pointer; a
  * shadow that cannot darken the page it falls on leaves every raised surface
- * flat. One floor covers all eleven, 1.05:1.
+ * flat. One floor covers all twelve, 1.05:1.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -53,7 +55,8 @@ export interface DecorativeSurface {
    * fill behind a status message, `statusEdge` bounds it, `scrollbar` is the
    * thumb a scroller paints, `stateWash` is the tint behind a hovered, pressed,
    * selected or accented row, `filledAction` is the resting fill of a tonal
-   * action, `disabledFace` is the fill a control wears while it is unavailable,
+   * action, `track` is the rail a progress bar, meter or slider draws its value
+   * inside, `disabledFace` is the fill a control wears while it is unavailable,
    * `actionFeedback` is the derived hover or press a filled role paints (its
    * placements are {@link actionFeedbackPlacements}, because the paint is
    * derived rather than a role), and `elevation` is the shadow a raised surface
@@ -68,6 +71,7 @@ export interface DecorativeSurface {
     | "scrollbar"
     | "stateWash"
     | "filledAction"
+    | "track"
     | "disabledFace"
     | "actionFeedback"
     | "elevation";
@@ -167,6 +171,28 @@ const filledActionRole = "secondary" as const;
 const filledActionStrips = ["background", "card", "popover", "muted"] as const;
 
 /**
+ * The rail a bar's value is drawn inside.
+ *
+ * `Progress`, `Meter` and `Slider` paint their track `colors.muted`
+ * (`progressTrackClass` and `sliderRailClass` in `@gpuixui/primitives`), and a
+ * rail that matches the fill behind it leaves a 40% bar reading as a small
+ * floating pill with no total. The strips are the three surfaces a bar is
+ * placed on: the page, a card, and the floating `popover` fill of a dialog or a
+ * popover. The `muted` strip is deliberately **not** one of them — the quiet
+ * fill *is* the strip there, the same exemption `disabledFace` makes — so the
+ * rail is never measured against itself.
+ *
+ * Measured, the base dark theme's `muted` was its own `popover` (**1.000:1**), so
+ * a progress bar in a dialog had no track whatsoever; Windows dark sat at
+ * 1.014:1 on its card and 1.042:1 on its popover, Aero dark at 1.013:1, macOS
+ * dark at 1.028:1 and Luna dark at 1.045:1. The five dark `muted` roles are a
+ * step darker now, between the card and the popover, which is what gives the
+ * rail a step to be seen against.
+ */
+const trackRole = "muted" as const;
+const trackStrips = ["background", "card", "popover"] as const;
+
+/**
  * The pointer feedback a filled role paints: its hover and its press, each a
  * derived fill the role moves toward the theme's foreground (`filledHover` /
  * `filledPressed`).
@@ -259,8 +285,8 @@ export function actionFeedbackFailures(
  * The strip behind the control is deliberately **not** measured: the neutral
  * `disabled` fill is a quiet surface by design, and in four shipped styles it
  * carries a quiet strip's own value (the base light theme's `disabled` *is* its
- * `muted`, the base dark theme's is its `popover` and toolbar, both
- * high-contrast variants' is their `secondary`). A fill that matched an enabled
+ * `muted`, the base dark theme's is its `popover`, and both high-contrast
+ * variants' is their `muted`). A fill that matched an enabled
  * face is the state defect; a fill that matches a toolbar is a quiet control on
  * a quiet strip.
  */
@@ -413,6 +439,13 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
     (over): DecorativeSurface => ({
       surface: "filledAction",
       role: filledActionRole,
+      over,
+    }),
+  ),
+  ...trackStrips.map(
+    (over): DecorativeSurface => ({
+      surface: "track",
+      role: trackRole,
       over,
     }),
   ),

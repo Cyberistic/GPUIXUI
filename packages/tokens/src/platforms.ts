@@ -152,7 +152,13 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         popover: "#2C2C30",
         input: "#1F1F22",
         secondary: "#3A3A3C",
-        muted: "#2A2A2E",
+        // The bar rail is `muted`, measured on the page, a card, this popover
+        // and a field's `input` fill. The inherited value sat 1.028:1 from the
+        // popover; the card and the popover are one step apart, and the field
+        // fill the diff pane paints sits just above the page, so no step between
+        // them clears the rail. The quiet surface takes the recessed step below
+        // the page instead — the same direction the light themes take it.
+        muted: "#16161A",
         // A loading dialog paints its skeleton rows on this popover fill; the
         // inherited base skeleton sat 1.049:1 from it, so the dialog looked
         // empty rather than loading.
@@ -263,7 +269,10 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         popover: "#2D2D2D",
         input: "#1F1F1F",
         secondary: "#3A3A3A",
-        muted: "#2A2A2A",
+        // The bar rail is `muted`; the inherited value sat 1.014:1 from this
+        // card and 1.042:1 from the popover, so a bar in a dialog or on a card
+        // had no track. A step darker clears both.
+        muted: "#262626",
         // A loading dialog paints its skeleton rows on this popover fill; the
         // inherited base skeleton sat 1.039:1 from it.
         skeleton: "#323232",

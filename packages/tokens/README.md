@@ -349,9 +349,10 @@ element's** opacity by `keyboardFocusDimOpacity` (`0.4`) — but a focused
 filled action beside a form keeps its label while a reader types. The field is
 on by default, per element, and an element that draws its own focus look opts out
 with `keyboardFocusDim: false`. The share is measured, not assumed: the
-`keyboard-focus-dim` window capture paints the dark theme's `muted` fill
-`#222730` as `#181C23` and its `foreground` text `#EEF1F5` as `#6E7177` over that
-fill, which is `blend(colour, behind, 1 - 0.4)`.
+`keyboard-focus-dim` window capture measured it and the model — a dimmed label
+lands on its own dimmed fill, not on the page. Against the shipped dark palette
+the `muted` fill `#1E222A` paints `#161A20` and its `foreground` text `#EEF1F5`
+paints `#6C7075` over that fill, which is `blend(colour, behind, 1 - 0.4)`.
 
 `keyboardDimPairs` is the 40 placements the three filled actions, a field's
 value and placeholder in both of its fills (a plain field's `input` and the page
@@ -391,9 +392,9 @@ so the wash buried them. The base light secondary text is `#4B5362` and the dark
 one `#C1C7D1` — a step further from their surfaces — with the two authored looks
 carrying their own tint, and the high-contrast dark wash at 26% so its 7:1
 secondary text clears the composite. The bubble was the fifth surface it found:
-Aero dark's 30% share left a user message's body text at 6.55:1, so that look
+Aero dark's 30% share left a user message's body text at 6.74:1, so that look
 carries the 24% its siblings use, and the tightest bubble in the library is Luna
-dark at 7.12:1. A runnable example lives in
+dark at 7.20:1. A runnable example lives in
 [`src/selection.example.ts`](./src/selection.example.ts).
 
 The two **saturated state tones** are deliberately not surfaces: a box paints
@@ -645,13 +646,18 @@ Each report is also a function of its own:
   nothing can darken a black page), a
   status tone's soft tint and its edge, a
   scrollbar thumb, the wash a hovered or selected row is tinted with, the fill a
-  tonal action rests on, the derived hover and press of every filled role (a
+  tonal action rests on, a bar's rail (on the page, a card and a popover — the
+  `muted` strip is exempt, because the quiet fill *is* the rail), the derived
+  hover and press of every filled role (a
   step that lands on the fill it replaces) — that is too close to what it is
   painted on to be seen,
   compositing a translucent role first. Each half found a shipped alias: the base
   dark theme's `hover` was its `popover`, so a hovered menu row painted nothing;
   light `secondary` was its `muted` value and paints no border, so a secondary
-  button in a toolbar was a label with no button around it; and the light
+  button in a toolbar was a label with no button around it; the base dark theme's
+  `muted` was its `popover`, so a progress bar in a dialog had no track, and four
+  dark styles were within 5% of the fill a bar sits on (the five quiet surfaces
+  moved a step, tightest rail now 1.052:1); and the light
   `successSoft` was 1.006:1 on the muted strip it sat in, so a soft badge there
   had no surface (the light tints moved one ramp step deeper and the dark ones one
   step lighter, with Luna — whose beige page is at a pale tint's own lightness —

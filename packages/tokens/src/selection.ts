@@ -29,7 +29,7 @@
  * user's chat bubble (`MESSAGE_BUBBLES.user` is `bg-muted`) and behind a
  * `surface="muted"` box, and a `Text selectable` inside either one hands the
  * runtime the wash over that fill. It was measured by nothing, and it found one
- * style: Aero dark's 30% wash buried the bubble's body text at 6.55:1 under the
+ * style: Aero dark's 30% wash buried the bubble's body text at 6.74:1 under the
  * 7:1 floor, so the look carries the same 24% share its siblings use. The
  * bubble paints body copy only — its author line sits outside it — so the muted
  * surface is measured for the body role alone.

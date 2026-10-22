@@ -137,7 +137,7 @@ tool never has to copy the palette out of this page.
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `secondary` | `#E1E5EC` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
-| `muted` | `#EEF1F5` | `#222730` | quiet surface |
+| `muted` | `#EEF1F5` | `#1E222A` | quiet surface |
 | `mutedForeground` | `#4B5362` | `#C1C7D1` | secondary text |
 | `accent` | `#E0E3FF` | `#2E2370` | tinted emphasis surface |
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
@@ -740,7 +740,7 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `card` | `#FFFFFF` | `#26262A` | `#FFFFFF` | `#303030` | `#FFFFFF` | `#2B2B2B` |
 | `popover` | `#FFFFFF` | `#2C2C30` | `#FFFFFF` | `#383838` | `#FFFFFF` | `#2D2D2D` |
 | `input` | `#FFFFFF` | `#1F1F22` | `#FFFFFF` | `#212121` | `#FFFFFF` | `#1F1F1F` |
-| `muted` | `#E9E9EF` | `#2A2A2E` | `#ECEBE9` | `#2A2A2A` | `#EBEBEB` | `#2A2A2A` |
+| `muted` | `#E9E9EF` | `#16161A` | `#ECEBE9` | `#2A2A2A` | `#EBEBEB` | `#262626` |
 | `skeleton` | `#DCDFE7` | `#303036` | base | `#3E3E3E` | base | `#323232` |
 | `secondary` | `#DEE3EA` | `#3A3A3C` | base | `#404040` | base | `#3A3A3A` |
 | `hover` | `#E2E2E8` | `#35353B` | `#E3E2DF` | `#343434` | `#E0E0E0` | `#333333` |
@@ -1777,14 +1777,16 @@ library triggers was measured by nothing. `keyboardFocusDimOpacity` is that shar
 (`0.4`) and `keyboardDimFailures(theme, floor?)` measures it by compositing.
 
 The share is measured, not assumed: the `keyboard-focus-dim` window capture on
-0.11.0 paints the dark theme's `muted` fill `#222730` as `#181C23` over the
-page, and its `foreground` text `#EEF1F5` as `#6E7177` over *that fill*. Both are
-`blend(colour, behind, 1 - 0.4)`, and the text lands on the dimmed fill rather
-than on the page — the same composite the disabled fade uses
-(§The fade a disabled control paints), because the runtime dims each element's
-own paint. A `KeyboardDimPair` names a placement and a `KeyboardDimFailure`
-carries it with the composited `ratio` (or `undefined` for a role it cannot
-composite) and the floor.
+0.11.0 measured it, and measured which surface the text fades against — a
+dimmed control's label lands on its **own dimmed fill**, not on the page (the
+flatten-the-subtree model read a different pixel in the same capture). Against
+the shipped dark palette that pair is the `muted` fill `#1E222A` painted as
+`#161A20` over the page, and its `foreground` text `#EEF1F5` as `#6C7075` over
+*that fill*; both are `blend(colour, behind, 1 - 0.4)`. It is the same composite
+the disabled fade uses (§The fade a disabled control paints), because the
+runtime dims each element's own paint. A `KeyboardDimPair` names a placement and
+a `KeyboardDimFailure` carries it with the composited `ratio` (or `undefined`
+for a role it cannot composite) and the floor.
 
 `keyboardFocusDimOpacity` is a runtime constant rather than a `Theme` group:
 every element the runtime dims gets this share, so a brand that set its own
@@ -1824,19 +1826,21 @@ keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
 
 ### Decorative surfaces
 
-Ten surfaces carry no text and are not an essential boundary, so WCAG's floors
+Twelve surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
 (`overlay`), a status message's soft tint and its edge, a scrollbar thumb, the
 wash a row is tinted with while it is hovered, pressed, selected or accented, the
-resting fill of a tonal action (`secondary`), the face a control wears while it
-is unavailable (`disabled`), and the shadow a raised surface drops. They still
+resting fill of a tonal action (`secondary`), the rail a bar draws its value
+inside (`muted`), the face a control wears while it
+is unavailable (`disabled`), the derived hover and press a filled role paints, and
+the shadow a raised surface drops. They still
 have one job — be seen — so they get one floor of their own,
 `decorativeFloor = 1.05:1`. Below it a
 surface reads as the fill it is painted on: a card without an edge, a skeleton
 that looks like an empty row or an empty dialog, a dialog with no layer behind
 it, a message with no surface or no boundary, a scroller whose thumb nobody can
 find, a menu row that does not answer the pointer, a button that looks like a
-label, a disabled control that looks available.
+label, a bar with no total, a disabled control that looks available.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -1854,6 +1858,7 @@ how a status edge is measured at the alpha its component actually uses:
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
 | stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted` |
 | filledAction | `secondary` | `background`, `card`, `popover`, `muted` |
+| track | `muted` | `background`, `card`, `popover` (never `muted` itself) |
 | disabledFace | `disabled` | `primary`, `secondary`, `destructive`, `accent`, `input` |
 
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
@@ -1928,6 +1933,20 @@ same value as a pressed ghost, `borderStrong` darkened to `#6A7483` to keep its
 3:1 on the new fill, and each affected platform style and authored look carries
 its own control face.
 
+A **rail** is the track a bar, meter or slider draws its value inside:
+`Progress`, `Meter` and `Slider` paint it `muted` (`progressTrackClass`,
+`sliderRailClass`). A rail that matches the fill behind it leaves a 40% bar
+reading as a small floating pill with no total, and the dark palettes shipped
+exactly that where it matters most: the base dark theme's `muted` **was** its
+`popover` (1.000:1), Windows dark sat 1.014:1 on its card and 1.042:1 on its
+popover, macOS dark 1.028:1, Luna dark 1.045:1 and Aero dark 1.013:1, so a bar
+in a dialog had no track at all. The rail is measured on the page, a card and a
+popover; the `muted` strip is exempt, because the quiet fill *is* the strip
+there. The five dark quiet surfaces each moved a step — the base dark `muted` is
+`#1E222A`, macOS dark `#16161A`, Windows dark `#262626`, and Luna dark and Aero
+dark a step darker — and the tightest
+rail is Windows 7 (Aero) dark's on its dialog fill at 1.052:1.
+
 A **disabled face** is the same defect in the other direction. A disabled control
 does not sit on a strip; it replaces the control, so the comparison is face
 against face: an unavailable action that wears the fill of the enabled one beside
@@ -1944,8 +1963,8 @@ both variants. The five faces are `primary`, `secondary`, `destructive`,
 either. The **strip** behind the control is deliberately not measured — the
 neutral fill is a quiet surface by design, and in four shipped styles it carries
 a quiet strip's own value (the base light theme's `disabled` *is* its `muted`,
-the base dark theme's is its `popover` and toolbar, and both high-contrast
-variants' was their `secondary`); a fill that matches a toolbar is a quiet
+the base dark theme's is its `popover`, and both high-contrast
+variants' is their `muted`); a fill that matches a toolbar is a quiet
 control on a quiet strip, while a fill that matches an enabled face is the state
 defect.
 
@@ -2266,7 +2285,7 @@ three things per placement, in both of the fills a host can be handed:
 The hunk stripe is a `muted` toolbar, and its text is the runtime's `text_faint`
 — the `placeholder` role — so the faint role had to clear the secondary floor
 **on a chrome strip**, not only on the page. It did not: the base dark
-placeholder measured 4.03:1 on its own toolbar, and every light style was
+placeholder measured 4.29:1 on its own toolbar, and every light style was
 4.35–4.46:1 on the platform toolbars and the two authored looks. The faintest
 role is a step further from its surface now — light `#606A79`, dark `#858E9F`,
 Luna `#59616D`, Aero `#586978` — and every placement clears 4.5:1, the tightest
@@ -2815,8 +2834,8 @@ mid accent over a light card is exactly what put those three under the floor.
 fill a user message bubble is painted on (`MESSAGE_BUBBLES.user` is `bg-muted`)
 — and a selectable `Text` inside it hands the runtime the same wash over that
 fill. Aero dark still carried a 30% share, which left the bubble's body text at
-6.55:1, so it takes the 24% its siblings use; the tightest placement over a
-bubble is Windows XP (Luna) dark at 7.12:1. The bubble paints no author line of
+6.74:1, so it takes the 24% its siblings use; the tightest placement over a
+bubble is Windows XP (Luna) dark at 7.20:1. The bubble paints no author line of
 its own, so the muted surface is measured for the body role alone.
 
 **It then found the palette had no headroom.** Measuring secondary text under

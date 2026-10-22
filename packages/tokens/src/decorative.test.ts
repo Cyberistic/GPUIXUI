@@ -60,6 +60,7 @@ import {
   alpha,
   alphaOf,
   blend,
+  darkColors,
   highContrastDarkColors,
   highContrastLightColors,
   lightColors,
@@ -85,7 +86,7 @@ import {
 } from "./decorative.example.js";
 import { statusEdgeAlpha, statusTone, statusTones } from "./styles.js";
 import { platformNames, platformStyles } from "./platforms.js";
-import { retroNames, retroTheme } from "./retro.js";
+import { retroNames, retroStyles, retroTheme } from "./retro.js";
 import {
   darkTheme,
   extendTheme,
@@ -533,6 +534,88 @@ describe("decorative surfaces", () => {
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("measures a rail on every strip a bar is drawn on", () => {
+    // `Progress`, `Meter` and `Slider` paint their track `muted`; a rail that
+    // matches the strip behind it leaves a 40% bar reading as a floating pill
+    // with no total. A bar is drawn on the page, on a card and on the floating
+    // surface of a dialog or a popover.
+    const missing = ["background", "card", "popover"].filter(
+      (over) => !measured("track", "muted", over),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("does not measure a rail against the quiet strip it is made of", () => {
+    // The `muted` strip *is* the rail, the exemption `disabledFace` makes on the
+    // same strip: a placement there would compare the role with itself and pass
+    // at 1.00:1 on every theme, which reads as a contract while guarding nothing.
+    expect(measured("track", "muted", "muted")).toBe(false);
+  });
+
+  it("reads the painters that draw a bar's rail in the role it measures", () => {
+    // The placement names `muted`, so the rail the primitives paint has to be
+    // that role: a rail repainted in another role would leave the table
+    // measuring a surface nothing draws.
+    const source = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8");
+    const recipe = source("../../primitives/src/recipe/index.ts");
+    const declaration = (name: string): string => {
+      const start = recipe.indexOf(`export const ${name}`);
+      return recipe.slice(start, recipe.indexOf(";", start));
+    };
+
+    expect(declaration("sliderRailClass")).toContain("bg-muted");
+    expect(declaration("progressTrackClass")).toContain("bg-muted");
+    expect(source("../../primitives/src/components/Progress.tsx")).toContain(
+      "progressTrackClass",
+    );
+    expect(source("../../primitives/src/components/Meter.tsx")).toContain(
+      "progressTrackClass",
+    );
+    expect(source("../../primitives/src/components/Slider.tsx")).toContain(
+      "sliderRailClass",
+    );
+  });
+
+  it("reports a rail painted in the fill it sits on", () => {
+    // A dialog whose rail is the dialog's own fill is a bar with no total, which
+    // is what every dark style shipped before the quiet surface moved.
+    const broken = {
+      colors: { ...lightColors, muted: lightColors.popover },
+    };
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, role, over }) =>
+          surface === "track" && role === "muted" && over === "popover",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("reports the dark rails that matched their own dialog before this step", () => {
+    // Measured on the shipped values: the base dark theme's `muted` was its
+    // `popover`, and four platform or authored dark styles sat within 5% of the
+    // fill a dialog or a card paints.
+    const before = [
+      ["dark", darkColors, "#222730", 1],
+      ["darwin", platformStyles.darwin.colors.dark, "#2A2A2E", 1.028],
+      ["win32", platformStyles.win32.colors.dark, "#2A2A2A", 1.042],
+      ["luna", retroStyles.luna.colors.dark, "#1B2F4A", 1.045],
+      ["aero", retroStyles.aero.colors.dark, "#1D2F3D", 1.013],
+    ] as const;
+
+    before.forEach(([where, colors, muted, ratio]) => {
+      expect(contrastRatio(muted, colors.popover), where).toBeCloseTo(ratio, 3);
+    });
+    expect(
+      contrastRatio(
+        platformStyles.win32.colors.dark.muted,
+        platformStyles.win32.colors.dark.card,
+      ),
+    ).toBeGreaterThanOrEqual(decorativeFloor);
   });
 
   it("measures a disabled face against every available face it replaces", () => {
@@ -983,6 +1066,43 @@ describe("decorative surfaces", () => {
       ).toBeGreaterThanOrEqual(decorativeFloor);
       expect(decorativeFailures(shipped), platform).toEqual([]);
     });
+  });
+
+  it("prints the tightest rail placement over every shipped style", () => {
+    // A rail sits one step from three surfaces at once, so the tightest of the
+    // three is the one the palette was tuned to — printing it keeps a palette
+    // edit from leaving the catalogue teaching a number the suite no longer
+    // measures.
+    const rails = decorativeSurfaces.filter(
+      ({ surface }) => surface === "track",
+    );
+    const looks = retroNames.flatMap((look) => [
+      retroTheme(lightTheme, look),
+      retroTheme(darkTheme, look),
+    ]);
+    const tightest = [...shippedThemes, ...platformThemes, ...looks]
+      .flatMap((theme) =>
+        rails.map(({ over, role }) => ({
+          theme: theme.name,
+          over,
+          ratio: contrastRatio(theme.colors[role], theme.colors[over]),
+        })),
+      )
+      .reduce((worst, placement) =>
+        placement.ratio !== undefined &&
+        (worst.ratio === undefined || placement.ratio < worst.ratio)
+          ? placement
+          : worst,
+      );
+
+    expect(tightest.theme).toBe("Dark · Windows 7 (Aero)");
+    expect(tightest.over).toBe("popover");
+    expect(tightest.ratio).toBeCloseTo(1.052, 3);
+    expect(
+      readFileSync(new URL("../../../docs/tokens.md", import.meta.url), "utf8"),
+    ).toContain(
+      "rail is Windows 7 (Aero) dark's on its dialog fill at 1.052:1",
+    );
   });
 
   it("prints the tightest placeholder placement over every shipped style", () => {

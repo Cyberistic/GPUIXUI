@@ -6,10 +6,12 @@
  * so pressing Tab fades every other control — fill and text — and no contract
  * measured it, because `contrastRatio` refuses a translucent result. The
  * composite is the disabled fade's with a different share, and the factor is
- * measured rather than assumed: the `keyboard-focus-dim` window capture paints
- * the dark theme's `muted` fill `#222730` as `#181C23` over the page and its
- * `foreground` text `#EEF1F5` as `#6E7177` over that fill, which is
- * `blend(colour, behind, 1 - 0.4)`.
+ * measured rather than assumed: the `keyboard-focus-dim` window capture measured
+ * the share, and that the text lands on the control's **own dimmed fill** rather
+ * than on the page — the two models read apart in the captured pixel, which is
+ * how the composite was identified. The colours the capture read belong to the
+ * palette the probe painted at the time; the pair the shipped palette composites
+ * is `blend`'s arithmetic on today's roles.
  *
  * It also holds the runtime's one exclusion: `renderer.rs`'s
  * `keyboard_focus_path` returns no path when the focused element is an
@@ -23,7 +25,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
-import { darkColors, lightColors } from "./color.js";
+import { blend, darkColors, lightColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { fadedPair } from "./fade.js";
@@ -133,18 +135,37 @@ describe("keyboardFocusDimOpacity", () => {
     expect(Object.keys(lightTheme)).not.toContain("keyboardFocusDimOpacity");
   });
 
-  it("paints the values the window capture measured", () => {
-    // The `keyboard-focus-dim` probe's capture on 0.11.0: a dimmed sample over
-    // the dark page. Both values are what `blend` produces at this share, and
-    // the text lands on the *dimmed* fill rather than on the page — a flatten-
-    // the-subtree model would paint `#696C72`.
-    expect(
-      fadedPair(
-        darkColors,
-        { fill: "muted", label: "foreground", over: "background" },
-        keyboardFocusDimOpacity,
+  it("composites the pair the shipped palette paints at the captured share", () => {
+    // The `keyboard-focus-dim` probe measured two facts on 0.11.0: the share is
+    // 0.4, and a dimmed control's text lands on its **own dimmed fill** rather
+    // than on the page — the flatten-the-subtree model read a different pixel,
+    // which is how the composite was identified. The colours a reader sees are
+    // the shipped palette's, so a palette move follows them.
+    const dim = fadedPair(
+      darkColors,
+      { fill: "muted", label: "foreground", over: "background" },
+      keyboardFocusDimOpacity,
+    );
+
+    expect(dim.fill).toBe(
+      blend(
+        darkColors.muted,
+        darkColors.background,
+        1 - keyboardFocusDimOpacity,
       ),
-    ).toEqual({ fill: "#181C23", label: "#6E7177" });
+    );
+    expect(dim.label).toBe(
+      blend(darkColors.foreground, dim.fill ?? "", 1 - keyboardFocusDimOpacity),
+    );
+    // The label does not fade against the page a second time: the two models
+    // read apart, which is the captured fact.
+    expect(dim.label).not.toBe(
+      blend(
+        darkColors.foreground,
+        darkColors.background,
+        1 - keyboardFocusDimOpacity,
+      ),
+    );
   });
 });
 
