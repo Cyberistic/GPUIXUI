@@ -1096,30 +1096,45 @@ describe("docs/gpuix-capabilities.md", () => {
     const terminal = rowFor("Terminal rendering");
     expect(terminal?.verdict).toBe("supported, with limits");
     expect(terminal?.evidence).toContain("terminal-render");
+    expect(terminal?.evidence).toContain("terminal-resize");
+    expect(terminal?.evidence).toContain("terminal-pointer");
     expect(terminal?.evidence).toContain("terminal-input");
+    expect(terminal?.evidence).toContain("4/4");
 
     // The printed frame size is arithmetic on the probe's own grid and cell, so
     // a changed cell cannot leave the record teaching the previous frame.
     const probe = read("apps/playground/src/terminal/run.ts");
     const grid = /TERMINAL_GRID = \{ columns: (\d+), rows: (\d+) \}/.exec(probe);
+    const resized =
+      /RESIZED_GRID = \{ columns: (\d+), rows: (\d+) \}/.exec(probe);
     const cell = /TERMINAL_CELL = \{ width: (\d+), height: (\d+) \}/.exec(probe);
     const columns = Number(grid?.[1] ?? 0);
     const rows = Number(grid?.[2] ?? 0);
+    const resizedColumns = Number(resized?.[1] ?? 0);
+    const resizedRows = Number(resized?.[2] ?? 0);
     const cellWidth = Number(cell?.[1] ?? 0);
     const cellHeight = Number(cell?.[2] ?? 0);
     expect(
-      [columns, rows, cellWidth, cellHeight],
-      "the terminal probe no longer declares the grid and cell the record prints",
+      [columns, rows, resizedColumns, resizedRows, cellWidth, cellHeight],
+      "the terminal probe no longer declares the grids and cell the record prints",
     ).not.toContain(0);
     expect(terminal?.evidence).toContain(
       `${columns * cellWidth}×${rows * cellHeight}`,
     );
     expect(terminal?.evidence).toContain(`${columns}×${rows}-cell`);
+    expect(terminal?.evidence).toContain(
+      `${resizedColumns * cellWidth}×${resizedRows * cellHeight}`,
+    );
+    expect(terminal?.evidence).toContain(`${resizedColumns}×${resizedRows} grid`);
 
     const asserted = [
       "the frame is the pty grid at one cell per character",
       "the app fills the frame with its terminal page",
       "the app reads isTerminal() as true",
+      "a pointer press reaches the app",
+      "the press repaints the ink, not the page",
+      "the terminal's in-band resize repaints at the new grid",
+      "the app fills the resized frame",
       "a key press repaints the page",
       "the run restores the terminal",
     ];
@@ -1132,6 +1147,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(terminal?.workaround).toContain("kitty");
     expect(terminal?.workaround).toContain("host element");
     expect(terminal?.workaround).toContain("macOS-only");
+    expect(terminal?.workaround).toContain("stty");
   });
 
   it("publishes the terminal frame on /docs/runtime", () => {
@@ -1141,9 +1157,13 @@ describe("docs/gpuix-capabilities.md", () => {
       "the page's measured table has no terminal-frame row",
     ).toBeDefined();
     expect(page?.[1]).toContain("terminal-render");
+    expect(page?.[1]).toContain("terminal-pointer");
+    expect(page?.[1]).toContain("terminal-resize");
     expect(page?.[1]).toContain("terminal-input");
     expect(page?.[1]).toContain("99.78%");
+    expect(page?.[1]).toContain("400×320");
     expect(page?.[2]).toContain("kitty or Ghostty");
+    expect(page?.[2]).toContain("stty");
     expect(page?.[2]).toContain("host element");
   });
 
