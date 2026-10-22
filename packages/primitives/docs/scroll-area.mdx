@@ -159,8 +159,11 @@ A page is the side of the viewport the move travels along. PageUp/PageDown page
 the **vertical** axis of a region that scrolls it — a screenful to a reader —
 and the **horizontal** one of a region that scrolls nothing else, so a sideways
 region pages by the width in view rather than by a height it never paints. The
-painted box is what both numbers come from, so a resized scroller pages the
-frame it is now, not the one it was mounted in.
+axis is the one you declared, not one measured from the content: a `both`
+region pages vertically even when only its width overflows, so give a
+width-only strip `axis="horizontal"`. The painted box is what both numbers come
+from, so a resized scroller pages the frame it is now, not the one it was
+mounted in.
 
 ```tsx
 <ScrollArea axis="vertical" style={{ height: 240 }} label="Rows">

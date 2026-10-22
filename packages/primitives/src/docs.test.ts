@@ -984,6 +984,9 @@ describe("the primitives docs page contract", () => {
         "the **horizontal** one of a region that scrolls nothing else",
       ),
       pageWidth: keyboard.includes("pages by the width in view"),
+      pageDeclared: keyboard.includes(
+        'give a width-only strip `axis="horizontal"`',
+      ),
       logicAxis: logic.includes("const pageAxis"),
       logicWidth: logic.includes("metrics.page.width"),
       areaBox: area.includes("page: { width: box.width, height: box.height }"),
@@ -993,6 +996,7 @@ describe("the primitives docs page contract", () => {
       pageVertical: true,
       pageSideways: true,
       pageWidth: true,
+      pageDeclared: true,
       logicAxis: true,
       logicWidth: true,
       areaBox: true,
