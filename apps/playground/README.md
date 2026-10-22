@@ -2075,6 +2075,77 @@ windows — the binding opens one window per process), and `onFileDrop` is the
 only OS drop path. A row reorder is therefore the caller's own pointer gesture,
 which is what this probe composes.
 
+### `table-lifecycle` — measured on 0.11.0 here
+
+Tier 3's table does not exist yet, so this probe composes the shape a data grid
+has to use — fixed-width cells in flex rows, a header sibling above the row
+scroller, one horizontal scroller around both — and measures the two
+interactions MISSION names for a table, **sort and selection**, in a window. The
+headless `table-select-sort` and `data-grid-fixed-header` scenarios proved the
+state changes and the geometry against a `TestRenderer`; what a window adds is
+that a press is hit-tested rather than a handler invoked, a wheel is aimed by
+geometry, and a key only reaches the element the press actually focused.
+
+Sixty rows of 28px in a 300×200 viewport, three columns (160 / 120 / 100) inside
+a 380px content box, so the table has 80px of horizontal travel and 1 480px of
+vertical. Order and selection are keyed by **record**, not by row position.
+Measured:
+
+| Step | Readout / paint |
+| ---- | --------------- |
+| mount | `rows=60 sorted=name-asc selected=none`, first row `Item 000` |
+| press `table-row-3` | `selected=r3`, focus `table-row-3` |
+| `down` | `selected=r4`, focus `table-row-4` |
+| press the size header | `sorted=size-asc`, first row `Item 005`, `selected=r4` still |
+| press it again | `sorted=size-desc`, first row `Item 004` |
+| wheel the rows −100 | offset `-100`; header `y` unchanged; row 5 moved by −100 |
+| wheel the header −100 | the row offset did not move |
+| wheel the header −60 across | `table-hscroll` `x=-60`; header cell and row cell both −60, still aligned |
+| wheel the rows −10 000 | offset `-1480`, the content's end |
+
+Four facts a table can build on:
+
+1. **A press selects the record it hit and that row holds the focus.** A
+   `tabIndex={0}` row is focused by the press in a window, so the key that
+   follows reaches *that* row's `onKeyDown` — no synthetic focus needed.
+2. **An arrow can rove focus.** `down` from `table-row-3` reaches
+   `table-row-4`'s handler; moving the focus in that handler
+   (`renderer.focusElement`) leaves the *next* key on row 4 with the selection,
+   which is how a table's arrows walk.
+3. **The header must be a sibling of the row scroller.** It keeps its painted
+   `y` while the rows scroll under it, and a wheel over the header scrolls
+   nothing — the body is not its ancestor, so a header inside the scroller would
+   scroll away instead (that is the negative control below).
+4. **One horizontal scroller carries the header and the cells.** A single
+   `overflowX` box around header + body means the pan moves both by the same
+   amount with no synchronisation to write; the two stay aligned at the same
+   `x` after the pan.
+
+One measured constraint on a sortable header: the automation protocol aims a
+press at the element's **painted centre**, so a header cell whose centre is
+clipped by the horizontal viewport sorts nothing. This probe's first run put
+`size` last (280…380 in a 300px frame, centre 330) and the press changed no
+order; both sortable cells now sit inside the frame and the third column is the
+one that overflows. A table whose sortable columns overflow needs its own
+header pan before a press lands.
+
+`sortTable`, `toggleSort` and the fixture are pure and unit-tested
+(`src/live/table.test.ts`, 4 cases: a different first row per column and
+direction, ties broken by record, every record sorted once, and the flip rule),
+because a fixture whose name and size orders coincided would keep the probe green
+while it measured only that a press repainted something.
+
+Negative controls measured, all exit `1` and restored green:
+pointing the size header's `onPress` at the name column fails
+`a press on the size header sorts by size`
+(`got "rows=60 sorted=name-desc selected=r4"`); dropping the `focus` call after
+an arrow fails `down moves the focus with it`
+(`expected "table-row-4", got "table-row-3"`); and moving the header inside
+`table-body` — the sticky-inside-the-scroller shape the runtime cannot paint —
+fails `the header keeps its painted y` (`expected 64 ± 1, got -36`). 34 checks,
+`--only table-lifecycle`, green on 0.11.0. Capture:
+`.artifacts/live/table-sorted.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session

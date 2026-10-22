@@ -10,7 +10,7 @@
 import type { ComboboxOption } from "@gpuixui/components";
 
 /** The reviewers, in arrow order; `alan` is the disabled row. */
-export const REVIEWERS = [
+export const REVIEWERS: ReadonlyArray<ComboboxOption> = [
   { value: "ada", label: "Ada Lovelace", description: "Engineering" },
   { value: "grace", label: "Grace Hopper", description: "Compilers" },
   {
@@ -25,4 +25,4 @@ export const REVIEWERS = [
     label: "Margaret Hamilton",
     description: "Flight software",
   },
-] as const satisfies ReadonlyArray<ComboboxOption>;
+];

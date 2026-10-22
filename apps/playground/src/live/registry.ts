@@ -258,6 +258,12 @@ export const liveRegistry = [
       "Workspace: a row that captures the pointer resolves its drop by hit-testing, and the painted order follows",
     capability: "workspace",
   },
+  {
+    id: "table-lifecycle",
+    title:
+      "Table: a header press sorts by the column it hit, a row press selects and focuses, arrows rove, and the header holds still under one shared scroller",
+    capability: "table",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

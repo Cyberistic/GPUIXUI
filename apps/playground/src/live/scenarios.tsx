@@ -163,6 +163,21 @@ import {
   scrollRange,
 } from "./message-scroller.js";
 import {
+  TABLE_HEIGHT,
+  TABLE_HEADER_HEIGHT,
+  TABLE_ROWS,
+  TABLE_ROW_HEIGHT,
+  TABLE_SORT,
+  TABLE_WIDTH,
+  TABLE_Y_RANGE,
+  COLUMN_WIDTH,
+  sortLabel,
+  sortTable,
+  toggleSort,
+  type TableRow,
+  type TableSort,
+} from "./table.js";
+import {
   TREE_ALL_DIRECTORIES,
   TREE_INDENT,
   TREE_REVEAL_INDEX,
@@ -8968,6 +8983,473 @@ const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("portal-reattached");
   });
 
+/**
+ * One table header cell that sorts by a press.
+ *
+ * It is the press target itself rather than a row above the table: a header that
+ * only responds to a control beside it measures nothing about a table, and the
+ * probe's press is hit-tested on the cell's painted centre.
+ */
+const TableHeaderCell = ({
+  testId,
+  label,
+  width,
+  onPress,
+}: {
+  readonly testId: string;
+  readonly label: string;
+  readonly width: number;
+  readonly onPress: () => void;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId={testId}
+      role="button"
+      tabIndex={0}
+      onClick={onPress}
+      style={{
+        width,
+        height: TABLE_HEADER_HEIGHT,
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        paddingLeft: 6,
+        borderBottomWidth: 1,
+        borderColor: theme.colors.border,
+        backgroundColor: theme.colors.muted,
+        cursor: "pointer",
+        hover: { backgroundColor: theme.colors.border },
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {label}
+      </text>
+    </div>
+  );
+};
+
+/**
+ * A Tier 3 table: a sortable header sibling above the row scroller, inside one
+ * horizontal scroller.
+ *
+ * The composition is the one the headless `data-grid-fixed-header` and
+ * `table-select-sort` scenarios measured. What a window adds is that a press is
+ * hit-tested rather than a handler invoked, a wheel is aimed by geometry, and a
+ * key only reaches the element the press actually focused. Order and selection
+ * are keyed by **record**, so a sort cannot leave the highlight on a different
+ * row.
+ */
+const TableProbe = (): ReactNode => {
+  const theme = useTheme();
+  const windowSize = useWindowSize();
+  const renderer = useGpuix().renderer;
+  const [sort, setSort] = useState<TableSort>(TABLE_SORT);
+  const [selected, setSelected] = useState(Option.none<number>());
+  const elements = useRef(new Map<number, number>());
+
+  const rows = sortTable(sort);
+  const direction = sort.descending ? "desc" : "asc";
+  const isSelected = (row: TableRow): boolean =>
+    Option.contains(selected, row.n);
+  const cell = {
+    display: "flex",
+    alignItems: "center",
+    flexShrink: 0,
+    paddingLeft: 6,
+    height: TABLE_ROW_HEIGHT,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border,
+  } as const;
+
+  const register = useCallback((n: number, instance: PublicInstance | null) => {
+    const map = elements.current;
+    if (instance === null) map.delete(n);
+    else map.set(n, instance.id);
+  }, []);
+
+  const focus = (n: number): void => {
+    const elementId = elements.current.get(n);
+    if (elementId !== undefined) renderer?.focusElement?.(elementId);
+  };
+
+  /** Moves selection and focus together, as a table's roving focus does. */
+  const step = (row: TableRow, delta: number): void =>
+    Option.match(
+      Option.flatMap(
+        Arr.findFirstIndex(rows, (candidate) => candidate.n === row.n),
+        (index) => Arr.get(rows, index + delta),
+      ),
+      {
+        onNone: () => undefined,
+        onSome: (next) => {
+          setSelected(Option.some(next.n));
+          focus(next.n);
+        },
+      },
+    );
+
+  return (
+    <div
+      testId="table-probe"
+      style={{
+        width: windowSize.width,
+        height: windowSize.height,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Press a header to sort, press a row to select it, and use the arrows to
+        walk the table.
+      </text>
+      <Readout testId="table-readout">
+        {`rows=${TABLE_ROWS} sorted=${sortLabel(sort)} selected=${Option.match(
+          selected,
+          { onNone: () => "none", onSome: (n) => `r${n}` },
+        )}`}
+      </Readout>
+      <div
+        testId="table-hscroll"
+        style={{
+          width: TABLE_WIDTH,
+          height: TABLE_HEADER_HEIGHT + TABLE_HEIGHT + 16,
+          overflowX: "scroll",
+          backgroundColor: theme.colors.card,
+        }}
+      >
+        <div
+          style={{
+            width: COLUMN_WIDTH.name + COLUMN_WIDTH.status + COLUMN_WIDTH.size,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div
+            testId="table-header"
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              height: TABLE_HEADER_HEIGHT,
+              backgroundColor: theme.colors.muted,
+            }}
+          >
+            <TableHeaderCell
+              testId="table-header-name"
+              label={sort.column === "name" ? `name ${direction}` : "name"}
+              width={COLUMN_WIDTH.name}
+              onPress={() => setSort((current) => toggleSort(current, "name"))}
+            />
+            <TableHeaderCell
+              testId="table-header-size"
+              label={sort.column === "size" ? `size ${direction}` : "size"}
+              width={COLUMN_WIDTH.size}
+              onPress={() => setSort((current) => toggleSort(current, "size"))}
+            />
+            <div
+              testId="table-header-status"
+              style={{
+                width: COLUMN_WIDTH.status,
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                paddingLeft: 6,
+                borderBottomWidth: 1,
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.muted,
+              }}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                status
+              </text>
+            </div>
+          </div>
+          <div
+            testId="table-body"
+            style={{ height: TABLE_HEIGHT, overflowY: "scroll" }}
+          >
+            {rows.map((row, index) => (
+              <div
+                key={row.n}
+                testId={`table-row-${index}`}
+                ref={(instance: PublicInstance | null) =>
+                  register(row.n, instance)
+                }
+                tabIndex={0}
+                role="row"
+                aria-selected={isSelected(row)}
+                onClick={() => setSelected(Option.some(row.n))}
+                onKeyDown={(event) => {
+                  const delta =
+                    event.key === "down" ? 1 : event.key === "up" ? -1 : 0;
+                  if (delta !== 0) step(row, delta);
+                }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  height: TABLE_ROW_HEIGHT,
+                  flexShrink: 0,
+                  backgroundColor: isSelected(row)
+                    ? theme.colors.accent
+                    : index % 2 === 0
+                      ? theme.colors.background
+                      : theme.colors.card,
+                  hover: { backgroundColor: theme.colors.muted },
+                  ...keyboardFocusRing(theme),
+                }}
+              >
+                <div style={{ ...cell, width: COLUMN_WIDTH.name }}>
+                  <text
+                    testId={`table-name-${index}`}
+                    style={{
+                      ...textStyle(theme, "body"),
+                      color: isSelected(row)
+                        ? theme.colors.accentForeground
+                        : theme.colors.foreground,
+                    }}
+                  >
+                    {row.name}
+                  </text>
+                </div>
+                <div
+                  testId={`table-size-${index}`}
+                  style={{ ...cell, width: COLUMN_WIDTH.size }}
+                >
+                  <text
+                    style={{
+                      ...textStyle(theme, "caption"),
+                      color: theme.colors.mutedForeground,
+                    }}
+                  >
+                    {`${row.size} B`}
+                  </text>
+                </div>
+                <div style={{ ...cell, width: COLUMN_WIDTH.status }}>
+                  <text
+                    style={{
+                      ...textStyle(theme, "caption"),
+                      color: theme.colors.mutedForeground,
+                    }}
+                  >
+                    {row.status}
+                  </text>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The table probe's checks.
+ *
+ * A press is a hit test in a window: the locator aims the element's painted
+ * centre, so a header cell that is covered, clipped or misaligned sorts nothing.
+ * The readout names the order and the selected **record**, which is what makes
+ * "the selection survived the sort" a check rather than a coincidence.
+ */
+const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("table-readout");
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text("table-readout");
+    const nameAt = (index: number) => ctx.host.text(`table-name-${index}`);
+    const offsetOf: (
+      testId: string,
+    ) => Effect.Effect<
+      Smoke.Offset,
+      Smoke.SmokeAssertionError | Smoke.SmokeHostError
+    > = (testId) =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `${testId} reports a scroll offset`,
+          Option.fromNullishOr(yield* ctx.host.scrollOffset(testId)),
+        );
+      });
+    /** The focus id as a readout reads it: `none` rather than a null. */
+    const focusOf = Effect.map(ctx.host.focused(), (id) =>
+      Option.getOrElse(Option.fromNullishOr(id), () => "none"),
+    );
+
+    yield* ctx.expectEqual(
+      "the table mounts in name order with nothing selected",
+      yield* readout(),
+      "rows=60 sorted=name-asc selected=none",
+    );
+
+    // The header is a sibling of the row scroller, so it cannot scroll with the
+    // rows: the first row starts where the header ends.
+    const header = yield* paintedBox(ctx, "table-header");
+    const first = yield* paintedBox(ctx, "table-row-0");
+    yield* ctx.expectNear(
+      "the first row starts below the header",
+      first.y,
+      header.y + header.height,
+      1,
+    );
+
+    // 1. A press selects the row it landed on, and that row holds the focus.
+    yield* ctx.host.click("table-row-3");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press selects the row it hit",
+      yield* readout(),
+      "selected=r3",
+    );
+    yield* ctx.expectEqual(
+      "the pressed row took the focus",
+      yield* focusOf,
+      "table-row-3",
+    );
+
+    // 2. An arrow key reaches the focused row and roves both focus and selection.
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "down moves the selection one record on",
+      yield* readout(),
+      "selected=r4",
+    );
+    yield* ctx.expectEqual(
+      "down moves the focus with it",
+      yield* focusOf,
+      "table-row-4",
+    );
+
+    // 3. A press on the size header sorts by the column it hit, not by the other.
+    yield* ctx.host.click("table-header-size");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press on the size header sorts by size",
+      yield* readout(),
+      "sorted=size-asc",
+    );
+    yield* ctx.expectEqual(
+      "the smallest row paints first",
+      yield* nameAt(0),
+      "Item 005",
+    );
+    yield* ctx.expectContains(
+      "the selection is a record, so it survives the sort",
+      yield* readout(),
+      "selected=r4",
+    );
+
+    // 4. The same header again flips the direction.
+    yield* ctx.host.click("table-header-size");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a second press flips the column it is on",
+      yield* readout(),
+      "sorted=size-desc",
+    );
+    yield* ctx.expectEqual(
+      "the largest row paints first",
+      yield* nameAt(0),
+      "Item 004",
+    );
+
+    // 5. A wheel over the rows scrolls them under a header that does not move.
+    const headerBefore = yield* paintedBox(ctx, "table-header");
+    const rowBefore = yield* paintedBox(ctx, "table-row-5");
+    yield* ctx.host.wheel("table-body", 0, -100);
+    yield* Effect.sleep(SETTLE);
+    const scrolled = yield* offsetOf("table-body");
+    yield* ctx.expectNear("the wheel scrolls the rows", scrolled.y, -100, 2);
+    const headerAfter = yield* paintedBox(ctx, "table-header");
+    yield* ctx.expectNear(
+      "the header keeps its painted y",
+      headerAfter.y,
+      headerBefore.y,
+      1,
+    );
+    const rowAfter = yield* paintedBox(ctx, "table-row-5");
+    yield* ctx.expectNear(
+      "the row moved up by the scroll amount",
+      rowAfter.y - rowBefore.y,
+      scrolled.y,
+      2,
+    );
+
+    // 6. The header is outside the row scroller, so a wheel over it scrolls nothing.
+    yield* ctx.host.wheel("table-header", 0, -100);
+    yield* Effect.sleep(SETTLE);
+    const afterHeaderWheel = yield* offsetOf("table-body");
+    yield* ctx.expectNear(
+      "a wheel over the header leaves the rows where they are",
+      afterHeaderWheel.y,
+      scrolled.y,
+      1,
+    );
+
+    // 7. One horizontal scroller carries the header and the cells together.
+    const headerCellBefore = yield* paintedBox(ctx, "table-header-size");
+    const sizeCellBefore = yield* paintedBox(ctx, "table-size-5");
+    yield* ctx.host.wheel("table-header", -60, 0);
+    yield* Effect.sleep(SETTLE);
+    const panned = yield* offsetOf("table-hscroll");
+    yield* ctx.expectNear(
+      "a horizontal wheel pans the table",
+      panned.x,
+      -60,
+      2,
+    );
+    const headerCellAfter = yield* paintedBox(ctx, "table-header-size");
+    const sizeCellAfter = yield* paintedBox(ctx, "table-size-5");
+    yield* ctx.expectNear(
+      "the header cell moved with the pan",
+      headerCellAfter.x - headerCellBefore.x,
+      panned.x,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the row's cell moved by the same amount",
+      sizeCellAfter.x - sizeCellBefore.x,
+      panned.x,
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the header and the row stay aligned after the pan",
+      headerCellAfter.x,
+      sizeCellAfter.x,
+    );
+
+    // 8. The rows stop at the content's end.
+    yield* ctx.host.wheel("table-body", 0, -10_000);
+    yield* Effect.sleep(SETTLE);
+    const clamped = yield* offsetOf("table-body");
+    yield* ctx.expectNear(
+      "the rows clamp at the content's end",
+      clamped.y,
+      -TABLE_Y_RANGE,
+      2,
+    );
+    yield* ctx.host.capture("table-sorted");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -9155,5 +9637,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "drag-reorder",
     view: () => <DragReorderProbe />,
     steps: dragReorderSteps,
+  },
+  "table-lifecycle": {
+    id: "table-lifecycle",
+    view: () => <TableProbe />,
+    steps: tableLifecycleSteps,
   },
 };
