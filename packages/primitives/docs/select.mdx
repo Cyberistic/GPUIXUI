@@ -3,10 +3,13 @@ title: Select
 description: One choice from a list, in a popover — a themed wrapper over GPUix's own Select.
 ---
 
-`Select` reuses `@gpuix/react/select` for the open state, dismissal and arrow
-navigation, and themes it to match the field chrome. It is **not** a
+`Select` reuses `@gpuix/react/select` for the interaction — opening, dismissal and
+arrow navigation — and themes it to match the field chrome. It is **not** a
 reimplementation: what this package owns is the trigger's paint, the list surface
-and the item states.
+and the item states. The one state it holds itself is the open state, because a
+`combobox` has to publish it and the runtime publishes none: the wrapper mirrors
+what GPUix reports (so `aria-expanded` is always truthful) and a caller may take
+it over with `open`/`onOpenChange`.
 
 ## Usage
 
@@ -27,11 +30,12 @@ import { Label, Select } from "@gpuixui/primitives";
 />;
 ```
 
-Options can be grouped under a caption. Groups are **presentational**:
-`SelectGroup`/`SelectLabel` are plain elements in 0.11.0 with no role, so the
-caption is visible text and each row keeps its own accessible name. The runtime
-still receives one flat list in render order, so keyboard navigation crosses a
-group boundary exactly as it crosses any other row.
+Options can be grouped under a caption. `SelectGroup`/`SelectLabel` are plain
+elements in 0.11.0 with no role, so the caption is announced by the `Group` the
+rows sit in — the wrapper names that group with the caption — while each row
+keeps its own accessible name. The runtime still receives one flat list in render
+order, so keyboard navigation crosses a group boundary exactly as it crosses any
+other row.
 
 ```tsx
 import { Select } from "@gpuixui/primitives";
@@ -61,6 +65,9 @@ import { Select } from "@gpuixui/primitives";
 | `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | `{ value, label, disabled? }` items, or `{ label, options }` groups painted under a caption and a rule |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | — | initial selection when uncontrolled |
+| `open` | `boolean` | — | controlled open state of the list; omit to let the Select hold its own |
+| `defaultOpen` | `boolean` | `false` | the list's initial state while `open` is omitted |
+| `onOpenChange` | `(open: boolean) => void` | none | the open state GPUix reported, mirrored for `aria-expanded` |
 | `onChange` | `(value: string) => void` | none | deprecated alias for `onValueChange`; the new name runs when both are passed |
 | `onValueChange` | `(value: string) => void` | none | the committed value |
 | `placeholder` | `string` | none | shown before a choice |
@@ -120,10 +127,12 @@ list's painted boxes), which also works for a row nested in a group.
   not, and the group's caption names the run it heads. The rows take pointer and
   keyboard input as before — the announcement is a role and a name, not a second
   control.
-- **The expanded state is not published.** The wrapper does not own the open
-  state (GPUix does), so the trigger reads as a combobox whose popup is neither
-  `expanded` nor `collapsed`; the rows themselves are absent while the list is
-  closed.
+- **The expanded state is published.** The trigger's `aria-expanded` follows the
+  open state the wrapper holds, so the combobox says whether its popup is open —
+  measured in a window (`runtime/fields.runtime.test.tsx`): `false` at rest,
+  `true` once the list opens, and `false` again when an option commits. GPUix
+  reports the changes but publishes no state to read, so the wrapper mirrors them
+  and a caller may take the state over with `open`/`onOpenChange`.
 - Disabled items are painted from the `disabled` state GPUix reports and cannot
   be committed.
 
@@ -162,9 +171,6 @@ state of its own.
 
 - **Options are data.** No rich option content and no compound escape hatch in
   the public API; use `RadioGroup` for rich options.
-- **No `expanded` state.** The open state is GPUix's, so the combobox node does
-  not say whether its list is open; while closed, the rows are unmounted and
-  absent from the tree.
 - A group's name has no semantic effect on the keyboard; the arrows walk the
   flat list in render order.
 - The list's dismissal and positioning are GPUix's; this package cannot change
@@ -193,9 +199,10 @@ state of its own.
   `placeholder` role and a chosen value's value role, the list's `lg` lift (held
   to `elevationShadow(theme, "lg")`, not a literal shadow), list surface and item
   states, both state-aware callbacks receiving their live state and winning, the
-  selected row's mark coming from the state the runtime reports, and a row's
+  selected row's mark coming from the state the runtime reports, a row's
   announcement (`role="option"`, its label as the name, `aria-selected` from the
-  state). Group cases:
+  state), and the trigger's `aria-expanded` following the open state it was
+  rendered with (absent when a pure render has none). Group cases:
   the flat list in render order, the caption's muted role and one-pixel rule, the
   group/rule/group tree, and a grouped row being a row of its own.
 - `src/core/scroll.test.ts` — the reveal arithmetic: a row below the fold moves
@@ -207,7 +214,10 @@ state of its own.
   `ListBox` holding an `option` per row, the chosen row reads `selected` and the
   others do not, and a group's caption names a `Group` (negative controls
   measured: without the row's `role` the tree holds no `ListBoxOption`, and
-  without the group's it holds no `Group`); it opens, paints its options and
+  without the group's it holds no `Group`); the trigger's `expanded` is `false`
+  at rest, `true` with the list open and `false` again once an option commits
+  (negative control measured: without the attribute the node publishes no
+  `expanded`); it opens, paints its options and
   commits a clicked option in the real renderer; the trigger and an option row are
   addressed by `triggerTestId`/`itemTestId` rather than by walking children and
   searching the painted text (negative control measured: without the forwarding,

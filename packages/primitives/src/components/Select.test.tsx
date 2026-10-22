@@ -186,6 +186,34 @@ describe("Select", () => {
     expect(elementProp(select, "aria-label")).toStrictEqual(Option.none());
   });
 
+  it("publishes the open state the trigger was rendered with", () => {
+    // The bug guarded: a `combobox` has to say whether its list is open, and
+    // GPUix publishes no state to read, so the control was a combobox with no
+    // expanded state at all. The wrapper holds the state and hands the trigger
+    // the answer it just rendered; a pure render with no state publishes none
+    // rather than guessing.
+    const trigger = (open?: boolean) =>
+      Arr.head(
+        elementChildren(
+          renderSelect(
+            {
+              options: [{ value: "apple", label: "Apple" }],
+              label: "Fruit",
+              open,
+            },
+            testTheme,
+          ),
+        ),
+      );
+    const expandedOf = (open?: boolean) =>
+      Option.flatMap(trigger(open), (element) =>
+        elementProp(element, "aria-expanded"),
+      );
+    expect(expandedOf(true)).toStrictEqual(Option.some(true));
+    expect(expandedOf(false)).toStrictEqual(Option.some(false));
+    expect(expandedOf(undefined)).toStrictEqual(Option.none());
+  });
+
   it("paints a selected item differently from a hovered or resting one", () => {
     const paint = selectItemStyle(testTheme);
     const selected = paint({ ...rest, selected: true });

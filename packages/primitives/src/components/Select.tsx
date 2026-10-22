@@ -21,6 +21,7 @@ import {
   useCallback,
   useLayoutEffect,
   useRef,
+  useState,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -111,9 +112,8 @@ export const selectOptions = (
 
 export interface SelectProps extends ValueChangeProps<string> {
   /**
-   * The list: options, or named groups of them. A group's caption is a visual
-   * heading — 0.11.0's `SelectGroup` has no role to announce it — so keep the
-   * names short and unique.
+   * The list: options, or named groups of them. A group's caption names the
+   * `Group` its rows sit in, so keep the names short and unique.
    */
   readonly options: ReadonlyArray<SelectEntry>;
   /** Controlled selection. Omit to let the select hold its own. */
@@ -121,6 +121,11 @@ export interface SelectProps extends ValueChangeProps<string> {
   readonly defaultValue?: string;
   readonly placeholder?: string;
   readonly disabled?: boolean;
+  /** Controlled open state of the list. Omit to let the Select hold its own. */
+  readonly open?: boolean;
+  /** The list's initial state while `open` is omitted. */
+  readonly defaultOpen?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
   /** Validation failed: the trigger's border takes the destructive role. */
   readonly invalid?: boolean;
   /** Defaults to `md`. */
@@ -346,6 +351,8 @@ export const renderSelect = (
     onChange,
     placeholder,
     disabled,
+    open,
+    onOpenChange,
     invalid,
     size = "md",
     fullWidth,
@@ -384,6 +391,8 @@ export const renderSelect = (
       value={value}
       defaultValue={defaultValue}
       onValueChange={valueChange({ onValueChange, onChange })}
+      open={open}
+      onOpenChange={onOpenChange}
       disabled={disabled}
       testId={testId}
       style={mergeStyle(
@@ -403,6 +412,11 @@ export const renderSelect = (
         // (`renderSelectRow`).
         role="combobox"
         aria-label={accessibleName(label)}
+        // A combobox must say whether its list is open, and GPUix publishes no
+        // state of its own — the wrapper owns the open state (`Select`), so
+        // this is the one it just rendered. A render without it (the pure
+        // `renderSelect`) publishes no expanded state rather than a guess.
+        aria-expanded={open}
         style={selectTriggerStyle(spec, theme, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />
@@ -454,5 +468,25 @@ export const renderSelect = (
 };
 
 /** A list of options in a popover. */
-export const Select = (props: SelectProps): ReactElement =>
-  renderSelect(props, useTheme(), useRef<PublicInstance | null>(null));
+export const Select = (props: SelectProps): ReactElement => {
+  const theme = useTheme();
+  const scroller = useRef<PublicInstance | null>(null);
+  // The open state is held here, not read from GPUix, for one reason: a
+  // combobox has to publish `aria-expanded` and the runtime publishes no open
+  // state to read. GPUix still decides when it changes — this only mirrors what
+  // it reports, and a caller may take the state over with `open`.
+  const [held, setHeld] = useState(props.defaultOpen === true);
+  const open = props.open ?? held;
+  return renderSelect(
+    {
+      ...props,
+      open,
+      onOpenChange: (next) => {
+        if (props.open === undefined) setHeld(next);
+        props.onOpenChange?.(next);
+      },
+    },
+    theme,
+    scroller,
+  );
+};

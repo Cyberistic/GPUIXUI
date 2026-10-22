@@ -546,6 +546,41 @@ it("announces a Select's options, their selection and their group", async () => 
   expect(selected("Pear")).toStrictEqual(Option.some(false));
 });
 
+it("publishes whether its list is open", async () => {
+  // The bug guarded: `combobox` requires an expanded state, and GPUix's trigger
+  // publishes none — the control never said whether its popup was open. The
+  // wrapper holds the state the runtime reports (a caller may take it over with
+  // `open`) and hands the trigger the answer, so the node flips both ways and
+  // returns when an option commits.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        label="Fruit"
+        placeholder="Pick one"
+        triggerTestId="fruit-trigger"
+        itemTestId={(value) => `fruit-${value}`}
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  const expanded = () =>
+    Option.flatMap(
+      a11yNode(runtime.a11y(), { role: "ComboBox", label: "Fruit" }),
+      (node) => Option.fromNullishOr(node.aria?.expanded),
+    );
+  expect(expanded()).toStrictEqual(Option.some(false));
+  runtime.click("fruit-trigger");
+  runtime.flush();
+  expect(expanded()).toStrictEqual(Option.some(true));
+  runtime.click("fruit-pear");
+  runtime.flush();
+  expect(expanded()).toStrictEqual(Option.some(false));
+});
+
 it("lifts a Select's list like every other floating surface", async () => {
   // The bug guarded: the list floats over page content and was the one floating
   // surface with no lift at all. `selectContentStyle` bounds it (the only

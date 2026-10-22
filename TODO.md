@@ -6677,13 +6677,19 @@ the old sentence fails the new page case. See the interlock row above.
       the other not, the group's name, the list). Directions measured: without the
       row's `role` the tree holds no `ListBoxOption`, without the group's it holds
       no `Group`, and without `aria-selected` the chosen row does not read
-      `selected`; restored, `fields.runtime` is 41/41. The one gap left is the
-      open state (GPUix owns it, so the combobox publishes no `expanded`) and is
-      recorded on the page and the row. Docs: `docs/select.mdx`
-      §Accessibility/§Theming/§Limitations/§Verification, the package README's
-      Select-parts row, the `Selects` inventory record and its `COMPONENTS.md`
-      row. The curated docs-site Select page still teaches the retracted claim —
-      recorded in the Interlocks table above, owner docs-site.
+      `selected`; restored, `fields.runtime` is 42/42. **The trigger also
+      publishes its open state now** — a `combobox` must, and GPUix reports open
+      changes without publishing a state to read, so `Select` holds the mirror
+      (`open`/`defaultOpen`/`onOpenChange` let a caller take it over) and paints
+      `aria-expanded`: the window case reads `false` at rest, `true` with the
+      list open and `false` again once an option commits (negative control:
+      without the attribute the node publishes no `expanded`), and the unit case
+      holds a pure render with no state to no `expanded` rather than a guess.
+      Docs: `docs/select.mdx`
+      §Usage/§API/§Accessibility/§Theming/§Limitations/§Verification, the package
+      README's Select-parts row, the `Selects` inventory record and its
+      `COMPONENTS.md` row. The curated docs-site Select page still teaches the
+      retracted claim — recorded in the Interlocks table above, owner docs-site.
 
 ## Swarm-owned blockers (fix these)
 

@@ -346,7 +346,6 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "The trigger and the rows are announced; the open state is not (GPUix owns it, so the trigger publishes no expanded state)",
       "Options are data: grouped, but no rich options or compound escape hatch",
       "No search or type-ahead and no multi-select",
       "A long list is capped at 320px and scrolls on the wheel; the highlighted row reveals itself by painted-box arithmetic (the runtime never does)",
