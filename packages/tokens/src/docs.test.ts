@@ -439,10 +439,17 @@ describe("filled action adoption claim", () => {
   })();
 
   it("names the components package as the adopter", () => {
+    // The components' action delegates to the primitives' button (plan 160), so
+    // the fills it paints are the primitives' variant table's; the page must
+    // name the delegation rather than a paint the components' file no longer
+    // holds.
     const source = read("../../../packages/components/src/internal/button.tsx");
+    const variants = read("../../../packages/primitives/src/core/variants.ts");
 
-    expect(source).toContain('filledHover(theme, "primary")');
+    expect(source).toContain("@gpuixui/primitives/button");
+    expect(variants).toContain("filledHover(theme, action)");
     expect(limitation).toContain("packages/components/src/internal/button.tsx");
+    expect(limitation).toContain("packages/primitives/src/core/variants.ts");
     expect(limitation).toContain("filledHover");
   });
 

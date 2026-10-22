@@ -399,11 +399,15 @@ describe("the pages that teach the disabled state", () => {
     );
     expect(painters.menuRow).toContain("theme.colors.disabledForeground");
     // The fade's share is the token constant, not a literal: the components
-    // package's `Button` paints the measured pair on a filled variant and keeps
-    // `disabledOpacity` on a ghost, so both mechanisms the page teaches are in
-    // the file.
-    expect(painters.componentButton).toContain("disabledAction(theme)");
-    expect(painters.componentButton).toContain("opacity: disabledOpacity");
+    // package's action delegates to the primitives' button (plan 160), and the
+    // primitives' core style paints the measured pair on a filled variant and
+    // keeps the fade on an unfilled one, so both mechanisms the page teaches are
+    // in the chain.
+    expect(painters.componentButton).toContain("@gpuixui/primitives/button");
+    expect(painters.control).toContain(
+      "variant.filledAction === undefined ? undefined : disabledAction(theme)",
+    );
+    expect(painters.control).toContain(`style.opacity = ${disabledOpacity}`);
     expect(painters.twRecipes).toContain("disabled:opacity-50");
   });
 
@@ -432,12 +436,45 @@ describe("the pages that teach the disabled state", () => {
     );
   });
 
-  it("names the two painters that still fade", () => {
+  it("names the painters that still fade", () => {
+    // The components' action delegates to the primitives' button (plan 160), so
+    // the whole-control fades left are the tw recipes and the primitives' own
+    // parts. A page naming the components' file as a *fading* painter sends a
+    // reader to repaint a state that file does not paint.
     Object.entries(pages).forEach(([page, text]) => {
       expect(text, page).toContain("`@gpuixui/tw`");
-      expect(text, page).toContain(
-        "`packages/components/src/internal/button.tsx`",
-      );
+      expect(text, page).toContain("`packages/primitives/src/core/style.ts`");
+      expect(text, page).toContain("`disabledOpacity`");
+    });
+  });
+
+  it("reads the share each fade actually writes", () => {
+    // `disabledOpacity` is the share `disabledFadeFailures` composites, so a
+    // fade that writes another number is a mechanism the contract does not
+    // measure. The primitives write the value out rather than import it, which
+    // is why every written share is compared to the constant instead of a name.
+    const shares = [
+      ...painters.control.matchAll(/style\.opacity = ([\d.]+)/g),
+    ].map(([, value]) => Number(value));
+    expect(shares.length, "the fades in the primitives' core style").toBe(3);
+    shares.forEach((share, index) => {
+      expect(share, `primitive fade ${index + 1}`).toBe(disabledOpacity);
+    });
+    const recipeShare = /disabled:opacity-(\d+)/.exec(painters.twRecipes);
+    expect(recipeShare?.[1], "the tw recipe's fade").toBe(
+      String(disabledOpacity * 100),
+    );
+  });
+
+  it("holds the components action to a translation, not a second painter", () => {
+    // A re-implemented opacity in that file would be a fade the pages no longer
+    // teach and the primitives' branch no longer owns.
+    expect(painters.componentButton).toContain("@gpuixui/primitives/button");
+    expect(painters.componentButton).not.toContain("opacity");
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, page).toContain("delegates");
+      expect(text, page).not.toContain("fading its ghost");
+      expect(text, page).not.toContain("token constant rather than a copied");
     });
   });
 
@@ -451,6 +488,8 @@ describe("the pages that teach the disabled state", () => {
       "Adopting the pair in the recipes and the primitive cores",
       "Replacing the fade in the recipes and the primitive cores remains",
       "(`packages/components/src/internal/button.tsx`, `opacity: 0.5`)",
+      "while a ghost keeps the fade (`packages/components/src/internal/button.tsx`)",
+      "and the components' `Button` fading its ghost at `disabledOpacity`",
     ];
 
     Object.entries(pages).forEach(([page, text]) => {
@@ -461,16 +500,19 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("names the components Button's two disabled paths, not a whole-control fade", () => {
-    // The components `Button` splits: a filled variant wears the measured pair,
-    // a ghost keeps `disabledOpacity`. The page that calls the whole Button a
-    // 50% fade sends a reader to repaint a state its filled variants already
-    // paint as the contract, so the sentence is read against the branch itself.
-    const branch = painters.componentButton.slice(
-      painters.componentButton.indexOf("const disabledStyle"),
-      painters.componentButton.indexOf("const paintsSurface"),
+    // The action splits: a filled variant wears the measured pair, a ghost keeps
+    // the fade. The page that calls the whole Button a 50% fade sends a reader
+    // to repaint a state its filled variants already paint as the contract, so
+    // the sentence is read against the branch itself. The components' action
+    // delegates to the primitives' button (plan 160), so the branch is the
+    // primitives' core style's.
+    const start = painters.control.indexOf("if (spec.disabled === true) {");
+    const branch = painters.control.slice(
+      start,
+      painters.control.indexOf("} else {", start),
     );
-    expect(branch).toContain("paintsSurface(variant) ? disabledAction(theme)");
-    expect(branch).toContain("opacity: disabledOpacity");
+    expect(branch).toContain("disabledAction(theme)");
+    expect(branch).toContain(`style.opacity = ${disabledOpacity}`);
 
     Object.entries(pages).forEach(([page, text]) => {
       expect(text, page).toContain("filled variant");

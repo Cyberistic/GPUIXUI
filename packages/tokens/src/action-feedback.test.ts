@@ -17,13 +17,14 @@
  * platform carries `#59C9FF` (1.059:1) now.
  *
  * And it measured the deviation the pages had been describing as adoption: the
- * components package's `Button` paints the derived fills for `primary` and
- * `danger`, but its `secondary` variant paints the `hover` / `active` role
+ * components package's action used to paint the derived fills for `primary` and
+ * `danger` while its `secondary` variant painted the `hover` / `active` role
  * washes over the `secondary` fill — **1.000:1** hovered in the two
  * high-contrast variants and macOS light, and 1.000:1 pressed in Windows dark,
- * where the wash *is* the fill. That painter belongs to another package; both
- * pages state the measured deviation and this suite holds the sentence to the
- * painter in both directions.
+ * where the wash *is* the fill. That painter belongs to another package, which
+ * has since delegated the action to `@gpuixui/primitives` (plan 160); the
+ * variant table the primitives own is where the derivation now lives, and this
+ * suite holds the documents to that painter in both directions.
  */
 
 import { readFileSync } from "node:fs";
@@ -234,14 +235,20 @@ describe("the pointer feedback a filled role paints", () => {
   it("reads the painters that carry the derived fills", () => {
     // The placements exist because two packages paint these helpers: the
     // primitives' registry asks for `fill-<action>` / `fill-<action>-pressed`,
-    // and the components' button derives `primary` and `danger` outright.
+    // and the action's own variant table derives the step outright. The
+    // components' action delegates to the primitives' button (plan 160), so the
+    // painter a contract is held to is that table.
     const primitives = read("../../primitives/src/recipe/index.ts");
+    const variants = read("../../primitives/src/core/variants.ts");
     const button = read("../../components/src/internal/button.tsx");
 
+    expect(button).toContain("@gpuixui/primitives/button");
     expect(primitives).toContain("hover:fill-secondary");
     expect(primitives).toContain("active:fill-secondary-pressed");
-    expect(button).toContain('filledHover(theme, "primary")');
-    expect(button).toContain('filledPressed(theme, "destructive")');
+    expect(variants).toContain("filledHover(theme, action)");
+    expect(variants).toContain("filledPressed(theme, action)");
+    expect(variants).toContain('...filled("primary")');
+    expect(variants).toContain('...filled("destructive")');
   });
 });
 
@@ -251,17 +258,25 @@ describe("the secondary variant paints the derived fills", () => {
   // under the floor, 1.000:1 in the variants a reader selects for clarity. It
   // derives both states from the `secondary` fill now, like the other actions,
   // so its label keeps an opaque step the filled-role contract measures.
-  const button = read("../../components/src/internal/button.tsx");
-  const secondary = button.slice(
-    button.indexOf('Match.when("secondary", () => ({'),
-    button.indexOf('Match.when("ghost", () => ({'),
+  const variants = read("../../primitives/src/core/variants.ts");
+  const secondary = variants.slice(
+    variants.indexOf("const secondary: ControlVariant"),
+    variants.indexOf("const washed:"),
+  );
+  const filled = variants.slice(
+    variants.indexOf("const filled = ("),
+    variants.indexOf("const primary: ControlVariant"),
   );
 
   it("paints both pointer states from the fill it replaces", () => {
-    expect(secondary).toContain('filledHover(theme, "secondary")');
-    expect(secondary).toContain('filledPressed(theme, "secondary")');
+    expect(secondary).toContain('...filled("secondary")');
+    expect(filled).toContain("filledHover(theme, action)");
+    expect(filled).toContain("filledPressed(theme, action)");
     expect(secondary, "the wash the fix replaced").not.toContain(
-      "backgroundColor: theme.colors.hover",
+      "theme.colors.hover",
+    );
+    expect(secondary, "the wash the fix replaced").not.toContain(
+      "theme.colors.active",
     );
   });
 
