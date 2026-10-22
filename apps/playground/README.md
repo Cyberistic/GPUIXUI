@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-78 probes a real window can prove, of which eighteen mount shipped
+79 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -54,7 +54,8 @@ the Button), three mount `@gpuixui/data`'s examples (the table, the virtualized
 table and the tree), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
-own wheel and size, a split pane, a virtual list, a paginated list's loading-row
+own wheel, a scroll region's keyboard contract and size, a split pane, a virtual
+list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
 handler, a field's hint and value ink, a configurable data grid, a resizable
@@ -1732,6 +1733,48 @@ reports `-100000`, not the distance actually travelled), while
 `onScrollChange`'s `scrollX`/`scrollY` is the clamped absolute pair the
 renderer holds — which is what `ScrollArea`'s `onScrollChange` forwards.
 Evidence: `.artifacts/live/scroll-end.png`.
+
+### `keyboard-scroll-lifecycle` — measured on 0.11.0 here
+
+The scroll region's **keyboard** contract through a window's delivery path. The
+offscreen suite proves the arithmetic (`runtime.keyDown(elementId, …)`), and
+that verb names the element the key is aimed at; a window has no such verb. A
+key reaches the **focused** element and bubbles, and `ScrollAreaViewport`'s
+handler stands down unless `getFocusedElementId()` is its own id — so the
+traversal that reaches the stop is part of the contract, not a setup step.
+
+The vertical region is 200×160 over a 40px field slot and eleven 40px rows, so
+the content is 480px and the end is `-320`. The sideways region is 320×120 over
+eighteen 80px columns, so its end is `-1120`. One line is the theme's own
+`density.rowHeight` (`32`), because the contract steps by the theme rather than
+by a literal.
+
+| Step | Check |
+| ---- | ----- |
+| traversal from the control before the region | the focus lands on the region, which is the only route a key can move it |
+| `down` | one density row (`-32`), and the region's `onScrollChange` readout follows the renderer |
+| `down`, `up` | `-64`, then back to `-32` |
+| `pagedown` | one viewport (`-192` from `-32`) |
+| `cmd-home` | no move: a chord is the platform's, not the region's |
+| `home` | `0` |
+| `pagedown` ×3 | `-160`, `-320`, then `-320` again — the third asks for `-480` and the runtime clamps at the content |
+| `home`, `end` | `0`, then `-320`, the content's real end |
+| `up`, `pageup` at the origin | `0`: a move never passes the start |
+| a field inside the region | a press starts the text session, `ab` reaches `onChange`, and an arrow leaves the region at `0` |
+| sideways `right`, `pagedown` | `-32`, `-352` — a page is the width the region shows |
+| sideways `end`, `home` | `-1120`, then `0` |
+| sideways `down` | no move on either axis: a vertical key is not the region's |
+| a `focusable={false}` region | the traversal skips it and a `down` leaves it at `0` |
+
+62 checks (many of them the repeated `getScrollOffset`/`onScrollChange` reads).
+Two negative controls measured, each exit `1`: pinning the page step to one line
+fails `pagedown moves kscroll-vertical` with `expected -64 ± 1, got -192`, so the
+page really is the viewport's side rather than a second line step; dropping
+`focusable={false}` from the third region fails
+`a traversal skips the region that opted out`
+(`expected "kscroll-after", got "kscroll-inert"`), so the check is the stop the
+traversal reaches rather than one absence among many.
+Evidence: `.artifacts/live/keyboard-scroll.png`.
 
 ### `nested-scroll-lifecycle` — measured on 0.11.0 here
 
@@ -4343,17 +4386,20 @@ registry and asserts its readout plus the rows that exist in the tree.
 | press row 905 | `1 selected` | a press chooses the record it hit, through the virtual window |
 | wheel `-300` | `1 selected` | the window leaves the chosen row and the choice is kept by **record** |
 | Reveal row 900 again | `1 selected` | the reveal brings the chosen row back and it is still chosen |
-| type `01` | `127 rows · 0 selected` | the query matches the row's whole text (`name status size`), so 127 records survive; the choice is released, and row 701 — outside the narrowed set — still reports its box |
-| wheel `-300` | `last=127` | the next scroll re-clamps the window to the narrowed set, and the paint holds `file-0601.ts` and its neighbours |
+| type `01` | `127 rows · 0 selected` | the query matches the row's whole text (`name status size`), so 127 records survive; the choice is released, a record the set no longer holds (`row-700`) leaves the tree, and the window re-clamps **in the same commit** — the tail fills the viewport from the narrowed set and ends on `file-0901.ts` |
+| wheel `-300` | `last=127` | the range report catches up with the narrowed set; the paint still fills the viewport from the narrowed tail, ends on `file-0901.ts`, and `row-700` (outside the set) never returns |
 
-The header keeps its painted `y` through every wheel, and the last two rows are
-the measured limit this probe found: narrowing the set while the window sits past
-its end leaves a row the app no longer holds still reporting its box, and only a
-scroll re-clamps the window. The data package's interlock row in `TODO.md`
-carries the investigation; the probe reports the behaviour rather than claiming a
-clean cut.
+The header keeps its painted `y` through every wheel. The last row is the
+measured bug this probe first found and now guards: a scroll offset belongs to
+the set it was measured against, so narrowing a thousand rows to 127 while the
+window sat near row 900 left the core clamping the stale offset to the new
+content's end and mounting five rows in a nine-row viewport — half the table
+blank until the next wheel. `useVirtualRows` clamps the offset to
+`count × rowHeight − viewport` before the window is computed, so the narrowed
+tail fills the viewport immediately and a record the set no longer holds is
+gone from the tree.
 
-26 checks, `--only virtual-table-lifecycle`, green on 0.11.0 (~0.7 s, three
+31 checks, `--only virtual-table-lifecycle`, green on 0.11.0 (~0.7 s, three
 consecutive runs). Fixture: `src/live/virtual-table.ts` (the ids, the readout's
 spelling and its two window states) + `virtual-table.test.ts` (6 cases: the
 example's row count, height and reveal index, the 127-row count **derived** from
@@ -4633,7 +4679,8 @@ narrower. Each deviation is deliberate and measured:
   `syntax-palette`, `press-routing-lifecycle`, `list-row-press`,
   `column-resize-lifecycle`, `button-activation-lifecycle` and
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
-  `data-tree-lifecycle` (twenty probes, each run alone).
+  `data-tree-lifecycle`, `keyboard-scroll-lifecycle` (twenty-one probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

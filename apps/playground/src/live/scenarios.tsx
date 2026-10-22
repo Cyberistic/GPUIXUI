@@ -97,6 +97,7 @@ import {
   Input,
   OTPField,
   RangeSlider,
+  ScrollArea,
   Select as PrimitiveSelect,
   Slider,
   SliderIndicator,
@@ -485,6 +486,22 @@ import {
   OUTER_MAX,
   OUTER_VIEWPORT,
 } from "./nested-scroll.js";
+import {
+  FIELD_SLOT,
+  HORIZONTAL_COLUMNS,
+  HORIZONTAL_COLUMN_WIDTH,
+  HORIZONTAL_MAX,
+  HORIZONTAL_VIEWPORT,
+  KEYBOARD_SCROLL_IDS,
+  VERTICAL_MAX,
+  VERTICAL_ROWS,
+  VERTICAL_ROW_HEIGHT,
+  VERTICAL_VIEWPORT,
+  lineStep,
+  offsetText,
+  predictedOffset,
+  type ScrollAction,
+} from "./keyboard-scroll.js";
 import { REVIEWERS } from "./combobox.js";
 import {
   VALIDATION_DESCRIPTION,
@@ -7620,6 +7637,461 @@ const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
     yield* ctx.host.capture("scroll-end");
+  });
+
+/**
+ * A scroll region reached by a real traversal and paged by real keys.
+ *
+ * `ScrollAreaViewport` is a tab stop with a keyboard contract — arrows move one
+ * density row, PageUp/PageDown a viewport, Home/End the ends — but its handler
+ * stands down unless the focus is its own, so the **window's** delivery path is
+ * the thing to measure: a traversal has to land on the stop before any key can
+ * move it, a chord has to stay the platform's, and a field inside has to keep
+ * its arrows. The offscreen suite reaches the same contract through
+ * `runtime.keyDown(elementId, …)`, which names the target and so proves none of
+ * that (README §`keyboard-scroll-lifecycle`).
+ *
+ * The fixture (`keyboard-scroll.ts`) sizes both regions and predicts each
+ * offset; the checks assert the value the renderer holds after the key.
+ */
+const KeyboardScrollProbe = (): ReactNode => (
+  <PrimitiveThemeProvider theme={palettes.dark}>
+    <KeyboardScrollStage />
+  </PrimitiveThemeProvider>
+);
+
+/** A focusable, unfilled control: the tab stop on either side of a region. */
+const KeyboardScrollStop = ({
+  testId,
+  label,
+}: {
+  readonly testId: string;
+  readonly label: string;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId={testId}
+      tabIndex={0}
+      role="button"
+      style={{
+        width: 120,
+        padding: theme.spacing.sm,
+        borderRadius: theme.radius.sm,
+        backgroundColor: theme.colors.muted,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {label}
+      </text>
+    </div>
+  );
+};
+
+const KeyboardScrollStage = (): ReactNode => {
+  const theme = useTheme();
+  const [vertical, setVertical] = useState<Smoke.Offset>({ x: 0, y: 0 });
+  const [horizontal, setHorizontal] = useState<Smoke.Offset>({ x: 0, y: 0 });
+  const [value, setValue] = useState("");
+
+  return (
+    <div
+      testId="kscroll-probe"
+      style={{
+        width: 760,
+        height: 460,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A traversal reaches the region, then the arrows, PageUp/PageDown, Home
+        and End move the renderer&apos;s own offset. A field inside keeps its
+        keys.
+      </text>
+      <KeyboardScrollStop
+        testId={KEYBOARD_SCROLL_IDS.before}
+        label="before the region"
+      />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-start",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.sm,
+          }}
+        >
+          <ScrollArea
+            axis="vertical"
+            label="Rows"
+            viewportTestId={KEYBOARD_SCROLL_IDS.vertical}
+            style={{
+              width: VERTICAL_VIEWPORT.width,
+              height: VERTICAL_VIEWPORT.height,
+            }}
+            onScrollChange={(event) =>
+              setVertical({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+            }
+          >
+            <div
+              style={{
+                height: FIELD_SLOT,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Input
+                testId={KEYBOARD_SCROLL_IDS.field}
+                label="Filter"
+                value={value}
+                onChange={setValue}
+              />
+            </div>
+            {Array.from({ length: VERTICAL_ROWS }, (_, index) => (
+              <div
+                key={index}
+                testId={`kscroll-row-${index}`}
+                style={{ height: VERTICAL_ROW_HEIGHT }}
+              >
+                <text
+                  style={{
+                    ...textStyle(theme, "body"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  {`row ${index}`}
+                </text>
+              </div>
+            ))}
+          </ScrollArea>
+          <text
+            testId={KEYBOARD_SCROLL_IDS.readout}
+            style={{
+              ...textStyle(theme, "code"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            {offsetText(vertical)}
+          </text>
+          <text
+            testId={KEYBOARD_SCROLL_IDS.value}
+            style={{
+              ...textStyle(theme, "code"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            {`value=${value}`}
+          </text>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.sm,
+          }}
+        >
+          <ScrollArea
+            axis="horizontal"
+            label="Columns"
+            viewportTestId={KEYBOARD_SCROLL_IDS.horizontal}
+            style={{
+              width: HORIZONTAL_VIEWPORT.width,
+              height: HORIZONTAL_VIEWPORT.height,
+            }}
+            onScrollChange={(event) =>
+              setHorizontal({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+            }
+          >
+            <div style={{ display: "flex", flexDirection: "row" }}>
+              {Array.from({ length: HORIZONTAL_COLUMNS }, (_, index) => (
+                <div
+                  key={index}
+                  testId={`kscroll-column-${index}`}
+                  style={{
+                    width: HORIZONTAL_COLUMN_WIDTH,
+                    height: HORIZONTAL_VIEWPORT.height - 40,
+                  }}
+                >
+                  <text
+                    style={{
+                      ...textStyle(theme, "body"),
+                      color: theme.colors.foreground,
+                    }}
+                  >
+                    {`col ${index}`}
+                  </text>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <ScrollArea
+            axis="vertical"
+            focusable={false}
+            label="Inert rows"
+            viewportTestId={KEYBOARD_SCROLL_IDS.inert}
+            style={{ width: 200, height: 120 }}
+          >
+            {Array.from({ length: 8 }, (_, index) => (
+              <div key={index} style={{ height: VERTICAL_ROW_HEIGHT }}>
+                <text
+                  style={{
+                    ...textStyle(theme, "body"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  {`inert ${index}`}
+                </text>
+              </div>
+            ))}
+          </ScrollArea>
+          <text
+            testId={`${KEYBOARD_SCROLL_IDS.readout}-horizontal`}
+            style={{
+              ...textStyle(theme, "code"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            {offsetText(horizontal)}
+          </text>
+        </div>
+      </div>
+      <KeyboardScrollStop
+        testId={KEYBOARD_SCROLL_IDS.after}
+        label="after the region"
+      />
+    </div>
+  );
+};
+
+const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(KEYBOARD_SCROLL_IDS.vertical);
+
+    const { vertical, horizontal, inert, field, before, after } =
+      KEYBOARD_SCROLL_IDS;
+    const line = lineStep(palettes.dark);
+    const verticalPage = VERTICAL_VIEWPORT.height;
+    const horizontalPage = HORIZONTAL_VIEWPORT.width;
+
+    /** The offset the renderer holds for one region. */
+    const offsetOf = (
+      id: string,
+    ): Effect.Effect<
+      Smoke.Offset,
+      Smoke.SmokeAssertionError | Smoke.SmokeHostError
+    > =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `the region ${id} reports a scroll offset`,
+          Option.fromNullishOr(yield* ctx.host.scrollOffset(id)),
+        );
+      });
+
+    /**
+     * Presses one key and holds the renderer's answer to the prediction.
+     *
+     * The renderer moves the scroller; the fixture only says where the move
+     * should end, so a drifted contract fails on the window's own value.
+     */
+    const moved = (
+      id: string,
+      action: ScrollAction,
+      axis: "x" | "y",
+      from: number,
+      page: number,
+      max: number,
+    ): Effect.Effect<void, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+      Effect.gen(function* () {
+        yield* ctx.host.key(action);
+        yield* Effect.sleep(SETTLE);
+        const current = yield* offsetOf(id);
+        yield* ctx.expectNear(
+          `${action} moves ${id}`,
+          axis === "x" ? current.x : current.y,
+          predictedOffset(from, action, line, page, max),
+          1,
+        );
+      });
+
+    // The traversal is the only route a window has into the region: a key aimed
+    // at an element that is not focused cannot scroll it.
+    yield* ctx.host.focusElement(before);
+    yield* ctx.expectEqual(
+      "the control before the region takes the focus",
+      yield* focusedAfterPaint(ctx),
+      before,
+    );
+    yield* ctx.host.focusNext();
+    yield* ctx.expectEqual(
+      "a native traversal lands on the scroll region",
+      yield* focusedAfterPaint(ctx),
+      vertical,
+    );
+
+    yield* ctx.expectEqual(
+      "the region starts at the origin",
+      offsetText(yield* offsetOf(vertical)),
+      "x=0 y=0",
+    );
+    yield* moved(vertical, "down", "y", 0, verticalPage, VERTICAL_MAX);
+    yield* ctx.expectEqual(
+      "the region's own readout follows the key",
+      yield* ctx.host.text(KEYBOARD_SCROLL_IDS.readout),
+      offsetText(yield* offsetOf(vertical)),
+    );
+    yield* moved(vertical, "down", "y", -line, verticalPage, VERTICAL_MAX);
+    yield* moved(vertical, "up", "y", -2 * line, verticalPage, VERTICAL_MAX);
+    yield* moved(vertical, "pagedown", "y", -line, verticalPage, VERTICAL_MAX);
+
+    // A chord belongs to the platform: `Cmd+Home` is a document shortcut, not a
+    // scroll, so the region keeps the offset it had.
+    yield* ctx.host.key("cmd-home");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "a chorded Home leaves the region where it was",
+      (yield* offsetOf(vertical)).y,
+      -line - verticalPage,
+      1,
+    );
+
+    yield* moved(vertical, "home", "y", 0, verticalPage, VERTICAL_MAX);
+    yield* ctx.expectEqual(
+      "Home returns the region to the origin",
+      offsetText(yield* offsetOf(vertical)),
+      "x=0 y=0",
+    );
+    yield* moved(vertical, "pagedown", "y", 0, verticalPage, VERTICAL_MAX);
+    yield* moved(
+      vertical,
+      "pagedown",
+      "y",
+      -verticalPage,
+      verticalPage,
+      VERTICAL_MAX,
+    );
+    // A third page asks for more than the content has: the runtime clamps it.
+    yield* moved(
+      vertical,
+      "pagedown",
+      "y",
+      VERTICAL_MAX,
+      verticalPage,
+      VERTICAL_MAX,
+    );
+    yield* ctx.expectEqual(
+      "a page past the end reports no offset beyond the content",
+      (yield* offsetOf(vertical)).y,
+      VERTICAL_MAX,
+    );
+    yield* moved(vertical, "home", "y", 0, verticalPage, VERTICAL_MAX);
+    yield* moved(vertical, "end", "y", 0, verticalPage, VERTICAL_MAX);
+    yield* ctx.expectEqual(
+      "End reaches the content's own end",
+      (yield* offsetOf(vertical)).y,
+      VERTICAL_MAX,
+    );
+    yield* moved(vertical, "home", "y", 0, verticalPage, VERTICAL_MAX);
+    yield* moved(vertical, "up", "y", 0, verticalPage, VERTICAL_MAX);
+    yield* moved(vertical, "pageup", "y", 0, verticalPage, VERTICAL_MAX);
+
+    // A field inside the region keeps its keys: the viewport scrolls only while
+    // the focus is its own. A press starts the platform's text session, which a
+    // programmatic focus does not (README §`text-input`).
+    yield* ctx.host.click(field);
+    yield* ctx.expectEqual(
+      "the field inside the region takes the focus",
+      yield* focusedAfterPaint(ctx),
+      field,
+    );
+    yield* ctx.host.key("a");
+    yield* ctx.host.key("b");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "typing reaches the field inside the region",
+      yield* ctx.host.text(KEYBOARD_SCROLL_IDS.value),
+      "value=ab",
+    );
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow in the field does not scroll its region",
+      (yield* offsetOf(vertical)).y,
+      0,
+    );
+
+    // A sideways region answers the horizontal keys and pages by its width; a
+    // vertical key is not its own, so it moves nothing.
+    yield* ctx.host.focusElement(horizontal);
+    yield* ctx.expectEqual(
+      "a native focus reaches the sideways region",
+      yield* focusedAfterPaint(ctx),
+      horizontal,
+    );
+    yield* moved(horizontal, "right", "x", 0, horizontalPage, HORIZONTAL_MAX);
+    yield* moved(
+      horizontal,
+      "pagedown",
+      "x",
+      -line,
+      horizontalPage,
+      HORIZONTAL_MAX,
+    );
+    yield* moved(horizontal, "end", "x", 0, horizontalPage, HORIZONTAL_MAX);
+    yield* ctx.expectEqual(
+      "End reaches the sideways content's own end",
+      (yield* offsetOf(horizontal)).x,
+      HORIZONTAL_MAX,
+    );
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a vertical key leaves the sideways region still",
+      (yield* offsetOf(horizontal)).y,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the sideways region keeps its pan through a vertical key",
+      (yield* offsetOf(horizontal)).x,
+      HORIZONTAL_MAX,
+    );
+    yield* moved(horizontal, "home", "x", 0, horizontalPage, HORIZONTAL_MAX);
+
+    // A region with `focusable={false}` is no tab stop and answers no keys.
+    yield* ctx.host.focusElement(horizontal);
+    yield* ctx.host.focusNext();
+    yield* ctx.expectEqual(
+      "a traversal skips the region that opted out",
+      yield* focusedAfterPaint(ctx),
+      after,
+    );
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a region that opted out answers no key",
+      (yield* offsetOf(inert)).y,
+      0,
+    );
+    yield* ctx.host.capture("keyboard-scroll");
   });
 
 /**
@@ -21796,10 +22268,13 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("virtual-table-revealed");
 
-    // The filter narrows the set while the window sits past its end. The row the
-    // window still holds is not in the narrowed set, and the paint does not
-    // re-clamp until the next scroll — the measured limit the interlock row in
-    // `TODO.md` carries for the data package.
+    // The filter narrows the set while the window sits past its end. A scroll
+    // offset belongs to the set it was measured against, so the window commits
+    // the narrowed set's clamp in the same render: records the set no longer
+    // holds leave the tree, and the tail still fills the viewport. Without the
+    // clamp the core lands the stale offset on the new content's end and mounts
+    // five rows in a nine-row viewport, so half the table goes blank until the
+    // next wheel.
     yield* ctx.host.click(VIRTUAL_TABLE_FILTER);
     yield* ctx.host.key("0");
     yield* ctx.host.key("1");
@@ -21810,37 +22285,60 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `${VIRTUAL_TABLE_FILTERED_ROWS} rows · 0 selected`,
     );
     yield* ctx.expectEqual(
-      "a row the narrowed set no longer holds is still painted",
-      yield* mounted(701),
-      true,
+      "a record the narrowed set does not hold leaves the tree",
+      yield* mounted(700),
+      false,
     );
-    yield* ctx.host.wheel(VIRTUAL_TABLE, 0, -300);
-    yield* Effect.sleep(SETTLE);
-    yield* ctx.expectContains(
-      "the next scroll re-clamps the window to the narrowed set",
-      yield* readout(),
-      `last=${VIRTUAL_TABLE_FILTERED_ROWS}`,
-    );
-    // The removed row keeps reporting its box even after the scroll: the
-    // runtime's virtual list still resolves an item it was handed before the
-    // count shrank, so a probe (or a screen reader) can find a row the app no
-    // longer lists. The data package's interlock row carries the investigation.
     yield* ctx.expectEqual(
-      "a row outside the narrowed set still reports its box",
+      "a record the narrowed set still holds stays painted",
       yield* mounted(701),
       true,
     );
     const painted = yield* ctx.host.paintedText();
+    const names = Arr.filter(painted, (line) => line.includes("file-"));
     yield* ctx.expectEqual(
-      "the paint holds a name from the filtered set",
-      Arr.join(
-        Arr.take(
-          Arr.filter(painted, (line) => line.includes("file-")),
-          3,
-        ),
-        " / ",
-      ),
-      "file-0601.ts / file-0602.ts / file-0603.ts",
+      "the tail fills the viewport from the narrowed set",
+      names.length >= Math.floor(320 / 36),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "and ends on the narrowed set's last record",
+      Option.match(Arr.last(names), {
+        onNone: () => "",
+        onSome: (name) => name,
+      }),
+      "file-0901.ts",
+    );
+    yield* ctx.host.wheel(VIRTUAL_TABLE, 0, -300);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the next scroll reports the narrowed set's range",
+      yield* readout(),
+      `last=${VIRTUAL_TABLE_FILTERED_ROWS}`,
+    );
+    yield* ctx.expectEqual(
+      "a record outside the narrowed set never returns",
+      yield* mounted(700),
+      false,
+    );
+    const afterScroll = yield* ctx.host.paintedText();
+    const namesAfter = Arr.filter(afterScroll, (line) =>
+      line.includes("file-"),
+    );
+    yield* ctx.expectEqual(
+      "the paint still fills the viewport from the narrowed set",
+      namesAfter.length >= Math.floor(320 / 36),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "and still ends on the narrowed set's last record",
+      Option.getOrElse(Arr.last(namesAfter), () => ""),
+      "file-0901.ts",
+    );
+    yield* ctx.expectEqual(
+      "a record outside the narrowed set never paints",
+      Arr.some(namesAfter, (name) => name === "file-0700.ts"),
+      false,
     );
   });
 
@@ -22634,6 +23132,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "scroll-lifecycle",
     view: () => <ScrollProbe />,
     steps: scrollSteps,
+  },
+  "keyboard-scroll-lifecycle": {
+    id: "keyboard-scroll-lifecycle",
+    view: () => <KeyboardScrollProbe />,
+    steps: keyboardScrollSteps,
   },
   "nested-scroll-lifecycle": {
     id: "nested-scroll-lifecycle",

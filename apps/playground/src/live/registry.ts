@@ -187,6 +187,12 @@ export const liveRegistry = [
     capability: "scroll",
   },
   {
+    id: "keyboard-scroll-lifecycle",
+    title:
+      "Scroll: a traversal reaches the region, arrows/page/Home/End move the renderer's offset, a field keeps its keys and an opted-out region answers none",
+    capability: "scroll",
+  },
+  {
     id: "nested-scroll-lifecycle",
     title:
       "Scroll: a wheel inside a nested scroller moves every scrollable ancestor by its delta, so the page and the list scroll together",
