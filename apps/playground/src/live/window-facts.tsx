@@ -12,7 +12,7 @@
  * report belongs here too.
  */
 import { createContext, useContext, type ReactNode } from "react";
-import type { WindowBackground } from "./backdrop.js";
+import { defaultWindowBackground, type WindowBackground } from "./backdrop.js";
 
 /** The window facts the runner knows and the renderer cannot report. */
 export interface WindowFacts {
@@ -20,7 +20,7 @@ export interface WindowFacts {
 }
 
 const WindowFactsContext = createContext<WindowFacts>({
-  background: "opaque",
+  background: defaultWindowBackground,
 });
 
 /** Read the facts of the window this tree is mounted in. */
