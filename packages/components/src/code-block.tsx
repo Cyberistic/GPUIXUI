@@ -18,7 +18,8 @@
  * The copy action is a **press**, not a clipboard write: `@gpuix/native@0.11.0`
  * publishes no clipboard API (measured; `docs/gpuix-capabilities.md`), so
  * `onCopy` owns the path — usually writing into the read-only field the platform
- * lets a reader copy from — and the block only acknowledges the press.
+ * lets a reader copy from — and the block only acknowledges the press through
+ * the shared `CopyButton` action.
  */
 
 import type { Props } from "@gpuix/react";
@@ -27,11 +28,9 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { Icon } from "@gpuixui/icons";
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { useEffect, useRef, useState } from "react";
 import {
   fadeFrom,
   presenceMotion,
@@ -40,14 +39,13 @@ import {
   useSurfaceTiming,
 } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { IconButton } from "./internal/button.js";
 import { nativeTextTheme, useTheme } from "./internal/theme.js";
+import { CopyButton } from "./copy-button.js";
 import {
   codeBlockDescription,
   codeBlockHeader,
   codeBlockName,
   codeRowCount,
-  copyAcknowledgementMs,
   hasCode,
 } from "./code-block/logic.js";
 
@@ -73,8 +71,6 @@ const CODE_BLOCK_RISE = 4;
 export interface CodeBlockState {
   /** Whether the source has anything to paint. */
   readonly hasCode: boolean;
-  /** Whether the copy action is showing its acknowledgement. */
-  readonly acknowledged: boolean;
   readonly reducedMotion: boolean;
 }
 
@@ -153,26 +149,7 @@ export const CodeBlock = ({
   const content = hasCode(code);
   const timing = useSurfaceTiming(level === "none" ? "normal" : level);
   const presence = useSurfacePresence(true, timing);
-  const [acknowledged, setAcknowledged] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const base = testId ?? "code-block";
-
-  useEffect(
-    () => () => {
-      if (timer.current !== undefined) clearTimeout(timer.current);
-    },
-    [],
-  );
-
-  const copy = (): void => {
-    onCopy?.(code);
-    setAcknowledged(true);
-    if (timer.current !== undefined) clearTimeout(timer.current);
-    timer.current = setTimeout(
-      () => setAcknowledged(false),
-      copyAcknowledgementMs,
-    );
-  };
 
   const capped = Option.getOrUndefined(
     Option.filter(
@@ -183,7 +160,6 @@ export const CodeBlock = ({
 
   const state: CodeBlockState = {
     hasCode: content,
-    acknowledged,
     reducedMotion: preference === "reduced",
   };
   const spansHeader =
@@ -248,18 +224,16 @@ export const CodeBlock = ({
                 ),
               })}
               {onCopy === undefined ? null : (
-                <IconButton
+                <CopyButton
                   testId={`${base}-copy`}
                   size="sm"
-                  label={acknowledged ? copiedLabel : copyLabel}
-                  onClick={copy}
-                >
-                  <Icon
-                    name={acknowledged ? "check" : "copy"}
-                    size="sm"
-                    color={theme.colors.mutedForeground}
-                  />
-                </IconButton>
+                  text={code}
+                  onCopy={onCopy}
+                  label={copyLabel}
+                  copiedLabel={copiedLabel}
+                  level={level === "none" ? "none" : "fast"}
+                  color={theme.colors.mutedForeground}
+                />
               )}
             </div>
           </div>

@@ -27,7 +27,7 @@ import {
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { CodeBlock } from "../code-block.js";
-import { copyAcknowledgementMs } from "../code-block/logic.js";
+import { COPY_ACKNOWLEDGEMENT_MS } from "../copy-button/logic.js";
 import { MotionProvider } from "../motion.js";
 
 const SOURCE = "const answer = 42;";
@@ -124,7 +124,7 @@ describe("CodeBlock", () => {
 
       await waitFor(
         () => expect(nodeWith(page, "button")?.name).toBe("Copy"),
-        copyAcknowledgementMs + 1_000,
+        COPY_ACKNOWLEDGEMENT_MS + 1_000,
       );
     } finally {
       page.unmount();

@@ -100,8 +100,9 @@ const [mirror, setMirror] = useState("");
 `@gpuix/native@0.11.0` publishes **no clipboard write** (measured in the
 capability record). The block therefore does not pretend: `onCopy` receives the
 source and the caller decides how it reaches the clipboard — commonly by writing
-it into a read-only field the platform lets a reader copy from. The action
-acknowledges the **press** for 1.2 s and returns to its copy name; it does not
+it into a read-only field the platform lets a reader copy from. The action is the
+package's `CopyButton`: it acknowledges the **press** for 1.2 s, arrives its
+checked glyph on the house entrance and returns to its copy name; it does not
 claim a write finished.
 
 ## Motion
@@ -140,7 +141,7 @@ runtime has no `transform` (upstream issue #102) and no filter.
 | `copiedLabel` | `string` | `"Copied"` | The name the action carries after a press. |
 | `onCopy` | `(code: string) => void` | — | The clipboard path. Omit it and no copy action paints. |
 | `className` | `string` | — | A Tailwind class string for the card, merged last. |
-| `style` | `StateStyle<CodeBlockState>` | — | The card's style, or a function of `{ hasCode, acknowledged, reducedMotion }`. |
+| `style` | `StateStyle<CodeBlockState>` | — | The card's style, or a function of `{ hasCode, reducedMotion }`. |
 
 `CodeBlockState` is exported for a state-aware `style`. The internal parts carry
 `<testId>-title`, `-language`, `-copy`, `-source`, `-empty`; the `testId` (default

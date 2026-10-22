@@ -146,6 +146,3 @@ export const codeBlockDescription = (
         onNone: () => "",
         onSome: (name) => ` of ${name}`,
       })}`;
-
-/** How long the copy action acknowledges a press, in milliseconds. */
-export const copyAcknowledgementMs = 1_200;

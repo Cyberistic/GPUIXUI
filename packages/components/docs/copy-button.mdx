@@ -1,0 +1,139 @@
+---
+title: Copy button
+description: The icon action that asks the application to copy a value and acknowledges the press.
+---
+
+`CopyButton` is the press, not the write. `@gpuix/native@0.11.0` publishes no
+clipboard API, so the application owns the path — a read-only field, a platform
+write, an application store — and the control hands it the text, swaps its glyph
+and name for a moment, and reports nothing it cannot know. It is the action
+`CodeBlock` shows in its header, extracted for a token row, a command list or a
+key-value panel.
+
+## Usage
+
+```tsx
+import { useState } from "react";
+import { CopyButton } from "@gpuixui/components";
+
+const [mirror, setMirror] = useState("");
+
+<CopyButton text={token} onCopy={setMirror} />;
+```
+
+The read-only field beside the control is the path the runtime actually has: the
+platform lets a reader select and copy from it. An application with its own
+clipboard bridge hands that function to `onCopy` instead.
+
+## The acknowledgement
+
+A press does three things: it calls `onCopy(text)`, swaps the copy glyph for a
+check, and renames the button from `Copy` to `Copied`. After 1.2 s it returns.
+The window belongs to the control, so a second press **restarts** it instead of
+stacking a timer that would clear the confirmation early:
+
+```tsx
+<CopyButton
+  text="npm i @gpuixui/components"
+  onCopy={writeToMirror}
+  acknowledgeMs={2_000}
+/>;
+```
+
+`acknowledgeMs` must be a positive, finite number; anything else falls back to
+the house window rather than firing in the press frame or never clearing. Both
+names are the caller's, and a blank one falls back to `Copy`/`Copied` because an
+icon-only control with no name is an unnamed button to a screen reader.
+
+## Motion
+
+The checked glyph arrives with the house entrance on the `fast` level: a fade
+and a 3 px rise, the same seam `Reveal` and every overlay use. The resting copy
+glyph does not animate — a toolbar that moves on load reads as jitter.
+
+```tsx
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <CopyButton text={token} onCopy={setMirror} />
+</MotionProvider>;
+```
+
+`level="none"` paints the checked glyph at rest for a crowded toolbar, and
+`MotionProvider preference="reduced"` zeroes the duration so the new mark paints
+in the frame it appears. The runtime has no `transform` (upstream issue #102), so
+the arrival is an offset, not a scale.
+
+## Sizes
+
+```tsx
+<CopyButton text={token} onCopy={setMirror} size="sm" />
+<CopyButton text={token} onCopy={setMirror} size="md" />
+<CopyButton text={token} onCopy={setMirror} size="lg" />
+```
+
+The control is square, and its side follows the theme's density scale at each
+size. It is the package's icon action, so a `sm` action sits in a header row
+beside a `sm` button without re-baselining.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `text` | `string` | — | The value handed to `onCopy` on a press. |
+| `onCopy` | `(text: string) => void` | — | The caller's write; the runtime calls it once per press. |
+| `label` | `string` | `"Copy"` | The accessible name at rest. |
+| `copiedLabel` | `string` | `"Copied"` | The name while the acknowledgement shows. |
+| `acknowledgeMs` | `number` | `1200` | How long the confirmation stays; a non-positive or non-finite value falls back. |
+| `size` | `"sm" \| "md" \| "lg"` | `"sm"` | The square side from the theme's density scale. |
+| `disabled` | `boolean` | `false` | Leaves the tab order, drops the handlers and never reaches `onCopy`. |
+| `color` | `string` | `mutedForeground` | The glyph's role. GPUix does not inherit colour into an `<svg>`. |
+| `level` | `MotionLevel \| "none"` | `"fast"` | The acknowledged glyph's entrance. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+| `style` | `StateStyle<CopyButtonState>` | — | The control's style, or a function of `{ acknowledged, reducedMotion }`. |
+
+The button carries the `testId` (default `copy-button`); its glyph's wrapper
+carries `<testId>-glyph`. `CopyButtonState` is exported for a state-aware
+`style`. A disabled action leaves the tab order, drops its handlers and never
+reaches `onCopy`.
+
+## Accessibility
+
+The control publishes one focusable `button` whose name changes with the state,
+so a reader hears "Copied" after their press and "Copy" once the window closes.
+The glyph is decorative and agrees with the name — there is no separate node to
+announce. There is **no live region** in `0.11.0`, so the confirmation is the
+button's own name; it renames rather than pushing a notice into a queue.
+
+A caller's labels should describe the value, not the control: "Copy the API
+token" is more useful than three identically named "Copy" buttons in one panel.
+
+## Limitations
+
+- **No clipboard write.** The runtime has no clipboard API, so the control calls
+  the caller's `onCopy` and acknowledges the press — it cannot report a finished
+  write, and a caller that fails to write has no error surface here.
+- **The confirmation is the button's name.** `0.11.0` publishes no live region,
+  so a reader who is not on the control does not hear the acknowledgement.
+- **The glyph fades and rises, it does not scale.** The runtime has no
+  `transform` (upstream issue #102).
+- **The glyph paints one role.** An `<svg>` takes its colour from its own style,
+  so the hover wash paints the well behind the vector, not the vector.
+
+## Verification
+
+`src/behaviour/copy-button.test.tsx` renders the control in the real GPUix
+renderer (5 tests): the text handed to the caller and the name returning after
+the window, a second press restarting rather than stacking, the 3 px arrival
+measured on the motion clock, `level="none"` at rest with no motion target, the
+reduced preference painting the checked glyph at rest in its first frame, and a
+disabled action keeping its name while never reaching `onCopy`. The decisions are
+`src/copy-button/logic.test.ts`
+(6 tests): the two names, a caller's copy with the blank fallbacks, the glyph
+pair, and the window's house default and refusals.
+
+## Related
+
+- [Code block](/docs/components/code-block) — the header action this control was
+  extracted from.
+- [Reveal](/docs/components/reveal) — the entrance the acknowledged glyph uses.
+- [Button](/docs/primitives/button) — the action the icon control is built on.
+- [Runtime](/docs/runtime) — the measured absence of a clipboard API.
