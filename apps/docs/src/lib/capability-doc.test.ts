@@ -116,6 +116,42 @@ const measuredRow = (label: string) =>
     (row[0] ?? "").startsWith(label),
   );
 
+/** The offscreen row whose label starts with `label`, or `undefined`. */
+const offscreenRow = (label: string) =>
+  sectionRows("## Measured offscreen").find((row) =>
+    (row[0] ?? "").startsWith(label),
+  );
+
+/**
+ * The probe ids the page cites as `(`id`)` in its two measured sections.
+ *
+ * The citation shape is what keeps a hyphenated value in prose (`wrow-60`) out
+ * of the list: a probe is named in parentheses, not mentioned in a sentence.
+ */
+const citedProbes = (): ReadonlyArray<string> => {
+  const ids = (heading: string) =>
+    sectionRows(heading)
+      .flatMap((row) => row)
+      .flatMap((cell) => [...cell.matchAll(/\(`([a-z][a-z0-9-]*)`\)/g)])
+      .map((match) => match[1] ?? "");
+  return Array.from(
+    new Set([...ids("## Measured in a window"), ...ids("## Measured offscreen")]),
+  );
+};
+
+/** The probe ids the playground's headless and live registries declare. */
+const registeredProbes = (): ReadonlySet<string> => {
+  const ids = (path: string) =>
+    [...read(path).matchAll(/\n\s*id: "([^"]+)",/g)].map(
+      (match) => match[1] ?? "",
+    );
+  return new Set([
+    ...ids("apps/playground/src/scenarios/registry.ts"),
+    ...ids("apps/playground/src/live/registry.ts"),
+  ]);
+};
+
+
 /** The typings-gap row whose label starts with `label`, or `undefined`. */
 const typingsRow = (label: string) =>
   sectionRows("## Not in the typings").find((row) =>
@@ -563,6 +599,64 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(selection?.[2]).toContain("alignSelf");
   });
 
+  it("records the accessibility tree a test renderer reported", () => {
+    // The record's aria row says which attributes are accepted, and nothing said
+    // what they become — or that a node without a role is not in the tree at
+    // all. The tooltip's "reaches a screen reader as `aria-description`" and the
+    // inventory's announced-state rows rested on a tree no one had read.
+    // `a11y-tree` read it: the role arrives as the platform's own name, the seven
+    // attributes land on their fields, and a roleless div is absent.
+    const tree = rowFor("Accessibility tree");
+    expect(tree?.verdict).toBe("supported, with limits");
+    expect(tree?.evidence).toContain("a11y-tree");
+    expect(tree?.evidence).toContain("ListBoxOption");
+    expect(tree?.evidence).toContain("author_id");
+    expect(tree?.evidence).toContain('role="none"');
+    expect(tree?.evidence).toContain("TestRenderer");
+    expect(tree?.workaround).toContain("role");
+  });
+
+  it("publishes the accessibility tree offscreen on /docs/runtime", () => {
+    // The tree is a `TestRenderer` fact, so it is listed apart from the window
+    // measurements rather than inside a section that promises paints.
+    expect(runtimePage).toContain("## Measured offscreen");
+
+    const tree = offscreenRow("Accessibility tree");
+    expect(
+      tree,
+      "the page's offscreen table has no accessibility row",
+    ).toBeDefined();
+    expect(tree?.[1]).toContain("a11y-tree");
+    expect(tree?.[1]).toContain("ListBoxOption");
+    expect(tree?.[1]).toContain('role="none"');
+    expect(tree?.[2]).toContain("aria-valuetext");
+  });
+
+  it("cites only registered probes, and owes every one of them in the record", () => {
+    // A row's citation is the only evidence path a reader has, so an id that no
+    // playground registry declares would point at a probe that does not exist,
+    // and a page probe missing from §5 is one the record never owed. It caught a
+    // pre-existing omission the accessibility row would otherwise have hidden:
+    // the virtual-list row cited `virtual-list-lifecycle` while §5 owed it no
+    // line. Directions measured: dropping `a11y-tree` from §5 fails naming it,
+    // and a mistyped page citation (`a11y-tre`) fails the registry case.
+    const cited = citedProbes();
+    expect(cited.length).toBeGreaterThanOrEqual(15);
+
+    const registered = registeredProbes();
+    expect(registered.size).toBeGreaterThanOrEqual(40);
+    const unknown = cited.filter((id) => !registered.has(id));
+    expect(
+      unknown,
+      "the page cites a probe no playground registry declares",
+    ).toEqual([]);
+
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
+    expect(keeping).not.toBe("");
+    const unowed = cited.filter((id) => !keeping.includes(id));
+    expect(unowed, "the record's §5 owes no line for these probes").toEqual([]);
+  });
+
   it("records the typings gaps a component composes around", () => {
     // `COMPONENTS.md`'s rows relied on five absences the record never named, so
     // a plan reading only the record could pass `href`, `fieldset`, `onPaste`
@@ -677,6 +771,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("select-lifecycle");
     expect(runtimePage).toContain("floating-sides");
     expect(runtimePage).toContain("portal-layer");
+    expect(runtimePage).toContain("a11y-tree");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });

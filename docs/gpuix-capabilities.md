@@ -110,6 +110,7 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Paste event (`onPaste`) | not supported | `HostProps` declares no `onPaste`; the platform's paste runs inside a focused field and reaches `onChange` with the new value, **measured** by `clipboard-lifecycle` | read the pasted text from the new value in `onChange`. There is no paste payload, caret or insert-at-selection API, so an `OTPField`'s paste is unverified |
 | Live regions (`aria-live`, `aria-atomic`) | not supported | the `aria-*` set below is closed and has no live-region attribute, so a container cannot declare one; `Toast` paints `role="status"` as a marker and does not claim an announcement, and `Countdown` and `MessageScroller` document the same gap | move the focus to the new message, or name the control that changed; do not present a toast or a ticking countdown as announced |
 | `role` and the `aria-*` subset | supported, with limits | `role` plus exactly seven `aria-*` attributes: `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-labelledby`, `aria-describedby`, `aria-orientation`, `aria-controls`, `aria-disabled`, `aria-pressed`, `aria-haspopup`, `aria-current`, `aria-activedescendant`, `aria-live` or `aria-atomic` | name each control through its own `label`/`aria-label`; put a numeric value in `aria-valuetext`; there is no `labelledby` relationship, no pressed or checked state and no live region |
+| Accessibility tree (`getA11yTree()`) | supported, with limits | what the attributes above actually become, read from the offscreen renderer's `getA11yTree()` and **measured** by the headless `a11y-tree` scenario: the ARIA token is the **platform's** role name (`button` → `Button`, `option` → `ListBoxOption`, `heading` → `Heading`, `progressbar` → `ProgressIndicator`), `aria-label`/`aria-description`/`aria-id` reach `label`/`description`/`author_id`, `aria-selected`/`aria-expanded`/`aria-level`/`aria-valuetext` reach `selected`/`expanded`/`level`/`value`, an `onClick` with a `tabIndex` surfaces as the `Click` and `Focus` actions, and a `<text>` is a `Label` node carrying its content. **A node needs a role to exist at all**: a `div` with an `aria-label` and no role paints no node, and `role="none"` is dropped. This is a `TestRenderer` fact — a window's automation protocol has no a11y verb | give an element that must be announced both a `role` and its label, and assert the platform's role name rather than the ARIA token; publish a state the closed set can carry (`aria-valuetext`) instead of `aria-checked`/`aria-valuenow`. Announcement of a change still has no path: there is no live region |
 
 ## 4. Accessibility and motion, cross-cutting
 
@@ -126,9 +127,16 @@ anything a sighted user sees only on focus is also published as
 `aria-description`, which the runtime does deliver.
 
 Assistive technology sees a node only when it has **both** an id (always set) and
-a `role`; `"none"`/`"presentation"` remove the node. Focus rings are painted by
-`focusVisible`, which is measured to paint after Tab and never after a mouse
-press — the tokens package owns the helper (`keyboardFocusRing`) and the policy.
+a `role`; `"none"`/`"presentation"` remove the node. The `a11y-tree` scenario
+read the tree those rules produce: the role reaches the platform under its own
+name (`option` is `ListBoxOption`), the seven `aria-*` attributes land on
+`label`/`description`/`author_id`/`selected`/`expanded`/`level`/`value`, a
+`<text>` is a `Label`, and a roleless `div` carrying only an `aria-label` is
+absent from the tree. That tree is the offscreen `TestRenderer`'s; a window's
+automation protocol has no a11y verb, so it is not among the window probes above.
+Focus rings are painted by `focusVisible`, which is measured to paint after Tab
+and never after a mouse press — the tokens package owns the helper
+(`keyboardFocusRing`) and the policy.
 
 Motion is springs over numeric fields only, with no keyframes and no
 reduced-motion flag; the state-driven design rule is to make motion optional and
@@ -141,13 +149,16 @@ short, never the carrier of meaning.
   that matrix: a row and the code cannot disagree about whether the runtime
   supports something, and a new matrix key without a row fails by name.
 - The same test holds `/docs/runtime` to this file: the site's *measured in a
-  window* section must name the probes behind every gap it lists
-  (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
+  window* and *measured offscreen* sections must name the probes behind every gap
+  they list (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
   `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`, `content-surfaces`,
   `selection-lifecycle`, `clipboard-lifecycle`, `virtual-tree-lifecycle`,
-  `virtual-list-windowed`, `virtual-list-rows`, `portal-layer`,
-  `data-grid-frozen-column`, `select-lifecycle`, `floating-sides`), because a
-  measured gap is absent from the typings rather than merely hard to find.
+  `virtual-list-lifecycle`, `virtual-list-windowed`, `virtual-list-rows`,
+  `portal-layer`, `data-grid-frozen-column`, `select-lifecycle`,
+  `floating-sides`, `a11y-tree`), because a measured gap is absent from the
+  typings rather than merely hard to find. Every id a page row cites must be a
+  registered probe in `apps/playground` and appear in this list, so a row cannot
+  cite a probe that does not exist or a probe the record does not owe.
 - The five absences the typings alone prove — links (`href`), `fieldset`,
   `onContextMenu`, `onPaste` and the closed `aria-*` set — are held from both
   sides too: a row dropped from this file, a page row dropped from

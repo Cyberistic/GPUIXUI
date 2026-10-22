@@ -54,6 +54,16 @@ path and the alternative — is
 This page publishes the subset a reader of the docs needs; that document is what
 a component plan cites.
 
+## Measured offscreen
+
+One measurement is not a window fact: the accessibility tree is read from the
+offscreen `TestRenderer`, because a window's automation protocol has no a11y
+verb. It is listed apart so the section above stays a record of paints.
+
+| Capability | What the test renderer reported | Use instead |
+| --- | ------------------------------ | ----------- |
+| Accessibility tree | the role reaches the platform under its **own** name — `button` is `Button`, `option` is `ListBoxOption`, `heading` is `Heading`, `progressbar` is `ProgressIndicator` — while `aria-label`/`aria-description`/`aria-id` land on `label`/`description`/`author_id`, `aria-selected`/`aria-expanded`/`aria-level`/`aria-valuetext` on `selected`/`expanded`/`level`/`value`, and `onClick` + `tabIndex` surface as `Click` and `Focus` (`a11y-tree`). A `<text>` is a `Label`. **A node needs a role to exist**: a `div` with only an `aria-label` paints no node and `role="none"` is dropped | give an element that must be announced both a `role` and its label, and assert the platform's role name rather than the token you passed; carry a state in `aria-valuetext`, since there is no `aria-checked`/`aria-valuenow` and no live region to announce a change |
+
 ## Not in the typings
 
 The matrix above is built from `@gpuixui/runtime`'s own keys. These five are
