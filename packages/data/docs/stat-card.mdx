@@ -1,16 +1,10 @@
 ---
 title: Statistic / metric cards
-description: A card that shows one derived reading, with its label, its unit and its trend.
+description: A card that shows one derived reading.
 ---
 
-`StatCard` shows **one** reading: what it measures, the number, and — when the
-reader needs it — the unit and the way it moved.
-
-The reading is **derived, never stored twice**: the card is handed the value it
-shows, so an edit that reaches the object reaches the card in the same frame.
-`inspector-lifecycle` measured the area card following a width change
-(9600 → 19200) in the same frame as the preview box, the `size` row and the
-readout.
+`StatCard` shows **one** reading: what it measures, the number, and optionally the
+unit and the way it moved.
 
 ## Usage
 
@@ -19,10 +13,6 @@ import { StatCard } from "@gpuixui/data";
 
 <StatCard label="Area" value={`${width * height}`} unit="px²" />;
 ```
-
-The full build is the `surfaces` example in
-`packages/data/examples/surfaces.example.tsx`, which the native playground
-mounts.
 
 ## API
 
@@ -34,65 +24,7 @@ mounts.
 | `hint` | `ReactNode` | — | a line under the reading |
 | `trend` | `StatTrend` | — | `{ direction: "up" \| "down" \| "flat", text: string }` |
 
-Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
-pointer and key handlers) and **merges `style` last**.
-
-```tsx
-<StatCard
-  label="Downloads"
-  value="1284"
-  trend={{ direction: "up", text: "+12%" }}
-/>
-```
-
-## Theming
-
-| Part | Reads |
-| ---- | ----- |
-| the card's surface | the `card` fill, with the `border` edge |
-| the reading | `foreground`, at the registry's `2xl` step (24/32, weight 600) |
-| the label and the hint | `mutedForeground`, at the registry's `xs` step |
-| the unit | `mutedForeground`, beside the reading |
-| a rising trend | `statusTone(theme, "success").foreground` |
-| a falling trend | `statusTone(theme, "destructive").foreground` |
-| a flat trend | `mutedForeground` |
-
-A trend is **text on the card**, so it reads the status tone's readable role
-(`statusTone(...).foreground`), which the tokens contract holds to the body
-floor on `card` and `background`. The solid `success` / `destructive` fills are
-marks — measured at the 3:1 floor — and the base light `success` is 4.26:1 on
-the page, so a card painted there would ship a trend nobody can read.
-`src/surfaces/stat-card.test.ts` sweeps both surfaces over every shipped,
-high-contrast, platform and authored style.
-
-## Accessibility
-
-- The card is a `div` and carries no role: it is a group of text.
-- The label is a separate line from the reading, so a screen reader reads
-  "Area", then "9600", then "px²" — name first, then value.
-- The trend's words are text, not a colour alone: `+12%` is painted beside the
-  reading and the colour only repeats it.
-
 ## Limitations
 
-- The card does not size itself: it fills the box it is given, so a grid of
-  cards wants a fixed width or a flex row.
-- The reading is a node, not a number: the card formats nothing. Pass the
-  string you want painted.
-
-## Verification
-
-`src/behaviour/surfaces.test.tsx` runs in the real GPUix renderer: the width
-action moves the card's reading from 9600 to 19200 **in the same frame**, with
-no timer and no second copy of the number. `src/surfaces/stat-card.test.ts`
-holds the trend's painter to the readable status role on both surfaces a card
-stands on, across the sixteen shipped styles. Run them with:
-
-```sh
-nub run --filter @gpuixui/data test:behaviour
-```
-
-## Related
-
-- **Key-value displays** — the same object, read row by row.
-- **Property panels** — the panel that edits the object the card reads.
+- The card does not size itself; it fills the box it is given.
+- The reading is a node, not a number: the card formats nothing.

@@ -1,16 +1,10 @@
 ---
 title: Expandable rows
-description: A table row that opens a detail panel under itself, without a row span.
+description: A table row that opens a detail panel under itself.
 ---
 
-`TableExpandableRow` is a row that opens a panel under itself. GPUix has no row
-span and no sticky position, so the panel cannot be a cell inside the row: the
-row is a horizontal box whose height is its content, while a panel needs the
-table's **content width** and room to grow. The composition is two rows — the
-row and a `TableDetailRow` sibling under it.
-
-The expansion state is the app's. `toggleExpanded` is the tree package's
-reducer, so a table and a tree cannot disagree about what "open" means.
+`TableExpandableRow` is a row that opens a panel under itself; the composition is
+two rows — the row and a `TableDetailRow` sibling.
 
 ## Usage
 
@@ -24,8 +18,9 @@ import {
   TableRow,
   TableViewport,
 } from "@gpuixui/data";
+import { useState } from "react";
 
-const [open, setOpen] = useState(HashSet.empty<string>());
+const [open, setOpen] = useState<string | null>(null);
 
 <Table height={300} aria-label="Files with details">
   <TableViewport>
@@ -33,21 +28,15 @@ const [open, setOpen] = useState(HashSet.empty<string>());
       <TableRow>
         <TableHeaderCell width={32} />
         <TableHeaderCell width={200}>Name</TableHeaderCell>
-        <TableHeaderCell width={120}>Status</TableHeaderCell>
       </TableRow>
     </TableHeader>
     <TableBody>
       {files.map((file) => (
         <TableExpandableRow
           key={file.id}
-          expanded={HashSet.has(open, file.id)}
-          onToggle={() => setOpen((current) => toggleExpanded(current, file.id))}
-          cells={
-            <>
-              <TableCell width={200}>{file.name}</TableCell>
-              <TableCell width={120}>{file.status}</TableCell>
-            </>
-          }
+          expanded={open === file.id}
+          onToggle={() => setOpen(open === file.id ? null : file.id)}
+          cells={<TableCell width={200}>{file.name}</TableCell>}
           detail={<KeyValue entries={detailOf(file)} />}
         />
       ))}
@@ -55,23 +44,6 @@ const [open, setOpen] = useState(HashSet.empty<string>());
   </TableViewport>
 </Table>;
 ```
-
-The header's first cell is the expander track (`toggleWidth`, 32px by default).
-The full screen is `packages/data/examples/expandable-rows.example.tsx`, mounted
-by the native playground as the `expandable-rows` example.
-
-## Behaviour
-
-- A press anywhere on the row opens or closes its panel. The row carries
-  `aria-expanded`, so the state is announced.
-- A press **on the panel** does not close the row: the panel is a sibling, not a
-  child of the row.
-- The panel is as wide as the row it belongs to, and its height pushes every row
-  below it down by exactly that height.
-- The chevron is decoration. It is an `<svg>` whose `pointerEvents: "none"`
-  leaves the press to the row, because a painted child is where GPUI's hit test
-  stops (`press-routing-lifecycle`). A grid that also chooses rows puts a
-  painted control (a checkbox) in a cell, which then takes its own press.
 
 ## API
 
@@ -81,72 +53,12 @@ by the native playground as the `expandable-rows` example.
 | `onToggle` | `() => void` | — | the row's press; the caller flips `expanded` |
 | `cells` | `ReactNode` | — | the row's cells, after the expander track |
 | `detail` | `ReactNode` | — | the panel painted under the row while it is open |
-| `toggleWidth` | `number` | `32` | the expander track's width; the header needs a cell of the same width |
-| `detailTestId` | `string` | — | the panel's test id; its cell is `${detailTestId}-cell` |
-| `selected`, `disabled`, `instanceRef`, `className`, `style`, `testId` | | | forwarded to the row (`TableRow`) |
-
-`TableDetailRow` is exported for a caller that paints its own row: it is one
-`role="row"` on the `muted` strip whose single `role="cell"` fills the content
-width.
-
-## Measured rules
-
-`virtual-list-expand` measured the growth on `@gpuix/native@0.11.0`: a painted
-row that grows re-measures on the next frame with no scroll, the rows below
-shift by the growth, and the measured height is remembered across the window
-round trip.
-
-Two consequences for a grid:
-
-- **the body is sized for the open row.** `<virtual-list>` in `itemCount` mode
-  positions rows from a fixed `estimatedItemHeight`, so an expanding row belongs
-  in the plain table or the list's children mode. A fixed-height window would
-  misplace every row below the open one.
-- **the viewport must leave room for the panel.** The list paints whole rows, so
-  a growth that leaves less than one row of viewport defers the following row's
-  paint until a scroll.
-
-## Theming
-
-The panel paints the `muted` strip and `mutedForeground` text, so a detail panel
-reads as a container rather than a second row. The expander track paints no fill
-— a fill there would be the hit-test boundary and the row would stop answering
-the press. The chevron paints `mutedForeground`.
-
-## Accessibility
-
-- The row keeps `role="row"` and carries `aria-expanded`.
-- The panel is `role="row"` with a `role="cell"`, so a reader meets it in table
-  order after the row it belongs to.
-- 0.11.0 has no row-span attribute, which is why the panel is a sibling row
-  rather than a spanning cell.
+| `toggleWidth` | `number` | `32` | the expander track's width |
+| `detailTestId` | `string` | — | the panel's test id |
 
 ## Limitations
 
-- One panel per row; two rows can be open at once, and the caller decides.
-- No animation of the panel's height (the runtime has no transform and no
-  height tween through this component); the panel appears on the frame the row
-  opens.
-- A row that changes height while painted re-measures on the next frame, so a
-  windowed table cannot use it — the plain table or the list's children mode is
-  the honest composition.
-- The docs site cannot render this component live — it is a GPUix host tree,
-  not DOM. The code above is the real source.
-
-## Verification
-
-`src/behaviour/expandable.test.tsx` (5 tests) mounts the shipped example in the
-real renderer: a press opens the panel and a second closes it, the panel spans
-the row's width with its cell filling it, the rows below move by exactly the
-panel's height, a press on the panel keeps the row open, and a press on the
-chevron's own edge opens the row.
-
-```sh
-nub run --filter @gpuixui/data test:behaviour
-```
-
-## Related
-
-- **Tables** — the row and header composition this extends.
-- **Property panels** — the usual content of a detail panel.
-- **Tree views** — the hierarchical version of open and close.
+- One panel per row; two rows can be open at once.
+- No animation of the panel's height.
+- A windowed table cannot use it; use the plain table or the list's children mode.
+- The docs site cannot render this component live.

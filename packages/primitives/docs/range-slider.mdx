@@ -3,10 +3,8 @@ title: RangeSlider
 description: Two values — the ends of one interval — on a single track.
 ---
 
-`RangeSlider` is a minimum and a maximum on one track: a price band, a time
-window, a size range. It is a **second component**, not a mode of `Slider`,
-because its accessibility contract is different: the group contains two
-sliders, each with its own value and tab stop.
+`RangeSlider` is a minimum and a maximum on one track; a second component, not a
+mode of `Slider`.
 
 ## Usage
 
@@ -28,14 +26,14 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 </Stack>;
 ```
 
-The value is always `[start, end]` in that order. A press picks the nearer end;
-a press beyond both thumbs picks the end it passed. The ends can touch but never
-cross.
+## Composition
 
-The ends of the **range** are stops as well: a step that does not divide the
-span (`min: 0`, `max: 10`, `step: 3`) leaves 10 reachable, so the last band
-cannot be selected away. The stops are counted, so a move off 10 lands on 9
-rather than skipping it.
+| Part | Responsibility |
+| ---- | -------------- |
+| `RangeSlider` | the group, two values and the pointer handling |
+| `SliderTrack` | the rail |
+| `SliderIndicator` | the fill for each end |
+| `SliderThumb` | a thumb per end, one `index` each |
 
 ## API
 
@@ -50,140 +48,20 @@ rather than skipping it.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
 | `disabled` | `boolean` | `false` | both thumbs leave the tab order |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
-| `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` (trimmed; a blank label leaves both unnamed) |
-| `description` | `string` | none | announced help on the group node; a blank one publishes nothing |
-| `ref` / `aria-id` / `onLayout` | host props | none | the address lands on the thumb the form should focus — the one holding keyboard focus, or the start while neither does |
+| `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
+| `description` | `string` | none | announced help on the group node |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | the axis the two values run along; a vertical track needs a definite height |
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
-| `children` | `ReactNode` | — | the parts to draw; omit for the default two-thumb composition |
-| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the range's own; keys and focus land on a thumb, the press on the track or the thumb it hit |
+| `children` | `ReactNode` | — | the parts to draw; omit for the default composition |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the range's own; keys land on a thumb |
 | `testId` | `string` | — | stable locator for the track |
-
-The parts are the same three `Slider` exports: `SliderTrack` holds
-`SliderIndicator index={0}` / `SliderThumb index={0}` /
-`SliderIndicator index={1}` / `SliderThumb index={1}`. Each thumb keeps its own
-`role="slider"`, name and tab stop; `index` is what tells the parts which end
-they paint. A custom composition may reorder or restyle them, but each thumb is
-still a tab stop and the root still owns the pointer handling.
-
-Your host handlers are composed with the range's, never substituted. A key and a
-focus event arrive from the thumb they landed on; a press arrives from the track
-— or from the thumb the runtime hit, since `<div>`s do not bubble. A disabled
-range installs no `onClick` and keeps every key and focus observable.
-
-## Keyboard
-
-Each thumb is its own tab stop and answers:
-
-| Key | Effect on the focused thumb |
-| --- | --------------------------- |
-| `ArrowRight` / `ArrowUp` | + one step |
-| `ArrowLeft` / `ArrowDown` | − one step |
-| `PageUp` / `PageDown` | ± ten steps |
-| `Home` / `End` | `min` / `max`, clamped at the other thumb |
-
-A press moves native focus to the thumb it grabbed, so the arrows that follow
-act on the end the user is holding. The focused thumb paints the ring. **Only the
-primary button's press grabs an end**: the runtime delivers `mouseDown` for all
-three buttons while `onClick` is the primary button's own, so a right press (the
-context-menu gesture) or a middle press is refused and neither moves a thumb nor
-arms the drag that would (`core/pointer.ts`'s `primaryButton`,
-`runtime/value.runtime.test.tsx`). **A move that cannot change an end reports
-nothing**: the span is compared by its two values, not by tuple identity, so a
-pointer held at a bound or an arrow pressed against the other thumb does not
-stream identical `onValueChange` calls (`src/components/Slider.test.tsx`'s
-`does not report a span an arrow could not move`,
-`runtime/value.runtime.test.tsx`'s drag-at-a-bound case).
-
-Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
-Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
-moving by word — belongs to the platform or the application and is left alone,
-default action included; Shift is not a chord, so `Shift+Space` is still a press.
-
-## Accessibility
-
-- The group is `role="group"` with `aria-label`; each thumb is `role="slider"`
-  (AccessKit `Slider` and `Group`, verified in the real renderer).
-- Each thumb announces its own value through `aria-valuetext`. There is no
-  `aria-valuenow`/`min`/`max` in `@gpuix/native` 0.11.0, so the two values reach a screen
-  reader but the range does not.
-- The default names — `"Budget minimum"`, `"Budget maximum"` — are derived from
-  `label` after the package's name rule: trimmed, and absent when blank. A group
-  with one name is never two unnamed sliders, and a blank label does not name
-  the ends `" minimum"` / `" maximum"`.
-- The help line a visible `Label` paints goes through `description` and is
-  announced on the group node (there is no `aria-describedby`). The address
-  names one element because only one can hold it: the thumb a form should focus
-  — the end the reader last used, or the start while neither holds focus — so a
-  form can focus the range it failed on and an automation host can address it.
-
-## Theming
-
-Same resolver as `Slider`: `colors.muted` rail, `colors.primary` fill, thumb
-`colors.input` with a `colors.primary` border, the keyboard outline
-(`keyboardRing` → the runtime's `focusVisible`) on each thumb because each thumb
-is its own tab stop. The end
-values are painted as two fills; the second fill is the length between the ends.
-
-`style` takes the same `StateStyle<SliderState>` as `Slider` — a `StyleDesc`, or
-a callback that receives `{ disabled, focused, invalid }`. A range reports
-`focused` while **either** thumb holds focus, because the callback styles the
-track both components share, not an individual thumb.
-
-`orientation="vertical"` turns the same parts onto the other axis, exactly as
-`Slider` does: the start's band is the bottom one, the track paints its parts
-from the floor up, and the caller supplies the height. A vertical range is two
-values on one upward axis — a time window from 09:00 at the floor to 17:00 at the
-ceiling, say — and the order of the pair is still `[start, end]`, not
-`[bottom, top]`.
 
 ## Limitations
 
-- **No `aria-valuenow`/`min`/`max`** (above), and **no `aria-orientation`**: a
-  vertical range is announced without its axis.
-- **A vertical track needs a definite height.** Its width is the control's own
-  height, but a value that runs up has no natural length.
-- Both thumbs are the same pill as `Slider`'s; a custom glyph goes inside a
-  `SliderThumb` in the caller's composition, one `index` per end.
-- A custom composition may not add a marker that answers a press: the root owns
-  the pointer handling, and the runtime does not bubble a press to it from a
-  child that takes the hit.
-
-## Verification
-
-- `src/core/value.test.ts` — span ordering, the crossing guard, the nearest-end
-  rule (including both thumbs at one value), the maximum staying reachable
-  when the step does not divide the span, and a move off that maximum landing on
-  the stop beside it.
-- `src/components/Slider.test.tsx` — two named sliders, per-thumb keys, the
-  crossing result, per-thumb rings, disabled tab stops; the second segment's
-  width from the parts; a `style` callback reporting focus anywhere in the group
-  and winning over the recipe.
-- `runtime/value.runtime.test.tsx` — a real press at 10% moves the start, at 90%
-  the end; focus follows the grabbed thumb; an arrow moves only that end; a
-  start driven past the end stops on it; and a drag that leaves the track keeps
-  moving the end it grabbed until it stops on the other end. A right or middle
-  press (and the move after it) changes nothing, and a drag held at a bound
-  reports the span once rather than on every frame. A vertical range reads its ends
-  from the floor (0.05 moves the start, 0.9 the end) on a track whose width is
-  the control's height. Measured 2026-10-17 (plan 053 §11); the vertical case was
-  added 2026-10-22 and the button guard and span comparison 2026-10-23.
-- `apps/playground`'s `slider-vertical-lifecycle` (0.11.0) — the vertical range
-  painted in a real window: a press at the centre of a `10-90` pair moves the
-  nearer end to `50-90`, a drag to the quarter mark moves that end to `25-90`
-  while the other end stays, and the two thumbs' ink is centred at **194** and
-  **74.5**, their values' marks. The `TestRenderer` cases above are the
-  arithmetic; this is the paint and the runtime's pointer path.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Slider** — one value.
-- **Meter** — a measurement inside a range.
-- **Input** — when an exact number matters more than a gesture.
+- No `aria-valuenow`/`min`/`max`: each thumb announces its value as
+  `aria-valuetext`.
+- No `aria-orientation`: a vertical range is announced without its axis.
+- A vertical track needs a definite height.
+- A composed part cannot answer a press; the root owns the pointer handling.

@@ -4,9 +4,8 @@ description: 76 monochrome icons, their size scale and the two accessibility rul
 ---
 
 `@gpuixui/icons` is the icon set: each icon is a self-contained 24×24 monochrome
-SVG markup string that GPUix's host `<svg>` paints and tints with `style.color`.
-Icons are **data**, not component trees — no paths to render, no icon font, no
-CSS. The package needs no theme, so it is usable before the design system exists.
+SVG markup string that GPUix tints with `style.color`. Icons are data, not
+component trees.
 
 ## Usage
 
@@ -23,25 +22,17 @@ const theme = useTheme();
 <Icon name="warning" color={theme.colors.destructive} size="md" label="Overdue" />;
 ```
 
-A runnable composition is `packages/primitives/examples/icons.example.tsx`.
-
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `name` | `IconName` | — (required) | which icon; TypeScript rejects an unknown name |
-| `color` | `string` | — (required) | the tint; pass a theme role |
+| `name` | `IconName` | required | which icon; TypeScript rejects an unknown name |
+| `color` | `string` | required | the tint; pass a theme role |
 | `size` | `IconSize \| number` | `"md"` | a named step or raw pixels |
 | `label` | `string` | none | accessible name; a non-blank label promotes the icon to an image |
 | `testId` | `string` | — | stable locator |
 
-`ICON_NAMES` / `IconName` is the source of truth for which icons exist; `icons`
-exposes the markup by name; `ICON_SIZES` / `iconPixels` resolve the scale.
-
 ## Names
-
-Grouped the way a screen is composed, not alphabetically — `ICON_NAMES` itself is
-sorted, which is what keeps a generated index stable.
 
 **Navigation and layout** — `arrow-down`, `arrow-left`, `arrow-right`, `arrow-up`,
 `chevron-down`, `chevron-left`, `chevron-right`, `chevron-up`, `chevrons-up-down`,
@@ -64,11 +55,6 @@ sorted, which is what keeps a generated index stable.
 
 **Appearance** — `eye`, `eye-off`, `moon`, `sun`
 
-Two of them are ours rather than Lucide's, because no upstream icon says the same
-thing: `star-filled` (the `star` outline filled instead of stroked, which is how
-`Rating` paints a chosen star) and `sort-desc` (the mirror of `sort-asc`). Neither
-carries a colour; the tint is still `style.color`.
-
 ## Sizes
 
 | Step | Pixels |
@@ -79,81 +65,15 @@ carries a colour; the tint is still `style.color`.
 | `lg` | 20 |
 | `xl` | 24 |
 
-Named sizes line an icon up with text of the same step. A raw number is for the
-rare case that no step fits; a measure that cannot be painted — `NaN`, infinity,
-zero or a negative count from a collapsed panel or an empty row — reads as the
-`md` step rather than a `width` the runtime draws as nothing.
-
-## Accessibility
-
-Two rules the component enforces, because both fail silently otherwise:
-
-- **`color` is required.** A monochrome SVG with no tint paints black, which is
-  invisible in a dark theme. There is no default palette by design.
-- **A decorative icon gets `role="presentation"`** and produces no accessibility
-  node; only a **non-blank** `label` promotes it to `role="img"` with a name. The
-  name is trimmed, so `label=""` and a whitespace-only label stay decorative
-  rather than publishing an unnamed image. An icon that announces itself inside
-  a button makes the button read twice.
-
-The rendered `<svg>` also sets `pointerEvents: "none"`, so an icon inside a
-control cannot swallow the press meant for the control.
-
-## Theming
-
-The set has no palette: the caller passes the tint, which is why an icon beside
-text can take `theme.colors.mutedForeground` or `toneColor(theme, "muted")`.
-Geometry uses `fill="none"` and `stroke="#000"` in the shared wrapper — the two
-paint values a monochrome tint can use. No individual icon carries a colour.
-
 ## Limitations
 
 - Monochrome only: no two-tone, duotone or brand marks.
-- No rotation or spin animation; a spinner is a separate component because the
-  runtime cannot rotate (see `Spinner`).
+- No rotation or spin animation; use `Spinner`.
 - No icon font and no ligatures.
-- The set is curated, not a full Lucide import: add a name to `registry.ts` and
-  `names.ts` together, and the type checker enforces both. Geometry comes from
-  the Lucide release the provenance record names — update that record when the
-  release moves.
-
-## Verification
-
-- `src/registry.test.ts` — every icon is 24×24 geometry, self-contained and free
-  of scripts, external references and embedded colours; no two names carry the
-  same geometry (a copy-pasted entry ships a wrong glyph); and the markup uses
-  only the six element types the runtime suite has painted.
-- `src/sizes.test.ts` — every named step resolves, a readable raw number passes
-  through, and a count that cannot be painted reads as `md`.
-- `src/Icon.test.ts` — the decoration/image rule, required colour and the
-  pointer-events rule.
-- `src/docs.test.ts` — the page prints the set's real size, lists every name in
-  it, and cites the provenance record that carries the licence notices.
-- `packages/primitives/runtime/icons.runtime.test.tsx` — the raw `<svg source>`
-  paints at 20×20 (`lg`) and 24×24 (`xl`); an unusable raw size paints the
-  `md` 16×16 box; a decorative icon is absent from the
-  accessibility tree while a labelled one is an `Image`; a red versus blue
-  capture differs byte-wise, so the tint reaches the paint — for a **stroke**
-  glyph (`check`) and for `star-filled`, the one icon drawn with `fill`, which
-  is what `Rating` paints every chosen star with.
-
-```sh
-nub run --filter @gpuixui/icons test
-nub run --filter @gpuixui/primitives test:runtime
-```
+- The set is curated; add a name to `registry.ts` and `names.ts` together.
 
 ## Provenance
 
 The geometry is taken from [Lucide](https://lucide.dev) `lucide-static@1.61.0`,
-on its 24×24 grid at `stroke-width="2"` — copied, not traced by eye. Lucide
-licenses the set under ISC and the icons it inherits from Feather under MIT, so
-**both notices travel with the geometry**; they are reproduced in full, with the
-version they were read at, in [`LICENSES/lucide.md`](../../../LICENSES/lucide.md).
-No colour, wrapper attribute, icon font, sprite, logo or brand mark is copied,
-and `LICENSES/` records what we do and do not take.
-
-## Related
-
-- **Text** — the type the icon aligns with.
-- **Button** — an icon-only action needs a `label`.
-- **Tooltip** — explains an icon without giving it a name.
+on its 24×24 grid at `stroke-width="2"`. Both the ISC and MIT notices travel
+with the geometry in [`LICENSES/lucide.md`](../../../LICENSES/lucide.md).

@@ -3,9 +3,7 @@ title: ButtonGroup
 description: A row or column of related actions, attached or separated.
 ---
 
-`ButtonGroup` lays buttons out on one axis and gives the group `role="group"`.
-In `attached` mode the gap is zero, every action inside squares its own corners
-and the **group** is rounded and clipped, so the group reads as one control.
+`ButtonGroup` lays buttons out on one axis with `role="group"`.
 
 ## Usage
 
@@ -19,44 +17,12 @@ import { Button, ButtonGroup } from "@gpuixui/primitives";
 </ButtonGroup>;
 ```
 
-A column of actions takes the same parts:
+## Composition
 
-```tsx
-<ButtonGroup mode="attached" orientation="vertical" label="Alignment">
-  <Button variant="ghost">Top</Button>
-  <Button variant="ghost">Middle</Button>
-  <Button variant="ghost">Bottom</Button>
-</ButtonGroup>;
-```
-
-## Modes
-
-| `mode` | Gap | Shape |
-| ------ | --- | ----- |
-| `attached` (default) | 0 | children square their corners; group radius `md`, `overflow: hidden` |
-| `separated` | `gap` step (`sm` default) | buttons keep their own radius |
-
-## Orientation
-
-| `orientation` | Axis | Sizing |
-| ------------- | ---- | ------ |
-| `horizontal` (default) | a row, actions centred on the cross axis | each action keeps its own width |
-| `vertical` | a column, actions stretched to one width | a square action keeps its own size |
-
-A vertical group shares one width between its actions, so their ends line up
-whatever their labels say. The stretch is a cross-axis size, so an action with
-an explicit width — a square `IconButton`, for instance — keeps that width
-instead of being stretched.
-
-The runtime has no `:first-child`/`:last-child` selector and a ref exposes no
-style mutation, so the group cannot reshape a child from outside. It instead
-tells the actions it attaches that the **container** owns the silhouette
-(`AttachedGroup`): each `Button` and `IconButton` inside squares its own
-`borderRadius`, and the group's radius plus `overflow: hidden` clip the two ends.
-Without that, two adjacent rounded fills leave a notch at every seam where the
-page shows through. A caller who wants one end rounded passes `style` on that
-button, which merges after the group's rule; a child that is not one of this
-package's actions is not reshaped.
+| Part | Responsibility |
+| ---- | -------------- |
+| `ButtonGroup` | the axis, gap, radius and `role="group"` |
+| `Button` / `IconButton` | each action; attached children square their own corners |
 
 ## API
 
@@ -67,69 +33,13 @@ package's actions is not reshaped.
 | `gap` | spacing step | `"sm"` | the gap in separated mode |
 | `label` | `string` | none | the group's accessible name, written as `aria-label` |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
-| `style` | `StyleDesc` | — | merged last, e.g. `justifyContent: "flex-end"` |
+| `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the buttons |
 
-## Keyboard
-
-The group adds no key handling. Tab moves through each button in order; Enter and
-Space follow each `Button`'s contract. A segmented control that should be one tab
-stop with arrow navigation is a radio group, not a button group.
-
-## Accessibility
-
-- Role: `group`. The runtime has no `aria-labelledby`, so a visible heading
-  cannot name the group by reference; pass its words as `label` and the group
-  carries `aria-label`. Without `label` the group is anonymous, exactly as the
-  runtime reports it.
-- Each button keeps its own name and role.
-
-## Theming
-
-The gap uses `spacing[gap]`; the group radius is `radius.md`. No literal. The
-children do not take a radius role of their own while attached: the group's
-radius is the only one painted on the silhouette.
-
 ## Limitations
 
-- Only this package's actions are reshaped: a raw `div` or another component
-  placed inside an attached group keeps its own radius, because the runtime has
-  no child selector and the group cannot reach into it.
-- The name must be passed as `label`; there is no automatic association with a
-  heading.
-- No overflow behaviour: a group wider than its parent does not collapse into a
-  menu.
-- `orientation` has two values. A group that switches axis at runtime is two
-  groups in one slot, not a responsive breakpoint — the runtime has no media
-  queries.
-
-## Verification
-
-- `src/components/presentational.test.tsx` — attached and separated geometry,
-  the axis `orientation` resolves to, `role="group"`, the `label` →
-  `aria-label` contract, and both ordered indexes
-  (`BUTTON_GROUP_MODES`/`BUTTON_GROUP_ORIENTATIONS`) at the package root, which a
-  persisted choice needs to name the values it may store.
-- `src/recipe/recipe.test.ts` — the compiled row and column layouts, including
-  the shared width a column asks for.
-- `src/components/Button.test.tsx` / `IconButton.test.tsx` — an attached action
-  squares its corners and a caller's `style` still restores a radius.
-- `runtime/controls.runtime.test.tsx` — attached children are 0px apart and
-  paint `borderRadius: 0` while separated children paint the theme's `md` radius
-  and sit the `sm` gap apart; a vertical group stacks its actions 0px apart in
-  `attached` mode and by the `sm` gap in `separated` mode, with both actions
-  painted at one width despite their different labels, while a square action in
-  the same column keeps its own 32×32 box; a labelled group is an accessibility
-  `Group` with that name.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Button** — the child.
-- **RadioGroup** — one choice from a set, with a roving tab stop.
-- **Separator** — divide unrelated action rows.
+- Only this package's actions are reshaped; other children keep their radius.
+- The name must be passed as `label`.
+- No overflow-to-menu for a group wider than its parent.
+- No responsive axis switch.

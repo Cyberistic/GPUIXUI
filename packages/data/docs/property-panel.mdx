@@ -1,19 +1,10 @@
 ---
 title: Property panels
-description: A panel of property rows, read-only or editable, over one object the caller owns.
+description: A panel of property rows over one object the caller owns.
 ---
 
-`PropertyPanel` shows the rows that describe one object. The panel owns **no
-copy** of the object: every row is the caller's, and an edit is a callback, so
-a preview, a key-value list and a statistic card can all read the same object
-and every one of them repaints in the frame the edit lands.
-
-`inspector-lifecycle` measured exactly that: an `Input` edit reaching the
-readout, the preview and the tag row together, and a toolbar action resizing
-all three views at once.
-
-A row is either **read-only** or **editable**, and the difference is data
-rather than a flag: an editable row carries the change it reports.
+`PropertyPanel` shows the rows that describe one object; every row is the
+caller's, and an edit is a callback.
 
 ## Usage
 
@@ -29,10 +20,6 @@ import { PropertyPanel } from "@gpuixui/data";
 />;
 ```
 
-The full build is the `surfaces` example in
-`packages/data/examples/surfaces.example.tsx`, which the native playground
-mounts.
-
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -41,55 +28,11 @@ mounts.
 | `rows` | `PropertyRow[]` | — | the rows, in the order they paint |
 | `labelWidth` | `number` | `120` | the label column's width, in pixels |
 
-A **read-only** row is `{ kind: "readonly", key, label, value }`; an
-**editable** row is `{ kind: "editable", key, label, value, onChange }`. The
-`key` is the row's identity — it names the field's test id
-(`property-${key}`) and is what React keys the row by.
-
-An editable row's field is the primitives' `Input`, so it keeps the platform
-text session while the object behind it changes.
-
-## Theming
-
-| Part | Reads |
-| ---- | ----- |
-| the panel's surface | the `card` fill, with the `border` edge |
-| the header | the `border` edge under it, `px-3 py-2` |
-| the title | `foreground`, at the registry's `xs` step, weight 500 |
-| the rows | the **Key-value displays** recipes: `mutedForeground` labels, `foreground` values |
-
-## Accessibility
-
-- Each editable row's field is named by its label, so a screen reader announces
-  "Name" before the value.
-- The rows are painted in the order the caller gives them; the panel does not
-  reorder or group them.
-- A read-only row is plain text. If a value is a control, put the control in
-  the value — the panel does not add a wrapper.
+A read-only row is `{ kind: "readonly", key, label, value }`; an editable row is
+`{ kind: "editable", key, label, value, onChange }`.
 
 ## Limitations
 
-- The panel does not validate. A row that must be valid reports it in its own
-  `onChange` or paints the message beside the row.
-- The panel does not scroll: a panel that owns its overflow scrolls the rows
-  inside it.
-- One editable row is one text session. A window has **one** platform text
-  session, so two fields in the same window share it — the field that has
-  focus is the one the keys reach.
-
-## Verification
-
-`src/behaviour/surfaces.test.tsx` runs in the real GPUix renderer: an edit
-typed into the panel's field reaches the readout in the frame it lands. Run it
-with:
-
-```sh
-nub run --filter @gpuixui/data test:behaviour
-```
-
-## Related
-
-- **Key-value displays** — the rows, without the panel around them.
-- **Data toolbars** — the actions that change the object the panel reads.
-- **Advanced filtering / query builders** — the other place an object is
-  described as data.
+- The panel does not validate; a row reports its own change or message.
+- The panel does not scroll.
+- One editable row is one text session.

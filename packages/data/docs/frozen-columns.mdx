@@ -1,30 +1,15 @@
 ---
 title: Frozen columns
-description: A pinned column beside a grid that pans, without sticky positioning.
+description: A pinned column beside a grid that pans.
 ---
 
-`FrozenTable` pins a column beside a grid that scrolls. GPUix paints no
-`position: "sticky"`, so the column is not pinned *inside* a scroller: it is a
-second vertical scroller beside the data pane, and the two are mirrored through
-`onScrollChange` → `renderer.scrollTo` (`data-grid-frozen-column`,
-`frozen-column-lifecycle`).
-
-The mirror is **two-way and guarded**. A wheel over either pane moves both, so
-the record under the reader keeps its `y` across the seam; the programmatic
-scroll reports its own change inside the call, so a ref stops it mirroring back.
-A **sideways** pan is the data pane's alone — the frozen column never follows it,
-and a vertical mirror carries the data pane's `x` into the call rather than
-resetting it.
+`FrozenTable` pins a column beside a grid that scrolls: it is a second vertical
+scroller beside the data pane, mirrored through `onScrollChange`.
 
 ## Usage
 
 ```tsx
-import {
-  FrozenTable,
-  TableCell,
-  TableHeaderCell,
-  TableRow,
-} from "@gpuixui/data";
+import { FrozenTable, TableCell, TableHeaderCell, TableRow } from "@gpuixui/data";
 
 <FrozenTable
   height={320}
@@ -39,124 +24,43 @@ import {
     </TableRow>
   }
   frozenRow={(row) => (
-    <TableRow
-      selected={table.isSelected(row.id)}
-      onClick={() => table.pressRow(row)}
-      style={{ height: 32 }}
-    >
+    <TableRow selected={table.isSelected(row.id)} onClick={() => table.pressRow(row)}>
       <TableCell width={180}>{row.name}</TableCell>
     </TableRow>
   )}
   header={
     <TableRow>
       <TableHeaderCell width={140}>Status</TableHeaderCell>
-      <TableHeaderCell width={120}>Size</TableHeaderCell>
-      <TableHeaderCell width={160}>Owner</TableHeaderCell>
     </TableRow>
   }
   row={(row) => (
-    <TableRow
-      selected={table.isSelected(row.id)}
-      onClick={() => table.pressRow(row)}
-      style={{ height: 32 }}
-    >
+    <TableRow selected={table.isSelected(row.id)} onClick={() => table.pressRow(row)}>
       <TableCell width={140}>{row.status}</TableCell>
-      <TableCell width={120} align="right">{`${row.size} B`}</TableCell>
-      <TableCell width={160}>{row.owner}</TableCell>
     </TableRow>
   )}
 />;
 ```
 
-The full screen is `packages/data/examples/frozen-table.example.tsx`, mounted by
-the native playground as the `frozen-table` example.
-
-## The seam
-
-Three values are shared, and each has one source:
-
-- **The row height.** Both panes paint it, because the shared vertical offset is
-  what lines a record up across the seam. Set it on both `TableRow`s from one
-  constant.
-- **The frozen width.** The pane takes `frozenWidth`; the frozen header cell and
-  every frozen cell paint the same number. The example exports the constant once.
-- **The record.** A press on either pane reports the record, so a frozen press
-  chooses it for the whole grid. The example's two render functions read one
-  `selected` state.
-
-The panes' headers get the taller of their two measured heights, so a header
-with a different text step cannot push one pane's rows out of line.
-
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `height` | `number` | — | the grid's definite height; both panes' scrollers are bounded by it |
-| `frozenWidth` | `number` | — | the frozen pane's width; the frozen cell must paint the same width |
-| `contentWidth` | `number` | — | the scrolling columns' total width — what the data pane pans over |
+| `height` | `number` | — | the grid's definite height |
+| `frozenWidth` | `number` | — | the frozen pane's width |
+| `contentWidth` | `number` | — | the scrolling columns' total width |
 | `rows` | `ReadonlyArray<Row>` | — | the records, in paint order |
 | `rowKey` | `(row: Row) => string` | — | the stable React key of a record |
-| `frozenHeader` | `ReactNode` | — | the frozen column's `TableRow` of header cells |
-| `frozenRow` | `(row: Row) => ReactNode` | — | the frozen column's `TableRow` |
-| `header` | `ReactNode` | — | the scrolling columns' `TableRow` of header cells |
-| `row` | `(row: Row) => ReactNode` | — | the scrolling columns' `TableRow` |
-| `empty` | `ReactNode` | — | painted in the data pane when `rows` is empty |
-| `frozenTestId`, `bodyTestId`, `viewportTestId` | `string` | — | the frozen scroller, the data row scroller and the data horizontal scroller, for a probe |
-| `style`, `testId`, `ref`, `aria-label` | | | the GPUix host props on the grid |
-
-## Theming
-
-The panes use the table's own recipes: the header is the table's header strip,
-the rows are `TableRow`, and the selection wash is the selected row's fill, so a
-frozen column reads as the same table rather than a second list. The scrollers
-paint the platform's scrollbar from `colors.scrollbar` through `TableBody` and
-`TableViewport`.
-
-## Accessibility
-
-- The grid is one `role="table"`; the panes contribute their own `rowgroup`
-  nodes, so a reader meets the header and rows in order.
-- A press on a frozen cell chooses the record for the whole grid; the selection
-  is announced through the row's `aria-selected`.
-- The keyboard walk stays the caller's: the rows are `TableRow`s, so the roving
-  tab stop and the arrow keys are the example's `useTable` composition.
+| `frozenHeader` | `ReactNode` | — | the frozen column's header cells |
+| `frozenRow` | `(row: Row) => ReactNode` | — | the frozen column's row |
+| `header` | `ReactNode` | — | the scrolling columns' header cells |
+| `row` | `(row: Row) => ReactNode` | — | the scrolling columns' row |
+| `empty` | `ReactNode` | — | painted when `rows` is empty |
+| `frozenTestId` / `bodyTestId` / `viewportTestId` | `string` | — | locators for a probe |
+| `style` / `testId` / `ref` / `aria-label` | host props | — | on the grid |
 
 ## Limitations
 
-- **No sticky pinning.** The frozen column is a second scroller, so it has its
-  own scrollbar and the pair must stay mirrored. A single-scroller freeze is not
-  expressible on 0.11.0.
-- **Both panes paint every row.** This is the plain-table composition, not the
-  virtualized one: a windowed frozen grid needs the window in both panes, which
-  this component does not ship.
-- **The horizontal pan belongs to the table core.** The data pane's `overflowX`
-  scroller is the measured `data-grid-fixed-header` composition; the runtime's
-  test renderer delivers a horizontal wheel to the innermost vertical scroller,
-  so the window (`frozen-column-lifecycle`) is the pointer path's evidence.
-- **One frozen column.** Several frozen columns are one wider frozen pane; the
-  caller composes their cells side by side.
-- The docs site cannot render this component live — it is a GPUix host tree, not
-  DOM. The code above is the real source.
-
-## Verification
-
-`src/behaviour/frozen-table.test.tsx` (6 tests) mounts the shipped example in the
-real renderer: a record lines up across the seam at rest, a wheel over the data
-pane moves the frozen column to the same offset, a wheel over the frozen column
-moves the data pane back, a press on a frozen cell chooses the record in both
-panes, and a huge wheel clamps both panes at the same end.
-
-```sh
-nub run --filter @gpuixui/data test:behaviour
-```
-
-The runtime rules come from `data-grid-frozen-column` (headless) and
-`frozen-column-lifecycle` (a window): both panes move to `-300` then `-600`, a
-sideways wheel leaves the frozen column still, a frozen press selects the row,
-and both clamp at the same end.
-
-## Related
-
-- **Tables** — the fixed-header composition this sits beside.
-- **Column configuration** — hiding, moving and resizing the scrolling columns.
-- **Virtualized tables** — the windowed table, which this is not.
+- No sticky pinning: the frozen column is a second scroller.
+- Both panes paint every row; this is not the virtualized composition.
+- One frozen column; several become one wider frozen pane.
+- The docs site cannot render this component live.

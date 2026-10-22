@@ -4,11 +4,7 @@ description: One run of type, named by a theme role and a semantic tone.
 ---
 
 `Text` names a role from the theme's type scale and a tone that decides its
-colour. It adds no behaviour: the runtime has one `text` host element, so every
-typographic role is the same element with a different resolved `StyleDesc`. The
-semantics a role carries are published on that element — a heading role sets
-`role="heading"` with its level, and a code role the code role — so the page's
-Accessibility section is the contract, not a caveat.
+colour.
 
 ## Usage
 
@@ -37,34 +33,18 @@ import { Text, Stack } from "@gpuixui/primitives";
 | `code` | mono | an inline identifier or command |
 | `codeBlock` | mono | a block of code |
 
-Sizes, line heights and weights come from `theme.typography`. No component picks
-a font size.
+Heading roles publish `role="heading"` with their level; `code` roles publish
+`role="code"`. The rest are plain text.
 
 ## Tones
 
-| `tone` | Colour role | Use for |
-| ------ | ----------- | ------- |
-| `default` | `foreground` | body and headings |
-| `muted` | `mutedForeground` | metadata, help, disabled-adjacent copy |
-| `primary` | `brandText(theme)` | a link-like non-interactive emphasis |
-| `destructive` | `destructiveSoftForeground` | an error or a breaking change |
-| `inherit` | none | text on a coloured surface, taking its parent's colour |
-
-`destructive` is the **status text** role, not the solid `destructive` fill:
-that fill is a background whose own label clears the secondary floor, and
-written as body text on the page it does not. `destructiveSoftForeground` is the
-role tokens measure as page text on `background` and `card`, so an error message
-stays legible in every shipped theme.
-
-`primary` is the same mistake the other way round: the brand is a **fill** that
-carries `primaryForeground`, and no contract measures it as text, so it reads
-4.30:1 on the base light theme's `active` wash and 3.10:1 in macOS dark.
-`brandText(theme)` derives a text colour from it — the brand moved toward
-`foreground` until every surface a link sits on clears the theme's floor, or the
-brand itself where it already reads. The `text-brand` utility in the primitives'
-registry resolves it, so `tone="primary"`, `Button variant="link"` and the
-`core/style.ts` `textStyle` resolver a consumer can call without React paint one
-colour; the caller's `className`/`style` still win.
+| `tone` | Colour role |
+| ------ | ----------- |
+| `default` | `foreground` |
+| `muted` | `mutedForeground` |
+| `primary` | `brandText(theme)` |
+| `destructive` | `destructiveSoftForeground` |
+| `inherit` | none |
 
 ## API
 
@@ -74,98 +54,16 @@ colour; the caller's `className`/`style` still win.
 | `tone` | `TextTone` | `"default"` | colour role |
 | `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
-| `clamp` | `number` | none | cut to a box N lines tall at the role's own leading |
-| `selectable` | `boolean` | `false` | `userSelect: "text"` plus the theme's `selection` wash; off for chrome, on for content |
+| `clamp` | `number` | none | cut to a box N lines tall |
+| `selectable` | `boolean` | `false` | `userSelect: "text"` plus the theme's `selection` wash |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the string (or inline nodes) |
 
-## Keyboard
-
-Not focusable. Selectable text is pointer-selectable when `selectable` is on;
-there is no copy command binding in the component.
-
-## Accessibility
-
-`Text` publishes the semantics its typographic role carries. GPUix 0.11.0
-exposes `role` and `aria-level` on the host element, so:
-
-- `h1`/`h2`/`h3` set `role="heading"` with `aria-level` 1/2/3, and a plain string
-  child becomes the heading's name;
-- `code`/`codeBlock` set `role="code"` (AccessKit `Code`);
-- `display`, `body`, `bodyStrong`, `label` and `caption` stay plain text.
-
-A mixed or element child gets the role but no derived name. `display` is a
-visual size, not a heading; if the document outline matters, use `h1`–`h3`.
-
-## Theming
-
-The recipe (`textClass`, compiled through the primitives' registry) reads
-`typography[role]`, the mono/sans family and the tone's colour; every tone but
-`primary` names a theme role, and `primary` derives one. `userSelect` defaults to
-`"none"` so chrome does not accept a text selection by accident; turn it on for
-content. A selectable run also declares
-`selectionColor: theme.colors.selection` — the wash the token contract measures
-for visibility and for the text it carries — instead of the runtime's default of
-the theme accent at 35%, a colour no pair measures.
-
-**A clamp is a box, not a runtime style.** GPUix 0.11.0 declares `lineClamp` and
-paints every line for it: the playground's `text-truncation` probe measured a
-five-line paragraph under `lineClamp: 2` painting all five, on the `<text>` and on
-its container. So `clamp` resolves a definite height — the line count times the
-role's own leading — with `overflow: "hidden"`, and the recipe's class carries
-the role (`clamp-body-2`, `clamp-h1-2`) because two roles have two leadings. A
-count that is not a number, or is zero or below, reads as one line rather than a
-zero-height box that paints nothing; a hand-written class naming an unknown role
-is reported as unsupported instead of painting an uncut paragraph.
-
 ## Limitations
 
-- No paragraph or list semantics: only the heading and code roles above are
-  published.
-- A heading's name is derived from a **plain string** child; compose icon or
-  formatted children and give the region its own accessible name elsewhere.
-- No rich text: one run, one role. Composition is several `Text` nodes in a
-  `Stack`.
+- No paragraph or list semantics: only the heading and code roles are published.
+- No rich text: one run, one role; compose several `Text` nodes in a `Stack`.
 - No responsive type scale or fluid sizing.
-- `truncate` and `clamp` need a bounded width to wrap against. A clamp without a
-  width the parent limits wraps to the line it would have taken anyway.
-- GPUI lays a string out once per window and reuses that layout for identical
-  copy, which decides **where the string wraps**. That no longer decides the
-  clamp: each node's box is its own line count, so a two-line and a one-line
-  `clamp` over the same copy paint two and one lines
-  (`runtime/layout.runtime.test.tsx`).
-
-## Verification
-
-- `src/core/variants.test.ts` — every role resolves from the theme.
-- `src/core/style.test.ts` — the clamp's box (height, hidden overflow, no
-  `lineClamp`), the one-line floor for a count that cannot be laid out, and the
-  `textStyle` resolver's brand tone as `brandText` clearing the floor on every
-  surface a link sits on.
-- `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp,
-  selectable, the heading/code semantics (level and name, with body copy left
-  plain), the status role an error paints, and a brand-toned run's derived
-  colour clearing the floor on every surface a link sits on.
-- `src/recipe/recipe.test.ts` — the compiled recipe equal to `textStyle` for
-  every role and tone **on the shipped themes as well as the fixture** (the
-  fixture's translucent washes leave `brandText` unchanged, so it cannot see a
-  derived tone drift), the clamp's height resolved from the role its class
-  names, and an unknown role reported as unsupported.
-- `runtime/layout.runtime.test.tsx` — the string is painted, its box height
-  equals the role's line height, and the a11y tree reports a heading's level
-  (`h1` = 1, `h3` = 3) with body copy carrying no heading role; a clamp over
-  unique copy lands on its own line count, and two clamps over identical copy
-  each keep their own box.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Label** — a control's visible name, with required/invalid states.
-- **Icons** — decoration that aligns with the type scale.
-- **ThemeProvider** — supplies the scale.
+- `truncate` and `clamp` need a bounded width to wrap against.

@@ -4,9 +4,7 @@ description: Equal tracks in two dimensions — the only grid GPUix draws.
 ---
 
 `Grid` is the runtime's fixed-size grid: a numeric column count and an optional
-numeric row count. It is **not** a CSS grid. There is no auto-flow, no named
-area, no `minmax()` and no track string, so anything raggedy belongs in a
-wrapping `Stack`.
+row count. It is not a CSS grid.
 
 ## Usage
 
@@ -25,8 +23,8 @@ import { Grid, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `columns` | `number` | — (required) | equal column tracks; floored, minimum 1; a count that is not a finite number reads as 1 |
-| `rows` | `number` | auto | equal fixed rows; floored, minimum 1; the same rule for a non-finite count |
+| `columns` | `number` | required | equal column tracks; floored, minimum 1 |
+| `rows` | `number` | auto | equal fixed rows; floored, minimum 1 |
 | `gap` | spacing step | none | both axes, from `spacing` |
 | `grow` | `boolean` | `false` | takes leftover space on the parent's axis |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
@@ -34,52 +32,9 @@ import { Grid, Text } from "@gpuixui/primitives";
 | `children` | `ReactNode` | — | cells, in source order |
 | `testId` | `string` | — | stable locator |
 
-## Keyboard
-
-Not focusable. Grid cells do not become a composite widget; a grid of controls
-is a collection with its own roving-tab-stop logic, not a layout.
-
-## Accessibility
-
-No role. Visual columns convey no structure to assistive technology — a
-label/value pair still needs its words in reading order (as in the example),
-not a positional relationship.
-
-## Theming
-
-`gridStyle` reads `theme.spacing[gap]` and clamps the track counts. The recipe
-(`gridClass`) reads the same `trackCount`, so the painted classes and the
-resolver cannot disagree about a count the runtime cannot draw. No column width
-is ever a pixel value at the call site.
-
 ## Limitations
 
-- Equal tracks only. A two-column inspector with a narrow label column is not
-  expressible; use a `Stack` row with a fixed-width `Box` label, or `Stack` plus
-  `Spacer`.
+- Equal tracks only; a narrow label column is a `Stack` row.
 - No auto-flow or spanning cells.
 - No named areas or template strings.
-
-## Verification
-
-- `src/core/layout.test.ts` — column/row clamping (a fractional, zero, negative,
-  infinite or `NaN` count all resolve to a drawable track count) and gap
-  resolution.
-- `src/recipe/recipe.test.ts` — the compiled recipe equals the resolver for the
-  same counts, **including** a `NaN` and an infinite one: an unresolved
-  `grid-cols-NaN` used to leave the shipped grid with no template at all.
-- `src/components/presentational.test.tsx` — `renderGrid` paints one track for a
-  count it cannot measure.
-- `runtime/layout.runtime.test.tsx` — a two-column grid paints two cells on one
-  row with the theme's gap.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Stack** — one dimension, with per-child growth.
-- **Box** — the grid's cells.
-- **Separator** — divide regions that a grid cannot.
+- Not focusable and no role.

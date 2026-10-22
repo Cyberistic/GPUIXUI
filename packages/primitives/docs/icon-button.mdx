@@ -3,13 +3,8 @@ title: IconButton
 description: A square, icon-only action that carries a required accessible name.
 ---
 
-`IconButton` is `Button` for the one case `Button` cannot guard: an action whose
-only visible content is a glyph. The name is a required prop, so the unnamed
-icon-only button that `Button` allowed — a `role="button"` div with nothing for
-assistive technology to read — cannot be written.
-
-It is not a toggle (that is `Toggle`), not a switch, and not a toolbar container:
-compose several of these inside a `Stack`.
+`IconButton` is `Button` for an action whose only visible content is a glyph; the
+name is required.
 
 ## Usage
 
@@ -34,26 +29,6 @@ const theme = useTheme();
 </Stack>;
 ```
 
-The glyph's `color` is the caller's: an `Icon` paints one monochrome tint, so it
-takes a theme role rather than inheriting the button's text colour.
-
-## Variants and sizes
-
-`variant` is every `ButtonVariant` (`primary`, `secondary`, `outline`, `ghost`,
-`destructive`, `link`) and defaults to **`ghost`**: a toolbar of icon actions
-reads as chrome, not as a row of filled buttons. `size` is `sm` / `md` / `lg` and
-sets both sides of the square from `density.controlHeight`.
-
-- `disabled` — refuses a press and both keys and leaves the Tab order
-  (`tabIndex: -1`, so code can still focus it). A filled
-  `variant` wears the same neutral pair a `Button` does; the default `ghost`
-  keeps the fade, since it has no fill to collapse into.
-- `loading` — paints a spinner, announces the busy word (default `Loading`),
-  refuses activation, and **stays focusable** so a keyboard user is not dropped
-  mid-action. `loadingLabel` is that word, reaching the description and the
-  spinner's name. The spinner's motion is the caller's: `reducedMotion` holds it
-  still, exactly as on `Button`.
-
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -62,125 +37,21 @@ sets both sides of the square from `density.controlHeight`.
 | `icon` | `ReactNode` | required | the glyph painted inside the button |
 | `variant` | `ButtonVariant` | `"ghost"` | the paint from `core/variants.ts` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | square side from `density.controlHeight` |
-| `disabled` | `boolean` | `false` | blocks activation; out of the Tab order but focusable from code (`tabIndex: -1`) |
+| `disabled` | `boolean` | `false` | blocks activation; out of the Tab order (`tabIndex: -1`) |
 | `loading` | `boolean` | `false` | spinner, busy description, blocks activation |
 | `loadingLabel` | `string` | `"Loading"` | the busy word, announced as the description and the spinner's name |
-| `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
-| `onActivate` | `(event: EventPayload) => void` | none | click or activating key, with the event that caused it; not called while busy |
+| `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot |
+| `onActivate` | `(event: EventPayload) => void` | none | click or activating key; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
-| `ref` | `Ref<PublicInstance>` | — | the element itself: a trigger anchors the surface it opens to it |
+| `ref` | `Ref<PublicInstance>` | — | the element itself |
 | `aria-expanded` / `aria-selected` | `boolean` | — | announced state, forwarded through `ActionHostProps` |
-| other host props | `ActionHostProps` | — | forwarded unchanged (`onMouseDown`/`onMouseMove`/`onMouseUp`, `onLayout`, `autoFocus`, …) |
-| `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }` and merged last |
 | `className` | `string` | — | a Tailwind string joined after the recipe |
+| `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }`, merged last |
 | `testId` | `string` | — | stable locator |
-
-The five host handlers are `InteractionProps`, composed exactly as on `Button`:
-yours runs first and the action still follows. A busy or disabled icon button
-installs no `onClick` at all. The runtime's remaining host props
-(`ActionHostProps`) pass through `iconButtonProps` to the element, so an
-icon-only menu trigger carries its own `ref` and `aria-expanded` exactly as a
-text `Button` does.
-
-`onActivate` is `Button`'s contract, so it carries the event that activated the
-action: the runtime's `click` payload (with the press point) for a pointer, the
-`keyDown`/`keyUp` payload the button decided on for a key.
-
-## Keyboard
-
-`IconButton` reuses `Button`'s contract; there is no second key path:
-
-| Key | Contract |
-| --- | -------- |
-| Enter | activates on key **down** |
-| Space | activates on key **up** |
-| held key | repeat events never activate |
-
-Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
-Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
-moving by word — belongs to the platform or the application and is left alone,
-default action included; Shift is not a chord, so `Shift+Space` is still a press.
-
-## Accessibility
-
-- Role: `button`, named by `label`. The glyph is passed through `icon` rather
-  than as a child, so it is never mistaken for the name — and an unlabelled
-  `Icon` stays `role="presentation"`.
-- `loading` sets `aria-description` to `loadingLabel` (default `Loading`); this
-  runtime has no `aria-busy`.
-- There is no `aria-disabled`: a disabled action leaves the Tab order
-  (`tabIndex: -1`, still reachable from code) instead.
-- Focus is the keyboard-only outline `Button` declares at rest
-  (`keyboardRing` → `focusVisible`), so a Tab paints it and a mouse press does
-  not.
-- A blank `label` is treated as absent, exactly as `Button` treats a blank
-  `label` — the control would then be unnamed, which the required prop is there
-  to prevent.
-
-## Theming
-
-The paint is `Button`'s recipe (`recipe/buttonClass` with `square`), so every
-variant maps to colour **roles**, never literals, and the square side comes from
-`density`. Ghost is the resting look: the button paints no fill until hover.
-Inside an attached `ButtonGroup` the action squares its own corners, exactly as a
-text `Button` does: the group owns the silhouette.
-
-`style` takes a `StateStyle<ButtonState>` (`{ disabled, focused }`) and merges
-after the recipe, so a callback is the last word:
-
-```tsx
-<IconButton
-  label="Delete layer"
-  icon={<Icon name="trash" color={theme.colors.foreground} />}
-  style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
-/>
-```
 
 ## Limitations
 
-- No `aria-disabled` and no `aria-pressed` — use `Toggle` when the action has a
-  pressed state.
-- No tooltip of its own, but it is a `Tooltip` trigger: it forwards
-  `TooltipTriggerProps` (`onMouseEnter`/`onMouseLeave` and `aria-description`),
-  so wrapping it opens the tip on hover and announces the tip's text. Hover is
-  the window's only open path: a `Tab` traversal focuses the button without
-  running its `onFocus`, and the runtime opens a tip only from that event. The
-  `label` stays required — a tip is a description, not a name.
-- The glyph is not sized by `size`; pass `icon={<Icon size="sm" … />}` to match a
-  smaller button.
-- No native button element: the runtime exposes a `div` with role and handlers.
-
-## Verification
-
-- `src/components/IconButton.test.tsx` — the label is the name, the box is
-  square at the density height, ghost is the default, the activation contract
-  and busy/disabled refusals hold, the caller's busy word reaches both channels,
-  the activation event reaches `onActivate` as
-  it does on `Button`, an attached group squares its corners, the busy spinner
-  receives the caller's `reducedMotion`, the tooltip trigger pair reaches its
-  `Button`, and the caller's `style` wins; a trigger's `ref` and `aria-expanded`
-  reach the element too.
-- `src/components/handlers.test.tsx` — a caller's click, keys and focus are
-  composed with the button's own, and a disabled icon button installs none.
-- `src/docs.test.ts` — the page and the mounted example tint every glyph from a
-  theme role, never a hex literal.
-- `runtime/icon-button.runtime.test.tsx` — the accessibility tree names the
-  action with no image node, the painted box is a 32px square at `md`, a press
-  and Enter each activate once, disabled refuses and leaves the Tab order while
-  keeping the `-1` stop `Button` paints, and a busy action stays focusable.
-- `runtime/examples.runtime.test.tsx` — the layer-toolbar example paints.
-- Both directions measured: dropping `square` fails the square case in both
-  suites (`expected 1256 to be 32`), and blanking the label fails the name case.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Button** — the same control with a visible label.
-- **Toggle** — an icon-only action with a pressed state.
-- **Tooltip** — describes an icon-only action on hover and keyboard focus; the
-  `label` is still the name.
-- **ButtonGroup** — related actions as one control.
+- No `aria-disabled` and no `aria-pressed`: use `Toggle` for a pressed mode.
+- No tooltip of its own, but it is a `Tooltip` trigger.
+- The glyph is not sized by `size`; pass `icon={<Icon size="sm" … />}`.
+- No native button element: a `div` with a role and handlers.

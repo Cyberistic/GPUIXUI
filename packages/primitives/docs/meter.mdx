@@ -3,10 +3,7 @@ title: Meter
 description: A measurement inside a range — distinct from a task's progress.
 ---
 
-`Meter` reports where a measurement sits in a known range: disk used, signal
-strength, a score out of 16. It is not `Progress`: a progress bar reports how
-far a task has got, is always 0–100, and often has no known end. A meter has a
-`min` and a `max` that mean something, and it is never a control.
+`Meter` reports where a measurement sits in a known range. It is not `Progress`.
 
 ## Usage
 
@@ -19,41 +16,15 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 </Stack>;
 ```
 
-The parts put the label and measurement beside the bar:
-
-```tsx
-import {
-  Meter,
-  MeterIndicator,
-  MeterLabel,
-  MeterTrack,
-  MeterValue,
-  Stack,
-} from "@gpuixui/primitives";
-
-<Meter value={68} max={100} label="Disk usage" formatValue={(v) => `${v} GB`}>
-  <Stack direction="row" justify="between">
-    <MeterLabel />
-    <MeterValue />
-  </Stack>
-  <MeterTrack>
-    <MeterIndicator />
-  </MeterTrack>
-</Meter>;
-```
-
-## Parts
+## Composition
 
 | Part | Responsibility |
 | ---- | -------------- |
-| `Meter` | role, accessible name, announced measurement, the frame |
-| `MeterTrack` | the bar's background, height, radius and overflow clip |
+| `Meter` | role, accessible name, announced measurement |
+| `MeterTrack` | the bar's background and overflow clip |
 | `MeterIndicator` | the measurement's share of the track |
 | `MeterLabel` | visible subject, defaulting to the root's `label` |
-| `MeterValue` | the formatted measurement, defaulting to the announced text |
-
-The default composition is the track and its indicator. A caller's `children`
-replace it, and every part reads the same clamped measurement the fill paints.
+| `MeterValue` | the formatted measurement |
 
 ## API
 
@@ -70,62 +41,8 @@ replace it, and every part reads the same clamped measurement the fill paints.
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
 | `testId` | `string` | — | stable locator, on the root |
 
-`MeterTrack` and `MeterIndicator` accept `style`, `className` and `testId`;
-`MeterTrack` also takes `children`. `MeterLabel` takes `children` (visible
-text) and `testId`; `MeterValue` takes `testId`. Each part's `style` is merged
-last, after the recipe.
-
-There is no `aria-valuemax` in the runtime, so pair the meter with visible text
-when the range matters ("68 of 100 GB" above) — the announcement is the value
-alone unless `formatValue` says more.
-
-## Keyboard
-
-Not focusable and not interactive. A meter is status; there is no slider
-behaviour and no tab stop.
-
-## Accessibility
-
-- Role: `meter` (AccessKit `Meter` — verified in the real renderer).
-- The measurement is announced through **`aria-valuetext`**, because `@gpuix/native`
-  0.11.0 has no `aria-valuenow`/`min`/`max`.
-- The name comes from `label`. Without one the meter is unnamed; give it the
-  measurement's subject ("Disk usage").
-- `MeterLabel` is visible text, not a second name.
-
-## Theming
-
-The paint is `Progress`'s: `colors.muted` track, the tone's role for the fill
-(`colors.primary`, `colors.success`, `colors.destructive`,
-`colors.mutedForeground`), height a spacing step, both ends `radius.full`. One
-bar painter means `Progress` and `Meter` cannot drift apart. The label and value
-parts use the `caption` type role in the `muted` text tone.
-
 ## Limitations
 
-- No `aria-valuenow`/`min`/`max` (above).
-- No threshold segments, tick marks or a part that paints inside the track.
-- The fill cannot animate between values; `motion` is not used here, so a
-  changing measurement repaints rather than interpolates.
-
-## Verification
-
-- `src/core/value.test.ts` — the fraction and clamping the paint depends on.
-- `src/components/Meter.test.tsx` — role, announced value, clamped range and
-  fill, the formatted measurement part, the label part, a custom composition,
-  the frame's `style`/`className` split (a caller's `flex-row` wins over the
-  resting column), and that it is neither a tab stop nor a handler target.
-- `runtime/value.runtime.test.tsx` — AccessKit reports `Meter` with the value,
-  the fill's painted width is the measurement's fraction of the track, and Tab
-  never lands on it. Measured 2026-10-17 (plan 053 §11).
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Progress** — task completion.
-- **Slider** — a value the user can change.
-- **Spinner** — activity with no known proportion.
+- No `aria-valuenow`/`min`/`max`: the measurement is `aria-valuetext`.
+- No threshold segments, tick marks or a part inside the track.
+- The fill does not animate between values.
