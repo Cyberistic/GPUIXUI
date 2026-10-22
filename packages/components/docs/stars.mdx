@@ -1,0 +1,134 @@
+---
+title: Stars
+description: A decorative field of twinkling lights for an empty state, a hero or a night-sky panel.
+---
+
+`Stars` paints a bounded box of tiny lights that brighten to their own peak and
+dim back to their own floor. It is decoration: it publishes no accessibility
+node, takes no pointer input, and names nothing. The content in front of it owns
+the words and the presses.
+
+## Usage
+
+```tsx
+import { Stars } from "@gpuixui/components/stars";
+
+<div style={{ position: "relative", height: 240, overflow: "hidden" }}>
+  <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}>
+    <Stars count={64} seed={11} />
+  </div>
+  <EmptyState title="No builds yet" />
+</div>;
+```
+
+The field **measures itself**, so the box has to be bounded — a height, or an
+absolute inset like the one above. Before the first layout it paints nothing,
+because there is no box to place a star in yet.
+
+## How the twinkle works
+
+A star **holds its place**. The runtime has no `transform` (upstream issue #102)
+and no filter, so a star cannot drift, flare or bloom — but it does animate
+`opacity` natively, and a twinkle is exactly that.
+
+The runtime tweens a target **once**, so a twinkle is a ping-pong. Each star
+brightens to its own peak, and when that tween reports `onMotionComplete` it dims
+back to its own floor. The layout is a pure function of the measured box and one
+seed (`stars/logic.ts`):
+
+- **deterministic** — the same seed paints the same sky, so a decorative
+  background does not reshuffle between mounts;
+- **inside the box** — a star sits at least its own size from the edge, so none
+  is clipped in half;
+- **out of step** — every star runs `0.7…1.3` of `twinkleMs`, and waits up to
+  `0.6` of that before it starts, so the sky never blinks in unison;
+- **two lights** — the dim floor and the bright peak are drawn separately, so the
+  field has small glints rather than one uniform glow.
+
+```tsx
+import { Stars } from "@gpuixui/components/stars";
+import { useTheme } from "@gpuixui/components";
+
+const theme = useTheme();
+
+<Stars
+  count={32}
+  seed={4}
+  // The three decisions the field leaves to its caller.
+  color={theme.colors.primary}
+  minSize={1}
+  maxSize={2}
+  twinkleMs={1_600}
+/>;
+```
+
+## Reduced motion
+
+`MotionProvider preference="reduced"` paints every star at its own dim floor
+rather than deleting the sky — the decoration stays, the twinkle goes. No star
+then has a motion target at all, so no tween is running and no turnaround can
+fire. The entrance fade is zeroed the same way the overlays are.
+
+```tsx
+import { MotionProvider, Stars } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <Stars count={48} />
+</MotionProvider>;
+```
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `count` | `number` | `48` | `0` paints none; the cap is `200`, because each star is its own native tween. |
+| `seed` | `number` | `1` | The layout seed. The same seed paints the same sky; a non-finite value is the house seed. |
+| `minSize` | `number` | `1` | The smallest star, in pixels. A value below 1 falls back. |
+| `maxSize` | `number` | `3` | The largest star. An inverted pair is read low-to-high. |
+| `color` | `string` | theme `foreground` | The star colour; every star paints it at its own opacity. |
+| `twinkleMs` | `number` | `2_400` | The base time for one twinkle. Below 320 ms it would flicker and falls back; 20 s is the cap. |
+| `level` | `MotionLevel` | `"slow"` | The entrance fade. `MotionProvider` zeroes it under the reduced preference. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+| `style` | `StyleDesc` | — | The box's style, or a function of `{ count, reducedMotion, width, height }`. Give it a height. |
+
+Every star carries an internal id (`star-0`, …) and a `testId` on the field lands
+on the clipped box.
+
+## Limitations
+
+- **A twinkle, not a flare.** No `transform` and no filter, so a star changes
+  brightness in place; it cannot drift, scale or glow past its own edge.
+- **The box must be bounded by the caller.** The field measures itself; a box
+  with no height paints no stars.
+- **A hidden field keeps animating.** The runtime exposes no visibility query, so
+  unmount the field (or pass `count={0}`) when it is off screen.
+- **A resize re-draws the sky.** The layout follows the new box from the same
+  seed, and every twinkle restarts — a tween cannot be resumed at an arbitrary
+  progress.
+- **No accessibility node.** The field adds no role and no name; give the content
+  in front of it its own.
+- **One tween per star.** `count` is capped at 200 so a sky cannot turn into a
+  thousand native animations.
+
+## Verification
+
+Seven native behaviour cases in `src/behaviour/stars.test.tsx` measure the real
+renderer: the stars inside the box the field measured, the same seed painting the
+same sky, a star born at its floor and handed the peak then the floor as its
+targets turn around on the motion clock, the reduced preference painting the sky
+still with no motion target, no accessibility node and no pointer input,
+`count={0}` painting none, and the entrance at the house `slow` level. The
+arithmetic is `src/stars/logic.test.ts` (8 tests): determinism, every star inside
+the box, the dim floor below the peak, the twinkle times and their waits, an
+unmeasured box painting nothing, and the direction the runtime is handed. The
+clamps it shares with the mote field are `src/internal/scatter.test.ts` (7
+tests).
+
+## Related
+
+- [Particles](/docs/components/particles) — the same field arithmetic, drifting
+  instead of twinkling.
+- [Reveal](/docs/components/reveal) — the entrance a field's content can join.
+- [Empty state](/docs/components/empty-state) — the content this sky sits behind.
+- [Avatar group](/docs/components/avatar-group) — a staggered arrival in the same
+  house style.

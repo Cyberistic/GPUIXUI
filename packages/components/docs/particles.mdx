@@ -120,9 +120,10 @@ painting the same field, a mote drifting out and turning around on the motion
 clock, the reduced preference painting the field still with no motion target, no
 accessibility node and no pointer input, `count={0}` painting none, a resize
 re-drawing the field, and the entrance at the house `slow` level. The arithmetic
-is `src/particles/logic.test.ts` (12 tests): determinism, every seeded place and
+is `src/particles/logic.test.ts` (8 tests): determinism, every seeded place and
 leg inside the box, the size and leg-time ranges, the opacity spread, the return
-leg, the count/size/drift/seed fallbacks and an unmeasured box painting nothing.
+leg and an unmeasured box painting nothing. The clamps it shares with the
+starfield are `src/internal/scatter.test.ts` (7 tests).
 
 ## Related
 

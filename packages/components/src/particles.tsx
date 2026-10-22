@@ -39,11 +39,20 @@ import {
 import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 import {
-  particleCountOf,
-  particleDriftOf,
+  countOf,
+  durationOf,
+  seedOf,
+  sizeRangeOf,
+} from "./internal/scatter.js";
+import {
+  particleCount,
+  particleCountCap,
+  particleDriftCap,
+  particleDriftFloor,
+  particleDriftMs,
   particleField,
-  particleSeedOf,
-  particleSizeRange,
+  particleMaxSize,
+  particleMinSize,
   particleTravel,
   type ParticleDirection,
   type ParticleSpec,
@@ -154,13 +163,24 @@ export const Particles = ({
   const theme = useTheme();
   const preference = useMotionPreference();
   const timing = useSurfaceTiming(level);
-  const fieldCount = particleCountOf(Option.fromNullishOr(count));
-  const sizes = particleSizeRange(
+  const fieldCount = countOf(
+    Option.fromNullishOr(count),
+    particleCount,
+    particleCountCap,
+  );
+  const sizes = sizeRangeOf(
     Option.fromNullishOr(minSize),
     Option.fromNullishOr(maxSize),
+    particleMinSize,
+    particleMaxSize,
   );
-  const layoutSeed = particleSeedOf(Option.fromNullishOr(seed));
-  const drift = particleDriftOf(Option.fromNullishOr(driftMs));
+  const layoutSeed = seedOf(Option.fromNullishOr(seed));
+  const drift = durationOf(
+    Option.fromNullishOr(driftMs),
+    particleDriftMs,
+    particleDriftFloor,
+    particleDriftCap,
+  );
   const ink = color ?? theme.colors.primary;
   const still = preference === "reduced";
   // The box the field is laid out in. A size that changes re-draws the field from

@@ -16,11 +16,12 @@
  *   reads as depth rather than as a dotted grid.
  *
  * All of it is arithmetic over one measured box, so the field is checked without
- * a window.
+ * a window. The seeded hash and the caller-facing clamps live in
+ * `internal/scatter.ts`, beside the starfield's.
  */
 
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
+import { paintable, seededUnit, tenth } from "../internal/scatter.js";
 
 /** The house number of motes. */
 export const particleCount = 24;
@@ -91,80 +92,6 @@ export interface ParticleTravel {
   readonly top: number;
 }
 
-/** A tenth of a pixel is the finest the runtime paints. */
-const tenth = (value: number): number => Math.round(value * 10) / 10;
-
-const paintable = (value: number): boolean =>
-  Number.isFinite(value) && value > 0;
-
-/**
- * A stable unit value in `[0, 1)` for one field slot.
- *
- * A hash rather than a sequence: the layout must not depend on the order the
- * motes are painted in, and a caller who unmounts one mote must not reshuffle
- * the rest of the field.
- */
-const unit = (seed: number, index: number, slot: number): number => {
-  let value =
-    Math.imul(seed ^ 0x9e3779b9, 0x85ebca6b) ^
-    Math.imul((index + 1) * 8 + slot, 0xc2b2ae35);
-  value ^= value >>> 15;
-  value = Math.imul(value, 0x2c1b3c6d);
-  value ^= value >>> 13;
-  return (value >>> 0) / 0x100000000;
-};
-
-/** The number of motes a caller can paint with, or the house one. */
-export const particleCountOf = (count: Option.Option<number>): number =>
-  Option.getOrElse(
-    Option.map(
-      Option.filter(count, (value) => Number.isFinite(value) && value >= 0),
-      (value) => Math.min(Math.round(value), particleCountCap),
-    ),
-    () => particleCount,
-  );
-
-/** The seed a field is drawn from. A non-finite seed is not a layout. */
-export const particleSeedOf = (seed: Option.Option<number>): number =>
-  Option.getOrElse(
-    Option.filter(seed, (value) => Number.isFinite(value)),
-    () => 1,
-  );
-
-const sizeOf = (size: Option.Option<number>, fallback: number): number =>
-  Option.getOrElse(
-    Option.map(
-      Option.filter(size, (value) => Number.isFinite(value) && value >= 1),
-      Math.round,
-    ),
-    () => fallback,
-  );
-
-/** The ordered size range a caller can paint with; an inverted pair is read low-to-high. */
-export const particleSizeRange = (
-  min: Option.Option<number>,
-  max: Option.Option<number>,
-): { readonly min: number; readonly max: number } => {
-  const floor = sizeOf(min, particleMinSize);
-  const ceiling = sizeOf(max, particleMaxSize);
-  return floor <= ceiling
-    ? { min: floor, max: ceiling }
-    : { min: ceiling, max: floor };
-};
-
-/** The base time for one leg, in milliseconds. */
-export const particleDriftOf = (drift: Option.Option<number>): number =>
-  Option.getOrElse(
-    Option.map(
-      Option.filter(
-        drift,
-        (value) => Number.isFinite(value) && value >= particleDriftFloor,
-      ),
-      (value) => Math.min(Math.round(value), particleDriftCap),
-    ),
-    () => particleDriftMs,
-  );
-
 /**
  * How far a mote travels: a share of the shorter side, within the pixel bounds.
  *
@@ -202,26 +129,27 @@ export const particleField = (
   const spanY = Math.max(input.height - originY * 2, 0);
 
   return Arr.makeBy(count, (index) => {
-    const angle = unit(input.seed, index, 3) * Math.PI * 2;
+    const angle = seededUnit(input.seed, index, 3) * Math.PI * 2;
     const size = Math.round(
-      input.minSize + unit(input.seed, index, 2) * (maxSize - input.minSize),
+      input.minSize +
+        seededUnit(input.seed, index, 2) * (maxSize - input.minSize),
     );
     return {
       key: String(index),
-      x: tenth(originX + unit(input.seed, index, 0) * spanX),
-      y: tenth(originY + unit(input.seed, index, 1) * spanY),
+      x: tenth(originX + seededUnit(input.seed, index, 0) * spanX),
+      y: tenth(originY + seededUnit(input.seed, index, 1) * spanY),
       size: Math.max(size, 1),
       driftX: tenth(Math.cos(angle) * amplitude),
       driftY: tenth(Math.sin(angle) * amplitude),
       durationMs: Math.round(
         input.driftMs *
           (durationFloorShare +
-            unit(input.seed, index, 4) *
+            seededUnit(input.seed, index, 4) *
               (durationCeilingShare - durationFloorShare)),
       ),
       opacity: tenth(
         opacityFloor +
-          unit(input.seed, index, 5) * (opacityCeiling - opacityFloor),
+          seededUnit(input.seed, index, 5) * (opacityCeiling - opacityFloor),
       ),
     };
   });

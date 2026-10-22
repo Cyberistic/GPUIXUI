@@ -58,6 +58,7 @@ export * from "./scroll-progress.js";
 export * from "./search-input.js";
 export * from "./shine-button.js";
 export * from "./splitting-text.js";
+export * from "./stars.js";
 export * from "./stepper.js";
 export * from "./tabs.js";
 export * from "./tag-input.js";

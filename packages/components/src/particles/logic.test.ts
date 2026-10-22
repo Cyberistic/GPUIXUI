@@ -5,28 +5,17 @@
  * background jumps between frames); a mote seeded or drifting outside the box it
  * was measured in (clipped at the edge, or half outside its own surface); every
  * mote turning at the same instant, which reads as a pulse rather than a float;
- * a leg so short it is a jitter, or so long the field looks frozen; a count or a
- * size a caller can ask for that the runtime cannot paint; and a return leg that
- * drifts away from the seeded place instead of returning to it.
+ * a return leg that drifts away from the seeded place instead of returning to
+ * it; and a count or a size the runtime cannot paint.
  */
 
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
   particleAmplitude,
-  particleCount,
-  particleCountCap,
-  particleCountOf,
-  particleDriftCap,
-  particleDriftFloor,
-  particleDriftMs,
-  particleDriftOf,
   particleField,
   particleMaxSize,
   particleMinSize,
-  particleSeedOf,
-  particleSizeRange,
   particleTravel,
   type ParticleFieldInput,
   type ParticleSpec,
@@ -120,48 +109,7 @@ describe("particleField", () => {
   });
 });
 
-describe("the field's policy", () => {
-  it("clamps the count", () => {
-    expect(particleCountOf(Option.none())).toBe(particleCount);
-    expect(particleCountOf(Option.some(6))).toBe(6);
-    expect(particleCountOf(Option.some(0))).toBe(0);
-    expect(particleCountOf(Option.some(1_000))).toBe(particleCountCap);
-    // An unreadable or negative request is not a smaller field.
-    expect(particleCountOf(Option.some(Number.NaN))).toBe(particleCount);
-    expect(particleCountOf(Option.some(-4))).toBe(particleCount);
-  });
-
-  it("reads an inverted size range low-to-high and an unreadable one as the house pair", () => {
-    expect(particleSizeRange(Option.none(), Option.none())).toEqual({
-      min: particleMinSize,
-      max: particleMaxSize,
-    });
-    expect(particleSizeRange(Option.some(9), Option.some(3))).toEqual({
-      min: 3,
-      max: 9,
-    });
-    // A mote smaller than a pixel cannot be seen, so it is the house size.
-    expect(particleSizeRange(Option.some(0), Option.some(Number.NaN))).toEqual({
-      min: particleMinSize,
-      max: particleMaxSize,
-    });
-  });
-
-  it("holds the leg time between a jitter and a stare", () => {
-    expect(particleDriftOf(Option.none())).toBe(particleDriftMs);
-    expect(particleDriftOf(Option.some(particleDriftFloor - 1))).toBe(
-      particleDriftMs,
-    );
-    expect(particleDriftOf(Option.some(2_000.4))).toBe(2_000);
-    expect(particleDriftOf(Option.some(10_000_000))).toBe(particleDriftCap);
-  });
-
-  it("reads an unreadable seed as the house one", () => {
-    expect(particleSeedOf(Option.none())).toBe(1);
-    expect(particleSeedOf(Option.some(Number.NaN))).toBe(1);
-    expect(particleSeedOf(Option.some(42))).toBe(42);
-  });
-
+describe("particleAmplitude", () => {
   it("bounds the travel by the box's shorter side", () => {
     expect(particleAmplitude(1_000, 200)).toBe(16);
     expect(particleAmplitude(20, 20)).toBe(2);
