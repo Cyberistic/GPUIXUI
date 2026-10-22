@@ -646,6 +646,9 @@ describe("the curated component pages", () => {
     const dismiss = read(
       "packages/components/src/internal/dismiss-layer.ts",
     ).replace(/\s+/g, " ");
+    const presenceSeam = read(
+      "packages/components/src/internal/presence.tsx",
+    ).replace(/\s+/g, " ");
 
     // The box: the component's two size tables, and the window clamp on each.
     expect(source).toContain(
@@ -671,12 +674,14 @@ describe("the curated component pages", () => {
     );
 
     // The exit frame: the surface stays mounted, refuses presses, and travels
-    // 12px on an inset at the `slow` level.
+    // 12px on an inset at the `slow` level. The refusal is the shared seam's —
+    // `presenceStyle` paints `auto` while present and `none` once it starts
+    // leaving — so the surface composes it rather than restating the pair.
     expect(source).toContain("fadeFromSide(side, 12)");
     expect(source).toContain('useSurfaceTiming("slow")');
-    expect(source).toContain(
-      'pointerEvents: presence.present ? "auto" : "none"',
-    );
+    expect(flatSource).toContain("...presenceStyle(presence.present)");
+    expect(presenceSeam).toContain('{ pointerEvents: "auto" }');
+    expect(presenceSeam).toContain('{ pointerEvents: "none" }');
     expect(source).toContain("if (!presence.mounted) return null;");
     expect(source).toContain('label="Close drawer"');
 
@@ -741,6 +746,9 @@ describe("the curated component pages", () => {
       /\s+/g,
       " ",
     );
+    const presenceSeam = read(
+      "packages/components/src/internal/presence.tsx",
+    ).replace(/\s+/g, " ");
 
     // Both opening routes, each with the point it records.
     expect(flatSource).toContain("event.isRightClick !== true");
@@ -768,14 +776,15 @@ describe("the curated component pages", () => {
     expect(flatSource).toContain("restoreFocus.current = false;");
 
     // The entrance and the exit frame: 4px from the point at the normal level,
-    // mounted without taking a press once it starts leaving.
+    // mounted without taking a press once it starts leaving. The press refusal
+    // is the shared seam's, so the surface composes `presenceStyle`.
     expect(flatSource).toContain('fadeFromAnchor("bottom", 4)');
     expect(flatSource).toContain('useSurfaceTiming("normal")');
     expect(flatSource).toContain("if (!presence.mounted) return null;");
     expect(flatSource).toContain("occlude={presence.present}");
-    expect(flatSource).toContain(
-      'pointerEvents: presence.present ? "auto" : "none"',
-    );
+    expect(flatSource).toContain("...presenceStyle(presence.present)");
+    expect(presenceSeam).toContain('{ pointerEvents: "auto" }');
+    expect(presenceSeam).toContain('{ pointerEvents: "none" }');
 
     // The surface itself takes focus on every open: `autoFocus` is on the
     // menu box, so the first arrow reaches the first row rather than the probe
@@ -1249,6 +1258,9 @@ describe("the curated component pages", () => {
     const model = read("packages/components/src/toast/model.ts");
     const viewport = read("packages/components/src/toast/viewport.tsx");
     const recipes = read("packages/tw/src/recipes.ts");
+    const presenceSeam = read(
+      "packages/components/src/internal/presence.tsx",
+    ).replace(/\s+/g, " ");
 
     expect(store).toContain("const DEFAULT_MAX = 3;");
     expect(store).toContain("const DEFAULT_DURATION = Duration.seconds(5);");
@@ -1263,7 +1275,22 @@ describe("the curated component pages", () => {
 
     expect(viewport).toContain('role="status"');
     expect(viewport).toContain('aria-label="Notifications"');
-    expect(viewport).toContain('pointerEvents: present ? "auto" : "none"');
+    // The page stays usable because the viewport itself takes no press and each
+    // card turns it back on — the pair the two recipes compile — while a card
+    // that is leaving refuses the press through the shared presence seam.
+    const viewportRecipe = recipes.slice(
+      recipes.indexOf("export const TOAST_VIEWPORT ="),
+      recipes.indexOf("export const TOAST_CARD ="),
+    );
+    const cardRecipe = recipes.slice(
+      recipes.indexOf("export const TOAST_CARD ="),
+      recipes.indexOf("export const TOAST_TITLE ="),
+    );
+    expect(viewportRecipe).toContain("pointer-events-none");
+    expect(cardRecipe).toContain("pointer-events-auto");
+    expect(viewport).toContain("presenceStyle(present)");
+    expect(presenceSeam).toContain('{ pointerEvents: "auto" }');
+    expect(presenceSeam).toContain('{ pointerEvents: "none" }');
     expect(viewport).toContain("held.current.focus > 0");
     expect(viewport).toContain(
       "Math.max(0, held.current.focus + (value ? 1 : -1))",
