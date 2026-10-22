@@ -62,7 +62,8 @@ interface PreviewSelectProps {
   readonly id: string;
   readonly entries: ReadonlyArray<PreviewEntry>;
   readonly value: string | null;
-  readonly onValueChange: (value: string) => void;
+  /** Absent on a disabled preview, which never commits. */
+  readonly onValueChange?: (value: string) => void;
   readonly label: string;
   readonly placeholder?: string;
   readonly size?: "sm" | "md" | "lg";
@@ -112,7 +113,7 @@ const PreviewSelect = ({
 
   const commit = (next: string | null) => {
     if (next === null) return;
-    onValueChange(next);
+    onValueChange?.(next);
     close(true);
   };
 
@@ -341,7 +342,8 @@ export const SelectDemo = () => {
 /** The three sizes and the four trigger states the component paints. */
 export const SelectStates = () => {
   const [plan, setPlan] = useState<string | null>("team");
-  const [compact, setCompact] = useState<string | null>(null);
+  const [empty, setEmpty] = useState<string | null>(null);
+  const [invalid, setInvalid] = useState<string | null>(null);
 
   return (
     <div className="gx-demo-select gx-select-states">
@@ -387,9 +389,9 @@ export const SelectStates = () => {
             entries={plans}
             id="preview-plan-empty"
             label="Plan, empty"
-            onValueChange={setCompact}
+            onValueChange={setEmpty}
             placeholder="Select a plan…"
-            value={compact}
+            value={empty}
           />
         </div>
         <div className="gx-select-field">
@@ -399,9 +401,9 @@ export const SelectStates = () => {
             id="preview-plan-invalid"
             invalid
             label="Plan, invalid"
-            onValueChange={setCompact}
+            onValueChange={setInvalid}
             placeholder="Required"
-            value={null}
+            value={invalid}
           />
         </div>
         <div className="gx-select-field">
@@ -411,14 +413,14 @@ export const SelectStates = () => {
             entries={plans}
             id="preview-plan-disabled"
             label="Plan, disabled"
-            onValueChange={setCompact}
             value="team"
           />
         </div>
       </div>
       <p className="gx-select-readout">
-        Every trigger opens; the invalid one shows the destructive edge the
-        component paints, and the disabled one refuses to open.
+        Every trigger opens; the invalid one keeps the destructive edge the
+        caller asked for, because the component paints the state it is given
+        rather than deciding when a form is wrong.
       </p>
     </div>
   );
