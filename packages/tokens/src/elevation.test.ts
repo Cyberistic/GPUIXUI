@@ -24,6 +24,7 @@ import {
 } from "./color.js";
 import {
   darkElevation,
+  elevationLevels,
   elevationShadow,
   elevationWithTint,
   highContrastDarkElevation,
@@ -50,7 +51,7 @@ const runtimeFields = [
   "spreadRadius",
 ];
 
-const levels = ["sm", "md", "lg", "overlay"] as const;
+const levels = elevationLevels;
 
 const color = /^#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?$/;
 
@@ -96,6 +97,13 @@ describe("elevation levels", () => {
         });
       });
     });
+  });
+
+  it("lists the levels in the order a theme declares them", () => {
+    // The index is what `scales.ts` walks to compare the elevation ladder, so it
+    // has to be the order the catalogue prints and the shipped themes write.
+    expect(elevationLevels).toEqual(Object.keys(lightElevation));
+    expect(elevationLevels).toEqual(Object.keys(highContrastDarkElevation));
   });
 
   it("keeps the overlay level reserved and empty", () => {

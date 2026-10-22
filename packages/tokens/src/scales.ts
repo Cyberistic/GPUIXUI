@@ -40,7 +40,7 @@
 import {
   type BoxShadow,
   type Elevation,
-  type ElevationLevel,
+  elevationLevels,
 } from "./elevation.js";
 import { controlSizes, type ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
@@ -117,14 +117,6 @@ const borderKeys = ["thin", "strong"] as const;
 /** Icon steps from inline to navigation. */
 const iconKeys = ["xs", "sm", "md", "lg", "xl"] as const;
 
-/** Elevation levels from a resting card to a dialog, in the catalogue's order. */
-const elevationKeys = [
-  "sm",
-  "md",
-  "lg",
-  "overlay",
-] as const satisfies readonly ElevationLevel[];
-
 /**
  * The type hierarchy, smallest to largest. `bodyStrong` shares `body`'s size and
  * differs by weight, and the two mono roles are a separate family rather than
@@ -175,7 +167,7 @@ const reach = ({ offsetY, blurRadius, spreadRadius }: BoxShadow): number =>
  * `elevationShadow` paints, which is the only one the level renders.
  */
 const elevationSteps = (elevation: Partial<Elevation>): readonly Step[] =>
-  elevationKeys.flatMap((level) => {
+  elevationLevels.flatMap((level) => {
     const shadow = elevation[level]?.[0];
     if (shadow === undefined) {
       return [];

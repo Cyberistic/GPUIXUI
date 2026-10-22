@@ -51,8 +51,16 @@ export interface Elevation {
 /** A level a surface can be raised to. */
 export type ElevationLevel = keyof Elevation;
 
-/** Every elevation level, in the order the catalogue lists them. */
-const elevationLevels = [
+/**
+ * Every elevation level, in the order the catalogue lists them: the order a
+ * surface is raised through, and the order `invalidShadowColors` reports a level
+ * in. A consumer that renders the scale iterates this instead of retyping it.
+ *
+ * `elevationLevels` is public for the same reason `statusTones` and
+ * `platformNames` are: an ordered index is the one place the set is written
+ * down, so a level added to a theme cannot leave a picker with a stale list.
+ */
+export const elevationLevels = [
   "sm",
   "md",
   "lg",

@@ -1907,6 +1907,11 @@ A level is a list because the runtime accepts a shadow list; the scale is
 designed as one shadow per level, so a shipped level carries one entry and a
 consumer reads it with `elevationShadow`:
 
+`elevationLevels` is the set as an ordered list — `sm`, `md`, `lg`, `overlay` —
+the order a surface is raised through, the order the table above prints and the
+order `invalidShadowColors` reports a level in. A consumer that renders the
+scale (a theme editor's level picker) iterates it instead of retyping the keys.
+
 ```tsx
 import { elevationShadow } from "@gpuixui/tokens";
 
