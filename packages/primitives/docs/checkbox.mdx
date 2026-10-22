@@ -79,7 +79,7 @@ press that toggles the box.
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
 | `description` | `string` | none | announced help (`aria-description`) for a format hint or an error message; a blank one publishes nothing, and it wins over a tooltip's |
-| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press target, so the box can be a `Tooltip` trigger; the tip opens on hover and focus |
+| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press target, so the box can be a `Tooltip` trigger; the tip opens on hover (and on the focus event a `TestRenderer` delivers — a window's `Tab` traversal runs no `onFocus`) |
 | `ref` / `aria-id` / `onLayout` | host address | none | the box is the addressed element: focus it, name it for an automation host, measure it |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the box's own; yours runs first |
 | `style` | `StateStyle<CheckboxState>` | — | resolved against the live state and merged last |
@@ -136,7 +136,8 @@ also scroll while the control waits for the release.
   `labelledBy(name, help)`. A blank description publishes nothing. A `Tooltip`
   arrives on the same channel: its text becomes the description when the box has
   no `description` of its own, and the forwarded hover pair means the tip opens
-  on the pointer as well as on focus.
+  on the pointer (a window's `Tab` traversal runs no `onFocus`, so hover is its
+  only open path).
 - The box is the **address** a form focuses: `ref` receives the runtime's own
   instance, `aria-id` is its automation id, and `onLayout` reports its box.
   `runtime/address.runtime.test.tsx` reads all three back off a window.

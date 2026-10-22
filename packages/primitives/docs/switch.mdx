@@ -53,7 +53,7 @@ const theme = useTheme();
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name |
 | `description` | `string` | none | announced help (`aria-description`); a blank one publishes nothing, and it wins over a tooltip's |
-| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press band, so the switch can be a `Tooltip` trigger; the tip opens on hover and focus |
+| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press band, so the switch can be a `Tooltip` trigger; the tip opens on hover (and on the focus event a `TestRenderer` delivers — a window's `Tab` traversal runs no `onFocus`) |
 | `ref` / `aria-id` / `onLayout` | host address | none | the press band is the addressed element: focus it, address it, measure it |
 | `reducedMotion` | `boolean` | `false` | the thumb lands on its position instead of sliding there |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the switch's own; yours runs first |
@@ -97,7 +97,8 @@ also scroll while the control waits for the release.
   `description`, or `labelledBy(name, help)`. A blank one publishes nothing. A
   `Tooltip` arrives on the same channel: its text becomes the description when
   the switch has no `description` of its own, and the forwarded hover pair means
-  the tip opens on the pointer as well as on focus.
+  the tip opens on the pointer (a window's `Tab` traversal runs no `onFocus`, so
+  hover is its only open path).
 - The press band is the **address**: `ref`, `aria-id` and `onLayout` land on it,
   so a form can focus the switch it failed on and a layout can measure it
   (`runtime/address.runtime.test.tsx`).
