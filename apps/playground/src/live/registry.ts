@@ -534,6 +534,12 @@ export const liveRegistry = [
       "Input: a filled child is the boundary a row's native hover stops at, while its unfilled and pointer-inert children leave the row's fill and its enter event intact",
     capability: "input",
   },
+  {
+    id: "multi-step-form-lifecycle",
+    title:
+      "Input: a multi-step form gates each step, keeps its draft across Back, and submits only the record its schema decodes",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

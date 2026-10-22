@@ -69,6 +69,7 @@ import {
   DropdownMenu,
   Field,
   FieldInput,
+  Form,
   List,
   ListItem,
   ListItemTitle,
@@ -83,6 +84,8 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Stepper,
+  StepperStep,
   Tabs,
   TabsContent,
   TabsList,
@@ -182,6 +185,22 @@ import {
   otpKeysChannels,
   otpKeysReadout,
 } from "./otp-keys.js";
+import {
+  MULTI_STEP_IDS,
+  MULTI_STEP_NAME_MESSAGE,
+  MULTI_STEP_PORT_MESSAGE,
+  MULTI_STEP_STEPS,
+  MULTI_STEP_TERMS_MESSAGE,
+  WorkspaceSetup,
+  appliedReadout,
+  emptyMultiStepDraft,
+  multiStepReadout,
+  nextStep,
+  previousStep,
+  stepError,
+  type MultiStepDraft,
+  type MultiStepStep,
+} from "./multi-step.js";
 
 import {
   DATA_TREE_COLLAPSE,
@@ -1715,6 +1734,171 @@ const ValidationProbe = (): ReactNode => {
         <Readout testId={VALIDATION_READOUT}>
           {validationReadout(error, applied, submits)}
         </Readout>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The shipped `Form`, `Stepper`, `Field` and `Checkbox` as one three-step
+ * wizard.
+ *
+ * The app owns the step, the draft and the acceptance; the step gate is the
+ * wizard's own rule, while the form's schema decodes the whole record once, at
+ * submit. Keeping both layers visible is the point: a wizard that gates forward
+ * movement and then trusts it would carry an invalid record, so the review
+ * step's acceptance is checked by `Form` alone.
+ */
+const MultiStepProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [step, setStep] = useState<MultiStepStep>(1);
+  const [draft, setDraft] = useState<MultiStepDraft>(emptyMultiStepDraft);
+  const [attempted, setAttempted] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [submits, setSubmits] = useState(0);
+  const [applied, setApplied] = useState<Option.Option<WorkspaceSetup>>(
+    Option.none(),
+  );
+
+  // The message follows the value once the reader has tried to move on, so a
+  // corrected field clears it without another press.
+  const error = attempted ? stepError(step, draft) : Option.none<string>();
+
+  const advance = (): void => {
+    const refusal = stepError(step, draft);
+    setAttempted(Option.isSome(refusal));
+    if (Option.isNone(refusal)) setStep(nextStep(step));
+  };
+
+  const back = (): void => {
+    setAttempted(false);
+    setStep(previousStep(step));
+  };
+
+  return (
+    <div
+      testId={MULTI_STEP_IDS.probe}
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 520,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <Stepper value={step} label="Workspace setup" style={{ width: 460 }}>
+          {MULTI_STEP_STEPS.map((label, index) => (
+            <StepperStep key={label} value={index + 1} label={label} />
+          ))}
+        </Stepper>
+        <Form
+          schema={WorkspaceSetup}
+          value={{ ...draft, accepted }}
+          onSubmit={(setup) => {
+            setApplied(Option.some(setup));
+            setSubmits((count) => count + 1);
+          }}
+          label="Create a workspace"
+        >
+          {(form) => (
+            <>
+              {Match.value(step).pipe(
+                Match.when(1, () => (
+                  <Field
+                    label="Workspace name"
+                    description="3–24 lowercase letters, digits or hyphens"
+                    error={Option.getOrUndefined(error)}
+                    testId={MULTI_STEP_IDS.name}
+                  >
+                    <FieldInput
+                      testId={MULTI_STEP_IDS.nameInput}
+                      placeholder="design-system"
+                      value={draft.name}
+                      onChange={(event) =>
+                        setDraft({ ...draft, name: event.value ?? "" })
+                      }
+                      onSubmit={advance}
+                    />
+                  </Field>
+                )),
+                Match.when(2, () => (
+                  <Field
+                    label="Port"
+                    description="1024 to 65535"
+                    error={Option.getOrUndefined(error)}
+                    testId={MULTI_STEP_IDS.port}
+                  >
+                    <FieldInput
+                      testId={MULTI_STEP_IDS.portInput}
+                      placeholder="3000"
+                      value={draft.port}
+                      onChange={(event) =>
+                        setDraft({ ...draft, port: event.value ?? "" })
+                      }
+                      onSubmit={advance}
+                    />
+                  </Field>
+                )),
+                Match.when(3, () => (
+                  <>
+                    <Readout testId={MULTI_STEP_IDS.review}>
+                      {`name=${draft.name} port=${draft.port}`}
+                    </Readout>
+                    <Checkbox
+                      testId={MULTI_STEP_IDS.terms}
+                      checked={accepted}
+                      onCheckedChange={setAccepted}
+                      label="The port is free"
+                    />
+                  </>
+                )),
+                Match.exhaustive,
+              )}
+              <div style={{ display: "flex", gap: theme.spacing.sm }}>
+                <Button
+                  testId={MULTI_STEP_IDS.back}
+                  variant="secondary"
+                  disabled={step === 1}
+                  onClick={back}
+                >
+                  Back
+                </Button>
+                {step === 3 ? (
+                  <Button
+                    testId={MULTI_STEP_IDS.submit}
+                    variant="primary"
+                    onClick={form.submit}
+                  >
+                    Create workspace
+                  </Button>
+                ) : (
+                  <Button
+                    testId={MULTI_STEP_IDS.next}
+                    variant="primary"
+                    onClick={advance}
+                  >
+                    Next
+                  </Button>
+                )}
+              </div>
+              <Readout testId={MULTI_STEP_IDS.readout}>
+                {multiStepReadout(step, draft, accepted, submits)}
+              </Readout>
+              <Readout testId={MULTI_STEP_IDS.applied}>
+                {appliedReadout(applied)}
+              </Readout>
+            </>
+          )}
+        </Form>
       </div>
     </div>
   );
@@ -5126,6 +5310,196 @@ const validationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* focusedAfterPaint(ctx),
       VALIDATION_INPUT,
     );
+  });
+
+/**
+ * Drives a three-step wizard built from the shipped `Form`, `Stepper`, `Field`
+ * and `Checkbox`.
+ *
+ * The two gates are the measurement: a step refuses to advance on its own
+ * field's rule, while the review step's acceptance is decoded by `Form` alone
+ * and paints its summary where no step gate looks. The draft stays the app's
+ * across Back and Next, so a reader loses nothing on the way through.
+ */
+const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(MULTI_STEP_IDS.next);
+
+    yield* ctx.expectEqual(
+      "the wizard opens on the first step with an empty draft",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(1, emptyMultiStepDraft, false, 0),
+    );
+
+    // Back cannot move before the first step: the control is disabled, and a
+    // disabled action refuses the press in a window.
+    yield* ctx.host.click(MULTI_STEP_IDS.back);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press on the disabled Back leaves the wizard on the first step",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(1, emptyMultiStepDraft, false, 0),
+    );
+
+    // Next with no name: the step gate refuses and the field paints its rule.
+    yield* ctx.host.click(MULTI_STEP_IDS.next);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a step with no usable name refuses to advance",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(1, emptyMultiStepDraft, false, 0),
+    );
+    yield* ctx.expectContains(
+      "the refusal paints the name rule in the field's message slot",
+      yield* ctx.host.text(MULTI_STEP_IDS.name),
+      MULTI_STEP_NAME_MESSAGE,
+    );
+
+    // A usable name, then Enter: the field's own submit path advances too.
+    yield* typeInto(ctx, MULTI_STEP_IDS.nameInput, "desk");
+    yield* ctx.expectEqual(
+      "the step's message clears once the value satisfies the rule",
+      Str.includes(MULTI_STEP_NAME_MESSAGE)(
+        yield* ctx.host.text(MULTI_STEP_IDS.name),
+      ),
+      false,
+    );
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter from a valid first step advances the wizard",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(2, { name: "desk", port: "" }, false, 0),
+    );
+
+    // The second step's own rule refuses an out-of-range port.
+    yield* typeInto(ctx, MULTI_STEP_IDS.portInput, "70000");
+    yield* ctx.host.click(MULTI_STEP_IDS.next);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an out-of-range port refuses to advance",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(2, { name: "desk", port: "70000" }, false, 0),
+    );
+    yield* ctx.expectContains(
+      "the port's refusal paints its own message",
+      yield* ctx.host.text(MULTI_STEP_IDS.port),
+      MULTI_STEP_PORT_MESSAGE,
+    );
+
+    // A corrected value clears the message without another press, and Next
+    // reaches the review step. The press on Next moved the focus, so the field
+    // takes it back before the replacement.
+    yield* ctx.host.click(MULTI_STEP_IDS.portInput);
+    yield* ctx.host.key("cmd-a");
+    yield* Effect.forEach(
+      Arr.fromIterable(["3", "0", "0", "0"]),
+      (digit) => ctx.host.key(digit),
+      { concurrency: 1 },
+    );
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the corrected port is what the field holds",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(2, { name: "desk", port: "3000" }, false, 0),
+    );
+    yield* ctx.expectEqual(
+      "the port's message clears with the corrected value",
+      Str.includes(MULTI_STEP_PORT_MESSAGE)(
+        yield* ctx.host.text(MULTI_STEP_IDS.port),
+      ),
+      false,
+    );
+    yield* ctx.host.click(MULTI_STEP_IDS.next);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the review step paints the decoded-looking draft",
+      yield* ctx.host.text(MULTI_STEP_IDS.review),
+      "name=desk port=3000",
+    );
+    yield* ctx.expectEqual(
+      "the stepper's value and the readout agree on the last step",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(3, { name: "desk", port: "3000" }, false, 0),
+    );
+    yield* ctx.host.capture("multi-step-review");
+
+    // Back keeps the draft: the port is still there, and Next returns.
+    yield* ctx.host.click(MULTI_STEP_IDS.back);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Back preserves the draft it was given",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(2, { name: "desk", port: "3000" }, false, 0),
+    );
+    yield* ctx.host.click(MULTI_STEP_IDS.next);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Next returns to the review with the same draft",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(3, { name: "desk", port: "3000" }, false, 0),
+    );
+
+    // The accepted review is the form's decode: one press reaches the caller
+    // with the class instance's own values.
+    yield* ctx.host.click(MULTI_STEP_IDS.terms);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the review's acceptance reaches the wizard's state",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(3, { name: "desk", port: "3000" }, true, 0),
+    );
+    yield* ctx.host.click(MULTI_STEP_IDS.submit);
+    yield* Effect.sleep(Duration.millis(200));
+    yield* ctx.expectEqual(
+      "the caller receives the decoded values, not the draft",
+      yield* ctx.host.text(MULTI_STEP_IDS.applied),
+      "applied=desk:3000",
+    );
+    yield* ctx.expectEqual(
+      "the accepted record submits once",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(3, { name: "desk", port: "3000" }, true, 1),
+    );
+    yield* ctx.expectEqual(
+      "the record's message is gone once it is accepted",
+      Str.includes(MULTI_STEP_TERMS_MESSAGE)(
+        yield* ctx.host.text(MULTI_STEP_IDS.probe),
+      ),
+      false,
+    );
+    yield* ctx.host.capture("multi-step-submitted");
+
+    // The measured limit: a form whose first submit succeeded and whose next
+    // one fails keeps the failure in its field meta, so the correction below
+    // paints no message and never reaches the caller. Recorded in TODO.md for
+    // the components owner; this check flips when the retry is repaired.
+    yield* ctx.host.click(MULTI_STEP_IDS.terms);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "un-accepting the review paints the record's rule before any submit",
+      Str.includes(MULTI_STEP_TERMS_MESSAGE)(
+        yield* ctx.host.text(MULTI_STEP_IDS.probe),
+      ),
+      true,
+    );
+    yield* ctx.host.click(MULTI_STEP_IDS.submit);
+    yield* Effect.sleep(Duration.millis(200));
+    yield* ctx.expectEqual(
+      "a refused review records no second submit",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(3, { name: "desk", port: "3000" }, false, 1),
+    );
+    yield* ctx.host.click(MULTI_STEP_IDS.terms);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click(MULTI_STEP_IDS.submit);
+    yield* Effect.sleep(Duration.millis(200));
+    yield* ctx.expectEqual(
+      "the corrected review is not revalidated: the submit still does not reach the caller",
+      yield* ctx.host.text(MULTI_STEP_IDS.readout),
+      multiStepReadout(3, { name: "desk", port: "3000" }, true, 1),
+    );
+    yield* ctx.host.capture("multi-step-retry");
   });
 
 const checkboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
@@ -24286,5 +24660,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "hover-routing-lifecycle",
     view: () => <HoverRoutingProbe />,
     steps: hoverRoutingSteps,
+  },
+  "multi-step-form-lifecycle": {
+    id: "multi-step-form-lifecycle",
+    view: () => <MultiStepProbe />,
+    steps: multiStepSteps,
   },
 };
