@@ -65,6 +65,20 @@ const section = (body: string, heading: string): string => {
   return start === -1 ? "" : body.slice(start, end === -1 ? undefined : end);
 };
 
+/**
+ * One bullet of a page's audit list, without its following siblings.
+ *
+ * A bullet is scoped rather than the whole section because the bullets name
+ * overlapping vocabulary: `muted` appears in the indicator bullet, so a
+ * section-wide read of the selection bullet's surfaces passed while that bullet
+ * still described four.
+ */
+const bullet = (body: string, label: string): string => {
+  const start = body.indexOf(`- **${label}**:`);
+  const end = body.indexOf("\n- **", start + 1);
+  return start === -1 ? "" : body.slice(start, end === -1 ? undefined : end);
+};
+
 /** A name as the pages print it, so a list can be built from the package. */
 const backticked = (name: string): string => "`" + name + "`";
 
@@ -182,11 +196,15 @@ describe("the theme page", () => {
 
   it("measures both the body text and the secondary line a reader can select", () => {
     // The bullet described "the four content surfaces body text can be selected
-    // from" at 7:1. `selectionPairs` grew to seven when a `mutedForeground` line
-    // on the three prose surfaces joined at the secondary floor, so the caption,
-    // table second line or log row a reader selects was measured by a report the
-    // page never described.
+    // from" at 7:1, then named only `input`/`background`/`card`/`popover` after
+    // `selectionPairs` grew: the `mutedForeground` line on the three prose
+    // surfaces joined at the secondary floor (the caption, table second line or
+    // log row a reader selects), then the `muted` fill a user message bubble
+    // paints joined at the body floor — the fifth content surface. The section
+    // also names `muted` in the indicator bullet, so a section-wide guard let the
+    // selection bullet keep a four-surface table.
     const audit = section(page("themes.mdx"), "The theme audit");
+    const selection = bullet(page("themes.mdx"), "Text selection");
     const tokensImport = page("themes.mdx")
       .split("\n")
       .find(
@@ -196,19 +214,20 @@ describe("the theme page", () => {
 
     expect(tokensImport).toContain("selectionPairs");
     expect(tokensImport).toContain("contrastFloors");
-    expect(page("themes.mdx")).toContain("{selectionPairs.length}");
-    expect(audit).toContain("mutedForeground");
-    expect(audit).toContain("{contrastFloors.body}");
-    expect(audit).toContain("{contrastFloors.secondary}");
+    expect(selection).toContain("{selectionPairs.length}");
+    expect(selection).toContain("mutedForeground");
+    expect(selection).toContain("message bubble");
+    expect(selection).toContain("{contrastFloors.body}");
+    expect(selection).toContain("{contrastFloors.secondary}");
     expect(audit).not.toContain(
       "the four content surfaces body text can be selected from",
     );
 
-    // Every surface the report composites over is named on the page, so a pair
-    // added to the contract cannot leave the bullet describing an older table.
-    const unnamed = [
-      ...new Set(selectionPairs.map((pair) => pair.background)),
-    ].filter((surface) => !audit.includes(`\`${surface}\``));
+    // Every surface the report composites over is named in the selection bullet
+    // itself, so a pair added to the contract cannot leave the bullet describing
+    // an older table.
+    const unnamed = [...new Set(selectionPairs.map((pair) => pair.background))]
+      .filter((surface) => !selection.includes(backticked(surface)));
     expect(
       unnamed,
       "the selection bullet does not name these surfaces",
