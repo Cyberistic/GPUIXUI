@@ -26,11 +26,7 @@ function Probe() {
 function PresenceProbe() {
   const provided = useThemePresence();
   const theme = useTheme();
-  return (
-    <>
-      {`${provided ? "provided" : "none"}:${theme.mode}`}
-    </>
-  );
+  return <>{`${provided ? "provided" : "none"}:${theme.mode}`}</>;
 }
 
 describe("ThemeProvider", () => {

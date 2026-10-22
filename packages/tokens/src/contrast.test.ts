@@ -430,7 +430,9 @@ describe("the ink an alert paints on its own tint", () => {
       expect(page).toContain("`warningSoft`");
       expect(page).toContain("7.14:1");
     });
-    expect(system).toContain("Windows XP (Luna) dark's `warningSoft` at 7.14:1");
+    expect(system).toContain(
+      "Windows XP (Luna) dark's `warningSoft` at 7.14:1",
+    );
   });
 });
 
