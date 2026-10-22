@@ -97,6 +97,30 @@ describe("live main", () => {
       expect(deps.loaded()).toBe(false);
     });
   });
+
+  it.effect("rejects a titlebar that is not a mode before loading", () => {
+    const deps = probe(["--titlebar", "glassy"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.unverified);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
+
+  it.effect("accepts the titlebar modes beside a backdrop flag", () => {
+    const deps = probe([
+      "--list",
+      "--window-background",
+      "transparent",
+      "--titlebar",
+      "transparent",
+    ]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.passed);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
 });
 
 describe("the live report's host line", () => {
@@ -108,5 +132,14 @@ describe("the live report's host line", () => {
     expect(hostLabel("blurred")).toContain(
       `gpuix live window ${process.platform}-${process.arch} @gpuix/native 0.11.0`,
     );
+  });
+
+  it("names a transparent titlebar and leaves the default line alone", () => {
+    // A chrome run proves something an ordinary window does not, so the report
+    // has to carry it; a default run keeps printing the line the README quotes.
+    expect(hostLabel("opaque", "transparent")).toBe(
+      hostLabel("opaque").replace("opaque)", "opaque, titlebar transparent)"),
+    );
+    expect(hostLabel("opaque", "default")).toBe(hostLabel("opaque"));
   });
 });

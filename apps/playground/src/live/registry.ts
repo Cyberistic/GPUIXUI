@@ -294,6 +294,12 @@ export const liveRegistry = [
       "Content: a chart paints from a pixel buffer in its own colours, updates when its data changes, and takes multi-colour SVG bytes",
     capability: "content",
   },
+  {
+    id: "window-chrome",
+    title:
+      "Window: the app's layout starts at the window's top edge, the reported insets carry no titlebar band in either titlebar mode, and an app insets its own chrome",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

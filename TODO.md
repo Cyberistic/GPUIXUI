@@ -531,7 +531,45 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 68/68
+`[x]` `[██████████]` 69/69
+
+`[x]` Land the `window-chrome` live probe and measure **the window's own chrome**
+      — a Tier 4 toolbar, status bar or titlebar-integrated workspace needs to
+      know whether the runtime reserves the titlebar and what
+      `getWindowInsets()` answers, and no probe had read either: the capability
+      record's window rows covered size, reflow and the backdrop only, and
+      `titlebarTransparent` / `trafficLightX` / `trafficLightY` had no
+      measurement at all. The runner gains `--titlebar <default|transparent>`
+      (split off before the shared parser, like `--window-background`, with a
+      value that names no mode reported instead of ignored) and hands it to
+      `init` through `titlebarOptions`, so the window and the readout cannot
+      drift. Measured on 0.11.0, 14 checks per run, **green in both modes**:
+      `safeArea`, `ime` and `effective` are all `0,0,0,0`; `useWindowInsets()`
+      reports the same edges as the renderer (it samples every 100ms, so the
+      probe polls rather than reading the mount's tick); `effective` equals the
+      safe area while `ime` is empty; a bar painted at `top: effective.top`
+      starts at that `y` (±1) and paints there; and the app's own bar is the
+      capture's **first row**, so the app's layout starts at the window's top
+      edge and the chrome is the app's to paint. The transparent titlebar is
+      accepted and changes neither the insets nor that origin — so a workspace
+      **reserves its own chrome** (the traffic-light geometry is a
+      `WindowOptions` input, not a reported safe area) and reads the insets for
+      what the OS knows and the app cannot. `src/live/chrome.ts` holds the flag,
+      the option and the readout, with `chrome.test.ts` (7 cases: the two modes,
+      the rejected value, the option table, the readout round-trip, and text
+      that is not four numbers decoding to `None` rather than a zero — the first
+      version used `Schema.Number`, which accepted `NaN`, and the case caught
+      it). Two negative controls measured, exit `1` each and restored green:
+      painting the app's bar 28px down fails `the app's own bar paints at the
+      window's top edge: expected "rgba(45, 107, 224, 255)", got "rgba(17, 20,
+      26, 255)"`, and reporting a safe top of 28 fails `the app channel reports
+      the renderer's safe area: expected "28,0,0,0", got "0,0,0,0"`. Two limits
+      stated, not implied: whether the OS titlebar is hidden is not app-visible
+      (an OS-composited fact, like `blurred` vibrancy), and an IME inset is
+      unmeasurable because the protocol cannot start an IME session. Evidence:
+      `apps/playground/README.md` §`window-chrome`,
+      `.artifacts/live/chrome.png`; publishing it in the record and the Tier 4
+      chrome rows is the interlock row below
 
 `[x]` Land the `chart-raster` live probe and measure **the surface a chart can
       be built on** — the Charts row (`todo`) and `docs/gpuix-capabilities.md`
@@ -2313,6 +2351,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `packages/components/tsconfig.json` must stop mapping `@gpuix/react/jsx-runtime` (and `jsx-dev-runtime`) to the `.d.ts` files, so the playground can mount the package's components | components | **resolved** — the `paths` mapping is deleted (tokens' JSX pragma removed the reason for it; `tsc --noEmit` stays green without it). Measured both ways through the runner's own loader, 2026-10-21: with the mapping, importing `packages/components/src/index.ts` dies with `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`; without it, 194 exports load and `Tabs` is a function. `src/tsconfig.test.ts` guards the mapping's absence and keeps `jsxImportSource` on `@gpuix/react` (2 unit tests, both-direction proven). **The Tier 2 live probes (dialog, menu, toast) are unblocked and landed** — the playground depends on `@gpuixui/components` (the row below records the three probes) |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | **resolved** — `apps/playground` depends on `@gpuixui/components` and three live probes mount the shipped components: `dialog-lifecycle` (open by press, focus enters the surface, Escape unpaints and returns focus, the dialog's own close works; 13 checks), `menu-lifecycle` (press/Escape, keyboard open lands on row one, arrows move real focus, Enter and a press activate; 13 checks) and `toast-lifecycle` (the Effect-backed store queues, paints and dismisses in a window; 4 checks). Negative controls measured: `dismissible={false}` fails `Escape unpaints the dialog surface`, a dropped `ArrowDown` fails `an arrow key moves focus to the next row`, a dropped viewport fails its locator. Documented in `apps/playground/README.md` and guarded by `src/live/registry.test.ts` |
 | Record the **chart surface** a probe painted — the capability record and `COMPONENTS.md`'s Charts row say only that `<svg source>` is one tinted mask and that `<canvas>` is blank, which leaves a Tier 3 chart plan with no drawing route. The playground's `chart-raster` (19 checks, 0.11.0) measured four facts a chart needs: `setImagePixels` keeps each pixel's own colour (three exact series colours in one element), a `0, 0, 0, 0` margin composites onto the surface behind the element (so a chart inherits its card), a second buffer replaces the frame whole on a data change with no re-mount, and `setImage` decoding SVG **bytes** paints every `fill` its own colour (`#B14AFF`/`#00A893`/`#FF8A00`) — the vector route `<svg source>` cannot take | docs-site (capability record + `/docs/runtime`) and components (the Tier 3 Charts row) | open — the record needs a **Raster and vector chart surfaces** row (`supported` with the four measurements, the two limits — no translucent-bar composite measured, labels compose beside the image — and the workaround: a raster buffer for a multi-colour plot, SVG bytes for a vector one, `<svg source>` never for more than one colour), `/docs/runtime#measured-in-a-window` needs the row and §5's owed-probe list needs `chart-raster`, and the Charts row should cite the probe instead of "partial (measured)". Evidence: `apps/playground/README.md` §`chart-raster`, `.artifacts/live/{chart,chart-second}.png` |
+| Record the **window chrome and insets** a probe painted — nothing in the capability record or the Tier 4 rows (Toolbars, Status bars, Application menus, Workspace layouts, all `?`) says whether the runtime reserves the titlebar or what `getWindowInsets()` returns, and `titlebarTransparent`/`trafficLightX`/`trafficLightY` had no measurement. The playground's `window-chrome` (14 checks per run, 0.11.0, both titlebar modes) measured: `safeArea`/`ime`/`effective` are all `0,0,0,0` on this host, the app channel agrees with the renderer after a poll, `effective` equals the safe area while no keyboard is up, a bar at `top: effective.top` starts and paints there (±1), and the app's own bar is the capture's first row — so the app's layout starts at the window's top edge and **the chrome is the app's to paint**. A transparent titlebar changes neither the insets nor that origin | docs-site (capability record + `/docs/runtime`) and components (the Tier 4 Toolbars/Status bars/Workspace rows) | open — the record needs a **Window chrome and insets** row (`supported, with limits`: the zero insets, the two-channel agreement, the app-origin measurement, and the two limits — the OS titlebar is not app-visible and an IME inset is unmeasurable), `/docs/runtime#measured-in-a-window` needs the row and §5's owed-probe list needs `window-chrome`, and the Tier 4 chrome rows should cite it where they describe a toolbar or titlebar. Evidence: `apps/playground/README.md` §`window-chrome`, `.artifacts/live/chrome.png` |
 | Native proof that `registerFonts` paints the registered face: register a face in the theme gallery and show the fallback and the intended face | playground | **resolved** — the `register-font` live probe (`apps/playground/src/live/`) installs `GpuixTestSquare` through `registerFonts` before the first paint and measures the painted **widths**: installed 80px (its own 4em at 20px), unknown family 44px, theme face 42px. Negative control measured (no face declared → `expected 80 ± 1, got 44`, exit `1`). 4 unit tests guard the fixture's declared family and the expected width; README §`register-font`, `.artifacts/live/register-font.png` |
 | Probe that `focusVisible` paints after Tab and not after a mouse press (and on programmatic focus in a dialog) — plan 053's STOP gate | playground | **resolved** — the `focus-visible` live probe measured all five states on 0.11.0 (`apps/playground/README.md` §`focus-visible`): Tab paints the outline and dims other focusables; a mouse press, a native traversal and a programmatic focus before any key paint nothing; a programmatic focus after a Tab paints it. The tokens half shipped `keyboardFocusRing`; adoption is the row below |
 | Adopt the keyboard-only ring and delete the manual focus tracking: `components/src/{inline-edit,time-picker,search-input,tabs,date-picker,field,list,accordion,breadcrumb,tag-input,color-picker,mention-input,hotkey-recorder,collapsible,context-menu}.tsx`, `components/src/internal/button.tsx`, `primitives/src/core/{selection,style}.ts`, `primitives/src/components/internal.ts` | components, primitives | **resolved (both halves)** — `core/focus.ts` (`keyboardRing`) declares the `focusVisible` outline at rest and every primitive uses it: Button, Toggle, Checkbox, Switch, RadioGroup, Input/TextArea (`fieldChrome`), NumberField, OTPField, Slider's track, RangeSlider's thumbs and Rating's stars; `internal.ts`'s `focusRingStyle` is deleted. **Components half:** `internal/theme.ts` grew the same `keyboardRing(theme, invalid?)` and every Tier 2 focusable part declares it at rest — tabs, list rows, accordion headers, collapsible/breadcrumb/context-menu triggers, the local Button/IconButton, SearchInput, FieldInput (destructive while invalid), InlineEdit, TagInputField, TimePicker segments and clear, DatePicker days, ColorPicker's hex field, MentionInput and HotkeyRecorder. The manual `focused`→shadow state is gone wherever it existed only for the ring (the public `StateStyle` `focused` flags stay). Composite fields (SearchInput, TagInput, TimePicker, MentionInput) moved the ring from the group to the node that takes focus, since a group never holds it. `focusRing` stays only in the seam for a programmatic focus (the probe's measured gap); no component needs it today. Guarded by `src/behaviour/focus-ring.test.tsx` (5 native tests, both-direction proven) |

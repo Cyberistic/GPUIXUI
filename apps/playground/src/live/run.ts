@@ -47,7 +47,13 @@ import { liveRegistry, type LiveProbeMeta } from "./registry.js";
 import { liveProbeBodies, type LiveProbeBody } from "./scenarios.js";
 import { withWindowKeyProvider, type WindowKeyHandler } from "../window-key.js";
 import { splitWindowBackground, type WindowBackground } from "./backdrop.js";
-import { withWindowFacts } from "./window-facts.js";
+import {
+  defaultTitlebarChrome,
+  splitTitlebarChrome,
+  titlebarOptions,
+  type TitlebarChrome,
+} from "./chrome.js";
+import { withWindowFacts, type WindowFacts } from "./window-facts.js";
 
 /** One live probe: its metadata, its body and the view the window mounts. */
 export type LiveProbe = LiveProbeMeta & LiveProbeBody;
@@ -64,10 +70,14 @@ const SETTLE = Duration.millis(60);
  * the fact the probe reads cannot drift: `--window-background transparent`
  * either reaches `init` or the CLI rejects it as an unknown argument.
  */
-const windowOptionsOf = (background: WindowBackground) => ({
+const windowOptionsOf = (
+  background: WindowBackground,
+  chrome: TitlebarChrome,
+) => ({
   title: TITLE,
   ...WINDOW,
   windowBackground: background,
+  ...titlebarOptions(chrome),
 });
 
 /** A window that could not be opened or driven: this run has no evidence. */
@@ -87,8 +97,11 @@ class NoWindowError extends Schema.TaggedError<NoWindowError>()(
  * so it is printed rather than left to the command line the reader no longer
  * has.
  */
-export const hostLabel = (background: WindowBackground): string =>
-  `gpuix live window ${process.platform}-${process.arch} @gpuix/native 0.11.0 (window-background ${background})`;
+export const hostLabel = (
+  background: WindowBackground,
+  chrome: TitlebarChrome = defaultTitlebarChrome,
+): string =>
+  `gpuix live window ${process.platform}-${process.arch} @gpuix/native 0.11.0 (window-background ${background}${chrome === "default" ? "" : `, titlebar ${chrome}`})`;
 
 export { liveRegistry };
 
@@ -137,7 +150,7 @@ const mount =
     registrar: FontRegistrar,
     selected: ReadonlyArray<LiveProbe>,
     registerWindowKey: (handler: Option.Option<WindowKeyHandler>) => void,
-    background: WindowBackground,
+    facts: WindowFacts,
   ): ((scenario: { readonly id: string }) => Effect.Effect<void>) =>
   (scenario) =>
     Effect.gen(function* () {
@@ -164,7 +177,7 @@ const mount =
               ThemeProvider,
               { theme: palettes.dark },
               withWindowFacts(
-                { background },
+                facts,
                 withWindowKeyProvider(
                   registerWindowKey,
                   Option.match(view, {
@@ -188,7 +201,7 @@ const mount =
 export const program = (
   flags: CliFlags,
   selected: ReadonlyArray<LiveProbe>,
-  background: WindowBackground,
+  facts: WindowFacts,
 ): Effect.Effect<
   ExitCode,
   NoWindowError | PlatformError.PlatformError,
@@ -211,7 +224,7 @@ export const program = (
       catch: (cause) => new NoWindowError({ stage: "load", cause }),
     });
 
-    const windowOptions = windowOptionsOf(background);
+    const windowOptions = windowOptionsOf(facts.background, facts.chrome);
     const renderer = yield* Effect.try({
       try: () => {
         const live = modules.gpuix.createRenderer();
@@ -276,8 +289,8 @@ export const program = (
     const report = yield* Smoke.runAsyncScenarios(
       host,
       selected,
-      { host: hostLabel(background), startedAt },
-      mount(root, renderer, selected, registerWindowKey, background),
+      { host: hostLabel(facts.background, facts.chrome), startedAt },
+      mount(root, renderer, selected, registerWindowKey, facts),
     );
 
     yield* fileSystem.writeFileString(
@@ -310,6 +323,7 @@ const liveUsage: string = Arr.join(
   [
     usage,
     "  --window-background <opaque|transparent|blurred>  the window's backdrop (live only)",
+    "  --titlebar <default|transparent>                  the window's titlebar (live only)",
   ],
   "\n",
 );
@@ -320,8 +334,16 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
     // The backdrop flag is this CLI's alone: the headless suite has no window,
     // so it is split off before the shared parser sees the arguments.
     const windowArgs = splitWindowBackground(deps.argv);
-    const parsed = parseArgs(windowArgs.rest);
-    const unknownArgs = Arr.appendAll(parsed.unknown, windowArgs.unknown);
+    const chromeArgs = splitTitlebarChrome(windowArgs.rest);
+    const parsed = parseArgs(chromeArgs.rest);
+    const unknownArgs = Arr.appendAll(
+      Arr.appendAll(parsed.unknown, windowArgs.unknown),
+      chromeArgs.unknown,
+    );
+    const facts: WindowFacts = {
+      background: windowArgs.background,
+      chrome: chromeArgs.chrome,
+    };
 
     if (parsed.flags.list) {
       yield* Console.log(
@@ -383,7 +405,7 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
       return EXIT.unverified;
     }
 
-    return yield* program(parsed.flags, selected, windowArgs.background).pipe(
+    return yield* program(parsed.flags, selected, facts).pipe(
       Effect.catchTag("NoWindowError", (error) =>
         Console.error(unavailable(error)).pipe(Effect.as(EXIT.unverified)),
       ),

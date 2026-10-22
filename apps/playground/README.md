@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-43 probes a real window can prove, of which eleven mount shipped
+44 probes a real window can prove, of which eleven mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -2455,6 +2455,62 @@ Not measured here: a **translucent** bar over another bar (only a fully
 transparent pixel is proved to composite), and resize — the element scales its
 buffer to its box, so a chart drawn at its layout size is the safe shape.
 
+### `window-chrome` — measured on 0.11.0 here
+
+The **window's own chrome**. A Tier 4 toolbar, status bar or titlebar-integrated
+workspace has to know two things no probe had measured: whether the runtime
+already reserves the titlebar (so an app's `y = 0` is below the traffic lights),
+and what `getWindowInsets()` answers — the number an app would inset its own
+chrome by. `WindowOptions.titlebarTransparent` is the switch for the other case
+("draw chrome under the traffic lights"), so the runner passes it and the probe
+reads both modes:
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/live/run.js --only window-chrome                          # default titlebar
+nub apps/playground/dist/live/run.js --only window-chrome --titlebar transparent
+```
+
+14 checks per run, green on 0.11.0 in both. The probe paints a bar at its own
+`y = 0` and a second bar at `top: effective.top`, and reads both the renderer's
+`getWindowInsets()` and the app channel's `useWindowInsets()`.
+
+| Question | Measurement |
+| -------- | ----------- |
+| What does the window report as its safe area? | `safeArea`, `ime` and `effective` are all `0,0,0,0` on this host, in **both** titlebar modes |
+| Does the app channel agree? | `useWindowInsets()` reports the same edges as the renderer; it samples every 100ms, so the probe polls rather than reading it in the mount's tick |
+| Is the effective inset the safe area? | Yes while no keyboard is up (`ime` is empty), which is the composite an app reads |
+| Does an inset by that number land where it says? | A bar painted at `top: effective.top` starts at that `y` (±1) and paints there, so the number a toolbar insets by is the number the app is given |
+| Does the runtime reserve the titlebar for the app? | No: the app's own bar is the capture's **first row**, so the app's layout starts at the window's top edge and the chrome is the app's to paint |
+| Does a transparent titlebar change the insets? | No — the option is accepted and the reported edges stay empty, so an app that draws under the traffic lights reserves that inset itself |
+
+What a workspace does with this: **reserve your own chrome.** The traffic-light
+geometry is an *input* (`WindowOptions.trafficLightX` / `trafficLightY`), not a
+reported safe area, so a titlebar-integrated toolbar keeps its own constant (28pt
+on macOS) and paints over the window's top edge. The reported insets are for
+what the OS knows and the app cannot: a display notch's safe area and an
+on-screen keyboard — and on this host both are empty.
+
+Two limits, measured and stated rather than implied:
+
+1. **Whether the OS titlebar is actually hidden is not app-visible.** No API
+   reports it and a capture is the app's own scene, so `--titlebar transparent`
+   proves the option was passed and the insets it left; the titlebar itself is
+   an OS-composited fact, like the `blurred` vibrancy above — confirm it by eye
+   on the target OS.
+2. **An IME inset is not measured.** The window's automation protocol cannot
+   start an IME session, so the `ime` edges are only proved empty.
+
+Fixture: `src/live/chrome.ts` (the flag, the `WindowOptions` it asks `init` for,
+and the readout) with `chrome.test.ts` (7 cases, including a readout that is not
+four numbers decoding to `None` rather than a zero). Two negative controls
+measured, exit `1` each and restored green: painting the app's bar 28px down
+fails `the app's own bar paints at the window's top edge: expected
+"rgba(45, 107, 224, 255)", got "rgba(17, 20, 26, 255)"`, and reporting a safe top
+of 28 fails the two-channel check
+`the app channel reports the renderer's safe area: expected "28,0,0,0", got
+"0,0,0,0"`. Capture: `.artifacts/live/chrome.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2567,7 +2623,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (43/43), with a written report and screenshots.
+  (44/44), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

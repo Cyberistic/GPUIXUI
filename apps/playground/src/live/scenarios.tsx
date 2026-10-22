@@ -19,6 +19,7 @@ import { Duration, Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import {
   extendTheme,
@@ -89,10 +90,15 @@ import {
   createPortal,
   flushSync,
   useGpuix,
+  useWindowInsets,
   useWindowSize,
   motion,
 } from "@gpuix/react";
-import type { ImgInstance, PublicInstance } from "@gpuix/react";
+import type {
+  ImgInstance,
+  NativeWindowInsets,
+  PublicInstance,
+} from "@gpuix/react";
 import type { EventPayload } from "@gpuix/native";
 import { FloatingLayer } from "@gpuix/react/floating";
 import {
@@ -109,6 +115,18 @@ import { Pressable, Readout, Toolbar } from "../ui.js";
 import { useWindowKey } from "../window-key.js";
 import { useWindowFacts } from "./window-facts.js";
 import type { LiveProbeId } from "./registry.js";
+import {
+  BAR_HEIGHT,
+  CHROME_FILL,
+  SAFE_BAR_X,
+  SAFE_FILL,
+  TitlebarChrome,
+  barPoint,
+  insetBarPoint,
+  decodeEdges,
+  formatEdges,
+  type Edges,
+} from "./chrome.js";
 import {
   BAR_PIXEL,
   MARGIN_PIXEL,
@@ -10794,6 +10812,188 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * The window-chrome probe: where the app's own layout starts, and what the
+ * window reports as its safe area.
+ */
+const WindowChromeProbe = (): ReactNode => {
+  const theme = useTheme();
+  const facts = useWindowFacts();
+  const { renderer } = useGpuix();
+  const live = useWindowInsets();
+  const [insets, setInsets] = useState<Option.Option<NativeWindowInsets>>(
+    Option.none(),
+  );
+
+  // The renderer's own answer, read at mount: the hook samples every 100ms, so
+  // the two channels are a fact about the app rather than the same read twice.
+  useLayoutEffect(() => {
+    setInsets(Option.fromNullishOr(renderer?.getWindowInsets?.()));
+  }, [renderer]);
+
+  const edge = (pick: (value: NativeWindowInsets) => Edges): ReactNode =>
+    Option.match(insets, {
+      onNone: () => "pending",
+      onSome: (value) => formatEdges(pick(value)),
+    });
+
+  return (
+    <div
+      testId="chrome-probe"
+      style={{
+        width: "100%",
+        height: "100%",
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        testId="chrome-top-bar"
+        style={{ height: BAR_HEIGHT, backgroundColor: hexOf(CHROME_FILL) }}
+      />
+      <div
+        testId="chrome-safe-bar"
+        style={{
+          position: "absolute",
+          top: Option.match(insets, {
+            onNone: () => 0,
+            onSome: (value) => value.effective.top,
+          }),
+          left: SAFE_BAR_X,
+          right: 0,
+          height: BAR_HEIGHT,
+          backgroundColor: hexOf(SAFE_FILL),
+        }}
+      />
+      <div
+        style={{
+          marginTop: BAR_HEIGHT * 3,
+          padding: theme.spacing.lg,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.sm,
+        }}
+      >
+        <Readout testId="chrome-mode">{`titlebar=${facts.chrome}`}</Readout>
+        <Readout testId="chrome-renderer-safe">
+          {edge((value) => value.safeArea)}
+        </Readout>
+        <Readout testId="chrome-renderer-ime">
+          {edge((value) => value.ime)}
+        </Readout>
+        <Readout testId="chrome-renderer-effective">
+          {edge((value) => value.effective)}
+        </Readout>
+        <Readout testId="chrome-hook-safe">
+          {formatEdges(live.safeArea)}
+        </Readout>
+      </div>
+    </div>
+  );
+};
+
+/** Where the app's own layout starts, and what the window reports as its safe area. */
+const windowChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("chrome-top-bar");
+    const chrome = yield* ctx.expectSome(
+      "the window names the titlebar it opened with",
+      pipe(
+        yield* ctx.host.text("chrome-mode"),
+        Str.replace("titlebar=", ""),
+        Schema.decodeUnknownOption(TitlebarChrome),
+      ),
+    );
+    const edgesOf = (testId: string) =>
+      Effect.gen(function* () {
+        const text = yield* settleUntil(ctx.host.text(testId), (value) =>
+          Option.isSome(decodeEdges(value)),
+        );
+        return yield* ctx.expectSome(
+          `the ${testId} readout is four numbers`,
+          decodeEdges(text),
+        );
+      });
+
+    const safe = yield* edgesOf("chrome-renderer-safe");
+    const ime = yield* edgesOf("chrome-renderer-ime");
+    const effective = yield* edgesOf("chrome-renderer-effective");
+    const hookSafe = yield* edgesOf("chrome-hook-safe");
+
+    // 1. The app channel and the renderer answer for the same window: the hook
+    //    samples every 100ms, so a mismatch is a lag, and the poll above is what
+    //    a consumer's own inset code has to survive.
+    yield* ctx.expectEqual(
+      "the app channel reports the renderer's safe area",
+      formatEdges(hookSafe),
+      formatEdges(safe),
+    );
+
+    // 2. With no text session there is no keyboard inset, and the effective
+    //    edges are the safe area itself — the composite an app insets by.
+    yield* ctx.expectEqual(
+      "the keyboard inset is empty without a text session",
+      formatEdges(ime),
+      "0,0,0,0",
+    );
+    yield* ctx.expectEqual(
+      "the effective inset is the safe area while no keyboard is up",
+      formatEdges(effective),
+      formatEdges(safe),
+    );
+
+    // 3. A bar painted at `top: effective.top` starts exactly there, so the
+    //    number a toolbar insets by is the number the app is given.
+    const safeBar = yield* ctx.expectSome(
+      "the inset bar painted",
+      Option.fromNullishOr(yield* ctx.host.bounds("chrome-safe-bar")),
+    );
+    yield* ctx.expectNear(
+      "a bar inset by the effective top starts there",
+      safeBar.y,
+      effective.top,
+      1,
+    );
+
+    // 4. The app's layout starts at the capture's top edge, so the window's
+    //    chrome is the app's to paint over — not something the runtime reserves.
+    yield* ctx.host.capture("chrome");
+    const frame = yield* ctx.host.pixels("chrome");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, size),
+    );
+    const point = framePoint(barPoint(0), scale);
+    const insetPoint = framePoint(insetBarPoint(effective.top), scale);
+    const at = (spot: { x: number; y: number }) =>
+      Option.match(
+        Option.fromNullishOr(Pixels.pixelAt(frame, spot.x, spot.y)),
+        { onNone: () => "outside the capture", onSome: describeColour },
+      );
+    yield* ctx.expectEqual(
+      "the app's own bar paints at the window's top edge",
+      at(point),
+      describeColour(new Pixels.Rgba({ ...CHROME_FILL, a: 0xff })),
+    );
+    yield* ctx.expectEqual(
+      "the bar inset by the safe area paints where the inset puts it",
+      at(insetPoint),
+      describeColour(new Pixels.Rgba({ ...SAFE_FILL, a: 0xff })),
+    );
+
+    // 5. The safe area is the one the window reports, not a titlebar band: in
+    //    both modes it is empty on this host, so a toolbar that draws under a
+    //    transparent titlebar reserves its own inset — there is no reported
+    //    number to read it from.
+    yield* ctx.expectEqual(
+      `${chrome}: the safe area the window reports`,
+      formatEdges(safe),
+      "0,0,0,0",
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -11011,5 +11211,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "chart-raster",
     view: () => <ChartProbe />,
     steps: chartSteps,
+  },
+  "window-chrome": {
+    id: "window-chrome",
+    view: () => <WindowChromeProbe />,
+    steps: windowChromeSteps,
   },
 };
