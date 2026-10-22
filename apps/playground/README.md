@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-thirty-seven probes a real window can prove, of which eleven mount shipped
+40 probes a real window can prove, of which eleven mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -45,7 +45,7 @@ combobox and the modal focus rule), five mount
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
-restore and the app-level key handler).
+restore, a dock's keyboard order and the app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -2213,6 +2213,65 @@ panes would drive each other. The probe does not measure the loop (an unguarded
 version hangs, which is not a check a gate can read); the headless scenario's
 `syncGuard` note and the ref here are the same rule.
 
+### `dock-focus-lifecycle` — measured on 0.11.0 here
+
+The keyboard inside a **nested dock**: a collapsible sidebar, a three-document
+rail and the selected pane, in one layout. Tier 4's *keyboard navigation* row
+had no measurement — the shipped `Tabs` covers roving focus inside a rail
+(`tabs-lifecycle`), not the layer above it. This probe asks the questions a dock
+plan needs answered: which controls a Tab traversal visits and in what order,
+what a collapsed pane's controls do to that traversal, and what a key pressed in
+the pane's field does to the rail.
+
+The fixture is composed by hand rather than from the components, because a dock
+composes them: the toggle and its sidebar's two actions, one stop per rail
+(the selected trigger), the pane's field, and a status-bar action. Measured from
+the toggle, with the sidebar open:
+
+| Step | Result |
+| ---- | ------ |
+| Tab × 6 | `dock-sidebar-toggle` → `dock-sidebar-new` → `dock-sidebar-settings` → `dock-rail-explorer` → `dock-field-explorer` → `dock-status` → back to the toggle |
+| close the sidebar | its box paints **0** wide |
+| Tab from the toggle | `dock-sidebar-new` — the unguarded control still has a stop, and still reports its own **12px** box inside a zero-width parent |
+| Tab again | `dock-rail-explorer` — the guarded control (`tabIndex={-1}`) is skipped |
+| press the clipped `new` | `actions=0`: the pointer is clipped away even though the keyboard reached it |
+| `focusElement` on it | the runtime focuses a control the app never shows |
+| reopen, Tab × 2 | `dock-sidebar-new` → `dock-sidebar-settings`: the guard is state, not a removal |
+| right on the rail | focus and the selection move to `output`; the previous pane's field left the tree and the new one is painted |
+| Tab | `dock-field-output` — the rail's next stop is the pane's first field |
+| left in the field | the document stays `output`: the field owns its arrows |
+| Shift+Tab, left | back on the rail, focus and selection return to `explorer`; Tab reaches `dock-field-explorer` |
+| left on the first tab | the rail wraps to `problems` and selects it |
+
+Four rules a dock component carries:
+
+1. **One stop per rail, one per pane.** A per-trigger stop would put three rail
+   stops in the traversal (negative control 3 measured exactly that sequence),
+   and an inactive pane is not in the tree at all, so its field cannot be one.
+2. **A closed pane keeps its controls' stops.** The runtime does not skip a
+   control because its parent paints nothing — a width-0 sidebar still keeps
+   `new` in the traversal, still reports a 12px box for it, and still accepts
+   programmatic focus. The dock removes the stop (`tabIndex={-1}`) or the
+   traversal walks into a pane the reader cannot see; the pointer half is
+   already clipped, so the two inputs disagree unless the app guards.
+3. **A rail step moves focus, not just state.** The runtime does not move focus
+   when the selected trigger changes; the rail's key handler calls
+   `renderer.focusElement`. Without it the readout says `output` while the focus
+   stays on `explorer` (negative control 2).
+4. **The field owns its arrows.** `left`/`right` in the pane's field never reach
+   the rail, so a dock must move its rail with its own chords (or leave arrows
+   to the fields) rather than assume a bubble.
+
+Negative controls measured, each exit `1` and restored green: removing the
+closed-sidebar guard fails `the guarded control is skipped by the same
+traversal` (`expected "dock-rail-explorer", got "dock-sidebar-settings"`);
+dropping the rail's `focusElement` delegation fails `the rail moves focus to the
+next document` (`expected "dock-rail-output", got "dock-rail-explorer"`); and
+giving every trigger a stop fails the order check with
+`dock-rail-explorer > dock-rail-output > dock-rail-problems > dock-field-explorer`.
+24 checks, `--only dock-focus-lifecycle`, green on 0.11.0. Capture:
+`.artifacts/live/dock-focus.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2319,7 +2378,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (39/39), with a written report and screenshots.
+  (40/40), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

@@ -179,6 +179,20 @@ import {
   type TableSort,
 } from "./table.js";
 import {
+  DOCK_GUARDED_ACTION,
+  DOCK_SIDEBAR_WIDTH,
+  DOCK_STATUS,
+  DOCK_TABS,
+  DOCK_TOGGLE,
+  dockActionId,
+  dockFieldId,
+  dockPaneId,
+  dockRailId,
+  dockStops,
+  stepTab,
+  type DockTab,
+} from "./dock-focus.js";
+import {
   TREE_ALL_DIRECTORIES,
   TREE_INDENT,
   TREE_REVEAL_INDEX,
@@ -9782,6 +9796,418 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * `dock-focus-lifecycle` — what a keyboard reaches inside a nested dock.
+ *
+ * Tier 4's **keyboard navigation** is the one capability with no measurement:
+ * a dock is a rail, a collapsible sidebar and a pane inside one layout, and the
+ * questions a plan needs answered are which controls a Tab traversal visits and
+ * in what order, what a collapsed sidebar's controls do to that traversal, and
+ * what a key pressed in the pane's field does to the rail. The fixture is
+ * composed by hand — the shipped `Tabs` already owns roving focus
+ * (`tabs-lifecycle`), and this is the layer above it.
+ */
+const DockFocusProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const renderer = useGpuix().renderer;
+  const railIds = useRef<Partial<Record<DockTab, number>>>({});
+  const [tab, setTab] = useState<DockTab>("explorer");
+  const [changes, setChanges] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [actions, setActions] = useState(0);
+
+  const select = (next: DockTab) => {
+    setTab(next);
+    setChanges((count) => count + 1);
+    const id = railIds.current[next];
+    if (id !== undefined) renderer?.focusElement?.(id);
+  };
+
+  const actionStyle = {
+    padding: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.muted,
+    ...keyboardFocusRing(theme),
+  } as const;
+
+  return (
+    <div
+      testId="dock-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A Tab traversal walks the dock: toggle, sidebar, the selected tab, its
+        field, the status bar.
+      </text>
+      <Readout testId="dock-readout">{`tab=${tab} changes=${changes} sidebar=${
+        sidebarOpen ? "open" : "closed"
+      } actions=${actions}`}</Readout>
+      <div
+        testId={DOCK_TOGGLE}
+        tabIndex={0}
+        role="button"
+        aria-expanded={sidebarOpen}
+        onClick={() => setSidebarOpen((open) => !open)}
+        style={{ ...actionStyle, alignSelf: "start" }}
+      >
+        <text style={{ color: theme.colors.foreground }}>
+          {sidebarOpen ? "hide sidebar" : "show sidebar"}
+        </text>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: theme.spacing.md,
+          flexGrow: 1,
+        }}
+      >
+        <div
+          testId="dock-sidebar"
+          style={{
+            width: sidebarOpen ? DOCK_SIDEBAR_WIDTH : 0,
+            flexShrink: 0,
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.xs,
+            backgroundColor: theme.colors.card,
+          }}
+        >
+          {(["new", "settings"] as const).map((action) => (
+            <div
+              key={action}
+              testId={dockActionId(action)}
+              // The guard a dock owes: a control in a closed pane leaves the
+              // traversal. `new` keeps its stop on purpose — the probe measures
+              // the runtime with it.
+              tabIndex={sidebarOpen || action !== DOCK_GUARDED_ACTION ? 0 : -1}
+              role="button"
+              onClick={() => setActions((count) => count + 1)}
+              style={actionStyle}
+            >
+              <text style={{ color: theme.colors.foreground }}>{action}</text>
+            </div>
+          ))}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.sm,
+            flexGrow: 1,
+          }}
+        >
+          <div
+            testId="dock-rail"
+            role="tablist"
+            style={{ display: "flex", flexDirection: "row", gap: 4 }}
+          >
+            {DOCK_TABS.map((value) => (
+              <div
+                key={value}
+                testId={dockRailId(value)}
+                ref={(instance) => {
+                  railIds.current[value] = instance?.id;
+                }}
+                role="tab"
+                aria-selected={tab === value}
+                tabIndex={tab === value ? 0 : -1}
+                onClick={() => select(value)}
+                onKeyDown={(event: EventPayload) => {
+                  if (event.key === "right") select(stepTab(value, 1));
+                  if (event.key === "left") select(stepTab(value, -1));
+                }}
+                style={{
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.radius.sm,
+                  backgroundColor:
+                    tab === value ? theme.colors.accent : theme.colors.muted,
+                  ...keyboardFocusRing(theme),
+                }}
+              >
+                <text
+                  style={{
+                    color:
+                      tab === value
+                        ? theme.colors.accentForeground
+                        : theme.colors.foreground,
+                  }}
+                >
+                  {value}
+                </text>
+              </div>
+            ))}
+          </div>
+          <div
+            testId={dockPaneId(tab)}
+            role="tabpanel"
+            style={{
+              padding: theme.spacing.md,
+              borderWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.card,
+              display: "flex",
+              flexDirection: "column",
+              gap: theme.spacing.sm,
+            }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: theme.colors.foreground,
+              }}
+            >
+              {`${tab} pane`}
+            </text>
+            <input
+              testId={dockFieldId(tab)}
+              style={{
+                width: 240,
+                height: 24,
+                borderWidth: theme.borderWidth.thin,
+                borderColor: theme.colors.borderStrong,
+                color: theme.colors.inputForeground,
+                backgroundColor: theme.colors.input,
+                padding: theme.spacing.xs,
+              }}
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        testId={DOCK_STATUS}
+        tabIndex={0}
+        role="button"
+        style={{ ...actionStyle, alignSelf: "start" }}
+      >
+        <text style={{ color: theme.colors.mutedForeground }}>
+          ready · 0 problems
+        </text>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The dock's checks: the traversal's order, a closed sidebar's unguarded
+ * control still being reached while its guarded one is skipped, the rail
+ * stepping focus with its panes, and a field keeping its own arrows.
+ */
+const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("dock-probe");
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text("dock-readout");
+    /** An element's painted width; an unpainted one is zero. */
+    const widthOf = (testId: string) =>
+      Effect.map(ctx.host.bounds(testId), (bounds) =>
+        Option.match(Option.fromNullishOr(bounds), {
+          onNone: () => 0,
+          onSome: (value) => value.width,
+        }),
+      );
+    /** Press Tab `count` times, reading the focus each press left behind. */
+    const tabThrough = (count: number) =>
+      Effect.forEach(
+        Arr.range(1, count),
+        () => Effect.flatMap(ctx.host.key("tab"), () => focusedAfterPaint(ctx)),
+        { concurrency: 1 },
+      );
+
+    yield* ctx.expectContains(
+      "the dock opens on its first document with the sidebar open",
+      yield* readout(),
+      "tab=explorer changes=0 sidebar=open",
+    );
+
+    // 1. The open dock's traversal, from the toggle through to the status bar.
+    yield* ctx.host.focusElement(DOCK_TOGGLE);
+    yield* ctx.expectEqual(
+      "the sidebar toggle takes the focus",
+      yield* focusedAfterPaint(ctx),
+      DOCK_TOGGLE,
+    );
+    const openStops = dockStops(true, "explorer");
+    const walked = yield* tabThrough(Arr.length(openStops));
+    yield* ctx.expectEqual(
+      "a Tab traversal visits the dock's stops in tree order, wrapping at the end",
+      Arr.join(walked, " > "),
+      Arr.join(Arr.append(Arr.drop(openStops, 1), DOCK_TOGGLE), " > "),
+    );
+
+    // 2. A collapsed sidebar paints no width...
+    yield* ctx.host.click(DOCK_TOGGLE);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the toggle closes the sidebar",
+      yield* readout(),
+      "sidebar=closed",
+    );
+    yield* ctx.expectNear(
+      "the closed sidebar paints no width",
+      yield* widthOf("dock-sidebar"),
+      0,
+      0.5,
+    );
+
+    // 3. ...but the control without a guard keeps its stop, which is the rule
+    //    a dock has to apply itself: the runtime does not skip it.
+    yield* ctx.host.focusElement(DOCK_TOGGLE);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "an unguarded control in a closed sidebar keeps its tab stop",
+      yield* focusedAfterPaint(ctx),
+      dockActionId("new"),
+    );
+    const hiddenWidth = yield* widthOf(dockActionId("new"));
+    yield* ctx.expectNear(
+      "a control inside the closed sidebar still reports its own 12px box",
+      hiddenWidth,
+      12,
+      1,
+    );
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "the guarded control is skipped by the same traversal",
+      yield* focusedAfterPaint(ctx),
+      dockRailId("explorer"),
+    );
+    yield* ctx.host.click(dockActionId("new"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press on the clipped control does not reach it, though the keyboard did",
+      yield* readout(),
+      "actions=0",
+    );
+
+    // 4. Programmatic focus still lands in the hidden sidebar.
+    yield* ctx.host.focusElement(dockActionId("new"));
+    yield* ctx.expectEqual(
+      "the runtime focuses a control the app never shows",
+      yield* focusedAfterPaint(ctx),
+      dockActionId("new"),
+    );
+
+    // 5. Reopening restores the guarded stop.
+    yield* ctx.host.click(DOCK_TOGGLE);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.focusElement(DOCK_TOGGLE);
+    yield* ctx.host.key("tab");
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "reopening the sidebar restores the guarded stop",
+      yield* focusedAfterPaint(ctx),
+      dockActionId("settings"),
+    );
+
+    // 6. A rail step moves real focus and swaps the pane.
+    yield* ctx.host.focusElement(dockRailId("explorer"));
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the rail moves focus to the next document",
+      yield* focusedAfterPaint(ctx),
+      dockRailId("output"),
+    );
+    yield* ctx.expectContains(
+      "the step changed the selected document",
+      yield* readout(),
+      "tab=output changes=1",
+    );
+    yield* ctx.expectEqual(
+      "the previous document's field left the tree",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds(dockFieldId("explorer"))),
+      ),
+      true,
+    );
+    yield* ctx.expectSome(
+      "the new document's field is painted",
+      Option.fromNullishOr(yield* ctx.host.bounds(dockFieldId("output"))),
+    );
+
+    // 7. The pane's field is the rail's next stop.
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab from the rail reaches the pane's field",
+      yield* focusedAfterPaint(ctx),
+      dockFieldId("output"),
+    );
+
+    // 8. An arrow in the field belongs to the field, not the rail.
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow in a field keeps the focus there",
+      yield* focusedAfterPaint(ctx),
+      dockFieldId("output"),
+    );
+    yield* ctx.expectContains(
+      "…and does not switch the document",
+      yield* readout(),
+      "tab=output changes=1",
+    );
+
+    // 9. Shift+Tab walks back out, and the rail steps back with it.
+    yield* ctx.host.key("shift-tab");
+    yield* ctx.expectEqual(
+      "Shift+Tab returns to the rail",
+      yield* focusedAfterPaint(ctx),
+      dockRailId("output"),
+    );
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the rail steps back and focus follows",
+      yield* focusedAfterPaint(ctx),
+      dockRailId("explorer"),
+    );
+    yield* ctx.expectContains(
+      "the step back selected the first document again",
+      yield* readout(),
+      "tab=explorer changes=2",
+    );
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "the restored document's field is reachable",
+      yield* focusedAfterPaint(ctx),
+      dockFieldId("explorer"),
+    );
+
+    // 10. The rail wraps in the direction it was given.
+    yield* ctx.host.focusElement(dockRailId("explorer"));
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the rail wraps to the last document",
+      yield* focusedAfterPaint(ctx),
+      dockRailId("problems"),
+    );
+    yield* ctx.expectContains(
+      "…and selects it",
+      yield* readout(),
+      "tab=problems changes=3",
+    );
+    yield* ctx.host.capture("dock-focus");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -9979,5 +10405,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "frozen-column-lifecycle",
     view: () => <FrozenColumnProbe />,
     steps: frozenColumnSteps,
+  },
+  "dock-focus-lifecycle": {
+    id: "dock-focus-lifecycle",
+    view: () => <DockFocusProbe />,
+    steps: dockFocusSteps,
   },
 };

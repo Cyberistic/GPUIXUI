@@ -34,4 +34,19 @@ describe("live probe documentation", () => {
   it("documents every registered probe under the version it was measured on", () => {
     expect(documented).toEqual(liveRegistry.map((probe) => probe.id));
   });
+
+  it("prints the live probe total it actually runs", () => {
+    // The intro said "thirty-seven" while 39 probes were registered: a count a
+    // reader uses to tell a partial pass from a complete one, written by hand.
+    const intro = /the\s+(\d+) probes a real window can prove/.exec(readme);
+    const suite =
+      /pass in real GPUix 0\.11\.0 on this host\n\s+\((\d+)\/(\d+)\)/.exec(
+        readme,
+      );
+    expect(intro?.[1]).toBe(`${liveRegistry.length}`);
+    expect(suite?.slice(1)).toEqual([
+      `${liveRegistry.length}`,
+      `${liveRegistry.length}`,
+    ]);
+  });
 });

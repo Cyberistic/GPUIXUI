@@ -270,6 +270,12 @@ export const liveRegistry = [
       "Table: a frozen column and its grid mirror either pane's wheel in a window, the frozen column ignores a pan, and a frozen cell selects the row",
     capability: "table",
   },
+  {
+    id: "dock-focus-lifecycle",
+    title:
+      "Workspace: a dock's Tab traversal reaches its panes in tree order, a closed sidebar's unguarded control keeps its stop while the guarded one leaves, and a rail step carries focus and the pane",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
