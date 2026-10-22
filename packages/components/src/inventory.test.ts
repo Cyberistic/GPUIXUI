@@ -351,7 +351,7 @@ describe("the measured target rows", () => {
     expect(problems).toEqual([]);
   });
 
-  it("states a measured verdict instead of a question mark", () => {
+  it("states a verdict instead of a question mark", () => {
     const rows = targetRows();
     const problems = Arr.flatMap(CITATIONS, ([name]) =>
       Option.match(
@@ -359,9 +359,9 @@ describe("the measured target rows", () => {
         {
           onNone: () => [],
           onSome: (row) =>
-            row.support.includes("measured")
-              ? []
-              : [`${name}: support reads "${row.support}"`],
+            row.support === "?"
+              ? [`${name}: still reads "?", although a probe measured it`]
+              : [],
         },
       ),
     );
