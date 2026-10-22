@@ -34,6 +34,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `=`, `(`, `,`, `:`, `return` and the other value positions, or mask regex
       literals before the quote pass, and add a `--self-test` case with a quoted
       regex. Owner: repo tooling.
+`[ ]` `packages/primitives`: the docs suite's **repo-wide plan scan is load-sensitive** — `src/docs.test.ts`'s `cites only plans that exist` reads every text file in `packages/primitives` and `packages/icons` inside the default 5 s test budget, and it timed out once on 2026-10-22 while the full suite started 49 worker processes at once; the same run then passed twice (837/837) and the case passes alone. Hoist the scan and the plan-number set to module scope (they are static) or give the case an explicit budget, and measure the scan's own cost first so the fix answers the starvation rather than guessing at a larger number.
 
 ---
 
