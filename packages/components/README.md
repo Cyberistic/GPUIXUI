@@ -253,7 +253,7 @@ duration: `docs/component-api.md` §11.
 | `src/preview-card.tsx` | PreviewCard: hover/focus preview with pointer travel into the card |
 | `src/color-picker.tsx`, `src/color/hex.ts` | ColorPicker: theme swatches and a normalising HEX field (no radial gradient for a saturation/value square in 0.11.0) |
 | `src/hotkey-recorder.tsx` | HotkeyRecorder: capture a chord, reusing `@gpuixui/keyboard` |
-| `src/carousel.tsx` | Carousel: discrete slide stepping with mounted, hidden slides |
+| `src/carousel.tsx` | Carousel: discrete slide stepping with mounted, hidden slides, and a dot per slide on the press floor |
 | `src/tag-input.tsx`, `src/tag-input/logic.ts` | TagInput: tokens with a pure add/remove rule set and removable chips |
 | `src/inline-edit.tsx` | InlineEdit: display/input swap with one commit contract |
 | `src/countdown.tsx`, `src/countdown/logic.ts` | Countdown: clock text for a remaining duration; the app owns the tick |
