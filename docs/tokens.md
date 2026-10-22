@@ -910,6 +910,19 @@ its 4.5 floor, and Linux light at 2.96:1 hovered and 2.77:1 pressed — so those
 four `borderStrong` values moved to `#727D8C`, `#788494`, `#A7A7A7` and
 `#7E7C79`, and every other pair they carry still clears its floor.
 
+A **field** is the fourth border case, and the one the table reaches last. A
+field can land on the page, a card, a popover or a `muted` toolbar, and in the
+light palettes the page and a card are only 1.06:1 apart — less than the
+perceptibility floor applied twice — so no single fill clears it against both.
+Light `input` is `#FFFFFF`, the same value as `card` and `popover` (1.00:1). Its
+edge is the boundary, which means `borderStrong` — measured on `input` as well as
+on those four strips. The shipped field rests on the decorative `border` role
+instead (1.19:1 on the light page) and reaches `borderStrong` only on hover, in
+`fieldVariant` (`packages/primitives/src/core/variants.ts`) and `FieldInput`
+(`packages/components/src/field.tsx`); §Limitations records the deviation and
+`TODO.md` → Interlocks the adoption. `field-boundary.test.ts` reads both painters
+so the page cannot describe a field the library does not ship.
+
 `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
 to. `contrastFloorsFor(theme)` is the variant rule on its own, which is the floor
@@ -953,15 +966,17 @@ placement is Windows XP Luna's dark `secondary` panel at 3.26:1.
 both contracts, reports an invalid edge that matches its own field fill, and
 checks every shipped theme on all six strips.
 
-One limitation is the primitive package's, recorded here because this page owns
-the rule: `FIELD_INVALID` in `packages/primitives/src/recipe/index.ts` also
-paints `aria-invalid:bg-destructive`, so an invalid `Input`, `TextArea`,
-`OTPField` cell, `Select` trigger or `NumberField` becomes a solid destructive
-box while its value keeps `inputForeground` — 3.31:1 in the light theme, 2.45:1
-in the dark and 2.08:1 in high contrast, with a placeholder at 1.02:1. A role
-designed to be an edge cannot carry text, and no contract rescues that; the
-components package's `FieldInput` already keeps the fill. The fix is an
-interlock row in `TODO.md`.
+The primitives' field recipe used to paint the destructive *fill* behind the
+value; it now paints only the edge. `FIELD_INVALID` in
+`packages/primitives/src/recipe/index.ts` is `aria-invalid:border-destructive`,
+so an invalid `Input`, `TextArea`, `OTPField` cell, `Select` trigger or
+`NumberField` keeps its `input` fill while its border says what failed — and the
+components package's `FieldInput` paints the destructive edge over `input` the
+same way. The fill remains the failure this section names rather than a
+variation of it: `inputForeground` on `destructive` is 3.31:1 in the light theme,
+2.45:1 in the dark and 2.08:1 in high contrast, with a placeholder at 1.02:1, and
+no floor rescues text painted on a role designed to carry `destructiveForeground`.
+`field-boundary.test.ts` holds both recipes and this page to that.
 
 ### The disabled floor
 
@@ -2092,6 +2107,14 @@ or dropped is named rather than passing silently.
   `packages/primitives/src/core/selection.ts` for a filled checkbox or radio.
   Adopting the fills there is the primitives workstream's, recorded in
   `TODO.md` → Interlocks.
+- A field's **resting edge** is the decorative `border` role rather than the
+  functional `borderStrong` one: `fieldVariant`
+  (`packages/primitives/src/core/variants.ts`) and `FieldInput`
+  (`packages/components/src/field.tsx`) both rest there and reach
+  `borderStrong` only on hover, so a resting field inside a card is an edge at
+  1.26:1. The tokens ship and measure the boundary (`borderStrong` on `input`
+  and on the four strips a field sits on); adopting it is the primitives and
+  components workstreams', recorded in `TODO.md` → Interlocks.
 - `avatarSize` is a fixed scale, not a theme group. Adding a group to `Theme` is a
   breaking change for a hand-built theme literal, so a brand-specific diameter
   stays a component decision for now.

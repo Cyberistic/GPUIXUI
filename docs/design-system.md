@@ -217,13 +217,29 @@ circle is content, not a control.
 Two border roles:
 
 - `border` is decorative — dividers and card edges. It is intentionally subtle.
-- `borderStrong` is functional — input and control boundaries. It meets 3:1
+- `borderStrong` is functional — a control's boundary, and the edge a field
+  owes (§8). It meets 3:1
   against every surface a control can sit on — the canvas, a card, a field, a
   toolbar strip and a secondary fill — and on the `hover`/`active` wash a
   bordered control tints while it is hovered or pressed, because the secondary
   action keeps that edge while its fill moves. That last strip found four
   shipped misses (both base themes, high-contrast dark and Linux light), so the
   edge is perceivable in every state without relying on fill alone.
+
+A **field is carried by its edge, not its fill.** A field sits on the page, a
+card, a popover and a `muted` toolbar, and in the light palettes the page
+(`#F6F8FA`) and a card (`#FFFFFF`) are only 1.06:1 apart — less than the
+perceptibility floor applied twice, so no single fill clears it against both, let
+alone against the toolbar as well. Light `input` is `#FFFFFF`, the same value as
+`card` and `popover` (1.00:1). Its edge is the boundary,
+which means `borderStrong`, the role the contrast table measures on a field's own
+fill (`input`) as well as on those four strips. **The shipped field is the one
+control that still rests on the decorative role** — `fieldVariant` in
+`packages/primitives/src/core/variants.ts` and `FieldInput` in
+`packages/components/src/field.tsx` both paint `border` (1.19:1 on the light
+page) and reach `borderStrong` only on hover — so a resting field inside a card
+is a fill that matches the card and an edge a reader has to look for. The tokens
+ship and measure the boundary; the adoption is `TODO.md` → Interlocks.
 
 A control with **no** border — the `secondary` variant paints `border-0` — is
 carried by its fill instead, so that fill is measured: `secondary` is held to the
@@ -300,10 +316,14 @@ edge is a boundary: `destructive` is held to `contrastFloors.boundary` on the pa
 a card, a popover, a `muted` toolbar, a field's own fill and a segmented
 `secondary` panel, the last two through `contrastPairs` (§9). A destructive
 **fill** is a different role with a different job — it is designed to carry
-`destructiveForeground`, not `inputForeground` — and painting one behind a field's
-value is the failure the tokens catalogue records as an interlock: the
-primitives' field recipe still does, and §9's table cannot make that text
-readable.
+`destructiveForeground`, not `inputForeground` — so painting one behind a field's
+value is not a variation of this state: the value lands at 3.31:1 in the light
+theme, 2.45:1 in the dark and 2.08:1 in high contrast, and no floor rescues a
+text role painted on the wrong surface. Both painters keep the fill today: the
+primitives' field recipe's invalid class is `aria-invalid:border-destructive`
+alone, and the components package's `FieldInput` paints the destructive edge
+under `input`. `packages/primitives/src/recipe/recipe.test.ts` holds the painted
+roles and `runtime/fields.runtime.test.tsx` reads them back off a window.
 
 **Disabled ships two ways today, and only one of them is the contract.** A
 disabled field, a select's value and a fieldset legend paint the role pair —
