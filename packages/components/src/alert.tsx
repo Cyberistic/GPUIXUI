@@ -337,8 +337,8 @@ const alertRoot: PartsContract = {
 const alertContent: PartsContract = {
   parent: "AlertContent",
   family: alertParts,
-  accepts: [AlertTitle, AlertDescription],
-  hint: "Put AlertTitle and AlertDescription directly inside AlertContent.",
+  accepts: [AlertTitle, AlertDescription, AlertLink],
+  hint: "Put AlertTitle, AlertDescription and AlertLink directly inside AlertContent.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

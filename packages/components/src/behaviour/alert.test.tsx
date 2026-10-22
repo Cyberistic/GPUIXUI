@@ -268,13 +268,16 @@ describe("Alert", () => {
     const onSelect = vi.fn();
     const alert = renderComponent(
       <Alert tone="danger">
-        <AlertDescription>
+        <AlertContent>
+          <AlertTitle>Upload failed</AlertTitle>
           <AlertLink testId="alert-link" onClick={onClick} onSelect={onSelect}>
             View the log
           </AlertLink>
-        </AlertDescription>
+        </AlertContent>
       </Alert>,
     );
+
+    expect(alert.renderer.getAllText()).toContain("View the log");
 
     clickCentreOf(alert, "alert-link");
     expect(onClick).toHaveBeenCalledTimes(1);
