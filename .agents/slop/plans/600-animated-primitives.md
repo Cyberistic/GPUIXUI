@@ -83,8 +83,10 @@ Rules:
 1. **Text effects** — cheapest; pure text plus motion, no layout risk.
 2. **Reveal and scroll** — `auto-height` and `scroll-progress` first, they unlock
    the rest.
-3. **Interaction effects** — `magnetic`/`tilt` are blocked on `transform`; ship
-   the honest fallback or defer them.
+3. **Interaction effects** — `tilt` is blocked on `transform`; `magnetic` is not
+   (a magnet is an offset, not a translate — `Magnetic` keeps its hit box still
+   and moves an inner plate, plan 600's landed row), so ship the honest fallback
+   and defer only what the runtime cannot paint.
 4. **Media and collections** — `image-zoom` and `motion-grid` also need
    `transform`; `avatar-group`, `pinned-list` and `particles` do not.
 5. **Backgrounds** — decorative; lowest priority.

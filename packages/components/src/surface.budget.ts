@@ -40,10 +40,12 @@ export const surfaceBudget = {
   // 110 → 112 for RippleButton (`ripple-button.tsx` and its geometry rule).
   // 112 → 115 for ShineButton (`shine-button.tsx` and its sheen rule) and the
   // shared `internal/measure.ts` both button layers read their box from.
-  modules: 115,
+  // 115 → 117 for Magnetic (`magnetic.tsx` and the lean rule beside it).
+  modules: 117,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
-  // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; the ceiling keeps the
-  // headroom a prose edit needs while a bulk addition still has to state itself.
+  // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
+  // with Magnetic. The ceiling keeps the headroom a prose edit needs while a
+  // bulk addition still has to state itself.
   bytes: 760 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],

@@ -27,3 +27,24 @@ export const measuredBox = (event: EventPayload): Option.Option<MeasuredBox> =>
     width: Option.fromNullishOr(event.width),
     height: Option.fromNullishOr(event.height),
   });
+
+/** A point in window coordinates, as a pointer event reports it. */
+export interface MeasuredPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * The point a pointer event carries.
+ *
+ * `measuredBox` deliberately refuses this payload — a move has a position and no
+ * size — so a component that reads where the pointer is takes both halves from
+ * here rather than accepting half a layout as a pointer.
+ */
+export const measuredPoint = (
+  event: EventPayload,
+): Option.Option<MeasuredPoint> =>
+  Option.all({
+    x: Option.fromNullishOr(event.x),
+    y: Option.fromNullishOr(event.y),
+  });

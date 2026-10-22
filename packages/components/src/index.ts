@@ -36,6 +36,7 @@ export * from "./hotkey-recorder.js";
 export * from "./inline-edit.js";
 export * from "./keyboard-shortcuts.js";
 export * from "./list.js";
+export * from "./magnetic.js";
 export * from "./mention-input.js";
 export * from "./message.js";
 export * from "./message-scroller.js";

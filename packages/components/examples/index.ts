@@ -42,6 +42,7 @@ import { HotkeyRecorderExample } from "./hotkey-recorder.example.js";
 import { InlineEditExample } from "./inline-edit.example.js";
 import { KeyboardShortcutsExample } from "./keyboard-shortcuts.example.js";
 import { ListExample } from "./list.example.js";
+import { MagneticExample } from "./magnetic.example.js";
 import { MentionInputExample } from "./mention-input.example.js";
 import { MessageExample } from "./message.example.js";
 import { MessageScrollerExample } from "./message-scroller.example.js";
@@ -99,6 +100,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "inline-edit": InlineEditExample,
   "keyboard-shortcuts": KeyboardShortcutsExample,
   list: ListExample,
+  magnetic: MagneticExample,
   "mention-input": MentionInputExample,
   message: MessageExample,
   "message-scroller": MessageScrollerExample,

@@ -1,0 +1,130 @@
+---
+title: Magnetic
+description: A surface whose content leans toward the pointer while it is over it.
+---
+
+`Magnetic` wraps a control, a card or an icon and gives its content a small lean
+toward the pointer. It is a plain host with one inner plate, so what it wraps
+keeps its own layout, surface, role and click behaviour — only the plate travels.
+
+## Usage
+
+```tsx
+import { Magnetic } from "@gpuixui/components/magnetic";
+
+<Magnetic onClick={open}>
+  <Card>
+    <CardTitle>Notes</CardTitle>
+  </Card>
+</Magnetic>;
+```
+
+The component reads the pointer itself (`onMouseMove`/`onMouseLeave`) and the
+surface's own box (`onLayout`), so the caller wires no hover state.
+
+## How the lean is painted
+
+The runtime has **no `transform`** (upstream issue `#102`), so a magnet cannot be
+a translate or a scale. It is a **relative `left`/`top` offset on an inner
+plate**, tweened by the runtime:
+
+1. the pointer's distance from the centre of the measured box is taken on each
+   axis;
+2. that distance is scaled by `strength` (default `0.35`) and capped at
+   `maxOffset` (default `12`) per axis;
+3. the plate retargets from the offset on screen, so a moving pointer drags the
+   content rather than restarting a run.
+
+```
+pointer ──┐
+          │   distance × strength, capped at maxOffset
+          ▼
+ ┌────────────────────────┐   the outer box never moves
+ │      ╭──────────╮      │
+ │      │ content →│      │   the plate travels inside it
+ │      ╰──────────╯      │
+ └────────────────────────┘
+```
+
+Keeping the outer box still is deliberate. A surface whose box followed the
+cursor would move out from under the pointer, leave the hit box and snap back —
+the lean would flicker. Pulling the content inside a fixed box is both the honest
+mapping of the runtime's geometry and the behaviour a reader expects.
+
+## Timing and reduced motion
+
+The retarget uses `fast` (160 ms) by default; `level` picks any other level from
+`@gpuixui/motion`. A magnet follows a pointer, so it is feedback rather than
+content: under `MotionProvider preference="reduced"` **the plate never moves**.
+The preference is the application's to supply — the runtime exposes no
+reduced-motion query.
+
+```tsx
+import { Magnetic } from "@gpuixui/components/magnetic";
+import { MotionProvider } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <Magnetic>
+    <Card>…</Card>
+  </Magnetic>
+</MotionProvider>;
+```
+
+## Keyboard and accessibility
+
+A keyboard reader never moves a pointer, so the plate stays at rest; the surface's
+own focus cue is the feedback that path has. `Magnetic` adds no role, no tab stop
+and no text — the plate is a plain `div` — so the accessibility tree is exactly
+the one the wrapped content has.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `children` | `ReactNode` | — | The content that leans. |
+| `strength` | `number` | `0.35` | Share of the distance from the centre, clamped to `0…1`; `0` pins the plate. |
+| `maxOffset` | `number` | `12` | The furthest the plate travels on one axis, in pixels. |
+| `level` | `MotionLevel` | `"fast"` | The retarget's duration (160 ms at `fast`). |
+| `className` | `string` | — | A Tailwind class string for the outer box, joined last. |
+| `style` | `StyleDesc \| ((state) => StyleDesc)` | — | The outer box's style, or a function of `{ pulled, reducedMotion }`. |
+| `onMouseMove` | `(event) => void` | — | Composed: the pull is taken, then the caller's handler runs. |
+| `onMouseLeave` | `(event) => void` | — | Composed: the plate returns to rest, then the caller's handler runs. |
+| `onLayout` | `(event) => void` | — | Composed: the measured box is kept, then the caller's handler runs. |
+
+`Magnetic` takes the whole GPUix host-prop surface (`testId`, `role`, `aria-*`,
+the pointer handlers), plus the content it wraps. The inner plate carries an
+internal `testId="magnetic-plate"`, no role and no text.
+
+## Limitations
+
+- **Inset travel, not a translate.** The plate moves its `left`/`top` inside the
+  surface; no layer is transformed. A caller wanting the whole box to follow must
+  not get it, because the hit box would move with it.
+- **The pull follows the box's centre.** The arithmetic uses the centre of the
+  measured box, not the pointer's entry point, so a plate leans the same way
+  whoever the reader is.
+- **Nothing moves before the first `onLayout`.** The centre is measured, not
+  guessed: a pointer that arrives in the same frame as the first paint waits for
+  the box.
+- **Reduced motion and keyboard readers get no lean.** There is no static lean;
+  the wrapped surface's own hover fill and focus ring remain.
+- **Content only.** A `Magnetic` wrapping a surface with its own hover effect
+  moves that surface's content, not its background, unless the background is part
+  of the children.
+
+## Verification
+
+Six native behaviour cases in `src/behaviour/magnetic.test.tsx` measure the lean
+on the renderer's motion clock (capped on both axes, proportional inside the box,
+the outer box still, the return on leave, the reduced preference and the composed
+handlers); the arithmetic is `src/magnetic/logic.test.ts` (10 tests), and
+`src/internal/measure.test.ts` holds the pointer reading to the layout reading.
+
+## Related
+
+- [Reveal](/docs/components/reveal) — the house fade-and-offset entrance, the same
+  inset-travel rule on an arrival.
+- [Shine button](/docs/components/shine-button) — a hover effect on the action
+  itself.
+- [Ripple button](/docs/components/ripple-button) — press-time feedback at the
+  point of the press.

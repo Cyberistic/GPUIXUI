@@ -345,6 +345,7 @@ the honest parts.
 | Highlight text | `HighlightText` (one part) | — | plan 600 |
 | Ripple button | `RippleButton` (one part) | — | plan 600 |
 | Shine button | `ShineButton` (one part) | — | plan 600 |
+| Magnetic | `Magnetic` (one part) | — | plan 600 |
 
 **Planned Tier 2 additions** — none. The last reserved family, Chat and
 Message (plan `207`), landed with its parts unchanged, so every part table above

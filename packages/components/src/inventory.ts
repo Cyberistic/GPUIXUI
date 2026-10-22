@@ -37,6 +37,7 @@ import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
 import { inlineEditMeta } from "./inline-edit.js";
 import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { listMeta } from "./list.js";
+import { magneticMeta } from "./magnetic.js";
 import { mentionInputMeta } from "./mention-input.js";
 import { messageMeta } from "./message.js";
 import { messageScrollerMeta } from "./message-scroller.js";
@@ -110,6 +111,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   inlineEditMeta,
   keyboardShortcutsMeta,
   listMeta,
+  magneticMeta,
   mentionInputMeta,
   messageMeta,
   messageScrollerMeta,
