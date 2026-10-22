@@ -128,9 +128,13 @@ as the built one does.
 
 A timeline is repaired at the value the caller supplies: a keyframe whose offset
 or value cannot be read is not a stop (it is dropped, and a set with none answers
-`0`), a `Sequence` step whose start or duration cannot be read is placed at `0`
-with no duration, so it is completed on the first sample and the sequence's own
-end stays a number, and a stagger step that is non-finite or negative is no wait.
+`0`), a `Sequence` step whose start cannot be read is placed at `0`, and a
+duration it cannot run is no duration at all — the step is completed on the
+first sample, and the sequence's own end never lands before a step it still has
+to run. A stagger step that is non-finite or negative is no wait, and both
+stagger entry points answer it the same way: the standalone `stagger()` and the
+`Sequence`'s own group, whose members then all sit at the group's start rather
+than one of them starting before the sequence does.
 
 An easing curve is the caller's own function, so it gets the same rule. The
 shipped curves read a progress they cannot read as the start of the run (`NaN`

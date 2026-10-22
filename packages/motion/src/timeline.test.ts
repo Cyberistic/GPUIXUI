@@ -12,6 +12,13 @@ import { describe, expect, it } from "vitest";
 import { easeOut, type Easing } from "./easing.js";
 import { Sequence, keyframe, sampleKeyframes, stagger } from "./timeline.js";
 
+/** The steps a stagger cannot wait for: each is "no wait". */
+const unusableSteps: readonly (readonly [string, number])[] = [
+  ["a negative step", -20],
+  ["an unreadable step", Number.NaN],
+  ["an infinite step", Number.POSITIVE_INFINITY],
+];
+
 describe("sampleKeyframes", () => {
   it("pins the endpoints and interpolates linearly between them", () => {
     const frames = [keyframe(0, 0), keyframe(1, 100)];
@@ -148,6 +155,53 @@ describe("a timeline built by hand", () => {
     expect(sequence.duration()).toBe(0);
     expect(sequence.complete(0)).toBe(true);
   });
+
+  it("does not end the sequence before a step it still has to run", () => {
+    // A step's own sample reads a duration it cannot run as no duration — the
+    // step is done at its start — but `duration()` added a negative one to the
+    // start time, so the sequence's end landed *before* the step and
+    // `complete()` answered true while the step was still pending.
+    const sequence = new Sequence<string>().at("a", 100, -50);
+
+    expect(sequence.duration()).toBe(100);
+    expect(sequence.complete(99)).toBe(false);
+    expect(sequence.complete(100)).toBe(true);
+    expect(sequence.sample(99)[0]?.state).toBe("pending");
+    expect(sequence.sample(100)[0]?.state).toBe("completed");
+  });
+
+  it("reads a group's end from the steps it still has to run", () => {
+    const sequence = new Sequence<string>().stagger(["a", "b"], 10, 20, -50);
+
+    // The last step starts at 30 and runs for no time at all, so the group's
+    // end is that start — not a moment before it.
+    expect(sequence.duration()).toBe(10 + 20);
+    expect(sequence.complete(29)).toBe(false);
+    expect(sequence.complete(30)).toBe(true);
+  });
+
+  it.each(unusableSteps)(
+    "staggers a group with the rule the package publishes (%s)",
+    (_name, step) => {
+      // The sequence's own group used to place a step at `startMs + stepMs * index`
+      // directly, so an unusable step behaved differently from the standalone
+      // `stagger()`: a negative one put a member *before* the group — already
+      // running when the sequence began — and an unreadable one collapsed the
+      // whole group to the start of the clock, losing the group's own start.
+      expect(stagger(step, 1, 2)).toBe(0);
+
+      const group = new Sequence<string>().stagger(["a", "b"], 10, step, 50);
+      expect(group.sample(0).map((member) => member.state)).toEqual([
+        "pending",
+        "pending",
+      ]);
+      expect(group.sample(10).map((member) => member.state)).toEqual([
+        "active",
+        "active",
+      ]);
+      expect(group.duration()).toBe(10 + 50);
+    },
+  );
 
   it("keeps a staggered group's end readable", () => {
     // `stagger()`'s `NaN` start used to make `duration()` `NaN`, so `complete`

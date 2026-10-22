@@ -12,7 +12,9 @@
  * that cannot be read is no wait, and a curve that cannot read the frame it is
  * handed falls back to the linear progress (`eased` in `progress.ts`). A `NaN`
  * anywhere used to paint a frame the runtime draws as nothing and leave
- * `Sequence.complete` false forever.
+ * `Sequence.complete` false forever. The sequence's own end follows the same
+ * rule: a step whose duration it cannot run ends at its start, so the end is
+ * never before a step the sequence still has to run.
  */
 
 import { linear, type Easing } from "./easing.js";
@@ -21,6 +23,18 @@ import { clamp01, eased } from "./progress.js";
 /** A number a formula can read, or the fallback it stands for. */
 const finiteOr = (value: number, fallback: number): number =>
   Number.isFinite(value) ? value : fallback;
+
+/**
+ * A duration a step can run.
+ *
+ * A duration the step cannot run — one that is not a number, or one that is
+ * not positive — is no duration at all. The step's own sample already read it
+ * that way (a step with no duration is done at its start), so the sequence's
+ * end time has to agree: a negative duration used to be added to the step's
+ * start, landing the sequence's end *before* a step it still had to run.
+ */
+const durationOf = (durationMs: number): number =>
+  Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
 
 /** One timed target at a normalized offset in `[0, 1]`. */
 export interface Keyframe {
@@ -79,15 +93,18 @@ export const sampleKeyframes = (
 export type StaggerFrom = "start" | "end" | "center";
 
 /**
- * The delay (ms) for the `index`-th of `count` children under `from`. Returns
- * `0` for an out-of-range index or empty group, and for a step that is not a
- * wait: a non-finite one is unreadable and a negative one is no delay at all.
+ * The delay (ms) the `index`-th of `count` children waits under `from`.
+ *
+ * A step that is not a wait is no wait: a non-finite one is unreadable and a
+ * negative one is no delay at all. This is the one rule both stagger entry
+ * points share — the standalone {@link stagger} and the {@link Sequence}'s own
+ * group — so a caller cannot get two answers for the same input.
  */
-export const stagger = (
+const staggerDelay = (
   stepMs: number,
   index: number,
   count: number,
-  from: StaggerFrom = "start",
+  from: StaggerFrom,
 ): number => {
   if (count <= 0 || index < 0 || index >= count) return 0;
   const distance =
@@ -98,6 +115,18 @@ export const stagger = (
         : Math.abs(index - (count - 1) / 2);
   return (Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0) * distance;
 };
+
+/**
+ * The delay (ms) for the `index`-th of `count` children under `from`. Returns
+ * `0` for an out-of-range index or empty group, and for a step that is not a
+ * wait: a non-finite one is unreadable and a negative one is no delay at all.
+ */
+export const stagger = (
+  stepMs: number,
+  index: number,
+  count: number,
+  from: StaggerFrom = "start",
+): number => staggerDelay(stepMs, index, count, from);
 
 /** Per-step sample state. */
 export type SequenceStepState = "pending" | "active" | "completed";
@@ -128,9 +157,11 @@ export class Sequence<K> {
   /**
    * Appends a step at an absolute start time.
    *
-   * A start or duration that cannot be read is repaired to `0`: a `NaN` start
-   * used to leave the step permanently active at `NaN` and a `NaN` duration made
-   * `duration()`/`complete()` `NaN`, so a driver loop never stopped.
+   * A start that cannot be read is repaired to `0`: a `NaN` start used to leave
+   * the step permanently active at `NaN` and a `NaN` duration made
+   * `duration()`/`complete()` `NaN`, so a driver loop never stopped. A duration
+   * the step cannot run is no duration at all, so the sequence's end is never
+   * before a step it still has to run.
    */
   at(
     key: K,
@@ -141,7 +172,7 @@ export class Sequence<K> {
     this.steps.push({
       key,
       startMs: finiteOr(startMs, 0),
-      durationMs: finiteOr(durationMs, 0),
+      durationMs: durationOf(durationMs),
       easing,
     });
     return this;
@@ -152,7 +183,16 @@ export class Sequence<K> {
     return this.at(key, this.duration(), durationMs, easing);
   }
 
-  /** Inserts `keys` as steps with a fixed stagger from `startMs`. */
+  /**
+   * Inserts `keys` as steps with a fixed stagger from `startMs`.
+   *
+   * The group is placed with the package's own stagger rule, so an unusable
+   * step is no wait — every member sits at the group's start — and no member
+   * starts before the sequence does. A step used to be placed at
+   * `startMs + stepMs * index` directly, which put a member *before* the
+   * group for a negative step (already running when the sequence began) and
+   * collapsed the whole group to the start of the clock for an unreadable one.
+   */
   stagger(
     keys: readonly K[],
     startMs: number,
@@ -160,8 +200,14 @@ export class Sequence<K> {
     durationMs: number,
     easing: Easing = linear,
   ): this {
+    const count = keys.length;
     keys.forEach((key, index) => {
-      this.at(key, startMs + stepMs * index, durationMs, easing);
+      this.at(
+        key,
+        startMs + staggerDelay(stepMs, index, count, "start"),
+        durationMs,
+        easing,
+      );
     });
     return this;
   }
