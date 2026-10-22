@@ -79,6 +79,31 @@ one-pixel bar would claim a value the data does not have. A zero value keeps its
 category slot in a bar chart so the labels still line up, and a zero datum
 paints no ring segment at all.
 
+## API
+
+The series charts (`BarChart`, `StackedBar`, `LineChart`) share one contract:
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `series` | `ChartSeries[]` | — | `{ key, label, values }` per series, in the palette's order |
+| `labels` | `string[]` | — | one label per category, under the plot |
+| `width` | `number` | `320` | the plot's width, in pixels |
+| `height` | `number` | `160` | the plot's height, in pixels |
+| `legend` | `boolean` | `series.length > 1` | paints the legend under the labels |
+| `axis` | `boolean` | `true` | paints the y-axis tick column |
+| `ticks` | `number` | `4` | how many steps the y axis divides its scale into |
+| `testId` | `string` | — | the chart; a series layer is `${testId}-layer-${key}`, the plot `${testId}-plot`, a category `${testId}-label-${index}`, a tick `${testId}-tick-${value}` |
+| `aria-label` | `string` | — | the group's name; give it one |
+
+`DonutChart` takes `data: ChartDatum[]` (`{ key, label, value }`), `size`
+(`160`, square) and `legend`, and names its slices the same way.
+
+`Sparkline` takes `values: number[]`, `width` (`120`), `height` (`32`), `color`
+(the first categorical swatch), and its own `aria-label`.
+
+`ChartLegend` takes `items: ChartLegendItem[]` (`{ key, label, color }`) and
+`testId`; every part takes the GPUix host props and merges `style` last.
+
 ## Theming
 
 Charts read `seriesColors(theme)` — the five authored categorical swatches, each
