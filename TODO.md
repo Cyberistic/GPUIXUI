@@ -697,7 +697,20 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 107/107
+`[x]` `[██████████]` 108/108
+
+`[x]` Hold the **headless suite's printed total** to the registry again — the
+      data workstream's `6aa8cb15` added `data-table-core` to
+      `src/scenarios/registry.ts` (41 scenarios) without moving the two totals
+      the README prints, so `src/scenarios/registry.test.ts` failed
+      `prints the scenario total the registry actually runs` with
+      `[ "41/41" ]` against `[ "40/40" ]` and the release headline claimed a
+      suite one scenario shorter than the one that runs. Both places print
+      **41/41**, and the numbers are the run's own:
+      `nub apps/playground/dist/smoke/run.js` → 41/41 scenarios passed, all
+      seventeen capabilities verified (measured on 0.11.0 here; a first pass
+      read 40/41 because the data package was mid-edit in the shared checkout,
+      and the re-run after its scenario landed the header is green).
 
 `[x]` Measure **which half of a key activates the button everything composes** —
       `Button` carries the platform's rule (Enter on the key **down**, Space on

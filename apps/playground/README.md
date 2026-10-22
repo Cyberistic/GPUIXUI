@@ -108,7 +108,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (40/40 green); -> 2 on a host with no binding
+# -> 0 here (41/41 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -709,10 +709,10 @@ locate rule and replace-all, so a green probe cannot stand on wrong numbers.
 
 ## Evidence on this host
 
-The suite is **40/40 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **41/41 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-40/40 scenarios passed · capabilities: layout=verified text=verified
+41/41 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
