@@ -381,10 +381,10 @@ resting `foreground` clears the body floor on `hover`, `active` and `accent`,
 and `mutedForeground` clears the secondary floor on all three. A ghost button or
 a menu row tints its surface and leaves its label in its resting role, so a wash
 that drifted toward its text would be unreadable with nothing else noticing. A
-secondary action is the one filled control whose label is neither the page's
-`foreground` nor a derived fill's on-colour: it rests on `secondary` and moves to
-`hover`/`active` while keeping `secondaryForeground`, so that label is measured
-on both washes, tightest on Windows XP (Luna) dark's pressed wash at 7.88:1. A
+filled action keeps its label's floor when its fill moves: the pointer state is
+the derived `filledHover`/`filledPressed`, and `styles.test.ts` holds the role's
+on-colour on both fills — so the resting `secondaryForeground` on `secondary` is
+this table's pair and the pointer is the derivation's. A
 row floating on a popover keeps the *surface's* role instead — a menu row rests
 in `popoverForeground`, a destructive row in the tone's readable role — so both
 are measured on the same washes, and the popover's text role on the `selected`
@@ -609,7 +609,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | secondary text on background/card/muted/popover, on a selected row, inside a field's own fill (`input`), and on a control's `secondary` group strip | 4.5:1 | 7:1 |
 | a selected row's title on its own selection and on the `hover`/`active`/`accent` wash it tints (the `selectedForeground` it paints, held to the body floor), the `foreground` a default `Text` keeps on a selected surface, and a chosen row inside a popover resting in its surface's role (`popoverForeground` on `selected`) | 7:1 | 7:1 |
 | on-colour text, placeholder (on `input` and on the page fill) | 4.5:1 | 7:1 |
-| a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
+| a secondary action's resting label (`secondaryForeground` on the `secondary` fill) | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted, the hover/active washes it tints and the `accent`/`selected` washes a row paints under it (`brandText`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | the page role an alert's copy and dismiss glyph paint on a soft status tint (`foreground` on `xSoft`) | 7:1 | 7:1 |

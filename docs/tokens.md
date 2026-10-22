@@ -1377,12 +1377,13 @@ edge below. A wash — `hover`,
 `active`, `accent` — is a surface too: a ghost button or a menu row tints it and
 leaves its label in the
 resting `foreground`, and secondary text keeps `mutedForeground`, so both
-roles are measured on all three. A **secondary action** is the one filled
-control whose label is neither the page's `foreground` nor a derived fill's
-on-colour: it rests on `secondary` and moves to the `hover`/`active` role while
-keeping `secondaryForeground`, so that label is measured on both washes too.
-Every shipped, high-contrast, platform and authored style clears the floor, the
-tightest being Windows XP (Luna) dark's pressed wash at 7.88:1. A **group
+roles are measured on all three. A **filled action** keeps its label's floor
+when its fill moves: every filled role's pointer state is the derived
+`filledHover`/`filledPressed` (§Action fills), measured by `styles.test.ts`
+against the role's on-colour, which is why a secondary action's label is the
+resting `secondaryForeground` on `secondary` here and the derivation's business
+on the pointer — the two wash pairs retired when the variant stopped painting
+them. A **group
 panel** is the strip a control sits in without painting a fill of its own: the
 segmented `secondary` panel the ring, the strong boundary and a disabled label
 are already measured on. An `outline` or `ghost` action keeps `foreground` and a
