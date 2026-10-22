@@ -7,7 +7,8 @@
  * `aria-expanded` disagreed with the visible body; a controlled accordion
  * changed its own open set when the consumer said no; and arrow movement either
  * landed on a disabled header or opened the section it moved to. A caller `ref`
- * on a header was discarded in favour of the internal one.
+ * on a header was discarded in favour of the internal one. A held Enter flipped
+ * a just-opened section shut again on each repeat of the key.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -158,6 +159,23 @@ describe("Accordion", () => {
 
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
     expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+
+    faq.unmount();
+  });
+
+  it("does not close the section again on a repeat while Enter is held", () => {
+    const faq = renderComponent(<Faq collapsible />);
+    const trigger = faq.renderer.findByTestId("trigger-two");
+    expect(trigger).toBeDefined();
+    if (trigger === undefined) return;
+
+    faq.renderer.nativeSimulateKeyDown(trigger.id, "enter");
+    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+
+    // The platform repeats the key-down while the key is held; a collapsible
+    // section would flip shut again if a repeat counted as an activation.
+    faq.renderer.nativeSimulateKeyDown(trigger.id, "enter", true);
+    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
 
     faq.unmount();
   });

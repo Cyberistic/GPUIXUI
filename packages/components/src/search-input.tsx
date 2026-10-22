@@ -26,7 +26,7 @@ import {
 } from "@gpuixui/tw";
 import { useCallback, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { isDismiss } from "./internal/key.js";
+import { isActivation, isDismiss } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -155,7 +155,7 @@ export const SearchInput = ({
           tabIndex={disabled ? -1 : 0}
           onClick={clear}
           onKeyDown={(event: KeyEvent) => {
-            if (event.key === "enter" || event.key === "space") clear();
+            if (isActivation(event)) clear();
           }}
           style={mergeStyles(recipeStyle(SEARCH_INPUT_CLEAR, theme), {
             ...(disabled ? {} : keyboardRing(theme)),

@@ -5,7 +5,9 @@
  * so every later overlay inherits their correctness. The bugs these guard: a
  * click that fires twice (once from the pointer, once from a synthesised key); a
  * disabled control that still runs its handler or still takes a tab stop; a
- * keyboard activation that works for Enter but not Space; an icon-only
+ * keyboard activation that works for Enter but not Space; a **held** key that
+ * re-ran the activation on every repeat, so holding Enter on a focused row ran
+ * its action more than once; an icon-only
  * control with no accessible name; a filled action whose hover was a
  * half-alpha fill, so the same button read two colours on two surfaces; and an
  * outlined action that drew its edge in the decorative `border` role — the same
@@ -65,6 +67,30 @@ describe("Button", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
 
     button.renderer.nativeSimulateKeyDown(element.id, "space");
+    expect(onClick).toHaveBeenCalledTimes(2);
+
+    button.unmount();
+  });
+
+  it("activates once per keypress while Enter or Space is held", () => {
+    const onClick = vi.fn();
+    const button = renderComponent(
+      <Button testId="button" onClick={onClick}>
+        Save
+      </Button>,
+    );
+
+    const element = button.renderer.findByTestId("button");
+    expect(element).toBeDefined();
+    if (element === undefined) return;
+
+    // The platform sends key-down again, with `isHeld`, while a key is held.
+    button.renderer.nativeSimulateKeyDown(element.id, "enter");
+    button.renderer.nativeSimulateKeyDown(element.id, "enter", true);
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    button.renderer.nativeSimulateKeyDown(element.id, "space");
+    button.renderer.nativeSimulateKeyDown(element.id, "space", true);
     expect(onClick).toHaveBeenCalledTimes(2);
 
     button.unmount();

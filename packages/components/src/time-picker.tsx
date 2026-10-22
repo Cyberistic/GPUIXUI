@@ -46,6 +46,7 @@ import {
   type ReactNode,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
+import { isActivation } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -393,7 +394,7 @@ export const TimePickerClear = ({
       tabIndex={0}
       onClick={clear}
       onKeyDown={(event: EventPayload) => {
-        if (event.key === "enter" || event.key === "space") clear();
+        if (isActivation(event)) clear();
       }}
       style={mergeStyles(recipeStyle(TIME_PICKER_CLEAR, theme), {
         ...keyboardRing(theme),

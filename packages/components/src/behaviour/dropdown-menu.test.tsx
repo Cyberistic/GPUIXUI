@@ -5,7 +5,8 @@
  * highlights a disabled row (so Enter does nothing while the highlight claims it
  * would); Enter firing twice or not closing; focus not returning to the trigger
  * after Enter or Escape; a press on the open trigger flickering the menu back open;
- * a checkbox row toggling the wrong way; a destructive row painted in the
+ * a checkbox row toggling the wrong way; a held Enter toggling a checkbox row
+ * back again on each repeat of the key; a destructive row painted in the
  * solid `destructive` fill role, which no contrast pair measures as text; and a
  * disabled row dimmed with a 50% fade, which composites its label into its own
  * fill instead of painting the measured `disabledForeground` role.
@@ -483,6 +484,35 @@ describe("DropdownMenu", () => {
     expect(
       nodesWithRole(menu.renderer, "image").map((node) => node.name),
     ).toContain("Checked");
+
+    menu.unmount();
+  });
+
+  it("toggles a checkbox row once while Enter is held", () => {
+    const onCheckedChange = vi.fn();
+    const menu = renderComponent(
+      <FileActions onSelect={vi.fn()} onCheckedChange={onCheckedChange} />,
+    );
+    clickCentreOf(menu, "trigger");
+
+    // Rename → (skips the disabled Duplicate) → Show hidden.
+    menu.renderer.simulateKeystrokes("down down");
+    expect(focusedTestId(menu)).toEqual(Option.some("hidden"));
+
+    const row = menu.renderer.findByTestId("hidden");
+    expect(row).toBeDefined();
+    if (row === undefined) return;
+
+    // One keypress, then the platform's repeats of the same held key.
+    menu.renderer.nativeSimulateKeyDown(row.id, "enter");
+    menu.renderer.nativeSimulateKeyDown(row.id, "enter", true);
+    menu.renderer.flush();
+
+    expect(onCheckedChange).toHaveBeenCalledTimes(1);
+    expect(onCheckedChange).toHaveBeenCalledWith(true);
+    expect(
+      menu.renderer.findByTestId("hidden")?.customProps?.["aria-selected"],
+    ).toBe(true);
 
     menu.unmount();
   });

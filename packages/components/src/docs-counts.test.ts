@@ -7,7 +7,9 @@
  * `inventory.test.ts` holds the `COMPONENTS.md` rows; the package's own pages
  * had no guard, so this suite reads every `(N tests)` claim and counts the suite
  * it names. A claim that names no suite fails too, so an indirect count like
- * "the others are the guard (18 tests)" cannot hide.
+ * "the others are the guard (18 tests)" cannot hide. The pattern also reads a
+ * claim a page wrapped onto the next line (`(36` / `tests)`): the space-only
+ * pattern skipped exactly the page that had drifted.
  *
  * `node:fs` is a test-time repository read, the boundary `inventory.test.ts`
  * and `packages/primitives/src/docs.test.ts` already use.
@@ -39,7 +41,10 @@ interface Claim {
  */
 const ATTRIBUTION_WINDOW = 400;
 
-const countClaim = /\((\d+) tests?\)/g;
+/** A stated count. `\s+` matters: a page that wraps `(36` / `tests)` is still a
+ *  claim, and the space-only pattern silently skipped the one page that had
+ *  drifted. */
+const countClaim = /\((\d+)\s+tests?\)/g;
 const suitePath = /`(src\/[^`]+\.test\.tsx?)`/g;
 
 /** The cases a suite declares, by the package's test-call convention. */
@@ -116,5 +121,16 @@ describe("docs test counts", () => {
 
   it("reads the claims it is meant to check", () => {
     expect(claims.length).toBeGreaterThanOrEqual(35);
+  });
+
+  it("reads a count that wraps onto the next line", () => {
+    const fixture =
+      "`src/behaviour/example.test.tsx` runs in the real renderer (36\n" +
+      "tests): a claim a line break must not hide";
+    const parsed = claimsIn("fixture.mdx", fixture);
+
+    expect(
+      Arr.map(parsed, (claim) => [claim.stated, claim.suite] as const),
+    ).toEqual([[36, Option.some("src/behaviour/example.test.tsx")]]);
   });
 });

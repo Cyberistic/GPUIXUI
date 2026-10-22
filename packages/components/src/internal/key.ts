@@ -11,9 +11,21 @@ import type { EventPayload } from "@gpuix/react";
 import { pipe } from "effect";
 import * as Option from "effect/Option";
 
-/** Enter or Space: the two keys that activate a focused control. */
+/**
+ * Enter or Space: the two keys that activate a focused control.
+ *
+ * A **repeat** is not an activation. The platform sends key-down again while a
+ * key is held, so without the `isHeld` guard holding Enter runs the focused
+ * menu row's action repeatedly and holding Space toggles a selection back —
+ * `@gpuix/react`'s own headless button guards `!event.isHeld` for the same
+ * reason.
+ *
+ * TODO: activate Space on key **up**, as the shared keyboard contract does
+ * (`docs/component-api.md` §4). That needs the primitives' keyboard module,
+ * which this package does not depend on yet (TODO.md → Interlocks).
+ */
 export const isActivation = (event: EventPayload): boolean =>
-  event.key === "enter" || event.key === "space";
+  event.isHeld !== true && (event.key === "enter" || event.key === "space");
 
 /** Enter alone: a row action. Space stays a selection key. */
 export const isEnter = (event: EventPayload): boolean => event.key === "enter";

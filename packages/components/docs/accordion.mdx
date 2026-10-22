@@ -77,6 +77,9 @@ Arrow movement changes focus only — it never opens or closes a section. Disabl
 headers are skipped, and a control inside an open section keeps its own arrow
 keys because the handler lives on the trigger, not the accordion root.
 
+A repeat event while `Enter` or `Space` is held is ignored, so one keypress
+toggles a section once instead of flipping it on every platform repeat.
+
 ## API
 
 `Accordion` takes the GPUix host props and merges `style` last. The root is a
@@ -125,12 +128,12 @@ because 0.11.0's `StyleDesc` has no `transform` — a rotation is not available.
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (14 tests):
 single mode closing the previous section, the non-collapsible no-op, the
 collapsible close, multiple mode keeping sections, the disabled section, Enter
-activation, the controlled contract including the `null` close, arrow /
-`Home` / `End` movement between headers (wrapping past a disabled one, without
-opening it), and a caller header `ref`.
+activation, a held Enter toggling a section once, the controlled contract
+including the `null` close, arrow / `Home` / `End` movement between headers
+(wrapping past a disabled one, without opening it), and a caller header `ref`.
 
 `src/accordion/logic.test.ts` covers the transition table (15 cases), and
 `src/internal/collection.test.ts` covers the shared movement arithmetic.

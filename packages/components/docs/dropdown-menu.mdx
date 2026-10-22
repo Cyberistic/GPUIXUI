@@ -84,6 +84,10 @@ an extra arrow press. A pointer click leaves focus on the menu surface with no
 row highlighted, which is the desktop menu convention; the first arrow key then
 picks the first enabled row.
 
+One keypress runs one action: a repeat event while `Enter` or `Space` is held is
+ignored (`event.isHeld`), so holding the key cannot run a row twice or toggle a
+checkbox row back.
+
 Disabled rows are skipped by every arrow key, by `Home`/`End` and by type-ahead,
 and a click on one does nothing.
 
@@ -253,13 +257,14 @@ above — needs no override.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (36
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (38
 tests): the `menu` role, keyboard opening on the first/last enabled row, a
 disabled trigger that stays out of the tab order and refuses ArrowDown, Enter and
 a press, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
-restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
+restoring focus, a held Enter toggling a checkbox row once, clicked and disabled
+rows, Escape/outside press/trigger re-press
 dismissal, checkbox toggling and its check mark, the destructive row's measured
 page-text role, the
 surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,

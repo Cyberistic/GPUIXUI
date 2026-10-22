@@ -1,8 +1,10 @@
 /**
- * Key predicates. The bug these guard: `isActivation` accepted only `"enter"`
+ * Key predicates. The bugs these guard: `isActivation` accepted only `"enter"`
  * because `"space"` looked like the DOM's `" "`, so Space never activated a
- * focused control. Every predicate is asserted against a neighbouring key, so a
- * typo in any key name fails here instead of in a component.
+ * focused control; and it accepted a **repeat** event, so holding Enter ran the
+ * focused menu row's action again on every repeat. Every predicate is asserted
+ * against a neighbouring key, so a typo in any key name fails here instead of in
+ * a component.
  */
 
 import { describe, expect, it } from "vitest";
@@ -29,11 +31,23 @@ const keyEvent = (key: string, ctrl = false, shift = false): EventPayload => ({
   modifiers: { shift, ctrl, alt: false, cmd: false },
 });
 
+const repeated = (key: string): EventPayload => ({
+  ...keyEvent(key),
+  isHeld: true,
+});
+
 describe("key predicates", () => {
   it("activates on Enter and Space, and not on Tab", () => {
     expect(isActivation(keyEvent("enter"))).toBe(true);
     expect(isActivation(keyEvent("space"))).toBe(true);
     expect(isActivation(keyEvent("tab"))).toBe(false);
+  });
+
+  it("does not activate on a repeat while the key is held", () => {
+    expect(isActivation(repeated("enter"))).toBe(false);
+    expect(isActivation(repeated("space"))).toBe(false);
+    // A first press of the same key still activates.
+    expect(isActivation(keyEvent("enter"))).toBe(true);
   });
 
   it("reads the arrow keys in their own direction only", () => {
