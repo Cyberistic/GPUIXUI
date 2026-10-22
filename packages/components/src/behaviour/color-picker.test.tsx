@@ -9,6 +9,9 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { useState } from "react";
+import * as Arr from "effect/Array";
+import * as P from "effect/Predicate";
+import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { ColorPicker } from "../color-picker.js";
 import { clickCentreOf } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -62,6 +65,10 @@ const typeHex = (root: ComponentTestRoot, text: string): void => {
 
 const hexValue = (root: ComponentTestRoot): unknown =>
   root.renderer.findByTestId("picker-hex")?.customProps?.value;
+
+/** A painted colour, or `undefined` for a style value that is not a string. */
+const colourOf = (value: unknown): string | undefined =>
+  P.isString(value) ? value : undefined;
 
 describe("ColorPicker", () => {
   it("renders the swatches, the hex field and the preview", () => {
@@ -189,5 +196,62 @@ describe("ColorPicker", () => {
       invalid.renderer.findByTestId("picker-swatch-0")?.style.borderColor,
     ).toBe(lightTheme.colors.border);
     invalid.unmount();
+  });
+
+  it("marks the selected swatch in a role the swatch cannot swallow", () => {
+    // The bug: selection was a `foreground` border and nothing else, and
+    // `foreground` is the last of the six default swatches — choosing it
+    // painted the mark in its own colour (1.00:1), so the reader could not see
+    // which colour they had chosen. The pip carries the page fill and the body
+    // ink, a measured pair, so at least one of the three marks clears the 3:1
+    // a non-text indicator needs against every default swatch.
+    const failures = Arr.flatMap(["dark", "light"] as const, (mode) =>
+      Arr.flatMap(Arr.range(0, 5), (index) => {
+        const picker = renderComponent(<Harness />, mode);
+        const id = `picker-swatch-${index}`;
+        const early =
+          picker.renderer.findByTestId(`${id}-marker`) === undefined
+            ? []
+            : [`${mode} ${index}: marked before it was chosen`];
+
+        clickCentreOf(picker, id);
+
+        const cell = picker.renderer.findByTestId(id);
+        const marker = picker.renderer.findByTestId(`${id}-marker`);
+        const swatch = colourOf(cell?.style.backgroundColor);
+        const best = Arr.reduce(
+          Arr.flatMap(
+            [
+              colourOf(cell?.style.borderColor),
+              colourOf(marker?.style.backgroundColor),
+              colourOf(marker?.style.borderColor),
+            ],
+            (mark) => {
+              const ratio = contrastRatio(mark, swatch);
+              return ratio === undefined ? [] : [ratio];
+            },
+          ),
+          0,
+          (highest, ratio) => (ratio > highest ? ratio : highest),
+        );
+
+        picker.unmount();
+
+        if (marker === undefined) {
+          return Arr.append(
+            early,
+            `${mode} ${index}: no marker after choosing`,
+          );
+        }
+        return best < contrastFloors.boundary
+          ? Arr.append(
+              early,
+              `${mode} ${index}: the best mark on ${String(swatch)} is ${best.toFixed(2)}`,
+            )
+          : early;
+      }),
+    );
+
+    expect(failures).toEqual([]);
   });
 });

@@ -49,6 +49,41 @@ const defaultSwatches = (theme: Theme): ReadonlyArray<string> => [
   theme.colors.foreground,
 ];
 
+/**
+ * The mark on the chosen swatch.
+ *
+ * A ring alone cannot mark an arbitrary colour: `foreground` is one of the six
+ * default swatches, so a `foreground` edge around that swatch paints nothing,
+ * and a caller's own colour can match any single role. The pip carries two
+ * roles a theme keeps a body pair apart — the page fill behind it and the body
+ * ink around it — so at most one of them can disappear into the swatch.
+ */
+const SelectedSwatch = ({
+  testId,
+  index,
+}: {
+  readonly testId: string | undefined;
+  readonly index: number;
+}) => {
+  const theme = useTheme();
+
+  return (
+    <div
+      testId={
+        testId === undefined ? undefined : `${testId}-swatch-${index}-marker`
+      }
+      style={{
+        width: theme.spacing.sm,
+        height: theme.spacing.sm,
+        borderRadius: theme.radius.full,
+        backgroundColor: theme.colors.background,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.foreground,
+      }}
+    />
+  );
+};
+
 /** {@link ColorPicker} props. */
 export interface ColorPickerProps extends Omit<
   Props,
@@ -155,6 +190,9 @@ export const ColorPicker = ({
               style={mergeStyles(recipeStyle(COLOR_PICKER_CELL, theme), {
                 width: controlHeight(theme, "sm"),
                 height: controlHeight(theme, "sm"),
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 backgroundColor: swatch,
                 borderWidth: selected
                   ? theme.borderWidth.strong
@@ -163,7 +201,11 @@ export const ColorPicker = ({
                   ? theme.colors.foreground
                   : theme.colors.border,
               })}
-            />
+            >
+              {selected ? (
+                <SelectedSwatch testId={testId} index={index} />
+              ) : null}
+            </div>
           );
         })}
       </div>

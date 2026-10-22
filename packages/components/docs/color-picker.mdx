@@ -61,7 +61,8 @@ playground mounts.
 | `style` | `StateStyle<ColorPickerState>` | — | `{ disabled, valid }`. |
 
 With a `testId`, the parts are addressable as `${testId}-swatch-${index}`,
-`${testId}-hex` and `${testId}-preview`.
+`${testId}-swatch-${index}-marker` (the chosen swatch only), `${testId}-hex` and
+`${testId}-preview`.
 
 ## Theming
 
@@ -77,7 +78,10 @@ colour), and the preview uses
 
 - The root is a named `group`.
 - Every swatch is a `role="button"` named by its hex value, with `aria-selected`
-  on the current one; selected swatches also carry the strong border.
+  on the current one; the chosen swatch also carries a strong edge and a
+  **two-tone pip** — the page fill inside the body ink — because a ring in one
+  role disappears into a swatch of that colour (`foreground` is one of the six
+  defaults).
 - The field is a real input named `<label> hex value`; an invalid draft is
   described through `aria-description` (`0.11.0` supports it).
 - Disabled is `tabIndex={-1}` plus `readOnly` and dimming: there is no
@@ -95,9 +99,11 @@ colour), and the preview uses
 
 `src/color/hex.test.ts` (8 pure tests) covers shorthand, case, a missing hash,
 alpha refusal, invalid input and equivalence.
-`src/behaviour/color-picker.test.tsx` (8 native tests) covers the parts, the
+`src/behaviour/color-picker.test.tsx` (9 native tests) covers the parts, the
 theme swatches, a swatch press and selection, a typed shorthand, an invalid
-draft, blur commit/revert, disabled, and a style callback in both themes.
+draft, blur commit/revert, disabled, a style callback in both themes, and the
+chosen-swatch mark: every default swatch in both shipped themes must leave at
+least one of the three marks at the 3:1 a non-text indicator needs.
 
 ```sh
 nub run --filter @gpuixui/components test
