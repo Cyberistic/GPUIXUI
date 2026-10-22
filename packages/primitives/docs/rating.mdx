@@ -54,7 +54,7 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
 | `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |
-| `label` | `string` | none | the group's name; stars are announced "N of max" |
+| `label` | `string` | none | the group's name; each star is named from the provider's `starName` template (`"N of max"` by default) |
 | `description` | `string` | none | announced help for the group (`aria-description`); a blank one publishes nothing |
 | `ref` / `aria-id` / `onLayout` | host address | none | land on the star that holds the tab stop |
 | `invalid` | `boolean` | `false` | failed validation: chosen stars paint destructive and the ring turns destructive |
@@ -104,9 +104,10 @@ A `disabled` or `readOnly` rating ignores the pointer.
 
 - Roles: `radiogroup` with the group's `label`, and one `radio` per star
   (AccessKit `RadioGroup` / `RadioButton`).
-- Each star's name is `"N of max"` and its state is announced through
-  **`aria-valuetext`** (`"checked"`, `"half"` or `"unchecked"`), because
-  `@gpuix/native` 0.11.0 has no
+- Each star's name is the provider's `starName` template (`"N of max"` by
+  default) and its state is announced through **`aria-valuetext`** — the fill
+  words `checked`, `half` or `unchecked` from the provider's `star` group —
+  because `@gpuix/native` 0.11.0 has no
   `aria-checked`.
 - `readOnly` keeps the group visible to assistive technology but removes it from
   the tab order; `disabled` also paints it muted.
@@ -118,6 +119,11 @@ A `disabled` or `readOnly` rating ignores the pointer.
   holds the tab stop: `ref` receives that star, `aria-id` is its automation id,
   and `onLayout` reports its box. An unrated rating addresses the first star, and
   the address follows the value (`runtime/address.runtime.test.tsx`).
+
+A star's fill words and its name are interface copy, so they come from the
+provider's `messages.star` and `messages.starName` (see the ThemeProvider page's
+§Words) and default to the English above. The paint keeps reading `starState`, so
+renaming the words never changes which star is filled.
 
 ## Theming
 
@@ -180,6 +186,10 @@ recipe also sets.
   shares: `Enter` on the press, `Space` on the release, a held key ignored and
   exactly one activation. `Rating` failed it (a focused star could not be
   chosen with either key); the matrix names the part that regresses.
+- `src/components/messages.test.tsx` and `runtime/messages.runtime.test.tsx` —
+  the words seam: a French table's star names and fill words reach the element
+  tree and a real window's accessibility nodes, and a tree naming no words
+  announces the shipped English (`1 of 2`, `checked`).
 - `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; a
   real click on its left half reports `3.5` and announces `"half"` while a click
   on its right half reports `4`; the half star's clip paints half the star's

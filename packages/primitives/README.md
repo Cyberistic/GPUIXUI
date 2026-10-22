@@ -44,10 +44,11 @@ second copy of them.
 
 The **words** a control announces are interface copy, so they ride the provider
 too: `messages={{ selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" } }}`
-names the selection states, `press` the toggle states, `scrollRegion` a focusable
-scroller's default name and `codeDigit` a code cell's sentence — once for the
-whole tree, because this runtime announces state through `aria-valuetext` and has
-no `aria-checked`/`aria-pressed`/`aria-busy`. A named group replaces its default
+names the selection states, `press` the toggle states, `star` a rating star's fill
+and `starName` its name template, `scrollRegion` a focusable scroller's default
+name and `codeDigit` a code cell's sentence — once for the whole tree, because
+this runtime announces state through `aria-valuetext` and has no
+`aria-checked`/`aria-pressed`/`aria-busy`. A named group replaces its default
 group whole and a group left out keeps the default. `MessagesProvider` is the
 same seam without a theme, for a sub-tree in another language — it extends the
 table above it rather than resetting it — and `useMessages` reads the resolved

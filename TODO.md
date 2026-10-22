@@ -2859,15 +2859,25 @@ a workaround for two live sessions sharing one worktree; see
       suite was not run (no playground path changed); its `examples-mount`
       scenario — which mounts every shipped example, all of them through these
       components — was run scoped and passed (1/1)
-`[ ]` `packages/primitives`: `Rating` announces **fixed English** outside the
-      messages seam — each star's `aria-valuetext` is `checked`/`half`/
+`[x]` `packages/primitives`: `Rating` announces **fixed English** outside the
+      messages seam — each star's `aria-valuetext` was `checked`/`half`/
       `unchecked` (a star-fill vocabulary, not a selection state) and each star's
-      name is the `N of M` sentence, so a localised interface hears both in
-      English. The seam is already the shape: add a star words group and a name
-      template to `core/messages.ts`, map the announced text through it in
-      `renderRating` (the paint keeps reading `starState`), and hold it with
-      `messages.test.tsx` plus a window case. Not folded into the row above
-      because these are sentences rather than state words
+      name was the `N of M` sentence, so a localised interface heard both in
+      English. `PrimitiveMessages` gains the `star` group and the
+      `starName(index, max)` template (the English defaults are unchanged);
+      `renderRating` takes the resolved table as its last argument and `Rating`
+      reads `useMessages()`, so the paint still reads `starState` and a renamed
+      word never moves a star. Proof: `messages.test.tsx`'s `names each star and
+      announces its fill in the caller's words` (unit) and
+      `runtime/messages.runtime.test.tsx`'s French window (`étoile 1 sur 2` →
+      `plein`), plus the compatibility direction (`1 of 2` → `checked`).
+      Directions measured: restoring either literal fails the unit case by name
+      (`expected [ '1 of 3', … ] to deeply equal [ 'étoile 1 sur 3', … ]`) and
+      the window case (`no accessibility node announced étoile 1 sur 2`).
+      `nub run --filter @gpuixui/primitives test`: 51 files / 899 tests;
+      `test:runtime`: 21 files / 267 tests. Docs: `docs/rating.mdx`
+      §API/§Accessibility/§Verification, `docs/theme-provider.mdx` §Words/
+      §Verification, the package README and the `COMPONENTS.md` Rating row
 `[x]` `packages/primitives`: give `ButtonGroup` its **second axis** — the shadcn
       reference takes `orientation`, and the primitive only ever laid a row, so a
       column of attached actions had to be hand-built outside the group and lost

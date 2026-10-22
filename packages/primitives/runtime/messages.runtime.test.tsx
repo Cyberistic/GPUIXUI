@@ -20,6 +20,7 @@ import type { PrimitiveMessages } from "../src/core/messages.js";
 import { MessagesProvider } from "../src/components/MessagesProvider.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
+import { Rating } from "../src/components/Rating.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
@@ -33,6 +34,8 @@ import { openWindow, Surface } from "./fixture.js";
 const french: PrimitiveMessages = {
   selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" },
   press: { pressed: "enfoncé", notPressed: "relâché" },
+  star: { checked: "plein", half: "demi", unchecked: "vide" },
+  starName: (index, max) => `étoile ${index} sur ${max}`,
   scrollRegion: "Zone de défilement",
   codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
 };
@@ -83,6 +86,7 @@ it("announces every control's state in the caller's words", async () => {
           <Text>rows</Text>
         </ScrollArea>
         <OTPField length={2} />
+        <Rating testId="rating" label="Qualité" max={2} defaultValue={1} />
       </Stack>
     </Surface>,
   );
@@ -93,6 +97,10 @@ it("announces every control's state in the caller's words", async () => {
   expect(announced(runtime, "Wi-Fi")).toBe("coché");
   expect(announced(runtime, "Bold")).toBe("enfoncé");
   expect(announced(runtime, "Left")).toBe("enfoncé");
+  // A rating names each star from the table and announces how much of it is
+  // filled — the second vocabulary the seam carries.
+  expect(announced(runtime, "étoile 1 sur 2")).toBe("plein");
+  expect(announced(runtime, "étoile 2 sur 2")).toBe("vide");
   // The scroll region names itself from the table, and a code cell names its
   // position in the caller's sentence.
   expect(named(runtime, "Group", "Zone de défilement")).toBe(true);
@@ -129,6 +137,7 @@ it("keeps the shipped words when a caller names none", async () => {
     <Surface>
       <Stack direction="column" gap="sm">
         <Checkbox testId="check" label="Notify" defaultChecked />
+        <Rating testId="rating" label="Quality" max={2} defaultValue={1} />
         <ScrollArea
           axis="vertical"
           testId="scroller"
@@ -142,5 +151,7 @@ it("keeps the shipped words when a caller names none", async () => {
   );
 
   expect(announced(runtime, "Notify")).toBe("checked");
+  expect(announced(runtime, "1 of 2")).toBe("checked");
+  expect(announced(runtime, "2 of 2")).toBe("unchecked");
   expect(named(runtime, "Group", "Scroll region")).toBe(true);
 });

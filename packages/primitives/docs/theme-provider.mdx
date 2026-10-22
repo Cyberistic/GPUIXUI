@@ -63,6 +63,8 @@ import { ThemeProvider, Toggle } from "@gpuixui/primitives";
   messages={{
     selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" },
     press: { pressed: "enfoncé", notPressed: "relâché" },
+    star: { checked: "plein", half: "demi", unchecked: "vide" },
+    starName: (index, max) => `étoile ${index} sur ${max}`,
     scrollRegion: "Zone de défilement",
     codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
   }}
@@ -78,8 +80,10 @@ keeps the shipped English, so naming `press` alone changes nothing else.
 another language wraps in it, and a nested provider **extends** the table above
 it rather than resetting it. `useMessages()` returns the resolved table for a
 component of your own that announces a state, and `selectionValueText`,
-`pressedValueText` and `otpCellLabel` are the word functions, taking a table when
-you compute a word yourself.
+`pressedValueText`, `starWord` and `otpCellLabel` are the word functions, taking
+a table when you compute a word yourself. `starName` is a template rather than a
+word because a star's name is a whole sentence over its position and the star
+count, so a caller owns its wording and its grammar.
 
 ## Contrast and platform
 
@@ -162,13 +166,15 @@ re-render with a different `theme` prop — verified natively by
 - `src/components/messages.test.tsx` — the words table: the shipped defaults, a
   named group replacing its default whole, a group left out keeping the default,
   a nested provider extending the table above it, and **every** render path
-  (checkbox, checkbox group, radio group, switch, toggle, toggle group, scroll
-  region, code cell) announcing the table it is handed — plus the compatibility
-  direction, that a tree naming no words announces exactly the shipped ones.
+  (checkbox, checkbox group, radio group, switch, toggle, toggle group, rating,
+  scroll region, code cell) announcing the table it is handed — plus the
+  compatibility direction, that a tree naming no words announces exactly the
+  shipped ones.
 - `runtime/messages.runtime.test.tsx` — the same seam in a real window: a
-  provider's French table reaches eight controls' accessibility nodes, a nested
-  `MessagesProvider` extends the outer table instead of resetting it, and an
-  unnamed tree still announces the English words.
+  provider's French table reaches nine controls' accessibility nodes (a rating's
+  star names and fill words among them), a nested `MessagesProvider` extends the
+  outer table instead of resetting it, and an unnamed tree still announces the
+  English words.
 - `src/core/theme.test.ts` — the colour-literal scan and density metrics.
 - `runtime/theme.runtime.test.tsx` — a primitive paints the dark background
   under `@gpuixui/tokens/react`'s provider **alone** (the mixed-tree case that

@@ -16,11 +16,13 @@ export {
   pressWord,
   resolveMessages,
   selectionWord,
+  starWord,
 } from "./messages.js";
 export type {
   PressWords,
   PrimitiveMessages,
   SelectionWords,
+  StarWords,
 } from "./messages.js";
 
 export {

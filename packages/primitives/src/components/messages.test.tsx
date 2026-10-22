@@ -2,7 +2,8 @@
  * The words a control announces, in the caller's language.
  *
  * The bug this suite guards: every state word was an English literal baked into
- * a component (`checked`/`mixed`, `pressed`, `Scroll region`, `Code digit 1`),
+ * a component (`checked`/`mixed`, `pressed`, `Scroll region`, `Code digit 1`,
+ * and a rating star's `checked`/`half`/`unchecked` plus its `N of max` name),
  * so a localised interface had no seam and heard English from its own controls —
  * the same defect `loadingLabel` fixed for the busy state. A per-control prop
  * would repeat one vocabulary at every instance, so the seam is a `messages`
@@ -32,6 +33,7 @@ import { renderCheckboxGroup } from "./CheckboxGroup.js";
 import type { FocusState } from "./internal.js";
 import { otpFieldPart, renderOtpFieldInput } from "./OTPField.js";
 import { renderRadioGroup } from "./RadioGroup.js";
+import { renderRating } from "./Rating.js";
 import { renderScrollAreaViewport, scrollPart } from "./ScrollArea.js";
 import { renderSwitch } from "./Switch.js";
 import { renderToggle } from "./Toggle.js";
@@ -42,6 +44,8 @@ import { expectSome, elementChildren, hostProp } from "./testing/element.js";
 const french: PrimitiveMessages = {
   selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" },
   press: { pressed: "enfoncé", notPressed: "relâché" },
+  star: { checked: "plein", half: "demi", unchecked: "vide" },
+  starName: (index, max) => `étoile ${index} sur ${max}`,
   scrollRegion: "Zone de défilement",
   codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
 };
@@ -133,6 +137,30 @@ describe("every control announces the table it is handed", () => {
       french,
     );
     expect(rows(element)).toEqual(["coché", "décoché"]);
+  });
+
+  it("names each star and announces its fill in the caller's words", () => {
+    // The bug this guards: a star's name was the template `"N of max"` and its
+    // state was the fill vocabulary `checked`/`half`/`unchecked`, both English
+    // literals inside the component, so a localised rating spoke English while
+    // every other control followed the provider's table. A star's fill is not a
+    // selection state — every star of a rated group is "checked" — which is why
+    // it is its own group and its own sentence.
+    const stars = elementChildren(
+      renderRating(
+        { max: 3, allowHalf: true },
+        testTheme,
+        initValueState(Option.some(2.5), 0),
+        { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+        { onSelect: vi.fn(), onMove: vi.fn(), registerItem: () => () => {} },
+        undefined,
+        french,
+      ),
+    );
+    expect(
+      Arr.map(stars, (star) => expectSome(hostProp(star, "aria-label"))),
+    ).toEqual(["étoile 1 sur 3", "étoile 2 sur 3", "étoile 3 sur 3"]);
+    expect(Arr.map(stars, announced)).toEqual(["plein", "plein", "demi"]);
   });
 
   it("announces a switch and both toggle states", () => {
@@ -260,5 +288,18 @@ describe("a caller who names no words", () => {
         ),
       ),
     ).toBe("Scroll region");
+    const stars = elementChildren(
+      renderRating(
+        { max: 2, allowHalf: true },
+        testTheme,
+        initValueState(Option.some(0.5), 0),
+        { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+        { onSelect: vi.fn(), onMove: vi.fn(), registerItem: () => () => {} },
+      ),
+    );
+    expect(
+      Arr.map(stars, (star) => expectSome(hostProp(star, "aria-label"))),
+    ).toEqual(["1 of 2", "2 of 2"]);
+    expect(Arr.map(stars, announced)).toEqual(["half", "unchecked"]);
   });
 });

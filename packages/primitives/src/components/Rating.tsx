@@ -30,6 +30,11 @@ import { Icon } from "@gpuixui/icons";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
 import {
+  defaultMessages,
+  starWord,
+  type PrimitiveMessages,
+} from "../core/messages.js";
+import {
   clampRating,
   decideRating,
   pointerRating,
@@ -61,6 +66,7 @@ import {
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+import { useMessages } from "./MessagesProvider.js";
 
 export interface RatingProps
   extends
@@ -85,7 +91,7 @@ export interface RatingProps
   readonly disabled?: boolean;
   /** Shows the value but takes no input and no tab stop. */
   readonly readOnly?: boolean;
-  /** The group's name; each star is announced as "N of max". */
+  /** The group's name; each star is named from the provider's `starName`. */
   readonly label?: string;
   /** A failed validation: the chosen stars paint the destructive role. */
   readonly invalid?: boolean;
@@ -162,6 +168,7 @@ export const renderRating = (
   focus: RatingFocus,
   handlers: RatingHandlers,
   hover: RatingHover = NO_POINTER,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const max = ratingMax(props.max);
   const half = props.allowHalf === true;
@@ -217,10 +224,10 @@ export const renderRating = (
             : handlers.registerItem(index)
         }
         role="radio"
-        aria-label={`${index} of ${max}`}
+        aria-label={messages.starName(index, max)}
         aria-id={index === tabStop ? props["aria-id"] : undefined}
         // The state stays the rating's: a previewed star is filled, not chosen.
-        aria-valuetext={starState(index, value)}
+        aria-valuetext={starWord(starState(index, value), messages.star)}
         tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
         onLayout={index === tabStop ? props.onLayout : undefined}
         onClick={composePress(!interactive, props.onClick, (event) => {
@@ -296,6 +303,7 @@ export const renderRating = (
 /** A score in stars, or none. */
 export const Rating = (props: RatingProps): ReactElement => {
   const theme = useTheme();
+  const messages = useMessages();
   const { renderer } = useGpuix();
   const itemIds = useRef<Map<number, number>>(new Map());
   const half = props.allowHalf === true;
@@ -355,5 +363,6 @@ export const Rating = (props: RatingProps): ReactElement => {
         ),
       onHoverEnd: () => setHovered(Option.none()),
     },
+    messages,
   );
 };
