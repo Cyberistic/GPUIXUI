@@ -1,0 +1,130 @@
+---
+title: Topography
+description: A contour map generated for its own box, for a launch panel, a hero or a calm empty state.
+---
+
+`Topography` paints a field of contour lines behind its content: each line
+wanders under two seeded waves, the whole map is one generated `<svg source>`
+path, and it slowly breathes between dim and full. Content passed as children
+sits above it and keeps its presses.
+
+## Usage
+
+```tsx
+import { Topography } from "@gpuixui/components/topography";
+
+<Topography
+  spacing={30}
+  amplitude={10}
+  seed={3}
+  style={{ width: 520, height: 260 }}
+/>;
+```
+
+Give the field a box — a height, padding or a sized flex parent — because the map
+is generated for the size the field actually has. Before the first layout it
+paints nothing.
+
+## How the map is painted
+
+The runtime paints `<svg source>` markup as **one mask** in the element's
+`style.color`, so the whole map is one `<path>` of line subpaths. `svg-pattern`
+measured where that path lands on 0.11.0: it is scaled by the element's **width
+alone**, the view box clips its own overflow, and the element does **not** clip
+the centred content area when it is taller than the box.
+
+So the field generates its view box **from its measured box**, which makes the
+width scale 1:1 on both axes and leaves nothing for a centred content area to
+leak. A resize re-measures and re-generates the map.
+
+- each line is sampled across the box at a fixed step and displaced by a long
+  wave plus a shorter ripple, both phased from `seed`;
+- the same seed paints the same map on every mount, and a different seed gives a
+  different one;
+- an `amplitude` of `0` is honoured as straight rules;
+- a spacing that would exceed 80 lines is grown to fit instead of dropping
+  lines; `spacing` is clamped to 12–120 px, `amplitude` to 0–60 px and `stroke`
+  to 0.5–6 px, and an unreadable value uses the house value.
+
+The lines are **not** elevation data: two seeded sine waves give the contour look
+with arithmetic the field can afford, and the map says so rather than pretending
+to a terrain function.
+
+## Movement
+
+The runtime has no `transform` (upstream issue #102), so the map cannot drift,
+zoom or rotate. The one motion it can honestly offer is a slow breath of
+opacity: the line layer pings between 55% and full on its own
+`onMotionComplete`, because the runtime tweens a target once. `breatheMs` sets one
+leg (8 s by default); the entrance fade is the house `slow` level.
+
+```tsx
+import { Topography } from "@gpuixui/components/topography";
+
+<Topography breatheMs={12_000} level="normal" />;
+```
+
+## Reduced motion
+
+`MotionProvider preference="reduced"` paints the lines at full opacity with no
+breath and zeroes the entrance, so the field is still decoration rather than a
+deleted background.
+
+```tsx
+import { Topography, MotionProvider } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <Topography />
+</MotionProvider>;
+```
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `spacing` | `number` | `32` | Distance between lines in pixels, 12–120. A spacing that would exceed the line cap is grown. |
+| `amplitude` | `number` | `8` | How far a line wanders from its base in pixels, 0–60. Zero paints straight rules. |
+| `stroke` | `number` | `1` | Line weight in pixels, 0.5–6. |
+| `seed` | `number` | `1` | The layout seed; the same seed paints the same map. |
+| `color` | `string` | theme `border` | The one tint the mask paints. |
+| `breatheMs` | `number` | `8_000` | One breath leg in milliseconds, 1–60 s. |
+| `level` | `MotionLevel` | `"slow"` | The entrance fade. `MotionProvider` zeroes it under the reduced preference. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+| `style` | `StateStyle<TopographyState>` | — | The box's style, or a function of `{ width, height, reducedMotion }`. |
+
+The field's `testId` lands on the box; the line art is `${testId}-lines` and the
+breathing layer `${testId}-breath` while it exists.
+
+## Limitations
+
+- **One ink.** The runtime paints a markup as one tint, so a two-ink map is two
+  `<svg>` elements.
+- **Not a terrain model.** The lines are two seeded sine waves, not elevation
+  data; a real contour map would need its own generator and a data source.
+- **No transform.** The map cannot drift, zoom or rotate (upstream issue #102);
+  the breath is the only motion.
+- **Generated for its box.** A resize re-generates the map, so lines do not keep
+  their absolute position across a resize.
+- **A hidden field keeps breathing.** The runtime exposes no visibility query, so
+  unmount it when it is off screen.
+- **It owns no semantics.** No role and no name: the content in front of it must
+  carry both.
+
+## Verification
+
+Six native behaviour cases in `src/behaviour/topography.test.tsx` (6 tests) read
+the real renderer: the view box matching the measured box, the breath turning
+around when a leg completes, the reduced preference painting still and full, the
+field publishing no accessibility node and taking no pointer input, and a resize
+regenerating the map. The arithmetic is `src/topography/logic.test.ts` (8 tests):
+the view box and line count, determinism, two seeds giving two maps, a zero
+amplitude painting straight rules, the line cap, the fallbacks and clamps, the
+house seed, and an unmeasured box painting nothing.
+
+## Related
+
+- [Hexagon](/docs/components/hexagon) — the tiled field beside it.
+- [Gradient](/docs/components/gradient) — the other background that breathes paint.
+- [Stars](/docs/components/stars) — a decorative field that also holds still under
+  the reduced preference.
+- [Card](/docs/components/card) — the surface a contour map usually sits in.

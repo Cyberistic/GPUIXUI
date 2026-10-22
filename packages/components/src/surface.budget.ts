@@ -60,8 +60,12 @@ export const surfaceBudget = {
   // hint (`internal/hint.tsx`), because a GPUix host's own placeholder is a
   // fixed grey no theme reaches and every text field paints its hint instead.
   // 145 → 147 for SlidingNumber (`sliding-number.tsx` and the decimal-place rule
-  // beside it), the odometer whose columns a value can grow.
-  modules: 147,
+  // beside it), the odometer whose columns a value can grow. 147 → 153 for the
+  // generated line-art fields (`hexagon.tsx`/`hexagon/logic.ts`,
+  // `topography.tsx`/`topography/logic.ts`, and the two modules they share:
+  // `internal/pattern-field.tsx` and `internal/svg-pattern.ts`), whose view boxes
+  // are generated from their measured boxes.
+  modules: 153,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -72,8 +76,10 @@ export const surfaceBudget = {
   // headroom a prose edit needs while a bulk addition still has to state itself;
   // it moved 850 → 860 KiB with PageTransition (848 KiB left the next family only
   // two), 860 → 875 KiB with Bubbles, 875 → 890 KiB with Fireworks, 890 → 900 KiB
-  // with Gradient and 900 → 940 KiB with GravityStars.
-  bytes: 940 * 1024,
+  // with Gradient and 900 → 940 KiB with GravityStars. 940 → 990 KiB with the
+  // generated Hexagon and Topography fields (962 KiB measured, the shared
+  // pattern frame included).
+  bytes: 990 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

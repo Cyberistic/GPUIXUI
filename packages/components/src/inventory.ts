@@ -39,6 +39,7 @@ import { fireworksMeta } from "./fireworks.js";
 import { formMeta } from "./form.js";
 import { gradientMeta } from "./gradient.js";
 import { gravityStarsMeta } from "./gravity-stars.js";
+import { hexagonMeta } from "./hexagon.js";
 import { highlightTextMeta } from "./highlight-text.js";
 import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
 import { inlineEditMeta } from "./inline-edit.js";
@@ -74,6 +75,7 @@ import { themeTogglerMeta } from "./theme-toggler.js";
 import { timelineMeta } from "./timeline.js";
 import { timePickerMeta } from "./time-picker.js";
 import { toastMeta } from "./toast.js";
+import { topographyMeta } from "./topography.js";
 import { typingTextMeta } from "./typing-text.js";
 
 /** One component's inventory record. */
@@ -127,6 +129,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   formMeta,
   gradientMeta,
   gravityStarsMeta,
+  hexagonMeta,
   highlightTextMeta,
   hotkeyRecorderMeta,
   inlineEditMeta,
@@ -162,5 +165,6 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   timelineMeta,
   timePickerMeta,
   toastMeta,
+  topographyMeta,
   typingTextMeta,
 ];

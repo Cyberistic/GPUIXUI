@@ -38,6 +38,7 @@ export * from "./fireworks.js";
 export * from "./form.js";
 export * from "./gradient.js";
 export * from "./gravity-stars.js";
+export * from "./hexagon.js";
 export * from "./highlight-text.js";
 export * from "./hotkey-recorder.js";
 export * from "./inline-edit.js";
@@ -74,6 +75,7 @@ export * from "./theme-toggler.js";
 export * from "./timeline.js";
 export * from "./time-picker.js";
 export * from "./toast.js";
+export * from "./topography.js";
 export * from "./typing-text.js";
 
 export type { PartChildren } from "./internal/parts.js";

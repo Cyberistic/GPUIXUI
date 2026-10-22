@@ -10,7 +10,13 @@
  * reduced-motion preference; it completes immediately at the target.
  */
 
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import {
   DEFAULT_TWEEN_MS,
   MotionValue,
@@ -111,10 +117,7 @@ export const useMotion = (
     motion.animate(target, transition);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
-      const next = motion.sample(
-        performance.now() - origin,
-        reduced(options),
-      );
+      const next = motion.sample(performance.now() - origin, reduced(options));
       setFrame(next);
       if (next.active) handle = setTimeout(tick, FRAME_MS);
     };
@@ -181,10 +184,7 @@ export const useInertia = (
     motion.coast(inertia, velocity);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
-      const next = motion.sample(
-        performance.now() - start,
-        reduced(options),
-      );
+      const next = motion.sample(performance.now() - start, reduced(options));
       setFrame(next);
       if (next.active) handle = setTimeout(tick, FRAME_MS);
     };

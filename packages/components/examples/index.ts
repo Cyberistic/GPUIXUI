@@ -43,6 +43,7 @@ import { FieldsetExample } from "./fieldset.example.js";
 import { FireworksExample } from "./fireworks.example.js";
 import { GradientExample } from "./gradient.example.js";
 import { GravityStarsExample } from "./gravity-stars.example.js";
+import { HexagonExample } from "./hexagon.example.js";
 import { HighlightTextExample } from "./highlight-text.example.js";
 import { FormExample } from "./form.example.js";
 import { HotkeyRecorderExample } from "./hotkey-recorder.example.js";
@@ -80,6 +81,7 @@ import { ThemeTogglerExample } from "./theme-toggler.example.js";
 import { TimePickerExample } from "./time-picker.example.js";
 import { TimelineExample } from "./timeline.example.js";
 import { ToastExample } from "./toast.example.js";
+import { TopographyExample } from "./topography.example.js";
 import { TypingTextExample } from "./typing-text.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
@@ -115,6 +117,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   fireworks: FireworksExample,
   gradient: GradientExample,
   "gravity-stars": GravityStarsExample,
+  hexagon: HexagonExample,
   "highlight-text": HighlightTextExample,
   form: FormExample,
   "hotkey-recorder": HotkeyRecorderExample,
@@ -152,5 +155,6 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "time-picker": TimePickerExample,
   timeline: TimelineExample,
   toast: ToastExample,
+  topography: TopographyExample,
   "typing-text": TypingTextExample,
 };
