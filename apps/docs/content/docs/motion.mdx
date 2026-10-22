@@ -123,6 +123,16 @@ the rest test `atRest` performs: within `restDelta` of the target and within
 `restSpeed` of a standstill. A caller can stop sampling on that flag rather than
 guessing a duration.
 
+**The repair belongs to the sampler, not the constructor.** `SpringPhysics` is an
+exported **structural** interface, so a caller may write one by hand and skip
+`springPhysics()` entirely — `{ mass: 1, stiffness: 260, damping: NaN }`
+type-checks. `sampleSpring` and `atRest` therefore repair what they are handed:
+a mass, stiffness, damping or rest threshold that cannot be read takes the
+house default, so a hand-built spring samples as the built one does. Without
+that repair a `NaN` damping made every formula answer `NaN` and the spring
+jumped to its target in a single frame, while a `NaN` rest threshold meant the
+run never settled at all — a driver waiting for rest sampled it forever.
+
 ## One retained value
 
 `MotionValue` holds a scalar across samples, which is what a gesture needs
@@ -184,6 +194,13 @@ of interpolating to `NaN`, and a list with no readable frame samples `0`. That
 repair sits in the sample rather than in `keyframe()`, so a hand-built list is
 treated the same as one built with the helper — a `NaN` value from a measurement
 removes a stop instead of erasing the animation.
+
+The curve is repaired the same way. The progress a curve is handed is clamped
+into `[0, 1]`, and a curve that answers `NaN` (or an infinity) is **not a
+curve**: the run falls back to the linear progress, so it still starts, ends and
+completes exactly instead of painting nothing for its whole journey. A caller's
+own easing — `tween(300, myEasing)` — and a keyframe's `easing` both go through
+it.
 
 `Sequence` positions keyed steps in absolute elapsed time and samples all of
 them at once — `at`, `append`, `stagger`, `duration`, `sample` and `complete`.

@@ -26,6 +26,7 @@ const pageText = page.replace(/\s+/g, " ");
 const record = readRepo("docs/gpuix-capabilities.md");
 const todo = readRepo("TODO.md");
 const spring = readRepo("packages/motion/src/spring.ts");
+const progress = readRepo("packages/motion/src/progress.ts");
 const motion = readRepo("packages/motion/src/motion.ts");
 const inertia = readRepo("packages/motion/src/inertia.ts");
 const timeline = readRepo("packages/motion/src/timeline.ts");
@@ -194,7 +195,9 @@ describe("the motion page", () => {
     const declaration = (source: string, name: string): string => {
       const start = source.indexOf(`export const ${name} = (`);
       const end = source.indexOf("\nexport ", start + 1);
-      return start === -1 ? "" : source.slice(start, end === -1 ? undefined : end);
+      return start === -1
+        ? ""
+        : source.slice(start, end === -1 ? undefined : end);
     };
 
     expect(inertia).toContain("const tauOf = (tau: number): number =>");
@@ -227,7 +230,10 @@ describe("the motion page", () => {
     // repaired the same way, and a `Sequence` step is repaired on insertion.
     expect(timeline).toContain("const stops = stopsOf(frames);");
     expect(timeline).toContain("startMs: finiteOr(startMs, 0)");
-    expect(timeline).toContain("durationMs: finiteOr(durationMs, 0)");
+    // The duration repair's helper is the package's choice — a step whose
+    // duration it cannot read is repaired either way — so the guard reads the
+    // rule rather than the helper's name.
+    expect(timeline).toMatch(/durationMs: \w+\(durationMs/);
     expect(timeline).toContain(
       "Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0",
     );
@@ -247,6 +253,90 @@ describe("the motion page", () => {
     expect(pageText).toContain("a list with no readable frame samples `0`");
     expect(pageText).toContain("**completed on the first sample**");
     expect(pageText).toContain("is no wait rather than a `NaN` delay");
+  });
+
+  it("places the spring's repair in the samplers a hand-built physics reaches", () => {
+    // `SpringPhysics` is structural, so a caller may build one without
+    // `springPhysics()` — and a `NaN` damping made every formula answer `NaN`
+    // (the spring jumped to its target in one frame) while a `NaN` rest
+    // threshold meant the run never settled. The samplers read the *repaired*
+    // physics, so the page has to teach the repair where a reader builds one
+    // by hand rather than leaving it in the constructor's paragraph.
+    expect(spring).toContain(
+      "const physicsOf = (fields: SpringPhysicsParams): SpringPhysics =>",
+    );
+    expect(spring).toContain("const rest = physicsOf(physics);");
+    expect(spring).toContain(
+      "withinRest(physicsOf(physics), value, target, velocity)",
+    );
+    expect(spring).toContain(
+      "mass: sanitizePositive(fields.mass, DEFAULT_MASS),",
+    );
+    expect(spring).toContain(
+      "damping: sanitizeNonNegative(fields.damping, DEFAULT_DAMPING),",
+    );
+    expect(spring).toContain(
+      "restDelta: sanitizePositive(fields.restDelta, DEFAULT_REST_DELTA),",
+    );
+    expect(spring).toContain(
+      "restSpeed: sanitizePositive(fields.restSpeed, DEFAULT_REST_SPEED),",
+    );
+
+    expect(pageText).toContain(
+      "**The repair belongs to the sampler, not the constructor.**",
+    );
+    expect(pageText).toContain(
+      "`SpringPhysics` is an exported **structural** interface",
+    );
+    expect(pageText).toContain(
+      "`{ mass: 1, stiffness: 260, damping: NaN }` type-checks",
+    );
+    expect(pageText).toContain(
+      "`sampleSpring` and `atRest` therefore repair what they are handed",
+    );
+    expect(pageText).toContain(
+      "a `NaN` damping made every formula answer `NaN`",
+    );
+    expect(pageText).toContain(
+      "a `NaN` rest threshold meant the run never settled at all",
+    );
+  });
+
+  it("places the curve's repair where a caller's own easing reaches", () => {
+    // An `Easing` is a caller's function, so the package cannot trust it: a
+    // curve that answers `NaN` would put that value into the interpolated
+    // result and the run would paint nothing for its whole journey. The
+    // progress is clamped and an unreadable answer falls back to the linear
+    // progress — the rule the page has to carry, since `progress.ts` is private
+    // and its helpers are not a surface a consumer has to learn.
+    expect(progress).toContain(
+      "export const clamp01 = (value: number): number =>",
+    );
+    expect(progress).toContain(
+      "Number.isNaN(value) ? 0 : value < 0 ? 0 : value > 1 ? 1 : value",
+    );
+    expect(progress).toContain("export const eased = (");
+    expect(progress).toContain("const unit = clamp01(progress);");
+    expect(progress).toContain("return Number.isFinite(value) ? value : unit;");
+
+    // The tween and the keyframe sampler both go through it.
+    expect(motion).toContain(
+      "const progress = eased(transition.easing, t / durationSec);",
+    );
+    expect(timeline).toContain(
+      "return lo.value + (hi.value - lo.value) * eased(easing, local);",
+    );
+
+    expect(pageText).toContain("The curve is repaired the same way.");
+    expect(pageText).toContain(
+      "The progress a curve is handed is clamped into `[0, 1]`",
+    );
+    expect(pageText).toContain("is **not a curve**");
+    expect(pageText).toContain("the run falls back to the linear progress");
+    expect(pageText).toContain(
+      "instead of painting nothing for its whole journey",
+    );
+    expect(pageText).toContain("`tween(300, myEasing)`");
   });
 
   it("documents the initial option the hooks read once at mount", () => {
