@@ -138,7 +138,7 @@ export function brandText(
  * `xSoft` tint — is held to the surface it actually paints on, so it keeps as
  * much of the brand as that surface allows. It matters because the tints are not
  * in {@link brandTextSurfaces}' set by design: a tint is one tone away from the
- * page, and the shared colour is under the text floor on a third of the tint
+ * page, and the shared colour is under the text floor on 29 of the 64 tint
  * placements in the shipped styles.
  *
  * The floor and the derivation are the same as {@link brandText}'s: the theme's
