@@ -21,11 +21,13 @@ import { createRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import { Box } from "../src/components/Box.js";
+import { Checkbox } from "../src/components/Checkbox.js";
 import { IconButton } from "../src/components/IconButton.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { Select } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
+import { Switch } from "../src/components/Switch.js";
 import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Tooltip } from "../src/components/Tooltip.js";
@@ -715,6 +717,53 @@ it("opens a Tooltip from the IconButton it wraps and announces its text", async 
   expect(node.aria?.description).toBe("Booked revenue, net of refunds.");
   runtime.click("target");
   expect(runtime.allText()).not.toContain("Booked revenue, net of refunds.");
+});
+
+it("opens a Tooltip from the Checkbox it wraps and announces its text", async () => {
+  // The bug guarded: a checkbox in a toolbar is described by a tip, and the
+  // control dropped the trigger pair, so the tip opened on a keyboard focus and
+  // never on hover, and its text reached no accessibility node.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="Draws a grid over the canvas" testId="tip">
+        <Checkbox label="Show grid" testId="target" />
+      </Tooltip>
+    </Surface>,
+  );
+  expect(runtime.allText()).not.toContain("Draws a grid over the canvas");
+  runtime.hover("target");
+  expect(runtime.allText()).toContain("Draws a grid over the canvas");
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { label: "Show grid" }),
+    () => expect.fail("the checkbox has no accessibility node"),
+  );
+  expect(node.aria?.description).toBe("Draws a grid over the canvas");
+  runtime.click("target");
+  expect(runtime.allText()).not.toContain("Draws a grid over the canvas");
+});
+
+it("opens a Tooltip from the Switch it wraps and announces its text", async () => {
+  // Same contract as the checkbox: a setting in a toolbar is described by a
+  // tip, and without the forwarded pair only the focus path opened it.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="Sends a digest every morning" testId="tip">
+        <Switch label="Notifications" testId="target" />
+      </Tooltip>
+    </Surface>,
+  );
+  expect(runtime.allText()).not.toContain("Sends a digest every morning");
+  runtime.hover("target");
+  expect(runtime.allText()).toContain("Sends a digest every morning");
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { label: "Notifications" }),
+    () => expect.fail("the switch has no accessibility node"),
+  );
+  expect(node.aria?.description).toBe("Sends a digest every morning");
+  runtime.click("target");
+  expect(runtime.allText()).not.toContain("Sends a digest every morning");
 });
 
 it("keeps the Tooltip's content inside the frame it is anchored to", async () => {

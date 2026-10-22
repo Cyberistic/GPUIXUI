@@ -10,6 +10,11 @@
  * Two parts (`docs/component-api.md` §8): the track, and `SwitchThumb`. A
  * caller's children are the thumb's content, drawn inside the part's
  * `pointerEvents: "none"` guard so a glyph cannot swallow the press.
+ *
+ * It forwards the `Tooltip` trigger pair (`TooltipTriggerProps`) onto the press
+ * band, because a setting in a toolbar is described by a tip: the runtime
+ * delivers a hover only to the element that registered the listener, so without
+ * the pair the tip opened on focus and never on hover.
  */
 
 import {
@@ -56,6 +61,7 @@ import {
   type FocusState,
   type HelpProps,
   type InteractionProps,
+  type TooltipTriggerProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -78,7 +84,12 @@ export interface SwitchThumbProps {
 }
 
 export interface SwitchProps
-  extends CheckedChangeProps, InteractionProps, FieldHostProps, HelpProps {
+  extends
+    CheckedChangeProps,
+    InteractionProps,
+    TooltipTriggerProps,
+    FieldHostProps,
+    HelpProps {
   /** Controlled. Omit to let the switch hold its own state. */
   readonly checked?: boolean;
   readonly defaultChecked?: boolean;
@@ -227,13 +238,20 @@ export const renderSwitch = (
       ref={props.ref}
       role="switch"
       aria-label={accessibleName(props.label)}
-      aria-description={accessibleName(props.description)}
+      // A tooltip arrives through the same channel as the caller's help; an
+      // explicit `description` is the field-style help and wins.
+      aria-description={
+        accessibleName(props.description) ??
+        accessibleName(props["aria-description"])
+      }
       aria-id={props["aria-id"]}
       aria-valuetext={state.current ? "checked" : "unchecked"}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onLayout={props.onLayout}
       onClick={composePress(props.disabled === true, props.onClick, toggle)}
+      onMouseEnter={props.onMouseEnter}
+      onMouseLeave={props.onMouseLeave}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}
       onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}

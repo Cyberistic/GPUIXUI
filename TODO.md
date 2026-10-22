@@ -2193,6 +2193,26 @@ a workaround for two live sessions sharing one worktree; see
       `a11y-tree` probe measured that a node needs a `role` to exist), and
       `docs.test.ts` guards the role, the tree mapping and both probes.
       722 unit / 206 runtime
+`[x]` `packages/primitives`: the **same `Tooltip` trigger gap in the two selection
+      controls** — `Checkbox` and `Switch` are focusable controls a toolbar
+      describes with a tip, and neither declared `TooltipTriggerProps`: the
+      runtime delivered the hover to the wrapper element and the pair was
+      dropped, so a wrapped box or switch opened the tip on a keyboard focus and
+      never on hover, and the tip's text stopped at the component because the
+      control's `aria-description` read only its own `description`. Both now
+      forward `onMouseEnter`/`onMouseLeave` and the tip's `aria-description` onto
+      the press target (the element that owns the pointer, focus and role), with
+      an explicit `description` winning the shared channel. Proof: the
+      `Checkbox`/`Switch` cases in `runtime/fields.runtime.test.tsx` hover a
+      wrapped control, read the tip's painted text and the control's
+      `description` out of the a11y tree, and dismiss it on a press — measured
+      failing in both directions (without the forwarding: `expected [] to include
+      'Draws a grid over the canvas'`); `Checkbox.test.tsx`/`Switch.test.tsx`
+      hold the forwarded pair and the precedence, and `src/docs.test.ts` gains
+      `names every control that forwards a tooltip's trigger pair`, which scans
+      all five sources and the page's Limitations list (measured failing by name
+      when the page drops `Checkbox`/`Switch`). Docs on the Tooltip, Checkbox and
+      Switch pages and both Tier 1 rows. 763 unit / 219 runtime
 `[x]` `packages/primitives`: a **pressed `Toggle` painted a translucent fill** — its
       hover and press lifted the accent's alpha (`bg-accent/90` / `bg-accent/80`),
       the one remaining filled face that let the surface behind the control

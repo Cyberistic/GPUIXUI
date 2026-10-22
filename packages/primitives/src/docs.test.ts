@@ -372,6 +372,38 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("names every control that forwards a tooltip's trigger pair", () => {
+    // Bug guarded: the page listed three triggers while `Checkbox` and `Switch`
+    // dropped the pair — a tip on a toolbar box opened on focus and never on
+    // hover, and its text stopped at the component. The page and the sources
+    // have to agree, so a control that stops forwarding (or a forwarding control
+    // the page forgets) fails here by name.
+    const page = read("tooltip.mdx");
+    const limitations = Option.getOrElse(bodyOf(page, "Limitations"), () => "");
+    const controls = [
+      { name: "Button", file: "Button.tsx" },
+      { name: "IconButton", file: "IconButton.tsx" },
+      { name: "Toggle", file: "Toggle.tsx" },
+      { name: "Checkbox", file: "Checkbox.tsx" },
+      { name: "Switch", file: "Switch.tsx" },
+    ] as const;
+    const sourceOf = (file: string): string =>
+      readFileSync(
+        fileURLToPath(new URL(`../src/components/${file}`, import.meta.url)),
+        "utf8",
+      );
+    expect(
+      Arr.filter(
+        Arr.map(controls, ({ name, file }) => ({
+          name,
+          forwards: sourceOf(file).includes("TooltipTriggerProps"),
+          named: limitations.includes(`\`${name}\``),
+        })),
+        (control) => !control.forwards || !control.named,
+      ),
+    ).toEqual([]);
+  });
+
   it("gives the separator's line-style limit its real cause", () => {
     // Bug guarded: the page and the inventory said a dashed rule was missing
     // because "the runtime paints solid borders". The pinned runtime accepts

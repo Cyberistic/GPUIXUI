@@ -52,7 +52,8 @@ const theme = useTheme();
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name |
-| `description` | `string` | none | announced help (`aria-description`); a blank one publishes nothing |
+| `description` | `string` | none | announced help (`aria-description`); a blank one publishes nothing, and it wins over a tooltip's |
+| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press band, so the switch can be a `Tooltip` trigger; the tip opens on hover and focus |
 | `ref` / `aria-id` / `onLayout` | host address | none | the press band is the addressed element: focus it, address it, measure it |
 | `reducedMotion` | `boolean` | `false` | the thumb lands on its position instead of sliding there |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the switch's own; yours runs first |
@@ -93,7 +94,10 @@ also scroll while the control waits for the release.
 - The name comes from `label`; there is no `aria-labelledby`.
 - The help a visible `Label description` paints is announced through
   **`aria-description`** (no `aria-describedby` exists); pass the same string as
-  `description`, or `labelledBy(name, help)`. A blank one publishes nothing.
+  `description`, or `labelledBy(name, help)`. A blank one publishes nothing. A
+  `Tooltip` arrives on the same channel: its text becomes the description when
+  the switch has no `description` of its own, and the forwarded hover pair means
+  the tip opens on the pointer as well as on focus.
 - The press band is the **address**: `ref`, `aria-id` and `onLayout` land on it,
   so a form can focus the switch it failed on and a layout can measure it
   (`runtime/address.runtime.test.tsx`).
@@ -165,6 +169,9 @@ the recipe also sets.
   a press on the band and a press on the track each reporting exactly one change.
 - `runtime/labelling.runtime.test.tsx` — a `Label` beside the switch paints its
   text but does not name it; the same string through `labelledBy` does.
+- `runtime/fields.runtime.test.tsx` — a `Tooltip` wrapping the switch opens on
+  hover, publishes its text as the switch's description in the accessibility
+  tree and closes on a press.
 
 ```sh
 nub run --filter @gpuixui/primitives test
@@ -175,4 +182,5 @@ nub run --filter @gpuixui/primitives test:runtime
 
 - **Checkbox** — a submitted choice, possibly indeterminate.
 - **RadioGroup** — one of several.
+- **Tooltip** — a short description for a switch in a toolbar.
 - **Label** — the visible name.

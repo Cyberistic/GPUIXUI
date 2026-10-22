@@ -78,7 +78,8 @@ press that toggles the box.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
-| `description` | `string` | none | announced help (`aria-description`) for a format hint or an error message; a blank one publishes nothing |
+| `description` | `string` | none | announced help (`aria-description`) for a format hint or an error message; a blank one publishes nothing, and it wins over a tooltip's |
+| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press target, so the box can be a `Tooltip` trigger; the tip opens on hover and focus |
 | `ref` / `aria-id` / `onLayout` | host address | none | the box is the addressed element: focus it, name it for an automation host, measure it |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the box's own; yours runs first |
 | `style` | `StateStyle<CheckboxState>` | — | resolved against the live state and merged last |
@@ -132,7 +133,10 @@ also scroll while the control waits for the release.
 - The help a visible `Label description` paints is announced through
   **`aria-description`**, because 0.11.0 has no `aria-describedby` to connect the
   two nodes: pass the same string as `description`, or
-  `labelledBy(name, help)`. A blank description publishes nothing.
+  `labelledBy(name, help)`. A blank description publishes nothing. A `Tooltip`
+  arrives on the same channel: its text becomes the description when the box has
+  no `description` of its own, and the forwarded hover pair means the tip opens
+  on the pointer as well as on focus.
 - The box is the **address** a form focuses: `ref` receives the runtime's own
   instance, `aria-id` is its automation id, and `onLayout` reports its box.
   `runtime/address.runtime.test.tsx` reads all three back off a window.
@@ -175,7 +179,8 @@ on a property the recipe also sets.
 - `src/components/Checkbox.test.tsx` — toggle, indeterminate and disabled
   wiring; the mark's state flows into its colour; a custom glyph replaces the
   default; the mark keeps the pointer guard; the callback name and its alias;
-  a `style` callback receives the live state and wins.
+  a `style` callback receives the live state and wins; the tooltip trigger pair
+  reaches the press target and the box's own help wins over a tip's description.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus are
   composed with the box's own, and a disabled box installs no press handler.
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
@@ -189,6 +194,9 @@ on a property the recipe also sets.
   exactly one change.
 - `runtime/labelling.runtime.test.tsx` — a `Label` beside the box paints its
   text but does not name the box; the same string through `labelledBy` does.
+- `runtime/fields.runtime.test.tsx` — a `Tooltip` wrapping the box opens on
+  hover, publishes its text as the box's description in the accessibility tree
+  and closes on a press.
 
 ```sh
 nub run --filter @gpuixui/primitives test
@@ -199,4 +207,5 @@ nub run --filter @gpuixui/primitives test:runtime
 
 - **Switch** — an immediate on/off with a different intent.
 - **RadioGroup** — one choice from a set.
+- **Tooltip** — a short description for a box in a toolbar.
 - **Label** — the visible name.

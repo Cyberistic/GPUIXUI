@@ -281,4 +281,53 @@ describe("a switch's address and help", () => {
     );
     expect(hostProp(element, "aria-description")).toStrictEqual(Option.none());
   });
+
+  it("forwards a tooltip trigger's pointer pair and description", () => {
+    // Bug guarded: a setting in a toolbar is described by a tip, and GPUix's
+    // `TooltipTrigger asChild` merges its handlers into the child element while
+    // the runtime delivers a hover only to the element that registered the
+    // listener — so a switch without the pair opened the tip on focus but never
+    // on hover, and its text stopped at the component.
+    const entered = vi.fn();
+    const left = vi.fn();
+    const element = renderSwitch(
+      {
+        label: "Notifications",
+        onMouseEnter: entered,
+        onMouseLeave: left,
+        "aria-description": "  Sends a digest every morning  ",
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(Option.getOrUndefined(hostHandler(element, "onMouseEnter"))).toBe(
+      entered,
+    );
+    expect(Option.getOrUndefined(hostHandler(element, "onMouseLeave"))).toBe(
+      left,
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Sends a digest every morning",
+    );
+  });
+
+  it("keeps its own help over a tooltip's description", () => {
+    // Both channels publish `aria-description`; the visible help a settings
+    // writer chose is the words the reader needs, so it wins.
+    const element = renderSwitch(
+      {
+        description: "Sends a digest every morning.",
+        "aria-description": "A tooltip description",
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Sends a digest every morning.",
+    );
+  });
 });

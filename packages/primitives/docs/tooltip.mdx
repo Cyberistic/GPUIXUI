@@ -41,11 +41,11 @@ tree (a `div` carrying only a description is not a node a screen reader visits):
 ```
 
 The child must be a single **focusable element**. `Tooltip`'s trigger clones it
-with the hover and focus handlers, so a control has to forward them. `Button`, `IconButton`
-and `Toggle` forward the whole `TooltipTriggerProps` pair (`onMouseEnter`,
-`onMouseLeave`) and the tip's `aria-description`; a component that forwards
-neither — this package's `Box`, for instance — paints the trigger but does not
-open the tip or announce the description.
+with the hover and focus handlers, so a control has to forward them. `Button`, `IconButton`,
+`Toggle`, `Checkbox` and `Switch` forward the whole `TooltipTriggerProps` pair
+(`onMouseEnter`, `onMouseLeave`) and the tip's `aria-description`; a component
+that forwards neither — this package's `Box`, for instance — paints the trigger
+but does not open the tip or announce the description.
 
 ### Controlled
 
@@ -158,7 +158,8 @@ cannot see and no contrast pair measures.
 
 - The trigger must be a focusable element: a host with no `tabIndex` never
   receives the focus that opens the tip, and a component only works if it
-  forwards `TooltipTriggerProps` (`Button`, `IconButton` and `Toggle` do).
+  forwards `TooltipTriggerProps` (`Button`, `IconButton`, `Toggle`, `Checkbox`
+  and `Switch` do).
 - No `aria-describedby`: a non-string tip has no description unless `description`
   is passed, and an element with no `role` is absent from the accessibility tree,
   so its description is never announced.
@@ -181,17 +182,19 @@ cannot see and no contrast pair measures.
   paints `popoverForeground` on its own `popover` fill and that pair clears the
   body floor in both shipped palettes; a caller's `className` beats the recipe
   and their `style` beats both. `src/components/Button.test.tsx` /
-  `IconButton.test.tsx` hold the forwarded pair.
+  `IconButton.test.tsx` / `Checkbox.test.tsx` / `Switch.test.tsx` hold the
+  forwarded pair.
 - `src/docs.test.ts` — every snippet's `@gpuixui/primitives` import resolves to a
   real export of the package, which is how this page's `Icon` (an
   `@gpuixui/icons` glyph) stopped being taught as a primitive.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus in
-  the `TestRenderer` from a host trigger **and from the `IconButton` it wraps**,
-  dismisses on click, keeps its content inside the anchoring frame, paints the
-  popover role, and the a11y tree reports the tip as the trigger's
-  `description`. A controlled tip paints while its owner says `open`, reports a
-  press's close request to `onOpenChange` and stays painted until `open` flips;
-  a `defaultOpen` tip paints at mount with no interaction.
+  the `TestRenderer` from a host trigger **and from the `IconButton`,
+  `Checkbox` and `Switch` it wraps**, dismisses on click, keeps its content
+  inside the anchoring frame, paints the popover role, and the a11y tree reports
+  the tip as the trigger's `description`. A controlled tip paints while its
+  owner says `open`, reports a press's close request to `onOpenChange` and stays
+  painted until `open` flips; a `defaultOpen` tip paints at mount with no
+  interaction.
 - The `tooltip-lifecycle` live probe (`apps/playground/README.md`) — the same
   wrapper in a **real window** (14 checks on 0.11.0): a `Tab` traversal opens the
   tip and Escape closes it with the focus on the trigger; hover opens it above
@@ -206,7 +209,8 @@ nub run --filter @gpuixui/primitives test:runtime
 
 ## Related
 
-- **Button** / **IconButton** / **Toggle** — the usual triggers; each forwards
-  the pair, and the control still needs its own `label`.
+- **Button** / **IconButton** / **Toggle** / **Checkbox** / **Switch** — the
+  usual triggers; each forwards the pair, and the control still needs its own
+  `label`.
 - **Select** — the other headless GPUix wrapper this package themes.
 - **Text** — use visible help text when the information is essential.
