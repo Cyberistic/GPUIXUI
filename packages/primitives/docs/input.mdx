@@ -174,7 +174,8 @@ sixty, marks the field invalid and the action refuses to save.
 - `disabled` is emulated: the runtime exposes no `disabled` host prop (plan
   025). The component forwards `readOnly`, drops the field from the tab order
   and guards its handlers; the accessibility difference is the limitation above.
-- No masks, formatting or prefix/suffix slots.
+- No prefix/suffix slots or display formatting: the field shows the text it is
+  given.
 - The hint is the field's own `<text>`, not the host's placeholder property:
   `0.11.0` exposes no `aria-placeholder` channel this library can set, so the
   hint reads as a label beside the field rather than as the field's placeholder.
