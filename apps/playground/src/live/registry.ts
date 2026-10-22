@@ -79,6 +79,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "field-ink",
+    title:
+      "Input: a host paints its own grey hint under any theme, a field's painted hint is the placeholder role, and a value paints the element's colour",
+    capability: "input",
+  },
+  {
     id: "checkbox-toggle",
     title:
       "Input: the shipped Checkbox toggles on a press and on Space in a window",

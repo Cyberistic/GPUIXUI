@@ -26,6 +26,7 @@ import * as Str from "effect/String";
 import {
   extendTheme,
   keyboardFocusRing,
+  nativeTextTheme,
   statusTone,
   textStyle,
   type FontSource,
@@ -248,6 +249,18 @@ import {
   selectionReadout,
 } from "./selection-event.js";
 import { settleNumber, settleUntil } from "./settle.js";
+import {
+  FIELD_INK_IDS,
+  HINT_TEXT,
+  HINT_TYPED,
+  INK_PEAK_FLOOR,
+  INK_PEAK_TOLERANCE,
+  countDarker,
+  fieldInk,
+  hasInk,
+  luminanceOf,
+  peakInk,
+} from "./field-ink.js";
 import {
   THEME_CARD,
   THEME_CARD_PADDING,
@@ -3438,6 +3451,316 @@ const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "submits=1",
     );
     yield* ctx.host.capture("typed");
+  });
+
+/** The width every probe field takes, so a crop is the field and not the page. */
+const INK_FIELD_WIDTH = 320;
+const INK_FIELD_PADDING = 10;
+
+/** The field chrome the four hosts share: the fill the seam's pairs sit on. */
+const inkFieldStyle = (theme: Theme, colour?: string): StyleDesc => ({
+  width: INK_FIELD_WIDTH,
+  paddingTop: INK_FIELD_PADDING,
+  paddingBottom: INK_FIELD_PADDING,
+  paddingLeft: INK_FIELD_PADDING + 1,
+  paddingRight: INK_FIELD_PADDING + 1,
+  borderWidth: theme.borderWidth.thin,
+  borderColor: theme.colors.border,
+  borderRadius: theme.radius.sm,
+  backgroundColor: theme.colors.input,
+  color: colour,
+});
+
+/**
+ * What a field paints for a hint and for a value, four ways.
+ *
+ * A window reports no style, so the two inks are read from a captured frame:
+ * `@gpuix/native@0.11.0` shapes an empty host's placeholder with a fixed
+ * `#8F8F8F` whatever `nativeTextTheme` says, and it paints a value in the
+ * element's own `color` rather than the theme object's `text`. So the probe
+ * shows the runtime's own hint, the workaround the fields ship (an empty host
+ * with no placeholder and a `<text>` in the `placeholder` role over it), a value
+ * typed into a host given only the seam, and the same value with `color` set
+ * from the seam's ink.
+ */
+const FieldInkProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [plain, setPlain] = useState("");
+  const [seamed, setSeamed] = useState("");
+  const [shipped, setShipped] = useState("");
+  return (
+    <div
+      testId="fieldink-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A field&apos;s hint and value ink: the host paints its own grey hint
+        under any theme, the library paints the placeholder role over an empty
+        host, and a value paints the element&apos;s colour — the seam&apos;s
+        text alone does not reach it.
+      </text>
+      <input
+        testId={FIELD_INK_IDS.host}
+        placeholder={HINT_TEXT}
+        theme={nativeTextTheme(palettes.dark)}
+        style={inkFieldStyle(theme)}
+      />
+      <div style={{ position: "relative", width: INK_FIELD_WIDTH }}>
+        <input
+          testId={FIELD_INK_IDS.painted}
+          placeholder=""
+          theme={nativeTextTheme(palettes.dark)}
+          style={inkFieldStyle(theme)}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            paddingLeft: INK_FIELD_PADDING + 2,
+            pointerEvents: "none",
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: palettes.dark.colors.placeholder,
+            }}
+          >
+            {HINT_TEXT}
+          </text>
+        </div>
+      </div>
+      <input
+        testId={FIELD_INK_IDS.plain}
+        placeholder={HINT_TEXT}
+        value={plain}
+        onChange={(event) => setPlain(event.value ?? "")}
+        theme={nativeTextTheme(palettes.dark)}
+        style={inkFieldStyle(theme)}
+      />
+      <input
+        testId={FIELD_INK_IDS.seamed}
+        placeholder={HINT_TEXT}
+        value={seamed}
+        onChange={(event) => setSeamed(event.value ?? "")}
+        theme={nativeTextTheme(palettes.dark)}
+        style={inkFieldStyle(theme, palettes.dark.colors.inputForeground)}
+      />
+      <Input
+        testId={FIELD_INK_IDS.shipped}
+        label="Search"
+        placeholder={HINT_TEXT}
+        value={shipped}
+        onChange={setShipped}
+      />
+      <text
+        testId={FIELD_INK_IDS.readout}
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`plain=${plain} seamed=${seamed} shipped=${shipped}`}
+      </text>
+    </div>
+  );
+};
+
+/** Types `value` into the field `id` and lets React paint the result. */
+const typeInto = (
+  ctx: Smoke.AsyncSmokeContext,
+  id: string,
+  value: string,
+): Effect.Effect<void, Smoke.SmokeHostError> =>
+  Effect.gen(function* () {
+    yield* ctx.host.click(id);
+    yield* Effect.forEach(
+      Arr.fromIterable(Str.split("")(value)),
+      (letter) => ctx.host.key(letter),
+      { concurrency: 1 },
+    );
+    yield* Effect.sleep(SETTLE);
+  });
+
+const fieldInkSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(FIELD_INK_IDS.host);
+    const window = yield* ctx.host.windowSize();
+    yield* ctx.host.capture("field-ink-rest");
+    const rest = yield* ctx.host.pixels("field-ink-rest");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(rest, window),
+    );
+    const placeholder = palettes.dark.colors.placeholder;
+    const measured = yield* Effect.forEach(
+      [
+        FIELD_INK_IDS.host,
+        FIELD_INK_IDS.painted,
+        FIELD_INK_IDS.plain,
+        FIELD_INK_IDS.seamed,
+        FIELD_INK_IDS.shipped,
+      ],
+      (id) =>
+        Effect.flatMap(ctx.host.bounds(id), (found) =>
+          Effect.flatMap(
+            ctx.expectSome(
+              `${id} reports its painted box`,
+              Option.fromNullishOr(found),
+            ),
+            (box) => Effect.succeed({ id, box }),
+          ),
+        ),
+      { concurrency: 1 },
+    );
+    const boxOf = (id: string) =>
+      Effect.map(
+        ctx.expectSome(
+          `${id} was measured`,
+          Arr.findFirst(measured, (field) => field.id === id),
+        ),
+        (field) => field.box,
+      );
+
+    // 1. The runtime's own hint: the grey, never the role the seam hands over.
+    const host = yield* boxOf(FIELD_INK_IDS.host);
+    const hostInk = fieldInk(rest, host, scale, placeholder);
+    yield* ctx.expectEqual(
+      "an empty host paints its own hint",
+      hasInk(hostInk.runtime),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the theme's placeholder role does not reach the host's hint",
+      hasInk(hostInk.themed),
+      false,
+    );
+
+    // 2. The workaround: no host placeholder, the role painted as text over it.
+    const paintedField = yield* boxOf(FIELD_INK_IDS.painted);
+    const paintedInk = fieldInk(rest, paintedField, scale, placeholder);
+    yield* ctx.expectEqual(
+      "an empty host with no placeholder paints no hint of its own",
+      hasInk(paintedInk.runtime),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "the painted hint is the theme's placeholder role",
+      hasInk(paintedInk.themed),
+      true,
+    );
+
+    // 3. A value in a field given only the seam: the runtime's black, not the
+    //    seam's ink, because a value paints the element's `color`.
+    const plainBox = yield* boxOf(FIELD_INK_IDS.plain);
+    yield* ctx.expectEqual(
+      "an empty field still shows the runtime's hint",
+      hasInk(fieldInk(rest, plainBox, scale, placeholder).runtime),
+      true,
+    );
+    yield* typeInto(ctx, FIELD_INK_IDS.plain, HINT_TYPED);
+    yield* ctx.host.capture("field-ink-plain");
+    const plainFrame = yield* ctx.host.pixels("field-ink-plain");
+    yield* ctx.expectEqual(
+      "a value replaces the runtime's hint",
+      hasInk(fieldInk(plainFrame, plainBox, scale, placeholder).runtime),
+      false,
+    );
+    const plainPeak = yield* ctx.expectSome(
+      "the plain field's box is inside the capture",
+      peakInk(plainFrame, plainBox, scale),
+    );
+    yield* ctx.expectEqual(
+      "the seam's text alone does not reach a value's ink",
+      plainPeak < INK_PEAK_FLOOR,
+      true,
+    );
+    const plainDarker = yield* ctx.expectSome(
+      "the plain field's ink can be counted against its fill",
+      countDarker(plainFrame, plainBox, scale, palettes.dark.colors.input),
+    );
+    yield* ctx.expectEqual(
+      "the value still paints, darker than its own fill",
+      plainDarker > 0,
+      true,
+    );
+
+    // 4. The same value with `color` from the seam: the ink a library field
+    //    paints.
+    const seamedBox = yield* boxOf(FIELD_INK_IDS.seamed);
+    yield* typeInto(ctx, FIELD_INK_IDS.seamed, HINT_TYPED);
+    yield* ctx.host.capture("field-ink-seamed");
+    const seamedFrame = yield* ctx.host.pixels("field-ink-seamed");
+    const inkLuminance = yield* ctx.expectSome(
+      "the dark theme names the ink a field's value paints",
+      luminanceOf(palettes.dark.colors.inputForeground),
+    );
+    const seamedPeak = yield* ctx.expectSome(
+      "the seamed field's box is inside the capture",
+      peakInk(seamedFrame, seamedBox, scale),
+    );
+    yield* ctx.expectEqual(
+      "a value paints the colour the field sets, not the theme's text",
+      Math.abs(seamedPeak - inkLuminance) <= INK_PEAK_TOLERANCE,
+      true,
+    );
+
+    // 5. The shipped `Input`: its own hint, and the ink its recipe sets. This is
+    //    the half a component owes — the runtime cannot reach either role.
+    const shippedBox = yield* boxOf(FIELD_INK_IDS.shipped);
+    const shippedRest = fieldInk(rest, shippedBox, scale, placeholder);
+    yield* ctx.expectEqual(
+      "the shipped field paints the placeholder role when empty",
+      hasInk(shippedRest.themed),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the shipped field paints none of the runtime's grey",
+      hasInk(shippedRest.runtime),
+      false,
+    );
+    yield* typeInto(ctx, FIELD_INK_IDS.shipped, HINT_TYPED);
+    yield* ctx.expectEqual(
+      "all three fields received the value",
+      yield* ctx.host.text(FIELD_INK_IDS.readout),
+      `plain=${HINT_TYPED} seamed=${HINT_TYPED} shipped=${HINT_TYPED}`,
+    );
+    yield* ctx.host.capture("field-ink-shipped");
+    const shippedFrame = yield* ctx.host.pixels("field-ink-shipped");
+    yield* ctx.expectEqual(
+      "the shipped field's hint is gone once it has a value",
+      hasInk(fieldInk(shippedFrame, shippedBox, scale, placeholder).themed),
+      false,
+    );
+    const shippedPeak = yield* ctx.expectSome(
+      "the shipped field's box is inside the capture",
+      peakInk(shippedFrame, shippedBox, scale),
+    );
+    yield* ctx.expectEqual(
+      "the shipped field's value paints the seam's ink",
+      Math.abs(shippedPeak - inkLuminance) <= INK_PEAK_TOLERANCE,
+      true,
+    );
   });
 
 /**
@@ -14690,6 +15013,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "text-input",
     view: () => <TextInputProbe />,
     steps: textInputSteps,
+  },
+  "field-ink": {
+    id: "field-ink",
+    view: () => <FieldInkProbe />,
+    steps: fieldInkSteps,
   },
   "checkbox-toggle": {
     id: "checkbox-toggle",

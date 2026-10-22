@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-55 probes a real window can prove, of which fifteen mount shipped
+56 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -53,8 +53,8 @@ mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
-window's own backdrop, the app-level key handler and the app-level selection
-handler).
+window's own backdrop, the app-level key handler, the app-level selection
+handler and a field's hint and value ink).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -1023,6 +1023,44 @@ element — takes real typed input in a window. The Tier 2 probes that followed
 (`dialog-lifecycle`, `menu-lifecycle`, `toast-lifecycle`) mount
 `@gpuixui/components`; they were blocked until the package's `jsx-runtime` path
 mapping was deleted (TODO → Interlocks) and now run here.
+
+### `field-ink` — measured on 0.11.0 here
+
+What a field paints for a **hint** and for a **value**, read out of the frame's
+own pixels. Two inks are the runtime's rather than a `StyleDesc`'s: an empty
+`<input>`'s hint is a fixed `#8F8F8F` (`custom_elements/input.rs` at the pinned
+release), and its value paints the element's `color`, not the theme object's
+`text`. The probe paints four fields and crops each one to its own box, so a
+role painted elsewhere on the page cannot stand in for the field's ink.
+
+| Field | Check |
+| ----- | ----- |
+| the host's own hint (theme object only) | the box paints `#8F8F8F`; the theme's `placeholder` role paints **0** pixels |
+| the workaround the fields ship (no host placeholder, a themed `<text>` over it) | `#8F8F8F` is **0**; `#858E9F` — the dark palette's `placeholder` — paints |
+| a value typed into a host given only the seam | the hint is gone, the value paints **darker than its fill**, and the box's brightest pixel is its **47.5**-luminance border — never the seam's ink |
+| the same value with `color` set from `inputForeground` | the brightest pixel is the ink itself (**240.7** against 240.7), so the element's colour is what paints |
+| the shipped `Input` (`@gpuixui/primitives`) | its hint is the `placeholder` role and paints **none** of the runtime's grey; once typed, the hint is gone and the value's peak is the seam's ink |
+
+The probe is the measurement behind two contract sentences. The `placeholder`
+role never reaches a host's hint, so a field that wants a readable hint paints
+it — the second row is the workaround and the last is the shipped `Input` doing
+it (the primitives' window half of the themed-placeholder row). And the theme
+object's `text` **does not reach an `<input>`'s value**: the platform default
+paints instead, which is near-black on a dark fill. The library's own fields set
+`color` from their recipe, so a shipped field is readable — the last row reads
+that ink back — while a consumer following the token page's bare
+`<input theme=…>` snippet is not. That sentence is an interlock row in `TODO.md`
+(owner: tokens-theme and docs-site).
+
+The exact-colour counts work because a `<text>` and the runtime's own hint have
+solid glyph cores; a native value's glyphs are antialiased and never reach their
+pure colour, so the value is read as a **peak** luminance against the ink's own,
+with `INK_PEAK_TOLERANCE` (12) as the window. 22 checks, `--only field-ink`,
+green on 0.11.0 (~4 s). Negative control, measured: dropping the seamed field's
+`color` (the same value typed into a host carrying only the theme object) fails
+`a value paints the colour the field sets, not the theme's text`
+(`expected true, got false`, exit `1`). Evidence:
+`.artifacts/live/{field-ink-rest,field-ink-plain,field-ink-seamed,field-ink-shipped}.png`.
 
 ### `checkbox-toggle` — measured on 0.11.0 here
 
@@ -3275,7 +3313,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop, the app-level shortcut and selection probes pass in real GPUix 0.11.0 on this host
-  (55/55), with a written report and screenshots.
+  (56/56), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls
