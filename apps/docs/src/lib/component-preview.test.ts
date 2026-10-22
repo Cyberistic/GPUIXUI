@@ -164,6 +164,28 @@ describe("the component previews", () => {
     expect(strategy).toContain("var(--spacing-md)");
   });
 
+  it("says where a probe frame lands, and whether the repository ignores it", () => {
+    // The policy called the frames "verification-only and gitignored" while
+    // `.gitignore` carried no rule for `.artifacts/`, so a probe run left an
+    // untracked directory one `git add -A` from a large commit. The claim is
+    // read against the file that decides it: the page may call the directory
+    // ignored only while a rule for it exists.
+    const claim = "gitignored";
+    const rules = read(".gitignore")
+      .split("\n")
+      .map((line) => line.trim().replace(/\/$/, ""))
+      .filter((line) => /^\/?\.artifacts($|\/)/.test(line));
+    const strategy = read("docs/preview-strategy.md");
+
+    expect(strategy).toContain(".artifacts/live/");
+    expect(strategy).toContain("local evidence");
+    expect(strategy).toContain("delete");
+    expect(
+      strategy.includes(claim),
+      "the policy's ignore claim disagrees with .gitignore",
+    ).toBe(rules.length > 0);
+  });
+
   it("says the overlay preview draws a corner the native surface does not", () => {
     // The native dialog compiles `rounded-4xl` (a fixed 32px) and paints the
     // theme's `elevation.lg` beside the recipe's ring, while `.gx-dialog` draws
