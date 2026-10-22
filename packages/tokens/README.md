@@ -607,8 +607,9 @@ Each report is also a function of its own:
   must also be finite: the runtime clamps a real number into its 1–1000 range, so
   a variable font's 450 paints, while a weight the theme computed to `NaN` or
   `Infinity` is dropped before native and the role paints at the runtime's
-  default weight — reported as `finite` on the role's `fontWeight`, which is the
-  shape a theme restored from storage arrives in. The strong border must
+  default weight — reported as `finite` on the role's `fontWeight`. A weight is a
+  number like the size beside it, so an authored `NaN` typechecks exactly like a
+  stored one and the gate is what reports it. The strong border must
   paint: it
   is the width of both focus rings, so a zero there leaves the outline and the
   fallback shadow invisible while every colour report stays clean.

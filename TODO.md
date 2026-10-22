@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 120/120
+`[x]` `[██████████]` 121/121
 
 `[x]` Close the **secondary action's pointer feedback** in the catalogue — the components `Button` moved its `secondary` variant from the `hover`/`active` role washes to `filledHover`/`filledPressed(theme, "secondary")` (`b8ab0347`), and the tokens tree still printed the open deviation and measured the two washes as pairs. The wash pairs retired (`contrastPairs` 99 → 97), because a pair nobody paints reads as a contract while it guards nothing; the variant's pointer label is the filled-role contract's now. `contrast.test.ts`'s `the secondary action's label on the fill it paints` holds the resting pair, reads the painter and refuses a wash paint or a re-added wash pair; the ring-on-a-wash painter case moves to the combobox row, the one control that still tints `hover` under a focus ring. `action-feedback.test.ts` replaces the deviation suite with the fixed paint (both derived states, the 16-style floor sweep, and the four documents held to the closure), and the four pages keep the measured history (`15 of its 32 pointer placements`) while stating the derivation. Directions measured: restoring the wash fails the painter and document cases by name, and re-adding `secondaryForeground` on `hover` fails the retired-pair case. The remaining deviation is `@gpuixui/tw`'s own recipe (`hover:bg-primary/90`)
 
@@ -661,11 +661,40 @@ a workaround for two live sessions sharing one worktree; see
 
 `[x]` Measure a **control's own label on the group strip it sits in** — an unfilled action paints no fill of its own, so the strip behind it is its background: the `outline` and `ghost` variants keep `foreground` (`packages/primitives/src/core/variants.ts`), and a quiet label or icon in the same group keeps `mutedForeground`. `docs/design-system.md` §7 names the segmented `secondary` panel as a strip a control sits on, and the table already measured `ring`, `borderStrong`, a disabled label and the invalid edge there — every text role was read on every strip a control sits on **except this one**. A brand whose panel drifted toward its own ink could ship a label that vanishes inside the group while the edge beside it passed. Two pairs joined `contrastPairs` (97 → 99): `foreground` on `secondary` at the body floor and `mutedForeground` on `secondary` at the secondary floor. No palette moved: every shipped, high-contrast, platform and authored style already cleared both, the tightest being Windows XP (Luna) light's quiet label at **4.89:1** and its dark edition's page ink at 7.62:1. `contrast.test.ts`'s `a control's label on its group strip` suite holds the coverage, reads the two variants so the pairs cannot outlive the paint (both must declare `background: undefined` beside the page role), reports a panel painted the page ink and the quiet ink at 1.00:1, sweeps all 16 styles to the printed 4.89 and reads the catalogue's sentence. It also moves the high-contrast brand case to the five placements its 7:1 override now reports. Directions measured: removing the two pairs fails the coverage case with `[ 'foreground/secondary', 'mutedForeground/secondary' ]`; a stale printed `4.90` fails the page case; restored, 2182 tokens tests green. Docs in `docs/tokens.md` §Contrast, `docs/design-system.md` §9 and the `Contrast contract` row.
 
+`[x]` Let a **type role's weight be the number the runtime paints** — the pinned runtime takes `fontWeight: string | number` and clamps a real value into `1–1000` (`parse_font_weight`), and `invalidNumbers` already held a weight to `finite` *because* "a variable font's 450 is a design decision and paints" — but the public `FontWeight` was `400 | 500 | 600 | 700`, so the one value the gate blessed for variable faces, and a display role's 800, could not be authored without a cast. The type is `number` now, like `fontSize` and `lineHeight` beside it, and the docs say what that costs: a computed `NaN` typechecks too, so the gate rather than the type is what separates a painted weight from a dropped one (the same trade every other numeric token makes). `theme.test.ts` gains `accepts a weight between or above the shipped steps` (450 on `body` and 800 on `display` survive `extendTheme`, and `invalidNumbers` stays empty), and `typography.test.ts`'s four-weight case now holds the **shipped scale** to 400/500/600/700 rather than the type; `numbers.test.ts`'s 450 case is the stored-theme half. Directions measured: restoring the union fails `check-types` with `TS2322` on both literals (`450` and `800` not assignable to `FontWeight | undefined`); restored, `check-types` is clean and 2198 tokens tests pass. Docs in `docs/tokens.md` §Typography/§Numbers, `docs/design-system.md` §5, the package README and the `Design tokens` inventory row.
+
 `[x]` Merge a **partial density override** size by size — `ThemeOverrides.density` was typed `Partial<Omit<Density, "name">>`, so its `controlHeight` and `controlPaddingX` records had to name all three sizes: the documented override (`invalidNumbers`' own JSDoc example, `{ density: { controlHeight: { sm: 20 } } }`) **did not typecheck** (`TS2739`, measured: missing `lg` and `md`), and the runtime overlaid the record whole, so a brand that changed one size erased the two it did not name and `auditTheme` then **refused** the theme for a lost step instead of reporting the size — the snippet a reader copied produced a thrown audit. `DensityOverrides` makes each size optional (the preset name still comes from the base) and `mergeDensity` overlays the two records, so unnamed sizes inherit and an explicit `undefined` inherits too. `theme.test.ts` gains a five-case suite (both records merge, only the shrunken size is reported as `pressable`, a raised `md` audits clean while inheriting `sm`/`lg`, an `undefined` size inherits); `docs.test.ts` gains the page guard (the merge read from `theme.ts`, "size by size" on both token pages and the README, `DensityOverrides` named in the catalogue). Directions measured: reverting the merge fails all five theme cases by name (`{ sm: 20 }` vs `{ sm: 20, md: 32, lg: 36 }`, `{ md: 20 }` vs `{ sm: 8, md: 20, lg: 12 }`, and three number reports instead of one); reverting the type fails `check-types` with `TS2739`; dropping the sentence from `docs/design-system.md` fails the docs case naming the page; a `controlHeight` spread that skips the `undefined` filter fails the source case. Restored, 2190 tokens tests green. Docs in `docs/tokens.md` §Density/§Theme API, `docs/design-system.md` §11 and the package README.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 93/93
+`[x]` `[██████████]` 94/94
+
+`[x]` Make the **split divider a control, not only a handle** — Tier 4's
+      *resizable split panes* and *keyboard navigation* rows describe a divider a
+      pointer drags, and nothing measured a keyboard path: `SplitPane`'s divider
+      was a 6px `div` with no tab stop, no role, no ring and no key handler, so a
+      reader without a pointer could not size a pane at all (WCAG 2.1.1). The
+      divider is now a `role="separator"` tab stop with `aria-label` and
+      `aria-valuetext` (0.11.0 has no `aria-valuenow`/`aria-orientation`), it
+      declares `keyboardFocusRing` at rest, arrows move it one `step` (16px) and
+      Home/End name the caller's bounds. Both gestures resolve to one width:
+      `keySize` clamps an arrow through the same `nextSize` the pointer uses, and
+      the keys are the runtime's own names (`left`/`right`/`home`/`end`, not the
+      DOM's `ArrowLeft`). `split-pane-lifecycle` grows from 12 to **29 checks** in
+      the same window: after the drags a pressed divider paints **no** ring
+      (`0` ring pixels), `Tab` moves the focus onto it and paints the theme's
+      `ring`, `left` makes `split=504` with the painted pane at 504 and the
+      divider at its right edge while the focus stays, `right` returns to 520 and
+      a second `right` clamps there, and Home/End reach 80/520 with the painted
+      pane following. `resize.test.ts` gains five `keySize` cases (direction,
+      both bounds, a width outside the bounds, both ends, the caller's step) and
+      the key guard's negative set; `src/live/split-pane.test.ts` (3 cases) holds
+      the README's count to the assertions plus the paint reads and the source to
+      the runtime's key names. Directions measured: dropping `onKeyDown` fails
+      `an arrow key narrows the pane by one step` (`expected "split=504", got
+      "split=520"`), and making the arrows step by 0 fails the same check;
+      restored, `--only split-pane-lifecycle` 1/1 green (29 checks). The
+      components Tier 4 row now records the contract the shipped component owes.
 
 `[x]` Hold **`Pixels.hexToRgba` to the whole value, not its prefix** — the
       documented contract is "a hex colour, or `null` when malformed", and the

@@ -143,8 +143,8 @@ export const lopsidedEmphasisAudit = auditTheme(lopsidedEmphasisTheme);
  * factor with no base: the heading's `fontWeight` is `NaN`, the batch serialises
  * it to `null`, and the runtime drops the property — so the largest role in the
  * scale paints at the runtime's default weight while every size, leading and
- * colour is the library's. The type cannot express the value, which is why the
- * report reads the number rather than the type.
+ * colour is the library's. A weight is a number, so the value typechecks and the
+ * report is what catches it: it reads the number rather than trusting the type.
  */
 const storedTypography = {
   ...lightTheme.typography,

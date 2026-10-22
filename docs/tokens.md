@@ -635,9 +635,11 @@ getTheme("light"); // the default light theme, unchanged
 ## Typography
 
 Families come from the platform table: `sans` is `systemUiFont` (GPUI's
-`.SystemUIFont` sentinel) and `mono` is the current platform's family. Weights
-are `400`, `500`, `600`, `700`. GPUix has no `letterSpacing` field, so the scale
-does not define tracking.
+`.SystemUIFont` sentinel) and `mono` is the current platform's family. The scale
+ships the weights `400`, `500`, `600` and `700`, and a role takes any weight the
+runtime clamps into its `1–1000` range — a variable face's `450` or a display
+role's `800` is a real value, not a cast (`FontWeight` is a number). GPUix has no
+`letterSpacing` field, so the scale does not define tracking.
 
 | Role | Size | Line height | Weight | Use |
 | ---- | ---- | ----------- | ------ | --- |
@@ -1168,8 +1170,9 @@ font's `450` is a design decision and paints, while a weight a theme computes to
 `NaN`/`Infinity` arrives as `null`, is dropped, and the role paints at the
 runtime's default weight — a heading silently loses its emphasis with every
 other number usable. `invalidNumbers` reads the weight as `finite` rather than
-as one of the four steps the type scale declares, and a theme restored from
-storage is exactly the shape that can carry a weight the type cannot express.
+as one of the four steps the scale ships, because a weight is a number: a
+variable face's `450` and an authored `Number.NaN` both typecheck, so the gate is
+what says which one reaches native.
 
 Two **roles** only mean something together for the same reason. `bodyStrong`
 is one emphasis at one size: it shares `body`'s size and leading (14/20) and
@@ -1229,7 +1232,7 @@ invalidNumbers(
 invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
 // [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
 
-// A theme restored from storage: the type cannot express a NaN weight.
+// A weight the theme computed to NaN: a weight is a number, so it typechecks.
 const stored = {
   ...lightTheme,
   typography: {

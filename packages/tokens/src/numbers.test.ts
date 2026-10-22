@@ -403,7 +403,7 @@ describe("a type role's weight is a number the batch can carry", () => {
     ]);
   });
 
-  it("leaves a weight between the declared steps to the runtime's clamp", () => {
+  it("leaves a weight between the shipped steps to the runtime's clamp", () => {
     // A variable font's 450 is a real number in the runtime's 1–1000 range, so
     // it paints; only a value JSON cannot carry is the report's business.
     expect(invalidNumbers(stored("h1", 450))).toEqual([]);

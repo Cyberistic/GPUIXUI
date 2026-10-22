@@ -65,10 +65,10 @@
  * range, so a weight the theme computes to `NaN`/`Infinity` is serialised as
  * `null`, dropped, and the role paints at the runtime's default weight — a
  * heading silently loses its emphasis while every other number is usable. The
- * weight is read as `finite` rather than as one of the four steps the type
- * declares: the runtime accepts any number in its range, so a variable font's
- * 450 is a design choice, and only a value that cannot survive the batch is the
- * report's business.
+ * weight is read as `finite` rather than as one of the four steps the scale
+ * ships: a weight is a number, the runtime accepts any value in its range, so a
+ * variable font's 450 is a design choice, and only a value that cannot survive
+ * the batch is the report's business.
  *
  * `invalidColorRoles` covers the values the renderer cannot parse as a colour;
  * this covers the ones it cannot lay out or press.
@@ -162,8 +162,8 @@ interface TextStyleNumbers {
 /**
  * The type scale as the report reads it. The families are dropped to the two
  * names it needs, and each role's numbers are opened to `number` rather than
- * the declared `FontWeight` union: the report exists for a theme restored from
- * storage, which is exactly a theme carrying a weight the type cannot express.
+ * `TextStyle`'s own shape: the report is the gate for a weight or a size a
+ * theme computed rather than chose, and it reads the value the batch sees.
  */
 type TypographyNumbers = Omit<Typography, TextRole> & {
   readonly [role in TextRole]: TextStyleNumbers;
@@ -174,7 +174,7 @@ export type NumberSource = Pick<
   Theme,
   "spacing" | "radius" | "borderWidth" | "iconSize" | "density"
 > & {
-  /** Opened so a stored weight the type cannot express is still inspected. */
+  /** Opened so a stored weight a computed scale produced is still inspected. */
   readonly typography: TypographyNumbers;
   /**
    * A level the theme does not carry is the shadow report's business

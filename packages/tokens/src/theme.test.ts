@@ -107,6 +107,18 @@ describe("extendTheme", () => {
     expect(lightTheme.colors.primary).not.toBe("#123456");
   });
 
+  it("accepts a weight between or above the shipped steps", () => {
+    // The runtime clamps any numeric weight into 1–1000, so a variable face's
+    // 450 and a display role's 800 are decisions it paints. The type is a
+    // number for that reason; `invalidNumbers` is what holds it finite.
+    const variable = extendTheme(lightTheme, {
+      typography: { body: { fontWeight: 450 }, display: { fontWeight: 800 } },
+    });
+    expect(variable.typography.body.fontWeight).toBe(450);
+    expect(variable.typography.display.fontWeight).toBe(800);
+    expect(invalidNumbers(variable)).toEqual([]);
+  });
+
   it("merges a text role field by field", () => {
     const custom = extendTheme(lightTheme, {
       typography: { body: { fontSize: 15 } },

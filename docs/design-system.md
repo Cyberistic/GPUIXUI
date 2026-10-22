@@ -139,6 +139,12 @@ weigh more, and `invalidNumbers` reports a theme that breaks the pair as
 leading leaves the role meant to stand out behind, while every number stays
 layable (§9, `docs/tokens.md` §Numbers).
 
+A weight is a **number**, not a four-step union: the runtime clamps any real
+value into its `1–1000` range, so the scale's `400`/`500`/`600`/`700` are the
+steps this identity ships and a variable face's `450` or a display role's `800`
+is a value a brand may set — the gate holds it finite, not to the shipped four
+(§9).
+
 Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
 Labels are one step smaller because controls are scanned, not read.

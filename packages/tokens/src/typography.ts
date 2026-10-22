@@ -1,7 +1,17 @@
 import { systemMonoFamily, systemUiFont } from "./platforms.js";
 
-/** Available font weights. GPUIX accepts numeric weights on `StyleDesc`. */
-export type FontWeight = 400 | 500 | 600 | 700;
+/**
+ * A font weight, as the runtime paints it.
+ *
+ * GPUIX takes a numeric weight and clamps it into its `1–1000` range
+ * (`parse_font_weight` in the pinned `@gpuix/native@0.11.0` source), so this is
+ * a number like the size and the leading beside it rather than a four-value
+ * union: the scale ships `400`/`500`/`600`/`700`, a variable face's `450` is a
+ * real step, and a display role's `800` is a decision the renderer accepts.
+ * `invalidNumbers` holds a weight to a finite number, because a `NaN` reaches
+ * native as `null` and the property is dropped.
+ */
+export type FontWeight = number;
 
 /** A single typographic role: size, leading and weight. */
 export interface TextStyle {
