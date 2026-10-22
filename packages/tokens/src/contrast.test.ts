@@ -311,6 +311,129 @@ describe("status text on a surface", () => {
   });
 });
 
+/**
+ * Guards the second text role a soft status surface carries: the alert's own
+ * copy. `ALERT_DESCRIPTION` paints `text-foreground` and `AlertDismiss` paints
+ * its glyph the page role, so body copy and the close control sit on the tone's
+ * tint in the page's ink — while the table measured only the tone's readable
+ * role on that tint. The paint is deliberate (the page role is the most
+ * readable text a theme has), so the pair belongs in the table: a brand that
+ * repaints `foreground` or authors its own tint could ship an alert whose copy
+ * nobody can read with every report empty.
+ */
+describe("the ink an alert paints on its own tint", () => {
+  /** The four soft status surfaces a message is painted on. */
+  const softTints = statusTones.map((tone) => `${tone}Soft` as const);
+
+  it("measures the page role on every soft status tint", () => {
+    const missing = softTints.filter(
+      (background) =>
+        !contrastPairs.some(
+          (pair) =>
+            pair.foreground === "foreground" &&
+            pair.background === background &&
+            pair.floor === "body",
+        ),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the painters that put the alert's copy on the tint", () => {
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const alert = readFileSync(
+      new URL("../../components/src/alert.tsx", import.meta.url),
+      "utf8",
+    );
+
+    // The description's recipe is the page role, overriding the tone's readable
+    // role the root paints, and the dismiss glyph takes the same role: both sit
+    // on the tone's soft tint, so the pair cannot outlive either painter.
+    expect(recipe(recipes, "ALERT_DESCRIPTION")).toContain("text-foreground");
+    expect(alert).toContain("color={theme.colors.foreground}");
+    statusTones.forEach((tone) => {
+      expect(recipes).toContain(`bg-${tone}Soft`);
+    });
+  });
+
+  it("reports alert copy a tint swallows", () => {
+    const broken = {
+      colors: { ...lightColors, infoSoft: lightColors.foreground },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "foreground" && background === "infoSoft",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+  });
+
+  it("clears the body floor on every style, tightest on Luna's warning tint", () => {
+    const styles = [
+      themes.light,
+      themes.dark,
+      highContrastThemes.light,
+      highContrastThemes.dark,
+      ...platformNames.flatMap((platform) => [
+        platformTheme(themes.light, platform),
+        platformTheme(themes.dark, platform),
+      ]),
+      ...retroNames.flatMap((look) => [
+        retroTheme(themes.light, look),
+        retroTheme(themes.dark, look),
+      ]),
+    ];
+    const placements = styles.flatMap((theme) =>
+      softTints.map((tint) => ({
+        theme: theme.name,
+        tint,
+        ratio: contrastRatio(theme.colors.foreground, theme.colors[tint]),
+      })),
+    );
+
+    expect(styles).toHaveLength(16);
+    expect(placements).toHaveLength(64);
+    expect(
+      placements
+        .filter(
+          ({ ratio }) =>
+            ratio === undefined || ratio < contrastFloorsFor(themes.light).body,
+        )
+        .map(({ theme, tint }) => `${theme} ${tint}`),
+    ).toEqual([]);
+    // The catalogue prints this placement, so a palette edit moves both.
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+    expect(
+      `${tightest.theme} ${tightest.tint} ${printedRatio(tightest.ratio)}`,
+    ).toBe("Dark · Windows XP (Luna) warningSoft 7.14:1");
+  });
+
+  it("prints that placement on both token pages", () => {
+    // The two pages state the number this suite measures, so a palette edit and
+    // a page that kept the old value fail in opposite directions.
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    );
+    const system = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    );
+
+    [catalogue, system].forEach((page) => {
+      expect(page).toContain("`warningSoft`");
+      expect(page).toContain("7.14:1");
+    });
+    expect(system).toContain("Windows XP (Luna) dark's `warningSoft` at 7.14:1");
+  });
+});
+
 describe("text on the state washes", () => {
   /**
    * A hover, press or accent wash is painted under a control's existing text,

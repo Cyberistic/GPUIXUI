@@ -566,6 +566,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted and the hover/active washes it tints (`brandText`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
+| the page role an alert's copy and dismiss glyph paint on a soft status tint (`foreground` on `xSoft`) | 7:1 | 7:1 |
 | status text on `background`/`card`/`popover`/a `muted` strip and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a message in a muted sidebar, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
@@ -635,6 +636,15 @@ card, a popover and a `muted` sidebar are all in the table, and the muted strip
 was the one missing — the decorative half already put that tone's tint and edge
 there. The tightest placement in the library is Luna light's warning text on its
 beige toolbar at 8.78:1, so no palette moved.
+
+An alert's **own copy** is the tint's second ink. `ALERT_DESCRIPTION` is
+`text-foreground` and `AlertDismiss` paints its glyph the same role, so the body
+copy and the close control are read on the tone's soft tint in the page's ink,
+while the title and icon keep the tone's readable role. The paint is deliberate —
+the page role is the most readable text a theme has — so `foreground` on each of
+the four soft tints is in the table at the body floor, and the tightest shipped
+placement is Windows XP (Luna) dark's `warningSoft` at 7.14:1. A brand that
+repaints `foreground` or authors its own tint is measured there.
 
 The surfaces that carry no text are measured too, because "subtle" is not
 "invisible": a divider, a skeleton fill, the modal veil, a status message's soft

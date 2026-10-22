@@ -204,6 +204,18 @@ export const contrastPairs: readonly ContrastPair[] = [
   },
   { foreground: "infoForeground", background: "info", floor: "secondary" },
   { foreground: "infoSoftForeground", background: "infoSoft", floor: "body" },
+  // A tinted message surface carries a second text role. An `Alert`'s
+  // description is `text-foreground` (`ALERT_DESCRIPTION`) and its dismiss
+  // control paints the page role too (`alert.tsx`), so the body copy and the
+  // close glyph sit on `xSoft` in the page's own ink — not in the tone's
+  // readable role. That paint is deliberate (the page role is the most readable
+  // text a theme has), so the pair belongs in the table: a brand that repaints
+  // `foreground` or authors its own tint could swallow the alert's copy while
+  // every report stayed empty.
+  { foreground: "foreground", background: "infoSoft", floor: "body" },
+  { foreground: "foreground", background: "successSoft", floor: "body" },
+  { foreground: "foreground", background: "warningSoft", floor: "body" },
+  { foreground: "foreground", background: "destructiveSoft", floor: "body" },
   {
     foreground: "successSoftForeground",
     background: "successSoft",

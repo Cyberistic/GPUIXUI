@@ -292,6 +292,15 @@ table already put that tone's tint and edge on `muted`. All four placements are
 measured now; the tightest in the library is Luna light's warning text on its
 beige toolbar at 8.78:1.
 
+An alert's own copy is the tint's **second** ink: `ALERT_DESCRIPTION` is
+`text-foreground` and `AlertDismiss` paints its glyph the same role, so the body
+copy and the close control sit on `xSoft` in the page's role while the title and
+icon keep the tone's readable one. The paint is deliberate — the page role is the
+most readable text a theme has — so `foreground` on each of the four soft tints
+is in the contrast table at the body floor rather than left to the component. A
+brand that repaints `foreground` or authors its own tint is measured there; the
+tightest shipped placement is Windows XP (Luna) dark's `warningSoft` at 7.14:1.
+
 A runnable example spreads the result onto a container and its text; see
 [`src/status-tone.example.ts`](../packages/tokens/src/status-tone.example.ts).
 
@@ -1191,7 +1200,7 @@ named colour, an `hsl()`-family function). Shorthand hex is measured.
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 87 pairs cover the text role
+the caller remembering to say so. The 91 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1204,6 +1213,11 @@ it tints, every status and soft-status pair, each status tone's readable text
 as **page** text on `background`, `card`, `popover` and a `muted` strip (a field
 error, an inline warning or a destructive menu row is not on the tone's own
 tinted surface, and a form in a muted sidebar has none of the three page fills),
+the **page role an alert paints on its own soft tint** — its description is
+`text-foreground` and its dismiss glyph the same role, so the copy and the close
+control are read on `xSoft` in the page's ink rather than the tone's readable
+role (the tightest shipped placement is Windows XP (Luna) dark's `warningSoft`
+at 7.14:1) —
 the unavailable label on the fill that disables it, on the three page
 surfaces and on the two group strips a disabled control sits in (`muted`,
 `secondary`), accent and selected, the state washes,
