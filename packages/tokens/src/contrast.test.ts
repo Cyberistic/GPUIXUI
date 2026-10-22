@@ -241,22 +241,41 @@ describe("status text on a surface", () => {
     expect(missing).toEqual([]);
   });
 
-  it("holds the painter that puts status text on the strip", () => {
-    const field = readFileSync(
-      new URL("../../components/src/field.tsx", import.meta.url),
-      "utf8",
-    );
-    const recipes = readFileSync(
-      new URL("../../tw/src/recipes.ts", import.meta.url),
-      "utf8",
-    );
-
+  it("holds the painters that put status text on the strip", () => {
     // The message slot paints the tone's readable role over the strip, and its
     // recipe has no fill of its own — which is exactly why the strip is the
-    // surface the pair has to measure.
-    expect(field).toContain('statusTone(theme, "destructive").foreground');
-    const errorRecipe = recipe(recipes, "FIELD_ERROR");
-    expect(errorRecipe).not.toContain("bg-");
+    // surface the pair has to measure. Every component slot does it (a field's
+    // required marker, its error line, a `Form` message, a destructive menu
+    // row); the `@gpuixui/tw` recipes are the bare upstream copy and still name
+    // the solid role, which is the deviation the catalogue states.
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8");
+    const painter = (source: string): string => source.replace(/\s+/g, " ");
+
+    ["field.tsx", "form.tsx", "menu/item.tsx"].forEach((file) => {
+      expect(
+        painter(read(`../../components/src/${file}`)),
+        `${file} paints a status slot`,
+      ).toContain('statusTone(theme, "destructive").foreground');
+    });
+    const recipes = read("../../tw/src/recipes.ts");
+    ["FIELD_ERROR", "FIELD_REQUIRED", "FORM_ERROR"].forEach((name) => {
+      const bare = recipe(recipes, name);
+      expect(bare, `${name} is bare text`).toContain("text-destructive");
+      expect(bare, `${name} has no fill`).not.toContain("bg-");
+    });
+
+    // The page names both halves, so it cannot send a reader to a TODO row that
+    // no longer exists or claim the components still paint the fill as text.
+    const page = painter(read("../../../docs/tokens.md"));
+    const start = page.indexOf("### A brand run inside a message");
+    const end = page.indexOf("## Data series", start);
+    const section = page.slice(start, end);
+    expect(start).toBeGreaterThan(-1);
+    expect(section).toContain("`FieldError`");
+    expect(section).toContain("`Form`");
+    expect(section).toContain("`@gpuixui/tw`");
+    expect(section).not.toContain("a component that still does is");
   });
 
   it("reports status text painted invisible on a popover", () => {

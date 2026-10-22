@@ -525,9 +525,15 @@ link keeps as much of the brand as the tint allows.
 The other text a component writes in a status colour — a required marker, a
 field error, an inline warning — is not `brandText`'s job: a status tone has its
 own readable role, `statusTone(theme, tone).foreground`, measured as page text
-on `background`, `card` and `popover`. What neither helper does is treat a solid
-fill role (`primary`, `destructive`) as text; a component that still does is
-recorded in `TODO.md` → Interlocks.
+on the four strips a message sits on — `background`, `card`, `popover` and a
+`muted` toolbar. Neither helper treats a solid fill role (`primary`,
+`destructive`) as text. The components follow that rule: `FieldError`, a field's
+required marker and every `Form` message take the tone's readable role over the
+recipe they compile, and so does a destructive menu row. `@gpuixui/tw`'s own
+copyable `FIELD_ERROR`, `FIELD_REQUIRED` and `FORM_ERROR` recipes still name
+`text-destructive`, because they are the upstream shadcn copy the library's
+components compile — a consumer who hand-writes one swaps in the readable role
+the same way.
 
 `packages/tokens/src/brand-text.test.ts` holds all 16 shipped, high-contrast,
 platform and authored themes to the floor on all eight surfaces, reads the

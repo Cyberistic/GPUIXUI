@@ -302,7 +302,23 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 161/161
+`[x]` `[██████████]` 162/162
+
+`[x]` Retract the **status-text TODO pointer and its three-strip claim** — `docs/tokens.md`
+§A brand run inside a message said a status tone's readable role is "measured as page text
+on `background`, `card` and `popover`" (the fourth strip, a `muted` toolbar, landed with the
+four pairs) and sent a reader to "a component that still does [paint a solid fill as text] is
+recorded in `TODO.md` → Interlocks" — a row that no longer exists, because every status slot
+is converted: `FieldError`, a field's required marker, every `Form` message and a destructive
+menu row paint `statusTone(theme, "destructive").foreground`. The page now names the four
+strips and states both halves of the truth: the components override the recipe, while
+`@gpuixui/tw`'s copyable `FIELD_ERROR`/`FIELD_REQUIRED`/`FORM_ERROR` still name
+`text-destructive` because they are the bare upstream copy. `contrast.test.ts`'s
+`holds the painters that put status text on the strip` reads all four painters, the three
+recipes (bare, no fill) and the page section, so a component that returns to the fill role, a
+recipe that gains a fill, or a rebuilt TODO pointer fails by name. Directions measured: the
+old page text fails the section case, and a painter reading `colors.destructive` would fail
+its slot case. Docs in `docs/tokens.md` §A brand run inside a message
 
 `[x]` Close the **three drifts master's tokens suite carried** — the package was red for
 reasons outside the token files, and each was a page or a guard outliving a painter the
