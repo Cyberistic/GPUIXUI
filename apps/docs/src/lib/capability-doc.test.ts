@@ -565,6 +565,58 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("idempotent");
   });
 
+  it("records the window size a workspace lays out in, and the channel that lags", () => {
+    // A split's `max` is the caller's number, so a dock must pass the window's
+    // width; the record named split panes and dock reflow and said nothing about
+    // the window itself. `window-resize-reflow` measured that `getWindowSize()` is
+    // the box the layout fills (a constant fails the arithmetic), that a zoom
+    // reflows the flexible pane and runs `onLayout` again, and that the app's
+    // `useWindowSize()` lags the animated zoom.
+    const size = rowFor("Window size and resize reflow");
+    expect(size?.verdict).toBe("supported, with limits");
+    expect(size?.evidence).toContain("window-resize-reflow");
+    expect(size?.evidence).toContain("900×520");
+    expect(size?.evidence).toContain("1680×923");
+    expect(size?.evidence).toContain("expected 1680, got 900");
+    expect(size?.workaround).toContain("onLayout");
+
+    const page = measuredRow("Window size");
+    expect(
+      page,
+      "the page's measured table has no window-size row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("window-resize-reflow");
+    expect(page?.[1]).toContain("getWindowSize");
+    expect(page?.[1]).toContain("1680×923");
+    expect(page?.[2]).toContain("onLayout");
+  });
+
+  it("records the drag reorder a captured pointer owns, and the hit test it needs", () => {
+    // A row that follows the pointer is the one case where capture removes the
+    // drop target: the dragged row keeps the release (`heard=0`), and a row's
+    // `<text>` label is reported above the row, so a topmost-only hit test finds
+    // no row. `drag-reorder` measured both and that the painted order follows the
+    // move. The record had `drag-between-panes` (the other half) and no row for
+    // this one.
+    const reorder = rowFor("Drag reorder");
+    expect(reorder?.verdict).toBe("supported, with limits");
+    expect(reorder?.evidence).toContain("drag-reorder");
+    expect(reorder?.evidence).toContain("heard=0");
+    expect(reorder?.evidence).toContain("top=other");
+    expect(reorder?.evidence).toContain("over=none misses=1");
+    expect(reorder?.workaround).toContain("getElementsAt");
+
+    const page = measuredRow("Drag reorder");
+    expect(
+      page,
+      "the page's measured table has no drag-reorder row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("drag-reorder");
+    expect(page?.[1]).toContain("heard=0");
+    expect(page?.[1]).toContain("top=other");
+    expect(page?.[2]).toContain("getElementsAt");
+  });
+
   it("records the frozen column a table composes from two scrollers", () => {
     // The runtime paints no sticky, so a pinned column is not a provided
     // capability — but `data-grid-frozen-column` measured the composition that
@@ -754,6 +806,8 @@ describe("docs/gpuix-capabilities.md", () => {
       ["ellipsis-start", "a `textOverflow` value the truncation row quotes"],
       ["cmd-k", "a key chord the clipboard probe pressed"],
       ["wrow-60", "a row marker the windowed list probe checked for"],
+      ["row-alpha", "a row marker the reorder probe dragged"],
+      ["row-delta", "a row marker the reorder probe dropped onto"],
     ]);
 
     const evidenceTokens = rows.flatMap((row) =>
@@ -1052,6 +1106,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("drag-autoscroll");
     expect(runtimePage).toContain("window-shortcut-lifecycle");
     expect(runtimePage).toContain("loading-row-correction");
+    expect(runtimePage).toContain("window-resize-reflow");
+    expect(runtimePage).toContain("drag-reorder");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
