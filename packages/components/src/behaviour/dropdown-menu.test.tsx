@@ -495,10 +495,7 @@ describe("DropdownMenu", () => {
     // The bug: the check painted `colors.accent`, a wash role — 1.26:1 on the
     // light popover and 1.14:1 on the dark one, so a menu toggle was on with
     // nothing on screen saying so.
-    const menu = renderComponent(
-      <FileActions onSelect={vi.fn()} />,
-      "light",
-    );
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />, "light");
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "hidden");
 
@@ -511,8 +508,10 @@ describe("DropdownMenu", () => {
       Arr.every(
         ["popover", "hover"] as const,
         (surface) =>
-          (contrastRatio(lightTheme.colors.primary, lightTheme.colors[surface]) ??
-            0) >= contrastFloors.boundary,
+          (contrastRatio(
+            lightTheme.colors.primary,
+            lightTheme.colors[surface],
+          ) ?? 0) >= contrastFloors.boundary,
       ),
     ).toBe(true);
     // The premise: the wash it used to paint cannot be found on the surface.

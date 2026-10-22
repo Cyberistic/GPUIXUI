@@ -291,10 +291,7 @@ describe("Accordion", () => {
     // the body floor on the wash.
     expect(hover).toMatchObject({ color: null });
     expect(
-      contrastRatio(
-        lightTheme.colors.foreground,
-        lightTheme.colors.hover,
-      ) ?? 0,
+      contrastRatio(lightTheme.colors.foreground, lightTheme.colors.hover) ?? 0,
     ).toBeGreaterThanOrEqual(contrastFloors.body);
     // The premise: the role the header used to paint cannot meet that floor.
     expect(
@@ -308,14 +305,17 @@ describe("Accordion", () => {
   it("signals the hover the same way in a dark theme", () => {
     const faq = renderComponent(<Faq />, "dark");
 
-    expect(faq.renderer.findByTestId("trigger-two")?.style.hover).toMatchObject({
-      backgroundColor: darkTheme.colors.hover,
-    });
+    expect(faq.renderer.findByTestId("trigger-two")?.style.hover).toMatchObject(
+      {
+        backgroundColor: darkTheme.colors.hover,
+      },
+    );
 
     faq.unmount();
   });
 
-  it("feeds both the internal and the caller's header ref", () => {    const ref = createRef<PublicInstance>();
+  it("feeds both the internal and the caller's header ref", () => {
+    const ref = createRef<PublicInstance>();
     const faq = renderComponent(
       <Accordion type="multiple">
         <AccordionItem value="one">
