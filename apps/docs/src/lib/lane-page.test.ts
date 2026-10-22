@@ -360,7 +360,9 @@ describe("the data-display page's drawing claims", () => {
     expect(inspector).toContain("inspector-lifecycle");
     expect(inspector).toContain("9600");
     expect(inspector).toContain("19200");
-    expect(dataPage).toContain("A property panel is one object, read four ways");
+    expect(dataPage).toContain(
+      "A property panel is one object, read four ways",
+    );
     expect(dataPage).toContain("inspector-lifecycle");
     expect(dataPage).toContain("6px");
     expect(dataPage).toContain("649");
