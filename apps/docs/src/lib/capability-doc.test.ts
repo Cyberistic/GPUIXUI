@@ -974,6 +974,30 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(uncited).toEqual([]);
   });
 
+  it("records the app-level key path a command palette needs", () => {
+    // `render({ onKeyDown })` is the only window-level key route, and a palette
+    // or an application menu lives on it. The record named the absence of a
+    // global shortcut but not the path that exists, and nothing had measured it
+    // with the focus elsewhere — the case that separates a window handler from an
+    // element one.
+    const windowKey = rowFor("Window-level key events");
+    expect(windowKey?.verdict).toBe("supported, with limits");
+    expect(windowKey?.evidence).toContain("window-key-shortcut");
+    expect(windowKey?.evidence).toContain("window-shortcut-lifecycle");
+    expect(windowKey?.evidence).toContain("getFocusedElementId");
+    expect(windowKey?.evidence).toContain("onKeyDown");
+    expect(windowKey?.workaround).toContain("root");
+
+    const page = measuredRow("Window-level key events");
+    expect(
+      page,
+      "the page's measured table has no window-key row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("window-shortcut-lifecycle");
+    expect(page?.[1]).toContain("window-key-shortcut");
+    expect(page?.[2]).toContain("root");
+  });
+
   it("publishes the measured gaps on /docs/runtime", () => {
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");
@@ -996,6 +1020,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("scroll-horizontal");
     expect(runtimePage).toContain("tab-overflow");
     expect(runtimePage).toContain("drag-autoscroll");
+    expect(runtimePage).toContain("window-shortcut-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });

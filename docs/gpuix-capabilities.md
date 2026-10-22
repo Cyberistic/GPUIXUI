@@ -85,6 +85,7 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Container queries | not supported | no such field; `useWindowSize` is the responsive hook | measure the box (`onLayout`, on `div`/`text`) or `useWindowSize` and branch in the component |
 | Canvas drawing | not supported | as above — no 2D context, and **measured** by `content-surfaces`: a `<canvas>` tracks no painted bounds and paints nothing, so the fill behind it shows through | as above |
 | IME composition | not supported | no composition events reach React | compose from `onInput`/`onKeyDown` at the application layer; live IME preview needs a runtime change |
+| Window-level key events | supported, with limits | `render({ onKeyDown })` is the **only** app-level key path: the focused element's own `onKeyDown` runs first and the window handler after it, with `event.modifiers` set. **Measured** by the headless `window-key-shortcut` (`simulateKeystrokes("cmd-k")` runs the element handler and then the window handler, with the modifier set) and by `window-shortcut-lifecycle` in a window: the runner installs the handler once and forwards to the shipped `useWindowKey` seam; `cmd-k` opens the palette (`open=true last=cmd-k`, its text painted), `Escape` closes it, and after a press on another element — `getFocusedElementId` names the other element, not the probe — `cmd-k` still opens it. Dropping the runner's forwarding is the negative control (nothing reaches the app) | install one handler at the root and route accelerators from it; the focused element sees the key first, so a chord a field needs belongs to the field. A shortcut fires only while the window is focused, so a background hotkey needs a runtime change |
 | Global / system shortcut | not supported | key events fire only while the window is focused | window-level `onKeyDown`; a background hotkey needs a runtime change |
 | Tray / menu bar / status item | not supported | no such host | ship an in-window menu |
 | Native view / webview / embedded browser | not supported | no child-view host | `markdown`/`code`/`diff` surfaces |
@@ -171,7 +172,8 @@ out.
   `select-lifecycle`, `floating-sides`, `dock-reflow`, `docking-nested`,
   `panel-resize`, `split-pane-lifecycle`, `a11y-tree`, `drag-between-panes`,
   `keyboard-focus-dim`, `filled-action-dim`, `motion-geometry`,
-  `scroll-horizontal`, `tab-overflow`, `drag-autoscroll`), because a measured gap
+  `scroll-horizontal`, `tab-overflow`, `drag-autoscroll`,
+  `window-key-shortcut`, `window-shortcut-lifecycle`), because a measured gap
   is absent from the typings rather than merely hard to find. Every id a page
   row cites must be a registered probe in `apps/playground` and appear in this
   list, so a row cannot cite a probe that does not exist or a probe the record
