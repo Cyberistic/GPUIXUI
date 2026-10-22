@@ -677,7 +677,39 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 100/100
+`[x]` `[██████████]` 101/101
+
+`[x]` Measure **a tab moved between strips** — Tier 4's *detachable / movable
+      tabs* row was `partial` for the one limit no probe can lift (one window per
+      process) and said nothing about the half a window can prove: the move
+      inside it. `workspace-tab-drag` measured the state arithmetic in a
+      `TestRenderer`, so no real pointer or key had driven it. The
+      `movable-tabs-lifecycle` live probe mounts two 280px strips 24px apart,
+      each with a selected panel and an editable field, and measures on 0.11.0:
+      the strips share one row; a press selects `bravo` and typing reaches the
+      draft; dragging `bravo` out of the left strip and releasing at the right
+      strip's start takes it out of the source (which selects the tab that took
+      its slot) and inserts it at the destination slot (`bravo,delta,echo`,
+      selected), with the moved tab painted inside the destination group on
+      `delta`'s row; the destination mounts its title, the source mounts
+      `charlie`, and the draft (`bravo:abc`) survives because the tab changed
+      parent — which is also why the app has to restore the focus the remount
+      dropped; `Cmd+Shift+Right` reorders in the strip, reaches the end, clamps
+      on a further step, returns on `Cmd+Shift+Left` and keeps focus; a release
+      **below both strips** is a miss that leaves both orders alone; and dragging
+      `echo` back into the left strip's `charlie` slot inserts it there and keeps
+      the right strip's selection. 31 checks, `--only movable-tabs-lifecycle`,
+      green (~0.7 s). Fixture: `src/live/tabs-drag.ts` (`groupAt`,
+      `insertionIndex` splitting at a tab's centre, `moveTab`, `stepTab` with no
+      wrap, the readout) + `tabs-drag.test.ts` (14 cases, including the emptied
+      strip's `None` and the source neighbour). Two negative controls measured,
+      exit `1`, restored green: dropping the app's focus restore fails `the app
+      restores focus to the tab it moved` (`expected "movable-tab-bravo", got
+      "none"`), and resolving a drop slot from a tab's left edge fails `splits a
+      tab at its centre` (`expected 1 to be +0`). Evidence:
+      `apps/playground/README.md` §`movable-tabs-lifecycle`,
+      `.artifacts/live/movable-tabs.png`; the Tier 4 row now names the move half
+      and the state-ownership rule.
 
 `[x]` Measure **a translucent mark over another mark** — Tier 3's *Charts*
       row called a buffer's alpha unmeasured beyond a fully transparent pixel,
@@ -3690,7 +3722,7 @@ a workaround for two live sessions sharing one worktree; see
       arrows move a vertical value, and a vertical range moves the end a press
       grabbed) and `docs.test.ts` (both pages keep the prop, its two limits and
       the painter's axis). Three directions measured: un-inverting the pointer
-      fails all three window cases by name, dropping the mirror fails the thumb
+      fails all three runtime cases by name, dropping the mirror fails the thumb
       centre case, and removing the page's API row fails the docs case. Docs:
       `docs/slider.mdx`/`docs/range-slider.mdx` §API/§Theming/§Accessibility/
       §Limitations/§Verification, `examples/value.example.tsx` (a vertical
@@ -4167,6 +4199,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Publish the **translucent chart mark** the probe measured — `docs/gpuix-capabilities.md`'s **Raster and vector chart surfaces** row still says "a **translucent** bar over another bar is unmeasured (only a fully transparent pixel is proved to composite)" and prints the probe at **19 checks**, while `chart-raster` now measures a two-layer plot: the buffer is straight alpha, `#0A84FF` at `0x80` over the opaque `#FF3B30` mark reads `rgba(132, 96, 152, 255)` and over the `#14223A` card `rgba(15, 83, 157, 255)`, with pre-multiplied bytes reading `rgba(130, 63, 88, 255)` as the negative control. The probe now also measures the resize it called a limit: a 120 → 180 point box re-scales the buffer with no second `setImagePixels`, the first bar's bound growing 1.5× and keeping its height (33 checks). Both limits should become the measured rules and the count should move | docs-site (`docs/gpuix-capabilities.md` + `/docs/runtime`) | open — the probe and `COMPONENTS.md` are done; these two files are the other workstream's |
 | Correct the **curated Carousel page's track edge** — `apps/docs/content/docs/components/carousel.mdx` says "The track's edge is the **`input`** role the recipe names, not the decorative `border` role, which is the `secondary` fill in both shipped themes", and its Theming table's track row prints `` `card` fill, `input` edge ``. Measured through the package's own compile of `CAROUSEL_TRACK`: `@gpuixui/tw` resolves `border-input` to `theme.colors.border` (`utilities.ts`, `if (name === "border-input") return { borderColor: theme.colors.border }`), so the track paints the `border` role; this library's `input` role is the field fill (`palette.neutral[0]`, the card's own white in the base light theme), so a reader who tuned `input` would repaint nothing visible on the track's `card` fill. The parenthetical is also backwards in the light theme: `border` and `secondary` are the same `neutral[200]`, while `borderStrong` is the role a control's boundary is measured on | docs-site (`apps/docs/content/docs/components/carousel.mdx`, `component-page-truth.test.ts`) | **resolved 2026-10-22** — the Theming table's track row now reads `` `card` fill, `border` edge `` and the paragraph teaches the compiler's remap: `border-input` is shadcn's name for a border, `@gpuixui/tw` resolves it to this library's `border` role, and the library's `input` role is the field fill — the card's own white in the base light theme, so the old page sent a reader to a role that paints no edge on the track. The preview had the same defect and worse: `.gx-carousel-card` drew `1px solid var(--input)`, a white edge on the white card fill in every light style. It now draws `--border`. `component-page-truth.test.ts`'s carousel case reads the registry's remap and the two roles' difference, holds the **cell** directly (a prose check would let a bold marker hide the retracted value), refuses `the **`input`** role`, and reads the `.gx-carousel-card` rule for `--border` with no `--input`; `theme-css.test.ts`'s carousel case moved with it. Directions measured: restoring the old cell fails `expected '`card` fill, `input` edge' to contain '`border`'`, and restoring `var(--input)` in the card rule fails `expected '.gx-carousel-card {…' to contain 'border: 1px solid var(--border)'`; restored, both files are 45/45 green |
 | Publish the **`AlertLink`** part on the curated `/docs/components/alert` page — the components workstream added `AlertLink` (`packages/components/src/alert.tsx`), a focusable `role="link"` action painted with `brandTextOn` against the message's own tint, so the behaviour suite now runs **13** cases (was 11) and the shadowed package page documents a new `onSelect` prop. `apps/docs/src/lib/component-page-truth.test.ts` fails twice on 2026-10-22: `print the number of native cases their suite runs` → `alert.mdx: says 11, suite runs 13`, and `documents every prop the displaced page documents` → one prop missing (the package page's new `AlertLink` row). The curated page needs the count, an `AlertLink` row in Composition (a `div` with `role="link"` painted in the brand derived for the tint), its Theming row, a Keyboard row (`Enter`/`Space` run `onSelect`), the `onSelect` API row, and a sentence on why the page's link colour is not the shared `brandText` (29 of 64 tint placements under the floor; macOS dark 3.43:1 on `warningSoft`) | docs-site (`apps/docs/content/docs/components/alert.mdx` + its guard row) | open — the package side is landed and green (`nubx vitest run src/api.test.ts src/docs-counts.test.ts src/inventory.test.ts src/internal/theme.test.ts` 34/34, behaviour alert 13/13) |
+| Measure the **vertical slider in a window** — the primitives gave `Slider`/`RangeSlider` an `orientation` axis (`core/value.ts`'s `verticalPointerValue`, the four parts turned onto the other axis, and a track that mirrors its parts because the runtime has no `column-reverse`), and every measurement is the TestRenderer's: a bottom-up click, a drag that leaves the box, the thumb centre and a vertical range (`runtime/value.runtime.test.tsx`). No live probe paints one, so the layout under a real window and the pointer path are the offscreen renderer's reading | playground (`apps/playground/src/live/`) | open — mount a `Slider orientation="vertical" style={{ height: 200 }}` and a vertical `RangeSlider`, and prove the track's width is the control's height at the caller's height, a click at 25% from the bottom reports 25 with the thumb centred within 1px, a drag that leaves the box follows (to 100) and stops on release, and the parts paint from the floor rather than the ceiling |
+
 
 ## Phase D — data and workspace components
 
