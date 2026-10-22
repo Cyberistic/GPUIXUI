@@ -31,7 +31,14 @@ const inertia = readRepo("packages/motion/src/inertia.ts");
 
 /** The value names the package's modules export, in file order. */
 const valueExports = (): ReadonlyArray<string> =>
-  ["easing.ts", "spring.ts", "timeline.ts", "inertia.ts", "motion.ts", "react.ts"]
+  [
+    "easing.ts",
+    "spring.ts",
+    "timeline.ts",
+    "inertia.ts",
+    "motion.ts",
+    "react.ts",
+  ]
     .flatMap((file) =>
       [
         ...readRepo(`packages/motion/src/${file}`).matchAll(
@@ -69,9 +76,7 @@ const declaredPresets = (): ReadonlyMap<string, readonly [string, string]> =>
 
 /** One §3 row of the capability record, found by the start of its first cell. */
 const recordRow = (capability: string): string =>
-  record
-    .split("\n")
-    .find((line) => line.startsWith(`| ${capability}`)) ?? "";
+  record.split("\n").find((line) => line.startsWith(`| ${capability}`)) ?? "";
 
 describe("the motion page", () => {
   it("resolves every import it prints against the package's own exports", () => {
@@ -137,7 +142,9 @@ describe("the motion page", () => {
 
     expect(pageText).toContain("exposes no reduced-motion preference");
     expect(pageText).toContain("so the app supplies");
-    expect(pageText).toContain("finishes an active run immediately at its target");
+    expect(pageText).toContain(
+      "finishes an active run immediately at its target",
+    );
     expect(pageText).not.toContain("reads the system preference");
     expect(pageText).not.toContain("detects the system");
   });
