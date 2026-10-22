@@ -90,6 +90,20 @@ describe("the examples page", () => {
     expect(page).toContain("apps/playground/README.md");
   });
 
+  it("keeps the preview policy on the command the page prints", () => {
+    // The policy told a contributor the components' examples were "the
+    // copy-target for their pages and have no runtime registry yet — that is a
+    // tracked task", and kept saying it after `examples-mount` mounted all of
+    // them and after this page was corrected. The policy is read before a page
+    // is written, so it is held to the same registry as the page.
+    const policy = read("docs/preview-strategy.md");
+
+    expect(policy).not.toContain("no runtime registry");
+    expect(policy).toContain("examples-mount");
+    expect(policy).toContain("The example gallery");
+    expect(policy).toContain("runtime/examples.runtime.test.tsx");
+  });
+
   it("sits under Reference, before the API reference", () => {
     const position = sidebar.indexOf("examples");
     expect(position).toBeGreaterThan(0);

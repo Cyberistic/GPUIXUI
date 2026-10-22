@@ -1463,7 +1463,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 52/52
+`[x]` `[██████████]` 53/53
+
+`[x]` The preview policy's examples section teaches a registry that exists — `docs/preview-strategy.md` still told a contributor the components' examples were "the copy-target for their pages and have no runtime registry yet — that is a tracked task", long after `examples-mount` mounted all 39 and `/docs/examples` was corrected (the policy half was missed). It now names both native mounts (the primitives' `runtime/examples.runtime.test.tsx` and the playground's `examples-mount`), says what the scenario asserts, and points at `apps/playground/README.md` §The example gallery. `examples-page.test.ts` gained a case holding the policy to the command the page prints — the old sentence fails on "no runtime registry", a renamed scenario fails on `examples-mount`, and a policy that drops the primitives command fails too — so the file a page author reads before writing cannot promise a registry that is gone or deny one that exists.
 
 `[x]` The landing page's links are held to the mounted pages — the front door
 writes its CTAs in components, not MDX, so the page-level link guard never read

@@ -359,10 +359,14 @@ Three rules keep the rows honest:
   should not pay for fifty code blocks to scan the list.
 
 The page also names how the examples are run today: the primitives package
-mounts all of its examples in `runtime/examples.runtime.test.tsx`. The
-components' examples are the copy-target for their pages and have no runtime
-registry yet — that is a tracked task, and the page says so instead of implying
-they run.
+mounts all of its examples in `runtime/examples.runtime.test.tsx`, and the
+components' registry runs through the playground's `examples-mount` scenario,
+which pages through every entry one screen at a time and reads the result back
+from the renderer. Both commands are resolved to the workspace manifest and the
+scenario registry on disk by `examples-page.test.ts`, and that guard also holds
+this file to the command the page prints — so the policy cannot promise a
+registry that is gone, or deny one that exists. The scenario's checks and
+negative controls are in `apps/playground/README.md` §The example gallery.
 
 ## A page's claims about the runtime
 
