@@ -3278,7 +3278,9 @@ key-value rows beside a preview on 0.11.0, and measured:
 | press **Reset size** | the width returns to **120**; the typed tag stays, because reset is a size action, not a new object |
 | wheel **−200** in the inspector | the inspector reports **−200** and scrolls its 30 rows, while its own pane and the preview caption keep their exact `y`, and the preview reports no scroll offset at all (it is not a scroller) |
 
-48 checks, `--only inspector-lifecycle`, green on 0.11.0 (~0.8 s). Fixture:
+48 checks, `--only inspector-lifecycle`, green on 0.11.0 (~0.8 s alone;
+the mount is the window's, so a run after another probe's teardown reports
+seconds). Fixture:
 `src/live/inspector.ts` — the object, its four readings, the area and size
 arithmetic, the row set and the scroll premise; `inspector.test.ts` (9 cases)
 holds the area against a sum, the tag's absence against an empty string, the
