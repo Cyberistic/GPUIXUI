@@ -62,7 +62,7 @@ workstream_scope() {
       echo "the salvage queue: every plan an earlier swarm run wrote and never landed. Implement it or discard it, then delete it."
       ;;
     motion)
-      echo "motion: wire @gpuixui/motion into the existing surfaces first (Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs, PreviewCard), following shadcn and Base UI enter/exit patterns, then implement the animate-ui primitives in plan 600. You own packages/motion and the motion wiring inside packages/components. Never animate transform (runtime issue 102): fade plus offset only."
+      echo "motion: wire @gpuixui/motion into the existing surfaces first (Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs, PreviewCard), following shadcn and Base UI enter/exit patterns, then implement the animated primitives in plan 600. You own packages/motion and the motion wiring inside packages/components. Never animate transform (runtime issue 102): fade plus offset only."
       ;;
     *)
       echo "the next unclaimed task."

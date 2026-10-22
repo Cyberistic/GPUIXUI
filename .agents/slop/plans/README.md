@@ -155,4 +155,4 @@ component call sites adopt the outline in their own workstream.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [600](./600-animate-ui-primitives.md) | Animate UI animated primitives: gap analysis and phases | D | motion, tw, runtime | planned |
+| [600](./600-animated-primitives.md) | Animated primitives: gap analysis and phases | D | motion, tw, runtime | planned |
