@@ -344,3 +344,28 @@ it("shows a value that arrives after the field was mounted", async () => {
   runtime.flush();
   expect(textOf(runtime, "Quantity")).toBe("5");
 });
+
+it("mounts a value it cannot paint, and steps from the bound it paints", async () => {
+  // The bug guarded: the field compared its owner's value with `===`, and `NaN`
+  // never equals itself — so the draft folded on every render, `setDraft` ran on
+  // each pass and React threw "Too many re-renders" before the field painted at
+  // all. The value now reads as the nearest bound (the rule `core/value.ts`
+  // already states for a slider), so the field shows it and an arrow moves from
+  // it rather than adding to `NaN`.
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Quantity"
+      autoFocus
+      min={0}
+      max={10}
+      value={Number.NaN}
+      onChange={field.onChange}
+    />,
+  );
+  expect(textOf(runtime, "Quantity")).toBe("0");
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(lastValue(field.values)).toBe(1);
+});

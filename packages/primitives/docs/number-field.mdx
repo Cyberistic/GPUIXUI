@@ -169,6 +169,12 @@ so a caller that composes its own parts still gets the hint.
 
 ## Limitations
 
+- **A value the field cannot lay out reads as a bound.** `NaN` and `±Infinity`
+  have no position to paint, so the field shows the nearest bound (`min`, else
+  `max`, else `0`) and steps from it rather than painting `NaN` or refusing every
+  arrow. `core/value.ts` states the same rule for a slider. A bound that is
+  itself non-finite is not a bound, so one bad `max` cannot take the value with
+  it.
 - **Decimal text only.** `1,5`, `0x10` and `Infinity` are rejected rather than
   guessed at; a locale decimal needs `formatValue` for display and parsing
   before the value reaches the field.
@@ -212,9 +218,12 @@ so a caller that composes its own parts still gets the hint.
   the chrome declares the keyboard ring and a press paints none; a disabled
   field refuses text, keys and clicks; a caller's composition of the input and
   both steppers reads the field's live value (a real press on each steps it);
-  **Enter arrives as the runtime's Submit action** — the draft reformats to
-  `precision` and `onSubmit` reports once (measured 2026-10-22; without the
-  field's listener the text stayed `1.5` and the report never came).
+  **a non-finite value mounts instead of throwing** — the field paints its
+  bound and an arrow reports one step from it (measured 2026-10-22; the old
+  comparison folded the draft on every render and React threw "Too many
+  re-renders"); **Enter arrives as the runtime's Submit action** — the draft
+  reformats to `precision` and `onSubmit` reports once (measured 2026-10-22;
+  without the field's listener the text stayed `1.5` and the report never came).
   Measured in a window 2026-10-17.
 
 ```sh

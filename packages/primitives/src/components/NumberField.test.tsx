@@ -115,6 +115,23 @@ describe("NumberField", () => {
     ).toBe("1.");
   });
 
+  it("reads a value it cannot paint as the bound it can", () => {
+    // The bug guarded: `NaN` reached the part unchanged, so the field painted
+    // "NaN" and both steppers read as available. The display, the bounds and a
+    // step now agree on the clamped value.
+    const part = numberFieldPart(
+      { min: 0, max: 10 },
+      testTheme,
+      initValueState(Option.some(Number.NaN), 0),
+      "",
+      idle,
+      handlers(),
+    );
+    expect(part.current).toBe(0);
+    expect(part.atMin).toBe(true);
+    expect(part.atMax).toBe(false);
+  });
+
   it("moves one step with the arrow keys and a page at a time", () => {
     const onValue = vi.fn();
     const onCommit = vi.fn();

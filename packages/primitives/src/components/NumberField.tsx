@@ -180,6 +180,10 @@ export const numberFieldPart = (
   handlers: NumberFieldHandlers,
 ): NumberFieldPart => {
   const disabled = props.disabled === true;
+  const range = numberRange(props);
+  // What the field paints is also what it steps from: a value it cannot lay out
+  // (a non-finite one) reads as a bound instead of reaching the text.
+  const current = clampNumeric(state.current, range);
   return {
     theme,
     size: props.size ?? "md",
@@ -193,13 +197,13 @@ export const numberFieldPart = (
     testId: props.testId,
     description: accessibleName(props.description),
     onSubmit: disabled ? undefined : props.onSubmit,
-    current: state.current,
-    range: numberRange(props),
+    current,
+    range,
     focus,
     handlers,
     interaction: props,
-    atMin: props.min !== undefined && state.current <= props.min,
-    atMax: props.max !== undefined && state.current >= props.max,
+    atMin: props.min !== undefined && current <= props.min,
+    atMax: props.max !== undefined && current >= props.max,
   };
 };
 
@@ -460,7 +464,11 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   const folded = syncNumberDraft(draft, incoming, range);
   if (Option.isSome(folded)) setDraft(folded.value);
   const effective = Option.getOrElse(folded, () => draft);
-  const text = numberDraftText(effective, state.value.current, display);
+  const text = numberDraftText(
+    effective,
+    clampNumeric(state.value.current, range),
+    display,
+  );
   const focusInput = (): void =>
     Option.match(Option.fromNullishOr(inputId.current), {
       onNone: () => {},

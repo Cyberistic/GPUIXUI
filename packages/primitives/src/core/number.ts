@@ -33,10 +33,39 @@ export const parseNumericText = (text: string): Option.Option<number> => {
   return Number.isFinite(value) ? Option.some(value) : Option.none();
 };
 
+/**
+ * The bounds a range can actually use.
+ *
+ * A bound that cannot be laid out is not a bound: `Math.min(NaN, value)` is
+ * `NaN`, so one `max: NaN` would otherwise take the field's value with it.
+ */
+const numericBounds = (
+  range: NumberRange,
+): { readonly min: number | undefined; readonly max: number | undefined } => ({
+  min: Number.isFinite(range.min) ? range.min : undefined,
+  max: Number.isFinite(range.max) ? range.max : undefined,
+});
+
+/**
+ * The number a range paints for a value it was given.
+ *
+ * A value that is not a number has no position, so it reads as the nearest
+ * bound: the minimum when there is one, otherwise the maximum, otherwise zero.
+ * `core/value.ts` makes the same call for a slider, and the alternative —
+ * carrying `NaN` — is a field that paints "NaN" and whose arrows move nothing.
+ */
+const paintable = (
+  value: number,
+  min: number | undefined,
+  max: number | undefined,
+): number => (Number.isFinite(value) ? value : (min ?? max ?? 0));
+
 /** Clamp to whichever bounds exist; an absent bound does not constrain. */
 export const clampNumeric = (value: number, range: NumberRange): number => {
-  const aboveMin = range.min === undefined ? value : Math.max(range.min, value);
-  return range.max === undefined ? aboveMin : Math.min(range.max, aboveMin);
+  const { min, max } = numericBounds(range);
+  const finite = paintable(value, min, max);
+  const aboveMin = min === undefined ? finite : Math.max(min, finite);
+  return max === undefined ? aboveMin : Math.min(max, aboveMin);
 };
 
 /** Fixed decimals, never a thousands separator. */
@@ -69,9 +98,13 @@ export const stepNumber = (
   range: NumberRange,
   steps: number,
 ): number => {
-  const step = range.step > 0 ? range.step : 1;
-  const scale = 10 ** Math.max(decimalsOf(step), decimalsOf(value));
-  const moved = Math.round((value + steps * step) * scale) / scale;
+  const step = Number.isFinite(range.step) && range.step > 0 ? range.step : 1;
+  // The move starts where the field paints: a value outside the range, or one
+  // that is not a number, is read as its bound first — a step from such a value
+  // otherwise adds to something the reader never saw.
+  const from = clampNumeric(value, range);
+  const scale = 10 ** Math.max(decimalsOf(step), decimalsOf(from));
+  const moved = Math.round((from + steps * step) * scale) / scale;
   return clampNumeric(moved, range);
 };
 
@@ -202,7 +235,11 @@ export const syncNumberDraft = (
   if (Option.isNone(incoming)) return Option.none();
   const value = incoming.value;
   // The owner's value did not move: the text being typed is still the user's.
-  if (Option.getOrUndefined(draft.incoming) === value) return Option.none();
+  // `Object.is` rather than `===`, because `NaN` never equals itself: with
+  // `===` a non-finite value folded on every render, each fold called
+  // `setDraft`, and React stopped the field with "Too many re-renders".
+  if (Object.is(Option.getOrUndefined(draft.incoming), value))
+    return Option.none();
   const kept = Option.match(draft.text, {
     onSome: (text) =>
       Option.match(meansValue(text, range), {

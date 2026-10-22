@@ -61,6 +61,26 @@ describe("clampNumeric", () => {
     expect(clampNumeric(140, { step: 1, max: 100 })).toBe(100);
     expect(clampNumeric(-5, { step: 1 })).toBe(-5);
   });
+
+  it("reads a value it cannot paint as the nearest bound", () => {
+    // The bug guarded: `Math.min`/`Math.max` pass `NaN` straight through, so a
+    // controlled field painted "NaN" and its arrows moved nothing. A slider
+    // already reads an unknown position as `min` (`core/value.ts`), and this is
+    // the same rule for a typed value.
+    expect(clampNumeric(Number.NaN, RANGE)).toBe(0);
+    expect(clampNumeric(Number.POSITIVE_INFINITY, RANGE)).toBe(0);
+    expect(clampNumeric(Number.NaN, { step: 1 })).toBe(0);
+    expect(clampNumeric(Number.NaN, { step: 1, max: 5 })).toBe(5);
+  });
+
+  it("does not treat a bound it cannot lay out as a bound", () => {
+    // A `max` of `NaN` used to poison every clamp: `Math.min(NaN, value)` is
+    // `NaN`, so the field lost the value it was given.
+    expect(clampNumeric(50, { step: 1, max: Number.NaN })).toBe(50);
+    expect(clampNumeric(50, { step: 1, min: Number.NEGATIVE_INFINITY })).toBe(
+      50,
+    );
+  });
 });
 
 describe("formatNumber", () => {
@@ -103,6 +123,20 @@ describe("stepNumber", () => {
 
   it("does not round away an integer step at a large magnitude", () => {
     expect(stepNumber(1e15, { step: 1 }, 1)).toBe(1_000_000_000_000_001);
+  });
+
+  it("steps from the value it paints when that value is not a number", () => {
+    // The bug guarded: `NaN + 1` is `NaN`, so the arrow moved nothing. The
+    // field paints a bound for such a value, and the move has to start there —
+    // including a value the owner left outside the range before it shrank.
+    expect(stepNumber(Number.NaN, RANGE, 1)).toBe(1);
+    expect(stepNumber(-5, { step: 1, min: 0 }, 1)).toBe(1);
+    expect(stepNumber(140, { step: 1, max: 100 }, -1)).toBe(99);
+  });
+
+  it("treats a step it cannot lay out as one", () => {
+    expect(stepNumber(5, { step: Number.NaN }, 1)).toBe(6);
+    expect(stepNumber(5, { step: Number.POSITIVE_INFINITY }, -1)).toBe(4);
   });
 });
 
@@ -221,5 +255,16 @@ describe("the draft a number field keeps", () => {
     expect(syncNumberDraft(draft, Option.none(), RANGE)).toStrictEqual(
       Option.none(),
     );
+  });
+
+  it("does not fold a value that never equals itself", () => {
+    // The bug guarded: the owner's value was compared with `===` and `NaN`
+    // never equals itself, so the draft folded on every render and called
+    // `setDraft` each time — React threw "Too many re-renders" and the field
+    // never painted. `Object.is` is the identity reading: `NaN` has not moved.
+    const draft = initNumberDraft(Option.some(Number.NaN), true);
+    expect(
+      syncNumberDraft(draft, Option.some(Number.NaN), RANGE),
+    ).toStrictEqual(Option.none());
   });
 });
