@@ -462,7 +462,10 @@ describe("the workspace page's pointer and terminal claims", () => {
       "utf8",
     );
     const bounds = /initial: (\d+),\s*min: (\d+),\s*max: (\d+),/.exec(fixture);
-    expect(bounds, "the multi-pane fixture lost its split bounds").not.toBeNull();
+    expect(
+      bounds,
+      "the multi-pane fixture lost its split bounds",
+    ).not.toBeNull();
     const [, initial = "", min = "", max = ""] = bounds ?? [];
     expect(Number(initial)).toBeGreaterThan(Number(min));
 

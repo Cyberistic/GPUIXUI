@@ -119,7 +119,8 @@ describe("the component previews", () => {
     // preview.
     const recipes = read("packages/tw/src/recipes.ts");
     const at = recipes.indexOf("export const DIALOG_CONTENT =");
-    const dialog = at === -1 ? "" : recipes.slice(at).split("\n").slice(0, 2).join("\n");
+    const dialog =
+      at === -1 ? "" : recipes.slice(at).split("\n").slice(0, 2).join("\n");
     expect(dialog, "the dialog recipe lost its fixed radius").toContain(
       "rounded-4xl",
     );
