@@ -908,7 +908,9 @@ four shipped misses — the base light theme's pressed secondary button at
 2.88:1, the base dark theme's at 2.86:1, high-contrast dark at 4.15:1 against
 its 4.5 floor, and Linux light at 2.96:1 hovered and 2.77:1 pressed — so those
 four `borderStrong` values moved to `#727D8C`, `#788494`, `#A7A7A7` and
-`#7E7C79`, and every other pair they carry still clears its floor. `contrastFloors` and `highContrastFloors` are the
+`#7E7C79`, and every other pair they carry still clears its floor.
+
+`contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
 to. `contrastFloorsFor(theme)` is the variant rule on its own, which is the floor
 set `auditTheme` uses unless one is passed. A brand theme runs the same check the
