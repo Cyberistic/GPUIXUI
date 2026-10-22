@@ -3,10 +3,10 @@
  *
  * A dock's pane list sits inside the workspace's own scroller, a dialog body's
  * list sits inside the page's scroll root, and a settings form scrolls in a
- * panel that scrolls in the window. Whether the wheel stops at the inner
- * scroller, chains to the outer one at its end, or bubbles its `onScroll` to an
- * ancestor handler decides whether a panel needs a wheel guard — and nothing has
- * measured it.
+ * panel that scrolls in the window. The probe measured that a wheel moves
+ * **every** scrollable ancestor on its hit path by the same delta, so a
+ * fixture here has to give each wheel a target that can only reach the
+ * scroller it names (README §`nested-scroll-lifecycle`).
  *
  * The geometry is a premise the probe's checks rest on: the inner scroller must
  * be **wholly inside** the outer one's viewport, the filler row the outer-only
@@ -43,7 +43,7 @@ export const OUTER_CONTENT =
   INNER_TOP + INNER_VIEWPORT.height + FILLER_ROWS * FILLER_ROW_HEIGHT;
 export const OUTER_MAX = scrollMax(OUTER_VIEWPORT.height, OUTER_CONTENT);
 
-/** The first wheel: it moves the inner and stops short of its end. */
+/** The first wheel: short of the list's own end, and it moves the page too. */
 export const INNER_STEP = -100;
 
 /**
