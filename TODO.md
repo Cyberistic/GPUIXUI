@@ -238,6 +238,37 @@ default registry: `border-strong` (the picker triggers' strong edge),
 skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 (39/39).
 
+### Icons (`@gpuixui/icons`)
+
+`[x]` `[██████████]` 1/1
+
+`[x]` Carry the Lucide notice the geometry owes, and grow the set the inventory
+composes from — 48 → 76 icons. The page said "no third-party icon file is copied
+verbatim" and pointed at `LICENSES/` while most shapes **are** Lucide's, and no
+Lucide record existed: an ISC notice (and the MIT/Feather notice Lucide ships
+beside it) the release owed and did not carry. `LICENSES/lucide.md` now records
+the package and version read (`lucide-static` `1.61.0`), what is copied (geometry
+only) and what is not (colours, wrapper attributes, fonts, sprites, brand marks),
+and reproduces both notices whole. The 28 new icons are the file/workspace/data
+vocabulary the later tiers ask for (`file`, `file-text`, `folder-open`, `save`,
+`terminal`, `database`, `git-branch`, `table`, `panel-right`, `panel-bottom`,
+`maximize`, `minimize`, `undo`, `redo`, `play`, `pause`, `square`, `bell`,
+`mail`, `circle`, `code`, `image`, `shield`, `sliders-horizontal`, `sparkles`,
+`bot`, `ellipsis-vertical`, `sort-desc`). Guards and directions measured: no two
+names may share geometry (a copy-pasted entry ships the wrong glyph — duplicating
+`download` into `save` fails it by name), the markup may use only the element
+types the window suite has painted (an added `<ellipse>` fails it), the page must
+list every name and nothing else (dropping `sparkles` from the page fails it), and
+the page must cite a record carrying both notices (a missing MIT section fails
+it). `primitives/runtime/icons.runtime.test.tsx` gains `paints every geometry
+form the set is built from` — a red/blue capture pair for `pause` (rects only),
+`play` (one closed arc path), `circle` (a circle) and `file` (arcs joined to
+segments), because markup that does not parse paints nothing and reads exactly
+like a decorative icon; measured with an empty `pause` entry, which fails naming
+`pause: two rects and nothing else`. `database`'s `<ellipse>` is written as two
+arc paths for the same reason. Docs: `docs/icon.mdx` §Names/§Provenance/§
+Verification.
+
 ### Design tokens and theming (`tokens-theme`)
 
 `[x]` `[██████████]` 101/101
@@ -3129,7 +3160,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 105/105
+`[x]` `[██████████]` 106/106
+
+`[x]` Read the **licence shape a record actually has** — `LICENSES/lucide.md` (the
+icons' ISC/MIT record, authored beside the geometry it covers) states what it
+leaves out as a "We do **not** copy:" list inside `## What we use` and never as
+`## What we do not use`, so `parseLicense` refused it and `/docs/license` dropped
+the whole notice while the suite went red (`[ 'lucide.md' ]`). The parser now
+accepts the statement in either shape — a section whose heading starts "What we
+do not", or the labelled lead-in list — and splits the uses text at that list so
+the page still renders the two halves it promises; the module comment says the
+shape requires the statement, not one verb or one layout. `licenses.test.ts` gains
+two cases (a heading worded "copy", and a record that folds the list into its
+uses) beside the existing refusals, so a record without either still fails.
+Directions measured: restoring the exact "What we do not use" heading fails the
+verb case by name, and removing the lead-in split fails the folded case and the
+real-file case. Suite 72 files / 648 tests, `check-types` and `build` green.
 
 `[x]` Hold the **house timing** a surface passes to the runtime to its source —
 `/docs/motion` printed the five durations as a sentence ("the 120 / 160 / 200 /

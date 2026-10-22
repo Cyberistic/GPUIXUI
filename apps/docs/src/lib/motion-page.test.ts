@@ -29,6 +29,7 @@ const spring = readRepo("packages/motion/src/spring.ts");
 const motion = readRepo("packages/motion/src/motion.ts");
 const inertia = readRepo("packages/motion/src/inertia.ts");
 const react = readRepo("packages/motion/src/react.ts");
+const timing = readRepo("packages/motion/src/timing.ts");
 
 /** The value names the package's modules export, in file order. */
 const valueExports = (): ReadonlyArray<string> =>
@@ -39,6 +40,7 @@ const valueExports = (): ReadonlyArray<string> =>
     "inertia.ts",
     "motion.ts",
     "react.ts",
+    "timing.ts",
   ]
     .flatMap((file) =>
       [
@@ -78,6 +80,56 @@ const declaredPresets = (): ReadonlyMap<string, readonly [string, string]> =>
 /** One §3 row of the capability record, found by the start of its first cell. */
 const recordRow = (capability: string): string =>
   record.split("\n").find((line) => line.startsWith(`| ${capability}`)) ?? "";
+
+/** The rows of one `## ` section, so the level rows cannot be read as phase rows. */
+const section = (heading: string): string => {
+  const start = page.indexOf(`## ${heading}`);
+  const end = page.indexOf("\n## ", start + 1);
+  return start === -1 ? "" : page.slice(start, end === -1 ? undefined : end);
+};
+
+/** The house levels as the page's timing table prints them. */
+const printedLevels = (): ReadonlyMap<string, string> => {
+  const table = section("House timing");
+  return new Map(
+    [...table.matchAll(/^\|\s*`([a-z]+)`\s*\|\s*(\d+)\s*\|/gm)].map(
+      (match) => [match[1] ?? "", match[2] ?? ""] as const,
+    ),
+  );
+};
+
+/** The levels `motionLevels` declares, name → milliseconds. */
+const declaredLevels = (): ReadonlyMap<string, string> => {
+  const block =
+    /export const motionLevels = \{([\s\S]*?)\} as const;/.exec(timing)?.[1] ??
+    "";
+  return new Map(
+    [...block.matchAll(/(\w+): (\d+),/g)].map(
+      (match) => [match[1] ?? "", match[2] ?? ""] as const,
+    ),
+  );
+};
+
+/** The phase rows as the page prints them. */
+const printedPhases = (): ReadonlyMap<string, string> => {
+  const table = section("House timing");
+  return new Map(
+    [...table.matchAll(/^\|\s*`(enter|exit|standard)`\s*\|\s*`(\w+)`/gm)].map(
+      (match) => [match[1] ?? "", match[2] ?? ""] as const,
+    ),
+  );
+};
+
+/** The easings `motionEasings` declares, phase → easing. */
+const declaredPhases = (): ReadonlyMap<string, string> => {
+  const block =
+    /export const motionEasings[^{]*\{([\s\S]*?)\};/.exec(timing)?.[1] ?? "";
+  return new Map(
+    [...block.matchAll(/(\w+): "(\w+)",/g)].map(
+      (match) => [match[1] ?? "", match[2] ?? ""] as const,
+    ),
+  );
+};
 
 describe("the motion page", () => {
   it("resolves every import it prints against the package's own exports", () => {
@@ -194,6 +246,44 @@ describe("the motion page", () => {
     expect(recordRow("Per-element `transform`")).toContain("| not supported |");
     expect(pageText).toContain("no `transform` key");
     expect(pageText).toContain("cannot be painted or animated");
+  });
+
+  it("prints the house levels and phases the timing module declares", () => {
+    // `motionTiming` is what every animated surface passes to the runtime, so
+    // its two tables are the page's most-copied numbers. A level edited in
+    // `timing.ts` would otherwise leave the docs teaching the old feel — and
+    // the page printed the five durations in prose, where no guard could read
+    // them.
+    const declared = declaredLevels();
+    const printed = printedLevels();
+
+    expect(declared.size).toBe(5);
+    expect(
+      [...declared.keys()].filter((name) => !printed.has(name)),
+      "the page does not print every house level",
+    ).toEqual([]);
+    expect(printed.size).toBe(declared.size);
+    expect(
+      [...printed].filter(([name, ms]) => ms !== declared.get(name)),
+      "the page prints a level the timing module no longer declares",
+    ).toEqual([]);
+
+    const phases = declaredPhases();
+    const printedPhaseRows = printedPhases();
+    expect(phases.size).toBe(3);
+    expect(printedPhaseRows.size).toBe(phases.size);
+    expect(
+      [...printedPhaseRows].filter(([phase, ease]) => ease !== phases.get(phase)),
+    ).toEqual([]);
+
+    // The unit the function converts to is the runtime's: the levels are
+    // milliseconds and the returned duration is seconds.
+    expect(timing).toContain("motionLevels[level] / 1000");
+    expect(pageText).toContain("a duration in **seconds**");
+    expect(timing).toContain(
+      'if (options.preference === "reduced") return { duration: 0 };',
+    );
+    expect(pageText).toContain("the duration is `0` and no easing is named");
   });
 
   it("calls the animated surfaces unwired only while plan 600 owes the wiring", () => {

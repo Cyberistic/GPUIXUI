@@ -24,8 +24,8 @@ elapsed time you pass in, so a movement is a value in a test rather than a wait.
 
 The primitives paint their one moving piece — a switch's thumb, a busy
 spinner — with the **runtime's** declarative `motion.div` and a plain duration,
-and the library's surfaces do the same: `motionTiming` names the 120 / 160 / 200
-/ 320 / 500 ms levels and the per-phase easing those surfaces move with, and
+and the library's surfaces do the same: `motionTiming` names the house levels and
+the per-phase easing below, and
 `packages/components/src/internal/presence.tsx` composes them into a fade plus an
 inset offset. The physics a surface does not need (a spring retargeted
 mid-flight, a stagger, a momentum coast) stay here for the components that
@@ -46,6 +46,44 @@ The hooks are the only place a clock is read. Each keeps one `performance.now()`
 origin for the life of the component and samples every 16 ms, clearing its timer
 on unmount. A hook is an app-boundary convenience; the pure functions are the
 contract.
+
+## House timing
+
+`motionTiming(level, options)` turns one house level into the object the runtime's
+`transition` prop reads: a duration in **seconds**, because the runtime reads
+seconds while the levels are authored in milliseconds, and the easing for the
+phase.
+
+| Level | Milliseconds | For |
+| ----- | ------------ | --- |
+| `step` | 120 | a step indicator's tick |
+| `fast` | 160 | a small affordance: a tooltip, an indicator |
+| `normal` | 200 | a surface arriving: a popover, a menu, an accordion panel, a tab pill |
+| `slow` | 320 | a surface that owns the window: a dialog, a drawer |
+| `notice` | 500 | a notice that may be read while it leaves: a toast |
+
+The phase chooses the easing, never the duration — `phase` defaults to
+`standard`:
+
+| Phase | Easing | Why |
+| ----- | ------ | --- |
+| `enter` | `easeOut` | a surface arrives decelerating |
+| `exit` | `easeIn` | it leaves accelerating |
+| `standard` | `easeInOut` | a movement between two resting states eases at both ends |
+
+```ts
+import { motionTiming } from "@gpuixui/motion";
+
+const enter = motionTiming("normal", { phase: "enter" });
+// { duration: 0.2, ease: "easeOut" }
+
+const still = motionTiming("slow", { preference: "reduced" });
+// { duration: 0 } — the target is assigned, not tweened
+```
+
+Under `preference: "reduced"` the duration is `0` and no easing is named. The
+caller keeps the frames — an opacity, an offset — so the resting appearance never
+depends on the preference.
 
 ## Springs
 

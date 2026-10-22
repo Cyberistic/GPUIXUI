@@ -70,6 +70,35 @@ describe("the licence records", () => {
     );
   });
 
+  it("accepts the verb a record uses for what it leaves out", () => {
+    // The Lucide record says "What we do not copy" — the section the shape
+    // requires, worded for an icon set. A parser that only knew "use" dropped
+    // the whole record from `/docs/license` with no other symptom, which is the
+    // one outcome a licence page may not have.
+    const parsed = parseLicense(
+      "lucide.md",
+      record.replace("What we do not use", "What we do not copy"),
+    );
+
+    expect(parsed?.exclusions).toBe("No source is copied.");
+  });
+
+  it("reads a record that folds its exclusions into the uses section", () => {
+    // The record may state the second half as a labelled list under "What we
+    // use" — the shape a geometry reference reads naturally in. Dropping the
+    // section must not drop the record.
+    const folded = record
+      .replace("## What we do not use\n\nNo source is copied.", "")
+      .replace(
+        "The API shape.",
+        "The API shape.\n\nWe do **not** copy:\n\n- any source, class or token.",
+      );
+    const parsed = parseLicense("folded.md", folded);
+
+    expect(parsed?.uses).toBe("The API shape.");
+    expect(parsed?.exclusions).toBe("- any source, class or token.");
+  });
+
   it("names the release artefacts the directory still lacks", () => {
     expect(missingReleaseArtifacts(["inventory.md", "NOTICE"])).toEqual([
       "provenance.md",

@@ -7,9 +7,12 @@
  * code appears on the site with no docs change, and a reference whose terms
  * were never verified cannot hide behind a summary.
  *
- * The shape is enforced: a record without a repository, a licence line, and
- * both provenance sections is not renderable, and `licenses.test.ts` fails on
- * one instead of dropping it.
+ * The shape is enforced: a record without a repository, a licence line, and a
+ * statement of what it takes and what it leaves out is not renderable, and
+ * `licenses.test.ts` fails on one instead of dropping it. A record may carry
+ * that second statement as its own section or as a "We do not copy:" list
+ * inside the uses section, because it is worded for the reference — an icon
+ * set's geometry is copied, a design system's API is not.
  */
 
 /** One `LICENSES/*.md` record. Display-ready: the Markdown is folded here. */
@@ -55,6 +58,32 @@ const sections = (body: string): ReadonlyMap<string, string> =>
       }),
   );
 
+/** The lead-in a record may use for what it leaves out instead of a section. */
+const exclusionsLeadIn = /^We do (?:\*\*)?not(?:\*\*)?[^\n]*:\s*$/m;
+
+/** Split a uses section that carries the exclusions as a lead-in list. */
+const splitExclusions = (
+  uses: string,
+): readonly [uses: string, exclusions: string] => {
+  const match = exclusionsLeadIn.exec(uses);
+  return match === null
+    ? [uses, ""]
+    : [
+        uses.slice(0, match.index).trim(),
+        uses.slice(match.index + match[0].length).trim(),
+      ];
+};
+
+/**
+ * The section naming what a record leaves out. The heading is worded for the
+ * reference: a design system is not used, an icon set is not copied, a font is
+ * not shipped. The shape requires the statement, not one verb or one layout.
+ */
+const exclusionsSection = (
+  found: ReadonlyMap<string, string>,
+): string | undefined =>
+  [...found].find(([heading]) => heading.startsWith("What we do not"))?.[1];
+
 /**
  * The folded `- Key: value` bullets of a record's header. A wrapped bullet is
  * one value: indented lines continue it.
@@ -92,8 +121,11 @@ export const parseLicense = (
   const title = plain(heading.replace(/^#\s*/, "").trim());
   const source = plain(fields.get("Repository") ?? "").replace(/[<>]/g, "");
   const licence = plain(fields.get("Licence") ?? "");
-  const uses = found.get("What we use") ?? "";
-  const exclusions = found.get("What we do not use") ?? "";
+  const usesSection = found.get("What we use") ?? "";
+  const excluded = exclusionsSection(found);
+  const [uses, leadInExclusions] =
+    excluded === undefined ? splitExclusions(usesSection) : [usesSection, ""];
+  const exclusions = excluded ?? leadInExclusions;
 
   return title === "" ||
     source === "" ||
