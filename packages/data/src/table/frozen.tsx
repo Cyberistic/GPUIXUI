@@ -132,11 +132,9 @@ export const FrozenTable = <Row,>({
   // The panes' headers are the caller's rows, so their heights can differ by a
   // text step. Both panes get the taller one, which is what keeps the two row
   // scrollers starting at the same y.
-  const headerHeight = Math.max(
-    frozenHeaderHeight,
-    dataHeaderHeight,
-    DEFAULT_HEADER_HEIGHT,
-  );
+  const measuredHeader = Math.max(frozenHeaderHeight, dataHeaderHeight);
+  const headerHeight =
+    measuredHeader === 0 ? DEFAULT_HEADER_HEIGHT : measuredHeader;
   const bodyHeight = Math.max(0, height - headerHeight);
 
   // The source's own change arrives inside `scrollTo`, so the flag stops the
