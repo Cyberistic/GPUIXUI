@@ -932,6 +932,48 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("overflow");
   });
 
+  it("records the scroller a table, a tab rail or a tree drag sits in", () => {
+    // Three measurements a data or workspace plan needs and the record never
+    // published: a horizontal scroller works and moves one axis; the runtime
+    // never reveals a selection, and the reveal call only reaches a direct
+    // child of the scroller; and nothing auto-scrolls a pane at a drag's edge.
+    // Each has a limitation that changes the layout or the handler a component
+    // ships, so the record has to carry it rather than the playground alone.
+    const horizontal = rowFor("Horizontal scrollers");
+    expect(horizontal?.verdict).toBe("supported");
+    expect(horizontal?.evidence).toContain("scroll-horizontal");
+    expect(horizontal?.evidence).toContain("overflowX");
+    expect(horizontal?.evidence).toContain("-1120");
+
+    const reveal = rowFor("Reveal a selection");
+    expect(reveal?.verdict).toBe("supported, with limits");
+    expect(reveal?.evidence).toContain("tab-overflow");
+    expect(reveal?.evidence).toContain("scrollIntoView");
+    expect(reveal?.evidence).toContain("direct child");
+    expect(reveal?.workaround).toContain("direct children");
+
+    const drag = rowFor("Drag auto-scroll");
+    expect(drag?.verdict).toBe("supported, with limits");
+    expect(drag?.evidence).toContain("drag-autoscroll");
+    expect(drag?.evidence).toContain("-128");
+    expect(drag?.evidence).toContain("scrollTo");
+    expect(drag?.workaround).toContain("ref");
+
+    const pageRows = [
+      [measuredRow("Horizontal scrollers"), "scroll-horizontal"],
+      [measuredRow("Revealing a selection"), "tab-overflow"],
+      [measuredRow("Drag auto-scroll"), "drag-autoscroll"],
+    ] as const;
+    const missing = pageRows
+      .filter(([row]) => row === undefined)
+      .map(([, probe]) => `the page's measured table has no ${probe} row`);
+    expect(missing).toEqual([]);
+    const uncited = pageRows.flatMap(([row, probe]) =>
+      (row?.[1] ?? "").includes(probe) ? [] : [`${probe} is not cited`],
+    );
+    expect(uncited).toEqual([]);
+  });
+
   it("publishes the measured gaps on /docs/runtime", () => {
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");
@@ -951,6 +993,9 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("portal-layer");
     expect(runtimePage).toContain("a11y-tree");
     expect(runtimePage).toContain("motion-geometry");
+    expect(runtimePage).toContain("scroll-horizontal");
+    expect(runtimePage).toContain("tab-overflow");
+    expect(runtimePage).toContain("drag-autoscroll");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
