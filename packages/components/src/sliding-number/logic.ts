@@ -103,20 +103,26 @@ export const numberLayout = (
       const sign = match[1] ?? "";
       const integers = match[2] ?? "";
       const fraction = match[3];
+      const digits = `${integers}${fraction ?? ""}`;
       const cells = [
         ...placeCells(integers, (index, length) => length - 1 - index, "i"),
         ...Option.match(Option.fromNullishOr(fraction), {
           onNone: () => [],
-          onSome: (digits) => [
+          onSome: (places) => [
             pointCell,
-            ...placeCells(digits, (index) => index + 1, "f"),
+            ...placeCells(places, (index) => index + 1, "f"),
           ],
         }),
       ];
+      // A value that rounds to zero has no sign to paint: `-0.4` cut to no
+      // decimals is `toFixed`'s `-0`, not a negative number.
+      const negative =
+        sign === "-" &&
+        Arr.some(Str.split("")(digits), (digit) => digit !== "0");
       return {
-        negative: sign === "-",
+        negative,
         cells,
-        text: `${sign}${prefix}${integers}${fraction === undefined ? "" : `.${fraction}`}${suffix}`,
+        text: `${negative ? "-" : ""}${prefix}${integers}${fraction === undefined ? "" : `.${fraction}`}${suffix}`,
       };
     },
   });

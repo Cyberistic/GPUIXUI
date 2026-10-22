@@ -129,11 +129,11 @@ describe("SlidingNumber", () => {
     }
   });
 
-  it("paints a caller's affixes on the outside of the digits", () => {
-    const page = render({ value: 42, prefix: "$", suffix: "/mo" });
+  it("paints the sign and a caller's affixes around the digits", () => {
+    const page = render({ value: -42, prefix: "$", suffix: "/mo" });
     try {
       const runs = painted(page);
-      expect(runs[0]).toBe("$");
+      expect(runs.slice(0, 2)).toEqual(["-", "$"]);
       expect(runs.at(-1)).toBe("/mo");
     } finally {
       page.unmount();

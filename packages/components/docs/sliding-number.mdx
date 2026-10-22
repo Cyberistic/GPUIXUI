@@ -126,11 +126,11 @@ Ten native behaviour cases in `src/behaviour/sliding-number.test.tsx` (10 tests)
 read the plate's rise per column on the renderer's motion clock: the mounted
 value, the one digit each column's frame shows, a change that rolls only the ones
 column, a column that appears at its own digit, the point and the fraction
-columns, a caller's affixes, the accessible name, a caller's label, the reduced
+columns, the sign and a caller's affixes, the accessible name, a caller's label, the reduced
 frame, and a value no column can paint. The
 layout rules — decimal-place keys, the clamped decimals, the affixes, the
 fallback and the plate arithmetic — are `src/sliding-number/logic.test.ts`
-(8 tests). Two directions measured: a plate that starts at zero instead of its
+(9 tests). Two directions measured: a plate that starts at zero instead of its
 digit fails four behaviour cases, and a digit without `role="presentation"` fails
 the name case with the twenty glyphs in the tree.
 

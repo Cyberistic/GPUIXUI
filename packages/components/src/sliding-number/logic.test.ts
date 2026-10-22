@@ -55,6 +55,18 @@ describe("numberLayout", () => {
     ]);
   });
 
+  it("drops the sign of a value that rounds to zero", () => {
+    Arr.forEach([{ decimals: 0 }, undefined], (format) => {
+      expect(numberLayout(-0.4, format)).toMatchObject({
+        negative: false,
+        text: "0",
+      });
+    });
+    expect(numberLayout(-0.04, { decimals: 1 }).text).toBe("0.0");
+    expect(numberLayout(-0.5, { decimals: 1 }).negative).toBe(true);
+    expect(numberLayout(-0.04, { decimals: 1 }).negative).toBe(false);
+  });
+
   it("reads the value with its sign, point and the caller's affixes", () => {
     expect(numberLayout(-3.5, { decimals: 1 })).toMatchObject({
       negative: true,
