@@ -35,6 +35,7 @@ import {
   type PlatformName,
   type Theme,
 } from "@gpuixui/tokens";
+import { examples as dataExamples } from "@gpuixui/data/examples";
 import {
   Badge,
   Combobox,
@@ -179,6 +180,29 @@ import {
   otpKeysChannels,
   otpKeysReadout,
 } from "./otp-keys.js";
+
+import {
+  DATA_TABLE_BODY,
+  DATA_TABLE_COLUMNS,
+  DATA_TABLE_COLUMN_RESET,
+  DATA_TABLE_COLUMNS_ORDER,
+  DATA_TABLE_CONTENT_WIDTH,
+  DATA_TABLE_DIVIDER,
+  DATA_TABLE_DRAG,
+  DATA_TABLE_FILTER,
+  DATA_TABLE_INITIAL,
+  DATA_TABLE_NAME_HEADER,
+  DATA_TABLE_NAME_SORT,
+  DATA_TABLE_NAME_WIDTH,
+  DATA_TABLE_READOUT,
+  DATA_TABLE_SORT_ASC,
+  DATA_TABLE_SORT_DESC,
+  dataTableCell,
+  dataTableColumnToggle,
+  dataTableContent,
+  dataTableReadout,
+  dataTableRow,
+} from "./data-table.js";
 
 import {
   DATE_PICKER_AFTER,
@@ -21171,6 +21195,378 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The shipped `@gpuixui/data` files table, driven in a real window.
+ *
+ * The example is mounted from the package's registry rather than rebuilt, so the
+ * probe measures the screen a consumer copies. The window adds what the offscreen
+ * `data-table-core` scenario cannot: a press focuses the row the runtime hit, a
+ * row's `focusElement` call has to follow the committed `tabIndex` (the rule the
+ * example's `useLayoutEffect` documents), a header press and its menu live in the
+ * same anchored layer a window hit-tests, and the `TableColumnDivider` drag is a
+ * pointer path with eight moves rather than a synthesised one.
+ */
+const DataTableProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const TableExample = dataExamples["table"];
+  return (
+    <div
+      testId="data-table-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The shipped data table: a press selects and focuses the row it hit,
+        arrows walk the records, the filter releases a hidden selection, the
+        column menu hides one and the divider resizes it.
+      </text>
+      {TableExample === undefined ? null : <TableExample />}
+    </div>
+  );
+};
+
+const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(DATA_TABLE_READOUT);
+    const readout = () => ctx.host.text(DATA_TABLE_READOUT);
+    const initial = yield* ctx.expectSome(
+      "the header painted",
+      Option.fromNullishOr(yield* ctx.host.bounds(DATA_TABLE_NAME_HEADER)),
+    );
+    const firstRow = yield* ctx.expectSome(
+      "the first row painted",
+      Option.fromNullishOr(yield* ctx.host.bounds(dataTableRow(1))),
+    );
+    yield* ctx.expectEqual(
+      "the table opens on the example's own readout",
+      yield* readout(),
+      DATA_TABLE_INITIAL,
+    );
+    yield* ctx.expectEqual(
+      "the rows start below the header",
+      firstRow.y > initial.y,
+      true,
+    );
+
+    // A press chooses the record it hit, paints the selection wash and takes the
+    // focus: the example moves focus after the `tabIndex` commit, and a window is
+    // where that ordering matters.
+    yield* ctx.host.click(dataTableRow(2));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press chooses the row it hit",
+      yield* readout(),
+      dataTableReadout({
+        rows: 60,
+        selected: 1,
+        columns: DATA_TABLE_COLUMNS_ORDER,
+        width: DATA_TABLE_NAME_WIDTH,
+        content: DATA_TABLE_CONTENT_WIDTH,
+        sort: "unsorted",
+      }),
+    );
+    yield* ctx.expectEqual(
+      "the chosen row takes the focus",
+      yield* focusedAfterPaint(ctx),
+      dataTableRow(2),
+    );
+    // The live host reports no style, so the wash is counted in a capture: the
+    // row width's worth of the theme's `selected` role cannot come from anything
+    // else on the screen.
+    const wash = yield* ctx.expectSome(
+      "the theme names a selected wash",
+      Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.selected)),
+    );
+    yield* ctx.host.capture("data-table-selected");
+    yield* ctx.expectEqual(
+      "the chosen row paints the selection wash",
+      (yield* paintedPixels(ctx, "data-table-selected", wash)) > 0,
+      true,
+    );
+
+    // Arrows walk the painted records and move the real focus with them, because
+    // `focusElement` refuses an element still outside the tab order. The poll
+    // waits for the focus to **leave** the row the key was sent to, then the
+    // check names where it landed, so a swallowed key cannot pass by reading the
+    // row it started on.
+    const step = (key: "down" | "up", from: number, to: number) =>
+      Effect.gen(function* () {
+        yield* ctx.host.key(key);
+        const landed = yield* settleUntil(
+          focusedId(ctx),
+          (id) => id !== dataTableRow(from),
+        );
+        yield* ctx.expectEqual(
+          key === "down"
+            ? "ArrowDown moves the choice and the focus to the next record"
+            : "ArrowUp walks back",
+          landed,
+          dataTableRow(to),
+        );
+      });
+    yield* step("down", 2, 3);
+    yield* step("up", 3, 2);
+
+    // A chorded press toggles the record under it — the modifier flags arrive on
+    // the window's click event, not only in a `TestRenderer`.
+    yield* ctx.host.clickWith(dataTableRow(5), ["cmd"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a cmd press adds the record without dropping the first",
+      yield* readout(),
+      dataTableReadout({
+        rows: 60,
+        selected: 2,
+        columns: DATA_TABLE_COLUMNS_ORDER,
+        width: DATA_TABLE_NAME_WIDTH,
+        content: DATA_TABLE_CONTENT_WIDTH,
+        sort: "unsorted",
+      }),
+    );
+    yield* ctx.expectEqual(
+      "and the pressed record holds the focus",
+      yield* focusedAfterPaint(ctx),
+      dataTableRow(5),
+    );
+
+    // The header sorts by the column it hit, and the selection is kept by record
+    // rather than by position.
+    yield* ctx.host.click(DATA_TABLE_NAME_SORT);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a header press sorts ascending",
+      yield* readout(),
+      `${DATA_TABLE_SORT_ASC}`,
+    );
+    yield* ctx.expectContains(
+      "the selection survives the sort",
+      yield* readout(),
+      "2 selected",
+    );
+    yield* ctx.host.click(DATA_TABLE_NAME_SORT);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a second press flips the direction",
+      yield* readout(),
+      `${DATA_TABLE_SORT_DESC}`,
+    );
+    const top = yield* ctx.expectSome(
+      "the sorted top row painted",
+      Option.fromNullishOr(yield* ctx.host.bounds(dataTableRow(60))),
+    );
+    yield* ctx.expectNear(
+      "the last record paints at the top",
+      top.y,
+      firstRow.y,
+      1,
+    );
+
+    // The fixed header: a wheel over the body moves the rows under a header that
+    // keeps its painted place.
+    yield* ctx.host.wheel(DATA_TABLE_BODY, 0, -300);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the wheel changes nothing the control owns",
+      yield* readout(),
+      `${DATA_TABLE_SORT_DESC}`,
+    );
+    const headerAfter = yield* ctx.expectSome(
+      "the header still painted",
+      Option.fromNullishOr(yield* ctx.host.bounds(DATA_TABLE_NAME_HEADER)),
+    );
+    yield* ctx.expectNear(
+      "the header keeps its painted position",
+      headerAfter.y,
+      initial.y,
+      1,
+    );
+    const scrolled = yield* ctx.expectSome(
+      "the scrolled row painted",
+      Option.fromNullishOr(yield* ctx.host.bounds(dataTableRow(60))),
+    );
+    yield* ctx.expectEqual(
+      "and the rows moved under it",
+      scrolled.y < top.y,
+      true,
+    );
+
+    // The shipped column menu, opened from a trigger inside the header: it is a
+    // real `DropdownMenu`, so Escape dismisses it and returns the focus.
+    yield* ctx.host.click(DATA_TABLE_COLUMNS);
+    yield* ctx.host.waitFor(dataTableColumnToggle("status"));
+    yield* Effect.sleep(SETTLE);
+    const sizeBefore = yield* ctx.expectSome(
+      "the last column painted before the hide",
+      Option.fromNullishOr(yield* ctx.host.bounds("files-size")),
+    );
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "Escape dismisses the column menu",
+      yield* settleGone(ctx, dataTableColumnToggle("status")),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "and hands the focus back to its trigger",
+      yield* focusedAfterPaint(ctx),
+      DATA_TABLE_COLUMNS,
+    );
+    yield* ctx.host.click(DATA_TABLE_COLUMNS);
+    yield* ctx.host.waitFor(dataTableColumnToggle("status"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click(dataTableColumnToggle("status"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "hiding a column takes its width out of the content",
+      yield* readout(),
+      dataTableReadout({
+        rows: 60,
+        selected: 2,
+        columns: ["name", "size"],
+        width: DATA_TABLE_NAME_WIDTH,
+        content: dataTableContent(["name", "size"]),
+        sort: DATA_TABLE_SORT_DESC,
+      }),
+    );
+    yield* ctx.expectEqual(
+      "the hidden column paints no header",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds("files-status")),
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "and no cell",
+      Option.isNone(
+        Option.fromNullishOr(
+          yield* ctx.host.bounds(dataTableCell(60, "status")),
+        ),
+      ),
+      true,
+    );
+    const sizeAfter = yield* ctx.expectSome(
+      "the later column still painted",
+      Option.fromNullishOr(yield* ctx.host.bounds("files-size")),
+    );
+    yield* ctx.expectNear(
+      "the later column moved left by exactly the hidden width",
+      sizeBefore.x - sizeAfter.x,
+      110,
+      1,
+    );
+
+    // Reset restores the declared columns, in the declared order and widths.
+    yield* ctx.host.click(DATA_TABLE_COLUMN_RESET);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the reset restores all three columns",
+      yield* readout(),
+      "cols=name,status,size",
+    );
+    yield* ctx.expectContains(
+      "and the declared content width",
+      yield* readout(),
+      `content=${DATA_TABLE_CONTENT_WIDTH}`,
+    );
+
+    // The shipped divider's drag: eight moves, the column's own clamp, and the
+    // header and every cell on the width it reports.
+    yield* ctx.host.drag(DATA_TABLE_DIVIDER, DATA_TABLE_DRAG, 0);
+    yield* Effect.sleep(SETTLE);
+    const width = DATA_TABLE_NAME_WIDTH + DATA_TABLE_DRAG;
+    yield* ctx.expectContains(
+      "a drag widens the column it starts on",
+      yield* readout(),
+      `w=${width}`,
+    );
+    yield* ctx.expectContains(
+      "and the content grows with it",
+      yield* readout(),
+      `content=${dataTableContent(DATA_TABLE_COLUMNS_ORDER, width)}`,
+    );
+    yield* ctx.expectNear(
+      "the header paints the new width",
+      (yield* paintedBox(ctx, DATA_TABLE_NAME_HEADER)).width,
+      width,
+      1,
+    );
+    yield* ctx.expectNear(
+      "and so does the cell under it",
+      (yield* paintedBox(ctx, dataTableCell(1, "name"))).width,
+      width,
+      1,
+    );
+    yield* ctx.host.capture("data-table-resized");
+
+    // The filter last: it narrows the painted set and releases the selection it
+    // hides in the same commit, and a query that widens again revives the
+    // records the controller still holds — the retention `useTable` documents.
+    yield* ctx.host.click(DATA_TABLE_FILTER);
+    yield* ctx.host.key("001");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a typed filter narrows the rows and releases the hidden selection",
+      yield* readout(),
+      dataTableReadout({
+        rows: 1,
+        selected: 0,
+        columns: DATA_TABLE_COLUMNS_ORDER,
+        width: DATA_TABLE_NAME_WIDTH + DATA_TABLE_DRAG,
+        content: dataTableContent(
+          DATA_TABLE_COLUMNS_ORDER,
+          DATA_TABLE_NAME_WIDTH + DATA_TABLE_DRAG,
+        ),
+        sort: DATA_TABLE_SORT_DESC,
+      }),
+    );
+    yield* ctx.expectEqual(
+      "the one matching row paints",
+      Option.isSome(
+        Option.fromNullishOr(yield* ctx.host.bounds(dataTableRow(1))),
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a row the query hides paints nothing",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds(dataTableRow(2))),
+      ),
+      true,
+    );
+    // A query the whole set matches brings every record back — typed over the
+    // narrowed text with the field's own select-all — and it brings the chosen
+    // records with it: `useTable` retains the store and only hides what the
+    // query releases, so widening the set paints the choice again. That is the
+    // rule a grid reading this page must know before it clears a filter in an
+    // effect expecting the release to be permanent.
+    yield* ctx.host.key("cmd-a");
+    yield* ctx.host.key("file");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "clearing the query restores the whole set",
+      yield* readout(),
+      "60 rows",
+    );
+    yield* ctx.expectContains(
+      "and the records the controller held are chosen again",
+      yield* readout(),
+      "2 selected",
+    );
+    yield* ctx.host.capture("data-table-filtered");
+  });
+
+/**
  * A grid whose first column is drag-resized in a real window.
  *
  * Tier 3's **Resizable columns** row cites only the headless
@@ -22004,5 +22400,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "date-picker-lifecycle",
     view: () => <DatePickerProbe />,
     steps: datePickerSteps,
+  },
+  "data-table-lifecycle": {
+    id: "data-table-lifecycle",
+    view: () => <DataTableProbe />,
+    steps: dataTableSteps,
   },
 };

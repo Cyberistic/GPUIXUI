@@ -486,6 +486,12 @@ export const liveRegistry = [
       "Input: the shipped DatePicker opens on a day cell, moves real focus by key and clamps to its bounds, chooses on Enter, and Escape and Clear return the focus",
     capability: "input",
   },
+  {
+    id: "data-table-lifecycle",
+    title:
+      "Table: the shipped data table selects and focuses the row a press hit, walks records by arrow, keeps a selection through a sort and a hidden column, and resizes its track",
+    capability: "table",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

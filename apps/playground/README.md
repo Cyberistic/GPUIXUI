@@ -42,13 +42,13 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-75 probes a real window can prove, of which sixteen mount shipped
+76 probes a real window can prove, of which seventeen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
-combobox, the date picker, the nested overlay stack and the modal focus rule),
-seven mount
+combobox, the date picker, the shipped data table, the nested overlay stack
+and the modal focus rule), seven mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip and
 the Button), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
@@ -786,7 +786,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density |
-| table sort/selection | `table-lifecycle`, `modifier-select-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
+| table sort/selection | `table-lifecycle`, `modifier-select-lifecycle`, `data-table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
 | panel resizing | `split-pane-lifecycle` | a divider drag resizes the pane and clamps at the caller's bounds |
 | workspace restore | `workspace-restore` | a saved arrangement paints again after a re-mount, a corrupt string opens the default, and an out-of-bounds width is clamped |
 
@@ -4279,6 +4279,59 @@ is opened (**`expected "ArrowRight moves one day forward: 2026-03-13", got
 day fails with **`expected "date-day-2026-03-11", got "date-next"`** — the
 measured limit is reported, not assumed away.
 
+### `data-table-lifecycle` — measured on 0.11.0 here
+
+**Does the shipped `@gpuixui/data` table survive a window, or only the
+`TestRenderer` that built it?** The headless `data-table-core` scenario mounts
+the same screen, but a window is a different delivery path for four of its rules:
+a press is hit-tested rather than dispatched to a test id, a row's focus has to
+follow the committed `tabIndex` (`renderer.focusElement` refuses an element still
+outside the tab order, the rule the example's `useLayoutEffect` documents), a
+header's menu is an anchored layer the window hit-tests, and the divider drag is
+eight pointer moves rather than a synthesised one. The probe therefore mounts the
+**example** from the package's registry and asserts the example's own readout, so
+a change to the screen fails here instead of measuring a copy.
+
+| Gesture | Readout | What it proves |
+| ------- | ------- | -------------- |
+| open | `60 rows · 0 selected · cols=name,status,size · w=260 · content=460 · unsorted` | the example's own counters, and the rows paint below the header |
+| press row 2 | `60 rows · 1 selected …` | a press chooses the record it hit, paints the `selected` wash (counted in a capture), and the row holds the focus |
+| `down` / `up` | focus `file-3` / `file-2` | the arrow walks the painted records and moves the real focus after the `tabIndex` commit |
+| cmd press row 5 | `60 rows · 2 selected …` | the window's click carries its modifier chord: the press toggles instead of replacing |
+| press the Name header | `… · name-asc` | a header press sorts by the column it hit, and the selection survives it |
+| press it again | `… · name-desc` | the second press flips the direction; `file-060` paints at the top edge |
+| wheel the body `-300` | unchanged | the rows move under a header that keeps its painted `y` — the sibling-header scroll, not sticky |
+| drag the divider `+40` | `… w=300 · content=500 …` | the shipped divider's eight moves resize the column, and the header and the cell under it paint the new width |
+| open the column menu | — | the trigger opens the shipped `DropdownMenu`; Escape dismisses it and returns the focus to the trigger |
+| hide Status | `cols=name,size · content=350` | hiding takes the column's width out of the content, unpaints its header and cells, and shifts the later column left by exactly 110 |
+| Reset columns | `cols=name,status,size · content=460` | the declared order and widths come back |
+| type `001` | `1 rows · 0 selected` | the query narrows the painted set and releases the choice it hides in the same commit |
+| select all, type `file` | `60 rows · 2 selected` | widening the query brings the whole set back **and the chosen records with it** |
+
+The last row is a design rule rather than a quirk: `useTable` retains the store
+and computes the visible selection during render, so a query releases what it
+hides without dropping it, and the next wider query paints it again. A grid that
+needs a permanent release must commit one on the query change; the filter probe
+page says the same beside its own contract. Two harness notes the probe records:
+a window's press commits its state on the next frame, so every read of the
+readout follows a settle (the first run failed `a press chooses the row it hit`
+on the pre-press readout), and the automation's `key` runs no native edit for a
+named key, so the query is replaced by select-all-then-type rather than
+backspaces.
+
+43 checks, `--only data-table-lifecycle`, green on 0.11.0 (~9 s, three
+consecutive runs). Fixture: `src/live/data-table.ts` (the example's ids, its
+declared widths, the content arithmetic and the readout's spelling) +
+`data-table.test.ts` (7 cases: every width and the content read from the
+example's `FILE_COLUMNS`, the readout template and its three moves, the parts the
+example and the menu derive, the row/cell ids, the probe held to the fixture, and
+this section). Evidence: `.artifacts/live/data-table-{selected,resized,filtered}.png`.
+
+Negative control measured, exit `1`, restored green: expecting the down step to
+land on `files-row-file-4` fails `ArrowDown moves the choice and the focus to the
+next record` with **`expected "files-row-file-4", got "files-row-file-3"`** — the
+check reads the window's focused element, not the key it sent.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -4497,7 +4550,8 @@ narrower. Each deviation is deliberate and measured:
   `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text`,
   `syntax-palette`, `press-routing-lifecycle`, `list-row-press`,
   `column-resize-lifecycle`, `button-activation-lifecycle` and
-  `date-picker-lifecycle` (seventeen probes, each run alone).
+  `date-picker-lifecycle` and `data-table-lifecycle` (eighteen probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
