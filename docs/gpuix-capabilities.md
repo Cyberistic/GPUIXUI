@@ -78,6 +78,7 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | CSS shorthand and `calc()` strings | not supported | values are numbers or colours, not a CSS string | `@gpuixui/tw` resolves a numeric `calc()` to a number before it reaches the runtime |
 | Keyframe animations, variants, shared-layout transitions | not supported | `MotionProps` drives `width`, `height`, `opacity`, `top`, `right`, `bottom`, `left`, `borderRadius` with duration/delay/ease | `@gpuixui/motion` springs over those fields; a cross-fade is `opacity` |
 | Animation interruption | supported | a target change starts the next transition from the current visible value | — |
+| Animated geometry and content clipping | supported, with limits | `motion` tweens painted geometry. **Measured** by `motion-geometry` on a 120×40 box with `transition={{ duration: 3, ease: "easeInOut" }}`: eight presses ~50ms apart painted `40, 43, 117, 123, 221, 240, 240, 240` — a tween, not a jump — and settled at 240×240, the reverse run tweened `240, 240, 167, 63, 59.5, 40, 40, 40`, and `onMotionComplete` fired once per run. **The animated box clips its content rather than reflowing it**: a fixed 320×200 child kept that size while the box was 120×40 and while it was 240×240. `duration: 0` is the negative control (two target sizes, no frame between them) | animate an **outer** clipping box (`overflow: "hidden"`) for a collapsing sidebar or a growing row — the content inside stands still, it is not re-laid out; read `onMotionComplete` when a finished run should unmount or unlock; a numeric target lands exactly, so the settled box is the value written |
 | Reduced-motion detection | unverified | no documented media query or runtime flag | keep motion optional and short; do not claim a reduced-motion mode |
 | Custom paint | not supported | `canvas` is in `ElementType` but blank | render `svg`; there is no retained draw API |
 | Inline SVG painting | supported, with limits | `<svg source>` paints its markup, but **as one tint**: `@gpuix/native`'s `SvgElement` renders through GPUI's icon element, so the whole markup is masked in `style.color` and a shape's own `fill` never reaches the frame. **Measured** by `content-surfaces`: all five shapes painted in the one source tint, while five stacked `<svg>` elements each painted their own (bar green, bubble blue, line red, axis yellow, label orange); `<text>` inside the markup paints | stack one `<svg>` per colour — a multi-series chart is one element per series; labels can live in the markup, but a gradient or a per-shape palette inside one element is not available |
@@ -143,7 +144,13 @@ and never after a mouse press — the tokens package owns the helper
 
 Motion is springs over numeric fields only, with no keyframes and no
 reduced-motion flag; the state-driven design rule is to make motion optional and
-short, never the carrier of meaning.
+short, never the carrier of meaning. Where it runs it is a real tween on painted
+geometry: a 3s box painted eight intermediate heights between 40 and 240, landed
+exactly at 240, and fired `onMotionComplete` once (`motion-geometry`). The
+animated box **clips** its content — a fixed 320×200 child kept its size while
+the box was 120×40 and while it was 240×240 — so a collapsing sidebar animates an
+outer `overflow: "hidden"` box instead of expecting the panel inside to re-lay
+out.
 
 ## 5. Keeping this document true
 
@@ -153,14 +160,15 @@ short, never the carrier of meaning.
   supports something, and a new matrix key without a row fails by name.
 - The same test holds `/docs/runtime` to this file: the site's *measured in a
   window* and *measured offscreen* sections must name the probes behind every gap
-  they list (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
+  and measured behaviour they list (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
   `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`, `content-surfaces`,
   `selection-lifecycle`, `clipboard-lifecycle`, `virtual-tree-lifecycle`,
   `virtual-list-lifecycle`, `virtual-list-windowed`, `virtual-list-rows`,
   `virtual-list-expand`, `portal-layer`, `data-grid-frozen-column`,
   `select-lifecycle`, `floating-sides`, `dock-reflow`, `docking-nested`,
   `panel-resize`, `split-pane-lifecycle`, `a11y-tree`, `drag-between-panes`,
-  `keyboard-focus-dim`, `filled-action-dim`), because a measured gap
+  `keyboard-focus-dim`, `filled-action-dim`, `motion-geometry`), because a
+  measured gap
   is absent from the typings rather than merely hard to find. Every id a page
   row cites must be a registered probe in `apps/playground` and appear in this
   list, so a row cannot cite a probe that does not exist or a probe the record

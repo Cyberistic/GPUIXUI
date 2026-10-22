@@ -905,6 +905,33 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("keyboardFocusDim: false");
   });
 
+  it("records the geometry `motion` animates and the content it clips", () => {
+    // Two inventory rows rest on this — Tier 3's expandable rows and Tier 4's
+    // collapsible sidebars — and neither had a window measurement, because a
+    // `TestRenderer` frame is not a run. `motion-geometry` measured the tween
+    // (intermediate heights, an exact landing, one completion per run) and the
+    // fact a plan would otherwise get wrong: the animated box clips its child
+    // rather than re-laying it out, so the sidebar animates an outer box and the
+    // panel inside stands still.
+    const motion = rowFor("Animated geometry and content clipping");
+    expect(motion?.verdict).toBe("supported, with limits");
+    expect(motion?.evidence).toContain("motion-geometry");
+    expect(motion?.evidence).toContain("40, 43, 117, 123, 221, 240");
+    expect(motion?.evidence).toContain("onMotionComplete");
+    expect(motion?.evidence).toContain("320×200");
+    expect(motion?.workaround).toContain("overflow");
+    expect(motion?.workaround).toContain("outer");
+
+    const page = measuredRow("Animated geometry");
+    expect(
+      page,
+      "the page's measured table has no animated-geometry row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("motion-geometry");
+    expect(page?.[1]).toContain("clips");
+    expect(page?.[2]).toContain("overflow");
+  });
+
   it("publishes the measured gaps on /docs/runtime", () => {
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");
@@ -923,6 +950,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("floating-sides");
     expect(runtimePage).toContain("portal-layer");
     expect(runtimePage).toContain("a11y-tree");
+    expect(runtimePage).toContain("motion-geometry");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
