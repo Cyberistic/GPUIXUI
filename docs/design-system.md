@@ -940,7 +940,8 @@ would ignore or a number it cannot lay out. The audit is the gate: `auditTheme(t
 runs all ten checks — an unpaintable role, an unpaintable shadow in a level the
 brand supplied, a size, length or shadow geometry the renderer would drop, every
 pair below the floor its variant asks for, every decorative surface too close to
-its background, a data series lost on its plot or to a colour-vision deficiency,
+its background — including the derived hover and press a filled role paints
+(§8) — a data series lost on its plot or to a colour-vision deficiency,
 a selection wash that hides the body or secondary text inside it, an indicator
 mark nobody can find, a disabled label the fade erases, and a label the
 keyboard dim erases while another control holds the focus; run it over the
