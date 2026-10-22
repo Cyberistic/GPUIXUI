@@ -1513,6 +1513,53 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("height");
   });
 
+  it("records the box an image occupies, derived from its fixture", () => {
+    // An image is the one element whose intrinsic ratio the runtime owns, and
+    // the record taught the four sources an `<img>` can paint from without
+    // saying what box it takes. `image-box` measured that the loaded bitmap's
+    // ratio **replaces** a style's `aspectRatio` (120×120, not the 120×60 the
+    // style asks for) and that only two definite dimensions pin the box. The
+    // geometry is derived from the fixture, so a record that teaches a box the
+    // probe no longer paints fails by name.
+    const fixture = read("apps/playground/src/live/image-box.ts");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d.]+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+    const intrinsic = constant("IMAGE_INTRINSIC_SIZE");
+    const width = constant("IMAGE_WIDTH");
+    const height = constant("IMAGE_HEIGHT");
+    const styleRatio = constant("IMAGE_RATIO");
+    const bitmapRatio = intrinsic / intrinsic;
+    const box = (w: number, h: number): string =>
+      `${Math.round(w)}×${Math.round(h)}`;
+    const square = box(width, width / bitmapRatio);
+    const styleHeight = width / styleRatio;
+
+    // The premise: the style asks for a shorter box than the bitmap paints.
+    expect(styleRatio).toBeGreaterThan(bitmapRatio);
+
+    const image = rowFor("Image painting");
+    expect(image?.verdict).toBe("supported, with limits");
+    expect(image?.evidence).toContain("image-box");
+    expect(image?.evidence).toContain(box(intrinsic, intrinsic));
+    expect(image?.evidence).toContain(square);
+    expect(image?.evidence).toContain(`(**${styleHeight}**)`);
+    expect(image?.evidence).toContain(box(width, height));
+    expect(image?.evidence).toContain("replaces");
+    expect(image?.workaround).toContain("both");
+
+    const page = measuredRow("Image bytes");
+    expect(page, "the page's measured table has no image-box row").toBeDefined();
+    expect(page?.[1]).toContain("image-box");
+    expect(page?.[1]).toContain(box(intrinsic, intrinsic));
+    expect(page?.[1]).toContain(square);
+    expect(page?.[1]).toContain(box(width, height));
+    expect(page?.[1]).toContain("replaces");
+    expect(page?.[2]).toContain("both");
+  });
+
   it("records the Select reveal gap a window and a runtime suite measured", () => {
     // `Select` is named in §2 as provided, so the record read as "a Select is
     // just a wrapper". A window measured the overlay half (`select-lifecycle`)
