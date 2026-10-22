@@ -33,6 +33,19 @@ export const keyboardRing = (
     : ring;
 };
 
+/**
+ * A control whose own content must stay readable while the keyboard focus is
+ * elsewhere.
+ *
+ * The runtime dims every other focusable element to
+ * `keyboardFocusDimOpacity` (40%) so a keyboard user can see where Tab can go.
+ * On a filled action that composites the label into its own fill, and on a
+ * field it fades the value the reader is reading, so both declare
+ * `keyboardFocusDim: false`. A caller's `style` merges last and can put the dim
+ * back. The measurement is `keyboardDimFailures` in `@gpuixui/tokens`.
+ */
+export const keepContent: StyleDesc = { keyboardFocusDim: false };
+
 /** What decides whether a control declares a ring at all. */
 export interface RingState {
   readonly disabled?: boolean;

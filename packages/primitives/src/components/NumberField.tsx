@@ -50,7 +50,7 @@ import {
   type NumberRange,
 } from "../core/number.js";
 import { accessibleName } from "../core/a11y.js";
-import { controlRing } from "../core/focus.js";
+import { controlRing, keepContent } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -200,6 +200,24 @@ export const renderNumberFieldInput = (
   part: NumberFieldPart,
 ): ReactElement => {
   const { disabled, focus, handlers } = part;
+  /**
+   * The chrome holds the ring and the dim opt-out, not the wrapper: the runtime
+   * paints `focusVisible` only on the element that holds the focus, which is
+   * this `<input>`.
+   */
+  const chrome = mergeStyle(
+    mergeStyle(
+      mergeStyle(
+        recipeTw.classesToStyle(numberInputClass, part.theme).style,
+        recipeTw.classesToStyle(className, part.theme).style,
+      ),
+      keepContent,
+    ),
+    controlRing(part.theme, {
+      disabled: part.disabled,
+      invalid: part.invalid,
+    }),
+  );
   return (
     <input
       ref={handlers.registerInput}
@@ -211,13 +229,7 @@ export const renderNumberFieldInput = (
       tabIndex={disabled ? -1 : undefined}
       theme={nativeTextTheme(part.theme)}
       aria-label={part.label}
-      style={mergeStyle(
-        mergeStyle(
-          recipeTw.classesToStyle(numberInputClass, part.theme).style,
-          recipeTw.classesToStyle(className, part.theme).style,
-        ),
-        style,
-      )}
+      style={mergeStyle(chrome, style)}
       onChange={(event: EventPayload) => {
         if (disabled) return;
         handlers.onTextChange(event.value ?? "");
@@ -333,10 +345,6 @@ export const renderNumberField = (
   if (part.invalid) chrome = mergeStyle(chrome, resolved.invalid);
   if (part.disabled)
     chrome = suppressFeedback(mergeStyle(chrome, resolved.disabled));
-  chrome = mergeStyle(
-    chrome,
-    controlRing(theme, { disabled: part.disabled, invalid: part.invalid }),
-  );
   chrome = mergeStyle(
     chrome,
     resolveStyle(props.style, {

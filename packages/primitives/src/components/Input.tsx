@@ -19,7 +19,7 @@ import { accessibleName } from "../core/a11y.js";
 import type { ValueState } from "../core/state.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { controlRing } from "../core/focus.js";
+import { controlRing, keepContent } from "../core/focus.js";
 import { fieldClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
@@ -95,7 +95,7 @@ export const fieldChrome = (
   }
   const ring = controlRing(theme, { disabled, invalid });
   return mergeStyle(
-    mergeStyle(base, ring),
+    mergeStyle(mergeStyle(base, keepContent), ring),
     resolveStyle(style, {
       disabled: disabled === true,
       focused,

@@ -184,19 +184,44 @@ it("steps from a hit-tested click on the spin column and refocuses the input", a
   expect(focused.type).toBe("input");
 });
 
-it("declares the keyboard ring on the field's chrome, never a shadow", async () => {
-  const runtime = await mount(<NumberField testId="nf" label="Quantity" />);
-  const input = inputOf(runtime, "nf");
-  const box = Option.getOrElse(runtime.boundsOfId(input.id), () =>
-    expect.fail("the input painted no box"),
+it("declares the keyboard ring on the input, the element that holds focus", async () => {
+  // The bug this guards: the ring was declared on the field's wrapper, and the
+  // runtime paints `focusVisible` only on an element it tracks focus for
+  // (`apply_focus_visible` is gated on a focus handle — measured by
+  // `groups.runtime.test.tsx`), so Tab painted no ring on this field at all.
+  const runtime = await mount(
+    <Stack direction="row">
+      <Button testId="before">Before</Button>
+      <NumberField testId="nf" label="Quantity" />
+    </Stack>,
   );
-  runtime.clickAt(box.x + box.width / 2, box.y + box.height / 2);
+  const input = inputOf(runtime, "nf");
+  runtime.click("before");
+  runtime.focusNext();
   runtime.flush();
-  const field = Option.getOrElse(runtime.element("nf"), () =>
+  const focused = Option.getOrElse(runtime.focusedElement(), () =>
+    expect.fail("Tab moved the focus nowhere"),
+  );
+  expect(focused.id).toBe(input.id);
+  expect(focused.style["focusVisible"]).toBeDefined();
+  expect(focused.style["boxShadow"]).toBeUndefined();
+  const chrome = Option.getOrElse(runtime.element("nf"), () =>
     expect.fail("the runtime retained no field"),
   );
-  expect(field.style["focusVisible"]).toBeDefined();
-  expect(field.style["boxShadow"]).toBeUndefined();
+  expect(chrome.style["focusVisible"]).toBeUndefined();
+});
+
+it("keeps its value out of the keyboard dim, so a Tab elsewhere leaves it readable", async () => {
+  // The runtime fades every other focusable element to 40% while one has
+  // keyboard focus; on a field that composites the reader's value into its own
+  // fill (`keyboardDimFailures`), so the input opts out.
+  const runtime = await mount(<NumberField testId="nf" label="Quantity" />);
+  const input = inputOf(runtime, "nf");
+  expect(input.style["keyboardFocusDim"]).toBe(false);
+  const chrome = Option.getOrElse(runtime.element("nf"), () =>
+    expect.fail("the runtime retained no field"),
+  );
+  expect(chrome.style["keyboardFocusDim"]).toBeUndefined();
 });
 
 it("refuses edits, keys and steps while disabled", async () => {

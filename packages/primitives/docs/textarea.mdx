@@ -65,7 +65,9 @@ mean.
 
 The same `fieldChrome` and native text theme as `Input`; only the height model
 changes — and the same `StateStyle<FieldState>` (`{ disabled, focused, invalid }`)
-`style` contract, merged last.
+`style` contract, merged last. The field keeps its text out of the runtime's
+keyboard dim (`keyboardFocusDim: false`), because the text being read is content
+rather than chrome; see `Input` §Theming for the measurement.
 
 ## Limitations
 

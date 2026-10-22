@@ -145,6 +145,11 @@ Cells use the shared field chrome (`colors.input`, `colors.border`,
 comes from `density.controlHeight[size]`; the row gap is the `sm` spacing step.
 No literal colour, size or radius is named.
 
+Each cell's digit is content, not chrome, so every cell declares
+`keyboardFocusDim: false`: the runtime dims every other focusable element to 40%
+while one has keyboard focus, which would composite a digit into its own cell
+fill. The ring still marks where the focus is.
+
 ## Limitations
 
 - **Paste is unverified.** `@gpuix/native` 0.11.0 has no `onPaste` and the

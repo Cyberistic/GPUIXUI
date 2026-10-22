@@ -97,6 +97,15 @@ receives `{ disabled, focused, invalid }`. `TextArea` and `Input` share the type
 so a form styles both the same way, and the result merges after the ring (the
 last word on a property the recipe also sets).
 
+A field's own text is content, not chrome: while another control holds keyboard
+focus the runtime dims every other focusable element to 40%
+(`keyboardFocusDimOpacity`), and on a field that composites the value and the
+placeholder into the field's own fill (`keyboardDimFailures` measures the pair).
+The field therefore declares `keyboardFocusDim: false`, so its content stays
+readable while Tab is elsewhere; the ring still says where the keyboard focus
+is. `style` merges last, so an application that wants the cue on a field can put
+it back.
+
 ## Limitations
 
 - No `type`, `maxLength`, `inputMode` or `pattern`: the component exposes a
@@ -114,6 +123,12 @@ last word on a property the recipe also sets).
 - `src/components/fields.test.tsx` — chrome, invalid state and host props.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the field's own tracking, on both fields.
+- `src/components/keyboard-dim.test.tsx` — the fields (`Input`, `TextArea`,
+  `NumberField`'s input, every OTP cell, `Select`'s trigger) declare
+  `keyboardFocusDim: false`, a caller's `style` can put the cue back, and a
+  `Toggle` and a `Slider` keep it (both directions measured: dropping a field's
+  declaration fails its case by name, and opting every control out fails the two
+  negative cases).
 - `runtime/fields.runtime.test.tsx` — runtime keystrokes reach `onValueChange` with
   the accumulated text; Enter reaches `onSubmit`; a controlled field reports each
   edit; an empty field paints its hint in the theme's `placeholder` role and a

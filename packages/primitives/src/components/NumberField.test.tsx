@@ -238,17 +238,35 @@ describe("NumberField parts", () => {
 });
 
 describe("NumberField styles", () => {
-  it("declares the keyboard ring on the field's own chrome, not the input", () => {
+  it("declares the keyboard ring on the input, the element that holds focus", () => {
+    // The bug this guards: the ring was declared on the field's wrapper, and
+    // the runtime applies `focusVisible` only to an element it tracks focus for
+    // (measured by `runtime/groups.runtime.test.tsx`), so a Tab painted no ring
+    // at all. The input is the tab stop, so the declaration belongs there.
     const element = render({}, 50, "50", focused);
     const chrome = expectSome(hostStyleRecord(element));
-    expect(chrome["focusVisible"]).toBeDefined();
-    expect(Option.fromNullishOr(chrome["boxShadow"])).toStrictEqual(
+    expect(Option.fromNullishOr(chrome["focusVisible"])).toStrictEqual(
       Option.none(),
     );
     const { input } = partsOf(element);
-    expect(
-      Option.getOrUndefined(hostStyleRecord(input))?.["focusVisible"],
-    ).toBeUndefined();
+    const ringed = expectSome(hostStyleRecord(input));
+    expect(ringed["focusVisible"]).toBeDefined();
+    expect(Option.fromNullishOr(ringed["boxShadow"])).toStrictEqual(
+      Option.none(),
+    );
+  });
+
+  it("keeps the value lit while another control holds keyboard focus", () => {
+    // A field's value is content, not chrome: the runtime's 40% keyboard dim
+    // composites it into its own fill, so the input opts out. The part's own
+    // `style` merges last and can put the dim back.
+    const { input } = partsOf(render({}, 50, "50", focused));
+    expect(expectSome(hostStyle(input, "keyboardFocusDim"))).toBe(false);
+    const overridden = renderNumberFieldInput(
+      { style: { keyboardFocusDim: true } },
+      partOf({}),
+    );
+    expect(expectSome(hostStyle(overridden, "keyboardFocusDim"))).toBe(true);
   });
 
   it("resolves a style callback against the live field state, last", () => {

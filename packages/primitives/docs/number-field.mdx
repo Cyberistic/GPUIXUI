@@ -29,8 +29,8 @@ way a native number field does — it does not start with a zero to delete.
 
 | Part | Responsibility |
 | ---- | -------------- |
-| `NumberField` | the chrome, focus ring, state and the accessible name |
-| `NumberFieldInput` | the native `<input>`: draft text, keys, focus and blur |
+| `NumberField` | the chrome, state and the accessible name |
+| `NumberFieldInput` | the native `<input>`: draft text, keys, focus, the focus ring and blur |
 | `NumberFieldIncrement` | the step-up hit target (pointer only, never a tab stop) |
 | `NumberFieldDecrement` | the step-down hit target |
 
@@ -131,9 +131,17 @@ on a stepper returns focus to the input so the next arrow works.
 ## Theming
 
 The field uses the shared field chrome (`colors.input`, `colors.border`,
-`colors.inputForeground`), the `keyboardRing` outline on the **wrapper**, and
-`colors.mutedForeground` icons in the spin column. Height and padding come from
-`density`; nothing names a literal.
+`colors.inputForeground`) and `colors.mutedForeground` icons in the spin column.
+Height and padding come from `density`; nothing names a literal.
+
+The `keyboardRing` outline is declared on the **input**, the element the runtime
+tracks focus for and paints `focusVisible` on; a ring declared on the wrapper
+painted nothing (the rule measured by `runtime/groups.runtime.test.tsx`). The
+input also declares `keyboardFocusDim: false`, so its value stays readable while
+another control holds the keyboard focus — the runtime otherwise dims every other
+focusable element to 40% and composites the value into the field's own fill
+(`keyboardDimFailures`). `NumberFieldInput`'s `style` merges last, so a caller
+can put the cue back.
 
 ## Limitations
 
@@ -148,7 +156,7 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
   component feature not yet written rather than a capability gap; the steppers
   are the gesture today.
 - **`autoFocus` paints no ring on mount.** A focus that arrives without keyboard
-  input (mount, programmatic) does not paint `focusVisible`, so the wrapper's ring
+  input (mount, programmatic) does not paint `focusVisible`, so the input's ring
   appears at the first Tab. The same is true of `Input`.
 
 ## Verification
@@ -158,8 +166,11 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
   that rounding must not erase, Home/End only with a bound.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
   raw edit report, steppers as presentation, one tab stop, disabled/invalid,
-  the four part names in a caller's composition, and the input part carrying
-  the draft, name and keys.
+  the four part names in a caller's composition, the input part carrying the
+  draft, name and keys, the ring on the input rather than the wrapper, and the
+  value opted out of the keyboard dim (a caller's `style` puts it back).
+- `src/components/keyboard-dim.test.tsx` — every field node keeps its content
+  lit, and a `Toggle`/`Slider` keep the cue.
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
   `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;

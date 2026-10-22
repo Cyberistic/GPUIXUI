@@ -85,6 +85,13 @@ Two suites hold rules no single page owns:
   element tree never holds their host nodes; its ring and stops are pinned on its
   page and in the runtime suite.
 
+- `src/components/keyboard-dim.test.tsx` — the runtime dims every other
+  focusable element to 40% while one has keyboard focus, so a control whose own
+  text is **content** (a field's value and placeholder, an OTP cell's digit, a
+  select's chosen value) declares `keyboardFocusDim: false`, while a control
+  whose content is a glyph (a toggle, a slider) keeps the where-can-Tab-go cue.
+  A caller's `style` merges last, so the opt-out is never forced.
+
 ## Verification commands
 
 ```sh

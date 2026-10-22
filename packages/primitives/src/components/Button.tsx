@@ -26,7 +26,7 @@
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
-import type { EventPayload, KeyEvent, StyleDesc } from "@gpuix/react";
+import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
@@ -47,7 +47,7 @@ import {
   suppressFeedback,
   type InteractionProps,
 } from "./internal.js";
-import { controlRing } from "../core/focus.js";
+import { controlRing, keepContent } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -95,13 +95,6 @@ export interface ButtonState {
   readonly focused: boolean;
 }
 
-/**
- * A filled action's label is the control, so it stays at full opacity while
- * another control has keyboard focus (see `paintsFilledSurface`). The caller's
- * `style` still merges last, so it can put the dim back.
- */
-const KEEP_LABEL: StyleDesc = { keyboardFocusDim: false };
-
 const isBusy = (props: ButtonProps): boolean =>
   props.disabled === true || props.loading === true;
 
@@ -140,7 +133,9 @@ export const renderButton = (
       ? suppressFeedback(mergeStyle(resolved.style, resolved.disabled))
       : resolved.style;
   const own = mergeStyle(
-    paintsFilledSurface(variant) ? mergeStyle(base, KEEP_LABEL) : base,
+    // A filled action's label is the control, so it keeps full opacity while
+    // another control has the keyboard focus (`paintsFilledSurface`).
+    paintsFilledSurface(variant) ? mergeStyle(base, keepContent) : base,
     controlRing(theme, { disabled: props.disabled }),
   );
   const style = mergeStyle(

@@ -54,7 +54,7 @@ import {
   type OtpEdit,
 } from "../core/otp.js";
 import { accessibleName } from "../core/a11y.js";
-import { controlRing } from "../core/focus.js";
+import { controlRing, keepContent } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -158,7 +158,7 @@ export const otpFieldPart = (
     fieldSquareClass({ size: props.size ?? "md", invalid: props.invalid }),
     theme,
   );
-  let cellStyle = resolved.style;
+  let cellStyle = mergeStyle(resolved.style, keepContent);
   if (props.invalid === true)
     cellStyle = mergeStyle(cellStyle, resolved.invalid);
   if (disabled) {

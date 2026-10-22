@@ -109,8 +109,10 @@ the mark cannot disagree with the selection. It is decorative — the row is
 already `aria-selected`, and the mark is `role="presentation"`. The trigger
 declares the shared keyboard outline at rest (`keyboardRing`, destructive while
 `invalid`), so the runtime paints it after Tab and not after a mouse press; a
-disabled trigger declares none. The list is one spacing step inset, full trigger
-width.
+disabled trigger declares none. The trigger shows the chosen value, so it also
+declares `keyboardFocusDim: false` and keeps that value readable while another
+control holds the keyboard focus. The list is one spacing step inset, full
+trigger width.
 
 `triggerStyle` and `itemStyle` are the state-aware hooks. The trigger callback
 receives GPUix's own `{ open, disabled, placeholder }`, so a caller can paint the
