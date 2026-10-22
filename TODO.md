@@ -5953,6 +5953,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `property-panel`, `data-toolbar`, `advanced-filter`) and the five inventory
     rows moved to `done`. `nub run --filter @gpuixui/data test` is 85/85 and
     `test:behaviour` 29/29 on 0.11.0.
+  - [x] Label a **stacked bar's axis with the stack it drew** — `StackedBar`
+    painted its bars against `niceCeiling(tallest total)` but printed the axis
+    from `chartScale`, the ceiling of the **widest single value**: two series of
+    `60` drew a `120` stack against a `200` scale while the axis stopped at
+    `100`, so the plot's top read as half the value it claimed. The shipped
+    example could not show it — its widest value (`60`) and tallest total (`84`)
+    both round to `100` — and neither the geometry suite nor the window case
+    compared the axis with the marks. `stackedScale(series)` is now the one
+    measure of a stack's ceiling (the exported `stackedBarMarks` **takes** the
+    scale rather than computing a second one, like its grouped sibling), and
+    `ChartFrame` gained `scaleOf` so the number the axis prints and the number
+    the marks divide by are one call: a grouped bar or a line reads
+    `chartScale`, a stack reads `stackedScale`. `src/chart/logic.test.ts` gained
+    two cases (the measure: `chartScale` 100 against `stackedScale` 200, a
+    ragged series, an all-zero set and no series; and the paint: the stack's top
+    at `height × (1 − total/scale)` while the per-series scale puts it at `0`),
+    and `src/behaviour/chart.test.tsx` mounts a two-series stack whose axis must
+    read `0, 50, 100, 150, 200` with the top 40px down the plot. Directions
+    measured: measuring `stackedScale` as the widest series fails three unit
+    cases by name (`expected 100 to be 200`, the stack's `y`, the tick list), and
+    dropping `scaleOf` fails the window case on the missing `tick-200`.
+    `packages/data/docs/charts.mdx` §The numbers, the Charts row and the README
+    state the rule. Package suite 128/128, behaviour 68/68, `check-types` clean.
   - [x] Register the data package on the site — `@gpuixui/data` shipped its table
     and virtual-list examples with no docs surface, so three site guards failed
     and one page lied. `examples.ts` gained a **lane home**: a package with no
@@ -6068,6 +6091,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
     caches the guard fails by name (`expected 36159 to be 24112`); with them the
     file is 6/6 in 81 ms and `nub run --filter @gpuixui/components test` is
     **101 files / 874 tests** green.
+  - [x] Give the **no-press guard one home**, and paint it on the two surfaces
+    that stayed mounted without it — eight overlays each copied
+    `pointerEvents: present ? "auto" : "none"`, while `Reveal` and `AutoHeight`
+    (which keep their subtree for the exit tween like a surface) copied nothing,
+    so a fading box kept a hitbox. `internal/presence.tsx` now exports
+    `presenceStyle(present, rest)`: a **target** (an overlay, which blocks the
+    pointer and the wheel behind it) paints `"auto"` at rest, a **wrapper** (a
+    reveal, which owns no surface) paints nothing at rest — `"auto"` there put a
+    hitbox over wrapped content and a `ThemeToggler`'s glyph swallowed its
+    control's press, measured — and both paint `"none"` while leaving.
+    `presence-contract.test.ts` fails any seam consumer that omits the guard and
+    any source that writes the literal again; `presence.test.tsx` and
+    `auto-height.test.tsx` read the guard off a leaving box (both directions
+    measured: with `presenceStyle` removed from either source its case fails by
+    name; restored, 24/24). The runtime limit is recorded on both pages:
+    `0.11.0`'s `pointerEvents` does not inherit, so a filled control inside a
+    fading box keeps its own hitbox and there is no `inert`.
 `[x]` Docs truth pass against the implementation
   - [x] `packages/primitives/docs` cites `@gpuix/native@0.10.0` 19 times across 14 pages (owner: primitives). Re-verify each claim against 0.11.0 rather than replacing the version string: this workstream has already found three closed gaps (`aria-description` on a trigger, `scrollbarColor`/`scrollbarWidth` on a scroller, `role`/`aria-level` for headings) and several still-true ones (no `aria-valuenow`, no `aria-checked`, no pointer capture). Record the version each verdict was taken on. — **landed**: every remaining verdict was re-read against the installed `@gpuix/native` 0.11.0 typings (`host.d.ts`): the aria set is still exactly label/description/id/expanded/selected/valuetext/level, so no `aria-valuenow`/`checked`/`pressed`/`labelledby`/`disabled`; `onPaste`, pointer capture, `transform`, a fade mask and `gridColumn`/`gridRow` are still absent; **two claims failed and were corrected rather than relabelled** — `StyleDesc` now accepts `borderStyle: "dashed"` and a linear-gradient `background`, so `box.mdx`/`COMPONENTS.md` no longer call those runtime absences (they are `Box` API gaps, pass them through `style`), and `@gpuix/react` 0.11.0 now publishes a headless `./button` (`Button`/`buttonProps`), so `button.mdx`/`Button.tsx` no longer say it does not exist; 13 docs pages, both `label` comments, seven source headers, the README's capability table (scrollbar tint is present, `./button` published) and `MIGRATION.md` now name 0.11.0. `src/runtime-version.test.ts` walks every docs page, source, runtime suite, example, `README.md` and `MIGRATION.md` and fails on any `@gpuix/<pkg>`/`GPUix` version that is not the workspace pin (both directions measured: a 0.10.0 in `Meter.tsx` and the README table fails by file name), with a floor so a scan that stopped matching cannot pass. The README's own runtime count was stale too and now reads the measured 15 files / 146 tests
   - [x] `packages/components` cited the **previous runtime** in 148 places across
