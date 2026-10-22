@@ -780,8 +780,8 @@ describe("the label an accent row paints", () => {
     );
 
     expect(hidden).toEqual([]);
-    expect(tightest.name).toBe("Light · macOS");
-    expect(printedRatio(tightest.ratio)).toBe("7.19:1");
+    expect(tightest.name).toBe("Dark · macOS");
+    expect(printedRatio(tightest.ratio)).toBe("7.22:1");
 
     // The two pages print the pair and the tightest placement this suite
     // measured, so a palette edit cannot leave a stale sentence behind.
@@ -1154,7 +1154,7 @@ describe("the status label on the wash a list row wears", () => {
       washes.map((background) => ({
         foreground: "destructiveSoftForeground",
         background,
-        ratio: 1,
+        ratio: contrastRatio(lightColors.selected, lightColors[background]),
         floor: contrastFloors.body,
       })),
     );
@@ -2297,11 +2297,11 @@ describe("the edge of a control inside a row's wash", () => {
     expect(hidden).toEqual([]);
     // A neutral edge on a wash a light palette tints is the hardest of the
     // sixteen now that the popover and tint strips moved the edge up: the
-    // authored Windows XP look's selected row, at 3.18:1 against the 3:1 floor.
+    // authored Windows XP look's selected row, at 3.07:1 against the 3:1 floor.
     expect(tightest.name).toBe(
       `${retroTheme(themes.light, "luna").name}/borderStrong/selected`,
     );
-    expect(tightest.ratio).toBeCloseTo(3.18, 2);
+    expect(tightest.ratio).toBeCloseTo(3.07, 2);
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(

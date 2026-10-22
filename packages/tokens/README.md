@@ -412,9 +412,9 @@ The two **saturated state tones** are deliberately not surfaces: a box paints
 `accent` and `selected`, and both are drawn from the same accent family as the
 wash, so a selection moves them toward the text rather than away from it. The
 wash costs contrast in all 80 placements on those tones and leaves 39 under the
-floor the unwashed pair met (tightest: Luna dark's secondary line on a selected
-row, 3.78:1; tightest body placement: the base dark theme's selected row title,
-5.33:1). A selectable run belongs on a content tone; the suite reads the
+floor the unwashed pair met (tightest: Luna light's secondary line on a selected
+row, 3.68:1; tightest body placement: the base dark theme's selected row title,
+5.11:1). A selectable run belongs on a content tone; the suite reads the
 tones the box resolves so one cannot be added without a measurement or a
 recorded reason.
 
@@ -664,7 +664,9 @@ Each report is also a function of its own:
   with the page's void exempt because
   nothing can darken a black page), a
   status tone's soft tint and its edge, a
-  scrollbar thumb, the wash a hovered or selected row is tinted with, the fill a
+  scrollbar thumb, the wash a hovered or selected row is tinted with — including
+  the `accent` a chosen row is repainted with when the pointer arrives, because
+  that fill replaces the `selected` one it already wears — the fill a
   tonal action rests on, a bar's rail (on the page, a card and a popover — the
   `muted` strip is exempt, because the quiet fill *is* the rail), the derived
   hover and press of every filled role (a
@@ -673,7 +675,11 @@ Each report is also a function of its own:
   compositing a translucent role first. Each half found a shipped alias: the base
   dark theme's `hover` was its `popover`, so a hovered menu row painted nothing;
   light `secondary` was its `muted` value and paints no border, so a secondary
-  button in a toolbar was a label with no button around it; the base dark theme's
+  button in a toolbar was a label with no button around it; **eleven of the
+  sixteen styles painted a chosen row's pointer step in the fill it already
+  wore** — the four base palettes at 1.00:1 — so each `selected` is a step
+  stronger than its `accent` now (macOS light moves its `accent`), tightest the
+  base dark theme at 1.05:1; the base dark theme's
   `muted` was its `popover`, so a progress bar in a dialog had no track, and four
   dark styles were within 5% of the fill a bar sits on (the five quiet surfaces
   moved a step, tightest rail now 1.052:1); and the light

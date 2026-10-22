@@ -2,7 +2,8 @@
  * The perceptibility contract for the surfaces that carry no text: dividers,
  * skeleton fills, the modal veil, a status message's soft surface and its edge,
  * the scrollbar thumb, the wash a control tints its surface with while it is
- * hovered, pressed, selected or accented, the fill a tonal action rests on, the
+ * hovered, pressed, selected or accented — and the wash a chosen row is
+ * repainted with when the pointer arrives — the fill a tonal action rests on, the
  * rail a bar draws its value inside, the face a control wears while it is
  * unavailable, the derived hover and press a filled role paints, and the shadow a
  * raised surface drops.
@@ -16,7 +17,9 @@
  * nothing is a dialog with no layer behind it; a tint that matches the strip it
  * sits in is a status message with no surface; an edge that matches its tint is
  * a message with no boundary; a hover that matches the row it tints is a menu
- * with no feedback; a tonal action painted in its toolbar's own colour is a
+ * with no feedback, and a chosen row the pointer repaints in the fill it already
+ * wears is a selection that cannot answer a click; a tonal action painted in its
+ * toolbar's own colour is a
  * label a reader cannot tell is a button; a rail that matches the fill a bar sits
  * on is a bar with no total; a disabled control painted in the face
  * of the one it replaced looks available; a filled action's derived step that
@@ -500,6 +503,17 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
       }),
     ),
   ),
+  // A **chosen row answers the pointer by repainting the wash it is already
+  // wearing**: a selectable list row fills `selected` once chosen and tints
+  // `accent` under the pointer (`list.tsx`), so the fill that replaces a wash is
+  // a surface nothing measured — the four strips are the page under a row, not
+  // the state a row is in. A theme whose `accent` is its `selected` leaves a
+  // chosen row with no feedback at all, which is what eleven shipped styles did,
+  // the four base and high-contrast palettes at **1.00:1**. The press that
+  // follows is the same defect one state over and is recorded in `TODO.md` →
+  // Interlocks with its measurement, because `active` is pinned against the
+  // selected row's own title floor in macOS dark.
+  { surface: "stateWash", role: "accent", over: "selected" },
   // A status message's edge is a decorative boundary — its text and icon carry
   // the meaning — so it is held to the perceptibility floor, not the boundary
   // floor, and measured on the tint it bounds and on every strip the tint is

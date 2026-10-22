@@ -61,6 +61,15 @@ export const panelShadowBrand = extendTheme(lightTheme, {
   colors: { shadow: lightTheme.colors.secondary },
 });
 
+/**
+ * A brand whose chosen row is painted the colour it already wears. The row
+ * fills `selected` and the pointer repaints it `accent`, so a brand with the two
+ * on one value has a selection that does not answer a click.
+ */
+export const flatSelectionBrand = extendTheme(lightTheme, {
+  colors: { accent: lightTheme.colors.selected },
+});
+
 /** A failure written the way a theme editor shows it. */
 export const report = (theme: Theme): ReadonlyArray<string> =>
   decorativeFailures(theme).map(
