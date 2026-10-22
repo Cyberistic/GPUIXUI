@@ -51,6 +51,7 @@ components/dialog.mdx        Curated: a real confirmation workflow
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
 components/popover.mdx       Curated: anchored placement
+components/select.mdx        Curated: the 320px list, the row that reveals itself
 components/tabs.mdx          Curated: the measured indicator
 components/toast.mdx         Curated: the bounded queue, one action, the hold
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
@@ -89,6 +90,8 @@ src/components/docs/preview-surface.tsx   A preview carrying the resolved theme'
 src/components/docs/demos.tsx             The browser renderings and their source strings
 src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic
 src/components/docs/command-preview.ts    The palette preview's matcher and group ranking
+src/components/docs/select-preview.ts     The select preview's data and arrow arithmetic
+src/components/docs/select-demo.tsx       The select's two browser renderings and their source strings
 src/components/docs/sources.ts            The real source files the Code tab shows
 src/components/docs/component-source.tsx  The copyable source block, for a curated page
 src/components/docs/package-source.tsx    The generated source block a package page ends with

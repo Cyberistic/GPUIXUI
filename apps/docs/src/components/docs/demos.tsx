@@ -20,6 +20,12 @@ import {
   menuEntries,
   type MenuEntry,
 } from "./menu-preview";
+import {
+  SelectDemo,
+  SelectStates,
+  selectDemoSource,
+  selectStatesSource,
+} from "./select-demo";
 
 /**
  * Browser previews for the docs pages.
@@ -2437,6 +2443,8 @@ export const demos: Readonly<Record<string, Demo>> = {
     composition: true,
   },
   "popover-demo": { render: PopoverDemo, source: popoverSource },
+  "select-states": { render: SelectStates, source: selectStatesSource },
+  "select-workflow": { render: SelectDemo, source: selectDemoSource },
   "tabs-demo": { render: TabsDemo, source: tabsSource },
   "toast-tones": { render: ToastTones, source: toastTonesSource },
   "toast-workflow": { render: ToastWorkflow, source: toastWorkflowSource },

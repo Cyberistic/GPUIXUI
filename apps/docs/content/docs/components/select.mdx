@@ -1,0 +1,252 @@
+---
+title: Select
+description: One choice from a list, in a popover — a themed wrapper over GPUix's own Select, with the trigger, list and row states painted from the theme.
+---
+
+`Select` is one choice from a list that opens in a popover. It is not a
+combobox: there is no search, no type-ahead and no multi-select, and the options
+are data rather than children. Open state, positioning and dismissal are
+`@gpuix/react/select`'s; what this package owns is the trigger's paint, the list
+surface and the row states. Gaps below were measured on
+`@gpuix/native@0.11.0`.
+
+<ComponentPreview name="select-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/primitives" importName="Select" />
+
+<ComponentSource
+  name="select"
+  file="packages/primitives/src/components/Select.tsx"
+/>
+
+## Usage
+
+```tsx
+import { useState } from "react";
+import { Label, Select } from "@gpuixui/primitives";
+
+const regions = [
+  {
+    label: "Europe",
+    options: [
+      { value: "eu-west", label: "Europe — West (Ireland)" },
+      { value: "eu-central", label: "Europe — Central (Frankfurt)" },
+    ],
+  },
+  {
+    label: "Americas",
+    options: [
+      { value: "us-east", label: "United States — East" },
+      { value: "us-west", label: "United States — West" },
+    ],
+  },
+];
+
+export const DeployTarget = () => {
+  const [region, setRegion] = useState("eu-west");
+
+  return (
+    <>
+      <Label>Region</Label>
+      <Select
+        label="Region"
+        onValueChange={setRegion}
+        options={regions}
+        value={region}
+      />
+    </>
+  );
+};
+```
+
+A group is `{ label, options }`; it paints a muted caption and a rule between
+runs, while the runtime still receives one flat list in render order. A group
+name is **presentational**: `SelectGroup`/`SelectLabel` carry no role in 0.11.0,
+so a reader who hears a row does not hear which group it belongs to. Keep group
+names short, or put the context in each row's label.
+
+## Sizes
+
+The trigger takes its height and horizontal padding from the theme's density, so
+a compact theme shrinks it without a component change.
+
+| Size | Height | Horizontal padding |
+| ---- | ------ | ------------------ |
+| `sm` | `density.controlHeight.sm` | `density.controlPaddingX.sm` |
+| `md` (default) | `density.controlHeight.md` | `density.controlPaddingX.md` |
+| `lg` | `density.controlHeight.lg` | `density.controlPaddingX.lg` |
+
+There are no variants: a select is not filled, outlined or tonal. The states
+below are the whole surface it varies on.
+
+## States
+
+<ComponentPreview name="select-states" />
+
+| Part | State | Paint |
+| ---- | ----- | ----- |
+| trigger | rest | `input` fill, `inputForeground` text, `border` edge |
+| trigger | hover | edge strengthens to `borderStrong` |
+| trigger | open, or pressed | edge takes the `ring` role |
+| trigger | invalid | `destructive` edge, with the same keyboard ring |
+| trigger | disabled | refuses to open and dims; no keyboard ring |
+| row | rest | `popoverForeground` text |
+| row | highlighted | `hover` fill |
+| row | selected | `selected` fill, and the check mark |
+| row | disabled | `disabledForeground` text, no pointer |
+
+The selected fill wins over the highlighted one — `selectItemClass` checks
+`selected` first — so the chosen row stays identifiable while the pointer or the
+arrows pass over it.
+
+## Composition
+
+`Select` is a compound surface with a data API: the root positions, the trigger
+opens, the value shows the choice, the content paints the popover and each item
+is a row. Only the data shape is public; the parts are the runtime's.
+
+| Part | Role |
+| ---- | ---- |
+| `Select` | the root: data, value, size, states and the accessible name |
+| trigger | the field chrome, and the only focusable part while closed |
+| content | the popover list, capped at 320px |
+| item | one row: label, state paint and the selected mark |
+| group / label / separator | a named run of rows, its caption and the rule above it |
+
+Options are **data** on purpose: the trigger needs their labels to show a choice
+before the list is ever opened. When a choice needs rich content — a description
+under each row, an avatar, a badge — use
+[RadioGroup](/docs/primitives/radio-group) instead of forcing it into an option
+string. A long or searchable list wants a [Combobox](/docs/components/combobox);
+a select has no search.
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| `Enter`, `Space` | opens the list on the chosen row |
+| `ArrowDown` / `ArrowUp` | opens the list on the first / last enabled row; moves the highlight while open |
+| `Enter`, `Space` | commits the highlighted row and returns the focus to the trigger |
+| `Escape` | closes the list and returns the focus to the trigger |
+| `Tab` | closes the list and lets the focus move on — a select is not modal |
+
+A disabled row is skipped by the arrows and cannot be committed, and the ends
+wrap. There is **no type-ahead**: a keyboard user crossing a long list has to
+walk it, which is the reason a long list wants a combobox.
+
+GPUix never scrolls its own highlight into view, so the row reveals itself after
+each move: the wrapper reads the row's and the list's painted boxes and scrolls
+the list by the overshoot (`core/scroll.ts`'s `revealScroll`). The runtime's
+`scrollIntoView` would only work for a list's direct child, so a row nested in a
+group would reveal nothing. A list taller than the 320px cap is reachable in both
+directions because of this, not because of the runtime.
+
+## API reference
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | required | the rows, or named groups of them, in render order |
+| `value` | `string` | none | controlled selection |
+| `defaultValue` | `string` | none | initial selection when uncontrolled |
+| `onValueChange` | `(value: string) => void` | none | the committed value |
+| `onChange` | `(value: string) => void` | none | deprecated alias; `onValueChange` wins when both are passed |
+| `placeholder` | `string` | none | the trigger's text before a choice |
+| `disabled` | `boolean` | `false` | refuses to open |
+| `invalid` | `boolean` | `false` | `destructive` edge on the trigger |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
+| `fullWidth` | `boolean` | `false` | trigger and list fill the parent |
+| `side` | `FloatingSide` | the runtime's choice | which side the list opens on |
+| `label` | `string` | none | the accessible name — put a visible `Label` beside it |
+| `style` | `StyleDesc` | none | merged last on the wrapper, which paints only its width |
+| `triggerStyle` | `StateStyle<SelectTriggerState>` | none | resolved against the trigger's live state, merged last |
+| `itemStyle` | `StateStyle<SelectItemState>` | none | resolved per row against that row's state, merged last |
+| `testId` | `string` | none | locator for the wrapper — it is **not** the trigger |
+| `triggerTestId` | `string` | none | locator for the element that opens the list |
+| `itemTestId` | `(value: string) => string` | none | locator for an option row, derived from its value |
+
+An automation host presses `triggerTestId` and then `itemTestId(value)`: the root
+`testId` sits on a positioning wrapper that paints nothing but the width, so
+walking its children for a label is the wrong address.
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| trigger | `input` fill, `inputForeground` text, `border` edge, `radius.md` |
+| trigger hover / press | `borderStrong`, then `ring` |
+| trigger, invalid | `destructive` edge |
+| trigger, focused | the runtime's `focusVisible` outline in the `ring` role |
+| list | `popover` fill, `border`, `radius.md`, one spacing step of padding |
+| row, selected | `selected` fill; the check mark paints `popoverForeground` |
+| row, highlighted | `hover` fill |
+| row, disabled | `disabledForeground` |
+| group caption | `mutedForeground`, at the caption size |
+
+Two decisions are worth knowing when you edit a theme. The trigger declares
+`keyboardFocusDim: false`, because it shows the chosen value rather than a glyph:
+while another control holds the keyboard focus, the value a reader is checking
+stays readable. And the ring is declared **at rest**, so a Tab traversal paints
+it and a mouse press does not — the runtime's own `focusVisible` behaviour, held
+by the shared control rule.
+
+The list's 320px cap is the component's, not the theme's: the runtime's content
+sets no maximum height and its scroll-button parts are empty in 0.11.0.
+
+## Accessibility and limitations
+
+- Role and name come from the runtime's trigger; the package adds the accessible
+  name through `label`, and the visible name is a `Label` beside the control.
+  The chosen row is `aria-selected`; the check mark is decorative, because the
+  row already reports its state.
+- A group caption is painted, not announced: `SelectGroup`/`SelectLabel` carry no
+  role in 0.11.0, so the hierarchy is visual only.
+- **No type-ahead, no search, no multi-select.** A long or searchable list wants
+  a combobox.
+- Options are strings; there is no rich option content and no compound escape
+  hatch in the public API.
+- The runtime positions the list and dismisses it; the wrapper cannot change the
+  open animation or the outside-press rule. Measured on
+  `@gpuix/native@0.11.0`: the layer snaps into the window with an 8px margin, so
+  a trigger at the bottom edge opens a list that stays inside it.
+- The runtime never scrolls the highlighted row into view; the row reveals
+  itself with arithmetic over painted boxes. Measured in a window: twenty
+  `ArrowDown`s move the 320px scroller and keep the highlighted row inside it, in
+  both directions, including a row nested in a group.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `this package` | the options shape, the trigger and list recipes, and the reveal arithmetic |
+| `@gpuix/react` | the host tree and the renderer's focus and scroll calls |
+| `@gpuix/react/select` | the published Select parts the wrapper themes |
+| `@gpuix/react/floating` | `resolveStyle` for the state-aware `style` callbacks |
+| `@gpuixui/icons` | the selected row's check mark |
+| `@gpuixui/tw` | the `select*` class recipes, compiled through the package registry |
+| `effect` | `Option` for the reveal and `Array` for the flat option list |
+
+`@gpuixui/tokens` is reached through this package's theme provider, not imported
+directly; the component reads roles, never colours.
+
+## Related
+
+- **Combobox** — a select with a query field, for a long list.
+- **RadioGroup** — a small set with no popover, and rich option content.
+- **Label** — the visible name that sits beside the trigger.
+- **Dropdown menu** — actions rather than a committed value.
+- **Popover** — the surface a select borrows, when you need to compose your own.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `yes` runtime verdict: GPUix publishes the
+Select parts this wrapper themes, so open state, positioning and dismissal are
+supported rather than reimplemented. The paint and data mapping are held by
+`packages/primitives/src/components/Select.test.tsx`; the reveal arithmetic by
+`packages/primitives/src/core/scroll.test.ts`; and the 320px box, the wheel
+offset, both placement cases and the keyboard reveal by
+`packages/primitives/runtime/fields.runtime.test.tsx` in a real renderer. Three
+limits remain and are recorded above rather than hidden: group captions are not
+announced, there is no type-ahead, and the highlight reveal is the wrapper's
+arithmetic because the runtime does not move the list itself.

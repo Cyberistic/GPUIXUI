@@ -141,6 +141,11 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/popover.tsx",
   },
   {
+    file: "select.mdx",
+    row: "Selects",
+    source: "packages/primitives/src/components/Select.tsx",
+  },
+  {
     file: "tabs.mdx",
     row: "Tabs",
     suite: "packages/components/src/behaviour/tabs.test.tsx",
@@ -434,6 +439,62 @@ describe("the curated component pages", () => {
     // The retracted shapes: a field that validates itself, or a faded control.
     expect(text).not.toContain("validates on every keystroke and");
     expect(text).not.toContain("fades the whole control");
+  });
+
+  it("hold the select's list cap and its reveal to the source", () => {
+    // A Select looks like a field and a list, so the two decisions a reader
+    // cannot see are what the page has to get right: the 320px cap is the
+    // component's own (the runtime's content sets no maximum height and its
+    // scroll parts are empty in 0.11.0), and a row that the arrows reach below
+    // the fold moves the list itself — GPUix never scrolls its own highlight
+    // into view. A page that taught either the other way would describe a
+    // component nobody shipped.
+    const select = pages.find((page) => page.file === "select.mdx");
+    expect(select, "the select page is not in the curated set").toBeDefined();
+    if (select === undefined) return;
+
+    const source = read(select.source);
+    const scroll = read("packages/primitives/src/core/scroll.ts");
+
+    // The bound, and the scroller that makes it reachable.
+    expect(source).toContain("maxHeight: 320");
+    expect(source).toContain('overflowY: "scroll"');
+
+    // The reveal is the wrapper's arithmetic over painted boxes, not the
+    // runtime's `scrollIntoView` (which only reaches a direct child).
+    expect(source).toContain("revealScroll");
+    expect(source).toContain("renderer.getElementBounds");
+    expect(source).toContain("renderer.scrollTo");
+    expect(scroll).toContain("revealScroll");
+
+    // The mark comes from the row's reported state, in the popover's own text
+    // role, so an uncontrolled select keeps no mirror of its value.
+    expect(source).toContain('name="check"');
+    expect(source).toContain("theme.colors.popoverForeground");
+    expect(source).toContain("state.selected");
+
+    // The trigger shows the chosen value, so it opts out of the keyboard dim;
+    // its ring is the shared resting one.
+    expect(source).toContain("keepContent");
+    expect(source).toContain("controlRing");
+    expect(read("packages/primitives/src/core/focus.ts")).toContain(
+      "keyboardFocusDim: false",
+    );
+
+    // The options are data: the runtime receives one flat list.
+    expect(source).toContain("isSelectGroup");
+    expect(source).toContain("Arr.flatMap");
+
+    const text = body(select).replace(/\s+/g, " ");
+    expect(text).toContain("320px");
+    expect(text).toContain("reveals itself");
+    expect(text).toContain("check mark");
+    expect(text).toContain("keyboardFocusDim: false");
+    expect(text).toContain("No type-ahead");
+    expect(text).toContain("one flat list");
+    // The retracted shape: the keyboard gap the reveal closed.
+    expect(text).not.toContain("cannot reach the tail");
+    expect(text).not.toContain("does not scroll the highlight");
   });
 
   it("hold the toast queue's bounds and its card paint to the source", () => {

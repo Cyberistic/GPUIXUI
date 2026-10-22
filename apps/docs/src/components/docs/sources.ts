@@ -8,6 +8,7 @@ import dialog from "../../../../../packages/components/src/dialog.tsx?raw";
 import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.tsx?raw";
 import field from "../../../../../packages/components/src/field.tsx?raw";
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
+import select from "../../../../../packages/primitives/src/components/Select.tsx?raw";
 import tabs from "../../../../../packages/components/src/tabs.tsx?raw";
 import toast from "../../../../../packages/components/src/toast.tsx?raw";
 
@@ -28,6 +29,7 @@ export const componentSources = {
   dropdownMenu,
   field,
   popover,
+  select,
   tabs,
   toast,
 } as const;
