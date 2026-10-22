@@ -14,24 +14,21 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import { keyboardFocusRing } from "@gpuixui/tokens";
+import { controlFocusRing } from "@gpuixui/tokens";
 import type { PrimitiveTheme } from "./theme.js";
 
-/** The ring every control declares at rest; destructive when the control is invalid. */
+/**
+ * The ring every control declares at rest; destructive when the control is
+ * invalid.
+ *
+ * The rule is `@gpuixui/tokens`' `controlFocusRing`: this package's spelling of
+ * it exists only to return a `StyleDesc`, so a call site never branches on the
+ * control's state.
+ */
 export const keyboardRing = (
   theme: PrimitiveTheme,
   invalid?: boolean,
-): StyleDesc => {
-  const ring = keyboardFocusRing(theme);
-  return invalid === true
-    ? {
-        focusVisible: {
-          ...ring.focusVisible,
-          outlineColor: theme.colors.destructive,
-        },
-      }
-    : ring;
-};
+): StyleDesc => controlFocusRing(theme, { invalid }) ?? {};
 
 /**
  * A control whose own content must stay readable while the keyboard focus is
@@ -59,8 +56,11 @@ export interface RingState {
  * already holds the focus does not move that focus — the runtime keeps it, so a
  * ring declared anyway would stay painted on a control that refuses every key.
  * Disabled therefore means no declaration; invalid still recolours it.
+ *
+ * The rule is `@gpuixui/tokens`' `controlFocusRing`; the absence it returns for
+ * a disabled control becomes `{}` here, so a spread always paints the fill.
  */
 export const controlRing = (
   theme: PrimitiveTheme,
-  { disabled, invalid }: RingState,
-): StyleDesc => (disabled === true ? {} : keyboardRing(theme, invalid));
+  state: RingState = {},
+): StyleDesc => controlFocusRing(theme, state) ?? {};
