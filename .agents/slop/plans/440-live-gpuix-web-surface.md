@@ -2,11 +2,11 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | spike planned — **not started**; the capability evaluation and its guard are on `master` |
+| Status | **feasibility measured** — a real GPUix frame paints in headless Chrome (probe on `master`); the `/live` route is **not built** |
 | Phase | F (docs polish) → feeds the preview policy in `docs/preview-strategy.md` |
 | Owner | `docs-site` |
 | Depends on | the 0.11.0 browser build (`@gpuix/native`'s `browser` export), the docs site's deploy middleware, plan `203` (capability record) |
-| Feeds | `docs/preview-strategy.md` §The GPUix web build, `TODO.md` → Docs information architecture, `apps/docs/src/lib/gpuix-web.test.ts` |
+| Feeds | `docs/preview-strategy.md` §The paint is measured, `TODO.md` → Docs information architecture, `apps/docs/scripts/live-surface-probe.ts` |
 
 ## 1. The finding this plan builds on
 
@@ -35,11 +35,39 @@ Evidence in the tree today: `apps/docs/src/lib/gpuix-web.test.ts` reads the
 installed package, holds those four facts, and keeps
 `docs/preview-strategy.md`'s status line true in both directions.
 
+### 1.1 The paint is measured (measured 2026-10-22)
+
+The plan's riskiest unknown — *does a real GPUix frame paint in a browser at
+all?* — is settled. `apps/docs/scripts/live-surface-probe.ts` serves a
+cross-origin-isolated page, boots `wasm/gpuix-web.js` against the published wasm,
+applies one batch, captures the frame over the DevTools protocol and reads the
+pixel back out of the PNG. On this host, `@gpuix/native@0.11.0`, macOS 15.8.1
+x86_64, headless Google Chrome 155.0.8059.80 over SwiftShader:
+
+- `crossOriginIsolated` is true under `COOP: same-origin` + `COEP: require-corp`,
+  `SharedArrayBuffer` exists, WebGL2 is available and
+  `navigator.gpu.requestAdapter()` returns an adapter (SwiftShader, `gcn-4`).
+- One batch paints: a 420×200 root at `#7C5CFF` with a `text` child renders, and
+  the sampled pixel is exactly `#7c5cff`; the same page filled `#31A05F` samples
+  `#31a05f`. The text reaches `getAllText()`.
+- Three constraints the plan now knows:
+  1. `browser.mjs`'s `import … with { type: "file" }` is a **bundler** convention;
+     the glue must be initialised directly (or a Vite rule must reproduce it).
+  2. `getPaintedText()` returned `[]` on a frame that visibly painted — a paint
+     claim reads pixels, not that report.
+  3. `--screenshot` and `--virtual-time-budget` capture **before** the renderer's
+     first frame (measured: white 800×600). The probe drives Chrome over
+     DevTools and captures after the page reports itself.
+
+Negative control measured: dropping `setRoot` from the batch leaves a black
+frame, and the probe fails by name
+(`the frame painted #000000 at 210,100, not #7C5CFF`, exit `1`).
+
 **The site does not mount it.** No page imports the browser build, and every
 preview is still the labelled DOM reproduction. This plan is the spike that
-would change that; it is deliberately separate from the evaluation because it
-needs a real browser with WebGPU or WebGL2 to prove a paint, and no
-browser-automation tool is installed on this host.
+would change that; §1.1 records the measurement that its riskiest step now
+passes, and §3 Step 1's dependency edit is what remains before a route can
+exist.
 
 ## 2. What ships, if the spike passes
 
@@ -159,10 +187,13 @@ drawing a DOM imitation.
    `apps/docs/README.md` §The live surface.
 4. Press a control in the surface and confirm a real event reaches React.
 
-**STOP** if no browser with a backend is available on this host. The route then
-stays out of `master`; the plan records the blocker and the evaluation row in
-`TODO.md` stays as it is. A route nobody has seen paint is not shipped as
-"working".
+The *capability* half of this step is done: `nub apps/docs/scripts/live-surface-probe.ts`
+does 2–3 headlessly and fails if the frame does not carry the batch's fill
+(§1.1). The route still owes 2–4 **through `/live`**, including the event check.
+
+**STOP** if no browser with a backend is available on this host. **Not a STOP
+any more** — measured: this host's headless Chrome has WebGL2 and a WebGPU
+adapter under isolation.
 
 ### Step 6 — guards
 
@@ -181,12 +212,16 @@ paint from Node.
 
 ## 4. STOP conditions (summary)
 
-1. Lockfile contention with another workstream.
+1. Lockfile contention with another workstream. — **live**: `nub.lock` carries
+   another workstream's uncommitted importer entry, so Step 1 waits for it.
 2. SSR resolves the `.node` binding, or the wasm cannot be isolated to the
    client build.
 3. `require-corp` breaks the route's own assets.
 4. `render()` cannot be injected and §3a cannot paint a real `StyleDesc`.
-5. No browser with WebGPU/WebGL2 on the host.
+   — **retired for the batch path**: §1.1 paints a real `StyleDesc` through
+   `applyBatch`; injection is still open.
+5. No browser with WebGPU/WebGL2 on the host. — **retired**: measured on this
+   host (headless Chrome, both backends, isolated).
 6. The wasm grows past 25 MiB (mobile budget) — re-decide before shipping.
 
 ## 5. Acceptance

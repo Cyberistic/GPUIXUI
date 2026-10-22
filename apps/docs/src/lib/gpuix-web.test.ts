@@ -135,4 +135,29 @@ describe("the GPUix web build", () => {
     // The status points a reader at the work, not at a mystery.
     expect(policy).toContain("440-live-gpuix-web-surface");
   });
+
+  it("holds the measured paint to the probe that measures it", () => {
+    const probe = read("apps/docs/scripts/live-surface-probe.ts");
+    const frame = read("apps/docs/scripts/live-frame.ts");
+
+    // The policy says a paint was measured and prints how to reproduce it; the
+    // command has to be the file, and the file has to read the same installed
+    // copy this guard reads (the docs app declares no dependency on it yet).
+    expect(policy).toContain("### The paint is measured");
+    expect(policy).toContain("nub apps/docs/scripts/live-surface-probe.ts");
+    expect(probe).toContain("apps/playground/node_modules/@gpuix/native");
+
+    // The frame's verdict is the pixel, not the screenshot's existence — the
+    // first probe passed on a white frame for exactly that reason.
+    expect(frame).toContain("probePoint");
+    expect(frame).toContain("the frame painted");
+    expect(probe).toContain("fillAt");
+  });
+
+  it("keeps the probe a host tool, so the unmounted claim stays true", () => {
+    // A route would live under `src/`; the probe lives beside the app. If it
+    // ever moves in, the mounting case above fails and this one says why.
+    expect(saysUnmounted()).toBe(true);
+    expect(liveImports()).toEqual([]);
+  });
 });

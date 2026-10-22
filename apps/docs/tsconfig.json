@@ -15,6 +15,7 @@
     "src",
     "content",
     "plugins",
+    "scripts",
     "source.config.ts",
     "vite.config.ts",
     "vitest.config.ts",

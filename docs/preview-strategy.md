@@ -68,6 +68,48 @@ and it cannot claim it is mounted while none does. The guard also reads the
 installed package, so the size, the memory requirement and the browser entry it
 quotes cannot drift silently.
 
+### The paint is measured
+
+Plan `440`'s riskiest step — whether a real GPUix surface paints at all in a
+browser — is now measured, not assumed.
+`scripts/live-surface-probe.ts` serves a cross-origin-isolated page, boots the
+published glue against the published wasm, applies one mutation batch (a
+420×200 `div` with a `text` child), captures the frame over the DevTools
+protocol and reads a pixel back out of the PNG. It passes only when the renderer
+started, appended its `<canvas>`, the retained tree carries the text the batch
+set, **and the sampled pixel is the fill the batch set** — a blank frame captures
+perfectly well, so its existence proves nothing.
+
+Run it with `nub apps/docs/scripts/live-surface-probe.ts`; the frames land in
+`.artifacts/live/`, which is verification-only and gitignored.
+`scripts/live-frame.ts` is the frame contract it judges against, and
+`src/lib/live-frame.test.ts` holds both directions: a frame that reported itself
+healthy while its pixels were white fails by name.
+
+What it settled, measured on macOS 15.8.1 x86_64 with headless Google Chrome
+155.0.8059.80 over SwiftShader:
+
+- **A headless browser is enough.** `crossOriginIsolated` is true under
+  `COOP: same-origin`/`COEP: require-corp`, `SharedArrayBuffer` exists, WebGL2 is
+  available and `navigator.gpu.requestAdapter()` returns an adapter — so the
+  backend question the plan had no tool to answer is answered on this host.
+- **`browser.mjs` is a bundler entry, not a browser one.** Its
+  `import … with { type: "file" }` is a bundler convention; the probe initialises
+  `wasm/gpuix-web.js` directly with the wasm URL, which is the path a Vite rule
+  must reproduce.
+- **`getPaintedText()` is not a paint report.** It returned `[]` on a frame whose
+  screenshot shows the fill and the label, because the report is written by a
+  frame the probe never ticks. A paint claim has to read the pixels.
+- **The CLI screenshot flags cannot prove it.** `--screenshot` captures at load
+  and `--virtual-time-budget` fast-forwards the page's timers, so both captured a
+  white frame while the surface painted a moment later; the probe drives Chrome
+  over DevTools and captures after the page reports itself.
+
+That is the spike's feasibility half. The mount is still unbuilt, and its
+remaining blocker is a dependency change — `apps/docs` must declare
+`@gpuix/native` and `@gpuix/react` — which belongs with the lockfile edit the
+workstream that owns it makes, not with this record.
+
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those
