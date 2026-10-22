@@ -163,9 +163,9 @@ describe("disabledFadePairs", () => {
         (entry.ratio ?? 0) < (low.ratio ?? 0) ? entry : low,
       );
 
-    expect(tightest.theme).toBe("Light · Windows 7 (Aero)");
+    expect(tightest.theme).toBe("Light · Windows");
     expect(tightest.pair).toBe("background/placeholder on background");
-    expect(tightest.ratio?.toFixed(2)).toBe("1.95");
+    expect(tightest.ratio?.toFixed(2)).toBe("1.99");
 
     // The catalogue prints the same number and names the fills and labels the
     // table measures, so the page cannot teach a placement the report dropped.
@@ -173,7 +173,7 @@ describe("disabledFadePairs", () => {
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
-    expect(page).toContain("composite hint at **1.95:1**");
+    expect(page).toContain("composite hint at **1.99:1**");
     expect(page).toContain("both of its fills and both of its labels");
   });
 });

@@ -250,13 +250,13 @@ describe("keyboardDimFailures", () => {
       )
       .reduce((low, next) => (next.ratio < low.ratio ? next : low));
 
-    expect(tightest.theme).toBe("Light · Windows 7 (Aero)");
+    expect(tightest.theme).toBe("Light · macOS");
     expect(tightest.pair).toEqual({
       fill: "background",
       label: "placeholder",
       over: "muted",
     });
-    expect(tightest.ratio).toBeCloseTo(1.67, 2);
+    expect(tightest.ratio).toBeCloseTo(1.68, 2);
 
     // The number the catalogue prints, and the field coverage it names, so the
     // page cannot teach a placement the table dropped.
@@ -264,7 +264,7 @@ describe("keyboardDimFailures", () => {
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
-    expect(page).toContain("composite hint on a muted strip at **1.67:1**");
+    expect(page).toContain("composite hint on a muted strip at **1.68:1**");
     expect(page).toContain("in both of its fills");
   });
 

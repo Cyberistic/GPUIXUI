@@ -161,7 +161,7 @@ tool never has to copy the palette out of this page.
 | `borderStrong` | `#727D8C` | `#788494` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
-| `placeholder` | `#626C7B` | `#7C8595` | placeholder text |
+| `placeholder` | `#606A79` | `#858E9F` | placeholder text |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24% alpha) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
@@ -1499,8 +1499,8 @@ as its own fill (`bg-background` in `@gpuixui/tw`'s recipes), and each carries a
 value and a hint. The pairing is the coverage: the table held one fill and one
 label, so the fade a composite field paints was the one control no report
 composited, and a hint is the lowest-contrast label a field carries at rest. Every
-placement clears the floor — the tightest is the authored Windows 7 light look's
-composite hint at **1.95:1** — so the pairs close a gap rather than move a
+placement clears the floor — the tightest is the Windows light platform style's
+composite hint at **1.99:1** — so the pairs close a gap rather than move a
 palette. The three
 filled actions stay in it although the shipped painter wears the pair: the table
 measures the paint a re-introduced fade would produce, and the gate reports it.
@@ -1589,8 +1589,8 @@ its fills (`input` and the page role a composite field paints), a focusable row'
 own text and a selected row sit on across `background`, `card`,
 `popover` and `muted`; a row with no fill of its own names the surface as its
 fill, which is that composite, while a composite field has a fill and is listed
-by it. The lowest field placement is the authored Windows 7 light look's
-composite hint on a muted strip at **1.67:1**.
+by it. The lowest field placement is macOS light's
+composite hint on a muted strip at **1.68:1**.
 
 The floor is `decorativeFloor` (1.05:1), deliberately **not** a readability
 floor: the dim is a where-can-Tab-go cue whose job is to keep the control
@@ -1923,10 +1923,13 @@ const host = nativeTextTheme(theme);
 host.appearance; // theme.mode — the field's own defaults follow it
 host.bg; // theme.colors.input
 host.text; // inputForeground
-host.textFaint; // placeholder
+host.textFaint; // placeholder — the faint role a code block's gutter paints
 host.caret; // primary
 host.fontSans; // typography.sans
 host.metrics.codeTextSize; // typography.codeBlock.fontSize
+host.diffAdd; // the success tone's readable role
+host.diffDel; // the destructive tone's readable role
+host.diffHunkBg; // muted — the hunk header's chrome stripe
 ```
 
 | Host field | Role |
@@ -1938,6 +1941,8 @@ host.metrics.codeTextSize; // typography.codeBlock.fontSize
 | `accent` / `caret` | `primary` |
 | `fontSans` / `fontMono` | `typography.sans` / `typography.mono` |
 | `metrics.codeTextSize` / `codeLineHeight` | `typography.codeBlock`'s size / leading |
+| `diffAdd` / `diffDel` | the `success` / `destructive` tone's readable role |
+| `diffHunkBg` / `textDim` | `muted` / `mutedForeground` |
 
 A `<code>` host is the one host whose **type** also comes from the theme object:
 the runtime sizes a code block from the theme's own metrics — an element's
@@ -1947,6 +1952,56 @@ the runtime sizes a code block from the theme's own metrics — an element's
 leading, so a brand's block role reaches the host instead of stopping at it; the
 gutter widths and the syntax palette stay the runtime's, because this package
 has no tokens for them (§Limitations).
+
+### The diff host
+
+A `<diff>` host paints its own green and red unless the theme object carries
+them: at the pinned release an added line's ink is `diffAdd`, the row under it is
+tinted **5.5% of that same value** over the fill
+(`packages/native/src/custom_elements/diff.rs`), a removed line's is `diffDel`, a
+hunk header sits on `diffHunkBg` and its file path is `textDim`. So one value
+does two jobs — the ink and the hue of the wash it sits on — and the seam picks
+the value that has to serve both: a status tone's **readable** role, not its
+solid fill. A fill is designed to carry its own on-colour, not to be read on the
+page: light `success` measures 4.26:1 there, under the secondary floor a 11px
+count needs, while the tone's readable role measures 11.98:1.
+
+`nativeDiffWash` (0.055) is the runtime's own share, exported so a consumer's
+contract can composite the row it will actually paint. The contract measures
+three things per placement, in both of the fills a host can be handed:
+
+| Contract | Floor | What it catches |
+| -------- | ----- | --------------- |
+| `diffAdd` / `diffDel` on the fill | body | a changed-line count nobody can read |
+| the same ink on its own row wash | body | ink the tint it derives buries |
+| the row wash against the fill | 1.05:1 | a changed line that does not look changed |
+| `textFaint` on the hunk stripe | secondary | a hunk header with no header text |
+| `diffHunkBg` against the fill | 1.05:1 | a stripe indistinguishable from the pane |
+| `textDim` on the fill | secondary | a file path that disappears |
+
+The hunk stripe is a `muted` toolbar, and its text is the runtime's `text_faint`
+— the `placeholder` role — so the faint role had to clear the secondary floor
+**on a chrome strip**, not only on the page. It did not: the base dark
+placeholder measured 4.03:1 on its own toolbar, and every light style was
+4.35–4.46:1 on the platform toolbars and the two authored looks. The faintest
+role is a step further from its surface now — light `#606A79`, dark `#858E9F`,
+Luna `#59616D`, Aero `#586978` — and every placement clears 4.5:1, the tightest
+being a dark platform's page fill at 5.01:1.
+
+### What a field's placeholder actually paints
+
+The seam fills `textFaint`, and a `<code>` gutter and a `<diff>`'s meta rows read
+it — but a native `<input>`/`<textarea>` does **not**. At the pinned
+`@gpuix/native@0.11.0` an empty field shapes its placeholder text with a fixed
+`#8F8F8F` (`custom_elements/input.rs`, the one occurrence of that value in the
+package), so no token reaches it and no theme change can move it: the runtime's
+grey measures **2.84:1** on a white field and 4.72:1 on the base dark fill. The
+`placeholder` role is still the faint role the library paints itself — a number
+field's unavailable steppers are `colors.placeholder` — and the one the contrast
+table holds on both fills, so a component that needs a themed placeholder paints
+the text itself while its field is empty instead of handing the host one. The
+components package's fields pass the host's `placeholder` today; adopting the
+painted hint is recorded in `TODO.md` → Interlocks.
 
 A field paints one of **two** fills, and the host has to be told which, because
 the roles above are measured against it. A plain field paints `input`; a
@@ -1964,11 +2019,11 @@ value at the body floor, the placeholder at the secondary floor, on `input` and
 on `background`; the caret is the `primary` mark on the same fill, held to the
 non-text floor. The page-fill pair found two shipped misses: Aero light's
 placeholder measured **4.35:1** on its own window and macOS light's inherited
-value **4.49:1** on its, both under the 4.5:1 floor — Aero's is `#5B6C7B` and
-the light base value is `#626C7B` now. The tightest placement over both fills is
-the base dark theme's placeholder on its own field fill at 4.54:1 — 0.04 of
-headroom, recorded rather than widened, because every dark palette's placeholder
-is a step deliberately fainter than its secondary text. No other value moved.
+value **4.49:1** on its, both under the 4.5:1 floor, so those values moved. The
+tightest placement over both fills is Light · Windows 7 (Aero)'s placeholder on
+the page role at 4.89:1 — 0.39 of headroom, recorded rather than widened, because
+every light palette's placeholder is a step deliberately fainter than its
+secondary text.
 
 **Adoption.** Both packages carry the seam. `packages/primitives/src/core/style.ts`
 re-exports it, so `Input`, `TextArea`, `NumberField` and `OTPField` share one

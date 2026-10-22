@@ -287,12 +287,14 @@ field — paints the page role as its own fill and keeps `inputForeground` as it
 value, so both roles and the placeholder are measured on `background` as well as
 on `input`; that pair found two shipped misses, Aero light's placeholder at
 4.35:1 on its own window and macOS light's inherited value at 4.49:1 on its,
-both under the 4.5:1 floor (Aero's is `#5B6C7B` and the light base is `#626C7B`
-now). The native text engine draws those fields, and a host given no theme falls
-back to the runtime's **built-in dark** palette, so its placeholder and caret
-would be chosen for a dark surface in a light theme:
+both under the 4.5:1 floor, so both palettes moved. The native text engine draws
+those fields, and a host given no theme falls back to the runtime's **built-in
+dark** palette, so its caret would be chosen for a dark surface in a light theme:
 `nativeTextTheme(theme, fill)` hands the host the theme for the fill the field
-paints (`docs/tokens.md` §Native text hosts).
+paints (`docs/tokens.md` §Native text hosts). **The runtime does not let the
+theme colour an empty field's placeholder** — at the pinned release it shapes the
+hint with a fixed `#8F8F8F` (`custom_elements/input.rs`), so no token can move it
+and a component that needs a themed hint paints the text itself.
 
 A control with **no** border — the `secondary` variant paints `border-0` — is
 carried by its fill instead, so that fill is measured: `secondary` is held to the
@@ -471,8 +473,8 @@ surface a control sits on. **A field is measured on all three content surfaces**
 with both fills and both labels: a plain field paints `input`, a composite field
 — a search, tag or mention field, the inline edit, the chat composer, the colour
 picker's hex field — paints the page role as its own fill, and each carries a
-value and a hint. The tightest of those placements is the authored Windows 7
-light look's composite hint at **1.95:1**, above its floor; the pairs are
+value and a hint. The tightest of those placements is the Windows light platform
+style's composite hint at **1.99:1**, above its floor; the pairs are
 coverage, so a brand that tints its page cannot ship a hint nobody can read. A
 filled action and the menu row already paint the pair; the two recipe sets and
 the components' own `Button` remain the interlock in `TODO.md` → Interlocks.
@@ -508,8 +510,8 @@ its placeholder), a focusable row and a selected row sit on; the composite is
 the disabled fade's, with the label over the *dimmed*
 fill — measured in the `keyboard-focus-dim` window capture, which paints the
 dark `muted` fill `#222730` as `#181C23` and the `foreground` text `#EEF1F5` as
-`#6E7177`. The lowest field placement is the authored Windows 7 light look's
-composite hint on a muted strip at **1.67:1**, still above the cue's floor.
+`#6E7177`. The lowest field placement is macOS light's
+composite hint on a muted strip at **1.68:1**, still above the cue's floor.
 It is the gate's tenth report (`audit.keyboardDim`): the dim and the
 disabled fade are the same composite with two shares, so no palette fails the
 dim alone — the dim's band sits inside the fade's — and what the report adds is
@@ -616,9 +618,11 @@ a composite field paints the page role, so its value and placeholder sit on
 `background` while the table measured only `input`. Measuring it found Aero
 light's placeholder at 4.35:1 on its own window and macOS light's inherited value
 at 4.49:1 on its, both under the 4.5:1 floor, so those values moved (§7). The
-caret joined the mark contract on the same fill: `indicatorSurfaces` names
-`input` as its seventh strip, because the native text host paints the caret
-there.
+faint role then had to clear the same floor on a **chrome stripe**: a `<diff>`
+hunk header is `muted` and its text is the faint role, which measured 4.03:1 on
+the dark base's own toolbar, so the whole faint scale moved a step. The caret
+joined the mark contract on the same fill: `indicatorSurfaces` names `input` as
+its seventh strip, because the native text host paints the caret there.
 
 A field's own fill holds a **third** text role besides the value and the
 placeholder: the muted line. A time picker paints its separator and its clear

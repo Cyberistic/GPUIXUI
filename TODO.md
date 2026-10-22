@@ -3344,25 +3344,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[~]` `[█████████░]` 117/119
+`[~]` `[█████████░]` 118/119
 
-`[ ]` Move the **styling page's two-registry split** when the primitives' empty
-selection box takes the measured edge — `packages/primitives/src/recipe/registry.ts`
-overrides `border-input` to the `input` fill, which is `/docs/styling`'s "one
-deliberate difference" and `styling-page.test.ts`'s
-`keeps the deliberate border-input difference`; the open interlock row **The empty
-selection box's edge is a fill role** replaces it with `border-strong` (the
-working tree already has the override removed), so that page row, its prose and the
-guard must move in the same push. Until then the docs suite is red against an
-uncommitted primitives tree and green against `master`.
+`[x]` Move the **styling page past the removed `border-input` remap** — the
+primitives' registry overrode `border-input` to the `input` fill (the page's "one
+deliberate difference"), and the empty selection box now carries the measured
+`border-strong` boundary, so the override is gone and both registries resolve the
+class to the `border` role. `/docs/styling` lists `border-input` in the shared
+table and explains the collision — shadcn's `--input` is a border, this library's
+`input` role is the field's **fill**, and a control whose edge *is* the control
+takes `border-strong` — instead of teaching a remap that no longer exists.
+`styling-page.test.ts`'s case now reads both registries from the package, proves
+the two roles differ, and requires the page's explanation while refusing the old
+"fill role, not the border role" line; the additions table's floor moved 15 → 14
+with `type-body` named so a scan that stopped matching still fails. Directions
+measured: the old page fails `to contain '`border` role'`, and the pre-fix
+override failed with the `input` role painted; 9/9 green.
 
 `[ ]` Move the **`.gx-demo` `--placeholder` default** when the tokens workstream's
 native-text pass lands — it moves the dark `placeholder` role from `#7C8595` to
 `#858E9F` (and light from `#626C7B` to `#606A79`), so
 `theme-css.test.ts`'s `keep the .gx-demo defaults equal to the dark theme` reports
-`--placeholder` against the current style sheet. Same pattern as the styling item:
-the docs default is correct on `master` and stale against the uncommitted tokens
-tree.
+`--placeholder` against the current style sheet. The docs default is correct on
+`master` and stale against the uncommitted tokens tree.
 
 `[x]` Record **where the overlay preview stays coarser than the shipped surface** —
 the four curated overlay pages already state the two shadows (`elevation.lg` beside

@@ -311,7 +311,7 @@ on, and
 where-can-Tab-go cue — and the tightest shipped placement is Linux light's
 `primary` over a card at 1.27:1, so a control whose text must stay readable while
 the focus is elsewhere opts out of the dim; the lowest field placement is the
-authored Windows 7 light look's composite hint at 1.67:1.
+macOS light's composite hint on a muted strip at 1.68:1.
 
 ## Text selection
 
@@ -700,7 +700,13 @@ plain field, the page role for a composite one (search, tag and mention fields,
 the chat composer, the inline edit) — because the value, the placeholder and the
 caret are measured against it (`nativeTextFills` is the two-value list). A host
 is handed the theme's mode, families, `inputForeground`/`mutedForeground`, the
-`placeholder` role and `primary` as its caret and accent. The muted role is
+`placeholder` role and `primary` as its caret and accent. A `<diff>` host takes
+three more: `diffAdd`/`diffDel` are the `success`/`destructive` tone's readable
+role (the runtime tints the row under a changed line at 5.5% of the same value,
+exported as `nativeDiffWash`), a hunk header sits on the `muted` `diffHunkBg` and
+its file path is `textDim`. A native field's placeholder is **not** themeable at
+0.11.0 — the runtime shapes an empty field's hint with a fixed `#8F8F8F` — so a
+component that needs a themed hint paints it itself. The muted role is
 measured on that fill too: the same pair covers the separator and clear glyph a
 time picker paints inside a field's `input` root and a number field's stepper
 chevrons, so a brand with a tinted fill cannot bury either in silence.

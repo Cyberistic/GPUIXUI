@@ -82,7 +82,9 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     warningSoft: palette.amber[50],
     destructiveSoft: palette.red[50],
     selection: "#316AC53D",
-    placeholder: "#5C6470",
+    // A hunk header is a `muted` stripe and its text is the faint role, so the
+    // placeholder is held to 4.5:1 on the toolbar as well as on the page.
+    placeholder: "#59616D",
     disabled: "#E4E0CE",
     disabledForeground: "#8C8873",
     skeleton: "#D2CDB6",
@@ -141,10 +143,11 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     selected: "#C2E0F8",
     selectedForeground: "#08344F",
     selection: "#3399FF3D",
-    // Aero's window is darker than the base page, so the shared placeholder sat
-    // at 4.35:1 on it, under the 4.5:1 secondary floor. This is the step that
-    // clears it while staying visibly fainter than `mutedForeground`.
-    placeholder: "#5B6C7B",
+    // Aero's window is darker than the base page and its toolbar darker still,
+    // so the inherited placeholder was under the 4.5:1 secondary floor on both.
+    // This is the step that clears the stripe while staying visibly fainter
+    // than `mutedForeground`.
+    placeholder: "#586978",
     disabled: "#E3EAF1",
     disabledForeground: "#8A99A6",
     skeleton: "#CFDCE8",
