@@ -123,10 +123,11 @@ grows (a longer label, another font) carries the pill with it and a caller's rai
 `className` padding cannot leave it short. The behaviour suite asserts the pill's
 painted box is exactly the selected trigger's box, in both orientations.
 
-GPUix has no `transform` and no position animation, so the pill **jumps** between
-tabs instead of sliding; the docs demo's slide is a browser-only illustration.
-There is also no `zIndex`, so the pill stays behind the triggers by being their
-earlier sibling.
+The pill **slides** between triggers: its `left`/`top`/`width`/`height` are a
+motion target (`normal`, 200 ms), retargeted from the box on screen, so a move
+across three tabs sweeps once rather than jumping. Not a transform — the runtime
+animates the box's own inset and size. There is no `zIndex`, so the pill stays
+behind the triggers by being their earlier sibling.
 
 ## Style by state
 

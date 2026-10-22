@@ -149,6 +149,11 @@ palette Alert and Badge use). Width is 380px.
   so a keyboard reader's arrival holds the clock; a toast can still dismiss
   before they reach it, so use `duration: 0` for one that must wait. A consumer
   that needs a custom hold can call `pause`/`resume` from `useToast()`.
+- **A card slides in from the right edge** (16px + fade, `notice` 500 ms) and
+  stays painted for that tween after it leaves the store, then unmounts. The
+  leave is timed by the same duration, not by the runtime's clock, so a frozen
+  motion clock cannot strand a card. `MotionProvider` supplies the
+  reduced-motion preference (`docs/component-api.md` §11).
 - Not portalled: the viewport is an absolutely positioned element in its parent,
   so put it at the app root.
 - Disposal is deferred one microtask (`toast/lifecycle.ts`) so a React

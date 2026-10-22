@@ -197,6 +197,14 @@ also closes both.
 <DropdownMenu open={open} onOpenChange={setOpen}>…</DropdownMenu>;  // app remembers
 ```
 
+## Motion
+
+The surface fades and travels 4px out from its trigger's side (`normal`,
+200 ms), and stays mounted for its exit tween — so a dismiss is immediate in
+state while the box fades out. Submenus mount with the same appearance rules;
+their own entry is not animated in v1. `MotionProvider` supplies the
+reduced-motion preference (`docs/component-api.md` §11).
+
 ## API
 
 Every part takes the GPUix host props and merges `style` last.

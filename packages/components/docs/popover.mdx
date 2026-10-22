@@ -71,6 +71,15 @@ Focus moves into the surface on open, so keys reach its content without a click.
 The surface is a tab stop (`tabIndex={-1}`) but not a trap: Tab leaves and closes
 it. The trigger is an ordinary button: `Enter`/`Space` toggle it.
 
+## Motion
+
+The surface fades and travels 8px out from its trigger's side (`normal`,
+200 ms): a panel below its trigger enters from above, one above enters from
+below, and a flipped placement keeps the side it was measured at while it
+leaves. The panel stays mounted for the exit tween; focus behaviour is
+unchanged. `MotionProvider` supplies the reduced-motion preference
+(`docs/component-api.md` §11).
+
 ## API
 
 Every part takes the GPUix host props and merges `style` last.

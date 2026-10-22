@@ -16,7 +16,11 @@ import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  waitFor,
+  focusedTestId,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
@@ -59,15 +63,19 @@ const Faq = ({
 );
 
 describe("Accordion", () => {
-  it("opens the clicked section and closes the previous one", () => {
+  it("opens the clicked section and closes the previous one", async () => {
     const faq = renderComponent(<Faq />);
 
     expect(faq.renderer.findByTestId("content-one")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-two")).toBeUndefined(),
+    );
 
     clickCentreOf(faq, "trigger-two");
 
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-one")).toBeUndefined(),
+    );
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
     expect(faq.renderer.findByTestId("trigger-one")?.customProps).toMatchObject(
       {
@@ -98,12 +106,14 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
-  it("closes the open section when collapsible", () => {
+  it("closes the open section when collapsible", async () => {
     const faq = renderComponent(<Faq collapsible />);
 
     clickCentreOf(faq, "trigger-one");
 
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-one")).toBeUndefined(),
+    );
     expect(faq.renderer.findByTestId("trigger-one")?.customProps).toMatchObject(
       {
         "aria-expanded": false,
@@ -113,7 +123,7 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
-  it("keeps several sections open in multiple mode", () => {
+  it("keeps several sections open in multiple mode", async () => {
     const faq = renderComponent(
       <Accordion type="multiple" defaultValue={["one"]}>
         {section("one", "One")}
@@ -129,18 +139,22 @@ describe("Accordion", () => {
 
     clickCentreOf(faq, "trigger-one");
 
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-one")).toBeUndefined(),
+    );
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
 
     faq.unmount();
   });
 
-  it("does not open a disabled section", () => {
+  it("does not open a disabled section", async () => {
     const faq = renderComponent(<Faq />);
 
     clickCentreOf(faq, "trigger-three");
 
-    expect(faq.renderer.findByTestId("content-three")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-three")).toBeUndefined(),
+    );
     expect(
       faq.renderer.findByTestId("trigger-three")?.customProps,
     ).toMatchObject({
@@ -151,7 +165,7 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
-  it("opens from Enter on the focused trigger", () => {
+  it("opens from Enter on the focused trigger", async () => {
     const faq = renderComponent(<Faq />);
     faq.renderer.focusElement(
       faq.renderer.findByTestId("trigger-two")?.id ?? -1,
@@ -160,7 +174,9 @@ describe("Accordion", () => {
     faq.renderer.simulateKeystrokes("enter");
 
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-one")).toBeUndefined(),
+    );
 
     faq.unmount();
   });
@@ -182,7 +198,7 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
-  it("reports a controlled change without opening the section", () => {
+  it("reports a controlled change without opening the section", async () => {
     const onValueChange = vi.fn();
     const faq = renderComponent(
       <Faq value="one" onValueChange={onValueChange} />,
@@ -192,7 +208,9 @@ describe("Accordion", () => {
 
     expect(onValueChange).toHaveBeenCalledWith("two");
     expect(faq.renderer.findByTestId("content-one")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-two")).toBeUndefined(),
+    );
 
     faq.unmount();
   });
@@ -211,7 +229,7 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
-  it("moves focus between headers with the arrow keys, without opening them", () => {
+  it("moves focus between headers with the arrow keys, without opening them", async () => {
     const faq = renderComponent(<Faq />);
     faq.renderer.focusElement(
       faq.renderer.findByTestId("trigger-one")?.id ?? -1,
@@ -221,7 +239,9 @@ describe("Accordion", () => {
 
     expect(focusedTestId(faq)).toEqual(Option.some("trigger-two"));
     expect(faq.renderer.findByTestId("content-one")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-two")).toBeUndefined(),
+    );
 
     faq.renderer.simulateKeystrokes("up");
 
@@ -260,7 +280,7 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
-  it("still opens the focused header with Enter after moving", () => {
+  it("still opens the focused header with Enter after moving", async () => {
     const faq = renderComponent(<Faq />);
     faq.renderer.focusElement(
       faq.renderer.findByTestId("trigger-one")?.id ?? -1,
@@ -270,7 +290,9 @@ describe("Accordion", () => {
     faq.renderer.simulateKeystrokes("enter");
 
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-one")).toBeUndefined(),
+    );
 
     faq.unmount();
   });

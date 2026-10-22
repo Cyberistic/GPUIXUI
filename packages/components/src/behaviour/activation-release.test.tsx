@@ -39,7 +39,11 @@ import {
   DropdownMenuTrigger,
 } from "../dropdown-menu.js";
 import { HotkeyRecorder } from "../hotkey-recorder.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  waitFor,
+  focusedTestId,
+} from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -142,7 +146,7 @@ describe("Space activates on the release, not the press", () => {
     list.unmount();
   });
 
-  it("runs a menu row on the release, and not on the press", () => {
+  it("runs a menu row on the release, and not on the press", async () => {
     const onSelect = vi.fn();
     const menu = renderComponent(
       <div style={{ padding: 40 }}>
@@ -174,7 +178,9 @@ describe("Space activates on the release, not the press", () => {
 
     releaseSpace(menu);
     expect(onSelect).toHaveBeenCalledWith("rename");
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     menu.unmount();
   });

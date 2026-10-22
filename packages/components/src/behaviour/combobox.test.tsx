@@ -18,6 +18,7 @@ import * as Option from "effect/Option";
 import { Dialog, DialogContent } from "../dialog.js";
 import {
   clickCentreOf,
+  waitFor,
   focusedTestId,
   requireBounds,
 } from "../internal/interaction.js";
@@ -243,7 +244,9 @@ describe("Combobox", () => {
 
     expect(onCreate).toHaveBeenCalledTimes(1);
     expect(onCreate).toHaveBeenCalledWith("zzz");
-    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
 
     // The root reports the query; only the caller can add the option, so no
@@ -259,13 +262,17 @@ describe("Combobox", () => {
     await open(matching);
     type(matching, "vac");
     await settle();
-    expect(matching.renderer.findByTestId("combobox-create")).toBeUndefined();
+    await waitFor(() =>
+      expect(matching.renderer.findByTestId("combobox-create")).toBeUndefined(),
+    );
     expect(matching.renderer.getAllText()).toContain("Vacation");
     matching.unmount();
 
     const blank = renderComponent(<Picker onCreate={() => undefined} />);
     await open(blank);
-    expect(blank.renderer.findByTestId("combobox-create")).toBeUndefined();
+    await waitFor(() =>
+      expect(blank.renderer.findByTestId("combobox-create")).toBeUndefined(),
+    );
     blank.unmount();
   });
 
@@ -274,7 +281,11 @@ describe("Combobox", () => {
     await open(noHandler);
     type(noHandler, "zzz");
     await settle();
-    expect(noHandler.renderer.findByTestId("combobox-create")).toBeUndefined();
+    await waitFor(() =>
+      expect(
+        noHandler.renderer.findByTestId("combobox-create"),
+      ).toBeUndefined(),
+    );
     noHandler.unmount();
 
     const multiple = renderComponent(
@@ -283,7 +294,9 @@ describe("Combobox", () => {
     await open(multiple);
     type(multiple, "zzz");
     await settle();
-    expect(multiple.renderer.findByTestId("combobox-create")).toBeUndefined();
+    await waitFor(() =>
+      expect(multiple.renderer.findByTestId("combobox-create")).toBeUndefined(),
+    );
     multiple.unmount();
   });
 
@@ -367,7 +380,9 @@ describe("Combobox", () => {
     picker.renderer.simulateKeystrokes("escape");
     await settle();
 
-    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
 
     picker.unmount();
@@ -387,13 +402,17 @@ describe("Combobox", () => {
     nested.renderer.simulateKeystrokes("escape");
     await settle();
 
-    expect(nested.renderer.findByTestId("combobox-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(nested.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
     expect(nested.renderer.findByTestId("dialog-panel")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
     await settle();
 
-    expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined(),
+    );
 
     nested.unmount();
   });
@@ -441,7 +460,9 @@ describe("Combobox", () => {
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith("camera");
-    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
     expect(
       picker.renderer.findByTestId("combobox-trigger")?.customProps?.[
         "aria-expanded"
@@ -498,7 +519,9 @@ describe("Combobox", () => {
     clickCentreOf(picker, "elsewhere");
     await settle();
 
-    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
 
     picker.unmount();
   });

@@ -59,6 +59,13 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import {
+  fadeFrom,
+  fadeOnly,
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 
@@ -210,6 +217,8 @@ export const DialogContent = ({
   const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
   assertParts(dialogContent, children);
+  const timing = useSurfaceTiming("slow");
+  const presence = useSurfacePresence(open, timing);
   const [content, setContent] = useState<PublicInstance | undefined>(undefined);
   const contentRef = useCallback((next: PublicInstance | null) => {
     setContent(next ?? undefined);
@@ -219,9 +228,9 @@ export const DialogContent = ({
     ref,
   );
   const contentId = content?.id;
-  useModalFocus(contentId, initialFocus);
+  useModalFocus(contentId, initialFocus, open);
 
-  if (!open) return null;
+  if (!presence.mounted) return null;
 
   const close = () => setOpen(false);
 
@@ -239,6 +248,7 @@ export const DialogContent = ({
     >
       <div
         testId="dialog-backdrop"
+        motion={presenceMotion(fadeOnly, presence)}
         style={mergeStyles(
           overlaySurfaceStyle(DIALOG_OVERLAY, undefined, theme),
           {
@@ -248,7 +258,7 @@ export const DialogContent = ({
             alignItems: "center",
             justifyContent: "center",
             padding: theme.spacing["3xl"],
-            pointerEvents: "auto",
+            pointerEvents: presence.present ? "auto" : "none",
           },
         )}
       >
@@ -259,6 +269,7 @@ export const DialogContent = ({
           {...rest}
           ref={setContentElement}
           testId={testId}
+          motion={presenceMotion(fadeFrom("top", 8), presence)}
           onMouseDownOutside={(event) => {
             onMouseDownOutside?.(event);
             dismissTopLayer(event);
@@ -273,7 +284,7 @@ export const DialogContent = ({
               maxWidth: available,
               maxHeight: window.height - 2 * theme.spacing["3xl"],
               overflow: "scroll",
-              pointerEvents: "auto",
+              pointerEvents: presence.present ? "auto" : "none",
             }),
             style,
           )}

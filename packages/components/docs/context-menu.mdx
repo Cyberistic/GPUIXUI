@@ -116,6 +116,12 @@ and return focus to the sub-trigger; choosing a row (by keyboard or pointer)
 runs it once, closes both levels, and a pointer-opened menu leaves focus where
 the click put it. A press elsewhere closes both levels.
 
+## Motion
+
+The surface fades and travels 4px down from the pointer (`normal`, 200 ms), and
+stays mounted for its exit tween. `MotionProvider` supplies the reduced-motion
+preference (`docs/component-api.md` §11).
+
 ## API
 
 The rows, separators and submenu parts are the shared menu parts, so their props

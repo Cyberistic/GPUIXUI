@@ -15,7 +15,11 @@ import { describe, expect, it, vi } from "vitest";
 import { ConfirmDialog } from "../confirm-dialog.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { darkTheme } from "../internal/theme.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  waitFor,
+  focusedTestId,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
 /** A caller that owns the open state, exactly as the API requires. */
@@ -51,7 +55,7 @@ describe("ConfirmDialog", () => {
     confirm.unmount();
   });
 
-  it("cancels on Enter without confirming", () => {
+  it("cancels on Enter without confirming", async () => {
     const onConfirm = vi.fn();
     const confirm = renderComponent(<Harness onConfirm={onConfirm} />);
 
@@ -62,7 +66,9 @@ describe("ConfirmDialog", () => {
     confirm.renderer.simulateKeystrokes("enter");
 
     expect(onConfirm).not.toHaveBeenCalled();
-    expect(confirm.renderer.findByTestId("confirm-cancel")).toBeUndefined();
+    await waitFor(() =>
+      expect(confirm.renderer.findByTestId("confirm-cancel")).toBeUndefined(),
+    );
 
     confirm.unmount();
   });

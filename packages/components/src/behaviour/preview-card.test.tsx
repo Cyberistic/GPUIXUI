@@ -73,10 +73,12 @@ const Workspace = ({
 );
 
 describe("PreviewCard", () => {
-  it("renders only the trigger until it is opened", () => {
+  it("renders only the trigger until it is opened", async () => {
     const card = renderComponent(<Workspace />);
 
-    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+    );
     expect(card.renderer.getAllText()).not.toContain("Design system");
 
     card.unmount();
@@ -86,14 +88,16 @@ describe("PreviewCard", () => {
     const card = renderComponent(<Workspace />);
 
     hoverCentreOf(card, "trigger");
-    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+    );
     await waitFor(() =>
       expect(card.renderer.findByTestId("preview")).toBeDefined(),
     );
     card.unmount();
   });
 
-  it("opens on a press with no delay, and a second press closes it", () => {
+  it("opens on a press with no delay, and a second press closes it", async () => {
     const card = renderComponent(<Workspace />);
 
     try {
@@ -114,13 +118,15 @@ describe("PreviewCard", () => {
         "AFTER SECOND",
         JSON.stringify(card.renderer.findByTestId("trigger")?.customProps),
       );
-      expect(card.renderer.findByTestId("preview")).toBeUndefined();
+      await waitFor(() =>
+        expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+      );
     } finally {
       card.unmount();
     }
   });
 
-  it("does not open from a focus event alone, by policy", () => {
+  it("does not open from a focus event alone, by policy", async () => {
     const card = renderComponent(<Workspace />);
 
     try {
@@ -130,7 +136,9 @@ describe("PreviewCard", () => {
 
       // The event does arrive in a window; the card keeps its open path off it
       // deliberately, so focus alone leaves it closed.
-      expect(card.renderer.findByTestId("preview")).toBeUndefined();
+      await waitFor(() =>
+        expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+      );
     } finally {
       card.unmount();
     }
@@ -144,10 +152,14 @@ describe("PreviewCard", () => {
 
     hoverCentreOf(card, "trigger");
     await after(40);
-    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+    );
 
     card.renderer.focusElement(trigger?.id ?? -1);
-    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+    );
 
     card.unmount();
   });
@@ -178,7 +190,9 @@ describe("PreviewCard", () => {
     hoverCentreOf(card, "elsewhere");
     await after(40);
 
-    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+    );
 
     card.unmount();
   });
@@ -190,7 +204,9 @@ describe("PreviewCard", () => {
 
     card.renderer.simulateKeystrokes("escape");
 
-    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+    );
     expect(focusedTestId(card)).toEqual(Option.some("trigger"));
 
     card.unmount();
@@ -205,7 +221,9 @@ describe("PreviewCard", () => {
 
     card.renderer.nativeSimulateClick(12, 12);
 
-    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+    );
 
     card.unmount();
   });
@@ -236,7 +254,9 @@ describe("PreviewCard", () => {
 
     hoverCentreOf(card, "trigger");
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(true));
-    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    await waitFor(() =>
+      expect(card.renderer.findByTestId("preview")).toBeUndefined(),
+    );
 
     card.unmount();
   });

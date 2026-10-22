@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Renderer-neutral motion physics — springs, easing, timelines and inertia — with React hooks that drive GPUix motion targets.",
+  "description": "Renderer-neutral motion physics \u2014 springs, easing, timelines and inertia \u2014 with React hooks that drive GPUix motion targets.",
   "sideEffects": false,
   "exports": {
     ".": {
@@ -13,6 +13,10 @@
     "./react": {
       "types": "./src/react.ts",
       "default": "./src/react.ts"
+    },
+    "./timing": {
+      "types": "./src/timing.ts",
+      "default": "./src/timing.ts"
     }
   },
   "scripts": {

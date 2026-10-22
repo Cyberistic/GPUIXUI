@@ -13,7 +13,11 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "../internal/button.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  waitFor,
+  focusedTestId,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
   CommandMenu,
@@ -185,7 +189,7 @@ describe("CommandMenu", () => {
     palette.unmount();
   });
 
-  it("returns focus to the opener when it closes", () => {
+  it("returns focus to the opener when it closes", async () => {
     const palette = renderComponent(<OpenedPalette perform={vi.fn()} />);
 
     palette.renderer.focusElement(
@@ -196,7 +200,9 @@ describe("CommandMenu", () => {
 
     palette.renderer.simulateKeystrokes("escape");
 
-    expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(palette.renderer.findByTestId("command-menu")).toBeUndefined(),
+    );
     expect(focusedTestId(palette)).toEqual(Option.some("palette-opener"));
 
     palette.unmount();
@@ -220,7 +226,7 @@ describe("CommandMenu", () => {
     palette.unmount();
   });
 
-  it("runs the second match with ArrowDown and Enter, then closes", () => {
+  it("runs the second match with ArrowDown and Enter, then closes", async () => {
     const perform = vi.fn();
     const palette = renderComponent(<Palette perform={perform} />);
 
@@ -230,19 +236,23 @@ describe("CommandMenu", () => {
 
     expect(perform).toHaveBeenCalledTimes(1);
     expect(perform).toHaveBeenCalledWith("open-recent");
-    expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(palette.renderer.findByTestId("command-menu")).toBeUndefined(),
+    );
 
     palette.unmount();
   });
 
-  it("runs a clicked row", () => {
+  it("runs a clicked row", async () => {
     const perform = vi.fn();
     const palette = renderComponent(<Palette perform={perform} />);
 
     clickCentreOf(palette, "command-save");
 
     expect(perform).toHaveBeenCalledWith("save");
-    expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(palette.renderer.findByTestId("command-menu")).toBeUndefined(),
+    );
 
     palette.unmount();
   });
@@ -286,17 +296,19 @@ describe("CommandMenu", () => {
     palette.unmount();
   });
 
-  it("closes on Escape", () => {
+  it("closes on Escape", async () => {
     const palette = renderComponent(<Palette perform={vi.fn()} />);
 
     palette.renderer.simulateKeystrokes("escape");
 
-    expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(palette.renderer.findByTestId("command-menu")).toBeUndefined(),
+    );
 
     palette.unmount();
   });
 
-  it("matches a non-contiguous query by initials", () => {
+  it("matches a non-contiguous query by initials", async () => {
     const perform = vi.fn();
     const palette = renderComponent(<Palette perform={perform} />);
 
@@ -305,7 +317,9 @@ describe("CommandMenu", () => {
     const texts = palette.renderer.getAllText();
     expect(texts).toContain("Open file");
     expect(texts).not.toContain("Open recent");
-    expect(palette.renderer.findByTestId("command-empty")).toBeUndefined();
+    await waitFor(() =>
+      expect(palette.renderer.findByTestId("command-empty")).toBeUndefined(),
+    );
 
     palette.renderer.simulateKeystrokes("enter");
     expect(perform).toHaveBeenCalledWith("open-file");
@@ -427,7 +441,7 @@ describe("CommandMenu", () => {
     palette.unmount();
   });
 
-  it("runs a recent row once and closes", () => {
+  it("runs a recent row once and closes", async () => {
     const perform = vi.fn();
     const palette = renderComponent(
       <Palette perform={perform} recents={["save"]} />,
@@ -437,7 +451,9 @@ describe("CommandMenu", () => {
 
     expect(perform).toHaveBeenCalledTimes(1);
     expect(perform).toHaveBeenCalledWith("save");
-    expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(palette.renderer.findByTestId("command-menu")).toBeUndefined(),
+    );
 
     palette.unmount();
   });

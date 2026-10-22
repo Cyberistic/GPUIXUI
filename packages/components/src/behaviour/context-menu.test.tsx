@@ -23,6 +23,7 @@ import {
   boundsOf,
   clickCentreOf,
   focusedTestId,
+  waitFor,
 } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -137,12 +138,14 @@ const WithSubmenu = ({
 );
 
 describe("ContextMenu", () => {
-  it("opens on a right click but not on a left click", () => {
+  it("opens on a right click but not on a left click", async () => {
     const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
     const origin = rowOrigin(row);
 
     clickCentreOf(row, "row");
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     rightClickAt(row, origin.x + 40, origin.y + 30);
 
@@ -166,7 +169,7 @@ describe("ContextMenu", () => {
     row.unmount();
   });
 
-  it("runs a selected action and closes", () => {
+  it("runs a selected action and closes", async () => {
     const onSelect = vi.fn();
     const row = renderComponent(<ProjectRow onSelect={onSelect} />);
     const origin = rowOrigin(row);
@@ -176,7 +179,9 @@ describe("ContextMenu", () => {
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith("copy");
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     row.unmount();
   });
@@ -198,19 +203,21 @@ describe("ContextMenu", () => {
     row.unmount();
   });
 
-  it("closes on Escape", () => {
+  it("closes on Escape", async () => {
     const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
     const origin = rowOrigin(row);
 
     rightClickAt(row, origin.x + 40, origin.y + 30);
     row.renderer.simulateKeystrokes("escape");
 
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     row.unmount();
   });
 
-  it("leaves the focus nowhere when a pointer-opened menu dismisses", () => {
+  it("leaves the focus nowhere when a pointer-opened menu dismisses", async () => {
     // The light harness cannot see a native window's focus, but the rule is the
     // component's: a pointer open records no restore target, so the documented
     // contract is "focus stays where the pointer put it" rather than the
@@ -224,19 +231,23 @@ describe("ContextMenu", () => {
 
     row.renderer.simulateKeystrokes("escape");
 
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
     expect(focusedTestId(row)).toEqual(Option.none());
 
     row.unmount();
   });
 
-  it("does not open from a disabled trigger", () => {
+  it("does not open from a disabled trigger", async () => {
     const row = renderComponent(<ProjectRow onSelect={vi.fn()} disabled />);
     const origin = rowOrigin(row);
 
     rightClickAt(row, origin.x + 40, origin.y + 30);
 
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     row.unmount();
   });
@@ -271,7 +282,7 @@ describe("ContextMenu", () => {
     row.unmount();
   });
 
-  it("activates an item from the keyboard after opening", () => {
+  it("activates an item from the keyboard after opening", async () => {
     const onSelect = vi.fn();
     const row = renderComponent(<ProjectRow onSelect={onSelect} />);
     focusRow(row);
@@ -281,31 +292,37 @@ describe("ContextMenu", () => {
     row.renderer.simulateKeystrokes("enter");
 
     expect(onSelect).toHaveBeenCalledWith("open");
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     row.unmount();
   });
 
-  it("returns focus to the trigger when Escape closes it", () => {
+  it("returns focus to the trigger when Escape closes it", async () => {
     const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
     focusRow(row);
 
     row.renderer.simulateKeystrokes("shift-f10");
     row.renderer.simulateKeystrokes("escape");
 
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
     expect(focusedTestId(row)).toEqual(Option.some("row"));
 
     row.unmount();
   });
 
-  it("ignores Shift+F10 on a disabled trigger", () => {
+  it("ignores Shift+F10 on a disabled trigger", async () => {
     const row = renderComponent(<ProjectRow onSelect={vi.fn()} disabled />);
     focusRow(row);
 
     row.renderer.simulateKeystrokes("shift-f10");
 
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
     expect(row.renderer.findByTestId("row")?.customProps?.tabIndex).toBe(-1);
 
     row.unmount();
@@ -358,7 +375,7 @@ describe("ContextMenu submenus", () => {
     root.renderer.simulateKeystrokes("right");
   };
 
-  it("runs a submenu row clicked with the pointer and closes both levels", () => {
+  it("runs a submenu row clicked with the pointer and closes both levels", async () => {
     const onSelect = vi.fn();
     const row = renderComponent(<WithSubmenu onSelect={onSelect} />);
     openSubmenu(row);
@@ -367,8 +384,12 @@ describe("ContextMenu submenus", () => {
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith("copy-link");
-    expect(row.renderer.findByTestId("submenu")).toBeUndefined();
-    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     row.unmount();
   });
@@ -389,26 +410,30 @@ describe("ContextMenu submenus", () => {
     row.unmount();
   });
 
-  it("closes one level on Escape and returns focus to the sub trigger", () => {
+  it("closes one level on Escape and returns focus to the sub trigger", async () => {
     const row = renderComponent(<WithSubmenu onSelect={vi.fn()} />);
     openSubmenu(row);
 
     row.renderer.simulateKeystrokes("escape");
 
-    expect(row.renderer.findByTestId("submenu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
     expect(row.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(row)).toEqual(Option.some("share"));
 
     row.unmount();
   });
 
-  it("closes one level on ArrowLeft and keeps the parent menu", () => {
+  it("closes one level on ArrowLeft and keeps the parent menu", async () => {
     const row = renderComponent(<WithSubmenu onSelect={vi.fn()} />);
     openSubmenu(row);
 
     row.renderer.simulateKeystrokes("left");
 
-    expect(row.renderer.findByTestId("submenu")).toBeUndefined();
+    await waitFor(() =>
+      expect(row.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
     expect(row.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(row)).toEqual(Option.some("share"));
 

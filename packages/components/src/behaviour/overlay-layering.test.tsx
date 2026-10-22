@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
 } from "../dropdown-menu.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
-import { clickCentreOf } from "../internal/interaction.js";
+import { clickCentreOf, waitFor } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
 /**
@@ -56,7 +56,7 @@ const focus = (
 };
 
 describe("overlay layering", () => {
-  it("dismisses a popover opened inside a dialog one layer at a time", () => {
+  it("dismisses a popover opened inside a dialog one layer at a time", async () => {
     const nested = renderComponent(
       <Dialog defaultOpen>
         <DialogContent label="Dialog" testId="dialog-panel">
@@ -76,16 +76,20 @@ describe("overlay layering", () => {
     // One keystroke reaches the popover's handler and the dialog's: the shared
     // stack must dismiss only the popover, which is what is on top.
     nested.renderer.simulateKeystrokes("escape");
-    expect(nested.renderer.findByTestId("popover-panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(nested.renderer.findByTestId("popover-panel")).toBeUndefined(),
+    );
     expect(nested.renderer.findByTestId("dialog-panel")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
-    expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined(),
+    );
 
     nested.unmount();
   });
 
-  it("puts a popover declared open inside a dialog above it in the first render", () => {
+  it("puts a popover declared open inside a dialog above it in the first render", async () => {
     // Both surfaces open in one commit. React runs the popover's layout effect
     // before the dialog's, so a stack ordered by push would hand the first
     // Escape to the dialog — the container — and unmount the popover with it.
@@ -109,16 +113,20 @@ describe("overlay layering", () => {
     // the path a reader's Escape takes.
     focus(nested, "popover-panel");
     nested.renderer.simulateKeystrokes("escape");
-    expect(nested.renderer.findByTestId("popover-panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(nested.renderer.findByTestId("popover-panel")).toBeUndefined(),
+    );
     expect(nested.renderer.findByTestId("dialog-panel")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
-    expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(nested.renderer.findByTestId("dialog-panel")).toBeUndefined(),
+    );
 
     nested.unmount();
   });
 
-  it("dismisses a dialog over a popover over a menu outside-in", () => {
+  it("dismisses a dialog over a popover over a menu outside-in", async () => {
     const stack = renderComponent(<Stack />);
 
     expect(stack.renderer.findByTestId("menu-panel")).toBeDefined();
@@ -129,18 +137,24 @@ describe("overlay layering", () => {
     // menu holds focus, but the top dialog is what a single Escape dismisses.
     focus(stack, "menu-panel");
     stack.renderer.simulateKeystrokes("escape");
-    expect(stack.renderer.findByTestId("dialog-panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(stack.renderer.findByTestId("dialog-panel")).toBeUndefined(),
+    );
     expect(stack.renderer.findByTestId("popover-panel")).toBeDefined();
     expect(stack.renderer.findByTestId("menu-panel")).toBeDefined();
 
     focus(stack, "popover-panel");
     stack.renderer.simulateKeystrokes("escape");
-    expect(stack.renderer.findByTestId("popover-panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(stack.renderer.findByTestId("popover-panel")).toBeUndefined(),
+    );
     expect(stack.renderer.findByTestId("menu-panel")).toBeDefined();
 
     focus(stack, "menu-panel");
     stack.renderer.simulateKeystrokes("escape");
-    expect(stack.renderer.findByTestId("menu-panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(stack.renderer.findByTestId("menu-panel")).toBeUndefined(),
+    );
 
     stack.unmount();
   });

@@ -39,9 +39,11 @@ import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   clickCentreOf,
+  waitFor,
   focusedTestId,
   hoverCentreOf,
   requireBounds,
+  settleMotion,
 } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -246,7 +248,7 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
-  it("keeps a disabled trigger out of the tab order and closed", () => {
+  it("keeps a disabled trigger out of the tab order and closed", async () => {
     const menu = renderComponent(
       <FileActions onSelect={vi.fn()} triggerDisabled />,
     );
@@ -262,7 +264,9 @@ describe("DropdownMenu", () => {
     menu.renderer.simulateKeystrokes("enter");
     clickCentreOf(menu, "trigger");
 
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     menu.unmount();
   });
@@ -278,7 +282,7 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
-  it("opens on the first row from Enter, and a second Enter runs it", () => {
+  it("opens on the first row from Enter, and a second Enter runs it", async () => {
     const onSelect = vi.fn();
     const menu = renderComponent(<FileActions onSelect={onSelect} />);
     focusTrigger(menu);
@@ -290,7 +294,9 @@ describe("DropdownMenu", () => {
     menu.renderer.simulateKeystrokes("enter");
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith("rename");
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
     expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
 
     menu.unmount();
@@ -306,10 +312,12 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
-  it("opens as a menu on the trigger", () => {
+  it("opens as a menu on the trigger", async () => {
     const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
 
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     clickCentreOf(menu, "trigger");
 
@@ -325,6 +333,7 @@ describe("DropdownMenu", () => {
   it("centres a requested menu on its trigger", () => {
     const menu = renderComponent(<CentredActions />);
     clickCentreOf(menu, "trigger");
+    settleMotion(menu);
 
     const trigger = requireBounds(menu, "trigger");
     const surface = requireBounds(menu, "menu");
@@ -339,6 +348,7 @@ describe("DropdownMenu", () => {
   it("opens above a trigger near the window bottom instead of covering it", () => {
     const menu = renderComponent(<LowActions />);
     clickCentreOf(menu, "trigger");
+    settleMotion(menu);
 
     const trigger = requireBounds(menu, "trigger");
     const surface = requireBounds(menu, "menu");
@@ -380,7 +390,7 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
-  it("runs Enter on the focused row once, closes and restores focus", () => {
+  it("runs Enter on the focused row once, closes and restores focus", async () => {
     const onSelect = vi.fn();
     const menu = renderComponent(<FileActions onSelect={onSelect} />);
     clickCentreOf(menu, "trigger");
@@ -390,13 +400,15 @@ describe("DropdownMenu", () => {
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith("rename");
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
     expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
 
     menu.unmount();
   });
 
-  it("runs a clicked row and ignores a disabled one", () => {
+  it("runs a clicked row and ignores a disabled one", async () => {
     const onSelect = vi.fn();
     const menu = renderComponent(<FileActions onSelect={onSelect} />);
     clickCentreOf(menu, "trigger");
@@ -407,7 +419,9 @@ describe("DropdownMenu", () => {
 
     clickCentreOf(menu, "rename");
     expect(onSelect).toHaveBeenCalledWith("rename");
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     menu.unmount();
   });
@@ -444,12 +458,16 @@ describe("DropdownMenu", () => {
 
     clickCentreOf(menu, "trigger");
     menu.renderer.simulateKeystrokes("escape");
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
     expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
 
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "elsewhere");
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     // The real runtime delivers the press and the next click in separate tasks,
     // so the one-gesture dismiss mark has been cleared by now.
@@ -458,7 +476,9 @@ describe("DropdownMenu", () => {
     clickCentreOf(menu, "trigger");
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     clickCentreOf(menu, "trigger");
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     menu.unmount();
   });
@@ -743,6 +763,7 @@ describe("DropdownMenu submenus", () => {
     clickCentreOf(menu, "trigger");
 
     clickCentreOf(menu, "share");
+    settleMotion(menu);
 
     const row = requireBounds(menu, "share");
     const surface = requireBounds(menu, "submenu");
@@ -769,7 +790,7 @@ describe("DropdownMenu submenus", () => {
     menu.unmount();
   });
 
-  it("runs a submenu row once, closes both levels and restores root focus", () => {
+  it("runs a submenu row once, closes both levels and restores root focus", async () => {
     const onSelect = vi.fn();
     const menu = renderComponent(<WithSubmenus onSelect={onSelect} />);
     clickCentreOf(menu, "trigger");
@@ -780,14 +801,18 @@ describe("DropdownMenu submenus", () => {
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith("email");
-    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
     expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
 
     menu.unmount();
   });
 
-  it("runs a submenu row clicked with the pointer", () => {
+  it("runs a submenu row clicked with the pointer", async () => {
     const onSelect = vi.fn();
     const menu = renderComponent(<WithSubmenus onSelect={onSelect} />);
     clickCentreOf(menu, "trigger");
@@ -797,38 +822,48 @@ describe("DropdownMenu submenus", () => {
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith("copy-link");
-    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     menu.unmount();
   });
 
-  it("closes one level on Escape and returns focus to the sub trigger", () => {
+  it("closes one level on Escape and returns focus to the sub trigger", async () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "share");
 
     menu.renderer.simulateKeystrokes("escape");
 
-    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(menu)).toEqual(Option.some("share"));
 
     menu.renderer.simulateKeystrokes("escape");
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
     expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
 
     menu.unmount();
   });
 
-  it("closes one level on ArrowLeft and keeps the parent menu", () => {
+  it("closes one level on ArrowLeft and keeps the parent menu", async () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "share");
 
     menu.renderer.simulateKeystrokes("left");
 
-    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(menu)).toEqual(Option.some("share"));
 
@@ -847,20 +882,22 @@ describe("DropdownMenu submenus", () => {
     menu.unmount();
   });
 
-  it("keeps at most one submenu open", () => {
+  it("keeps at most one submenu open", async () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "share");
 
     clickCentreOf(menu, "export");
 
-    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
     expect(menu.renderer.findByTestId("export-menu")).toBeDefined();
 
     menu.unmount();
   });
 
-  it("closes the submenu when the pointer moves onto another row", () => {
+  it("closes the submenu when the pointer moves onto another row", async () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
     hoverCentreOf(menu, "share");
@@ -868,21 +905,27 @@ describe("DropdownMenu submenus", () => {
 
     hoverCentreOf(menu, "rename");
 
-    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
 
     menu.unmount();
   });
 
-  it("closes both levels on an outside press", () => {
+  it("closes both levels on an outside press", async () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "share");
 
     clickCentreOf(menu, "elsewhere");
 
-    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
-    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
 
     menu.unmount();
   });

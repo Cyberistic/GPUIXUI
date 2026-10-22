@@ -75,6 +75,7 @@ import {
   isUp,
   swallowsDefault,
 } from "./internal/key.js";
+import { useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -433,6 +434,7 @@ export const TabsList = ({
   const { orientation, moveBy, jumpTo, selectActive, selected, boxes, rows } =
     useTabsContext();
   const [origin, setOrigin] = useState<Option.Option<TabBox>>(Option.none());
+  const timing = useSurfaceTiming("normal");
   assertParts(tabsList, children);
 
   const direction = (event: EventPayload): Option.Option<1 | -1> =>
@@ -535,9 +537,15 @@ export const TabsList = ({
         onSome: ({ origin: anchoredAt, selected: box }) => (
           <div
             testId="tabs-indicator"
+            motion={{
+              // The first measured box is painted where it is; every later one
+              // retargets from the box on screen, which is the slide.
+              initial: false,
+              animate: indicatorBox(anchoredAt, box),
+              transition: timing.enter,
+            }}
             style={{
               position: "absolute",
-              ...indicatorBox(anchoredAt, box),
               backgroundColor: theme.colors.card,
               borderRadius: theme.radius.sm,
               pointerEvents: "none",

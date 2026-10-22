@@ -103,6 +103,19 @@ export const settle = (root: ComponentTestRoot): void => {
   root.renderer.flush();
 };
 
+/**
+ * Put the runtime's motion clock past every entry tween, then settle.
+ *
+ * A surface that fades and travels is *moving* right after it opens, so a claim
+ * about where it rests (placement, size, a pill's box) has to be measured once
+ * the movement is over. The longest level in `@gpuixui/motion` is a notice's
+ * 500 ms, so one second covers every surface the library ships.
+ */
+export const settleMotion = (root: ComponentTestRoot): void => {
+  root.renderer.clockFastForward(1_000);
+  settle(root);
+};
+
 /** Let real time pass, for a claim that something has *not* happened yet. */
 export const after = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));

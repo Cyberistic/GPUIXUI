@@ -3123,9 +3123,9 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[ ]` `[░░░░░░░░░░]` 0/7
+`[~]` `[█░░░░░░░░░]` 1/7
 
-`[ ]` Phase 0: wire `@gpuixui/motion` into Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs and PreviewCard (shadcn/Base UI enter-exit patterns; fade + offset, never `transform`)
+`[x]` Phase 0: wire `@gpuixui/motion` into Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs and PreviewCard (shadcn/Base UI enter-exit patterns; fade + offset, never `transform`) — the timing policy is `motionTiming` in `@gpuixui/motion`, the frames and mount window are `packages/components/src/internal/presence.tsx`, the preference is `MotionProvider`, and `src/behaviour/presence.test.tsx` measures the movement and exit in the real renderer
 `[ ]` Text effects: splitting, typing, morphing, rotating, swapping, sliding, rolling, scrolling/sliding/counting number, gradient, highlight
 `[ ]` Reveal and scroll: blur, fade, zoom, slide, highlight, auto-height, scroll-fade, scroll-progress
 `[ ]` Interaction effects: magnetic, tilt, click, ripple-button, icon-button, flip-button, liquid-button, shine

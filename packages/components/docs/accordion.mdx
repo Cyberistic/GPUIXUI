@@ -133,7 +133,21 @@ still the keyboard cue: the flag is presentational, not the cue
 - **No `aria-controls`** in 0.11.0; the relationship is positional.
 - The indicator icon carries `aria-label="Expand"` / `"Collapse"`.
 - Arrow keys move focus between enabled headers; they do not activate them.
-- No height animation (see **Collapsible** for the measured reason).
+- The panel **grows and collapses** through its measured height (`normal`,
+  200 ms) plus a fade; the body stays mounted for the exit. See **Motion** below.
+
+## Motion
+
+Each open panel is one clipped box whose `height` animates from zero to the
+body's own measured height — the inner box reports it through `onLayout`, so the
+transition is a real measurement rather than a guessed maximum. Closing runs
+`height` back to zero and fades the body out over the same `normal` (200 ms)
+level; the body stays mounted until that tween ends.
+
+Collapsible's panel is still not animated: it is an app-owned disclosure whose
+height no part measures, which is why the measured reveal lives here, where the
+body is a library part. `MotionProvider` supplies the reduced-motion preference
+(`docs/component-api.md` §11).
 
 ## Verification
 

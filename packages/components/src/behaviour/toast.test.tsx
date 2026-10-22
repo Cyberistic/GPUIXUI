@@ -19,6 +19,7 @@ import {
   boundsOf,
   clickCentreOf,
   hoverCentreOf,
+  waitFor,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -168,7 +169,9 @@ describe("Toast", () => {
     await settle();
 
     clickCentreOf(page, "toast-dismiss");
-    await settle();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
 
     expect(page.renderer.getAllText()).not.toContain("Saved changes");
     expect(page.renderer.getAllText()).toContain("Disk nearly full");
@@ -187,8 +190,12 @@ describe("Toast", () => {
     clickCentreOf(page, "dismiss-all");
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
-    expect(page.renderer.findByTestId("toast-2")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-2")).toBeUndefined(),
+    );
 
     page.unmount();
   });
@@ -258,7 +265,9 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
 
     page.unmount();
   });
@@ -284,7 +293,9 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
 
     page.unmount();
   });
@@ -312,7 +323,9 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
 
     page.unmount();
   });
@@ -330,7 +343,9 @@ describe("Toast", () => {
     await settle();
 
     expect(onAction).toHaveBeenCalledTimes(1);
-    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
 
     page.unmount();
   });
@@ -342,7 +357,9 @@ describe("Toast", () => {
     await settle();
 
     expect(page.renderer.getAllText()).toContain("Archived, no handler");
-    expect(page.renderer.findByTestId("toast-action")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-action")).toBeUndefined(),
+    );
 
     page.unmount();
   });
@@ -354,7 +371,9 @@ describe("Toast", () => {
     await settle();
 
     expect(page.renderer.findByTestId("toast-1")).toBeDefined();
-    expect(page.renderer.findByTestId("toast-action")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-action")).toBeUndefined(),
+    );
 
     page.unmount();
   });
@@ -382,7 +401,9 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
 
     page.unmount();
   });
@@ -401,7 +422,9 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 400));
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
 
     page.renderer.clockResume();
     page.unmount();

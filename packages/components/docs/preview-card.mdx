@@ -43,6 +43,12 @@ playground mounts.
 The delays are props, so a test or a dense UI can use `0`. They are component
 timers at the UI boundary — not domain time.
 
+## Motion
+
+The card fades and travels 4px out from the trigger's side (`fast`, 160 ms) and
+stays mounted for its exit tween. `MotionProvider` supplies the reduced-motion
+preference (`docs/component-api.md` §11).
+
 ## API
 
 | Part | Renders | Props |

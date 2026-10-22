@@ -39,6 +39,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import {
+  fadeFromAnchor,
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -278,8 +284,12 @@ export const DropdownMenuContent = ({
   const keys = menuKeyHandlers(menu);
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(open, timing);
   const placement = usePlacement({
-    open,
+    // The exit tween keeps the measured side, so a flipped menu does not jump
+    // back while it fades out.
+    open: presence.mounted,
     side,
     align,
     margin: collisionPadding,
@@ -298,10 +308,11 @@ export const DropdownMenuContent = ({
     menu.step({ _tag: edge === "first" ? "First" : "Last" });
   }, [menu, open, pendingFocus]);
 
-  if (!open) return null;
+  if (!presence.mounted) return null;
 
   return (
     <FloatingLayer
+      motion={presenceMotion(fadeFromAnchor(placement.side, 4), presence)}
       side={placement.side}
       align={placement.align}
       sideOffset={sideOffset}
@@ -327,7 +338,7 @@ export const DropdownMenuContent = ({
       }}
       style={mergeStyles(
         mergeStyles(menuSurfaceStyle(theme, className), {
-          pointerEvents: "auto",
+          pointerEvents: presence.present ? "auto" : "none",
         }),
         style,
       )}

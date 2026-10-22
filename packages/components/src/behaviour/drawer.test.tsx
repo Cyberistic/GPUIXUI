@@ -26,6 +26,8 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  settleMotion,
+  waitFor,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { a11yNodes } from "../internal/a11y.js";
@@ -117,7 +119,7 @@ describe("Drawer", () => {
     drawer.unmount();
   });
 
-  it("takes focus on open and returns it to the trigger on Escape", () => {
+  it("takes focus on open and returns it to the trigger on Escape", async () => {
     const drawer = renderComponent(<Workspace />);
     clickCentreOf(drawer, "open");
 
@@ -125,15 +127,18 @@ describe("Drawer", () => {
 
     drawer.renderer.simulateKeystrokes("escape");
 
-    expect(drawer.renderer.findByTestId("drawer")).toBeUndefined();
     expect(focusedTestId(drawer)).toEqual(Option.some("open"));
+    await waitFor(() =>
+      expect(drawer.renderer.findByTestId("drawer")).toBeUndefined(),
+    );
 
     drawer.unmount();
   });
 
-  it("closes on a backdrop press but not on a press inside", () => {
+  it("closes on a backdrop press but not on a press inside", async () => {
     const drawer = renderComponent(<Workspace />);
     clickCentreOf(drawer, "open");
+    settleMotion(drawer);
 
     const surface = requireBounds(drawer, "drawer");
     drawer.renderer.nativeSimulateMouseDown(
@@ -147,7 +152,9 @@ describe("Drawer", () => {
     expect(drawer.renderer.findByTestId("drawer")).toBeDefined();
 
     drawer.renderer.nativeSimulateClick(12, 12);
-    expect(drawer.renderer.findByTestId("drawer")).toBeUndefined();
+    await waitFor(() =>
+      expect(drawer.renderer.findByTestId("drawer")).toBeUndefined(),
+    );
 
     drawer.unmount();
   });
@@ -173,6 +180,7 @@ describe("Drawer", () => {
 
     const right = renderComponent(<Workspace side="right" size="md" />);
     clickCentreOf(right, "open");
+    settleMotion(right);
     const rightBox = requireBounds(right, "drawer");
     expect(rightBox.width).toBe(400);
     expect(rightBox.height).toBe(window.height);
@@ -181,6 +189,7 @@ describe("Drawer", () => {
 
     const left = renderComponent(<Workspace side="left" size="sm" />);
     clickCentreOf(left, "open");
+    settleMotion(left);
     const leftBox = requireBounds(left, "drawer");
     expect(leftBox.x).toBe(0);
     expect(leftBox.width).toBe(320);
@@ -188,6 +197,7 @@ describe("Drawer", () => {
 
     const bottom = renderComponent(<Workspace side="bottom" size="lg" />);
     clickCentreOf(bottom, "open");
+    settleMotion(bottom);
     const bottomBox = requireBounds(bottom, "drawer");
     expect(bottomBox.width).toBe(window.width);
     expect(bottomBox.height).toBe(420);

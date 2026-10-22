@@ -242,6 +242,9 @@ importers:
       '@gpuixui/keyboard':
         specifier: workspace:*
         version: link:../keyboard
+      '@gpuixui/motion':
+        specifier: workspace:*
+        version: link:../motion
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens

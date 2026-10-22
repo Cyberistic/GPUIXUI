@@ -343,3 +343,63 @@ compliant as single parts.
   (plan `203`).
 - The per-component parts and keyboard rules — plans `110–119`, `030`, `053`,
   `054`, `205–207`.
+
+## 11. Motion
+
+The library's overlays and the tab rail **move**: a surface fades and travels a
+few pixels, and the tab pill slides between its triggers. Three packages hold
+that contract between them, and no component re-implements a part of it.
+
+| Piece | Owns |
+| ----- | ---- |
+| `@gpuixui/tw` | the resting recipe, including shadcn's motion classes as provenance |
+| `@gpuixui/motion` (`motionTiming`) | the levels (120 / 160 / 200 / 320 / 500 ms), the per-phase easing and the reduced-motion policy |
+| `packages/components/src/internal/presence.tsx` | the frames (fade + offset), the mount window, and the `motion` prop a surface hands the runtime |
+
+**The runtime executes the tween.** `@gpuix/native@0.11.0` animates `opacity`,
+`width`, `height`, `top`, `right`, `bottom`, `left` and `borderRadius` on its own
+clock; it has **no `transform`**, so a library surface never scales, rotates or
+translates beyond an inset offset (upstream issue #102, plan `600` §3). shadcn's
+`zoom-in-95` stays unsupported rather than being faked.
+
+**Presence is a duration.** A closed surface stays mounted for its exit tween and
+unmounts when that duration has elapsed (`useSurfacePresence`). `AnimatePresence`
+reports an exit only through `onMotionComplete` on a `motion.div`, and the
+popover, menu and preview-card surfaces are hosted by `FloatingLayer`'s own
+element, so one mechanism covers every surface. The consequence a consumer sees:
+a dismissal is *immediate* in state (focus returns, `onOpenChange` fires) while
+the box fades out, and an element disappears from the tree a level's duration
+later.
+
+**Per surface:**
+
+| Surface | Movement | Level |
+| ------- | -------- | ----- |
+| Dialog, Command menu | fade + 8px rise | `slow` (320 ms) |
+| Drawer | fade + 12px from its own edge | `slow` |
+| Popover, Dropdown menu, Context menu | fade + 8px / 4px from the trigger's side | `normal` (200 ms) |
+| Preview card | fade + 4px from the trigger's side | `fast` (160 ms) |
+| Toast | fade + 16px from the right edge | `notice` (500 ms) |
+| Accordion panel | height from 0 to the body's measured height, plus a fade | `normal` |
+| Tabs pill | `left`/`top`/`width`/`height` between measured trigger boxes | `normal` |
+
+**The preference is the application's.** GPUix exposes no reduced-motion query,
+so `MotionProvider` takes it:
+
+```tsx
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <App />
+</MotionProvider>
+```
+
+Under `"reduced"` a tween's duration is zero and no easing is named: the resting
+frame still paints, only the journey is removed. The same rule holds for a
+component that has no provider (the default is `"animated"`).
+
+**Verification.** `packages/components/src/behaviour/presence.test.tsx` measures
+the movement and the mount window in the real renderer: bounds move by the
+surface's offset, the exit keeps the box painted and then removes it, the
+reduced preference paints the resting frame with no travel, the accordion grows
+from zero to its measured height, and the tab pill lands exactly on the next
+trigger's box. The live playground proves the fade itself (a window reports
+painted bounds, not painted opacity).

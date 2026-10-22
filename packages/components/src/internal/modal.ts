@@ -61,10 +61,15 @@ export const useModalState = ({
 /**
  * Move focus into `contentId` once it exists, run the caller's `initialFocus`
  * after that, and return focus to whatever held it before on unmount.
+ *
+ * `open` is the close signal, not the content id: a surface stays mounted for
+ * its exit tween (see `internal/presence.tsx`), and focus must leave the moment
+ * the reader dismisses it rather than a duration later.
  */
 export const useModalFocus = (
   contentId: number | undefined,
   initialFocus: (() => number | null) | undefined,
+  open: boolean,
 ): void => {
   const renderer = useGpuix().renderer;
   const previousFocus = useRef<number | null>(null);
@@ -74,7 +79,7 @@ export const useModalFocus = (
   });
 
   useLayoutEffect(() => {
-    if (contentId === undefined) return;
+    if (contentId === undefined || !open) return;
     previousFocus.current = renderer?.getFocusedElementId?.() ?? null;
     renderer?.focusElement?.(contentId);
     const initial = initialFocusRef.current?.() ?? null;
@@ -94,7 +99,7 @@ export const useModalFocus = (
       }
       renderer?.focusElement?.(previous);
     };
-  }, [contentId, renderer]);
+  }, [contentId, renderer, open]);
 };
 
 /**

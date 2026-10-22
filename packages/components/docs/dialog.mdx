@@ -124,6 +124,15 @@ actions off screen.
 - The top-right close control is an icon (`x`) named "Close".
 - A dialog is not resizable, draggable or multi-window. One dialog per surface.
 
+## Motion
+
+The veil fades and the surface rises 8px into place on a `slow` (320 ms) enter;
+closing runs the reverse. It is a fade plus an offset, not a scale — the runtime
+has no `transform`. The surface stays mounted for its exit, so focus is back on
+the opener the moment the dialog closes while the box fades out. `MotionProvider`
+turns it off (`preference="reduced"` paints the resting frame with a zero
+duration); `docs/component-api.md` §11 has the levels and the shared rules.
+
 ## API
 
 | `Dialog` prop | Type | Default |

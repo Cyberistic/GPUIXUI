@@ -119,6 +119,13 @@ same row object with its group replaced by `Recent`, so `perform` runs once and
 (⌘K, Ctrl+P) rather than by a control inside the component, so ownership of the
 state belongs to the app. Render it once at the app root.
 
+## Motion
+
+The palette is a dialog surface, so it inherits the dialog's motion: a fade plus
+an 8px rise (`slow`, 320 ms), with focus restored to the opener as it closes.
+`MotionProvider` supplies the reduced-motion preference
+(`docs/component-api.md` §11).
+
 ## API
 
 `CommandMenu` is controlled: `open` and `onOpenChange` are required. Every part

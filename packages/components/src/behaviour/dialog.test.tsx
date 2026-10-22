@@ -28,6 +28,7 @@ import {
   boundsOf,
   clickCentreOf,
   focusedTestId,
+  waitFor,
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { a11yNodes } from "../internal/a11y.js";
@@ -103,7 +104,7 @@ describe("Dialog", () => {
     dialog.unmount();
   });
 
-  it("blocks a click that lands behind the modal", () => {
+  it("blocks a click that lands behind the modal", async () => {
     const onBehind = vi.fn();
     const dialog = renderComponent(<Workspace onBehind={onBehind} />);
     clickCentreOf(dialog, "open");
@@ -113,7 +114,10 @@ describe("Dialog", () => {
     clickCentreOf(dialog, "behind");
 
     expect(onBehind).not.toHaveBeenCalled();
-    expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
+    // The surface plays its exit before it leaves (see `presence.test.tsx`).
+    await waitFor(() =>
+      expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
+    );
 
     dialog.unmount();
   });
@@ -127,19 +131,21 @@ describe("Dialog", () => {
     dialog.unmount();
   });
 
-  it("closes on Escape and returns focus to the trigger", () => {
+  it("closes on Escape and returns focus to the trigger", async () => {
     const dialog = renderComponent(<Workspace />);
     clickCentreOf(dialog, "open");
 
     dialog.renderer.simulateKeystrokes("escape");
 
-    expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
     expect(focusedTestId(dialog)).toEqual(Option.some("open"));
+    await waitFor(() =>
+      expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
+    );
 
     dialog.unmount();
   });
 
-  it("closes on a backdrop press and stays open on a press inside", () => {
+  it("closes on a backdrop press and stays open on a press inside", async () => {
     const dialog = renderComponent(<Workspace />);
     clickCentreOf(dialog, "open");
 
@@ -160,7 +166,9 @@ describe("Dialog", () => {
 
     dialog.renderer.nativeSimulateClick(12, 12);
 
-    expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
+    await waitFor(() =>
+      expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
+    );
 
     dialog.unmount();
   });
@@ -249,12 +257,14 @@ describe("Dialog", () => {
     dialog.unmount();
   });
 
-  it("renders the caller's close control", () => {
+  it("renders the caller's close control", async () => {
     const dialog = renderComponent(<Workspace />);
     clickCentreOf(dialog, "open");
     clickCentreOf(dialog, "dialog-close");
 
-    expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
+    await waitFor(() =>
+      expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
+    );
 
     dialog.unmount();
   });

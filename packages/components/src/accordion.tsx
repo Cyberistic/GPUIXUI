@@ -64,6 +64,11 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import {
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
@@ -514,7 +519,18 @@ export interface AccordionContentProps extends Props {
   readonly className?: string;
 }
 
-/** The body of an open section. Unmounts while closed. */
+/**
+ * The body of an open section.
+ *
+ * It is kept mounted for its exit tween and its height is animated rather than
+ * mounted: the inner box reports its own painted height through `onLayout`, and
+ * the clipped outer box tweens `height` from zero to that measurement. The
+ * runtime cannot measure a collapsed box, which is why the measurement is the
+ * child's — the outer box clips, it does not shrink what it contains.
+ *
+ * Without motion the duration is zero, so the measurement still closes the gap
+ * and the section paints at its full height instead of never appearing.
+ */
 export const AccordionContent = ({
   className,
   style,
@@ -524,18 +540,36 @@ export const AccordionContent = ({
   const theme = useTheme();
   const { isOpen } = useAccordionContext();
   const { value } = useAccordionItemContext();
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(isOpen(value), timing);
+  const [height, setHeight] = useState(Option.none<number>());
 
-  if (!isOpen(value)) return null;
+  if (!presence.mounted) return null;
 
   return (
     <div
       {...rest}
-      style={mergeStyles(
-        recipeStyle(cn(ACCORDION_CONTENT, className), theme),
-        style,
+      motion={presenceMotion(
+        {
+          initial: { height: 0, opacity: 0 },
+          animate: { height: Option.getOrElse(height, () => 0), opacity: 1 },
+          exit: { height: 0, opacity: 0 },
+        },
+        presence,
       )}
+      style={mergeStyles({ width: "100%", overflow: "hidden" }, style)}
     >
-      {children}
+      <div
+        onLayout={(event) => {
+          Option.match(Option.fromNullishOr(event.height), {
+            onNone: () => undefined,
+            onSome: (measured) => setHeight(Option.some(measured)),
+          });
+        }}
+        style={recipeStyle(cn(ACCORDION_CONTENT, className), theme)}
+      >
+        {children}
+      </div>
     </div>
   );
 };

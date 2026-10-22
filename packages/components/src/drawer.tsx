@@ -45,6 +45,13 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import {
+  fadeFromSide,
+  fadeOnly,
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { useMergedRef } from "./internal/ref.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { DismissScope } from "./internal/dismiss-scope.js";
@@ -222,6 +229,8 @@ export const DrawerContent = ({
   const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
   assertParts(drawerContent, children);
+  const timing = useSurfaceTiming("slow");
+  const presence = useSurfacePresence(open, timing);
   const [content, setContent] = useState<PublicInstance | undefined>(undefined);
   const contentRef = useCallback((next: PublicInstance | null) => {
     setContent(next ?? undefined);
@@ -232,9 +241,9 @@ export const DrawerContent = ({
   );
 
   const contentId = content?.id;
-  useModalFocus(contentId, initialFocus);
+  useModalFocus(contentId, initialFocus, open);
 
-  if (!open) return null;
+  if (!presence.mounted) return null;
 
   const box = surfaceSize(side, size, window);
   const close = () => setOpen(false);
@@ -250,6 +259,7 @@ export const DrawerContent = ({
     >
       <div
         testId="drawer-backdrop"
+        motion={presenceMotion(fadeOnly, presence)}
         style={mergeStyles(
           overlaySurfaceStyle(DRAWER_OVERLAY, undefined, theme),
           {
@@ -259,7 +269,7 @@ export const DrawerContent = ({
             flexDirection: isVertical(side) ? "column" : "row",
             alignItems: "stretch",
             justifyContent: side === "left" ? "flex-start" : "flex-end",
-            pointerEvents: "auto",
+            pointerEvents: presence.present ? "auto" : "none",
           },
         )}
       >
@@ -270,12 +280,18 @@ export const DrawerContent = ({
           {...rest}
           ref={setContentElement}
           testId={testId}
+          motion={presenceMotion(fadeFromSide(side, 12), presence)}
           onMouseDownOutside={(event) => {
             onMouseDownOutside?.(event);
             dismissTopLayer(event);
           }}
           onKeyDown={handleKeyDown}
-          style={mergeStyles(surfaceStyle(theme, box, className), style)}
+          style={mergeStyles(
+            mergeStyles(surfaceStyle(theme, box, className), {
+              pointerEvents: presence.present ? "auto" : "none",
+            }),
+            style,
+          )}
         >
           <DismissScope>{children}</DismissScope>
           {showClose ? (

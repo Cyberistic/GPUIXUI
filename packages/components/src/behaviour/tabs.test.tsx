@@ -25,7 +25,7 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
-  settle,
+  settleMotion,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -147,7 +147,7 @@ describe("Tabs", () => {
   it("paints the shared selected surface from whichever theme is active", () => {
     const assertTheme = (theme: TestTheme, card: string): void => {
       const tabs = renderComponent(<Settings />, theme);
-      settle(tabs);
+      settleMotion(tabs);
 
       expect(
         tabs.renderer.findByTestId("tabs-indicator")?.style.backgroundColor,
@@ -165,7 +165,7 @@ describe("Tabs", () => {
 
   it("draws one selected surface exactly behind the selected trigger", () => {
     const tabs = renderComponent(<Settings />);
-    settle(tabs);
+    settleMotion(tabs);
 
     expect(requireBounds(tabs, "tabs-indicator")).toEqual(
       requireBounds(tabs, "tab-profile"),
@@ -199,7 +199,7 @@ describe("Tabs", () => {
         </TabsList>
       </Tabs>,
     );
-    settle(tabs);
+    settleMotion(tabs);
 
     const surface = requireBounds(tabs, "tabs-indicator");
     tabs.renderer.nativeSimulateClick(
@@ -214,11 +214,11 @@ describe("Tabs", () => {
 
   it("moves the surface with the selection, not with focus", () => {
     const tabs = renderComponent(<Settings />);
-    settle(tabs);
+    settleMotion(tabs);
     const before = requireBounds(tabs, "tabs-indicator");
 
     clickCentreOf(tabs, "tab-danger");
-    settle(tabs);
+    settleMotion(tabs);
 
     const after = requireBounds(tabs, "tabs-indicator");
     expect(after).toEqual(requireBounds(tabs, "tab-danger"));
@@ -229,7 +229,7 @@ describe("Tabs", () => {
 
   it("puts the surface on a vertical rail's trigger too", () => {
     const tabs = renderComponent(<VerticalSettings />);
-    settle(tabs);
+    settleMotion(tabs);
 
     expect(requireBounds(tabs, "tabs-indicator")).toEqual(
       requireBounds(tabs, "tab-profile"),
@@ -340,7 +340,7 @@ describe("Tabs", () => {
         </TabsContent>
       </Tabs>,
     );
-    settle(tabs);
+    settleMotion(tabs);
 
     expect(tabs.renderer.findByTestId("panel-other")).toBeUndefined();
 
@@ -360,7 +360,7 @@ describe("Tabs", () => {
         </TabsContent>
       </Tabs>,
     );
-    settle(tabs);
+    settleMotion(tabs);
 
     // The panel follows the value; the pill needs a measured trigger box.
     expect(tabs.renderer.findByTestId("panel-ghost")).toBeDefined();

@@ -17,12 +17,18 @@ import {
   TOAST_TITLE,
   TOAST_VIEWPORT,
 } from "@gpuixui/tw";
-import { Match } from "effect";
+import { HashMap, Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Button, IconButton } from "../internal/button.js";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
+import {
+  fadeFromSide,
+  presenceMotion,
+  useSurfaceTiming,
+  type SurfaceTiming,
+} from "../internal/presence.js";
 import { recipeStyle } from "../internal/recipe.js";
 import { tone, useTheme, type Tone } from "../internal/theme.js";
 import type { Toast, ToastTone } from "./model.js";
@@ -48,8 +54,92 @@ const glyph = (value: ToastTone): "info" | "success" | "warning" | "error" =>
     Match.exhaustive,
   );
 
+/** One painted card: a live toast, or one playing out its exit. */
+interface StackEntry {
+  readonly toast: Toast;
+  readonly present: boolean;
+}
+
+/**
+ * The stack with the cards that have just left it, kept for their exit tween.
+ *
+ * The store removes a dismissed toast immediately — its timers are Effect
+ * `Clock` time, not animation frames — so the viewport is what remembers the
+ * card long enough to run its exit. The entry list keeps its order: a card
+ * leaving does not reorder the stack under the reader. A leave is timed by the
+ * seam's exit duration, not by the runtime's clock, so a frozen motion clock
+ * cannot strand a card on screen.
+ */
+const useToastStack = (
+  toasts: ReadonlyArray<Toast>,
+  timing: SurfaceTiming,
+): ReadonlyArray<StackEntry> => {
+  const [entries, setEntries] = useState<ReadonlyArray<StackEntry>>(() =>
+    Arr.map(toasts, (toast) => ({ toast, present: true })),
+  );
+  const painted = useRef(entries);
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+
+  useLayoutEffect(() => {
+    painted.current = entries;
+  }, [entries]);
+
+  useLayoutEffect(() => {
+    const live = HashMap.fromIterable(
+      Arr.map(toasts, (toast) => [toast.id, toast] as const),
+    );
+    const current = painted.current;
+    const kept = Arr.map(current, (entry): StackEntry => {
+      const next = HashMap.get(live, entry.toast.id);
+      return Option.isSome(next)
+        ? { toast: next.value, present: true }
+        : { toast: entry.toast, present: false };
+    });
+    const appended = Arr.map(
+      Arr.filter(
+        toasts,
+        (toast) => !Arr.some(current, (entry) => entry.toast.id === toast.id),
+      ),
+      (toast): StackEntry => ({ toast, present: true }),
+    );
+    const merged = [...kept, ...appended];
+    const ms = Math.round((timing.exit.duration ?? 0) * 1000);
+    setEntries(merged);
+    Arr.forEach(merged, (entry) => {
+      if (entry.present || timers.current.has(entry.toast.id)) return;
+      timers.current.set(
+        entry.toast.id,
+        setTimeout(() => {
+          timers.current.delete(entry.toast.id);
+          setEntries((list) =>
+            Arr.filter(list, (item) => item.toast.id !== entry.toast.id),
+          );
+        }, ms),
+      );
+    });
+  }, [timing.exit.duration, toasts]);
+
+  useLayoutEffect(
+    () => () => {
+      timers.current.forEach((handle) => clearTimeout(handle));
+      timers.current.clear();
+    },
+    [],
+  );
+
+  return entries;
+};
+
 /** One card. Its left bar and tone icon carry the status; the surface is neutral. */
-const ToastCard = ({ toast }: { readonly toast: Toast }) => {
+const ToastCard = ({
+  toast,
+  present,
+  timing,
+}: {
+  readonly toast: Toast;
+  readonly present: boolean;
+  readonly timing: SurfaceTiming;
+}) => {
   const theme = useTheme();
   const { dismiss, pause, resume, actionFor } = useToast();
   const palette = tone(theme, asTone(toast.tone));
@@ -85,9 +175,16 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   return (
     <div
       testId={`toast-${toast.id}`}
+      motion={presenceMotion(fadeFromSide("right", 16), {
+        mounted: true,
+        present,
+        timing,
+      })}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={overlaySurfaceStyle(TOAST_CARD, undefined, theme)}
+      style={mergeStyles(overlaySurfaceStyle(TOAST_CARD, undefined, theme), {
+        pointerEvents: present ? "auto" : "none",
+      })}
     >
       <div
         style={{ width: 3, alignSelf: "stretch", backgroundColor: palette.fg }}
@@ -187,6 +284,8 @@ export const ToastViewport = ({
 }: ToastViewportProps) => {
   const theme = useTheme();
   const { toasts } = useToast();
+  const timing = useSurfaceTiming("notice");
+  const stack = useToastStack(toasts, timing);
 
   return (
     <div
@@ -204,8 +303,13 @@ export const ToastViewport = ({
       )}
     >
       {children}
-      {Arr.map(toasts, (toast) => (
-        <ToastCard key={toast.id} toast={toast} />
+      {Arr.map(stack, (entry) => (
+        <ToastCard
+          key={entry.toast.id}
+          toast={entry.toast}
+          present={entry.present}
+          timing={timing}
+        />
       ))}
     </div>
   );

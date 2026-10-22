@@ -43,6 +43,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import {
+  fadeFromAnchor,
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 
@@ -301,10 +307,14 @@ export const PreviewCardContent = ({
     }, depth);
   }, [depth, dismissedByOutsidePress, open, renderer, trigger]);
 
-  if (!open) return null;
+  const timing = useSurfaceTiming("fast");
+  const presence = useSurfacePresence(open, timing);
+
+  if (!presence.mounted) return null;
 
   return (
     <FloatingLayer
+      motion={presenceMotion(fadeFromAnchor(side, 4), presence)}
       side={side}
       align={align}
       sideOffset={sideOffset}
@@ -332,7 +342,10 @@ export const PreviewCardContent = ({
         if (isDismiss(event)) dismissTopLayer(event);
       }}
       style={mergeStyles(
-        overlaySurfaceStyle(PREVIEW_CARD_CONTENT, className, theme),
+        mergeStyles(
+          overlaySurfaceStyle(PREVIEW_CARD_CONTENT, className, theme),
+          { pointerEvents: presence.present ? "auto" : "none" },
+        ),
         style,
       )}
     >

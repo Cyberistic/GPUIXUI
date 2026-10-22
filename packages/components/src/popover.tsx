@@ -52,6 +52,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import {
+  fadeFromAnchor,
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -185,8 +191,12 @@ export const PopoverContent = ({
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(open, timing);
   const placement = usePlacement({
-    open,
+    // The surface is still painted while it leaves, so its measured side must
+    // not reset under the exit tween.
+    open: presence.mounted,
     side,
     align,
     margin: collisionPadding,
@@ -222,10 +232,11 @@ export const PopoverContent = ({
     }, depth);
   }, [depth, dismissedByOutsidePress, open, renderer, trigger]);
 
-  if (!open) return null;
+  if (!presence.mounted) return null;
 
   return (
     <FloatingLayer
+      motion={presenceMotion(fadeFromAnchor(placement.side, 8), presence)}
       side={placement.side}
       align={placement.align}
       sideOffset={sideOffset}
@@ -253,7 +264,7 @@ export const PopoverContent = ({
       style={mergeStyles(
         mergeStyles(overlaySurfaceStyle(POPOVER_CONTENT, className, theme), {
           minWidth: 200,
-          pointerEvents: "auto",
+          pointerEvents: presence.present ? "auto" : "none",
         }),
         style,
       )}

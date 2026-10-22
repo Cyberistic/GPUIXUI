@@ -40,6 +40,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import {
+  fadeFromAnchor,
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { useMergedRef } from "./internal/ref.js";
 import { keyboardRing, useTheme } from "./internal/theme.js";
 import {
@@ -296,12 +302,16 @@ export const ContextMenuContent = ({
   const { open, point } = useContextMenuContext();
   assertParts(contextMenuContent, children);
 
-  if (!open) return null;
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(open, timing);
+
+  if (!presence.mounted) return null;
 
   return (
     <anchored position={point} deferred priority={1} occlude>
       <MenuSurface
         {...rest}
+        motion={presenceMotion(fadeFromAnchor("bottom", 4), presence)}
         label={label}
         testId={testId}
         className={className}

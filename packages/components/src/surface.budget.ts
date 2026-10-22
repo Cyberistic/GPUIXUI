@@ -14,16 +14,22 @@
  * Measured 2026-10-22 on `master` with `nub scripts/surface.ts` (and
  * `--import` for the cold load, recorded in the package README). Regenerate with
  * the same command and state what moved in the commit.
+ *
+ * `@gpuixui/motion` is reached through its `./timing` subpath, not its barrel:
+ * the surfaces need the level table and the reduced-motion policy, and the
+ * physics modules (spring, timeline, inertia) are not part of an overlay's cost.
  */
 export const surfaceBudget = {
   /** Modules in the entry's own package — `src/index.ts` and everything it reaches. */
   // 85 → 88 when Chat and Message landed (plan 207): `chat.tsx`,
   // `chat/logic.ts` and `message.tsx`. 88 → 89 when the list's key origin became
   // a pure rule (`list/origin.ts`), because the row a key came from is a rule
-  // worth testing on its own rather than through a renderer.
-  modules: 89,
+  // worth testing on its own rather than through a renderer. 89 → 91 when the
+  // motion seam landed (`internal/presence.tsx` and the public `motion.tsx`,
+  // plan 600 Phase 0).
+  modules: 91,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
-  bytes: 600 * 1024,
+  bytes: 640 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

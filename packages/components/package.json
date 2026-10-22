@@ -21,6 +21,7 @@
     "@gpuix/react": "catalog:",
     "@gpuixui/icons": "workspace:*",
     "@gpuixui/keyboard": "workspace:*",
+    "@gpuixui/motion": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*",
     "effect": "catalog:"

@@ -36,6 +36,7 @@ export * from "./list.js";
 export * from "./mention-input.js";
 export * from "./message.js";
 export * from "./message-scroller.js";
+export * from "./motion.js";
 export * from "./navigation-menu.js";
 export * from "./pagination.js";
 export * from "./popover.js";

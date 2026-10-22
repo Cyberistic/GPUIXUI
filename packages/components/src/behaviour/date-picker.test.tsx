@@ -14,7 +14,11 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  waitFor,
+  focusedTestId,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import {
@@ -88,7 +92,7 @@ describe("DatePicker", () => {
     picker.unmount();
   });
 
-  it("selects an ISO day, closes and updates the trigger", () => {
+  it("selects an ISO day, closes and updates the trigger", async () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(<Picker onValueChange={onValueChange} />);
 
@@ -96,7 +100,11 @@ describe("DatePicker", () => {
     clickCentreOf(picker, "date-day-2026-10-20");
 
     expect(onValueChange).toHaveBeenCalledWith("2026-10-20");
-    expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(
+        picker.renderer.findByTestId("date-picker-content"),
+      ).toBeUndefined(),
+    );
     expect(picker.renderer.getAllText()).toContain("20 October 2026");
     expect(picker.renderer.getAllText()).not.toContain("Pick a date");
     expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
@@ -157,13 +165,17 @@ describe("DatePicker", () => {
     picker.unmount();
   });
 
-  it("closes on Escape and returns focus to the trigger", () => {
+  it("closes on Escape and returns focus to the trigger", async () => {
     const picker = renderComponent(<Picker defaultValue="2026-10-17" />);
     open(picker);
 
     picker.renderer.simulateKeystrokes("escape");
 
-    expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(
+        picker.renderer.findByTestId("date-picker-content"),
+      ).toBeUndefined(),
+    );
     expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
 
     picker.unmount();
@@ -203,12 +215,16 @@ describe("DatePicker", () => {
     assertTheme("light", lightTheme.colors.primary);
   });
 
-  it("does not open when disabled", () => {
+  it("does not open when disabled", async () => {
     const picker = renderComponent(<Picker disabled />);
 
     open(picker);
 
-    expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(
+        picker.renderer.findByTestId("date-picker-content"),
+      ).toBeUndefined(),
+    );
 
     picker.unmount();
   });
@@ -268,7 +284,7 @@ describe("DatePicker", () => {
     picker.unmount();
   });
 
-  it("clears the selection, closes and returns focus to the trigger", () => {
+  it("clears the selection, closes and returns focus to the trigger", async () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(
       <Picker
@@ -283,7 +299,11 @@ describe("DatePicker", () => {
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith(null);
-    expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+    await waitFor(() =>
+      expect(
+        picker.renderer.findByTestId("date-picker-content"),
+      ).toBeUndefined(),
+    );
     expect(picker.renderer.getAllText()).toContain("Pick a date");
     expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
 

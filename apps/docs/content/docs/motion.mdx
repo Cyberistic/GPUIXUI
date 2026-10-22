@@ -20,12 +20,20 @@ elapsed time you pass in, so a movement is a value in a test rather than a wait.
 | inertia | `inertia`, `project` and `sampleInertia` — exponential decay with optional hard bounds |
 | value | `MotionValue` and its transitions: `instant`, `tween`, `springTransition`, `transitionEquals` |
 | React | `useSpring`, `useTransition`, `useInertia` and `useMotion` from `@gpuixui/motion/react` |
+| timing | `motionLevels`, `motionEasings` and `motionTiming` — the house durations and per-phase easing, in the runtime's seconds |
 
 The primitives paint their one moving piece — a switch's thumb, a busy
 spinner — with the **runtime's** declarative `motion.div` and a plain duration,
-and the overlay components do not animate yet. This package is for physics the
-runtime does not compute: a spring retargeted mid-flight, a stagger, a momentum
-coast. Its adoption by the animated surfaces is tracked as plan `600` Phase 0.
+and the library's surfaces do the same: `motionTiming` names the 120 / 160 / 200
+/ 320 / 500 ms levels and the per-phase easing those surfaces move with, and
+`packages/components/src/internal/presence.tsx` composes them into a fade plus an
+inset offset. The physics a surface does not need (a spring retargeted
+mid-flight, a stagger, a momentum coast) stay here for the components that
+scrub, count or follow a gesture. The reduced-motion preference is the
+application's, since the runtime exposes none: `MotionProvider` from
+`@gpuixui/components` carries it and a reduced run is a zero-duration
+assignment. Per-surface table: `/docs/components` pages and
+`docs/component-api.md` §11.
 
 ## The clock is yours
 

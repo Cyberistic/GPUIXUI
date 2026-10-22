@@ -21,6 +21,8 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  settleMotion,
+  waitFor,
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
@@ -107,6 +109,7 @@ describe("Popover", () => {
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
 
     clickCentreOf(popover, "trigger");
+    settleMotion(popover);
 
     const trigger = boundsOf(popover, "trigger");
     const panel = boundsOf(popover, "panel");
@@ -125,6 +128,7 @@ describe("Popover", () => {
   it("honours the side it is given", () => {
     const popover = renderComponent(<Filters side="right" />);
     clickCentreOf(popover, "trigger");
+    settleMotion(popover);
 
     const trigger = boundsOf(popover, "trigger");
     const panel = boundsOf(popover, "panel");
@@ -142,6 +146,7 @@ describe("Popover", () => {
   it("centres a requested panel on its trigger", () => {
     const popover = renderComponent(<CentredPopover />);
     clickCentreOf(popover, "trigger");
+    settleMotion(popover);
 
     const trigger = requireBounds(popover, "trigger");
     const panel = requireBounds(popover, "panel");
@@ -159,6 +164,7 @@ describe("Popover", () => {
   it("opens above a trigger near the window bottom instead of covering it", () => {
     const popover = renderComponent(<LowPopover />);
     clickCentreOf(popover, "trigger");
+    settleMotion(popover);
 
     const trigger = requireBounds(popover, "trigger");
     const panel = requireBounds(popover, "panel");
@@ -170,14 +176,16 @@ describe("Popover", () => {
     popover.unmount();
   });
 
-  it("closes on Escape and gives focus back to the trigger", () => {
+  it("closes on Escape and gives focus back to the trigger", async () => {
     const popover = renderComponent(<Filters />);
     clickCentreOf(popover, "trigger");
 
     popover.renderer.simulateKeystrokes("escape");
 
-    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
     expect(focusedTestId(popover)).toEqual(Option.some("trigger"));
+    await waitFor(() =>
+      expect(popover.renderer.findByTestId("panel")).toBeUndefined(),
+    );
 
     popover.unmount();
   });
@@ -188,7 +196,9 @@ describe("Popover", () => {
 
     clickCentreOf(popover, "elsewhere");
 
-    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(popover.renderer.findByTestId("panel")).toBeUndefined(),
+    );
 
     // The real runtime delivers the press and the next click in separate tasks,
     // so the one-gesture dismiss mark has been cleared by now.
@@ -212,7 +222,7 @@ describe("Popover", () => {
     popover.unmount();
   });
 
-  it("closes on Tab so focus can leave a non-modal surface", () => {
+  it("closes on Tab so focus can leave a non-modal surface", async () => {
     const popover = renderComponent(<Filters />);
     clickCentreOf(popover, "trigger");
 
@@ -220,7 +230,9 @@ describe("Popover", () => {
 
     popover.renderer.simulateKeystrokes("tab");
 
-    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+    await waitFor(() =>
+      expect(popover.renderer.findByTestId("panel")).toBeUndefined(),
+    );
 
     popover.unmount();
   });
