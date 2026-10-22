@@ -94,7 +94,6 @@ const describeClose = (reason: CloseReason): string => {
 
 interface SurfaceProps {
   readonly point: Point;
-  readonly source: OpenSource;
   readonly onClose: (reason: CloseReason, action?: string) => void;
   readonly onActivate: (row: Row) => void;
   readonly checked: boolean;
@@ -105,19 +104,16 @@ interface SurfaceProps {
  *
  * The highlight is the focus, as in the shipped component: a row focused by an
  * arrow key, a click or type-ahead is the row `Enter` runs. The surface itself
- * takes focus after a pointer open, which is why a pointer-opened menu has no
- * row highlighted and dismisses with the focus `none`.
+ * takes focus on every open, so no row is highlighted until a key, a pointer or
+ * type-ahead moves there.
  */
 const ContextSurface = ({
   point,
-  source,
   onClose,
   onActivate,
   checked,
 }: SurfaceProps) => {
-  const [highlight, setHighlight] = useState<string | null>(() =>
-    source === "keyboard" ? (step(rows, null, 1) ?? null) : null,
-  );
+  const [highlight, setHighlight] = useState<string | null>(null);
   const [submenu, setSubmenu] = useState(false);
   const [subHighlight, setSubHighlight] = useState<string | null>(null);
   const surface = useRef<HTMLDivElement | null>(null);
@@ -157,12 +153,8 @@ const ContextSurface = ({
   };
 
   useEffect(() => {
-    if (source === "keyboard") {
-      rowRefs.current.get(highlight ?? "")?.focus();
-    } else {
-      surface.current?.focus();
-    }
-  }, [highlight, source]);
+    surface.current?.focus();
+  }, []);
 
   useEffect(() => {
     const onPress = (event: MouseEvent) => {
@@ -433,7 +425,6 @@ const ContextMenuWorkflow = () => {
           onActivate={activate}
           onClose={close}
           point={point}
-          source={source}
         />
       ) : null}
     </div>
@@ -530,7 +521,6 @@ const ContextMenuStates = () => {
           }}
           onClose={() => setOpen(false)}
           point={point}
-          source={source}
         />
       ) : null}
     </div>

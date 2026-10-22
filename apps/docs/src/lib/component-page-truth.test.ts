@@ -685,6 +685,10 @@ describe("the curated component pages", () => {
     const typeahead = read(
       "packages/components/src/internal/typeahead.ts",
     ).replace(/\s+/g, " ");
+    const surface = read("packages/components/src/menu/surface.tsx").replace(
+      /\s+/g,
+      " ",
+    );
 
     // Both opening routes, each with the point it records.
     expect(flatSource).toContain("event.isRightClick !== true");
@@ -721,6 +725,12 @@ describe("the curated component pages", () => {
       'pointerEvents: presence.present ? "auto" : "none"',
     );
 
+    // The surface itself takes focus on every open: `autoFocus` is on the
+    // menu box, so the first arrow reaches the first row rather than the probe
+    // finding a row already focused.
+    expect(surface).toContain("autoFocus");
+    expect(surface).toContain('role="menu"');
+
     // The typed prefix: the shipped window and the "after the current row"
     // rule, which is what makes a repeated letter advance.
     expect(typeahead).toContain("Duration.millis(500)");
@@ -746,6 +756,10 @@ describe("the curated component pages", () => {
     expect(text).toContain("rounded-3xl");
     expect(text).toContain("`partial`");
     expect(text).toContain("24 checks");
+    expect(text).toContain("focuses the surface");
+    // The retracted shape: a keyboard open does not pre-highlight a row in the
+    // shipped component, so a page saying it does would teach focus it lacks.
+    expect(text).not.toContain("focuses the first enabled row");
     // The retracted shape: a keyboard route that opens at the pointer would
     // teach a point the keyboard never has.
     expect(text).not.toContain("Shift+F10` opens at the pointer");

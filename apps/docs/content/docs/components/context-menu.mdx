@@ -80,7 +80,7 @@ from the trigger's measured box.
 | ------- | -------- | ------------ |
 | right press on the trigger | the press point | an open surface closes and a new one opens at the new point |
 | right press outside the trigger | nothing | an open surface closes; the trigger is the only element listening, so no second menu can open |
-| `Shift+F10` / Menu key | the trigger's bottom-left | the first enabled row takes focus |
+| `Shift+F10` / Menu key | the trigger's bottom-left | the surface takes focus; the first arrow reaches the first enabled row |
 | primary press | nothing | the trigger answers it like any other element |
 
 `ContextMenuContent` renders an `anchored` element with the point as its
@@ -108,13 +108,13 @@ Put the trigger and the content directly inside `ContextMenu`.
 
 ## Keyboard
 
-The surface takes focus when it opens, so an arrow moves **real** focus and the
-highlighted row is the focused row. A pointer-opened menu focuses the surface
-itself, which is why no row is highlighted after a right press.
+The surface itself takes focus when it opens, whichever gesture opened it, so an
+arrow moves **real** focus and the highlighted row is the focused row. No row is
+highlighted until an arrow, a pointer or type-ahead moves there.
 
 | Key | Contract |
 | ---- | -------- |
-| `Shift+F10` / Menu key | opens at the trigger's bottom-left and focuses the first enabled row |
+| `Shift+F10` / Menu key | opens at the trigger's bottom-left and focuses the surface |
 | `ArrowDown` / `ArrowUp` | next/previous enabled row, wrapping at both ends |
 | `Home` / `End` | first/last enabled row |
 | `Enter` | runs the highlighted row on the press |
@@ -149,8 +149,8 @@ shortcut and wants focus back should go through `Shift+F10` or a controlled
 Dismissal is a stack, not a flag: the surface pushes itself as a dismiss layer
 and an `Escape` or outside press is offered to the **topmost** layer only, so a
 context menu opened inside a dialog closes first and one gesture cannot close
-both. An outside press is also how a right press on a sibling row is handled:
-the trigger swallows the new press and the open menu closes.
+both. An outside press is also how a right press on a sibling row is handled: the open
+menu closes and no second one opens, because only the owning trigger listens.
 
 ### Motion
 
