@@ -11,7 +11,7 @@
  * decorative badge in a cell or a file tree's row silently took the row's hover
  * wash, and a data-grid plan reading the package had no reason to opt the child
  * out. The sentences a reader depends on live in the source, the README rule
- * table, the tree page and the two Tier 3 rows.
+ * table and the three Tier 3 rows.
  */
 
 import { readFileSync } from "node:fs";
@@ -25,7 +25,6 @@ const read = (relative: string): string =>
 const tableSource = read("./table.tsx");
 const treeSource = read("../tree/tree-view.tsx");
 const readme = read("../../README.md");
-const treePage = read("../../docs/tree-view.mdx");
 const inventory = read("../../../../COMPONENTS.md");
 const capabilityRecord = read("../../../../docs/gpuix-capabilities.md");
 
@@ -39,6 +38,16 @@ const row = (name: string): string => {
 };
 
 describe("the painted-child hover rule", () => {
+  it("stays in the row docs and the README rule table", () => {
+    Arr.forEach([tableSource, treeSource, readme], (text) => {
+      expect(text).toContain("hover-routing-lifecycle");
+      expect(text).toContain('pointerEvents: "none"');
+    });
+    // The mechanism, not only the id: hover is the press's own hit test.
+    expect(tableSource).toContain("same hit test");
+    expect(treeSource).toContain("same hit test");
+  });
+
   it("stays in the Tables, Row selection and Tree views rows", () => {
     Arr.forEach(["Tables", "Row selection", "Tree views"], (name) => {
       expect(row(name)).toContain("hover-routing-lifecycle");
