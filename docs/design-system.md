@@ -422,9 +422,9 @@ two colours on a card and on a dialog. `filledHover` / `filledPressed` take a
 `FilledRole` — the three actions plus a toggle's `accent` on-state — and move the
 role 12% / 18% of the way toward `foreground`, clamped so the role's on-colour
 keeps the floor its theme declares. The accent face is the one that needs the
-clamp: pressed at the full step its label lands at 4.13:1 in macOS dark (under
+clamp: pressed at the full step its label lands at 4.42:1 in macOS dark (under
 4.5) and 6.90 / 6.94:1 in the two high-contrast themes (under 7), so those three
-styles press at 14% and 17%. Every action keeps the full step everywhere.
+styles press at 17%. Every action keeps the full step everywhere.
 
 The step must also be **seen**, so the eight placements (four roles × hover and
 press) are measured against the fill they replace at the decorative floor —
@@ -636,6 +636,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | text typed into an input, on `input` and on the page role a composite field paints its fill with | 7:1 | 7:1 |
 | secondary text on background/card/muted/popover, on a selected row, inside a field's own fill (`input`), and on a control's `secondary` group strip | 4.5:1 | 7:1 |
 | a selected row's title on its own selection and on the `hover`/`active`/`accent` wash it tints (the `selectedForeground` it paints, held to the body floor), the `foreground` a default `Text` keeps on a selected surface, and a chosen row inside a popover resting in its surface's role (`popoverForeground` on `selected`) | 7:1 | 7:1 |
+| a row's label on the accent it tints — a navigation row or a mention suggestion (`accentForeground` on `accent`); a filled accent control's own label keeps the on-colour row below | 7:1 | 7:1 |
 | on-colour text, placeholder (on `input` and on the page fill) | 4.5:1 | 7:1 |
 | a secondary action's resting label (`secondaryForeground` on the `secondary` fill) | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted, the hover/active washes it tints and the `accent`/`selected` washes a row paints under it (`brandText`) | 4.5:1 | 7:1 |

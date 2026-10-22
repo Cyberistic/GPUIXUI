@@ -292,10 +292,18 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "muted",
     floor: "body",
   },
+  // A navigation row and a highlighted mention suggestion paint their label in
+  // `accentForeground` on `accent` (`navigation-menu.tsx`, `mention-input.tsx`),
+  // and a row label is body text — the same claim `selectedForeground` and
+  // `popoverForeground` are held to on the washes they sit on. It was measured
+  // at the secondary floor, so a brand whose row label measured 4.68:1 passed
+  // while the page's reading floor is 7:1. The two macOS styles were the only
+  // shipped placements under it (6.53:1 and 6.74:1), so their foreground takes
+  // the smallest step that clears it.
   {
     foreground: "accentForeground",
     background: "accent",
-    floor: "secondary",
+    floor: "body",
   },
   // A state wash is painted under a control's existing text, which keeps its
   // resting role: hovering a ghost button or a menu row tints the surface and

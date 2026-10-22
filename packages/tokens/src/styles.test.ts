@@ -349,7 +349,7 @@ describe("action state example", () => {
  * the action fills were written for — the surface behind the control shows
  * through, so the same toggle reads as two colours on a card and on a dialog —
  * and the accent label has less headroom than any action: at the fixed 18% press
- * it lands at 4.13:1 in macOS dark (under 4.5) and 6.90/6.94:1 in the two
+ * it lands at 4.42:1 in macOS dark (under 4.5) and 6.90/6.94:1 in the two
  * high-contrast themes (under 7), so the step has to stop where the label's
  * floor starts.
  */
@@ -377,7 +377,7 @@ describe("filled role fills", () => {
     const fullStep = (theme: typeof lightTheme): string =>
       blend(theme.colors.accent, theme.colors.foreground, 0.18);
     const cases = [
-      ["macOS dark", platformTheme(darkTheme, "darwin"), 4.5, "4.13"],
+      ["macOS dark", platformTheme(darkTheme, "darwin"), 4.5, "4.42"],
       ["high-contrast light", highContrastLightTheme, 7, "6.90"],
       ["high-contrast dark", highContrastDarkTheme, 7, "6.94"],
     ] as const;

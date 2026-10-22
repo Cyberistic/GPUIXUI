@@ -346,7 +346,7 @@ const STEP_LADDER: readonly number[] = Array.from(
  * role's label.
  *
  * A filled action has 18% of headroom in every shipped theme, but the accent
- * face does not: pressed, macOS dark's accent label lands at 4.13:1 under its
+ * face does not: pressed, macOS dark's accent label lands at 4.42:1 under its
  * 4.5 floor at the full step, and both high-contrast themes at 6.90:1 and
  * 6.94:1 under 7:1, so the fixed step was a label the theme could not carry.
  * The clamp keeps the derived fill opaque and the label measured. A theme whose

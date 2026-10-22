@@ -220,7 +220,7 @@ control. A brand's `primary` carries its own states with no second edit.
 
 `FilledRole` is the three actions plus `accent`, the toggle's on-state. The step
 is a ceiling: it stops where the role's on-colour would lose the floor the theme
-declares, which the accent face does in macOS dark (4.13:1 pressed at the full
+declares, which the accent face does in macOS dark (4.42:1 pressed at the full
 step, under 4.5) and both high-contrast themes (6.90/6.94:1, under 7). Every
 action keeps the full 12% hover and 18% press in all 16 shipped styles.
 

@@ -336,9 +336,9 @@ carries (`primaryForeground`,
 stops where that label would lose the floor its theme declares
 (`contrastFloorsFor(theme).secondary` — 4.5:1 default, 7:1 high contrast). The
 accent face is the one that needs the clamp: at the full press step its label
-lands at **4.13:1** in macOS dark, under 4.5, and at **6.90:1** and **6.94:1** in
-the two high-contrast themes, under 7, so those three styles press at 14% / 17% /
-17%. Every action keeps the full 18% in all 16 shipped, high-contrast, platform
+lands at **4.42:1** in macOS dark, under 4.5, and at **6.90:1** and **6.94:1** in
+the two high-contrast themes, under 7, so those three styles press at 17%. Every
+action keeps the full 18% in all 16 shipped, high-contrast, platform
 and authored styles, so no shipped fill moved. A theme whose *resting* pair
 already misses its floor cannot be protected — the gate reports it — so the
 helpers keep the nominal step rather than removing the pointer cue as well.
@@ -758,7 +758,7 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
 | `accent` | `#CCE0F9` | `#1A3D60` | `#D2E4F7` | `#1B3E60` | `#CFE6F9` | `#1B3A50` |
-| `accentForeground` | `#0A4A8F` | `#A9CCF7` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
+| `accentForeground` | `#09457F` | `#B2D3F9` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
 | `selected` | `#D3E5FB` | `#0D3A66` | `#CFE3F9` | `#1B3F60` | `#CCE4F7` | `#123C57` |
 | `selectedForeground` | `#0B3D6B` | `#C7E0FF` | `#0F3E74` | `#CFE4FA` | `#093A5C` | `#CDEBFF` |
 | `destructiveSoftForeground` | base | base | base | base | `#5C1619` | base |
@@ -1446,7 +1446,18 @@ quiet label or icon keeps `mutedForeground`, so both roles are read there — th
 page ink at the body floor and the quiet one at the secondary floor. Every
 shipped style clears both, the tightest being Windows XP (Luna) light's quiet
 label on its group panel at 4.89:1, while the same look's dark edition holds the
-page ink at 7.62:1. A row
+page ink at 7.62:1. An **accent row** is the other state a control's label sits
+on: `NavigationMenuLink`'s hover fills the row `accent` and paints its text
+`accentForeground` (`navigation-menu.tsx`), and a highlighted `MentionInputItem`
+does the same (`mention-input.tsx`) — both are row labels rather than the
+on-colour of a filled control. The pair was held at the secondary floor
+(4.5:1) while every other row label — `popoverForeground` on the
+`hover`/`active` wash, `selectedForeground` on the washes a list row wears — is
+held to the body floor, so a brand whose accent foreground measured 4.68:1
+shipped a navigation or suggestion label under the page's reading floor. It is
+measured at the body floor now; macOS was the only shipped style under it
+(6.53:1 light, 6.74:1 dark), so both foregrounds take the smallest step that
+clears it, the tightest being Light · macOS at 7.19:1. A row
 **floating on a popover** keeps that
 surface's role rather than the page's — a menu or combobox row is
 `popoverForeground` — and a destructive row paints the tone's readable role, so

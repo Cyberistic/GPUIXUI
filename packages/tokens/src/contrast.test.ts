@@ -684,6 +684,128 @@ describe("a control's label on its group strip", () => {
 });
 
 /**
+ * Guards the label a row paints in the accent it tints.
+ *
+ * `NavigationMenuLink`'s hover and a highlighted `MentionInputItem` both fill
+ * the row `accent` and paint its text `accentForeground`, so both are row labels
+ * rather than the on-colour of a filled control. The pair was held at the
+ * secondary floor (4.5:1) while every other row label — `popoverForeground` on
+ * the `hover`/`active` wash, `selectedForeground` on the washes a list row
+ * wears — is held to the body floor, so a brand whose accent foreground measured
+ * 4.68:1 shipped a navigation or suggestion label below the page's reading
+ * floor while the gate stayed green.
+ */
+describe("the label an accent row paints", () => {
+  const navigation = readFileSync(
+    new URL("../../components/src/navigation-menu.tsx", import.meta.url),
+    "utf8",
+  );
+  const mention = readFileSync(
+    new URL("../../components/src/mention-input.tsx", import.meta.url),
+    "utf8",
+  );
+
+  /** The pair, or `undefined` when the table stopped carrying it. */
+  const pair = contrastPairs.find(
+    ({ foreground, background }) =>
+      foreground === "accentForeground" && background === "accent",
+  );
+
+  it("measures the role as body text, not a filled control's label", () => {
+    expect(pair).toMatchObject({
+      foreground: "accentForeground",
+      background: "accent",
+      floor: "body",
+    });
+  });
+
+  it("reads the two rows that paint it", () => {
+    // A pair nobody paints reads as a contract while it guards nothing: both
+    // painters set the fill and the text role together.
+    expect(navigation).toContain("backgroundColor: theme.colors.accent,");
+    expect(navigation).toContain("color: theme.colors.accentForeground,");
+    expect(mention).toContain(
+      "backgroundColor: highlighted ? theme.colors.accent : undefined,",
+    );
+    expect(mention).toContain("? theme.colors.accentForeground");
+  });
+
+  it("reports a label the secondary floor would have passed", () => {
+    const brand = {
+      colors: {
+        ...lightColors,
+        accent: "#F0F0F0",
+        accentForeground: "#6B6B6B",
+      },
+    };
+    const ratio = contrastRatio(
+      brand.colors.accentForeground,
+      brand.colors.accent,
+    );
+
+    expect(ratio).toBeCloseTo(4.68, 2);
+    expect(ratio ?? 0).toBeGreaterThanOrEqual(contrastFloors.secondary);
+    expect(ratio ?? 0).toBeLessThan(contrastFloors.body);
+    expect(
+      contrastFailures(brand).find(
+        ({ foreground, background }) =>
+          foreground === "accentForeground" && background === "accent",
+      ),
+    ).toMatchObject({ ratio, floor: contrastFloors.body });
+  });
+
+  it("clears the body floor in every shipped, platform and authored style", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const placements = shipped.map((theme) => ({
+      name: theme.name,
+      ratio: contrastRatio(theme.colors.accentForeground, theme.colors.accent),
+      floor: contrastFloorsFor(theme).body,
+    }));
+    const hidden = placements.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+
+    expect(hidden).toEqual([]);
+    expect(tightest.name).toBe("Light · macOS");
+    expect(printedRatio(tightest.ratio)).toBe("7.19:1");
+
+    // The two pages print the pair and the tightest placement this suite
+    // measured, so a palette edit cannot leave a stale sentence behind.
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const design = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    );
+    const row = design
+      .split("\n")
+      .find((line) =>
+        line.startsWith("| a row's label on the accent it tints"),
+      );
+    expect(catalogue).toContain(
+      `the tightest being ${tightest.name} at ${printedRatio(tightest.ratio)}`,
+    );
+    expect(row, "docs/design-system.md has no accent-row row").toBeDefined();
+    expect(row).toContain("`accentForeground` on `accent`");
+    expect(row).toContain("| 7:1 | 7:1 |");
+  });
+});
+
+/**
  * Guards the body role on a container's own surface.
  *
  * `Box`/`surfaceStyle` paints six content tones, and the default `Text` inside
