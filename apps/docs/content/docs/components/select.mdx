@@ -62,10 +62,11 @@ export const DeployTarget = () => {
 ```
 
 A group is `{ label, options }`; it paints a muted caption and a rule between
-runs, while the runtime still receives one flat list in render order. A group
-name is **presentational**: `SelectGroup`/`SelectLabel` carry no role in 0.11.0,
-so a reader who hears a row does not hear which group it belongs to. Keep group
-names short, or put the context in each row's label.
+runs, while the runtime still receives one flat list in render order. The caption
+**names the run it heads**: `SelectGroup` is a plain `div` in 0.11.0, so the
+wrapper carries `role="group"` and the caption as its accessible name, and a
+reader who cannot see the popup hears the group before its rows. Keep group names
+short and unique.
 
 ## Sizes
 
@@ -198,10 +199,15 @@ sets no maximum height and its scroll-button parts are empty in 0.11.0.
 
 - Role and name come from the runtime's trigger; the package adds the accessible
   name through `label`, and the visible name is a `Label` beside the control.
-  The chosen row is `aria-selected`; the check mark is decorative, because the
-  row already reports its state.
-- A group caption is painted, not announced: `SelectGroup`/`SelectLabel` carry no
-  role in 0.11.0, so the hierarchy is visual only.
+  The open list is announced as a `ListBox` of `option` rows, each with its
+  accessible name and the selected state the runtime reports — the check mark is
+  decorative, because the row already reports its state.
+- A group caption announces the run it heads: `SelectGroup` is a plain `div` in
+  0.11.0, so the wrapper carries `role="group"` and the caption as its accessible
+  name, and the list announces a `Group` node beside its `option` rows. Read off
+  the runtime's accessibility tree by `runtime/fields.runtime.test.tsx`
+  (`announces a Select's options, their selection and their group`) — a
+  `TestRenderer` fact, because a window's automation protocol has no a11y verb.
 - **No type-ahead, no search, no multi-select.** A long or searchable list wants
   a combobox.
 - Options are strings; there is no rich option content and no compound escape

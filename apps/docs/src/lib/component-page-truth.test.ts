@@ -994,6 +994,20 @@ describe("the curated component pages", () => {
     expect(source).toContain("isSelectGroup");
     expect(source).toContain("Arr.flatMap");
 
+    // A group is announced: 0.11.0's `SelectGroup` carries no role, so the
+    // wrapper supplies `group` and the caption as its accessible name, and the
+    // accessibility tree reports that node beside the list's `option` rows. The
+    // page taught the opposite after the shim landed, which told a reader the
+    // announcement the component ships does not exist.
+    expect(source).toContain('role="group"');
+    expect(source).toContain("aria-label={accessibleName(entry.label)}");
+    expect(source).toContain('role="option"');
+    const a11y = read("packages/primitives/runtime/fields.runtime.test.tsx");
+    expect(a11y).toContain(
+      "announces a Select's options, their selection and their group",
+    );
+    expect(a11y).toContain('role: "Group"');
+
     const text = body(select).replace(/\s+/g, " ");
     expect(text).toContain("320px");
     expect(text).toContain("reveals itself");
@@ -1001,6 +1015,13 @@ describe("the curated component pages", () => {
     expect(text).toContain("keyboardFocusDim: false");
     expect(text).toContain("No type-ahead");
     expect(text).toContain("one flat list");
+    expect(text).toContain("names the run it heads");
+    expect(text).toContain('role="group"');
+    expect(text).toContain("announces a Select's options");
+    // The retracted shape: the shim's announcement called impossible.
+    expect(text).not.toContain("presentational");
+    expect(text).not.toContain("painted, not announced");
+    expect(text).not.toContain("hierarchy is visual only");
     // The retracted shape: the keyboard gap the reveal closed.
     expect(text).not.toContain("cannot reach the tail");
     expect(text).not.toContain("does not scroll the highlight");
