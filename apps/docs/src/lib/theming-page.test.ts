@@ -432,6 +432,17 @@ describe("the preview policy's audit count", () => {
   });
 });
 
+describe("the theming page's audit enumerations", () => {
+  it("names the code palette the audit measures, in both lists", () => {
+    // Both sentences enumerate every contract `auditTheme` runs. They stopped
+    // at the keyboard dim while the gate gained `syntax`, so a brand whose code
+    // tokens match the fill they are read on was told the audit covers it.
+    const body = page("theming.mdx");
+    expect(body).toContain("the code palette");
+    expect(body).toContain("every token in a code block");
+  });
+});
+
 describe("the theming page's indicator marks", () => {
   it("describes the contract a mark is held to, not only its colours", () => {
     // A mark is neither text nor a boundary, so the page has to name the report
