@@ -19,16 +19,21 @@ export const unmeasuredBrandAudit = auditTheme(unmeasuredBrandTheme);
 
 /**
  * A "dense" preset a settings file handed back with every control shaved a few
- * pixels. Each height is a finite number the renderer lays out, so nothing looks
- * broken — but the box a pointer presses is the control, the library reserves no
- * hit area on top of it, and two of the three sizes are now under the 24px floor.
+ * pixels and the rows shaved further. Each height is a finite number the
+ * renderer lays out, so nothing looks broken — but the box a pointer presses is
+ * the control (or, for a dense list row, the row itself), the library reserves
+ * no hit area on top of either, and two of the three control sizes plus the row
+ * are now under the 24px floor.
  */
 export const squatDensityTheme = extendTheme(lightTheme, {
   name: "Squat",
-  density: { controlHeight: { sm: 20, md: 22, lg: 24 } },
+  density: {
+    controlHeight: { sm: 20, md: 22, lg: 24 },
+    rowHeight: 20,
+  },
 });
 
-/** What the gate reports for it: the two heights under the floor, by size. */
+/** What the gate reports for it: the two shrunken sizes and the row, by name. */
 export const squatDensityAudit = auditTheme(squatDensityTheme);
 
 /**

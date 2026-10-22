@@ -179,17 +179,23 @@ describe("docs/design-system.md", () => {
     expect(Number(floors?.[2])).toBe(targetSize.comfortable);
   });
 
-  it("holds a theme's control heights to the floor in the prose it prints", () => {
+  it("holds a theme's control heights and row height to the floor in the prose it prints", () => {
     const rule =
       /`invalidNumbers` reports a `controlHeight` under `targetSize\.minimum`\s+\((\d+)px\) as `pressable`/.exec(
         doc,
       );
+    const row =
+      /`rowHeight` is reported as `pressable` under the same floor/.exec(doc);
 
     expect(
-      rule,
+      rule?.[0],
       "docs/design-system.md no longer holds a brand's control height to the pressable floor",
     ).toBeDefined();
     expect(Number(rule?.[1])).toBe(targetSize.minimum);
+    expect(
+      row?.[0],
+      "docs/design-system.md no longer holds a brand's row height to the pressable floor",
+    ).toBeDefined();
   });
 
   it("prints the data-series distances", () => {

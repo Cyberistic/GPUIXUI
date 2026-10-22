@@ -847,7 +847,7 @@ by group, path, value and the rule it missed:
 | `typography` | every role's size | finite, `> 0` |
 | `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |
 | `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`) |
-| `density` | `rowHeight` | finite, `> 0` |
+| `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |
 | `density` | `controlPaddingX` per size | finite, `>= 0` |
 | `elevation` | every shadow's `offsetX`, `offsetY`, `spreadRadius` | finite |
 | `elevation` | every shadow's `blurRadius` | finite, `>= 0` |
@@ -865,6 +865,15 @@ instead of letting the audit pass. The shipped presets sit at or above it —
 `compact` `sm` is exactly `targetSize.minimum` — so no palette or metric moves
 for a theme that keeps them.
 
+`rowHeight` is the same box one level down. A list row is a press target — it
+takes a `tabIndex`, a press and a hover wash — and a `dense` row is built at
+exactly `density.rowHeight` (`packages/components/src/list.tsx`), with the
+library reserving no hit-area padding on top of the row either. So the same
+`pressable` rule holds it: a brand that shaves the rows to 20px ships a target a
+reader cannot reliably hit while every control height is right, and
+`invalidNumbers` reports `rowHeight` by name. Every shipped preset clears it —
+the density table below prints each one.
+
 Two numbers only mean something together: a type role's leading and its size. A
 leading shorter than the size puts the next baseline inside this line's glyph
 box, so ascenders and descenders collide — and a scale computed from a factor
@@ -878,6 +887,8 @@ import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
 
 invalidNumbers(extendTheme(lightTheme, { radius: { md: Number.NaN } }));
 // [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
+invalidNumbers(extendTheme(lightTheme, { density: { rowHeight: 20 } }));
+// [{ group: "density", path: "rowHeight", value: 20, rule: "pressable" }]
 invalidNumbers(
   extendTheme(lightTheme, { typography: { body: { lineHeight: 10 } } }),
 );
@@ -885,12 +896,12 @@ invalidNumbers(
 ```
 
 `src/numbers.example.ts` holds three brands: one whose corner radius came from a
-scale factor nobody set, one whose "dense" preset shaves two control heights
-under the pressable floor, and one whose type scale multiplied the leadings under
-the sizes. `numbers.test.ts` runs all three audits, proves none of the colour
-reports can see their defects, and holds all 16 shipped, platform and authored
-themes to an empty report — the shipped scale's tightest role is the display
-step at 28/36, well clear of the floor.
+scale factor nobody set, one whose "dense" preset shaves two control heights and
+a row under the pressable floor, and one whose type scale multiplied the leadings
+under the sizes. `numbers.test.ts` runs all three audits, proves none of the
+colour reports can see their defects, and holds all 16 shipped, platform and
+authored themes to an empty report — the shipped scale's tightest role is the
+display step at 28/36, well clear of the floor.
 
 ### Contrast
 

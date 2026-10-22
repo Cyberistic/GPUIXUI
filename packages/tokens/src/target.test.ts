@@ -74,6 +74,18 @@ describe("the shipped scales against the floor", () => {
     expect(short).toEqual([]);
   });
 
+  it("keeps every row height at or above the AA floor in every density", () => {
+    // A `dense` list row is built at exactly this height, and it is a press
+    // target — so the shipped presets, like a brand's, clear the floor.
+    const short = Object.values(densityPresets).flatMap((preset) =>
+      preset.rowHeight < targetSize.minimum
+        ? [`${preset.name}: ${preset.rowHeight}`]
+        : [],
+    );
+
+    expect(short).toEqual([]);
+  });
+
   it("reserves every icon step up to the floor, because an icon-only control draws at the step", () => {
     const boxes = Object.values(iconSize).map(
       (size) => size + targetInset(size) * 2,

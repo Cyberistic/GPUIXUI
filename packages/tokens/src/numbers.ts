@@ -17,6 +17,12 @@
  * claim `docs/design-system.md` §6 makes about the shipped presets, held here
  * for a brand's density too.
  *
+ * A row height is the same box one step down. A list row is a press target — it
+ * takes a `tabIndex`, a press and a hover wash — and a `dense` row is built at
+ * exactly `density.rowHeight` (`packages/components/src/list.tsx`), so a theme
+ * that shaves the row ships a target under the floor even when every control
+ * height is right.
+ *
  * A type role carries two numbers that only mean something together: a leading
  * shorter than the role's own size puts the next baseline inside this line's
  * glyph box, so ascenders and descenders collide. A type scale computed from a
@@ -50,10 +56,11 @@ export type NumberGroup =
  *   (`radius.none`, a hairline divider, a shadow with no blur);
  * - `positive` — a size a reader has to see (a type size, an icon), where zero
  *   paints nothing;
- * - `pressable` — a control height, which is also the box a pointer presses, so
- *   it reaches {@link targetSize.minimum}. The library builds a control at its
- *   `controlHeight` with no extra inset, so a shorter one is a target a reader
- *   cannot reliably hit;
+ * - `pressable` — a control height or a dense list row, which is also the box a
+ *   pointer presses, so it reaches {@link targetSize.minimum}. The library
+ *   builds a control at its `controlHeight` and a dense row at its `rowHeight`
+ *   with no extra inset, so a shorter one is a target a reader cannot reliably
+ *   hit;
  * - `leading` — a type role's line height, which reaches the role's own font
  *   size. Below that the next baseline sits inside this line's glyph box, so the
  *   two lines collide. It is the one rule about two tokens, so it is applied
@@ -201,13 +208,14 @@ const inspectShadow = (
  * cannot press.
  *
  * An empty array means every size, length and shadow a theme carries is one the
- * runtime can paint, every control height is one a reader can hit and every type
- * role's leading reaches its own size. A number
+ * runtime can paint, every control height and row height is one a reader can hit
+ * and every type role's leading reaches its own size. A number
  * that is not finite is dropped rather than clamped, a size at or below zero
  * paints an element no one can find, a control height under
  * {@link targetSize.minimum} is a press target the library's own components do
- * not pad up, and a leading shorter than its type stacks the next line into the
- * current one — all four are reported by path instead of shipping as a default.
+ * not pad up, the same floor holds a dense list row to `rowHeight`, and a
+ * leading shorter than its type stacks the next line into the current one — all
+ * reported by path instead of shipping as a default.
  *
  * @example
  * ```ts
@@ -218,6 +226,8 @@ const inspectShadow = (
  * // [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
  * invalidNumbers(extendTheme(lightTheme, { density: { controlHeight: { sm: 20 } } }));
  * // [{ group: "density", path: "controlHeight.sm", value: 20, rule: "pressable" }]
+ * invalidNumbers(extendTheme(lightTheme, { density: { rowHeight: 20 } }));
+ * // [{ group: "density", path: "rowHeight", value: 20, rule: "pressable" }]
  * invalidNumbers(
  *   extendTheme(lightTheme, { typography: { body: { lineHeight: 12 } } }),
  * );
@@ -243,7 +253,7 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
       "nonNegative",
       "controlPaddingX.",
     ),
-    ...inspect("density", "rowHeight", theme.density.rowHeight, "positive"),
+    ...inspect("density", "rowHeight", theme.density.rowHeight, "pressable"),
     ...Object.entries(theme.elevation).flatMap(([level, shadows]) =>
       isShadowList(shadows)
         ? shadows.flatMap((shadow, index) =>

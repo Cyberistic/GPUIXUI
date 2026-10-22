@@ -203,8 +203,10 @@ pressable-target floor, so a control built at a control height never needs
 extra hit-area padding. That is a claim about a theme, not only about the built-in
 presets: `invalidNumbers` reports a `controlHeight` under `targetSize.minimum`
 (24px) as `pressable`, so a brand that shrinks one fails the audit instead of
-shipping a target a pointer cannot reliably hit. An icon-sized part needs an
-inset; §9 has the rule.
+shipping a target a pointer cannot reliably hit. A row is the same box one level
+down — a `dense` list row is built at exactly `rowHeight` and takes a press — so
+`rowHeight` is reported as `pressable` under the same floor. An icon-sized part
+needs an inset; §9 has the rule.
 
 ## 7. Radii, borders and elevation
 
@@ -504,10 +506,10 @@ radius beside a valid border, type size and fill left those three on the element
 and dropped only the radius; a negative size is accepted instead and paints
 nothing usable (`fontSize: -4` laid text out at height 0). `invalidNumbers(theme)`
 names the group, path, value and rule for every numeric token that cannot be
-laid out — a shadow offset may be negative, but a control height or type size
-must be positive, and a type role's leading must reach its own size, because a
-shorter one starts the next line inside this line's glyph box (§10,
-`docs/tokens.md` §Numbers).
+laid out — a shadow offset may be negative, a type size must be positive, a
+control height and a row height must reach the pressable-target floor,
+and a type role's leading must reach its own size, because a shorter one starts
+the next line inside this line's glyph box (§10, `docs/tokens.md` §Numbers).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
 reports all nine in one call — `invalidRoles`, `invalidShadows`,
@@ -534,8 +536,9 @@ the requirement is private to this repo.
 
 Colour is not the only measured contract. Every pointer target keeps
 `targetSize.minimum` — 24px — and a touch-first surface may raise it to
-`targetSize.comfortable`, 44px. Every shipped control height is at or above the
-first floor; an icon-sized part — a checkbox's 16px box, a 12px chevron — keeps
+`targetSize.comfortable`, 44px. Every shipped control height and every shipped
+row height is at or above the first floor; an icon-sized part — a checkbox's
+16px box, a 12px chevron — keeps
 its drawing and reserves the difference as padding with `targetInset`, so the
 look does not change and the target still reaches the floor. The floor is fixed
 rather than theme-owned: a brand can restyle the control, not lower the target.

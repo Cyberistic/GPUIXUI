@@ -8,6 +8,7 @@ import {
   iconSize,
   radius,
   spacing,
+  targetSize,
   type DensityName,
 } from "./scale.js";
 
@@ -91,7 +92,11 @@ describe("density presets", () => {
       expect(densityPresets[preset].controlHeight.md).toBeLessThan(
         densityPresets[preset].controlHeight.lg,
       );
-      expect(densityPresets[preset].rowHeight).toBeGreaterThan(0);
+      // A dense list row is built at exactly this height and takes a press, so
+      // the scale itself must clear the floor a brand's row is held to.
+      expect(densityPresets[preset].rowHeight).toBeGreaterThanOrEqual(
+        targetSize.minimum,
+      );
     });
   });
 });

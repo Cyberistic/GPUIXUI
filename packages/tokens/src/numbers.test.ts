@@ -16,11 +16,17 @@
  * inside the previous one's glyph box. The documents name that rule, and this
  * suite reads them (as `docs.test.ts` and `selection.test.ts` do) so the page
  * cannot describe a report the code does not return.
+ *
+ * A row height is the third: a list row is a press target, and a `dense` row is
+ * built at exactly `density.rowHeight`, so a theme whose rows were shaved ships
+ * a target under the floor even when every control height is right. It is the
+ * same `pressable` rule one level down, held here by name.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   auditTheme,
+  densityNames,
   densityPresets,
   extendTheme,
   highContrastThemes,
@@ -143,11 +149,25 @@ describe("a type role's leading reaches its own size", () => {
   });
 });
 
-describe("the documents name the leading rule", () => {
+describe("the documents name the number rules", () => {
   const page = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
 
-  it("prints the rule in the catalogue, with a report the code actually returns", () => {
+  it("prints the row rule in the catalogue, with a report the code actually returns", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(brand({ density: { rowHeight: 20 } }));
+
+    expect(failure).toBeDefined();
+    expect(catalogue).toContain(
+      "| `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |",
+    );
+    // The snippet is the real report, not an illustration of one.
+    expect(catalogue).toContain(
+      `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+  });
+
+  it("prints the leading rule in the catalogue, with a report the code actually returns", () => {
     const catalogue = page("../../../docs/tokens.md");
     const [failure] = invalidNumbers(
       brand({ typography: { body: { lineHeight: 10 } } }),
@@ -256,7 +276,7 @@ describe("every group of numbers is inspected", () => {
       },
     ]);
     expect(invalidNumbers(brand({ density: { rowHeight: -1 } }))).toEqual([
-      { group: "density", path: "rowHeight", value: -1, rule: "positive" },
+      { group: "density", path: "rowHeight", value: -1, rule: "pressable" },
     ]);
   });
 
@@ -353,6 +373,39 @@ describe("a control height a pointer cannot reach", () => {
   });
 });
 
+describe("a row height a pointer cannot reach", () => {
+  it("reports a row under the pressable floor, because a dense row IS the box", () => {
+    // `packages/components/src/list.tsx` builds a `dense` row at exactly
+    // `density.rowHeight`; that row takes a `tabIndex`, a press and a hover
+    // wash, so the row height is a press target the library does not pad.
+    expect(invalidNumbers(brand({ density: { rowHeight: 20 } }))).toEqual([
+      { group: "density", path: "rowHeight", value: 20, rule: "pressable" },
+    ]);
+  });
+
+  it("accepts the floor itself and every shipped preset's row", () => {
+    expect(
+      invalidNumbers(brand({ density: { rowHeight: targetSize.minimum } })),
+    ).toEqual([]);
+    expect(
+      densityNames.filter(
+        (name) => densityPresets[name].rowHeight < targetSize.minimum,
+      ),
+    ).toEqual([]);
+  });
+
+  it("fails the gate on a shrunken row, with no colour report involved", () => {
+    const audit = auditTheme(brand({ density: { rowHeight: 18 } }));
+
+    expect(audit.invalidNumbers.map(({ path, rule }) => [path, rule])).toEqual([
+      ["rowHeight", "pressable"],
+    ]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+});
+
 describe("the rule is precise", () => {
   it("allows the zero and negative lengths a design can use", () => {
     // `radius.none` and a hairline divider are zero by design; a shadow may be
@@ -431,6 +484,7 @@ describe("the audit gates on the numbers", () => {
     expect(squatDensityAudit.invalidNumbers.map(({ path }) => path)).toEqual([
       "controlHeight.sm",
       "controlHeight.md",
+      "rowHeight",
     ]);
     expect(squatDensityAudit.contrast).toEqual([]);
     expect(squatDensityAudit.passed).toBe(false);
