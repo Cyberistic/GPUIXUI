@@ -124,6 +124,30 @@ describe("Reveal", () => {
     }
   });
 
+  it("drops the stagger with the journey under the reduced preference", () => {
+    // The bug this guards: `delayMs` was spread onto the reduced timing, and the
+    // runtime waits a delay out *before* an instant assignment — so a reduced
+    // reveal sat at its first frame for the whole stagger before appearing.
+    const shown = (
+      <MotionProvider preference="reduced">
+        {framed(<Reveal testId="reveal" distance={12} delayMs={300} />)}
+      </MotionProvider>
+    );
+    const page = renderComponent(shown);
+    try {
+      page.renderer.clockPause();
+      page.rerender(shown);
+      settle(page);
+
+      expect(offsetOf(page, "y")).toBeCloseTo(0, 1);
+      const motion = page.renderer.findByTestId("reveal")?.customProps?.motion;
+      expect(motion).toMatchObject({ transition: { duration: 0 } });
+      expect(motion).not.toHaveProperty("transition.delay");
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("paints nothing while closed, and unmounts after the exit", async () => {
     const page = renderComponent(
       framed(<Reveal testId="reveal" open={false} />),

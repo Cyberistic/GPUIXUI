@@ -464,6 +464,15 @@ Under `"reduced"` a tween's duration is zero and no easing is named: the resting
 frame still paints, only the journey is removed. The same rule holds for a
 component that has no provider (the default is `"animated"`).
 
+**A stagger is a delay on the same timing, and it goes with the journey.**
+`delayedTiming` (in the seam) adds one in the seconds the runtime reads, and it
+drops the delay when the duration is zero: the runtime waits a delay out *before*
+an instant assignment, so a kept delay holds a reduced surface at its first frame
+for the whole stagger. `Reveal`'s `delayMs`, the avatar group's discs and
+`SplittingText`'s units compose it, and `src/presence-contract.test.ts` holds the
+rule to that one implementation — a component that spreads a delay onto a timing
+itself re-implements the reduced rule.
+
 **The preference is read on every render**, so turning it on settles a run that
 is already moving: an entry interrupted half-way jumps to its resting frame
 instead of finishing the journey, and a reveal whose height is a measurement
@@ -476,15 +485,17 @@ the first frame`).
 the movement and the mount window in the real renderer: bounds move by the
 surface's offset, the exit keeps the box painted and then removes it, the
 reduced preference paints the resting frame with no travel (including a setting
-turned on mid-entry, and a dismissed notice removed at once), the accordion
+turned on mid-entry, a dismissed notice removed at once, and a staggered
+`Reveal` that drops its delay with the duration), the accordion
 grows from zero to its measured height, and the tab pill lands exactly on the
 next trigger's box. A press through a leaving
 box is measured on the context menu and on a dismissed modal's veil.
 `src/presence-contract.test.ts` holds every
 floating host in the package to the two rules that make it possible — a host
 that composes the presence seam paints `pointerEvents` from it, and a deferred
-`anchored` host drops its occlusion with it. The live playground proves the fade
-itself (a window reports painted bounds, not painted opacity).
+`anchored` host drops its occlusion with it — and holds a stagger to
+`delayedTiming`, one implementation of the reduced rule. The live playground
+proves the fade itself (a window reports painted bounds, not painted opacity).
 
 ## 12. Native text hosts
 

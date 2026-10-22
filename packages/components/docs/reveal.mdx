@@ -67,9 +67,11 @@ starts the entry later, which is how a list is staggered:
 accelerates, and the exit's own duration is the mount window: the subtree
 unmounts when it ends.
 
-Under `MotionProvider preference="reduced"` the durations are zero, so the
-content paints at rest in the frame it appears and still unmounts on the same
-contract. The preference is the application's: the runtime exposes no query for
+Under `MotionProvider preference="reduced"` the durations are zero and a
+`delayMs` is dropped with them — the runtime waits a delay out *before* an
+instant assignment, so a kept one would hold the content at its first frame for
+the whole stagger — so the content paints at rest in the frame it appears and
+still unmounts on the same contract. The preference is the application's: the runtime exposes no query for
 it (`docs/gpuix-capabilities.md`).
 
 ```tsx
@@ -86,7 +88,7 @@ it (`docs/gpuix-capabilities.md`).
 | `from` | `RevealFrom` | `"below"` | The edge the content comes from, or `"none"` for a fade. |
 | `distance` | `number` | `8` | Pixels travelled; an unusable value falls back to the default. |
 | `level` | `MotionLevel` | `"normal"` | The house duration the entry and exit use. |
-| `delayMs` | `number` | `0` | Milliseconds before the entry starts. |
+| `delayMs` | `number` | `0` | Milliseconds before the entry starts; dropped under reduced motion. |
 | `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
 | `style` | `StateStyle<RevealState>` | — | `RevealState` is `{ open, from, reducedMotion }`. |
 
@@ -128,9 +130,10 @@ few hundred milliseconds.
 ## Verification
 
 `src/behaviour/reveal.test.tsx` renders the component in the real GPUix renderer
-(7 tests): the entry starting below and rising home, the right edge travelling on
+(8 tests): the entry starting below and rising home, the right edge travelling on
 the horizontal axis, the above edge dropping, a fade-only reveal staying put, the
-reduced preference painting at rest with a zero duration, a closed reveal
-painting nothing and unmounting only after its exit, and the delay reaching the
-runtime in seconds. The direction and distance rules are the unit suite beside
+reduced preference painting at rest with a zero duration **and dropping a
+`delayMs` with it** (the measured bug: a reduced reveal with a delay sat at
+its first frame for the whole stagger), a closed reveal painting nothing and unmounting only
+after its exit, and the delay reaching the runtime in seconds. The direction and distance rules are the unit suite beside
 the logic (`src/reveal/frames.test.ts`).

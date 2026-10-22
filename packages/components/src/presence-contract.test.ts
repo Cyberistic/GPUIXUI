@@ -172,3 +172,65 @@ describe("the pointer contract", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+/** A stagger spread onto a house timing, which re-implements the reduced rule. */
+const inlineDelay = /\.\.\.timing(?:\.\w+)?\s*,\s*delay\s*:/;
+
+/** The arrivals that queue behind a stagger, and the seam that builds it. */
+const staggered = [
+  "src/reveal.tsx",
+  "src/avatar-group.tsx",
+  "src/splitting-text.tsx",
+] as const;
+const timingSeam = "src/internal/presence.tsx";
+const retiredDelayCopies = ["groupEntering", "unitTransition"] as const;
+
+describe("the house timing", () => {
+  it("gains a delay in one place, so the reduced rule has one home", () => {
+    // The bug this guards: `Reveal` spread `delayMs` onto the reduced timing
+    // itself, and the runtime waits a delay out *before* an instant assignment —
+    // so a reduced reveal sat at its first frame for the whole stagger. Its two
+    // siblings had each written the correct rule in their own logic module.
+    const offenders = Arr.filterMap(sources, ({ path, body }) =>
+      inlineDelay.test(body) ? Result.succeed(path) : Result.failVoid,
+    );
+    expect(offenders).toEqual([timingSeam]);
+  });
+
+  it("is composed by every staggered arrival", () => {
+    const missing = Arr.filterMap(staggered, (file) => {
+      const source = Arr.findFirst(
+        sources,
+        (candidate) => candidate.path === file,
+      );
+      return Option.match(source, {
+        onNone: () => Result.succeed(`${file}: not read`),
+        onSome: ({ body }) =>
+          Str.includes("delayedTiming(")(body)
+            ? Result.failVoid
+            : Result.succeed(`${file}: does not compose delayedTiming`),
+      });
+    });
+    expect(missing).toEqual([]);
+    Arr.forEach(retiredDelayCopies, (name) => {
+      expect(
+        Arr.filter(sources, ({ body }) => Str.includes(name)(body)),
+      ).toEqual([]);
+    });
+  });
+
+  it("still drops the delay under a reduced timing, so the rule cannot pass by deletion", () => {
+    const seam = Option.getOrElse(
+      Option.map(
+        Arr.findFirst(sources, (source) => source.path === timingSeam),
+        (source) => source.body,
+      ),
+      () => {
+        throw new Error(`timing contract: ${timingSeam} was not read`);
+      },
+    );
+    expect(Str.includes("export const delayedTiming")(seam)).toBe(true);
+    expect(Str.includes("timing.duration === 0")(seam)).toBe(true);
+    expect(Str.includes("delay: delayMs / 1000")(seam)).toBe(true);
+  });
+});

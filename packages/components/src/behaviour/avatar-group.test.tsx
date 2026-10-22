@@ -155,7 +155,8 @@ describe("AvatarGroup", () => {
             ?.motion,
       );
 
-      expect(motions[0]).toMatchObject({ transition: { delay: 0 } });
+      // A zero stagger adds nothing, so the first arrival carries no delay.
+      expect(motions[0]).not.toHaveProperty("transition.delay");
       expect(motions[1]).toMatchObject({ transition: { delay: 0.04 } });
       expect(motions[2]).toMatchObject({ transition: { delay: 0.08 } });
     } finally {

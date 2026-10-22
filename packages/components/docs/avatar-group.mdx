@@ -139,10 +139,13 @@ and the group adds no tab stop.
 Nine native behaviour cases in `src/behaviour/avatar-group.test.tsx` measure the
 row in the real renderer: the overlap and reserved width, the capped tail and its
 named chip, the rise on a paused motion clock, the stagger in the seconds the
-runtime reads, a stable box during the arrival, an appended face that does not
-replay the row, a removed one that does not remount the rest, the reduced
-preference, and the group's accessible name. The arithmetic is
-`src/avatar-group/logic.test.ts` (15 tests).
+runtime reads (and no delay on the first disc), a stable box during the arrival,
+an appended face that does not replay the row, a removed one that does not
+remount the rest, the reduced preference, and the group's accessible name. The
+arithmetic is `src/avatar-group/logic.test.ts` (14 tests); the delay's seconds
+and its removal under reduced motion are the seam's `delayedTiming`
+(`src/internal/presence.test.ts`, and `src/presence-contract.test.ts` holds the
+three staggered arrivals to it).
 
 ## Related
 

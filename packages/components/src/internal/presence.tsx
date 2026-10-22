@@ -108,6 +108,27 @@ export const exitWindowMs = (timing: SurfaceTiming): number =>
   Math.round((timing.exit.duration ?? 0) * 1000);
 
 /**
+ * A house timing that waits `delayMs` before it runs — a stagger.
+ *
+ * The delay is named in milliseconds and handed to the runtime in seconds. A
+ * reduced timing (a zero duration) drops the delay with the journey: the runtime
+ * waits a delay out *before* an instant assignment, so keeping it would hold a
+ * resting frame back by exactly the wait the preference removes. A delay that
+ * cannot be scheduled (negative, infinite, `NaN`) adds nothing, and the timing
+ * is returned as it was, so an unstaggered run keeps the object it was given.
+ *
+ * This is the one place a timing gains a stagger; a component that spreads a
+ * delay onto a timing itself re-implements the reduced rule.
+ */
+export const delayedTiming = (
+  timing: MotionTransition,
+  delayMs: number,
+): MotionTransition =>
+  timing.duration === 0 || !Number.isFinite(delayMs) || delayMs <= 0
+    ? timing
+    : { ...timing, delay: delayMs / 1000 };
+
+/**
  * A fade that travels `offset` pixels along one axis.
  *
  * A positive `top` starts the surface low and rises it into place; a negative

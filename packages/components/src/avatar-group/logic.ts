@@ -7,7 +7,6 @@
  * The stagger is `@gpuixui/motion`'s rule rather than a second copy of it.
  */
 
-import type { MotionTransition } from "@gpuix/react";
 import { stagger, type StaggerFrom } from "@gpuixui/motion/timeline";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -130,21 +129,6 @@ export const groupDelayMs = (
   stepMs: Option.Option<number>,
   from: StaggerFrom = "start",
 ): number => stagger(stepOf(stepMs), index, count, from);
-
-/**
- * A disc's tween under the house timing.
- *
- * The delay is the stagger in the seconds the runtime reads; a reduced run drops
- * it with the duration, because a zero-duration tween that still waits would
- * hold the arrival back — the journey reduced motion removes.
- */
-export const groupEntering = (
-  timing: MotionTransition,
-  delayMs: number,
-): MotionTransition =>
-  timing.duration === 0
-    ? { duration: 0 }
-    : { ...timing, delay: Math.max(0, delayMs) / 1000 };
 
 /** The chip's painted text: the number behind it. */
 export const overflowText = (hidden: number): string =>

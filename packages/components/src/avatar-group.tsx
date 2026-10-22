@@ -36,13 +36,12 @@ import {
   avatarRowWidth,
   avatarStep,
   groupDelayMs,
-  groupEntering,
   groupName,
   overflowName,
   overflowText,
   splitMembers,
 } from "./avatar-group/logic.js";
-import { useSurfaceTiming } from "./internal/presence.js";
+import { delayedTiming, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { avatarSize, textStyle, useTheme } from "./internal/theme.js";
 
@@ -157,7 +156,7 @@ export const AvatarGroup = ({
   const entrance = (index: number) => ({
     initial: { opacity: 0, top: travel },
     animate: { opacity: 1, top: 0 },
-    transition: groupEntering(
+    transition: delayedTiming(
       timing,
       groupDelayMs(index, count, stepMsOption, "start"),
     ),

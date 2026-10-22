@@ -2,12 +2,13 @@
  * The motion seam's frames and mount window.
  *
  * The bugs these guard: an offset with the wrong sign (a drawer that jumps away
- * from its edge, a popover that arrives from the wrong side of its trigger) and
- * a mount window with the wrong unit — `motionTiming` names seconds because the
+ * from its edge, a popover that arrives from the wrong side of its trigger); a
+ * mount window with the wrong unit — `motionTiming` names seconds because the
  * runtime reads seconds, while the seam keeps a leaving box painted for
- * milliseconds, and a preference change has to collapse both to zero. The
- * direction of every edge is asserted here because the behaviour suite can only
- * see the surfaces it mounts.
+ * milliseconds, and a preference change has to collapse both to zero; and a
+ * stagger that survives the reduced preference, holding a resting surface at its
+ * first frame for the length of the wait. The direction of every edge is
+ * asserted here because the behaviour suite can only see the surfaces it mounts.
  */
 
 import {
@@ -17,6 +18,7 @@ import {
 } from "@gpuixui/motion/timing";
 import { describe, expect, it } from "vitest";
 import {
+  delayedTiming,
   exitWindowMs,
   fadeFrom,
   fadeFromAnchor,
@@ -99,5 +101,33 @@ describe("the mount window", () => {
 
   it("treats a timing with no duration as an instant assignment", () => {
     expect(exitWindowMs({ enter: { duration: 0 }, exit: {} })).toBe(0);
+  });
+});
+
+describe("a staggered run", () => {
+  it("hands the delay to the runtime in the seconds it reads", () => {
+    // The runtime's `delay` is seconds like `duration`; milliseconds here would
+    // make a reveal wait a thousand times too long.
+    expect(delayedTiming(timing("normal").enter, 80)).toEqual({
+      duration: 0.2,
+      ease: "easeOut",
+      delay: 0.08,
+    });
+  });
+
+  it("drops the delay with the journey under the reduced preference", () => {
+    // The runtime waits a delay out *before* an instant assignment, so a kept
+    // delay holds a reduced surface at its first frame for the whole stagger —
+    // measured on `Reveal` (`behaviour/reveal.test.tsx`).
+    expect(delayedTiming(timing("normal", "reduced").enter, 80)).toEqual({
+      duration: 0,
+    });
+  });
+
+  it("adds nothing for a delay it cannot schedule, and keeps the timing", () => {
+    const enter = timing("fast").enter;
+    [-10, Number.NaN, Number.POSITIVE_INFINITY, 0].forEach((delay) => {
+      expect(delayedTiming(enter, delay)).toBe(enter);
+    });
   });
 });

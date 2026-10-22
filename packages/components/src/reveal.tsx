@@ -24,6 +24,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import {
+  delayedTiming,
   presenceMotion,
   useMotionPreference,
   useSurfacePresence,
@@ -94,8 +95,7 @@ export const Reveal = ({
   );
   const travel = Option.getOrElse(Option.fromNullishOr(distance), () => 8);
   const presence = useSurfacePresence(open ?? true, {
-    enter:
-      delay === 0 ? timing.enter : { ...timing.enter, delay: delay / 1000 },
+    enter: delayedTiming(timing.enter, delay),
     exit: timing.exit,
   });
 

@@ -24,13 +24,12 @@ import type { StaggerFrom } from "@gpuixui/motion/timeline";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useSurfaceTiming } from "./internal/presence.js";
+import { delayedTiming, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 import {
   offsetOf,
   splitUnits,
-  unitTransition,
   type SplitMode,
 } from "./splitting-text/logic.js";
 
@@ -122,7 +121,7 @@ export const SplittingText = ({
               motion={{
                 initial: { opacity: 0, top: rise },
                 animate: { opacity: 1, top: 0 },
-                transition: unitTransition(timing.enter, unit.delayMs),
+                transition: delayedTiming(timing.enter, unit.delayMs),
               }}
               style={{
                 position: "relative",

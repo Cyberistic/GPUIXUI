@@ -121,7 +121,7 @@ the stagger dropped, two explicit lines landing in two rows, and a character
 split keeping an emoji whole with a non-breaking word gap.
 
 `src/splitting-text/logic.test.ts` holds the rules without a renderer
-(11 tests): whitespace collapsing and blank lines, the unit keys, code points
-and the word gap, the stagger counted across lines and from the end and centre,
-the `stepMs` fallbacks, the delay in seconds and its removal under reduced
-motion, and the offset fallback.
+(8 tests): whitespace collapsing and blank lines, the unit keys, code points and
+the word gap, the stagger counted across lines and from the end and centre, the
+`stepMs` fallbacks, and the offset fallback. The delay's seconds and its removal
+under reduced motion are the seam's `delayedTiming` (`src/internal/presence.test.ts`).

@@ -9,7 +9,6 @@
  * it.
  */
 
-import type { MotionTransition } from "@gpuix/react";
 import { stagger, type StaggerFrom } from "@gpuixui/motion/timeline";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -107,18 +106,3 @@ export const splitUnits = (
     units,
   }));
 };
-
-/**
- * A unit's tween under the house timing.
- *
- * The delay is the stagger, in the seconds the runtime reads; a reduced run
- * drops it with the duration, because a zero-duration tween that still waits
- * would hold the resting frame back — the journey reduced motion removes.
- */
-export const unitTransition = (
-  timing: MotionTransition,
-  delayMs: number,
-): MotionTransition =>
-  timing.duration === 0
-    ? { duration: 0 }
-    : { ...timing, delay: Math.max(0, delayMs) / 1000 };

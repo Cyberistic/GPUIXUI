@@ -4,17 +4,14 @@
  * The bugs these guard: a character split that tears an emoji in half; a space
  * in character mode painted as `" "`, which the text layout trims so the words
  * collide; a delay that restarts per line, so the second line arrives before the
- * first; a `stepMs` of `NaN` scheduling a stagger no tween can use; and a
- * reduced run that still waits for the stagger it just removed.
+ * first; and a `stepMs` of `NaN` scheduling a stagger no tween can use. The
+ * delay's seconds and the reduced rule are `@gpuixui/motion`'s
+ * (`timing.test.ts`, "a staggered timing").
  */
 
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import {
-  offsetOf,
-  splitUnits,
-  unitTransition,
-} from "../splitting-text/logic.js";
+import { offsetOf, splitUnits } from "../splitting-text/logic.js";
 
 const texts = (source: string, mode: "words" | "characters" = "words") =>
   splitUnits(source, { mode }).map((line) => line.units.map((u) => u.text));
@@ -67,30 +64,6 @@ describe("splitUnits", () => {
 
   it("splits an empty string into no rows", () => {
     expect(splitUnits("")).toEqual([]);
-  });
-});
-
-describe("unitTransition", () => {
-  const timing = { duration: 0.2, ease: "easeOut" as const };
-
-  it("hands the stagger to the runtime in seconds, under the house curve", () => {
-    expect(unitTransition(timing, 80)).toEqual({
-      duration: 0.2,
-      ease: "easeOut",
-      delay: 0.08,
-    });
-  });
-
-  it("drops the delay with the duration under the reduced preference", () => {
-    expect(unitTransition({ duration: 0 }, 80)).toEqual({ duration: 0 });
-  });
-
-  it("never hands the runtime a negative delay", () => {
-    expect(unitTransition(timing, -10)).toEqual({
-      duration: 0.2,
-      ease: "easeOut",
-      delay: 0,
-    });
   });
 });
 

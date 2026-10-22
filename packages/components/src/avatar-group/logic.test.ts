@@ -4,9 +4,10 @@
  * The bugs these guard: a cap that hides the wrong end of the list or accepts a
  * nonsense value; an overlap wide enough to paint the row backwards; a row whose
  * width disagrees with where the discs actually sit, so the group reflows the
- * page as it animates; a stagger counted per disc instead of through the row, or
- * handed to the runtime in milliseconds; and a chip that paints a count no
- * reader can resolve to names.
+ * page as it animates; a stagger counted per disc instead of through the row;
+ * and a chip that paints a count no reader can resolve to names. The delay's
+ * seconds and the reduced rule are `@gpuixui/motion`'s (`timing.test.ts`, "a
+ * staggered timing").
  */
 
 import * as Option from "effect/Option";
@@ -20,7 +21,6 @@ import {
   avatarRowWidth,
   avatarStep,
   groupDelayMs,
-  groupEntering,
   groupName,
   overflowName,
   overflowText,
@@ -100,21 +100,10 @@ describe("the row's geometry", () => {
 });
 
 describe("the arrival", () => {
-  it("counts the stagger through the row, in the seconds the runtime reads", () => {
+  it("counts the stagger through the row, not per disc", () => {
     expect(groupDelayMs(0, 4, Option.none())).toBe(0);
     expect(groupDelayMs(2, 4, Option.none())).toBe(avatarGroupStepMs * 2);
-    const timing = { duration: 0.2, ease: "linear" } as const;
-    expect(groupEntering(timing, groupDelayMs(2, 4, Option.some(40)))).toEqual({
-      duration: 0.2,
-      ease: "linear",
-      delay: 0.08,
-    });
-  });
-
-  it("drops the delay with the duration under reduced motion", () => {
-    // A zero-duration tween that still waited would hold the resting frame back,
-    // which is the journey the preference removes.
-    expect(groupEntering({ duration: 0 }, 120)).toEqual({ duration: 0 });
+    expect(groupDelayMs(2, 4, Option.some(40))).toBe(80);
   });
 
   it("falls back for a step that cannot be scheduled", () => {
