@@ -30,8 +30,11 @@ import { mergeStyle, useStep } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface SpinnerProps {
-  /** Dot side in pixels. Defaults to the theme's icon size for `md`. */
-  readonly size?: number;
+  /**
+   * Dot side: a step on the theme's icon scale, or raw pixels for a mark that
+   * is not lining up with text. Defaults to the theme's `md` icon step.
+   */
+  readonly size?: keyof PrimitiveTheme["iconSize"] | number;
   /** Defaults to `primary`. */
   readonly accent?: SpinnerAccent;
   /** Accessible name. Defaults to "Loading". */
@@ -60,7 +63,7 @@ export const renderSpinner = (
   theme: PrimitiveTheme,
   step: number,
 ): ReactElement => {
-  const dot = size ?? theme.iconSize.md;
+  const dot = typeof size === "number" ? size : theme.iconSize[size ?? "md"];
   const group = mergeStyle(
     recipeTw.classesToStyle(cn(spinnerGroupClass, className), theme).style,
     style,

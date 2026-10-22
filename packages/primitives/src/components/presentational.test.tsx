@@ -568,6 +568,22 @@ describe("loading", () => {
     expect(expectSome(hostProp(element, "role"))).toBe("status");
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Saving");
   });
+
+  it("sizes a spinner's dots from the icon scale, or from pixels", () => {
+    // The bug guarded: `size` took a bare pixel count while every sibling
+    // `size` prop in the package took a named step, so the documented way to
+    // line a spinner up with the text beside it was to read `theme.iconSize.sm`
+    // and pass the number back — a scale the caller had to find first.
+    const dotSides = (size?: Parameters<typeof renderSpinner>[0]["size"]) =>
+      Arr.map(elementChildren(renderSpinner({ size }, testTheme, 0)), (dot) =>
+        expectSome(numberIn(dot, "width")),
+      );
+    expect(dotSides()).toStrictEqual(Arr.replicate(testTheme.iconSize.md, 3));
+    expect(dotSides("sm")).toStrictEqual(
+      Arr.replicate(testTheme.iconSize.sm, 3),
+    );
+    expect(dotSides(9)).toStrictEqual(Arr.replicate(9, 3));
+  });
 });
 
 describe("ButtonGroup's public surface", () => {

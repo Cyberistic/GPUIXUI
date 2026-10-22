@@ -445,7 +445,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "Cannot rotate: a discrete lit-dot step instead",
       "The trail is the accent at reduced opacity, not a separate quiet role",
-      "No smooth animation and no size scale",
+      "No smooth animation, and the three dots share one size",
       "No inline placement inside a text run",
       "reducedMotion holds the lit dot; the preference is the caller's",
     ],
