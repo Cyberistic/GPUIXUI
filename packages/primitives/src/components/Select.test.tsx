@@ -14,6 +14,12 @@ import { isValidElement, type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import {
+  contrastFloors,
+  contrastRatio,
+  darkTheme,
+  lightTheme,
+} from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { fieldVariant } from "../core/variants.js";
 import * as primitives from "../index.js";
@@ -170,6 +176,28 @@ describe("Select", () => {
     expect(selected.backgroundColor).toBe(testTheme.colors.selected);
     expect(highlighted.backgroundColor).toBe(testTheme.colors.hover);
     expect(paint(rest).backgroundColor).toBeUndefined();
+  });
+
+  it("keeps a selected row's label above the body floor on the selection wash", () => {
+    // The gap this holds at the consumer: the selected row paints
+    // `popoverForeground` on `selected`, and `contrastPairs` measures that role
+    // on `popover`, `hover` and `active` — not on the selection wash. So a
+    // recipe that moved the label to a role the wash erases would pass the
+    // tokens gate. The pair is measured here off the painted style, in both
+    // shipped palettes; adding it to `contrastPairs` is the tokens-side row in
+    // `TODO.md`.
+    Arr.forEach([lightTheme, darkTheme], (theme) => {
+      const painted = selectItemStyle(theme)({ ...rest, selected: true });
+      const ratio = expectSome(
+        Option.fromNullishOr(
+          contrastRatio(
+            expectSome(Option.fromNullishOr(painted.color)),
+            expectSome(Option.fromNullishOr(painted.backgroundColor)),
+          ),
+        ),
+      );
+      expect(ratio, theme.name).toBeGreaterThanOrEqual(contrastFloors.body);
+    });
   });
 
   it("keeps a disabled item from offering a pointer", () => {
