@@ -108,13 +108,13 @@ interface ListContextValue {
 const ListContext = createContext<ListContextValue | undefined>(undefined);
 
 /**
- * Whether the row around a text part is selected.
+ * What the text parts of a row need to know about it.
  *
- * The row paints its own on-colour, but a text part sets one from its recipe, so
- * the title has to know the selection to keep the role the row declares. It is a
- * boolean rather than the row's whole state because a title only reads this.
+ * The row paints its own fill, but a text part sets its colour from its recipe,
+ * so the title and the description have to know which fill they sit on (the
+ * `selected` wash or the strip) and whether the row is unavailable, to keep the
+ * role the token contract measured for that surface.
  */
-/** What a row's text parts need to know about the row they sit in. */
 interface RowState {
   readonly selected: boolean;
   readonly disabled: boolean;
