@@ -117,6 +117,20 @@ describe("the mount window", () => {
     expect(transitionWindowMs(timing("notice", "reduced").enter)).toBe(0);
     expect(transitionWindowMs({})).toBe(0);
   });
+
+  it("counts the wait before a delayed run", () => {
+    // The runtime holds a delayed run's first frame for the wait, so a window
+    // that counted only the duration would unmount a feedback layer before its
+    // journey began.
+    expect(transitionWindowMs(delayedTiming(timing("normal").enter, 80))).toBe(
+      motionLevels.normal + 80,
+    );
+    // A hand-built timing can carry a wait the scheduler would refuse; it is no
+    // window rather than a NaN one.
+    expect(transitionWindowMs({ duration: 0.2, delay: Number.NaN })).toBe(
+      motionLevels.normal,
+    );
+  });
 });
 
 describe("a staggered run", () => {

@@ -37,14 +37,20 @@ const scenarios = readFileSync(
 );
 
 /**
- * The `columnResizeSteps` effect, bounded by the declaration that follows it.
+ * The `columnResizeSteps` effect, bounded by the next declaration after it.
  *
  * It has no loop that adds a check, so its `ctx.expect*` call sites are the
- * checks the window runs — which is what the README prints.
+ * checks the window runs — which is what the README prints. The end is the
+ * next `const`, not the bodies map: a probe declared between the two would
+ * otherwise be counted as this one's checks.
  */
 const columnResizeSteps = (() => {
   const start = scenarios.indexOf("const columnResizeSteps");
-  const end = scenarios.indexOf("The bodies, one per registry id", start + 1);
+  const next = scenarios.indexOf("\nconst ", start + 1);
+  const end =
+    next === -1
+      ? scenarios.indexOf("The bodies, one per registry id", start + 1)
+      : next;
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 
