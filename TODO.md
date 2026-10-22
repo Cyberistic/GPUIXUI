@@ -3313,7 +3313,8 @@ green (43 files / 2 434 tests), `check-types` clean.
       alone, a broken scale falls back to the house 4px, and a gesture that moved
       consumes the click the platform delivers at its end so one gesture is one
       step. The gesture's lifetime is React-local (`useNumberScrub`), the pure
-      renderer carries only the handlers, and the pointer keeps reporting past
+      renderer carries only the handlers, the release returns focus to the input
+      so the next arrow works, and the pointer keeps reporting past
       the small column because the element listens to both `mouseDown` and
       `mouseMove` (`pointer-capture`). Proof: `core/number.test.ts`'s
       `scrubNumber` suite (7 cases) holds the arithmetic and both bounds;

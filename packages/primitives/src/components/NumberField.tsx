@@ -177,6 +177,8 @@ interface ScrubOptions {
   readonly range: NumberRange;
   readonly disabled: boolean;
   readonly onValue: (next: number) => void;
+  /** A gesture that moved the value is over: put the keyboard back on the input. */
+  readonly onEnd: () => void;
 }
 
 /**
@@ -194,6 +196,7 @@ const useNumberScrub = ({
   range,
   disabled,
   onValue,
+  onEnd,
 }: ScrubOptions): NumberFieldScrub => {
   const press = useRef<
     Option.Option<{ readonly y: number; readonly value: number }>
@@ -233,7 +236,9 @@ const useNumberScrub = ({
       );
     },
     onMouseUp: () => {
+      const moved = scrubbed.current;
       press.current = Option.none();
+      if (moved) onEnd();
     },
     consumedClick: () => {
       const moved = scrubbed.current;
@@ -614,7 +619,8 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     });
   // A scrub is a step gesture, so it commits the draft like a stepper click —
   // but it does not pull the focus to the input mid-drag, which would interrupt
-  // the pointer gesture the runtime is capturing.
+  // the pointer gesture the runtime is capturing. The release does, so the next
+  // arrow key works exactly as it does after a click.
   const scrub = useNumberScrub({
     current: clampNumeric(state.value.current, range),
     range,
@@ -623,6 +629,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       state.set(clampNumeric(next, range));
       setDraft((current) => commitNumberDraft(current));
     },
+    onEnd: focusInput,
   });
   return renderNumberField(
     props,

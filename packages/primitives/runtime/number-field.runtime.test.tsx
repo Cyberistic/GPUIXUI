@@ -222,6 +222,10 @@ it("scrubs the value by dragging vertically on the spin column", async () => {
   runtime.mouseMoveAt(x, y - 40, 0);
   runtime.mouseUpAt(x, y - 40);
   expect(lastValue(field.values)).toBe(60);
+  const focused = Option.getOrElse(runtime.focusedElement(), () =>
+    expect.fail("the scrub did not return focus to the input"),
+  );
+  expect(focused.id).toBe(inputOf(runtime, "nf").id);
   // A fresh press that does not travel is still exactly one step. (The platform
   // turns the press/release pair into the click the field steps on, which is
   // the gesture a reader makes.)
