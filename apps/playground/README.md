@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-41 probes a real window can prove, of which eleven mount shipped
+42 probes a real window can prove, of which eleven mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -45,8 +45,8 @@ combobox and the modal focus rule), five mount
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
-restore, a dock's keyboard order, an anchored menu in a scrolled header and the
-app-level key handler).
+restore, a dock's keyboard order, an anchored menu in a scrolled header, the
+window's own backdrop and the app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -2322,6 +2322,61 @@ item` (`expected "header-menu-item-status", got "header-menu-item-name"`).
 20 checks, `--only header-menu-lifecycle`, green on 0.11.0. Capture:
 `.artifacts/live/header-menu.png`.
 
+### `window-backdrop` — measured on 0.11.0 here
+
+The **window's own backdrop**. `WindowOptions.windowBackground` is declared as
+`"opaque" | "transparent" | "blurred"` and nothing on this host had opened a
+window with one, so the capability record still listed window vibrancy as
+`unverified` and a workspace plan could not tell a translucent window from an
+option the runtime ignores. A window reports neither its options nor its style,
+so the probe paints **one box** and leaves every other pixel to the window
+server: the capture carries that area's alpha, and the probe compares it with
+the mode the runner passed to `init`.
+
+**One window per process** — a second `init` fails with `A GPUI application
+already exists on this thread` (measured; the same fact behind "no detachable
+tab") — so each mode is its own run:
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/live/run.js --only window-backdrop                            # opaque (default)
+nub apps/playground/dist/live/run.js --only window-backdrop --window-background transparent
+nub apps/playground/dist/live/run.js --only window-backdrop --window-background blurred
+```
+
+Measured, one 900×520 window per run, captured at 1800×1040 (the display's 2×
+scale, read back rather than assumed):
+
+| Mode | The box the app paints | The surface the app leaves empty |
+| ---- | ---------------------- | -------------------------------- |
+| `opaque` | `rgba(217, 67, 43, 255)` | alpha **255** — the window fills it |
+| `transparent` | `rgba(217, 67, 43, 255)` | alpha **0** — the desktop shows through |
+| `blurred` | `rgba(217, 67, 43, 255)` | alpha **0**, byte-identical to `transparent` |
+
+Three facts a workspace can be built on:
+
+1. **The option is real.** The unpainted surface goes from alpha 255 to 0
+   between two runs of the same probe, so `windowBackground` is honoured, not
+   ignored. A vibrancy pane, a floating inspector or a HUD window can be a real
+   translucent window rather than an opaque rectangle painted with a dark tint.
+2. **`blurred` is translucent, and the blur is the window server's.** Both modes
+   produce the same app-side capture — the vibrancy is composited *behind* the
+   window, so no app-side frame can prove it. Use `"blurred"` for the effect and
+   confirm the look by eye on the target OS; do not claim it from a capture.
+3. **The app's own translucent paint composites against that surface.** A box
+   filled `#D9432B80` painted `rgba(109, 34, 22, 255)` in an opaque window — 50%
+   over black — so a translucent window plus a translucent app fill does not
+   produce the colour a theme literal names. Paint the content opaque and let
+   the *unpainted* area carry the translucency.
+
+Negative controls measured, both exit `1` and restored green: pointing
+`windowOptionsOf` at `"opaque"` while the probe still asserts the flag fails
+`transparent: the window's unpainted surface alpha: expected 0, got 255`, and
+painting the fixture box at 50% fails
+`opaque: the box the app paints carries its fill: expected "rgba(217, 67, 43,
+255)", got "rgba(109, 34, 22, 255)"`. 4 checks per run, capture
+`.artifacts/live/backdrop.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2397,6 +2452,8 @@ src/live/content.ts      the chart/image fixtures the content probe paints
 src/live/virtual-tree.ts the 4 000-node file-tree fixture and its flattening
 src/live/dock-focus.ts   the dock fixture and the Tab stop rule the probe measures
 src/live/header-menu.ts  the header widths and trigger-cell arithmetic the probe asserts
+src/live/backdrop.ts     the window-backdrop modes, fixture and capture arithmetic
+src/live/window-facts.tsx the window options the runner opened, read by a probe
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
 ```
@@ -2428,9 +2485,9 @@ narrower. Each deviation is deliberate and measured:
 ## What is proven here, honestly
 
 - The eleven core capabilities (including the token gallery, the modal contract,
-  floating placement and text selection), the Tier 3/4 probes
-  and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (41/41), with a written report and screenshots.
+  floating placement and text selection), the Tier 3/4 probes, the window's own
+  backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
+  (42/42), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

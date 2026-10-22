@@ -67,4 +67,27 @@ describe("live main", () => {
       expect(deps.loaded()).toBe(false);
     });
   });
+
+  it.effect(
+    "rejects a backdrop that is not a mode before loading a window",
+    () => {
+      const deps = probe(["--window-background", "glassy"]);
+      return Effect.gen(function* () {
+        const code = yield* main(deps);
+        expect(code).toBe(EXIT.unverified);
+        expect(deps.loaded()).toBe(false);
+      });
+    },
+  );
+
+  it.effect("accepts a declared backdrop mode", () => {
+    // `--list` answers before the preflight, so the flag is parsed without a
+    // binding: the guard is that it is a known argument, not that it opened one.
+    const deps = probe(["--list", "--window-background", "blurred"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.passed);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
 });

@@ -46,6 +46,8 @@ import { createLiveHost } from "./host.js";
 import { liveRegistry, type LiveProbeMeta } from "./registry.js";
 import { liveProbeBodies, type LiveProbeBody } from "./scenarios.js";
 import { withWindowKeyProvider, type WindowKeyHandler } from "../window-key.js";
+import { splitWindowBackground, type WindowBackground } from "./backdrop.js";
+import { withWindowFacts } from "./window-facts.js";
 
 /** One live probe: its metadata, its body and the view the window mounts. */
 export type LiveProbe = LiveProbeMeta & LiveProbeBody;
@@ -54,6 +56,19 @@ const TITLE = "GPUIXUI live smoke";
 const WINDOW = { width: 900, height: 520 } as const;
 /** Two frames plus the protocol round-trip, so a keyed view switch has painted. */
 const SETTLE = Duration.millis(60);
+
+/**
+ * The options the window is opened with.
+ *
+ * The backdrop the probe asserts comes from this one value, so the window and
+ * the fact the probe reads cannot drift: `--window-background transparent`
+ * either reaches `init` or the CLI rejects it as an unknown argument.
+ */
+const windowOptionsOf = (background: WindowBackground) => ({
+  title: TITLE,
+  ...WINDOW,
+  windowBackground: background,
+});
 
 /** A window that could not be opened or driven: this run has no evidence. */
 class NoWindowError extends Schema.TaggedError<NoWindowError>()(
@@ -114,6 +129,7 @@ const mount =
     registrar: FontRegistrar,
     selected: ReadonlyArray<LiveProbe>,
     registerWindowKey: (handler: Option.Option<WindowKeyHandler>) => void,
+    background: WindowBackground,
   ): ((scenario: { readonly id: string }) => Effect.Effect<void>) =>
   (scenario) =>
     Effect.gen(function* () {
@@ -139,12 +155,15 @@ const mount =
             createElement(
               ThemeProvider,
               { theme: palettes.dark },
-              withWindowKeyProvider(
-                registerWindowKey,
-                Option.match(view, {
-                  onNone: () => null,
-                  onSome: (render) => render(),
-                }),
+              withWindowFacts(
+                { background },
+                withWindowKeyProvider(
+                  registerWindowKey,
+                  Option.match(view, {
+                    onNone: () => null,
+                    onSome: (render) => render(),
+                  }),
+                ),
               ),
             ),
           ),
@@ -161,6 +180,7 @@ const mount =
 export const program = (
   flags: CliFlags,
   selected: ReadonlyArray<LiveProbe>,
+  background: WindowBackground,
 ): Effect.Effect<
   ExitCode,
   NoWindowError | PlatformError.PlatformError,
@@ -183,10 +203,11 @@ export const program = (
       catch: (cause) => new NoWindowError({ stage: "load", cause }),
     });
 
+    const windowOptions = windowOptionsOf(background);
     const renderer = yield* Effect.try({
       try: () => {
         const live = modules.gpuix.createRenderer();
-        live.init({ title: TITLE, ...WINDOW });
+        live.init(windowOptions);
         return live;
       },
       catch: (cause) => new NoWindowError({ stage: "open", cause }),
@@ -209,8 +230,7 @@ export const program = (
     const root = yield* Effect.sync(() =>
       modules.gpuix.render(createElement(Fragment), {
         renderer,
-        title: TITLE,
-        ...WINDOW,
+        ...windowOptions,
         onKeyDown: (event) =>
           Option.match(windowKey.current, {
             onNone: () => {},
@@ -249,7 +269,7 @@ export const program = (
       host,
       selected,
       { host: hostLabel(), startedAt },
-      mount(root, renderer, selected, registerWindowKey),
+      mount(root, renderer, selected, registerWindowKey, background),
     );
 
     yield* fileSystem.writeFileString(
@@ -277,10 +297,23 @@ export interface MainDeps {
   readonly load: () => Promise<unknown>;
 }
 
+/** The live CLI's usage: the shared flags plus the one only a window can take. */
+const liveUsage: string = Arr.join(
+  [
+    usage,
+    "  --window-background <opaque|transparent|blurred>  the window's backdrop (live only)",
+  ],
+  "\n",
+);
+
 /** Validates the arguments, then wires the preflight and the window. */
 export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
   Effect.gen(function* () {
-    const parsed = parseArgs(deps.argv);
+    // The backdrop flag is this CLI's alone: the headless suite has no window,
+    // so it is split off before the shared parser sees the arguments.
+    const windowArgs = splitWindowBackground(deps.argv);
+    const parsed = parseArgs(windowArgs.rest);
+    const unknownArgs = Arr.appendAll(parsed.unknown, windowArgs.unknown);
 
     if (parsed.flags.list) {
       yield* Console.log(
@@ -292,15 +325,15 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
       return EXIT.passed;
     }
 
-    if (Arr.isReadonlyArrayNonEmpty(parsed.unknown)) {
+    if (Arr.isReadonlyArrayNonEmpty(unknownArgs)) {
       yield* Console.error(
         Arr.join(
           [
             ...Arr.map(
-              parsed.unknown,
+              unknownArgs,
               (token) => `live smoke: unknown argument: ${token}`,
             ),
-            usage,
+            liveUsage,
           ],
           "\n",
         ),
@@ -342,7 +375,7 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
       return EXIT.unverified;
     }
 
-    return yield* program(parsed.flags, selected).pipe(
+    return yield* program(parsed.flags, selected, windowArgs.background).pipe(
       Effect.catchTag("NoWindowError", (error) =>
         Console.error(unavailable(error)).pipe(Effect.as(EXIT.unverified)),
       ),

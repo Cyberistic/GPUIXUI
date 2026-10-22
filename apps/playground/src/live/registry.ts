@@ -282,6 +282,12 @@ export const liveRegistry = [
       "Table: a column menu anchored inside a scrolled header opens under its trigger, follows the wheel, dismisses with Escape and hides a column",
     capability: "table",
   },
+  {
+    id: "window-backdrop",
+    title:
+      "Window: a windowBackground paints the surface the app leaves empty — opaque fills it, transparent and blurred leave it to the desktop",
+    capability: "layout",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -107,6 +107,7 @@ import { palettes } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
 import { Pressable, Readout } from "../ui.js";
 import { useWindowKey } from "../window-key.js";
+import { useWindowFacts } from "./window-facts.js";
 import type { LiveProbeId } from "./registry.js";
 import {
   BUFFER_COLOUR,
@@ -133,6 +134,18 @@ import {
   SQUARE_WORD,
   SQUARE_WORD_WIDTH,
 } from "./fonts.js";
+import {
+  BACKDROP_BOX,
+  BACKDROP_FILL,
+  BACKDROP_FILL_RGBA,
+  backdropPoint,
+  captureScale,
+  contentPoint,
+  decodeWindowBackground,
+  describeColour,
+  framePoint,
+  surfaceAlpha,
+} from "./backdrop.js";
 import { moveRow, rowAt, type RowHandle } from "./reorder.js";
 import {
   EDGE_HEIGHT,
@@ -10477,6 +10490,88 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("header-menu");
   });
 
+/**
+ * One painted box in a window that is otherwise left to the window server.
+ *
+ * The paint is deliberately sparse: every pixel the app does not cover is the
+ * backdrop under test, so the probe's own chrome would become the measurement.
+ * The root carries no background for the same reason, and the children are
+ * absolute because an absolute element resolves against its direct parent.
+ */
+const BackdropProbe = (): ReactNode => {
+  const { background } = useWindowFacts();
+  const window = useWindowSize();
+  return (
+    <div
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+      }}
+    >
+      <div
+        testId="backdrop-box"
+        style={{
+          position: "absolute",
+          left: BACKDROP_BOX.x,
+          top: BACKDROP_BOX.y,
+          width: BACKDROP_BOX.width,
+          height: BACKDROP_BOX.height,
+          backgroundColor: BACKDROP_FILL,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          left: BACKDROP_BOX.x,
+          top: BACKDROP_BOX.y + BACKDROP_BOX.height + 40,
+        }}
+      >
+        <Readout testId="backdrop-mode">{background}</Readout>
+      </div>
+    </div>
+  );
+};
+
+const backdropSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("backdrop-box");
+    const mode = yield* ctx.expectSome(
+      "the window names the backdrop it opened with",
+      decodeWindowBackground(yield* ctx.host.text("backdrop-mode")),
+    );
+    yield* ctx.host.capture("backdrop");
+
+    // A window is captured at its display's scale, so the fixture's logical
+    // points are converted rather than assumed: a hardcoded 2 would read the
+    // wrong pixel on a 1x display.
+    const frame = yield* ctx.host.pixels("backdrop");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, size),
+    );
+    const at = (point: { readonly x: number; readonly y: number }) =>
+      Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y));
+
+    yield* ctx.expectEqual(
+      `${mode}: the box the app paints carries its fill`,
+      Option.match(at(framePoint(contentPoint, scale)), {
+        onNone: () => "outside the capture",
+        onSome: describeColour,
+      }),
+      describeColour(BACKDROP_FILL_RGBA),
+    );
+    yield* ctx.expectEqual(
+      `${mode}: the window's unpainted surface alpha`,
+      Option.match(at(framePoint(backdropPoint(size), scale)), {
+        onNone: () => "outside the capture",
+        onSome: (colour) => colour.a,
+      }),
+      surfaceAlpha(mode),
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -10684,5 +10779,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "header-menu-lifecycle",
     view: () => <HeaderMenuProbe />,
     steps: headerMenuSteps,
+  },
+  "window-backdrop": {
+    id: "window-backdrop",
+    view: () => <BackdropProbe />,
+    steps: backdropSteps,
   },
 };
