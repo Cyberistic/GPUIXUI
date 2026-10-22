@@ -35,6 +35,16 @@
  * ramp step deeper (the 200 step with the 900 text), the dark ones one step
  * lighter (800 with the 100 text), and Luna — whose beige page is at the same
  * lightness a pale tint has — carries a lighter tint of its own.
+ *
+ * The elevation tint joined last, and it is the one surface the page said was
+ * deliberately outside this contract: a shadow is a blurred geometry, so a flat
+ * composite overstates what the eye receives. It overstates in the safe
+ * direction — the deepest level is a ceiling, and only a shadow that cannot be
+ * seen at all is reported — and the gap was real: the high-contrast dark theme
+ * tints its shadows with black on a pure-black page, so **every** level measured
+ * 1.00:1 there and no raised surface in that variant had a shadow. Its tint is
+ * the grey its raised controls use now, and the scale reads 1.09–1.37:1 across
+ * the four strips.
  */
 
 import { describe, expect, it } from "vitest";
@@ -48,13 +58,15 @@ import {
   decorativeSurfacesAreVisible,
   edgeLessBrand,
   flatActionBrand,
+  flatShadowBrand,
   report,
 } from "./decorative.example.js";
 import { statusEdgeAlpha, statusTone, statusTones } from "./styles.js";
 import { platformNames } from "./platforms.js";
-import { retroTheme } from "./retro.js";
+import { retroNames, retroTheme } from "./retro.js";
 import {
   darkTheme,
+  extendTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
@@ -268,6 +280,126 @@ describe("decorative surfaces", () => {
     ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
 
+  it("measures the deepest elevation level on every strip a raised surface floats over", () => {
+    // A dialog lands on the page, a popover on a card or the page, a menu in a
+    // toolbar; the shadow is the only thing separating a raised surface from the
+    // strip in a dark theme, so all four are measured.
+    const missing = ["background", "card", "popover", "muted"].filter(
+      (over) => !measured("elevation", "shadow", over),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reads the level's painted colour, not the role it is tinted from", () => {
+    // A level supplied to `extendTheme` replaces the array whole, colours and
+    // all. The theme's `shadow` role stays paintable and every other surface
+    // passes, so only a contract that reads the level can see the flat dialog.
+    const flat = extendTheme(lightTheme, {
+      elevation: {
+        lg: [
+          {
+            offsetX: 0,
+            offsetY: 16,
+            blurRadius: 40,
+            spreadRadius: -8,
+            color: "#00000000",
+          },
+        ],
+      },
+    });
+
+    expect(
+      decorativeFailures(flat)
+        .filter(({ surface }) => surface === "elevation")
+        .map(({ over, ratio }) => [over, ratio]),
+    ).toEqual([
+      ["background", 1],
+      ["card", 1],
+      ["popover", 1],
+      ["muted", 1],
+    ]);
+    expect(decorativeFailures(lightTheme)).toEqual([]);
+  });
+
+  it("reports the high-contrast dark page no level could lift", () => {
+    // The shipped defect: the high-contrast dark theme tinted its shadows with
+    // black on a pure-black page, so every level measured 1.00:1 there and no
+    // raised surface had a shadow on the page. Its card, popover and toolbar are
+    // lifted greys, so only the page was erased — which is the strip a dialog
+    // and a full-width card land on. The tint is the grey its raised controls
+    // use now, and the deepest level clears the floor on all four strips.
+    const before = extendTheme(highContrastDarkTheme, {
+      colors: { shadow: "#000000B3" },
+    });
+
+    expect(
+      decorativeFailures(before).filter(
+        ({ surface }) => surface === "elevation",
+      ),
+    ).toEqual([
+      {
+        surface: "elevation",
+        role: "shadow",
+        over: "background",
+        ratio: 1,
+        floor: decorativeFloor,
+      },
+    ]);
+    expect(
+      decorativeFailures(highContrastDarkTheme).some(
+        ({ surface }) => surface === "elevation",
+      ),
+    ).toBe(false);
+  });
+
+  it("reports a shadow painted in the page it falls on", () => {
+    // The same defect from a brand: a tint equal to the strip cannot darken it,
+    // so every level is flat there no matter how strong its share is. The card,
+    // popover and toolbar are reported too — the page-coloured tint lifts them
+    // by less than a percent.
+    const broken = extendTheme(lightTheme, {
+      colors: { shadow: lightTheme.colors.background },
+    });
+
+    expect(
+      decorativeFailures(broken)
+        .filter(({ surface }) => surface === "elevation")
+        .map(({ over, ratio }) => [over, ratio]),
+    ).toMatchObject([
+      ["background", 1],
+      ["card", expect.any(Number)],
+      ["popover", expect.any(Number)],
+      ["muted", expect.any(Number)],
+    ]);
+    expect(
+      decorativeFailures(broken)
+        .filter(({ surface }) => surface === "elevation")
+        .every(({ ratio, floor }) => ratio !== undefined && ratio < floor),
+    ).toBe(true);
+  });
+
+  it("reports an elevation level the theme does not carry as unmeasurable", () => {
+    // A theme restored from storage can predate a level; the report names the
+    // absence instead of skipping the surface it cannot read.
+    const reported = decorativeFailures({
+      colors: lightColors,
+      elevation: {},
+    }).filter(({ surface }) => surface === "elevation");
+
+    expect(reported).toHaveLength(4);
+    expect(reported.every(({ ratio }) => ratio === undefined)).toBe(true);
+  });
+
+  it("passes every authored look", () => {
+    retroNames.forEach((look) => {
+      [lightTheme, darkTheme].forEach((base) => {
+        const theme = retroTheme(base, look);
+        expect(decorativeFailures(theme), theme.name).toEqual([]);
+      });
+    });
+  });
+
   it("passes every shipped theme", () => {
     shippedThemes.forEach((theme) => {
       expect(decorativeFailures(theme), theme.name).toEqual([]);
@@ -366,6 +498,13 @@ describe("the documented example", () => {
     expect(decorativeSurfacesAreVisible(flatActionBrand)).toBe(false);
     expect(report(flatActionBrand)).toContain(
       "filledAction: secondary on muted is 1.00",
+    );
+  });
+
+  it("reports the brand whose shadows are its page", () => {
+    expect(decorativeSurfacesAreVisible(flatShadowBrand)).toBe(false);
+    expect(report(flatShadowBrand)).toContain(
+      "elevation: shadow on background is 1.00",
     );
   });
 });

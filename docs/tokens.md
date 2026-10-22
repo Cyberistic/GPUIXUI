@@ -517,7 +517,7 @@ getTheme("light"); // the default light theme, unchanged
 | `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
 | `skeleton` | `#D6D6D6` | `#3D3D3D` | loading placeholder |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb |
-| `shadow` | `#00000040` | `#000000B3` | elevation tint |
+| `shadow` | `#00000040` | `#2E2E2EB3` | elevation tint |
 
 ## Typography
 
@@ -794,7 +794,7 @@ audit.invalidRoles; // roles the renderer cannot paint
 audit.invalidShadows; // elevation shadow colours the renderer cannot paint
 audit.invalidNumbers; // sizes, lengths and shadows the renderer cannot lay out
 audit.contrast; // text, icon and boundary pairs below their floor
-audit.decorative; // dividers, skeleton fills, veils and status edges too subtle to see
+audit.decorative; // dividers, skeleton fills, veils, status edges, washes, control faces and shadows too subtle to see
 audit.series; // data-series colours lost on their plot, against each other, or for a colour-blind reader
 audit.selection; // a selection wash the reader cannot see, or that hides its text
 audit.indicators; // a progress fill, spinner dot or presence mark lost on its strip
@@ -1364,12 +1364,13 @@ keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
 
 ### Decorative surfaces
 
-Eight surfaces carry no text and are not an essential boundary, so WCAG's floors
+Nine surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
 (`overlay`), a status message's soft tint and its edge, a scrollbar thumb, the
-wash a row is tinted with while it is hovered, pressed, selected or accented, and
-the resting fill of a tonal action (`secondary`). They still have one job — be
-seen — so they get one floor of their own, `decorativeFloor = 1.05:1`. Below it a
+wash a row is tinted with while it is hovered, pressed, selected or accented, the
+resting fill of a tonal action (`secondary`), and the shadow a raised surface
+drops. They still have one job — be seen — so they get one floor of their own,
+`decorativeFloor = 1.05:1`. Below it a
 surface reads as the fill it is painted on: a card without an edge, a skeleton
 that looks like an empty row, a dialog with no layer behind it, a message with no
 surface or no boundary, a scroller whose thumb nobody can find, a menu row that
@@ -1448,12 +1449,22 @@ scrim, and a high-contrast theme separates its dialog with a border instead. A
 surface that cannot be measured at all — a translucent page — is reported with
 `ratio: undefined`, exactly as a text pair is.
 
-The elevation tint is **not** in the table. A shadow is a blurred geometry, not a
-fill: its visible contribution depends on its offset and blur, so a flat
-composite would overstate it. Its contract is the one-shadow-per-level rule with
-the tint owned by the `shadow` role, in
-[`src/elevation.ts`](../packages/tokens/src/elevation.ts) and guarded by
-`elevation.test.ts`.
+The **elevation tint** is in the table too, and it is the surface this page used
+to say was deliberately outside it. A shadow is a blurred geometry, so a flat
+composite overstates what the eye receives — but it overstates in the safe
+direction: the table measures the scale's **deepest** level (`lg`), the strongest
+separation any raised surface can paint, so a shadow that passes may still read
+faint at its blurred edge and only a shadow a reader cannot see at all is
+reported. The measured colour is the level's own, because a level carries its
+share in its alpha byte and a brand can supply a level whole; the strips are the
+four a raised surface floats over (`background`, `card`, `popover`, `muted`).
+
+That gap was real. The high-contrast dark theme tinted its shadows with black on
+a **pure-black** page, so every level measured 1.00:1 there and a dialog or a
+full-width card had no shadow at all. Its tint is the grey its raised controls
+use (`#2E2E2EB3` now), and the deepest level clears the floor on all four strips
+at 1.21–1.37:1. The one-shadow-per-level rule and the role-owned tint remain
+`elevation.test.ts`'s.
 
 ```ts
 import { decorativeFailures } from "@gpuixui/tokens";
@@ -1515,12 +1526,13 @@ The contracts cover the whole role list, and that is itself guarded. `colorRoles
 is the inventory of what a theme carries, and `coverage.test.ts` fails when a
 role appears in none of them — no pair, no decorative placement, no dedicated
 contract. It found two that had shipped unmeasured: `disabledForeground` (now on
-the disabled floor) and `scrollbar` (now a decorative surface). Two roles are
-measured by a contract of their own rather than a pair, and the guard names them:
+the disabled floor) and `scrollbar` (now a decorative surface). One role is
+measured by a contract of its own rather than a pair, and the guard names it:
 `selection` by `selectionFailures`, because a translucent wash is measured by what
-it does to the text inside it, and `shadow` by `elevation.test.ts`, because a
-blurred geometry is not a fill. An exemption that stops being needed fails the
-same guard, so the list cannot quietly grow.
+it does to the text inside it. `shadow` used to be the second, exempted on the
+argument that a blurred geometry is not a fill; it is a decorative placement now
+(§Decorative surfaces), so the exemption went with it. An exemption that stops
+being needed fails the same guard, so the list cannot quietly grow.
 
 ## Fonts
 
@@ -1648,9 +1660,9 @@ cannot render half of itself.
 
 | Level | Light | Dark | High-contrast light | High-contrast dark | Use |
 | ----- | ----- | ---- | ------------------- | ------------------ | --- |
-| `sm` | `0 1 2 0 #191D2514` | `0 1 2 0 #00000066` | `0 1 2 0 #00000014` | `0 1 2 0 #00000066` | resting cards |
-| `md` | `0 4 12 -2 #191D251F` | `0 8 24 -4 #000000A6` | `0 4 12 -2 #0000001F` | `0 8 24 -4 #000000A6` | menus and popovers |
-| `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | `0 16 40 -8 #00000029` | `0 24 56 -12 #000000CC` | dialogs and command palettes |
+| `sm` | `0 1 2 0 #191D2514` | `0 1 2 0 #00000066` | `0 1 2 0 #00000014` | `0 1 2 0 #2E2E2E66` | resting cards |
+| `md` | `0 4 12 -2 #191D251F` | `0 8 24 -4 #000000A6` | `0 4 12 -2 #0000001F` | `0 8 24 -4 #2E2E2EA6` | menus and popovers |
+| `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | `0 16 40 -8 #00000029` | `0 24 56 -12 #2E2E2ECC` | dialogs and command palettes |
 | `overlay` | `[]` | `[]` | `[]` | `[]` | reserved; overlay layering uses the scrim colour |
 
 A level is a list because the runtime accepts a shadow list; the scale is
@@ -1716,6 +1728,12 @@ resolved theme reads the tables directly. `elevation.test.ts` holds each level t
 the role's hue and its strength, holds every shipped theme to its own role, and
 proves a brand's retint reaches every inherited level while an explicit one
 survives.
+
+A level also has to be **visible**: the deepest one must differ from each strip a
+raised surface falls on, which `decorativeFailures` measures (§Decorative
+surfaces). A tint equal to the page cannot darken it, however strong the level's
+share — the high-contrast dark theme's black-on-black shadows did exactly that —
+so a brand that retints `shadow` is held to the same floor as the shipped themes.
 
 ## Layering
 
@@ -2235,11 +2253,11 @@ the documented brand theme, so a documented brand that loses its on-colour fails
 the suite.
 
 `packages/tokens/src/decorative.test.ts` covers the surfaces that carry no text:
-every divider, skeleton, veil, status-edge, scrollbar, state-wash and
-filled-action placement is measured, the edge is held to the share `statusTone`
-paints, the veil is composited rather than skipped, a surface that matches its
-page or cannot be measured is reported, and every shipped and every platform
-theme clears the 1.05:1 floor. It found two platform styles whose inherited
+every divider, skeleton, veil, status-edge, scrollbar, state-wash, filled-action
+and elevation placement is measured, the edge is held to the share `statusTone`
+paints, the veil and the shadow are composited rather than skipped, a surface
+that matches its page or cannot be measured is reported, and every shipped,
+platform and authored theme clears the 1.05:1 floor. It found two platform styles whose inherited
 skeleton matched their own surfaces — macOS light on `muted` at 1.045:1, Linux
 dark on `card` at 1.004:1 — which now carry a `skeleton` of their own. The
 state-wash half found five aliases: the base dark theme's `hover` was its

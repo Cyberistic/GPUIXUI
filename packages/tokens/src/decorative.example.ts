@@ -25,6 +25,15 @@ export const flatActionBrand = extendTheme(lightTheme, {
   colors: { secondary: lightTheme.colors.muted },
 });
 
+/**
+ * A brand whose shadows are its own page colour. A tint equal to the surface it
+ * falls on cannot darken it, so a raised card, menu or dialog paints flat at
+ * every level however strong the level's share is.
+ */
+export const flatShadowBrand = extendTheme(lightTheme, {
+  colors: { shadow: lightTheme.colors.background },
+});
+
 /** A failure written the way a theme editor shows it. */
 export const report = (theme: Theme): ReadonlyArray<string> =>
   decorativeFailures(theme).map(

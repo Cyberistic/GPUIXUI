@@ -18,15 +18,14 @@ import { decorativeSurfaces } from "./decorative.js";
 import { selectionPairs } from "./selection.js";
 
 /**
- * The roles a dedicated contract measures instead of a pair or a surface.
+ * The role a dedicated contract measures instead of a pair or a surface.
  *
- * Both are values whose effect is not a flat colour on a surface, so the pair
- * tables would overstate what a reader sees; each names the contract that does
- * measure it.
+ * A selection wash's effect is not a flat colour on a surface — it is composited
+ * behind the text the reader is reading — so the pair tables would overstate
+ * what a reader sees, and `selectionFailures` measures both of its jobs.
  */
 const measuredElsewhere = {
   selection: "selectionFailures",
-  shadow: "elevationWithTint",
 } as const satisfies Partial<Record<keyof ThemeColors, string>>;
 
 /** Every role the pair and surface tables mention, on either side. */

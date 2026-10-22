@@ -98,7 +98,7 @@ Dark mode is designed, not inverted:
 | floating surface | `#FFFFFF` | `#222730` |
 | primary | dark iris `#5F4BDB`, white text | light iris `#A7A9FF`, near-black text |
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
-| shadow | graphite at low alpha | black at high alpha |
+| shadow | graphite at low alpha | black at high alpha (grey in the high-contrast dark theme, whose black page no black shadow can darken) |
 
 Both themes expose exactly the same 47 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
@@ -291,11 +291,17 @@ Overlay layering is paint order, not a shadow or a weight: the runtime has no
 `overlay` scrim role is what recedes the content behind a modal. §Layering in
 `docs/tokens.md` is the model — the five mount layers, the topmost-layer
 dismissal stack, and why `elevation.overlay` stays a reserved, empty level. Dark
-shadows are stronger because contrast between surfaces is lower. A shadow is not
-measured by the contrast contract: it is a blurred geometry whose visible
-contribution depends on its offset and blur, so a flat composite would overstate
-it. It is held instead to one shadow per level, tinted by the `shadow` role (see
-§9 for the surfaces that *are* measured).
+shadows are stronger because contrast between surfaces is lower — but stronger is
+not the same as visible. The deepest level is held to the perceptibility floor
+against the four strips a raised surface falls on, the same `decorativeFailures`
+call a divider and a wash answer to (§9). A shadow is a blurred geometry, so the
+composite is a ceiling rather than what the eye receives: a shadow that passes may
+still read faint at its edge, and the contract reports only one that cannot be
+seen at all. It found exactly that — the high-contrast dark theme tinted its
+shadows with black on a pure-black page, so every level was 1.00:1 there and a
+dialog or a full-width card had no shadow; that theme's tint is now the grey its
+raised controls use, and the deepest level reads 1.21–1.37:1 across the page,
+card, popover and toolbar.
 
 ## 8. Interaction states
 
@@ -486,7 +492,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
 | soft status surface against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
-| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash | 1.05:1 | 1.05:1 |
+| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 | text inside the selection wash (input, page, card, popover) | 7:1 | 7:1 |
@@ -503,8 +509,8 @@ can fail: a palette edit that reduces contrast fails the gate.
 The surfaces that carry no text are measured too, because "subtle" is not
 "invisible": a divider, a skeleton fill, the modal veil, a status message's soft
 tint and its edge, the scrollbar thumb, the wash a row is hovered, pressed,
-selected or accented with, and the resting fill of a tonal action are held to
-1.05:1 against what they are painted on. The veil is composited over its surface rather than rejected as
+selected or accented with, the resting fill of a tonal action and the shadow of a
+raised surface are held to 1.05:1 against what they are painted on. The veil is composited over its surface rather than rejected as
 translucent, and the two places it is measured are the content surfaces a modal
 covers; a black page cannot be darkened, and a high-contrast theme separates its
 dialog with a border instead. The status edge is measured at the share
@@ -535,9 +541,12 @@ while its fill moves to the wash, and both base themes, high-contrast dark and
 Linux light were under the floor there — the four values moved to `#727D8C`,
 `#788494`, `#A7A7A7` and `#7E7C79`.
 
-Also not measured, deliberately: the elevation tint. A shadow is a blurred
-geometry, so a flat ratio overstates what the eye receives; its contract is the
-one-shadow rule and the role-owned tint, guarded by `elevation.test.ts`.
+The elevation tint is measured on the same floor, as a **ceiling**: the deepest
+level is composited over the four strips a raised surface can fall on, so a
+shadow that passes may still read faint at its blurred edge and one a reader
+cannot see is reported. That is how the high-contrast dark page's black-on-black
+scale was found; the one-shadow rule and the role-owned tint stay
+`elevation.test.ts`'s.
 
 One pair class is measured by a helper rather than by the table, because it is
 **derived** rather than stored: a link's colour. `primary` is a fill, so
@@ -549,9 +558,9 @@ Nothing else escapes: `coverage.test.ts` holds every role in `colorRoles` to at
 least one measurement, so a role cannot ship unmeasured — it found
 `disabledForeground` (now on the disabled floor) and `scrollbar` (now measured as
 a decorative surface, because a thumb nobody can find is a scroller nobody can
-find). The only two roles with no pair are `selection`, measured by
-`selectionFailures` on the text inside the wash (body and secondary text), and
-`shadow`, measured by the elevation tint above; the guard names each contract.
+find). The only role with no pair is `selection`, measured by `selectionFailures`
+on the text inside the wash (body and secondary text); `shadow` is a decorative
+placement now, and its exemption went with the placement.
 
 A value the renderer cannot paint is the other silent failure: GPUix ignores a
 colour string it cannot parse, so a typo keeps the property's previous value or

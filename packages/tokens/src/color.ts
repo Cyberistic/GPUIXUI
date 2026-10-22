@@ -413,7 +413,11 @@ export const highContrastDarkColors = {
   disabledForeground: "#8A8A8A",
   skeleton: "#3D3D3D",
   scrollbar: "#8A8A8A",
-  shadow: "#000000B3",
+  // A black tint cannot darken a pure-black page, so this variant's shadow is
+  // the grey its raised controls use: at the scale's own shares it reads
+  // 1.09–1.37:1 across the page, card, popover and muted strips, where the
+  // black it shipped was 1.00:1 on the page at every level.
+  shadow: "#2E2E2EB3",
 } satisfies ThemeColors;
 
 /**

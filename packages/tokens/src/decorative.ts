@@ -2,7 +2,8 @@
  * The perceptibility contract for the surfaces that carry no text: dividers,
  * skeleton fills, the modal veil, a status message's soft surface and its edge,
  * the scrollbar thumb, the wash a control tints its surface with while it is
- * hovered, pressed, selected or accented, and the fill a tonal action rests on.
+ * hovered, pressed, selected or accented, the fill a tonal action rests on, and
+ * the shadow a raised surface drops.
  *
  * WCAG's text and non-text floors do not cover them — they are decorative, and
  * the veil's job is to suppress what is behind it — so they have no floor at all
@@ -13,11 +14,13 @@
  * is a status message with no surface; an edge that matches its tint is a
  * message with no boundary; a hover that matches the row it tints is a menu with
  * no feedback; a tonal action painted in its toolbar's own colour is a label a
- * reader cannot tell is a button. One floor covers all eight, 1.05:1.
+ * reader cannot tell is a button; a shadow that cannot darken the page it falls
+ * on leaves every raised surface flat. One floor covers all nine, 1.05:1.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
+import type { Elevation, ElevationLevel } from "./elevation.js";
 import { statusEdgeAlpha, statusTones } from "./styles.js";
 
 /**
@@ -36,7 +39,7 @@ export interface DecorativeSurface {
    * fill behind a status message, `statusEdge` bounds it, `scrollbar` is the
    * thumb a scroller paints, `stateWash` is the tint behind a hovered, pressed,
    * selected or accented row, `filledAction` is the resting fill of a tonal
-   * action.
+   * action, `elevation` is the shadow a raised surface drops.
    */
   readonly surface:
     | "divider"
@@ -46,7 +49,8 @@ export interface DecorativeSurface {
     | "statusEdge"
     | "scrollbar"
     | "stateWash"
-    | "filledAction";
+    | "filledAction"
+    | "elevation";
   /** The role painted. Its alpha, if it has one, is part of the measurement. */
   readonly role: keyof ThemeColors;
   /** The role it is painted over, and must be distinguishable from. */
@@ -57,6 +61,12 @@ export interface DecorativeSurface {
    * derived surface — a status edge — states the share its component paints.
    */
   readonly alpha?: number;
+  /**
+   * Read the painted colour from this elevation level instead of from `role`:
+   * a level is a geometry plus a share of the `shadow` role, so its painted
+   * colour is the level's own, not the role's untinted value.
+   */
+  readonly level?: ElevationLevel;
 }
 
 /**
@@ -121,13 +131,32 @@ const filledActionRole = "secondary" as const;
 const filledActionStrips = ["background", "card", "popover", "muted"] as const;
 
 /**
+ * The shadow a raised surface drops, on every strip it can float over.
+ *
+ * A level's strength lives in its own alpha byte, so the painted colour is the
+ * level's and a placement names the level it measures. `lg` is the deepest step
+ * the scale ships, and the claim is deliberately the weakest one a blurred
+ * geometry supports: if even the strongest level cannot differ from the strip,
+ * the whole scale is flat there, and a lighter step being subtler than `lg` is
+ * the design rather than a defect. The measured result is a ceiling (a blurred
+ * edge casts less than its full alpha), so this reports only a shadow that
+ * cannot be seen at all — which is exactly the case that shipped: the
+ * high-contrast dark theme's black tint on its pure-black page measured 1.00:1
+ * at every level, so no raised surface in that variant had a shadow.
+ */
+const elevationRole = "shadow" as const;
+const elevationLevel = "lg" as const;
+const elevationStrips = ["background", "card", "popover", "muted"] as const;
+
+/**
  * The decorative surfaces the library paints. Each is measured where it is
  * actually used rather than against a single generic surface: a divider sits on
  * the page, inside a card, in a popover and in a muted toolbar strip; a
  * skeleton stands in for a row on a page, in a card and in a muted list; a soft
  * status surface is the tint a message sits in and its edge bounds it, on every
  * strip a message is placed on; a tonal action sits on any of the four strips,
- * because a toolbar, a card and a popover all hold buttons.
+ * because a toolbar, a card and a popover all hold buttons; a raised surface
+ * floats over the same four, and its shadow is what tells it apart from them.
  */
 export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "divider", role: "border", over: "background" },
@@ -154,6 +183,14 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
       surface: "filledAction",
       role: filledActionRole,
       over,
+    }),
+  ),
+  ...elevationStrips.map(
+    (over): DecorativeSurface => ({
+      surface: "elevation",
+      role: elevationRole,
+      over,
+      level: elevationLevel,
     }),
   ),
   ...stateWashRoles.flatMap((role) =>
@@ -207,24 +244,31 @@ export interface DecorativeFailure {
  * translucent veil is measured by the result a reader sees rather than rejected
  * as translucent, and a derived surface states the share it paints. `blend`
  * clamps the amount, so a theme cannot pass by carrying an alpha byte the
- * runtime would ignore. A surface whose role or strip the theme does not carry
- * is reported unmeasurable — `invalidColorRoles` names the absence, and this
- * report does not pretend a surface it could not composite is visible.
+ * runtime would ignore. A surface whose role, strip or elevation level the theme
+ * does not carry is reported unmeasurable — `invalidColorRoles` names the
+ * absence, and this report does not pretend a surface it could not composite is
+ * visible.
  *
  * @example
  * ```ts
  * import { decorativeFailures, type Theme } from "@gpuixui/tokens";
  *
- * decorativeFailures(brandTheme).length === 0; // every divider, skeleton and veil is visible
+ * decorativeFailures(brandTheme).length === 0; // every divider, skeleton, veil and shadow is visible
  * ```
  */
 export function decorativeFailures(
-  theme: { readonly colors: Partial<ThemeColors> },
+  theme: {
+    readonly colors: Partial<ThemeColors>;
+    readonly elevation?: Partial<Elevation>;
+  },
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
-  return decorativeSurfaces.flatMap(({ surface, role, over, alpha }) => {
+  return decorativeSurfaces.flatMap(({ surface, role, over, alpha, level }) => {
     const paintedOver = theme.colors[over];
-    const paintedRole = theme.colors[role];
+    const paintedRole =
+      level === undefined
+        ? theme.colors[role]
+        : theme.elevation?.[level]?.[0]?.color;
     const painted =
       paintedOver === undefined || paintedRole === undefined
         ? undefined

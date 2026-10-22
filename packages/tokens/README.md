@@ -76,6 +76,12 @@ changes, and a brand retints the library's shadows by changing that one role.
 `elevationWithTint(elevation, tint)` is the same rule on its own, for a theme
 composed by hand.
 
+The deepest level must also be **visible** on the strips a raised surface falls
+on, which `decorativeFailures` measures as a ceiling — a blurred shadow passes
+below the floor only when a reader cannot see it at all. That found the
+high-contrast dark theme, whose black tint on a pure-black page read 1.00:1 at
+every level; its tint is the grey its raised controls use now.
+
 ## Layering
 
 There is no stacking token — the published `StyleDesc` has no `zIndex`, so a
@@ -452,7 +458,7 @@ audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
 audit.invalidNumbers; // [] — every size, length and shadow is layable, every leading reaches its size, and every control height and row height is pressable
 audit.contrast; // [] — every measured pair meets its floor
-audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash and control face is visible
+audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face and shadow is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.selection; // [] — every selection wash is visible and keeps its text readable
 audit.indicators; // [] — every progress fill, spinner dot and presence mark is visible
@@ -558,10 +564,11 @@ four through the mark contract and two (`input`, `secondary`) through
 the modal veil, each status tone's soft tint on the four strips a message sits
 on and its edge (read at the share `statusEdgeAlpha` that `statusTone` paints),
 the scrollbar thumb, `hover`/`active`/`selected`/`accent` and the `secondary`
-fill on the four strips a control can sit on. Nothing
-escapes the contract either: `coverage.test.ts` holds every role in `colorRoles`
-to at least one measurement, and names the two that a dedicated contract measures
-instead — `selection` and `shadow`. See
+fill on the four strips a control can sit on, and the deepest elevation level
+composited over those same four. Nothing escapes the contract either:
+`coverage.test.ts` holds every role in `colorRoles` to at least one measurement,
+and names the one a dedicated contract measures instead — `selection`, by
+`selectionFailures`. See
 [`src/theme-audit.example.ts`](./src/theme-audit.example.ts).
 
 ## Fonts
