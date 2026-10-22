@@ -21,6 +21,7 @@ import {
   lightTheme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import * as primitives from "../index.js";
 import { renderBox } from "./Box.js";
 import { renderButton } from "./Button.js";
 import { renderButtonGroup } from "./ButtonGroup.js";
@@ -546,5 +547,22 @@ describe("loading", () => {
     const element = renderSpinner({ label: "Saving" }, testTheme, 0);
     expect(expectSome(hostProp(element, "role"))).toBe("status");
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Saving");
+  });
+});
+
+describe("ButtonGroup's public surface", () => {
+  it("exports both ordered indexes a persisted choice needs", () => {
+    // The bug guarded: `ButtonGroup` gained a second axis while only the mode
+    // index reached the package root, so a consumer persisting an orientation
+    // could not name the choices it is allowed to store — the same dead end the
+    // Select helpers had when a page taught symbols the root did not export.
+    expect(primitives.BUTTON_GROUP_MODES).toStrictEqual([
+      "attached",
+      "separated",
+    ]);
+    expect(primitives.BUTTON_GROUP_ORIENTATIONS).toStrictEqual([
+      "horizontal",
+      "vertical",
+    ]);
   });
 });

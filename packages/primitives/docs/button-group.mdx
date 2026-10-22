@@ -107,8 +107,10 @@ radius is the only one painted on the silhouette.
 ## Verification
 
 - `src/components/presentational.test.tsx` — attached and separated geometry,
-  the axis `orientation` resolves to, `role="group"`, and the `label` →
-  `aria-label` contract.
+  the axis `orientation` resolves to, `role="group"`, the `label` →
+  `aria-label` contract, and both ordered indexes
+  (`BUTTON_GROUP_MODES`/`BUTTON_GROUP_ORIENTATIONS`) at the package root, which a
+  persisted choice needs to name the values it may store.
 - `src/recipe/recipe.test.ts` — the compiled row and column layouts, including
   the shared width a column asks for.
 - `src/components/Button.test.tsx` / `IconButton.test.tsx` — an attached action
