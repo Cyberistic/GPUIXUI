@@ -11,9 +11,9 @@
  *   no `transform` style key (plan 600 §3, upstream issue #102);
  * - presence is a duration, not a frame callback: the surface stays mounted for
  *   its exit tween and then unmounts. `AnimatePresence` reports an exit only
- *   through `onMotionComplete` on `motion.div`, and four of the surfaces that
- *   need this sit inside `FloatingLayer`'s own host element, so one mechanism
- *   covers all of them;
+ *   through `onMotionComplete` on `motion.div`, and the popover, menu and
+ *   preview-card surfaces are hosted by `FloatingLayer`'s own element, so one
+ *   mechanism covers every surface;
  * - the reduced preference is read from `MotionProvider`, because the runtime
  *   exposes no preference of its own. It zeroes the duration: the resting frame
  *   still paints, only the journey is removed.
