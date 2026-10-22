@@ -254,7 +254,7 @@ describe("the field the preview draws", () => {
     // greyed a disabled input instead would teach the wrong contract.
     expect(nativePicker).toContain("readOnly: disabled");
     expect(nativePicker).toContain("tabIndex: disabled ? -1 : 0");
-    expect(nativePicker).toContain("opacity: disabled ? 0.5 : 1");
+    expect(nativePicker).toContain("...disabledFade(disabled)");
     expect(nativePicker).toContain("if (!clearable || !hasValue || disabled)");
   });
 });

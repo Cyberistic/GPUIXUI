@@ -17,7 +17,8 @@ runtime at all.
 | `@gpuixui/tw` | The Tailwind-subset recipe registry; compiles class strings to a GPUix `StyleDesc` | `tokens` |
 | `@gpuixui/icons` | Icon markup, size scale and accessibility rules | `tokens` |
 | `@gpuixui/primitives` | Tier 1: layout, type, actions, inputs, selection and indicators | `tokens`, `tw`, `icons` |
-| `@gpuixui/components` | Tier 2: cards, overlays, menus, tabs, pickers, feedback | `tokens`, `tw`, `keyboard` |
+| `@gpuixui/components` | Tier 2: cards, overlays, menus, tabs, pickers, feedback | `tokens`, `tw`, `icons`, `keyboard`, `motion`, `primitives` |
+| `@gpuixui/data` | Tier 3: the table core, sorting, selection, filtering, virtualisation and charts | `tokens`, `tw`, `primitives`, `components` |
 | `@gpuixui/keyboard` | Accelerator grammar, scoped keymaps, event matching, command registry | — |
 | `@gpuixui/motion` | Renderer-neutral springs, easing, timelines and inertia | — |
 | `@gpuixui/runtime` | The pinned GPUix capability matrix and typed refusals | — |
@@ -25,24 +26,32 @@ runtime at all.
 | `@gpuixui/config` | Shared TypeScript, lint and format configuration | — |
 | `@gpuixui/deploy` | The Cloudflare Worker that publishes this docs site | — |
 
-`@gpuixui/components` does not depend on `@gpuixui/primitives` today: it keeps a
-small internal button stand-in instead of reaching up for the primitive. That is
-recorded as an interlock in `TODO.md`, not hidden behind a re-export.
+`@gpuixui/components` depends on `@gpuixui/primitives` for one published
+subpath — `@gpuixui/primitives/hint`, the seam that paints a themed hint over a
+native text host — and not for the styled components, which it composes locally.
+The dependency was deliberately refused while that seam lived in the package
+barrel (importing it loaded the whole Tier 1 package for one hint); the subpath
+is what makes it affordable, and `src/hints-seam.test.ts` holds the import path,
+the disabled ink and the absence of a copy. `@gpuixui/data` builds on both: a
+table composes primitives and reuses the components' `Badge` and `Menu` rather
+than reimplementing them.
 
 ## The direction
 
 ```
-tokens ──▶ tw ──▶ primitives ──▶ (components)
+tokens ──▶ tw ──▶ primitives ──▶ components ──▶ data
    └──────▶ icons ──▶ primitives
 keyboard, motion, runtime, testing   stand alone
 ```
 
-Three rules keep that graph acyclic:
+Each arrow means "may import at build time". The graph is acyclic, and three
+rules keep it that way:
 
 1. **Tokens may not import anything in the library.** A token value is plain
    data, so a theme can be built and tested without a renderer.
 2. **A styling layer may not import a component.** `tw` compiles strings;
-   primitives call it; components call it. Nothing calls back down.
+   primitives call it; components call it; data calls it. Nothing calls back
+   down.
 3. **The native runtime may not depend on the docs site.** This app imports
    `@gpuixui/*`, never the reverse, so shipping a component never pulls in MDX,
    Fumadocs or a browser bundle.

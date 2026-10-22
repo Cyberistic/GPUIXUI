@@ -688,11 +688,12 @@ describe("the real index", () => {
   it("never calls a pending lane shipped, so a reader is not sent to a page that is not there", () => {
     // The intro said the Tier 2 set was "dialogs, menus, tabs, pickers,
     // **tables** and the rest of the feedback layer", while `COMPONENTS.md`
-    // records every Tier 3 table row as `todo` — a top-level page promising a
+    // recorded every Tier 3 table row as `todo` — a top-level page promising a
     // component the inventory says does not exist. The claim is held to the
-    // inventory rather than to a fixed sentence: when the Tables row ships this
-    // case stops constraining the word, and until then the page may only point
-    // a reader at the data lane's page.
+    // inventory rather than to a fixed sentence: while the lane ships nothing
+    // the word is refused; once it ships, the intro must not keep saying it
+    // ships nothing (`@gpuixui/data` landed its table core, and the sentence
+    // still called the lane unshipped).
     const page = readFileSync(
       new URL("../../content/docs/components/index.mdx", import.meta.url),
       "utf8",
@@ -700,13 +701,28 @@ describe("the real index", () => {
     const intro = page.slice(0, page.indexOf("<ComponentIndex"));
     const lane = laneView(inventory, "data-display");
     expect(lane.rows.length, "the data lane has no rows").toBeGreaterThan(0);
-    const shipped = summarize(lane.rows).shipped;
+    const { shipped } = summarize(lane.rows);
 
-    expect(
-      shipped === 0 && /\btables\b/i.test(intro),
-      "the Components index calls tables part of the shipped set",
-    ).toBe(false);
-    if (shipped === 0) expect(intro).toContain("/docs/data-display");
+    if (shipped === 0) {
+      expect(
+        /\btables\b/i.test(intro),
+        "the Components index calls tables part of the shipped set",
+      ).toBe(false);
+    } else {
+      expect(
+        /data lane is not shipped/i.test(intro),
+        "the Components index calls a partly shipped data lane unshipped",
+      ).toBe(false);
+      expect(
+        /records (?:its|the data lane's) rows as `todo`/i.test(intro),
+        "the Components index calls every data row pending while some ship",
+      ).toBe(false);
+      expect(
+        intro.includes("@gpuixui/data"),
+        "the Components index names the shipped data rows' package",
+      ).toBe(true);
+    }
+    expect(intro).toContain("/docs/data-display");
   });
 
   it("lists only parts the library actually exports", () => {

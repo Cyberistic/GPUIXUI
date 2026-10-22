@@ -1923,7 +1923,7 @@ describe("the curated component pages", () => {
     expect(source).toContain('role="button"');
     expect(source).toContain("aria-expanded={open}");
     expect(source).toContain("tabIndex={disabled ? -1 : 0}");
-    expect(source).toContain("opacity: disabled ? 0.5 : 1");
+    expect(source).toContain("...disabledFade(disabled)");
     expect(source).toContain('cursor: disabled ? "not-allowed" : "pointer"');
     expect(source).toContain("hover: disabled ? undefined");
     expect(source).toContain("active: disabled");
@@ -2078,7 +2078,7 @@ describe("the curated component pages", () => {
     expect(source).toContain("onSubmit={() => onSubmit?.(value)}");
     expect(source).toContain("renderer?.focusElement?.(instance.id)");
     expect(source).toContain("readOnly={disabled}");
-    expect(source).toContain("opacity: disabled ? 0.5 : 1");
+    expect(source).toContain("...disabledFade(disabled)");
     expect(source).toContain("fieldHint(");
     expect(source).toContain("renderFieldHint(");
     expect(source).toContain('nativeTextTheme(theme, "background")');
@@ -2181,7 +2181,7 @@ describe("the curated component pages", () => {
     // no `aria-disabled` in 0.11.0 for the page to promise.
     expect(source).toContain("readOnly: disabled");
     expect(source).toContain("tabIndex: disabled ? -1 : 0");
-    expect(source).toContain("opacity: disabled ? 0.5 : 1");
+    expect(source).toContain("...disabledFade(disabled)");
     expect(source).not.toContain("aria-disabled=");
     // The field is the density's `md` box; the segment and the clear target are
     // the component's own fixed metrics.

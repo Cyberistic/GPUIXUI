@@ -4,6 +4,7 @@ import { packageCollections } from "./collection-routes";
 import { componentIndex } from "./component-index-data";
 import {
   buildExamples,
+  collectionOf,
   filterExamples,
   pageFor,
   summaryOf,
@@ -49,9 +50,15 @@ describe("the example registry", () => {
   });
 
   it("links every row to a page that exists", () => {
+    // A lane home is a page the site writes (`/docs/data-display`), so the set
+    // is the component pages, the package collections and every declared home.
     const routes = new Set([
       ...componentIndex.map((entry) => entry.url),
       ...packageCollections.map((collection) => collection.route),
+      ...examples.flatMap((entry) => {
+        const home = collectionOf(entry.packageName);
+        return home === undefined ? [] : [home.route];
+      }),
     ]);
     expect(examples.filter((entry) => !routes.has(entry.url))).toEqual([]);
   });
@@ -59,10 +66,8 @@ describe("the example registry", () => {
   it("sends a grouped example to its lane index, never to a guessed page", () => {
     const misplaced = examples.filter((entry) => {
       if (!entry.grouped) return false;
-      const collection = packageCollections.find(
-        (candidate) => candidate.section === entry.section,
-      );
-      return entry.url !== collection?.route;
+      const home = collectionOf(entry.packageName);
+      return entry.url !== home?.route;
     });
     expect(misplaced).toEqual([]);
     expect(examples.some((entry) => entry.grouped)).toBe(true);

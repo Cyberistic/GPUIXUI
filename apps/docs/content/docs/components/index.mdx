@@ -7,9 +7,11 @@ import { playgroundCommand } from "@/components/docs/native-run-note";
 
 The Tier 2 components are composed from the [primitives](/docs/primitives):
 dialogs, menus, tabs, pickers and the rest of the feedback layer. The data lane
-is not shipped — the inventory records its rows as `todo`, and [Data
-display](/docs/data-display) records what a table needs — so a page appears here
-only once it exists. This index covers both component lanes, curated and
+is partial — @gpuixui/data ships the table core with sorting, selection and
+filtering, while column configuration, virtualisation, a tree view, charts and
+the inspector surfaces are still `todo` — and [Data
+display](/docs/data-display) renders each row's real state, so a page appears
+here only once it exists. This index covers both component lanes, curated and
 package-shipped, and the filter matches a page's name, its purpose, its lane,
 **the parts it documents**, **the props and prop types its API table declares**,
 **the limits it records** and **its inventory verdict**. So

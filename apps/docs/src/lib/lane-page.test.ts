@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { columnDrag } from "./column-drag.test-util";
+import { laneView, summarize } from "./inventory";
+import { inventory } from "./inventory-data";
 import { sidebarPages } from "./sidebar-pages.test-util";
 
 /**
@@ -681,5 +683,45 @@ describe("the workspace page's pointer and terminal claims", () => {
       "Clamp a restored number to the pane's own bounds",
     );
     expect(workspace).toContain("first layout");
+  });
+});
+
+/**
+ * The data page said the lane had not started while it had.
+ *
+ * It opened "None of the Tier 3 rows is shipped yet" and told a reader the
+ * table was the row to build, after `@gpuixui/data` had landed the table core,
+ * sorting, selection and filtering. The page is the lane's map, so its premise
+ * is read from the inventory rather than from memory.
+ */
+describe("the data-display page's shipped rows", () => {
+  const dataPage = read("data-display.mdx");
+  const lane = summarize(laneView(inventory, "data-display").rows);
+
+  it("names the package that ships the rows the inventory calls done", () => {
+    expect(lane.shipped).toBeGreaterThan(0);
+    expect(dataPage).toContain("@gpuixui/data");
+    expect(dataPage).not.toContain("None of the Tier 3 rows is shipped yet");
+    expect(dataPage).not.toContain("The table row comes first");
+  });
+
+  it("names the parts and the hook a table plan starts from", () => {
+    // The page is where a column menu or a virtualised body is designed, so the
+    // shipped surface has to be findable from it without opening the package.
+    const parts = [
+      "TableViewport",
+      "TableHeader",
+      "TableBody",
+      "TableSortHeader",
+      "TableFilterField",
+      "useTable",
+    ];
+
+    expect(parts.filter((part) => !dataPage.includes(part))).toEqual([]);
+  });
+
+  it("still says what is pending, so the lane is not called whole", () => {
+    expect(lane.pending).toBeGreaterThan(0);
+    expect(dataPage).toContain("`todo`");
   });
 });

@@ -1,14 +1,15 @@
 ---
 title: Data display
-description: The data-presentation lane — what ships today, what a table will be built from, and the runtime gaps it already measured.
+description: The data-presentation lane — the table core that ships, what the remaining rows will be built from, and the runtime gaps already measured.
 ---
 
 A data surface is rows, columns, a header that sorts them and a selection that
 survives a scroll. GPUix 0.11.0 has **no table host element**, so this lane is a
-composition of layout primitives, the shipped list and a pure row model — not a
-widget the runtime hands over. None of the Tier 3 rows is shipped yet; this page
+composition of layout primitives, a pure row model and — since `@gpuixui/data`
+landed — a reusable table core. Four of the Tier 3 rows ship (Tables, Sortable
+tables, Row selection, Filtering controls); the rest are `todo`, and this page
 records what exists, what a missing row will be built from, and the evidence for
-each gap, so the first table does not start by re-discovering them.
+each gap, so the next one does not start by re-discovering them.
 
 ## The lane
 
@@ -18,14 +19,24 @@ Rows and statuses come from `COMPONENTS.md`.
 
 ## What ships today
 
-Most of a data surface is already here, one tier down. These are the pieces the
-first table will compose:
+The table core is the lane's own package: `@gpuixui/data` ships `Table`,
+`TableViewport`, `TableHeader`, `TableBody`, `TableRow`, `TableHeaderCell`,
+`TableCell`, `TableCaption`, `TableEmpty` and `TableSkeleton`, with
+`TableSortHeader`, `TableFilterField` and `useTable` joining a pure sort,
+selection and filter model. The shipped example is
+[`table.example.tsx`](https://github.com/Cyberistic/GPUIXUI/blob/master/packages/data/examples/table.example.tsx),
+and `/docs/examples` lists it under **Data display** until the package has
+component pages of its own. Its rules are measured, not planned — see
+[the table that ships](#the-table-that-ships) below.
+
+Most of the rest of a data surface is already here, one tier down:
 
 | Piece | Page | What it gives the lane | Its limit |
 | ----- | ---- | ---------------------- | --------- |
+| Table core | `@gpuixui/data` | Measured header, sortable header, selection, filter field, empty and skeleton rows | Column configuration, resizing and virtualisation are `todo` |
 | List / ListItem | [List](/docs/components/list) | A roving tab stop, single and multiple selection, Shift ranges, `Cmd`/`Ctrl`+A, type-ahead, activation | Rows are compound children, so a list mounts all of them; a windowed list is `<virtual-list>`'s `itemCount` mode |
 | Pagination | [Pagination](/docs/components/pagination) | A derived page window with stable width | No page-size control |
-| Empty state | [Empty state](/docs/components/empty-state) | The no-rows state a table shows | No illustration slot |
+| Empty state | [Empty state](/docs/components/empty-state) | The no-rows state a table shows | No illustration slot; `TableEmpty` is the table's own row |
 | Cards, badges, progress | [Components](/docs/components) | Statistic cards and metric rows today | No chart component |
 | Message scroller | [Message scroller](/docs/components/message-scroller) | Append-follow, unread count, jump-to-latest | Every row renders: a compound-children list, where the windowed `itemCount` mode renders rows from data instead |
 | Command menu | [Command menu](/docs/components/command-menu) | Ranked filtering over a list | Per-group ranking, no column model |
@@ -53,10 +64,11 @@ import { Grid, Text } from "@gpuixui/primitives";
 </Grid>;
 ```
 
-This is the honest ceiling today: you own the row model, the sort and the
-selection, and you draw the header yourself. What is missing is the reusable
-part — a header that sorts, a selection that survives sorting, and column
-configuration.
+This is the honest ceiling **without** the table package: you own the row
+model, the sort and the selection, and you draw the header yourself. A header
+that sorts, a selection that survives sorting and a filter field are what
+`@gpuixui/data` adds — see below; what stays missing is column configuration and
+resizing, virtualisation, a tree and charts.
 
 ## A property panel is one object, read four ways
 
@@ -87,10 +99,13 @@ the width to 240, the area to 19200 and the preview to 240×80 in that frame, an
 **Reset size** returned the width while the typed tag stayed — a reset is a size
 action, not a new object.
 
-## The table row comes first
+## The table that ships
 
-The other twelve rows depend on it, so `Tables` is the row that unblocks the
-lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
+`Tables` is the row that unblocks the lane, and `@gpuixui/data` ships it: a grid
+of `div` rows, not a `<table>`, with sorting, selection and filtering beside it.
+The rules below are the ones the package implements and a window measured — a
+plan for a column menu, a virtualised body or a tree starts from them instead of
+re-deriving them.
 
 - **Rows and columns** — `Grid` for equal tracks; a whole row is one child, so
   the header and body share one column count.

@@ -1,7 +1,4 @@
-import {
-  packageCollections,
-  type PackageCollection,
-} from "./collection-routes";
+import { packageCollections } from "./collection-routes";
 import type { ComponentEntry } from "./component-index";
 
 /**
@@ -60,10 +57,44 @@ export const exampleAnchor = (entry: {
 /** The files the registry reads: one package's `examples` directory. */
 const filePattern = /^packages\/([^/]+)\/examples\/([^/]+)\.example\.tsx$/;
 
-const collectionOf = (packageName: string): PackageCollection | undefined =>
+/**
+ * Where a package's examples are documented.
+ *
+ * A package collection carries its pages' route and sidebar section; a package
+ * whose examples are documented on a lane page has the same two facts without
+ * pages of its own.
+ */
+export interface ExampleHome {
+  /** The route an example with no page of its own links to. */
+  readonly route: string;
+  /** The section the examples registry groups its rows under. */
+  readonly section: string;
+}
+
+/**
+ * A package whose examples are documented on a lane page, not in a collection
+ * of its own.
+ *
+ * `@gpuixui/data` ships a table example before it ships component pages, and an
+ * example with no home would vanish from the registry while sitting on disk —
+ * so its row points at the lane that documents the package's rows. A package
+ * that gains a `docs` collection takes over automatically.
+ */
+const laneHomes: ReadonlyArray<{
+  readonly packageName: string;
+  readonly home: ExampleHome;
+}> = [
+  {
+    packageName: "data",
+    home: { route: "/docs/data-display", section: "Data display" },
+  },
+];
+
+/** The collection an example belongs to: the package's pages, or its lane. */
+export const collectionOf = (packageName: string): ExampleHome | undefined =>
   packageCollections.find(
     (collection) => collection.dir === `packages/${packageName}/docs`,
-  );
+  ) ?? laneHomes.find((lane) => lane.packageName === packageName)?.home;
 
 /** `number-field` → `Number field`: a fallback title, never a replacement. */
 const titleCase = (id: string): string => {
@@ -177,7 +208,10 @@ export const buildExamples = (
     ];
   });
 
-  const sectionOrder = packageCollections.reduce<ReadonlyArray<string>>(
+  const sectionOrder = [
+    ...packageCollections,
+    ...laneHomes.map((lane) => lane.home),
+  ].reduce<ReadonlyArray<string>>(
     (order, collection) =>
       order.includes(collection.section)
         ? order

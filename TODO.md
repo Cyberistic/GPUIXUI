@@ -4759,13 +4759,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `Sparkline`, `StackedBar`; `chart-raster`)
   - [ ] Tier 3 phase 7 — `KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`,
     `AdvancedFilter` (`inspector-lifecycle`)
-  - [ ] Register the data package on the site — `apps/docs/src/lib/examples.ts`
-    must list `packages/data/examples/table.example.tsx` and
-    `packages/data/examples/virtual-list.example.tsx` (`apps/docs/src/lib/examples.test.ts`
-    fails `lists every example file and nothing else` until it does), the
-    architecture page must name `@gpuixui/data` (`architecture.test.ts` fails
-    `names every workspace package`), and the Components index prose that calls
-    the data lane "pending" is now behind the inventory. Owner: docs-site.
+  - [x] Register the data package on the site — `@gpuixui/data` shipped its table
+    and virtual-list examples with no docs surface, so three site guards failed
+    and one page lied. `examples.ts` gained a **lane home**: a package with no
+    `docs` collection maps to the lane that documents it (`data` →
+    `/docs/data-display`, `Data display` section), so both examples appear on
+    `/docs/examples` as grouped rows instead of vanishing while on disk, and
+    `collectionOf` is exported so `examples.test.ts` holds every grouped row to
+    its declared home in both directions. The architecture page gained the
+    package row, the measured dependency columns for `components` (icons,
+    keyboard, motion, primitives, tokens, tw) and `data` (components,
+    primitives, tokens, tw), replaced the retracted "components does not depend
+    on primitives" paragraph with the `@gpuixui/primitives/hint` subpath and why
+    the barrel was refused, and moved the arrow graph to `primitives ──▶
+    components ──▶ data`. `architecture.test.ts` now parses the table and holds
+    every "Depends on" cell to the package's manifest, so the column cannot
+    drift again; the Components index says the lane is **partial** (four of
+    fifteen rows) and names the package, and `component-index.test.ts` holds
+    both directions — while nothing ships, no "tables"; once something ships,
+    no "not shipped" and no "every row is `todo`". `/docs/data-display` opens
+    with the shipped core (`Table*`, `TableSortHeader`, `TableFilterField`,
+    `useTable`), lists it in "What ships today", retitles the plan section to
+    **The table that ships**, and `lane-page.test.ts` derives the shipped count
+    from the inventory and refuses the retracted "None of the Tier 3 rows is
+    shipped yet". Directions measured: restoring `components`' old dependency
+    cell fails `states the dependency each package's manifest declares`, and
+    restoring the retracted data-page sentence fails `names the package that
+    ships the rows the inventory calls done`. `nub run --filter @gpuixui/docs
+    test` is 912/912 with `check-types`, `oxlint`, `check:tests` and `build`
+    clean. **Still open:** the mounted collection (next bullet); the collection
+    is now needed for a page per data surface, not for the example registry.
   - [ ] Mount a `@gpuixui/data` docs collection on the site and write a page per
     data surface — the `apps/docs` collection route (`collection-routes.ts`), a
     sidebar section and the `/docs/data-display` link. The package cannot ship
