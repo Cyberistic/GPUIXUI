@@ -125,7 +125,8 @@ describe("the theme page", () => {
   it("names the leading rule the number report can return", () => {
     // The number report grew a fifth rule when a type role's leading had to
     // reach its own font size, and the bullet described only the single-value
-    // rules. It is the one rule about two tokens, so the page says so.
+    // rules. It is one of the two rules about a pair of tokens, so the page
+    // says so.
     const audit = section(page("themes.mdx"), "The theme audit");
     const short = auditTheme(
       extendTheme(themes.light, { typography: { body: { lineHeight: 12 } } }),
@@ -134,6 +135,24 @@ describe("the theme page", () => {
     expect(short.invalidNumbers.map(({ rule }) => rule)).toEqual(["leading"]);
     expect(audit).toContain("leading");
     expect(audit).toContain("own font size");
+  });
+
+  it("names the fit between a control height and the label it carries", () => {
+    // The number report's sixth rule compares two groups: a control's box is
+    // exactly `density.controlHeight[size]` and its label is laid at the taller
+    // of `label`'s and `body`'s leading, so a box that is pressable but shorter
+    // than that leading clips the text. The page named only the pressable floor,
+    // so a height the report refuses was described by nothing.
+    const audit = section(page("themes.mdx"), "The theme audit");
+    const failures = auditTheme(
+      extendTheme(themes.light, { typography: { body: { lineHeight: 30 } } }),
+    ).invalidNumbers;
+
+    expect(failures).toEqual([
+      { group: "density", path: "controlHeight.sm", value: 28, rule: "fits" },
+    ]);
+    expect(audit).toContain("contain the leading");
+    expect(audit).toContain("`label` or `body`");
   });
 
   it("names the row height the pressable rule also holds", () => {

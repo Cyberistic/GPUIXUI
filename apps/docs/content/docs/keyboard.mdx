@@ -40,10 +40,10 @@ event path has three measured properties (the probes are named on
   root handler is a fallback, not an interceptor.
 - **There is no global or system shortcut.** Keys fire only while the window is
   focused; a background hotkey needs a runtime change, not a different binding.
-- **A `Tab` traversal moves focus without running React's `onFocus`.** A handler
-  that must know where focus went reads the key event's own `elementId` or
-  `getFocusedElementId`; anything only a focus event would reveal belongs on
-  `aria-description`.
+- **A `Tab` traversal runs React's `onFocus`.** A tip or hint may open on focus;
+  a key *move* that needs its origin reads the key event's own `elementId` or
+  `getFocusedElementId`, because the first arrow after a traversal must move off
+  the tab it reached rather than the selection.
 
 ## Decode, then match
 
@@ -210,9 +210,10 @@ platform, which is where `Mod` is Control.
   focused; a background hotkey can only be documented as unavailable.
 - **A focused field sees the key first.** Install one handler at the root and
   route accelerators from it; a chord the field needs is the field's.
-- **A `Tab` traversal runs no `onFocus`.** Read the key event or
-  `getFocusedElementId`, and publish focus-only information as
-  `aria-description`.
+- **A key move names its origin.** A traversal now runs `onFocus`, but the first
+  arrow after it must move off the tab the traversal reached rather than the
+  selection, so the handler reads the key event's own `elementId` (the `Tabs`
+  origin does).
 - **Physical bindings cannot match.** There is no `code` in a GPUix event, so
   `Mod+[KeyS]` parses and never resolves.
 - **`@tanstack/hotkeys` is `0.x`.** Its surface can change in a minor release;
@@ -230,7 +231,8 @@ platform, which is where `Mod` is Control.
 ## Related
 
 - [Runtime capabilities](/docs/runtime) — the measured event path this layer
-  builds on, including the missing global shortcut and focus event.
+  builds on, including the missing global shortcut and the focus path a handler
+  can rely on.
 - [Keyboard shortcuts](/docs/components/keyboard-shortcuts) — the shipped cheat
   sheet that reads a keymap.
 - [Hotkey recorder](/docs/components/hotkey-recorder) — the shipped capture

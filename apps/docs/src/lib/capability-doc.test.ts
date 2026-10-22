@@ -280,15 +280,31 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(caret?.workaround).toContain("<textarea>");
   });
 
-  it("records the focus-event limit a window measured on the events row", () => {
-    // `onFocus` is declared and the events row called it supported while a
-    // `Tab` traversal moved focus without ever running the handler: a tooltip
-    // that opens on focus stayed closed and Tabs' own counter stayed at 0.
-    // Both probes paint, so the row carries their evidence.
+  it("records the focus path a `Tab` traversal delivers, with the probes behind it", () => {
+    // The events row used to say `onFocus` never ran on a traversal, so a plan
+    // that opens a tip or a hint on focus was told to substitute
+    // `aria-description` for a handler that does run. Re-measured 2026-10-22:
+    // the tooltip opens on the traversal and Tabs counts `focuses=1`; the old
+    // run read the frame before the event arrived. Keeping the retracted
+    // sentence — or dropping the measurement that replaced it — fails here.
     const events = rowFor("Pointer, keyboard and focus events");
     expect(events?.verdict).toBe("supported, with limits");
     expect(events?.evidence).toContain("tooltip-lifecycle");
     expect(events?.evidence).toContain("tabs-lifecycle");
+    expect(events?.evidence).toContain("run React's `onFocus`");
+    expect(events?.evidence).toContain("focuses=1");
+    expect(events?.evidence).toContain("before the event arrived");
+    expect(doc).not.toContain("without running React's `onFocus`");
+
+    const page = measuredRow("Keyboard focus events");
+    expect(
+      page,
+      "the page's measured table has no keyboard-focus-event row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("run React's `onFocus`");
+    expect(page?.[1]).toContain("tooltip-lifecycle");
+    expect(page?.[1]).toContain("focuses=1");
+    expect(page?.[2]).toContain("onFocus");
   });
 
   it("records what each scroll event reports, with the probe that measured it", () => {

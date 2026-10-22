@@ -70,8 +70,11 @@ call reports ten independent failures:
   pointer presses, so both are held to the library's {targetSize.minimum}px target
   floor: a shorter one lays out, but a reader cannot reliably hit it. A type
   role's leading must also reach its own font size, because a shorter line height
-  puts the next baseline inside this line's glyphs; that is the one rule about two
-  tokens, so it is measured on the pair.
+  puts the next baseline inside this line's glyphs, and a control height must
+  contain the leading of the tallest label a control paints (`label` or `body`),
+  because the box is exactly that height and a shorter one clips the text it
+  exists to show. Those are the report's two rules about a pair of tokens, so
+  each is measured on the pair.
 - **Contrast**: `contrastFailures` checks {contrastPairs.length} role pairs — body
   text at 7:1, secondary text at 4.5:1, boundaries and focus rings at 3:1 — and
   the readout names every pair an edit breaks, with its measured ratio. A

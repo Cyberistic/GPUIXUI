@@ -402,6 +402,24 @@ describe("theme-editor audit readout", () => {
     expect(audit.passed).toBe(false);
   });
 
+  it("words a control height too short for the label it carries", () => {
+    // A control's box is exactly its control height and its label is laid at the
+    // type role's leading, so a height that a pointer can press but the label
+    // cannot fit clips the text. It is a second question from the press floor:
+    // the editor must tell a reader which one the height failed.
+    const audit = auditTheme(
+      extendTheme(themes.light, { typography: { body: { lineHeight: 30 } } }),
+    );
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "number",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      "density controlHeight.sm — 28 cannot be laid out (needs a height that contains the tallest label it carries)",
+    ]);
+    expect(audit.passed).toBe(false);
+  });
+
   it("words a leading that sits inside its own type", () => {
     // The one number rule about two tokens: a line height shorter than its font
     // size stacks the next baseline inside this line's glyphs. The reader is told

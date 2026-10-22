@@ -16,7 +16,7 @@ import {
  * The page is held to three sources: the package's entry point (a new export
  * must be documented and every snippet must resolve), the capability record's
  * measured rows (no global shortcut, the focused element seeing a key first, and
- * a `Tab` traversal running no `onFocus`), and the adapter's own source (the
+ * a `Tab` traversal that runs `onFocus`), and the adapter's own source (the
  * physical-binding limit follows from the decode, not from a preference).
  */
 
@@ -61,13 +61,15 @@ describe("the keyboard page", () => {
 
   it("states the measured limits a shortcut has to design around", () => {
     // These are runtime facts, not package choices, so the page is held to the
-    // record's measured rows rather than to the sentence it prints.
+    // record's measured rows rather than to the sentence it prints. The focus
+    // row was re-measured on 2026-10-22: a traversal does run `onFocus`, so the
+    // page must not send a reader to `aria-description` in its place.
     expect(record).toContain("| Global / system shortcut | not supported |");
     expect(page).toContain("No global or system shortcut");
     expect(page).toContain("own handler runs first");
-    expect(page).toContain(
-      "`Tab` traversal moves focus without running React's `onFocus`",
-    );
+    expect(page).toContain("`Tab` traversal runs React's `onFocus`");
+    expect(page).toContain("first\n  arrow after it must move off the tab");
+    expect(page).not.toContain("runs no `onFocus`");
     expect(page).toContain("/docs/runtime#measured-in-a-window");
   });
 
