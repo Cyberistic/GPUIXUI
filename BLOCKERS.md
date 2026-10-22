@@ -26,7 +26,7 @@ Evidence lives in the worktree that hit it — find it there first.
 binary, so `apps/playground/scripts/build-native-binding.sh` builds it from the pinned
 release commit (the binding's napi surface is version-specific) and installs it into
 `node_modules/@gpuix/native/`; it is idempotent and `GPUIX_REV` overrides the pin. The
-playground's headless suite runs **32/32** and the live suite opens a real window against
+playground's headless suite runs **40/40** and the live suite opens a real window against
 that binding. Recipe, commands and evidence: `apps/playground/README.md` §The binding on
 this host, ADR 0003. B1 re-opens on every `@gpuix/native` bump — rerun the script.
 
