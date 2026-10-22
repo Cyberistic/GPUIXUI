@@ -378,6 +378,12 @@ export const liveRegistry = [
       "Table: hiding a column shifts later columns, a restore re-grows the content, the offset clamps to the new end, and a move re-orders header and cells together",
     capability: "table",
   },
+  {
+    id: "svg-pattern",
+    title:
+      "Content: a generated svg path is scaled from its view box by the element's width, clipped at the view box's edge, and paints above and below a box it does not fit",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

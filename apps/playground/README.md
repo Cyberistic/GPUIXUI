@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-57 probes a real window can prove, of which fifteen mount shipped
+58 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -54,7 +54,8 @@ mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
-handler, a field's hint and value ink and a configurable data grid).
+handler, a field's hint and value ink, a configurable data grid and a generated
+SVG pattern).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -3155,6 +3156,67 @@ Two negative controls were measured, exit `1` each, then restored green:
 
 Capture: `.artifacts/live/table-columns.png`.
 
+### `svg-pattern` — measured on 0.11.0 here
+
+The **generated line art a decorative field is made of**. Plan 600's `hexagon`
+and `topography` are one generated `<path>` in a view box, sized by the element,
+and the open question was whether the runtime paints that route at all — the
+icons prove a small glyph path paints, not that a wide generated path is scaled,
+clipped and re-laid-out when its box changes. The probe mounts five shapes with
+disjoint tints, so one capture answers each half:
+
+| Shape | Measurement |
+| ----- | ----------- |
+| square: a 60-unit square stroked 10 in a 100-unit view box, in a **200×200** element | ink **140×140**, centred: the path is scaled 2× with its stroke, so the 15–85-unit ink lands 30–170 points in from the element's origin |
+| overhang: the same band drawn from **−40 to 140**, outside the view box on both sides | ink **200** wide and **40** tall, and nothing outside it: the view box clips its own overflow |
+| wide: the band (0–100) in a **300×100** element | ink **300** wide and **30** thick, centred: the view box is scaled by the **width** (3×), not fitted to the short axis (which would paint 100 wide) |
+| tall: the band in a **100×200** element | ink **100** wide and **10** thick: the height is not consulted, so the 2× it would have given appears nowhere |
+| comb: 20 vertical subpaths in one `<path>`, a 240×80 view box in a **480×160** element | **20/20** strokes paint their tint, at each stroke's own centre |
+| press **Resize** (square → **300×100**) | the path is laid out again at the new width (ink **210** wide, centred) and the square content area becomes 300 points tall: it paints **above and below** the 100-point element (ink bbox top 0, the window's edge) rather than being clipped to it |
+
+34 checks, `--only svg-pattern`, green on 0.11.0 (~1.9 s). Fixture:
+`src/live/pattern.ts` — the geometry, the width-only scale rule (`patternScale`,
+`strokeWeight`), the generated comb path, the tint per shape and the capture →
+logical conversion; `pattern.test.ts` (8 cases) holds the tints apart, the
+fraction against the path the markup strokes, the overhang past both view-box
+edges, the 20 subpaths the samples assume, and the conversion.
+
+What it settles, for a pattern field:
+
+1. **A generated path paints, scaled from its view box by the element's width**,
+   stroke included. A hexagon or topography path needs no `onLayout` pass: the
+   host scales it.
+2. **The view box clips.** A path drawn past its edges paints nothing outside
+   them, so a pattern can be authored edge-to-edge without bleeding.
+3. **A non-square element is neither letterboxed nor stretched.** The scale is
+   the width's and the content is centred, so the content area keeps the view
+   box's shape (square here) and the element does **not** clip it — in a 3:1 box
+   the line art paints above and below the box it was given, over whatever is
+   painted after it. A field with a square view box must therefore be sized
+   near-square, and this is the one rule a plan for `hexagon`/`topography` has to
+   carry.
+4. **A stroke's weight follows that same width scale**: 10 units paint 10 points
+   in the 100-wide box and 30 points in the 300-wide one. A pattern in a wide
+   pane has heavier lines, not longer ones only.
+
+Four negative controls were measured, exit `1` each, then restored green:
+
+- dropping the stroke from the expected fraction fails `a generated path is
+  scaled from its view box` with **`expected 120 ± 4, got 140`** — the ink is
+  the path **plus** its half-stroke, which is what a line-art field is.
+- truncating the generated path by one subpath fails `every subpath of a
+  generated path paints` (`expected 20, got 19`) — a prefix of a generated path
+  would otherwise paint and pass as a whole field.
+- drawing the band inside the view box (`M 10 50 H 90`) fails `a path past the
+  view box is clipped at the view box's edge` (`expected 200 ± 3, got 160`) —
+  the check reads both edges, not one.
+- resizing to a **square** box (300×300) fails `the square content area is not
+  clipped to the element's own box` (`expected true, got false`) — the overflow
+  is what a box that disagrees with the view box's aspect causes.
+
+Captures: `.artifacts/live/svg-pattern.png` (the five shapes) and
+`.artifacts/live/svg-pattern-resized.png` (the 300×100 square).
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3355,11 +3417,11 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop, the app-level shortcut and selection probes run in real GPUix 0.11.0
-  on this host. The last full pass was **55/57** on 2026-10-22 — every probe ran,
-  and the reds were: `list-lifecycle`, `command-palette` (both in the components
-  workstream's in-flight work, recorded in `TODO.md`; the new columns probe and
-  every other probe were green). The full live suite is the release gate that
-  turns this line green.
+  on this host. The last full pass was **55/57** on 2026-10-22 — every probe it
+  covered ran, and the reds were: `list-lifecycle`, `command-palette` (both in
+  the components workstream's in-flight work, recorded in `TODO.md`). Measured
+  alone since then: `svg-pattern` (green on 0.11.0, 34 checks). The full live
+  suite is the release gate that turns this line green.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

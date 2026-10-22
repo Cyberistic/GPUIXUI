@@ -116,7 +116,10 @@ describe("live probe documentation", () => {
     // reader uses to tell a partial pass from a complete one, written by hand.
     // The suite line is the other half: a full pass prints the registry's size
     // twice, and a partial one names exactly the probes that did not pass, so a
-    // red probe cannot be left out of the sentence that reports it.
+    // red probe cannot be left out of the sentence that reports it. The third
+    // part is the probes registered *after* that pass and measured alone: they
+    // are neither green in that run nor reds, so the sentence must name them or
+    // a probe can be added without any measurement being reported at all.
     const intro = /the\s+(\d+) probes a real window can prove/.exec(readme);
     expect(intro?.[1]).toBe(`${liveRegistry.length}`);
 
@@ -126,23 +129,37 @@ describe("live probe documentation", () => {
     const suite = /\*\*(\d+)\/(\d+)\*\*/.exec(bullet);
     const passed = Number(suite?.[1] ?? Number.NaN);
     const total = Number(suite?.[2] ?? Number.NaN);
-    expect(total).toBe(liveRegistry.length);
-    expect(passed).toBeLessThanOrEqual(total);
 
-    const redsAt = bullet.indexOf("the reds were:");
-    const redList = redsAt === -1 ? "" : bullet.slice(redsAt);
-    const upToParenthesis = redList.slice(0, redList.indexOf("("));
-    const named = Arr.filter(
-      Arr.map(
-        [...upToParenthesis.matchAll(/`([^`]+)`/g)],
-        (match) => match[1] ?? "",
-      ),
-      (id) => id.length > 0,
-    );
-    expect(named).toHaveLength(total - passed);
+    // The bullet is wrapped prose, so a marker can be split across a line: the
+    // clauses are read from one line of text, not from the file's wrapping.
+    const text = bullet.replace(/\s+/g, " ");
+
+    /** The backticked ids a clause names, up to the parenthesis after it. */
+    const idsIn = (marker: string): ReadonlyArray<string> => {
+      const at = text.indexOf(marker);
+      if (at === -1) return [];
+      const from = at + marker.length;
+      const to = text.indexOf("(", from);
+      const clause = text.slice(from, to === -1 ? text.length : to);
+      return Arr.filter(
+        Arr.map([...clause.matchAll(/`([^`]+)`/g)], (match) => match[1] ?? ""),
+        (id) => id.length > 0,
+      );
+    };
+    const reds = idsIn("the reds were:");
+    const alone = idsIn("Measured alone since then:");
+
+    // The pass accounts for the probes it covered, and the registry is the pass
+    // plus the probes named as measured alone afterwards.
+    expect(passed + reds.length).toBe(total);
+    expect(total + alone.length).toBe(liveRegistry.length);
+
     const registered = new Set<string>(
       Arr.map(liveRegistry, (probe) => probe.id),
     );
-    expect(Arr.filter(named, (id) => !registered.has(id))).toEqual([]);
+    expect(
+      Arr.filter(Arr.appendAll(reds, alone), (id) => !registered.has(id)),
+    ).toEqual([]);
+    expect(Arr.filter(reds, (id) => Arr.contains(alone, id))).toEqual([]);
   });
 });

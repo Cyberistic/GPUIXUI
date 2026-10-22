@@ -171,6 +171,26 @@ import {
   type Rgb,
 } from "./content.js";
 import {
+  COMB,
+  COMB_SIZE,
+  OVERHANG_SIZE,
+  PATTERN_IDS,
+  PATTERN_TINTS,
+  SQUARE_BOX,
+  SQUARE_RESIZED_BOX,
+  TALL,
+  WIDE,
+  combPoints,
+  logicalRegion,
+  overhangFraction,
+  patternReadout,
+  shapeSvg,
+  shapeTint,
+  squareFraction,
+  strokeWeight,
+  type PatternShape,
+} from "./pattern.js";
+import {
   MISSING_FAMILY,
   SQUARE_BYTES,
   SQUARE_FACE,
@@ -15390,6 +15410,337 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("table-columns");
   });
 
+/**
+ * A generated pattern field's `<svg>` in a real window.
+ *
+ * Plan 600's `hexagon` and `topography` are one generated `<path>` in a view
+ * box, sized by the element — and nothing had measured that this route paints.
+ * The probe mounts five shapes with disjoint tints, so one capture answers each
+ * question: a stroked square (is the path scaled from its view box, stroke
+ * included?), a band drawn past the view box (is it clipped at the view box's
+ * edge?), the same band in a 3:1 box and in a 1:2 box (which axis decides the
+ * scale, and what happens to the line's weight?), and a twenty-subpath comb
+ * (does the whole generated path paint, or a prefix?). A press then gives the
+ * square a different aspect ratio: the path is laid out again at the new width,
+ * and the square content area it is painted in overflows the shorter box.
+ */
+const SvgPatternProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [resized, setResized] = useState(false);
+  const square = resized ? SQUARE_RESIZED_BOX : SQUARE_BOX;
+  return (
+    <div
+      testId={PATTERN_IDS.probe}
+      style={{
+        width: 900,
+        height: 500,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div style={{ display: "flex", gap: theme.spacing.lg }}>
+        <svg
+          testId={PATTERN_IDS.square}
+          source={shapeSvg("square")}
+          style={{
+            width: square.width,
+            height: square.height,
+            color: shapeTint("square"),
+          }}
+        />
+        <svg
+          testId={PATTERN_IDS.overhang}
+          source={shapeSvg("overhang")}
+          style={{
+            width: OVERHANG_SIZE,
+            height: OVERHANG_SIZE,
+            color: shapeTint("overhang"),
+          }}
+        />
+        <svg
+          testId={PATTERN_IDS.wide}
+          source={shapeSvg("wide")}
+          style={{
+            width: WIDE.width,
+            height: WIDE.height,
+            color: shapeTint("wide"),
+          }}
+        />
+        <svg
+          testId={PATTERN_IDS.tall}
+          source={shapeSvg("tall")}
+          style={{
+            width: TALL.width,
+            height: TALL.height,
+            color: shapeTint("tall"),
+          }}
+        />
+      </div>
+      <div
+        style={{ display: "flex", gap: theme.spacing.lg, alignItems: "center" }}
+      >
+        <svg
+          testId={PATTERN_IDS.comb}
+          source={shapeSvg("comb")}
+          style={{
+            width: COMB_SIZE.width,
+            height: COMB_SIZE.height,
+            color: shapeTint("comb"),
+          }}
+        />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.md,
+          }}
+        >
+          <Button
+            testId={PATTERN_IDS.resize}
+            onClick={() => setResized((was) => !was)}
+          >
+            Resize
+          </Button>
+          <text testId={PATTERN_IDS.readout}>{patternReadout(square)}</text>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** The ink one shape's tint paints, in the window's logical points. */
+const patternInk = (
+  ctx: Smoke.AsyncSmokeContext,
+  frame: Pixels.Pixels,
+  scale: number,
+  shape: PatternShape,
+  state: string,
+): Effect.Effect<Smoke.Bounds, Smoke.SmokeAssertionError> =>
+  Effect.map(
+    ctx.expectSome(
+      `the ${shape} ink paints in the ${state} frame`,
+      Option.fromNullishOr(
+        Pixels.boundsOfColour(
+          frame,
+          new Pixels.Rgba({ ...PATTERN_TINTS[shape], a: 0xff }),
+        ),
+      ),
+    ),
+    (region) => logicalRegion(region, scale),
+  );
+
+/** How many of the comb's strokes paint their own tint at their centre. */
+const combPainted = (
+  frame: Pixels.Pixels,
+  scale: number,
+  origin: { readonly x: number; readonly y: number },
+): number =>
+  Arr.length(
+    Arr.filter(combPoints(origin), (point) => {
+      const at = framePoint(point, scale);
+      return Option.match(
+        Option.fromNullishOr(Pixels.pixelAt(frame, at.x, at.y)),
+        {
+          onNone: () => false,
+          onSome: (pixel) =>
+            pixel.r === PATTERN_TINTS.comb.r &&
+            pixel.g === PATTERN_TINTS.comb.g &&
+            pixel.b === PATTERN_TINTS.comb.b &&
+            pixel.a === 0xff,
+        },
+      );
+    }),
+  );
+
+const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(PATTERN_IDS.probe);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("svg-pattern");
+    const frame = yield* ctx.host.pixels("svg-pattern");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, size),
+    );
+    const ink = (shape: PatternShape) =>
+      patternInk(ctx, frame, scale, shape, "first");
+
+    // 1. A generated path is scaled from its view box, stroke and all.
+    const square = yield* paintedBox(ctx, PATTERN_IDS.square);
+    yield* ctx.expectEqual(
+      "the readout names the box the probe opened in",
+      yield* ctx.host.text(PATTERN_IDS.readout),
+      patternReadout(SQUARE_BOX),
+    );
+    yield* ctx.expectNear(
+      "the svg element paints the box its style gives it",
+      square.width,
+      SQUARE_BOX.width,
+      1,
+    );
+    const squareInk = yield* ink("square");
+    yield* ctx.expectNear(
+      "a generated path is scaled from its view box",
+      squareInk.width,
+      square.width * squareFraction(),
+      4,
+    );
+    yield* ctx.expectNear(
+      "the stroke is scaled by the same rule",
+      squareInk.height,
+      square.height * squareFraction(),
+      4,
+    );
+    yield* ctx.expectNear(
+      "the scaled ink is centred in its box",
+      squareInk.x + squareInk.width / 2,
+      square.x + square.width / 2,
+      3,
+    );
+
+    // 2. A path drawn past the view box is clipped at the view box's edge: the
+    //    band reaches both edges and paints nothing outside them.
+    const overhang = yield* paintedBox(ctx, PATTERN_IDS.overhang);
+    const overhangInk = yield* ink("overhang");
+    yield* ctx.expectNear(
+      "a path past the view box is clipped at the view box's edge",
+      overhangInk.width,
+      overhang.width,
+      3,
+    );
+    yield* ctx.expectNear(
+      "the clipped band is the stroke's own thickness",
+      overhangInk.height,
+      overhang.height * overhangFraction(),
+      3,
+    );
+    yield* ctx.expectNear(
+      "the ink does not grow past the left edge",
+      overhangInk.x,
+      overhang.x,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the ink does not grow past the right edge",
+      overhangInk.x + overhangInk.width,
+      overhang.x + overhang.width,
+      2,
+    );
+
+    // 3. A view box in a wider box: the width alone decides the scale, so the
+    //    band spans all 300 points rather than the 100 a fitted view box paints,
+    //    and its 10-unit stroke paints 30 points thick.
+    const wide = yield* paintedBox(ctx, PATTERN_IDS.wide);
+    const wideInk = yield* ink("wide");
+    yield* ctx.expectNear(
+      "a view box in a 3:1 box is scaled by the width, not fitted to the short axis",
+      wideInk.width,
+      wide.width,
+      4,
+    );
+    yield* ctx.expectNear(
+      "the content area is centred in its box",
+      wideInk.x + wideInk.width / 2,
+      wide.x + wide.width / 2,
+      3,
+    );
+    yield* ctx.expectNear(
+      "a stroke paints at the width's scale",
+      wideInk.height,
+      strokeWeight(WIDE.stroke, WIDE.width),
+      4,
+    );
+
+    // 3b. The same band in a box twice as tall as it is wide: the height is not
+    //     consulted, so the band still spans the 100-point width and keeps a
+    //     10-point stroke instead of taking the height's 2× scale.
+    const tall = yield* paintedBox(ctx, PATTERN_IDS.tall);
+    const tallInk = yield* ink("tall");
+    yield* ctx.expectNear(
+      "a view box in a 1:2 box keeps the width's scale",
+      tallInk.width,
+      tall.width,
+      4,
+    );
+    yield* ctx.expectNear(
+      "the height does not scale a stroke",
+      tallInk.height,
+      strokeWeight(TALL.stroke, TALL.width),
+      4,
+    );
+    yield* ctx.expectNear(
+      "the content area is centred on the tall box's centre",
+      tallInk.y + tallInk.height / 2,
+      tall.y + tall.height / 2,
+      3,
+    );
+
+    // 4. Every subpath of the generated path paints, not its prefix.
+    const comb = yield* paintedBox(ctx, PATTERN_IDS.comb);
+    yield* ctx.expectEqual(
+      "every subpath of a generated path paints",
+      combPainted(frame, scale, comb),
+      COMB.strokes,
+    );
+
+    // 5. The same view box in a 3:1 box: the path is laid out again at the new
+    //    width, and the content area grows with it — a square 300-point area,
+    //    which the element's 100-point box does not clip, so the pattern paints
+    //    above and below the box it was given.
+    yield* ctx.host.click(PATTERN_IDS.resize);
+    yield* settleUntil(
+      ctx.host.text(PATTERN_IDS.readout),
+      (text) => text === patternReadout(SQUARE_RESIZED_BOX),
+    );
+    yield* ctx.host.capture("svg-pattern-resized");
+    const resizedFrame = yield* ctx.host.pixels("svg-pattern-resized");
+    const resized = yield* paintedBox(ctx, PATTERN_IDS.square);
+    yield* ctx.expectEqual(
+      "the press re-lays the element out at the new box",
+      yield* ctx.host.text(PATTERN_IDS.readout),
+      patternReadout(SQUARE_RESIZED_BOX),
+    );
+    yield* ctx.expectNear(
+      "the resized element paints the box its style gives it",
+      resized.width,
+      SQUARE_RESIZED_BOX.width,
+      1,
+    );
+    const resizedInk = yield* patternInk(
+      ctx,
+      resizedFrame,
+      scale,
+      "square",
+      "resized",
+    );
+    yield* ctx.expectNear(
+      "a resize lays the path out at the new width",
+      resizedInk.width,
+      resized.width * squareFraction(),
+      6,
+    );
+    yield* ctx.expectNear(
+      "the re-laid-out ink is centred on the element's horizontal centre",
+      resizedInk.x + resizedInk.width / 2,
+      resized.x + resized.width / 2,
+      4,
+    );
+    yield* ctx.expectEqual(
+      "the square content area is not clipped to the element's own box",
+      resizedInk.height > resized.height,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the overflow paints above the box the element was given",
+      resizedInk.y < resized.y,
+      true,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -15677,5 +16028,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "table-columns-lifecycle",
     view: () => <TableColumnsProbe />,
     steps: tableColumnsSteps,
+  },
+  "svg-pattern": {
+    id: "svg-pattern",
+    view: () => <SvgPatternProbe />,
+    steps: svgPatternSteps,
   },
 };
