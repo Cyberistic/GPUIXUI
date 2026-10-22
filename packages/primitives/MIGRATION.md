@@ -208,6 +208,7 @@ Geometry, colour and type map to the classes below. Columns are the
 | `borderWidth: 0` | `border-0` | built-in |
 | `borderColor` | `border-<role>` (`border-border`, `border-ring`, …) | built-in role table |
 | `backgroundColor` | `bg-<role>` (`bg-primary`, `bg-input`, …) | built-in role table |
+| `backgroundColor` (a filled action's hover/press) | `fill-<action>` / `fill-<action>-pressed` | registry → `filledHover` / `filledPressed` (an opaque, derived fill) |
 | `color` | `text-<role>` (`text-foreground`, `text-primary`, …) | built-in role table; `text-brand` is the registry's derived text colour |
 | `fontSize`/`lineHeight`/`fontWeight` | `type-<role>` (`type-label`, `type-body`, `type-h2`, …) | registry family → `theme.typography` |
 | `fontSize`/`lineHeight` (inherited weight) | `type-size-<role>` (`type-size-caption`, `type-size-label`) | registry family → `theme.typography`, no weight |
@@ -345,5 +346,11 @@ import { Button } from "@gpuixui/primitives";
 ```
 
 The recipe resolves `variant="secondary"` → `bg-secondary
-text-secondary-foreground hover:bg-secondary/90 active:bg-secondary/80`; the
-caller's `rounded-full px-6` are joined last and win.
+text-secondary-foreground hover:fill-secondary
+active:fill-secondary-pressed`; the caller's `rounded-full px-6` are joined last
+and win. `fill-secondary` is a **derived** fill — the theme's own opaque hover
+fill for the secondary action (`filledHover`), and `fill-secondary-pressed` its
+press fill (`filledPressed`). The recipe it replaced,
+`hover:bg-secondary/90 active:bg-secondary/80`, lifted the fill's alpha, so the
+surface behind the control showed through and the same action read as two
+colours on a card and on a dialog.

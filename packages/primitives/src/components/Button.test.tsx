@@ -20,6 +20,8 @@ import {
   contrastFloorsFor,
   contrastRatio,
   darkTheme,
+  filledHover,
+  filledPressed,
   keyboardDimFailures,
   lightTheme,
 } from "@gpuixui/tokens";
@@ -33,6 +35,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleRecord,
   hostStyleString,
   hostTag,
@@ -244,6 +247,48 @@ describe("Button", () => {
     expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
       testTheme.colors.destructive,
     );
+  });
+
+  it("paints a filled action's feedback as an opaque, derived fill", () => {
+    // The bug: the hover was a half-alpha lift (`bg-primary/90`), so the
+    // surface behind the control showed through — the same action read as two
+    // colours on a card and on a dialog — and a translucent fill cannot be
+    // measured for label contrast at all. The fill is derived from the theme
+    // instead: it moves toward the theme's foreground and stays opaque.
+    const filled = [
+      ["primary", "primary"],
+      ["secondary", "secondary"],
+      ["destructive", "destructive"],
+    ] as const;
+
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      Arr.forEach(filled, ([variant, action]) => {
+        const element = renderButton({ variant, children: "Save" }, theme, {
+          focused: false,
+        });
+        expect(expectSome(hostStyle(element, "hover"))).toEqual({
+          backgroundColor: filledHover(theme, action),
+        });
+        expect(expectSome(hostStyle(element, "active"))).toEqual({
+          backgroundColor: filledPressed(theme, action),
+        });
+        // The fill is opaque, so it measures against every surface it sits on.
+        expect(
+          contrastRatio(filledHover(theme, action), theme.colors.background),
+        ).toBeDefined();
+        // And the label keeps the text floor on it, which is the reason the
+        // fill is derived rather than lifted.
+        const label = theme.colors[`${action}Foreground`];
+        Arr.forEach(
+          [filledHover(theme, action), filledPressed(theme, action)],
+          (fill) => {
+            expect(contrastRatio(label, fill) ?? 0).toBeGreaterThanOrEqual(
+              contrastFloorsFor(theme).secondary,
+            );
+          },
+        );
+      });
+    });
   });
 
   it("keeps a filled action's label while Tab is elsewhere", () => {

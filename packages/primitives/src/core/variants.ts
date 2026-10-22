@@ -8,13 +8,20 @@
  * A variant references **theme roles**, never colours: `(theme) =>
  * theme.colors.primary`. A colour the theme does not ship is derived from a
  * role instead — a link paints `brandText`, the brand moved until it reads as
- * text. Interaction feedback lifts the fill's alpha (`alpha(primary, 0.9)`), the
- * way a filled action shows a press without a second palette entry. Resolution
+ * text. A filled action's feedback is derived the same way: `filledHover` and
+ * `filledPressed` move the fill toward the theme's foreground and keep it
+ * **opaque**, so one action reads as one colour on every surface. Resolution
  * happens in `style.ts`.
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import { alpha, brandText } from "@gpuixui/tokens";
+import {
+  alpha,
+  brandText,
+  filledHover,
+  filledPressed,
+  type FilledAction,
+} from "@gpuixui/tokens";
 import type { SpinnerAccent } from "./loading.js";
 import type { PrimitiveTheme } from "./theme.js";
 import type { ControlVariant } from "./style.js";
@@ -30,12 +37,20 @@ export const BUTTON_VARIANTS = [
 
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 
-/** Hover and press for a control whose fill is a solid role. */
+/**
+ * Hover and press for a control whose fill is a solid action role.
+ *
+ * The fill is **derived**, not lifted: `filledHover` / `filledPressed` move it
+ * toward the theme's foreground and keep it opaque. A half-alpha lift
+ * (`alpha(primary, 0.9)`) let the surface behind the control through, so the
+ * same action read as two colours on a card and on a dialog — and a
+ * translucent fill cannot be measured for label contrast at all.
+ */
 const filled = (
-  color: (theme: PrimitiveTheme) => string,
+  action: FilledAction,
 ): Pick<ControlVariant, "hover" | "active"> => ({
-  hover: (theme) => ({ backgroundColor: alpha(color(theme), 0.9) }),
-  active: (theme) => ({ backgroundColor: alpha(color(theme), 0.8) }),
+  hover: (theme) => ({ backgroundColor: filledHover(theme, action) }),
+  active: (theme) => ({ backgroundColor: filledPressed(theme, action) }),
 });
 
 /**
@@ -46,7 +61,7 @@ const primary: ControlVariant = {
   background: (theme) => theme.colors.primary,
   foreground: (theme) => theme.colors.primaryForeground,
   border: undefined,
-  ...filled((theme) => theme.colors.primary),
+  ...filled("primary"),
 };
 
 /** Filled, neutral: the second most important action in a view. */
@@ -54,7 +69,7 @@ const secondary: ControlVariant = {
   background: (theme) => theme.colors.secondary,
   foreground: (theme) => theme.colors.secondaryForeground,
   border: undefined,
-  ...filled((theme) => theme.colors.secondary),
+  ...filled("secondary"),
 };
 
 /** Hover and press for a control that paints no fill at rest. */
@@ -90,7 +105,7 @@ const destructive: ControlVariant = {
   background: (theme) => theme.colors.destructive,
   foreground: (theme) => theme.colors.destructiveForeground,
   border: undefined,
-  ...filled((theme) => theme.colors.destructive),
+  ...filled("destructive"),
 };
 
 /** A text action: underlines on hover instead of painting a filled surface. */

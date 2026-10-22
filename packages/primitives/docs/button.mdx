@@ -32,12 +32,19 @@ import { Button, Stack } from "@gpuixui/primitives";
 
 | `variant` | Rest | Hover / press |
 | --------- | ---- | ------------- |
-| `primary` (default) | `primary` fill, `primaryForeground` text | fill at 90% / 80% alpha |
-| `secondary` | `secondary` fill | alpha wash |
+| `primary` (default) | `primary` fill, `primaryForeground` text | derived fill — `filledHover` / `filledPressed` |
+| `secondary` | `secondary` fill | derived fill — `filledHover` / `filledPressed` |
 | `outline` | border only — `borderStrong`, the measured control boundary | hover wash |
 | `ghost` | no chrome | hover wash |
-| `destructive` | `destructive` fill | alpha wash |
+| `destructive` | `destructive` fill | derived fill — `filledHover` / `filledPressed` |
 | `link` | text in `brandText` — the brand derived until it reads as text | underline + hover wash |
+
+A filled action's hover and press are **opaque** fills the theme owns: they move
+toward the theme's foreground (`filledHover` / `filledPressed` in
+`@gpuixui/tokens`), so the same action reads as one colour on a card and on a
+dialog. The old half-alpha lift let the surface behind the control show through,
+and a translucent fill cannot be measured for label contrast at all. The label
+keeps the text floor on both fills.
 
 ## Sizes and states
 
@@ -168,8 +175,10 @@ the dim back with `style`, which merges last.
   loading description, a busy filled button handing its spinner the fill's
   on-colour, a `style` callback receiving the live state and winning over the
   recipe, the filled actions opting out of the keyboard dim (the collapsed
-  pair is named per mode; `outline`/`ghost`/`link` keep it), and a `link`'s
-  label painting `brandText` on every surface a link sits on.
+  pair is named per mode; `outline`/`ghost`/`link` keep it), a `link`'s
+  label painting `brandText` on every surface a link sits on, and a filled
+  action's hover and press painting the theme's **opaque** derived fills with
+  the label still clearing the text floor on both.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the button's own action, and a busy button installs no press handler.
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter

@@ -34,16 +34,25 @@ import type { ButtonVariant, ToggleVariant } from "../core/variants.js";
 const BUTTON_BASE =
   "flex flex-row items-center justify-center gap-sm rounded-md type-label cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
 
+/**
+ * A filled action's feedback is a **derived, opaque** fill.
+ *
+ * `hover:fill-primary` is the theme's own hover fill for the primary action and
+ * `active:fill-primary-pressed` its press fill — both derived from the fill
+ * toward the theme's foreground. The old `bg-primary/90` lifted the fill's
+ * alpha, so the surface behind the control showed through and the same action
+ * read as two colours on a card and on a dialog.
+ */
 const BUTTON_VARIANT: Readonly<Record<ButtonVariant, string>> = {
   primary:
-    "bg-primary text-primary-foreground border-0 hover:bg-primary/90 active:bg-primary/80",
+    "bg-primary text-primary-foreground border-0 hover:fill-primary active:fill-primary-pressed",
   secondary:
-    "bg-secondary text-secondary-foreground border-0 hover:bg-secondary/90 active:bg-secondary/80",
+    "bg-secondary text-secondary-foreground border-0 hover:fill-secondary active:fill-secondary-pressed",
   outline:
     "text-foreground border border-strong hover:bg-hover active:bg-active",
   ghost: "text-foreground border-0 hover:bg-hover active:bg-active",
   destructive:
-    "bg-destructive text-destructive-foreground border-0 hover:bg-destructive/90 active:bg-destructive/80",
+    "bg-destructive text-destructive-foreground border-0 hover:fill-destructive active:fill-destructive-pressed",
   link: "text-brand border-0 hover:bg-hover hover:underline active:bg-active",
 };
 

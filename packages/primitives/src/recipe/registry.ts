@@ -12,8 +12,18 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import type { ControlSize, TextRole, Theme } from "@gpuixui/tokens";
-import { brandText, targetSize } from "@gpuixui/tokens";
+import type {
+  ControlSize,
+  FilledAction,
+  TextRole,
+  Theme,
+} from "@gpuixui/tokens";
+import {
+  brandText,
+  filledHover,
+  filledPressed,
+  targetSize,
+} from "@gpuixui/tokens";
 import { createTw } from "@gpuixui/tw";
 import { switchThumbOffset } from "../core/selection.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
@@ -108,6 +118,30 @@ const roleSize = (
   return { fontSize: type.fontSize, lineHeight: type.lineHeight };
 };
 
+/**
+ * A filled action's hover and press fill, as a derived colour.
+ *
+ * The fill moves toward the theme's foreground and stays **opaque**: a
+ * half-alpha lift (`bg-primary/90`) let the surface behind the control
+ * through, so the same action read as two colours on a card and on a dialog,
+ * and its label could not be measured for contrast at all.
+ *
+ * The class name carries the state — `fill-primary` is the hover,
+ * `fill-primary-pressed` the press — and an unknown suffix resolves to
+ * nothing, so a typo lands in the compiler's `unsupported` list instead of
+ * painting the resting fill.
+ */
+const filledFill = (
+  theme: Theme,
+  action: FilledAction,
+  value: string | undefined,
+): StyleDesc | undefined =>
+  value === undefined
+    ? { backgroundColor: filledHover(theme, action) }
+    : value === "pressed"
+      ? { backgroundColor: filledPressed(theme, action) }
+      : undefined;
+
 /** The primitives' compiler: built-in utilities plus the theme-scale steps. */
 export const recipeTw = createTw({
   utilities: {
@@ -150,6 +184,12 @@ export const recipeTw = createTw({
     // wash and 3.10:1 in macOS dark. `brandText` moves the brand toward
     // `foreground` until the least readable surface a link sits on clears.
     "text-brand": (theme) => ({ color: brandText(theme) }),
+    // A filled action's feedback is derived too: the hover and the press are
+    // opaque fills the theme owns, not a half-alpha lift of the resting one.
+    "fill-primary": (theme, value) => filledFill(theme, "primary", value),
+    "fill-secondary": (theme, value) => filledFill(theme, "secondary", value),
+    "fill-destructive": (theme, value) =>
+      filledFill(theme, "destructive", value),
     "ml-0": () => ({ marginLeft: 0 }),
     "mr-0": () => ({ marginRight: 0 }),
     "mt-0": () => ({ marginTop: 0 }),
