@@ -16,7 +16,7 @@
  * component runtime imports it.
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -110,6 +110,15 @@ const isExportedPart = (name: string): boolean =>
     ([key, value]) => key === name && typeof value === "function",
   );
 
+/** A top-level part file's source, read from this test's own directory. */
+const sourceOf = (file: string): string =>
+  readFileSync(fileURLToPath(new URL(`./${file}`, import.meta.url)), "utf8");
+
+const partFiles: ReadonlyArray<string> = Arr.filter(
+  readdirSync(fileURLToPath(new URL("./", import.meta.url))),
+  (name) => Str.endsWith(".tsx")(name) && !Str.endsWith(".test.tsx")(name),
+);
+
 describe("component API contract", () => {
   it("names the boolean change callback beside the value one", () => {
     const controlled = section("## 2. Controlled and uncontrolled");
@@ -161,6 +170,33 @@ describe("component API contract", () => {
     );
 
     expect(problems).toEqual([]);
+  });
+
+  it("states the focus a traversal cannot deliver, and keeps the cue on the ring", () => {
+    // A `Tab` traversal focuses an element without running its focus handler
+    // (measured by `tabs-lifecycle`), so a `focused` StateStyle flag is not the
+    // focus feedback a keyboard user gets. The cue is the ring, declared at
+    // rest; this holds the spec's sentence and every part that carries the flag
+    // to that rule, so a new part cannot ship `focused` as its only feedback.
+    const vocabulary = section("## 3. State-aware styling");
+
+    expect(vocabulary).toContain("without running its focus handler");
+    expect(vocabulary).toContain("keyboardRing");
+
+    const flagged = Arr.filter(partFiles, (file) =>
+      Str.includes("readonly focused: boolean")(sourceOf(file)),
+    );
+
+    // The audit's result: six parts expose the flag today. A seventh must add
+    // its name to the sentence above and the ring to its source.
+    expect(Arr.length(flagged)).toBe(6);
+
+    const missingRing = Arr.filter(
+      flagged,
+      (file) => !Str.includes("keyboardRing(")(sourceOf(file)),
+    );
+
+    expect(missingRing).toEqual([]);
   });
 
   it("keeps a planned part out of the package until its row lands", () => {

@@ -1468,7 +1468,15 @@ a workaround for two live sessions sharing one worktree; see
       verification count, and the `COMPONENTS.md` row. Behaviour 559/53, unit
       429/45, `check-types` green. No live probe re-run: the press path is
       measured in the `TestRenderer`, and the focus gap it removes is the one
-      `tabs-lifecycle` already measured in a window
+      `tabs-lifecycle` already measured in a window. The same pass closes the
+      cosmetic `onFocus` audit: six parts expose a `focused` `StateStyle` flag
+      fed only by the focus event (`AccordionTrigger`, `CollapsibleTrigger`,
+      `TabsTrigger`, `SearchInput`, `FieldInput`, `TimePickerSegment`) and none
+      paints from it, so the rule is now stated once in `docs/component-api.md`
+      §3 — the cue is `keyboardRing` at rest, the flag arrives only from a
+      press, a click or a programmatic focus — and `src/api.test.ts` derives the
+      six flagged files from the source, fails when one loses its ring
+      (measured: `[ 'search-input.tsx' ]`) and when the sentence goes (measured)
     - [x] Inventory test counts and the drifted rows — plan 139
     - [x] Tabs vertical orientation verified: axis keys, layout and manual activation — plan 321
     - [x] Toast actions: one labelled action with a provider-owned handler — plan 322

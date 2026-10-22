@@ -82,6 +82,16 @@ a public state object instead:
   State names come from `base-gpui`'s per-part structs — `active`, `checked`,
   `closed`, `disabled`, `focused`, `highlighted`, `invalid`, `open`,
   `orientation`, `selected` — and are the only vocabulary allowed.
+- **`focused` is the one member the runtime cannot always deliver.** A `Tab`
+  traversal focuses the element without running its focus handler (measured by
+  the playground's `tabs-lifecycle` on 0.11.0), so a `style` callback keyed on
+  `focused` sees a pointer press, a click or a programmatic `focusElement` —
+  not a traversal, and not a keyboard user's arrival. The focus **cue** does not
+  depend on the flag: every part declares `keyboardRing` at rest, so the runtime
+  paints the `focusVisible` outline after a `Tab`. Six parts carry the
+  flag — `AccordionTrigger`, `CollapsibleTrigger`, `TabsTrigger`, `SearchInput`,
+  `FieldInput`, `TimePickerSegment` — and `api.test.ts` holds each one to the
+  ring, so a part cannot ship the flag as its only focus feedback.
 - Every token lookup goes through the theme seam (`internal/theme.ts`); a
   component never repeats a raw role name or writes a colour/shadow/radius
   literal. The seam is also where a consumer gets the theme: the package root
