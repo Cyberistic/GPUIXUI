@@ -955,6 +955,132 @@ describe("the resting role of a floating row on the wash it tints", () => {
 });
 
 /**
+ * Guards the status label a **list** row carries on the wash it wears.
+ *
+ * The floating-row suite above measured a menu row's destructive label on the
+ * washes a menu row tints (`hover`, `active`); a list row is the other row in
+ * the library and it wears the other two: `list.tsx` tints `accent` under the
+ * pointer, keeps `active` while pressed and fills `selected` once the row is
+ * chosen, while a status caption is painted `Text tone="destructive"` → the
+ * tone's readable role (`toneColor` in `packages/primitives`). Both list washes
+ * were measured by nothing, so a brand whose status text sat near its selection
+ * could erase a failed row exactly when the reader picked it.
+ */
+describe("the status label on the wash a list row wears", () => {
+  const washes = ["selected", "accent"] as const;
+
+  it("measures the destructive label on both list-row washes", () => {
+    const missing = washes
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "destructiveSoftForeground" &&
+              pair.background === background &&
+              pair.floor === "body",
+          ),
+      )
+      .map((background) => `destructiveSoftForeground/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the roles the list painters actually use", () => {
+    // The pair only means something while a row still paints those washes and a
+    // status run still resolves to the readable role rather than the solid fill.
+    const list = readFileSync(
+      new URL("../../components/src/list.tsx", import.meta.url),
+      "utf8",
+    );
+    const style = readFileSync(
+      new URL("../../primitives/src/core/style.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(list).toContain("hover: { backgroundColor: theme.colors.accent }");
+    expect(list).toContain("active: { backgroundColor: theme.colors.active }");
+    expect(list).toContain("backgroundColor: theme.colors.selected");
+    expect(style).toContain(
+      "destructive: (theme) => theme.colors.destructiveSoftForeground",
+    );
+  });
+
+  it("reports a status label painted in the wash it sits on", () => {
+    // A brand whose status text is its selection paints a failed row nobody can
+    // read — on the chosen row and on the row the pointer is on.
+    const broken = {
+      colors: {
+        ...lightColors,
+        destructiveSoftForeground: lightColors.selected,
+      },
+    };
+    const failures = contrastFailures(broken);
+
+    // The two list washes are the pairs that land exactly on the text; the other
+    // placements the same broken role touches report their own ratios, which
+    // the surface suites hold.
+    expect(
+      washes.map((background) =>
+        failures.find(
+          ({ foreground, background: over }) =>
+            foreground === "destructiveSoftForeground" && over === background,
+        ),
+      ),
+    ).toEqual(
+      washes.map((background) => ({
+        foreground: "destructiveSoftForeground",
+        background,
+        ratio: 1,
+        floor: contrastFloors.body,
+      })),
+    );
+  });
+
+  it("clears the body floor in every shipped theme, with Luna's chosen row tightest", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const measured = shipped.flatMap((theme) =>
+      washes.map((background) => ({
+        name: `${theme.name}/destructiveSoftForeground/${background}`,
+        ratio:
+          contrastRatio(
+            theme.colors.destructiveSoftForeground,
+            theme.colors[background],
+          ) ?? 0,
+      })),
+    );
+    const tightest = measured.reduce((low, next) =>
+      next.ratio < low.ratio ? next : low,
+    );
+
+    expect(measured.filter(({ ratio }) => ratio < contrastFloors.body)).toEqual(
+      [],
+    );
+    // The authored look's warmer selected wash is the tightest of the sixteen
+    // styles; the catalogue prints the same number.
+    expect(tightest.name).toBe(
+      "Dark · Windows XP (Luna)/destructiveSoftForeground/selected",
+    );
+    expect(tightest.ratio.toFixed(2)).toBe("7.97");
+
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    expect(page).toContain(`at ${printedRatio(tightest.ratio)}`);
+    expect(page).toContain("a destructive status label");
+  });
+});
+
+/**
  * Guards the selected row a floating list paints in its own text role. The
  * floating-row suite above measured `popoverForeground` on the two washes a row
  * tints while the pointer moves; the row that is **chosen** fills `selected`

@@ -407,7 +407,12 @@ wash a chosen row fills (`selectItemClass` is `text-popover-foreground` over
 `bg-selected`); that check found the two light looks' pressed washes at 6.93:1
 and 6.77:1, so every light theme carries red 900 as
 `destructiveSoftForeground` — the same value the deeper soft surface needs for
-its label, rather than flattening press into hover.
+its label, rather than flattening press into hover. A **list** row is the other
+row and it wears the other two washes: `list.tsx` fills `selected` once a row is
+chosen and tints `accent` under the pointer, and a destructive status caption
+(`Text tone="destructive"`) keeps the tone's readable role, so that role is
+measured on both — the tightest shipped placement is the Luna look's chosen row
+at 7.97:1.
 
 A **filled role's pointer feedback** is derived, never a lifted alpha: a
 half-alpha fill shows the surface behind the control, so the same face reads as

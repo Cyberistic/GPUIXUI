@@ -376,6 +376,26 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "active",
     floor: "body",
   },
+  // A **list** row wears the other two washes, and it carries the same status
+  // label: `Text tone="destructive"` resolves to the tone's readable role
+  // (`toneColor` in the primitives), while `list.tsx` tints `accent` under the
+  // pointer and fills `selected` once the row is chosen — so a destructive
+  // caption in an inbox row or a failed item is painted on both. The two
+  // floating-row pairs above measured the washes a *menu* row tints, and the
+  // list row's own two were measured by nothing: a brand whose status text sat
+  // near its selection would erase the failure exactly when the reader picked
+  // the row. All sixteen shipped styles clear the body floor here, the tightest
+  // being Luna dark's chosen row at 7.97:1.
+  {
+    foreground: "destructiveSoftForeground",
+    background: "selected",
+    floor: "body",
+  },
+  {
+    foreground: "destructiveSoftForeground",
+    background: "accent",
+    floor: "body",
+  },
   { foreground: "placeholder", background: "input", floor: "secondary" },
   { foreground: "borderStrong", background: "background", floor: "boundary" },
   { foreground: "borderStrong", background: "card", floor: "boundary" },

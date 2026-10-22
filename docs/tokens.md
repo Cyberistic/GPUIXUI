@@ -1392,7 +1392,7 @@ named colour, an `hsl()`-family function). Shorthand hex is measured.
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 101 pairs cover the text role
+the caller remembering to say so. The 103 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1451,7 +1451,14 @@ left the destructive row at 6.93:1 and Luna light's at 6.77:1, under the body
 floor. Every light theme now carries red 900 (`#5C1619`) as
 `destructiveSoftForeground`: it is both the label the deeper soft surface needs
 (red 800 landed at 6.78:1 on it, under the body floor) and the value the two
-darker presses needed, so one role covers both. A **bordered** control is the third case: the
+darker presses needed, so one role covers both. A **list** row is the other row
+and it wears the other two washes: `list.tsx` tints `accent` under the pointer,
+keeps `active` while pressed and fills `selected` once the row is chosen, and a
+status caption is `Text tone="destructive"` → the tone's readable role. So a
+destructive status label is measured on both of those washes too, where the
+tightest shipped placement is the Luna look's chosen row at 7.97:1 — a failed
+item in an inbox row stays readable exactly when the reader selects it. A
+**bordered** control is the third case: the
 secondary action paints `borderStrong` and keeps that edge while the same
 element's fill moves to the wash, so the edge is measured there too. It found
 four shipped misses — the base light theme's pressed secondary button at
