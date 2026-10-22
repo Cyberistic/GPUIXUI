@@ -968,6 +968,71 @@ describe("List", () => {
     list.unmount();
   });
 
+  it("refuses the keys while a press has left a disabled row focused", () => {
+    // The sequence the live `list-lifecycle` probe measured: a press leaves a
+    // disabled row focused and a selection already made, and the keys must
+    // neither act on the row the record names nor on the selection. This
+    // renderer delivers the focus event the window does not, so the end state
+    // is what it holds here; the origin rule's own direction is measured by
+    // `list/origin.test.ts` and the window by `list-lifecycle`.
+    const onActivate = vi.fn();
+    const onValueChange = vi.fn();
+    const list = renderComponent(
+      <List
+        testId="list"
+        selectionMode="single"
+        onActivate={onActivate}
+        onValueChange={onValueChange}
+      >
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" disabled>
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    clickCentreOf(list, "row-c");
+    expect(onValueChange).toHaveBeenLastCalledWith("c");
+    expect(onActivate).toHaveBeenCalledTimes(1);
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    list.renderer.nativeSimulateKeyDown(
+      list.renderer.findByTestId("list")?.id ?? -1,
+      "enter",
+    );
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onActivate).toHaveBeenCalledTimes(1);
+
+    // An arrow leaves the disabled row for the next enabled one, where Enter
+    // acts again.
+    pressKey(list, "down");
+    pressKey(list, "enter");
+    expect(onActivate).toHaveBeenLastCalledWith("c");
+    expect(onActivate).toHaveBeenCalledTimes(2);
+
+    list.unmount();
+  });
+
+  it("keeps the tab stop off a disabled row a press focused", () => {
+    // The press records the disabled row as the row the reader is on (so the
+    // keys act from it and refuse), while the tab stop stays a row a traversal
+    // may land on: a disabled row that owned the stop would be the only way in
+    // from the keyboard.
+    const list = renderComponent(catalog);
+
+    clickCentreOf(list, "row-b");
+
+    expect(tabStop(list)).toEqual(["row-a"]);
+
+    list.unmount();
+  });
+
   it("clips a long title and description to the row's one line", () => {
     const text =
       "A very long label that would otherwise wrap far beyond the row it sits in";

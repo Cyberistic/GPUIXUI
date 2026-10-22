@@ -258,6 +258,36 @@ describe("CommandMenu", () => {
     palette.unmount();
   });
 
+  it("reopens while its surface is still leaving", async () => {
+    // The reopen path, held where it can be seen: a reader's next press lands
+    // the frame after an action ran, so the surface must retarget its exit into
+    // an entry with the query of a fresh open. The window half is the
+    // playground's `command-palette` probe, which is red for a reason this
+    // renderer cannot see (the leaving layer's hit box swallows the press) —
+    // see `TODO.md` → Interlocks.
+    const perform = vi.fn();
+    const palette = renderComponent(<OpenedPalette perform={perform} />);
+    const opener = palette.renderer.findByTestId("palette-opener")?.id ?? -1;
+
+    palette.renderer.focusElement(opener);
+    clickCentreOf(palette, "palette-opener");
+    type(palette, "save");
+    palette.renderer.simulateKeystrokes("enter");
+    expect(perform).toHaveBeenCalledWith("save");
+
+    // Reopen in the exit window, before its tween could finish.
+    clickCentreOf(palette, "palette-opener");
+
+    await waitFor(() =>
+      expect(palette.renderer.findByTestId("command-menu")).toBeDefined(),
+    );
+    expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
+    // The query is the one a fresh open starts with, so every action is back.
+    expect(palette.renderer.getAllText()).toContain("Toggle sidebar");
+
+    palette.unmount();
+  });
+
   it("shows the empty label when nothing matches", () => {
     const palette = renderComponent(<Palette perform={vi.fn()} />);
 

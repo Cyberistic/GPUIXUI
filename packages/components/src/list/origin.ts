@@ -1,11 +1,17 @@
 /**
  * The row a key event acts on.
  *
- * A focus event does deliver the row a reader arrives on (re-measured on 0.11.0),
- * but the recorded row is not the truth a key should move from: it can be stale
- * after a controlled selection or a filter, and a key that arrives at the list
- * itself names no row at all. The element that sent the key is the precise
- * origin; the recorded row is the fallback for a key that has no row of its own.
+ * Three readings, most precise first:
+ *
+ * - the element the runtime delivered the key from (a renderer that names the
+ *   sending row);
+ * - the element the runtime reports as focused — a *window* builds a key
+ *   payload per handler, so the list's own handler names the list (the rule
+ *   `internal/dismiss-layer.ts` records for a press), and a pointer press moves
+ *   focus without running the row's `onFocus` (measured on 0.11.0), so the
+ *   record can name the previous row;
+ * - the row the list recorded, for a key that arrives with no focus of its own
+ *   (the list itself focused, or a renderer that reports neither).
  */
 
 import * as Arr from "effect/Array";
@@ -19,24 +25,33 @@ export interface OriginRow {
   readonly value: string;
 }
 
+/** The row with native id `id`, when one matches. */
+const rowOf = (
+  rows: ReadonlyArray<OriginRow>,
+  id: number,
+): Option.Option<string> =>
+  Option.map(
+    Arr.findFirst(rows, (row) => row.nativeId === id),
+    (row) => row.value,
+  );
+
 /**
- * The row a key event acts on: the sending row, then `active`, then `None`.
+ * The row a key event acts on: the sending row, then the focused row, then
+ * `active`, then `None`.
  *
- * `elementId` is the host element the runtime delivered the key from; it is a
- * row only when it matches one, so a key from the list root falls through.
+ * `elementId` is the host element the runtime delivered the key from and
+ * `focusedId` the element it reports as focused; either is a row only when it
+ * matches one, so a key from the list root falls through to the record.
  */
 export const keyOrigin = (
   rows: ReadonlyArray<OriginRow>,
   active: Option.Option<string>,
   elementId: Option.Option<number>,
+  focusedId: Option.Option<number>,
 ): Option.Option<string> =>
   pipe(
     elementId,
-    Option.flatMap((id) =>
-      Option.map(
-        Arr.findFirst(rows, (row) => row.nativeId === id),
-        (row) => row.value,
-      ),
-    ),
+    Option.flatMap((id) => rowOf(rows, id)),
+    Option.orElse(() => Option.flatMap(focusedId, (id) => rowOf(rows, id))),
     Option.orElse(() => active),
   );

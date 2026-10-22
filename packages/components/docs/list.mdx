@@ -35,8 +35,8 @@ import {
 | `selectionMode` | Role | Tab stop | Keyboard |
 | --------------- | ---- | -------- | -------- |
 | `none` (default) | `list` / `listitem` | none — rows are not focusable | none |
-| `single` | `listbox` / `option` | exactly one row | see below |
-| `multiple` | `listbox` / `option` | exactly one row | see below |
+| `single` | `listbox` / `option` | exactly one **enabled** row | see below |
+| `multiple` | `listbox` / `option` | exactly one **enabled** row | see below |
 
 ## Keyboard (single mode)
 
@@ -52,14 +52,24 @@ import {
 | Letter keys | jump to the next enabled row whose `textValue` starts with the typed prefix |
 
 A disabled row is skipped by the arrow keys, by `Home`/`End` and by clicks; it can
-never be selected.
+never be selected or activated.
 
-A key acts on the row it came from, so a reader who reached a row with `Tab`
-moves from **that** row. The traversal focuses the row without running its
-`onFocus` on 0.11.0 (`tabs-lifecycle` reads `focuses=0`), so the key's own element
-is the precise origin: the recorded row can be stale or absent, and a key that
-arrives at the list root has no row of its own. The rule is a pure function
+A key acts on the row the reader is on, read in three steps: the row that sent
+the key, then the element the renderer reports as focused, then the row the list
+recorded. All three exist because the runtime reports focus in more than one way
+on 0.11.0 — a traversal focuses a row **without running its `onFocus`**
+(`tabs-lifecycle` reads `focuses=0`), and a window builds a key payload per
+handler, so the list's own `onKeyDown` sees an `elementId` naming **the list**
+rather than the row (`list-lifecycle`). The focused element is therefore the
+precise reading a window gives, and the recorded row is the fallback for a key
+that arrives with no focus of its own. The rule is a pure function
 (`src/list/origin.ts`) with its own suite, `src/list/origin.test.ts`.
+
+A press on a disabled row still takes the pointer's focus — the runtime focuses
+it, and the row refuses the press — so it becomes the row the keys act from: `↓`
+leaves it for the next enabled row, and `Enter` there refuses. The tab stop
+deliberately does **not** follow it; it stays on an enabled row, because a
+traversal must not be the way onto the one row nothing accepts.
 
 ## Keyboard (multiple mode)
 
@@ -289,9 +299,11 @@ is on.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (40 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (42 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
-`src/internal/typeahead.test.ts` for the shared prefix matching, and
+`src/internal/typeahead.test.ts` for the shared prefix matching,
+`src/list/origin.test.ts` for the three-step origin rule (a sending row, a
+focused row behind a payload that names the handler, and the record) and
 `src/list/selection.test.ts` for the multiple-selection rules: the modes and
 their roles, the absence and uniqueness of the tab stop, selection by click and by
 key, a disabled row rejecting both, real focus moving with wrap-around past a
@@ -304,12 +316,19 @@ and bounded by the row, the selected title painted in the row's on-colour (held
 to the body floor on the fill it sits on) while the description keeps its muted
 role and a caller's `style` still wins, a disabled row keeping its selection wash
 at the role itself (no `opacity`) with its title on the secondary role measured
-there and, off the wash, on `disabledForeground`, and — in multiple mode —
-plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, `Cmd`/`Ctrl`+A
-selecting every enabled row, and a disabled row never entering a selection.
+there and, off the wash, on `disabledForeground`, a key refusing while a press has
+left a disabled row focused, the tab stop staying off that row, and — in multiple
+mode — plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges,
+`Cmd`/`Ctrl`+A selecting every enabled row, and a disabled row never entering a
+selection.
+
+The window half is the playground's `list-lifecycle` probe, which measured the
+same key path through a real window: a press focuses a disabled row, `Enter`
+refuses it, and `↓` leaves it for the next enabled row.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
+nub apps/playground/dist/live/run.js --only list-lifecycle
 ```
 
 ## Related

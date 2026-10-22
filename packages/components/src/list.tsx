@@ -13,6 +13,16 @@
  *   the list can own the keys while the row owns the focus;
  * - the ring is the runtime's `focusVisible` outline, so it paints after a
  *   keyboard focus and not after a click (measured on 0.11.0).
+ *
+ * Two more decide where a key acts (live `list-lifecycle`, 2026-10-22):
+ *
+ * - a window builds a key payload per handler, so the list's `onKeyDown` sees
+ *   `elementId` naming the list rather than the row that sent it;
+ * - a pointer press moves focus without running the row's `onFocus`
+ *   (`focuses=0` on 0.11.0), so the record can name the previous row.
+ *
+ * `keyOrigin` therefore reads the sender, then the renderer's focused element,
+ * then the record.
  */
 
 import type {
@@ -188,7 +198,16 @@ const tabbableValue = (
   selectable: boolean,
 ): Option.Option<string> =>
   pipe(
-    active,
+    // A press moves the pointer's focus onto a disabled row and records it as
+    // the active row, so the stop has to skip it: a traversal must not be the
+    // way onto the one row nothing accepts.
+    Option.flatMap(active, (value) =>
+      pipe(
+        Arr.findFirst(rows, (row) => row.value === value),
+        Option.filter((row) => !row.disabled),
+        Option.map((row) => row.value),
+      ),
+    ),
     Option.orElse(() =>
       selectable
         ? Option.map(
@@ -543,7 +562,12 @@ export const List = (props: ListProps) => {
   });
 
   const originOf = (event: EventPayload): Option.Option<string> =>
-    keyOrigin(rows, active, Option.fromNullishOr(event.elementId));
+    keyOrigin(
+      rows,
+      active,
+      Option.fromNullishOr(event.elementId),
+      Option.fromNullishOr(renderer?.getFocusedElementId?.()),
+    );
 
   const handleKeyDown = (event: KeyEvent): void => {
     if (!selectable) return;
@@ -943,6 +967,7 @@ export const listMeta = {
     "type-ahead matches an explicit ListItem textValue, not rendered children",
     "activation is a callback on single/none lists: no href or link role, and a multiple list has no activation",
     "no drag reorder or virtualisation",
+    "a press can focus a disabled row (the runtime does); the keys then refuse it and the tab stop stays on an enabled row",
   ],
   docs: "docs/list.mdx",
   example: "examples/list.example.tsx",
