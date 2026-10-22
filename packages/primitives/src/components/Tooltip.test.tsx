@@ -78,4 +78,40 @@ describe("Tooltip accessibility", () => {
       Option.none(),
     );
   });
+
+  it("trims a padded description like every other name", () => {
+    // The bug guarded: the description was cloned verbatim while every label in
+    // the package goes through `accessibleName`, so a padded copy reached the
+    // accessibility tree with its padding and a screen reader read the pause.
+    const trigger = triggerOf(
+      render({
+        content: <text>Not a string</text>,
+        description: "  Revenue definition  ",
+        children: <div tabIndex={0} />,
+      }),
+    );
+    expect(expectSome(hostProp(trigger, "aria-description"))).toBe(
+      "Revenue definition",
+    );
+  });
+
+  it("publishes no description for a blank tip or description", () => {
+    // A blank string is not a description: cloning it sets an attribute a
+    // reader has to dismiss, the same reason `accessibleName` drops a blank
+    // label rather than publishing it.
+    const blankTip = triggerOf(
+      render({ content: "   ", children: <div tabIndex={0} /> }),
+    );
+    const blankDescription = triggerOf(
+      render({
+        content: "Tip",
+        description: "",
+        children: <div tabIndex={0} />,
+      }),
+    );
+    expect(hostProp(blankTip, "aria-description")).toStrictEqual(Option.none());
+    expect(hostProp(blankDescription, "aria-description")).toStrictEqual(
+      Option.none(),
+    );
+  });
 });

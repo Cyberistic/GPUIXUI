@@ -63,7 +63,8 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 - The tip is the trigger's **`aria-description`** when `content` is a string (or
   `description` is set): GPUix 0.11.0 has `aria-description` but no
   `aria-describedby`, so the wrapper clones the host trigger with it. A
-  component trigger cannot carry the prop.
+  component trigger cannot carry the prop. The text is trimmed and a blank one is
+  not published — an empty description is still an attribute a reader dismisses.
 - The description is supplementary, not a name. A button whose only name is
   inside a tooltip is unnamed to assistive technology, so give the control its
   own `label`.

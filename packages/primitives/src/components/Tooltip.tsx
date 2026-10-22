@@ -32,6 +32,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
+import { accessibleName } from "../core/a11y.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { tooltipClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -65,16 +66,22 @@ export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc =>
  * GPUix 0.11.0 has `aria-description` but no `aria-describedby`, so the tip is
  * published by cloning the host trigger. A component trigger that does not
  * forward the prop cannot carry it — the documented contract is a host element.
+ *
+ * The text goes through `accessibleName`, so a padded description is trimmed and
+ * a blank one is not published: an empty description is still an attribute a
+ * reader has to dismiss, exactly like a blank `aria-label`.
  */
 const describedTrigger = (
   children: ReactNode,
   text: string | undefined,
-): ReactNode =>
-  text === undefined ||
-  !isValidElement<Record<string, unknown>>(children) ||
-  typeof children.type !== "string"
+): ReactNode => {
+  const name = accessibleName(text);
+  return name === undefined ||
+    !isValidElement<Record<string, unknown>>(children) ||
+    typeof children.type !== "string"
     ? children
-    : cloneElement(children, { "aria-description": text });
+    : cloneElement(children, { "aria-description": name });
+};
 
 /** The element tree `Tooltip` renders. Pure in its arguments. */
 export const renderTooltip = (
