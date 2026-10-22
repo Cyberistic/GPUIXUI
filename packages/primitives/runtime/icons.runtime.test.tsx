@@ -4,7 +4,7 @@
  * Lives here rather than in `packages/icons` because the runtime harness lives
  * with the components that use it: `@gpuixui/primitives` already depends on
  * `@gpuixui/icons`, and the reverse dependency would break the boundary. One
- * harness, one suite — see plan 041 §2.2.
+ * harness, one suite.
  *
  * `packages/icons/src/*.test.ts` proves the icon *data*; this proves the three
  * claims that only a painted frame can: that GPUix paints the raw `<svg

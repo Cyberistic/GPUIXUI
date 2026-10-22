@@ -44,7 +44,7 @@ control cannot swallow the press meant for the control.
 ## Sizes
 
 `xs` 12 · `sm` 14 · `md` 16 (default) · `lg` 20 · `xl` 24, or a raw pixel count.
-The scale is `iconSize` from `@gpuixui/tokens` (plan 024), not a second copy, so
+The scale is `iconSize` from `@gpuixui/tokens`, not a second copy, so
 a theme change moves the icons with it. Named sizes are how an icon lines up
 with the text beside it.
 
@@ -83,7 +83,7 @@ executable tests (`nub run --filter @gpuixui/icons test`).
 **Verified in the real GPUix runtime** by
 `packages/primitives/runtime/icons.runtime.test.tsx`, which runs with
 `nub run --filter @gpuixui/primitives test:runtime` (the harness lives with the
-package that consumes icons — see plan 041 §2.2). Measured 2026-10-17:
+package that consumes icons). Measured 2026-10-17:
 
 - the raw `<svg source>` markup is painted: at `lg` the box is 20×20, at `xl`
   24×24;
@@ -92,5 +92,6 @@ package that consumes icons — see plan 041 §2.2). Measured 2026-10-17:
 - `style.color` tints the painted mark: two captures of the same red icon are
   byte-identical while the blue capture differs.
 
-The binding behind that run is the locally-built `darwin-x64` artifact from plan
-140, not a published binary (none exists for Intel macOS).
+The binding behind that run is the locally-built `darwin-x64` artifact — the
+recipe is in `apps/playground/README.md` §The binding on this host — not a
+published binary (none exists for Intel macOS).

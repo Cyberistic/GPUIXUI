@@ -5,7 +5,7 @@
  * proves the elements are *driven by it* — the rendered value comes from the
  * resolved state, an edit is reported from `event.value`, a runtime event with
  * no value is not a `null` change, and the field carries the name GPUix can
- * actually read (`aria-label`; there is no `aria-labelledby`, plan 020 §1.4).
+ * actually read (`aria-label`; there is no `aria-labelledby`; see `docs/gpuix-capabilities.md`).
  */
 
 import type { ReactElement } from "react";

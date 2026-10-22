@@ -1,7 +1,7 @@
 /**
  * `Checkbox` — an independent yes/no.
  *
- * GPUix exposes **no `aria-checked`** (plan 020 §1.4), so the state is reported
+ * GPUix exposes **no `aria-checked`** (see `docs/gpuix-capabilities.md`), so the state is reported
  * through `aria-valuetext` (`"checked"` / `"unchecked"` / `"mixed"`), which is
  * the supported way to make a checkbox legible to assistive technology. The
  * same three states are one paint resolved by `core/selection.ts`.
@@ -125,7 +125,7 @@ const markName = (state: SelectionState): "check" | "minus" =>
  * the control. `pointerEvents: "none"` is load-bearing, not decoration: the
  * runtime hit-tests to the deepest element under the point and does not bubble
  * an unhandled click, so a custom mark that took the press would make the box
- * untoggleable (measured for the switch's thumb, plan 041 §9).
+ * untoggleable (measured for the switch's thumb in `runtime/controls.runtime.test.tsx`).
  */
 export const renderCheckboxIndicator = (
   props: CheckboxIndicatorProps,

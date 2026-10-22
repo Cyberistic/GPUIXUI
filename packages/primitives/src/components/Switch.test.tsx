@@ -5,7 +5,7 @@
  * is a real second region, so a caller's glyph lives inside it — and GPUI
  * hit-tests to the deepest element, so a glyph without the `pointerEvents:
  * "none"` guard silently swallows the press that toggles the switch (measured
- * for the filled thumb, plan 041 §9).
+ * for the filled thumb in `runtime/controls.runtime.test.tsx`).
  */
 
 import type { ReactElement } from "react";

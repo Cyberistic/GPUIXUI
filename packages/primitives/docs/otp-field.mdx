@@ -126,7 +126,7 @@ field once and leaves it; it does not walk all `length` cells.
 
 The key contract runs on **key up**. GPUix's text editor consumes
 Left/Right/Home/End/Backspace/Delete on key down, so those keys never reach the
-element's key-down handler (measured 2026-10-17, plan 054 §9). A held arrow
+element's key-down handler (measured 2026-10-17 in a window). A held arrow
 therefore moves one cell rather than repeating. Backspace on a filled cell is
 the native edit and arrives through `onValueChange`; the key-up handler knows this
 and does not delete a second character.
@@ -194,7 +194,7 @@ fill. The ring still marks where the focus is.
   and six `TextInput`s; invalid paints every cell; one ring; disabled refuses
   input, submit and the tab order; Tab enters once at the cell the code reached
   and leaves the group; a caller's cell composition still types, distributes and
-  reports the code. Measured 2026-10-17 (plan 054 §9), Enter on 2026-10-22.
+  reports the code. Measured in a window 2026-10-17; Enter on 2026-10-22.
 
 ```sh
 nub run --filter @gpuixui/primitives test

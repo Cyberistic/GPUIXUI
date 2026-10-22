@@ -1,7 +1,7 @@
 /**
  * The Button keyboard contract.
  *
- * The published `@gpuix/react` ships **no** button (plan 020 §1.5), so this is
+ * The published `@gpuix/react` ships **no** button (see `docs/gpuix-capabilities.md`), so this is
  * behaviour the library owns — and the part most worth guarding. Each test
  * below flips a real bug: Enter firing on key *up* (double activation with the
  * platform's own click), Space on key *down* (repeating while held), a held key

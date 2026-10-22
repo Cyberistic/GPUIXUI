@@ -1,7 +1,7 @@
 /**
  * `Slider` and `RangeSlider` — a value on a track.
  *
- * GPUix publishes **no slider** (plan 020 §1.5): there is a `div`, a style
+ * GPUix publishes **no slider** (see `docs/gpuix-capabilities.md`): there is a `div`, a style
  * object and real mouse/key events, and the rest is this package's. The
  * arithmetic lives in `core/value.ts`, the paint in `core/style.ts`, and this
  * file owns only what is irreducible here — reading the track's box from the

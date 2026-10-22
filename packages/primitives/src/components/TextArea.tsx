@@ -23,8 +23,9 @@ import { useTheme } from "./ThemeProvider.js";
 
 /**
  * Drift a textarea cannot take: with `onSubmit` set, the runtime turns Enter
- * into a submit and the newline never arrives (plan 046). A caller who wants
- * submit-on-Enter wants an `Input`.
+ * into a submit and the newline never arrives (measured by
+ * `runtime/fields.runtime.test.tsx`). A caller who wants submit-on-Enter wants
+ * an `Input`.
  */
 export type TextAreaProps = Omit<FieldProps, "onSubmit"> &
   ValueChangeProps<string> & {

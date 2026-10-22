@@ -95,7 +95,7 @@ export interface GridSpec {
  * A fixed-size grid.
  *
  * GPUix exposes `gridTemplateColumns`/`gridTemplateRows` as **numbers** and has
- * no auto-flow or named areas (plan 020 §1.2), so a grid is always `columns`
+ * no auto-flow or named areas (see `docs/gpuix-capabilities.md`), so a grid is always `columns`
  * equal tracks; anything raggedy uses a wrapping Stack.
  */
 export const gridStyle = (spec: GridSpec, theme: PrimitiveTheme): StyleDesc => {

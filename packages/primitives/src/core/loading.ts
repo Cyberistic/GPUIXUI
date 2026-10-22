@@ -3,9 +3,9 @@
  *
  * The published runtime's `motion` API animates **only** `width`, `height`,
  * `opacity`, `top`, `right`, `bottom`, `left` and `borderRadius` — no rotation,
- * no colour interpolation (plan 020 §1.2) — and `motion` itself is only
+ * no colour interpolation (see `docs/gpuix-capabilities.md`) — and `motion` itself is only
  * reachable through the `@gpuix/react` root, which this repository cannot import
- * (plan 020 §3). So every indicator here advances through a **discrete step**
+ * (see `docs/gpuix-capabilities.md`). So every indicator here advances through a **discrete step**
  * driven by a component interval, and the step function — the part that can be
  * wrong — is pure and lives here.
  */
@@ -175,8 +175,8 @@ export const spinnerDotStyle = (
  * Where the moving segment of an indeterminate bar starts, as a percentage of
  * the track.
  *
- * The runtime has no `onLayout` (plan 020 §1.3), so the track's width is
- * unknown; a percentage `width` is a length it does accept. The bar is a row
+ * This resolver never measures the track, so its width is unknown; a
+ * percentage `width` is a length the runtime accepts. The bar is a row
  * whose first child is an empty spacer of this width and whose second is the
  * segment, so varying the spacer moves the segment without measuring anything.
  *

@@ -35,7 +35,7 @@ export const TypographyExample = (): ReactElement => {
           </Text>
         </Stack>
 
-        <Text role="h2">Version 0.10.0</Text>
+        <Text role="h2">Version 0.11.0</Text>
 
         <Text role="bodyStrong">
           GPUIxUI now draws every Tier 1 primitive in the real GPUix runtime.
@@ -57,7 +57,7 @@ export const TypographyExample = (): ReactElement => {
 
         <Text role="label">Upgrade with</Text>
 
-        <Text role="code">nub add @gpuixui/primitives@0.10.0</Text>
+        <Text role="code">nub add @gpuixui/primitives</Text>
 
         <Separator orientation="horizontal" />
 

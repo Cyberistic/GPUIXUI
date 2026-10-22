@@ -5,7 +5,7 @@
  * **One window per test, never per file.** A re-render replaces the React tree,
  * but GPUI keeps the native state of a host element that is reused — measured:
  * a second `<input>` in the same window started with the previous test's text
- * (plan 041 §9). A fresh window is the only isolation that is actually true, and
+ * (the runtime suites in `runtime/`). A fresh window is the only isolation that is actually true, and
  * it is what makes the editing tests in `fields.runtime.test.tsx` meaningful.
  *
  * The window's own root is not a flex column either, so a tree mounted straight

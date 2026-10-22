@@ -4,7 +4,7 @@
  * These are the components the capability map forces to be *discrete*: the
  * runtime's `motion` animates opacity, width and insets and nothing else, so a
  * skeleton pulses opacity and a spinner advances a lit dot instead of rotating
- * (plan 020 §1.2/§1.6). That makes them the components a resolver test cannot
+ * (see `docs/gpuix-capabilities.md`). That makes them the components a resolver test cannot
  * judge at all: whether the step actually moves the pixels is only observable in
  * a running frame, so this suite samples the frame over real time.
  *

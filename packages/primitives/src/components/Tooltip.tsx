@@ -2,7 +2,7 @@
  * `Tooltip` — a short label on hover or keyboard focus.
  *
  * GPUix 0.11.0 ships the whole mechanism — the anchored layer, the open delay,
- * the dismiss-on-escape and the provider defaults (plan 020 §1.5) — so this is
+ * the dismiss-on-escape and the provider defaults (see `docs/gpuix-capabilities.md`) — so this is
  * a themed wrapper, not a reimplementation. Its job is that a tooltip cannot
  * drift from the rest of the system: the content wears the popover surface and
  * the caption type, and the trigger is `asChild`, because a tooltip describes

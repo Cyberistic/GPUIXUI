@@ -2,7 +2,7 @@
  * Selection controls: a checkbox, a radio and a switch are three paints of one
  * three-state model (unchecked, checked, indeterminate) over the same metrics.
  *
- * The published runtime has **no `aria-checked`** (plan 020 §1.4), so a
+ * The published runtime has **no `aria-checked`** (see `docs/gpuix-capabilities.md`), so a
  * component cannot announce the state natively; it reports the state through
  * `aria-valuetext`, and this module owns what that state *looks* like. Keeping
  * both in one place is what stops a Checkbox and a Switch disagreeing about what
@@ -249,8 +249,8 @@ export const switchTrackStyle = (
  * `pointerEvents: "none"` is load-bearing, not decoration: GPUI hit-tests to the
  * deepest element under the point and does not bubble an unhandled click to the
  * track, so a filled child covering the switch's centre swallowed every click
- * (measured: plan 041 §9 — the toggle never fired and the switch never took
- * focus).
+ * (measured in `runtime/controls.runtime.test.tsx` — the toggle never fired
+ * and the switch never took focus).
  */
 export const switchThumbStyle = (
   spec: SelectionSpec,

@@ -8,7 +8,7 @@
  * old palette for ever and no resolver test would notice.
  *
  * The two themes are the **shipped** `lightTheme` and `darkTheme` from
- * `@gpuixui/tokens` (plan 021), not test doubles, so this is the real
+ * `@gpuixui/tokens`, not test doubles, so this is the real
  * both-themes verification. The invariant is structural: every painted colour
  * must be a value of the active palette, so adding a role cannot silently
  * satisfy it. The other runtime suites keep the deterministic fixture

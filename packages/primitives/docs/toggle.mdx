@@ -106,7 +106,7 @@ decision, so a callback is the last word on a property the recipe also sets.
 - `runtime/toggle.runtime.test.tsx` — a real click flips the announced state and
   repaints the accent fill; Enter down and Space up each activate once; a
   disabled toggle leaves the tab order; the ring follows focus. Measured
-  2026-10-17 (plan 054 §9).
+  2026-10-17 (measured in a window).
 - The disabled **handler** guard is proven at the element-tree level: a
   tabIndex-less toggle cannot be focused natively, so the runtime test can only
   prove the tab order.

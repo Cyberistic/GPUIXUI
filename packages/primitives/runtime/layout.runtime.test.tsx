@@ -159,7 +159,7 @@ it("scrolls a ScrollArea by the wheel's delta", async () => {
     expect.fail("the ScrollArea painted no scrollable box"),
   );
   expect(before.y).toBe(0);
-  // GPUI's deltaY is negative to scroll down (plan 140 §4).
+  // GPUI's deltaY is negative to scroll down (measured on 0.11.0).
   runtime.wheel("s", 0, -100);
   const after = Option.getOrElse(runtime.scrollOffset("s"), () =>
     expect.fail("the ScrollArea lost its scroll offset"),

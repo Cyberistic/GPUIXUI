@@ -20,7 +20,7 @@ import { testTheme } from "./testing/theme.fixture.js";
 /**
  * Guards the discrete-step loading indicators.
  *
- * The runtime cannot rotate or interpolate a colour (plan 020 §1.2), so these
+ * The runtime cannot rotate or interpolate a colour (see `docs/gpuix-capabilities.md`), so these
  * indicators move by stepping a number. That makes the step function the whole
  * behaviour: if it stops advancing, wraps wrongly, or lights two dots at once,
  * the indicator is frozen or nonsensical and nothing else in the pipeline

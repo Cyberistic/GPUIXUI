@@ -1409,6 +1409,18 @@ a workaround for two live sessions sharing one worktree; see
       citation that resolves nowhere. Both directions measured: a planted
       `.agents/slop/plans/099-deleted-plan.md` citation fails naming the file, and
       the tree passes as it is
+`[x]` `packages/primitives`: the **prose citations** to deleted plans — about sixty
+      `(plan 020 §1.4)`, `plan 041 §9`, `plan 054 §9`, `plan 140 §4` references
+      across fifty files — were dead ends even after the path citations moved,
+      because the number-only form resolved nowhere either. Each now names a
+      source that survives (`docs/gpuix-capabilities.md`, the runtime suite that
+      measured the behaviour, the playground README), the stale "rendering is
+      impossible on this machine" claim in `src/components/testing/element.ts`
+      is corrected, the typography example's demo copy moved to the pinned
+      0.11.0, and the guard resolves a bare `plan NNN` against the plan
+      directory's own file names. Both directions measured: planting `plan 099`
+      fails `cites plan 099, which does not exist`, and the tree passes as it is.
+      679 unit / 194 runtime / 21 icons
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness

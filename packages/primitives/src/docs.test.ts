@@ -17,6 +17,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
@@ -98,11 +99,43 @@ const deniedProps = (source: string): ReadonlyArray<string> =>
     (match) => Result.succeed(match[1] ?? ""),
   );
 
-/** The plan paths a document cites, e.g. the plan file a comment names with `§9`. */
+/**
+ * The plan paths a document cites, e.g. the plan file a comment names with `§9`.
+ *
+ * Both spellings count: the repo-relative `.agents/slop/plans/…` and the short
+ * `plans/…` a package config uses.
+ */
 const citedPlans = (source: string): ReadonlyArray<string> =>
   Arr.map(
-    [...source.matchAll(/\.agents\/slop\/plans\/[A-Za-z0-9._-]+/g)],
+    [...source.matchAll(/(?:\.agents\/slop\/)?plans\/[A-Za-z0-9._-]+\.md/g)],
     (match) => match[0],
+  );
+
+/** Where a citation resolves: the short form is the plan directory's own path. */
+const planFile = (citation: string): string =>
+  Str.startsWith(".agents/")(citation) ? citation : `.agents/slop/${citation}`;
+
+/** The plan numbers a document cites by number, e.g. "plan 053 §6". */
+const citedPlanNumbers = (source: string): ReadonlyArray<string> =>
+  Arr.map(
+    [...source.matchAll(/\bplans? (\d{3})\b/g)],
+    (match) => match[1] ?? "",
+  );
+
+/** The plan numbers that still have a file in the plan directory. */
+const existingPlanNumbers = (): HashSet.HashSet<string> =>
+  HashSet.fromIterable(
+    Arr.filterMap(
+      readdirSync(fileURLToPath(new URL(".agents/slop/plans/", repoRoot)), {
+        encoding: "utf8",
+      }),
+      (name) => {
+        const match = /^(\d{3})-/.exec(name);
+        return match === null
+          ? Result.failVoid
+          : Result.succeed(match[1] ?? "");
+      },
+    ),
   );
 
 const TEXT_EXTENSIONS = [".ts", ".tsx", ".md", ".mdx"] as const;
@@ -331,20 +364,35 @@ describe("the primitives docs page contract", () => {
 
   it("cites only plans that exist", () => {
     // The bug guarded: completed plans are deleted (`.agents/slop/plans/README.md`),
-    // but this workstream still sent readers to plans 020, 041, 055 and 140 for
-    // the Tier 1 runtime evidence and the binding recipe. A citation to a deleted
+    // but this workstream still sent readers to four completed plans for the
+    // Tier 1 runtime evidence and the binding recipe. A citation to a deleted
     // plan is a dead end; the evidence lives in `COMPONENTS.md`, the suite each
     // `src/inventory.ts` record names, `docs/gpuix-capabilities.md` and
     // `apps/playground/README.md`.
-    const missing = Arr.flatMap(workstreamFiles(), (file) =>
-      Arr.map(
-        Arr.filter(
-          citedPlans(file.source),
-          (path) => !existsSync(fileURLToPath(new URL(path, repoRoot))),
+    const files = workstreamFiles();
+    const numbers = existingPlanNumbers();
+    const missing = [
+      ...Arr.flatMap(files, (file) =>
+        Arr.map(
+          Arr.filter(
+            citedPlans(file.source),
+            (path) =>
+              !existsSync(fileURLToPath(new URL(planFile(path), repoRoot))),
+          ),
+          (path) => `${file.name}: cites ${path}, which does not exist`,
         ),
-        (path) => `${file.name}: cites ${path}, which does not exist`,
       ),
-    );
+      ...Arr.flatMap(files, (file) =>
+        Arr.map(
+          Arr.filter(
+            citedPlanNumbers(file.source),
+            (number) => !HashSet.has(numbers, number),
+          ),
+          (number) =>
+            `${file.name}: cites plan ${number}, which does not exist`,
+        ),
+      ),
+    ];
 
     expect(missing).toEqual([]);
   });

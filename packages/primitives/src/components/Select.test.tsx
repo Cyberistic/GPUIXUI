@@ -1,6 +1,6 @@
 /**
  * `Select` and `Tooltip` are themed wrappers over GPUix's own published controls
- * (plan 020 §1.5), so what this package owns — and what this suite pins — is the
+ * (see `docs/gpuix-capabilities.md`), so what this package owns — and what this suite pins — is the
  * paint and the data mapping. The list's open/close and arrow behaviour is
  * GPUix's and is exercised in the native runtime, not here.
  *

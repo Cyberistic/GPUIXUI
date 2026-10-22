@@ -2,10 +2,10 @@ import { defineConfig } from "vitest/config";
 
 /**
  * The `core/` suite is pure: token → `StyleDesc` resolution, keyboard decisions
- * and the controlled/uncontrolled state machine. No GPUix runtime is involved,
- * which is the only reason it can run here — rendering needs a native binding
- * that does not exist for Intel macOS (`plans/020-gpuix-runtime-capability.md`
- * §3). Component rendering tests belong to `packages/testing`.
+ * and the controlled/uncontrolled state machine. Rendering needs a GPUix native
+ * binding, so a test that asserts on a painted frame belongs in `runtime/` (run
+ * by `test:runtime`) or `packages/testing`, never here. This config runs the
+ * pure suites only.
  */
 export default defineConfig({
   test: {

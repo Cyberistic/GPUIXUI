@@ -2,7 +2,7 @@
  * The interactive controls in the real GPUix runtime.
  *
  * This is the suite that pays for the library owning its keyboard contract.
- * `@gpuix/react` publishes no button (plan 020 §1.5), so Enter-on-key-down and
+ * `@gpuix/react` publishes no button (see `docs/gpuix-capabilities.md`), so Enter-on-key-down and
  * Space-on-key-up are `core/keyboard.ts`'s rules — and until this suite existed
  * they had only ever been proven against a decode of the React element tree
  * (`src/components/Button.test.tsx`). Here the keys go through GPUI's own

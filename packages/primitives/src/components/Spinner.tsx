@@ -1,10 +1,11 @@
 /**
  * `Spinner` — an activity indicator.
  *
- * **The runtime cannot rotate** (plan 020 §1.2: `motion` has no rotation), so
- * there is no spinning arc. This is a row of dots whose lit dot advances one
- * place per step and whose trail fades — the discrete-step alternative the
- * capability map allows. A `Progress` bar with no `value` is the other option.
+ * **The runtime cannot rotate** (its `motion` has no rotation; see
+ * `docs/gpuix-capabilities.md`), so there is no spinning arc. This is a row of
+ * dots whose lit dot advances one place per step and whose trail fades — the
+ * discrete-step alternative the capability map allows. A `Progress` bar with no
+ * `value` is the other option.
  */
 
 import type { ReactElement } from "react";

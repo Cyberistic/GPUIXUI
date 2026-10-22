@@ -1,7 +1,7 @@
 /**
  * The arithmetic behind every value control.
  *
- * GPUix has no slider host element (plan 020 §1.5), so a slider is a `div`
+ * GPUix has no slider host element (see `docs/gpuix-capabilities.md`), so a slider is a `div`
  * whose position has to be decided here: how a value clamps and snaps, how it
  * maps to a fraction of the track, and how a pointer position or a key press
  * moves it. A slider, a range slider and a meter are the same model, which is

@@ -30,7 +30,7 @@ The theme is `Theme` from **`@gpuixui/tokens`**, re-exported here as
 `PrimitiveTheme` (`src/core/theme.ts`). The tokens package owns every value and
 the runtime-shaped helpers (`focusRing`, `elevationShadow`); this package resolves
 a semantic spec into a GPUix `StyleDesc` from that theme. There is one theme
-declaration in the library (plan 021), so a token change reaches every component
+declaration in the library (`@gpuixui/tokens`), so a token change reaches every component
 without an adapter.
 
 ## Density
@@ -126,7 +126,7 @@ re-render with a different `theme` prop — verified natively by
 - `runtime/theme-axes.runtime.test.tsx` — the high-contrast palettes paint only
   their own colours in both modes; a density override moves control heights to
   the preset and leaves colour alone; `platformTheme`'s mono family reaches the
-  paint and a platform switch repaints the same tree (plan 055).
+  paint and a platform switch repaints the same tree (the playground's theme gallery).
 
 ```sh
 nub run --filter @gpuixui/primitives test

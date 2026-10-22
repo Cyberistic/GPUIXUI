@@ -1,7 +1,7 @@
 /**
  * `Select` — one choice from a list, in a popover.
  *
- * GPUix 0.11.0 already ships a headless, shadcn-shaped Select (plan 020 §1.5),
+ * GPUix 0.11.0 already ships a headless, shadcn-shaped Select (see `docs/gpuix-capabilities.md`),
  * so this is a **themed wrapper, not a reimplementation**: the trigger wears the
  * same field chrome as `Input`, the list is the popover surface, and an item's
  * paint comes from the state GPUix reports (`selected`, `highlighted`,

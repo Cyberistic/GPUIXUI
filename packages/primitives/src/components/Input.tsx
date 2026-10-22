@@ -50,7 +50,7 @@ export interface FieldProps extends ValueChangeProps<string>, InteractionProps {
   readonly defaultValue?: string;
   /**
    * Enter in an `<input>`. A `TextArea` does not take this: the runtime would
-   * turn Enter into a submit and take the newline away (plan 046).
+   * turn Enter into a submit and take the newline away (measured by `runtime/fields.runtime.test.tsx`).
    */
   readonly onSubmit?: (event: EventPayload) => void;
   readonly placeholder?: string;
@@ -58,7 +58,7 @@ export interface FieldProps extends ValueChangeProps<string>, InteractionProps {
   /**
    * Not editable, out of the tab order, and painted with the disabled chrome.
    * The host has no `disabled` prop, so this is read-only plus the guards below
-   * — assistive technology sees a read-only field (plan 025).
+   * — assistive technology sees a read-only field.
    */
   readonly disabled?: boolean;
   /** Take keyboard focus on mount. Required for a field to receive key events. */

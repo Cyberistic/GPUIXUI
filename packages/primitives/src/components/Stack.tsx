@@ -71,7 +71,7 @@ export const renderGrid = (
  * A fixed-size grid of equal tracks.
  *
  * The runtime's grid is numeric — no track strings, no auto-flow, no named
- * areas (plan 020 §1.2) — so anything raggedy belongs in a wrapping `Stack`.
+ * areas (see `docs/gpuix-capabilities.md`) — so anything raggedy belongs in a wrapping `Stack`.
  */
 export const Grid = (props: GridProps): ReactElement =>
   renderGrid(props, useTheme());

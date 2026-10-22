@@ -1,7 +1,7 @@
 /**
  * The theme a primitive draws with.
  *
- * The values and the shape are owned by `@gpuixui/tokens` (plan 021): this
+ * The values and the shape are owned by `@gpuixui/tokens`: this
  * module re-exports the names the components import and adds the `ColorRef`
  * resolver type. A second structural copy of the theme would drift silently, so
  * there is exactly one declaration — in the tokens package.

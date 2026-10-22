@@ -1,7 +1,7 @@
 /**
  * `Progress` — the bar, its parts and its accessible value.
  *
- * GPUix has no `aria-valuenow` (plan 020 §1.4), so the value rides on
+ * GPUix has no `aria-valuenow` (see `docs/gpuix-capabilities.md`), so the value rides on
  * `aria-valuetext`. The bug to guard is paint outside the track: a value above
  * 100 or below 0 must clamp, and an indeterminate bar must not look finished.
  * The parts suite guards the second failure: the value a caller renders must be

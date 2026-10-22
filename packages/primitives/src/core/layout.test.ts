@@ -7,7 +7,7 @@ import { testTheme } from "./testing/theme.fixture.js";
  *
  * A wrong `gap` step or an inverted `direction` is a layout that is subtly off
  * on screen and perfectly valid to the compiler. With no runtime to render into
- * (plan 020 §3), the numeric contract asserted here is the only proof that a
+ * (see `docs/gpuix-capabilities.md`), the numeric contract asserted here is the only proof that a
  * Stack and a Box agree about direction, spacing and flex behaviour.
  */
 

@@ -1,7 +1,7 @@
 /**
  * `Toggle` in the real GPUix runtime.
  *
- * `@gpuix/react` publishes no button (plan 020 §1.5), so a toggle's activation
+ * `@gpuix/react` publishes no button (see `docs/gpuix-capabilities.md`), so a toggle's activation
  * is this package's contract: a hit-tested click, Enter on key down, Space on
  * key up, a held key ignored. The other thing only the runtime can show is that
  * the pressed state reaches the paint and the accessibility tree through the one

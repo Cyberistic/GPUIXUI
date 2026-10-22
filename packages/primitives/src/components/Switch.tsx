@@ -112,7 +112,7 @@ const THUMB_SLIDE: MotionTransition = { duration: 0.15, ease: "easeOut" };
  * The knob a switch slides.
  *
  * The part centres its children, so a glyph lands on the knob rather than beside
- * it. The recipe's `pointer-events-none` is load-bearing (plan 041 §9), not
+ * it. The recipe's `pointer-events-none` is load-bearing (the runtime suites in `runtime/`), not
  * decoration: a caller's glyph must not take the press that toggles the switch.
  *
  * The knob is an absolutely positioned child of the track, so its `left` is the

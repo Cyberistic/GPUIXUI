@@ -1,7 +1,7 @@
 /**
  * `Label` — the visible name of a control.
  *
- * The runtime has **no `aria-labelledby`** (plan 020 §1.4), so a label cannot be
+ * The runtime has **no `aria-labelledby`** (see `docs/gpuix-capabilities.md`), so a label cannot be
  * associated with a control by reference. The honest arrangement is that the
  * control carries its own `aria-label` and `Label` is the visible text beside
  * it; `labelledBy` builds the control's own `label` prop so a caller writes the

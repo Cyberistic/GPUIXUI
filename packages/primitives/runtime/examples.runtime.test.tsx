@@ -35,7 +35,7 @@ const byLabel = (runtime: Runtime, label: string) =>
 /** The root and the headline each example must paint. */
 const SCREENS = [
   { id: "layout", root: "layout-example", headline: "Inspector" },
-  { id: "typography", root: "typography-example", headline: "Version 0.10.0" },
+  { id: "typography", root: "typography-example", headline: "Version 0.11.0" },
   { id: "form", root: "form-example", headline: "Project settings" },
   { id: "selection", root: "selection-example", headline: "Notifications" },
   { id: "feedback", root: "feedback-example", headline: "Revenue" },

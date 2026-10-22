@@ -2,7 +2,7 @@
  * `Checkbox` — the element tree the runtime receives.
  *
  * The bug this suite guards is invisible to the runtime's own tests: GPUix has
- * no `aria-checked` (plan 020 §1.4), so state must stay legible through
+ * no `aria-checked` (see `docs/gpuix-capabilities.md`), so state must stay legible through
  * `aria-valuetext` and the unsupported attribute must stay absent rather than
  * being written for the DOM's benefit. The mark is its own part
  * (`CheckboxIndicator`), and the second half guards the two ways a split can go

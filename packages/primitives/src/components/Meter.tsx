@@ -5,10 +5,11 @@
  * meaning above or below). A meter reports a measurement: 62 of 100, 12 of 16.
  * It is status, not a control — never focusable, no pointer or key handlers.
  *
- * `@gpuix/native` 0.11.0 has no `aria-valuenow`/`min`/`max` (plan 020 §1.4), so the value
- * is announced through `aria-valuetext`, and the honest default text is the
- * formatted value alone. The paint is `Progress`'s track and fill, because a
- * second bar painter would drift from it.
+ * `@gpuix/native` 0.11.0 has no `aria-valuenow`/`min`/`max` (see
+ * `docs/gpuix-capabilities.md`), so the value is announced through
+ * `aria-valuetext`, and the honest default text is the formatted value alone.
+ * The paint is `Progress`'s track and fill, because a second bar painter would
+ * drift from it.
  *
  * The parts mirror `Progress`: the root is the frame, `MeterTrack` the bar,
  * `MeterIndicator` the fill, `MeterLabel`/`MeterValue` the text.

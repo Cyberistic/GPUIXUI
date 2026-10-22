@@ -4,7 +4,7 @@
  * `mergeStyle` is how a caller's `style` prop wins over a resolved one without
  * each component re-implementing a spread. `useStep` is the one animation the
  * runtime allows: a discrete step advanced on a timer, because `motion` cannot
- * rotate or interpolate a colour (plan 020 §1.2).
+ * rotate or interpolate a colour (see `docs/gpuix-capabilities.md`).
  */
 
 import { Children, useEffect, useState, type ReactNode } from "react";

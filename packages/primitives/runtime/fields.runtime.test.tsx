@@ -67,7 +67,7 @@ it("announces a field's own name beside its visible Label", async () => {
   );
   // The visible name and the control's name are two nodes with different
   // roles; `aria-labelledby` does not exist, so the control carries its own
-  // name (plan 020 §1.4). This is the end-to-end form of `labelledBy`.
+  // name (see `docs/gpuix-capabilities.md`). This is the end-to-end form of `labelledBy`.
   const dump = runtime.a11y();
   expect(Option.isSome(a11yNode(dump, { role: "Label" }))).toBe(true);
   expect(

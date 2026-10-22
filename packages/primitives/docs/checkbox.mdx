@@ -121,7 +121,8 @@ also scroll while the control waits for the release.
   drawing is decoration with `pointerEvents: "none"`, so a press on the box and a
   press on its padding each toggle exactly once.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
-  `mixed`), because `@gpuix/native` 0.11.0 has no `aria-checked` (plan 020 §1.4).
+  `mixed`), because `@gpuix/native` 0.11.0 has no `aria-checked` (see
+  `docs/gpuix-capabilities.md`).
 - `disabled` removes the tab stop; there is no `aria-disabled`.
 - The visible name is a separate `Label`, but it does not name the box: there is
   no `aria-labelledby`, so the box's own `label` prop is its accessible name —

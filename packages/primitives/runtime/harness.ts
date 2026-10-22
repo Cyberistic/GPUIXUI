@@ -2,10 +2,10 @@
  * The GPUix `TestRenderer`, adapted to the verbs a component runtime test needs.
  *
  * These suites are the only place in this workstream that loads the native
- * binding (`@gpuix/react/testing` → `@gpuix/native`). Plan 020 §3 measured that
- * no `darwin-x64` binary is published, and plan 140 (playground) built one from
- * source on this host; the import therefore *can* fail, on a host where the
- * binding is absent, and it fails at load time rather than in an assertion.
+ * binding (`@gpuix/react/testing` → `@gpuix/native`). No `darwin-x64` binary is
+ * published, and the playground builds one from source on this host (its README,
+ * §The binding on this host); the import therefore *can* fail, on a host where
+ * the binding is absent, and it fails at load time rather than in an assertion.
  *
  * That failure is fatal on purpose. `test:runtime` is an opt-in command whose
  * whole output is native evidence; skipping it on a host without a binding would
@@ -16,7 +16,8 @@
  * The adapter is deliberately thinner than `@gpuixui/testing`'s `SmokeHost`
  * (playground workstream): it returns `Option` instead of `null`, names things
  * after the component API (`testId`) rather than the capability, and asserts
- * nothing itself. See plan 041 §2.2 for why the two exist for now.
+ * nothing itself. The two adapters exist for now because this one is scoped to
+ * the component API while the playground's is scoped to capabilities.
  */
 
 import { Effect } from "effect";
@@ -150,7 +151,7 @@ const idOf = (renderer: TestRenderer, testId: string): Option.Option<number> =>
  *
  * A node that paints no surface of its own — `<svg>`, an overlay layer — reports
  * `null` even though it occupies space, so walking up to the first ancestor with
- * bounds keeps a click aimed inside it instead of nowhere (plan 140 §4).
+ * bounds keeps a click aimed inside it instead of nowhere (measured on 0.11.0).
  */
 const boundsOf = (renderer: TestRenderer, id: number): Option.Option<Bounds> =>
   Option.match(Option.fromNullishOr(renderer.getElementBounds(id)), {
@@ -304,7 +305,7 @@ export const createRuntime = (
         }),
       type: (keystrokes) => renderer.simulateKeystrokes(keystrokes),
       // `focusNext` is a raw native call: it does not drain and dispatch the
-      // resulting focus events, so React's `onFocus` would never run (plan 140 §4).
+      // resulting focus events, so React's `onFocus` would never run (measured on 0.11.0).
       focusNext: () => {
         renderer.focusNext();
         renderer.dispatchNativeEvents();

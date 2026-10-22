@@ -1,7 +1,7 @@
 /**
  * `Progress` — a determinate or indeterminate bar.
  *
- * The runtime exposes **no `aria-valuenow`** (plan 020 §1.4), so the value is
+ * The runtime exposes **no `aria-valuenow`** (see `docs/gpuix-capabilities.md`), so the value is
  * reported through `aria-valuetext`, which is the one supported way to make a
  * progressbar legible to assistive technology. A `value` outside 0–100 is
  * clamped by `core/style.ts`; an absent `value` means indeterminate.

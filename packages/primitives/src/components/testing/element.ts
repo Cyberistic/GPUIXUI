@@ -1,9 +1,10 @@
 /**
  * Read the element tree a render function returns.
  *
- * Rendering is impossible on this machine (plan 020 §3: no `darwin-x64` native
- * binding), so the strongest honest check of a component is its **element
- * tree** — the props and handlers the runtime would receive. React gives that
+ * These suites inspect the element tree rather than a painted frame: the
+ * strongest honest check a pure unit test can make is the **element tree** — the
+ * props and handlers the runtime would receive — while painted behaviour is
+ * measured in `runtime/` on a machine with a native binding. React gives that
  * tree no prop type (`JSX.Element` is `ReactElement<any, any>`), so this module
  * decodes at the boundary instead of assuming: the same rule the library
  * applies to every other unknown input. A test asserts on parsed props, never

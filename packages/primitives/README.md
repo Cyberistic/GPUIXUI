@@ -26,8 +26,8 @@ import { darkTheme } from "@gpuixui/tokens";
 `src/core/theme.ts` under the name the components import. The tokens package
 owns the values **and** the runtime-shaped helpers (`focusRing`,
 `keyboardFocusRing`, `elevationShadow`); primitives owns only the resolution from
-a semantic spec to a `StyleDesc`. There is one declaration of the theme in the library (plan 021) —
-a second copy would drift silently.
+a semantic spec to a `StyleDesc`. There is one declaration of the theme in the
+library (`@gpuixui/tokens`) — a second copy would drift silently.
 
 There is deliberately **no default theme**: a primitive rendered without a
 `ThemeProvider` above it throws `MissingThemeProviderError` naming the provider.

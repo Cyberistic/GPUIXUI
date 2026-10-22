@@ -237,8 +237,8 @@ routes to buckets: `hover:` → `style.hover`, `active:` → `style.active`,
 
 GPUix exposes `gridTemplateColumns` / `gridTemplateRows` as **numbers** — the
 runtime draws `n` equal tracks and has no track strings, no `repeat()`, no
-auto-flow, no named areas (plan 020 §1.2). `@gpuixui/tw`'s built-in table maps
-the integer classes to those numbers:
+auto-flow, no named areas (see `docs/gpuix-capabilities.md`). `@gpuixui/tw`'s
+built-in table maps the integer classes to those numbers:
 
 - `grid-cols-<n>` (1–12) → `gridTemplateColumns: n`
 - `grid-rows-<n>` (1–6) → `gridTemplateRows: n`
