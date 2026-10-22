@@ -108,8 +108,9 @@ page and the reader renames it in place.
 
 - The display is a tab stop (`Tab` reaches it) and a `role="button"`, so
   `Enter` and `Space` both start the edit.
-- In the input, `Enter` commits and `Escape` discards; `Tab` blurs, which
-  commits by contract.
+- In the input, `Enter` commits and `Escape` discards. A blur also commits —
+  the behaviour suite moves the focus to a sibling and reads the commit — and
+  `Tab` leaves the field, so it saves by the same rule.
 - A disabled control leaves the tab order and refuses activation, so a `Tab`
   traversal skips it.
 - The component installs no other shortcut. There is no key to jump to the
