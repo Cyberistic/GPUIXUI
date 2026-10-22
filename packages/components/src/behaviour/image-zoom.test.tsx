@@ -177,6 +177,53 @@ describe("ImageZoom", () => {
     }
   });
 
+  it("pans from the frame the surface is in now, not the one it first reported", () => {
+    // A frame moved by a layout above it keeps the box it last reported, because
+    // `onLayout` fires on a size change and not a move. The pan is then taken
+    // against a frame the picture is no longer inside: pointing at three
+    // quarters across the frame as it sits now reads as the far edge.
+    const Shifted = ({ inset }: { readonly inset: number }) => (
+      <div style={{ paddingLeft: inset, paddingTop: inset }}>
+        <ImageZoom
+          testId="shifted-frame"
+          src="/photos/harbour.png"
+          alt="The harbour at dusk"
+          width={frame.width}
+          height={frame.height}
+        />
+      </div>
+    );
+
+    const page = renderComponent(<Shifted inset={0} />);
+    settle(page);
+    try {
+      page.renderer.clockPause();
+
+      page.rerender(<Shifted inset={120} />);
+      settle(page);
+
+      const outer = requireBounds(page, "shifted-frame");
+      page.renderer.nativeSimulateMouseMove(
+        outer.x + outer.width * 0.75,
+        outer.y + outer.height * 0.5,
+      );
+      settle(page);
+      advance(page, 400);
+
+      const frameNow = requireBounds(page, "shifted-frame");
+      const picture = requireBounds(page, "image-zoom-image");
+      // Three quarters across the 320 px picture: the same pan as at the origin.
+      expect({
+        left: picture.x - frameNow.x,
+        top: picture.y - frameNow.y,
+        width: picture.width,
+        height: picture.height,
+      }).toEqual({ left: -90, top: -36, width: 320, height: 192 });
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("keeps the magnification but drops the journey under the reduced preference", () => {
     const page = renderComponent(
       <MotionProvider preference="reduced">

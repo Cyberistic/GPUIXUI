@@ -133,6 +133,44 @@ describe("Magnetic", () => {
     }
   });
 
+  it("leans from the box the surface is in now, not the one it first reported", () => {
+    // A surface moved by a layout above it (a pane opening, a scroll) keeps the
+    // box it last reported: `onLayout` fires on a size change, not a move. The
+    // pull is then taken against a centre the surface no longer has, and leans
+    // the opposite way from the pointer.
+    const Shifted = ({ inset }: { readonly inset: number }) => (
+      <div style={{ paddingLeft: inset, paddingTop: inset }}>
+        <Magnetic testId="shifted-surface" style={surface}>
+          <div testId="shifted-content" style={{ width: 120, height: 40 }}>
+            <text>Lean</text>
+          </div>
+        </Magnetic>
+      </div>
+    );
+
+    const page = renderComponent(<Shifted inset={0} />);
+    settle(page);
+    try {
+      page.renderer.clockPause();
+
+      page.rerender(<Shifted inset={120} />);
+      settle(page);
+
+      const shifted = requireBounds(page, "shifted-surface");
+      const plate = requireBounds(page, "magnetic-plate");
+      page.renderer.nativeSimulateMouseMove(
+        shifted.x + shifted.width * 0.25,
+        shifted.y + shifted.height / 2,
+      );
+      settle(page);
+
+      // A quarter of the width to the left of the centre the surface has now.
+      expect(pullOf(page, plate).left).toBe(-magneticReach);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("paints no lean under the reduced preference", () => {
     const page = renderComponent(
       <MotionProvider preference="reduced">

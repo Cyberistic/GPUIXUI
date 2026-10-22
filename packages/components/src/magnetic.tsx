@@ -23,21 +23,17 @@ import {
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { useRef, useState, type ReactNode } from "react";
-import {
-  measuredBox,
-  measuredPoint,
-  type MeasuredBox,
-} from "./internal/measure.js";
+import { useState, type ReactNode } from "react";
+import { measuredPoint, type MeasuredPoint } from "./internal/measure.js";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { surfaceOriginStyle, useSurfaceBox } from "./internal/surface-box.js";
 import { useTheme } from "./internal/theme.js";
 import {
   magneticFrames,
   magneticPull,
   magneticRest,
   samePull,
-  type MagneticPull,
 } from "./magnetic/logic.js";
 
 /** What a magnetic surface draws at one frame. */
@@ -86,38 +82,58 @@ export const Magnetic = ({
   const theme = useTheme();
   const preference = useMotionPreference();
   const timing = useSurfaceTiming(level).enter;
-  const box = useRef<Option.Option<MeasuredBox>>(Option.none());
-  const [pull, setPull] = useState<MagneticPull>(magneticRest);
+  const surface = useSurfaceBox();
+  const [pointer, setPointer] = useState<Option.Option<MeasuredPoint>>(
+    Option.none(),
+  );
   const reduced = preference === "reduced";
 
+  // The pull is derived, not stored: the origin the probe reports is a fresh
+  // reading of the same pointer, so a surface a layout above moved leans from
+  // the centre it has now without waiting for another move.
+  const pull = Option.match(
+    Option.all({ surface: surface.box, point: pointer }),
+    {
+      onNone: () => magneticRest,
+      onSome: ({ surface, point }) =>
+        magneticPull(
+          point,
+          surface,
+          strength ?? undefined,
+          maxOffset ?? undefined,
+        ),
+    },
+  );
+
   const measure = (event: EventPayload) => {
-    box.current = measuredBox(event);
+    surface.measure(event);
     onLayout?.(event);
   };
 
   const follow = (event: EventPayload) => {
     onMouseMove?.(event);
     if (reduced) return;
-    Option.match(
-      Option.all({ surface: box.current, point: measuredPoint(event) }),
-      {
-        onNone: () => undefined,
-        onSome: ({ surface, point }) => {
-          const next = magneticPull(
-            point,
-            surface,
-            strength ?? undefined,
-            maxOffset ?? undefined,
-          );
-          setPull((current) => (samePull(current, next) ? current : next));
-        },
-      },
-    );
+    surface.read();
+    Option.match(measuredPoint(event), {
+      onNone: () => undefined,
+      // A held pointer emits a move per frame; a repeat of the same point is a
+      // frame the runtime would paint identically, so it is not a state change.
+      onSome: (point) =>
+        setPointer((current) =>
+          Option.match(current, {
+            onNone: () => Option.some(point),
+            onSome: (previous) =>
+              previous.x === point.x && previous.y === point.y
+                ? current
+                : Option.some(point),
+          }),
+        ),
+    });
   };
 
   const leave = (event: EventPayload) => {
     onMouseLeave?.(event);
-    setPull(magneticRest);
+    setPointer(Option.none());
   };
 
   const state: MagneticState = {
@@ -139,6 +155,10 @@ export const Magnetic = ({
         resolveStyle(style, state),
       )}
     >
+      <div
+        style={surfaceOriginStyle(surface.nudge)}
+        onLayout={surface.noteOrigin}
+      />
       <div
         testId="magnetic-plate"
         // The plate is painted where it is on the first frame; every later
@@ -166,7 +186,8 @@ export const magneticMeta = {
     "the lean is a relative left/top offset on an inner plate, not a translate: the runtime has no transform (upstream issue #102)",
     "the outer box deliberately stays still, so the pointer cannot leave the surface it is pulling; the content moves inside it",
     "a reduced-motion reader and a keyboard reader get no lean; the hover fill and the focus ring are the feedback that remains",
-    "the pull follows the centre of the measured box, so it has no reading until the first onLayout",
+    "the pull follows the centre of the measured box; a 1px probe at the surface's origin re-reports it on every pointer read, because onLayout reports a size change and not a move",
+    "nothing moves until the surface and its probe have both reported a box",
   ],
   docs: "docs/magnetic.mdx",
   example: "examples/magnetic.example.tsx",

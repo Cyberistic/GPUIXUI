@@ -51,6 +51,19 @@ cursor would move out from under the pointer, leave the hit box and snap back â€
 the lean would flicker. Pulling the content inside a fixed box is both the honest
 mapping of the runtime's geometry and the behaviour a reader expects.
 
+## The box the pointer is read against
+
+A surface is not always where it first painted: a pane opening, a sidebar
+collapsing or a scroll moves it without changing its size, and `onLayout`
+reports a **size** change, not a move. A lean taken against the old centre leans
+the wrong way. `Magnetic` keeps a one-pixel probe at the surface's origin and
+toggles the probe's width on every pointer read, which makes the runtime lay it
+out again and report the origin the surface has now. The pull is derived from
+that origin and the measured size during render, so the reading that asked for
+the fresh box corrects the lean without waiting for another move. The probe
+reads the surface's padded origin, so a surface with a border centres on the
+inside of it; the house recipe paints none.
+
 ## Timing and reduced motion
 
 The retarget uses `fast` (160 ms) by default; `level` picks any other level from
@@ -114,11 +127,12 @@ internal `testId="magnetic-plate"`, no role and no text.
 
 ## Verification
 
-Six native behaviour cases in `src/behaviour/magnetic.test.tsx` measure the lean
-on the renderer's motion clock (capped on both axes, proportional inside the box,
-the outer box still, the return on leave, the reduced preference and the composed
-handlers); the arithmetic is `src/magnetic/logic.test.ts` (10 tests), and
-`src/internal/measure.test.ts` holds the pointer reading to the layout reading.
+Seven native behaviour cases in `src/behaviour/magnetic.test.tsx` measure the
+lean on the renderer's motion clock (capped on both axes, proportional inside the
+box, the outer box still, the return on leave, a surface moved by a layout above
+it, the reduced preference and the composed handlers); the arithmetic is
+`src/magnetic/logic.test.ts` (10 tests), and `src/internal/measure.test.ts` holds
+the pointer reading to the layout reading.
 
 ## Related
 

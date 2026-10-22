@@ -58,6 +58,18 @@ A frame size below one pixel falls back to the house size rather than clipping
 the picture to nothing. A responsive layout measures the space it has and passes
 the result — the frame is a number, not a CSS percentage.
 
+## The box the pointer is read against
+
+A frame is not always where it first painted: a pane opening, a sidebar
+collapsing or a scroll moves it without changing its size, and `onLayout`
+reports a **size** change, not a move. A pan taken against the old frame puts
+the pointed detail somewhere the reader is not. `ImageZoom` keeps a one-pixel
+probe at the frame's origin and toggles the probe's width on every pointer read,
+which makes the runtime lay it out again and report the origin the frame has now;
+the pan is derived from that origin and the measured size during render. The
+probe reads the frame's padded origin, so a frame with a border is measured
+inside it; the frame paints none.
+
 ## Timing and reduced motion
 
 `level` picks one of the @gpuixui/motion durations — `step` 120 ms, `fast` 160,
@@ -136,12 +148,13 @@ full-size image as a link.
 ## Verification
 
 `src/behaviour/image-zoom.test.tsx` renders the component in the real GPUix
-renderer (9 tests): the picture covering its frame at rest, the magnification and
+renderer (10 tests): the picture covering its frame at rest, the magnification and
 pan at three quarters across on the paused motion clock, the travel measured
 between the rest and target boxes, an edge pinning the picture so it still
-covers the frame, the return when the pointer leaves, the reduced preference
-painting the magnified box with no journey, `scale={1}` leaving the picture alone,
-the accessible name, and the caller's pointer and layout handlers running beside
-the component's own. The arithmetic — fallbacks, the `1…4` magnification, edge
-clamping, tenth-of-a-pixel rounding and the comparison that skips a repeated
-frame — is `src/image-zoom/logic.test.ts` (12 tests).
+covers the frame, the return when the pointer leaves, a frame moved by a layout
+above it, the reduced preference painting the magnified box with no journey,
+`scale={1}` leaving the picture alone, the accessible name, and the caller's
+pointer and layout handlers running beside the component's own. The arithmetic —
+fallbacks, the `1…4` magnification, edge clamping, tenth-of-a-pixel rounding and
+the comparison that skips a repeated frame — is `src/image-zoom/logic.test.ts`
+(12 tests).

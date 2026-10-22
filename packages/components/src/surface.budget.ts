@@ -81,8 +81,11 @@ export const surfaceBudget = {
   // its cells are hosts rather than a path. 163 → 164 for CodeBlock's tokenizer
   // (`code-block/tokenize.ts`) and 164 → 165 for Form's validator seam
   // (`form/validator.ts`, the Effect/Schema ↔ `@tanstack/form-core` adapter), so
-  // each adoption adds exactly the module it names.
-  modules: 165,
+  // each adoption adds exactly the module it names. 165 → 166 for
+  // `internal/surface-box.tsx`, the origin probe `Magnetic` and `ImageZoom` read
+  // a pointer against: `onLayout` reports a size change, not a move, so the box
+  // a surface last reported is stale after a pane opens or a scroll.
+  modules: 166,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -105,5 +108,11 @@ export const surfaceBudget = {
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.
-  packages: ["@gpuix/react", "@tanstack/form-core", "@tanstack/highlight", "effect", "react"],
+  packages: [
+    "@gpuix/react",
+    "@tanstack/form-core",
+    "@tanstack/highlight",
+    "effect",
+    "react",
+  ],
 } as const;
