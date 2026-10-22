@@ -1116,6 +1116,36 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("anchor");
   });
 
+  it("records the right-to-left string the platform shapes, and the direction it cannot be given", () => {
+    // The row kept one half explicitly unmeasured while claiming the other:
+    // whether the platform shapes and orders an RTL **string** on its own. A
+    // consumer shipping Arabic or Hebrew has to know which half it owns, and
+    // `rtl-text` measured it: the direction comes from the first strong
+    // character rather than from right-aligning a box, and the shaper joins the
+    // Arabic run. What stays missing is expressing a layout direction.
+    const rtl = rowFor("Right-to-left layout");
+    expect(rtl?.verdict).toBe("not supported");
+    expect(rtl?.evidence).toContain("rtl-text");
+    expect(rtl?.evidence).toContain("92/0");
+    expect(rtl?.evidence).toContain("0/92");
+    expect(rtl?.evidence).toContain("58 pt");
+    expect(rtl?.evidence).toContain("79 pt");
+    // The retracted "unmeasured" clause cannot come back.
+    expect(rtl?.evidence).not.toContain("unmeasured");
+    expect(rtl?.workaround).toContain("direction-aware helper");
+
+    const page = typingsRow("Right-to-left layout");
+    expect(
+      page,
+      "the page's typings table has no right-to-left row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("rtl-text");
+    expect(page?.[1]).toContain("92/0");
+    expect(page?.[1]).toContain("58 pt");
+    expect(page?.[1]).not.toContain("unmeasured");
+    expect(page?.[2]).toContain("direction-aware helper");
+  });
+
   it("records the rules around a grid's filter, and the four decisions a grid owns", () => {
     // Tier 3's Filtering controls row is composition, and a plan reading only
     // the table sort/selection rule would leave a filtered-out selection live.

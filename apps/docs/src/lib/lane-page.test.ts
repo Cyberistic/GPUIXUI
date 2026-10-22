@@ -396,6 +396,16 @@ describe("the layouts page's direction claim", () => {
     expect(layouts).toContain("No direction input");
     expect(layouts).toContain("paddingLeft");
     expect(layouts).toContain("direction-aware helper");
+
+    // The string half is measured: the platform orders a Hebrew run from its
+    // first strong character and shapes the Arabic one, which is what a layout
+    // plan needs to know before it mirrors anything by hand.
+    expect(rtl).toContain("rtl-text");
+    expect(rtl).toContain("92/0");
+    expect(layouts).toContain("rtl-text");
+    expect(layouts).toContain("92/0");
+    expect(layouts).toContain("58 pt");
+    expect(layouts).not.toContain("unmeasured");
   });
 });
 

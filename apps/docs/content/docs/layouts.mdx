@@ -46,7 +46,7 @@ composition, not just the CSS.
 | No `zIndex` | paint order is source order; put a floating surface last, or use the shared dismiss stack |
 | A scroll container with no height grows instead of scrolling | give `ScrollArea` a bounded parent (`height`, `flex: 1` inside a sized column) |
 | Grid tracks are equal and numeric | ragged rows wrap in a `Stack`; a spanning cell is not expressible |
-| No direction input | RTL is the app's helper, not a component branch: every edge is physical (`paddingLeft`, `marginLeft`, `borderLeftWidth`) and `AnchoredProps` places by a physical `side`, so one direction-aware helper maps a logical inset to the app's direction and a component stays physical |
+| No direction input | RTL is the app's helper, not a component branch: every edge is physical (`paddingLeft`, `marginLeft`, `borderLeftWidth`) and `AnchoredProps` places by a physical `side`, so one direction-aware helper maps a logical inset to the app's direction and a component stays physical. The platform still **reads** a string's own direction (`rtl-text`): a trailing capital `T` lands **left** in `ייT` and **right** in `nnT`/`aייT` (92/0 vs 0/92 ink in the end bands), and `سلام` measures 58 pt against 79 pt with zero-width non-joiners, so a Hebrew or Arabic run is shaped and ordered for the reader. What you cannot pass is the layout's direction |
 
 The full capability table, with the evidence for each line, is on
 [Runtime](/docs/runtime).
