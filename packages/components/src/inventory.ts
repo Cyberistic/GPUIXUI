@@ -9,6 +9,7 @@
 
 import { accordionMeta } from "./accordion.js";
 import { alertMeta } from "./alert.js";
+import { autoHeightMeta } from "./auto-height.js";
 import { avatarMeta } from "./avatar.js";
 import { badgeMeta } from "./badge.js";
 import { breadcrumbMeta } from "./breadcrumb.js";
@@ -71,6 +72,7 @@ export interface ComponentMeta {
 /** Every implemented Tier 2 component. */
 export const inventory: ReadonlyArray<ComponentMeta> = [
   accordionMeta,
+  autoHeightMeta,
   alertMeta,
   avatarMeta,
   badgeMeta,

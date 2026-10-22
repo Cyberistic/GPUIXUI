@@ -1,0 +1,102 @@
+---
+title: Auto height
+description: A reveal that grows to its content's measured height and collapses again.
+---
+
+`AutoHeight` is the primitive behind a disclosure, a settings section or a
+sidebar that expands: it measures what its content paints and tweens the
+clipping box to that number. The runtime can tween a numeric height but not
+`auto`, so the measurement is the whole mechanism.
+
+## Usage
+
+```tsx
+import { AutoHeight } from "@gpuixui/components/auto-height";
+
+const [open, setOpen] = useState(false);
+
+<div role="button" aria-expanded={open} onClick={() => setOpen(!open)}>
+  <text>Advanced options</text>
+</div>
+<AutoHeight open={open}>
+  <text>Retry budget: 5 attempts</text>
+  <text>Timeout: 30 seconds</text>
+</AutoHeight>;
+```
+
+The caller owns `open`. The reveal owns the measurement, the tween and the mount
+window; nothing inside it needs to know it is being revealed.
+
+## How it measures
+
+The content box reports its own painted height through `onLayout`, and the
+clipping box tweens `height` from zero to that number (with a fade). On a first
+open the box paints at zero for one frame and retargets once the measurement
+arrives, so there is no guessed height. A closed reveal paints **nothing**: the
+subtree unmounts after its exit tween, so a timer or a request inside it stops.
+
+A content change while the reveal is open re-measures and continues from the
+height on screen, which is what a disclosure holding a growing list needs.
+
+## Motion and reduced motion
+
+The reveal uses the house levels: `normal` (200 ms) by default, and the
+`MotionProvider` preference. Under `"reduced"` the measured height paints on the
+first frame — the duration is zero, and the content is still fully revealed.
+
+```tsx
+import { MotionProvider } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <AutoHeight open={open}>{children}</AutoHeight>
+</MotionProvider>;
+```
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `open` | `boolean` | — | Required. Whether the content is revealed. |
+| `level` | `MotionLevel` | `"normal"` | `step`/`fast`/`normal`/`slow`/`notice`, in milliseconds. |
+| `className` | `string` | — | Joined on the clipping box, so it wins conflicts. |
+| `contentClassName` | `string` | — | Joined on the measured content box, where padding belongs. |
+| `style` | `StateStyle<AutoHeightState>` | — | `AutoHeightState` is `{ height, open, reducedMotion }`. |
+
+`AutoHeight` takes the GPUix host props (`testId`, `role`, `aria-*`) and merges
+`style` last on the clipping box.
+
+## Composition
+
+- Pair it with a button carrying `aria-expanded` and an `onClick`, or with the
+  `Collapsible` family (which wraps this rule for its own parts).
+- Do not put a `%` height on a child: the clipped box is the containing block,
+  and the reveal's own height is the animation target.
+- State that must survive a close belongs outside the reveal, because the
+  subtree unmounts after the collapse.
+
+## Limitations
+
+- A `height: "100%"` child measures against the content box, not the window.
+- The first open paints at zero for a frame (`onLayout` is a paint event), so a
+  surface that must never show an empty box needs its own fixed height.
+- No width animation and no horizontal reveal; the primitive owns the vertical
+  axis only (a collapsible sidebar uses the same rule on `width` with its own
+  measurement).
+- The content is clipped, not reflowed: a box taller than the reveal is cut off
+  until the animation finishes.
+
+## Related
+
+- [Collapsible](/docs/components/collapsible) — a trigger and a body composed
+  with this rule.
+- [Accordion](/docs/components/accordion) — the stacked, one-or-many variant of
+  the same measured reveal.
+- [Motion](/docs/motion) — the timing the reveal uses, and the levels it names.
+
+## Verification
+
+`src/behaviour/auto-height.test.tsx` renders the primitive in the real GPUix
+renderer (4 tests): the entry grows from zero to the reported height, a collapse
+stays painted for its exit tween then unmounts, the reduced preference paints
+the measured height with the motion clock paused, and a content change while
+open re-measures to the new height.

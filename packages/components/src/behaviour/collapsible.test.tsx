@@ -1,10 +1,11 @@
 /**
  * Collapsible behaviour, in the real GPUix renderer.
  *
- * The bugs these guard: a closed section that left its content mounted (and so
- * kept running); `aria-expanded` that disagreed with the visible body; a trigger
- * that only answered the mouse, not Enter/Space; and a controlled section that
- * opened itself when the consumer kept `open={false}`.
+ * The bugs these guard: a closed section that left its content mounted for good
+ * (and so kept running); a body that vanished on close instead of running its
+ * collapse; `aria-expanded` that disagreed with the visible body; a trigger that
+ * only answered the mouse, not Enter/Space; and a controlled section that opened
+ * itself when the consumer kept `open={false}`.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -13,6 +14,7 @@ import {
   clickCentreOf,
   focusedTestId,
   pressKey,
+  waitFor,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
@@ -42,7 +44,7 @@ const Advanced = ({
 );
 
 describe("Collapsible", () => {
-  it("opens and closes on a click, unmounting the body", () => {
+  it("opens on a click, and unmounts the body after its collapse", async () => {
     const section = renderComponent(<Advanced />);
 
     expect(section.renderer.findByTestId("content")).toBeUndefined();
@@ -64,13 +66,17 @@ describe("Collapsible", () => {
 
     clickCentreOf(section, "trigger");
 
-    expect(section.renderer.findByTestId("content")).toBeUndefined();
+    // The body is still painted for its collapse tween, then leaves.
+    expect(section.renderer.findByTestId("content")).toBeDefined();
+    await waitFor(() =>
+      expect(section.renderer.findByTestId("content")).toBeUndefined(),
+    );
     expect(section.renderer.getAllText()).not.toContain("Retry budget");
 
     section.unmount();
   });
 
-  it("toggles from Enter and Space on the focused trigger", () => {
+  it("toggles from Enter and Space on the focused trigger", async () => {
     const section = renderComponent(<Advanced />);
 
     section.renderer.focusElement(
@@ -82,7 +88,9 @@ describe("Collapsible", () => {
     expect(section.renderer.findByTestId("content")).toBeDefined();
 
     pressKey(section, "space");
-    expect(section.renderer.findByTestId("content")).toBeUndefined();
+    await waitFor(() =>
+      expect(section.renderer.findByTestId("content")).toBeUndefined(),
+    );
 
     section.unmount();
   });

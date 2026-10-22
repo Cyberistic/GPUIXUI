@@ -8,6 +8,7 @@
 
 export * from "./alert.js";
 export * from "./accordion.js";
+export * from "./auto-height.js";
 export * from "./avatar.js";
 export * from "./badge.js";
 export * from "./breadcrumb.js";

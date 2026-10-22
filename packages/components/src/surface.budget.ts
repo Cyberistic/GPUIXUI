@@ -28,8 +28,9 @@ export const surfaceBudget = {
   // motion seam landed (`internal/presence.tsx` and the public `motion.tsx`,
   // plan 600 Phase 0). 91 → 93 when TypingText landed (`typing-text.tsx` and the
   // timing rule beside it), 93 → 95 when CountingNumber did
-  // (`counting-number.tsx` and its formatting rule, plan 600's text effects).
-  modules: 95,
+  // (`counting-number.tsx` and its formatting rule), 95 → 96 for AutoHeight
+  // (`auto-height.tsx`, plan 600's measured reveal).
+  modules: 96,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   bytes: 640 * 1024,
   /** Packages the entry's own modules import. */

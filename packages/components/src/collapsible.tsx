@@ -1,10 +1,11 @@
 /**
  * Collapsible: one section that reveals its content on demand.
  *
- * The content unmounts while closed. That is the honest v1: GPUix's `motion`
- * animates a numeric height, and an automatic-height reveal needs a measured
- * first paint. The `TODO` on {@link CollapsibleContent} records the follow-up
- * instead of promising an animation the runtime cannot measure yet.
+ * The body grows to its measured height and collapses again through
+ * `AutoHeight`, the plan-600 reveal: the content box reports what it paints and
+ * the clipping box tweens to it, so the section reads as opening rather than
+ * appearing. It stays mounted for its exit tween and unmounts after it, so a
+ * closed body still holds nothing that runs.
  */
 
 import type { Props } from "@gpuix/react";
@@ -20,6 +21,7 @@ import {
   COLLAPSIBLE_TRIGGER,
 } from "@gpuixui/tw";
 import { createContext, useContext, useState } from "react";
+import { AutoHeight } from "./auto-height.js";
 import { useControllableState } from "./internal/controllable.js";
 import { activationHandlers } from "./internal/key.js";
 import {
@@ -167,30 +169,24 @@ export interface CollapsibleContentProps extends Props {
   readonly className?: string;
 }
 
-/** The revealed body. Unmounts while closed, so nothing inside it is running. */
+/** The revealed body: a measured height reveal that unmounts after it closes. */
 export const CollapsibleContent = ({
   className,
   style,
   children,
   ...rest
 }: CollapsibleContentProps) => {
-  const theme = useTheme();
   const { open } = useCollapsibleContext();
 
-  // TODO: measure the body with `onLayout` and animate to that height once a
-  // motion budget exists; 0.11.0's `motion` needs a numeric target.
-  if (!open) return null;
-
   return (
-    <div
+    <AutoHeight
       {...rest}
-      style={mergeStyles(
-        recipeStyle(cn(COLLAPSIBLE_CONTENT, className), theme),
-        style,
-      )}
+      open={open}
+      contentClassName={cn(COLLAPSIBLE_CONTENT, className)}
+      style={style}
     >
       {children}
-    </div>
+    </AutoHeight>
   );
 };
 
@@ -213,9 +209,10 @@ export const collapsibleMeta = {
   name: "Collapsible sections",
   tier: 2,
   status: "done",
-  gpuixSupport: "partial",
+  gpuixSupport: "yes",
   limitations: [
-    "mounts and unmounts instantly: 0.11.0's motion needs a numeric height, and an auto-height reveal needs a measured first paint",
+    "the first open paints the body at zero for a frame while it measures, then grows to the reported height",
+    "the body unmounts after its collapse tween, so state inside it does not survive a close",
   ],
   docs: "docs/collapsible.mdx",
   example: "examples/collapsible.example.tsx",
