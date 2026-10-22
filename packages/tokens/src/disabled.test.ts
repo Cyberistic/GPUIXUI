@@ -85,11 +85,12 @@ const tokenImport =
  */
 const fadeShares = (
   source: string,
+  file: string = source,
 ): ReadonlyArray<number | "not-the-constant"> =>
   [...source.matchAll(/style\.opacity = (disabledOpacity|[\d.]+)/g)].map(
     ([, written]) =>
       written === "disabledOpacity"
-        ? tokenImport.test(source)
+        ? tokenImport.test(file)
           ? disabledOpacity
           : "not-the-constant"
         : Number(written),
@@ -597,7 +598,9 @@ describe("the pages that teach the disabled state", () => {
       painters.control.indexOf("} else {", start),
     );
     expect(branch).toContain("disabledAction(theme)");
-    expect(fadeShares(branch)).toEqual([disabledOpacity]);
+    // The branch is a slice, so the import that makes the name the package's
+    // share is read from the file it was cut out of.
+    expect(fadeShares(branch, painters.control)).toEqual([disabledOpacity]);
 
     Object.entries(pages).forEach(([page, text]) => {
       expect(text, page).toContain("filled variant");

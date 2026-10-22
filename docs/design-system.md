@@ -377,7 +377,7 @@ wash a surface can open over (the
 `selected` a chosen row holds, the `accent` a list row tints under the pointer,
 the `active` a row keeps while the press is down and the `hover` a click leaves
 on the trigger it was opened from) and the four soft tints a message is painted
-on, because an alert's documented action can open a menu over its own surface —
+on, because an action inside an alert can open a menu over its own surface —
 the same `decorativeFailures` call a divider and a wash answer to (§9). A shadow
 is a blurred geometry, so the composite is a ceiling rather
 than what the eye receives: a shadow that passes may still read faint at its

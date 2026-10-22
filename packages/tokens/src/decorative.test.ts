@@ -1026,8 +1026,9 @@ describe("decorative surfaces", () => {
   });
 
   it("measures a message's own action opening over its tint", () => {
-    // An `Alert`'s description is a container and its documented action is a
-    // plain `Button`: a menu or a popover opened from one casts its shadow over
+    // An `Alert`'s description is a container, and the action a consumer places
+    // in it — the package's documented text `AlertLink` or a filled `Button` —
+    // can open a menu: a menu or a popover opened from one casts its shadow over
     // the tint the message is painted on, and a confirmation dialog opened from
     // it veils the message that asked for the confirmation. Both contracts cover
     // the same strips the row washes are measured for, one surface over.
