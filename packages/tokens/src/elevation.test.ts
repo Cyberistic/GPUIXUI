@@ -332,17 +332,21 @@ describe("unpaintable shadow colours", () => {
     ]);
   });
 
-  it("accepts the 6- and 8-digit grammar and rejects a colour the runtime cannot parse", () => {
+  it("accepts the grammar the runtime parses and rejects a value no colour grammar reads", () => {
     const valid = extendTheme(lightTheme, {
-      elevation: { sm: [shadow("#000000")], md: [shadow("#00000020")] },
+      elevation: {
+        sm: [shadow("#000000")],
+        md: [shadow("#00000020")],
+        lg: [shadow("black")],
+      },
     });
     const invalid = extendTheme(lightTheme, {
-      elevation: { sm: [shadow("black")], md: [shadow("")] },
+      elevation: { sm: [shadow("blackened")], md: [shadow("")] },
     });
 
     expect(invalidShadowColors(valid)).toEqual([]);
     expect(invalidShadowColors(invalid)).toEqual([
-      { level: "sm", index: 0, color: "black" },
+      { level: "sm", index: 0, color: "blackened" },
       { level: "md", index: 0, color: "" },
     ]);
   });

@@ -491,13 +491,18 @@ find). The only two roles with no pair are `selection`, measured by
 
 A value the renderer cannot paint is the other silent failure: GPUix ignores a
 colour string it cannot parse, so a typo keeps the property's previous value or
-paints black. `invalidColorRoles(theme)` reports every role that is not a 6- or
-8-digit hex colour, and it is what found the documented brand example pairing a
-saturated violet with the dark theme's near-black on-colour — 4.24:1, below the
-floor. The example now ships a white label with its violet, and the audit runs
-over it in `theme.test.ts`. An elevation level a brand supplies is outside that
-report — it reads `colors` — and an unpaintable shadow colour paints no shadow,
-so `invalidShadowColors(theme)` names the level and position (§7).
+paints black. `invalidColorRoles(theme)` reports every role outside the grammar
+the runtime's own parser reads — CSS Color 4 (`csscolorparser` 0.8.3 in the
+pinned release): hex in any of its four lengths, a CSS named colour or a colour
+function. It is what found the documented brand example pairing a saturated
+violet with the dark theme's near-black on-colour — 4.24:1, below the floor. The
+example now ships a white label with its violet, and the audit runs over it in
+`theme.test.ts`. The paint grammar is wider than the measurement one — the
+contracts read six- and eight-digit hex, so a brand in `hsl()` paints and its
+pairs are reported unmeasurable (`docs/tokens.md` §Paint-ready values). An
+elevation level a brand supplies is outside that report — it reads `colors` —
+and an unpaintable shadow colour paints no shadow, so
+`invalidShadowColors(theme)` names the level and position (§7).
 
 A value it cannot **lay out** is the third: a style batch is JSON, so `NaN` and
 `Infinity` arrive as `null`, the property is dropped, and the element paints as

@@ -807,22 +807,39 @@ The three below are here; the categorical scale is §Data series
 ### Paint-ready values
 
 `invalidColorRoles(theme)` returns every semantic role whose value is not a
-6- or 8-digit hex colour — the grammar GPUix can paint. An 8-digit value is
-valid: the alpha byte is how `selection` and `overlay` are translucent. A role
-missing from a hand-built theme literal is reported too, because the runtime
-cannot paint what is not there.
+colour GPUix can paint. The runtime parses colours with `csscolorparser` 0.8.3 —
+the pinned `@gpuix/native@0.11.0` release ships it in
+`packages/native/src/color.rs` — so the paint grammar is CSS Color 4: hex in any
+of its four lengths, with or without the `#`; a CSS named colour; `transparent`;
+or an `rgb`/`hsl`/`hwb`/`hsv`/`lab`/`lch`/`oklab`/`oklch` function, absolute or
+relative. A role missing from a hand-built theme literal is reported too,
+because the runtime cannot paint what is not there.
 
 ```ts
 import { invalidColorRoles } from "@gpuixui/tokens";
 
 invalidColorRoles({ colors: { ...lightColors, primary: "#7C5CF" } });
 // [{ role: "primary", value: "#7C5CF" }]
+
+invalidColorRoles({ colors: { ...lightColors, primary: "hsl(258 88% 58%)" } });
+// [] — the renderer paints it
 ```
 
 `isPaintableColor(value)` is that grammar on its own, for a caller validating one
-value — a theme editor's hex field, a persisted brand colour — before it reaches
-a style. `invalidShadowColors(theme)` applies it to an elevation level a brand
+value — a theme editor's field, a persisted brand colour — before it reaches a
+style. It accepts an argument list whose channel count is wrong (`rgb(255, 0)`
+is two channels and paints nothing) and rejects a value no colour grammar reads;
+resolving the arithmetic inside a channel is the runtime's.
+`invalidShadowColors(theme)` applies the same check to an elevation level a brand
 supplies, which the role report cannot see (§Elevation).
+
+**The paint grammar is wider than the measurement one.** `contrastRatio`,
+`alphaOf`, `blend`, `selectionFailures` and the decorative contracts read the
+six- and eight-digit hex form only, which is why every shipped palette is written
+in it. A brand written in `hsl()`, a colour name or shorthand hex paints, and its
+role values pass this check, but its contrast pairs are reported **unmeasurable**
+rather than guessed — the honest outcome, and the reason the docs' examples stay
+in hex.
 
 ### Numbers
 
@@ -2110,6 +2127,13 @@ or dropped is named rather than passing silently.
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
+- The paint grammar is CSS Color 4 (the runtime's `csscolorparser`), while this
+  package's measurements read six- and eight-digit hex: a brand in `hsl()`, a
+  named colour or shorthand hex paints and passes the paint check, but its
+  contrast, selection and decorative pairs are reported unmeasurable rather than
+  guessed. The shipped palettes are hex for that reason, and `alphaOf` /
+  `blend` derive from hex only — a shadow colour written another way is treated
+  as opaque when an elevation level is retinted.
 - No `zIndex` in the published API, so there is no numeric stacking token: paint
   order is tree order and the mounting rules are §Layering. The repo's
   source-built binding carries a local `zIndex` patch for a probe; library code

@@ -403,35 +403,197 @@ export const highContrastDarkColors = {
   shadow: "#000000B3",
 } satisfies ThemeColors;
 
-const hexColor = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
+/**
+ * The hex form this package's measurements understand: `#RRGGBB`, with an
+ * optional `AA` byte carrying a translucent role's share. The shipped palettes
+ * are written in this form, because a contrast pair, `alphaOf` and `blend` all
+ * read it.
+ */
+const measuredHex = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
 
 /**
- * Whether `value` is a colour string GPUix can paint: a 6-digit `#RRGGBB` or an
- * 8-digit `#RRGGBBAA`. The alpha byte is how the translucent roles — `selection`
- * and `overlay` — carry their share.
+ * Every hex form the runtime's parser reads: 3, 4, 6 or 8 digits, with or
+ * without the `#`. A bare form is legal to that parser — it reads `ff0` as a
+ * colour — so the paint check accepts it rather than reporting a value the
+ * renderer would paint.
+ */
+const paintedHex =
+  /^#?(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
+
+/**
+ * The CSS named colours the runtime's parser knows, plus `transparent`. A theme
+ * value may be a name, so the paint check has to know them: reading a name as an
+ * unpaintable colour would fail a theme the renderer paints.
+ */
+const namedColours = new Set(
+  (
+    "aliceblue antiquewhite aqua aquamarine azure beige bisque black " +
+    "blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse " +
+    "chocolate coral cornflowerblue cornsilk crimson cyan darkblue " +
+    "darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki " +
+    "darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon " +
+    "darkseagreen darkslateblue darkslategray darkslategrey " +
+    "darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey " +
+    "dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro " +
+    "ghostwhite gold goldenrod gray green greenyellow grey honeydew " +
+    "hotpink indianred indigo ivory khaki lavender lavenderblush " +
+    "lawngreen lemonchiffon lightblue lightcoral lightcyan " +
+    "lightgoldenrodyellow lightgray lightgreen lightgrey lightpink " +
+    "lightsalmon lightseagreen lightskyblue lightslategray " +
+    "lightslategrey lightsteelblue lightyellow lime limegreen linen " +
+    "magenta maroon mediumaquamarine mediumblue mediumorchid " +
+    "mediumpurple mediumseagreen mediumslateblue mediumspringgreen " +
+    "mediumturquoise mediumvioletred midnightblue mintcream mistyrose " +
+    "moccasin navajowhite navy oldlace olive olivedrab orange orangered " +
+    "orchid palegoldenrod palegreen paleturquoise palevioletred " +
+    "papayawhip peachpuff peru pink plum powderblue purple rebeccapurple " +
+    "red rosybrown royalblue saddlebrown salmon sandybrown seagreen " +
+    "seashell sienna silver skyblue slateblue slategray slategrey snow " +
+    "springgreen steelblue tan teal thistle tomato turquoise violet " +
+    "wheat white whitesmoke yellow yellowgreen transparent"
+  ).split(" "),
+);
+
+/** The functional colour families the runtime's parser reads. */
+const colourFunctions = new Set([
+  "rgb",
+  "rgba",
+  "hsl",
+  "hsla",
+  "hwb",
+  "hwba",
+  "hsv",
+  "hsva",
+  "lab",
+  "lch",
+  "oklab",
+  "oklch",
+]);
+
+/**
+ * Whether a functional colour's argument list has the shape the parser reads:
+ * three channels and an optional fourth value after `/`, or a leading `from`
+ * relative colour, whose arguments the parser resolves. Parentheses are tracked
+ * because a channel may be a `calc(...)` expression with spaces of its own; a
+ * channel count is the one typo this can catch that a colour family alone cannot
+ * — `rgb(255, 0)` is two channels and paints nothing.
+ */
+/** The state a functional colour's argument scan carries between characters. */
+interface ChannelScan {
+  readonly channels: readonly string[];
+  readonly channel: string;
+  readonly depth: number;
+  readonly slash: boolean;
+  readonly broken: boolean;
+}
+
+const isChannelList = (args: string): boolean => {
+  const initial: ChannelScan = {
+    channels: [],
+    channel: "",
+    depth: 0,
+    slash: false,
+    broken: false,
+  };
+  const scan = args.split("").reduce((state: ChannelScan, character) => {
+    const top = state.depth === 0;
+    if (state.broken) {
+      return state;
+    }
+    if (character === "(") {
+      return {
+        ...state,
+        depth: state.depth + 1,
+        channel: state.channel + character,
+      };
+    }
+    if (character === ")") {
+      return top
+        ? { ...state, broken: true }
+        : {
+            ...state,
+            depth: state.depth - 1,
+            channel: state.channel + character,
+          };
+    }
+    if (top && character === "/") {
+      return { ...state, slash: true };
+    }
+    if (top && (character === "," || /\s/.test(character))) {
+      return {
+        ...state,
+        channels:
+          state.channel === ""
+            ? state.channels
+            : [...state.channels, state.channel],
+        channel: "",
+      };
+    }
+    return { ...state, channel: state.channel + character };
+  }, initial);
+  if (scan.broken || scan.depth !== 0) {
+    return false;
+  }
+  const channels =
+    scan.channel === "" ? scan.channels : [...scan.channels, scan.channel];
+  // A relative colour names its source first: `rgb(from #bad455 b r g)`.
+  if (channels[0]?.toLowerCase() === "from") {
+    return true;
+  }
+  return scan.slash
+    ? channels.length === 4
+    : channels.length === 3 || channels.length === 4;
+};
+
+/**
+ * Whether `value` is a colour string GPUix can paint.
  *
- * The runtime ignores a colour it cannot parse instead of failing, so this is
- * the grammar every theme value is checked against: `invalidColorRoles` for the
- * roles and `invalidShadowColors` for an elevation level a brand supplies.
+ * The runtime parses colours with `csscolorparser` 0.8.3 (the pinned
+ * `@gpuix/native@0.11.0` release, `packages/native/src/color.rs`), so the paint
+ * grammar is CSS Color 4: a hex value in any of four lengths, a CSS named
+ * colour, `transparent`, or an `rgb`/`hsl`/`hwb`/`hsv`/`lab`/`lch`/`oklab`/
+ * `oklch` function, absolute or relative. A value outside that grammar is
+ * ignored by the renderer — the property keeps its previous value or paints
+ * black — which is what {@link invalidColorRoles} and
+ * {@link invalidShadowColors} report.
+ *
+ * This is the **paint** grammar, not the **measurement** one: the shipped
+ * palettes are `#RRGGBB`/`#RRGGBBAA` because every contrast and decorative
+ * contract reads that form, and a role written as `hsl(...)` paints while
+ * {@link contrastRatio} reports it unmeasurable rather than guessing.
  *
  * @example
  * ```ts
  * isPaintableColor("#2559D6"); // true
  * isPaintableColor("#2559D"); // false
+ * isPaintableColor("oklch(0.62 0.26 29.2)"); // true
  * ```
  */
-export const isPaintableColor = (value: string): boolean =>
-  hexColor.test(value);
+export const isPaintableColor = (value: string): boolean => {
+  const colour = value.trim();
+  if (paintedHex.test(colour) || namedColours.has(colour.toLowerCase())) {
+    return true;
+  }
+  const open = colour.indexOf("(");
+  if (open < 1 || !colour.endsWith(")")) {
+    return false;
+  }
+  // The parser trims the end of a function name before matching it.
+  return (
+    colourFunctions.has(colour.slice(0, open).trimEnd().toLowerCase()) &&
+    isChannelList(colour.slice(open + 1, -1))
+  );
+};
 
 /**
  * Return `color` with an alpha channel, as an 8-digit hex colour.
  *
  * `amount` is clamped to `0…1` and rounded to the nearest byte. A 6-digit
  * `#RRGGBB` gains an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced.
- * A colour the parser does not recognise is returned unchanged, so a non-hex
- * value stays solid rather than becoming transparent — and so is a
- * non-finite `amount`, which has no alpha byte to produce and would otherwise
- * emit a string the renderer cannot parse.
+ * A colour outside the measured hex dialect is returned unchanged, so a value
+ * the renderer paints stays as it was rather than becoming transparent — and so
+ * is a non-finite `amount`, which has no alpha byte to produce and would
+ * otherwise emit a string the renderer cannot parse.
  *
  * @example
  * ```ts
@@ -439,7 +601,7 @@ export const isPaintableColor = (value: string): boolean =>
  * ```
  */
 export function alpha(color: string, amount: number): string {
-  const match = hexColor.exec(color);
+  const match = measuredHex.exec(color);
   if (match === null || !Number.isFinite(amount)) {
     return color;
   }
@@ -453,8 +615,9 @@ export function alpha(color: string, amount: number): string {
  *
  * The inverse of {@link alpha}: it reads the byte a translucent colour carries
  * so a rule can restate that colour at the same strength in another tint. An
- * opaque six-digit colour reads as `1`, and so does a value the parser does not
- * recognise — an unparseable colour is painted solid, not cut up.
+ * opaque six-digit colour reads as `1`, and so does a value outside the measured
+ * hex dialect — the CSS colour families carry their alpha in a form this reads
+ * as opaque, which is one reason the contracts measure the hex dialect.
  *
  * @example
  * ```ts
@@ -463,7 +626,7 @@ export function alpha(color: string, amount: number): string {
  * ```
  */
 export function alphaOf(color: string): number {
-  const match = hexColor.exec(color);
+  const match = measuredHex.exec(color);
   const byte = match?.[2];
   return byte === undefined ? 1 : Number.parseInt(byte, 16) / 255;
 }
@@ -474,9 +637,9 @@ export function alphaOf(color: string): number {
  * `amount` is clamped to `0…1`. The result keeps `color`'s alpha byte when it
  * has one and is opaque when it does not, so a blend of two opaque colours is
  * an opaque colour — the point of the rule: a fill that changes with the
- * pointer does not let the surface behind it through. A colour the parser does
- * not recognise — or a non-finite `amount`, as in {@link alpha} — is returned
- * unchanged.
+ * pointer does not let the surface behind it through. A colour outside the
+ * measured hex dialect — or a non-finite `amount`, as in {@link alpha} — is
+ * returned unchanged.
  *
  * @example
  * ```ts
@@ -484,8 +647,8 @@ export function alphaOf(color: string): number {
  * ```
  */
 export function blend(color: string, toward: string, amount: number): string {
-  const base = hexColor.exec(color);
-  const target = hexColor.exec(toward);
+  const base = measuredHex.exec(color);
+  const target = measuredHex.exec(toward);
   if (base === null || target === null || !Number.isFinite(amount)) {
     return color;
   }
@@ -585,9 +748,11 @@ export interface InvalidColorRole {
  *
  * The runtime ignores a colour string it cannot parse: the property keeps its
  * previous value or paints black, so a typo in a brand theme fails silently.
- * This is the check that makes it visible. Six- and eight-digit hex are both
- * valid — the alpha byte is how `selection` and `overlay` are translucent — and
- * a role that is missing from a hand-built theme literal is reported too,
+ * This is the check that makes it visible, over the grammar the runtime's own
+ * parser reads ({@link isPaintableColor}) — any hex length, a CSS named colour
+ * or a colour function. The shipped palettes stay in the six- and eight-digit
+ * hex form because that is the one every contrast and decorative contract can
+ * measure, and a role missing from a hand-built theme literal is reported too,
  * because the runtime cannot paint what is not there.
  *
  * @example

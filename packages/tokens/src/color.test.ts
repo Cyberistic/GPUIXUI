@@ -15,6 +15,7 @@ import {
   highContrastDarkColors,
   highContrastLightColors,
   invalidColorRoles,
+  isPaintableColor,
   lightColors,
   palette,
   type ThemeColors,
@@ -117,12 +118,9 @@ describe("soft status surfaces", () => {
 });
 
 describe("colour roles", () => {
-  it("uses a colour grammar GPUix can paint", () => {
-    const grammar = /^(#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{8})$/;
+  it("paints every role of every shipped palette", () => {
     colourSets.forEach(({ label, colors }) => {
-      Object.entries(colors).forEach(([role, value]) => {
-        expect(value, `${label}.${role}`).toMatch(grammar);
-      });
+      expect(invalidColorRoles({ colors }), label).toEqual([]);
     });
   });
 
@@ -176,12 +174,23 @@ describe("invalidColorRoles", () => {
     ]);
   });
 
-  it("reports a named colour and a short hex in role order", () => {
-    const unparseable = {
+  it("accepts a named colour and a short hex, which the parser paints", () => {
+    // Both were reported before the grammar was matched to the runtime's
+    // parser: `rebeccapurple` and `#FFF` are CSS Color 4 values, and GPUix
+    // paints them. Reporting them failed a brand theme the renderer renders.
+    const painted = {
       colors: { ...lightColors, ring: "rebeccapurple", selection: "#FFF" },
     };
 
-    expect(invalidColorRoles(unparseable).map(({ role }) => role)).toEqual([
+    expect(invalidColorRoles(painted)).toEqual([]);
+  });
+
+  it("reports a value no colour grammar reads, in role order", () => {
+    const unreadable = {
+      colors: { ...lightColors, ring: "purple-ish", selection: "#12" },
+    };
+
+    expect(invalidColorRoles(unreadable).map(({ role }) => role)).toEqual([
       "ring",
       "selection",
     ]);
@@ -328,6 +337,114 @@ describe("filled action state fills", () => {
             `${label} ${action} ${state}`,
           ).toBeGreaterThanOrEqual(floor);
         });
+      });
+    });
+  });
+});
+
+/**
+ * The bug this holds: the paint check accepted only 6- and 8-digit hex, while
+ * the pinned `@gpuix/native@0.11.0` release parses colours with
+ * `csscolorparser` 0.8.3 (`packages/native/src/color.rs` at `2e31b47`). So a
+ * brand theme written in `hsl()`, in a CSS colour name, or in the shorthand
+ * `#fff` the parser reads was reported as unpaintable and failed the audit the
+ * docs tell a brand to run — a false failure on a theme the renderer paints.
+ * Both directions are held here: every family the parser's own tests name is
+ * accepted, and every typo class the old check caught is still rejected.
+ */
+describe("the colour grammar GPUix paints", () => {
+  const painted = [
+    // Hex, every length the parser reads, with and without the hash.
+    "#fff",
+    "#fff8",
+    "#ffffff",
+    "#ffffff80",
+    "ff0000ff",
+    // Named colours and `transparent`.
+    "rebeccapurple",
+    "BLACK",
+    "transparent",
+    // Absolute functions.
+    "rgb(255 0 0)",
+    "rgba(255, 0, 0, 1)",
+    "hsl(0 100% 50%)",
+    "hsl(360deg, 100%, 50%)",
+    "hsla(0, 100%, 50%, 1)",
+    "hwba(0, 0%, 0%, 1)",
+    "hwb(0 0% 0%)",
+    "hsv(0 100% 100%)",
+    "lab(100% 0 0)",
+    "lch(100% 0 0)",
+    "oklab(0.62796 0.22486 0.12585)",
+    "oklch(0.62796 0.25768 29.23388)",
+    "rgb(none none none / none)",
+    "rgb(255 0 0 / 50%)",
+    // The parser trims the end of a function name before matching it.
+    "hsl (0 100% 50%)",
+    // A channel may be an expression or a relative colour.
+    "oklab(from #bad455 calc(l * 0.7) a b)",
+    "rgb(from #bad455 b r g / alpha)",
+    "lab(from #bad455 l a b / calc(alpha / 2))",
+  ];
+
+  const unpaintable = [
+    "#7C5CF",
+    "#GGGGGG",
+    "#",
+    "",
+    "notacolour",
+    "rgb(255, 0)",
+    "rgb()",
+    "rgb(",
+    "rgb(1 2 3))",
+    "color(display-p3 1 0 0)",
+  ];
+
+  painted.forEach((value) => {
+    it(`accepts ${value}`, () => {
+      expect(isPaintableColor(value)).toBe(true);
+    });
+  });
+
+  unpaintable.forEach((value) => {
+    it(`rejects ${value === "" ? "an empty string" : value}`, () => {
+      expect(isPaintableColor(value)).toBe(false);
+    });
+  });
+
+  it("stops reporting a role a CSS colour family paints", () => {
+    // The old check reported every one of these; `invalidColorRoles` is what a
+    // brand's audit reads, so each false report failed the gate.
+    expect(
+      invalidColorRoles({
+        colors: { ...lightColors, primary: "hsl(258 88% 58%)" },
+      }),
+    ).toEqual([]);
+    expect(
+      invalidColorRoles({ colors: { ...lightColors, primary: "#fff" } }),
+    ).toEqual([]);
+    expect(
+      invalidColorRoles({
+        colors: { ...lightColors, primary: "rebeccapurple" },
+      }),
+    ).toEqual([]);
+  });
+
+  it("still reports a value no CSS grammar reads", () => {
+    expect(
+      invalidColorRoles({ colors: { ...lightColors, primary: "#7C5CF" } }),
+    ).toEqual([{ role: "primary", value: "#7C5CF" }]);
+  });
+
+  it("writes the shipped palettes in the measurable hex dialect", () => {
+    // The paint grammar is wider than the measurement one: `contrastRatio`,
+    // `alphaOf` and `blend` read 6- and 8-digit hex only, so the shipped
+    // palettes stay in that form even though the renderer paints more.
+    colourSets.forEach(({ label, colors }) => {
+      Object.entries(colors).forEach(([role, value]) => {
+        expect(value, `${label}.${role}`).toMatch(
+          /^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/,
+        );
       });
     });
   });

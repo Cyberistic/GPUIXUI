@@ -458,9 +458,15 @@ into `auditTheme` is recorded in `TODO.md` → Interlocks.
 
 Each report is also a function of its own:
 
-- `invalidColorRoles(theme)` lists every role whose value is not a hex colour
-  GPUix can paint. The runtime **ignores** a value it cannot parse, so a typo
-  paints black instead of failing — this is the warning that makes it visible.
+- `invalidColorRoles(theme)` lists every role whose value falls outside the
+  colour grammar GPUix paints — CSS Color 4, which the pinned release parses with
+  `csscolorparser` 0.8.3: hex in any of its four lengths, a named colour, or an
+  `rgb`/`hsl`/`hwb`/`hsv`/`lab`/`lch`/`oklab`/`oklch` function. The runtime
+  **ignores** a value it cannot parse, so a typo paints black instead of failing —
+  this is the warning that makes it visible. The paint grammar is wider than the
+  measurement one: the contrast and decorative contracts read six- and eight-digit
+  hex, so the shipped palettes are written in it and a brand in another family has
+  its pairs reported unmeasurable rather than guessed.
 - `invalidShadowColors(theme)` applies the same grammar to every shadow in the
   elevation scale, which the role report cannot see: a level a brand supplies
   replaces the array whole, and a colour the runtime ignores paints no shadow at
