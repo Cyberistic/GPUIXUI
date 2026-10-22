@@ -1188,7 +1188,10 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 87 pairs cover the text role
+— an empty array means the theme is readable. The floors are the theme's own
+variant's unless one is passed, which is the rule `auditTheme` applies: a brand
+derived from a high-contrast theme is measured at 7:1 for secondary text without
+the caller remembering to say so. The 87 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1316,8 +1319,10 @@ sweeps all 16 styles, so the pairs cannot outlive the paint.
 
 `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
-to. `contrastFloorsFor(theme)` is the variant rule on its own, which is the floor
-set `auditTheme` uses unless one is passed. A brand theme runs the same check the
+to. `contrastFloorsFor(theme)` is the variant rule on its own: every report that
+takes floors — `contrastFailures`, `selectionFailures`, `indicatorFailures`,
+`seriesFailures` and the gate itself — starts from it, so the theme's declaration
+decides, and an explicit set overrides it. A brand theme runs the same check the
 built-in themes pass:
 
 ```ts
@@ -1749,12 +1754,15 @@ near-black it carries in dark).
 
 `indicatorFailures(theme, floors?)` names each mark and strip that misses the
 floor, reports one it cannot measure (a translucent role) rather than skipping
-it, and is part of [`auditTheme`](#checking-your-own-theme). Every shipped,
+it, and is part of [`auditTheme`](#checking-your-own-theme). The floor is the
+theme's own variant's — `contrastFloorsFor(theme).boundary` — so a high-contrast
+brand is held to 4.5:1 without the caller naming a floor set; an explicit floor
+set still overrides it. Every shipped,
 high-contrast, platform and authored theme passes; the tightest placement is
 Luna light's `success` mark on the pressed wash its own pointer paints, at
 3.05:1. `indicator.test.ts` holds the sweep, the rule, the two washes and their
-painters, the Aero pre-fix values, the unmeasurable case and a caller's
-stricter floor.
+painters, the Aero pre-fix values, the unmeasurable case, the variant default and
+a caller's stricter floor.
 
 ### Every role is measured
 

@@ -471,9 +471,13 @@ export interface ContrastFailure {
  *
  * An empty array means the theme meets the contract. Runs the same pairs the
  * built-in themes are tested against, so a brand theme is held to the floors
- * the library publishes rather than to a second set. A pair whose role the theme
- * does not carry is reported unmeasurable (`ratio: undefined`) — the absence is
- * named by `invalidColorRoles`, and a pair nobody can verify is not a pass.
+ * the library publishes rather than to a second set. The floors follow the
+ * theme's own `contrast` declaration unless one is passed — a brand derived from
+ * a high-contrast theme is held to the AAA floors without the caller remembering
+ * to say so, which is the rule `auditTheme` already applied. A pair whose role
+ * the theme does not carry is reported unmeasurable (`ratio: undefined`) — the
+ * absence is named by `invalidColorRoles`, and a pair nobody can verify is not a
+ * pass.
  *
  * @example
  * ```ts
@@ -484,8 +488,11 @@ export interface ContrastFailure {
  * ```
  */
 export function contrastFailures(
-  theme: { readonly colors: Partial<ThemeColors> },
-  floors: ContrastFloors = contrastFloors,
+  theme: {
+    readonly colors: Partial<ThemeColors>;
+    readonly contrast?: ThemeContrast;
+  },
+  floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly ContrastFailure[] {
   return contrastPairs.flatMap(({ foreground, background, floor }) => {
     const ratio = contrastRatio(

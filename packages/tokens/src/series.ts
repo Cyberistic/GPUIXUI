@@ -20,11 +20,7 @@
  */
 
 import type { ThemeColors } from "./color.js";
-import {
-  contrastFloors,
-  contrastRatio,
-  highContrastFloors,
-} from "./contrast.js";
+import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./hex.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
@@ -369,8 +365,7 @@ export function seriesFailures(
   theme: SeriesAuditSource,
   floors: SeriesFloors = {},
 ): SeriesReport {
-  const variant =
-    theme.contrast === "high" ? highContrastFloors : contrastFloors;
+  const variant = contrastFloorsFor(theme);
   const surfaceFloor = floors.surface ?? variant.boundary;
   const distinctnessFloor = floors.distinctness ?? seriesDistinctnessFloor;
   const deficiencyFloor = floors.deficiency ?? seriesDeficiencyFloor;

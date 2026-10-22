@@ -20,11 +20,12 @@
 
 import type { ThemeColors } from "./color.js";
 import {
-  contrastFloors,
+  contrastFloorsFor,
   contrastRatio,
   type ContrastFloors,
 } from "./contrast.js";
 import { statusTones } from "./styles.js";
+import type { ThemeContrast } from "./theme.js";
 
 /**
  * The roles a component may paint a mark in: the three action and field marks
@@ -90,9 +91,10 @@ export interface IndicatorFailure {
  * An empty array means every bar, dot and presence mark is visible where the
  * library draws it. Runs the same placements the built-in themes are tested
  * against, so a brand theme is held to the floor the library publishes rather
- * than to a second one. The floors come from `contrastFloors` (the theme's own
- * variant when `auditTheme` calls it). A mark or strip the theme does not carry
- * is reported unmeasurable rather than skipped.
+ * than to a second one. The floors follow the theme's own `contrast` declaration
+ * unless one is passed, so a brand derived from a high-contrast theme is held to
+ * 4.5:1 without the caller naming a floor set. A mark or strip the theme does not
+ * carry is reported unmeasurable rather than skipped.
  *
  * @example
  * ```ts
@@ -102,8 +104,11 @@ export interface IndicatorFailure {
  * ```
  */
 export function indicatorFailures(
-  theme: { readonly colors: Partial<ThemeColors> },
-  floors: ContrastFloors = contrastFloors,
+  theme: {
+    readonly colors: Partial<ThemeColors>;
+    readonly contrast?: ThemeContrast;
+  },
+  floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly IndicatorFailure[] {
   return indicatorRoles.flatMap((role) =>
     indicatorSurfaces.flatMap((surface): ReadonlyArray<IndicatorFailure> => {

@@ -377,3 +377,43 @@ describe("documents import what the package exports", () => {
     });
   });
 });
+
+/**
+ * The pages promised the variant rule before every report had it.
+ *
+ * `docs/tokens.md` §Text selection said the legibility floors were "of the
+ * theme's own contrast variant, so a high-contrast brand is measured at AAA
+ * without naming a floor set" while `selectionFailures(theme)` defaulted to the
+ * ordinary floors — the page taught a check the code did not run. The reports
+ * select the theme's variant now, and this holds the three pages to saying so:
+ * a rewrite that drops the rule sends a brand back to the false pass.
+ */
+describe("the variant default the reports share", () => {
+  const catalogueFlat = catalogue.replace(/\s+/g, " ");
+  const designFlat = designSystem.replace(/\s+/g, " ");
+  const readmeFlat = readme.replace(/\s+/g, " ");
+
+  it("states the rule in the catalogue, with the reports it applies to", () => {
+    expect(catalogueFlat).toContain(
+      "every report that takes floors — `contrastFailures`, `selectionFailures`, `indicatorFailures`, `seriesFailures` and the gate itself — starts from it",
+    );
+  });
+
+  it("states it where each report is documented", () => {
+    expect(catalogueFlat).toContain(
+      "The floors are the theme's own variant's unless one is passed",
+    );
+    expect(catalogueFlat).toContain(
+      "The floor is the theme's own variant's — `contrastFloorsFor(theme).boundary`",
+    );
+  });
+
+  it("states it in the design system and the README", () => {
+    expect(designFlat).toContain(
+      "Every report that takes floors reads them that way",
+    );
+    expect(readmeFlat).toContain(
+      "every report that takes floors starts from it",
+    );
+  });
+});

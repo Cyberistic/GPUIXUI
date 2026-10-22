@@ -745,7 +745,11 @@ when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
 to AAA without the caller naming a floor set; an explicit `ContrastFloors`
-overrides it. Two reports ignore those floors: the disabled fade is a
+overrides it. Every report that takes floors reads them that way — the contrast,
+selection and indicator reports select the theme's variant themselves, and the
+series surface floor comes from the same rule — so calling one of them on its own
+cannot answer with different floors than the gate (§9). Two reports ignore those
+floors: the disabled fade is a
 mechanism, so it is held to `contrastFloors.disabled` in every variant
 (§8 records why the fade cannot carry a high-contrast theme), and the keyboard
 dim is a where-can-Tab-go cue rather than a reading mode, so it is held to
@@ -755,9 +759,10 @@ measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `highContrastFloors` names the text and boundary pairs and their floors,
 `decorativeFailures(theme, floor?)` measures the subtle surfaces,
 `seriesFailures(theme)` measures a categorical scale — on its plot, against
-itself and after each colour-vision deficiency — while `selectionFailures(theme)`
+itself and after each colour-vision deficiency — while
+`selectionFailures(theme, floors?)`
 measures the body and secondary text a selected run sits in,
-`indicatorFailures(theme)` measures the marks a component shows and
+`indicatorFailures(theme, floors?)` measures the marks a component shows and
 `keyboardDimFailures(theme)` the label the runtime's keyboard dim erases.
 Nothing about the requirement is private to this repo.
 

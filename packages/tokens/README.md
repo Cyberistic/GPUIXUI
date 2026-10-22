@@ -444,7 +444,9 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 CSS validation and lint, and `passed` is true only when all ten reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
-set — `contrastFloorsFor(theme)` is that rule on its own, and an explicit
+set — `contrastFloorsFor(theme)` is that rule on its own, every report that takes
+floors starts from it (so `contrastFailures(theme)`, `selectionFailures(theme)`
+and `indicatorFailures(theme)` answer with the gate's floors), and an explicit
 `ContrastFloors` argument overrides it. The disabled fade is the exception: it
 is held to `contrastFloors.disabled` in every variant, because a fade is a
 mechanism rather than a readability claim.
@@ -551,7 +553,7 @@ Each report is also a function of its own:
   `lg`.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
-  translucent.
+  translucent. The floors default to the theme's own variant.
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
   skeleton fill, the modal veil (on the content strips a window holds behind it:
   a card, a popover, a `muted` toolbar, a `secondary` panel and a field's `input`
@@ -572,7 +574,8 @@ Each report is also a function of its own:
   deficiency, and reports one it cannot measure.
 - `selectionFailures(theme, floors?)` composites the `selection` wash over each
   surface text is selected from and lists a wash the reader cannot see and one
-  that hides the body or secondary text inside it; see §Text selection.
+  that hides the body or secondary text inside it; the text floors default to the
+  theme's own variant. See §Text selection.
 - `disabledFadeFailures(theme, floor?)` composites the disabled fade a control
   applies (`disabledOpacity`) and lists a label that disappears into the faded
   fill; the role pair is measured by `contrastFailures`, this is the other
@@ -583,7 +586,8 @@ Each report is also a function of its own:
   surface behind it.
 - `indicatorFailures(theme, floors?)` lists every progress fill, spinner dot,
   slider fill or presence mark that cannot be found on the strip it is drawn on,
-  and reports one it cannot measure. A status mark paints the tone's readable
+  and reports one it cannot measure. The floor defaults to the theme's own
+  variant (4.5:1 high contrast). A status mark paints the tone's readable
   role, never its solid fill; see §Checking a theme.
 
 `contrastRatio(foreground, background)` is the WCAG 2.1 ratio behind the second

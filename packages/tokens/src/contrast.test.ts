@@ -33,6 +33,7 @@ import { retroNames, retroTheme } from "./retro.js";
 import { statusTones } from "./styles.js";
 import {
   darkTheme,
+  extendTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   highContrastThemes,
@@ -125,6 +126,58 @@ describe("contrast floors", () => {
       ({ foreground, background }) => `${foreground}/${background}`,
     );
     expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+/**
+ * The floors are the theme's, not the caller's memory.
+ *
+ * `auditTheme` has always read a theme's `contrast` declaration, and the
+ * individual report did not: `contrastFailures(theme)` defaulted to the default
+ * floors, so a brand built from a high-contrast theme passed a check whose
+ * floors its own variant does not accept. The brand below is exactly that
+ * mistake — `#505050` keeps every pair above 4.5:1 and drops the four washes
+ * under 7:1 — and the default-floor call is the passing twin that makes the
+ * variant call the failure it is.
+ */
+describe("the floors a contrast report uses", () => {
+  const brand = extendTheme(highContrastLightTheme, {
+    colors: { mutedForeground: "#505050" },
+  });
+
+  it("takes the high floors from the theme without being told", () => {
+    const failures = contrastFailures(brand);
+
+    expect(
+      failures.map(({ foreground, background, floor }) => ({
+        foreground,
+        background,
+        floor,
+      })),
+    ).toEqual([
+      { foreground: "mutedForeground", background: "hover", floor: 7 },
+      { foreground: "mutedForeground", background: "active", floor: 7 },
+      { foreground: "mutedForeground", background: "accent", floor: 7 },
+      { foreground: "mutedForeground", background: "selected", floor: 7 },
+    ]);
+    expect(
+      failures.every(({ ratio }) => ratio !== undefined && ratio >= 4.5),
+    ).toBe(true);
+  });
+
+  it("a theme that declares nothing keeps the default floors", () => {
+    const standard = extendTheme(lightTheme, {
+      colors: { mutedForeground: "#5A5A5A" },
+    });
+
+    // 6.4:1 on the page clears the 4.5 secondary floor the default variant asks
+    // for, and would not clear the high-contrast variant's 7:1.
+    expect(contrastFailures(standard)).toEqual([]);
+  });
+
+  it("an explicit floor set still overrides the declaration", () => {
+    expect(contrastFailures(brand, contrastFloors)).toEqual([]);
+    expect(contrastFailures(brand, highContrastFloors).length).toBe(4);
   });
 });
 

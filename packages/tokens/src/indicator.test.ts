@@ -21,6 +21,7 @@ import {
   contrastRatio,
   extendTheme,
   highContrastFloors,
+  highContrastLightTheme,
   highContrastThemes,
   indicatorFailures,
   indicatorRoles,
@@ -238,5 +239,44 @@ describe("the catalogue documents the contract", () => {
     expect(catalogue).toContain(
       `The ${indicatorRoles.length} mark roles, on the ${indicatorSurfaces.length} strips`,
     );
+  });
+});
+
+/**
+ * The mark floor is the theme's, not the caller's memory.
+ *
+ * `indicatorFailures(theme)` defaulted to the default 3:1 floor whatever the
+ * theme declared, so a brand derived from a high-contrast theme — whose marks
+ * must be found at 4.5:1 — passed a report whose floors its own variant does not
+ * accept. `#6B6B6B` is a mark that clears 3:1 on every strip and only 3.67:1 and
+ * 4.35:1 on the two washes a row tints under the pointer.
+ */
+describe("the floors an indicator report uses", () => {
+  const brand = extendTheme(highContrastLightTheme, {
+    colors: { primary: "#6B6B6B" },
+  });
+
+  it("holds the marks to the theme's own variant", () => {
+    expect(indicatorFailures(brand, contrastFloors)).toEqual([]);
+    expect(
+      indicatorFailures(brand).map(({ role, surface, floor }) => ({
+        role,
+        surface,
+        floor,
+      })),
+    ).toEqual([
+      { role: "primary", surface: "hover", floor: 4.5 },
+      { role: "primary", surface: "active", floor: 4.5 },
+    ]);
+  });
+
+  it("keeps every shipped high-contrast mark at its own floor", () => {
+    // The variant floors are the ones the gate already used, so this is a
+    // guard rather than a change: the high-contrast pair must still pass.
+    expect(
+      Object.values(highContrastThemes).flatMap((theme) =>
+        indicatorFailures(theme),
+      ),
+    ).toEqual([]);
   });
 });

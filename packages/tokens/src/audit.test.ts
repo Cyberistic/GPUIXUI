@@ -80,10 +80,16 @@ describe("the floors follow the theme's contrast variant", () => {
 
   it("reports a pair the default floors would have passed", () => {
     // The retracted gate in one line: no failures at the default floors...
-    expect(contrastFailures(faintPlaceholder)).toEqual([]);
-    // ...and a real one once the theme's own variant decides. The placeholder
-    // sits on both field fills — a plain field's `input` and the page role a
-    // composite field paints — so the one role is reported on each.
+    expect(contrastFailures(faintPlaceholder, contrastFloors)).toEqual([]);
+    // ...and a real one from the report's own default, because the theme's
+    // variant decides. The placeholder sits on both field fills — a plain
+    // field's `input` and the page role a composite field paints — so the one
+    // role is reported on each.
+    expect(
+      contrastFailures(faintPlaceholder).map(
+        ({ foreground, background }) => `${foreground}/${background}`,
+      ),
+    ).toEqual(["placeholder/background", "placeholder/input"]);
     const { contrast, passed } = auditTheme(faintPlaceholder);
     expect(passed).toBe(false);
     expect(
@@ -418,5 +424,30 @@ describe("a brand whose colours carry a fully opaque alpha byte", () => {
   it("passes the gate the six-digit theme with the same palette passes", () => {
     expect(auditTheme(highContrastLightTheme).passed).toBe(true);
     expect(auditTheme(field).passed).toBe(true);
+  });
+});
+
+/**
+ * The gate and the report it names must answer with the same floors.
+ *
+ * `auditTheme` passed `contrastFloorsFor(theme)` into the contrast, selection and
+ * indicator reports, while each of those defaulted to the ordinary floors — so
+ * the same high-contrast brand was shippable through one entry point and a
+ * failure through another, depending on which the caller reached for. The three
+ * reports now select the floors the same way, and this case holds them to it.
+ */
+describe("the gate and its reports agree on a high-contrast brand", () => {
+  const brand = extendTheme(highContrastLightTheme, {
+    colors: { mutedForeground: "#505050", primary: "#6B6B6B" },
+  });
+
+  it("returns the same three reports the standalone checks do", () => {
+    const audit = auditTheme(brand);
+
+    expect(audit.contrast).toEqual(contrastFailures(brand));
+    expect(audit.indicators).toEqual(indicatorFailures(brand));
+    expect(audit.passed).toBe(false);
+    expect(audit.contrast.length).toBeGreaterThan(0);
+    expect(audit.indicators.length).toBeGreaterThan(0);
   });
 });

@@ -37,12 +37,13 @@
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
 import {
-  contrastFloors,
+  contrastFloorsFor,
   contrastRatio,
   type ContrastFloors,
   type ContrastPair,
 } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
+import type { ThemeContrast } from "./theme.js";
 
 /**
  * The text pairs a reader can select, and the surface each keeps its role on.
@@ -128,9 +129,12 @@ const washOver = (
  * `mutedForeground` line beside it.
  *
  * An empty array means the theme can be selected from. Runs over `selectionPairs`,
- * so a brand is held to the surfaces the library's own themes are. A pair whose
- * surface or wash the theme does not carry is reported unmeasurable: the wash
- * cannot be composited, and `invalidColorRoles` names the role.
+ * so a brand is held to the surfaces the library's own themes are. The text
+ * floors follow the theme's own `contrast` declaration unless one is passed, so a
+ * brand derived from a high-contrast theme is held to AAA without the caller
+ * naming a floor set. A pair whose surface or wash the theme does not carry is
+ * reported unmeasurable: the wash cannot be composited, and `invalidColorRoles`
+ * names the role.
  *
  * @example
  * ```ts
@@ -140,8 +144,11 @@ const washOver = (
  * ```
  */
 export function selectionFailures(
-  theme: { readonly colors: Partial<ThemeColors> },
-  floors: ContrastFloors = contrastFloors,
+  theme: {
+    readonly colors: Partial<ThemeColors>;
+    readonly contrast?: ThemeContrast;
+  },
+  floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly SelectionFailure[] {
   return selectionPairs.flatMap(({ foreground, background, floor }) => {
     const wash = washOver(theme.colors, background);

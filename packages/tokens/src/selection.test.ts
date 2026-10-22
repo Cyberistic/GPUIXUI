@@ -34,6 +34,7 @@ import {
 } from "./selection.example.js";
 import {
   darkTheme,
+  extendTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
@@ -338,5 +339,62 @@ describe("the documents describe the contract they are held to", () => {
     expect(design).toContain("secondary text inside the selection wash");
     expect(readme).toContain("mutedForeground");
     expect(readme).toContain(lightColors.mutedForeground);
+  });
+});
+
+/**
+ * The text floors follow the theme's declaration, not a caller's memory.
+ *
+ * The wash's own perceptibility floor is a design constant (1.05:1) and stays
+ * put; the *text* floor inside it is the theme's — the body floor for a run, the
+ * secondary floor for the `mutedForeground` line — and `selectionFailures` used
+ * to default to the ordinary floors, so a high-contrast brand passed the gate
+ * its own variant asks. `#505050` leaves the line at 5.51:1 inside the wash: above
+ * the 4.5 floor, under the 7 the variant declares.
+ */
+describe("the floors a selection report uses", () => {
+  const brand = extendTheme(highContrastLightTheme, {
+    colors: { mutedForeground: "#505050" },
+  });
+
+  it("holds the text to the theme's own variant", () => {
+    const failures = selectionFailures(brand);
+
+    expect(
+      failures.map(({ kind, foreground, background, floor }) => ({
+        kind,
+        foreground,
+        background,
+        floor,
+      })),
+    ).toEqual([
+      {
+        kind: "legibility",
+        foreground: "mutedForeground",
+        background: "background",
+        floor: 7,
+      },
+      {
+        kind: "legibility",
+        foreground: "mutedForeground",
+        background: "card",
+        floor: 7,
+      },
+      {
+        kind: "legibility",
+        foreground: "mutedForeground",
+        background: "popover",
+        floor: 7,
+      },
+    ]);
+    expect(
+      failures.every(
+        ({ kind, ratio }) => kind === "legibility" && (ratio ?? 0) > 4.5,
+      ),
+    ).toBe(true);
+  });
+
+  it("an explicit floor set still overrides the declaration", () => {
+    expect(selectionFailures(brand, contrastFloors)).toEqual([]);
   });
 });
