@@ -133,6 +133,37 @@ describe("the component previews", () => {
     expect(strategy).toContain("fixed 8px");
   });
 
+  it("says the table preview's row follows the density the native row fixes", () => {
+    // `TABLE_CELL` is shadcn's fixed `px-3 py-2 text-sm`, so a native row is an
+    // 8px inset around a 20px line in every platform, while the preview's row is
+    // `controlHeight.sm + spacing.md` and resizes with the platform switch. A
+    // reader comparing the two heights has to be told which is which.
+    const recipes = read("packages/data/src/table/recipe.ts");
+    expect(recipes).toContain('export const TABLE_CELL = "px-3 py-2 text-sm";');
+    const at = recipes.indexOf("export const TABLE_ROW =");
+    const row = at === -1 ? "" : (recipes.slice(at).split("\n")[0] ?? "");
+    expect(row, "the table row recipe lost its one-line form").toContain(
+      "flex flex-row items-center shrink-0",
+    );
+    expect(row, "the native row grew a height of its own").not.toMatch(
+      /\b(?:h-|height)/,
+    );
+
+    const css = read("apps/docs/src/styles/demos.css");
+    const start = css.indexOf(".gx-table-row {");
+    expect(start, "the table preview has no row rule").toBeGreaterThan(-1);
+    const previewRow = css.slice(start, css.indexOf("}", start));
+    expect(previewRow).toContain("--control-height-sm");
+    expect(previewRow).toContain("--spacing-md");
+
+    const strategy = read("docs/preview-strategy.md");
+    expect(strategy).toContain("table's row height");
+    expect(strategy).toContain("px-3 py-2 text-sm");
+    expect(strategy).toContain("36px");
+    expect(strategy).toContain("var(--control-height-sm)");
+    expect(strategy).toContain("var(--spacing-md)");
+  });
+
   it("says the overlay preview draws a corner the native surface does not", () => {
     // The native dialog compiles `rounded-4xl` (a fixed 32px) and paints the
     // theme's `elevation.lg` beside the recipe's ring, while `.gx-dialog` draws

@@ -51,6 +51,15 @@ agree in the default style and differ where a platform's `radius.md` is 8. The
 carousel page prints the fixed metric, and its preview is a rendering like every
 other.
 
+A **table's row height** follows the platform's density in the preview, while
+the native row is a fixed recipe: `TABLE_CELL` is shadcn's `px-3 py-2 text-sm`,
+so every shipped row is an 8px inset around a 20px line — 36px — whatever the
+platform. The preview's `.gx-table-row` is
+`calc(var(--control-height-sm) + var(--spacing-md))`, so the platform switch
+resizes it (40px at macOS compact, 48px at Linux spacious) and the native table
+does not move. The page says its previews are approximations; this is one of the
+ways, and it is the reason a reader comparing the two heights sees a difference.
+
 A **collapsible's body** is drawn with the browser's own mount, not the native
 measured reveal. The native body reports its painted height and tweens the
 clipping box to that number, stays painted for its 200 ms collapse and then
