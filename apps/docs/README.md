@@ -65,6 +65,7 @@ components/popover.mdx       Curated: anchored placement
 components/search-input.mdx  Curated: the Escape rule, the 24px clear target, the fixed metrics
 components/select.mdx        Curated: the 320px list, the row that reveals itself
 components/switch.mdx        Curated: the left-inset slide, the 24px band, the cleared dependent
+components/tag-input.mdx     Curated: the commit rules, the cap, the 24px removal target, no Backspace
 components/tabs.mdx          Curated: the measured indicator
 components/time-picker.mdx   Curated: one clock behind typing, arrows and midnight
 components/toast.mdx         Curated: the bounded queue, one action, the hold
@@ -136,6 +137,8 @@ src/components/docs/search-input-preview.ts The search preview's filter, count a
 src/components/docs/search-input-demo.tsx The search field's two browser renderings and their source strings
 src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule and its slide duration
 src/components/docs/switch-demo.tsx        The switch's two browser renderings and their source strings
+src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budget and publish gate
+src/components/docs/tag-input-demo.tsx     The tag field's two browser renderings and their source strings
 src/components/docs/tooltip-preview.ts    The tip's clock: delay, close grace, reopen window, traversal
 src/components/docs/tooltip-demo.tsx      The tooltip's two browser renderings and their source strings
 src/components/docs/sources.ts            The real source files the Code tab shows

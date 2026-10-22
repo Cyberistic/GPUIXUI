@@ -221,6 +221,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/primitives/src/components/Switch.tsx",
   },
   {
+    file: "tag-input.mdx",
+    row: "Tag / token input",
+    suite: "packages/components/src/behaviour/tag-input.test.tsx",
+    shadowed: "packages/components/docs/tag-input.mdx",
+    source: "packages/components/src/tag-input.tsx",
+  },
+  {
     file: "search-input.mdx",
     row: "Search inputs",
     suite: "packages/components/src/behaviour/search-input.test.tsx",
@@ -2301,6 +2308,62 @@ describe("the curated component pages", () => {
     // The retracted claim: a traversal does not open the tip, so a page
     // promising a keyboard-opened tip would teach a path the window lacks.
     expect(text).not.toContain("opens on focus");
+  });
+
+  it("holds the tag field's rules, its cap and its removal target to the source", () => {
+    // A tag page can drift in four silent ways: it can promise Backspace
+    // removal the runtime cannot observe, hide the 24px removal target behind a
+    // smaller glyph, describe a draft the caller can read (it cannot), or order
+    // the cap after the duplicate so a sixth repeated token is refused twice
+    // for the wrong reason. Each is read from the painter and the rules.
+    const page = pages.find((candidate) => candidate.file === "tag-input.mdx");
+    expect(page, "the tag input page is not in the curated set").toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    const rules = read("packages/components/src/tag-input/logic.ts");
+
+    // The group: named, one recipe, the density height and the disabled fade.
+    expect(source).toContain('role="group"');
+    expect(source).toContain("aria-label={label}");
+    expect(source).toContain('minHeight: controlHeight(theme, "md")');
+    expect(source).toContain("...disabledFade(disabled)");
+    // One fade for the group; a chip inside it must not composite a second.
+    expect(source).not.toContain("opacity: disabled ? 0.6");
+    expect(read("packages/tw/src/recipes.ts")).toContain(
+      "px-1.5 py-0.5 bg-background rounded-md border border-input",
+    );
+
+    // Every edit path refuses while disabled, and the field leaves the tab order.
+    expect(source.match(/if \(disabled\) return;/g)).toHaveLength(3);
+    expect(source).toContain("readOnly={disabled}");
+    expect(source).toContain("tabIndex={disabled ? -1 : 0}");
+    expect(source).toContain("controlRing(theme, { disabled })");
+    expect(source).toContain('nativeTextTheme(theme, "background")');
+    expect(source).toContain("fieldHint(");
+
+    // The chip's removal control: the 24px target, the named button, the glyph.
+    expect(source).toContain('role="button"');
+    expect(source).toContain("`Remove ${value}`");
+    expect(source).toContain("width: targetSize.minimum");
+    expect(source).toContain('name="x" size="sm"');
+    expect(source).toContain("`${testId}-remove`");
+    expect(source).toContain("hover: { backgroundColor: theme.colors.accent }");
+
+    // The cap is checked before the duplicate, and a commit clears the draft.
+    expect(rules.indexOf("rules.max !== undefined")).toBeLessThan(
+      rules.indexOf("rules.allowDuplicates !== true"),
+    );
+    expect(source).toContain('setDraft("");');
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("Backspace");
+    expect(text).toContain("No `aria-disabled`");
+    expect(text).toContain("6px / 2px");
+    expect(text).toContain("14/20");
+    expect(text).toContain("24px");
+    expect(text).toContain("draft is the component's");
+    expect(text).toContain("The cap is checked **before** the duplicate");
   });
 
   it("list every package the component imports", () => {

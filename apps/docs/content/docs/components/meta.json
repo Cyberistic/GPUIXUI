@@ -21,6 +21,7 @@
     "select",
     "combobox",
     "search-input",
+    "tag-input",
     "---Overlays---",
     "dialog",
     "drawer",

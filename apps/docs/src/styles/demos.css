@@ -4621,3 +4621,185 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---- tag input: mirrors components/src/tag-input.tsx's TAG_INPUT_* ----
+   The group is the recipe's `bg-background border border-input` at the
+   registry's fixed 6px corner and 6px / 2px padding, never shorter than the
+   density's `md` control height; the field takes the `sm` height, so the
+   platform switch re-heights the group and the field together. A chip is
+   `bg-muted` at 4px with 12/16 text, and its removal control is the shared
+   24px target around a 14px glyph — which is what makes the chip 28px tall,
+   because the target is taller than the word it sits beside. */
+.gx-tag {
+  width: 100%;
+  justify-content: center;
+}
+
+.gx-tag-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(460px, 100%);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-tag-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.gx-tag-meta {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--control-height-md);
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+}
+
+.gx-tag-group:focus-within {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-tag-group[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gx-tag-chip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--muted);
+}
+
+.gx-tag-chip-text {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+}
+
+.gx-tag-chip-remove {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-tag-chip-remove:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-tag-chip-remove:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-tag-field {
+  flex: 1;
+  min-width: 80px;
+  height: var(--control-height-sm);
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--input-foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-tag-field::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-tag-field:read-only {
+  cursor: not-allowed;
+}
+
+.gx-tag-note,
+.gx-tag-gate {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--placeholder);
+}
+
+.gx-tag-gate {
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+.gx-tag-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gx-tag-lock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-tag-lock input {
+  accent-color: var(--primary);
+}
+
+.gx-tag-states {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: min(460px, 100%);
+}
+
+.gx-tag-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-tag-state-label {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

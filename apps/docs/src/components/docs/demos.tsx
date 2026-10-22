@@ -105,6 +105,12 @@ import {
   switchWorkflowSource,
 } from "./switch-demo";
 import {
+  TagInputStates,
+  TagInputWorkflow,
+  tagInputStatesSource,
+  tagInputWorkflowSource,
+} from "./tag-input-demo";
+import {
   TooltipDemo,
   TooltipStates,
   tipStatesSource,
@@ -2525,6 +2531,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "switch-workflow": {
     render: SwitchWorkflow,
     source: switchWorkflowSource,
+  },
+  "tag-input-states": {
+    render: TagInputStates,
+    source: tagInputStatesSource,
+  },
+  "tag-input-workflow": {
+    render: TagInputWorkflow,
+    source: tagInputWorkflowSource,
   },
   "card-composition": {
     render: CardComposition,

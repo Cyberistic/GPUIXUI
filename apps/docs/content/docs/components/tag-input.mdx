@@ -1,0 +1,256 @@
+---
+title: Tag input
+description: A set of keywords entered through a field, with chips the caller renders and the add rules the component owns.
+---
+
+`TagInput` edits a list of tokens: keywords on a package, labels on an issue,
+recipients on a message. The caller owns the list and renders a `TagInputChip`
+from each token; the component owns the draft and the add rules, so nothing it
+holds is invisible to the caller. There is **no
+uncontrolled mode** — a `defaultValue` the caller cannot read would be a trap —
+and no autocomplete: a token is whatever the reader types, and a constrained
+vocabulary is a [Combobox](/docs/components/combobox) or a schema at the submit
+boundary.
+
+<ComponentPreview name="tag-input-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="TagInput" />
+
+<ComponentSource
+  name="tagInput"
+  file="packages/components/src/tag-input.tsx"
+/>
+
+## Usage
+
+```tsx
+import {
+  TagInput,
+  TagInputChip,
+  TagInputField,
+} from "@gpuixui/components/tag-input";
+import { useState } from "react";
+
+export const Keywords = () => {
+  const [keywords, setKeywords] = useState<ReadonlyArray<string>>(["design"]);
+
+  return (
+    <TagInput
+      label="Package keywords"
+      max={5}
+      value={keywords}
+      onValueChange={setKeywords}
+    >
+      {keywords.map((keyword) => (
+        <TagInputChip key={keyword} value={keyword} />
+      ))}
+      <TagInputField aria-label="Add a keyword" placeholder="Add a keyword…" />
+    </TagInput>
+  );
+};
+```
+
+A chip's key is the token, because the caller's list is the value: a token
+cannot appear twice unless `allowDuplicates` says it may, so a repeat is not a
+key collision. The field is the node that takes focus; the group is what carries
+the name (`label`) and the paint.
+
+## The token rules
+
+| Edit | Result |
+| ---- | ------ |
+| `Enter` in the field (key **down**) | trims the draft, commits every token it holds, clears the field |
+| The host's `submit` event | the same commit, so a form's Enter works while the field has focus |
+| A typed `,` | commits the words before the **last** comma and keeps the rest as the draft |
+| Pasting `"design, docs"` | adds both in one edit |
+| A token already in the list | ignored unless `allowDuplicates` |
+| Reaching `max` | further additions are refused; the chips stay |
+| A chip's removal control | removes that token |
+| A whitespace-only draft | never becomes a token |
+
+The cap is checked **before** the duplicate, so a sixth token is refused either
+way. A refused addition is silent — `onValueChange` still fires with the list it
+already had — and the draft clears on every commit, so a duplicate does not sit
+in the field inviting a second try. The removal is the chip's control;
+**`Backspace` on an empty field does nothing**, because `@gpuix/native@0.11.0`
+emits no `keyDown` for Backspace or Delete in the test renderer, so the component
+cannot promise (or test) that gesture.
+
+Commas are always separators: a token cannot contain one. The rules are pure
+(`src/tag-input/logic.ts`) and the field only decides which rule an edit calls.
+
+## States
+
+<ComponentPreview name="tag-input-states" />
+
+| State | What the reader sees |
+| ----- | -------------------- |
+| Rest | the painted hint, no chips, the field in the tab order |
+| At `max` | every chip, and a commit that adds nothing clears the field |
+| `allowDuplicates` | a repeated token is its own chip, with its own removal control |
+| `disabled` | the group at `disabledOpacity` (0.5), the field `readOnly` and out of the tab order, and **no removal controls** |
+
+There are no sizes and no variants: the group is the density's `md` control
+height and the field its `sm`, and the accent is the theme's `ring` and
+`accent`. A platform switch re-heights the group and the field and repaints the
+chips; it does not reshape them.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `TagInput` | the tokens, the draft, the add rules, the name and the paint |
+| `TagInputField` | the `<input>` that edits the draft and commits it |
+| `TagInputChip` | one token, and the control that removes it |
+
+Every edit path refuses while the group is disabled: commit, typed comma and
+removal each return before touching the caller's list, and the removal control is
+not rendered at all. A part placed outside the group throws
+`TagInput parts must be used inside TagInput`; a chip or field placed beside
+another part inside a foreign parent throws
+`TagInputChip cannot be used inside … Put TagInputChip and TagInputField
+directly inside TagInput.` The check is family-scoped, so a
+[Badge](/docs/components/badge) or a
+[Tooltip](/docs/components/tooltip) may sit beside a part.
+
+The draft is the component's: a caller reads the tokens, never the half-typed
+word. A form that must not save over a pending keyword has to ask the reader to
+commit it first — a gate can only read `value`.
+
+## Keyboard
+
+| Key | Contract |
+| ---- | -------- |
+| `Enter` | commits the draft on key **down**, through the same rule as a submit |
+| `,` | arrives as text through `onChange`; the words before it commit, the rest stays |
+| `Tab` | reaches the field and then each removal control; a disabled group leaves the field out |
+| `Enter` / `Space` on a removal control | removes that token — Enter on the press, Space on the release |
+| `Backspace` | no removal: the runtime emits no key event for it (see above) |
+
+The field's `onKeyDown` runs **before** the component's own commit and cannot
+cancel it, so a caller's handler observes the key but does not own the decision.
+A caller that needs a different commit rule owns the field itself.
+
+## API reference
+
+### `TagInput`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `ReadonlyArray<string>` | — | the tokens; the caller owns and renders them |
+| `onValueChange` | `(value: ReadonlyArray<string>) => void` | — | the list after every accepted edit, including a removal |
+| `label` | `string` | — | the group's accessible name |
+| `max` | `number` | none | additions past it are refused; the chips stay |
+| `allowDuplicates` | `boolean` | `false` | a repeated token is accepted as its own chip |
+| `disabled` | `boolean` | `false` | refuses every edit path and renders no removal control |
+| `children` | `PartChildren` | — | `TagInputChip` and `TagInputField`, directly inside |
+| `className` | `string` | — | joined after the group recipe, so it wins conflicts |
+| `style` | `StyleDesc` | — | merged last over the recipe |
+| `testId` | `string` | — | stable locator for the group |
+
+### `TagInputField`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `placeholder` | `string` | none | painted in the `placeholder` role while the draft is empty, because the host hint is a fixed grey |
+| `className` | `string` | — | joined after the field recipe |
+| `style` | `StateStyle<TagInputFieldState>` | — | resolved against `{ disabled }` and merged last |
+| `testId` | `string` | — | the input's locator; the painted hint follows it |
+| `onKeyDown` / `onFocus` / `onBlur` | host handlers | none | composed with the component's own; yours runs first |
+
+The field takes the input props **except** `value`, `onChange` and `onSubmit`:
+the draft and its commit belong to the group.
+
+### `TagInputChip`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `string` | — | the token this chip removes; also its key |
+| `className` | `string` | — | joined after the chip recipe |
+| `style` | `StateStyle<TagInputChipState>` | — | resolved against `{ disabled }` and merged last |
+| `testId` | `string` | none | the removal control is addressable as `<testId>-remove` |
+
+`TagInputFieldState` and `TagInputChipState` are `{ disabled }`, so a callback can
+paint a property the recipe does not. A chip uses `value` rather than `children`
+because the removal control is the component's: the chip is not a slot.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| group | `background` fill, `border` edge, the density's `md` control height |
+| group radius and padding | the recipe's **fixed** 6px corner and 6px / 2px padding (ADR 0006) |
+| chip | `muted` fill, `mutedForeground` text, 4px corner, 12/16 type |
+| chip removal control | `mutedForeground` glyph, an `accent` hover, a 24px square with a 14px glyph |
+| field | the page role behind its text, `inputForeground` value, `placeholder` hint, the density's `sm` height |
+| focus ring | `ring` at `borderWidth.strong`, declared on the field and on each removal control |
+| disabled group | `disabledOpacity` (0.5) through `disabledFade`, inherited by the chips; no ring on the field |
+
+The group is a recipe compiled through `@gpuixui/tw` against the default
+registry's fixed metrics, so a platform switch changes the height, the families
+and every colour role — and never the 6px corner, the 6px / 2px padding or the
+14/20 type. The removal control's 24px square is the pressable-target floor, not
+a recipe step; a chip is therefore 28px tall even where the group is 32.
+
+## Accessibility and limitations
+
+- The group is a named `group` (`aria-label={label}`); each removal control is a
+  `button` named `Remove <token>`, so a keyboard or a screen reader reaches
+  removal per chip rather than through a gesture.
+- **No `Backspace`-on-empty removal.** The pinned runtime emits no key event for
+  Backspace or Delete in the test renderer, so the chip's control is the only
+  route the component can test.
+- **No `aria-disabled`.** A disabled group is a `readOnly` field at
+  `tabIndex: -1`, half opacity and no removal controls; the state is visual and
+  behavioural, and the runtime has no attribute to announce it.
+- No token suggestions, no autocomplete, no validation and no free-form comma:
+  the rules are callable from `tag-input/logic.ts`, so a caller can validate the
+  tokens it receives.
+- Controlled only, and the draft is private, so a form cannot gate on a
+  half-typed token.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `this package` | the group, the draft, the add rules, the chips and the key decision |
+| `@gpuixui/primitives/hint` | the published seam that paints the field's hint in the `placeholder` role |
+| `@gpuix/react` | the host input, its key events and the renderer's focus call |
+| `@gpuix/react/floating` | `resolveStyle` for the two state-aware `style` callbacks |
+| `@gpuixui/icons` | the `x` glyph in each removal control |
+| `@gpuixui/tw` | the `TAG_INPUT_*` recipes, compiled through the package registry |
+| `effect` | `Array`, `Option` and `String` in the pure token rules |
+
+`@gpuixui/tokens` is reached through the package's theme provider, not imported
+directly; the component reads roles and metrics, never colours. `react` is the
+peer every component shares.
+
+## Related
+
+- **Combobox** — choose from a known list instead of typing free-form tokens.
+- **Field** — validation around one value.
+- **Badge** — a read-only token that removes nothing.
+- **Form** — the submit boundary a keyword list is validated at.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the component is
+whole, but `@gpuix/native@0.11.0` emits no key event for Backspace/Delete and
+publishes no `aria-disabled`, so the removal is the chip's control and the
+disabled state is visual.
+
+`src/behaviour/tag-input.test.tsx` runs 9 native behaviour tests in the real
+renderer — the named group, Enter committing and keeping the focus, a typed
+comma, a refused duplicate, the removal control, the cap, the disabled field
+with no removal controls, a draft refused after the caller disables the group,
+and a consumer that refuses a change — and `src/tag-input/logic.test.ts` covers
+the ten rules without a renderer. `src/behaviour/focus-ring.test.tsx` holds the
+removal control to the keyboard outline and the disabled field to declaring
+none, and `src/behaviour/hints.test.tsx` holds the painted hint.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```

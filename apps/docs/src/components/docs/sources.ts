@@ -22,6 +22,7 @@ import popover from "../../../../../packages/components/src/popover.tsx?raw";
 import searchInput from "../../../../../packages/components/src/search-input.tsx?raw";
 import select from "../../../../../packages/primitives/src/components/Select.tsx?raw";
 import switchSource from "../../../../../packages/primitives/src/components/Switch.tsx?raw";
+import tagInput from "../../../../../packages/components/src/tag-input.tsx?raw";
 import tabs from "../../../../../packages/components/src/tabs.tsx?raw";
 import timePicker from "../../../../../packages/components/src/time-picker.tsx?raw";
 import toast from "../../../../../packages/components/src/toast.tsx?raw";
@@ -59,6 +60,7 @@ export const componentSources = {
   select,
   switch: switchSource,
   tabs,
+  tagInput,
   timePicker,
   toast,
   tooltip,
