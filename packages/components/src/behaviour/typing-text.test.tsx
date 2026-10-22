@@ -71,7 +71,11 @@ describe("TypingText", () => {
       );
       expect(painted(page)).toBe("");
       await waitFor(() => expect(painted(page)).toBe("Second"));
-      expect(complete).toHaveBeenCalledTimes(2);
+      // The completion is a passive effect, so it lands in the flush after the
+      // paint the poll above can already read. Waiting on the callback is the
+      // claim; asserting it straight after the paint raced the effect and made
+      // a full-suite run fail once in a busy pass (measured 2026-10-22).
+      await waitFor(() => expect(complete).toHaveBeenCalledTimes(2));
     } finally {
       page.unmount();
     }
