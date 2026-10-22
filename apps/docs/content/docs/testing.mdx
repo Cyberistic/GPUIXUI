@@ -28,7 +28,7 @@ including one with no binding — while `apps/playground` supplies the renderer.
 | `Runtime` | `detectRuntime` (never fails), `bindingHint` and the `RuntimeStatus` union |
 | `Smoke` | the scenario, check and report model: `SmokeScenario`, `SmokeHost`, `runScenarios`, `SmokeReport`, `CAPABILITIES`, the assertion types, and their async twins for a window |
 | `Native` | `createTestHost` over the structural `NativeRenderer`/`NativeElement` port — the synchronous offscreen host |
-| `Pixels` | `decodePng` (with an injected inflate), `pixelAt`, `countColour`, `hexToRgba` — paint evidence from a captured frame |
+| `Pixels` | `decodePng` (with an injected inflate), `pixelAt`, `countColour`, `hexToRgba`, `crop`, `countDifferingPixels`, `PixelRegion`, `PngDecodeError`, `Pixels`, `Rgba` — paint evidence from a captured frame |
 | `State` | `runCommands` — fold a component runtime's commands and query the final state |
 | `Report` | `formatReport`, `reportJson`, `passed` and `exitCode` |
 
@@ -250,6 +250,36 @@ export const sampled = Pixels.pixelAt(frame, 210, 100);
 `decodePng` returns a `PngDecodeError` rather than a guess for a truncated frame;
 `pixelAt` returns `null` outside the image; `countColour` counts exact matches,
 because a capture is device-scaled and a coordinate is not worth asserting on.
+
+A paint claim is often a comparison rather than a count — "this field painted
+nothing over the layer beneath it" is what the `editor-overlay` probe asks. Two
+captures of one box are compared with `crop` and `countDifferingPixels`:
+
+```ts
+import { Pixels } from "@gpuixui/testing";
+
+const region = new Pixels.PixelRegion({
+  x: 40,
+  y: 60,
+  width: 320,
+  height: 24,
+});
+const before = Pixels.crop(frame, region);
+const after = Pixels.crop(laterFrame, region);
+export const changed =
+  before === null || after === null
+    ? null
+    : Pixels.countDifferingPixels(before, after);
+```
+
+`crop` takes a region in the capture's own pixels and clamps it to the frame,
+because a capture's edge can cut a box the layout reports; a region with no
+overlap is `null`, since there is no paint there to compare.
+`countDifferingPixels` returns `null` when the two frames are not the same shape
+— two boxes of different sizes are not a measurement of "nothing changed", and
+`0` would let a resized layer pass as an invisible one. A difference is any
+differing byte, alpha included, so a wash that changes only opacity is paint
+too.
 
 ## Replaying a runtime
 

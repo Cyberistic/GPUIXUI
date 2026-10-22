@@ -59,6 +59,7 @@ const pageText = page.replace(/\s+/g, " ");
 const entry = readRepo("packages/testing/src/index.ts");
 const smoke = readRepo("packages/testing/src/smoke.ts");
 const report = readRepo("packages/testing/src/report.ts");
+const pixels = readRepo("packages/testing/src/pixels.ts");
 const runner = readRepo("apps/playground/src/smoke/run.ts");
 
 /**
@@ -69,6 +70,23 @@ const runner = readRepo("apps/playground/src/smoke/run.ts");
  * the row it replaced.
  */
 const hasRow = (name: string): boolean => page.includes(`| \`${name}\` |`);
+
+/** The page's table row for `name`, or an empty string when it has none. */
+const rowOf = (name: string): string =>
+  page.split("\n").find((line) => line.startsWith(`| \`${name}\` |`)) ?? "";
+
+/** The names `pixels.ts` exports, which is what the `Pixels` namespace holds. */
+const pixelExports = (): ReadonlyArray<string> =>
+  [...pixels.matchAll(/^export (?:class|const|function) ([A-Za-z0-9_]+)/gm)].map(
+    (match) => match[1] ?? "",
+  );
+
+/** The page's paint section, from its heading to the next one. */
+const paintSection = (): string => {
+  const start = pageText.indexOf("## Reading a frame");
+  const end = pageText.indexOf("## Replaying a runtime");
+  return start < 0 || end < start ? "" : pageText.slice(start, end);
+};
 
 /** The namespaces `export * as …` projects from the package root. */
 const namespaces = (): ReadonlyArray<string> =>
@@ -158,6 +176,34 @@ describe("the testing page", () => {
     expect(assertions).toContain("expectSome");
 
     expect(assertions.filter((assertion) => !hasRow(assertion))).toEqual([]);
+  });
+
+  it("documents every export the Pixels namespace projects", () => {
+    // The row is the namespace's index: a verb that landed without it is a
+    // paint reader a probe author cannot find.
+    const names = pixelExports();
+    expect(names.length).toBeGreaterThanOrEqual(10);
+    expect(names).toContain("countDifferingPixels");
+
+    const row = rowOf("Pixels");
+    expect(row, "the page has no Pixels row").not.toBe("");
+    expect(names.filter((name) => !row.includes(`\`${name}\``))).toEqual([]);
+  });
+
+  it("teaches the comparison verbs by the answers the source returns", () => {
+    // A probe compares two crops of one box, so the two rules it depends on are
+    // read from the implementation: the clamp, and a different shape reading as
+    // `null` rather than "nothing changed".
+    expect(pixels).toContain("Math.max(region.x, 0)");
+    expect(pixels).toContain(
+      "if (left.width !== right.width || left.height !== right.height) return null;",
+    );
+
+    const section = paintSection();
+    expect(section, "the page has no paint section").not.toBe("");
+    expect(section).toContain("clamps it to the frame");
+    expect(section).toContain("not the same shape");
+    expect(section).toContain("`editor-overlay`");
   });
 
   it("resolves every import it prints against the package's own exports", () => {
