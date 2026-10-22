@@ -79,6 +79,7 @@ import {
   motion,
 } from "@gpuix/react";
 import type { ImgInstance, PublicInstance } from "@gpuix/react";
+import type { EventPayload } from "@gpuix/native";
 import { FloatingLayer } from "@gpuix/react/floating";
 import {
   Select as GpuixSelect,
@@ -118,6 +119,7 @@ import {
   SQUARE_WORD,
   SQUARE_WORD_WIDTH,
 } from "./fonts.js";
+import { moveRow, rowAt, type RowHandle } from "./reorder.js";
 import {
   EDGE_HEIGHT,
   MESSAGE_ROWS,
@@ -1141,6 +1143,248 @@ const DragProbe = (): ReactNode => {
         }}
       >
         {`zone=${zone} leftMoves=${leftMoves} rightMoves=${rightMoves} drops=${drops} dragging=${dragging}`}
+      </text>
+    </div>
+  );
+};
+
+/** The rows `drag-reorder` moves, in their declared order. */
+const REORDER_ROWS = ["alpha", "bravo", "charlie", "delta"] as const;
+
+/** One row's height, so a probe can aim at a row it read a box from. */
+const REORDER_ROW_HEIGHT = 44;
+
+/** What `drag-reorder`'s readout prints; one flat shape keeps a failure readable. */
+interface ReorderReadout {
+  readonly from: Option.Option<string>;
+  readonly over: Option.Option<string>;
+  readonly drops: number;
+  readonly misses: number;
+  readonly heard: number;
+  readonly moves: number;
+  readonly top: string;
+}
+
+const REORDER_START: ReorderReadout = {
+  from: Option.none(),
+  over: Option.none(),
+  drops: 0,
+  misses: 0,
+  heard: 0,
+  moves: 0,
+  top: "none",
+};
+
+/** A row name, or `"none"`, so the readout reads the same either way. */
+const nameOf = (value: Option.Option<string>): string =>
+  Option.getOrElse(value, () => "none");
+
+/**
+ * What the topmost hit belongs to: a row of this list, another element, nothing.
+ *
+ * The distinction is the reason the drop rule looks past the first id: a row's
+ * `<text>` label paints above the row, so `own` with the row's id second is the
+ * normal case rather than an oddity.
+ */
+const topOf = (
+  hits: ReadonlyArray<number>,
+  handles: ReadonlyArray<RowHandle<string>>,
+): string =>
+  Option.match(Arr.head(hits), {
+    onNone: () => "none",
+    onSome: (hit) =>
+      Arr.some(handles, (handle) => handle.id === hit) ? "own" : "other",
+  });
+
+/**
+ * One row in the reorder list: a press starts the drag, a move hit-tests the
+ * pointer, and a release on the dragged row resolves the drop.
+ *
+ * The row registers its own native id — and nothing else: the hit test reports
+ * its `<text>` label first, because a painted child sits above its parent, so
+ * the drop rule has to walk past ids that are not the row.
+ */
+const ReorderRow = ({
+  name,
+  register,
+  press,
+  move,
+  release,
+}: {
+  readonly name: string;
+  readonly register: (handle: RowHandle<string>) => void;
+  readonly press: (row: string) => void;
+  readonly move: (event: EventPayload) => void;
+  readonly release: (row: string) => void;
+}): ReactNode => {
+  const theme = useTheme();
+  const bind = useCallback(
+    (instance: PublicInstance | null) => {
+      if (instance) register({ id: instance.id, row: name });
+    },
+    [name, register],
+  );
+  return (
+    <div
+      testId={`row-${name}`}
+      ref={bind}
+      onMouseDown={() => press(name)}
+      onMouseMove={move}
+      onMouseUp={() => release(name)}
+      style={{
+        height: REORDER_ROW_HEIGHT,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingLeft: theme.spacing.md,
+        borderRadius: theme.radius.sm,
+        backgroundColor: theme.colors.card,
+      }}
+    >
+      <text
+        testId={`row-${name}-label`}
+        style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+      >
+        {name}
+      </text>
+    </div>
+  );
+};
+
+/**
+ * A reorderable list whose rows capture the pointer, the other half of
+ * `drag-between-panes`.
+ *
+ * A row that wants the travel after it leaves its box listens to `mouseDown`
+ * and `mouseMove`, which makes the runtime capture the pointer: every move and
+ * the release stay on the dragged row, so the row under the pointer hears
+ * nothing. The drop is therefore resolved by the runtime's hit test
+ * (`renderer.getElementsAt`) against the ids the rows registered from their
+ * refs — the composition a tier-3 reorder, a file tree or a tab strip needs.
+ */
+const DragReorderProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const renderer = useGpuix().renderer;
+  const [order, setOrder] = useState<ReadonlyArray<string>>(REORDER_ROWS);
+  const [readout, setReadout] = useState(REORDER_START);
+  const handles = useRef<ReadonlyArray<RowHandle<string>>>([]);
+  const pressed = useRef<Option.Option<string>>(Option.none());
+  const over = useRef<Option.Option<string>>(Option.none());
+
+  const register = useCallback((handle: RowHandle<string>) => {
+    handles.current = [
+      ...Arr.filter(handles.current, (current) => current.id !== handle.id),
+      handle,
+    ];
+  }, []);
+
+  const press = useCallback((row: string) => {
+    pressed.current = Option.some(row);
+  }, []);
+
+  const move = useCallback(
+    (event: EventPayload) => {
+      if (Option.isNone(pressed.current)) return;
+      const hits =
+        renderer?.getElementsAt?.(event.x ?? 0, event.y ?? 0) ?? [];
+      const target = rowAt(hits, handles.current);
+      over.current = target;
+      setReadout((current) => ({
+        ...current,
+        over: target,
+        moves: current.moves + 1,
+        top: topOf(hits, handles.current),
+      }));
+    },
+    [renderer],
+  );
+
+  const release = useCallback(
+    (row: string) => {
+      const started = pressed.current;
+      pressed.current = Option.none();
+      if (Option.isNone(started)) return;
+      // Another row heard a release while this list was being dragged: the
+      // pointer was not captured, which is the runtime fact the probe reports.
+      if (!Option.exists(started, (name) => name === row)) {
+        setReadout((current) => ({ ...current, heard: current.heard + 1 }));
+        return;
+      }
+      const target = over.current;
+      over.current = Option.none();
+      setReadout((current) => ({
+        ...current,
+        from: started,
+        over: target,
+        drops: Option.isSome(target) ? current.drops + 1 : current.drops,
+        misses: Option.isNone(target) ? current.misses + 1 : current.misses,
+      }));
+      Option.match(target, {
+        onNone: () => {},
+        onSome: (name) =>
+          setOrder((current) =>
+            Option.match(
+              Option.all([
+                Arr.findFirstIndex(current, (candidate) => candidate === row),
+                Arr.findFirstIndex(current, (candidate) => candidate === name),
+              ]),
+              {
+                onNone: () => current,
+                onSome: ([from, to]) => moveRow(current, from, to),
+              },
+            ),
+          ),
+      });
+    },
+    [],
+  );
+
+  return (
+    <div
+      testId="reorder-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Drag a row onto another: the dragged row keeps the pointer, so the drop
+        is resolved by the runtime's hit test.
+      </text>
+      <div
+        testId="reorder-list"
+        style={{ width: 280, display: "flex", flexDirection: "column", gap: 6 }}
+      >
+        {order.map((name) => (
+          <ReorderRow
+            key={name}
+            name={name}
+            register={register}
+            press={press}
+            move={move}
+            release={release}
+          />
+        ))}
+      </div>
+      <text
+        testId="reorder-readout"
+        style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+      >
+        {`order=${order.join(",")} from=${nameOf(readout.from)} over=${nameOf(
+          readout.over,
+        )} drops=${readout.drops} misses=${readout.misses} heard=${
+          readout.heard
+        } moves=${readout.moves} top=${readout.top}`}
       </text>
     </div>
   );
@@ -3068,6 +3312,127 @@ const dragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
     yield* ctx.host.capture("drag-left");
+  });
+
+/**
+ * Drags a row onto another and reads back the order, the pointer's target and
+ * which channel resolved it.
+ *
+ * What it measures: the dragged row keeps every move and the release (the list's
+ * other rows never hear it), the row under the pointer comes from
+ * `renderer.getElementsAt` matched against the rows' own ids, and the painted
+ * order follows with the moved row in the drop row's slot. A release that never
+ * left its own row reorders nothing, and a release over no row is a miss rather
+ * than a drop on the nearest one.
+ */
+const dragReorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("reorder-readout");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the list starts in its declared order",
+      yield* ctx.host.text("reorder-readout"),
+      "order=alpha,bravo,charlie,delta from=none over=none drops=0 misses=0 heard=0 moves=0 top=none",
+    );
+
+    const first = yield* paintedBox(ctx, "row-alpha");
+    const delta = yield* paintedBox(ctx, "row-delta");
+    const last = yield* paintedBox(ctx, "row-delta-label");
+    yield* ctx.host.drag(
+      "row-alpha",
+      last.x + last.width / 2 - (first.x + first.width / 2),
+      last.y + last.height / 2 - (first.y + first.height / 2),
+    );
+    yield* Effect.sleep(SETTLE);
+    const dropped = yield* ctx.host.text("reorder-readout");
+    yield* ctx.expectContains(
+      "the dragged row takes the dropped-on row's slot",
+      dropped,
+      "order=bravo,charlie,delta,alpha",
+    );
+    yield* ctx.expectContains(
+      "the readout names the dragged row",
+      dropped,
+      "from=alpha",
+    );
+    yield* ctx.expectContains(
+      "the hit test names the row under the pointer",
+      dropped,
+      "over=delta",
+    );
+    yield* ctx.expectContains("the drag resolved one drop", dropped, "drops=1");
+    yield* ctx.expectContains(
+      "no other row heard the release",
+      dropped,
+      "heard=0",
+    );
+    yield* ctx.expectEqual(
+      "the dragged row received the travel",
+      Str.includes("moves=0")(dropped),
+      false,
+    );
+    yield* ctx.expectContains(
+      "the pointer is over the row's painted label, not the row",
+      dropped,
+      "top=other",
+    );
+
+    const moved = yield* paintedBox(ctx, "row-alpha");
+    yield* ctx.expectNear(
+      "the dragged row paints where the drop row was",
+      moved.y,
+      delta.y,
+      1,
+    );
+    const closed = yield* paintedBox(ctx, "row-bravo");
+    yield* ctx.expectNear(
+      "the row that was first closes the gap",
+      closed.y,
+      first.y,
+      1,
+    );
+    yield* ctx.host.capture("drag-reorder");
+
+    // A release that never left its own row is not a reorder.
+    yield* ctx.host.drag("row-bravo", 0, 4);
+    yield* Effect.sleep(SETTLE);
+    const jittered = yield* ctx.host.text("reorder-readout");
+    yield* ctx.expectContains(
+      "a jitter inside the row keeps the order",
+      jittered,
+      "order=bravo,charlie,delta,alpha",
+    );
+    yield* ctx.expectContains(
+      "it resolves the row it never left",
+      jittered,
+      "over=bravo",
+    );
+    yield* ctx.expectContains(
+      "the second drop is counted",
+      jittered,
+      "drops=2",
+    );
+
+    // The hit test decides, not the distance travelled.
+    yield* ctx.host.drag("row-alpha", 420, 0);
+    yield* Effect.sleep(SETTLE);
+    const missed = yield* ctx.host.text("reorder-readout");
+    yield* ctx.expectContains(
+      "a release outside the list names no row",
+      missed,
+      "over=none",
+    );
+    yield* ctx.expectContains(
+      "a missed drop leaves the order alone",
+      missed,
+      "order=bravo,charlie,delta,alpha",
+    );
+    yield* ctx.expectContains("the miss is counted", missed, "misses=1");
+    yield* ctx.expectContains(
+      "the missed release is not a drop",
+      missed,
+      "drops=2",
+    );
   });
 
 /**
@@ -7786,5 +8151,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "window-resize-reflow",
     view: () => <WindowResizeProbe />,
     steps: windowResizeSteps,
+  },
+  "drag-reorder": {
+    id: "drag-reorder",
+    view: () => <DragReorderProbe />,
+    steps: dragReorderSteps,
   },
 };

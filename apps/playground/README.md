@@ -1881,6 +1881,66 @@ green (`--only window-resize-reflow`, 16 checks). Evidence:
 `.artifacts/live/window-zoomed.png` (3360×1846, the window's 2× backing) and
 `.artifacts/live/window-restored.png` (1800×1040).
 
+### `drag-reorder` — measured on 0.11.0 here
+
+The other half of `drag-between-panes`: a row that **keeps** the pointer. A
+reorderable list, a file tree or a tab strip has to track the travel after the
+pointer leaves the row, so the row subscribes to `mouseDown` and `mouseMove` —
+which is exactly what makes the runtime capture the pointer (`pointer-capture`
+measured the mechanism). The consequence for a drop was never measured: the row
+under the pointer hears nothing, so no target's `onMouseUp` can resolve the drop,
+and the whole gesture is the dragged row's.
+
+Four 44px rows in a 280px column. Each row registers its own native id from its
+`ref`; the drop is the **first id `renderer.getElementsAt(x, y)` reports that is
+one of those rows**, matched in `src/live/reorder.ts` (`rowAt`) and applied with
+`moveRow`. Measured:
+
+| Step | Readout |
+| ---- | ------- |
+| mount | `order=alpha,bravo,charlie,delta from=none over=none drops=0 misses=0 heard=0 moves=0 top=none` |
+| drag `alpha` onto **`delta`'s label** | `order=bravo,charlie,delta,alpha from=alpha over=delta drops=1 misses=0 heard=0 moves=8 top=other` |
+| jitter 4px inside `bravo` | `over=bravo drops=2`, order unchanged |
+| release 420px right of `alpha` | `over=none misses=1 drops=2`, order unchanged |
+
+Three facts a component can build on:
+
+1. **The dragged row keeps the release.** `heard=0` after every drag: no other
+   row's `onMouseUp` ran, so a drop target cannot be a listener. (Drop the row's
+   `onMouseMove` and capture is not armed — measured: `heard=1 from=none
+   drops=0`, the release lands on the target row and no reorder happens.)
+2. **The hit test names the row beneath a painted child.** The pointer was over
+   `delta`'s `<text>` label, and `getElementsAt` reported that label first — the
+   readout says `top=other`, because the label is not the row — while the row
+   beneath it is what `rowAt` found. Reading only the topmost id instead
+   measures `over=none misses=1` and no reorder, which is the negative control
+   below.
+3. **The painted order follows the rule, not just the readout.** After the drop
+   `row-alpha`'s painted `y` equals `row-delta`'s old `y` and `row-bravo` takes
+   the first row's old `y`, so the list really reordered rather than relabelling
+   a string.
+
+`rowAt` and `moveRow` are pure and unit-tested (`src/live/reorder.test.ts`, 6
+cases: a label id above its row, the topmost of two rows, a miss, and a move
+down/up/out-of-range), because both bugs read correctly in a readout: a rule
+that reads only the topmost id drops the row under the cursor, and a `moveRow`
+that inserts at `to` in the shortened array puts a downward move one slot too
+far.
+
+Negative controls measured, both exit `1` and restored green:
+`rowAt` reading only the topmost hit fails `the dragged row takes the dropped-on
+row's slot` (`got "order=alpha,bravo,charlie,delta from=alpha over=none drops=0
+misses=1 heard=0 moves=8 top=other"`), and removing the row's `onMouseMove` — so
+the runtime captures nothing — fails the same check with `heard=1 from=none
+drops=0`. 21 checks, `--only drag-reorder`, green on 0.11.0. Capture:
+`.artifacts/live/drag-reorder.png`.
+
+What is still absent, and why this is not a drag-and-drop component: there is no
+drag host feature (no drag image, no cross-application payload, no drag between
+windows — the binding opens one window per process), and `onFileDrop` is the
+only OS drop path. A row reorder is therefore the caller's own pointer gesture,
+which is what this probe composes.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session

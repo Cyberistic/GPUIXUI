@@ -234,6 +234,12 @@ export const liveRegistry = [
       "Workspace: the renderer's window size is the box the layout fills, useWindowSize follows it, and a zoom reflows a flexible pane",
     capability: "workspace",
   },
+  {
+    id: "drag-reorder",
+    title:
+      "Workspace: a row that captures the pointer resolves its drop by hit-testing, and the painted order follows",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
