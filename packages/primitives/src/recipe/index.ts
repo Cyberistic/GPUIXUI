@@ -44,7 +44,7 @@ const BUTTON_VARIANT: Readonly<Record<ButtonVariant, string>> = {
   ghost: "text-foreground border-0 hover:bg-hover active:bg-active",
   destructive:
     "bg-destructive text-destructive-foreground border-0 hover:bg-destructive/90 active:bg-destructive/80",
-  link: "text-primary border-0 hover:bg-hover hover:underline active:bg-active",
+  link: "text-brand border-0 hover:bg-hover hover:underline active:bg-active",
 };
 
 const BUTTON_SIZE: Readonly<Record<ControlSize, string>> = {
@@ -125,7 +125,11 @@ const ROLE_CLASS: Readonly<Record<TextRole, string>> = {
 const TONE_CLASS: Readonly<Record<TextTone, string | undefined>> = {
   default: "text-foreground",
   muted: "text-muted-foreground",
-  primary: "text-primary",
+  // Brand text is derived from the brand, not the brand fill role: `primary`
+  // carries `primaryForeground` and is measured as a surface, so written as
+  // text it lands under the floor (4.30:1 on the base light `active` wash,
+  // 3.10:1 in macOS dark). `text-brand` holds every surface a link sits on.
+  primary: "text-brand",
   // The status text role, not the solid fill: `destructive` is a background a
   // white label sits on, and reads at 3:1 as body text. `destructiveSoftForeground`
   // is the role tokens measure as page text, so an error is legible.

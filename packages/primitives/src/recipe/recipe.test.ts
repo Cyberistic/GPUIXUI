@@ -22,6 +22,7 @@
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
 import {
+  brandText,
   contrastFloors,
   contrastRatio,
   darkTheme,
@@ -144,6 +145,24 @@ describe("Button recipe", () => {
     expect(dark.style.backgroundColor).toBe(darkTheme.colors.primary);
     expect(dark.style.color).toBe(darkTheme.colors.primaryForeground);
     expect(light.style.backgroundColor).not.toBe(dark.style.backgroundColor);
+  });
+
+  it("derives a link's text colour on the shipped themes", () => {
+    // `primary` is a fill: written as text it measures 4.30:1 on the base light
+    // `active` wash. The recipe and the variant table must agree on the derived
+    // colour — a drift the test theme cannot show, because its washes are
+    // translucent and `brandText` leaves an unmeasurable brand alone.
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const compiled = recipeTw.classesToStyle(
+        buttonClass("link", "md"),
+        theme,
+      );
+      expect(compiled.style.color).toBe(brandText(theme));
+      expect(
+        controlStyle({ variant: buttonVariants.link, size: "md" }, theme).color,
+      ).toBe(brandText(theme));
+    });
+    expect(brandText(lightTheme)).not.toBe(lightTheme.colors.primary);
   });
 });
 
@@ -636,8 +655,10 @@ describe("the recipe stays one expression, not a stub", () => {
   it("registers no unsupported classes for the migrated recipes", () => {
     const joined = [
       buttonClass("primary", "md"),
+      buttonClass("link", "md"),
       fieldClass({ size: "md", invalid: true, fullWidth: true }),
       textClass({ role: "code", tone: "muted", truncate: true }),
+      textClass({ role: "body", tone: "primary" }),
       stackClass({ direction: "column", gap: "lg" }),
       gridClass({ columns: 3, rows: 2, gap: "md" }),
       boxClass({ tone: "card", border: true, elevation: "md" }),

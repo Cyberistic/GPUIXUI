@@ -44,7 +44,7 @@ a font size.
 | ------ | ----------- | ------- |
 | `default` | `foreground` | body and headings |
 | `muted` | `mutedForeground` | metadata, help, disabled-adjacent copy |
-| `primary` | `primary` | a link-like non-interactive emphasis |
+| `primary` | `brandText(theme)` | a link-like non-interactive emphasis |
 | `destructive` | `destructiveSoftForeground` | an error or a breaking change |
 | `inherit` | none | text on a coloured surface, taking its parent's colour |
 
@@ -53,6 +53,15 @@ that fill is a background whose own label clears the secondary floor, and
 written as body text on the page it does not. `destructiveSoftForeground` is the
 role tokens measure as page text on `background` and `card`, so an error message
 stays legible in every shipped theme.
+
+`primary` is the same mistake the other way round: the brand is a **fill** that
+carries `primaryForeground`, and no contract measures it as text, so it reads
+4.30:1 on the base light theme's `active` wash and 3.10:1 in macOS dark.
+`brandText(theme)` derives a text colour from it — the brand moved toward
+`foreground` until every surface a link sits on clears the theme's floor, or the
+brand itself where it already reads. The `text-brand` utility in the primitives'
+registry resolves it, so `tone="primary"` and `Button variant="link"` paint one
+colour and the caller's `className`/`style` still win.
 
 ## API
 
@@ -88,9 +97,11 @@ visual size, not a heading; if the document outline matters, use `h1`–`h3`.
 
 ## Theming
 
-`textStyle` reads `typography[role]`, the mono/sans family and the tone's colour
-role. `userSelect` defaults to `"none"` so chrome does not accept a text
-selection by accident; turn it on for content. A selectable run also declares
+The recipe (`textClass`, compiled through the primitives' registry) reads
+`typography[role]`, the mono/sans family and the tone's colour; every tone but
+`primary` names a theme role, and `primary` derives one. `userSelect` defaults to
+`"none"` so chrome does not accept a text selection by accident; turn it on for
+content. A selectable run also declares
 `selectionColor: theme.colors.selection` — the wash the token contract measures
 for visibility and for the text it carries — instead of the runtime's default of
 the theme accent at 35%, a colour no pair measures.
@@ -117,8 +128,9 @@ the theme accent at 35%, a colour no pair measures.
 
 - `src/core/variants.test.ts` — every role resolves from the theme.
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp,
-  selectable, and the heading/code semantics (level and name, with body copy
-  left plain).
+  selectable, the heading/code semantics (level and name, with body copy left
+  plain), the status role an error paints, and a brand-toned run's derived
+  colour clearing the floor on every surface a link sits on.
 - `runtime/layout.runtime.test.tsx` — the string is painted, its box height
   equals the role's line height, and the a11y tree reports a heading's level
   (`h1` = 1, `h3` = 3) with body copy carrying no heading role; a clamp over

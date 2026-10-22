@@ -6,13 +6,15 @@
  * cannot mean one thing in the library and another in its documentation.
  *
  * A variant references **theme roles**, never colours: `(theme) =>
- * theme.colors.primary`. Interaction feedback lifts the fill's alpha
- * (`alpha(primary, 0.9)`), the way a filled action shows a press without a
- * second palette entry. Resolution happens in `style.ts`.
+ * theme.colors.primary`. A colour the theme does not ship is derived from a
+ * role instead — a link paints `brandText`, the brand moved until it reads as
+ * text. Interaction feedback lifts the fill's alpha (`alpha(primary, 0.9)`), the
+ * way a filled action shows a press without a second palette entry. Resolution
+ * happens in `style.ts`.
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import { alpha } from "@gpuixui/tokens";
+import { alpha, brandText } from "@gpuixui/tokens";
 import type { SpinnerAccent } from "./loading.js";
 import type { PrimitiveTheme } from "./theme.js";
 import type { ControlVariant } from "./style.js";
@@ -94,7 +96,9 @@ const destructive: ControlVariant = {
 /** A text action: underlines on hover instead of painting a filled surface. */
 const link: ControlVariant = {
   background: undefined,
-  foreground: (theme) => theme.colors.primary,
+  // The brand as *text*, not the `primary` fill role: it carries
+  // `primaryForeground` and no contract measures it on the page.
+  foreground: brandText,
   border: undefined,
   hover: (theme) => ({
     backgroundColor: theme.colors.hover,

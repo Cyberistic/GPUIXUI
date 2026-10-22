@@ -12,6 +12,14 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import {
+  brandText,
+  brandTextSurfaces,
+  contrastFloorsFor,
+  contrastRatio,
+  darkTheme,
+  lightTheme,
+} from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderBox } from "./Box.js";
 import { renderButton } from "./Button.js";
@@ -322,6 +330,23 @@ describe("type", () => {
     expect(stringIn(element, "color")).not.toStrictEqual(
       Option.some(testTheme.colors.destructive),
     );
+  });
+
+  it("paints a brand-toned run in the derived brand text, not the fill role", () => {
+    // The bug: `tone="primary"` resolved to `primary`, a fill role no text
+    // contract measures — 4.30:1 on the base light `active` wash, 3.10:1 in
+    // macOS dark. A brand-coloured run paints `brandText` like a link does.
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const colour = expectSome(
+        stringIn(renderText({ tone: "primary" }, theme), "color"),
+      );
+      expect(colour).toBe(brandText(theme));
+      Arr.forEach(brandTextSurfaces, (surface) => {
+        expect(
+          contrastRatio(colour, theme.colors[surface]) ?? 0,
+        ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).secondary);
+      });
+    });
   });
 
   it("hands a control its name, because GPUix has no aria-labelledby", () => {

@@ -37,7 +37,7 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `outline` | border only — `borderStrong`, the measured control boundary | hover wash |
 | `ghost` | no chrome | hover wash |
 | `destructive` | `destructive` fill | alpha wash |
-| `link` | text in the primary role | underline + hover wash |
+| `link` | text in `brandText` — the brand derived until it reads as text | underline + hover wash |
 
 ## Sizes and states
 
@@ -108,9 +108,20 @@ container) does not run while activation waits for the release.
 
 ## Theming
 
-`controlStyle` resolves fill, text, border, hover, active and disabled from the
-theme, and the keyboard ring is `controlFocusStyle` (`keyboardRing`); `buttonVariants` maps each variant to colour **roles**, never
-colours. Size and padding come from `density`.
+The recipe (`buttonClass`, compiled through the primitives' registry) resolves
+fill, text, border, hover and active from the theme, and `controlRing`
+(`core/focus.ts`) declares the keyboard ring (`keyboardRing`); `buttonVariants`
+maps each variant to theme **roles** — one variant, `link`, paints a colour
+derived from a role rather than the role itself. Size and padding come from
+`density`.
+
+`link` is the one derivation: `primary` is a **fill** — it carries
+`primaryForeground` and is measured as a surface — so written as text it lands
+under the 4.5:1 reader floor on the washes a link tints (4.30:1 on the base
+light theme's `active`, 3.10:1 in macOS dark). The recipe's `text-brand` utility
+resolves `brandText(theme)` instead: the brand moved toward `foreground` in 2%
+steps until the least readable of `brandTextSurfaces` clears the theme's own
+floor, and returned unchanged for a brand that already reads.
 
 `style` takes a `StateStyle<ButtonState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused }` and returns one. The result merges after every
@@ -156,8 +167,9 @@ the dim back with `style`, which merges last.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
   loading description, a busy filled button handing its spinner the fill's
   on-colour, a `style` callback receiving the live state and winning over the
-  recipe, and the filled actions opting out of the keyboard dim (the collapsed
-  pair is named per mode; `outline`/`ghost`/`link` keep it).
+  recipe, the filled actions opting out of the keyboard dim (the collapsed
+  pair is named per mode; `outline`/`ghost`/`link` keep it), and a `link`'s
+  label painting `brandText` on every surface a link sits on.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the button's own action, and a busy button installs no press handler.
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter

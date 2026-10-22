@@ -13,7 +13,7 @@
 
 import type { StyleDesc } from "@gpuix/react";
 import type { ControlSize, TextRole, Theme } from "@gpuixui/tokens";
-import { targetSize } from "@gpuixui/tokens";
+import { brandText, targetSize } from "@gpuixui/tokens";
 import { createTw } from "@gpuixui/tw";
 import { switchThumbOffset } from "../core/selection.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
@@ -145,6 +145,11 @@ export const recipeTw = createTw({
     // An empty selection border is the field *fill* colour, not shadcn's
     // `--input` border role (which the built-in table maps to `border`).
     "border-input": (theme) => ({ borderColor: theme.colors.input }),
+    // Brand-coloured text is derived, not named: `primary` is a fill role, so
+    // `text-primary` paints a link at 4.30:1 on the base light theme's pressed
+    // wash and 3.10:1 in macOS dark. `brandText` moves the brand toward
+    // `foreground` until the least readable surface a link sits on clears.
+    "text-brand": (theme) => ({ color: brandText(theme) }),
     "ml-0": () => ({ marginLeft: 0 }),
     "mr-0": () => ({ marginRight: 0 }),
     "mt-0": () => ({ marginTop: 0 }),

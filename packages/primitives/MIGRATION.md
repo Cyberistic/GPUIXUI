@@ -53,8 +53,9 @@ typed:
 3. **`style`** — a typed `style` prop merged **last**, for data the theme
    cannot know (percentage fills, a caller's dot size, a pulse opacity).
 
-The derived tokens the primitives register (all read `theme.iconSize` /
-`theme.spacing`, so they follow an override):
+The derived tokens the primitives register (the geometry ones all read
+`theme.iconSize` / `theme.spacing`, so they follow an override; `text-brand`
+follows a brand edit):
 
 | Utility | Resolves | Used by |
 | ------- | -------- | ------- |
@@ -67,8 +68,12 @@ The derived tokens the primitives register (all read `theme.iconSize` /
 | `px-inset-<size>` | `round(iconSize[size] / 2)` horizontal padding | slider track inset |
 | `w-stepper-column` | `iconSize.md + spacing.sm` | number-field stepper column |
 | `h-space-<step>` | `spacing[step]` | slider rail, progress/meter track |
+| `text-brand` | `brandText(theme)` — the brand moved toward `foreground` until it reads as text | button `link`, text `primary` tone |
 
-The rule: **arithmetic on a token → a derived token; data → `style`.**
+The rule: **arithmetic on a token → a derived token; data → `style`.** A derived
+token need not be geometry: a colour the theme does not ship is derived from one
+instead of named, so `text-brand` starts at `primary` and holds every surface a
+link sits on.
 
 ## The `calc()` escape hatch
 
@@ -203,7 +208,7 @@ Geometry, colour and type map to the classes below. Columns are the
 | `borderWidth: 0` | `border-0` | built-in |
 | `borderColor` | `border-<role>` (`border-border`, `border-ring`, …) | built-in role table |
 | `backgroundColor` | `bg-<role>` (`bg-primary`, `bg-input`, …) | built-in role table |
-| `color` | `text-<role>` (`text-foreground`, `text-primary`, …) | built-in role table |
+| `color` | `text-<role>` (`text-foreground`, `text-primary`, …) | built-in role table; `text-brand` is the registry's derived text colour |
 | `fontSize`/`lineHeight`/`fontWeight` | `type-<role>` (`type-label`, `type-body`, `type-h2`, …) | registry family → `theme.typography` |
 | `fontSize`/`lineHeight` (inherited weight) | `type-size-<role>` (`type-size-caption`, `type-size-label`) | registry family → `theme.typography`, no weight |
 | `fontFamily` | `font-sans` / `font-mono` | registry |

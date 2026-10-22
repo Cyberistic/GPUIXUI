@@ -14,7 +14,10 @@ import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  brandText,
+  brandTextSurfaces,
   contrastFloors,
+  contrastFloorsFor,
   contrastRatio,
   darkTheme,
   keyboardDimFailures,
@@ -131,6 +134,47 @@ describe("Button", () => {
         contrastRatio(theme.colors.border, theme.colors.background) ?? Infinity,
       ).toBeLessThan(contrastFloors.boundary);
     });
+  });
+
+  it("paints a link in the derived brand text, not the fill role", () => {
+    // The bug: `link` painted `primary`, which is a *fill*: it carries
+    // `primaryForeground` and no contract reads it as text. On the base light
+    // theme it measures 4.30:1 on the `active` wash a pressed link tints behind
+    // itself, and 3.10:1 in macOS dark. `brandText` is the brand moved toward
+    // `foreground` until the least readable surface a link can sit on clears the
+    // text floor — and the brand itself where it already reads.
+    const linkColour = (theme: typeof lightTheme): string =>
+      expectSome(
+        hostStyleString(
+          renderButton({ variant: "link", children: "Details" }, theme, {
+            focused: false,
+          }),
+          "color",
+        ),
+      );
+
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const painted = linkColour(theme);
+      expect(painted).toBe(brandText(theme));
+      Arr.forEach(brandTextSurfaces, (surface) => {
+        expect(
+          contrastRatio(painted, theme.colors[surface]) ?? 0,
+        ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).secondary);
+      });
+    });
+
+    // The premise: where the shipped brand cannot carry a link's text, the fill
+    // role misses the floor on a surface the link tints.
+    const lightUnderFloor = Arr.filter(
+      brandTextSurfaces,
+      (surface) =>
+        (contrastRatio(lightTheme.colors.primary, lightTheme.colors[surface]) ??
+          Infinity) < contrastFloorsFor(lightTheme).secondary,
+    );
+    expect(lightUnderFloor.length).toBeGreaterThan(0);
+    expect(linkColour(lightTheme)).not.toBe(lightTheme.colors.primary);
+    // ...and where it already reads, the derivation leaves the brand alone.
+    expect(linkColour(darkTheme)).toBe(darkTheme.colors.primary);
   });
 
   it("stays focusable while loading but refuses to activate", () => {
