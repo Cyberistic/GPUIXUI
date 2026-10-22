@@ -107,10 +107,13 @@ Every sampler is total: a number it cannot read is replaced before it reaches a
 formula. `sampleSpring`, `sampleInertia`, `sampleKeyframes` and
 `Sequence.sample`/`complete` read a `NaN` clock (or progress) as the start of
 the run, and still clamp an infinity to the end — a presenter whose clock read
-failed paints the first frame rather than `NaN`. A tween duration that cannot
-run (`NaN` or an infinity) falls back to `DEFAULT_TWEEN_MS` (300 ms), and a zero
-or negative one is an instant assignment. `MotionValue.sample` keeps its own
-rule: an unusable clock holds the last sample rather than jumping to the end.
+failed paints the first frame rather than `NaN`. A clock **before** the sequence
+(a negative one) is its start too, and both entry points read it that way, so
+`complete` and `sample` cannot disagree about a sequence with nothing left to
+run. A tween duration that cannot run (`NaN` or an infinity) falls back to
+`DEFAULT_TWEEN_MS` (300 ms), and a zero or negative one is an instant
+assignment. `MotionValue.sample` keeps its own rule: an unusable clock holds the
+last sample rather than jumping to the end.
 
 The inertia inputs are repaired the same way, because `Inertia` is structural: a
 time constant that cannot run takes the house 350 ms, a bound that cannot be read
@@ -136,7 +139,9 @@ first sample, and the sequence's own end never lands before a step it still has
 to run. A stagger step that is non-finite or negative is no wait, and both
 stagger entry points answer it the same way: the standalone `stagger()` and the
 `Sequence`'s own group, whose members then all sit at the group's start rather
-than one of them starting before the sequence does.
+than one of them starting before the sequence does. An `index` or `count` the
+standalone helper cannot read is no wait as well, so a failed position or length
+never becomes a `NaN` or infinite delay.
 
 An easing curve is the caller's own function, so it gets the same rule. The
 shipped curves read a progress they cannot read as the start of the run (`NaN`

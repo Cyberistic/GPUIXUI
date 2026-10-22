@@ -96,9 +96,12 @@ export type StaggerFrom = "start" | "end" | "center";
  * The delay (ms) the `index`-th of `count` children waits under `from`.
  *
  * A step that is not a wait is no wait: a non-finite one is unreadable and a
- * negative one is no delay at all. This is the one rule both stagger entry
- * points share — the standalone {@link stagger} and the {@link Sequence}'s own
- * group — so a caller cannot get two answers for the same input.
+ * negative one is no delay at all. The same holds for the `index` and `count` a
+ * caller passes — a position or a length it could not compute is no wait rather
+ * than a `NaN`/infinite delay reached the runtime. This is the one rule both
+ * stagger entry points share — the standalone {@link stagger} and the
+ * {@link Sequence}'s own group — so a caller cannot get two answers for the same
+ * input.
  */
 const staggerDelay = (
   stepMs: number,
@@ -106,6 +109,7 @@ const staggerDelay = (
   count: number,
   from: StaggerFrom,
 ): number => {
+  if (!Number.isFinite(index) || !Number.isFinite(count)) return 0;
   if (count <= 0 || index < 0 || index >= count) return 0;
   const distance =
     from === "start"
@@ -119,7 +123,9 @@ const staggerDelay = (
 /**
  * The delay (ms) for the `index`-th of `count` children under `from`. Returns
  * `0` for an out-of-range index or empty group, and for a step that is not a
- * wait: a non-finite one is unreadable and a negative one is no delay at all.
+ * wait: a non-finite one is unreadable and a negative one is no delay at all. An
+ * `index` or `count` that cannot be read is no wait too, so a caller's failed
+ * measurement never reaches the runtime as a `NaN` or infinite delay.
  */
 export const stagger = (
   stepMs: number,
@@ -145,6 +151,18 @@ interface Step<K> {
   readonly durationMs: number;
   readonly easing: Easing;
 }
+
+/**
+ * The elapsed time a sequence reads from a clock.
+ *
+ * A clock before the sequence starts (`NaN`, a negative number, `-Infinity`) is
+ * the start of the run, which is how every other sampler reads one. `sample` and
+ * `complete` share this read, so the two entry points cannot disagree about the
+ * same clock: a sequence with nothing left to run used to answer `complete(-5)`
+ * false while `sample(-5)` painted every step completed.
+ */
+const clockOf = (elapsedMs: number): number =>
+  Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0);
 
 /**
  * A deterministic keyed sequence of tween steps. Steps are positioned in
@@ -220,9 +238,9 @@ export class Sequence<K> {
     );
   }
 
-  /** Samples every step at sequence elapsed time. A `NaN` time reads as `0`. */
+  /** Samples every step at sequence elapsed time. A clock before the sequence is its start. */
   sample(elapsedMs: number): readonly SequenceStepSample<K>[] {
-    const elapsed = Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0);
+    const elapsed = clockOf(elapsedMs);
     return this.steps.map((step) => {
       if (elapsed < step.startMs)
         return { key: step.key, state: "pending", value: 0 };
@@ -240,6 +258,6 @@ export class Sequence<K> {
 
   /** Whether every step has completed at sequence elapsed time. */
   complete(elapsedMs: number): boolean {
-    return (Number.isNaN(elapsedMs) ? 0 : elapsedMs) >= this.duration();
+    return clockOf(elapsedMs) >= this.duration();
   }
 }

@@ -59,6 +59,17 @@ describe("stagger", () => {
     expect(stagger(20, 5, 3)).toBe(0);
     expect(stagger(20, -1, 3)).toBe(0);
   });
+
+  it("waits for nothing when the group cannot be read", () => {
+    // `index` and `count` are caller arithmetic too (a measured position, a
+    // filtered length). A delay the helper cannot compute used to be returned as
+    // `NaN` or `Infinity`, which the runtime paints as no wait at best and
+    // forever at worst; the package's rule is that it is no wait.
+    expect(stagger(20, Number.NaN, 4)).toBe(0);
+    expect(stagger(20, 2, Number.NaN)).toBe(0);
+    expect(stagger(20, 2, Number.POSITIVE_INFINITY)).toBe(0);
+    expect(stagger(20, 0, 3)).toBe(0);
+  });
 });
 
 describe("Sequence", () => {
@@ -105,6 +116,27 @@ describe("Sequence", () => {
 });
 
 describe("a timeline built by hand", () => {
+  it("reads a clock before the sequence as its start, in both entry points", () => {
+    // `sample` already clamps a clock before the sequence to `0`, while
+    // `complete` compared the raw value. On a sequence with nothing left to run
+    // — empty, a zero-duration step, or a step that ended before the clock
+    // starts — the two entry points therefore disagreed about the same clock,
+    // and a driver waiting on `complete` saw it false forever.
+    const empty = new Sequence<string>();
+    expect(empty.sample(-5)).toEqual([]);
+    expect(empty.complete(-5)).toBe(true);
+    expect(empty.complete(Number.NEGATIVE_INFINITY)).toBe(true);
+
+    const instant = new Sequence<string>().at("a", 0, 0);
+    const past = new Sequence<string>().at("a", -100, 50);
+    [-5, -0.5, 0].forEach((clock) => {
+      const steps = instant.sample(clock);
+      expect(steps.every((step) => step.state === "completed")).toBe(true);
+      expect(instant.complete(clock)).toBe(true);
+      expect(past.complete(clock)).toBe(instant.complete(clock));
+    });
+  });
+
   it("does not stop on a frame whose value cannot be read", () => {
     // A frame is a value a caller computed (a measured height, a counter). One
     // that cannot be read used to interpolate the whole segment to `NaN`.
