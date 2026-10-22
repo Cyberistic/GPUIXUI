@@ -1105,6 +1105,13 @@ a workaround for two live sessions sharing one worktree; see
       `COMPONENTS.md` rows to the code, so that table cannot drift again;
       their pages now render on the site at `/docs/primitives/<name>` (and the
       icon page at `/docs/icons/icon`), linked from the Primitives section index
+`[x]` `packages/icons`: the icon page's printed set size and size table are
+      held to the package — the description said "Forty-seven monochrome icons"
+      while `ICON_NAMES` shipped 48, and the `xs`…`xl` table printed pixels that
+      nothing compared with the token scale. `src/docs.test.ts` reads
+      `docs/icon.mdx` and fails on a stale count or a stale step, both
+      directions measured (restoring "Forty-seven" and changing `md` to 18 each
+      fail by name)
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness
