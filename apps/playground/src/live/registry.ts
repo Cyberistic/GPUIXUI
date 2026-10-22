@@ -222,6 +222,12 @@ export const liveRegistry = [
       "Overlay: createPortal paints beside its target, escapes a clipped ancestor, keeps context and takes pointer and key input",
     capability: "overlay",
   },
+  {
+    id: "loading-row-correction",
+    title:
+      "Table: a page arriving while a loading row is the anchor is re-anchored on the message under it, so the splice does not replace the screen",
+    capability: "virtual-list",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

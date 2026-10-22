@@ -71,7 +71,13 @@ import {
   Tooltip,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
-import { createPortal, useGpuix, useWindowSize, motion } from "@gpuix/react";
+import {
+  createPortal,
+  flushSync,
+  useGpuix,
+  useWindowSize,
+  motion,
+} from "@gpuix/react";
 import type { ImgInstance, PublicInstance } from "@gpuix/react";
 import { FloatingLayer } from "@gpuix/react/floating";
 import {
@@ -84,7 +90,7 @@ import {
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
-import { Readout } from "../ui.js";
+import { Pressable, Readout } from "../ui.js";
 import { useWindowKey } from "../window-key.js";
 import type { LiveProbeId } from "./registry.js";
 import {
@@ -112,6 +118,24 @@ import {
   SQUARE_WORD,
   SQUARE_WORD_WIDTH,
 } from "./fonts.js";
+import {
+  EDGE_HEIGHT,
+  MESSAGE_ROWS,
+  MESSAGE_TOP,
+  NEWER_FIRST,
+  OLDER_FIRST,
+  PAGE_ROWS,
+  READER_TOP,
+  ROW_HEIGHT,
+  VIEWPORT_HEIGHT,
+  VOID_TOP,
+  loadingRowRestore,
+  messageIds,
+  pageFirstId,
+  voidRow,
+  type PageDirection,
+} from "./loading-row.js";
+import { listAnchorOf } from "./host.js";
 import {
   TREE_ALL_DIRECTORIES,
   TREE_INDENT,
@@ -4881,6 +4905,620 @@ const virtualListSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * One paginated list with a loading void at the edge `direction` names.
+ *
+ * `correct` applies `loadingRowRestore` after the commit; the twin without it
+ * lets the runtime keep whatever row it anchored, which is the behaviour the
+ * probe measures against.
+ */
+const LoadingRowList = ({
+  testId,
+  prefix,
+  direction,
+  correct,
+}: {
+  readonly testId: string;
+  readonly prefix: string;
+  readonly direction: PageDirection;
+  readonly correct: boolean;
+}): ReactNode => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const list = useRef<PublicInstance | null>(null);
+  const [page, setPage] = useState(0);
+  const [corrections, setCorrections] = useState(0);
+  const [guards, setGuards] = useState(0);
+  const [request, setRequest] = useState("none");
+
+  const messages = messageIds(direction, page);
+  const loadingRow = voidRow(direction, messages.length);
+
+  const load = (): void => {
+    const target = Option.flatMap(
+      Option.fromNullishOr(list.current?.id),
+      (elementId) =>
+        Option.map(
+          Option.fromNullishOr(
+            listAnchorOf(renderer?.getListScrollTop?.(elementId) ?? null),
+          ),
+          (anchor) => ({ elementId, anchor }),
+        ),
+    );
+    // The reader's place, decided before the commit and applied after it.
+    const arrival = Option.flatMap(target, ({ elementId, anchor }) =>
+      Option.map(
+        loadingRowRestore({
+          direction,
+          anchor,
+          voidRow: loadingRow,
+          pageRows: PAGE_ROWS,
+          edgeHeight: EDGE_HEIGHT,
+        }),
+        (scroll) => ({ elementId, scroll }),
+      ),
+    );
+    // Commit the splice **synchronously** before queueing the scroll: the
+    // runtime applies a queued list scroll on the next render, and a scroll
+    // queued before the splice lands would name rows in the old child list.
+    flushSync(() => setPage(page + 1));
+    if (!correct) return;
+    Option.match(arrival, {
+      onNone: () => setGuards((count) => count + 1),
+      onSome: ({ elementId, scroll }) => {
+        renderer?.scrollToItem?.(elementId, scroll.index, scroll.offsetInItem);
+        setRequest(`${scroll.index}:${scroll.offsetInItem}`);
+        setCorrections((count) => count + 1);
+      },
+    });
+  };
+
+  const row = (id: number) => (
+    <div key={id} testId={`${testId}-row-${id}`} style={{ height: ROW_HEIGHT }}>
+      <text
+        style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+      >
+        {`${prefix} ${id}`}
+      </text>
+    </div>
+  );
+
+  const edge = (
+    <div
+      key="loading-row"
+      testId={`${testId}-void`}
+      style={{
+        height: EDGE_HEIGHT,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`${prefix} loading`}
+      </text>
+    </div>
+  );
+
+  const rows = Arr.map(messages, row);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <div
+        testId={`${testId}-frame`}
+        style={{ display: "flex", height: VIEWPORT_HEIGHT }}
+      >
+        <virtual-list
+          ref={list}
+          testId={testId}
+          alignment={direction === "append" ? "bottom" : "top"}
+          style={{ flexGrow: 1, minHeight: 0 }}
+        >
+          {direction === "prepend"
+            ? Arr.prepend(rows, edge)
+            : Arr.append(rows, edge)}
+        </virtual-list>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <Pressable
+          testId={`${testId}-load`}
+          onClick={load}
+          style={{ padding: theme.spacing.xs }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.foreground,
+            }}
+          >
+            load page
+          </text>
+        </Pressable>
+        <Readout testId={`${testId}-readout`}>
+          {`pages=${page} corrected=${corrections} guarded=${guards} request=${request}`}
+        </Readout>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The loading-row correction, measured on both edges of a paginated history.
+ *
+ * Four lists, identical geometry, in two pairs (top void and bottom void): the
+ * left pair is left to the runtime, the right pair re-anchors. The reader waits
+ * in the void, a page arrives, and the probe asserts the pixel the message they
+ * were reading keeps — or loses.
+ */
+const LoadingRowProbe = (): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId="loading-row-probe"
+      style={{
+        width: 880,
+        height: 500,
+        padding: theme.spacing.md,
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A page arrives while the reader waits in the loading row. The runtime
+        anchors that row, so only the app can put the reader back.
+      </text>
+      <div style={{ display: "flex", gap: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+            width: 410,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            no correction — the splice keeps the loading row
+          </text>
+          <LoadingRowList
+            testId="loading-top-naive"
+            prefix="naive older"
+            direction="prepend"
+            correct={false}
+          />
+          <LoadingRowList
+            testId="loading-bottom-naive"
+            prefix="naive newer"
+            direction="append"
+            correct={false}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+            width: 410,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            re-anchored on the message under the loading row
+          </text>
+          <LoadingRowList
+            testId="loading-top-fixed"
+            prefix="fixed older"
+            direction="prepend"
+            correct
+          />
+          <LoadingRowList
+            testId="loading-bottom-fixed"
+            prefix="fixed newer"
+            direction="append"
+            correct
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The `loading-row-correction` steps: the same arrival on both edges, once left
+ * to the runtime and once re-anchored by the app.
+ *
+ * Every expected number comes from `loading-row.ts`, so the probe cannot drift
+ * from the rule its unit test guards.
+ */
+const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** The painted box of `testId`, or `None` when the row is not painted. */
+    const boxOf = (testId: string) =>
+      Effect.map(ctx.host.bounds(testId), Option.fromNullishOr);
+    /** The window y of `testId`'s top edge, with the check that names it missing. */
+    const topOf = (label: string, testId: string) =>
+      Effect.flatMap(boxOf(testId), (box) =>
+        Effect.map(ctx.expectSome(label, box), (bounds) => bounds.y),
+      );
+    /**
+     * A row's y relative to its list's frame.
+     *
+     * The renderer reports window coordinates, and the four lists sit below the
+     * probe's caption, so an absolute `y` would assert the layout of the probe
+     * instead of the list's own placement.
+     */
+    const yIn =
+      (origin: number) =>
+      (
+        label: string,
+        testId: string,
+      ): Effect.Effect<
+        number,
+        Smoke.SmokeAssertionError | Smoke.SmokeHostError
+      > =>
+        Effect.flatMap(boxOf(testId), (box) =>
+          Effect.map(ctx.expectSome(label, box), (bounds) => bounds.y - origin),
+        );
+    const anchorOf = (label: string, testId: string) =>
+      Effect.flatMap(
+        Effect.map(ctx.host.listAnchor(testId), Option.fromNullishOr),
+        (anchor) => ctx.expectSome(label, anchor),
+      );
+    /** A row that paints no pixel inside its list's frame: above or below it. */
+    const offScreenIn =
+      (origin: number) =>
+      (
+        label: string,
+        testId: string,
+      ): Effect.Effect<
+        void,
+        Smoke.SmokeAssertionError | Smoke.SmokeHostError
+      > =>
+        Effect.flatMap(boxOf(testId), (box) =>
+          ctx.expectEqual(
+            label,
+            Option.match(box, {
+              onNone: () => true,
+              onSome: (bounds) => {
+                const top = bounds.y - origin;
+                return top + bounds.height <= 1 || top >= VIEWPORT_HEIGHT - 1;
+              },
+            }),
+            true,
+          ),
+        );
+    /** Presses a list's loader and waits past the commit and the splice. */
+    const load = (testId: string) =>
+      Effect.gen(function* () {
+        yield* ctx.host.click(`${testId}-load`);
+        yield* Effect.sleep(Duration.millis(250));
+      });
+
+    const topNaive = "loading-top-naive";
+    const topFixed = "loading-top-fixed";
+    const bottomNaive = "loading-bottom-naive";
+    const bottomFixed = "loading-bottom-fixed";
+    const newerLast = NEWER_FIRST + MESSAGE_ROWS - 1;
+    const topNaiveTop = yield* topOf(
+      "the top naive list's frame painted",
+      `${topNaive}-frame`,
+    );
+    const topFixedTop = yield* topOf(
+      "the top re-anchored list's frame painted",
+      `${topFixed}-frame`,
+    );
+    const bottomNaiveTop = yield* topOf(
+      "the bottom naive list's frame painted",
+      `${bottomNaive}-frame`,
+    );
+    const bottomFixedTop = yield* topOf(
+      "the bottom re-anchored list's frame painted",
+      `${bottomFixed}-frame`,
+    );
+    const topNaiveY = yIn(topNaiveTop);
+    const topFixedY = yIn(topFixedTop);
+    const bottomNaiveY = yIn(bottomNaiveTop);
+    const bottomFixedY = yIn(bottomFixedTop);
+    const topNaiveOff = offScreenIn(topNaiveTop);
+    const bottomNaiveOff = offScreenIn(bottomNaiveTop);
+    const topFixedOff = offScreenIn(topFixedTop);
+
+    yield* ctx.host.waitFor(`${topNaive}-row-${OLDER_FIRST}`);
+    yield* Effect.sleep(SETTLE);
+
+    // 1. Premise: while the page is in flight the void IS the list's anchor,
+    //    and the message the reader is reading sits one void height below it.
+    const restAnchor = yield* anchorOf(
+      "the top list reports its anchor",
+      topNaive,
+    );
+    yield* ctx.expectEqual(
+      "the top void is the list's anchor",
+      restAnchor.itemIndex,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the reader waits at the void's own top",
+      restAnchor.offsetInItem,
+      0,
+    );
+    yield* ctx.expectNear(
+      "the anchor reports the list's viewport",
+      restAnchor.viewportHeight,
+      VIEWPORT_HEIGHT,
+      1,
+    );
+    const readerTop = yield* topNaiveY(
+      "the message under the top void painted",
+      `${topNaive}-row-${OLDER_FIRST}`,
+    );
+    yield* ctx.expectNear(
+      "the message under the void sits one void height down",
+      readerTop,
+      MESSAGE_TOP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "both top lists start on the same pixel",
+      yield* topFixedY(
+        "the re-anchored twin painted",
+        `${topFixed}-row-${OLDER_FIRST}`,
+      ),
+      readerTop,
+      1,
+    );
+
+    // 2. The same page arrives in both top lists.
+    yield* load(topNaive);
+    yield* load(topFixed);
+
+    // 3. Left to the runtime, the void stays put and the page takes the
+    //    reader's screen: this is the defect the correction exists for.
+    yield* ctx.expectEqual(
+      "the naive list still anchors the void",
+      (yield* anchorOf("the naive list reports its anchor", topNaive))
+        .itemIndex,
+      0,
+    );
+    yield* ctx.expectNear(
+      "the naive load paints the page where the reader was reading",
+      yield* topNaiveY(
+        "the page's first row painted",
+        `${topNaive}-row-${pageFirstId("prepend", 1)}`,
+      ),
+      MESSAGE_TOP,
+      1,
+    );
+    yield* topNaiveOff(
+      "the naive load takes the reader's message off the screen",
+      `${topNaive}-row-${OLDER_FIRST}`,
+    );
+
+    // 4. Re-anchored, the page fills the void's old extent and the message the
+    //    reader was on does not move a pixel.
+    const corrected = yield* anchorOf(
+      "the re-anchored list reports its anchor",
+      topFixed,
+    );
+    yield* ctx.expectEqual(
+      "the top void is no longer the list's anchor",
+      corrected.itemIndex !== 0,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the corrected load leaves the reader's message where it was",
+      yield* topFixedY(
+        "the reader's message painted",
+        `${topFixed}-row-${OLDER_FIRST}`,
+      ),
+      MESSAGE_TOP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the corrected load puts the page above the message",
+      yield* topFixedY(
+        "the page's last row painted",
+        `${topFixed}-row-${OLDER_FIRST - 1}`,
+      ),
+      (PAGE_ROWS - 1) * ROW_HEIGHT,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the correction asked for the message under the void, one void up",
+      yield* ctx.host.text(`${topFixed}-readout`),
+      "pages=1 corrected=1 guarded=0 request=3:-80",
+    );
+
+    // 5. A second page, with the reader already past the void: the anchor is a
+    //    message row, so the runtime's own index shift holds the screen and the
+    //    app must NOT correct again.
+    yield* load(topFixed);
+    yield* ctx.expectNear(
+      "a second page leaves the reader's message still",
+      yield* topFixedY(
+        "the reader's message still painted",
+        `${topFixed}-row-${OLDER_FIRST}`,
+      ),
+      MESSAGE_TOP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the page already on screen stays put",
+      yield* topFixedY(
+        "the first page's last row painted",
+        `${topFixed}-row-${OLDER_FIRST - 1}`,
+      ),
+      (PAGE_ROWS - 1) * ROW_HEIGHT,
+      1,
+    );
+    yield* topFixedOff(
+      "the second page joins above the viewport",
+      `${topFixed}-row-${pageFirstId("prepend", 2)}`,
+    );
+    yield* ctx.expectEqual(
+      "the app corrected the void arrival and left the scrolled one alone",
+      yield* ctx.host.text(`${topFixed}-readout`),
+      "pages=2 corrected=1 guarded=1 request=3:-80",
+    );
+    yield* ctx.expectEqual(
+      "the naive list never corrected anything",
+      yield* ctx.host.text(`${topNaive}-readout`),
+      "pages=1 corrected=0 guarded=0 request=none",
+    );
+
+    // 6. The bottom edge: a bottom-aligned list resting at its end reports the
+    //    at-end sentinel, and its trailing void's top edge is one viewport less
+    //    a void below the top.
+    const endAnchor = yield* anchorOf(
+      "the bottom list reports its anchor",
+      bottomNaive,
+    );
+    yield* ctx.expectEqual(
+      "a list resting at its end reports the at-end sentinel",
+      endAnchor.itemIndex,
+      MESSAGE_ROWS + 1,
+    );
+    yield* ctx.expectNear(
+      "the trailing void's top edge sits one viewport less a void down",
+      yield* bottomNaiveY("the trailing void painted", `${bottomNaive}-void`),
+      VOID_TOP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the reader's last message sits above the trailing void",
+      yield* bottomNaiveY(
+        "the reader's last message painted",
+        `${bottomNaive}-row-${newerLast}`,
+      ),
+      READER_TOP,
+      1,
+    );
+
+    // 7. Left to the runtime, the sentinel follows the new end and the reader
+    //    jumps: the message they were on leaves the screen.
+    yield* load(bottomNaive);
+    yield* ctx.expectEqual(
+      "the naive append follows the sentinel to the new row count",
+      (yield* anchorOf("the naive bottom list reports its anchor", bottomNaive))
+        .itemIndex,
+      MESSAGE_ROWS + PAGE_ROWS + 1,
+    );
+    yield* bottomNaiveOff(
+      "the naive append takes the reader's message off the screen",
+      `${bottomNaive}-row-${newerLast}`,
+    );
+    yield* ctx.expectNear(
+      "the naive append paints the page at the top of the screen",
+      yield* bottomNaiveY(
+        "the appended page's first row painted",
+        `${bottomNaive}-row-${pageFirstId("append", 1)}`,
+      ),
+      0,
+      1,
+    );
+
+    // 8. Re-anchored, the page's first row takes the void's old top edge and
+    //    the row above the void keeps its pixel.
+    yield* load(bottomFixed);
+    const appended = yield* anchorOf(
+      "the re-anchored bottom list reports its anchor",
+      bottomFixed,
+    );
+    yield* ctx.expectEqual(
+      "the at-end sentinel is no longer the anchor",
+      appended.itemIndex < MESSAGE_ROWS + 1,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the reader's last message keeps its pixel",
+      yield* bottomFixedY(
+        "the reader's last message still painted",
+        `${bottomFixed}-row-${newerLast}`,
+      ),
+      READER_TOP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the page's first row takes the void's old top edge",
+      yield* bottomFixedY(
+        "the appended page's first row painted",
+        `${bottomFixed}-row-${pageFirstId("append", 1)}`,
+      ),
+      VOID_TOP,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the correction asked for the page's first row at the void's top edge",
+      yield* ctx.host.text(`${bottomFixed}-readout`),
+      "pages=1 corrected=1 guarded=0 request=10:-80",
+    );
+
+    // 9. Return to the end and load again: the sentinel rule applies a second
+    //    time, so the correction is not a one-shot.
+    yield* ctx.host.wheel(`${bottomFixed}-frame`, 0, -100000);
+    yield* Effect.sleep(Duration.millis(250));
+    yield* ctx.expectEqual(
+      "a wheel returns the list to the at-end sentinel",
+      (yield* anchorOf("the returned list reports its anchor", bottomFixed))
+        .itemIndex,
+      MESSAGE_ROWS + PAGE_ROWS + 1,
+    );
+    yield* ctx.expectNear(
+      "the trailing void is back at the bottom edge",
+      yield* bottomFixedY(
+        "the trailing void painted again",
+        `${bottomFixed}-void`,
+      ),
+      VOID_TOP,
+      1,
+    );
+    yield* load(bottomFixed);
+    yield* ctx.expectNear(
+      "the second page pins the row that was above the void",
+      yield* bottomFixedY(
+        "the row above the void painted",
+        `${bottomFixed}-row-${newerLast + PAGE_ROWS}`,
+      ),
+      READER_TOP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the second page's first row takes the void's old top edge",
+      yield* bottomFixedY(
+        "the second page's first row painted",
+        `${bottomFixed}-row-${pageFirstId("append", 2)}`,
+      ),
+      VOID_TOP,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the app corrected both arrivals at the bottom edge",
+      yield* ctx.host.text(`${bottomFixed}-readout`),
+      "pages=2 corrected=2 guarded=0 request=12:-80",
+    );
+
+    yield* ctx.host.capture("loading-row-corrected");
+  });
+
 /** The app-level shortcut probe: a palette toggled by the window's own key handler. */
 const WindowKeyProbe = (): ReactNode => {
   const theme = useTheme();
@@ -6883,5 +7521,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "portal-layer",
     view: () => <PortalProbe />,
     steps: portalSteps,
+  },
+  "loading-row-correction": {
+    id: "loading-row-correction",
+    view: () => <LoadingRowProbe />,
+    steps: loadingRowSteps,
   },
 };

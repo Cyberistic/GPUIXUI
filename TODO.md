@@ -501,7 +501,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[█████████░]` 54/55
+`[x]` `[██████████]` 55/55
 
 `[x]` Land the `virtual-list-prepend` headless scenario and measure **a page
       prepended above the reader** — a feed, a notification centre, a message
@@ -526,13 +526,41 @@ a workaround for two live sessions sharing one worktree; see
       `1` each, restored green). Evidence: `apps/playground/README.md` §A
       prepended page
 
-`[ ]` Measure the **loading-row correction** for infinite scroll — when the row
-      standing in for the arriving page is the anchor, a prepend splices the page
-      in *under* it and replaces the screen the reader was reading; the app owns
-      the restore (scroll top, then `scrollToItem` with `offsetInVoid −
-      EDGE_HEIGHT`), and the append twin rests on the at-end sentinel instead.
-      Needs a live window's `scrollToItem` (the headless host has none), so the
-      evidence today is only the upstream note, not a measurement here.
+`[x]` Measure the **loading-row correction** for infinite scroll — when the row
+      standing in for the arriving page *is* the anchor, a page spliced beside
+      it replaces the screen the reader was reading; the app owns the restore,
+      and the append twin rests on the at-end sentinel instead. The live probe
+      `loading-row-correction` mounts four identical lists (80px void, 40px
+      rows, 160px viewport): a naive and a corrected pair at each edge. Measured
+      on 0.11.0 — prepend: the void is the anchor (`itemIndex 0`), the naive
+      splice paints the page's first row at the exact pixel the reader's message
+      held (`y=80`) and the message leaves the screen, while the corrected list
+      keeps the message at `80`, fills `0..80` with the page and asks
+      `scrollToItem(3, -80)`; a second page with a message anchor is left alone
+      (`guarded=1`, message still `80`, new page above). Append: a bottom list
+      at its end reports the at-end sentinel (`itemIndex == 11`), the naive
+      splice follows it to `14` and paints the page at `y=0` with the reader's
+      message gone, while the corrected list pins the page's first row on the
+      void's old top edge (`y=80`), keeps the row above at `40`, asks
+      `scrollToItem(10, -80)`, and fires again after a wheel back to the end
+      (`scrollToItem(12, -80)`). 58 checks, `--only loading-row-correction`,
+      green on 0.11.0. The rule is native-free in `src/live/loading-row.ts` with
+      `loading-row.test.ts` (8 tests) holding its arithmetic. Three negative
+      controls measured: offset `0` instead of the rule's →
+      `the corrected load leaves the reader's message where it was — expected 80
+      ± 1, got 0`; removing the prepend guard →
+      `the reader's message still painted — expected a value, got none` (the app
+      moved the reader twice); the unit-level wrong index →
+      `Some({index: 1})` against `Some({index: 3})` — exit `1` each. Two
+      mechanics the probe settled: `scrollToItem` must be queued **after** the
+      splice (a call beside `setPage` applied against the old child list, and
+      the splice then shifted it again: the message landed at `y=0`), so the
+      probe wraps the commit in `@gpuix/react`'s `flushSync`; and
+      `getListScrollTop` names the **row at the viewport top after layout**, not
+      the request, so the probe records the request in its readout
+      (`request=3:-80`) and proves the pixel from `bounds`. Evidence:
+      `apps/playground/README.md` §`loading-row-correction`,
+      `.artifacts/live/loading-row-corrected.png`
 
 `[x]` Land the `a11y-tree` headless scenario and measure **what assistive
       technology is told** — the library documents `aria-description`, an
@@ -1692,6 +1720,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | The `/docs/themes` Numbers bullet names a control height as the only press-target token — `invalidNumbers` now holds `density.rowHeight` to `targetSize.minimum` too, because a `dense` list row (built at exactly that height) takes a press. The page's sentence "A control height is also the box a pointer presses" should name the row beside it; `themes.mdx` §The theme audit is the only site surface that enumerates the rules, so nothing else on the site changes | docs-site | **resolved** — the Numbers bullet reads "A control height — and a list row, which a `dense` row builds at exactly `density.rowHeight` — is also the box a pointer presses, so both are held to the library's {targetSize.minimum}px target floor", still interpolating the floor from `targetSize` rather than printing it. `theming-page.test.ts` gained `names the row height the pressable rule also holds`: it builds `extendTheme(themes.light, { density: { rowHeight: 20 } })` and requires the report to be exactly `[{ group: "density", path: "rowHeight", value: 20, rule: "pressable" }]`, so the rule is read from the code rather than restated, and it fails on the retracted sentence. Direction measured: restoring the old sentence fails with `expected … to contain 'rowHeight'`. `nub run --filter @gpuixui/docs test` green, `check-types` clean |
 
 | Fold `invalidScales` into `auditTheme` — the tokens workstream ships the scale-order contract as a public function *beside* the gate: a brand whose `sm` control is taller than its `lg` passes all ten reports today. It cannot be folded in alone because `/docs/themes`'s readout words every report `auditTheme` returns and derives its printed count from the gate's own keys. The coordinated change is: an eleventh `ThemeAudit` key and `passed` term, an `AuditKind` line (`scale`), a formatter naming both steps, the `themes.mdx` count/bullet and copy-theme note, and the editor's pass sentence | docs-site + tokens-theme | open — the report, its tests (`packages/tokens/src/scales.test.ts`, 7 cases) and both token pages are on `master`; `docs/tokens.md` §Scale order and `docs/design-system.md` §11 say it sits beside the gate until the readout maps it |
+| Publish the **loading-row restore** a paginated list owes — the playground's `loading-row-correction` probe measured what `virtual-list-prepend` could not: while a page is in flight the loading void **is** the list's anchor, so the splice keeps the void pixel-fixed and replaces the screen the reader was reading. The app re-anchors on the message under a top void (`scrollToItem(index, −edgeHeight)`) and pins the first new row on a trailing void's old top edge at the at-end sentinel (`edgeHeight − viewportHeight`), and must **not** correct once the anchor is a message row. It also measured that the scroll has to be queued after the splice (`flushSync` first) and that `getListScrollTop` reports the row at the viewport top *after* layout, not the request | docs-site (capability record + `/docs/runtime`), and the Tier 3/4 list, log and message-scroller plans that would otherwise rebuild the wrong thing | open — measurement on `master`: `apps/playground/README.md` §`loading-row-correction`, rule in `apps/playground/src/live/loading-row.ts` (unit-tested by `loading-row.test.ts`), 58 checks green on 0.11.0 (`--only loading-row-correction`) |
 
 ## Phase D — data and workspace components
 

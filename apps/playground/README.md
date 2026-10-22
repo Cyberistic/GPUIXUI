@@ -37,13 +37,14 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-nine probes a real window can prove, of which eight mount shipped
+thirty-two probes a real window can prove, of which eight mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the popover and the modal focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
-own wheel, a split pane, a virtual list and the app-level key handler).
+own wheel, a split pane, a virtual list, a paginated list's loading-row restore
+and the app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -1776,6 +1777,61 @@ opens one window per process, and there is no drag host feature, so a portal
 moves a tab to another layer in the same window — the piece that was missing —
 not to a new OS window.
 
+### `loading-row-correction` — measured on 0.11.0 here
+
+A paginated history paints a **loading void** at the edge a page is arriving
+from: a normal row, 80px here, standing in for the page. While the reader waits
+in it, that row is the list's anchor, so the runtime holds *it* still and the
+splice puts the page where the reader was reading. `virtual-list-prepend`
+measured the ordinary prepend — a reader scrolled into content keeps their row.
+This probe measures the case a message scroller or a feed actually has: the row
+at the viewport top is the void.
+
+Four lists, identical geometry (an 80px void, 40px rows, a 160px viewport), in
+two pairs: the left pair is left to the runtime, the right pair applies
+`loadingRowRestore` (`src/live/loading-row.ts`). Every expected pixel comes from
+that module, and `loading-row.test.ts` holds the rule and its arithmetic, so the
+probe cannot assert hand-copied numbers.
+
+| Edge | Left to the runtime | Re-anchored |
+| ---- | ------------------- | ----------- |
+| prepend, the void is the anchor (`itemIndex 0`) | the page's first row paints at the pixel the reader's message held (`y=80`) and that message leaves the screen | the message stays at `y=80`, the page fills `0..80`, and the void sits above the viewport |
+| prepend, a second page (the guard) | — | the anchor is a message row, so the app does **not** correct: the message stays at `80` and the new page joins above it (`guarded=1`) |
+| append, resting on the at-end sentinel (`itemIndex == row count`) | the sentinel follows the new end, the reader's last message leaves the screen and the page paints at `y=0` | the page's first row takes the void's old top edge (`y=80`) and the message above it keeps `y=40` |
+| append, after wheeling back to the end | — | the rule fires again: the next page's first row lands at `80`, the row above keeps `40` (`corrected=2`) |
+
+The probe records the request the app made as well as the settled pixels
+(`request=3:-80`, `request=10:-80`, `request=12:-80`), because the read-back is
+a normalised report: `getListScrollTop` names the **row at the viewport top
+after layout**, so a negative offset resolves into whichever row landed there.
+
+58 checks. Three measured mechanics a consumer needs:
+
+- **Queue the scroll after the commit, not with it.** React batches the click's
+  state update; a `scrollToItem` called beside `setPage` was applied against the
+  old child list, and the splice then shifted it a second time (measured: the
+  message landed at `y=0`). `flushSync` from `@gpuix/react` around the splice,
+  then `scrollToItem` — the order the upstream example uses, now measured here.
+- **A top-aligned list pinned at `scrollTop 0` is re-pinned after a prepend.**
+  The runtime matches the browser there, which is why the uncorrected prepend
+  shows the new page instead of keeping the reader's row; a reader who has
+  scrolled into content is anchored logically and needs no correction.
+- **The at-end sentinel is an index, not an offset.** A bottom-aligned list at
+  its end reports `itemIndex == row count`, and the trailing void's top edge is
+  `edgeHeight - viewportHeight` below the viewport top — the arithmetic
+  `loadingRowRestore` applies so the new page lands on the void's old pixel.
+
+Negative controls measured: passing `0` instead of the rule's offset fails
+`the corrected load leaves the reader's message where it was`
+(`expected 80 ± 1, got 0`); removing the prepend guard fails
+`the reader's message still painted` (`expected a value, got none` — the app
+moved the reader twice) — exit `1` each, restored green
+(`--only loading-row-correction`). The unit test's two directions: dropping the
+page rows from the corrective index fails `anchors the message under the top
+void at the pixel it held` (`Some({index: 1})` against `Some({index: 3})`), and
+a rule that always corrects fails `leaves a prepend alone once the reader is
+past the void`. Evidence: `.artifacts/live/loading-row-corrected.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -1846,6 +1902,7 @@ src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
 src/live/registry.ts     live probe ids + capabilities (imports nothing native)
 src/live/scenarios.tsx   one window view + async steps per live probe
 src/live/fonts.ts        the probe typeface's bytes and its declared advances
+src/live/loading-row.ts  the loading-row fixture, its pixel arithmetic and the restore rule
 src/live/content.ts      the chart/image fixtures the content probe paints
 src/live/virtual-tree.ts the 4 000-node file-tree fixture and its flattening
 src/live/host.ts         the window → AsyncSmokeHost adapter
