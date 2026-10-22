@@ -16,6 +16,10 @@
 import { pipe } from "effect";
 import * as Option from "effect/Option";
 import { Pixels } from "@gpuixui/testing";
+import { colourAt, differs } from "./frame.js";
+
+/** Frame sampling is shared with every other probe; re-exported for this one's readers. */
+export { colourAt, differs };
 
 /** Where the window's checks read the fixture. */
 export const BOX_PAINT_IDS = {
@@ -42,9 +46,6 @@ export const BOX_PAINT_HEIGHT = 60;
 /** The border width both bordered boxes ask for. */
 export const BOX_PAINT_BORDER_WIDTH = 2;
 
-/** How far a sampled point must sit from a colour to count as a different one. */
-export const BOX_PAINT_TOLERANCE = 8;
-
 /** A painted box, as the runtime's layout report gives it. */
 export interface PaintBox {
   readonly x: number;
@@ -69,39 +70,11 @@ export const pointAcross = (
   y,
 });
 
-/** The colour at a logical point, or `None` when it is outside the capture. */
-export const colourAt = (
-  frame: Pixels.Pixels,
-  point: PaintPoint,
-  scale: number,
-): Option.Option<Pixels.Rgba> =>
-  Option.fromNullishOr(
-    Pixels.pixelAt(
-      frame,
-      Math.round(point.x * scale),
-      Math.round(point.y * scale),
-    ),
-  );
-
-/** Whether two colours differ by more than `tolerance` on any channel. */
-export const differs = (
-  left: Pixels.Rgba,
-  right: Pixels.Rgba,
-  tolerance = BOX_PAINT_TOLERANCE,
-): boolean =>
-  Math.abs(left.r - right.r) > tolerance ||
-  Math.abs(left.g - right.g) > tolerance ||
-  Math.abs(left.b - right.b) > tolerance;
-
-/** Whether a sample is the colour `hex` asks for, within `tolerance`. */
-export const isColour = (
-  sample: Pixels.Rgba,
-  hex: string,
-  tolerance = BOX_PAINT_TOLERANCE,
-): boolean =>
+/** Whether a sample is the colour `hex` asks for, within the frame's tolerance. */
+export const isColour = (sample: Pixels.Rgba, hex: string): boolean =>
   pipe(
     Option.fromNullishOr(Pixels.hexToRgba(hex)),
-    Option.exists((colour) => !differs(sample, colour, tolerance)),
+    Option.exists((colour) => !differs(sample, colour)),
   );
 
 /**

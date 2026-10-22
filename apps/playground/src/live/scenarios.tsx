@@ -25,6 +25,7 @@ import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import {
   extendTheme,
+  elevationShadow,
   keyboardFocusRing,
   nativeTextTheme,
   statusTone,
@@ -232,7 +233,12 @@ import {
   decodeWindowBackground,
   surfaceAlpha,
 } from "./backdrop.js";
-import { captureScale, describeColour, framePoint } from "./frame.js";
+import {
+  captureScale,
+  describeColour,
+  distanceFrom,
+  framePoint,
+} from "./frame.js";
 import {
   OVERLAY_ENTER_COUNT,
   OVERLAY_FRAME,
@@ -538,7 +544,27 @@ import {
   isColour,
   type PaintPoint,
 } from "./box-paint.js";
-
+import {
+  aroundBox,
+  ELEVATION_BLUR,
+  ELEVATION_DEPTH,
+  ELEVATION_FADE_MID,
+  ELEVATION_FADE_NEAR,
+  ELEVATION_FAR,
+  ELEVATION_FILL,
+  ELEVATION_HEIGHT,
+  ELEVATION_IDS,
+  ELEVATION_INSIDE,
+  ELEVATION_NEAR,
+  ELEVATION_OFFSET,
+  ELEVATION_RAISED,
+  ELEVATION_ROW,
+  ELEVATION_SECOND,
+  ELEVATION_SHADOW,
+  ELEVATION_SPREAD,
+  ELEVATION_UNREADABLE,
+  ELEVATION_WIDTH,
+} from "./elevation.js";
 /** Long enough for one paint after an input reaches the window. */
 const SETTLE = Duration.millis(40);
 
@@ -17508,6 +17534,391 @@ const boxPaintSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * What a `boxShadow` paints, one property per box.
+ *
+ * The library's whole elevation contract is this one `StyleDesc` field: a card,
+ * a popover, a menu and a dialog separate from the page with the theme's
+ * `elevation` level, and the capability record called `boxShadow` supported
+ * because the field exists. So the fixture asks the runtime for each claim in
+ * turn — an offset, a blur, a spread, an inset and its outset twin of the same
+ * geometry, a two-entry list, a colour the parser cannot read, and the shipped
+ * resting and deepest levels on the page they lift — and the reads sample points
+ * whose distance is a constant.
+ */
+const ElevationProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: 16,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: 60,
+    height: ELEVATION_ROW,
+  };
+  const lifted = (shadow: StyleDesc["boxShadow"]): StyleDesc => ({
+    width: ELEVATION_WIDTH,
+    height: ELEVATION_HEIGHT,
+    backgroundColor: ELEVATION_FILL,
+    boxShadow: shadow,
+  });
+  const down = {
+    offsetX: 0,
+    offsetY: ELEVATION_OFFSET,
+    blurRadius: 0,
+    spreadRadius: 0,
+  };
+  const spread = {
+    offsetX: 0,
+    offsetY: 0,
+    blurRadius: 0,
+    spreadRadius: ELEVATION_SPREAD,
+  };
+  const raised = (level: "sm" | "lg"): StyleDesc => ({
+    width: ELEVATION_RAISED.width,
+    height: ELEVATION_RAISED.height,
+    backgroundColor: theme.colors.popover,
+    boxShadow: elevationShadow(theme, level),
+  });
+  return (
+    <div testId="elevation-probe" style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A shadow paints outside the box it lifts, inside it when inset, in the
+        colour it asks for.
+      </text>
+      <div style={{ height: 24 }} />
+      <div style={row}>
+        <div
+          testId={ELEVATION_IDS.offset}
+          style={lifted({ ...down, color: ELEVATION_SHADOW })}
+        />
+        <div
+          testId={ELEVATION_IDS.blur}
+          style={lifted({
+            ...down,
+            offsetY: 0,
+            blurRadius: ELEVATION_BLUR,
+            color: ELEVATION_SHADOW,
+          })}
+        />
+        <div
+          testId={ELEVATION_IDS.spread}
+          style={lifted({ ...spread, color: ELEVATION_SHADOW })}
+        />
+        <div
+          testId={ELEVATION_IDS.inset}
+          style={lifted({ ...spread, color: ELEVATION_SHADOW, inset: true })}
+        />
+      </div>
+      <div style={row}>
+        <div
+          testId={ELEVATION_IDS.outset}
+          style={lifted({ ...spread, color: ELEVATION_SHADOW })}
+        />
+        <div
+          testId={ELEVATION_IDS.stacked}
+          style={lifted([
+            { ...down, color: ELEVATION_SHADOW },
+            { ...down, offsetY: -ELEVATION_OFFSET, color: ELEVATION_SECOND },
+          ])}
+        />
+        <div
+          testId={ELEVATION_IDS.unreadable}
+          style={lifted({ ...down, color: ELEVATION_UNREADABLE })}
+        />
+      </div>
+      <div style={row}>
+        <div testId={ELEVATION_IDS.resting} style={raised("sm")} />
+        <div testId={ELEVATION_IDS.deepest} style={raised("lg")} />
+      </div>
+    </div>
+  );
+};
+
+const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(ELEVATION_IDS.offset);
+    const window = yield* ctx.host.windowSize();
+    yield* ctx.host.capture("elevation-paint");
+    const frame = yield* ctx.host.pixels("elevation-paint");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+    const pageHex = palettes.dark.colors.background;
+    const page = yield* ctx.expectSome(
+      "the page's role is a colour a sample can be compared with",
+      Option.fromNullishOr(Pixels.hexToRgba(pageHex)),
+    );
+
+    const boxOf = (id: string) =>
+      Effect.gen(function* () {
+        const painted = yield* ctx.host.bounds(id);
+        return yield* ctx.expectSome(
+          `${id} reports its painted box`,
+          Option.fromNullishOr(painted),
+        );
+      });
+
+    /** The colour the capture paints at a logical point. */
+    const at = (point: PaintPoint) =>
+      ctx.expectSome(
+        "the sampled point is inside the capture",
+        colourAt(frame, point, scale),
+      );
+
+    // 1. An offset shadow paints a band below its box, and nothing above it.
+    const offset = yield* boxOf(ELEVATION_IDS.offset);
+    const offsetPoints = aroundBox(offset, ELEVATION_NEAR);
+    const offsetAbove = aroundBox(offset, ELEVATION_INSIDE);
+    const below = yield* at({
+      x: offsetPoints.middleX,
+      y: offsetPoints.below,
+    });
+    const inside = yield* at({
+      x: offsetPoints.middleX,
+      y: offsetPoints.middleY,
+    });
+    const above = yield* at({
+      x: offsetAbove.middleX,
+      y: offsetAbove.above,
+    });
+    const farBelow = yield* at({
+      x: offsetPoints.middleX,
+      y: offset.y + offset.height + ELEVATION_FAR,
+    });
+    yield* ctx.expectEqual(
+      "an offset shadow paints below the box it lifts",
+      isColour(below, ELEVATION_SHADOW),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the shadow is behind the box, which keeps its own fill",
+      isColour(inside, ELEVATION_FILL),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a downward offset paints nothing above the box",
+      isColour(above, pageHex),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "an offset shadow stops where its offset ends",
+      isColour(farBelow, pageHex),
+      true,
+    );
+
+    // The band it covers is the shadow's colour and nothing else.
+    const band = {
+      x: offset.x + 1,
+      y: offset.y + offset.height + 1,
+      width: offset.width - 2,
+      height: ELEVATION_OFFSET - 2,
+    };
+    const bandPixels = yield* ctx.expectSome(
+      "the band under the offset box is inside the capture",
+      countPaint(frame, band, scale, ELEVATION_SHADOW),
+    );
+    yield* ctx.expectEqual(
+      "the band an offset shadow covers is its own colour throughout",
+      bandPixels,
+      Math.round(band.width * band.height * scale * scale),
+    );
+
+    // 2. A blur reaches past the edge and fades with distance.
+    const blur = yield* boxOf(ELEVATION_IDS.blur);
+    const blurPoints = aroundBox(blur, 0);
+    const blurNear = yield* at({
+      x: blurPoints.middleX,
+      y: blur.y + blur.height + ELEVATION_FADE_NEAR,
+    });
+    const blurMid = yield* at({
+      x: blurPoints.middleX,
+      y: blur.y + blur.height + ELEVATION_FADE_MID,
+    });
+    const blurFar = yield* at({
+      x: blurPoints.middleX,
+      y: blur.y + blur.height + ELEVATION_FAR,
+    });
+    yield* ctx.expectEqual(
+      "a blurred shadow paints past the edge of its box",
+      differs(blurNear, page),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a blurred shadow fades as the distance from the box grows",
+      distanceFrom(blurNear, page) > distanceFrom(blurMid, page),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a blurred shadow reaches no further than its radius",
+      isColour(blurFar, pageHex),
+      true,
+    );
+
+    // 3. A spread paints every side the offset alone leaves bare.
+    const spread = yield* boxOf(ELEVATION_IDS.spread);
+    const spreadPoints = aroundBox(spread, ELEVATION_INSIDE);
+    const spreadAbove = yield* at({
+      x: spreadPoints.middleX,
+      y: spreadPoints.above,
+    });
+    const spreadLeft = yield* at({
+      x: spreadPoints.left,
+      y: spreadPoints.middleY,
+    });
+    const spreadBelow = yield* at({
+      x: spreadPoints.middleX,
+      y: spreadPoints.below,
+    });
+    yield* ctx.expectEqual(
+      "a spread shadow paints above the box",
+      isColour(spreadAbove, ELEVATION_SHADOW),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a spread shadow paints to the left of the box",
+      isColour(spreadLeft, ELEVATION_SHADOW),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a spread shadow paints below the box",
+      isColour(spreadBelow, ELEVATION_SHADOW),
+      true,
+    );
+
+    // 4. Inset paints on the inside of the same geometry the outset paints on
+    //    the outside of — the pair is the measurement.
+    const inset = yield* boxOf(ELEVATION_IDS.inset);
+    const insetPoints = aroundBox(inset, ELEVATION_INSIDE);
+    const insetInside = yield* at({
+      x: insetPoints.middleX,
+      y: inset.y + ELEVATION_INSIDE,
+    });
+    const insetMiddle = yield* at({
+      x: insetPoints.middleX,
+      y: insetPoints.middleY,
+    });
+    const insetOutside = yield* at({
+      x: insetPoints.middleX,
+      y: insetPoints.above,
+    });
+    yield* ctx.expectEqual(
+      "an inset shadow paints inside the box",
+      isColour(insetInside, ELEVATION_SHADOW),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "an inset shadow leaves the box's own fill in the middle",
+      isColour(insetMiddle, ELEVATION_FILL),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "an inset shadow paints nothing outside the box",
+      isColour(insetOutside, pageHex),
+      true,
+    );
+
+    const outset = yield* boxOf(ELEVATION_IDS.outset);
+    const outsetPoints = aroundBox(outset, ELEVATION_INSIDE);
+    const outsetAbove = yield* at({
+      x: outsetPoints.middleX,
+      y: outsetPoints.above,
+    });
+    const outsetInside = yield* at({
+      x: outsetPoints.middleX,
+      y: outset.y + ELEVATION_INSIDE,
+    });
+    yield* ctx.expectEqual(
+      "the same geometry without inset paints outside the box",
+      isColour(outsetAbove, ELEVATION_SHADOW),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "an outset shadow leaves the box's fill at its inside edge",
+      isColour(outsetInside, ELEVATION_FILL),
+      true,
+    );
+
+    // 5. A list paints every entry, one on each side.
+    const stacked = yield* boxOf(ELEVATION_IDS.stacked);
+    const stackedPoints = aroundBox(stacked, ELEVATION_NEAR);
+    const stackedAbove = yield* at({
+      x: stackedPoints.middleX,
+      y: stackedPoints.above,
+    });
+    const stackedBelow = yield* at({
+      x: stackedPoints.middleX,
+      y: stackedPoints.below,
+    });
+    yield* ctx.expectEqual(
+      "a shadow list paints its first entry below the box",
+      isColour(stackedBelow, ELEVATION_SHADOW),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the same list paints its second entry above the box",
+      isColour(stackedAbove, ELEVATION_SECOND),
+      true,
+    );
+
+    // 6. A colour the parser cannot read paints no shadow at all.
+    const unreadable = yield* boxOf(ELEVATION_IDS.unreadable);
+    const unreadablePoints = aroundBox(unreadable, ELEVATION_NEAR);
+    const unreadableBelow = yield* at({
+      x: unreadablePoints.middleX,
+      y: unreadablePoints.below,
+    });
+    yield* ctx.expectEqual(
+      "a shadow colour the runtime cannot parse paints nothing",
+      isColour(unreadableBelow, pageHex),
+      true,
+    );
+
+    // 7. The shipped levels reach the glass, and the deepest reaches further.
+    const resting = yield* boxOf(ELEVATION_IDS.resting);
+    const deepest = yield* boxOf(ELEVATION_IDS.deepest);
+    const restingFar = yield* at({
+      x: resting.x + resting.width / 2,
+      y: resting.y + resting.height + ELEVATION_DEPTH,
+    });
+    const deepestNear = yield* at({
+      x: deepest.x + deepest.width / 2,
+      y: deepest.y + deepest.height + ELEVATION_DEPTH,
+    });
+    yield* ctx.expectEqual(
+      "a surface raised to the deepest level shades the page below it",
+      distanceFrom(deepestNear, page) > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the deepest level's shade is darker than the page it falls on",
+      distanceFrom(deepestNear, page) > 0 &&
+        deepestNear.r <= page.r &&
+        deepestNear.g <= page.g &&
+        deepestNear.b <= page.b,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the resting level reaches no further than the deepest one",
+      isColour(restingFar, pageHex),
+      true,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -17825,5 +18236,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "box-paint",
     view: () => <BoxPaintProbe />,
     steps: boxPaintSteps,
+  },
+  "elevation-paint": {
+    id: "elevation-paint",
+    view: () => <ElevationProbe />,
+    steps: elevationSteps,
   },
 };

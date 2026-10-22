@@ -17,12 +17,12 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { Pixels } from "@gpuixui/testing";
+import { COLOUR_TOLERANCE } from "./frame.js";
 import { liveRegistry } from "./registry.js";
 import {
   BOX_PAINT_BORDER,
   BOX_PAINT_FILL,
   BOX_PAINT_IDS,
-  BOX_PAINT_TOLERANCE,
   BOX_PAINT_WIDTH,
   colourAt,
   countPaint,
@@ -103,8 +103,8 @@ describe("the box-paint reader", () => {
 
   it("calls two colours the same within a tolerance and different past it", () => {
     const antialiased = new Pixels.Rgba({
-      r: BORDER.r - BOX_PAINT_TOLERANCE,
-      g: BORDER.g + BOX_PAINT_TOLERANCE,
+      r: BORDER.r - COLOUR_TOLERANCE,
+      g: BORDER.g + COLOUR_TOLERANCE,
       b: BORDER.b,
       a: 255,
     });

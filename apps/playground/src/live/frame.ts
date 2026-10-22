@@ -41,6 +41,45 @@ export const framePoint = (point: Point, scale: number): Point => ({
   y: Math.round(point.y * scale),
 });
 
+/**
+ * How far two colours may differ on one channel and still be the same paint.
+ *
+ * Not zero: a shadow, a border and a glyph all land on a fractional boundary
+ * somewhere, and an antialiased sample is the same paint as its solid core.
+ * Wider than the largest rounding a composite makes (the 2% steps the token
+ * derivations take are 3–5 bytes) and narrower than the gap between two roles.
+ */
+export const COLOUR_TOLERANCE = 8;
+
+/** The colour at a logical point, or `None` when it is outside the capture. */
+export const colourAt = (
+  frame: Pixels.Pixels,
+  point: Point,
+  scale: number,
+): Option.Option<Pixels.Rgba> => {
+  const at = framePoint(point, scale);
+  return Option.fromNullishOr(Pixels.pixelAt(frame, at.x, at.y));
+};
+
+/** Whether two colours differ by more than `tolerance` on any channel. */
+export const differs = (
+  left: Pixels.Rgba,
+  right: Pixels.Rgba,
+  tolerance = COLOUR_TOLERANCE,
+): boolean =>
+  Math.abs(left.r - right.r) > tolerance ||
+  Math.abs(left.g - right.g) > tolerance ||
+  Math.abs(left.b - right.b) > tolerance;
+
+/** How far a sample sits from a reference colour, summed over its channels. */
+export const distanceFrom = (
+  sample: Pixels.Rgba,
+  reference: Pixels.Rgba,
+): number =>
+  Math.abs(sample.r - reference.r) +
+  Math.abs(sample.g - reference.g) +
+  Math.abs(sample.b - reference.b);
+
 /** A pixel in one line, so a failed assertion prints the colour it read. */
 export const describeColour = (colour: Pixels.Rgba): string =>
   `rgba(${colour.r}, ${colour.g}, ${colour.b}, ${colour.a})`;

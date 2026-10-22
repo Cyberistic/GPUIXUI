@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-63 probes a real window can prove, of which fifteen mount shipped
+64 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3544,6 +3544,75 @@ What it settles:
 The capability record's **Two-stop linear gradients** and **Per-corner radii,
 per-side border widths, a two-value `borderStyle`** rows now cite this probe.
 
+### `elevation-paint` — measured on 0.11.0 here
+
+**What a `boxShadow` paints.** The library's whole elevation contract is this one
+`StyleDesc` field: a card, a popover, a menu and a dialog separate from the page
+with the theme's `elevation` level, `BoxShadow` carries an `inset` flag, and the
+token package's report claims a shadow colour the parser cannot read paints
+nothing at all. The capability record called all of it supported because the
+fields exist, and a window reports no style — so the probe mounts one box per
+property and samples the frame at fixed distances from an edge.
+
+| State | Measured |
+| ----- | -------- |
+| a shadow with `offsetY: 16`, no blur, no spread | the 118×14 band under the box is **`6608`** pixels of the shadow's own `#FF3B30` out of 6608 (the capture is 2×), the box's own fill sits unchanged above it, **4** points above the box the page is untouched, and **48** points below it the page is back — the band is the shadow's geometry and nothing else |
+| `blurRadius: 24` on the same box | still paint **4** points past the edge (`115,36,35` over the page's `17,20,26`), weaker **16** points out (`74,29,31`), and the page by **48** (`22,21,26`): a blur reaches past the box and fades rather than ending in a hard edge |
+| `spreadRadius: 8` with no offset | the shadow's colour at **4** points above, left and below the box — a spread paints every side, where an offset alone paints one |
+| `inset: true`, `spreadRadius: 8` | the shadow's colour **4** points inside the top edge, the box's own fill at the centre, and the page **4** points outside: an inset shadow paints on the inside of the same geometry with no paint outside it |
+| the same geometry **without** `inset` | the shadow's colour **4** points *outside* the top edge and the fill at the inside edge — the pair is the measurement, so neither state can pass as the other |
+| `boxShadow: [down, up]` | the first entry's `#FF3B30` **8** points below the box and the second's `#0A84FF` **8** points above it: a list paints every entry, not its first |
+| `color: "notacolour"` | the page **8** points below the box — the runtime drops a colour it cannot parse, which is the silent flat surface `invalidShadowColors` exists to report |
+| the shipped `lg` level on a 220×120 surface | **`12,14,18`** where the page is **`17,20,26`** — a 5/6/8-byte darkening **20** points below the box |
+| the shipped `sm` level, same surface, same point | the page exactly: the resting level does not reach where the deepest one does |
+
+27 checks, `--only elevation-paint`, green on 0.11.0 (~0.5 s). Fixture:
+`src/live/elevation.ts` — the ids, the box size, the row height, the offset/blur/
+spread geometry and the sample distances; `elevation.test.ts` (9 cases) holds the
+sampling arithmetic to a drawn box, holds the level's shade to the reason the
+probe reads it as a distance rather than a tolerance (`differs` calls a 5/6/8-byte
+shade the same paint), keeps every sample inside the row that reserves it, holds
+the page reference to the role the fixture paints, and holds this section's
+heading, count and printed values.
+
+Three negative controls were measured, exit `1` each, then restored green:
+
+- dropping `inset: true` from the inset box fails `an inset shadow paints inside
+  the box` (`expected true, got false`) — the pair is not two boxes that happen to
+  pass.
+- turning the spread box into an inset one fails `a spread shadow paints above
+  the box` — an inset shadow paints on the inside, so the outside check is
+  reading the flag and not the geometry.
+- dropping the list's second entry fails `the same list paints its second entry
+  above the box` (`expected true, got false`) — a list that painted only its first
+  entry would otherwise pass.
+
+Captures: `.artifacts/live/elevation-paint.png`.
+
+What it settles, for the elevation scale and for any component that raises a
+surface:
+
+1. **The shadow paints where the geometry says.** An offset's band is exactly the
+   box's width by the offset, a spread's ring is on every side, and an inset
+   shadow is the same ring on the inside — so a component can raise a surface
+   with a level and expect the paint, not a border stand-in.
+2. **A blur is a falloff, and it dilutes.** The shipped levels carry large blur
+   radii (the dark theme's `lg` is 56), and a blur that large spreads the shade
+   over the edge: the deepest level's **0.8** alpha composites to a 5/6/8-byte
+   darkening on the dark page at the distance a reader sees it. The level is a
+   soft edge rather than a cast shadow, and the printed bytes are what a theme
+   tuned for a stronger separation has to beat. The probe's own opaque shadows
+   are the control: a blur of 24 over a 120×48 box still paints `115,36,35`.
+3. **A colour the parser cannot read is silent.** `invalidShadowColors` reports
+   it and the surface paints flat, so the report is the only place a caller
+   learns a level disappeared.
+4. **`inset` is a different paint, not a smaller one.** It is the only way to
+   shade a well, a pinned header band or a field's recess without a second
+   element.
+
+The capability record's **`boxShadow`, including `inset`** row now cites this
+probe.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3757,8 +3826,8 @@ narrower. Each deviation is deliberate and measured:
   paint, which records all three measured shapes and the waits that replaced
   them. The full live suite is the release gate, and this line is its result.
   Measured alone since then: `inspector-lifecycle`,
-  `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation` and `box-paint`
-  (five probes, each run alone).
+  `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`
+  and `elevation-paint` (six probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

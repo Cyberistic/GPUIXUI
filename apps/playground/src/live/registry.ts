@@ -414,6 +414,12 @@ export const liveRegistry = [
       "Content: a dashed border covers less of its band than a solid one, a per-corner radius and a per-side width paint where they are asked, and a two-stop gradient grades across its box",
     capability: "content",
   },
+  {
+    id: "elevation-paint",
+    title:
+      "Content: a box shadow paints the band its offset covers, a blur fades past the edge, a spread paints every side, an inset paints inside, a list paints every entry, and the shipped levels shade the page",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
