@@ -71,31 +71,40 @@ const rowFor = (meta: PrimitiveMeta): Option.Option<Row> =>
   Arr.findFirst(tier1Rows(), (row) => row.name === meta.name);
 
 /**
- * The value controls whose measurement is announced through `aria-valuetext`,
- * and the source that declares it.
+ * The controls whose state is announced through `aria-valuetext`, and the
+ * source that declares it.
  *
- * `@gpuix/native` 0.11.0 has no `aria-valuenow`/`min`/`max`, which is a real
- * gap — but it is not the same as "not announced", and three rows said exactly
- * that while each control declared `aria-valuetext` and the window suite read
- * the announced value back. A consumer reading the inventory has to know which
- * half is missing.
+ * `@gpuix/native` 0.11.0 has no `aria-valuenow`/`min`/`max` and no
+ * `aria-checked`/`aria-pressed`, which is a real gap — but it is not the same as
+ * "not announced": every control below declares `aria-valuetext` and its window
+ * suite reads the announced state back. Three value rows said "not announced"
+ * while the channel was painted, and the Toggle row said "the visual state is
+ * the only state" while the Switch row told a caller to pair it with a visible
+ * `Label`, which does not name a control in this runtime. A consumer reading the
+ * inventory has to know which half is missing.
  */
-const ANNOUNCED_VALUES: ReadonlyArray<{
+const ANNOUNCED_STATES: ReadonlyArray<{
   readonly name: string;
   readonly source: string;
 }> = [
   { name: "Slider", source: "src/components/Slider.tsx" },
   { name: "Range slider", source: "src/components/Slider.tsx" },
   { name: "Meter", source: "src/components/Meter.tsx" },
+  { name: "Radio groups", source: "src/components/RadioGroup.tsx" },
+  { name: "Switches", source: "src/components/Switch.tsx" },
+  { name: "Toggle", source: "src/components/Toggle.tsx" },
 ];
 
-/** Problems with one document's sentence about an announced value. */
+/** Problems with one document's sentence about an announced state. */
 const claimProblems = (name: string, text: string): ReadonlyArray<string> => [
   ...(text.includes("aria-valuetext")
     ? []
     : [`${name}: does not name aria-valuetext as the announced channel`]),
   ...(text.includes("not announced")
-    ? [`${name}: says the value is not announced`]
+    ? [`${name}: says the state is not announced`]
+    : []),
+  ...(text.includes("pair it with a visible label")
+    ? [`${name}: names a visible Label as the control's name`]
     : []),
 ];
 
@@ -117,7 +126,7 @@ const deniedParts = (text: string): ReadonlyArray<string> =>
 const sourceOf = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8");
 
-/** Every problem with one value control's record, row and source. */
+/** Every problem with one state control's record, row and source. */
 const announceProblems = ({
   name,
   source,
@@ -237,13 +246,14 @@ describe("Tier 1 inventory", () => {
     expect(problems).toEqual([]);
   });
 
-  it("names the channel a value control announces on", () => {
+  it("names the channel a state control announces on", () => {
     // The bug guarded: the Slider, Range slider and Meter rows said "No
     // aria-valuenow/min/max, so the range is not announced" while each control
     // declares `aria-valuetext` and the window suite reads the announced value
-    // back (`announced(runtime, "Volume")`). The bounds are what the runtime
-    // cannot carry; the value is measured. A consumer had to know which half.
-    const problems = Arr.flatMap(ANNOUNCED_VALUES, announceProblems);
+    // back (`announced(runtime, "Volume")`), and the Toggle row said "the visual
+    // state is the only state" while the Switch row sent a caller to a visible
+    // `Label`, which paints text only. The channel is the half a reader needs.
+    const problems = Arr.flatMap(ANNOUNCED_STATES, announceProblems);
 
     expect(problems).toEqual([]);
   });

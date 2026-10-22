@@ -325,6 +325,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
+      "No aria-checked: a row's state is announced through aria-valuetext",
       "No type-ahead selection",
       "An option description is not associated for assistive technology",
       "The data form of an option cannot carry rich content; use a RadioGroupItem for that",
@@ -365,7 +366,8 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No aria-checked: pair it with a visible label",
+      "No aria-checked: the state is announced through aria-valuetext",
+      "A visible Label paints text only; the label prop names the control",
       "The slide is 150ms; reducedMotion lands the thumb (the runtime exposes no preference)",
       "No loading or pending state",
     ],
@@ -549,7 +551,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No aria-pressed: the visual state is the only state",
+      "No aria-pressed: the state is announced through aria-valuetext",
       "No loading state",
       "Square sizes the button, not the icon",
     ],

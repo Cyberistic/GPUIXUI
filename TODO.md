@@ -2379,6 +2379,21 @@ a workaround for two live sessions sharing one worktree; see
       registration" case. Docs: each page's `## API` table and `## Accessibility`
       section names where its address lands; `COMPONENTS.md`'s seven Tier 1 rows
       record the support.
+`[x]` `packages/primitives`: two **state channels the inventory denied** — the
+      `Toggle` record said "No aria-pressed: the visual state is the only state"
+      and the `Switches` record said "No aria-checked: pair it with a visible
+      label", while `Toggle` publishes `aria-valuetext={pressedValueText(...)}`,
+      `Switch` publishes `checked`/`unchecked`, and a visible `Label` names no
+      control in this runtime. The rows told a consumer the state was not
+      announced and sent a reader to a label that paints text only; the
+      `Radio groups` record likewise omitted its row's channel. All three now
+      name `aria-valuetext`, the Switch record names the `label` prop as the
+      name, and `inventory.test.ts`'s `names the channel a state control
+      announces on` reads the six controls that declare it (three value, three
+      choice) and fails on a missing channel, a "not announced" claim, or a
+      visible Label offered as the name. Both directions measured: restoring
+      either old sentence fails by name (`Switches` / `Toggle: does not name
+      aria-valuetext as the announced channel`). 763 unit / 48 files.
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness
