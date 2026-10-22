@@ -17,6 +17,7 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as R from "effect/Record";
 import type { ComponentType } from "react";
 import { examples } from "../examples/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
@@ -52,6 +53,8 @@ const SCREENS = [
     headline: "Export settings",
   },
   { id: "otp", root: "otp-example", headline: "Two-factor verification" },
+  { id: "rating", root: "rating-example", headline: "Rate this release" },
+  { id: "toggle", root: "toggle-example", headline: "Canvas toolbar" },
 ] as const;
 
 const renderExample = (
@@ -69,6 +72,19 @@ const renderExample = (
     </Surface>,
   );
 };
+
+it("lists a native screen for every registered example", () => {
+  // Bug guarded: `rating` and `toggle` joined the registry (and the playground's
+  // gallery) without a runtime screen, so the "every registered example" mount
+  // and the dark-palette sweep silently covered ten of twelve. The list and the
+  // registry have to agree, so a new example fails here by id.
+  expect(
+    Arr.filter(
+      R.keys(examples),
+      (id) => !Arr.some(SCREENS, (screen) => screen.id === id),
+    ),
+  ).toEqual([]);
+});
 
 it("mounts every registered example and paints its headline", async () => {
   const runtime = await openWindow();

@@ -2215,6 +2215,16 @@ a workaround for two live sessions sharing one worktree; see
       all five sources and the page's Limitations list (measured failing by name
       when the page drops `Checkbox`/`Switch`). Docs on the Tooltip, Checkbox and
       Switch pages and both Tier 1 rows. 763 unit / 219 runtime
+`[x]` `packages/primitives`: the native **example guard covered ten of twelve
+      examples** — `rating` and `toggle` were in the registry that the playground
+      gallery mounts, but not in the runtime screen list the "mounts every
+      registered example" case and the dark-palette sweep iterate, so neither was
+      mounted, headline-checked or repainted in the dark palette by any case and a
+      new registry entry could ship with no native proof at all. Both joined the
+      list, and `lists a native screen for every registered example` compares the
+      list with the registry's keys and fails by id (measured: dropping `rating`
+      reports `expected [ 'rating' ] to deeply equal []`). 13 runtime cases in
+      that file (was 11)
 `[x]` `packages/primitives`: a **pressed `Toggle` painted a translucent fill** — its
       hover and press lifted the accent's alpha (`bg-accent/90` / `bg-accent/80`),
       the one remaining filled face that let the surface behind the control
@@ -3883,7 +3893,9 @@ numbers).
   - `[ ]` gradient-text — needs a gradient the runtime's text host does not paint (`background` gradients exist; a text fill does not), so it waits on a text-fill capability
 `[~]` Reveal and scroll: blur, fade, zoom, slide, highlight, auto-height, scroll-fade, scroll-progress
   - `[x]` `auto-height` — `AutoHeight` measures its content through `onLayout` and tweens the clipping box to it (mount window, re-measure, reduced motion), `src/behaviour/auto-height.test.tsx` (4), `docs/auto-height.mdx`, the example and the inventory row; `CollapsibleContent` now uses it, so the recorded "mounts instantly" limitation is closed
-  - `[ ]` blur, fade, zoom, slide, scroll-fade, scroll-progress — the text highlight landed as `highlight-text` above; `scroll-progress` needs a scroll offset the runtime does not publish per the capability record; check it before planning
+  - `[x]` `reveal` — `Reveal` is the house entrance as a component: fade plus a relative `top`/`left` offset, on mount or on an `open` change (the subtree unmounts after its exit), `from` names the edge, `distance`/`delayMs`/`level` shape the arrival, and the reduced preference paints at rest at once; `src/reveal/frames.ts` + its unit suite, `src/behaviour/reveal.test.tsx` (6), `docs/reveal.mdx`, the example and the row. Covers the catalogue's **fade** and **slide**, which are the same primitive with a different edge. Measured: a wrong edge sign fails the direction case, a "none" that moves fails the fade-only case, and an entry that paints at rest fails the arrival case
+  - `[-]` `zoom`, `blur` — cancelled with evidence: a zoom is a `transform: scale` and a blur is a `filter`, and `@gpuix/native@0.11.0`'s `StyleDesc` has neither (upstream issue #102), so `Reveal` offers the edges it can paint instead of imitating them
+  - `[ ]` scroll-fade, scroll-progress — **unblocked, the earlier note was stale**: `onScrollChange` is a runtime host prop in 0.11.0 (it publishes `scrollX`/`scrollY` for an `overflow: "scroll"` element; `ScrollArea`'s viewport already reads it), so a progress bar and a gradient edge fade are both paintable — a two-stop `linear-gradient` background exists. Next in this group
 `[ ]` Interaction effects: magnetic, tilt, click, ripple-button, icon-button, flip-button, liquid-button, shine
 `[ ]` Media and collections: image-zoom, avatar-group, pinned-list, motion-grid, particles
 `[ ]` Backgrounds: bubble, fireworks, glyph, gradient, gravity-stars, hexagon, hole, stars, topography
