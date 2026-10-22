@@ -368,4 +368,52 @@ describe("following a palette", () => {
     expect(typeof stop).toBe("function");
     expect(ticks).toBe(0);
   });
+
+  it("watches every field the palette offers", () => {
+    // The poll compares a key built from the palette's fields, so a field the
+    // key forgot is one a reader can change without the window noticing: the
+    // watch read the same key, decided nothing had moved and kept the old
+    // theme. The table is a `Record<keyof SystemPalette, …>`, so a field added
+    // to the palette fails the compile until it is named here, and each one is
+    // then driven through the watch. `selection` is the field this caught.
+    const pair: Record<keyof SystemPalette, readonly [string, string]> = {
+      background: ["#101418", "#101419"],
+      foreground: ["#E6E9EE", "#E6E9EF"],
+      accent: ["#7C5CFF", "#7C5CFE"],
+      muted: ["#1B2027", "#1B2028"],
+      border: ["#2A3038", "#2A3039"],
+      danger: ["#E5484D", "#E5484E"],
+      selection: ["#7C5CFF40", "#7C5CFF41"],
+    };
+
+    Object.entries(pair).forEach(([field, [first, second]]) => {
+      const manual = manualTimer();
+      const applied: Array<Theme> = [];
+      let palette: SystemPalette = { ...nightPalette, [field]: first };
+      watchSystemTheme({
+        read: () => palette,
+        base: darkTheme,
+        onChange: (theme) => applied.push(theme),
+        every: 2000,
+        timer: manual.timer,
+      });
+      palette = { ...nightPalette, [field]: second };
+      manual.tick();
+
+      expect(applied, `${field} re-applies`).toHaveLength(2);
+    });
+
+    // The other direction: a tick that reads the same palette applies nothing.
+    const manual = manualTimer();
+    const applied: Array<Theme> = [];
+    watchSystemTheme({
+      read: () => nightPalette,
+      base: darkTheme,
+      onChange: (theme) => applied.push(theme),
+      every: 2000,
+      timer: manual.timer,
+    });
+    manual.tick();
+    expect(applied).toHaveLength(1);
+  });
 });

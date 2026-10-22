@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 156/156
+`[x]` `[██████████]` 157/157
 
 `[x]` Retract the **adoption claims both mechanisms had already closed** — `docs/tokens.md` §The fade and `docs/design-system.md` §8 both ended by sending a reader to fix "the two recipe sets and the components' `Button`", while the primitives' recipe bucket already paints `disabled:bg-disabled disabled:text-disabled-foreground` and `packages/components/src/internal/button.tsx` translates the primitives' action and writes no opacity of its own; `docs/tokens.md` §The dim called the opt-out "an interlock row in `TODO.md`" after both packages had declared it. Read from the source: `core/focus.ts` exports `keepContent`, `components/Button.tsx` merges it for a variant `paintsFilledSurface` calls filled, a field host declares it, and the components package re-states the rule in `internal/theme.ts`, so a filled action and a field keep their text and only an unfilled action keeps the cue. The one recipe set still on a whole-control fade is `@gpuixui/tw`'s copyable `button` recipe (`disabled:opacity-50`), kept verbatim from shadcn and **not** what the library's action compiles; the unfilled parts of `core/style.ts` fade because they have no fill to replace. Both pages now say that, and the `COMPONENTS.md` `Contrast contract` row no longer claims the components' `Button` paints the ghost fade through `opacity: disabledOpacity` (the file contains no `opacity` at all). `disabled.test.ts`'s `names the one recipe set still on the fade, not two and a Button` reads the three painters, refuses the retracted sentence and holds the inventory row; `focus-dim.test.ts`'s `states the opt-out as landed in both packages` reads `keepContent` at its sites and refuses the dim's interlock sentence. The same retraction covers §Limitations' "`@gpuixui/tw` `button` recipe the components package compiles against" clause — it is the copyable upstream recipe, not the library's action — held by `docs.test.ts`'s `says the tw recipe is the copyable one, not the library's action`. Directions measured: restoring the fade sentence fails the disabled case by name, restoring the dim sentence fails the focus-dim case by name, restoring "compiles against" fails the docs case, and restored the package suite is green (43 files / 2 464 tests).
 
@@ -911,6 +911,22 @@ Directions measured: reverting the mapper fails both new cases by name
 and a printed `1.82:1` fails the records case. Docs in `docs/tokens.md` §System
 palettes (a third rule), `docs/design-system.md` §11, the package README and the
 `System palettes` inventory row.
+
+`[x]` Watch **every field a system palette offers** — `paletteKey` compared a
+hand-written list of the seven fields, so a field the list forgot would be one a
+reader could change while the poll decided nothing had moved and kept the old
+theme. The list is now `paletteFields` (the order the key reads), and
+`system-theme.test.ts` holds it from both sides: a `Record<keyof SystemPalette,
+readonly [string, string]>` table means a field added to the shape fails
+`check-types` until it is named there, and each of the seven is then driven
+through the watch — a palette differing in that one field alone must apply a
+second theme — with a same-reading tick applying nothing. Directions measured:
+dropping `selection` from `paletteFields` fails `selection re-applies`
+(`expected [ { name: 'Dark', … } ] to have a length of 2`), and dropping its row
+from the table fails the package's type-check (TS2741 naming `selection`).
+`nub run --filter @gpuixui/tokens test`: 43 files / 2 466 tests green;
+`check-types` clean. `docs/tokens.md` §System palettes says every field is
+compared.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

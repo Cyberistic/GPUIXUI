@@ -1031,9 +1031,11 @@ const stop = watchSystemTheme({
 ```
 
 It applies the first read immediately, then re-applies only when the palette it
-read actually changed — a poll that keeps reading the same file calls nothing —
-and an `undefined` read applies the base theme, which is how a deleted system
-theme returns the window to the application's own. `read` is the boundary: decode
+read actually changed — a poll that keeps reading the same file calls nothing,
+and every field the shape offers is compared, so a desktop that moves only its
+border or its selection colour still reaches the window — and an `undefined` read
+applies the base theme, which is how a deleted system theme returns the window to
+the application's own. `read` is the boundary: decode
 the platform's file there, and answer `undefined` rather than throw when it is
 missing or unreadable. A throw is a defect in that boundary, and this seam does
 not hide it.

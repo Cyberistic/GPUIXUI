@@ -259,21 +259,30 @@ export interface WatchSystemThemeOptions {
   readonly timer?: SystemThemeTimer;
 }
 
-/** The palette's values in a fixed order, so a tick that reads the same file is not a change. */
+/**
+ * The palette fields the poll watches, in the fixed order its key reads them.
+ *
+ * A field this list omits is one a reader can change without the window
+ * noticing — the watch compares this key, not the object — so the list is
+ * exhaustive by test: `system-theme.test.ts` builds a `Record<keyof
+ * SystemPalette, string>` table (a new field fails the compile until it is
+ * named there) and proves that changing any one field alone re-applies.
+ */
+const paletteFields = [
+  "background",
+  "foreground",
+  "accent",
+  "muted",
+  "border",
+  "danger",
+  "selection",
+] as const satisfies readonly (keyof SystemPalette)[];
+
+/** The palette's values in the watched order, so a tick that reads the same file is not a change. */
 const paletteKey = (palette: SystemPalette | undefined): string =>
   palette === undefined
     ? ""
-    : [
-        palette.background,
-        palette.foreground,
-        palette.accent,
-        palette.muted,
-        palette.border,
-        palette.danger,
-        palette.selection,
-      ]
-        .map((value) => value ?? "")
-        .join("\u0000");
+    : paletteFields.map((field) => palette[field] ?? "").join("\u0000");
 
 /**
  * Follow a system palette, applying the first read immediately and re-applying
