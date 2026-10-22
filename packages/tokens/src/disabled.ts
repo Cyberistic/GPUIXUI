@@ -18,9 +18,10 @@
  *
  * A fade is also a property of the strip behind it, not of the control: measured
  * on the shipped palettes, a faded filled action keeps the floor on the page and
- * lands at 1.47:1–1.49:1 on a card in the four light styles whose page is lighter
- * than their card. So the fade is a **page** mechanism for a filled action, and
- * {@link disabledAction} is the paint a disabled action wears anywhere else.
+ * lands at 1.47:1–1.49:1 on a card in four of the light styles (Linux, macOS,
+ * Windows XP Luna, Windows 7 Aero). So the fade is a **page** mechanism for a
+ * filled action, and {@link disabledAction} is the paint a disabled action wears
+ * anywhere else.
  */
 
 import { type ThemeColors } from "./color.js";

@@ -1056,11 +1056,10 @@ passes.
 **The fade is a page mechanism.** A fade composites the fill with whatever is
 behind it, so its result belongs to the strip the control sits on rather than to
 the control. Measured, the same faded `primary` label that keeps the floor on the
-page lands at **1.47:1–1.49:1** on a card in the four light styles whose page is
-lighter than their card — Linux, macOS, Windows XP (Luna) and Windows 7 (Aero) —
-so `disabledFadePairs` measures the three filled actions on `background` only. A
-disabled action on a card, a popover or a group strip paints the neutral pair
-instead:
+page lands at **1.47:1–1.49:1** on a card in four of the light styles — Linux,
+macOS, Windows XP (Luna) and Windows 7 (Aero) — so `disabledFadePairs` measures
+the three filled actions on `background` only. A disabled action on a card, a
+popover or a group strip paints the neutral pair instead:
 
 ```ts
 import { disabledAction, type Theme } from "@gpuixui/tokens";
