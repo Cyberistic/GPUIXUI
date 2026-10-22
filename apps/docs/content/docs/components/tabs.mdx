@@ -141,11 +141,16 @@ Only the selected trigger is in the tab order; every other trigger is `-1`.
 
 Selection is **one measured surface**, not a fill per trigger: the rail renders a
 `tabs-indicator` element and every trigger reports its painted box through
-`onLayout`, while a 1×1 `tabs-origin` swatch reports where the rail's absolutely
-positioned children start (the rail's border and padding move that origin, so the
-component cannot assume it). The pill is the selected trigger's box
-re-expressed against that origin, which means a longer label or another font
-carries the pill with it.
+`onLayout`, while a `tabs-origin` probe fills the box the rail's absolute
+children resolve against — its padding box, borders and padding included — and
+reports it again on every paint where that box changes. The pill is the selected
+trigger's box re-expressed against that origin, which means a longer label or
+another font carries the pill with it. Both boxes are **window coordinates**, so
+they have to come from the same paint: a rail the window moved (a resize, a pane
+opening above it) reports its origin again in the round its triggers re-measure,
+so the pill stays on its tab rather than the place the rail used to start at.
+The suite's `follows the rail when the window moves it, not the origin it first
+reported` holds that.
 
 The pill **slides** between triggers: its `left`/`top`/`width`/`height` are a
 motion target (`normal`, 200 ms) retargeted from the box on screen, so a move

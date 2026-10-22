@@ -1418,6 +1418,48 @@ describe("the curated component pages", () => {
     expect(text).toContain(`\`${level}\`, ${duration} ms`);
   });
 
+  it("place the pill from the origin the rail last reported", () => {
+    // The rail's `tabs-origin` probe was a 1×1 swatch in the rail's corner, and
+    // the page taught that as the mechanism. A 1×1 box never changes size, and
+    // the runtime reports only a layout it can see change — so a rail the window
+    // moved never reported its origin again, and a trigger that re-measured was
+    // subtracted from the place the rail used to start (measured: the pill
+    // 120px off its tab). The probe fills the padding box and re-reports it on
+    // every change now, and both boxes have to come from one paint; the page is
+    // held to the probe that exists rather than the swatch it described.
+    const tabs = pages.find((page) => page.file === "tabs.mdx");
+    expect(tabs, "the tabs page is not in the curated set").toBeDefined();
+    if (tabs === undefined) return;
+
+    const source = read(tabs.source);
+    expect(source, "tabs.tsx still draws a 1×1 origin probe").not.toContain(
+      "width: 1,",
+    );
+    expect(source).toContain("right: 0,");
+    expect(source).toContain("bottom: 0,");
+    expect(source).toContain("sameBox(previous, box)");
+
+    expect(read("packages/components/src/tabs/indicator.ts")).toContain(
+      "must come from the same paint",
+    );
+
+    expect(tabs.suite, "the tabs page prints no native suite").toBeDefined();
+    if (tabs.suite === undefined) return;
+    expect(read(tabs.suite)).toContain(
+      "follows the rail when the window moves it, not the origin it first reported",
+    );
+
+    const text = body(tabs).replace(/\s+/g, " ");
+    expect(text, "the tabs page still teaches the 1×1 swatch").not.toContain(
+      "1×1",
+    );
+    expect(text).toContain("padding box");
+    expect(text).toContain("same paint");
+    expect(text).toContain(
+      "follows the rail when the window moves it, not the origin it first reported",
+    );
+  });
+
   it("hold the pill's colour role to the palette that forced it", () => {
     // The page says the pill paints `selected` rather than `card` because
     // `card` equals the rail's `background` in the high-contrast light theme.
