@@ -18,6 +18,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ChatStatus } from "../chat/logic.js";
 import { ChatComposer, ChatMessages, ChatRoot } from "../chat.js";
 import { clickCentreOf, requireBounds } from "../internal/interaction.js";
+import { darkTheme } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -270,6 +271,50 @@ describe("Chat", () => {
     clickCentreOf(root, "chat-error-retry");
     expect(onRetry).toHaveBeenCalledTimes(1);
     expect(onStatusChange).toHaveBeenCalledWith("submitting");
+
+    root.unmount();
+  });
+
+  it("keeps the failed reply visible when the reader is scrolled to the top", () => {
+    const root = renderComponent(
+      <Conversation rows={30} status="error" onRetry={() => undefined} />,
+    );
+    wheel(root, 2000);
+
+    // The failure is laid out between the viewport and the affordance, so a
+    // reader at the top of a long transcript still sees it without scrolling.
+    // Inside the scroller it would sit past the viewport's box, off the window.
+    const error = requireBounds(root, "chat-error");
+    const viewport = requireBounds(root, "chat-messages");
+    const chat = requireBounds(root, "chat");
+    expect(error.y).toBeGreaterThanOrEqual(viewport.y + viewport.height);
+    expect(error.y + error.height).toBeLessThanOrEqual(
+      chat.y + chat.height + 1,
+    );
+
+    root.unmount();
+  });
+
+  it("takes a disabled field out of the tab order and paints the disabled role", () => {
+    const root = renderComponent(
+      <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
+        <ChatRoot onSubmit={() => undefined}>
+          <ChatMessages>
+            <MessageRoot testId="row">
+              <MessageContent>
+                <text>hi</text>
+              </MessageContent>
+            </MessageRoot>
+          </ChatMessages>
+          <ChatComposer testId="composer" disabled />
+        </ChatRoot>
+      </div>,
+    );
+    const field = root.renderer.findByTestId("chat-field");
+    const theme = darkTheme;
+
+    expect(field?.customProps?.tabIndex).toBe(-1);
+    expect(field?.style.color).toBe(theme.colors.disabledForeground);
 
     root.unmount();
   });

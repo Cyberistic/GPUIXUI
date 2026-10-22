@@ -271,23 +271,28 @@ export const ChatMessages = ({
         ) : (
           children
         )}
-        {status !== "error" ? null : (
-          <div style={recipeStyle(CHAT_ERROR, theme)} testId="chat-error">
-            <div
-              style={mergeStyles(recipeStyle(CHAT_ERROR_TEXT, theme), {
-                color: statusTone(theme, "destructive").foreground,
-              })}
-            >
-              <text>{error}</text>
-            </div>
-            {canRetry ? (
-              <Button testId="chat-error-retry" size="sm" onClick={retry}>
-                Retry
-              </Button>
-            ) : null}
-          </div>
-        )}
       </MessageScrollerViewport>
+      {/*
+        The failure is not a row: it sits between the transcript and the
+        affordance so a reader who scrolled up still sees it — a row inside the
+        viewport would be off screen exactly when it matters.
+      */}
+      {status !== "error" ? null : (
+        <div style={recipeStyle(CHAT_ERROR, theme)} testId="chat-error">
+          <div
+            style={mergeStyles(recipeStyle(CHAT_ERROR_TEXT, theme), {
+              color: statusTone(theme, "destructive").foreground,
+            })}
+          >
+            <text>{error}</text>
+          </div>
+          {canRetry ? (
+            <Button testId="chat-error-retry" size="sm" onClick={retry}>
+              Retry
+            </Button>
+          ) : null}
+        </div>
+      )}
       <MessageScrollerJumpToLatest />
     </MessageScroller>
   );
@@ -391,6 +396,10 @@ export const ChatComposer = ({
           value={draft}
           placeholder={placeholder}
           readOnly={disabled}
+          // The host has no `disabled` prop (the primitives' rule): a disabled
+          // field is read-only, out of the tab order, and paints the measured
+          // disabled pair rather than a fade.
+          tabIndex={disabled ? -1 : 0}
           minRows={1}
           maxRows={6}
           onChange={(event) => setDraft(event.value ?? "")}
@@ -402,7 +411,9 @@ export const ChatComposer = ({
             if (busy && canStop && isDismiss(event)) stop();
           }}
           style={mergeStyles(recipeStyle(CHAT_COMPOSER_FIELD, theme), {
-            ...(disabled ? {} : keyboardRing(theme)),
+            ...(disabled
+              ? { color: theme.colors.disabledForeground }
+              : keyboardRing(theme)),
             ...selectionWash(theme),
             minHeight: theme.spacing["2xl"],
           })}

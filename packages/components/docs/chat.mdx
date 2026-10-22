@@ -105,7 +105,7 @@ merges `style` last.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `ChatRoot` | a `role="region"` named by `label` | `status?`, `defaultStatus?`, `onStatusChange?`, `onSubmit` (required), `onStop?`, `onRetry?`, `error?`, `label?`, `className?`, children |
-| `ChatMessages` | the `MessageScroller` viewport, its jump control, the empty panel and the failure row | `empty?`, `emptyTitle?`, `emptyDescription?`, `className?`, children |
+| `ChatMessages` | the `MessageScroller` viewport, the empty panel, the failure row outside the scroller and the jump control | `empty?`, `emptyTitle?`, `emptyDescription?`, `className?`, children |
 | `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?`, `onValueChange?`, `label?`, `placeholder?`, `submitLabel?`, `stopLabel?`, `hint?`, `attachments?`, `disabled?`, `className?`, `style?: StateStyle<ChatComposerState>` |
 
 `onSubmit` is the transport. `status` is controlled when supplied and internal
@@ -117,7 +117,9 @@ act.
 
 `ChatMessages` shows an empty panel while it has no rows (`empty` replaces the
 default copy) and a failure row when the status is `error`, with Retry only when
-`onRetry` is supplied.
+`onRetry` is supplied. The failure row sits **between the scroller and the jump
+control**, not inside it: a reader scrolled up must still see that the reply
+failed.
 
 ## Theming
 
@@ -133,9 +135,9 @@ value is a theme role, so a custom theme repaints the conversation — see
   scroller's named `group` with the same name.
 - The field is named by `label` (`"Message"` by default); Send and Stop are real
   buttons with visible text, so their names need no label prop.
-- The failure row is in the reading order above the composer, and Retry is a
-  button — a keyboard reader reaches it by Tab or by the composer's own focus
-  order.
+- The failure row is in the reading order just above the jump control and the
+  composer, outside the scroller, so it is reachable and visible even when the
+  transcript is scrolled to the top. Retry is a button.
 - New rows are **not announced**: `@gpuix/native@0.11.0` has no `aria-live`, so a
   screen reader is not told that a reply arrived. The status is visible, and the
   consumer's readout (see the example) is the assistive-technology path.
@@ -161,12 +163,13 @@ value is a theme role, so a custom theme repaints the conversation — see
 `src/chat/logic.test.ts` holds the machine with no renderer (12 tests): every
 command from every state, the busy-submit refusal, Stop never emitting a submit,
 and a token that cannot start an idle conversation. `src/behaviour/chat.test.tsx`
-measures the composed parts in the real GPUix renderer (11 tests): the empty panel
-and its replacement, Enter sending and clearing the draft, Shift+Enter adding a
-line without sending, Stop replacing Send and refusing a send, Escape stopping
-the reply and re-enabling Send, the failure row and its Retry, the tail following
-a new row while the composer stays put, and a reader who scrolled up being left
-alone.
+measures the composed parts in the real GPUix renderer (13 tests): the empty
+panel and its replacement, Enter sending and clearing the draft, Shift+Enter
+adding a line without sending, Stop replacing Send and refusing a send, Escape
+stopping the reply and re-enabling Send, the failure row and its Retry (and that
+row staying visible at the top of a long transcript), a disabled field out of the
+tab order in the measured disabled role, the tail following a new row while the
+composer stays put, and a reader who scrolled up being left alone.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
