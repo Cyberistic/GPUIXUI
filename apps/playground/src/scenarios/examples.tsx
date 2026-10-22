@@ -5,8 +5,9 @@
  * A component's behaviour suite proves its parts; nothing proved that the
  * screens a reader copies out of the docs *mount*. `packages/components/examples`
  * is the registry this app is its only consumer of, so the gallery pages through
- * it one screen at a time: mounting 39 screens at once would lay out a very tall
- * tree and leave a screen's timer or `Effect` fiber running behind the next one.
+ * it one screen at a time: mounting every screen at once would lay out a very
+ * tall tree and leave a screen's timer or `Effect` fiber running behind the next
+ * one.
  *
  * Per page, all read from the renderer: the readout names the id, the example's
  * wrapper lays out a height of its own, and the wrapper's subtree carries text —
