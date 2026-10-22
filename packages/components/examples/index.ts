@@ -41,6 +41,7 @@ import { FormExample } from "./form.example.js";
 import { HotkeyRecorderExample } from "./hotkey-recorder.example.js";
 import { InlineEditExample } from "./inline-edit.example.js";
 import { KeyboardShortcutsExample } from "./keyboard-shortcuts.example.js";
+import { LiquidButtonExample } from "./liquid-button.example.js";
 import { ListExample } from "./list.example.js";
 import { MagneticExample } from "./magnetic.example.js";
 import { MentionInputExample } from "./mention-input.example.js";
@@ -99,6 +100,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "hotkey-recorder": HotkeyRecorderExample,
   "inline-edit": InlineEditExample,
   "keyboard-shortcuts": KeyboardShortcutsExample,
+  "liquid-button": LiquidButtonExample,
   list: ListExample,
   magnetic: MagneticExample,
   "mention-input": MentionInputExample,

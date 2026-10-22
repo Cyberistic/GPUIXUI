@@ -274,6 +274,7 @@ duration: `docs/component-api.md` §11.
 | `src/ripple-button.tsx`, `src/ripple-button/logic.ts` | RippleButton: a press spreads a disc from the pointer by growing its box, never a transform (plan 600) |
 | `src/shine-button.tsx`, `src/shine-button/logic.ts` | ShineButton: a sheen of two two-stop halves crossing the action on hover (plan 600) |
 | `src/magnetic.tsx`, `src/magnetic/logic.ts` | Magnetic: a surface whose content leans toward the pointer by inset offset, inside a still hit box (plan 600) |
+| `src/liquid-button.tsx`, `src/liquid-button/logic.ts` | LiquidButton: a wash that floods in from the pointer's edge and drains to the edge it leaves by (plan 600) |
 | `src/splitting-text.tsx`, `src/splitting-text/logic.ts` | SplittingText: a phrase revealed unit by unit, each unit fading and rising (plan 600) |
 | `src/highlight-text.tsx`, `src/highlight-text/logic.ts` | HighlightText: a marker wash swept across a query's matches by the runtime's `highlight` layer (plan 600) |
 | `src/internal/dismiss-layer.ts`, `src/internal/dismiss-scope.tsx` | the overlay stack: the deepest open surface wins, one event closes one overlay; the scope gives each surface its containment depth |

@@ -35,6 +35,7 @@ export * from "./highlight-text.js";
 export * from "./hotkey-recorder.js";
 export * from "./inline-edit.js";
 export * from "./keyboard-shortcuts.js";
+export * from "./liquid-button.js";
 export * from "./list.js";
 export * from "./magnetic.js";
 export * from "./mention-input.js";
