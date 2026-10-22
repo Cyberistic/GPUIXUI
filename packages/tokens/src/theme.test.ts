@@ -1,8 +1,9 @@
 /**
  * Guards the extension contract: overrides merge without mutating the base,
- * typography merges field by field, elevation replaces whole levels, a theme can
- * never change its mode through an override, and `createTheme` starts from the
- * contrast variant the caller asked for — every group's `undefined` inherits
+ * typography merges field by field, elevation replaces whole levels, a density
+ * override merges each control size rather than replacing the record, a theme
+ * can never change its mode through an override, and `createTheme` starts from
+ * the contrast variant the caller asked for — every group's `undefined` inherits
  * rather than erasing a role.
  */
 import { describe, expect, it } from "vitest";
@@ -19,6 +20,7 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   highContrastThemes,
+  invalidNumbers,
   lightTheme,
   themes,
 } from "./index.js";
@@ -143,6 +145,67 @@ describe("extendTheme", () => {
     expect(custom.density.controlHeight.md).toBe(
       densityPresets.comfortable.controlHeight.md,
     );
+  });
+
+  /**
+   * A size is a step in a record, and the documented override names one size
+   * (`invalidNumbers`' own example raises `controlHeight.sm`). The merge used
+   * to overlay the record whole, so a brand that changed one size erased the
+   * two it did not name — and the audit gate refuses a theme missing a step,
+   * which turned the documented snippet into a thrown audit.
+   */
+  describe("a partial density override", () => {
+    it("merges the control sizes it does not name", () => {
+      const custom = extendTheme(lightTheme, {
+        density: { controlHeight: { sm: 20 } },
+      });
+      expect(custom.density.controlHeight).toEqual({ sm: 20, md: 32, lg: 36 });
+      expect(custom.density.controlPaddingX).toEqual(
+        densityPresets.comfortable.controlPaddingX,
+      );
+      expect(custom.density.name).toBe("comfortable");
+    });
+
+    it("merges the padding sizes it does not name", () => {
+      const custom = extendTheme(lightTheme, {
+        density: { controlPaddingX: { md: 20 } },
+      });
+      expect(custom.density.controlPaddingX).toEqual({ sm: 8, md: 20, lg: 12 });
+      expect(custom.density.controlHeight).toEqual(
+        densityPresets.comfortable.controlHeight,
+      );
+    });
+
+    it("reports the size a brand shrank, not the sizes it inherited", () => {
+      const custom = extendTheme(lightTheme, {
+        density: { controlHeight: { sm: 20 } },
+      });
+      expect(invalidNumbers(custom)).toEqual([
+        {
+          group: "density",
+          path: "controlHeight.sm",
+          value: 20,
+          rule: "pressable",
+        },
+      ]);
+    });
+
+    it("raises one size without restating the others", () => {
+      const custom = extendTheme(lightTheme, {
+        density: { controlHeight: { md: 34 } },
+      });
+      expect(custom.density.controlHeight).toEqual({ sm: 28, md: 34, lg: 36 });
+      expect(auditTheme(custom).passed).toBe(true);
+    });
+
+    it("inherits a size an override forwards as undefined", () => {
+      const custom = extendTheme(lightTheme, {
+        density: { controlHeight: { sm: undefined } },
+      });
+      expect(custom.density.controlHeight).toEqual(
+        densityPresets.comfortable.controlHeight,
+      );
+    });
   });
 
   it("does not mutate the base theme", () => {

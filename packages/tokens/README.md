@@ -98,8 +98,9 @@ scrim; `elevation.overlay` is a reserved, empty level that lifts nothing.
 `contrast` (default contrast when it is not named); `extendTheme` derives from
 any theme. Neither mutates its base. Groups merge key by key — a key written as
 `undefined` inherits instead of erasing a role the group must carry. Typography
-merges field by field, elevation levels replace whole arrays, and the mode is not
-overridable.
+merges field by field, elevation levels replace whole arrays, a `density`
+override merges each control size so raising `md` keeps `sm` and `lg`, and the
+mode is not overridable.
 
 A brand that changes a fill owns its **on-colour** too, per mode. Dark themes
 pair a light fill with dark text, so the brand's dark fill is a light violet with

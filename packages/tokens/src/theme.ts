@@ -26,6 +26,7 @@ import {
   radius,
   spacing,
   type BorderWidth,
+  type ControlSize,
   type Density,
   type DensityName,
   type IconSize,
@@ -129,6 +130,20 @@ export interface TypographyOverrides {
 }
 
 /**
+ * Density metrics a brand may override. Every control size is optional and the
+ * sizes an override does not name inherit from the base preset, so raising one
+ * size cannot drop the steps the audit gate requires.
+ */
+export interface DensityOverrides {
+  /** Control and input height per size; an omitted size inherits. */
+  readonly controlHeight?: Partial<Record<ControlSize, number>>;
+  /** Horizontal control padding per size; an omitted size inherits. */
+  readonly controlPaddingX?: Partial<Record<ControlSize, number>>;
+  /** Table, list, menu and tree row height. */
+  readonly rowHeight?: number;
+}
+
+/**
  * A partial theme. Every group is optional; omitted groups inherit from the
  * base theme. Elevation arrays replace rather than concatenate.
  */
@@ -145,9 +160,10 @@ export interface ThemeOverrides {
   readonly radius?: Partial<Radius>;
   /**
    * Use a density preset, or override density metrics. A partial override
-   * keeps the base preset's name.
+   * keeps the base preset's name and merges each control size, so a brand that
+   * raises one size inherits the others.
    */
-  readonly density?: DensityName | Partial<Omit<Density, "name">>;
+  readonly density?: DensityName | DensityOverrides;
   /** Replace individual elevation levels. */
   readonly elevation?: Partial<Elevation>;
   /** Override border thicknesses. */
@@ -212,14 +228,20 @@ const mergeTypography = (
 
 const mergeDensity = (
   base: Density,
-  override: DensityName | Partial<Omit<Density, "name">> | undefined,
+  override: DensityName | DensityOverrides | undefined,
 ): Density => {
   if (override === undefined) {
     return base;
   }
-  return typeof override === "string"
-    ? densityPresets[override]
-    : { ...overlay(base, override), name: base.name };
+  if (typeof override === "string") {
+    return densityPresets[override];
+  }
+  return {
+    name: base.name,
+    controlHeight: overlay(base.controlHeight, override.controlHeight),
+    controlPaddingX: overlay(base.controlPaddingX, override.controlPaddingX),
+    rowHeight: override.rowHeight ?? base.rowHeight,
+  };
 };
 
 /** The default light theme. */

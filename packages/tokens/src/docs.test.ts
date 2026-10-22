@@ -497,3 +497,45 @@ describe("the variant default the reports share", () => {
     );
   });
 });
+
+/**
+ * Guards the density override the pages teach against the merge the package
+ * runs. `ThemeOverrides.density` takes a partial `controlHeight`, and the
+ * documented brand raises one size (`invalidNumbers`' own example is
+ * `{ controlHeight: { sm: 20 } }`), so the merge has to keep the sizes the
+ * override does not name. It used to overlay the record whole: the two unnamed
+ * sizes vanished, the audit gate refused the theme for a missing step, and the
+ * snippet a reader copied produced a thrown audit instead of one report.
+ */
+describe("the density override the pages teach", () => {
+  const themeSource = read("./theme.ts");
+  const pages = [
+    { name: "docs/tokens.md", body: catalogue },
+    { name: "docs/design-system.md", body: designSystem },
+    { name: "README.md", body: readme },
+  ] as const;
+
+  it("merges each control size instead of replacing the record", () => {
+    expect(themeSource).toContain(
+      "controlHeight: overlay(base.controlHeight, override.controlHeight)",
+    );
+    expect(themeSource).toContain(
+      "controlPaddingX: overlay(base.controlPaddingX, override.controlPaddingX)",
+    );
+  });
+
+  it("says a size merges on every page that documents the override", () => {
+    const silent = pages.flatMap(({ name, body }) => {
+      const flat = body.replace(/\s+/g, " ");
+      return flat.includes("size by size") ||
+        flat.includes("merges each control size")
+        ? []
+        : [name];
+    });
+    expect(silent).toEqual([]);
+  });
+
+  it("names the override type the catalogue points a brand at", () => {
+    expect(catalogue).toContain("`DensityOverrides`");
+  });
+});

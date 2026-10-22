@@ -893,9 +893,11 @@ The extension mechanism is deliberately small:
   …), so a settings row or a docs toggle iterates the axis and a restored value
   narrows without a cast.
 
-Overrides merge by group; typography merges field by field; elevation levels are
-replaced as whole arrays; the mode is immutable. Nothing mutates the base, so a
-theme can be created once at startup and shared.
+Overrides merge by group; typography merges field by field; a density preset's
+`controlHeight` and `controlPaddingX` merge size by size, so a brand that raises
+one size keeps the others; elevation levels are replaced as whole arrays; the
+mode is immutable. Nothing mutates the base, so a theme can be created once at
+startup and shared.
 
 A brand may change any value but should not remove roles: every component
 expects the full role set. A theme restored from storage can still be missing a

@@ -2218,6 +2218,20 @@ A platform style picks the preset its native controls sit at — macOS `compact`
 Windows `comfortable`, Linux `spacious` — so `platformTheme` carries a density
 too. Layer `extendTheme` to change it without losing the platform's look.
 
+A brand can change one size without restating the preset. `DensityOverrides`
+takes a partial `controlHeight` and `controlPaddingX`, and `extendTheme` merges
+them size by size, so the recorded metrics stay complete — a record a brand
+changes one step of must not lose the steps the audit requires:
+
+```ts
+import { extendTheme, lightTheme } from "@gpuixui/tokens";
+
+// md becomes 34px; sm stays 28 and lg stays 36.
+export const roomier = extendTheme(lightTheme, {
+  density: { controlHeight: { md: 34 } },
+});
+```
+
 `densityPresets` holds all three presets and `defaultDensity` is
 `densityPresets.comfortable`, the preset the built-in themes carry.
 
@@ -2713,8 +2727,10 @@ Merge rules:
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight;
 - elevation levels **replace** the whole shadow array;
-- `density` accepts a preset name or partial metrics; a partial override keeps
-  the base preset name;
+- `density` accepts a preset name or `DensityOverrides`; a partial override keeps
+  the base preset name and merges `controlHeight` and `controlPaddingX` size by
+  size, so raising one size inherits the rest rather than dropping the steps the
+  audit gate requires;
 - `mode` is not overridable — `extendTheme` keeps the base mode;
 - nothing is mutated. The returned theme may share untouched token objects. The
   contract is no mutation, not deep cloning.
