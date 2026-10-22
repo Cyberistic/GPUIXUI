@@ -8,15 +8,15 @@
  *
  * The values a caller builds a timeline from are repaired before they reach the
  * formulas: a frame whose offset or value cannot be read is not a stop, a step
- * whose timing cannot be read is placed at the start with no duration, and a
- * step that cannot be read is no wait. A `NaN` anywhere used to paint a frame
- * the runtime draws as nothing and leave `Sequence.complete` false forever.
+ * whose timing cannot be read is placed at the start with no duration, a step
+ * that cannot be read is no wait, and a curve that cannot read the frame it is
+ * handed falls back to the linear progress (`eased` in `progress.ts`). A `NaN`
+ * anywhere used to paint a frame the runtime draws as nothing and leave
+ * `Sequence.complete` false forever.
  */
 
 import { linear, type Easing } from "./easing.js";
-
-const clamp01 = (value: number): number =>
-  value < 0 ? 0 : value > 1 ? 1 : value;
+import { clamp01, eased } from "./progress.js";
 
 /** A number a formula can read, or the fallback it stands for. */
 const finiteOr = (value: number, fallback: number): number =>
@@ -45,10 +45,11 @@ const stopsOf = (frames: readonly Keyframe[]): ReadonlyArray<Keyframe> =>
 /**
  * Samples sorted keyframes at unit progress, interpolating between the
  * surrounding keyframes and applying the upper keyframe's easing. Frames must be
- * sorted ascending by `at`. A progress that is not a number reads as `0`, and a
+ * sorted ascending by `at`. A progress that is not a number reads as `0`, a
  * frame whose offset or value cannot be read is dropped rather than becoming the
  * segment's endpoint — an unreadable stop would make every value between it and
- * its neighbour `NaN`, which the runtime paints as nothing.
+ * its neighbour `NaN`, which the runtime paints as nothing — and a curve that
+ * cannot read the segment falls back to its linear progress.
  */
 export const sampleKeyframes = (
   frames: readonly Keyframe[],
@@ -56,7 +57,7 @@ export const sampleKeyframes = (
 ): number => {
   const stops = stopsOf(frames);
   if (stops.length === 0) return 0;
-  const t = clamp01(Number.isNaN(progress) ? 0 : progress);
+  const t = clamp01(progress);
   const first = stops[0];
   const last = stops[stops.length - 1];
   if (first === undefined || last === undefined) return 0;
@@ -71,7 +72,7 @@ export const sampleKeyframes = (
   }
   const local = (t - lo.at) / (hi.at - lo.at);
   const easing = hi.easing ?? linear;
-  return lo.value + (hi.value - lo.value) * easing(clamp01(local));
+  return lo.value + (hi.value - lo.value) * eased(easing, local);
 };
 
 /** Where a stagger group starts. */
@@ -186,7 +187,7 @@ export class Sequence<K> {
       return {
         key: step.key,
         state: "active",
-        value: step.easing(local / step.durationMs),
+        value: eased(step.easing, local / step.durationMs),
       };
     });
   }

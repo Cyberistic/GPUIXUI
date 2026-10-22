@@ -121,6 +121,14 @@ or value cannot be read is not a stop (it is dropped, and a set with none answer
 with no duration, so it is completed on the first sample and the sequence's own
 end stays a number, and a stagger step that is non-finite or negative is no wait.
 
+An easing curve is the caller's own function, so it gets the same rule. The
+shipped curves read a progress they cannot read as the start of the run (`NaN`
+passed both clamp comparisons, so every curve answered `NaN`), and the three
+samplers that apply a caller's curve — `MotionValue`'s tween, `sampleKeyframes`
+and `Sequence.sample` — fall back to the linear progress when the curve answers a
+value that cannot be painted, because a frame a curve cannot read is not a curve.
+The run keeps its start, its end and its completion edge either way.
+
 ## The runtime's declarative timing
 
 GPUix executes a tween over a duration and an easing it is told. That timing is

@@ -132,6 +132,27 @@ describe("MotionValue", () => {
     value.animate(1, tween(200, linear));
     expect(value.sample(150).value).toBeCloseTo(0.75, 5);
   });
+
+  it("paints no NaN for a curve that cannot read the frame", () => {
+    // `Easing` is a caller's function, so a curve can answer `NaN`. The value
+    // used to take it straight into the frame — every sample of the run was
+    // `NaN`, which the runtime paints as a null inset, so the surface vanished
+    // for the whole journey. An unreadable frame is not a curve: the run falls
+    // back to its own linear progress and still lands on the target.
+    const value = new MotionValue(0);
+    value.animate(
+      1,
+      tween(100, () => Number.NaN),
+    );
+
+    const middle = value.sample(50);
+    expect(Number.isFinite(middle.value)).toBe(true);
+    expect(middle.value).toBeCloseTo(0.5, 5);
+
+    const done = value.sample(100);
+    expect(done.value).toBe(1);
+    expect(done.complete).toBe(true);
+  });
 });
 
 describe("transitionEquals", () => {

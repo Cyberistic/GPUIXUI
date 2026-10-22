@@ -9,7 +9,7 @@
  * `NaN` there painted nothing and left a driver sampling forever.
  */
 import { describe, expect, it } from "vitest";
-import { easeOut } from "./easing.js";
+import { easeOut, type Easing } from "./easing.js";
 import { Sequence, keyframe, sampleKeyframes, stagger } from "./timeline.js";
 
 describe("sampleKeyframes", () => {
@@ -161,5 +161,19 @@ describe("a timeline built by hand", () => {
     expect(sequence.sample(50).map((step) => step.value)).toEqual([0.5, 0.5]);
     expect(sequence.duration()).toBe(100);
     expect(sequence.complete(100)).toBe(true);
+  });
+
+  it("applies only a curve that can read the frame", () => {
+    // A frame's easing is the caller's function, so it can answer `NaN`. Both
+    // samplers used to take it straight into the value, so a timeline with one
+    // such curve painted `NaN` for the whole segment.
+    const broken: Easing = () => Number.NaN;
+    const frames = [keyframe(0, 0), keyframe(1, 100, broken)];
+    expect(sampleKeyframes(frames, 0.5)).toBeCloseTo(50, 5);
+
+    const sequence = new Sequence<string>().at("a", 0, 100, broken);
+    expect(sequence.sample(50)).toEqual([
+      { key: "a", state: "active", value: 0.5 },
+    ]);
   });
 });

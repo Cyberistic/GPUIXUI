@@ -83,4 +83,26 @@ describe("easing", () => {
     const fallback = bezier(Number.NaN, 0, 1, 1);
     expect(fallback(0.5)).toBe(0.5);
   });
+
+  it("reads a progress it cannot read as the start of the run", () => {
+    // Every curve promises a value over `t` clamped to `[0, 1]`, and the
+    // package's totality rule is that a number a formula cannot read is
+    // replaced before it arrives. `clamp01` let `NaN` through, so a presenter
+    // whose progress read failed got `NaN` from every curve — a value the
+    // runtime paints as nothing.
+    const curves: readonly [string, Easing][] = [
+      ...monotonic,
+      ["backIn", backIn],
+      ["backOut", backOut],
+      ["backInOut", backInOut],
+      ["anticipate", anticipate],
+      ["bezier", bezier(0.4, 0, 0.2, 1)],
+    ];
+    curves.forEach(([name, easing]) => {
+      expect(easing(Number.NaN), name).toBeCloseTo(0, 5);
+      [Number.NEGATIVE_INFINITY, -1, 0, 0.5, 1, 2, Number.POSITIVE_INFINITY]
+        .map(easing)
+        .forEach((value) => expect(Number.isFinite(value), name).toBe(true));
+    });
+  });
 });

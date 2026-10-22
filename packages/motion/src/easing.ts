@@ -1,17 +1,18 @@
 /**
  * Easing curves for duration-based transitions.
  *
- * Every curve is a pure `(t: number) => number` over `t` clamped to `[0, 1]`.
+ * Every curve is a pure `(t: number) => number` over `t` clamped to `[0, 1]`,
+ * and a progress it cannot read is the start of the run (`clamp01` in
+ * `progress.ts`), so a failed reading paints the first frame instead of `NaN`.
  * The cubic / circular / back / anticipate curves follow `gpui-ce-motion`'s
  * `Easing` (MIT OR Apache-2.0); `bezier` is a monotonic-time cubic Bezier with
  * the same control convention (`x` in `[0, 1]`, `y` may overshoot).
  */
 
+import { clamp01 } from "./progress.js";
+
 /** A unit-progress easing curve. */
 export type Easing = (t: number) => number;
-
-const clamp01 = (value: number): number =>
-  value < 0 ? 0 : value > 1 ? 1 : value;
 
 /** Constant-speed interpolation. */
 export const linear: Easing = (t) => clamp01(t);
