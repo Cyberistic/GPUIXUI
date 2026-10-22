@@ -101,16 +101,23 @@ export const useSurfaceTiming = (level: MotionLevel): SurfaceTiming => {
   };
 };
 
+/** A timing field in milliseconds, with a value that cannot be read as none. */
+const milliseconds = (seconds: number | undefined): number =>
+  seconds !== undefined && Number.isFinite(seconds) ? seconds * 1000 : 0;
+
 /**
  * The window a run occupies, in whole milliseconds.
  *
  * `motionTiming` names a duration in seconds because the runtime reads seconds;
  * every component that keeps a box painted for the length of a journey converts
  * through here, so a preference change rescales the window with the tween it
- * belongs to. A run with no duration is no window at all.
+ * belongs to. The wait a delayed run sits out first is part of its window — the
+ * runtime holds the first frame for it — so a window that counted only the
+ * duration would unmount a feedback layer before its journey began. A run with
+ * no duration and no wait is no window at all.
  */
 export const transitionWindowMs = (timing: MotionTransition): number =>
-  Math.round((timing.duration ?? 0) * 1000);
+  Math.round(milliseconds(timing.duration) + milliseconds(timing.delay));
 
 /**
  * The mount window a leaving surface occupies, in whole milliseconds.
