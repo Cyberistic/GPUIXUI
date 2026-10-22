@@ -98,7 +98,7 @@ export const BADGE_VARIANTS = {
   danger:
     "bg-destructiveSoft text-destructiveSoftForeground border border-destructive/30",
   info: "bg-infoSoft text-infoSoftForeground border border-info/30",
-  outline: "text-muted-foreground border border-input",
+  outline: "text-muted-foreground border border-strong",
 } as const;
 
 /** `alert.tsx` — the surface and its four tones. */

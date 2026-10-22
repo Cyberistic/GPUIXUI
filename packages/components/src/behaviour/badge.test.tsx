@@ -10,9 +10,19 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import {
+  contrastFloorsFor,
+  contrastRatio,
+  decorativeFloor,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { Badge, type BadgeSize, type BadgeVariant } from "../badge.js";
-import { sizeOf } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  hoverCentreOf,
+  sizeOf,
+} from "../internal/interaction.js";
+import { List, ListItem, ListItemTitle } from "../list.js";
 import { darkTheme, lightTheme, tone, type Theme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -73,7 +83,7 @@ describe("Badge", () => {
     expect(styleOf(outline)).toMatchObject({
       color: darkTheme.colors.mutedForeground,
       borderWidth: darkTheme.borderWidth.thin,
-      borderColor: darkTheme.colors.border,
+      borderColor: darkTheme.colors.borderStrong,
     });
     outline.unmount();
   });
@@ -158,5 +168,71 @@ describe("Badge", () => {
 
       badge.unmount();
     });
+  });
+
+  it("draws an outline badge's edge on the wash its row wears", () => {
+    // The bug this guards: `outline` drew its edge in the decorative `border`
+    // role, which on a row's own `accent`/`selected` wash is the wash itself
+    // (~1.00:1) — a badge with a boundary at rest and none the moment its row
+    // was hovered or chosen. The list's `trailing` slot is where a status badge
+    // lives, so the boundary is the whole pill there.
+    Arr.forEach(
+      [
+        ["dark", darkTheme],
+        ["light", lightTheme],
+      ] as const,
+      ([mode, theme]) => {
+        const page = renderComponent(
+          <List testId="list" selectionMode="single">
+            <ListItem
+              testId="row"
+              value="beta"
+              trailing={
+                <Badge testId="badge" variant="outline">
+                  Beta
+                </Badge>
+              }
+            >
+              <ListItemTitle>Beta</ListItemTitle>
+            </ListItem>
+          </List>,
+          mode,
+        );
+
+        try {
+          const edge = String(
+            page.renderer.findByTestId("badge")?.style.borderColor,
+          );
+
+          // The two washes the row wears, read from the painter: the hover tint
+          // it declares and the fill it paints once chosen.
+          hoverCentreOf(page, "row");
+          expect(page.renderer.findByTestId("row")?.style.hover).toMatchObject({
+            backgroundColor: theme.colors.accent,
+          });
+          clickCentreOf(page, "row");
+          expect(page.renderer.findByTestId("row")?.style).toMatchObject({
+            backgroundColor: theme.colors.selected,
+          });
+
+          expect(edge).toBe(theme.colors.borderStrong);
+
+          Arr.forEach([theme.colors.accent, theme.colors.selected], (fill) => {
+            // The edge the badge paints clears the boundary floor on the strips
+            // its row can wear.
+            expect(contrastRatio(edge, fill) ?? 0).toBeGreaterThanOrEqual(
+              contrastFloorsFor(theme).boundary,
+            );
+            // And the role it used to paint is the premise: under even the
+            // perceptibility floor, so the pair cannot quietly return.
+            expect(contrastRatio(theme.colors.border, fill) ?? 1).toBeLessThan(
+              decorativeFloor,
+            );
+          });
+        } finally {
+          page.unmount();
+        }
+      },
+    );
   });
 });

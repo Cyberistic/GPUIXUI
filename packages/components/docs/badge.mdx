@@ -32,7 +32,7 @@ do want that.
 | `warning` | soft `warning` tint | tone text | tone tint |
 | `danger` | soft `destructive` tint | tone text | tone tint |
 | `info` | soft `accent` tint | tone text | tone tint |
-| `outline` | none | `mutedForeground` | `border` |
+| `outline` | none | `mutedForeground` | `borderStrong` |
 
 The four status variants draw from one palette shared with `Alert` and the toast
 viewport (`src/internal/theme.ts`), so statuses cannot drift apart between
@@ -79,6 +79,14 @@ Every colour is a semantic role (`colors.muted`, `colors.primary`, `colors.borde
 `colors.accent`, …) and every size comes from `typography`, `spacing` and `radius`
 — there are no literal colours or heights in the component. See `docs/tokens.md`.
 
+**The outline variant's edge is the boundary role, not the decorative one.**
+`outline` is the variant with nothing but its edge, and a badge is the component
+the list's `trailing` slot holds — so the edge is drawn on whatever wash the row
+is wearing. `colors.border` is the divider role: on the row's `accent` hover wash
+it measures ~1.00:1 in the shipped light and dark themes, so the pill had a
+boundary at rest and none under the pointer. It paints `borderStrong`, which
+`contrastPairs` holds to 3:1 on the page, a card and the row's washes.
+
 ## Limitations
 
 - No dismiss, no icon slot and no count animation. A badge that needs a close
@@ -88,12 +96,14 @@ Every colour is a semantic role (`colors.muted`, `colors.primary`, `colors.borde
 
 ## Verification
 
-`src/behaviour/badge.test.tsx` runs in the real GPUix renderer (7 tests): the
+`src/behaviour/badge.test.tsx` runs in the real GPUix renderer (8 tests): the
 label renders as text, each non-status variant paints from its own theme role,
 each status variant paints from the shared tone palette, a status fill changes
 with the theme (so it cannot be a constant), each size's measured height matches
-its type role plus padding, every variant is pill-rounded, and a consumer `style`
-wins.
+its type role plus padding, every variant is pill-rounded, a consumer `style`
+wins, and an outline badge's edge clears the boundary floor on the hover and
+selected washes of the row it sits in — with the decorative role's ~1.00:1
+measured as the premise.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

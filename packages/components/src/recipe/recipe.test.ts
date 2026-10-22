@@ -343,7 +343,7 @@ describe("Badge recipe", () => {
     expect(style(cn(BADGE_VARIANTS.outline))).toMatchObject({
       color: darkTheme.colors.mutedForeground,
       borderWidth: 1,
-      borderColor: darkTheme.colors.border,
+      borderColor: darkTheme.colors.borderStrong,
     });
     expect(style(cn(BADGE_VARIANTS.success))).toMatchObject({
       backgroundColor: darkTheme.colors.successSoft,
