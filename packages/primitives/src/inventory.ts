@@ -453,7 +453,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No aria-valuenow/min/max, so the range is not announced",
+      "No aria-valuenow/min/max: the value is announced as aria-valuetext",
       "A composed part cannot answer a press",
       "The thumb cannot rotate or scale: the runtime has no transform",
     ],
@@ -471,7 +471,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No aria-valuenow/min/max, so the range is not announced",
+      "No aria-valuenow/min/max: each thumb announces its value as aria-valuetext",
       "A composed part cannot answer a press",
       "The thumb cannot rotate or scale: the runtime has no transform",
     ],
@@ -489,7 +489,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No aria-valuenow/min/max",
+      "No aria-valuenow/min/max: the measurement is announced as aria-valuetext",
       "No threshold segments, tick marks or a part inside the track",
       "The fill does not animate between values",
     ],

@@ -67,6 +67,63 @@ const duplicates = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
 const rowFor = (meta: PrimitiveMeta): Option.Option<Row> =>
   Arr.findFirst(tier1Rows(), (row) => row.name === meta.name);
 
+/**
+ * The value controls whose measurement is announced through `aria-valuetext`,
+ * and the source that declares it.
+ *
+ * `@gpuix/native` 0.11.0 has no `aria-valuenow`/`min`/`max`, which is a real
+ * gap — but it is not the same as "not announced", and three rows said exactly
+ * that while each control declared `aria-valuetext` and the window suite read
+ * the announced value back. A consumer reading the inventory has to know which
+ * half is missing.
+ */
+const ANNOUNCED_VALUES: ReadonlyArray<{
+  readonly name: string;
+  readonly source: string;
+}> = [
+  { name: "Slider", source: "src/components/Slider.tsx" },
+  { name: "Range slider", source: "src/components/Slider.tsx" },
+  { name: "Meter", source: "src/components/Meter.tsx" },
+];
+
+/** Problems with one document's sentence about an announced value. */
+const claimProblems = (name: string, text: string): ReadonlyArray<string> => [
+  ...(text.includes("aria-valuetext")
+    ? []
+    : [`${name}: does not name aria-valuetext as the announced channel`]),
+  ...(text.includes("not announced")
+    ? [`${name}: says the value is not announced`]
+    : []),
+];
+
+const sourceOf = (relative: string): string =>
+  readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8");
+
+/** Every problem with one value control's record, row and source. */
+const announceProblems = ({
+  name,
+  source,
+}: {
+  readonly name: string;
+  readonly source: string;
+}): ReadonlyArray<string> =>
+  Option.match(
+    Arr.findFirst(inventory, (meta) => meta.name === name),
+    {
+      onNone: () => [`${name}: no record`],
+      onSome: (meta) => [
+        ...(sourceOf(source).includes("aria-valuetext={")
+          ? []
+          : [`${name}: ${source} declares no aria-valuetext`]),
+        ...claimProblems(name, meta.limitations.join(" ")),
+        ...Option.match(rowFor(meta), {
+          onNone: () => [`${name}: no COMPONENTS.md row`],
+          onSome: (row) => claimProblems(name, row.notes),
+        }),
+      ],
+    },
+  );
+
 describe("Tier 1 inventory", () => {
   it("names files that exist", () => {
     const problems = Arr.flatMap(inventory, (meta) =>
@@ -84,6 +141,17 @@ describe("Tier 1 inventory", () => {
       Arr.filter(inventory, (meta) => meta.status === "done"),
       (meta) => meta.tests.length === 0,
     ).map((meta) => `${meta.name}: done without a test`);
+
+    expect(problems).toEqual([]);
+  });
+
+  it("names the channel a value control announces on", () => {
+    // The bug guarded: the Slider, Range slider and Meter rows said "No
+    // aria-valuenow/min/max, so the range is not announced" while each control
+    // declares `aria-valuetext` and the window suite reads the announced value
+    // back (`announced(runtime, "Volume")`). The bounds are what the runtime
+    // cannot carry; the value is measured. A consumer had to know which half.
+    const problems = Arr.flatMap(ANNOUNCED_VALUES, announceProblems);
 
     expect(problems).toEqual([]);
   });
