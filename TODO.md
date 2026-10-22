@@ -6046,6 +6046,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `table/table.tsx: aria-disabled`, and cutting the consequence from the docs
     fails the second case by name. Package suite 131/131, behaviour 68/68,
     `check-types` clean.
+  - [x] Make an **empty `any` group say what it does** — `describeTree` answered
+    `everything` for both empty combinators, but `matchesTree` keeps every row
+    for an empty `all` and **none** for an empty `any` (there is no alternative
+    to satisfy): a builder over a saved query showed a sentence claiming the
+    filter kept the whole set while the table painted nothing. The sentence now
+    reads `nothing` for the empty `any`, and one case pins the words against the
+    rows (`23 unit cases` in `src/surfaces/logic.test.ts`). Direction measured:
+    the old sentence fails that case with `expected 'everything' to be
+    'nothing'`. `packages/data/docs/advanced-filter.mdx`,
+    `docs/key-value.mdx` and the Advanced filtering row state the rule.
   - [x] Register the data package on the site — `@gpuixui/data` shipped its table
     and virtual-list examples with no docs surface, so three site guards failed
     and one page lied. `examples.ts` gained a **lane home**: a package with no

@@ -57,7 +57,10 @@ A comparison is `equals`, `notEquals`, `contains`, `greaterThan` or
 stores as a number and a clause the reader types as text still compare; a text
 that is not a number never satisfies an order.
 
-An empty `all` matches **everything** — which is what an empty builder means.
+An empty `all` matches **everything** — which is what an empty builder means. An
+empty `any` matches **nothing**, because it has no alternative to satisfy, and
+`describeTree` reads the two differently (`everything` / `nothing`) so the
+sentence a builder shows agrees with the rows it keeps.
 
 ## API
 
@@ -121,10 +124,12 @@ runtime paints no menu of its own.
 
 ## Verification
 
-`src/surfaces/logic.test.ts` (22 tests) holds the tree: every comparison, the
-three combinators, an empty tree matching everything, an edit that keeps the
-clauses the reader did not touch, a removal that removes the right sibling, and
-a `not` that cannot be left empty.
+`src/surfaces/logic.test.ts` (23 tests) holds the tree: every comparison, the
+three combinators, an empty `all` matching everything against an empty `any`
+matching nothing (both the sentence a builder shows and the rows the tree
+keeps), an edit
+that keeps the clauses the reader did not touch, a removal that removes the
+right sibling, and a `not` that cannot be left empty.
 
 `src/behaviour/surfaces.test.tsx` runs in the real GPUix renderer: adding a
 clause and typing a value narrows the painted rows to the ones the tree

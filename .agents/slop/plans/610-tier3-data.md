@@ -269,7 +269,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   so a builder, a saved query and a table's filter read one shape. The runtime
   forces the rest: there is no menu host (the pickers are the component
   package's measured `DropdownMenu`), no canvas and no transform, and a label
-  column is a measurement rather than a token. 22 unit cases hold the tree and
+  column is a measurement rather than a token. 23 unit cases hold the tree and
   5 native behaviour cases mount the shipped example: the label column's fixed
   width and the value column's shared `x`, a width action moving the card's
   reading in the same frame (9600 → 19200), a panel edit reaching the readout,
@@ -298,6 +298,14 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   the seven measured attributes, holds the docs and re-reads the capability
   record. Directions measured: restoring the attribute fails the sweep naming
   `table/table.tsx: aria-disabled`. 131 unit / 68 behaviour green.
+- **An empty `any` group stopped claiming it kept everything**: `describeTree`
+  answered `everything` for both empty combinators, while `matchesTree` keeps
+  every row for an empty `all` and **none** for an empty `any` (no alternative
+  to satisfy). The sentence a builder shows now reads `nothing` for the empty
+  `any`, and the evaluation case beside it proves the rows agree with the words.
+  Direction measured: the old sentence fails `reads an empty any group as
+  nothing, because that is what it keeps` with `expected 'everything' to be
+  'nothing'`. 132 unit / 68 behaviour green.
 
 ## 5. Acceptance
 

@@ -199,7 +199,9 @@ export const describeTree = (tree: FilterTree): string =>
     ),
     Match.when(isAny, (group) =>
       group.children.length === 0
-        ? "everything"
+        ? // No alternative to satisfy, so no row matches — the sentence a
+          // builder shows has to agree with the rows the tree keeps.
+          "nothing"
         : `any of (${Arr.map(group.children, describeTree).join(", ")})`,
     ),
     Match.when(isNot, (group) => `not (${describeTree(group.child)})`),
