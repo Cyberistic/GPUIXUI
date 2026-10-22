@@ -556,14 +556,14 @@ auditTheme(brand).passed; // measured on the plot, against itself and for every 
 
 The array replaces the shipped table whole, like an elevation level: the five
 positions are an order the chart and its legend both read, so a partial array is
-not a merge. A **look** owns its scale the same way, in the `PlatformStyle`
-shape: `retroStyles.luna.series.light` is the table that look paints its charts
-in, `applyStyle` hands it to a base theme under the rule its palette follows (a
-high-contrast base keeps its own scale), and a mode a look does not name — and
-every style that declares none, which is every platform style and `aero` —
-resolves the base theme's table. The authored looks' reason is measured in
-[Authored looks](#authored-looks). A runnable example builds a legend and an
-audit; see
+not a merge. A **look** owns one the same way, in the `PlatformStyle` shape: a
+style may declare `series` per mode, `applyStyle` hands it to the base theme
+under the rule its palette follows (a high-contrast base keeps its own scale),
+and a mode a look does not name — and every style that declares none —
+resolves the base theme's table. It is the field a house version of a look sets
+when the look repaints the strips a plot is drawn on, which is the measured case
+in [Authored looks](#authored-looks). A runnable example builds a legend, an
+audit and the look that owns the table; see
 [`src/series.example.ts`](../packages/tokens/src/series.example.ts).
 
 ## High contrast
@@ -870,15 +870,19 @@ Four facts about these two:
   decorative placement through `decorativeFailures`, in `retro.test.ts`; a
   high-contrast base keeps its own palette and takes only the families, radii
   and density, exactly as a platform style does.
-- **Luna light owns its chart scale.** The shared light table is designed
-  against a near-white page; on Luna's beige toolbar (`#E0DCCB`) its amber
-  measures **2.75:1**, so a chart in a Luna status bar would lose a category
-  while every other series contract passed. Luna's light chart scale is
-  `#5F4BDB`, `#1B45AC`, `#158754`, `#9A6300`, `#A5262B` — the same five hues with
-  the amber a step deeper — which clears the look's page, card, popover and
-  toolbar (tightest 3.67:1, that amber on the toolbar) and keeps every pair
-  apart for a dichromat. The dark edition keeps the shared dark table, which its
-  navy page already separates on. See [Data series](#data-series).
+- **Its beige toolbar needs a chart scale of its own.** The shared light table is
+  designed against a near-white page; on Luna's toolbar (`#E0DCCB`) its amber
+  measures **2.75:1**, so a chart in a Luna status bar loses a category while
+  every other series contract passes. A house version of the look therefore sets
+  `PlatformStyle.series` — `beigeLook` in
+  [`src/series.example.ts`](../packages/tokens/src/series.example.ts) is that
+  copy, with the amber `#9A6300` (the ramp's own `#8E5B00` is 0.044 from the red
+  under deuteranopia) — which clears the look's page, card, popover and toolbar
+  (tightest 3.67:1, that amber on the toolbar) and keeps every pair apart for a
+  dichromat. The dark edition needs no table: its navy page separates the shared
+  dark scale already. The shipped edition follows its base theme's scale until a
+  page that teaches the contract prints the fourth plot strip
+  (`TODO.md` → Interlocks). See [Data series](#data-series).
 - **Luna light owns its soft status tints.** Its beige page (`#ECE9D8`) sits at
   the lightness a pale status tint has — the base `infoSoft` measured 1.00:1
   against it — and its toolbar is deeper than that, so no inherited tint can be

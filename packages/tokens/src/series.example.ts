@@ -5,12 +5,16 @@
  */
 
 import {
+  applyStyle,
   seriesColors,
   seriesFailures,
+  type PlatformStyle,
   type SeriesColors,
   type Theme,
+  type ThemeMode,
 } from "./index.js";
-import { extendTheme, lightTheme } from "./theme.js";
+import { retroStyles } from "./retro.js";
+import { extendTheme, lightTheme, themes } from "./theme.js";
 
 /** One legend row: the label a chart was given and the colour it is drawn in. */
 export interface LegendRow {
@@ -59,6 +63,42 @@ export const brandChartTheme: Theme = extendTheme(lightTheme, {
   name: "Acme charts",
   series: brandSeries,
 });
+
+/**
+ * The scale a look needs when it repaints the strips a plot is drawn on, and the
+ * look that carries it.
+ *
+ * Windows XP's Luna light edition is the measured case: its `#ECE9D8` page and
+ * `#E0DCCB` toolbar swallow the shared light amber (`#B57600`), which reads
+ * **2.75:1** there — a chart in that status bar would have one series nobody can
+ * find. The same five hues with the amber one step deeper clear the look's page,
+ * card, popover and toolbar (tightest 3.67:1, that amber on the toolbar) and keep
+ * every pair apart for a dichromat: the ramp's own `700` step, `#8E5B00`, is
+ * 0.044 from the red under deuteranopia, under the 0.05 floor.
+ *
+ * A look owns the scale in the `PlatformStyle` shape, per mode, and `applyStyle`
+ * hands it to the base theme under the same `contrast` rule as the look's
+ * palette. A consumer copies the style they ship — this is the copy of Luna with
+ * one more field — rather than naming a new platform.
+ */
+export const beigeSeries: SeriesColors = [
+  "#5F4BDB",
+  "#1B45AC",
+  "#158754",
+  "#9A6300",
+  "#A5262B",
+];
+
+/** The Luna look, with the light-edition scale its own strips need. */
+export const beigeLook: PlatformStyle = {
+  ...retroStyles.luna,
+  label: "Windows XP (Luna) · house",
+  series: { light: beigeSeries },
+};
+
+/** The look applied to a base theme, which is what a chart is painted on. */
+export const beigeTheme = (mode: ThemeMode): Theme =>
+  applyStyle(themes[mode], beigeLook);
 
 /** A failure written the way a theme editor shows it. */
 export function seriesReport(theme: Theme): ReadonlyArray<string> {

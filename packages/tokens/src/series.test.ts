@@ -25,8 +25,11 @@ import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
 import { contrastFloors, highContrastFloors } from "./contrast.js";
 import { platformNames } from "./platforms.js";
-import { retroNames, retroStyles, retroTheme } from "./retro.js";
+import { retroNames, retroTheme } from "./retro.js";
 import {
+  beigeLook,
+  beigeSeries,
+  beigeTheme,
   brandChartTheme,
   brandSeries,
   legend,
@@ -47,6 +50,7 @@ import {
   simulateColorVision,
 } from "./series.js";
 import {
+  applyStyle,
   darkTheme,
   extendTheme,
   highContrastDarkTheme,
@@ -119,23 +123,23 @@ describe("the shipped scale", () => {
     expect(seriesColors(platformTheme(lightTheme, "linux"))).toBe(lightSeries);
   });
 
-  it("follows the scale a look designs for its own plot surfaces", () => {
-    const luna = retroTheme(lightTheme, "luna");
+  it("follows the scale a look declares for its own plot surfaces", () => {
+    const themed = beigeTheme("light");
 
-    expect(luna.series).toBe(retroStyles.luna.series?.light);
-    expect(seriesColors(luna)).toBe(luna.series);
-    expect(seriesColors(luna)).not.toBe(lightSeries);
-    // A mode the look does not name keeps the base's table, and a look that
+    expect(themed.series).toBe(beigeSeries);
+    expect(seriesColors(themed)).toBe(beigeSeries);
+    expect(seriesColors(lightTheme)).toBe(lightSeries);
+    // A mode the look does not name keeps the base's table, and a style that
     // declares none is the platform case above.
-    expect(retroTheme(darkTheme, "luna").series).toBeUndefined();
-    expect(seriesColors(retroTheme(darkTheme, "luna"))).toBe(darkSeries);
-    expect(retroStyles.aero.series).toBeUndefined();
+    expect(beigeTheme("dark").series).toBeUndefined();
+    expect(seriesColors(beigeTheme("dark"))).toBe(darkSeries);
+    expect(retroTheme(lightTheme, "luna").series).toBeUndefined();
   });
 
   it("keeps a high-contrast base's own scale", () => {
     // Same rule as the palette: a scale designed for a look's strips is not an
     // AAA one, so accessibility outranks the look.
-    const accessible = retroTheme(highContrastLightTheme, "luna");
+    const accessible = applyStyle(highContrastLightTheme, beigeLook);
 
     expect(accessible.series).toBeUndefined();
     expect(seriesColors(accessible)).toBe(highContrastLightSeries);
@@ -300,8 +304,8 @@ describe("a look owns the scale its own strips need", () => {
   const luna = retroTheme(lightTheme, "luna");
 
   it("measures the shared light table on Luna's toolbar", () => {
-    // The bug this guards: a look could not own a chart scale, so its charts
-    // resolved the table designed for a near-white page. On Luna's `#E0DCCB`
+    // The measured case for the mechanism: a look that only repainted its page
+    // resolved the table designed for a near-white one, and on Luna's `#E0DCCB`
     // toolbar the shared amber is 2.75:1 — one series nobody can find.
     const inherited = seriesFailures(
       { ...luna, series: lightSeries },
@@ -317,11 +321,9 @@ describe("a look owns the scale its own strips need", () => {
   });
 
   it("is clean on every strip with the scale the look carries", () => {
-    expect(seriesFailures(luna, { surfaces: plotStrips })).toEqual({
-      surfaces: [],
-      distinctness: [],
-      deficiencies: [],
-    });
+    expect(
+      seriesFailures(beigeTheme("light"), { surfaces: plotStrips }),
+    ).toEqual({ surfaces: [], distinctness: [], deficiencies: [] });
   });
 });
 

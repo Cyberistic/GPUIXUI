@@ -71,8 +71,9 @@ pair still separated once protanopia, deuteranopia and tritanopia are simulated
 (`seriesDeficiencyFloor`). A chart never hard-codes a hex; a brand that wants its
 own categories carries `series`, a plot drawn on another strip names it
 (`seriesFailures(theme, { surfaces: ["muted"] })`), and a look that repaints the
-surfaces a plot is drawn on ships a scale for them (`PlatformStyle.series` —
-Luna's beige toolbar swallows the shared light amber at 2.75:1). See
+surfaces a plot is drawn on declares a scale for them (`PlatformStyle.series` —
+Luna's beige toolbar swallows the shared light amber at 2.75:1, so a house copy
+of that look adds a table). See
 `docs/tokens.md` §Data series and §Authored looks.
 
 This keeps a brand theme small: overriding `primary` changes every primary

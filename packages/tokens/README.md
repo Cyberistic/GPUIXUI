@@ -274,11 +274,11 @@ simulateColorVision(colors[0], "deuteranopia"); // the same swatch to a deuteran
 ```
 
 A brand that wants its own categories carries `series` in `extendTheme`; the
-array replaces the shipped scale whole. A look carries one in the
+array replaces the shipped scale whole. A style carries one in the
 `PlatformStyle` shape (`PlatformStyle.series`, per mode), which `applyStyle`
-hands to the base theme under the same rule as the look's palette — Luna's beige
-toolbar swallows the shared light amber at 2.75:1, so that look ships the scale
-its own plot strips need. A plot drawn on a strip that is not one of the three
+hands to the base theme under the same rule as the look's palette — a house copy
+of Luna, whose beige toolbar swallows the shared light amber at 2.75:1, carries
+the scale its own plot strips need (`beigeLook` in `series.example.ts`). A plot drawn on a strip that is not one of the three
 defaults names it: `seriesFailures(theme, { surfaces: ["muted"] })`.
 `seriesFailures(theme)` reports all three contracts and is part of `auditTheme`.
 

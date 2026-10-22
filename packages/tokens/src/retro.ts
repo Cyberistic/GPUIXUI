@@ -24,17 +24,16 @@
  * tint has, so the base light tint would vanish into it and a deeper one into
  * its toolbar — the look sits its tints above its page instead. Its warm pressed
  * wash is why the light destructive status text is red 900 in the base theme,
- * which this look inherits. The light edition also carries its own **chart
- * scale**: the shared light amber measures 2.75:1 on Luna's toolbar, so a plot
- * there would lose a category, and `PlatformStyle.series` is where a look owns
- * the scale designed for its own plot strips.
+ * which this look inherits. Its beige page and toolbar also swallow the shared
+ * light **chart** amber (2.75:1 on `#E0DCCB`), so a house version of the look
+ * adds its own `PlatformStyle.series` — the table `series.example.ts` measures —
+ * while the shipped edition follows its base theme's scale.
  */
 
 import { palette, type ThemeColors } from "./color.js";
 import type { PlatformStyle } from "./platforms.js";
 import { systemUiFont } from "./platforms.js";
-import type { SeriesColors } from "./series.js";
-import type { Theme, ThemeMode } from "./theme.js";
+import type { Theme } from "./theme.js";
 import { applyStyle } from "./theme.js";
 
 /**
@@ -189,26 +188,6 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
 };
 
 /**
- * Luna's own categorical scale for the light edition.
- *
- * The shared light table is designed against a near-white page. Luna's page is
- * `#ECE9D8` and its toolbar `#E0DCCB`, where the shared amber measures
- * **2.75:1** — a chart in a Luna status bar would have one series nobody can
- * find. The same five hues with the amber one step deeper clear the look's four
- * plot strips (tightest: that amber on the toolbar, 3.67:1) and keep every pair
- * apart for a dichromat; the ramp's own `700` step, `#8E5B00`, does not — it is
- * 0.044 from the red under deuteranopia, under the 0.05 floor, which is why the
- * value between the two steps is authored here.
- *
- * The dark edition carries none: its page is a deep navy the shared dark table
- * already separates on, and a table authored for no measured reason would be a
- * second place to keep in step.
- */
-const lunaSeries: Readonly<Partial<Record<ThemeMode, SeriesColors>>> = {
-  light: ["#5F4BDB", "#1B45AC", "#158754", "#9A6300", "#A5262B"],
-};
-
-/**
  * The authored looks. Each is the same `PlatformStyle` shape the platform table
  * uses, so one merge rule serves both: families, radii and density always
  * apply, and a palette applies only to a base of the `contrast` variant it was
@@ -228,7 +207,6 @@ export const retroStyles: Readonly<Record<RetroName, PlatformStyle>> = {
     density: "compact",
     contrast: "default",
     colors: lunaColors,
-    series: lunaSeries,
   },
   aero: {
     label: "Windows 7 (Aero)",
