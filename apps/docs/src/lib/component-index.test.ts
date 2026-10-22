@@ -322,6 +322,25 @@ describe("the props a page documents", () => {
       types: [],
     });
   });
+
+  it("does not read a default value as a prop", () => {
+    // `(default `false`)` inside a props cell made "false" a prop of the menu
+    // pages, so the index's prop list and its filter both answered a query for
+    // a value.
+    const source = [
+      "## API",
+      "",
+      "| Part | Renders | Props |",
+      "| ---- | ------- | ----- |",
+      "| `MenuCheckboxItem` | an on/off row | `checked` (required), `closeOnSelect?: boolean` (default `false`), `textValue?: string` |",
+    ].join("\n");
+
+    expect(propsOf(source).props).toEqual([
+      "checked",
+      "closeOnSelect",
+      "textValue",
+    ]);
+  });
 });
 
 describe("the parts a page documents", () => {

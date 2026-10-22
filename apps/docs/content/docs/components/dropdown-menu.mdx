@@ -113,6 +113,12 @@ takes `textValue` so it can still be typed at.
 | `defaultOpen` | `boolean` | `false` |
 | `onOpenChange` | `(open: boolean) => void` | none |
 
+### DropdownMenuTrigger
+
+The menu's button: the local `Button`'s `variant`, `size` and `label`, with
+`label` naming it for assistive technology. `disabled` also leaves the tab order
+and refuses `ArrowDown`, `Enter` and the press.
+
 ### DropdownMenuContent
 
 | Prop | Type | Default |
@@ -122,6 +128,7 @@ takes `textValue` so it can still be typed at.
 | `align` | `"start" \| "center" \| "end"` | `"start"` |
 | `sideOffset` | `number` | `4` |
 | `collisionPadding` | `number` | `8` |
+| `alignOffset` | `number` | `0` — added to the measured centre correction |
 
 ### DropdownMenuItem
 
@@ -130,12 +137,34 @@ takes `textValue` so it can still be typed at.
 | `onSelect` | `() => void` | none — runs, then closes |
 | `disabled` | `boolean` | `false` |
 | `tone` | `"default" \| "destructive"` | `"default"` |
+| `leading` | `ReactNode` | none — a slot before the label |
+| `trailing` | `ReactNode` | none — a slot after it, for a shortcut |
 | `textValue` | `string` | the plain text children |
+| `closeOnSelect` | `boolean` | `true` |
 | `style` | `StyleDesc \| (state: MenuItemState) => StyleDesc` | none |
 
 The row's `style` sees `{ disabled, highlighted }`, and the checkbox row's sees
 `{ checked, disabled, highlighted }`, so a caller can paint from the live state
 without owning the highlight.
+
+### DropdownMenuCheckboxItem
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `checked` | `boolean` (required) | none |
+| `onCheckedChange` | `(checked: boolean) => void` (required) | none |
+| `closeOnSelect` | `boolean` | `false` — the row stays open |
+
+It is a row with a check mark in the `leading` slot when checked, and takes the
+action row's `disabled`, `tone`, `leading`, `trailing`, `textValue` and `style`.
+
+### The rest of the family
+
+`DropdownMenuSub`, `DropdownMenuSubTrigger` and `DropdownMenuSubContent` make one
+secondary level; the sub-content takes the root surface's placement props
+(`side`, `align`, `sideOffset`, `collisionPadding`, `alignOffset`).
+`DropdownMenuGroup`, `DropdownMenuLabel` and `DropdownMenuSeparator` structure
+the rows and take only `children`.
 
 ## Theming
 

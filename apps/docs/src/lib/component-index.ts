@@ -317,7 +317,17 @@ export const propsOf = (source: string): PageProps => {
 };
 
 /** Column labels a table repeats, and words that are never a prop. */
-const notAProp = new Set(["Prop", "Props", "Part", "Parts"]);
+const notAProp = new Set([
+  "Prop",
+  "Props",
+  "Part",
+  "Parts",
+  // A default value a page writes in a code span (`(default `true`)`) is data,
+  // not a prop: counting it made "true" a prop of every menu page, so the
+  // index's prop list and its filter both matched a value.
+  "true",
+  "false",
+]);
 
 /**
  * What a page says its component cannot do.

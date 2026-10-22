@@ -1,6 +1,8 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { contrastRatio, highContrastLightColors } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
+import { pageUrl, propsOf } from "./component-index";
+import { packageCollections } from "./collection-routes";
 import { inventory } from "./inventory-data";
 
 /**
@@ -53,6 +55,15 @@ interface CuratedPage {
   readonly suite?: string;
   /** The source the page's Dependencies table describes. */
   readonly source: string;
+  /**
+   * The package page this curated page displaces.
+   *
+   * A docs page is served at one URL, so a curated page whose name matches a
+   * package page wins it: the package page is unreachable. Anything only the
+   * package page documented is then documented nowhere on the site — which is
+   * how `DropdownMenuCheckboxItem`'s two required props went missing.
+   */
+  readonly shadowed?: string;
 }
 
 const pages: ReadonlyArray<CuratedPage> = [
@@ -65,30 +76,35 @@ const pages: ReadonlyArray<CuratedPage> = [
     file: "command-menu.mdx",
     row: "Command menus",
     suite: "packages/components/src/behaviour/command-menu.test.tsx",
+    shadowed: "packages/components/docs/command-menu.mdx",
     source: "packages/components/src/command-menu.tsx",
   },
   {
     file: "dialog.mdx",
     row: "Dialogs",
     suite: "packages/components/src/behaviour/dialog.test.tsx",
+    shadowed: "packages/components/docs/dialog.mdx",
     source: "packages/components/src/dialog.tsx",
   },
   {
     file: "dropdown-menu.mdx",
     row: "Dropdown menus",
     suite: "packages/components/src/behaviour/dropdown-menu.test.tsx",
+    shadowed: "packages/components/docs/dropdown-menu.mdx",
     source: "packages/components/src/dropdown-menu.tsx",
   },
   {
     file: "popover.mdx",
     row: "Popovers",
     suite: "packages/components/src/behaviour/popover.test.tsx",
+    shadowed: "packages/components/docs/popover.mdx",
     source: "packages/components/src/popover.tsx",
   },
   {
     file: "tabs.mdx",
     row: "Tabs",
     suite: "packages/components/src/behaviour/tabs.test.tsx",
+    shadowed: "packages/components/docs/tabs.mdx",
     source: "packages/components/src/tabs.tsx",
   },
 ];
@@ -331,6 +347,33 @@ describe("the curated component pages", () => {
     expect(disagreeing).toEqual([]);
   });
 
+  it("state the runtime support verdict the inventory records", () => {
+    // The status word was held to the inventory; the support verdict beside it
+    // was not, so a page could drop `partial` and read as a component the
+    // runtime covers whole — the one claim the strip exists to prevent. The
+    // verdict is the first word of the cell (`partial`, `yes`, `?`); the rest
+    // of the cell is the note the page's prose expands.
+    const verdict = (support: string): string =>
+      support.trim().split(/\s+/)[0] ?? "";
+
+    const missing = pages.flatMap((page) => {
+      const row = inventory.rows.find(
+        (candidate) => candidate.name === page.row,
+      );
+      if (row === undefined) return [`${page.file}: no inventory row`];
+      const word = verdict(row.support);
+      return status(page).includes(`\`${word}\``)
+        ? []
+        : [
+            `${page.file}: does not name the ${word} runtime verdict its inventory row records`,
+          ];
+    });
+
+    // Floors: every curated page is read, and each verdict is a real word.
+    expect(pages.length).toBeGreaterThanOrEqual(4);
+    expect(missing).toEqual([]);
+  });
+
   it("list every package the component imports", () => {
     const missing = pages.flatMap((page) => {
       const listed = dependencies(page);
@@ -343,5 +386,87 @@ describe("the curated component pages", () => {
     });
 
     expect(missing).toEqual([]);
+  });
+});
+
+/** Every `packages/<pkg>/docs/*.mdx` page the site mounts, as a repo path. */
+const packagePageFiles = (): ReadonlyArray<string> =>
+  packageCollections.flatMap((collection) =>
+    readdirSync(new URL(`${collection.dir}/`, root))
+      .filter((name) => name.endsWith(".mdx"))
+      .map((name) => `${collection.dir}/${name}`),
+  );
+
+/** The `## API…` section of a page, as text: tables and the prose beside them. */
+const apiSection = (text: string): string => {
+  const start = text.search(/^## (API|Props)\b/m);
+  if (start === -1) return "";
+  const rest = text.slice(start);
+  const end = rest.indexOf("\n## ", 1);
+  return end === -1 ? rest : rest.slice(0, end);
+};
+
+describe("the page a curated page displaces", () => {
+  it("names exactly the package pages whose URL the curated folder takes", () => {
+    // The site serves one page per URL, so a curated page whose name matches a
+    // package page displaces it: the package page is not mounted anywhere. A
+    // curated page that forgot it (or a package page that landed on one) hides
+    // a whole page rather than a paragraph, so the set is derived from the
+    // files rather than kept in the fixture.
+    const curated = pages.map((page) => ({
+      file: page.file,
+      url: pageUrl(`content/docs/components/${page.file}`),
+    }));
+    const displaced = packagePageFiles().filter((file) => {
+      const url = pageUrl(file);
+      return curated.some((page) => page.url !== undefined && page.url === url);
+    });
+    const named = pages.flatMap((page) =>
+      page.shadowed === undefined ? [] : [page.shadowed],
+    );
+
+    expect(curated.filter((page) => page.url === undefined)).toEqual([]);
+    expect(named.toSorted()).toEqual(displaced.toSorted());
+  });
+
+  it("documents every prop the displaced page documents", () => {
+    // `DropdownMenuCheckboxItem` is a required `checked` and `onCheckedChange`
+    // row with two defaults of its own, and the curated page documented neither
+    // — nor `leading`/`trailing`/`closeOnSelect`, nor the alignment offset. The
+    // package page that says so is the one the curated page displaces, so the
+    // props were documented nowhere a reader of this site can reach. A prop
+    // counts as documented when the page's API section names it as a word: a
+    // backticked name, a `name?:` inside a declaration the page prints, and a
+    // plain `Props` cell are all the API. This is a presence check, not a
+    // signature one — the row's type and default are the page's to state.
+    const gaps = pages.flatMap((page) => {
+      if (page.shadowed === undefined) return [];
+      const documented = apiSection(body(page)).replaceAll("`", "");
+      const named = (prop: string): boolean =>
+        new RegExp(`(^|[^A-Za-z0-9_$])${prop}([^A-Za-z0-9_$]|$)`).test(
+          documented,
+        );
+      return propsOf(read(page.shadowed))
+        .props.filter((prop) => !named(prop))
+        .map(
+          (prop) =>
+            `${page.file}: the displaced ${page.shadowed} documents \`${prop}\`, this page does not`,
+        );
+    });
+
+    // Floors: the displacement is read, and the props are read from both sides.
+    expect(
+      pages.filter((page) => page.shadowed !== undefined).length,
+    ).toBeGreaterThanOrEqual(5);
+    expect(
+      pages.reduce(
+        (count, page) =>
+          page.shadowed === undefined
+            ? count
+            : count + propsOf(read(page.shadowed)).props.length,
+        0,
+      ),
+    ).toBeGreaterThan(30);
+    expect(gaps).toEqual([]);
   });
 });

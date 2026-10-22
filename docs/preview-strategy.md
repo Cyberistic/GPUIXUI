@@ -366,7 +366,7 @@ no keyboard path, it says so rather than leaving the reader to guess.
 | Accessibility and limitations | role/name, and every unsupported attribute with the alternative |
 | Dependencies | the packages it needs, and why — curated pages write the table; a package page gets the generated strip |
 | Related | siblings, parents, alternatives |
-| Status | `done` / `partial`, with the runtime evidence, when it is not `done` |
+| Status | the `done` / `partial` status and the runtime support verdict, with the evidence |
 
 The template is a contract, not a suggestion: a page missing a section is a page
 that hides a decision from the reader, so `src/lib/component-page.test.ts`
@@ -403,16 +403,20 @@ in the source, the timing level and duration come from the component's
 ratio is computed from the role pair the component's own comment cites — so a
 page that describes a different component fails by name.
 
-The **Accessibility and limitations** row has a shared half as well as a
-per-component one. A page states what its own control does and cannot do; the
-runtime's whole ARIA budget — the role-required rule, the seven attributes that
-are published, the fifteen it refuses, the absent live region, the focus ring
-and the keyboard dim — is the cross-cutting contract on `/docs/accessibility`,
-so a page does not have to restate the runtime in order to be honest.
-`src/lib/accessibility-page.test.ts` holds that page to the installed typings,
-the capability record, the primitives' label rule, the tokens' focus helpers and
-the two probes (`a11y-tree`, `filled-action-dim`), so a runtime bump or a
-capability row that changes cannot leave the contract teaching the old budget.
+A curated page that shares a package page's URL **displaces** it. The site
+serves one page per URL, so `/docs/components/dropdown-menu` is the curated page
+and `packages/components/docs/dropdown-menu.mdx` is mounted nowhere: anything
+only that file documented is documented nowhere on the site. The curated
+Dropdown menu page was missing `DropdownMenuCheckboxItem`'s required `checked`
+and `onCheckedChange`, the action row's `leading`/`trailing`/`closeOnSelect`
+slots, the trigger's button props and the surface's `alignOffset`, so none of
+them could be found from the page a reader lands on.
+`component-page-truth.test.ts` derives the displaced set from the two folders
+(a new collision fails until it is named) and requires every prop the displaced
+page documents to be named in the curated page's API section. The same file
+holds the Status section to **both** words of its inventory row — the status and
+the runtime support verdict — so a page cannot drop `partial` and read as a
+component the runtime covers whole.
 
 One line above every page body is **not** the author's: the site mounts the
 worked-example strip (and, on a package page, the status strip) from the example
