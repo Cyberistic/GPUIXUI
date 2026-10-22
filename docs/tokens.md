@@ -2512,6 +2512,25 @@ export function App() {
 a subtree. Without a provider it returns `lightTheme`. GPUix exposes no OS
 appearance query, so the application owns the mode switch.
 
+`useThemePresence()` answers a different question: whether a provider is above
+the hook at all. The fallback makes the two cases indistinguishable — a provider
+passing `lightTheme` and no provider both read as the light theme — so a
+consumer with a fail-loud rule (a component package that refuses to paint a
+default palette) reads the presence instead and accepts a token provider as
+satisfying it:
+
+```tsx
+import { useTheme, useThemePresence } from "@gpuixui/tokens/react";
+
+export function useRequiredTheme() {
+  const theme = useTheme();
+  if (!useThemePresence()) {
+    throw new Error("wrap the tree in <ThemeProvider theme={...}>");
+  }
+  return theme;
+}
+```
+
 ## Using tokens in components
 
 Rules:

@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 /**
- * The React binding: a context provider and the hook that reads it.
+ * The React binding: a context provider and the hooks that read it.
  *
  * The pragma above is deliberate. A consumer that compiles this file from source
  * with its own `jsxImportSource` — the component packages compile their JSX
@@ -13,7 +13,12 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { lightTheme, type Theme } from "./theme.js";
 
-const ThemeContext = createContext<Theme>(lightTheme);
+/**
+ * The nearest theme, or `undefined` when nothing supplies one. The absence is
+ * what {@link useThemePresence} reads: a default of `lightTheme` would make a
+ * provider passing the light theme indistinguishable from no provider at all.
+ */
+const ThemeContext = createContext<Theme | undefined>(undefined);
 
 /** Props for {@link ThemeProvider}. */
 export interface ThemeProviderProps {
@@ -38,5 +43,23 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
 
 /** Read the nearest theme, or the light theme when no provider exists. */
 export function useTheme(): Theme {
-  return useContext(ThemeContext);
+  return useContext(ThemeContext) ?? lightTheme;
+}
+
+/**
+ * Whether a {@link ThemeProvider} is above this hook.
+ *
+ * {@link useTheme} has a usable fallback, so a consumer that falls back cannot
+ * tell a caller's light theme from no provider at all. A package with its own
+ * fail-loud rule — `@gpuixui/primitives` refuses to paint a default palette —
+ * reads this instead and can accept a token provider as satisfying it.
+ *
+ * @example
+ * ```tsx
+ * const provided = useThemePresence();
+ * if (!provided) throw new MissingThemeProviderError();
+ * ```
+ */
+export function useThemePresence(): boolean {
+  return useContext(ThemeContext) !== undefined;
 }
