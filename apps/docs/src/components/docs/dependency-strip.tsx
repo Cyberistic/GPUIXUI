@@ -38,7 +38,9 @@ export function DependencyStrip({ url }: { readonly url: string }) {
       </ul>
       <span>
         read from{" "}
-        <code className="text-foreground">{entry.module.split("/").at(-1)}</code>
+        <code className="text-foreground">
+          {entry.module.split("/").at(-1)}
+        </code>
       </span>
       <a
         className="underline underline-offset-2 hover:text-foreground"

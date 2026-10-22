@@ -34,7 +34,8 @@ const mountedPages = (): ReadonlySet<string> => {
   const site = (directory: string, prefix: string): string[] =>
     readdirSync(join(root, directory), { withFileTypes: true }).flatMap(
       (entry) => {
-        if (entry.isDirectory()) return site(`${directory}/${entry.name}`, `${prefix}/${entry.name}`);
+        if (entry.isDirectory())
+          return site(`${directory}/${entry.name}`, `${prefix}/${entry.name}`);
         if (!entry.name.endsWith(".mdx")) return [];
         const page = entry.name.replace(/\.mdx$/, "");
         return [page === "index" ? prefix : `${prefix}/${page}`];
@@ -75,26 +76,24 @@ describe("the dependency index", () => {
   });
 
   it("reports every workspace import the module makes, and nothing else", () => {
-    const mismatched = Object.entries(index.pages).flatMap(
-      ([url, entry]) => {
-        const text = readFileSync(join(root, entry.module), "utf8");
-        const expected = quotedWorkspaceImports(text);
-        const reported = new Set(
-          entry.dependencies.map((dependency) => dependency.packageName),
-        );
-        const missing = [...expected].filter(
-          (name) => name !== "" && !reported.has(name),
-        );
-        const invented = [...reported].filter((name) => !expected.has(name));
-        return missing.length === 0 && invented.length === 0
-          ? []
-          : [
-              `${url}: missing ${missing.join(", ") || "—"}; invented ${
-                invented.join(", ") || "—"
-              }`,
-            ];
-      },
-    );
+    const mismatched = Object.entries(index.pages).flatMap(([url, entry]) => {
+      const text = readFileSync(join(root, entry.module), "utf8");
+      const expected = quotedWorkspaceImports(text);
+      const reported = new Set(
+        entry.dependencies.map((dependency) => dependency.packageName),
+      );
+      const missing = [...expected].filter(
+        (name) => name !== "" && !reported.has(name),
+      );
+      const invented = [...reported].filter((name) => !expected.has(name));
+      return missing.length === 0 && invented.length === 0
+        ? []
+        : [
+            `${url}: missing ${missing.join(", ") || "—"}; invented ${
+              invented.join(", ") || "—"
+            }`,
+          ];
+    });
 
     expect(mismatched).toEqual([]);
     expect(
@@ -137,9 +136,11 @@ describe("the dependency index", () => {
 
     expect(dead).toEqual([]);
     expect(packagePage("@gpuixui/tokens")).toBe("/docs/theming");
-    expect(index.pages["/docs/components/dialog"]?.dependencies.find(
-      (dependency) => dependency.packageName === "@gpuixui/icons",
-    )?.url).toBe("/docs/icons/icon");
+    expect(
+      index.pages["/docs/components/dialog"]?.dependencies.find(
+        (dependency) => dependency.packageName === "@gpuixui/icons",
+      )?.url,
+    ).toBe("/docs/icons/icon");
   });
 
   it("leaves a package the site does not document unlinked rather than guessing", () => {
@@ -151,7 +152,10 @@ describe("the dependency index", () => {
   });
 
   it("is mounted on the package page frame, not the curated one", () => {
-    const view = readFileSync(join(root, "apps/docs/src/lib/docs-view.tsx"), "utf8");
+    const view = readFileSync(
+      join(root, "apps/docs/src/lib/docs-view.tsx"),
+      "utf8",
+    );
     const frame = view.indexOf("function PackageContent");
     const strip = view.indexOf("<DependencyStrip");
     const curated = view.indexOf("function SiteContent");
