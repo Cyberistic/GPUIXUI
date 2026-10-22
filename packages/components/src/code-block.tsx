@@ -282,7 +282,7 @@ export const codeBlockMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the source is painted by the runtime's `<code>` host, whose text publishes no accessible node: a reader gets the block's name and line count, not the code",
-    "syntax colours are the runtime's built-in light/dark syntax palette; no token group owns them yet",
+    "syntax colours are the theme's palette — nativeTextTheme hands the host syntaxColors(theme), held structurally by the tokens' syntax.test.ts — while the runtime's tokenizer decides which run is a token; a brand owns the palette by carrying `syntax`, which replaces the table whole, and a window's highlighted pixels are still owed",
     "no per-line highlight, wrap toggle or diff markers through the host's API — a diff goes to the runtime's `<diff>` host",
     "no clipboard write exists in 0.11.0, so the copy action calls the caller's `onCopy` and acknowledges the press, not a finished write",
     "a capped block scrolls by wheel and scrollbar only; it is not a keyboard scroll region",

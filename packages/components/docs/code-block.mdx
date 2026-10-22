@@ -156,13 +156,42 @@ publishes no accessible node, so a screen reader cannot read the code itself.
 The copy action is a focusable button whose name changes to `copiedLabel` while
 it acknowledges the press.
 
+## Theming
+
+The card, the ink and the gutter paint the theme's roles, and the host's
+highlighting paints the theme's syntax palette: `nativeTextTheme` hands the
+runtime `syntaxColors(theme)`, so a light theme's code no longer arrives with the
+runtime's dark-default colours. A brand owns the palette through `syntax`, which
+**replaces the table whole** — the host reads every token — so spread the
+resolved table and edit the one you mean:
+
+```tsx
+import { ThemeProvider } from "@gpuixui/components";
+import { extendTheme, syntaxColors } from "@gpuixui/tokens";
+
+const brand = extendTheme(theme, {
+  syntax: { ...syntaxColors(theme), keyword: "#7A1F5C", string: "#0B5E4A" },
+});
+
+<ThemeProvider theme={brand}>
+  <CodeBlock code={source} language="ts" />
+</ThemeProvider>;
+```
+
+Every token stays measured: `auditTheme(brand).syntax` reports any role that
+misses its floor on the fills a host paints, and the tokens' `syntax.test.ts`
+holds the shipped tables and the seam that hands them over. What the runtime
+still owns is which run is a token and the gutter widths.
+
 ## Limitations
 
 - **The code text is not exposed to assistive technology.** The host paints it
   natively; the block publishes the name and the line count instead.
-- **Syntax colours are the runtime's own palette.** No token group owns syntax
-  capture colours yet, so a brand's roles reach the card, the ink and the gutter,
-  not the keywords.
+- **The tokenizer decides what a run is, not the palette.** Syntax colours are
+  the theme's, so a brand's palette reaches the block; which characters count as
+  a keyword, a string or a comment is the runtime's tokenizer. The palette is
+  held structurally (`syntax.test.ts`); a window's highlighted pixels are still
+  owed.
 - **No per-line highlight, wrap toggle or diff markers.** The host's API has none;
   a diff belongs in the runtime's own `<diff>` host.
 - **No clipboard write.** The copy action calls `onCopy` and acknowledges the
@@ -183,7 +212,10 @@ the reduced preference at rest, the height cap, and the group the accessibility
 tree receives. The decisions are `src/code-block/logic.test.ts` (14 tests): the
 extension map, the header's fallbacks and blank values, the row count for every
 line ending and trailing newline, the empty source, and the name and description
-text.
+text. `src/code-block-page.test.ts` (5 tests) holds this page, the record and the
+inventory row to the palette the seam actually hands over — it reads
+`nativeTextTheme` and `syntaxColors` back, so a stale "the runtime owns the
+colours" claim fails here.
 
 ## Related
 
