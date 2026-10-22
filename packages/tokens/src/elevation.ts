@@ -7,7 +7,6 @@ import {
   isPaintableColor,
   lightColors,
 } from "./color.js";
-import type { Theme } from "./theme.js";
 
 /** A drop shadow, structurally identical to GPUix's `StyleDesc.boxShadow`. */
 export interface BoxShadow {
@@ -69,9 +68,15 @@ export const elevationLevels = [
 
 /**
  * The shadow an elevation level paints. A level is designed as one shadow, so it
- * resolves to its first entry; a reserved empty level paints nothing and returns
+ * resolves to its first entry; a level that paints nothing — the reserved empty
+ * `overlay`, or one a theme restored from storage does not carry — returns
  * `undefined`, which `boxShadow` accepts. The runtime also accepts a shadow list;
  * the scale does not use one, so a level cannot render half of itself.
+ *
+ * The source is `Partial<Elevation>` because a stored theme can predate a level
+ * the library added: the report names it (`invalidShadowColors`) and the surface
+ * paints flat, rather than the first raised card throwing where the audit had
+ * already said why.
  *
  * @example
  * ```tsx
@@ -79,10 +84,10 @@ export const elevationLevels = [
  * ```
  */
 export function elevationShadow(
-  theme: Theme,
+  theme: { readonly elevation: Partial<Elevation> },
   level: ElevationLevel,
 ): BoxShadow | undefined {
-  return theme.elevation[level][0];
+  return theme.elevation[level]?.[0];
 }
 
 /** One elevation shadow whose colour the renderer cannot paint. */

@@ -2244,7 +2244,11 @@ import { elevationShadow } from "@gpuixui/tokens";
 ```
 
 `elevationShadow(theme, level)` returns the level's shadow, or `undefined` for
-the reserved empty `overlay` level (which `boxShadow` accepts). A level with two
+the reserved empty `overlay` level (which `boxShadow` accepts). A level the theme
+does not carry — a theme restored from storage that predates it — resolves to
+`undefined` too, so a raised surface paints flat instead of throwing where
+`invalidShadowColors`/`auditTheme` already named the absence
+(§[Paint-ready values](#paint-ready-values)). A level with two
 entries would be a second shadow the design did not ask for, so
 `packages/tokens/src/elevation.test.ts` fails if one appears.
 

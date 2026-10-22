@@ -17,6 +17,13 @@
  * once by `invalidShadowColors` at position 0 with `color: undefined`, and the
  * contracts that measure a pair report it unmeasurable. `passed` stays false, so
  * a stored theme older than the library is one audit line rather than a crash.
+ *
+ * The paint path owes the same promise, and it did not keep it: `elevationShadow`
+ * read the level's first entry directly, so the surface the report had just
+ * explained threw `TypeError: Cannot read properties of undefined (reading '0')`
+ * on its first paint. A role the renderer cannot resolve paints nothing — a
+ * property dropped from the batch — so an absent level now resolves to
+ * `undefined` too, and the report is the one place the absence is named.
  */
 
 import { readFileSync } from "node:fs";
@@ -27,6 +34,7 @@ import {
   defaultDensity,
   densityNames,
   densityPresets,
+  elevationShadow,
   extendTheme,
   invalidColorRoles,
   invalidNumbers,
@@ -190,6 +198,38 @@ describe("an absent elevation level", () => {
     expect(invalidShadowColors(broken)).toEqual([
       { level: "md", index: 0, color: "#00000" },
     ]);
+  });
+
+  it("paints nothing for the level instead of throwing", () => {
+    const stored = {
+      ...lightTheme,
+      elevation: elevationWithout(lightTheme, "md"),
+    };
+
+    expect(elevationShadow(stored, "md")).toBeUndefined();
+    // The neighbours are untouched: the absence is one level, not the scale.
+    expect(elevationShadow(stored, "sm")).toBe(lightElevation.sm[0]);
+    expect(elevationShadow(stored, "lg")).toBe(lightElevation.lg[0]);
+  });
+
+  it("paints every surviving level of every shipped style", () => {
+    const wrong = shipped.flatMap((theme) =>
+      levels.flatMap((level) => {
+        const stored = {
+          ...theme,
+          elevation: elevationWithout(theme, level),
+        };
+        const survivors = levels.filter((at) => at !== level);
+        return elevationShadow(stored, level) === undefined &&
+          survivors.every(
+            (at) => elevationShadow(stored, at) === theme.elevation[at][0],
+          )
+          ? []
+          : [`${theme.name} · ${level}`];
+      }),
+    );
+
+    expect(wrong).toEqual([]);
   });
 });
 

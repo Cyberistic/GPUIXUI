@@ -319,7 +319,9 @@ panel), and `lg` for dialogs (and the command palette, which is one), popovers,
 menus and the drawer. A level is
 designed as **one** shadow, read with `elevationShadow(theme, level)`; the
 runtime also accepts a shadow list, but the scale does not use one, so a level
-cannot render half of itself. Each level paints the `shadow` role at its designed
+cannot render half of itself. A level the theme does not carry resolves to
+`undefined` — a flat surface the audit has already named, not a throw on first
+paint (§9). Each level paints the `shadow` role at its designed
 strength — 8%, 12% and 16% over a pale canvas, 40%, 65% and 80% over a dark one —
 so retinting that one role retints every shadow a theme inherits. The high-contrast
 themes carry the same geometry in their own role's tint.
@@ -750,7 +752,10 @@ than throwing — `invalidColorRoles` returns the role with `value: undefined`,
 `invalidShadowColors` returns the level once at position `0` with no colour, and
 every contract that measures a pair reports it unmeasurable — so the gate returns
 a failing report that names the role instead of a `TypeError`
-(`docs/tokens.md` §Paint-ready values). A numeric group — and every numeric step
+(`docs/tokens.md` §Paint-ready values). The paint follows the same rule: a role
+the theme lost paints nothing, and `elevationShadow` returns `undefined` for a
+level it does not carry, so no surface throws on the defect the report just
+explained (§7). A numeric group — and every numeric step
 inside one — is not treated this way: adding either is a breaking change rather
 than an additive one, because the components read every step, so the gate refuses
 a theme missing one and names the group or the path (`typography.codeBlock`,
