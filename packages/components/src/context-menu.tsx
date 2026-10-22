@@ -43,6 +43,7 @@ import {
 import {
   fadeFromAnchor,
   presenceMotion,
+  presenceStyle,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -315,7 +316,7 @@ export const ContextMenuContent = ({
       // The occlusion is what makes the open menu a target; a leaving menu is
       // still painted for its tween but must not block the press underneath.
       occlude={presence.present}
-      style={{ pointerEvents: presence.present ? "auto" : "none" }}
+      style={presenceStyle(presence.present)}
     >
       <MenuSurface
         {...rest}
@@ -335,7 +336,7 @@ export const ContextMenuContent = ({
             position: "relative",
             // A leaving box is still painted for its exit tween, but the press the
             // dismissal was for belongs to the control underneath it.
-            pointerEvents: presence.present ? "auto" : "none",
+            ...presenceStyle(presence.present),
           },
           style,
         )}

@@ -64,6 +64,7 @@ import {
   fadeFrom,
   fadeOnly,
   presenceMotion,
+  presenceStyle,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -260,7 +261,7 @@ export const DialogContent = ({
             alignItems: "center",
             justifyContent: "center",
             padding: theme.spacing["3xl"],
-            pointerEvents: presence.present ? "auto" : "none",
+            ...presenceStyle(presence.present),
           },
         )}
       >
@@ -288,7 +289,7 @@ export const DialogContent = ({
                 maxWidth: available,
                 maxHeight: window.height - 2 * theme.spacing["3xl"],
                 overflow: "scroll",
-                pointerEvents: presence.present ? "auto" : "none",
+                ...presenceStyle(presence.present),
               },
             ),
             style,

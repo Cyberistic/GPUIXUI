@@ -41,6 +41,7 @@ import {
 import {
   fadeFromAnchor,
   presenceMotion,
+  presenceStyle,
   useSurfacePresence,
   useSurfaceTiming,
 } from "../internal/presence.js";
@@ -365,7 +366,7 @@ export const MenuSubContent = ({
               position: "relative",
               maxHeight: 320,
               overflowY: "scroll",
-              pointerEvents: presence.present ? "auto" : "none",
+              ...presenceStyle(presence.present),
             },
             style,
           )}

@@ -27,6 +27,7 @@ import {
   exitWindowMs,
   fadeFromSide,
   presenceMotion,
+  presenceStyle,
   useSurfaceTiming,
   type SurfaceTiming,
 } from "../internal/presence.js";
@@ -196,9 +197,10 @@ const ToastCard = ({
       })}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={mergeStyles(overlaySurfaceStyle(TOAST_CARD, undefined, theme), {
-        pointerEvents: present ? "auto" : "none",
-      })}
+      style={mergeStyles(
+        overlaySurfaceStyle(TOAST_CARD, undefined, theme),
+        presenceStyle(present),
+      )}
     >
       <div
         style={{ width: 3, alignSelf: "stretch", backgroundColor: palette.fg }}

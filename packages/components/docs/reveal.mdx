@@ -38,6 +38,14 @@ notice that a press dismisses, the contents of a disclosure, a toast. A closed
 reveal paints nothing at all, so nothing inside it keeps running; re-opening
 before the exit finishes retargets the same instance instead of remounting it.
 
+While the exit runs the box stays painted but paints the seam's no-press guard
+(`presenceStyle` in `internal/presence.tsx`): a surface that is leaving must not
+block the control it uncovers. That is the strongest guard the runtime offers —
+`0.11.0`'s `pointerEvents` does not inherit and removes only the declaring
+element's own hitbox, so a filled control *inside* a fading box keeps its own
+and the runtime has no `inert`. Do not put a destructive action in a reveal that
+is closing; put it outside the reveal.
+
 ## Directions, distance and delay
 
 `from` names the **edge the content arrives from**:
@@ -115,6 +123,9 @@ few hundred milliseconds.
   runtime's `MotionStyle` cannot express.
 - **The mount window is a timer**, so a backgrounded window may unmount an exit
   a frame late.
+- **The guard is not subtree inertness.** `pointerEvents` does not inherit in
+  `0.11.0`, so the fading box stops taking presses itself while a control inside
+  it keeps its hitbox; the overlays share that limit.
 - No scroll-triggered reveal: the runtime publishes no intersection signal, so
   timing is the caller's (`delayMs`, or mounting the reveal when it is needed).
 
@@ -136,4 +147,5 @@ reduced preference painting at rest with a zero duration **and dropping a
 `delayMs` with it** (the measured bug: a reduced reveal with a delay sat at
 its first frame for the whole stagger), a closed reveal painting nothing and unmounting only
 after its exit, and the delay reaching the runtime in seconds. The direction and distance rules are the unit suite beside
-the logic (`src/reveal/frames.test.ts`).
+the logic (`src/reveal/frames.test.ts`). `src/behaviour/presence.test.tsx` holds
+the no-press guard the box paints while it leaves.

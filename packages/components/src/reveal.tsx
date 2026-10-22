@@ -26,6 +26,7 @@ import type { ReactNode } from "react";
 import {
   delayedTiming,
   presenceMotion,
+  presenceStyle,
   useMotionPreference,
   useSurfacePresence,
   useSurfaceTiming,
@@ -110,7 +111,12 @@ export const Reveal = ({
           { position: "relative" },
           recipeStyle(cn(className), theme),
         ),
-        resolveStyle(style, state),
+        mergeStyles(
+          // A leaving subtree is still painted for its exit tween but takes no
+          // presses: the press the close was for belongs to what it covered.
+          presenceStyle(presence.present),
+          resolveStyle(style, state),
+        ),
       )}
     >
       {children}

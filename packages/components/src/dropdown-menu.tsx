@@ -42,6 +42,7 @@ import {
 import {
   fadeFromAnchor,
   presenceMotion,
+  presenceStyle,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -337,9 +338,10 @@ export const DropdownMenuContent = ({
         onKeyUp?.(event);
       }}
       style={mergeStyles(
-        mergeStyles(menuSurfaceStyle(theme, className), {
-          pointerEvents: presence.present ? "auto" : "none",
-        }),
+        mergeStyles(
+          menuSurfaceStyle(theme, className),
+          presenceStyle(presence.present),
+        ),
         style,
       )}
     >

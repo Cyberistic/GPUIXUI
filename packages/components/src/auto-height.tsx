@@ -25,6 +25,7 @@ import * as Option from "effect/Option";
 import { useState, type ReactNode } from "react";
 import {
   presenceMotion,
+  presenceStyle,
   useMotionPreference,
   useSurfacePresence,
   useSurfaceTiming,
@@ -101,7 +102,11 @@ export const AutoHeight = ({
       )}
       style={mergeStyles(
         mergeStyles(
-          { width: "100%", overflow: "hidden" },
+          {
+            width: "100%",
+            overflow: "hidden",
+            ...presenceStyle(presence.present),
+          },
           recipeStyle(cn(className), theme),
         ),
         resolveStyle(style, state),

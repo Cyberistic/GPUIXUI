@@ -55,6 +55,7 @@ import {
 import {
   fadeFromAnchor,
   presenceMotion,
+  presenceStyle,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -264,10 +265,7 @@ export const PopoverContent = ({
       style={mergeStyles(
         mergeStyles(
           overlaySurfaceStyle(POPOVER_CONTENT, className, theme, "lg"),
-          {
-            minWidth: 200,
-            pointerEvents: presence.present ? "auto" : "none",
-          },
+          { minWidth: 200, ...presenceStyle(presence.present) },
         ),
         style,
       )}

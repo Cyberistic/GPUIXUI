@@ -14,6 +14,14 @@
  * leaves. An `anchored` host must make `occlude` conditional for the same
  * reason: the occlusion is a native mouse block that no style value can undo.
  *
+ * **Every surface the seam keeps mounted owes that guard, not only the floating
+ * ones.** The rule was a literal copied into each overlay, and `Reveal` and
+ * `AutoHeight` — which stay mounted for their exit like a surface — never
+ * copied it, so a press meant for what a collapsing section uncovered ran a
+ * control inside the fading box instead. It lives once, as `presenceStyle` in
+ * the seam, and this suite fails a surface that composes the seam without it
+ * and any source that writes the literal again.
+ *
  * **The scan reads each entry in the same pass that lists it**, and skips one a
  * concurrent writer removed. Five sessions write this tree, so a listing can
  * name a file that is gone by the time it is opened: reproduced 2026-10-22 with
@@ -109,9 +117,18 @@ const floating = Arr.filter(sources, ({ body }) => {
 });
 
 /** The guard a leaving surface paints: no presses while its exit runs. */
-const guard =
-  /pointerEvents:\s*(?:presence\.)?present\s*\?\s*"auto"\s*:\s*"none"/;
+const guard = /presenceStyle\(/;
 const occludeGuard = /occlude=\{(?:presence\.)?present\}/;
+
+/**
+ * A surface whose presence is a constant: it mounts once and never leaves, so
+ * it has no exit for a press to land in.
+ */
+const neverLeaves = /useSurfacePresence\(\s*true\b/;
+
+/** The literal the guard replaced, before it had a home in the seam. */
+const inlineGuard =
+  /pointerEvents:\s*(?:presence\.)?present\s*\?\s*"auto"\s*:\s*"none"/;
 
 /** The opening tag of a host, so an attribute is read where it is written. */
 const tags = (body: string, host: string): ReadonlyArray<string> => {
@@ -150,6 +167,35 @@ describe("the pointer contract", () => {
       guard.test(body) ? Result.failVoid : Result.succeed(path),
     );
     expect(offenders).toEqual([]);
+  });
+
+  it("every surface that stays painted for an exit takes no press", () => {
+    // The bug this guards: the rule lived as a literal in eight floating
+    // surfaces, and the two that stayed mounted without copying it — `Reveal`
+    // and `AutoHeight` — ran a press on content the reader could no longer see.
+    // The seam owns the rule now; this case reads every surface it keeps.
+    const mounted = Arr.filter(
+      sources,
+      ({ body }) =>
+        (Str.includes("useSurfacePresence(")(body) ||
+          Str.includes("presenceMotion(")(body)) &&
+        !neverLeaves.test(body),
+    );
+    // A floor rather than the exact count: a new surface joins the rule.
+    expect(Arr.length(mounted)).toBeGreaterThanOrEqual(10);
+    const offenders = Arr.filterMap(mounted, ({ path, body }) =>
+      guard.test(body) ? Result.failVoid : Result.succeed(path),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps the guard in one home", () => {
+    // Eight copies and two omissions were one rule; a ninth copy is how the
+    // next omission happens.
+    const copies = Arr.filterMap(sources, ({ path, body }) =>
+      inlineGuard.test(body) ? Result.succeed(path) : Result.failVoid,
+    );
+    expect(copies).toEqual(["src/internal/presence.tsx"]);
   });
 
   it("a pointer-placed host drops its occlusion with its presence", () => {

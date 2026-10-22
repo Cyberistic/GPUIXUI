@@ -126,3 +126,35 @@ describe("AutoHeight", () => {
     }
   });
 });
+
+describe("the press a close uncovers", () => {
+  /**
+   * The bug this guards: a collapse stays mounted for its exit tween, so its
+   * box was still a target while the section shrank. The measured limit is the
+   * runtime's: `pointerEvents` does not inherit and removes only the declaring
+   * element's hitbox, so a control inside the fading box keeps its own (GPUix
+   * `AGENTS.md`; the headless renderer dispatches a simulated click by bounds,
+   * so routing is the live probes' claim, not this one). This case holds the
+   * guard the surface owes.
+   */
+  const guard = (page: ReturnType<typeof renderComponent>) =>
+    page.renderer.findByTestId("box")?.style.pointerEvents;
+
+  it("paints the no-press guard while the section collapses", async () => {
+    const page = renderComponent(<Reveal open={false} />);
+    try {
+      page.renderer.clockPause();
+      opened(page);
+      await waitFor(() => expect(height(page)).toBe(80));
+      expect(guard(page)).toBe("auto");
+
+      page.rerender(<Reveal open={false} />);
+      settle(page);
+      // The clipped box is still painted for the tween, and no longer a target.
+      expect(page.renderer.findByTestId("box")).toBeDefined();
+      expect(guard(page)).toBe("none");
+    } finally {
+      page.unmount();
+    }
+  });
+});

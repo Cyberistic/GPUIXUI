@@ -55,6 +55,7 @@ import {
   clickCentreOf,
   focusedTestId,
   settle,
+  settleMotion,
   waitFor,
 } from "../internal/interaction.js";
 import { MotionProvider } from "../motion.js";
@@ -65,6 +66,7 @@ import {
   PreviewCardContent,
   PreviewCardTrigger,
 } from "../preview-card.js";
+import { Reveal } from "../reveal.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs.js";
 import { ToastProvider, ToastViewport, useToast } from "../toast.js";
 
@@ -766,5 +768,48 @@ describe("the preference", () => {
     // Well inside the 500 ms the animated window would still be running.
     expect(painted(page.renderer, "toast-1")).toBe(false);
     page.unmount();
+  });
+});
+
+describe("a leaving subtree", () => {
+  /**
+   * The bug this guards: `Reveal` stayed mounted for its exit tween without the
+   * no-press guard every overlay paints, so its box kept a hitbox while it
+   * faded. The measured limit is the runtime's: `pointerEvents` does not
+   * inherit and inserts no hitbox for the element that declares it only, so a
+   * control *inside* a leaving box keeps its own hitbox (GPUix `AGENTS.md`, and
+   * measured in this renderer: a simulated click is dispatched by bounds, so a
+   * headless suite cannot measure routing at all). What this case can hold is
+   * the guard itself; the live probes measure where a press lands.
+   */
+  const leaving = (page: ReturnType<typeof renderComponent>) =>
+    page.renderer.findByTestId("reveal")?.style.pointerEvents;
+
+  it("paints the no-press guard while a reveal fades out", () => {
+    const page = renderComponent(
+      <Page>
+        <Reveal open testId="reveal">
+          <text>Notice</text>
+        </Reveal>
+      </Page>,
+    );
+    try {
+      settleMotion(page);
+      expect(leaving(page)).toBe("auto");
+
+      page.rerender(
+        <Page>
+          <Reveal open={false} testId="reveal">
+            <text>Notice</text>
+          </Reveal>
+        </Page>,
+      );
+      settle(page);
+      // Still painted for the tween, and no longer a target.
+      expect(painted(page.renderer, "reveal")).toBe(true);
+      expect(leaving(page)).toBe("none");
+    } finally {
+      page.unmount();
+    }
   });
 });

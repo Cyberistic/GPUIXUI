@@ -948,7 +948,7 @@ fill fails three cases by name (both full-object comparisons, printing
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 121/121
+`[x]` `[██████████]` 122/122
 
 `[x]` Measure **whether a filled child takes its row's hover away** — every
       list, table and tree row paints its pointer feedback through the runtime's
@@ -3445,6 +3445,29 @@ fill fails three cases by name (both full-object comparisons, printing
       `apps/playground/README.md` §`aspect-ratio-paint`. Publishing it in the
       capability record's **`aspectRatio`** row is the Interlocks row below.
 
+`[x]` Measure **what box an `<img>` paints** — an image is the one element whose
+      intrinsic ratio the runtime owns: `@gpuix/native` hands the decoded bitmap
+      to GPUI, which fills the element's own `aspect_ratio` once it loads, while
+      a style's `aspectRatio` is the contract `Box` documents. The `image-box`
+      live probe paints the 8×8 data-URL PNG (a square bitmap) four ways on
+      0.11.0 and reads each settled box: unsized paints **8×8** (the intrinsic
+      edge); `width: 120` with `aspectRatio: 2` paints **120×120**, so the loaded
+      bitmap's ratio **replaces** the style's 2 and the height the style asks for
+      (60) never paints; `width: 120` alone is **120×120**; and `width: 120,
+      height: 60` paints **120×60**, the one shape the runtime compensates for by
+      handing the element the declared width ÷ height so the bitmap cannot jump
+      it. 12 checks, `--only image-box`, green on 0.11.0 (~0.5 s), capability
+      `content` reported `unverified` alone. Fixture `src/live/image-box.ts` (the
+      four ids, the bitmap edge, the width/height/ratio, `heightAtBitmapRatio`,
+      `IMAGE_BOX_CASES`) + `image-box.test.ts` (8 cases: the two ratios' 60 vs
+      120, the case table, the fixture's expressions, the printed geometry, the
+      settle premise and the registry entry). Negative control measured, exit
+      `1`: pinning the both-definite case to its width alone paints **120×120**
+      and fails `imagebox-both paints the height its case expects`
+      (`expected 60 ± 1, got 120`); restored green. Evidence:
+      `apps/playground/README.md` §`image-box`. Publishing it in the capability
+      record's **Image painting** row is the Interlocks row below.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -5632,6 +5655,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Measure the **type a document host actually paints** — `nativeTextTheme` hands a `<code>`/`<markdown>` host the scale's own `metrics` (`codeTextSize`/`codeLineHeight`, the body and heading sizes, and now a fence's language strip `mdCodeHeaderTextSize` from `typography.caption`, where the runtime's own is `11`), and that hand-off is read from the pinned source (`MetricsOverride` is `rename_all = "camelCase"`) rather than from a frame: no probe has compared a painted block's glyph height against the theme's `codeBlock` role, so a brand that rescales its code role is promised a paint nobody measured. Record the measured heights for a block, a diff row and a fenced card's language strip in one theme whose `codeBlock`/`caption` roles are unmistakable (20/24 and 18), and keep the control that a host handed no `theme` paints the runtime's own numbers | playground (`apps/playground` live probes, a `document-type` scenario) | open — a new probe; the seam's numbers are a source read until it lands |
 | Publish the **`aspectRatio` paint** — the capability record calls the field supported because `StyleDesc` declares it, and the playground's `aspect-ratio-paint` (14 checks, 0.11.0) now measures what it fills: a definite width of **160** derives a height of **80**, `width: 100` at ratio **0.5** paints **100×200** (a portrait box, not a smaller one), `height: 60` derives a width of **120**, two definite dimensions (**160×60**) keep both, a child stretched by a 240-wide column paints **240×120**, and a child stretched by an 80-tall row paints **0×80** — the row's stretch supplies the height but the ratio derives no width from it, so a row child must declare the axis the ratio should derive from. §3's row should carry the verdict, the values and that row limit, and `/docs/runtime#measured-in-a-window` should publish it | docs-site (capability record + `/docs/runtime`) | open — the probe is green and documented in `apps/playground/README.md` §`aspect-ratio-paint`; the record row still says only "`StyleDesc.aspectRatio` — width divided by height" |
+| Publish the **`<img>` box** a thumbnail must reserve — the capability record's Image painting row covers the sources (a path, an http(s) URL, a data URL, in-memory pixels from a layout effect) and says nothing about the box an image occupies, which is what a preview card, a thumbnail grid or a crop area composes around. The playground's `image-box` (12 checks, 0.11.0) measured: an unsized image paints the bitmap's **8×8** intrinsic edge; `width: 120` with `aspectRatio: 2` paints **120×120** because the loaded bitmap replaces the element's ratio, so the style's **60** never paints; `width: 120` alone is **120×120**; and `width: 120, height: 60` paints **120×60**, the compensated shape where the runtime hands the element the declared ratio so the bitmap cannot jump it. §3's Image painting row should carry the rule (declare both dimensions for a stable thumbnail; an `aspectRatio` on an image is replaced by the bitmap), and `/docs/runtime#measured-in-a-window` should publish it | docs-site (capability record + `/docs/runtime`) | open — the probe is green and documented in `apps/playground/README.md` §`image-box`; the record row still reads as a source list only |
 
 ## Phase D — data and workspace components
 
@@ -5937,7 +5961,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 182/182
+`[x]` `[██████████]` 183/183
+
+`[x]` Retract `/docs/motion`'s **two claims that the shipped controls do not
+move** — the page is the only place that documents `@gpuixui/motion`, and its
+Related list called the Tabs indicator "the shared indicator that jumps rather
+than slides, because there is no `transform`", while `TabsList` ships a measured
+`tabs-indicator` whose box is a `normal` (200 ms) motion target retargeted from
+the box on screen. Its reduced-motion paragraph said `Switch` "paints its two
+states without the slide", while the thumb is the one primitive that tweens —
+`motion.div` with `animate={{ left }}`, `initial={false}` and a 150 ms `easeOut`
+`THUMB_SLIDE` — and only the caller's `reducedMotion` lands it in place of
+travelling. Both sentences now state the movement and the limit that remains (no
+`transform`, so the runtime interpolates a box rather than scaling a layer; the
+preference is the caller's). `motion-page.test.ts` gains `describes the tab pill
+as the slide the component ships` and `keeps the switch's slide while the
+caller's preference can skip it`: the first reads `tabs.tsx`'s
+`useSurfaceTiming("normal")`/`initial: false`/`animate: indicatorBox(`, the
+curated Tabs page's "The pill **slides**" and the Related line (which must say
+**slides**, keep the `transform` limit and refuse the retracted wording); the
+second derives the printed 150 ms from `THUMB_SLIDE`'s `duration: 0.15`, holds
+the three paint sites and refuses "paints its two states without the slide".
+Directions measured: restoring both retired sentences fails exactly those two
+cases by name (the file is 15/17); restored, `motion-page.test.ts` is 17/17 and
+`check-types` is clean. No native scenario applies — a docs page has no runtime
+path; the component's own record (`tabsMeta.limitations`) already states the
+slide.
 
 `[x]` Curate the **Color picker** page and hold its hex grammar, commit split
 and per-swatch tab stop to the source — `/docs/components/color-picker` served
@@ -8290,6 +8339,7 @@ numbers).
 `[x]` `packages/components`: **a dismissed notice ignored a preference change mid-exit** — the toast stack keeps a card painted for its exit tween with its own `setTimeout` (the store drops the toast immediately), and its effect re-ran when the preference changed but the guard `timers.current.has(id)` kept the **old** window, so a reader who turned Reduce Motion on while a 500 ms notice was leaving watched it play out anyway. The seam's seconds→milliseconds conversion is now one helper (`exitWindowMs` in `internal/presence.tsx`, also used by `useSurfacePresence`) and each scheduled exit remembers the window it was scheduled for, so a changed window **replaces** the running one (a 500 ms leave becomes an instant removal; an unchanged window is never restarted by an unrelated push). `src/internal/presence.test.ts` (8 cases) holds the frames' edge signs (`fadeFrom`, `fadeFromSide` from outside its window edge, `fadeFromAnchor` from the trigger's side, the scrim's geometry-free fade) and the window's unit (seconds→ms, zero under `reduced`, absent duration as instant), which the behaviour suite could only see through the surfaces it mounts. `presence.test.tsx`'s `removes a dismissed notice at once when the setting turns on` is the native proof: push, settle at rest, dismiss (still painted for the exit), re-render under `reduced`, and the card is unpainted inside 60 ms where the animated window still had 500 ms to run. Directions measured: restoring the `has(id)` guard fails the case `expected true to be false`; restored, `presence` + `toast` are 34/34. Docs: `docs/component-api.md` §11 (the window is rescaled with the preference), `docs/toast.mdx` §Motion
 `[x]` `packages/components`: **a re-typing guard raced its own completion** — `typing-text.test.tsx`'s `retypes from the first character when the string changes` waited for the painted `Second` and then asserted `onComplete` had run twice, but the callback is a passive effect: it lands in the flush *after* the paint the poll can already read, so the full behaviour suite failed once on a busy pass with `expected "vi.fn()" to be called 2 times, but got 1 times` (measured 2026-10-22 18:27; 10/10 green in isolation). The claim now polls the callback itself while keeping the paint assertion, so a retype that never completes still fails with the case's own message; 6/6, eight measured runs.
 `[x]` `packages/components`: `src/reveal-contract.test.ts` kept the **old list-then-open walk** — the one `presence-contract.test.ts` had just replaced because five sessions write this package: a listing can name a file another session deleted a moment later, so the contract threw `ENOENT` instead of judging the tree (the presence suite measured 106 throws in one five-second run against a directory being written). The reveal suite now reads each entry **in the same pass that lists it** and skips exactly that case (`ENOENT` between listing and read), while any other failure still fails the suite; the scanned bodies are reused by every case instead of re-read at test time, and a new `reads the tree it judges` case requires more than 100 sources plus both disclosure files, so an empty scan cannot satisfy the rules by accident. Directions measured: planting a second reveal (`onLayout` + `presenceMotion(`) in `accordion.tsx` fails `has one implementation` reporting `['src/accordion.tsx', …]` and `is not re-inlined` (`expected true to be false`); restored, 5/5. `check:tests`, `check-types` and `lint` green
+`[x]` `packages/components`: **a surface that leaves kept taking presses, and the rule lived in eight copies** — the no-press guard a leaving surface paints (`pointerEvents: present ? "auto" : "none"`) was written into each floating overlay, and the two surfaces that also stay mounted for an exit — `Reveal` and `AutoHeight`, which keep a collapsing subtree painted so a press meant for the control it uncovers ran a control inside the fading box — never copied it. The rule is one seam now (`presenceStyle` in `internal/presence.tsx`, returned as a `StyleDesc` so a surface can merge it with its own style), and every surface the seam keeps mounted composes it: the eight overlays, the drawer's scrim and surface, the toast card, `Reveal` and `AutoHeight`. `src/presence-contract.test.ts` (9 cases) walks every source that composes `useSurfacePresence`/`presenceMotion` and requires `presenceStyle(`, rejects the retired literal outside the seam, and still holds the conditional `occlude` on a deferred anchored host. `src/behaviour/presence.test.tsx` gains `paints the no-press guard while a reveal fades out` and `src/behaviour/auto-height.test.tsx` gains `paints the no-press guard while the section collapses` — both paused-clock cases read `auto` at rest and `none` while the box is still painted for its exit. The runtime limit is stated on both pages rather than hidden: `0.11.0`'s `pointerEvents` does not inherit and removes only the declaring element's own hitbox, so a filled control *inside* a leaving box keeps its own and there is no `inert`. Directions measured: reverting `presenceStyle` from either surface fails its case with `expected undefined to be 'auto'`; restored, the contract is 9/9 and both behaviour files are green (19 and 5). Docs: `docs/reveal.mdx` §Timing and reduced motion / §Limitations / §Verification, `docs/auto-height.mdx` §Motion and reduced motion / §Limitations / §Verification, and the `COMPONENTS.md` Reveal/Auto height rows.
 `[x]` Interaction effects: magnetic, tilt, click, ripple-button, icon-button, flip-button, liquid-button, shine
   - `[x]` `ripple-button` — `RippleButton` is the local action plus one layer: a press paints a disc born at the press point whose `width`, `height`, `left`, `top` and `borderRadius` tween together until it covers the control, fading from 28% to nothing, then unmounting — inset geometry rather than a scale, because the runtime has no `transform`. The wash is the action's own **label ink** (`actionOnColor`), the layer takes `pointerEvents: "none"` so the press it marks still reaches the action, a keyboard activation ripples from the centre, and the reduced preference paints no disc at all; `src/ripple-button/logic.ts` + its unit suite (7), `src/behaviour/ripple-button.test.tsx` (7), `docs/ripple-button.mdx`, the example and the row. Measured: the disc off-centre fails the centre case, a disc that outlives its tween fails the removal case, and a fill-coloured wash fails the ink case
   - `[x]` `shine` — `ShineButton` is the local action with a sheen that crosses it on hover: two absolutely positioned halves, each a two-stop gradient (the runtime's whole gradient grammar), tween their `left` together from outside the left edge to outside the right, so the seam between them is the brightest line. The lead brightens into the label ink at 20% and the trail dims back out; the pair is clipped by the control, takes `pointerEvents: "none"`, a re-entry restarts the sweep, a started sweep finishes after the pointer leaves, and reduced motion, a disabled action and the keyboard path paint none. `src/shine-button/logic.ts` + its unit suite (8), `src/behaviour/shine-button.test.tsx` (6), `docs/shine-button.mdx`, the example and the row. Measured: a lead that starts inside the control fails the born-outside case, a band that does not recentre fails the half-way case, and a layer that outlives its sweep fails the removal case

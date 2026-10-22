@@ -23,7 +23,12 @@
  * the native tree does not expose, and the live probes are what prove it.
  */
 
-import type { MotionProps, MotionStyle, MotionTransition } from "@gpuix/react";
+import type {
+  MotionProps,
+  MotionStyle,
+  MotionTransition,
+  StyleDesc,
+} from "@gpuix/react";
 import {
   motionTiming,
   type MotionLevel,
@@ -252,4 +257,18 @@ export const presenceMotion = (
   initial: frames.initial,
   animate: presence.present ? frames.animate : frames.exit,
   transition: presence.present ? presence.timing.enter : presence.timing.exit,
+});
+
+/**
+ * The input rule a surface paints for its current presence.
+ *
+ * A surface stays painted for its exit tween, so it is still a box with
+ * controls in it. The press that dismissed it belongs to whatever now lies
+ * underneath, so a leaving surface takes none: its whole subtree is out of the
+ * pointer until the tween ends and it unmounts. Every surface the seam keeps
+ * mounted composes this, because a box that keeps taking presses is a control
+ * nobody can see.
+ */
+export const presenceStyle = (present: boolean): StyleDesc => ({
+  pointerEvents: present ? "auto" : "none",
 });

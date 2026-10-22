@@ -47,6 +47,7 @@ import {
 import {
   fadeFromAnchor,
   presenceMotion,
+  presenceStyle,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -345,7 +346,7 @@ export const PreviewCardContent = ({
       style={mergeStyles(
         mergeStyles(
           overlaySurfaceStyle(PREVIEW_CARD_CONTENT, className, theme),
-          { pointerEvents: presence.present ? "auto" : "none" },
+          presenceStyle(presence.present),
         ),
         style,
       )}

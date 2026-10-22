@@ -38,6 +38,13 @@ subtree unmounts after its exit tween, so a timer or a request inside it stops.
 A content change while the reveal is open re-measures and continues from the
 height on screen, which is what a disclosure holding a growing list needs.
 
+A collapse keeps the body painted for its exit tween and paints the seam's
+no-press guard (`presenceStyle` in `internal/presence.tsx`), so the shrinking
+box stops blocking what the section uncovers. The limit is the runtime's:
+`pointerEvents` does not inherit in `0.11.0` and removes only the declaring
+element's hitbox, so a filled control inside the collapsing body keeps its own
+and there is no `inert` to ask for.
+
 ## Motion and reduced motion
 
 The reveal uses the house levels: `normal` (200 ms) by default, and the
@@ -84,6 +91,8 @@ import { MotionProvider } from "@gpuixui/components";
   measurement).
 - The content is clipped, not reflowed: a box taller than the reveal is cut off
   until the animation finishes.
+- The no-press guard is the surface's, not the subtree's: `pointerEvents` does
+  not inherit, so a control inside a collapsing body can still take a press.
 
 ## Related
 
@@ -96,7 +105,8 @@ import { MotionProvider } from "@gpuixui/components";
 ## Verification
 
 `src/behaviour/auto-height.test.tsx` renders the primitive in the real GPUix
-renderer (4 tests): the entry grows from zero to the reported height, a collapse
+renderer (5 tests): the entry grows from zero to the reported height, a collapse
 stays painted for its exit tween then unmounts, the reduced preference paints
-the measured height with the motion clock paused, and a content change while
-open re-measures to the new height.
+the measured height with the motion clock paused, a content change while open
+re-measures to the new height, and a collapse paints the no-press guard while it
+runs.

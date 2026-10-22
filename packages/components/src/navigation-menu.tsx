@@ -61,6 +61,7 @@ import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
   fadeFromAnchor,
   presenceMotion,
+  presenceStyle,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -614,9 +615,7 @@ export const NavigationMenuContent = ({
       style={mergeStyles(
         mergeStyles(
           overlaySurfaceStyle(NAVIGATION_MENU_CONTENT, className, theme),
-          {
-            pointerEvents: presence.present ? "auto" : "none",
-          },
+          presenceStyle(presence.present),
         ),
         style,
       )}

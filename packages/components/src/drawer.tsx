@@ -50,6 +50,7 @@ import {
   fadeFromSide,
   fadeOnly,
   presenceMotion,
+  presenceStyle,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -271,7 +272,7 @@ export const DrawerContent = ({
             flexDirection: isVertical(side) ? "column" : "row",
             alignItems: "stretch",
             justifyContent: side === "left" ? "flex-start" : "flex-end",
-            pointerEvents: presence.present ? "auto" : "none",
+            ...presenceStyle(presence.present),
           },
         )}
       >
@@ -289,9 +290,10 @@ export const DrawerContent = ({
           }}
           onKeyDown={handleKeyDown}
           style={mergeStyles(
-            mergeStyles(surfaceStyle(theme, box, className), {
-              pointerEvents: presence.present ? "auto" : "none",
-            }),
+            mergeStyles(
+              surfaceStyle(theme, box, className),
+              presenceStyle(presence.present),
+            ),
             style,
           )}
         >
