@@ -53,6 +53,8 @@ import {
   grownIconAudit,
   grownIconTheme,
   invisibleRingAudit,
+  lopsidedEmphasisAudit,
+  lopsidedEmphasisTheme,
   squatDensityAudit,
   tallTypeAudit,
   tallTypeTheme,
@@ -261,6 +263,110 @@ describe("the strong role outweighs the body it emphasises", () => {
   });
 });
 
+describe("the strong role shares the body's size and leading", () => {
+  // `bodyStrong` and `body` are one emphasis at one size — 14/20 for both roles,
+  // the weight the whole difference between reading and a line that stands out.
+  // The typography merge is per role, so a design-tool export that names only
+  // the token a body line is set from raises `body` and leaves `bodyStrong`
+  // behind: the card title becomes the smaller line. Every number stays finite,
+  // positive and in order and the weights are the library's, so the weight half
+  // of the rule — and every other report — stays empty.
+
+  it("reports a body size the strong role did not follow", () => {
+    expect(
+      invalidNumbers(brand({ typography: { body: { fontSize: 15 } } })),
+    ).toEqual([
+      {
+        group: "typography",
+        path: "bodyStrong.fontSize",
+        value: 14,
+        rule: "emphasis",
+      },
+    ]);
+  });
+
+  it("reports a body leading the strong role did not follow", () => {
+    expect(
+      invalidNumbers(brand({ typography: { body: { lineHeight: 24 } } })),
+    ).toEqual([
+      {
+        group: "typography",
+        path: "bodyStrong.lineHeight",
+        value: 20,
+        rule: "emphasis",
+      },
+    ]);
+  });
+
+  it("accepts the pair raised together", () => {
+    expect(
+      invalidNumbers(
+        brand({
+          typography: {
+            body: { fontSize: 15, lineHeight: 22 },
+            bodyStrong: { fontSize: 15, lineHeight: 22 },
+          },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reports an unusable size once, as a size rather than as emphasis", () => {
+    // A stored role can carry a size the batch would drop. It is the
+    // single-value report's, so the pair does not report the same role twice
+    // under a rule that says nothing about an unusable number.
+    expect(
+      invalidNumbers({
+        ...lightTheme,
+        typography: {
+          ...lightTheme.typography,
+          bodyStrong: {
+            ...lightTheme.typography.bodyStrong,
+            fontSize: Number.NaN,
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        group: "typography",
+        path: "bodyStrong.fontSize",
+        value: Number.NaN,
+        rule: "positive",
+      },
+    ]);
+  });
+
+  it("fails the gate on a lopsided emphasis, with no colour report involved", () => {
+    expect(lopsidedEmphasisAudit.invalidNumbers).toEqual([
+      {
+        group: "typography",
+        path: "bodyStrong.fontSize",
+        value: 14,
+        rule: "emphasis",
+      },
+    ]);
+    expect(lopsidedEmphasisAudit.invalidRoles).toEqual([]);
+    expect(lopsidedEmphasisAudit.invalidShadows).toEqual([]);
+    expect(lopsidedEmphasisAudit.contrast).toEqual([]);
+    expect(lopsidedEmphasisAudit.decorative).toEqual([]);
+    expect(lopsidedEmphasisAudit.indicators).toEqual([]);
+    expect(lopsidedEmphasisAudit.passed).toBe(false);
+  });
+
+  it("executes the documented example", () => {
+    expect(
+      lopsidedEmphasisAudit.invalidNumbers.map(({ path, rule }) => [
+        path,
+        rule,
+      ]),
+    ).toEqual([["bodyStrong.fontSize", "emphasis"]]);
+    expect(lopsidedEmphasisTheme.typography.body.fontSize).toBe(15);
+    expect(lopsidedEmphasisTheme.typography.bodyStrong.fontSize).toBe(14);
+    expect(lopsidedEmphasisAudit.contrast).toEqual([]);
+    expect(lopsidedEmphasisAudit.passed).toBe(false);
+  });
+});
+
 describe("a type role's weight is a number the batch can carry", () => {
   /** A theme restored from storage, in the shape the report reads. */
   const stored = (role: "h1" | "bodyStrong", fontWeight: number) => ({
@@ -411,7 +517,7 @@ describe("the documents name the number rules", () => {
 
     expect(failure).toBeDefined();
     expect(catalogue).toContain(
-      "| `typography` | `bodyStrong`'s weight | finite, and heavier than `body`'s (`emphasis`) |",
+      "| `typography` | `bodyStrong`'s size, leading and weight | the size and the leading equal `body`'s, and the weight is greater — `emphasis` |",
     );
     // The snippet is the real report, not an illustration of one.
     expect(catalogue).toContain(
@@ -421,10 +527,31 @@ describe("the documents name the number rules", () => {
     // contract list, so one surface cannot drift from the other.
     const design = page("../../../docs/design-system.md");
     expect(design).toContain(
-      "the strong role must weigh more than the body it emphasises",
+      "the strong role must share the body's size and leading and\nweigh more",
     );
     expect(design).toContain(
-      "the strong body role must weigh more than the body it emphasises",
+      "the strong body role must share the body's size and leading and weigh more",
+    );
+  });
+
+  it("prints the emphasis size report, not only the weight's", () => {
+    // The pair is three numbers: a brand that raises the body's size and leaves
+    // the strong role behind is reported on the role's `fontSize`. The page
+    // prints that exact report beside the weight one, so a reader cannot take
+    // the weight for the whole rule.
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(lopsidedEmphasisTheme);
+
+    expect(failure?.path).toBe("bodyStrong.fontSize");
+    expect(catalogue).toContain(
+      `// [{ group: "typography", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+    const design = page("../../../docs/design-system.md");
+    expect(design).toContain(
+      "`bodyStrong.fontSize` or `bodyStrong.lineHeight`",
+    );
+    expect(design).toContain(
+      "a brand that raises only the body's size or\nleading leaves the role meant to stand out behind",
     );
   });
 
@@ -681,7 +808,13 @@ describe("a control's box fits the text it carries", () => {
     // a 26px leading outgrows only the smallest box.
     expect(
       invalidNumbers(
-        brand({ density: "compact", typography: { body: { lineHeight: 26 } } }),
+        brand({
+          density: "compact",
+          typography: {
+            body: { lineHeight: 26 },
+            bodyStrong: { lineHeight: 26 },
+          },
+        }),
       ),
     ).toEqual([
       {
@@ -716,7 +849,13 @@ describe("a control's box fits the text it carries", () => {
   it("accepts a box exactly as tall as the leading, where the line fills it", () => {
     expect(
       invalidNumbers(
-        brand({ density: "compact", typography: { body: { lineHeight: 24 } } }),
+        brand({
+          density: "compact",
+          typography: {
+            body: { lineHeight: 24 },
+            bodyStrong: { lineHeight: 24 },
+          },
+        }),
       ),
     ).toEqual([]);
   });
@@ -728,7 +867,10 @@ describe("a control's box fits the text it carries", () => {
       invalidNumbers(
         brand({
           density: { controlHeight: { sm: 20, md: 28, lg: 32 } },
-          typography: { body: { lineHeight: 26 } },
+          typography: {
+            body: { lineHeight: 26 },
+            bodyStrong: { lineHeight: 26 },
+          },
         }),
       ),
     ).toEqual([

@@ -1088,7 +1088,7 @@ by group, path, value and the rule it missed:
 | `typography` | every role's size | finite, `> 0` |
 | `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |
 | `typography` | every role's weight | finite — the runtime clamps a real number into its 1–1000 range (`fontWeight`) |
-| `typography` | `bodyStrong`'s weight | finite, and heavier than `body`'s (`emphasis`) |
+| `typography` | `bodyStrong`'s size, leading and weight | the size and the leading equal `body`'s, and the weight is greater — `emphasis` |
 | `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the text and the icon it carries (`fits`) |
 | `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |
 | `density` | `controlPaddingX` per size | finite, `>= 0` |
@@ -1172,18 +1172,23 @@ as one of the four steps the type scale declares, and a theme restored from
 storage is exactly the shape that can carry a weight the type cannot express.
 
 Two **roles** only mean something together for the same reason. `bodyStrong`
-shares `body`'s size and leading by design, so its weight is the whole
-difference between reading and emphasis — a card title, a lead-in, a line a
-reader is meant to notice (`Text role="bodyStrong"`, `textStyle(theme,
-"bodyStrong")`). A brand that forwards one stored weight to every role — a
-design-tool export, a settings file, a `bodyStrong` override that copied the body
-token — keeps both sizes, both leadings and both weights layable while the
-emphasis paints exactly like the text it was meant to lift, and `invalidScales`
-cannot see it either: `bodyStrong` is not a rung of the size ladder. So the two
-weights are compared, and `invalidNumbers` reports the **strong** role's weight
-as `emphasis` — the number that has to change, whichever of the pair moved. One
-step of weight is enough (the shipped pair is `body` 400 against `bodyStrong`
-600); equal weights are a flattened emphasis, not a subpixel rounding.
+is one emphasis at one size: it shares `body`'s size and leading (14/20) and
+differs by weight, so a card title, a lead-in or a line a reader is meant to
+notice is the same measure as the copy around it (`Text role="bodyStrong"`,
+`textStyle(theme, "bodyStrong")`). Two brands break that while every number
+stays layable. A design-tool export that forwards one stored weight to every
+role — or a `bodyStrong` override that copied the body token — keeps both sizes,
+both leadings and both weights usable while the emphasis paints exactly like the
+text it was meant to lift. A brand that names only the token a body line is set
+from raises `body` and leaves `bodyStrong` behind, so the title becomes the
+smaller or the looser line. `invalidScales` cannot see either: `bodyStrong` is
+not a rung of the size ladder. So all three numbers are compared, and
+`invalidNumbers` reports the **strong** role's number as `emphasis` — the value
+that has to change, whichever of the pair moved. One step of weight is enough
+(the shipped pair is `body` 400 against `bodyStrong` 600); equal weights are a
+flattened emphasis, not a subpixel rounding. A number already reported by its own
+rule is not reported again: an unusable size is a `positive` report, and a
+leading inside its own glyph box is a `leading` report.
 
 ```ts
 import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
@@ -1199,7 +1204,10 @@ invalidNumbers(
 invalidNumbers(
   extendTheme(lightTheme, {
     density: "compact",
-    typography: { body: { lineHeight: 26 } },
+    typography: {
+      body: { lineHeight: 26 },
+      bodyStrong: { lineHeight: 26 },
+    },
   }),
 );
 // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
@@ -1210,6 +1218,10 @@ invalidNumbers(
   }),
 );
 // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
+invalidNumbers(
+  extendTheme(lightTheme, { typography: { body: { fontSize: 15 } } }),
+);
+// [{ group: "typography", path: "bodyStrong.fontSize", value: 14, rule: "emphasis" }]
 invalidNumbers(
   extendTheme(lightTheme, { typography: { bodyStrong: { fontWeight: 400 } } }),
 );
@@ -1268,9 +1280,9 @@ it, naming both steps:
 `bodyStrong` shares `body`'s size and differs by weight, and the two mono roles
 are a separate family rather than rungs of the size ladder, so neither is
 compared here. The emphasis pair is not left unmeasured for it: `bodyStrong`
-must weigh more than `body`, and `invalidNumbers` reports it as `emphasis`
-(§Numbers). A value that is not finite is skipped here and reported once by
-`invalidNumbers`, which owns it.
+must share `body`'s size and leading and weigh more, and `invalidNumbers`
+reports the strong role's number as `emphasis` (§Numbers). A value that is not
+finite is skipped here and reported once by `invalidNumbers`, which owns it.
 
 Elevation is the one ladder whose rung is not a single token. A level is a
 geometry plus a share of the `shadow` role, so its depth is the distance the
@@ -2819,8 +2831,8 @@ Merge rules:
 - colour, spacing, radius, border width and icon overrides merge key by key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight; `bodyStrong` is its own role, so a brand that changes the
-  body size names it too — the pair is designed at one size and no report holds
-  the two together yet (`TODO.md` → Interlocks);
+  body size names it too — the pair is one emphasis at one size, and
+  `invalidNumbers` reports a strong role that does not follow as `emphasis`;
 - elevation levels **replace** the whole shadow array;
 - `density` accepts a preset name or `DensityOverrides`; a partial override keeps
   the base preset name and merges `controlHeight` and `controlPaddingX` size by

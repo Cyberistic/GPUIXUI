@@ -543,9 +543,9 @@ describe("the density override the pages teach", () => {
 /**
  * `bodyStrong` is `body`'s emphasis at the same size and leading, and the
  * typography merge is per role, so an example that raises the body size has to
- * raise the pair. No report holds the two sizes together yet — that is the
- * interlock row in `TODO.md` — so the catalogue's executed shape is the surface
- * this guard keeps honest.
+ * raise the pair — and the gate now says so: `invalidNumbers` reports a strong
+ * role that does not follow as `emphasis`. The catalogue's executed shape and
+ * the rule beside the merge list are the two surfaces this guard keeps honest.
  */
 describe("the emphasis pair the extension example raises", () => {
   it("moves bodyStrong with the body size", () => {
@@ -554,9 +554,15 @@ describe("the emphasis pair the extension example raises", () => {
     );
   });
 
-  it("names the pair rule beside the merge rules", () => {
+  it("names the pair rule beside the merge rules, with the report behind it", () => {
     expect(catalogue.replace(/\s+/g, " ")).toContain(
-      "`bodyStrong` is its own role, so a brand that changes the body size names it too",
+      "`bodyStrong` is its own role, so a brand that changes the body size names it too — the pair is one emphasis at one size, and `invalidNumbers` reports a strong role that does not follow as `emphasis`;",
+    );
+    // The retracted sentence: no report holds the two together, so the example
+    // was the only guard. The gate returns the report now, so the page must not
+    // still call it an open interlock.
+    expect(catalogue.replace(/\s+/g, " ")).not.toContain(
+      "no report holds the two together yet",
     );
   });
 });

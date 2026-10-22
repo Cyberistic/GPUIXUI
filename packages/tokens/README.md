@@ -530,7 +530,7 @@ const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
-audit.invalidNumbers; // [] — every size, length and shadow is layable, every weight and leading is usable, every control height and row height is pressable, and the strong body role outweighs the body it emphasises
+audit.invalidNumbers; // [] — every size, length and shadow is layable, every weight and leading is usable, every control height and row height is pressable, and the strong body role shares the body's size and leading and outweighs it
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
@@ -596,11 +596,13 @@ Each report is also a function of its own:
   contain the leading of the `label` or `body` text a control paints **and the
   `iconSize.md` glyph it draws** — the box is exactly that height, so a brand
   that grows its type or its icon scale past it is reported as `fits` while
-  every number is still layable. The strong body role must weigh
-  more than the body it emphasises: the two share a size and a leading, so the
-  weight is the whole difference, and a brand that forwards one stored weight to
-  every role paints a card title as plain text — reported as `emphasis` on
-  `bodyStrong.fontWeight`, the number that has to change. A type role's weight
+  every number is still layable. The strong body role must be the body's
+  emphasis: the two share a size and a leading — one emphasis at one size — and
+  the strong role weighs more. A brand that forwards one stored weight to every
+  role paints a card title as plain text, and a brand that raises only the body's
+  size or leading makes that title the smaller or the looser line; both are
+  reported as `emphasis` on `bodyStrong.fontSize`, `.lineHeight` or
+  `.fontWeight` — the number that has to change. A type role's weight
   must also be finite: the runtime clamps a real number into its 1–1000 range, so
   a variable font's 450 paints, while a weight the theme computed to `NaN` or
   `Infinity` is dropped before native and the role paints at the runtime's

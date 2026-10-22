@@ -65,7 +65,10 @@ export const crushedTypeAudit = auditTheme(crushedTypeTheme);
 export const tallTypeTheme = extendTheme(lightTheme, {
   name: "Tall type",
   density: "compact",
-  typography: { body: { lineHeight: 26 } },
+  typography: {
+    body: { lineHeight: 26 },
+    bodyStrong: { lineHeight: 26 },
+  },
 });
 
 /** What the gate reports for it: the one box the leading outgrew, by size. */
@@ -118,6 +121,22 @@ export const flatEmphasisTheme = extendTheme(lightTheme, {
 
 /** What the gate reports for it: the strong role's weight, by name. */
 export const flatEmphasisAudit = auditTheme(flatEmphasisTheme);
+
+/**
+ * A brand that raised its reading size and left the emphasis behind. The
+ * design-tool export named the token a body line is set from and not the one a
+ * card title is: `body` is 15px and `bodyStrong` still 14, so the line the
+ * reader is meant to notice is now the smaller of the two. Both sizes are finite
+ * and positive, the scale is in order, the leading still reaches the body's own
+ * size and the weights are the library's, so only the pair sees it.
+ */
+export const lopsidedEmphasisTheme = extendTheme(lightTheme, {
+  name: "Lopsided emphasis",
+  typography: { body: { fontSize: 15 } },
+});
+
+/** What the gate reports for it: the strong role's size, by name. */
+export const lopsidedEmphasisAudit = auditTheme(lopsidedEmphasisTheme);
 
 /**
  * A theme restored from a stored preference whose weight came from a scale

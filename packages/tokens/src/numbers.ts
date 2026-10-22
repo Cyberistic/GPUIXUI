@@ -29,13 +29,15 @@
  * factor can produce one (`lineHeight: size * 0.9`) and every suite would stay
  * green, so the pair is compared rather than the numbers alone.
  *
- * The type scale also carries a pair that differs only by weight: `bodyStrong`
- * is `body`'s emphasis, painted where a line has to stand out at the same size
- * (`Text role="bodyStrong"`, a card's title). A brand that forwards one stored
- * weight to every role keeps both sizes, both leadings and both weights usable
- * while the emphasis paints exactly like the text it was meant to lift, so the
- * two weights are compared: the strong role must weigh more than the body it
- * emphasises.
+ * The type scale also carries a pair of roles, not two rungs: `bodyStrong` is
+ * `body`'s emphasis, painted where a line has to stand out at the same size
+ * (`Text role="bodyStrong"`, a card's title). The pair is designed at one size
+ * and one leading (14/20) and differs by weight, so all three numbers are
+ * compared. A brand that forwards one stored weight to every role paints the
+ * emphasis exactly like the text it lifts; a brand that raises the body size and
+ * leaves the strong role behind paints a card title smaller than the copy under
+ * it. Both keep every number finite, positive and ordered, so only the pair
+ * sees either.
  *
  * A control height is the other pair across groups: the box is exactly
  * `density.controlHeight[size]` and the text inside it is laid at
@@ -114,12 +116,14 @@ export type NumberGroup =
  *   is a square action's icon, so a glyph taller than it overflows the control.
  *   Reported on the height, the number that has to grow, and only once: a height
  *   that already misses the pressable floor is reported as `pressable`.
- * - `emphasis` — `bodyStrong`'s weight, which exceeds `body`'s. The two roles
- *   share a size and a leading by design, so the weight is the whole difference
- *   between reading and emphasis; a brand that forwards one weight to every role
- *   paints them identically. Reported on the strong role's weight, the number
- *   that has to grow, and applied where the pair sits together
- *   ({@link inspectEmphasis}) because it is about two roles.
+ * - `emphasis` — the pair `bodyStrong` and `body`: the strong role's size and
+ *   leading equal the body's, and its weight exceeds it. The two roles are one
+ *   emphasis at one size (14/20): a brand that forwards one weight to every role
+ *   paints them identically, and a brand that raises the body's size or leading
+ *   alone paints the role meant to stand out smaller or looser than the copy it
+ *   lifts. Reported on the strong role, the number that has to change, and
+ *   applied where the pair sits together ({@link inspectEmphasis}) because it is
+ *   about two roles.
  */
 export type NumberRule =
   | "finite"
@@ -280,35 +284,63 @@ const inspectType = (
   });
 
 /**
- * The one pair of type roles that differ only by weight. `bodyStrong` is
+ * The one pair of type roles that differ by weight alone. `bodyStrong` is
  * `body` at the same size and leading, so the weight is the whole difference
  * between reading and emphasis — a card title, a lead-in, a line a reader is
- * meant to notice. A brand that forwards one weight to every role draws both
- * roles identically and nothing else sees it: every size, leading and weight is
- * a value the renderer lays out.
+ * meant to notice. All three numbers are compared: a brand that forwards one
+ * weight to every role draws both roles identically, and a brand that raises the
+ * body's size or leading alone leaves the strong role behind. Both keep every
+ * size, leading and weight layable, so nothing else sees either.
  */
 const inspectEmphasis = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] => {
   const { body, bodyStrong } = typography;
-  // An unusable weight is already the single-value report's: comparing it would
-  // report one broken value twice, under a rule that says nothing about it.
-  if (
+  // An unusable number is already the single-value report's: comparing it would
+  // report one broken value twice, under a rule that says nothing about it. A
+  // leading inside its own glyph box is the same — the `leading` rule owns that
+  // line — so the pair compares only leadings that are decisions.
+  const usable = (value: number): boolean =>
+    Number.isFinite(value) && value > 0;
+  const reaching = (role: TextStyleNumbers): boolean =>
+    usable(role.fontSize) &&
+    usable(role.lineHeight) &&
+    role.lineHeight >= role.fontSize;
+  const shared = (
+    path: "fontSize" | "lineHeight",
+    comparable: boolean,
+  ): readonly InvalidNumber[] => {
+    const bodyValue = body[path];
+    const strongValue = bodyStrong[path];
+    return !comparable || bodyValue === strongValue
+      ? []
+      : [
+          {
+            group: "typography",
+            path: `bodyStrong.${path}`,
+            value: strongValue,
+            rule: "emphasis",
+          },
+        ];
+  };
+  const outweighs =
     !Number.isFinite(body.fontWeight) ||
-    !Number.isFinite(bodyStrong.fontWeight)
-  ) {
-    return [];
-  }
-  return bodyStrong.fontWeight > body.fontWeight
-    ? []
-    : [
-        {
-          group: "typography",
-          path: "bodyStrong.fontWeight",
-          value: bodyStrong.fontWeight,
-          rule: "emphasis",
-        },
-      ];
+    !Number.isFinite(bodyStrong.fontWeight) ||
+    bodyStrong.fontWeight > body.fontWeight
+      ? []
+      : [
+          {
+            group: "typography",
+            path: "bodyStrong.fontWeight",
+            value: bodyStrong.fontWeight,
+            rule: "emphasis",
+          } satisfies InvalidNumber,
+        ];
+  return [
+    ...shared("fontSize", usable(body.fontSize) && usable(bodyStrong.fontSize)),
+    ...shared("lineHeight", reaching(body) && reaching(bodyStrong)),
+    ...outweighs,
+  ];
 };
 
 /**
@@ -406,7 +438,8 @@ const inspectShadow = (
  * height below the leading of the label or value it paints — or below the
  * `iconSize.md` glyph it draws — clips the text or the icon, a
  * zero `borderWidth.strong` leaves the focus ring nothing to paint, a
- * `bodyStrong` no heavier than `body` paints an emphasis as plain reading, and a
+ * `bodyStrong` that does not share `body`'s size and leading or does not weigh
+ * more than it paints an emphasis as plain reading or as a smaller title, and a
  * text role's `fontWeight` that is not finite is dropped so the role paints at
  * the runtime's default weight — all
  * reported by path instead of shipping as a default.

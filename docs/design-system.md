@@ -132,10 +132,12 @@ Ten roles, one job each:
 
 `bodyStrong` is the one pair that shares a size and a leading, so its weight is
 the whole difference between reading and emphasis. That difference is a contract,
-not a convention: the strong role must weigh more than the body it emphasises,
-and `invalidNumbers` reports a theme that flattens the pair as `emphasis` — a
-weight scale forwarded from a design-tool export can hand `bodyStrong` the body's
-weight while every number stays layable (§9, `docs/tokens.md` §Numbers).
+not a convention: the strong role must share the body's size and leading and
+weigh more, and `invalidNumbers` reports a theme that breaks the pair as
+`emphasis` — a weight scale forwarded from a design-tool export can hand
+`bodyStrong` the body's weight, and a brand that raises only the body's size or
+leading leaves the role meant to stand out behind, while every number stays
+layable (§9, `docs/tokens.md` §Numbers).
 
 Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
@@ -815,8 +817,9 @@ the next line inside this line's glyph box (§10, `docs/tokens.md` §Numbers),
 a type role's weight must be finite, because the runtime clamps a real number
 into its 1–1000 range while `NaN` is dropped and the role paints at the default
 weight,
-and the strong body role must weigh more than the body it emphasises, because the
-two share a size (§5).
+and the strong body role must share the body's size and leading and weigh more
+than it, because the pair is one emphasis at one size — a plain weight
+difference applied to two different measures is two roles, not one (§5).
 A zero `borderWidth.strong` is the same silent class, not a flat design choice:
 that width is the width of both focus rings, so the outline is zero pixels wide
 and the fallback shadow has no spread — the only keyboard focus cue the library
@@ -907,6 +910,7 @@ design system cannot compensate for a missing role.
 | a leading shorter than its type is accepted | the renderer advances the baseline less than the glyphs are tall, so consecutive lines collide; `invalidNumbers` reports the role's `lineHeight` as `leading` |
 | a non-finite font weight is dropped before it reaches native | the role paints at the runtime's default weight, so a heading loses its emphasis; `invalidNumbers` reports the role's `fontWeight` as `finite` |
 | a strong role at the body's weight is accepted | the two roles share a size and a leading, so the emphasis paints as plain text; `invalidNumbers` reports `bodyStrong.fontWeight` as `emphasis` |
+| a strong role that does not follow a raised body is accepted | the pair is one emphasis at one size, so a title becomes the smaller or looser line; `invalidNumbers` reports `bodyStrong.fontSize` or `bodyStrong.lineHeight` as `emphasis` |
 
 ## 11. Extension
 
@@ -930,7 +934,8 @@ Overrides merge by group; typography merges field by field; a density preset's
 one size keeps the others; elevation levels are replaced as whole arrays; the
 mode is immutable. Nothing mutates the base, so a theme can be created once at
 startup and shared. `bodyStrong` is its own role, so a brand that changes the
-body size names it too — the pair is one emphasis at one size.
+body size names it too — the pair is one emphasis at one size, and
+`invalidNumbers` reports a strong role that does not follow as `emphasis`.
 
 A brand may change any value but should not remove roles: every component
 expects the full role set. A theme restored from storage can still be missing a
