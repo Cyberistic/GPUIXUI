@@ -3382,8 +3382,11 @@ export const messagePaint = (theme: Theme, tone: StatusTone) => {
 `selectionWash(theme)` from its theme seam, which every selectable host spreads:
 `FieldInput`, `SearchInput`, both `TimePickerSegment`s, `TagInputField`,
 `MentionInput`, `ColorPicker`'s hex field, `CommandMenuInput`, `ChatComposer`,
-`ComboboxInput` and the input `InlineEdit` swaps in, read back off the renderer by
-`src/behaviour/selection.test.tsx`. The property inherits down a subtree, so a
+`ComboboxInput` and the input `InlineEdit` swaps in. The nine input hosts and the
+combobox's own search field are read back off the renderer by
+`src/behaviour/selection.test.tsx`; the chat composer's `<textarea>` declares the
+role but no case reads it back yet, which `TODO.md` → Interlocks records. The
+property inherits down a subtree, so a
 container that paints a status tint does not use the page role: `Alert`'s root
 declares `messageSelection(theme, tone)`, which is `selectionOn` against the
 tone's own soft role. The runtime's own default is the theme accent at 35%,

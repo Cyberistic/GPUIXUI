@@ -833,4 +833,20 @@ describe("the adoption both packages paint", () => {
     expect(text).toContain("`ComboboxInput`");
     expect(text).not.toContain("Still open:");
   });
+
+  it("tells a host the renderer reads from one only the source declares", () => {
+    // The chat composer's host is a `<textarea>`, while the renderer helper
+    // reads `<input>` elements only — so the page must not hand it to the suite
+    // that walks the inputs. The day the suite gains the case, this fails until
+    // the page says the renderer reads it too.
+    const rendered = read("../../components/src/behaviour/selection.test.tsx");
+    const chat = read("../../components/src/chat.tsx");
+    const text = section("## Text selection");
+
+    expect(chat).toContain("...selectionWash(theme)");
+    expect(rendered).toContain('findByType("input")');
+    expect(rendered).not.toContain("ChatComposer");
+    expect(text).toContain("`ChatComposer`");
+    expect(text).toContain("`<textarea>`");
+  });
 });
