@@ -46,12 +46,13 @@ import {
   mergeStyle,
   suppressFeedback,
   type InteractionProps,
+  type TooltipTriggerProps,
 } from "./internal.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface ButtonProps extends InteractionProps {
+export interface ButtonProps extends InteractionProps, TooltipTriggerProps {
   /** Defaults to `primary`. */
   readonly variant?: ButtonVariant;
   /** Defaults to `md`. */
@@ -158,7 +159,11 @@ export const renderButton = (
     <div
       role="button"
       aria-label={accessibleName(props.label) ?? childrenName(props.children)}
-      aria-description={props.loading === true ? "Loading" : undefined}
+      aria-description={
+        props.loading === true
+          ? "Loading"
+          : accessibleName(props["aria-description"])
+      }
       tabIndex={
         // A busy button stays focusable so a keyboard reader is not dropped
         // mid-action; a disabled one leaves the tab order whether or not it is
@@ -169,6 +174,8 @@ export const renderButton = (
       }
       testId={props.testId}
       onClick={composePress(busy, props.onClick, activate)}
+      onMouseEnter={props.onMouseEnter}
+      onMouseLeave={props.onMouseLeave}
       onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
       onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}

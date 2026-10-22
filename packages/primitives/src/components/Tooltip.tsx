@@ -9,17 +9,22 @@
  * whatever element it wraps rather than introducing one of its own.
  *
  * The trigger also carries the tip as its `aria-description` (GPUix 0.11.0 has
- * no `aria-describedby`), cloned onto the host element the caller supplies.
+ * no `aria-describedby`), cloned onto the element the caller supplies. A host
+ * element publishes it directly; this package's `Button`/`IconButton` forward
+ * it from their own `TooltipTriggerProps`, so an icon action is a trigger.
  *
- * **Limitation:** the trigger must be a focusable host element for the keyboard
- * behaviour to work, and the runtime reports focus without saying how it arrived,
- * so a tooltip opened by a mouse press looks the same as one opened by Tab.
+ * **Limitation:** the runtime dispatches a hover to the element carrying the
+ * listener, so the trigger's host element must be the focusable one — a
+ * component that forwards neither the trigger handlers nor `tabIndex` cannot
+ * open the tip. The runtime reports focus without saying how it arrived, so a
+ * tooltip opened by a mouse press looks the same as one opened by Tab.
  *
  * The resting appearance is a Tailwind recipe (`recipe/tooltipClass`), compiled
  * through `@gpuixui/tw`.
  */
 
 import {
+  Fragment,
   cloneElement,
   isValidElement,
   type ReactElement,
@@ -46,7 +51,10 @@ export interface TooltipProps {
    * string; a non-text tip has no description to derive, so pass one here.
    */
   readonly description?: string;
-  /** The element the tooltip describes. It must be focusable. */
+  /**
+   * A focusable host element, or a control that forwards
+   * `TooltipTriggerProps` (`Button`, `IconButton`).
+   */
   readonly children: ReactNode;
   /** Defaults to `top`, the runtime's own default. */
   readonly side?: FloatingSide;
@@ -60,17 +68,7 @@ export interface TooltipProps {
 export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc =>
   recipeTw.classesToStyle(tooltipClass, theme).style;
 
-/**
- * The trigger with its description attached.
- *
- * GPUix 0.11.0 has `aria-description` but no `aria-describedby`, so the tip is
- * published by cloning the host trigger. A component trigger that does not
- * forward the prop cannot carry it — the documented contract is a host element.
- *
- * The text goes through `accessibleName`, so a padded description is trimmed and
- * a blank one is not published: an empty description is still an attribute a
- * reader has to dismiss, exactly like a blank `aria-label`.
- */
+/** The trigger with its description attached. */
 const describedTrigger = (
   children: ReactNode,
   text: string | undefined,
@@ -78,7 +76,7 @@ const describedTrigger = (
   const name = accessibleName(text);
   return name === undefined ||
     !isValidElement<Record<string, unknown>>(children) ||
-    typeof children.type !== "string"
+    children.type === Fragment
     ? children
     : cloneElement(children, { "aria-description": name });
 };

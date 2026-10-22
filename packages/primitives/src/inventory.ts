@@ -404,8 +404,9 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "yes",
     limitations: [
-      "The trigger must be a focusable host element",
+      "The trigger must be a focusable element: a host, or a control that forwards TooltipTriggerProps",
       "No arrow, no aria-describedby and no wrapping content",
+      "A role is required to be in the accessibility tree, and only a TestRenderer exposes it",
       "Open and close timing are the runtime's",
       "The runtime reports focus, not how the trigger got it",
     ],

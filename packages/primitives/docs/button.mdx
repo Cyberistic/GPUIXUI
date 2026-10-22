@@ -87,6 +87,8 @@ keeps the text floor on both fills.
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `() => void` | none | click or activating key; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
+| `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
+| `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here, and a busy button announces `Loading` instead |
 | `style` | `StateStyle<ButtonState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |
@@ -95,6 +97,12 @@ The five host handlers are `InteractionProps`. They are **composed**, never
 substituted: your handler runs first with the runtime's own event and the button
 still activates. A busy or disabled button installs no `onClick` at all, so
 neither your handler nor `onActivate` runs; keys and focus stay observable.
+
+The pointer pair and `aria-description` are `TooltipTriggerProps`: GPUix's
+`TooltipTrigger asChild` merges its handlers into the element it wraps, and the
+runtime delivers a hover only to the element that registered the listener, so
+the button forwards them to its own host. That is what makes `<Tooltip><Button
+… /></Tooltip>` open on hover and announce the tip.
 
 ## Keyboard
 

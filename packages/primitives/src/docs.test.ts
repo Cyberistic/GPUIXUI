@@ -344,6 +344,34 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("teaches the trigger's shape in the accessibility tree", () => {
+    // Bug guarded: the page's usage snippet painted a trigger with no `role`,
+    // and the measured tree (`a11y-tree`) drops a node that has no role — so
+    // the tip's `aria-description` was published onto an element a screen
+    // reader never visits. The page also promised a description without citing
+    // the measurement, and called a control trigger impossible after
+    // `Button`/`IconButton` learned to forward `TooltipTriggerProps`.
+    const source = read("tooltip.mdx");
+    const accessibility = Option.getOrElse(
+      bodyOf(source, "Accessibility"),
+      () => "",
+    );
+    expect({
+      roleOnTheTrigger:
+        /<div role="button" aria-label="Revenue definition"/.test(source),
+      controlTrigger: source.includes("TooltipTriggerProps"),
+      treeFact: accessibility.includes("getA11yTree()"),
+      roleRule: accessibility.includes("needs a `role`"),
+      probe: accessibility.includes("a11y-tree"),
+    }).toEqual({
+      roleOnTheTrigger: true,
+      controlTrigger: true,
+      treeFact: true,
+      roleRule: true,
+      probe: true,
+    });
+  });
+
   it("is indexed by the package's own page table", () => {
     const index = read("README.md");
     const linked = Arr.filterMap(

@@ -5,14 +5,16 @@
  * because the wrapper only cloned the runtime's hover/focus handlers onto the
  * trigger. GPUix 0.11.0 has `aria-description` (and still no
  * `aria-describedby`), so a string tip — or an explicit `description` — must
- * reach the trigger's host props. A trigger that is not a host element cannot
- * carry the prop, and the wrapper must not pretend it did.
+ * reach the trigger's host props. A host element publishes it directly and a
+ * control forwards it from its own `TooltipTriggerProps`; the wrapper must not
+ * pretend a trigger that ignores the prop carries it.
  */
 
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import { Box } from "./Box.js";
+import { Box, renderBox } from "./Box.js";
+import { IconButton } from "./IconButton.js";
 import { renderTooltip, type TooltipProps } from "./Tooltip.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -67,16 +69,33 @@ describe("Tooltip accessibility", () => {
     expect(hostProp(trigger, "aria-description")).toStrictEqual(Option.none());
   });
 
-  it("does not attach a description to a component trigger", () => {
-    // The documented contract is a focusable host element. Cloning a component
-    // would set a prop it may ignore, so the wrapper leaves it alone and the
-    // docs say to give the control its own name and description.
+  it("publishes the description onto a control trigger that forwards it", () => {
+    // The bug guarded: the wrapper cloned the tip only onto a host element, so
+    // an `IconButton` trigger — the usual icon action with a tooltip — dropped
+    // the description entirely. A control that declares `TooltipTriggerProps`
+    // receives it and hands it to its own host; see `Button.test.tsx`.
+    const trigger = triggerOf(
+      render({
+        content: "Save the document",
+        children: <IconButton label="Save" icon={<text>+</text>} />,
+      }),
+    );
+    expect(expectSome(elementProp(trigger, "aria-description"))).toBe(
+      "Save the document",
+    );
+  });
+
+  it("does not pretend a trigger that ignores the prop carries a description", () => {
+    // `Box` takes no host attributes, so the cloned prop stops at the component
+    // and its painted div has no description. The page names that limit; this
+    // case keeps the claim measured rather than assumed.
     const trigger = triggerOf(
       render({ content: "Tip", children: <Box tone="card" /> }),
     );
-    expect(elementProp(trigger, "aria-description")).toStrictEqual(
-      Option.none(),
-    );
+    expect(expectSome(elementProp(trigger, "aria-description"))).toBe("Tip");
+    expect(
+      hostProp(renderBox({ tone: "card" }, testTheme), "aria-description"),
+    ).toStrictEqual(Option.none());
   });
 
   it("trims a padded description like every other name", () => {

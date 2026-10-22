@@ -7,7 +7,7 @@ export {
 } from "./ThemeProvider.js";
 export type { ThemeProviderProps } from "./ThemeProvider.js";
 
-export type { InteractionProps } from "./internal.js";
+export type { InteractionProps, TooltipTriggerProps } from "./internal.js";
 
 export { Box } from "./Box.js";
 export type { BoxProps } from "./Box.js";

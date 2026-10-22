@@ -67,6 +67,22 @@ export interface InteractionProps {
 }
 
 /**
+ * The host props an `asChild` tooltip trigger forwards.
+ *
+ * GPUix's `TooltipTrigger` merges its handlers into the child element, and the
+ * runtime delivers a hover only to the element that registered the listener —
+ * an ancestor never hears a child's hover — so a control has to carry this pair
+ * itself to open a tip on hover. `aria-description` is the description channel
+ * 0.11.0 publishes (`aria-describedby` does not exist): the tip arrives there
+ * and a control hands it to its host like any other attribute.
+ */
+export interface TooltipTriggerProps {
+  readonly onMouseEnter?: (event: EventPayload) => void;
+  readonly onMouseLeave?: (event: EventPayload) => void;
+  readonly "aria-description"?: string;
+}
+
+/**
  * Compose a caller's handler with a part's own.
  *
  * The caller runs first, then the part. Either may be absent: with no caller

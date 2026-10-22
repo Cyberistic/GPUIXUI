@@ -53,6 +53,24 @@ describe("IconButton", () => {
     ).toBe("Delete layer");
   });
 
+  it("passes a tooltip trigger's pointer pair and description to its button", () => {
+    // Bug guarded: the icon action is the usual tooltip trigger, and this
+    // component narrowed `Button`'s props without the trigger pair, so a
+    // hover could not open a tip and the tip's description stopped here.
+    const entered = vi.fn();
+    const left = vi.fn();
+    const props = iconButtonProps({
+      label: "Delete layer",
+      icon: glyph,
+      onMouseEnter: entered,
+      onMouseLeave: left,
+      "aria-description": "Deletes the selected layer",
+    });
+    expect(props.onMouseEnter).toBe(entered);
+    expect(props.onMouseLeave).toBe(left);
+    expect(props["aria-description"]).toBe("Deletes the selected layer");
+  });
+
   it("is square at the density's control height", () => {
     const style = expectSome(
       hostStyleRecord(resting({ label: "Delete layer", icon: glyph })),

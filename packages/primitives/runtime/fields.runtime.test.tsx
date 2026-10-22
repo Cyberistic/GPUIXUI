@@ -17,7 +17,9 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { Icon } from "@gpuixui/icons";
 import { Box } from "../src/components/Box.js";
+import { IconButton } from "../src/components/IconButton.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { Select } from "../src/components/Select.js";
@@ -624,6 +626,35 @@ it("publishes a Tooltip's text as the trigger's accessible description", async (
     () => expect.fail("the trigger has no accessibility node"),
   );
   expect(node.aria?.description).toBe("Booked revenue, net of refunds.");
+});
+
+it("opens a Tooltip from the IconButton it wraps and announces its text", async () => {
+  // The bug guarded: an icon action is the usual tooltip trigger, and GPUix's
+  // `TooltipTrigger asChild` merges its handlers into the child element. The
+  // control dropped the hover pair and the `aria-description`, so the tip only
+  // opened on a keyboard focus and never reached the accessibility tree.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="Booked revenue, net of refunds." testId="tip">
+        <IconButton
+          label="Revenue definition"
+          icon={<Icon name="info" color={testTheme.colors.mutedForeground} />}
+          testId="target"
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  expect(runtime.allText()).not.toContain("Booked revenue, net of refunds.");
+  runtime.hover("target");
+  expect(runtime.allText()).toContain("Booked revenue, net of refunds.");
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { label: "Revenue definition" }),
+    () => expect.fail("the trigger has no accessibility node"),
+  );
+  expect(node.aria?.description).toBe("Booked revenue, net of refunds.");
+  runtime.click("target");
+  expect(runtime.allText()).not.toContain("Booked revenue, net of refunds.");
 });
 
 it("keeps the Tooltip's content inside the frame it is anchored to", async () => {

@@ -195,6 +195,37 @@ describe("Button", () => {
     expect(expectSome(hostProp(loading, "aria-description"))).toBe("Loading");
   });
 
+  it("forwards a tooltip trigger's pointer pair and description", () => {
+    // Bug guarded: GPUix's `TooltipTrigger asChild` merges its handlers into
+    // the child element and the runtime delivers a hover only to the element
+    // that registered the listener, so an action could not open a tooltip on
+    // hover and the tip's `aria-description` was dropped at the component.
+    const entered = vi.fn();
+    const left = vi.fn();
+    const element = resting({
+      onMouseEnter: entered,
+      onMouseLeave: left,
+      "aria-description": "  Save the document  ",
+    });
+    expect(Option.getOrUndefined(hostHandler(element, "onMouseEnter"))).toBe(
+      entered,
+    );
+    expect(Option.getOrUndefined(hostHandler(element, "onMouseLeave"))).toBe(
+      left,
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Save the document",
+    );
+  });
+
+  it("announces the busy state over a trigger's description", () => {
+    const busy = resting({
+      loading: true,
+      "aria-description": "Save the document",
+    });
+    expect(expectSome(hostProp(busy, "aria-description"))).toBe("Loading");
+  });
+
   it("gives a busy button a spinner that reads on its fill", () => {
     // The bug: a filled button rendered the default brand spinner on its own
     // brand fill (1.00:1), so the busy indicator disappeared.

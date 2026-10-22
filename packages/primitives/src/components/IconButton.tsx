@@ -29,10 +29,14 @@ import {
   type ButtonProps,
   type ButtonState,
 } from "./Button.js";
-import { useFocus, type InteractionProps } from "./internal.js";
+import {
+  useFocus,
+  type InteractionProps,
+  type TooltipTriggerProps,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface IconButtonProps extends InteractionProps {
+export interface IconButtonProps extends InteractionProps, TooltipTriggerProps {
   /** The accessible name. An icon-only control has no text to read. */
   readonly label: string;
   /** The glyph. It paints inside the button and never becomes its name. */
@@ -72,6 +76,9 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => ({
   leading: props.icon,
   onActivate: props.onActivate,
   onClick: props.onClick,
+  onMouseEnter: props.onMouseEnter,
+  onMouseLeave: props.onMouseLeave,
+  "aria-description": props["aria-description"],
   onKeyDown: props.onKeyDown,
   onKeyUp: props.onKeyUp,
   onFocus: props.onFocus,

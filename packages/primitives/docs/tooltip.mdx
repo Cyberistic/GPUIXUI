@@ -11,28 +11,41 @@ a wrapper, not a reimplementation.
 
 ```tsx
 import { Icon } from "@gpuixui/icons";
-import { Tooltip, useTheme } from "@gpuixui/primitives";
+import { IconButton, Tooltip, useTheme } from "@gpuixui/primitives";
 
 const theme = useTheme();
 
 <Tooltip content="Booked revenue, net of refunds." side="bottom">
-  <div
-    tabIndex={0}
-    style={{ display: "flex", padding: 2 }}
-  >
-    <Icon
-      name="info"
-      size={theme.iconSize.sm}
-      color={theme.colors.mutedForeground}
-    />
+  <IconButton
+    label="Revenue definition"
+    icon={
+      <Icon
+        name="info"
+        size={theme.iconSize.sm}
+        color={theme.colors.mutedForeground}
+      />
+    }
+  />
+</Tooltip>;
+```
+
+A host element works too, and it needs a **role** to exist in the accessibility
+tree (a `div` carrying only a description is not a node a screen reader visits):
+
+```tsx
+<Tooltip content="Booked revenue, net of refunds." side="bottom">
+  <div role="button" aria-label="Revenue definition" tabIndex={0}>
+    Definition
   </div>
 </Tooltip>;
 ```
 
-The child must be a single **focusable host element**. `Tooltip`'s trigger clones
-its child with the hover and focus handlers, so a component that does not forward
-those props (including this package's `Box`) will not open the tip. A host
-trigger also carries the tip as its `aria-description`.
+The child must be a single **focusable element**. `Tooltip`'s trigger clones it
+with the hover and focus handlers, so a control has to forward them. `Button` and
+`IconButton` forward the whole `TooltipTriggerProps` pair (`onMouseEnter`,
+`onMouseLeave`) and the tip's `aria-description`; a component that forwards
+neither — this package's `Box`, for instance — paints the trigger but does not
+open the tip or announce the description.
 
 ## API
 
@@ -40,7 +53,7 @@ trigger also carries the tip as its `aria-description`.
 | ---- | ---- | ------- | ----------- |
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
 | `description` | `string` | `content` when it is a string | the trigger's accessible description |
-| `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
+| `children` | `ReactNode` | — (required) | the trigger: a focusable host element, or a control that forwards the trigger pair |
 | `side` | `FloatingSide` | `"top"` | preferred placement |
 | `align` | `FloatingAlign` | GPUix's default | alignment against the trigger |
 | `delay` | `number` | provider default | hover delay in milliseconds |
@@ -62,9 +75,17 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 
 - The tip is the trigger's **`aria-description`** when `content` is a string (or
   `description` is set): GPUix 0.11.0 has `aria-description` but no
-  `aria-describedby`, so the wrapper clones the host trigger with it. A
-  component trigger cannot carry the prop. The text is trimmed and a blank one is
-  not published — an empty description is still an attribute a reader dismisses.
+  `aria-describedby`, so the wrapper passes it to the trigger.
+  `Button`/`IconButton` hand it to their host; a component that does not forward
+  it cannot carry it. The text is trimmed and a blank one is not published — an
+  empty description is still an attribute a reader dismisses.
+- **Measured in the accessibility tree**: the `description` field is one of the
+  four attribute fields `getA11yTree()` reports, so the tip reaches a screen
+  reader through the trigger. Two limits come with it: a node needs a `role` to
+  exist at all (a `div` with only a description paints no node), and the tree is
+  a `TestRenderer` fact — a window's automation protocol has no a11y verb.
+  Evidence: the playground's `a11y-tree` probe and the tooltip case in
+  `runtime/fields.runtime.test.tsx`.
 - The description is supplementary, not a name. A button whose only name is
   inside a tooltip is unnamed to assistive technology, so give the control its
   own `label`.
@@ -87,10 +108,12 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 
 ## Limitations
 
-- The trigger must be a focusable host element: a host with no `tabIndex` never
-  receives the focus that opens the tip.
+- The trigger must be a focusable element: a host with no `tabIndex` never
+  receives the focus that opens the tip, and a component only works if it
+  forwards `TooltipTriggerProps` (`Button` and `IconButton` do).
 - No `aria-describedby`: a non-string tip has no description unless `description`
-  is passed, and a component trigger cannot carry one.
+  is passed, and an element with no `role` is absent from the accessibility tree,
+  so its description is never announced.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
 - Open/close timing is GPUix's; this wrapper only sets the delay.
@@ -100,15 +123,18 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 - `src/components/Select.test.tsx` / `fields.test.tsx` — the wrapper's theme
   spec at the render seam.
 - `src/components/Tooltip.test.tsx` — a string tip and an explicit `description`
-  reach the host trigger, a non-text tip without one invents nothing, and a
-  component trigger is not cloned with a prop it may ignore.
+  reach the host trigger and a control trigger that forwards them, a non-text
+  tip without one invents nothing, and a component that forwards nothing is not
+  pretended to carry the description. `src/components/Button.test.tsx` /
+  `IconButton.test.tsx` hold the forwarded pair.
 - `src/docs.test.ts` — every snippet's `@gpuixui/primitives` import resolves to a
   real export of the package, which is how this page's `Icon` (an
   `@gpuixui/icons` glyph) stopped being taught as a primitive.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus in
-  the `TestRenderer`, dismisses on click, keeps its content inside the anchoring
-  frame, paints the popover role, and the a11y tree reports the tip as the
-  trigger's `description`.
+  the `TestRenderer` from a host trigger **and from the `IconButton` it wraps**,
+  dismisses on click, keeps its content inside the anchoring frame, paints the
+  popover role, and the a11y tree reports the tip as the trigger's
+  `description`.
 - The `tooltip-lifecycle` live probe (`apps/playground/README.md`) — the same
   wrapper in a **real window** (14 checks on 0.11.0): a `Tab` traversal opens the
   tip and Escape closes it with the focus on the trigger; hover opens it above
@@ -123,6 +149,7 @@ nub run --filter @gpuixui/primitives test:runtime
 
 ## Related
 
-- **Button** — the usual icon-only trigger; give it a `label`.
+- **Button** / **IconButton** — the usual triggers; both forward the trigger
+  pair, and the control still needs its own `label`.
 - **Select** — the other headless GPUix wrapper this package themes.
 - **Text** — use visible help text when the information is essential.

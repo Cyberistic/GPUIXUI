@@ -3,15 +3,16 @@
  *
  * The three loading surfaces in their real roles — a skeleton for content that
  * has not arrived, a spinner for work in progress, and a tooltip that explains
- * a metric without occupying the card. The tooltip's trigger is a plain host
- * element because the runtime's trigger must be focusable; a themed `Box` does
- * not forward `tabIndex`.
+ * a metric without occupying the card. The trigger is the icon action a reader
+ * would reach for: `IconButton` forwards the trigger pair, so the tip opens on
+ * hover and on keyboard focus and its text is the trigger's description.
  */
 
 import { Icon } from "@gpuixui/icons";
 import type { ReactElement } from "react";
 import {
   Box,
+  IconButton,
   Skeleton,
   Spinner,
   Stack,
@@ -41,22 +42,18 @@ export const FeedbackExample = (): ReactElement => {
               side="bottom"
               testId="feedback-example-tooltip"
             >
-              <div
+              <IconButton
                 testId="feedback-example-tooltip-trigger"
-                tabIndex={0}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: theme.spacing["2xs"],
-                  borderRadius: theme.radius.sm,
-                }}
-              >
-                <Icon
-                  name="info"
-                  color={theme.colors.mutedForeground}
-                  size={theme.iconSize.sm}
-                />
-              </div>
+                size="sm"
+                label="Revenue definition"
+                icon={
+                  <Icon
+                    name="info"
+                    color={theme.colors.mutedForeground}
+                    size={theme.iconSize.sm}
+                  />
+                }
+              />
             </Tooltip>
           </Stack>
           <Spinner size={theme.iconSize.sm} label="Refreshing revenue" />
