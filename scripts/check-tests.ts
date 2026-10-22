@@ -30,9 +30,23 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 
 /** A `/` starts a regex literal where a value cannot end: `toMatch(/don't/)`
- *  carries an apostrophe and parens that are not code. */
-const regexStart = (prev) =>
-  prev === undefined || /[([{,;:!&|?=+\-*%<>~^\n]/.test(prev);
+ *  carries an apostrophe and parens that are not code. The character before may
+ *  be whitespace (`const re = /"([^"]*)"/`), and the token before that may be a
+ *  keyword whose expression starts here (`return /x/`). Reading only the
+ *  immediately preceding character missed both, and a quote inside such a regex
+ *  opened a string that swallowed the rest of the file. */
+const REGEX_PRECEDERS = /[([{,;:!&|?=+\-*%<>~^\n]/;
+const REGEX_KEYWORDS =
+  /(?:^|[^\w$])(return|typeof|instanceof|delete|void|in|of|yield|await|case|do|else)$/;
+const regexStart = (src, at) => {
+  let i = at - 1;
+  while (i >= 0 && /\s/.test(src[i])) i -= 1;
+  if (i < 0) return true;
+  return (
+    REGEX_PRECEDERS.test(src[i]) ||
+    REGEX_KEYWORDS.test(src.slice(0, i + 1))
+  );
+};
 /** Index of the `/` that closes the regex starting at `at`, or `at` if this is
  *  not a regex after all. */
 const skipRegex = (src, at) => {
@@ -111,7 +125,7 @@ const stripComments = (src) => {
       i += 1;
       continue;
     }
-    if (c === "/" && regexStart(src[i - 1])) {
+    if (c === "/" && regexStart(src, i)) {
       const end = skipRegex(src, i);
       out += src.slice(i, end + 1);
       i = end;
@@ -161,7 +175,7 @@ const testBlocks = (src) => {
         else if (c === quote) quote = null;
         continue;
       }
-      if (c === "/" && regexStart(clean[i - 1])) {
+      if (c === "/" && regexStart(clean, i)) {
         i = skipRegex(clean, i);
         continue;
       }
@@ -314,6 +328,10 @@ const SELF_TEST = [
   ],
   ["no-literal-assertion", 'it("literal", () => { expect(2).toBe(2); });'],
   [
+    "no-assertionless-test",
+    'const re = /"([^"]*)"/.exec(source);\nit("nothing after a quoted regex", () => { const x = 1; });',
+  ],
+  [
     "no-mock-round-trip",
     'it("stub", () => { vi.mocked(f).mockReturnValue("stubbed"); expect(f()).toBe("stubbed"); });',
   ],
@@ -323,6 +341,14 @@ const SELF_TEST = [
 const NEGATIVE = [
   ["determinism", 'it("same id", () => { expect(render()).toBe(render()); });'],
   ["real assertion", 'it("adds", () => { expect(add(1, 2)).toBe(3); });'],
+  [
+    "quoted regex then a real test",
+    'const re = /"([^"]*)"/.exec(source);\nit("adds", () => { expect(add(1, 2)).toBe(3); });',
+  ],
+  [
+    "regex after return",
+    'function f(s) { return /don\'t/.exec(s); }\nit("adds", () => { expect(add(1, 2)).toBe(3); });',
+  ],
   [
     "throw matcher",
     'it("throws", () => { expect(() => parse("")).toThrow(); });',
