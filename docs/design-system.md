@@ -207,16 +207,19 @@ unexpectedly. Components read `controlHeight(theme, size)` and
 
 The two halves still have to fit together:
 
-- **A control's box contains the text it carries.** The box is exactly
-  `controlHeight`, and a control lays its text at a type role's leading — `label`
-  for a button, toggle and select trigger, `body` for a field's value
-  (`packages/primitives/src/core/style.ts`). A brand that grows its reading size
-  without growing the box paints a line taller than the control around it while
-  every number stays finite, positive and pressable.
+- **A control's box contains the text and the icon it carries.** The box is
+  exactly `controlHeight`, and a control lays its text at a type role's leading —
+  `label` for a button, toggle and select trigger, `body` for a field's value
+  (`packages/primitives/src/core/style.ts`) — and draws any glyph it carries at
+  `iconSize.md` (`Icon`'s default; a selection box and a spinner's dot take the
+  same step). A brand that grows its reading size or its icon scale without
+  growing the box paints a line or a glyph taller than the control around it
+  while every number stays finite, positive and pressable.
   `invalidNumbers` reports it as `fits` on the box that has to grow; `compact` is
-  24/28/32, so a 26px body leading outgrows only its `sm` control, and a box
-  exactly equal to the leading passes. Every shipped preset clears it — the
-  tallest control role is `body` at 20px, four pixels under `compact` `sm`.
+  24/28/32, so a 26px body leading outgrows only its `sm` control, a 26px `md`
+  icon outgrows the same box, and a box exactly equal to the taller of the two
+  passes. Every shipped preset clears it — the tallest control role is `body` at
+  20px and the control glyph is 16px, four pixels under `compact` `sm`.
 
 The shortest of those controls — `compact` `sm` at 24px — is also the
 pressable-target floor, so a control built at a control height never needs
@@ -712,9 +715,10 @@ paints would be invisible while every colour report stayed clean. The rule for
 the strong border is therefore `positive`; the decorative `thin` divider may
 still be zero. It is
 also the one report that compares two groups: a control height that cannot
-contain the `label` or `body` leading a control paints is reported as `fits`,
-because the box is exactly that height and the text would spill or clip while
-every number is still layable (§6).
+contain the `label` or `body` leading a control paints, or the `iconSize.md`
+glyph it draws, is reported as `fits`, because the box is exactly that height
+and the text or the icon would spill or clip while every number is still layable
+(§6).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
 reports all ten in one call — `invalidRoles`, `invalidShadows`,

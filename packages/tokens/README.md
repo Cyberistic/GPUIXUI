@@ -526,9 +526,10 @@ Each report is also a function of its own:
   a control height and a row height must reach `targetSize.minimum`, because the
   library builds the control box at that height and a `dense` list row at the
   row height, reserving no extra hit area on either, and a control height must
-  contain the leading of the `label` or `body` text a control paints — the box is
-  exactly that height, so a brand that grows its type past it is reported as
-  `fits` while every number is still layable. The strong body role must weigh
+  contain the leading of the `label` or `body` text a control paints **and the
+  `iconSize.md` glyph it draws** — the box is exactly that height, so a brand
+  that grows its type or its icon scale past it is reported as `fits` while
+  every number is still layable. The strong body role must weigh
   more than the body it emphasises: the two share a size and a leading, so the
   weight is the whole difference, and a brand that forwards one stored weight to
   every role paints a card title as plain text — reported as `emphasis` on

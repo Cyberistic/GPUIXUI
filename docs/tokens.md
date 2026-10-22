@@ -969,7 +969,7 @@ by group, path, value and the rule it missed:
 | `typography` | every role's size | finite, `> 0` |
 | `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |
 | `typography` | `bodyStrong`'s weight | finite, and heavier than `body`'s (`emphasis`) |
-| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the tallest control leading (`fits`) |
+| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the text and the icon it carries (`fits`) |
 | `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |
 | `density` | `controlPaddingX` per size | finite, `>= 0` |
 | `elevation` | every shadow's `offsetX`, `offsetY`, `spreadRadius` | finite |
@@ -1017,6 +1017,22 @@ box rather than spilling out of it, and a box that already misses the pressable
 floor is reported once, by `pressable`. Every shipped preset clears it — the
 tallest control role is `body` at 20px, four pixels under `compact` `sm`.
 
+The same box carries a drawing. An `Icon` defaults to `md`
+(`packages/icons/src/icon.tsx`), a selection box and a spinner's dot are drawn at
+that step (`packages/primitives/src/core/selection.ts`,
+`packages/primitives/src/components/Spinner.tsx`), and an `IconButton` is a
+square at its control height — so the glyph a control carries is `iconSize.md`,
+and a brand that grows the icon scale without growing the controls centres a
+26px glyph in `compact`'s 24px `sm` box, where it clips or overflows the action
+while every icon step is finite, positive and in order. The `fits` ceiling is
+therefore the taller of the two roles a control paints and the glyph it draws:
+`controlHeight[size] >= max(label.lineHeight, body.lineHeight, iconSize.md)`.
+The shipped numbers are 18, 20 and 16, so the box keeps four pixels of headroom
+at `compact` `sm`; an icon exactly the box height passes, and an icon value that
+cannot be laid out is the `iconSize` report's rather than a second `fits` line.
+`iconSize.lg` and `xl` are not in the comparison: they are the toolbar, navigation
+and empty-state steps, not the glyph inside an action.
+
 Two numbers only mean something together: a type role's leading and its size. A
 leading shorter than the size puts the next baseline inside this line's glyph
 box, so ascenders and descenders collide — and a scale computed from a factor
@@ -1058,6 +1074,13 @@ invalidNumbers(
 );
 // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
 invalidNumbers(
+  extendTheme(lightTheme, {
+    density: "compact",
+    iconSize: { md: 26, lg: 28, xl: 30 },
+  }),
+);
+// [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
+invalidNumbers(
   extendTheme(lightTheme, { typography: { bodyStrong: { fontWeight: 400 } } }),
 );
 // [{ group: "typography", path: "bodyStrong.fontWeight", value: 400, rule: "emphasis" }]
@@ -1065,16 +1088,18 @@ invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
 // [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
 ```
 
-`src/numbers.example.ts` holds six brands: one whose corner radius came from a
+`src/numbers.example.ts` holds seven brands: one whose corner radius came from a
 scale factor nobody set, one whose "dense" preset shaves two control heights and
 a row under the pressable floor, one whose type scale multiplied the leadings
 under the sizes, one that grew its body leading past the smallest control it
-still ships, one whose weight scale flattened `bodyStrong` into `body`, and one
-that zeroed the strong border and so left the focus ring nothing to paint.
-`numbers.test.ts` runs all six audits, proves none of the
+still ships, one that enlarged its `md` icon past the same box, one whose weight
+scale flattened `bodyStrong` into `body`, and one that zeroed the strong border
+and so left the focus ring nothing to paint. `numbers.test.ts` runs all seven
+audits, proves none of the
 colour reports can see their defects, and holds all 16 shipped, platform and
 authored themes to an empty report — the shipped scale's tightest role is the
-display step at 28/36, well clear of the floor.
+display step at 28/36, well clear of the floor, and its control glyph is 16px
+against a 24px smallest box.
 
 ### Scale order
 

@@ -72,6 +72,23 @@ export const tallTypeTheme = extendTheme(lightTheme, {
 export const tallTypeAudit = auditTheme(tallTypeTheme);
 
 /**
+ * A brand that enlarged its icon scale for a 24px grid and kept the library's
+ * density: every step is finite, positive and in order, and the icon is exactly
+ * the box a square action is — except `compact`'s smallest control is 24px and
+ * the glyph is 26, so the icon a control carries is taller than the control.
+ * Nothing else sees it: the box is still pressable, the type still fits it, and
+ * the colours are untouched.
+ */
+export const grownIconTheme = extendTheme(lightTheme, {
+  name: "Grown icon",
+  density: "compact",
+  iconSize: { md: 26, lg: 28, xl: 30 },
+});
+
+/** What the gate reports for it: the box the glyph outgrew, by size. */
+export const grownIconAudit = auditTheme(grownIconTheme);
+
+/**
  * A brand that states "no heavy lines" by setting the strong border to zero.
  * Every number is finite and non-negative, so nothing looks broken — and the
  * strong width is the width of the focus ring: `keyboardFocusRing`'s outline is

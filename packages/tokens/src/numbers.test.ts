@@ -31,6 +31,7 @@ import {
   extendTheme,
   focusRing,
   highContrastThemes,
+  iconSize,
   invalidNumbers,
   keyboardFocusRing,
   lightTheme,
@@ -47,6 +48,8 @@ import {
   crushedTypeAudit,
   flatEmphasisAudit,
   flatEmphasisTheme,
+  grownIconAudit,
+  grownIconTheme,
   invisibleRingAudit,
   squatDensityAudit,
   tallTypeAudit,
@@ -296,12 +299,25 @@ describe("the documents name the number rules", () => {
 
     expect(failure).toBeDefined();
     expect(catalogue).toContain(
-      "| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the tallest control leading (`fits`) |",
+      "| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the text and the icon it carries (`fits`) |",
     );
     // The snippet is the real report, not an illustration of one.
     expect(catalogue).toContain(
       `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
+  });
+
+  it("prints the icon half of the fit rule, with a report the code actually returns", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(grownIconTheme);
+
+    expect(failure).toBeDefined();
+    expect(catalogue).toContain(
+      `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+    // The page names the glyph a control draws, so a reader who grew the icon
+    // scale knows which number the box has to reach.
+    expect(catalogue).toContain("`iconSize.md`");
   });
 
   it("prints the strong-border rule in the catalogue, with a report the code actually returns", () => {
@@ -348,7 +364,9 @@ describe("the documents name the number rules", () => {
     expect(design).toContain(
       "`invalidNumbers` reports the role's `lineHeight` as `leading`",
     );
-    expect(design).toContain("A control's box contains the text it carries");
+    expect(design).toContain(
+      "A control's box contains the text and the icon it carries",
+    );
     expect(design).toContain("reports it as `fits`");
   });
 });
@@ -670,6 +688,90 @@ describe("a control's box fits the text it carries", () => {
     const squashed = densityNames.filter((name) =>
       Object.values(densityPresets[name].controlHeight).some(
         (height) => height < leading,
+      ),
+    );
+
+    expect(squashed).toEqual([]);
+  });
+});
+
+describe("a control's box fits the icon it draws", () => {
+  it("reports the size whose box is shorter than the glyph a control carries", () => {
+    // An `Icon` defaults to `md` and an `IconButton` is a square at its control
+    // height, so a 26px glyph in `compact`'s 24px `sm` control overflows the
+    // action. Every other number is the library's.
+    expect(invalidNumbers(grownIconTheme)).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.sm",
+        value: 24,
+        rule: "fits",
+      },
+    ]);
+  });
+
+  it("reads the icon step a control draws, not the scale's largest step", () => {
+    // `lg` and `xl` belong to toolbars, navigation and empty states rather than
+    // to the glyph in an action, so a 30px `xl` inside the same 24px control is
+    // not the failure — the `md` the control paints is.
+    const wide = brand({ density: "compact", iconSize: { xl: 30 } });
+    expect(invalidNumbers(wide)).toEqual([]);
+    const glyph = brand({ density: "compact", iconSize: { md: 26, lg: 28 } });
+    expect(invalidNumbers(glyph)).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.sm",
+        value: 24,
+        rule: "fits",
+      },
+    ]);
+  });
+
+  it("accepts a glyph exactly the box height, where it fills the control", () => {
+    expect(
+      invalidNumbers(
+        brand({
+          density: "compact",
+          iconSize: { md: 24, lg: 26, xl: 28 },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("leaves an unusable icon size to the icon report", () => {
+    expect(
+      invalidNumbers(
+        brand({ density: "compact", iconSize: { md: Number.NaN } }),
+      ),
+    ).toEqual([
+      {
+        group: "iconSize",
+        path: "md",
+        value: Number.NaN,
+        rule: "positive",
+      },
+    ]);
+  });
+
+  it("fails the gate on an icon that outgrows its control, with no colour report involved", () => {
+    const audit = grownIconAudit;
+
+    expect(audit.invalidNumbers.map(({ path, rule }) => [path, rule])).toEqual([
+      ["controlHeight.sm", "fits"],
+    ]);
+    expect(audit.invalidRoles).toEqual([]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("holds every shipped preset above the glyph a control draws", () => {
+    // The shipped `md` is 16px against a 24px smallest control, so the icon half
+    // of the rule is satisfied by the library's own scale — and the sweep keeps
+    // a future icon step from quietly passing the box.
+    const squashed = densityNames.filter((name) =>
+      Object.values(densityPresets[name].controlHeight).some(
+        (height) => height < iconSize.md,
       ),
     );
 

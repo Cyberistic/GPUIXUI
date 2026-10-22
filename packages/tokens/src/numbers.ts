@@ -44,6 +44,14 @@
  * a label taller than the control that carries it. Every number stays finite,
  * positive and pressable, so nothing else sees it.
  *
+ * The box carries a drawing as well as a line: an `Icon` defaults to `md`, the
+ * selection boxes and a spinner's dot are drawn at the same step
+ * (`packages/icons/src/icon.tsx`, `packages/primitives/src/components/Spinner.tsx`),
+ * and an `IconButton` is a square at its control height. A brand that grows the
+ * icon scale without growing the controls paints a glyph taller than the box it
+ * is centred in, which clips or overflows an action — again with every number
+ * finite, positive, ordered and pressable.
+ *
  * A zero `borderWidth.strong` is the same class one role over: that width is the
  * width of **both** focus rings — `keyboardFocusRing`'s outline and
  * `focusRing`'s spread — and the ring's colour is measured against the fills it
@@ -87,12 +95,13 @@ export type NumberGroup =
  *   two lines collide. It is a rule about two tokens, so it is applied
  *   where the pair sits together ({@link inspectType}) rather than to one value;
  * - `fits` — a control height, which contains the leading of the tallest type
- *   role a control paints (`label` or `body`). The box is exactly
- *   `density.controlHeight[size]` and both painters lay their text at that
- *   leading, so a box below it clips or spills the label while every number is
- *   finite, positive and pressable. Reported on the height, the number that has
- *   to grow, and only once: a height that already misses the pressable floor is
- *   reported as `pressable`.
+ *   role a control paints (`label` or `body`) and the icon it draws
+ *   (`iconSize.md`). The box is exactly `density.controlHeight[size]` and both
+ *   painters lay their text at that leading, so a box below it clips or spills
+ *   the label while every number is finite, positive and pressable; the same box
+ *   is a square action's icon, so a glyph taller than it overflows the control.
+ *   Reported on the height, the number that has to grow, and only once: a height
+ *   that already misses the pressable floor is reported as `pressable`.
  * - `emphasis` — `bodyStrong`'s weight, which exceeds `body`'s. The two roles
  *   share a size and a leading by design, so the weight is the whole difference
  *   between reading and emphasis; a brand that forwards one weight to every role
@@ -258,28 +267,38 @@ const inspectEmphasis = (
 };
 
 /**
- * The leading a control's box has to contain: the taller of the two roles a
- * control paints. A button, a toggle and a select trigger lay their text at
- * `typography.label`'s leading; a field lays its value at `typography.body`'s
- * (`packages/primitives/src/core/style.ts`'s `controlStyle` and
- * `fieldTextStyle`). An unusable leading is the type report's, not this one's.
+ * The ceiling a control's box has to contain: the taller of the two type roles a
+ * control paints and the icon a control draws. A button, a toggle and a select
+ * trigger lay their text at `typography.label`'s leading; a field lays its value
+ * at `typography.body`'s (`packages/primitives/src/core/style.ts`'s
+ * `controlStyle` and `fieldTextStyle`); an `Icon` defaults to `iconSize.md`
+ * (`packages/icons/src/icon.tsx`), which is also the step a selection box, a
+ * spinner's dot and a menu row's leading slot are drawn at, so the box is a
+ * square action's glyph as well as a line of text. An unusable leading is the
+ * type report's, and an unusable icon the icon report's, not this one's.
  */
-const controlLeading = (
+const controlContent = (
   typography: NumberSource["typography"],
+  iconSize: NumberSource["iconSize"],
 ): number | undefined => {
-  const leadings = [typography.label.lineHeight, typography.body.lineHeight];
-  return leadings.every(Number.isFinite) ? Math.max(...leadings) : undefined;
+  const parts = [
+    typography.label.lineHeight,
+    typography.body.lineHeight,
+    iconSize.md,
+  ];
+  return parts.every(Number.isFinite) ? Math.max(...parts) : undefined;
 };
 
 /**
- * Every control height, held to the pressable floor and to the leading it
- * carries. A height that is not pressable is reported once, by that rule; the
- * fit is measured only on a height a pointer can already press, so one shrunken
- * box is not two defects.
+ * Every control height, held to the pressable floor and to what it carries. A
+ * height that is not pressable is reported once, by that rule; the fit is
+ * measured only on a height a pointer can already press, so one shrunken box is
+ * not two defects.
  */
 const inspectControlHeights = (
   density: NumberSource["density"],
   typography: NumberSource["typography"],
+  iconSize: NumberSource["iconSize"],
 ): readonly InvalidNumber[] =>
   controlSizes.flatMap((size: ControlSize) => {
     const value = density.controlHeight[size];
@@ -292,8 +311,8 @@ const inspectControlHeights = (
     if (pressable.length > 0) {
       return pressable;
     }
-    const leading = controlLeading(typography);
-    return leading === undefined || value >= leading
+    const content = controlContent(typography, iconSize);
+    return content === undefined || value >= content
       ? []
       : [
           {
@@ -331,15 +350,16 @@ const inspectShadow = (
  *
  * An empty array means every size, length and shadow a theme carries is one the
  * runtime can paint, every control height and row height is one a reader can hit,
- * every control height contains the text it carries, every type role's leading
- * reaches its own size, and the strong body role outweighs the body it
- * emphasises. A number
+ * every control height contains the text and the icon it carries, every type
+ * role's leading reaches its own size, and the strong body role outweighs the
+ * body it emphasises. A number
  * that is not finite is dropped rather than clamped, a size at or below zero
  * paints an element no one can find, a control height under
  * {@link targetSize.minimum} is a press target the library's own components do
  * not pad up, the same floor holds a dense list row to `rowHeight`, a leading
  * shorter than its type stacks the next line into the current one, a control
- * height below the leading of the label or value it paints clips the text, a
+ * height below the leading of the label or value it paints — or below the
+ * `iconSize.md` glyph it draws — clips the text or the icon, a
  * zero `borderWidth.strong` leaves the focus ring nothing to paint, and a
  * `bodyStrong` no heavier than `body` paints an emphasis as plain reading — all
  * reported by path instead of shipping as a default.
@@ -367,6 +387,13 @@ const inspectShadow = (
  * );
  * // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
  * invalidNumbers(
+ *   extendTheme(lightTheme, {
+ *     density: "compact",
+ *     iconSize: { md: 26, lg: 28, xl: 30 },
+ *   }),
+ * );
+ * // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
+ * invalidNumbers(
  *   extendTheme(lightTheme, { typography: { bodyStrong: { fontWeight: 400 } } }),
  * );
  * // [{ group: "typography", path: "bodyStrong.fontWeight", value: 400, rule: "emphasis" }]
@@ -382,7 +409,7 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
     ...inspectLengths("iconSize", theme.iconSize, "positive"),
     ...inspectType(theme.typography),
     ...inspectEmphasis(theme.typography),
-    ...inspectControlHeights(theme.density, theme.typography),
+    ...inspectControlHeights(theme.density, theme.typography, theme.iconSize),
     ...inspectLengths(
       "density",
       theme.density.controlPaddingX,

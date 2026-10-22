@@ -541,6 +541,8 @@ a workaround for two live sessions sharing one worktree; see
 
 `[x]` Measure the **status text on the fourth strip a message sits on** — a `FieldError` paints `statusTone(theme, "destructive").foreground` with **no fill of its own** (`FIELD_ERROR` is a bare `text-destructive`, and `packages/components/src/field.tsx` swaps in the tone's readable role), so the strip its form sits on is the surface it is read against. `contrastPairs` measured that role on `background`, `card` and `popover` and **not** on `muted`, while `decorativeSurfaces` already places each tone's soft tint and its edge on `muted` ("a soft badge in a muted sidebar") — an inline warning in a muted toolbar was a measured tint, a measured edge and a label nothing checked. Four pairs joined `contrastPairs` (83 → 87) at the body floor and **no palette moved**: every shipped, high-contrast, platform and authored style already cleared it, the tightest being Windows XP (Luna) light's `warning` text on its beige toolbar at 8.78:1. `contrast.test.ts`'s `status text on a surface` suite now holds the four-strip coverage, reads the painter that has no fill of its own (so the pair cannot outlive the paint), reports a `warningSoftForeground` set to its own `muted` at 1.00:1, sweeps all 16 styles and holds the catalogue's printed 8.78 to the same computation. Directions measured: removing the four pairs fails the coverage case (`[ 'infoSoftForeground/muted', …(3) ]`), the brand case and the catalogue count; reading the wrong painter file fails the painter case by name; and a `muted` painted the warning text fails the sweep and 18 pair cases. Docs in `docs/tokens.md` §Status tones/§Contrast, `docs/design-system.md` §9, the package README and the `Contrast contract` inventory row. The same pass moves the components `Button`'s fade literal to the token constant (`opacity: disabledOpacity`) in both pages and the inventory row after that painter adopted it.
 
+`[x]` Fit a control's box to the **icon it draws**, not only to the text — `fits` compared a control height with the `label` and `body` leadings a control paints and nothing else, while the same box is the glyph a control carries: `Icon` defaults to `md` (`packages/icons/src/icon.tsx`), a selection box and a spinner's dot take that step (`packages/primitives/src/core/selection.ts`, `…/Spinner.tsx`), and an `IconButton` is a square at its control height. A brand from a 24px icon grid — `extendTheme(lightTheme, { density: "compact", iconSize: { md: 26, lg: 28, xl: 30 } })` — keeps every value finite, positive, ordered and pressable, and centres a 26px glyph in `compact`'s 24px `sm` box, where it clips or overflows the action; the gate passed while every control painted a glyph taller than itself. The `fits` ceiling is now `max(label.lineHeight, body.lineHeight, iconSize.md)` for every control size, with `iconSize.lg`/`xl` deliberately excluded (they are the toolbar, navigation and empty-state steps, not the glyph inside an action), an icon exactly the box height accepted, an unlayable icon left to the `iconSize` report rather than a second `fits` line, and a box already under the pressable floor still reported once. No API, gate shape or count changed — the rule and the report are the same, and `packages/tokens` still ships zero runtime dependencies. No shipped, high-contrast, platform or authored style moved: the shipped ceiling is 20px (`body`'s leading) against a 24px smallest box. `numbers.test.ts` gains `a control's box fits the icon it draws` (6 cases: the glyph report by path, the `md`-not-`xl` read, the equal-height pass, the unlayable icon, the gate failing with every colour report empty, and the preset sweep against `iconSize.md`); `numbers.example.ts` gains `grownIconTheme`/`grownIconAudit` as the seventh brand, `docs/tokens.md` §Numbers gains the paragraph and a snippet whose report the code returns, and `docs/design-system.md` §6/§9, the package README and the `Token numbers` row move with it. Directions measured: removing the icon half fails four cases by name (the example, the `md`-not-`xl` case, the gate case and the catalogue case), and the docs sentences fail in the opposite direction until the pages move.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 72/72
@@ -2748,6 +2750,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Correct the token page that still calls the components' `Button` a whole-control fade — `docs/design-system.md` §8 keeps it in "the deviation that remains" with `opacity: 0.5`, while a **filled** variant now paints `disabledAction(theme)` and only the **unfilled** (ghost/icon) path keeps `disabledOpacity`, so the only whole-control fade left is `@gpuixui/tw`'s recipes. The correction keeps `packages/components/src/internal/button.tsx` named (the ghost path, which `disabled.test.ts`'s `names the two painters that still fade` requires) and moves the Button into the unfilled sentence | tokens-theme | **half resolved** — `docs/tokens.md` §The fade a disabled control paints already reads "The components package's own `Button` splits the same way: a filled variant wears `disabledAction(theme)` and pins its hover and press to the resting fill, while a ghost keeps the fade" (commit `850e46ec`), so only `docs/design-system.md` §8 is stale |
 
+| Word the `fits` rule's **icon half** in the theme editor — `@gpuixui/tokens`' `invalidNumbers` holds a control height to `max(label.lineHeight, body.lineHeight, iconSize.md)` now, because the same box is the glyph a control carries, while `apps/docs/src/components/docs/theme-editor-logic.ts`'s `numberRequirement` still reads `fits: "a height that contains the tallest label it carries"`. A brand whose only defect is a 26px `md` icon in `compact`'s 24px `sm` box fails the gate `/docs/themes` calls "the whole audit" and the readout words the reason without the icon | docs-site | open — the rule value, report shape and gate keys are unchanged, so the docs suite typechecks; only the sentence (`a height that contains the tallest label or icon it carries`) and its case in `theme-editor-logic.test.ts` need the icon. The tokens half is `docs/tokens.md` §Numbers and `docs/design-system.md` §6/§9 |
+
 ## Phase D — data and workspace components
 
 `[ ]` `[░░░░░░░░░░]` 0/3
@@ -2802,7 +2806,41 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 96/96
+`[x]` `[██████████]` 97/97
+
+`[x]` Publish the **accessibility contract** a reader needs before choosing a
+control — the site explained the runtime's ARIA subset inside rows of
+`/docs/runtime` and in each component's own limitations, and nowhere told a
+consumer what to do about it: how to name a control when there is no
+`aria-labelledby`, which states have no attribute at all, why a toast is not
+announced, or how to prove the tree. `/docs/accessibility` is now that page
+(the runtime's whole budget in consumer terms, after Runtime in the Getting
+Started section): the role-required rule and the seven published attributes with
+the field each reaches (`label`, `description`, `author_id`, `expanded`,
+`selected`, `value`, `level`), the platform role names (`button` → `Button`,
+`option` → `ListBoxOption`, …), the fifteen refused attributes with the honest
+alternative for each intent, the label rule (`labelledBy`, `accessibleName` and
+the trap that a visible `Label` is not a reference), focus (`keyboardFocusRing`
+at rest, `focusRing` for a programmatic focus, the `keyboardFocusDimOpacity`
+0.4 dim and its field exemption), and the proof (`getA11yTree()` →
+`Smoke.A11yTree`, the `a11y-tree` command, the `TestRenderer`-only limit).
+`src/lib/accessibility-page.test.ts` (7 cases) derives the published set from
+the installed `host.d.ts` and the refused set from the capability record's own
+aria row — a set that overlaps or an attribute either side names and the page
+does not fails by name — prints the count as a word from the derived length,
+holds the label and focus sentences to the primitives'/tokens' sources, requires
+the two probe ids the playground registers (`a11y-tree`, `filled-action-dim`),
+keeps the announcement gap on the three component pages that document it, and
+requires the sidebar entry plus the links from `/docs/runtime` and
+`/docs/testing`. Directions measured: dropping the `aria-level` row fails
+`names every attribute the pinned typings publish` with `[ 'aria-level' ]`,
+adding `aria-modal` to the record fails the refused case with it named, removing
+the sidebar entry fails both this case and `sidebar-structure.test.ts`, deleting
+the label sentence fails by name, and replacing `keyboardFocusRing(theme)` with
+`focusRing(theme)` fails the focus case. Verified in the dev server:
+`/docs/accessibility` renders 200 with the page and its sidebar entry, and
+`/api/search?query=accessibility` returns it. Suite 72 files / 626 tests,
+`check-types`, `build` and `check:tests` green.
 
 `[x]` Give every package page its **dependencies**, generated from the component — `MISSION.md` asks a component page for the packages it needs, and the package pages are Markdown the site mounts, so a hand-written table beside each component would drift the first time an import moved. The site reads the component's own module instead: `src/lib/page-dependencies.ts` groups its `@gpuixui/*`/`@gpuix/*` imports by package and names the page that documents each, `src/lib/page-dependencies-source.ts` resolves the page's component from the published symbol (`grid` → the `Grid` in `Stack.tsx`, `spacer` → `Separator.tsx`) and falls back to the file of the same name for a family that publishes no symbol (`chat` → `chat.tsx`), `plugins/page-dependencies-plugin.ts` serves the index as a build-time module, and `<DependencyStrip>` prints it under the status strip, naming the module it read and linking each package to its page. A page that writes its own `## Dependencies` (today `tooltip.mdx`) is left alone; a page that resolves to no module is reported and fails the guard rather than rendering nothing. `page-dependencies.test.ts` (7 cases) proves both directions of the reading — every workspace import the module makes is listed and nothing invented, subpaths kept — pins `dialog`'s three packages, holds every printed link to a mounted page, and holds the mount to `PackageContent`; `dependency-strip.test.tsx` (4 cases) renders `drawer` with its three links and the source name and stays empty for `tooltip` and an unknown URL. Directions measured: removing the mount fails the frame case; emptying the dependency list fails five cases across both files. Docs in `docs/preview-strategy.md` §The dependency line is generated, not written; suite 71 files / 619 tests.
 
