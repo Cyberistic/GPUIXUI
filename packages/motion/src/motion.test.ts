@@ -14,6 +14,7 @@ import {
   springTransition,
   transitionEquals,
   tween,
+  type Transition,
 } from "./motion.js";
 import { layoutSpring, springPhysics, type SpringPhysics } from "./spring.js";
 
@@ -131,6 +132,29 @@ describe("MotionValue", () => {
 
     value.animate(1, tween(200, linear));
     expect(value.sample(150).value).toBeCloseTo(0.75, 5);
+  });
+
+  it("does not restart a run for a re-declared duration it cannot read", () => {
+    // `Transition` is exported and structural, so a caller can build a tween
+    // without `tween()`, and a duration computed before a measurement is often
+    // `NaN`. The sampler repaired it to the house 300 ms, but the equality
+    // check compared `NaN === NaN` — false — so every render re-armed the run
+    // from the sample on screen and a surface that repainted crawled toward its
+    // target instead of finishing. The check reads the duration the sampler
+    // runs, the way it reads the physics a spring samples.
+    const unreadable = (): Transition => ({
+      kind: "tween",
+      durationMs: Number.NaN,
+      easing: linear,
+    });
+    const value = new MotionValue(0);
+    value.animate(1, unreadable());
+    expect(value.sample(150).value).toBeCloseTo(0.5, 5);
+
+    value.animate(1, unreadable());
+    const done = value.sample(300);
+    expect(done.value).toBe(1);
+    expect(done.complete).toBe(true);
   });
 
   it("does not restart a coast for a re-declared inertia", () => {
@@ -275,6 +299,38 @@ describe("transitionEquals", () => {
     );
     expect(transitionEquals(instant, instant)).toBe(true);
     expect(transitionEquals(instant, tween())).toBe(false);
+  });
+
+  it("compares a tween by the duration the sampler runs", () => {
+    // The twin of the spring case above. A hand-built tween's duration can be
+    // `NaN` (arithmetic before a measurement) or a value that cannot run; the
+    // sampler reads those as the house length and an instant assignment, so two
+    // declarations that sample identically are the same run. Without this the
+    // run was re-armed on every render and never reached its end.
+    const unreadable = (durationMs: number): Transition => ({
+      kind: "tween",
+      durationMs,
+      easing: linear,
+    });
+
+    expect(
+      transitionEquals(unreadable(Number.NaN), unreadable(Number.NaN)),
+    ).toBe(true);
+    expect(transitionEquals(unreadable(Number.NaN), tween(300, linear))).toBe(
+      true,
+    );
+    expect(
+      transitionEquals(
+        unreadable(Number.POSITIVE_INFINITY),
+        tween(300, linear),
+      ),
+    ).toBe(true);
+    // A zero and a negative duration are both an instant assignment.
+    expect(transitionEquals(tween(0, linear), tween(-20, linear))).toBe(true);
+    // A runnable duration still tells two declarations apart.
+    expect(transitionEquals(tween(300, linear), tween(200, linear))).toBe(
+      false,
+    );
   });
 
   it("compares a spring by every physics field", () => {

@@ -64,7 +64,10 @@ frame.complete; // true
 `sample(elapsedMs, reducedMotion?)`. `transition` is `instant`, `tween`, or
 `spring` (built with `instant`, `tween(durationMs, easing)`,
 `springTransition(physics)`); `transitionEquals` compares them structurally so a
-re-declared transition does not restart a run. A coast is compared the same way:
+re-declared transition does not restart a run, and it compares what the sampler
+reads: a tween by the duration it actually runs (a hand-built `{ durationMs:
+NaN }` is the house 300 ms, and a zero or negative one is instant) and a spring
+by its repaired physics. A coast is compared the same way:
 re-declaring the inertia already in flight with the same release velocity is a
 no-op, so a render that builds `inertia()` again does not relaunch the run from
 the sample on screen with the speed it has since lost. A new gesture (another
@@ -129,7 +132,9 @@ failed paints the first frame rather than `NaN`. A clock **before** the sequence
 `complete` and `sample` cannot disagree about a sequence with nothing left to
 run. A tween duration that cannot run (`NaN` or an infinity) falls back to
 `DEFAULT_TWEEN_MS` (300 ms), and a zero or negative one is an instant
-assignment. `MotionValue.sample` keeps its own rule: an unusable clock holds the
+assignment; the equality check above reads the same duration, so a hand-built
+`Transition` whose duration cannot run is not treated as a new run on every
+render. `MotionValue.sample` keeps its own rule: an unusable clock holds the
 last sample rather than jumping to the end.
 
 The inertia inputs are repaired the same way, because `Inertia` is structural: a

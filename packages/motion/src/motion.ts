@@ -44,15 +44,19 @@ export const DEFAULT_TWEEN_MS = 300;
 export const instant: Transition = { kind: "instant" };
 
 /**
- * A tween duration that can run.
+ * The duration a tween runs for, read from a declared one.
  *
- * A non-finite duration divides the elapsed time into `NaN`, so the sample is
- * `NaN` and the run never reports completion — a surface that hands the runtime
- * a `NaN` inset. It falls back to {@link DEFAULT_TWEEN_MS} the way every other
- * unusable timing in the package does.
+ * A duration the sampler cannot read (`NaN`, an infinity) divides the elapsed
+ * time into `NaN`, so the sample is `NaN` and the run never reports completion —
+ * a surface that hands the runtime a `NaN` inset. It falls back to
+ * {@link DEFAULT_TWEEN_MS} the way every other unusable timing in the package
+ * does, and a zero or negative one is no duration at all (an instant
+ * assignment). The declared transition, the sampler and the equality check all
+ * read this one value, so a hand-built tween cannot sample differently from the
+ * duration it compares by.
  */
-const tweenDurationMs = (durationMs: number): number =>
-  Number.isFinite(durationMs) ? durationMs : DEFAULT_TWEEN_MS;
+const runDurationMs = (durationMs: number): number =>
+  Number.isFinite(durationMs) ? Math.max(durationMs, 0) : DEFAULT_TWEEN_MS;
 
 /** A duration/easing tween. A duration that cannot run uses the house default. */
 export const tween = (
@@ -60,7 +64,7 @@ export const tween = (
   easing: Easing = easeOut,
 ): Transition => ({
   kind: "tween",
-  durationMs: tweenDurationMs(durationMs),
+  durationMs: runDurationMs(durationMs),
   easing,
 });
 
@@ -92,7 +96,14 @@ const physicsEquals = (left: SpringPhysics, right: SpringPhysics): boolean => {
   );
 };
 
-/** Structural equality so a re-declared transition does not restart a run. */
+/**
+ * Structural equality so a re-declared transition does not restart a run.
+ *
+ * A tween is compared by the duration the sampler runs and a spring by the
+ * physics it samples, so a hand-built declaration whose unreadable field the
+ * sampler repairs reads equal to the repair it performs. `Easing` is a caller's
+ * function, so its identity is the only rule available for it.
+ */
 export const transitionEquals = (
   left: Transition,
   right: Transition,
@@ -101,7 +112,7 @@ export const transitionEquals = (
   if (left.kind === "instant") return true;
   if (left.kind === "tween" && right.kind === "tween") {
     return (
-      left.durationMs === right.durationMs &&
+      runDurationMs(left.durationMs) === runDurationMs(right.durationMs) &&
       easingEquals(left.easing, right.easing)
     );
   }
@@ -277,7 +288,7 @@ export class MotionValue {
     }
 
     if (transition.kind === "tween") {
-      const durationSec = tweenDurationMs(transition.durationMs) / 1000;
+      const durationSec = runDurationMs(transition.durationMs) / 1000;
       if (durationSec <= 0 || t >= durationSec) {
         this.finish();
         return;
