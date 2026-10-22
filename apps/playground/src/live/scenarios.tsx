@@ -5345,7 +5345,7 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "the correction asked for the message under the void, one void up",
       yield* ctx.host.text(`${topFixed}-readout`),
-      "pages=1 corrected=1 guarded=0 request=3:-80",
+      `pages=1 corrected=1 guarded=0 request=${1 + PAGE_ROWS}:-${EDGE_HEIGHT}`,
     );
 
     // 5. A second page, with the reader already past the void: the anchor is a
@@ -5377,7 +5377,7 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "the app corrected the void arrival and left the scrolled one alone",
       yield* ctx.host.text(`${topFixed}-readout`),
-      "pages=2 corrected=1 guarded=1 request=3:-80",
+      `pages=2 corrected=1 guarded=1 request=${1 + PAGE_ROWS}:-${EDGE_HEIGHT}`,
     );
     yield* ctx.expectEqual(
       "the naive list never corrected anything",
@@ -5469,7 +5469,7 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "the correction asked for the page's first row at the void's top edge",
       yield* ctx.host.text(`${bottomFixed}-readout`),
-      "pages=1 corrected=1 guarded=0 request=10:-80",
+      `pages=1 corrected=1 guarded=0 request=${MESSAGE_ROWS}:-${VOID_TOP}`,
     );
 
     // 9. Return to the end and load again: the sentinel rule applies a second
@@ -5513,7 +5513,7 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.expectEqual(
       "the app corrected both arrivals at the bottom edge",
       yield* ctx.host.text(`${bottomFixed}-readout`),
-      "pages=2 corrected=2 guarded=0 request=12:-80",
+      `pages=2 corrected=2 guarded=0 request=${MESSAGE_ROWS + PAGE_ROWS}:-${VOID_TOP}`,
     );
 
     yield* ctx.host.capture("loading-row-corrected");
