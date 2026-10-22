@@ -78,9 +78,10 @@ Every part takes the GPUix host props and merges `style` last.
 
 ## Theming
 
-Links and separators use the `caption` type role; links are
-`colors.mutedForeground` and hover to `colors.foreground`; the current page is
-`colors.foreground`. The root has no surface of its own.
+Links and separators paint the fixed 12/16 step `text-xs` compiles to, not the
+theme's `caption` role: a brand that restyles `caption` leaves the trail where it
+is. Links are `colors.mutedForeground` and hover to `colors.foreground`; the
+current page is `colors.foreground`. The root has no surface of its own.
 
 ## Accessibility and limitations
 

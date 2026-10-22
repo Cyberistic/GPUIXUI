@@ -1,10 +1,14 @@
 # 160 — Retire the components package's local Button stand-in
 
 **Owner:** components · **Size:** multi-phase (≈2 sessions) · **Status:**
-**blocked at Phase 2** — R1/R2 pass and the primitives' `Button` now forwards the
-host props Phase 1 asked for, but two measured gaps remain: it throws
-`MissingThemeProviderError` under the token provider this package publishes, and
-its `onActivate` carries no event. See §Measured STOP — Phase 2.
+**blocked at Phase 2 on a primitives subpath** — R1/R2 pass, the primitives'
+`Button` now forwards the host props Phase 1 asked for, and both Phase-2 STOPs
+are closed (its `onActivate` carries the `EventPayload`; its `useTheme` reads
+`useThemePresence`, so a token-only tree renders it). The remaining gap is the
+**route**: importing `Button` from the primitives' root barrel loads every
+primitive — measured at 52 modules / 416 KiB against the `./hint` subpath's
+5 / 51 — so the plan waits on a `@gpuixui/primitives/button` subpath (row in
+`TODO.md` → Interlocks). See §Measured STOP — Phase 2, item 4.
 
 ## Why
 
@@ -156,6 +160,17 @@ keep a single event-carrying contract.
 imports `Button`, `actionOnColor` and `ButtonProps` from `internal/button.tsx`.
 Phase 4 deletes that file, so the deletion follows the ripple component's
 migration; it is another workstream's file and this one does not edit it.
+
+**4. The route (measured 2026-10-22).** Both gaps above are closed — the
+primitives' `Button` hands its activation the `EventPayload`, and its `useTheme`
+reads `useThemePresence`, so a token-only tree renders it — but the adapter
+cannot be **imported** yet: `@gpuixui/primitives` publishes `./core` and `./hint`
+and no Button subpath, so the only route is the root barrel. The hint row already
+measured that route at **52 modules / 416 KiB** against the subpath's 5 / 51 —
+the whole Tier 1 package loaded to paint one control, which this package declined
+once. The unblocking change is `@gpuixui/primitives/button` (a declared export
+carrying `Button`, `IconButton` and their prop types), recorded in `TODO.md` →
+Interlocks. Do not import the barrel and do not copy `renderButton`.
 
 Two workarounds were rejected rather than shipped: wrapping each adapter instance
 in its own `ThemeProvider`, and reaching for primitives' unexported

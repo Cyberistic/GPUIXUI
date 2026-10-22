@@ -91,10 +91,12 @@ Every part takes the GPUix host props and merges `style` last.
 
 Page buttons are `controlHeight(theme, "sm")` square, `radius.md` — the corner
 the package's local `Button` reads from the theme, so a platform switch reshapes
-them; the current
-page paints `colors.primary` with `colors.primaryForeground`, others are ghost
-buttons with `colors.mutedForeground`. The ellipsis uses `colors.mutedForeground`
-and a caption type role.
+them. The current page is the `primary` variant: `colors.primary` behind
+`colors.primaryForeground`. Every other page number is a ghost action, which
+paints no fill of its own, so its label is the page ink `colors.foreground` and
+the pointer adds only the `hover`/`active` wash; the muted role belongs to the
+ellipsis alone. The ellipsis paints `colors.mutedForeground` at the fixed 12/16
+step its `text-xs` compiles to, so a theme's `caption` role does not move it.
 
 ## Style by state
 
