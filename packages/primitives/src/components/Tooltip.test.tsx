@@ -23,7 +23,12 @@ import {
 } from "@gpuixui/tokens";
 import { Box, renderBox } from "./Box.js";
 import { IconButton } from "./IconButton.js";
-import { renderTooltip, type TooltipProps } from "./Tooltip.js";
+import {
+  renderTooltip,
+  renderTooltipProvider,
+  type TooltipProps,
+  type TooltipProviderProps,
+} from "./Tooltip.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   elementChildren,
@@ -202,6 +207,43 @@ describe("Tooltip theming", () => {
       children: <div tabIndex={0} />,
     });
     expect(overridden["backgroundColor"]).toBe(testTheme.colors.muted);
+  });
+});
+
+describe("TooltipProvider", () => {
+  /** The provider the runtime reads, with its props. */
+  const providerOf = (props: TooltipProviderProps): ReactElement =>
+    renderTooltipProvider(props);
+
+  it("hands a group of tips the one timing it was given", () => {
+    // The gap guarded: the page said a tip's delay defaults to the provider's,
+    // while the package exposed no provider — a toolbar had to import the
+    // runtime's own component to set one delay for its tips. Every field the
+    // runtime reads must reach it from this package's names.
+    const provider = providerOf({
+      delay: 400,
+      skipDelay: 120,
+      disableHoverableContent: true,
+      children: <div />,
+    });
+    expect(expectSome(elementProp(provider, "delayDuration"))).toBe(400);
+    expect(expectSome(elementProp(provider, "skipDelayDuration"))).toBe(120);
+    expect(expectSome(elementProp(provider, "disableHoverableContent"))).toBe(
+      true,
+    );
+  });
+
+  it("leaves the runtime's defaults when a timing is omitted", () => {
+    // Omitted is not zero: the runtime's own defaults (immediate open, a 300 ms
+    // skip window, hoverable content) are what an unconfigured provider means.
+    const provider = providerOf({ children: <div /> });
+    expect(elementProp(provider, "delayDuration")).toStrictEqual(Option.none());
+    expect(elementProp(provider, "skipDelayDuration")).toStrictEqual(
+      Option.none(),
+    );
+    expect(elementProp(provider, "disableHoverableContent")).toStrictEqual(
+      Option.none(),
+    );
   });
 });
 

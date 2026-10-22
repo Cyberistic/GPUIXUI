@@ -26,7 +26,9 @@
  * The open state is the runtime's unless the caller takes it: `open` makes the
  * tip paint only while it is `true`, and `onOpenChange` reports every request
  * the trigger makes in both modes, so a guided hint can be held open or opened
- * from code.
+ * from code. `TooltipProvider` is the group timing: a toolbar gives one
+ * `delay`/`skipDelay`/`disableHoverableContent` to every tip below it, and a
+ * tip's own `delay` still wins.
  *
  * The resting appearance is a Tailwind recipe (`recipe/tooltipClass`), compiled
  * through `@gpuixui/tw`.
@@ -45,6 +47,7 @@ import { cn } from "@gpuixui/tw";
 import {
   Tooltip as GpuixTooltip,
   TooltipContent,
+  TooltipProvider as GpuixTooltipProvider,
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
 import { accessibleName } from "../core/a11y.js";
@@ -53,6 +56,56 @@ import { tooltipClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** Props for a group of tips that share one timing. */
+export interface TooltipProviderProps {
+  /**
+   * Milliseconds before a tip opens. Defaults to the runtime's `0`, which opens
+   * immediately; a toolbar usually wants a short delay so a pointer crossing it
+   * does not flash every label.
+   */
+  readonly delay?: number;
+  /**
+   * The window after a tip closed in which the next one opens with no wait.
+   * Defaults to the runtime's `300`. This is what makes adjacent tips feel like
+   * one surface rather than a queue.
+   */
+  readonly skipDelay?: number;
+  /**
+   * Close as soon as the pointer leaves the trigger, for every tip below it, so
+   * the tip itself cannot be hovered. Defaults to the runtime's `false`.
+   */
+  readonly disableHoverableContent?: boolean;
+  readonly children: ReactNode;
+}
+
+/**
+ * One timing for every tip below it.
+ *
+ * The runtime already reads a `delayDuration`, `skipDelayDuration` and
+ * `disableHoverableContent` from its provider, but this package did not expose
+ * the provider, so the only way to give a toolbar one delay was to import the
+ * runtime's component directly and bypass the package's API. A tip's own
+ * `delay` still wins; this is the default every other tip reads.
+ */
+export const renderTooltipProvider = ({
+  delay,
+  skipDelay,
+  disableHoverableContent,
+  children,
+}: TooltipProviderProps): ReactElement => (
+  <GpuixTooltipProvider
+    delayDuration={delay}
+    skipDelayDuration={skipDelay}
+    disableHoverableContent={disableHoverableContent}
+  >
+    {children}
+  </GpuixTooltipProvider>
+);
+
+/** One timing for every `Tooltip` below it. */
+export const TooltipProvider = (props: TooltipProviderProps): ReactElement =>
+  renderTooltipProvider(props);
 
 export interface TooltipProps {
   /** The label. Keep it short — the runtime does not wrap overlay content. */

@@ -64,6 +64,37 @@ open for a first-run hint while the trigger's own dismissal still asks:
 of the same hint. `disableHoverableContent` closes as soon as the pointer leaves
 the trigger instead of letting it cross the gap onto the tip.
 
+### One timing for a toolbar
+
+A tip with no `delay` reads its provider's. Wrap a row of actions once, rather
+than passing the same number to every child:
+
+```tsx
+import { Icon } from "@gpuixui/icons";
+import {
+  IconButton,
+  Tooltip,
+  TooltipProvider,
+  useTheme,
+} from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+<TooltipProvider delay={400} skipDelay={300}>
+  <Tooltip content="Save">
+    <IconButton label="Save" icon={<Icon name="save" color={theme.colors.foreground} />} />
+  </Tooltip>
+  <Tooltip content="Undo">
+    <IconButton label="Undo" icon={<Icon name="undo" color={theme.colors.foreground} />} />
+  </Tooltip>
+</TooltipProvider>;
+```
+
+The provider is the runtime's own, so an omitted field keeps its default (an
+immediate open, a `300` ms re-open window, hoverable content). A tip's own
+`delay` wins over the provider's, and a keyboard focus opens immediately either
+way.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -81,6 +112,15 @@ the trigger instead of letting it cross the gap onto the tip.
 | `style` | `StyleDesc` | — | extra style on the tip's surface, merged last |
 | `className` | `string` | — | a Tailwind string joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | locator on the **tip** |
+
+`TooltipProvider` carries the defaults every tip below it reads:
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `delay` | `number` | `0` | milliseconds before a hovered tip opens |
+| `skipDelay` | `number` | `300` | the window after a tip closes in which the next opens with no wait |
+| `disableHoverableContent` | `boolean` | `false` | close when the pointer leaves the trigger, for every tip below it |
+| `children` | `ReactNode` | — (required) | the tips and triggers the timing applies to |
 
 ## Keyboard
 
@@ -177,8 +217,8 @@ cannot see and no contrast pair measures.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
 - Open/close **timing** is GPUix's (the delay, the near-instant re-open after a
-  close); the wrapper sets the delay and can take the open state, not rewrite the
-  timing.
+  close); a `TooltipProvider` sets the defaults for a group and a tip's own
+  `delay` overrides them, but the wrapper does not rewrite the timing.
 
 ## Verification
 
@@ -189,7 +229,9 @@ cannot see and no contrast pair measures.
   tip without one invents nothing, and a component that forwards nothing is not
   pretended to carry the description; the controlled open state
   (`open`/`defaultOpen`/`onOpenChange`/`disableHoverableContent`) reaches the
-  runtime and an uncontrolled tip leaves the runtime's own state alone; the tip
+  runtime and an uncontrolled tip leaves the runtime's own state alone; a
+  `TooltipProvider` hands the group's three timings to the runtime and leaves an
+  omitted one at the runtime's default; the tip
   paints `popoverForeground` on its own `popover` fill and that pair clears the
   body floor in both shipped palettes; a caller's `className` beats the recipe
   and their `style` beats both. `src/components/Button.test.tsx` /
@@ -205,7 +247,9 @@ cannot see and no contrast pair measures.
   popover role, and the a11y tree reports the tip as the trigger's
   `description`. A controlled tip paints while its owner says `open`, reports a
   press's close request to `onOpenChange` and stays painted until `open` flips;
-  a `defaultOpen` tip paints at mount with no interaction.
+  a `defaultOpen` tip paints at mount with no interaction; and a delayed
+  `TooltipProvider` holds the tip closed after a hover until its delay has
+  passed.
 - The `tooltip-lifecycle` live probe (`apps/playground/README.md`) — the same
   wrapper in a **real window** (14 checks on 0.11.0): a `Tab` traversal focuses
   the trigger and leaves the tip closed, so there is nothing for Escape to

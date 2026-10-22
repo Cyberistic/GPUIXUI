@@ -30,9 +30,16 @@ import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
-import { Tooltip } from "../src/components/Tooltip.js";
+import { Tooltip, TooltipProvider } from "../src/components/Tooltip.js";
 import { a11yNode, type Bounds, type Runtime } from "./harness.js";
-import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
+import {
+  SURFACE,
+  Surface,
+  WINDOW,
+  openWindow,
+  sleep,
+  testTheme,
+} from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
@@ -957,6 +964,27 @@ it("opens a Tooltip on hover and dismisses it on click", async () => {
   expect(Option.getOrUndefined(fill)).toBe(testTheme.colors.popover);
   runtime.click("target");
   expect(runtime.allText()).not.toContain("A hint");
+});
+
+it("takes one hover delay from the TooltipProvider above it", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <TooltipProvider delay={120}>
+        <Tooltip content="A hint" testId="tip">
+          <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+            <Text>Hover me</Text>
+          </div>
+        </Tooltip>
+      </TooltipProvider>
+    </Surface>,
+  );
+  runtime.hover("target");
+  // The provider's delay is the tip's default: a hover does not paint at once,
+  // which is the behaviour a toolbar needs when the pointer crosses its actions.
+  expect(runtime.allText()).not.toContain("A hint");
+  await sleep(180);
+  expect(runtime.allText()).toContain("A hint");
 });
 
 it("opens a Tooltip when its trigger takes keyboard focus", async () => {
