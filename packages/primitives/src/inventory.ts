@@ -77,7 +77,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "yes",
     limitations: [
-      "Solid rules only: the runtime paints solid borders",
+      "A filled 1px rule, not a border, so borderStyle does not apply: no dashed or dotted divider (compose a Box for one)",
       "No draggable splitter and no resize event",
     ],
     source: ["src/components/Separator.tsx", "src/core/style.ts"],

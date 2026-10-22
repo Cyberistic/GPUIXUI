@@ -58,7 +58,11 @@ literal colour or thickness appears in the component.
 
 ## Limitations
 
-- No dashed or dotted style: the runtime paints solid borders.
+- **No dashed or dotted rule.** The runtime does accept `borderStyle: "dashed"`,
+  but this separator paints a **filled** 1px box on the border role rather than
+  drawing a border, so the property has nothing to style. Compose a `Box` with
+  `borderTopWidth`/`borderStyle: "dashed"`/`borderColor` when a dashed divider is
+  what a design needs; dotted is not in the runtime's grammar at all.
 - No draggable splitter and no resize event.
 - A vertical separator does not stretch to its parent automatically; give it a
   bounded parent or a `fullHeight` box around it.
@@ -67,6 +71,9 @@ literal colour or thickness appears in the component.
 
 - `src/components/presentational.test.tsx` — horizontal/vertical thickness,
   inset and the labelled composition.
+- `src/docs.test.ts` — this page's line-style limitation names the real cause
+  (a filled rule, not a runtime that only paints solid borders), the runtime's
+  `dashed` grammar and the `Box` alternative, and refuses the old sentence.
 - `runtime/layout.runtime.test.tsx` — one border step across the surface.
 - `runtime/theme.runtime.test.tsx` — the rule repaints with the active palette.
 

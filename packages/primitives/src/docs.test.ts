@@ -372,6 +372,33 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("gives the separator's line-style limit its real cause", () => {
+    // Bug guarded: the page and the inventory said a dashed rule was missing
+    // because "the runtime paints solid borders". The pinned runtime accepts
+    // `borderStyle: "solid" | "dashed"`, so that reason is false; what is true
+    // is that the separator paints a filled box rather than a border, so the
+    // property has nothing to style. A reader with the old sentence would wait
+    // for a runtime feature that already exists.
+    const source = read("separator.mdx");
+    const limitations = Option.getOrElse(
+      bodyOf(source, "Limitations"),
+      () => "",
+    );
+    expect({
+      filled: limitations.includes("paints a **filled** 1px box"),
+      runtimeGrammar: limitations.includes('borderStyle: "dashed"'),
+      alternative: limitations.includes("Compose a `Box`"),
+      retracted: limitations.includes("runtime paints solid borders"),
+      dottedPromise: limitations.includes("No dashed or dotted style"),
+    }).toEqual({
+      filled: true,
+      runtimeGrammar: true,
+      alternative: true,
+      retracted: false,
+      dottedPromise: false,
+    });
+  });
+
   it("is indexed by the package's own page table", () => {
     const index = read("README.md");
     const linked = Arr.filterMap(
