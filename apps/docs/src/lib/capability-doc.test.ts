@@ -226,6 +226,41 @@ const pinnedRuntime = (): string => {
   return typeof pin === "string" ? pin : "";
 };
 
+/**
+ * The composite-row press table `press-routing-lifecycle` holds a window to.
+ *
+ * `PRESS_CASES` is the fixture's expectation and `formatHits` is its one route
+ * spelling, so the record and the page are read against that table rather than
+ * a transcription of it. Parsed from source because the fixture belongs to the
+ * playground app and this suite reads cross-app evidence as text.
+ */
+interface PressCase {
+  readonly id: string;
+  readonly route: string;
+}
+
+const pressRoute = (hits: ReadonlyArray<string>): string =>
+  hits.length === 0 ? "hits=none" : `hits=${hits.join(",")}`;
+
+/** Quotes normalised to `~`: the repo's test scanner misreads a quote in a regex. */
+const pressSource = read(
+  "apps/playground/src/live/press-routing.ts",
+).replaceAll('"', "~");
+
+const pressCases: ReadonlyArray<PressCase> = Array.from(
+  pressSource.matchAll(
+    /^ {2}~([a-z-]+)~: \{\n {4}id: ~[a-z-]+~,\n {4}caption: ~[^~]+~,\n {4}hits: \[([^\]]*)\],$/gm,
+  ),
+).map((match) => ({
+  id: match[1] ?? "",
+  route: pressRoute(
+    (match[2] ?? "")
+      .split(",")
+      .map((hit) => hit.trim().replaceAll("~", ""))
+      .filter((hit) => hit !== ""),
+  ),
+}));
+
 describe("docs/gpuix-capabilities.md", () => {
   it("parses every row of the limits table", () => {
     expect(malformed).toEqual([]);
@@ -1082,6 +1117,68 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[1]).toContain("survives the sort");
     expect(page?.[1]).toContain("centre");
     expect(page?.[2]).toContain("record");
+  });
+
+  it("records the handler a press on a row's inner element runs", () => {
+    // A Tier 3 table or a Tier 4 dock puts a control inside a row that also
+    // selects it, and the only rule in the repo was a comment in `carousel.tsx`
+    // claiming the runtime runs the innermost handler alone. `press-routing-lifecycle`
+    // measured that the boundary is a **painted fill**, not depth — so a filled
+    // child runs alone, an unfilled one runs both, and `pointerEvents: "none"`
+    // does not unhook a filled control. The record prints every `PRESS_CASES`
+    // entry in `formatHits`'s spelling, derived from the fixture, so a route
+    // cannot be documented from memory.
+    const routing = rowFor("Composite-row press routing");
+    expect(routing?.verdict).toBe("supported, with limits");
+    expect(routing?.evidence).toContain("press-routing-lifecycle");
+    expect(routing?.evidence).toContain("PRESS_CASES");
+    expect(routing?.evidence).toContain("paints a background");
+    expect(routing?.workaround).toContain("onAuxClick");
+    expect(routing?.workaround).toContain("elementId");
+
+    expect(pressCases.length).toBe(10);
+    const printed = pressCases.map(({ id, route }) => `\`${id} → ${route}\``);
+    const missing = printed.filter(
+      (entry) => !routing?.evidence.includes(entry),
+    );
+    expect(
+      missing,
+      "the record prints a route the fixture does not measure",
+    ).toEqual([]);
+
+    const page = measuredRow("Composite-row press routing");
+    expect(
+      page,
+      "the page's measured table has no press-routing row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("press-routing-lifecycle");
+    expect(page?.[1]).toContain("paints a fill");
+    expect(page?.[1]).toContain("focus path");
+    expect(page?.[2]).toContain("onAuxClick");
+    // The page's key routes are the fixture's own, so a changed expectation
+    // moves the page with it.
+    const keyRoutes = [
+      "text-unfilled",
+      "text-filled",
+      "control-filled",
+      "control-unfilled",
+      "field-cell",
+    ].map((id) => ({
+      id,
+      route: pressCases.find((entry) => entry.id === id)?.route ?? "",
+    }));
+    expect(
+      keyRoutes.filter(({ route }) => route === "").map(({ id }) => id),
+      "the fixture no longer holds a case the page cites",
+    ).toEqual([]);
+    expect(
+      keyRoutes
+        .filter(
+          ({ id, route }) => !(page?.[1] ?? "").includes(`${id} → ${route}`),
+        )
+        .map(({ id }) => id),
+      "the page prints a route the fixture does not measure",
+    ).toEqual([]);
   });
 
   it("records the chord a desktop list selects with, and the count a probe cannot send", () => {

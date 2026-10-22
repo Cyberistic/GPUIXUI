@@ -86,6 +86,35 @@ A page that genuinely scrolls — a settings form, a dialog body — moves toget
 with a list inside it; that is a layout decision, not something a pane can
 guard against. See [Runtime](/docs/runtime) for the measurement.
 
+## A press stops at the first filled child
+
+A dock composes pressable rows inside pressable groups — a document row with a
+trailing close action, a section header with a menu, a pane row that also
+selects. `press-routing-lifecycle` measured where such a press lands: the
+runtime walks the hitboxes from the topmost down to the first element that
+**paints a fill**, so one press on a filled child runs that child's handler and
+not the row's (`control-filled → hits=cell-click`), while an unfilled child runs
+both (`control-unfilled → hits=cell-click,row-click`) and `pointerEvents: "none"`
+on a filled control still runs both — only a drawing that paints nothing lets
+the press through. Three consequences for a dock:
+
+- **A group row cannot be the only handler.** If the row paints and its child
+  paints too, the child's press never reaches the row; give the child the
+  selection, or leave it unfilled. A trailing action therefore lives on the
+  element the press hits, not on the row behind it.
+- **A drag row is not armed by a press its cell takes.** A row that captures
+  through `onMouseDown` never hears a press aimed at a filled child, so a
+  reorder handle must be the pressed element.
+- **A key follows the focus path, not the paint.** A group row's `onKeyDown`
+  hears a key typed in a field inside it (`field-cell → hits=row-key`) while the
+  field keeps the key and the focus, so the row reads the event's own
+  `elementId` before acting on an arrow — and a press on that field also
+  selects the row (`field-in-row`).
+
+The ten cases are the record's `PRESS_CASES` (`apps/playground/src/live/press-routing.ts`),
+measured by `press-routing-lifecycle`; [Data display](/docs/data-display) carries
+the table's half.
+
 ## The inspector is a pane, not a page
 
 The property inspector the dock's right side holds is a pane with its own

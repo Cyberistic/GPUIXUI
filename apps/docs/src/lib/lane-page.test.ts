@@ -339,6 +339,28 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("no `scrollTo`");
   });
 
+  it("teaches the press a painted cell owns, and the key the focus path carries", () => {
+    // The page taught sort, selection, filtering, freezing and virtualizing, and
+    // never said which handler a press on a checkbox cell or a trailing menu
+    // runs — the shape every composite row composes. `press-routing-lifecycle`
+    // measured that a painted fill is the boundary rather than depth, so a row's
+    // own click cannot be the only selection path, and that a key travels the
+    // focus path rather than the paint.
+    const routing = rowFor(record, "Composite-row press routing");
+
+    expect(routing).toContain("supported, with limits");
+    expect(routing).toContain("press-routing-lifecycle");
+    expect(routing).toContain("paints a background");
+    expect(routing).toContain("PRESS_CASES");
+    expect(dataPage).toContain("press-routing-lifecycle");
+    expect(dataPage).toContain("control-filled → hits=cell-click");
+    expect(dataPage).toContain("control-unfilled → hits=cell-click,row-click");
+    expect(dataPage).toContain("field-cell → hits=row-key");
+    expect(dataPage).toContain("pointerEvents");
+    expect(dataPage).toContain("onAuxClick");
+    expect(dataPage).toContain("elementId");
+  });
+
   it("tells a selection toolbar when the reader's selection empties", () => {
     // The page taught a table how a row is selected and nothing about the
     // window-level event a selection toolbar, an inspector or a "quote the
@@ -515,6 +537,28 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("nested-scroll-lifecycle");
     expect(workspace).toContain("The workspace does not scroll");
     expect(workspace).toContain("onScrollChange");
+  });
+
+  it("stops a press at the first painted child, as the window measured it", () => {
+    // A dock's document row carries a trailing action inside the group that also
+    // selects it, and the page described the focus order, the panes, the
+    // scrollers and the inspector while saying nothing about which handler a
+    // press on a filled child runs. `press-routing-lifecycle` measured the
+    // boundary — a painted fill, not depth — and the key half, which follows the
+    // focus path into a row's own handler.
+    const routing = rowFor(record, "Composite-row press routing");
+
+    expect(routing).toContain("supported, with limits");
+    expect(routing).toContain("press-routing-lifecycle");
+    expect(routing).toContain("paints a background");
+    expect(workspace).toContain("A press stops at the first filled child");
+    expect(workspace).toContain("press-routing-lifecycle");
+    expect(workspace).toContain("control-filled → hits=cell-click");
+    expect(workspace).toContain("control-unfilled → hits=cell-click,row-click");
+    expect(workspace).toContain("field-cell → hits=row-key");
+    expect(workspace).toContain("onMouseDown");
+    expect(workspace).toContain("elementId");
+    expect(workspace).toContain("PRESS_CASES");
   });
 
   it("counts a find bar's matches instead of rows", () => {

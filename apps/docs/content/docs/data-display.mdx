@@ -185,6 +185,22 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   `shift` cannot see a `cmd` the runtime sent. One limit: a double press cannot
   be synthesized (`click_count: 1`), so a table that opens a record on a double
   press needs a keyboard path or a control (`modifier-select-lifecycle`).
+- **A cell that paints owns the press, and a key takes the focus path** — a
+  table's checkbox cell, sort arrow, expander or trailing menu sits inside the
+  row that also selects it, and the route is a painted surface rather than
+  depth: `press-routing-lifecycle` measured that a press on a cell that paints
+  runs the cell's handler alone (`control-filled → hits=cell-click`), while an
+  unfilled child runs both (`control-unfilled → hits=cell-click,row-click`), and
+  `pointerEvents: "none"` on a filled control still runs both — only a drawing
+  that paints nothing lets the press through. A row whose cell paints cannot
+  therefore rely on its own `onClick` for selection; a chip inside a selectable
+  row needs the cell filled or the row guarded, or one press becomes two
+  actions. A reorder row that captures through `onMouseDown` never hears a press
+  its cell takes, and a row's `onAuxClick` never hears a right press on a
+  filled child, so a context menu belongs to the cell. Keys are the other path:
+  a key typed in an editable cell reaches the row's `onKeyDown`
+  (`field-cell → hits=row-key`) while the field keeps it, so the row reads the
+  event's own `elementId` before acting on an arrow (`press-routing-lifecycle`).
 - **A filter's rules are the app's, and a window measured them** — a filter is
   an `<input>` above the rows, so nothing in the runtime can make the four
   decisions a grid owns. `table-filter-lifecycle` typed a literal,
