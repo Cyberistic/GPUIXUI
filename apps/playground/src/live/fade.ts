@@ -55,6 +55,15 @@ export const FADE_PARTIAL_MS = Math.round(FADE_DURATION_MS / 3);
  */
 export const FADE_REST_MS = FADE_DURATION_MS + 80;
 
+/**
+ * How many captures a frozen read is retried for.
+ *
+ * A capture costs about a second on this host (readback, PNG encode, write), so
+ * the shared fifty-attempt poll would spend a minute proving a paint that never
+ * came; the clock is frozen, so a retry measures the same progress either way.
+ */
+export const FADE_CAPTURE_ATTEMPTS = 6;
+
 /** The page the probe paints behind the surface: no theme role, so no drift. */
 export const FADE_BACKING = "#FFFFFF";
 

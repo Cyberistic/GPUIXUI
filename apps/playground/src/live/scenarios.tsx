@@ -180,6 +180,7 @@ import { captureScale, describeColour, framePoint } from "./frame.js";
 import {
   FADE_BACKING,
   FADE_BACKING_RGBA,
+  FADE_CAPTURE_ATTEMPTS,
   FADE_PARTIAL_MS,
   FADE_REST_MS,
   fadeSample,
@@ -4890,6 +4891,7 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const partial = yield* settleUntil(
       captureSample("fade-partial", scale),
       (sample) => isFading(sample, FADE_BACKING_RGBA, surface),
+      FADE_CAPTURE_ATTEMPTS,
     );
     yield* ctx.expectEqual(
       "partway through its level the surface is a mix of surface and page",
@@ -4901,6 +4903,7 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const settled = yield* settleUntil(
       captureSample("fade-settled", scale),
       (sample) => isSurface(sample, surface),
+      FADE_CAPTURE_ATTEMPTS,
     );
     yield* ctx.expectEqual(
       "past its level the surface rests on its own colour",
@@ -4933,6 +4936,7 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const reduced = yield* settleUntil(
       captureSample("fade-reduced", scale),
       (sample) => isSurface(sample, surface),
+      FADE_CAPTURE_ATTEMPTS,
     );
     yield* ctx.expectEqual(
       "a reduced surface paints at rest under the same frozen clock",
