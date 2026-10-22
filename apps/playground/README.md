@@ -2797,34 +2797,40 @@ The **chart surface**. A chart has no host element and no drawing surface on
 this runtime — `<canvas>` paints nothing and `<svg source>` is rasterised into
 **one** tinted mask — so the only per-pixel route the published API offers is
 `ImgInstance.setImagePixels`, and the only vector route is `ImgInstance.setImage`
-decoding SVG **bytes**. The probe paints the same three-series plot three ways:
-a buffer, a second buffer when the data changes, and the plot's SVG markup
-pushed as bytes.
+decoding SVG **bytes**. The probe paints the same three-series plot four ways:
+a buffer, a second buffer when the data changes, the plot's SVG markup pushed as
+bytes, and a two-layer plot whose upper series is half alpha.
 
 ```sh
 nub run --filter playground build
 nub apps/playground/dist/live/run.js --only chart-raster
 ```
 
-19 checks, green on 0.11.0. The fixture is `src/live/chart.ts` (three 14×30
-bars, one band of columns per series) and its arithmetic — the bands do not
-overlap, the margin has no colour in it, a buffer pixel converts to a fraction
-of the painted box — is held by `chart.test.ts` (7 cases).
+25 checks, green on 0.11.0. The fixture is `src/live/chart.ts` (three 14×30
+bars, one band of columns per series, plus the two-layer alpha plot) and its
+arithmetic — the bands do not overlap, the margin has no colour in it, a buffer
+pixel converts to a fraction of the painted box, the alpha bands and the
+straight-alpha prediction — is held by `chart.test.ts` (9 cases).
 
 | Question | Measurement |
 | -------- | ----------- |
 | Does a buffer keep each pixel's own colour? | Three series paint three exact colours (`#2ECC71`, `#3498DB`, `#E74C3C`), and a sampled point inside the first bar reads `rgba(46, 204, 113, 255)` — one element, more than one colour, which a tinted `<svg>` cannot do |
 | Does a transparent pixel composite? | The buffer's `0, 0, 0, 0` margin reads the `#14223A` box behind the element, so a chart inherits the card it sits on instead of painting an opaque rectangle |
+| Does a half-alpha mark composite over another mark? | Yes, and the buffer is **straight alpha**: `#0A84FF` at `0x80` over the opaque `#FF3B30` mark reads `rgba(132, 96, 152, 255)`, over the `#14223A` card `rgba(15, 83, 157, 255)` — both the sRGB mixture of the operands — while the same colour at `0xff` beside them stays `rgba(10, 132, 255, 255)` |
 | Does new data repaint? | A press pushes a second buffer: the frame carries `#9B59B6`, `#F1C40F` and `#16A085` and **none** of the first palette, with no re-mount and no re-layout call |
 | Do SVG bytes carry their own fills? | `setImage(Buffer.from(markup))` decodes and paints `#B14AFF`, `#00A893` and `#FF8A00` — the vector route, unlike `<svg source>`, which paints every shape in the one tint its `style.color` names |
 
-Two negative controls measured, exit `1` each and restored green: pushing the
+Three negative controls measured, exit `1` each and restored green: pushing the
 first buffer on the "New data" press fails
 `the updated series 1 paints from the second buffer: expected true, got false`,
-and painting the plot's backing in the theme's card colour fails
+painting the plot's backing in the theme's card colour fails
 `the plot's transparent margin shows the surface behind it: expected
 "rgba(20, 34, 58, 255)", got "rgba(25, 29, 37, 255)"` (the sample is a real
-frame read, not a constant).
+frame read, not a constant), and pre-multiplying the translucent band's bytes
+fails `a half-alpha mark over another mark composites onto it: expected
+"rgba(132, 96, 152, 255)", got "rgba(130, 63, 88, 255)"` — the frame reads a
+straight-alpha mixture, so a chart hands the element its own colour at its own
+alpha rather than a pre-multiplied one.
 
 What a chart component should do with this:
 
@@ -2841,9 +2847,10 @@ What a chart component should do with this:
 5. **Labels are not part of the raster.** A chart composes `<text>` beside the
    image for axes and legends, and the raster carries the marks.
 
-Not measured here: a **translucent** bar over another bar (only a fully
-transparent pixel is proved to composite), and resize — the element scales its
-buffer to its box, so a chart drawn at its layout size is the safe shape.
+Not measured here: resize — the element scales its buffer to its box, so a
+chart drawn at its layout size is the safe shape. A translucent mark is safe on
+either layer: the buffer's alpha is straight and composites over the layer
+below, so a stacked series is its own colour at its own share.
 
 ### `window-chrome` — measured on 0.11.0 here
 

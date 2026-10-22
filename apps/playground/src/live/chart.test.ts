@@ -11,6 +11,10 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import { hexOf, type Rgb } from "./content.js";
 import {
+  ALPHA_BASE,
+  ALPHA_OVER,
+  ALPHA_POINTS,
+  ALPHA_SHARE,
   BAR_PIXEL,
   MARGIN_PIXEL,
   PLOT,
@@ -19,7 +23,11 @@ import {
   REPLACEMENT,
   SERIES,
   VECTOR,
+  alphaBands,
+  alphaBasePixels,
+  alphaOverPixels,
   barBand,
+  compositeOver,
   plotPixels,
   pointIn,
 } from "./chart.js";
@@ -98,6 +106,55 @@ describe("the chart-raster fixture", () => {
     ).toEqual(Arr.makeBy(VECTOR.length, () => true));
     expect(PLOT_SVG.split("<rect").length - 1).toBe(VECTOR.length);
     expect(PLOT_SVG.includes(hexOf(PLOT_BACKING))).toBe(false);
+  });
+
+  it("keeps the translucent layer inside its bands, half alpha over the base", () => {
+    const under = alphaBasePixels();
+    const over = alphaOverPixels();
+    expect(pixelAt(under, ALPHA_POINTS.overBase)).toBe(
+      `rgba(${ALPHA_BASE.r}, ${ALPHA_BASE.g}, ${ALPHA_BASE.b}, 255)`,
+    );
+    expect(pixelAt(over, ALPHA_POINTS.overBase)).toBe(
+      `rgba(${ALPHA_OVER.r}, ${ALPHA_OVER.g}, ${ALPHA_OVER.b}, ${ALPHA_SHARE})`,
+    );
+    expect(pixelAt(over, ALPHA_POINTS.overBacking)).toBe(
+      `rgba(${ALPHA_OVER.r}, ${ALPHA_OVER.g}, ${ALPHA_OVER.b}, ${ALPHA_SHARE})`,
+    );
+    expect(pixelAt(over, ALPHA_POINTS.opaque)).toBe(
+      `rgba(${ALPHA_OVER.r}, ${ALPHA_OVER.g}, ${ALPHA_OVER.b}, 255)`,
+    );
+    // The base stops where the translucent over-mark continues: the sample
+    // over the card would otherwise be a second read of the red mark.
+    expect(pixelAt(under, ALPHA_POINTS.overBacking)).toBe("rgba(0, 0, 0, 0)");
+    expect(ALPHA_POINTS.overBase.x).toBeGreaterThanOrEqual(alphaBands.base.left);
+    expect(ALPHA_POINTS.overBase.x).toBeLessThan(alphaBands.base.right);
+    expect(ALPHA_POINTS.opaque.x).toBeGreaterThanOrEqual(
+      alphaBands.opaque.left,
+    );
+    expect(ALPHA_POINTS.opaque.x).toBeLessThan(alphaBands.opaque.right);
+  });
+
+  it("predicts the straight-alpha composite the probe holds a frame to", () => {
+    const black = { r: 0, g: 0, b: 0 };
+    const white = { r: 255, g: 255, b: 255 };
+    expect(compositeOver({ r: 255, g: 0, b: 0 }, black, 128)).toEqual({
+      r: 128,
+      g: 0,
+      b: 0,
+    });
+    expect(compositeOver(black, white, 128)).toEqual({
+      r: 127,
+      g: 127,
+      b: 127,
+    });
+    // Both ends are the operands themselves, not a mixture.
+    expect(compositeOver(ALPHA_OVER, ALPHA_BASE, 255)).toEqual(ALPHA_OVER);
+    expect(compositeOver(ALPHA_OVER, ALPHA_BASE, 0)).toEqual(ALPHA_BASE);
+    // The prediction is not symmetric: a probe that swapped the operands would
+    // read a different colour.
+    expect(
+      compositeOver(ALPHA_OVER, ALPHA_BASE, ALPHA_SHARE),
+    ).not.toEqual(compositeOver(ALPHA_BASE, ALPHA_OVER, ALPHA_SHARE));
   });
 
   it("converts a buffer pixel to a fraction of the painted box", () => {

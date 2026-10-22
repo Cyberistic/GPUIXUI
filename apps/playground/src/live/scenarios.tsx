@@ -166,6 +166,10 @@ import {
   otpKeysReadout,
 } from "./otp-keys.js";
 import {
+  ALPHA_BASE,
+  ALPHA_OVER,
+  ALPHA_POINTS,
+  ALPHA_SHARE,
   BAR_PIXEL,
   MARGIN_PIXEL,
   PLOT,
@@ -175,6 +179,9 @@ import {
   REPLACEMENT,
   SERIES,
   VECTOR,
+  alphaBasePixels,
+  alphaOverPixels,
+  compositeOver,
   plotPixels,
   pointIn,
   type Box,
@@ -13074,8 +13081,25 @@ const ChartProbe = (): ReactNode => {
   const theme = useTheme();
   const bufferImage = useRef<ImgInstance>(null);
   const svgImage = useRef<ImgInstance>(null);
+  const alphaBase = useRef<ImgInstance>(null);
+  const alphaOver = useRef<ImgInstance>(null);
   const [frame, setFrame] = useState(1);
   const [svgStatus, setSvgStatus] = useState("pending");
+
+  // The translucent plot is a second layer over the first: one buffer for the
+  // mark beneath, one for the half-alpha series over it.
+  useLayoutEffect(() => {
+    alphaBase.current?.setImagePixels(
+      PLOT.width,
+      PLOT.height,
+      Buffer.from(alphaBasePixels()),
+    );
+    alphaOver.current?.setImagePixels(
+      PLOT.width,
+      PLOT.height,
+      Buffer.from(alphaOverPixels()),
+    );
+  }, []);
 
   // The pixels must be on the element before the frame that paints it, and a
   // re-push has to be readable as the frame the data changed in.
@@ -13140,6 +13164,42 @@ const ChartProbe = (): ReactNode => {
       <div style={{ display: "flex", gap: theme.spacing.xl }}>
         {plot("chart-buffer", bufferImage)}
         {plot("chart-svg", svgImage)}
+        <div
+          testId="chart-alpha"
+          style={{
+            position: "relative",
+            width: PLOT_SIZE.width,
+            height: PLOT_SIZE.height,
+            backgroundColor: hexOf(PLOT_BACKING),
+          }}
+        >
+          <img
+            testId="chart-alpha-base"
+            ref={alphaBase}
+            alt="The opaque mark under a translucent series"
+            objectFit="fill"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: PLOT_SIZE.width,
+              height: PLOT_SIZE.height,
+            }}
+          />
+          <img
+            testId="chart-alpha-over"
+            ref={alphaOver}
+            alt="A half-alpha series over the mark"
+            objectFit="fill"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: PLOT_SIZE.width,
+              height: PLOT_SIZE.height,
+            }}
+          />
+        </div>
       </div>
       <Toolbar>
         <Pressable testId="chart-next" onClick={() => setFrame(2)}>
@@ -13167,6 +13227,7 @@ const chartCount = (frame: Pixels.Pixels, colour: Rgb): number =>
 const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("chart-buffer");
+    yield* ctx.host.waitFor("chart-alpha-over");
     yield* ctx.host.capture("chart");
     const frame = yield* ctx.host.pixels("chart");
     const size = yield* ctx.host.windowSize();
@@ -13214,6 +13275,42 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the plot's transparent margin shows the surface behind it",
       sample(buffer, MARGIN_PIXEL),
       describeColour(new Pixels.Rgba({ ...PLOT_BACKING, a: 0xff })),
+    );
+
+    // 2b. A half-alpha mark over another mark: the layer a stacked series
+    //     paints, read where it covers the opaque mark, where it covers the
+    //     card, and against an opaque pixel of the same colour.
+    const base = yield* box("chart-alpha-base");
+    const over = yield* box("chart-alpha-over");
+    yield* ctx.expectEqual(
+      "the translucent series paints on the mark's own box",
+      `${over.x},${over.y},${over.width},${over.height}`,
+      `${base.x},${base.y},${base.width},${base.height}`,
+    );
+    yield* ctx.expectEqual(
+      "a half-alpha mark over another mark composites onto it",
+      sample(base, ALPHA_POINTS.overBase),
+      describeColour(
+        new Pixels.Rgba({
+          ...compositeOver(ALPHA_OVER, ALPHA_BASE, ALPHA_SHARE),
+          a: 0xff,
+        }),
+      ),
+    );
+    yield* ctx.expectEqual(
+      "a half-alpha mark over the card composites onto the card",
+      sample(base, ALPHA_POINTS.overBacking),
+      describeColour(
+        new Pixels.Rgba({
+          ...compositeOver(ALPHA_OVER, PLOT_BACKING, ALPHA_SHARE),
+          a: 0xff,
+        }),
+      ),
+    );
+    yield* ctx.expectEqual(
+      "an opaque mark keeps its own colour beside the translucent one",
+      sample(base, ALPHA_POINTS.opaque),
+      describeColour(new Pixels.Rgba({ ...ALPHA_OVER, a: 0xff })),
     );
 
     // 3. `setImage` decodes SVG bytes: the vector route, with every fill its

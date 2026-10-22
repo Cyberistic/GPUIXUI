@@ -131,6 +131,108 @@ export const PLOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${PLOT.w
   "",
 )}</svg>`;
 
+/**
+ * The translucent plot: a series drawn over the mark beneath it, the question a
+ * stacked or overlapping chart asks of the buffer. The base mark is opaque and
+ * covers the left third; the over-mark covers the left two thirds at half alpha
+ * and the last third opaque, so one frame answers three questions — what a
+ * half-alpha pixel reads over another mark, what it reads over the card, and
+ * that an opaque pixel is still its own colour.
+ */
+export const ALPHA_BASE = rgb(0xff, 0x3b, 0x30);
+
+/** The over-mark's colour, painted at `ALPHA_SHARE` and then opaquely. */
+export const ALPHA_OVER = rgb(0x0a, 0x84, 0xff);
+
+/** The share a stacked series carries; half is the one a chart layers with. */
+export const ALPHA_SHARE = 0x80;
+
+/** Where each layer paints, in buffer pixels counted from the left edge. */
+export const alphaBands = {
+  base: { left: 0, right: 20 },
+  translucent: { left: 0, right: 40 },
+  opaque: { left: 40, right: PLOT.width },
+} as const;
+
+/** A horizontal span of buffer pixels. */
+export interface Band {
+  readonly left: number;
+  readonly right: number;
+}
+
+/** One layer of the translucent plot: the span it covers, its colour and alpha. */
+interface BandPaint {
+  readonly band: Band;
+  readonly colour: Rgb;
+  readonly alpha: number;
+}
+
+/** A buffer painting each layer inside its band, transparent everywhere else. */
+const bandedPixels = (layers: ReadonlyArray<BandPaint>): Uint8Array =>
+  Uint8Array.from(
+    Arr.flatten(
+      Arr.makeBy(PLOT.width * PLOT.height, (at) => {
+        const x = at % PLOT.width;
+        return pipe(
+          Arr.findFirst(
+            layers,
+            (layer) => x >= layer.band.left && x < layer.band.right,
+          ),
+          Option.match({
+            onNone: (): ReadonlyArray<number> => [0, 0, 0, 0],
+            onSome: (layer) => [
+              layer.colour.r,
+              layer.colour.g,
+              layer.colour.b,
+              layer.alpha,
+            ],
+          }),
+        );
+      }),
+    ),
+  );
+
+/** The opaque mark the translucent series is drawn over. */
+export const alphaBasePixels = (): Uint8Array =>
+  bandedPixels([
+    { band: alphaBands.base, colour: ALPHA_BASE, alpha: 0xff },
+  ]);
+
+/** The layer over it: half alpha over the base, opaque at the right. */
+export const alphaOverPixels = (): Uint8Array =>
+  bandedPixels([
+    { band: alphaBands.translucent, colour: ALPHA_OVER, alpha: ALPHA_SHARE },
+    { band: alphaBands.opaque, colour: ALPHA_OVER, alpha: 0xff },
+  ]);
+
+/**
+ * A point inside each region the translucent plot measures, in buffer pixels:
+ * over the opaque mark, over the card alone, and the opaque reference.
+ */
+export const ALPHA_POINTS = {
+  overBase: { x: 10, y: 20 },
+  overBacking: { x: 30, y: 20 },
+  opaque: { x: 50, y: 20 },
+} as const;
+
+/**
+ * The colour a straight-alpha `over` at `alpha` reads when it composites onto
+ * `under`. The API documents straight alpha, so this is the prediction the
+ * probe holds a real frame to.
+ */
+export const compositeOver = (
+  over: Rgb,
+  under: Rgb,
+  alpha: number,
+): Rgb => {
+  const share = (value: number): number => Math.round(value);
+  return {
+    r: share((over.r * alpha + under.r * (0xff - alpha)) / 0xff),
+    g: share((over.g * alpha + under.g * (0xff - alpha)) / 0xff),
+    b: share((over.b * alpha + under.b * (0xff - alpha)) / 0xff),
+  };
+};
+
 /** A painted box in logical window points — `bounds()`'s shape, narrowed. */
 export interface Box {
   readonly x: number;
