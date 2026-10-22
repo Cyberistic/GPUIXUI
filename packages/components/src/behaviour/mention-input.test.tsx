@@ -231,4 +231,36 @@ describe("MentionInput", () => {
 
     mention.unmount();
   });
+
+  it("offers no row for a query a disabled field already carries", () => {
+    const onMention = vi.fn();
+    const mention = renderComponent(
+      <Harness initial="@an" disabled onMention={onMention} />,
+    );
+
+    expect(
+      mention.renderer.findByTestId("mention")?.customProps?.tabIndex,
+    ).toBe(-1);
+    expect(mention.renderer.findByTestId("row-ana")).toBeUndefined();
+    expect(mention.renderer.findByTestId("row-anna")).toBeUndefined();
+    expect(onMention).not.toHaveBeenCalled();
+
+    mention.unmount();
+  });
+
+  it("closes a list that was open when the field became disabled", () => {
+    const onMention = vi.fn();
+    const mention = renderComponent(
+      <Harness initial="@an" onMention={onMention} />,
+    );
+    expect(mention.renderer.findByTestId("row-ana")).toBeDefined();
+
+    mention.rerender(<Harness initial="@an" disabled onMention={onMention} />);
+
+    expect(mention.renderer.findByTestId("row-ana")).toBeUndefined();
+    expect(valueOf(mention)).toBe("@an");
+    expect(onMention).not.toHaveBeenCalled();
+
+    mention.unmount();
+  });
 });

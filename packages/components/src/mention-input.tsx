@@ -144,7 +144,10 @@ export const MentionInput = ({
   const [visible, setVisible] = useState<ReadonlyArray<string>>([]);
   assertParts(mentionRoot, children);
 
-  const open = dismissed ? Option.none() : mentionQuery(text);
+  // A disabled field refuses every edit path, so it never offers a row to
+  // insert into: a caller that disables the field mid-edit does not leave the
+  // list floating over it.
+  const open = disabled || dismissed ? Option.none() : mentionQuery(text);
   const active =
     visible.length === 0
       ? 0
@@ -226,6 +229,7 @@ export const MentionInput = ({
               testId={testId}
               value={text}
               readOnly={disabled}
+              tabIndex={disabled ? -1 : 0}
               onChange={(event) => {
                 if (disabled) return;
                 setText(event.value ?? "");

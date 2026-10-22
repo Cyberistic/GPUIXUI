@@ -60,6 +60,7 @@ replaces the `@query` token with `@value` plus one space, and reports both
 | `Escape` | closes the list, text unchanged |
 | Typing a query with no matches | closes the list |
 | `Tab` | not claimed: the platform moves focus out of the field |
+| The field is `disabled` | no list opens, even for a draft that already ends in `@`; a list open when the field is disabled closes |
 
 ## API
 
@@ -100,6 +101,8 @@ see [Theming](/docs/theming).
   announced as a listbox. There is no `aria-activedescendant` either.
 - Rows are focusable (`tabIndex=0`), so `Tab` then `Enter` can pick a row; the
   input's `Tab` behaviour is the platform's.
+- A disabled field is inert: it leaves the tab order (`tabIndex=-1`) and offers
+  no rows, so neither a key nor a press can change the value.
 
 ## Limitations
 
@@ -116,10 +119,12 @@ see [Theming](/docs/theming).
 ## Verification
 
 `src/mention/logic.test.ts` (12 pure tests) covers query detection, replacement
-and ranking. `src/behaviour/mention-input.test.tsx` (10 native tests) covers
+and ranking. `src/behaviour/mention-input.test.tsx` (12 native tests) covers
 opening, narrowing, arrow movement, Enter insertion, row presses, Escape,
 no-match closing, the two callbacks firing once, the entrance's measured 4px of
-travel (and its absence under reduced motion), and a disabled field.
+travel (and its absence under reduced motion), and the disabled field: it is
+read-only, out of the tab order, paints no row for a query its draft already
+carries, and closes a list that was open when the caller disabled it.
 
 ```sh
 nub run --filter @gpuixui/components test
