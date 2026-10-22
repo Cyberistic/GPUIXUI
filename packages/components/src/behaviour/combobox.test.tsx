@@ -13,6 +13,8 @@
  * let a disabled option through would have passed.
  */
 
+import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
+import * as Arr from "effect/Array";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { Dialog, DialogContent } from "../dialog.js";
@@ -371,6 +373,45 @@ describe("Combobox", () => {
     expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
 
     picker.unmount();
+  });
+
+  it("paints a disabled row in the disabled pair instead of fading it", async () => {
+    // The row faded itself to 50%, a third fade painter the token pages do not
+    // name — they say the `@gpuixui/tw` recipes and the Button's ghost path are
+    // the two that remain. A menu-like row wears the `disabled` /
+    // `disabledForeground` pair, which `contrastPairs` measures on the popover;
+    // a row-level opacity composites the label into the fill instead.
+    const painted = (root: ComponentTestRoot, value: string) =>
+      root.renderer.getElement(
+        root.renderer.findByText(value)?.parentId ?? -1,
+      )?.style.color;
+
+    const dark = renderComponent(<Picker disabledCamera />);
+    await open(dark);
+    expect(dark.renderer.findByTestId("combobox-option-camera")?.style.opacity)
+      .toBeUndefined();
+    expect(painted(dark, "Camera")).toBe(darkTheme.colors.disabledForeground);
+    expect(painted(dark, "Hardware")).toBe(darkTheme.colors.disabledForeground);
+    dark.unmount();
+
+    const light = renderComponent(<Picker disabledCamera />, "light");
+    await open(light);
+    expect(painted(light, "Camera")).toBe(lightTheme.colors.disabledForeground);
+    expect(painted(light, "Hardware")).toBe(
+      lightTheme.colors.disabledForeground,
+    );
+    light.unmount();
+
+    // The role pair clears the floor the theme asks of a disabled control on the
+    // surface the row floats on; the painted pair is what the contract holds.
+    Arr.forEach([lightTheme, darkTheme], (theme) => {
+      expect(
+        contrastRatio(
+          theme.colors.disabledForeground,
+          theme.colors.popover,
+        ) ?? 0,
+      ).toBeGreaterThanOrEqual(contrastFloors.disabled);
+    });
   });
 
   it("closes on Escape and returns focus to the trigger", async () => {

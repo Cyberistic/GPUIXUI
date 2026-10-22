@@ -170,13 +170,30 @@ const rowStyle = (theme: Theme, state: ComboboxItemState): StyleDesc => ({
   ...recipeStyle(COMBOBOX_ITEM, theme),
   minHeight: controlHeight(theme, "sm"),
   cursor: state.disabled ? "not-allowed" : "pointer",
-  opacity: state.disabled ? 0.5 : 1,
   backgroundColor: state.highlighted ? theme.colors.hover : undefined,
   color: state.selected
     ? theme.colors.foreground
     : theme.colors.popoverForeground,
   hover: state.disabled ? undefined : { backgroundColor: theme.colors.hover },
 });
+
+/**
+ * The role a row's label paints.
+ *
+ * The label names its own colour in the recipe, so the row's inherited `color`
+ * never reached it: a disabled row faded the whole row to 50% instead, which
+ * composites the label into the popover fill (the state the menu row's comment
+ * rejects). The disabled pair is measured on the popover, so the line states it.
+ */
+const labelColor = (
+  theme: Theme,
+  state: { readonly disabled: boolean; readonly selected: boolean },
+): string =>
+  state.disabled
+    ? theme.colors.disabledForeground
+    : state.selected
+      ? theme.colors.foreground
+      : theme.colors.popoverForeground;
 
 /**
  * A searchable single- or multi-select. Compose {@link ComboboxTrigger} and
@@ -547,13 +564,15 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
   const { options, selectedValues, labelFor, isDisabled } = useCombobox();
   const option = optionOf(options, value);
   const selected = Arr.contains(selectedValues, value);
+  const disabled = isDisabled(value);
+  const color = labelColor(theme, { disabled, selected });
 
   return (
     <HeadlessItem
       value={value}
       role="option"
       aria-selected={selected}
-      disabled={isDisabled(value)}
+      disabled={disabled}
       testId={
         isCreateRow(value) ? "combobox-create" : `combobox-option-${value}`
       }
@@ -571,14 +590,22 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
           gap: theme.spacing["2xs"],
         }}
       >
-        <text style={recipeStyle(COMBOBOX_ITEM_TEXT, theme)}>
+        <text
+          style={mergeStyles(recipeStyle(COMBOBOX_ITEM_TEXT, theme), { color })}
+        >
           {labelFor(value)}
         </text>
         {Option.match(option, {
           onNone: () => null,
           onSome: (candidate) =>
             candidate.description === undefined ? null : (
-              <text style={recipeStyle(COMBOBOX_ITEM_DESCRIPTION, theme)}>
+              <text
+                style={mergeStyles(recipeStyle(COMBOBOX_ITEM_DESCRIPTION, theme), {
+                  color: disabled
+                    ? theme.colors.disabledForeground
+                    : theme.colors.mutedForeground,
+                })}
+              >
                 {candidate.description}
               </text>
             ),

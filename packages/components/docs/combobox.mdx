@@ -176,9 +176,14 @@ same shape for a row composed by hand.
 
 ```tsx
 <ComboboxList
-  itemStyle={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+  itemStyle={(state) => ({ fontWeight: state.selected ? 600 : 500 })}
 />
 ```
+
+A **disabled row paints its label and description in `disabledForeground`** — the
+role `contrastPairs` measures on the popover — and drops its highlight wash. It
+is not faded: an opacity composites the label into the row's own fill, which no
+pair holds — the same rule the menu row follows.
 
 ## Limitations
 
@@ -196,11 +201,13 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (21 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (22 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
-add/remove with order, the disabled row, Escape restoring focus and closing only
+add/remove with order, the disabled row, a disabled row's label and description
+painted in `disabledForeground` with no row-level fade (both themes), Escape
+restoring focus and closing only
 its own popup inside a dialog, prefix-before-substring ranking, both themes, the
 pointer path — selecting an option, toggling several while skipping a disabled
 one, closing on an outside press — a caller-supplied empty state, the trigger's
