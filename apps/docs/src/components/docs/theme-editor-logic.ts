@@ -16,6 +16,7 @@ import {
   type SeriesDistinctnessFailure,
   type SeriesSurfaceFailure,
   type SeriesVisionFailure,
+  type SyntaxFailure,
   type Theme,
   type ThemeAudit,
   type ThemeMode,
@@ -144,7 +145,7 @@ export const auditReport = (
   base: Theme = themes[mode],
 ): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
-/** Which of the audit's ten reports a finding came from. */
+/** Which of the audit's eleven reports a finding came from. */
 export type AuditKind =
   | "role"
   | "shadow"
@@ -152,6 +153,7 @@ export type AuditKind =
   | "contrast"
   | "decorative"
   | "series"
+  | "syntax"
   | "deficiency"
   | "selection"
   | "indicator"
@@ -291,6 +293,20 @@ export const formatSeriesVisionFailure = ({
   `${deficiency}: series ${index + 1} and series ${other + 1} — ${apart(distance, floor)}`;
 
 /**
+ * A code token a reader cannot read, e.g. `code keyword on input — 3.10:1
+ * (needs 4.5:1)`. A code block paints its tokens on the page or a field's fill,
+ * so a syntax palette that matches either is syntax a reader cannot see; no
+ * contrast pair measures a role that only exists inside a code host.
+ */
+export const formatSyntaxFailure = ({
+  role,
+  surface,
+  ratio,
+  floor,
+}: SyntaxFailure): string =>
+  `code ${role} on ${surface} — ${measured(ratio, floor)}`;
+
+/**
  * A selection wash as a line. It has two jobs and one line per missed job: the
  * wash must be visible where the reader selected, and the text inside it must
  * keep the body floor. Both lines carry the wash's fate, so a theme that cannot
@@ -386,6 +402,10 @@ export const auditFindings = (
   ...report.series.deficiencies.map((failure) => ({
     kind: "deficiency" as const,
     text: formatSeriesVisionFailure(failure),
+  })),
+  ...report.syntax.map((failure) => ({
+    kind: "syntax" as const,
+    text: formatSyntaxFailure(failure),
   })),
   ...report.selection.map((failure) => ({
     kind: "selection" as const,

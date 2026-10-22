@@ -372,6 +372,8 @@ describe("the theme page", () => {
         (deficiency) => !audit.includes(deficiency),
       ),
     ).toEqual([]);
+    expect(audit).toContain("syntaxFailures");
+    expect(audit).toContain("{syntaxSurfaces.length}");
     expect(audit).toContain("selectionFailures");
     expect(audit).toContain("indicatorFailures");
     expect(audit).toContain("disabledFadeFailures");
@@ -506,6 +508,7 @@ describe("the theme page's copy-theme note", () => {
         "contrastFailures",
         "decorativeFailures",
         "seriesFailures",
+        "syntaxFailures",
         "selectionFailures",
         "indicatorFailures",
         "disabledFadeFailures",

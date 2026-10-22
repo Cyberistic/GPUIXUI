@@ -3,7 +3,9 @@ import {
   createTheme,
   extendTheme,
   invalidColorRoles,
+  lightSyntax,
   selectionFailures,
+  syntaxSurfaces,
   targetSize,
   themes,
 } from "@gpuixui/tokens";
@@ -274,6 +276,34 @@ describe("theme-editor audit readout", () => {
       ...audit.series.surfaces,
       ...audit.series.distinctness,
     ]).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("reports a code token that matches the fill it is read on, which no contrast pair sees", () => {
+    // A syntax palette only paints inside a `<code>` host, so no role pair in
+    // `contrastFailures` measures it. The editor does not edit the palette, but
+    // `background` and `input` are both editable and both are the fills a token
+    // is read on — and the readout claims the whole audit.
+    const brand = extendTheme(themes.light, {
+      syntax: { ...lightSyntax, keyword: themes.light.colors.background },
+    });
+    const audit = auditTheme(brand);
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "syntax",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual(
+      expect.arrayContaining([
+        "code keyword on background — 1.00:1 (needs 7:1)",
+      ]),
+    );
+    // Two fills a host can paint, so the one colour is reported twice.
+    expect(findings).toHaveLength(syntaxSurfaces.length);
+
+    // Nothing else on this brand fails, so only the syntax line can fail the gate.
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.indicators).toEqual([]);
     expect(audit.passed).toBe(false);
   });
 

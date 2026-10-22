@@ -253,6 +253,14 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("holds the focus");
     expect(dataPage).toContain("survives the sort");
     expect(dataPage).toContain("painted **centre**");
+
+    // The chord a desktop reader selects with, and the anchor it moves or keeps,
+    // is the same table's second selection rule: a plan reading only the sort
+    // would build a shift range from the wrong row.
+    expect(dataPage).toContain("modifier-select-lifecycle");
+    expect(dataPage).toContain("selected=3,4,5,6");
+    expect(dataPage).toContain("moves** the anchor");
+    expect(dataPage).toContain("click_count: 1");
   });
 
   it("re-anchors a paginated list whose loading void is the anchor", () => {

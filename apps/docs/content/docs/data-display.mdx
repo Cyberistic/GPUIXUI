@@ -175,7 +175,16 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   constraint: a press is aimed at the element's painted **centre**, so a
   sortable header whose centre is clipped by the horizontal viewport sorts
   nothing — keep sortable columns inside the frame, or pan the header before
-  expecting a press to land (`table-lifecycle`).
+  expecting a press to land (`table-lifecycle`). The selection a desktop reader
+  expects is a **chord**, and `modifier-select-lifecycle` measured it: `shift`
+  extends from the anchor (`selected=3,4,5,6`), `cmd` toggles one record
+  (`selected=1,2,3,5`) and `cmd-shift` joins the span to the set, while a plain
+  press replaces the set and **moves** the anchor — so a `shift` after a `cmd`
+  toggle ranges from the row the reader toggled, not the row last clicked
+  plainly. Read the payload's four flags, because a handler that tests only
+  `shift` cannot see a `cmd` the runtime sent. One limit: a double press cannot
+  be synthesized (`click_count: 1`), so a table that opens a record on a double
+  press needs a keyboard path or a control (`modifier-select-lifecycle`).
 - **A filter's rules are the app's, and a window measured them** — a filter is
   an `<input>` above the rows, so nothing in the runtime can make the four
   decisions a grid owns. `table-filter-lifecycle` typed a literal,

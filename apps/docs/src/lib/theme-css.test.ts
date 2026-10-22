@@ -390,8 +390,9 @@ describe("the data series", () => {
     scale.map((colour) => colour?.toLowerCase());
 
   /**
-   * A look's own table, which no shipped style declares: five hues a reader can
-   * tell apart from the shared light scale on every position.
+   * A table this case declares itself: the shipped looks are read from their
+   * own `series` above, and this fixture proves the rule for any style that
+   * declares one — five hues a reader can tell apart on every position.
    */
   const lookSeries: SeriesColors = [
     "#9A6300",

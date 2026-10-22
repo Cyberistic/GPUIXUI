@@ -266,6 +266,33 @@ describe("the testing page", () => {
     );
   });
 
+  it("states the chord a modified press sends, and the count it cannot send", () => {
+    // `clickWith` sends the held modifier set, which no other verb can, and the
+    // `modifier-select-lifecycle` probe measured both halves a probe author
+    // plans around: the payload's four flags rather than only the chord, and a
+    // protocol that hard-codes `click_count: 1`, so a double press cannot be
+    // synthesized. A page that lists the verb without either sends the next
+    // probe after a range it cannot prove or a count no window can send.
+    const probe = readRepo("apps/playground/src/live/scenarios.tsx");
+    expect(probe).toContain('"shift extends the selection from the anchor"');
+    expect(probe).toContain(
+      '"a range after a plain press starts at that press, not at the last toggle"',
+    );
+    expect(probe).toContain(
+      '"a second press on the same row still reports one click"',
+    );
+
+    const row = rowOf("clickWith");
+    expect(row, "the window table has no clickWith row").not.toBe("");
+    expect(row).toContain("shift");
+    expect(row).toContain("cmd-shift");
+
+    expect(pageText).toContain("`modifier-select-lifecycle`");
+    expect(pageText).toContain("four flags");
+    expect(pageText).toContain("`click_count: 1`");
+    expect(pageText).toContain("`Smoke.formatModifiers`");
+  });
+
   it("resolves every import it prints against the package's own exports", () => {
     const imports = namedImports(typescriptSnippets(page));
     // Every snippet on the page imports the harness, or the scan missed them.

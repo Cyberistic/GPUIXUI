@@ -1084,6 +1084,38 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("record");
   });
 
+  it("records the chord a desktop list selects with, and the count a probe cannot send", () => {
+    // Tier 3's row selection is a selected **record**, and a desktop reader adds
+    // the three modified presses. The runtime delivered the held set all along,
+    // but the smoke host had no verb that holds one, so no probe had sent a
+    // modified press and a row handler could ignore the chord while every
+    // selection check passed. `modifier-select-lifecycle` measured the whole
+    // rule, and the anchor is the half a component gets wrong.
+    const chord = rowFor("Modifier press and chord selection");
+    expect(chord?.verdict).toBe("supported, with limits");
+    expect(chord?.evidence).toContain("modifier-select-lifecycle");
+    expect(chord?.evidence).toContain("selected=3,4,5,6");
+    expect(chord?.evidence).toContain(
+      "flags=cmd:true,ctrl:false,alt:false,shift:false",
+    );
+    expect(chord?.evidence).toContain("selected=4,5,6,7");
+    // The protocol hard-codes one click, so a double press is not measurable.
+    expect(chord?.evidence).toContain("click_count: 1");
+    expect(chord?.workaround).toContain("four flags");
+    expect(chord?.workaround).toContain("anchor");
+
+    const page = measuredRow("Modifier press");
+    expect(
+      page,
+      "the page's measured table has no modifier-press row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("modifier-select-lifecycle");
+    expect(page?.[1]).toContain("selected=3,4,5,6");
+    expect(page?.[1]).toContain("click_count: 1");
+    expect(page?.[2]).toContain("four flags");
+    expect(page?.[2]).toContain("anchor");
+  });
+
   it("records the rules around a grid's filter, and the four decisions a grid owns", () => {
     // Tier 3's Filtering controls row is composition, and a plan reading only
     // the table sort/selection rule would leave a filtered-out selection live.
@@ -1561,6 +1593,7 @@ describe("docs/gpuix-capabilities.md", () => {
       ["cmd-a", "a key chord the pasted-code probe pressed"],
       ["cmd-c", "a key chord the pasted-code probe pressed"],
       ["cmd-v", "a key chord the pasted-code probe pressed"],
+      ["cmd-shift", "a chord the modifier-selection probe pressed"],
       ["wrow-60", "a row marker the windowed list probe checked for"],
       ["row-alpha", "a row marker the reorder probe dragged"],
       ["row-delta", "a row marker the reorder probe dropped onto"],

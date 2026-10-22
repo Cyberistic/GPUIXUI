@@ -459,7 +459,7 @@ still print the identity's roles; `theme-editor-logic.test.ts` holds the pins to
 the base in both directions and keeps the persistence boundary (`parseState`)
 rejecting a pinned value the renderer cannot paint.
 
-The readout under the preview is the whole audit, not a contrast check: all ten
+The readout under the preview is the whole audit, not a contrast check: all eleven
 `auditTheme` reports are flattened into one list (`auditFindings`), each worded
 for a reader, because a theme that paints a divider into itself, drops a `NaN`
 radius, erases a disabled label or hides a chart series is still broken and none

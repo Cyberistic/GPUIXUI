@@ -246,7 +246,8 @@ export function ThemeEditorSurface({
             paints its colour, every number lays out, every text pair clears its
             floor, every decorative surface stays visible, every data-series
             colour separates from its plot and from its neighbours under every
-            colour-vision deficiency, every selection wash stays visible with
+            colour-vision deficiency, every token in a code block is readable on
+            the fill it is read on, every selection wash stays visible with
             readable text inside it, every indicator mark is findable on the
             strip it is drawn on, every disabled control keeps its faded label,
             and every control the keyboard dim touches keeps a visible one.

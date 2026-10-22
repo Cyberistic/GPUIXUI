@@ -187,6 +187,17 @@ that activates on release (Space on a button, checkbox or switch, the platform's
 own rule) is only provable with `keyUp`. And a window's renderer reports no
 style, so `paintedStyle` has no twin: a live probe proves paint from `pixels`.
 
+`clickWith` is the only verb that sends a **modified** press, and its chord is
+spelled through `Smoke.formatModifiers`, so `["shift", "cmd"]` is `cmd-shift`
+whatever the argument order. Two rules a probe author plans around:
+`modifier-select-lifecycle` measured the payload's four flags
+(`cmd`/`ctrl`/`alt`/`shift`) rather than only the chord, so a handler that
+derives the chord from `shift` alone is wrong about a `cmd` the runtime sent; and
+a **double press cannot be synthesized** — `simulateClick` and the locator both
+hard-code `click_count: 1`, so two presses on one row report `click=1` even in a
+row that listens for a double click. A control that opens on a double press needs
+a keyboard path or an explicit control until the protocol grows a count.
+
 `key` is not an editor either: it inserts a printable character but runs **no
 native text edit** for a named key, so `Backspace`/`Delete` cannot be driven
 through the platform's editor from a window. The shipped `OTPField` refuses to
