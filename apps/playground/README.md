@@ -3105,7 +3105,7 @@ Two details of the harness are load-bearing:
   terminal on exit, and replays its logs to stderr afterwards.
 
 Measured on 0.11.0 here (`--only terminal-render --only terminal-input`, 2/2,
-~4–6 s):
+~4–8 s):
 
 | State | What the stream proves |
 | ----- | ---------------------- |

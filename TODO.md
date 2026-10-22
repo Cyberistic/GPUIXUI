@@ -628,7 +628,7 @@ a workaround for two live sessions sharing one worktree; see
       repaints the page whole, and ctrl-c exiting `0` with the alternate screen
       left, the four protocols off, the keyboard flags popped and the image
       deleted (`a=d`). 2/2, `--only terminal-render --only terminal-input`, green
-      (~4–6 s). Two decoder defects found while building it — a completed transfer
+      (~4–8 s). Two decoder defects found while building it — a completed transfer
       replaced the frame list instead of appending (a repainted run read as "no
       page"), and an image delete carries no `;<payload>` so the APC grammar missed
       the restore — and both directions measured per case. The paint check's
