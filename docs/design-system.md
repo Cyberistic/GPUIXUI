@@ -269,7 +269,7 @@ it. It is held instead to one shadow per level, tinted by the `shadow` role (see
 | loading | a mark — `primary`, or a status tone's readable role — never the disabled fade: a busy control keeps its label, its tab stop and its announcement |
 | focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
 | dimmed | `keyboardFocusDimOpacity` — every other focusable keeps 40% of itself while one control has keyboard focus; a control whose text must stay readable opts out with `keyboardFocusDim: false` |
-| text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor |
+| text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor (secondary text at the secondary floor) |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
 A state wash is a surface with text on it, so it is measured like one: the
@@ -399,6 +399,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 | text inside the selection wash (input, page, card, popover) | 7:1 | 7:1 |
+| secondary text inside the selection wash (page, card, popover) | 4.5:1 | 7:1 |
 | the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
 | data series on `background`, `card` and `popover` | 3:1 | 4.5:1 |
 | any two data series apart from each other (OKLab distance) | 0.06 | 0.06 |
@@ -452,8 +453,8 @@ least one measurement, so a role cannot ship unmeasured — it found
 `disabledForeground` (now on the disabled floor) and `scrollbar` (now measured as
 a decorative surface, because a thumb nobody can find is a scroller nobody can
 find). The only two roles with no pair are `selection`, measured by
-`selectionFailures` on the text inside the wash, and `shadow`, measured by the
-elevation tint above; the guard names each contract.
+`selectionFailures` on the text inside the wash (body and secondary text), and
+`shadow`, measured by the elevation tint above; the guard names each contract.
 
 A value the renderer cannot paint is the other silent failure: GPUix ignores a
 colour string it cannot parse, so a typo keeps the property's previous value or
@@ -492,9 +493,9 @@ measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `decorativeFailures(theme, floor?)` measures the subtle surfaces,
 `seriesFailures(theme)` measures a categorical scale — on its plot, against
 itself and after each colour-vision deficiency — while `selectionFailures(theme)`
-measures the wash a selected run sits in and `indicatorFailures(theme)` measures
-the marks a component shows. Nothing about the requirement is
-private to this repo.
+measures the body and secondary text a selected run sits in, and
+`indicatorFailures(theme)` measures the marks a component shows. Nothing about
+the requirement is private to this repo.
 
 ### Target sizes
 
@@ -511,10 +512,8 @@ component packages is recorded in `TODO.md`.
 Not covered, deliberately:
 
 - disabled text (WCAG exempts inactive controls); it stays visibly dimmed;
-- secondary text selected under the wash — a caption already sits at the
-  secondary floor, so a wash that can be seen lowers it; the wash is held to the
-  primary reading text it covers, and the limit is stated in `docs/tokens.md`
-  §Text selection;
+- a field's placeholder inside a selection — it is painted only while the field
+  is empty, so there is no run for a reader to select;
 - placeholder as a substitute for a label — placeholders are hints, labels are
   required;
 - colour as the only status signal — status components pair colour with text or
@@ -575,7 +574,7 @@ runs all nine checks — an unpaintable role, an unpaintable shadow in a level t
 brand supplied, a size, length or shadow geometry the renderer would drop, every
 pair below the floor its variant asks for, every decorative surface too close to
 its background, a data series lost on its plot or to a colour-vision deficiency,
-a selection wash that hides its text, an indicator mark nobody can find, and a
+a selection wash that hides the body or secondary text inside it, an indicator mark nobody can find, and a
 disabled label the fade erases; run it over the resolved theme before it ships
 and assert `passed` in the package's own tests.
 

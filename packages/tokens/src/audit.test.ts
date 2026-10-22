@@ -27,6 +27,7 @@ import {
   platformTheme,
   retroNames,
   retroTheme,
+  selectionPairs,
   themes,
 } from "./index.js";
 
@@ -118,7 +119,9 @@ describe("every report is part of the gate", () => {
     });
 
     expect(contrastFailures(invisibleSelection)).toEqual([]);
-    expect(auditTheme(invisibleSelection).selection.length).toBe(4);
+    expect(auditTheme(invisibleSelection).selection.length).toBe(
+      selectionPairs.length,
+    );
     expect(auditTheme(invisibleSelection).passed).toBe(false);
   });
 

@@ -137,7 +137,7 @@ tool never has to copy the palette out of this page.
 | `secondary` | `#E1E5EC` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `muted` | `#EEF1F5` | `#222730` | quiet surface |
-| `mutedForeground` | `#545D6C` | `#A1A9B7` | secondary text |
+| `mutedForeground` | `#4B5362` | `#C1C7D1` | secondary text |
 | `accent` | `#E0E3FF` | `#2E2370` | tinted emphasis surface |
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
 | `destructive` | `#CC3439` | `#FF6B6B` | destructive action |
@@ -501,7 +501,7 @@ getTheme("light"); // the default light theme, unchanged
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
-| `selection` | `#7567F24D` | `#C7CBFF4D` | text selection wash (30% alpha) |
+| `selection` | `#7567F24D` | `#C7CBFF42` | text selection wash (30% light, 26% dark) |
 | `overlay` | `#000000A6` | `#000000CC` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
@@ -1593,23 +1593,27 @@ inside it keeps the role it already had. A translucent colour has no ratio of it
 own — `contrastRatio` refuses it — so the wash is measured **after** it is
 composited over the surface it sits on.
 
-`selectionPairs` names the four content surfaces body text is selected from — a
-field's value, prose on the page, a card and a popover — and each pair keeps the
-text role that surface already carries. `selectionFailures(theme, floors?)`
-measures two things per pair:
+`selectionPairs` names the surfaces text is selected from: the four content
+surfaces body text is read on — a field's value, prose on the page, a card and a
+popover — and the three prose surfaces again for the secondary
+`mutedForeground` line beside it (a caption, a table's second line, a log row).
+Each pair keeps the text role that surface already carries.
+`selectionFailures(theme, floors?)` measures two things per pair:
 
 | Contract | Floor | What it catches |
 | -------- | ----- | --------------- |
 | the wash is visible against its surface | 1.05:1 | a selection the reader cannot find |
-| the selected text reads on the wash | body, 7:1 | a wash that hides the text it selects |
+| the selected body text reads on the wash | body, 7:1 | a wash that hides the text it selects |
+| the selected secondary text reads on the wash | secondary, 4.5:1 | a wash that buries the line under the heading |
 
 The visibility floor is `decorativeFloor`, the perceptibility floor the dividers,
 skeleton fills and veil are held to — a selection that matches what it covers is
-not a selection. The legibility floor is the body floor of the theme's own
-contrast variant, so a high-contrast brand is measured at AAA without naming a
-floor set. Each failure carries its `kind` (`visibility` or `legibility`), the
-pair, the composited `wash` and the measured `ratio`; a surface that cannot be
-composited is reported with `ratio: undefined` rather than skipped.
+not a selection. The legibility floors are the ones the unselected pair already
+meets, of the theme's own contrast variant, so a high-contrast brand is measured
+at AAA without naming a floor set. Each failure carries its `kind` (`visibility`
+or `legibility`), the pair, the composited `wash` and the measured `ratio`; a
+surface that cannot be composited is reported with `ratio: undefined` rather
+than skipped.
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -1628,15 +1632,25 @@ now. A brand that wants a stronger wash should deepen its hue or its surface
 rather than raise the share: the contract measures the composite, and 30% of a
 mid accent over a light card is exactly what put those three under the floor.
 
+**It then found the palette had no headroom.** Measuring secondary text under
+the same wash left `mutedForeground` at 4.25–4.44:1 on the light platform themes
+and 3.27–4.13:1 on the dark ones, against the 4.5:1 floor the unselected pair
+meets: the grey ramp's 600 and 400 steps sit at that edge, so any visible wash
+had to bury them. The wash is not the defect — a secondary role with no room
+above its floor can only survive a selection by making the selection invisible.
+The light sets' secondary text is a step darker (`#4B5362`) and the dark sets' a
+step lighter (`#C1C7D1`), the two authored looks follow with their own tint
+(`#4F5550`, `#B4C6DD`, `#BCCEDF`), and the high-contrast dark wash carries a 26%
+share instead of 30% so its 7:1 secondary text clears the composite. No other
+wash strength changed.
+
 **Adoption.** The role reaches a window through the runtime's `selectionColor`
 property, which inherits down a subtree. Setting it on selectable text and
 fields is the component packages' work, recorded in `TODO.md` → Interlocks; the
 runtime's own default is the theme accent at 35%, which is not this role.
 
-**Not measured, deliberately:** secondary text selected under the wash. A
-caption already sits at the 4.5:1 secondary floor, so any visible wash lowers it;
-holding that pair to 4.5:1 would force a wash too faint to see. The wash is held
-to the primary reading text it covers.
+**Not measured, deliberately:** a field's `placeholder`. It is painted only
+while the field is empty, so there is no run for a reader to select.
 
 ## Theme API
 
@@ -1926,13 +1940,15 @@ suite names the shipped alias (`secondary`/`muted` at 1.00:1) and fails when a
 placement leaves the table or a face is reverted.
 
 `packages/tokens/src/selection.test.ts` covers the wash behind a selected run:
-`selectionPairs` names the four content surfaces and keeps the text role each one
-already carries, `selectionFailures` composites the role over each surface, and a
-theme passes only when the wash is visible against what it covers (1.05:1) and the
-text inside it keeps the body floor. It reports the pre-fix Linux dark wash at
-6.63:1 by name, a brand whose wash is its own text colour, a transparent wash and
-a surface it cannot composite, and all 16 shipped, platform and authored themes
-clear both floors.
+`selectionPairs` names the surfaces text is selected from and keeps the text role
+each one already carries — the four body roles, plus `mutedForeground` on the
+page, a card and a popover — `selectionFailures` composites the role over each
+surface, and a theme passes only when the wash is visible against what it covers
+(1.05:1) and the text inside it keeps the floor its unselected pair meets (body
+7:1, secondary 4.5:1). It reports the pre-fix Linux dark wash at 6.63:1 and the
+pre-fix secondary value on macOS light at 4.30:1 by name, a brand whose wash is
+its own text colour, a transparent wash and a surface it cannot composite, and
+all 16 shipped, platform and authored themes clear every contract.
 
 `packages/tokens/src/series.test.ts` covers the categorical scale: every
 shipped, platform and authored theme holds every swatch to its variant's

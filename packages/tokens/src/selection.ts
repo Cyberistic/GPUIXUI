@@ -12,6 +12,17 @@
  * 30% accent wash on surfaces lighter than the base theme's, which left body
  * text at 6.63:1, 6.33:1 and 6.80:1 against the 7:1 floor. Their own `selection`
  * is a 24% tint now, the share the base dark theme already used.
+ *
+ * Measuring **secondary** text on the same surfaces then found that most styles
+ * had no room for a wash at all: with the rest of the palette unchanged the
+ * wash left `mutedForeground` at 4.25–4.44:1 on the light platform themes and
+ * 3.27–4.13:1 on the dark ones, against the 4.5:1 floor the unselected pair
+ * meets. The wash is not the defect — the secondary role had no headroom above
+ * the floor, so a selection could only ever bury it. The grey ramp's 600 and 400
+ * steps sit at that edge (the base dark theme measured 4.96:1 on its popover
+ * before any wash), so the light sets take a step darker (`#4B5362`) and the
+ * dark sets a step lighter (`#C1C7D1`), and every platform and authored style
+ * inherits the headroom. No wash strength changed.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -29,13 +40,23 @@ import { decorativeFloor } from "./decorative.js";
  * The four content surfaces — a field's value, prose on the page, a card and a
  * popover — where the resting pair is already held to the body floor, so a wash
  * that lowers what the reader can read is measured against the same floor the
- * unselected text is.
+ * unselected text is. The three prose surfaces also carry secondary text
+ * (`mutedForeground`) — a caption, a table's second line, a log row — at the
+ * secondary floor, so a wash readable for a heading but not for the line under
+ * it is reported rather than passing on the heading alone.
  */
 export const selectionPairs: readonly ContrastPair[] = [
   { foreground: "inputForeground", background: "input", floor: "body" },
   { foreground: "foreground", background: "background", floor: "body" },
   { foreground: "cardForeground", background: "card", floor: "body" },
   { foreground: "popoverForeground", background: "popover", floor: "body" },
+  {
+    foreground: "mutedForeground",
+    background: "background",
+    floor: "secondary",
+  },
+  { foreground: "mutedForeground", background: "card", floor: "secondary" },
+  { foreground: "mutedForeground", background: "popover", floor: "secondary" },
 ];
 
 /**
@@ -57,7 +78,7 @@ export interface SelectionFailure {
    * wash is reported rather than skipped.
    */
   readonly ratio: number | undefined;
-  /** The floor it had to reach: body text, or the perceptibility floor. */
+  /** The floor it had to reach: the pair's own text floor, or `decorativeFloor`. */
   readonly floor: number;
 }
 
@@ -72,7 +93,9 @@ const washOver = (colors: ThemeColors, over: keyof ThemeColors): string =>
  * measured by the result a reader sees. A wash must be visible against the
  * surface it tints — the same 1.05:1 perceptibility floor the decorative
  * surfaces use, because a selection the reader cannot find is not a selection —
- * and the text inside it must clear the body floor of the theme's own variant.
+ * and the text inside it must clear the floor the unselected pair already met:
+ * the body floor for the text a surface is read in, the secondary floor for the
+ * `mutedForeground` line beside it.
  *
  * An empty array means the theme can be selected from. Runs over `selectionPairs`,
  * so a brand is held to the surfaces the library's own themes are.

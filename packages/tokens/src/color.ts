@@ -202,7 +202,9 @@ export const lightColors = {
   secondary: palette.neutral[200],
   secondaryForeground: palette.neutral[800],
   muted: palette.neutral[100],
-  mutedForeground: palette.neutral[600],
+  // A step darker than the grey ramp's 600: secondary text also sits under the
+  // text-selection wash, which costs it contrast on every surface it covers.
+  mutedForeground: "#4B5362",
   accent: palette.iris[100],
   accentForeground: palette.iris[800],
   destructive: palette.red[600],
@@ -253,7 +255,9 @@ export const darkColors = {
   secondary: palette.neutral[800],
   secondaryForeground: palette.neutral[200],
   muted: palette.neutral[850],
-  mutedForeground: palette.neutral[400],
+  // A step lighter than the grey ramp's 400: secondary text also sits under the
+  // text-selection wash, which costs it contrast on every surface it covers.
+  mutedForeground: "#C1C7D1",
   accent: palette.iris[900],
   accentForeground: palette.iris[200],
   destructive: palette.red[400],
@@ -386,7 +390,7 @@ export const highContrastDarkColors = {
   inputForeground: "#FFFFFF",
   placeholder: "#B0B0B0",
   ring: "#C7CBFF",
-  selection: "#C7CBFF4D",
+  selection: "#C7CBFF42",
   overlay: "#000000CC",
   hover: "#2E2E2E",
   active: "#3D3D3D",

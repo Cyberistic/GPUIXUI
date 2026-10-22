@@ -293,19 +293,26 @@ paints it through the `selectionColor` style property, which inherits down a
 subtree and defaults to the theme accent at 35%; a component passes
 `theme.colors.selection` to keep the selection in the design system's palette.
 
-`selectionPairs` names the four content surfaces body text is selected from (a
-field's value, prose, a card, a popover) and
-`selectionFailures(theme, floors?)` composites the wash over each one and checks
-both jobs: it is visible against its surface (`decorativeFloor`, 1.05:1) and the
-text inside it keeps the theme variant's body floor (7:1). A failure names its
-`kind` (`visibility` or `legibility`), the pair, the composited colour and the
-ratio; `auditTheme` includes the report.
+`selectionPairs` names the surfaces text is selected from: the four content
+surfaces body text is read on (a field's value, prose, a card, a popover) and
+the three prose surfaces again for the secondary `mutedForeground` line beside
+it. `selectionFailures(theme, floors?)` composites the wash over each one and
+checks both jobs: it is visible against its surface (`decorativeFloor`, 1.05:1)
+and the text inside it keeps the floor its unselected pair already met — the
+theme variant's body floor (7:1) for body text, its secondary floor (4.5:1) for
+the line under a heading. A failure names its `kind` (`visibility` or
+`legibility`), the pair, the composited colour and the ratio; `auditTheme`
+includes the report.
 
 It found three shipped styles under the body floor — Linux dark at 6.63:1 on its
 card, Windows dark at 6.33:1 and Luna dark at 6.80:1 on its popover — from a 30%
 wash over cards lighter than the base theme's, so each carries the base dark
-theme's 24% share now. Secondary text selected under a wash is not measured: it
-already sits at 4.5:1, so any visible wash lowers it. A runnable example lives in
+theme's 24% share now. Measuring secondary text then found nine styles had no
+headroom for any wash: the grey ramp's 600 and 400 steps sat at the 4.5:1 floor,
+so the wash buried them. The base light secondary text is `#4B5362` and the dark
+one `#C1C7D1` — a step further from their surfaces — with the two authored looks
+carrying their own tint, and the high-contrast dark wash at 26% so its 7:1
+secondary text clears the composite. A runnable example lives in
 [`src/selection.example.ts`](./src/selection.example.ts).
 
 ## Platform styles
@@ -476,8 +483,8 @@ Each report is also a function of its own:
   close to its neighbour, or too close to it for a reader with a colour-vision
   deficiency, and reports one it cannot measure.
 - `selectionFailures(theme, floors?)` composites the `selection` wash over each
-  surface body text is selected from and lists a wash the reader cannot see and
-  one that hides the text it selects; see §Text selection.
+  surface text is selected from and lists a wash the reader cannot see and one
+  that hides the body or secondary text inside it; see §Text selection.
 - `disabledFadeFailures(theme, floor?)` composites the disabled fade a control
   applies (`disabledOpacity`) and lists a label that disappears into the faded
   fill; the role pair is measured by `contrastFailures`, this is the other

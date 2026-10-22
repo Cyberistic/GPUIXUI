@@ -9,12 +9,19 @@
  * three shipped styles under the body floor: Linux dark at 6.63:1 on its card,
  * Windows dark at 6.33:1, and Luna dark at 6.80:1 on its popover. Each now
  * carries the base dark theme's 24% share instead of 30%.
+ *
+ * The second half — **secondary** text under the same wash — found that nine of
+ * the sixteen styles had no headroom for a selection at all: the grey ramp's
+ * 600 (light) and 400 (dark) steps sat close enough to the 4.5:1 floor that the
+ * wash pushed them to 4.25–4.44:1 and 3.27–4.13:1. Both base palettes now carry
+ * a value a step further from their surfaces, so a selected `mutedForeground`
+ * line stays readable on the page, a card and a popover.
  */
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { lightColors } from "./color.js";
-import { contrastFloors } from "./contrast.js";
+import { lightColors, palette } from "./color.js";
+import { contrastFloors, contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
@@ -62,6 +69,9 @@ const restingText: Readonly<Record<string, string>> = {
   popover: "popoverForeground",
 };
 
+/** The prose surfaces that also carry secondary text beside their body text. */
+const secondarySurfaces = ["background", "card", "popover"] as const;
+
 describe("the pairs a selection is measured on", () => {
   it("covers every content surface body text is selected from", () => {
     const missing = Object.keys(restingText).filter((over) => !measured(over));
@@ -71,12 +81,31 @@ describe("the pairs a selection is measured on", () => {
 
   it("keeps the text role each surface already carries", () => {
     const wrong = selectionPairs
+      .filter(({ foreground }) => foreground !== "mutedForeground")
       .filter(
         ({ background, foreground }) => restingText[background] !== foreground,
       )
       .map(({ background }) => background);
 
     expect(wrong).toEqual([]);
+  });
+
+  it("measures secondary text on every prose surface at its own floor", () => {
+    // A caption, a table's second line and a log row keep `mutedForeground`
+    // when the reader selects them, so the wash owes that role the floor its
+    // resting pair meets rather than the body floor the heading needs.
+    const secondary = selectionPairs.filter(
+      ({ foreground }) => foreground === "mutedForeground",
+    );
+
+    expect(secondary.map(({ background }) => background)).toEqual([
+      ...secondarySurfaces,
+    ]);
+    expect(secondary.map(({ floor }) => floor)).toEqual([
+      "secondary",
+      "secondary",
+      "secondary",
+    ]);
   });
 });
 
@@ -115,7 +144,12 @@ describe("selectionFailures", () => {
   it("reports a wash that hides the text it selects", () => {
     const failures = selectionFailures(unreadableSelectionBrand);
 
+    // Every pair, body and secondary: an opaque wash in the text colour leaves
+    // nothing readable inside it.
     expect(failures.map(({ kind }) => kind)).toEqual([
+      "legibility",
+      "legibility",
+      "legibility",
       "legibility",
       "legibility",
       "legibility",
@@ -126,13 +160,45 @@ describe("selectionFailures", () => {
       "background",
       "card",
       "popover",
+      "background",
+      "card",
+      "popover",
     ]);
+  });
+
+  it("reports secondary text the wash buries, which its resting pair passes", () => {
+    // The regression: the grey ramp's 600 step clears the secondary floor on
+    // macOS light's window, so nothing measured it inside a selection — where a
+    // 24% wash took it to 4.30:1.
+    const before = {
+      colors: {
+        ...platformTheme(themes.light, "darwin").colors,
+        mutedForeground: palette.neutral[600],
+      },
+    };
+    const resting = platformTheme(themes.light, "darwin").colors;
+    const failure = selectionFailures(before).find(
+      ({ foreground, background }) =>
+        foreground === "mutedForeground" && background === "background",
+    );
+
+    expect(failure?.kind).toBe("legibility");
+    expect(failure?.floor).toBe(contrastFloors.secondary);
+    expect(failure?.ratio).toBeCloseTo(4.3, 1);
+    // The same pair is readable before the wash, which is the whole bug: the
+    // resting contrast contract cannot see that a selection buries it.
+    expect(
+      contrastRatio(resting.mutedForeground, resting.background),
+    ).toBeGreaterThanOrEqual(contrastFloors.secondary);
   });
 
   it("reports a wash the reader cannot find", () => {
     const failures = selectionFailures(invisibleSelectionBrand);
 
     expect(failures.map(({ kind }) => kind)).toEqual([
+      "visibility",
+      "visibility",
+      "visibility",
       "visibility",
       "visibility",
       "visibility",
@@ -191,13 +257,23 @@ describe("the documents describe the contract they are held to", () => {
   const read = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
 
-  it("documents the check, both floors and the surfaces", () => {
+  it("documents the check, every floor and the surfaces", () => {
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
 
     expect(catalogue).toContain("selectionFailures");
     expect(catalogue).toContain("## Text selection");
     expect(catalogue).toContain(`${decorativeFloor}:1`);
+    // The secondary half is the contract a reader copies: the page has to name
+    // the role, its floor and the value the palette carries for it, or the next
+    // palette edit that drops the headroom is taught as fine.
+    expect(catalogue).toContain("mutedForeground");
+    expect(catalogue).toContain(`${contrastFloors.secondary}:1`);
+    expect(catalogue).toContain(lightColors.mutedForeground);
     expect(design).toContain("selection wash");
+    expect(design).toContain("secondary text inside the selection wash");
+    expect(readme).toContain("mutedForeground");
+    expect(readme).toContain(lightColors.mutedForeground);
   });
 });
