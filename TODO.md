@@ -655,7 +655,7 @@ a workaround for two live sessions sharing one worktree; see
       by one subpath fails `expected 20, got 19`; drawing the band inside the
       view box fails `expected 200 ± 3, got 160`; resizing to a square box fails
       `expected true, got false`. Fixture: `src/live/pattern.ts` +
-      `pattern.test.ts` (8 cases). `registry.test.ts` now partitions the
+      `pattern.test.ts` (9 cases). `registry.test.ts` now partitions the
       registry across the full pass, its reds and the probes measured alone
       since (three directions measured: an unaccounted probe, a dropped red and
       an unregistered id each fail by count). Evidence:

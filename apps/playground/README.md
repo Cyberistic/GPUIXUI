@@ -3177,9 +3177,10 @@ disjoint tints, so one capture answers each half:
 34 checks, `--only svg-pattern`, green on 0.11.0 (~1.9 s). Fixture:
 `src/live/pattern.ts` — the geometry, the width-only scale rule (`patternScale`,
 `strokeWeight`), the generated comb path, the tint per shape and the capture →
-logical conversion; `pattern.test.ts` (8 cases) holds the tints apart, the
+logical conversion; `pattern.test.ts` (9 cases) holds the tints apart, the
 fraction against the path the markup strokes, the overhang past both view-box
-edges, the 20 subpaths the samples assume, and the conversion.
+edges, the 20 subpaths the samples assume, the conversion, and the check count
+the README prints against the steps' assertion sites.
 
 What it settles, for a pattern field:
 
