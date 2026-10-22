@@ -15,6 +15,8 @@ import {
 } from "./component-index";
 import { componentIndex } from "./component-index-data";
 import { packageCollections } from "./collection-routes";
+import { inventory } from "./inventory-data";
+import { statusForPage } from "./inventory-status";
 import { readPublishedModules, repoRoot } from "./public-symbols-source";
 
 /**
@@ -563,15 +565,24 @@ describe("the real index", () => {
     ).toEqual(curated.map((page) => page.url).toSorted());
   });
 
-  it("reports the inventory verdict on every page but the argued provider", () => {
-    // The row is what makes a mark honest, so a page the inventory answers
-    // must carry it — the one exemption is the provider, argued in
-    // `inventory-status.ts` and already exempt from its status strip.
+  it("reports the inventory verdict the page's strip prints", () => {
+    // The row is what makes a mark honest, so the data module has to resolve
+    // it for every page the inventory answers — the completeness rule itself
+    // (a page with no row fails) belongs to `inventory-status.test.ts`, which
+    // owns the status strip.
+    const missing = componentIndex.filter(
+      (row) =>
+        row.verdict === undefined &&
+        statusForPage(inventory, row.title).kind === "row",
+    );
+    const answered = componentIndex.filter((row) => row.verdict !== undefined);
+
+    expect(missing).toEqual([]);
+    expect(answered.length).toBeGreaterThan(80);
+    // The provider is the argued exemption, so it has no verdict to wear.
     expect(
-      componentIndex
-        .filter((row) => row.verdict === undefined)
-        .map((row) => row.title),
-    ).toEqual(["ThemeProvider"]);
+      componentIndex.find((row) => row.title === "ThemeProvider")?.verdict,
+    ).toBeUndefined();
   });
 
   it("marks the components the runtime supports only in part", () => {

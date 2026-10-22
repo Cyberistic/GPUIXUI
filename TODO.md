@@ -3253,8 +3253,9 @@ and `apps/docs/README.md` state where the mark comes from. `component-index.test
 (+2 real-index cases, 4 fixture cases) holds the resolution and both directions of
 the silence, `component-index.test.tsx` the rendered badge, and
 `component-page.test.ts` the prose. Directions measured: `verdict: undefined` in
-`entryOf` fails 5 cases naming `ThemeProvider` as the only row without one;
-dropping `{mark.label}` from the render fails with all 59 partial rows; removing
+`entryOf` fails 4 cases, starting with the resolution case naming every page the
+inventory answers; dropping `{mark.label}` from the render fails with all 59
+partial rows; removing
 the verdict from the haystack fails the two query cases. Verified in the dev
 server: `/docs/components` paints the `partial` mark on `/docs/primitives/button`
 and none on `/docs/components/card` or `/docs/primitives/select`;
