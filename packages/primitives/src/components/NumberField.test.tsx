@@ -23,6 +23,7 @@ import {
   type NumberFieldHandlers,
   type NumberFieldPart,
   type NumberFieldProps,
+  type NumberFieldScrub,
 } from "./NumberField.js";
 import type { FieldState } from "./Input.js";
 import type { FocusState } from "./internal.js";
@@ -61,6 +62,7 @@ const render = (
   text: string,
   focus: FocusState = idle,
   over: Partial<NumberFieldHandlers> = {},
+  scrub?: NumberFieldScrub,
 ): ReactElement =>
   renderNumberField(
     props,
@@ -69,6 +71,7 @@ const render = (
     text,
     focus,
     handlers(over),
+    scrub,
   );
 
 /** The field's body: a context provider draws nothing in the runtime. */
@@ -233,6 +236,73 @@ describe("NumberField", () => {
     expectSome(hostHandler(input, "onChange"))(changeEvent("99"));
     expect(onValue).toHaveBeenCalledTimes(0);
     expect(onTextChange).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe("NumberField scrub", () => {
+  /** A gesture whose scrubbed state a test can set, so the click is observable. */
+  const gesture = () => {
+    let scrubbed = false;
+    const scrub: NumberFieldScrub = {
+      onMouseDown: vi.fn(),
+      onMouseMove: vi.fn(),
+      onMouseUp: vi.fn(),
+      consumedClick: () => {
+        const value = scrubbed;
+        scrubbed = false;
+        return value;
+      },
+    };
+    return {
+      scrub,
+      moved: (value: boolean) => {
+        scrubbed = value;
+      },
+    };
+  };
+
+  it("hands both steppers the drag gesture", () => {
+    // The bug guarded: a number field's only pointer affordance was its two
+    // chevrons, so a caller could not scrub a value the way a design tool's
+    // field does. The pure renderer only carries the handlers; the gesture
+    // itself lives in the component (`runtime/number-field.runtime.test.tsx`
+    // drags it in a window).
+    const { scrub } = gesture();
+    const { up, down } = partsOf(render({}, 50, "50", idle, {}, scrub));
+    expect(Option.getOrUndefined(hostHandler(up, "onMouseDown"))).toBe(
+      scrub.onMouseDown,
+    );
+    expect(Option.getOrUndefined(hostHandler(up, "onMouseMove"))).toBe(
+      scrub.onMouseMove,
+    );
+    expect(Option.getOrUndefined(hostHandler(down, "onMouseUp"))).toBe(
+      scrub.onMouseUp,
+    );
+  });
+
+  it("refuses the click a scrubbing drag leaves behind", () => {
+    const onValue = vi.fn();
+    const { scrub, moved } = gesture();
+    const { up } = partsOf(render({}, 50, "50", idle, { onValue }, scrub));
+    const click = () =>
+      expectSome(hostHandler(up, "onClick"))(keyEvent("click"));
+    moved(true);
+    click();
+    expect(onValue).toHaveBeenCalledTimes(0);
+    // The flag is consumed: the next plain click steps once, as before.
+    click();
+    expect(onValue).toHaveBeenCalledWith(51);
+  });
+
+  it("installs no gesture on a disabled field", () => {
+    const onValue = vi.fn();
+    const { scrub } = gesture();
+    const { up } = partsOf(
+      render({ disabled: true }, 50, "50", idle, { onValue }, scrub),
+    );
+    expect(hostHandler(up, "onMouseDown")).toStrictEqual(Option.none());
+    expectSome(hostHandler(up, "onClick"))(keyEvent("click"));
+    expect(onValue).toHaveBeenCalledTimes(0);
   });
 });
 

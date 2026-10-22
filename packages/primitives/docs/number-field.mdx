@@ -178,6 +178,20 @@ Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
 moving by word — belongs to the platform or the application and is left alone,
 default action included; Shift is not a chord, so `Shift+Space` is still a press.
 
+## Pointer
+
+A press on a stepper that **travels** scrubs the value instead of clicking:
+dragging up raises it and dragging down lowers it, one `step` per four logical
+pixels of travel from the value the press started on. The direction is the
+gesture, not the chevron — dragging up raises the value whichever stepper the
+press landed on — and the drag keeps reporting after it leaves the small column,
+because the runtime captures the pointer for an element that listens to both
+`mouseDown` and `mouseMove` (measured by the `pointer-capture` probe). The travel
+rounds to the nearest four pixels, so a one-pixel wobble is still a click; a
+gesture that did move the value consumes the click the platform delivers at its
+end, so one gesture is one step. A disabled field takes no gesture at all, and a
+scrub stops at `min`/`max` like every other step.
+
 ## Accessibility
 
 - The input is a `TextInput` with the name from `label`; the steppers are
@@ -236,11 +250,9 @@ so a caller that composes its own parts still gets the hint.
   refused character stays in the box (`Input` §Theming measures both directions
   with `runtime/fields.runtime.test.tsx`). The hint is the field's own painted
   `<text>` (one line, clipped at the field's edge).
-- **No drag-to-scrub.** The runtime has the coordinates, bounds and pointer
-  capture for it (a track that listens to `mouseDown` and `mouseMove` keeps its
-  moves outside its box — measured by the `pointer-capture` probe), so this is a
-  component feature not yet written rather than a capability gap; the steppers
-  are the gesture today.
+- **No drag-to-scrub from the input.** A scrub is a pointer gesture on a
+  stepper; dragging across the text field is the host editor's selection, so the
+  value cannot be scrubbed from the box itself.
 - **`autoFocus` paints no ring on mount.** A focus that arrives without keyboard
   input (mount, programmatic) does not paint `focusVisible`, so the input's ring
   appears at the first Tab. The same is true of `Input`.
@@ -256,13 +268,18 @@ so a caller that composes its own parts still gets the hint.
   comma-decimal parser, the decimal fallback, a blank field, an unpaintable
   answer, and the grouped draft a controlled owner echoes), and fixed-decimal
   text that keeps no negative zero and expands past the platform's `1e21`
-  exponential bound.
+  exponential bound. `scrubNumber` holds the drag arithmetic: one step per four
+  pixels, a sign-symmetric half step (a +6px and a −6px travel are both two
+  steps), a click that stays a click, both bounds, a decimal step free of binary
+  noise, and an unreadable travel or scale.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
   raw edit report, the submit channel (commit first, no listener while
   disabled), steppers as presentation, one tab stop, disabled/invalid,
   the four part names in a caller's composition, the input part carrying the
-  draft, name and keys, the ring on the input rather than the wrapper, and the
-  value opted out of the keyboard dim (a caller's `style` puts it back).
+  draft, name and keys, the ring on the input rather than the wrapper, the
+  value opted out of the keyboard dim (a caller's `style` puts it back), and the
+  scrub wiring — both steppers carry the gesture, a scrubbing click is refused,
+  and a disabled field installs none.
 - `src/components/keyboard-dim.test.tsx` — every field node keeps its content
   lit, and a `Toggle`/`Slider` keep the cue.
 - `src/components/field-hint.test.tsx` and `runtime/field-hint.runtime.test.tsx`
@@ -272,6 +289,10 @@ so a caller that composes its own parts still gets the hint.
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
   `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;
+  **a vertical drag on the spin column scrubs the value** — 40px up is ten
+  steps and the platform's click at the end of that gesture does not step again,
+  while a fresh press that does not travel is exactly one step (measured in a
+  window on 0.11.0, with the pointer captured past the column's edge);
   the chrome declares the keyboard ring and a press paints none; a disabled
   field refuses text, keys and clicks; a caller's composition of the input and
   both steppers reads the field's live value (a real press on each steps it);

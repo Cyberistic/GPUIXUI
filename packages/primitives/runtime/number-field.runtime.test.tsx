@@ -199,6 +199,37 @@ it("steps from a hit-tested click on the spin column and refocuses the input", a
   expect(focused.type).toBe("input");
 });
 
+it("scrubs the value by dragging vertically on the spin column", async () => {
+  // A number field's only pointer affordance used to be two clicks. GPUix
+  // captures the pointer for an element listening to both `mouseDown` and
+  // `mouseMove` (the `pointer-capture` probe), so the column can follow a drag
+  // that leaves it: 40px up is ten steps, and the click the platform delivers
+  // at the end of that gesture must not step again.
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Quantity"
+      defaultValue={50}
+      onChange={field.onChange}
+    />,
+  );
+  const box = boundsOf(runtime, "nf");
+  const x = box.x + box.width - 8;
+  const y = box.y + box.height * 0.25;
+  runtime.mouseDownAt(x, y);
+  runtime.mouseMoveAt(x, y - 20, 0);
+  runtime.mouseMoveAt(x, y - 40, 0);
+  runtime.mouseUpAt(x, y - 40);
+  expect(lastValue(field.values)).toBe(60);
+  // A fresh press that does not travel is still exactly one step. (The platform
+  // turns the press/release pair into the click the field steps on, which is
+  // the gesture a reader makes.)
+  runtime.mouseDownAt(x, y);
+  runtime.mouseUpAt(x, y);
+  expect(lastValue(field.values)).toBe(61);
+});
+
 it("declares the keyboard ring on the input, the element that holds focus", async () => {
   // The bug this guards: the ring was declared on the field's wrapper, and the
   // runtime paints `focusVisible` only on an element it tracks focus for

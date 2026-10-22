@@ -172,6 +172,44 @@ export const stepNumber = (
   return clampNumeric(moved, range);
 };
 
+/**
+ * The vertical travel one scrub step takes.
+ *
+ * Four logical pixels is the pointer-native scale: a 40px drag moves ten steps,
+ * which crosses a typical `0…100` field in one comfortable gesture while a
+ * one-pixel wobble on a click stays a click. It is a design constant rather than
+ * a `Theme` group, because density describes a control's box and this describes
+ * a gesture — a brand that could change it would make two fields in one window
+ * scrub at different rates.
+ */
+export const SCRUB_PIXELS_PER_STEP = 4;
+
+/**
+ * The value a vertical drag aims at.
+ *
+ * `travel` is how far the pointer moved **up** since the press (a downward drag
+ * is negative), so dragging up raises the value. The travel is quantised with a
+ * sign-aware round: ±6px is two steps in both directions, where
+ * `Math.round(-6 / 4)` is `-1` and the same gesture would answer differently
+ * depending on which way it went. A travel that cannot be measured leaves the
+ * value alone, and a scale that cannot be laid out falls back to
+ * {@link SCRUB_PIXELS_PER_STEP} — the same absence rule as a broken step.
+ */
+export const scrubNumber = (
+  start: number,
+  travel: number,
+  range: NumberRange,
+  pixelsPerStep = SCRUB_PIXELS_PER_STEP,
+): number => {
+  if (!Number.isFinite(travel)) return start;
+  const scale =
+    Number.isFinite(pixelsPerStep) && pixelsPerStep > 0
+      ? pixelsPerStep
+      : SCRUB_PIXELS_PER_STEP;
+  const steps = Math.sign(travel) * Math.round(Math.abs(travel) / scale);
+  return stepNumber(start, range, steps);
+};
+
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   up: 1,
   down: -1,

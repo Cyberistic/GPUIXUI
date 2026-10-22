@@ -517,7 +517,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "Decimal text by default: a grouped or locale display is read through the formatValue/parseValue pair, never guessed",
-      "No type=number, inputMode or drag-to-scrub",
+      "No type=number or inputMode",
       "autoFocus paints no ring on mount",
       "Enter is the runtime's Submit action, not a keydown; onSubmit is the channel",
     ],

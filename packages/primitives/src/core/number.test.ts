@@ -19,6 +19,8 @@ import {
   numberDraftText,
   parseNumberText,
   parseNumericText,
+  SCRUB_PIXELS_PER_STEP,
+  scrubNumber,
   stepNumber,
   syncNumberDraft,
   withNumberDraftText,
@@ -217,6 +219,49 @@ describe("stepNumber", () => {
   it("treats a step it cannot lay out as one", () => {
     expect(stepNumber(5, { step: Number.NaN }, 1)).toBe(6);
     expect(stepNumber(5, { step: Number.POSITIVE_INFINITY }, -1)).toBe(4);
+  });
+});
+
+describe("scrubNumber", () => {
+  it("moves one step per four pixels, raising the value on an upward drag", () => {
+    expect(SCRUB_PIXELS_PER_STEP).toBe(4);
+    expect(scrubNumber(50, 4, RANGE)).toBe(51);
+    expect(scrubNumber(50, -4, RANGE)).toBe(49);
+    expect(scrubNumber(50, 40, RANGE)).toBe(60);
+    expect(scrubNumber(50, -40, RANGE)).toBe(40);
+  });
+
+  it("answers a travel the same either side of the half step", () => {
+    // The bug guarded: plain `Math.round` sends +6px two steps and -6px one, so
+    // the same gesture answered differently depending on its direction.
+    expect(scrubNumber(50, 6, RANGE)).toBe(52);
+    expect(scrubNumber(50, -6, RANGE)).toBe(48);
+  });
+
+  it("keeps a click a click", () => {
+    expect(scrubNumber(50, 1, RANGE)).toBe(50);
+    expect(scrubNumber(50, 0, RANGE)).toBe(50);
+  });
+
+  it("clamps at both bounds", () => {
+    expect(scrubNumber(95, 40, RANGE)).toBe(100);
+    expect(scrubNumber(5, -40, RANGE)).toBe(0);
+  });
+
+  it("keeps a decimal step free of binary noise", () => {
+    expect(scrubNumber(0.2, 4, { step: 0.1 })).toBe(0.3);
+    expect(scrubNumber(0.2, -8, { step: 0.1 })).toBe(0);
+  });
+
+  it("leaves the value alone when the travel cannot be measured", () => {
+    expect(scrubNumber(50, Number.NaN, RANGE)).toBe(50);
+    expect(scrubNumber(50, Number.POSITIVE_INFINITY, RANGE)).toBe(50);
+  });
+
+  it("falls back to the house scale when the scale cannot be laid out", () => {
+    expect(scrubNumber(50, 4, RANGE, Number.NaN)).toBe(51);
+    expect(scrubNumber(50, 4, RANGE, 0)).toBe(51);
+    expect(scrubNumber(50, 8, RANGE, 8)).toBe(51);
   });
 });
 

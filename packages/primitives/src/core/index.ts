@@ -54,6 +54,8 @@ export {
   formatNumber,
   parseNumberText,
   parseNumericText,
+  SCRUB_PIXELS_PER_STEP,
+  scrubNumber,
   stepNumber,
 } from "./number.js";
 export type { NumberRange, ParseValue } from "./number.js";

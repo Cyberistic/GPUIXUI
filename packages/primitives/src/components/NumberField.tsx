@@ -45,6 +45,7 @@ import {
   initNumberDraft,
   numberDraftText,
   parseNumberText,
+  scrubNumber,
   stepNumber,
   syncNumberDraft,
   withNumberDraftText,
@@ -153,6 +154,95 @@ export interface NumberFieldHandlers {
   readonly registerInput: (instance: PublicInstance | null) => void;
 }
 
+/**
+ * The vertical scrub a spin column runs on a pointer drag.
+ *
+ * A press that moves away from where it landed scrubs the value one step per
+ * {@link SCRUB_PIXELS_PER_STEP} of upward travel; the gesture that scrubbed must
+ * not also step, so its click is consumed. The state lives in the component, not
+ * the pure renderer, because it is a pointer gesture with a lifetime — the tree
+ * only carries the handlers.
+ */
+export interface NumberFieldScrub {
+  readonly onMouseDown: (event: EventPayload) => void;
+  readonly onMouseMove: (event: EventPayload) => void;
+  readonly onMouseUp: () => void;
+  /** Whether the gesture that just ended scrubbed; consumes the flag. */
+  readonly consumedClick: () => boolean;
+}
+
+interface ScrubOptions {
+  /** The committed value the press starts from, as the field paints it. */
+  readonly current: number;
+  readonly range: NumberRange;
+  readonly disabled: boolean;
+  readonly onValue: (next: number) => void;
+}
+
+/**
+ * The scrub gesture a number field's spin column owns.
+ *
+ * GPUix captures the pointer for an element that listens to both `mouseDown`
+ * and `mouseMove` (measured by the playground's `pointer-capture` probe), so a
+ * drag that leaves the small column keeps reporting until the release. The
+ * origin is read once per press so every move aims from the same value: a
+ * scrubbed field must follow the pointer's total travel, not accumulate its own
+ * reports.
+ */
+const useNumberScrub = ({
+  current,
+  range,
+  disabled,
+  onValue,
+}: ScrubOptions): NumberFieldScrub => {
+  const press = useRef<
+    Option.Option<{ readonly y: number; readonly value: number }>
+  >(Option.none());
+  const scrubbed = useRef(false);
+  return {
+    onMouseDown: (event) => {
+      // A secondary or middle press is not a step gesture.
+      if (event.button !== undefined && event.button !== 0) return;
+      // A new gesture starts clean: the previous drag's click may never have
+      // arrived (the pointer was released outside the column).
+      scrubbed.current = false;
+      press.current = Option.map(Option.fromNullishOr(event.y), (y) => ({
+        y,
+        value: current,
+      }));
+    },
+    onMouseMove: (event) => {
+      if (disabled || event.pressedButton !== 0) {
+        press.current = Option.none();
+        return;
+      }
+      Option.match(
+        Option.all({
+          origin: press.current,
+          y: Option.fromNullishOr(event.y),
+        }),
+        {
+          onNone: () => {},
+          onSome: ({ origin, y }) => {
+            const next = scrubNumber(origin.value, origin.y - y, range);
+            if (next === current) return;
+            scrubbed.current = true;
+            onValue(next);
+          },
+        },
+      );
+    },
+    onMouseUp: () => {
+      press.current = Option.none();
+    },
+    consumedClick: () => {
+      const moved = scrubbed.current;
+      scrubbed.current = false;
+      return moved;
+    },
+  };
+};
+
 /** What every part reads from the number field that owns it. */
 export interface NumberFieldPart {
   readonly theme: PrimitiveTheme;
@@ -176,6 +266,8 @@ export interface NumberFieldPart {
   readonly range: NumberRange;
   readonly focus: FocusState;
   readonly handlers: NumberFieldHandlers;
+  /** The spin column's drag gesture; absent when the pure renderer is used. */
+  readonly scrub: Option.Option<NumberFieldScrub>;
   /** The caller's host handlers, installed on the input and the steppers. */
   readonly interaction: InteractionProps;
   readonly atMin: boolean;
@@ -190,6 +282,7 @@ export const numberFieldPart = (
   text: string,
   focus: FocusState,
   handlers: NumberFieldHandlers,
+  scrub: Option.Option<NumberFieldScrub> = Option.none(),
 ): NumberFieldPart => {
   const disabled = props.disabled === true;
   const range = numberRange(props);
@@ -213,6 +306,7 @@ export const numberFieldPart = (
     range,
     focus,
     handlers,
+    scrub,
     interaction: props,
     atMin: props.min !== undefined && current <= props.min,
     atMax: props.max !== undefined && current >= props.max,
@@ -356,12 +450,31 @@ const renderStepper = (
 ): ReactElement => {
   const blocked = direction === 1 ? part.atMax : part.atMin;
   const inert = part.disabled || blocked;
+  // A drag answers on a bound too — it may be dragging *away* from the end the
+  // stepper's own direction cannot move. Only a disabled field takes no gesture.
+  const scrub = part.disabled ? Option.none<NumberFieldScrub>() : part.scrub;
+  const consumedClick = (): boolean =>
+    Option.match(scrub, {
+      onNone: () => false,
+      onSome: (gesture) => gesture.consumedClick(),
+    });
   return (
     <div
       role="presentation"
       testId={testId}
+      onMouseDown={Option.getOrUndefined(
+        Option.map(scrub, (gesture) => gesture.onMouseDown),
+      )}
+      onMouseMove={Option.getOrUndefined(
+        Option.map(scrub, (gesture) => gesture.onMouseMove),
+      )}
+      onMouseUp={Option.getOrUndefined(
+        Option.map(scrub, (gesture) => gesture.onMouseUp),
+      )}
       onClick={composeEvent<EventPayload>(part.interaction.onClick, () => {
-        if (inert) return;
+        // The gesture that scrubbed already moved the value; stepping again on
+        // the click a drag leaves behind would count one gesture twice.
+        if (consumedClick() || inert) return;
         part.handlers.onValue(stepNumber(part.current, part.range, direction));
       })}
       style={mergeStyle(
@@ -407,8 +520,17 @@ export const renderNumberField = (
   text: string,
   focus: FocusState,
   handlers: NumberFieldHandlers,
+  scrub?: NumberFieldScrub,
 ): ReactElement => {
-  const part = numberFieldPart(props, theme, state, text, focus, handlers);
+  const part = numberFieldPart(
+    props,
+    theme,
+    state,
+    text,
+    focus,
+    handlers,
+    Option.fromNullishOr(scrub),
+  );
   const resolved = recipeTw.classesToStyle(
     cn(
       numberFieldClass({ size: part.size, invalid: part.invalid }),
@@ -490,29 +612,49 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       onNone: () => {},
       onSome: (id) => renderer?.focusElement?.(id),
     });
-  return renderNumberField(props, theme, state.value, text, focus, {
-    registerInput: (instance) => {
-      inputId.current = instance?.id ?? null;
-    },
-    onTextChange: (next) => {
-      setDraft((current) => withNumberDraftText(current, next));
-      Option.match(read(next), {
-        onNone: () => {},
-        onSome: (parsed) => state.set(clampNumeric(parsed, range)),
-      });
-    },
-    onCommit: () =>
-      Option.match(read(text), {
-        onNone: () => setDraft((current) => commitNumberDraft(current)),
-        onSome: (parsed) => {
-          state.set(clampNumeric(parsed, range));
-          setDraft((current) => commitNumberDraft(current));
-        },
-      }),
+  // A scrub is a step gesture, so it commits the draft like a stepper click —
+  // but it does not pull the focus to the input mid-drag, which would interrupt
+  // the pointer gesture the runtime is capturing.
+  const scrub = useNumberScrub({
+    current: clampNumeric(state.value.current, range),
+    range,
+    disabled: props.disabled === true,
     onValue: (next) => {
       state.set(clampNumeric(next, range));
       setDraft((current) => commitNumberDraft(current));
-      focusInput();
     },
   });
+  return renderNumberField(
+    props,
+    theme,
+    state.value,
+    text,
+    focus,
+    {
+      registerInput: (instance) => {
+        inputId.current = instance?.id ?? null;
+      },
+      onTextChange: (next) => {
+        setDraft((current) => withNumberDraftText(current, next));
+        Option.match(read(next), {
+          onNone: () => {},
+          onSome: (parsed) => state.set(clampNumeric(parsed, range)),
+        });
+      },
+      onCommit: () =>
+        Option.match(read(text), {
+          onNone: () => setDraft((current) => commitNumberDraft(current)),
+          onSome: (parsed) => {
+            state.set(clampNumeric(parsed, range));
+            setDraft((current) => commitNumberDraft(current));
+          },
+        }),
+      onValue: (next) => {
+        state.set(clampNumeric(next, range));
+        setDraft((current) => commitNumberDraft(current));
+        focusInput();
+      },
+    },
+    scrub,
+  );
 };
