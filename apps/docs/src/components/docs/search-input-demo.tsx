@@ -19,9 +19,10 @@ import {
  * theme bridge — the height from density, the 6px radius and 8px padding the
  * recipe compiles — and mirrors three decisions a drawing cannot show: Escape
  * clears only a non-empty field, clearing returns focus to the input, and a
- * disabled field's clear control leaves the tab order. The last one is a
- * property of the shipped source, including its gap: the target keeps its press
- * handler, which the page records. Matching and the count are the app's.
+ * disabled field refuses every edit path — the field and its clear target leave
+ * the tab order, the target answers no press and paints no hover wash, and
+ * Escape is left for an enclosing surface. The target keeps its paint, so an
+ * archived query still reads. Matching and the count are the app's.
  */
 
 const deployments: ReadonlyArray<PreviewRow> = [
@@ -48,14 +49,14 @@ const SearchGlyph = () => (
   </svg>
 );
 
-/** The clear control's glyph. */
+/** The clear control's glyph, at the `sm` 14px icon step the component paints. */
 const ClearGlyph = () => (
   <svg
     aria-hidden="true"
     fill="none"
-    height={12}
+    height={14}
     viewBox="0 0 24 24"
-    width={12}
+    width={14}
   >
     <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" />
   </svg>
@@ -93,6 +94,10 @@ const PreviewField = ({
   const input = useRef<HTMLInputElement>(null);
 
   const clear = (): void => {
+    // The shipped field refuses every edit path while disabled, so the preview
+    // does too — a `readOnly` host still receives keys, which is why the guard
+    // belongs here rather than only on the button.
+    if (disabled) return;
     onChange?.("");
     onClear?.();
     input.current?.focus();
@@ -114,7 +119,7 @@ const PreviewField = ({
             onSubmit?.(value);
             return;
           }
-          if (event.key === "Escape" && escapeClears(value)) {
+          if (event.key === "Escape" && escapeClears(value, disabled)) {
             event.preventDefault();
             clear();
           }
@@ -128,6 +133,7 @@ const PreviewField = ({
         <button
           aria-label="Clear search"
           className="gx-search-clear"
+          disabled={disabled}
           onClick={clear}
           tabIndex={disabled ? -1 : 0}
           type="button"

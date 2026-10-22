@@ -1337,7 +1337,7 @@ describe("the curated component pages", () => {
     // Three decisions a screenshot cannot show: Escape clears only a non-empty
     // field (an empty one must leave the key to an enclosing dialog), a clear
     // returns the focus to the input, and the clear control is a 24px target
-    // around an 18px drawing while the field's radius and padding are the
+    // around the 14px `sm` glyph while the field's radius and padding are the
     // recipe's fixed metrics rather than theme tokens. The last one is a
     // correction: the package page this page displaces called them `radius.md`
     // and `spacing.md`, so a platform switch was said to reshape a field that
@@ -1366,9 +1366,17 @@ describe("the curated component pages", () => {
     expect(source).toContain("width: targetSize.minimum");
     expect(source).toContain("height: targetSize.minimum");
     expect(source).toContain("tabIndex={disabled ? -1 : 0}");
-    // The disabled clear control keeps its press handler: the page records the
-    // gap instead of teaching a disabled field as inert.
-    expect(source).toContain("onClick={clear}");
+    // A disabled field refuses every edit path: the guard sits on the clear
+    // itself (a `readOnly` host still receives keys), both tab stops leave the
+    // order, and the target paints no hover wash. The page must teach the inert
+    // rule, not the gap it used to record.
+    expect(source).toContain("if (disabled) return;");
+    expect(
+      source.match(/tabIndex=\{disabled \? -1 : 0\}/g) ?? [],
+      "both the field and the clear target must leave the tab order",
+    ).toHaveLength(2);
+    expect(source).toContain("hover: disabled");
+    expect(source).toContain('cursor: disabled ? "not-allowed" : "pointer"');
 
     // No timer: the field reports every edit and the caller schedules.
     expect(source).not.toContain("setTimeout");
@@ -1394,7 +1402,7 @@ describe("the curated component pages", () => {
     expect(recipes).toContain("size-[18px]");
 
     const text = body(page).replace(/\s+/g, " ");
-    expect(text).toContain("does nothing on an empty field");
+    expect(text).toContain("does nothing on an empty or disabled field");
     expect(text).toContain("`submit` event");
     expect(text).toContain("returns the focus");
     expect(text).toContain("24px");
@@ -1403,11 +1411,15 @@ describe("the curated component pages", () => {
     expect(text).toContain("14/20");
     expect(text).toContain("fixed");
     expect(text).toContain("paints the hint itself");
-    expect(text).toContain("press handler is still bound");
-    expect(text).toContain("7 native behaviour tests");
+    expect(text).toContain("refusing **every** edit path");
+    expect(text).toContain("`not-allowed`");
+    expect(text).toContain("refused `Escape`");
+    expect(text).toContain("10 native behaviour tests");
     // The retracted shape: radius and padding as theme tokens.
     expect(text).not.toContain("`radius.md`");
     expect(text).not.toContain("`spacing.md`");
+    // …and the retracted gap: a disabled field that a pointer could still clear.
+    expect(text).not.toContain("press handler is still bound");
   });
 
   it("hold the tip's clock and its trigger rule to the runtime", () => {

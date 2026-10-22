@@ -35,5 +35,10 @@ export const filterRows = (
 export const countLabel = (shown: number, total: number): string =>
   `${shown} of ${total}`;
 
-/** The component's Escape rule: only a field holding text clears. */
-export const escapeClears = (value: string): boolean => value.length > 0;
+/**
+ * The component's Escape rule: only an **enabled** field holding text clears.
+ * A disabled field refuses every edit path, so the key is left for whatever
+ * encloses it — the same rule the clear path's own guard implements.
+ */
+export const escapeClears = (value: string, disabled = false): boolean =>
+  !disabled && value.length > 0;

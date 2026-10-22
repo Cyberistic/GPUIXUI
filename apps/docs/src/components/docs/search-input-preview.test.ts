@@ -4,8 +4,9 @@
  * The bugs these guard: a filter that hides the list at rest, a query that only
  * matches one of the two fields a reader can see, a case or whitespace the
  * preview ignores while the app would not, a count that reports the total rather
- * than the painted set, and an Escape that clears an empty field — the case the
- * shipped component leaves alone so an enclosing dialog still receives the key.
+ * than the painted set, and an Escape that clears an empty or disabled field —
+ * the cases the shipped component leaves alone so an enclosing dialog still
+ * receives the key.
  */
 
 import { describe, expect, it } from "vitest";
@@ -70,5 +71,13 @@ describe("the search preview's Escape rule", () => {
 
   it("leaves an empty field alone, so an enclosing dialog keeps the key", () => {
     expect(escapeClears("")).toBe(false);
+  });
+
+  it("leaves a disabled field alone, even when it holds text", () => {
+    // The shipped field refuses every edit path while disabled, including
+    // Escape — so the key must reach whatever encloses the field instead of
+    // being swallowed by a clear that cannot happen.
+    expect(escapeClears("invoice", true)).toBe(false);
+    expect(escapeClears("invoice", false)).toBe(true);
   });
 });

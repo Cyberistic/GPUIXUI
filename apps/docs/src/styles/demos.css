@@ -2703,6 +2703,17 @@
   outline-offset: 2px;
 }
 
+/* A disabled field's target keeps its paint so the query reads, and answers
+   nothing: no press cue, no hover wash. */
+.gx-search-clear[disabled] {
+  cursor: not-allowed;
+}
+
+.gx-search-clear[disabled]:hover {
+  background: transparent;
+  color: var(--muted-foreground);
+}
+
 .gx-search-rows {
   display: flex;
   flex-direction: column;
