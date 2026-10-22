@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LiveRouteImport } from './routes/live'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
@@ -18,6 +19,11 @@ import { Route as DocsSplatRouteImport } from './routes/docs/$'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveRoute = LiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -43,6 +49,7 @@ const DocsSplatRoute = DocsSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/live': typeof LiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/live': typeof LiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/live': typeof LiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
@@ -65,14 +74,23 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sitemap.xml' | '/api/search' | '/docs/$' | '/docs/'
+  fullPaths:
+    '/' | '/live' | '/sitemap.xml' | '/api/search' | '/docs/$' | '/docs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sitemap.xml' | '/api/search' | '/docs/$' | '/docs'
-  id: '__root__' | '/' | '/sitemap.xml' | '/api/search' | '/docs/$' | '/docs/'
+  to: '/' | '/live' | '/sitemap.xml' | '/api/search' | '/docs/$' | '/docs'
+  id:
+    | '__root__'
+    | '/'
+    | '/live'
+    | '/sitemap.xml'
+    | '/api/search'
+    | '/docs/$'
+    | '/docs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LiveRoute: typeof LiveRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiSearchRoute: typeof ApiSearchRoute
   DocsSplatRoute: typeof DocsSplatRoute
@@ -86,6 +104,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live': {
+      id: '/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -121,6 +146,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LiveRoute: LiveRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiSearchRoute: ApiSearchRoute,
   DocsSplatRoute: DocsSplatRoute,

@@ -59,14 +59,23 @@ measured constraints:
   surface at all, so a live route owes a plain-text fallback rather than a blank
   canvas.
 
-**The site does not mount it.** No page imports the browser build; every preview
-on the site is still the labelled DOM reproduction above. Plan
-`440-live-gpuix-web-surface` is the spike that would change that, and
-`src/lib/gpuix-web.test.ts` holds this status to the tree in both directions:
-the policy cannot claim the surface is unmounted once a route imports the build,
-and it cannot claim it is mounted while none does. The guard also reads the
-installed package, so the size, the memory requirement and the browser entry it
-quotes cannot drift silently.
+**The site mounts it, on one route.** `/live` boots the browser build and paints
+a real card with a `@gpuixui/primitives` filled action on it; every other page
+keeps the labelled DOM reproduction above, because the platform hosts one
+surface per document and a component page needs room for its prose.
+`src/lib/gpuix-web.test.ts` holds this status to the tree in both directions: the
+policy cannot claim the surface is mounted while no route imports the build, and
+it cannot claim a route that is not there. The guard also reads the installed
+package, so the size, the memory requirement and the browser entry it quotes
+cannot drift silently. Plan `440-live-gpuix-web-surface` is the record of how the
+route was reached; this section is its outcome.
+
+Two things `/live` is **not**, and its label says both:
+
+- it is not the native macOS runtime — it is the same renderer compiled to wasm;
+- it is not the React reconciler. The reconciler's own mount is still owed; the
+  page feeds the renderer the mutation protocol the reconciler emits, with every
+  `StyleDesc` resolved by `@gpuixui/primitives/core` (see §The live surface).
 
 ### The paint is measured
 
@@ -105,10 +114,56 @@ What it settled, measured on macOS 15.8.1 x86_64 with headless Google Chrome
   white frame while the surface painted a moment later; the probe drives Chrome
   over DevTools and captures after the page reports itself.
 
-That is the spike's feasibility half. The mount is still unbuilt, and its
-remaining blocker is a dependency change — `apps/docs` must declare
-`@gpuix/native` and `@gpuix/react` — which belongs with the lockfile edit the
-workstream that owns it makes, not with this record.
+That is the spike's feasibility half. The route built on it is §The live surface.
+
+### The live surface
+
+`/live` is the strongest preview the mission allows: the real renderer, in the
+browser, painting the library's own styles. It is a whole-page route because the
+platform is a document-level singleton.
+
+- `src/routes/live.tsx` is the route; `src/components/docs/live-surface.tsx`
+  boots the renderer inside an effect (never at module scope, so the server build
+  never evaluates the wasm) and reports what it painted.
+- `src/lib/live-batch.ts` is the screen: a card, a heading, a sentence, a filled
+  action and a status line. Every `StyleDesc` comes from
+  `@gpuixui/primitives/core` — `controlStyle` for the button, `textStyle` for the
+  type, `surfaceStyle` for the card — so the paint is the recipe the package
+  ships, not a copy written for the docs.
+- The theme is the platform switch's: `resolvePlatformTheme(platform, "dark",
+  look)` from `?platform=` and `?look=`, falling back to the remembered choice,
+  so the surface changes with the rest of the site's previews.
+- A press goes through `renderer.simulateClick` — the renderer's own input path —
+  and the listener repaints the banner's fill and counts the press. Nothing in
+  the page calls the handler directly.
+- The bar above the surface is DOM and says what the surface is; the page falls
+  back to a sentence when there is no WebGPU or WebGL2, and says "reload to
+  mount it again" when the platform reports `GPUIX web is already running`.
+
+The paint is measured, not assumed. `scripts/live-route-probe.ts` loads the
+running dev server's `/live`, reads the element bounds the page reports, samples
+the button's fill and the banner's resting fill out of the PNG, presses through
+the renderer, and samples the banner again. It fails if the page does not report
+`painting`, if the button's pixel is not `controlStyle`'s fill, if the press does
+not reach the listener, or if the banner does not change. Run it with the dev
+server up:
+
+```sh
+nub run --filter @gpuixui/docs dev
+nub apps/docs/scripts/live-route-probe.ts
+```
+
+Frames land in `.artifacts/live/docs-live-route-{before,after}.png`, which are
+verification-only and gitignored. Measured on 2026-10-22, macOS 15.8.1 x86_64,
+headless Google Chrome 155.0.8059.80 over SwiftShader: the button sampled
+`#a7a9ff` (`controlStyle`'s dark primary), the banner `#222730` (`muted`), and
+after a press `#0e5135` (`successSoft`) with the status reading "Pressed 1 time".
+
+**Owed:** the React reconciler mount. `render(<App />, { renderer })` takes an
+injected renderer, but `@gpuix/react` pulls `@gpuix/native/runtime` and
+`@gpuix/native/automation` at module scope, and nothing has measured whether
+that graph bundles for a browser. Until it does, `/live` drives the batch
+protocol by hand — the same operations, resolved by the same library styles.
 
 ### Pages the package writes
 

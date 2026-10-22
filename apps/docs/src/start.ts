@@ -23,10 +23,38 @@ const withCacheHeaders = (response: Response, pathname: string): Response => {
   });
 };
 
+/**
+ * Cross-origin isolation for the live surface.
+ *
+ * `/live` boots `@gpuix/native`'s wasm build, which instantiates a
+ * `shared: true` `WebAssembly.Memory`; the document must be isolated or
+ * `SharedArrayBuffer` does not exist and the renderer never starts. Scoped to
+ * the one route so the rest of the docs keeps its embeds. Development sets the
+ * same pair in `vite.config.ts`.
+ */
+const withLiveIsolation = (response: Response, pathname: string): Response => {
+  if (!pathname.startsWith("/live")) return response;
+  const headers = new Headers(response.headers);
+  headers.set("cross-origin-opener-policy", "same-origin");
+  headers.set("cross-origin-embedder-policy", "require-corp");
+  headers.set("cross-origin-resource-policy", "same-origin");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+};
+
 const cachePolicy = createMiddleware().server(async ({ next, request }) => {
   const { pathname } = new URL(request.url);
   const result = await next();
-  return { ...result, response: withCacheHeaders(result.response, pathname) };
+  return {
+    ...result,
+    response: withLiveIsolation(
+      withCacheHeaders(result.response, pathname),
+      pathname,
+    ),
+  };
 });
 
 export const startInstance = createStart(() => ({

@@ -49,7 +49,9 @@ export function ComponentPreview({ name }: { name: string }) {
           ? "A composition of native parts, not a new component. "
           : "Browser preview: the geometry, palette and states of the native component. "}
         Drawn in the {platformLabel(platform)} type style; the shipped code
-        renders through GPUix, not the DOM.
+        renders through GPUix, not the DOM.{" "}
+        <a href="/live">Open /live to see a real GPUix frame</a> — the wasm
+        build of the same renderer, painting one library control.
       </p>
     </div>
   );

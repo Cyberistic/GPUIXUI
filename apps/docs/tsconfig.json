@@ -7,7 +7,8 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@gpuix/native/wasm/*": ["./node_modules/@gpuix/native/wasm/*"]
     },
     "noEmit": true
   },

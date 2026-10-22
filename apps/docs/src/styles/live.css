@@ -1,0 +1,50 @@
+/*
+ * The live surface's chrome.
+ *
+ * The surface is the renderer's canvas — every pixel inside it comes from
+ * GPUix — so this file styles only the bar above it and the sentence a browser
+ * without a backend reads instead. Colours are the docs palette's variables, so
+ * the bar matches the rest of the site in both schemes.
+ */
+.live-surface-bar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  color: var(--card-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.live-surface-bar a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.live-surface-bar a:hover {
+  text-decoration: underline;
+}
+
+.live-surface-note {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 6rem 2rem 2rem;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: center;
+}

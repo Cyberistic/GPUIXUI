@@ -13,14 +13,14 @@ import { describe, expect, it } from "vitest";
  * installed 0.11.0 files, and the "not mounted" sentence is checked against the
  * tree in both directions.
  *
- * The installed copy read here is the one `apps/playground` installs, because
- * the docs app does not depend on the native package yet — adding it is plan
- * `440`'s first step, and this file is the guard that plan extends rather than a
- * reason to pull a 19 MiB dependency into a Worker that never loads it.
+ * The installed copy read here is the one the docs app itself installs: `/live`
+ * imports the browser build, so the app declares the dependency. The guard reads
+ * that copy rather than the playground's, and the dependency is part of what it
+ * holds — a route cannot import a package the manifest does not declare.
  */
 
 const root = new URL("../../../../", import.meta.url);
-const native = new URL("apps/playground/node_modules/@gpuix/native/", root);
+const native = new URL("apps/docs/node_modules/@gpuix/native/", root);
 
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
@@ -70,10 +70,14 @@ const appSources = (): ReadonlyArray<string> =>
  * policy's status cannot outlive this list in either direction.
  */
 const liveImports = (): ReadonlyArray<string> =>
-  appSources().filter((path) => read(path).includes("@gpuix/native"));
+  appSources().filter((path) =>
+    /(?:from\s+|import\()\s*["']@gpuix\/native(?:\/[^"']*)?["']/.test(
+      read(path),
+    ),
+  );
 
-const saysUnmounted = (): boolean =>
-  policy.includes("**The site does not mount it.**");
+const saysMounted = (): boolean =>
+  policy.includes("**The site mounts it, on one route.**");
 
 describe("the GPUix web build", () => {
   it("is a browser export of the version the workspace pins", () => {
@@ -122,13 +126,27 @@ describe("the GPUix web build", () => {
   it("keeps the policy's status and the tree in agreement", () => {
     const mounted = liveImports();
 
-    // Both directions: a route that mounts the build must move the policy off
-    // "not mounted", and the policy cannot claim the surface is unused while a
-    // module imports it.
+    // Both directions: the one module that mounts the build is the live
+    // surface, and the policy says so. A second importer means a second surface
+    // the platform cannot host; dropping the importer means the policy claims a
+    // mount that is gone.
     expect({
       mounts: mounted,
-      saysUnmounted: saysUnmounted(),
-    }).toEqual({ mounts: [], saysUnmounted: true });
+      saysMounted: saysMounted(),
+    }).toEqual({
+      mounts: ["apps/docs/src/components/docs/live-surface.tsx"],
+      saysMounted: true,
+    });
+  });
+
+  it("declares the package the route imports", () => {
+    const dependencies = manifest("apps/docs/package.json").dependencies;
+
+    // A route that resolves the wasm through an undeclared package builds on
+    // this machine and nowhere else.
+    expect(
+      isRecord(dependencies) ? dependencies["@gpuix/native"] : undefined,
+    ).toBe("catalog:");
   });
 
   it("names the plan that would mount it", () => {
@@ -145,7 +163,7 @@ describe("the GPUix web build", () => {
     // copy this guard reads (the docs app declares no dependency on it yet).
     expect(policy).toContain("### The paint is measured");
     expect(policy).toContain("nub apps/docs/scripts/live-surface-probe.ts");
-    expect(probe).toContain("apps/playground/node_modules/@gpuix/native");
+    expect(probe).toContain("apps/docs/node_modules/@gpuix/native");
 
     // The frame's verdict is the pixel, not the screenshot's existence — the
     // first probe passed on a white frame for exactly that reason.
@@ -154,10 +172,15 @@ describe("the GPUix web build", () => {
     expect(probe).toContain("fillAt");
   });
 
-  it("keeps the probe a host tool, so the unmounted claim stays true", () => {
-    // A route would live under `src/`; the probe lives beside the app. If it
-    // ever moves in, the mounting case above fails and this one says why.
-    expect(saysUnmounted()).toBe(true);
-    expect(liveImports()).toEqual([]);
+  it("keeps the probes host tools", () => {
+    // A route lives under `src/`; both probes live beside the app, so the
+    // browser driver is never bundled into the Worker.
+    expect(read("apps/docs/scripts/live-route-probe.ts")).toContain(
+      "openChrome",
+    );
+    expect(
+      appSources().filter((path) => path.includes("chrome-session")),
+    ).toEqual([]);
+    expect(policy).toContain("nub apps/docs/scripts/live-route-probe.ts");
   });
 });

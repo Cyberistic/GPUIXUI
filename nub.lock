@@ -92,6 +92,12 @@ importers:
 
   apps/docs:
     dependencies:
+      '@gpuix/native':
+        specifier: 'catalog:'
+        version: 0.11.0
+      '@gpuixui/primitives':
+        specifier: workspace:*
+        version: link:../../packages/primitives
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
@@ -230,6 +236,9 @@ importers:
       '@gpuix/react':
         specifier: 'catalog:'
         version: 0.11.0(react@19.3.1)
+      '@gpuixui/icons':
+        specifier: workspace:*
+        version: link:../icons
       '@gpuixui/keyboard':
         specifier: workspace:*
         version: link:../keyboard

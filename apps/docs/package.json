@@ -11,6 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@gpuix/native": "catalog:",
+    "@gpuixui/primitives": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
