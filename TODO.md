@@ -3590,6 +3590,25 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       holds the floor, the exact three-dot fade and a turn that lights each dot
       once. Docs: `docs/spinner.mdx` §Theming/§Verification and the Loading
       indicators row.
+`[x]` `packages/primitives`: an **inverted `min`/`max` pair made `NumberField`
+      uneditable** — `clampNumeric` applied `min` then `max`, so `min: 100,
+      max: 0` clamped every value to 0 and both steppers read as blocked, while
+      the same props on a `Slider` swap into a working range. `NumberRange` now
+      goes through `normalizeNumberRange` (non-finite bounds dropped, an inverted
+      pair swapped) and the field's `atMin`/`atMax` read that range instead of the
+      raw props. `core/number.test.ts` and `NumberField.test.tsx` hold the range,
+      the clamp, the step and a working stepper; both fail on the old comparison.
+      The same pass stopped **a one-option group consuming an arrow** —
+      `Arr.range(1, 0)` is `[1]`, so `decideMove(0, 1, …)` answered `Some(0)` and
+      the option was its own neighbour (`core/keyboard.test.ts`). Docs:
+      `docs/number-field.mdx` §API/§Limitations/§Verification and the Number
+      Field row.
+`[x]` `packages/primitives`: **`CheckboxGroup`'s page said an option caption sat
+      *under* the name** while the shared `optionBody` paints one row (name, then
+      caption) and the radio and toggle pages said "beside" — three pages teaching
+      two layouts for one row. The page says "beside"; `docs.test.ts` reads the
+      shared row's `flex-row` and requires all three pages to use the same words
+      and refuse "under the name" (measured failing on the old page).
 `[x]` `packages/primitives`: `NumberField` gained the **drag-to-scrub** its
       docs recorded as unbuilt — a press on either stepper that travels scrubs
       the value one `step` per `SCRUB_PIXELS_PER_STEP` (4px) of vertical travel
