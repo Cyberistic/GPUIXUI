@@ -75,8 +75,11 @@ state carried by hue alone tells a reader who cannot separate the two hues
 nothing. Both inks are mark roles: `primary` for the active dot and
 `mutedForeground` for the rest, each measured at the 3:1 non-text floor on the
 page the carousel is painted on. Each target is 24 × 24 px — the press floor
-WCAG 2.2 SC 2.5.8 asks for — around the 6px drawing, and the drawing takes no
-pointer input so a press in the middle of a dot reaches its target.
+WCAG 2.2 SC 2.5.8 asks for — around the 6px drawing. A dot paints a fill, and a
+painted child is the boundary the runtime's hit test stops counting at, so the
+drawing declares `pointerEvents: "none"` and a press on the middle of a dot
+reaches its target. The routes are measured by `press-routing-lifecycle`:
+`text-filled` runs nothing, while `inert-control` reaches both handlers.
 
 The group holds **one roving tab stop**, on the active dot: Tab reaches the dots
 once, the arrows move the slide and the stop together, and `Enter` (on the

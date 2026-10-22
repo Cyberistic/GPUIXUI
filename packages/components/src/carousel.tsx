@@ -406,9 +406,11 @@ export const CarouselIndicators = ({
                 width: selected ? DOT_ACTIVE_WIDTH : DOT_REST_WIDTH,
                 height: DOT_HEIGHT,
                 borderRadius: DOT_HEIGHT / 2,
-                // The target is the press: a drawing that took the pointer would
-                // swallow a press on the middle of the dot (`0.11.0` runs the
-                // innermost handler, and a child with none runs nothing).
+                // The target is the press: the dot paints a fill, and a
+                // filled child is the boundary GPUI's hit test stops counting
+                // at, so a press on the middle of the dot would run nothing.
+                // Removing the drawing's hitbox is what lets the press reach
+                // the target (`press-routing-lifecycle`).
                 pointerEvents: "none",
                 backgroundColor: selected
                   ? theme.colors.primary

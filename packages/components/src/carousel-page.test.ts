@@ -16,6 +16,15 @@
  * The control, the dot geometry and the suite's size are held for the same
  * reason: each is a number or a role a reader could follow to the wrong place.
  *
+ * The third claim is a **mechanism**, which is the one a plan copies: the
+ * source said a drawing that took the pointer would swallow the press "because
+ * `0.11.0` runs the innermost handler, and a child with none runs nothing".
+ * The window measured the opposite shape: a press is routed by **paint**, not
+ * depth — a filled child is the boundary the hit test stops counting at, and
+ * `pointerEvents: "none"` removes the hitbox so the press reaches the target
+ * (`press-routing-lifecycle`'s `text-filled` and `inert-control` cases). A
+ * `Table`/`Tree` plan reads the Tier 3 rows for the same rule.
+ *
  * `node:fs` is a test-time repository read, the boundary `docs.test.ts` and
  * `card-page.test.ts` already use.
  */
@@ -34,6 +43,20 @@ const read = (path: string): string =>
 
 const page = read("../docs/carousel.mdx");
 const source = read("./carousel.tsx");
+const probe = read("../../../apps/playground/src/live/press-routing.ts");
+const inventory = read("../../../COMPONENTS.md");
+
+/** One measured case's body in the probe's table. */
+const probeCase = (id: string): string => {
+  const at = probe.indexOf(`\n  "${id}": {`);
+  if (at === -1) return "";
+  const end = probe.indexOf("\n  },", at);
+  return end === -1 ? "" : probe.slice(at, end);
+};
+
+/** A `COMPONENTS.md` row by the name in its first cell. */
+const row = (name: string): string =>
+  inventory.split("\n").find((line) => line.startsWith(`| ${name} |`)) ?? "";
 
 /** One page section, without the heading that follows it. */
 const section = (heading: string): string => {
@@ -131,6 +154,40 @@ describe("the Carousel page", () => {
     expect(text).toContain(`${targetSize.minimum} × ${targetSize.minimum} px`);
     // The active dot is wider, not only a different hue.
     expect(text).toContain("wider pill");
+  });
+
+  it("restates the press rule the window measured, in the source and the rows", () => {
+    // The measured rule: a press stops at the first child that paints a fill,
+    // whatever the depth, and `pointerEvents: "none"` removes that hitbox.
+    expect(probeCase("text-filled")).toContain("hits: []");
+    expect(probeCase("inert-control")).toContain(
+      'caption: "a press on a filled control that declares pointerEvents none"',
+    );
+    expect(probeCase("inert-control")).toContain(
+      'hits: ["cell-click", "row-click"]',
+    );
+
+    const sentence = source.replace(/\s+/g, " ");
+    expect(sentence).toContain("filled child is the boundary");
+    expect(sentence).toContain("Removing the drawing's hitbox");
+    expect(sentence).not.toContain("innermost");
+
+    const text = page.replace(/\s+/g, " ");
+    expect(text).toContain("a painted child is the boundary");
+    expect(text).toContain('`pointerEvents: "none"`');
+    expect(text).toContain("`press-routing-lifecycle`");
+
+    // The rows a `Table`/`Tree` plan reads carry the rule, so a plan cannot
+    // copy the depth claim the comment used to teach.
+    expect(row("Carousel")).toContain("press-routing-lifecycle");
+    expect(row("Carousel")).not.toContain("innermost");
+    ["Tables", "Row selection", "Virtualized tables", "Tree views"].forEach(
+      (name) => {
+        expect(row(name), `${name} does not cite the probe`).toContain(
+          "press-routing-lifecycle",
+        );
+      },
+    );
   });
 
   it("prints the size of the suite that proves it", () => {

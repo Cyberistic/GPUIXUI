@@ -409,6 +409,10 @@ describe("Carousel", () => {
       const painted = gallery.renderer.getElementBounds(drawing.id);
       expect(painted?.height).toBe(6);
       expect(painted?.width).toBe(6);
+      // The drawing paints a fill, which is the boundary a press stops at, so
+      // it removes its own hitbox and the press reaches the 24px target
+      // (`press-routing-lifecycle`'s `text-filled`/`inert-control` cases).
+      expect(drawing.style.pointerEvents).toBe("none");
     } finally {
       gallery.unmount();
     }
