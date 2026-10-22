@@ -1,18 +1,21 @@
 import { readFileSync } from "node:fs";
+import { contrastRatio, highContrastLightColors } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { inventory } from "./inventory-data";
 
 /**
- * The curated component pages make three claims the code owns: which runtime
- * version a gap was measured on, how many native behaviour tests prove the
- * component, and whether the inventory calls it shipped.
+ * The curated component pages make claims the code owns: which runtime version
+ * a gap was measured on, how many native behaviour tests prove the component,
+ * whether the inventory calls it shipped — and how the component paints.
  *
- * All three drifted. After the 0.11.0 bump the pages still measured their gaps
- * on 0.10.0 — and the Button page said the runtime had no `focusVisible`, which
+ * Each drifted. After the 0.11.0 bump the pages still measured their gaps on
+ * 0.10.0 — and the Button page said the runtime had no `focusVisible`, which
  * 0.11.0 paints. The Tabs page claimed 14 native tests where the suite runs 19,
- * and the Button page said `COMPONENTS.md` listed Tier 1 as `todo` long after
- * the rows were `done`. A page that undersells or overstates the code is the
- * same defect in both directions.
+ * and it went on saying selection was "painted per trigger" with "no measured
+ * overlay" after `tabs-indicator` shipped as one measured, sliding surface. The
+ * Button page said `COMPONENTS.md` listed Tier 1 as `todo` long after the rows
+ * were `done`. A page that undersells or overstates the code is the same defect
+ * in both directions.
  */
 
 const root = new URL("../../../../", import.meta.url);
@@ -181,21 +184,57 @@ describe("the curated component pages", () => {
   });
 
   it("describe the selected surface the source paints", () => {
-    // The Tabs page said selection was "painted per trigger" and that the native
-    // side had "no measured overlay" long after `tabs-indicator` shipped as one
-    // measured, sliding surface — a claim the count and status checks cannot see.
-    // The page's description is derived from the source rather than trusted.
+    // The Tabs page said selection was "painted per trigger", that the native
+    // side had "no measured overlay", and that the surface "jumps between
+    // triggers" — all three after `tabs-indicator` shipped as one measured,
+    // sliding surface. The test count and the status cannot see a claim like
+    // that, so the description is derived from the source and from the motion
+    // package instead of trusted.
     const tabs = pages.find((page) => page.file === "tabs.mdx");
     expect(tabs, "the tabs page is not in the curated set").toBeDefined();
     if (tabs === undefined) return;
 
-    expect(read(tabs.source)).toContain('testId="tabs-indicator"');
+    const source = read(tabs.source);
+    expect(source).toContain('testId="tabs-indicator"');
+    expect(source).toContain("motion={{");
+    expect(source).toContain("backgroundColor: theme.colors.selected");
 
-    const text = body(tabs);
+    const level = /useSurfaceTiming\("([a-z]+)"\)/.exec(source)?.[1];
+    expect(level, "tabs.tsx no longer names its surface timing level").toBeDefined();
+    const duration = new RegExp(`\\b${level}\\b:\\s*(\\d+)`).exec(
+      read("packages/motion/src/timing.ts"),
+    )?.[1];
+    expect(duration, `motionLevels has no ${level}`).toBeDefined();
+
+    const text = body(tabs).replace(/\s+/g, " ");
     expect(text).not.toContain("painted per trigger");
     expect(text).not.toContain("no measured overlay");
+    expect(text).not.toContain("jumps between");
     expect(text).toContain("`tabs-indicator`");
     expect(text).toContain("slides");
+    expect(text).toContain(`\`${level}\`, ${duration} ms`);
+  });
+
+  it("hold the pill's colour role to the palette that forced it", () => {
+    // The page says the pill paints `selected` rather than `card` because
+    // `card` equals the rail's `background` in the high-contrast light theme.
+    // If that palette moves, every other check stays green while the page
+    // teaches a decision whose cause is gone.
+    const ratio = contrastRatio(
+      highContrastLightColors.card,
+      highContrastLightColors.background,
+    );
+    expect(ratio, "the high-contrast light cards do not paint").toBeDefined();
+
+    const tabs = pages.find((page) => page.file === "tabs.mdx");
+    expect(tabs, "the tabs page is not in the curated set").toBeDefined();
+    if (tabs === undefined) return;
+
+    const text = body(tabs).replace(/\s+/g, " ");
+    expect(text).toContain(
+      "`card` equals the rail's `background` in the high-contrast light theme",
+    );
+    expect(text).toContain(`(${ratio?.toFixed(2)}:1)`);
   });
 
   it("agree with the inventory row for the component", () => {

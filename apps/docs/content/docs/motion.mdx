@@ -179,11 +179,14 @@ export const Grow = ({ open }: { readonly open: boolean }) => {
 ```
 
 Each hook returns `{ value, velocity, complete }` and accepts
-`{ reducedMotion }`. `useSpring` and `useTransition` build their transition from
-primitive arguments, so passing a physics preset or a tween inline is safe;
-`useMotion(target, transition)` takes the transition itself and compares
-structurally, but its effect re-runs on the reference — pass a module constant
-or a memoized value.
+`{ reducedMotion, initial }`. `initial` is the value the **first** run starts
+from — the default is the target, so a hook mounted at rest paints without an
+entry run. It is read once at mount: a later change is ignored, because the
+current presentation is the truth after it. `useSpring` and `useTransition`
+build their transition from primitive arguments, so passing a physics preset or
+a tween inline is safe; `useMotion(target, transition)` takes the transition
+itself and compares structurally, but its effect re-runs on the reference — pass
+a module constant or a memoized value.
 
 The `transition={{ duration: 0 }}` is deliberate: the hook has already sampled
 the physics, so the runtime assigns the number instead of tweening it a second

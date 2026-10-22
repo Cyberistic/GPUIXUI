@@ -350,6 +350,18 @@ name that no longer exists. It is a resolution check rather than a completeness
 one — a prop the page omits is a documentation gap, and inherited `Omit`/`Props`
 types make "every prop" a compiler question rather than a regex one.
 
+The **Theming** section is held the same way, because a page's description of
+how a component paints drifts faster than its props. The curated Tabs page was
+still calling the selected surface a fill "painted per trigger" that "jumps
+between tabs" while the component had shipped one measured `tabs-indicator`
+that slides, and no count or status check could see it.
+`src/lib/component-page-truth.test.ts` derives the description from the painter:
+the indicator's `testId`, its `motion` target and the `selected` role must exist
+in the source, the timing level and duration come from the component's
+`useSurfaceTiming` call and the motion package's table, and the printed contrast
+ratio is computed from the role pair the component's own comment cites — so a
+page that describes a different component fails by name.
+
 One line above every page body is **not** the author's: the site mounts the
 worked-example strip (and, on a package page, the status strip) from the example
 registry and `COMPONENTS.md` respectively. A page cannot claim an example or a

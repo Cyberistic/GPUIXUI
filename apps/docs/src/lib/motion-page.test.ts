@@ -28,6 +28,7 @@ const todo = readRepo("TODO.md");
 const spring = readRepo("packages/motion/src/spring.ts");
 const motion = readRepo("packages/motion/src/motion.ts");
 const inertia = readRepo("packages/motion/src/inertia.ts");
+const react = readRepo("packages/motion/src/react.ts");
 
 /** The value names the package's modules export, in file order. */
 const valueExports = (): ReadonlyArray<string> =>
@@ -130,6 +131,24 @@ describe("the motion page", () => {
     expect(tauMs).toBeDefined();
     expect(page).toContain(`\`DEFAULT_TWEEN_MS\` of ${tweenMs} ms`);
     expect(page).toContain(`defaults to ${tauMs} ms`);
+  });
+
+  it("documents the initial option the hooks read once at mount", () => {
+    // `MotionOptions.initial` is the one hook option that is not a policy:
+    // without it a hook mounted at rest runs an entry animation the caller
+    // never asked for, and the page named `reducedMotion` alone — an option a
+    // reader could not discover from the only page that documents the package.
+    const options =
+      /export interface MotionOptions \{[\s\S]*?\n\}/.exec(react)?.[0] ?? "";
+    expect(options, "MotionOptions is gone").toContain(
+      "readonly initial?: number;",
+    );
+
+    expect(pageText).toContain("`{ reducedMotion, initial }`");
+    expect(pageText).toContain("the value the **first** run starts from");
+    expect(pageText).toContain("the default is the target");
+    expect(pageText).toContain("read once at mount");
+    expect(pageText).toContain("a later change is ignored");
   });
 
   it("describes reduced motion as the app's policy, not a runtime capability", () => {
