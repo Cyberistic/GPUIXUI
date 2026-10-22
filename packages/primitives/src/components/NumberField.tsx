@@ -51,6 +51,7 @@ import {
   stepNumber,
   syncNumberDraft,
   withNumberDraftText,
+  withNumberDraftValue,
   type NumberRange,
   type ParseValue,
 } from "../core/number.js";
@@ -630,7 +631,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     disabled: props.disabled === true,
     onValue: (next) => {
       state.set(clampNumeric(next, range));
-      setDraft((current) => commitNumberDraft(current));
+      setDraft((current) => withNumberDraftValue(commitNumberDraft(current)));
     },
     onEnd: focusInput,
   });
@@ -645,8 +646,12 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
         inputId.current = instance?.id ?? null;
       },
       onTextChange: (next) => {
-        setDraft((current) => withNumberDraftText(current, next));
-        Option.match(read(next), {
+        const parsed = read(next);
+        setDraft((current) => {
+          const typed = withNumberDraftText(current, next);
+          return Option.isSome(parsed) ? withNumberDraftValue(typed) : typed;
+        });
+        Option.match(parsed, {
           onNone: () => {},
           onSome: (parsed) => state.set(clampNumeric(parsed, range)),
         });
@@ -656,12 +661,14 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
           onNone: () => setDraft((current) => commitNumberDraft(current)),
           onSome: (parsed) => {
             state.set(clampNumeric(parsed, range));
-            setDraft((current) => commitNumberDraft(current));
+            setDraft((current) =>
+              withNumberDraftValue(commitNumberDraft(current)),
+            );
           },
         }),
       onValue: (next) => {
         state.set(clampNumeric(next, range));
-        setDraft((current) => commitNumberDraft(current));
+        setDraft((current) => withNumberDraftValue(commitNumberDraft(current)));
         focusInput();
       },
     },

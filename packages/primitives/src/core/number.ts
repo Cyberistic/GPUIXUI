@@ -310,17 +310,41 @@ export const numberDraftText = (
     onNone: () => (draft.touched ? display(current) : ""),
   });
 
-/** An edit in progress: the raw text, kept verbatim so the caret never jumps. */
+/**
+ * An edit in progress: the raw text, kept verbatim so the caret never jumps.
+ *
+ * Typing is not a value: text the reader has not made a number of yet leaves
+ * `touched` alone, because a field that never had a value must stay empty when
+ * the edit ends rather than paint the zero its state starts from. The caller
+ * marks the draft with {@link withNumberDraftValue} when the text parses.
+ */
 export const withNumberDraftText = (
   draft: NumberDraft,
   text: string,
-): NumberDraft => ({ ...draft, text: Option.some(text), touched: true });
+): NumberDraft => ({ ...draft, text: Option.some(text) });
 
-/** The edit is over: the field shows its value again, and it has one. */
+/**
+ * The field learned a number — a parsed edit, a step, or its owner's value.
+ *
+ * This is the only thing that gives a field something to show at rest, so a
+ * blur over a field that never had one leaves the box empty.
+ */
+export const withNumberDraftValue = (draft: NumberDraft): NumberDraft => ({
+  ...draft,
+  touched: true,
+});
+
+/**
+ * The edit is over: the field shows its value again.
+ *
+ * An empty or unreadable box is a cancelled edit, not a new value — the field
+ * keeps the number it had, and a field that had none stays empty. That is why
+ * `touched` survives: it records whether there is a number to show, not
+ * whether the reader touched the box.
+ */
 export const commitNumberDraft = (draft: NumberDraft): NumberDraft => ({
   ...draft,
   text: Option.none(),
-  touched: true,
 });
 
 /** The value a piece of text means, once it is clamped into the range. */

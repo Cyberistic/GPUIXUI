@@ -342,6 +342,35 @@ it("leaves the caret keys to the host's text field", async () => {
   expect(lastValue(field.values)).toBe(51);
 });
 
+it("leaves a field that never had a value empty when its edit ends", async () => {
+  // The bug guarded: `commitNumberDraft` marked every draft touched, so a blur
+  // over a field with no value painted the state's starting `0` — a number the
+  // reader never typed, and one `onValueChange` never reported. Typing text the
+  // field cannot read is the same case: it is not a value.
+  const field = recorder();
+  const runtime = await mount(
+    <Stack direction="column">
+      <NumberField
+        testId="nf"
+        label="Quantity"
+        autoFocus
+        onChange={field.onChange}
+      />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  expect(textOf(runtime, "Quantity")).toBe("");
+  runtime.focusNext();
+  expect(textOf(runtime, "Quantity")).toBe("");
+  expect(field.values).toEqual([]);
+
+  runtime.focus("nf");
+  runtime.type("a b c");
+  runtime.focusNext();
+  expect(textOf(runtime, "Quantity")).toBe("");
+  expect(field.values).toEqual([]);
+});
+
 it("commits the draft on Enter and reports it through onSubmit", async () => {
   // The bug guarded: a single-line GPUix `<input>` binds Enter to the runtime's
   // own Submit action, so Enter never reaches `onKeyDown` — the field's commit

@@ -60,6 +60,19 @@ counterpart and is consulted before the decimal grammar, so a grouped field stay
 editable, and a controlled owner's echo is read through the same path rather than
 reformatting under the caret.
 
+## Absence
+
+A field's value channel is a number, so **an empty box is a cancelled edit, not a
+new value**. An edit that ends — blur or Enter — with no readable number leaves
+the field showing the number it already had; a field that never had one stays
+empty instead of painting the zero its internal range starts from. Text that is
+not a number (`abc`) is the same case as no text, and neither reports
+`onValueChange`. A field with `defaultValue={0}` or `value={0}` does hold zero,
+and paints it, because that zero is a value the caller chose.
+
+Starting empty and stepping works: the first step lands on the range's floor
+(`min`, else `max`, else 0) and is reported like any other step.
+
 ## Limitations
 
 - Decimal text by default: a grouped or locale display is read through the

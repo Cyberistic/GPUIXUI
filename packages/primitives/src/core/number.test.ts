@@ -25,6 +25,7 @@ import {
   stepNumber,
   syncNumberDraft,
   withNumberDraftText,
+  withNumberDraftValue,
   type NumberRange,
   type ParseValue,
 } from "./number.js";
@@ -348,12 +349,34 @@ describe("the draft a number field keeps", () => {
     expect(numberDraftText(draft, 1, display)).toBe("1.");
   });
 
-  it("shows the value again once the edit is committed", () => {
-    const draft = withNumberDraftText(
-      initNumberDraft(Option.none(), false),
-      "1.",
+  it("shows the value again once an edit that made a number is committed", () => {
+    const draft = withNumberDraftValue(
+      withNumberDraftText(initNumberDraft(Option.none(), false), "1."),
     );
     expect(numberDraftText(commitNumberDraft(draft), 1, display)).toBe("1");
+  });
+
+  it("leaves an empty field empty instead of showing the zero its state starts from", () => {
+    // The bug guarded: `commitNumberDraft` marked every draft touched, so a
+    // blur over a field that had never held a value painted the state's `0` —
+    // a number the reader never typed and no `onValueChange` reported.
+    const untouched = initNumberDraft(Option.none(), false);
+    expect(numberDraftText(commitNumberDraft(untouched), 0, display)).toBe("");
+
+    // Text that never became a number is not a value either: typing letters
+    // into an empty field and leaving it must not invent one.
+    const garbage = withNumberDraftText(untouched, "abc");
+    expect(numberDraftText(commitNumberDraft(garbage), 0, display)).toBe("");
+  });
+
+  it("keeps the last number when a field that had one is cleared", () => {
+    // The decided absence story: the value channel is a number, so an empty box
+    // is a cancelled edit, not a new value. A field with a value shows it again;
+    // a field without one stays empty (the case above).
+    const valued = initNumberDraft(Option.none(), true);
+    const cleared = withNumberDraftText(valued, "");
+    expect(numberDraftText(commitNumberDraft(cleared), 5, display)).toBe("5");
+    expect(numberDraftText(cleared, 5, display)).toBe("");
   });
 
   it("keeps the draft while the owner's value does not move", () => {
