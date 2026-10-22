@@ -322,6 +322,32 @@ it("moves a Spinner's lit dot instead of rotating it", async () => {
   ).toBe(true);
 });
 
+it("moves a disabled busy button's spinner onto the neutral pair", async () => {
+  // The bug guarded: a disabled filled action paints `disabled` behind
+  // `disabledForeground`, but the spinner kept the action's on-colour — white
+  // dots on the light theme's neutral fill, an indicator that vanishes.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Button testId="disabled-btn" variant="primary" loading disabled>
+        Save
+      </Button>
+    </Surface>,
+  );
+  const spinner =
+    childrenOf(runtime, "disabled-btn")[0] ?? expect.fail("no spinner");
+  expect(
+    Arr.map(
+      childrenOfId(runtime, spinner),
+      (id) => styleOf(runtime, id)["backgroundColor"],
+    ),
+  ).toEqual([
+    testTheme.colors.disabledForeground,
+    testTheme.colors.disabledForeground,
+    testTheme.colors.disabledForeground,
+  ]);
+});
+
 it("paints a loading button's spinner in its fill's on-colour", async () => {
   // The bug guarded: a busy brand button rendered a brand spinner on its own
   // brand fill (1.00:1), so the indicator vanished exactly where it mattered.

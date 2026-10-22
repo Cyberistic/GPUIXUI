@@ -198,10 +198,10 @@ describe("Button", () => {
   it("gives a busy button a spinner that reads on its fill", () => {
     // The bug: a filled button rendered the default brand spinner on its own
     // brand fill (1.00:1), so the busy indicator disappeared.
-    const accentOf = (variant: ButtonVariant): unknown =>
+    const accentOf = (variant: ButtonVariant, disabled = false): unknown =>
       expectSome(
         elementProp(
-          elementChildren(resting({ variant, loading: true }))[0] ??
+          elementChildren(resting({ variant, loading: true, disabled }))[0] ??
             expect.fail("the busy button drew no spinner"),
           "accent",
         ),
@@ -213,6 +213,30 @@ describe("Button", () => {
     expect(accentOf("outline")).toBe("primary");
     expect(accentOf("ghost")).toBe("primary");
     expect(accentOf("link")).toBe("primary");
+  });
+
+  it("moves a disabled busy button's spinner onto the neutral pair", () => {
+    // The bug: a disabled filled action paints `disabled` behind
+    // `disabledForeground`, but its spinner kept the action's on-colour — white
+    // dots on the light theme's neutral fill, which is a 1.0x:1 indicator.
+    const accentOf = (variant: ButtonVariant): unknown =>
+      expectSome(
+        elementProp(
+          elementChildren(
+            resting({ variant, loading: true, disabled: true }),
+          )[0] ?? expect.fail("the disabled busy button drew no spinner"),
+          "accent",
+        ),
+      );
+
+    Arr.forEach(["primary", "secondary", "destructive"] as const, (variant) => {
+      expect(accentOf(variant), variant).toBe("on-disabled");
+    });
+    // A disabled action with no fill keeps the page accent: it is not painted
+    // on the neutral pair, so there is no fill to read against.
+    Arr.forEach(["outline", "ghost", "link"] as const, (variant) => {
+      expect(accentOf(variant), variant).toBe("primary");
+    });
   });
 
   it("takes a disabled button out of the tab order", () => {

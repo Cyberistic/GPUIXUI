@@ -28,7 +28,7 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `size` | `number` | `theme.iconSize.md` | the dot side in pixels |
-| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive` | `"primary"` | the role every dot paints; the `on-*` accents are the fill's on-colour |
+| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-disabled` | `"primary"` | the role every dot paints; the `on-*` accents are the fill's on-colour |
 | `label` | `string` | `"Loading"` | accessible name announced as a status |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
@@ -36,10 +36,14 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 `size` accepts a number because a spinner inside a `Button` often needs to match
 the button's own icon size rather than a named icon step.
 
-The three `on-*` accents exist for that case: `variantSpinnerAccent(variant)`
-maps a filled button to the on-colour its own label uses, and a variant with no
-fill (outline, ghost, link) keeps the brand accent, which the mark contract
-measures on the page.
+The `on-*` accents exist for that case: `variantSpinnerAccent(variant,
+disabled)` maps a filled button to the on-colour its own label uses, and a
+variant with no fill (outline, ghost, link) keeps the brand accent, which the
+mark contract measures on the page. A **disabled** filled button paints the
+neutral `disabled`/`disabledForeground` pair instead of its fill, so its spinner
+takes `on-disabled` — `disabledForeground` — rather than white dots on the light
+theme's neutral fill (1.0x:1). A disabled action with no fill keeps `primary`,
+because it is not painted on the pair.
 
 ## Keyboard
 
@@ -73,14 +77,17 @@ inside a filled control keeps its on-colour along the whole row. The gap is
 ## Verification
 
 - `src/core/loading.test.ts` — the lit index and fade across steps, the accent on
-  every dot, and each `on-*` accent resolving to its fill's on-colour.
+  every dot, and each `on-*` accent resolving to its fill's on-colour (including
+  `on-disabled` on the neutral pair).
 - `src/components/Button.test.tsx` — a busy filled button hands the spinner
-  `on-primary`/`on-secondary`/`on-destructive`, and a variant with no fill keeps
-  `primary`.
+  `on-primary`/`on-secondary`/`on-destructive`, a variant with no fill keeps
+  `primary`, and a disabled filled button's spinner moves to `on-disabled` while
+  a disabled unfilled one keeps `primary`.
 - `runtime/loading.runtime.test.tsx` — the lit dot's index changes over real
   time (the opaque dot is the lit one), every dot paints the accent, a loading
   primary button's dots paint `primaryForeground` and a secondary one's paint
-  `secondaryForeground`, and AccessKit reports `Status` with the label.
+  `secondaryForeground`, a disabled busy primary button's dots paint
+  `disabledForeground`, and AccessKit reports `Status` with the label.
 - `runtime/examples.runtime.test.tsx` — the feedback example mounts it.
 
 ```sh

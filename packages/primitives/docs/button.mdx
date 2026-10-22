@@ -63,7 +63,9 @@ keeps the text floor on both fills.
   `ghost` or `link` action has no fill to collapse into and keeps the fade.
 - `loading` — shows a spinner in the variant's own on-colour (a busy primary
   button paints `primaryForeground`, not a brand dot on a brand fill), announces
-  `Loading`, refuses activation, and **stays focusable**.
+  `Loading`, refuses activation, and **stays focusable**. A disabled busy button
+  paints the neutral pair, so its spinner moves to `on-disabled`
+  (`disabledForeground`).
 
 ## API
 

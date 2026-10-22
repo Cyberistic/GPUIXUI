@@ -142,6 +142,9 @@ describe("spinnerDots", () => {
     expect(colourOf("on-destructive")).toBe(
       testTheme.colors.destructiveForeground,
     );
+    // A disabled filled action paints the neutral pair, so its spinner reads
+    // on that fill rather than on the action's own.
+    expect(colourOf("on-disabled")).toBe(testTheme.colors.disabledForeground);
     expect(colourOf("muted")).toBe(testTheme.colors.mutedForeground);
   });
 });

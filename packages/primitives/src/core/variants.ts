@@ -151,9 +151,19 @@ const FILLED_SPINNER_ACCENT: Readonly<
  * measures on that fill; a variant that paints no fill keeps the brand accent,
  * which the mark contract measures on the page. A busy brand button used to
  * paint a brand spinner on a brand fill (1.00:1).
+ *
+ * A **disabled** filled action paints the neutral pair rather than its fill
+ * (`core/style.ts`), so its spinner takes `on-disabled` — `disabledForeground`
+ * — instead of the action's on-colour, which would be the fill's text colour on
+ * a fill that is no longer there.
  */
-export const variantSpinnerAccent = (variant: ButtonVariant): SpinnerAccent =>
-  FILLED_SPINNER_ACCENT[variant] ?? "primary";
+export const variantSpinnerAccent = (
+  variant: ButtonVariant,
+  disabled = false,
+): SpinnerAccent =>
+  disabled && paintsFilledSurface(variant)
+    ? "on-disabled"
+    : (FILLED_SPINNER_ACCENT[variant] ?? "primary");
 
 /**
  * Whether a variant paints a fill behind its label.

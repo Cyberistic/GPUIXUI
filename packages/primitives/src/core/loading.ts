@@ -88,9 +88,11 @@ export const pulseOpacity = (step: number, dim = 0.6, full = 1): number =>
  * How a spinner dot is tinted: the brand, a destructive action, quiet — or, on
  * a filled control, the colour that sits on that fill.
  *
- * The last three exist because an indicator drawn **inside** a filled button
- * must paint that fill's on-colour: a brand spinner on a brand button is
- * 1.00:1, which is the one place a busy indicator would disappear.
+ * The `on-*` accents exist because an indicator drawn **inside** a filled
+ * button must paint that fill's on-colour: a brand spinner on a brand button is
+ * 1.00:1, which is the one place a busy indicator would disappear. A disabled
+ * filled action paints the neutral pair instead of its fill, so its spinner
+ * takes `on-disabled` — `disabledForeground` — for the same reason.
  */
 export const SPINNER_ACCENTS = [
   "primary",
@@ -99,6 +101,7 @@ export const SPINNER_ACCENTS = [
   "on-primary",
   "on-secondary",
   "on-destructive",
+  "on-disabled",
 ] as const;
 export type SpinnerAccent = (typeof SPINNER_ACCENTS)[number];
 
@@ -132,18 +135,21 @@ export const spinnerDots = (
   }));
 };
 
+/** The role each accent paints, one entry per accent. */
+const ACCENT_COLOR: Readonly<
+  Record<SpinnerAccent, (theme: PrimitiveTheme) => string>
+> = {
+  primary: (theme) => theme.colors.primary,
+  destructive: (theme) => theme.colors.destructive,
+  muted: (theme) => theme.colors.mutedForeground,
+  "on-primary": (theme) => theme.colors.primaryForeground,
+  "on-secondary": (theme) => theme.colors.secondaryForeground,
+  "on-destructive": (theme) => theme.colors.destructiveForeground,
+  "on-disabled": (theme) => theme.colors.disabledForeground,
+};
+
 const accentColor = (accent: SpinnerAccent, theme: PrimitiveTheme): string =>
-  accent === "destructive"
-    ? theme.colors.destructive
-    : accent === "muted"
-      ? theme.colors.mutedForeground
-      : accent === "on-primary"
-        ? theme.colors.primaryForeground
-        : accent === "on-secondary"
-          ? theme.colors.secondaryForeground
-          : accent === "on-destructive"
-            ? theme.colors.destructiveForeground
-            : theme.colors.primary;
+  ACCENT_COLOR[accent](theme);
 
 /**
  * One dot of the indicator.

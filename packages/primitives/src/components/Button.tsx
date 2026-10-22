@@ -165,7 +165,7 @@ export const renderButton = (
       {props.loading === true ? (
         <Spinner
           size={theme.iconSize.sm}
-          accent={variantSpinnerAccent(variant)}
+          accent={variantSpinnerAccent(variant, props.disabled)}
           label="Loading"
         />
       ) : (
