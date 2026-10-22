@@ -142,35 +142,118 @@ const existingPlanNumbers = (): HashSet.HashSet<string> =>
 
 const TEXT_EXTENSIONS = [".ts", ".tsx", ".md", ".mdx"] as const;
 
-/** Every text file this workstream owns, so a citation cannot go stale in a comment. */
-const workstreamFiles = (): ReadonlyArray<{
+/** Directories a citation scan never reads: package-manager and build output. */
+const SKIPPED_DIRECTORIES = HashSet.fromIterable(["node_modules", "dist"]);
+
+interface WorkstreamFile {
   readonly name: string;
   readonly source: string;
-}> =>
-  Arr.flatMap(
-    [
-      { prefix: "packages/primitives/", root: packageRoot },
-      {
-        prefix: "packages/icons/",
-        root: new URL("../../icons/", import.meta.url),
-      },
-    ],
-    ({ prefix, root }) => {
-      const base = fileURLToPath(root);
-      return Arr.filterMap(
-        readdirSync(base, { recursive: true, encoding: "utf8" }),
-        (entry) => {
-          if (/(^|\/)(node_modules|dist)\//.test(entry)) return Result.failVoid;
-          if (!Arr.some(TEXT_EXTENSIONS, (ext) => Str.endsWith(ext)(entry)))
-            return Result.failVoid;
-          return Result.succeed({
-            name: `${prefix}${entry}`,
-            source: readFileSync(`${base}${entry}`, "utf8"),
-          });
-        },
+}
+
+/** A package root the citation scan reads, with the prefix its file names carry. */
+interface WorkstreamRoot {
+  readonly prefix: string;
+  readonly root: URL;
+}
+
+/** The result of the scan: the text files and the directory entries it looked at. */
+interface Scan {
+  readonly entries: number;
+  readonly files: ReadonlyArray<WorkstreamFile>;
+}
+
+/** The entries and text files one directory holds, subdirectories included. */
+interface Walk {
+  readonly entries: number;
+  readonly files: ReadonlyArray<{
+    readonly name: string;
+    readonly path: string;
+  }>;
+}
+
+const WORKSTREAM_ROOTS: ReadonlyArray<WorkstreamRoot> = [
+  { prefix: "packages/primitives/", root: packageRoot },
+  { prefix: "packages/icons/", root: new URL("../../icons/", import.meta.url) },
+];
+
+const isTextFile = (name: string): boolean =>
+  Arr.some(TEXT_EXTENSIONS, (extension) => Str.endsWith(extension)(name));
+
+/**
+ * Walk a package root for the text files a citation scan reads.
+ *
+ * `node_modules` and `dist` are skipped **whole**. Filtering them out after a
+ * recursive `readdirSync` enumerated 17 884 directory entries to keep 191 files
+ * and cost 0.45–0.53 s on a warm cache, because the walk had already entered
+ * both trees; skipping them at the directory level reads 208 entries for the
+ * same file set, and the whole scan (208 entries plus 191 reads of 1.6 MB) takes
+ * ~16 ms. That is what keeps the case inside its budget when the full suite
+ * starts 49 workers on this box. `entries` is the measured cost, so a
+ * regression that reads those trees again fails the case that holds it.
+ *
+ * Paths are slash-joined the way `readdirSync`'s recursive entries are; the
+ * package runs on macOS and Linux, and this is a test-time repository check.
+ */
+const walkTextFiles = (directory: string, relative = ""): Walk => {
+  const entries = readdirSync(directory, { withFileTypes: true });
+  const walks = Arr.map(entries, (entry): Walk => {
+    if (entry.isDirectory() && !HashSet.has(SKIPPED_DIRECTORIES, entry.name)) {
+      return walkTextFiles(
+        `${directory}/${entry.name}`,
+        `${relative}${entry.name}/`,
       );
-    },
-  );
+    }
+    if (!entry.isFile() || !isTextFile(entry.name)) {
+      return { entries: 0, files: [] };
+    }
+    return {
+      entries: 0,
+      files: [
+        {
+          name: `${relative}${entry.name}`,
+          path: `${directory}/${entry.name}`,
+        },
+      ],
+    };
+  });
+
+  return {
+    entries:
+      Arr.length(entries) +
+      Arr.reduce(walks, 0, (count, walk) => count + walk.entries),
+    files: Arr.flatMap(walks, (walk) => walk.files),
+  };
+};
+
+/** Read one root's text files, naming each by the repo-relative path it owns. */
+const scanRoot = (scan: Scan, { prefix, root }: WorkstreamRoot): Scan => {
+  const walk = walkTextFiles(fileURLToPath(root));
+  return {
+    entries: scan.entries + walk.entries,
+    files: [
+      ...scan.files,
+      ...Arr.map(walk.files, (file) => ({
+        name: `${prefix}${file.name}`,
+        source: readFileSync(file.path, "utf8"),
+      })),
+    ],
+  };
+};
+
+/**
+ * Every text file this workstream owns, so a citation cannot go stale in a comment.
+ *
+ * The tree is static for a run, so it is read once when the module loads rather
+ * than inside the case that cites plans.
+ */
+const workstream: Scan = Arr.reduce(
+  WORKSTREAM_ROOTS,
+  { entries: 0, files: [] },
+  scanRoot,
+);
+
+/** The plan numbers that still have a file in the plan directory. */
+const existingPlans = existingPlanNumbers();
 
 /** The names a page's snippets import from this package, aliases resolved. */
 const importedNames = (source: string): ReadonlyArray<string> =>
@@ -621,10 +704,8 @@ describe("the primitives docs page contract", () => {
     // plan is a dead end; the evidence lives in `COMPONENTS.md`, the suite each
     // `src/inventory.ts` record names, `docs/gpuix-capabilities.md` and
     // `apps/playground/README.md`.
-    const files = workstreamFiles();
-    const numbers = existingPlanNumbers();
     const missing = [
-      ...Arr.flatMap(files, (file) =>
+      ...Arr.flatMap(workstream.files, (file) =>
         Arr.map(
           Arr.filter(
             citedPlans(file.source),
@@ -634,11 +715,11 @@ describe("the primitives docs page contract", () => {
           (path) => `${file.name}: cites ${path}, which does not exist`,
         ),
       ),
-      ...Arr.flatMap(files, (file) =>
+      ...Arr.flatMap(workstream.files, (file) =>
         Arr.map(
           Arr.filter(
             citedPlanNumbers(file.source),
-            (number) => !HashSet.has(numbers, number),
+            (number) => !HashSet.has(existingPlans, number),
           ),
           (number) =>
             `${file.name}: cites plan ${number}, which does not exist`,
@@ -647,5 +728,32 @@ describe("the primitives docs page contract", () => {
     ];
 
     expect(missing).toEqual([]);
+  });
+
+  it("walks the tree without reading package-manager or build output", () => {
+    // The bug guarded: the citation scan filtered `node_modules` and `dist` out
+    // *after* a recursive `readdirSync`, so it enumerated 17 884 directory
+    // entries to keep 191 files and took 0.45–0.53 s — enough for the case to
+    // blow its 5 s budget when the full suite started 49 workers at once
+    // (measured 2026-10-22). The walk now skips those directories whole, which
+    // is the same file set for a fraction of the entries; this case is what
+    // fails if the walk ever descends into them again.
+    expect(
+      workstream.entries,
+      `${workstream.entries} entries read for ${Arr.length(workstream.files)} files`,
+    ).toBeLessThan(Arr.length(workstream.files) * 2);
+    expect(Arr.length(workstream.files)).toBeGreaterThanOrEqual(150);
+    expect(
+      Arr.filter(workstream.files, (file) =>
+        /(^|\/)(node_modules|dist)\//.test(file.name),
+      ),
+    ).toEqual([]);
+    // Both roots still contribute: a walk that quietly read one package would
+    // otherwise spend its budget on nothing and pass.
+    const names = Arr.map(workstream.files, (file) => file.name);
+    expect(Arr.some(names, Str.startsWith("packages/icons/"))).toBe(true);
+    expect(Arr.some(names, Str.startsWith("packages/primitives/docs/"))).toBe(
+      true,
+    );
   });
 });
