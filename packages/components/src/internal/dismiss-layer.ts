@@ -64,11 +64,15 @@ let dismissedPress: Option.Option<Press> = Option.none();
 /**
  * How long a press shape identifies the same gesture. The runtime queues one
  * payload per handler, and every one of them is dispatched in the frame the
- * press arrived in; a reader cannot press twice inside one frame, and a second
- * click at one point counts 2 anyway. The window is the frame rather than the
- * task boundary because the drain is not part of the published API.
+ * press arrived in; a reader cannot press twice inside that window, and a
+ * second click at one point counts 2 anyway. The window is **four frames**, not
+ * one: the topmost surface's close re-renders the tree between two deliveries
+ * of one press, and the migrated action paint made that re-render outlast a
+ * single 16 ms frame — measured as two overlays closing on one outside press.
+ * The shape carries `clickCount`, so a real second press at the same point is
+ * always a different shape once the platform counts it as a double click.
  */
-export const pointerGestureWindow: Duration.Duration = Duration.millis(16);
+export const pointerGestureWindow: Duration.Duration = Duration.millis(64);
 
 const PRESS_WINDOW_NANOS =
   BigInt(Duration.toMillis(pointerGestureWindow)) * 1_000_000n;

@@ -135,6 +135,28 @@ describe("dismiss layer stack", () => {
     removeOuter();
   });
 
+  it("treats one press delivered after a frame's re-render as one gesture", () => {
+    // The bug this guards: one outside press reaches every open overlay, and
+    // the topmost one's close re-renders the tree between two deliveries. That
+    // re-render outlasted the one-frame window and closed two overlays on one
+    // press once the action paint moved onto the primitives. The platform
+    // counts a second press at one point as a double click, so the shape still
+    // tells a real next gesture apart after the wider window.
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const removeOuter = pushDismissLayer(outer, 1);
+    const removeInner = pushDismissLayer(inner, 2);
+    const now = gesture();
+
+    expect(dismissTopLayer(press(2), now)).toBe(true);
+    expect(dismissTopLayer(press(1), now + 40_000_000n)).toBe(false);
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+
+    removeInner();
+    removeOuter();
+  });
+
   it("lets the next press reach the layer that is now topmost", () => {
     const outer = vi.fn();
     const inner = vi.fn();
@@ -167,8 +189,8 @@ describe("dismiss layer stack", () => {
   });
 
   it("treats the same point after the gesture window as a new press", () => {
-    // A reader pressing the same pixel twice: the deliveries of one press all
-    // arrive inside a frame, so a later reading is the next gesture.
+    // A reader pressing the same pixel twice: the deliveries of one press
+    // arrive inside the gesture window, so a later reading is the next gesture.
     const outer = vi.fn();
     const inner = vi.fn();
     const removeOuter = pushDismissLayer(outer, 1);

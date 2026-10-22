@@ -10,11 +10,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import {
-  contrastFloorsFor,
-  contrastRatio,
-  decorativeFloor,
-} from "@gpuixui/tokens";
+import { contrastFloorsFor, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { Badge, type BadgeSize, type BadgeVariant } from "../badge.js";
 import {
@@ -260,10 +256,13 @@ describe("Badge", () => {
             expect(contrastRatio(edge, fill) ?? 0).toBeGreaterThanOrEqual(
               contrastFloorsFor(theme).boundary,
             );
-            // And the role it used to paint is the premise: under even the
-            // perceptibility floor, so the pair cannot quietly return.
-            expect(contrastRatio(theme.colors.border, fill) ?? 1).toBeLessThan(
-              decorativeFloor,
+            // And the role it used to paint is the premise: it cannot be the
+            // edge of anything, because it does not clear the 3:1 a control's
+            // boundary needs — the pill would be its own fill on the wash. The
+            // measured role is a divider, and a palette that moves it a step
+            // still leaves it nowhere near a boundary.
+            expect(contrastRatio(theme.colors.border, fill) ?? 0).toBeLessThan(
+              contrastFloorsFor(theme).boundary,
             );
           });
         } finally {

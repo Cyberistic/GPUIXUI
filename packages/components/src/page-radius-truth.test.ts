@@ -10,8 +10,9 @@
  * taught `radius.md` for a rail whose `TABS_LIST` is `rounded-md`.
  *
  * The other direction is held too. Pagination is painted by the package's
- * local `Button`, which reads `theme.radius.md`, and its page said
- * `radius.sm` — a theme role the control never reads.
+ * `Button`, which is a translation of the primitives' action recipe: that
+ * recipe names one radius utility, and the page must print the pixel corner it
+ * compiles to rather than a theme role the registry never reads.
  *
  * The sweep is closed by the last case: every page whose `## Theming` names a
  * `radius.*` role must be declared here, so a new page cannot teach one
@@ -70,6 +71,30 @@ interface ThemePart {
   readonly step: "sm" | "md" | "lg" | "xl";
 }
 
+/**
+ * The radius utility the primitives' action recipe paints, read from its source.
+ *
+ * A page button is that action, so the corner comes from this one class and not
+ * from a number a page may keep after the recipe moves. The components package
+ * cannot import an unexported recipe constant, and the subpath publishes the
+ * component rather than its classes, so the source is the boundary the painter
+ * exposes — the same read this suite already does for a page's painter.
+ */
+const primitiveActionRadius = (): string => {
+  const source = readFileSync(
+    new URL("../../primitives/src/recipe/index.ts", import.meta.url),
+    "utf8",
+  );
+  const base = /const BUTTON_BASE =\s*"([^"]*)"/.exec(source)?.[1];
+  expect(
+    base,
+    "the primitives' action recipe is not BUTTON_BASE",
+  ).toBeDefined();
+  const radius = base === undefined ? undefined : /\brounded-[\w-]+/.exec(base);
+  expect(radius?.[0], "BUTTON_BASE names no radius").toBeDefined();
+  return radius?.[0] ?? "";
+};
+
 interface PageClaim {
   readonly page: string;
   readonly fixed: ReadonlyArray<FixedPart>;
@@ -124,8 +149,9 @@ const claims: ReadonlyArray<PageClaim> = [
   },
   {
     page: "pagination.mdx",
-    fixed: [],
-    theme: [{ part: "page button", file: "internal/button.tsx", step: "md" }],
+    fixed: [
+      { part: "page button", recipe: primitiveActionRadius(), pixels: 6 },
+    ],
   },
   {
     page: "preview-card.mdx",
