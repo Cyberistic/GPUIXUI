@@ -122,6 +122,31 @@ it("paints an outlined Button's edge in the measured boundary role", async () =>
   expect(edge).not.toBe(testTheme.colors.border);
 });
 
+it("keeps a filled Button's label while another control has keyboard focus", async () => {
+  // The runtime dims every other focusable element to 40% while one control has
+  // keyboard focus, which on a filled action composites the label into its own
+  // fill (5.0–10.5:1 at rest, 1.3–3.2:1 dimmed, `keyboardDimFailures`). The
+  // declaration has to reach the painted element, not just the React tree.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="filled">Save</Button>
+        <Button testId="ghost" variant="ghost">
+          Cancel
+        </Button>
+      </Stack>
+    </Surface>,
+  );
+  const optOut = (testId: string) =>
+    Option.flatMap(runtime.element(testId), (element) =>
+      Option.fromNullishOr(element.style.keyboardFocusDim),
+    );
+  expect(optOut("filled")).toStrictEqual(Option.some(false));
+  // No fill to collapse into, so the where-can-Tab-go cue stays.
+  expect(Option.isNone(optOut("ghost"))).toBe(true);
+});
+
 it("activates a Button on Enter down, and not again on the key up", async () => {
   const { runtime, calls } = await renderButton();
   runtime.keyDown("b", "enter");

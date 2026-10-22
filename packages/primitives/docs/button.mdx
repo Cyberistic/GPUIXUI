@@ -123,6 +123,18 @@ role decision, so a callback is the last word on a property the recipe also sets
 `loading` is not in the state: a busy button reports `disabled`, because it
 refuses activation.
 
+### The keyboard dim
+
+While one control has keyboard focus, the runtime dims every other focusable
+element to `keyboardFocusDimOpacity` (40%) as a "where can Tab go" cue. On a
+filled action that composites the label into its own fill — the pair is held to
+4.5:1 at rest and lands at 1.3–3.2:1 dimmed (`keyboardDimFailures`) — so
+`primary`, `secondary` and `destructive` declare `keyboardFocusDim: false` and
+keep their label at full opacity. `outline`, `ghost` and `link` have no fill to
+collapse into and keep the cue. `paintsFilledSurface` derives the split from the
+variant table, so a variant that gains a fill inherits the rule. A caller can put
+the dim back with `style`, which merges last.
+
 ## Limitations
 
 - The ring's paint is the runtime's: the unit and runtime suites assert the
@@ -143,13 +155,16 @@ refuses activation.
 - `src/core/keyboard.test.ts` — the Enter/Space/held rules as pure decisions.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
   loading description, a busy filled button handing its spinner the fill's
-  on-colour, and a `style` callback receiving the live state and winning over
-  the recipe.
+  on-colour, a `style` callback receiving the live state and winning over the
+  recipe, and the filled actions opting out of the keyboard dim (the collapsed
+  pair is named per mode; `outline`/`ghost`/`link` keep it).
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the button's own action, and a busy button installs no press handler.
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
-  a busy button still announces its role and name.
+  a busy button still announces its role and name; a filled button's painted
+  `keyboardFocusDim: false` and a ghost button's absent declaration are read off
+  the runtime's style report.
 - `runtime/loading.runtime.test.tsx` — a busy primary button's spinner dots paint
   `primaryForeground` and a secondary one's paint `secondaryForeground` in a real
   window.

@@ -132,6 +132,22 @@ export const variantSpinnerAccent = (variant: ButtonVariant): SpinnerAccent =>
   FILLED_SPINNER_ACCENT[variant] ?? "primary";
 
 /**
+ * Whether a variant paints a fill behind its label.
+ *
+ * The runtime dims every other focusable element to 40% while one control has
+ * keyboard focus (`keyboardFocusDimOpacity`), which on a filled action
+ * composites the label into its own fill: measured at 5.0–10.5:1 at rest and
+ * 1.3–3.2:1 when dimmed (`keyboardDimFailures`). Those variants opt out with
+ * `keyboardFocusDim: false`; an `outline`, `ghost` or `link` action has no fill
+ * to collapse into and keeps the where-can-Tab-go cue.
+ *
+ * Read from the variant table rather than a second list, so a new filled
+ * variant inherits the rule.
+ */
+export const paintsFilledSurface = (variant: ButtonVariant): boolean =>
+  buttonVariants[variant].background !== undefined;
+
+/**
  * A field: an input, a textarea, a select trigger.
  *
  * It shares the control metrics with a button but not its variants — a field

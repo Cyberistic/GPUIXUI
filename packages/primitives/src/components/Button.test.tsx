@@ -17,6 +17,7 @@ import {
   contrastFloors,
   contrastRatio,
   darkTheme,
+  keyboardDimFailures,
   lightTheme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -199,6 +200,58 @@ describe("Button", () => {
     expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
       testTheme.colors.destructive,
     );
+  });
+
+  it("keeps a filled action's label while Tab is elsewhere", () => {
+    // The bug: the runtime dims every other focusable element to 40% while one
+    // control has keyboard focus, which on a filled action composites the label
+    // into its own fill. The pair is held to 4.5:1 at rest; dimmed it lands
+    // between 1.3:1 and 3.2:1, so the label has to stay at full opacity.
+    const filled = [
+      ["primary", "primary", "primaryForeground"],
+      ["secondary", "secondary", "secondaryForeground"],
+      ["destructive", "destructive", "destructiveForeground"],
+    ] as const;
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      Arr.forEach(filled, ([variant, fill, label]) => {
+        expect(
+          contrastRatio(theme.colors[label], theme.colors[fill]) ?? 0,
+        ).toBeGreaterThanOrEqual(contrastFloors.secondary);
+        expect(
+          Arr.filter(
+            keyboardDimFailures(theme, contrastFloors.secondary),
+            (failure) => failure.fill === fill && failure.label === label,
+          ).length,
+        ).toBeGreaterThan(0);
+        const element = renderButton({ variant, children: "Save" }, theme, {
+          focused: false,
+        });
+        expect(expectSome(hostStyleRecord(element))["keyboardFocusDim"]).toBe(
+          false,
+        );
+      });
+    });
+  });
+
+  it("leaves the dim on an action with no fill to collapse into", () => {
+    Arr.forEach(["outline", "ghost", "link"] as const, (variant) => {
+      const element = resting({ variant, children: "Cancel" });
+      expect(
+        Option.isNone(
+          Option.fromNullishOr(
+            expectSome(hostStyleRecord(element))["keyboardFocusDim"],
+          ),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it("lets a caller put the dim back on a filled action", () => {
+    const element = resting({
+      variant: "primary",
+      style: { keyboardFocusDim: true },
+    });
+    expect(expectSome(hostStyleRecord(element))["keyboardFocusDim"]).toBe(true);
   });
 
   it("still merges an object style last", () => {
