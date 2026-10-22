@@ -102,9 +102,16 @@ merges `style` last.
 
 ## Theming
 
-The track uses `card` with a `border` edge and `radius.lg`; controls are
-**secondary actions**, so each sits on the theme's `secondary` fill with the edge
-the boundary role draws. The chevron is that control's label in vectors: it
+The track paints the **`card` fill** with a `border-input` edge — the class
+shadcn names for its border, which `@gpuixui/tw` resolves to this library's
+**`border` role**; this package's `input` role is the field fill (the card's own
+white in the base light theme), so the class name is not the role — and a
+**fixed 8px** corner, because `rounded-lg` compiles from the registry's fixed
+shadcn scale (ADR 0006) rather than the theme's radius group. A platform switch
+re-heights the controls with its density and leaves the track's corner alone.
+
+Controls are **secondary actions**, so each sits on the theme's `secondary` fill
+with the edge the boundary role draws. The chevron is that control's label in vectors: it
 paints `secondaryForeground`, the on-colour of the fill it sits on, and never a
 role chosen for another fill — `secondaryForeground` on `primary` is 1.42:1 in
 Windows dark. `contrastPairs` measures the pair it paints on every shipped style,
