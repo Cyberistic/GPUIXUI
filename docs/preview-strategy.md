@@ -350,6 +350,11 @@ name that no longer exists. It is a resolution check rather than a completeness
 one — a prop the page omits is a documentation gap, and inherited `Omit`/`Props`
 types make "every prop" a compiler question rather than a regex one.
 
+One line above every page body is **not** the author's: the site mounts the
+worked-example strip (and, on a package page, the status strip) from the example
+registry and `COMPONENTS.md` respectively. A page cannot claim an example or a
+status it does not have, which is why neither is a table row an author writes.
+
 The package's own pages are the component's doc file and use strategy 4 from the
 top of this file: no browser preview, and a section that does not apply (no
 sizes, no keyboard path) is omitted rather than faked. Four sections are not
@@ -454,6 +459,16 @@ approximation this strategy warns about, with no component page to anchor it, an
 the file a reader copies is the stronger artefact. `examples.test.ts` holds the
 registry to the files on disk in both directions, so a new example appears
 without a docs change and a deleted one leaves no dead row.
+
+The link runs the other way too. A page that an example owns carries a
+**Worked example** strip under its title (`page-example.tsx`), generated from the
+same registry, pointing at the row's own fragment — `<package>-<id>`, so
+`/docs/examples#components-card`. The fragment is the file's package and id
+rather than the page title, because two packages ship a `form` and a retitled
+page would otherwise move the anchor. A grouped example owns no single page, so
+no component page claims it, and a page with no example renders no strip rather
+than borrowing one. `page-example.test.tsx` proves the href is the rendered row's
+anchor, that every owned page resolves, and that a page with no row stays empty.
 
 ## Generated specimens
 

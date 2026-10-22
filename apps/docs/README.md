@@ -85,6 +85,7 @@ src/components/docs/install.tsx           The nub / manual install tabs
 src/components/docs/copy-page.tsx         Copy the page as Markdown
 src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
+src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
 src/components/docs/component-index.tsx   The filterable index on /docs/components
 src/components/docs/examples-index.tsx    The generated registry on /docs/examples

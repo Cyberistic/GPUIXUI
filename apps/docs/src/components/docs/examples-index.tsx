@@ -78,7 +78,8 @@ export function ExamplesIndex() {
                   const open = expanded.includes(entry.id);
                   return (
                     <li
-                      className="m-0 rounded-xl border border-border px-4 py-3"
+                      className="m-0 scroll-mt-24 rounded-xl border border-border px-4 py-3"
+                      id={entry.anchor}
                       key={`${entry.packageName}/${entry.id}`}
                     >
                       <div className="flex flex-wrap items-baseline justify-between gap-2">

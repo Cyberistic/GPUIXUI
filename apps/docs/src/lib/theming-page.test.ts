@@ -247,6 +247,13 @@ describe("the theme page", () => {
       kinds.filter((kind) => !audit.includes(`\`${kind}\``)),
       "the decorative bullet does not name these surface kinds",
     ).toEqual([]);
+    // The count is the package's too: `disabledFace` joined the report without
+    // a line on the page, which is how this case found a bullet claiming nine
+    // while ten were measured.
+    const word = numberWords[kinds.length] ?? String(kinds.length);
+    expect(audit).toContain(
+      `${word.slice(0, 1).toUpperCase()}${word.slice(1)} kinds`,
+    );
     // The count and the floor are the package's, not a number to fall behind.
     expect(audit).toContain("{decorativeSurfaces.length}");
     expect(audit).toContain("{decorativeFloor}");

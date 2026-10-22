@@ -9,6 +9,11 @@ a gallery of one-off props. This page is generated from
 `packages/*/examples/*.example.tsx`, so a new example appears here with no docs
 change, and a removed one cannot leave a dead row.
 
+The link runs both ways: a page an example belongs to carries a **Worked
+example** strip under its title, pointing at the row below. Each row's fragment
+is its package and id — `#components-card` — not its title, because both packages
+ship a `form` and a retitled page must not move the anchor.
+
 <ExamplesIndex />
 
 ## What an example is

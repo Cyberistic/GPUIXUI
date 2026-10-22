@@ -38,10 +38,24 @@ export interface ExampleEntry {
   readonly file: string;
   /** The page this example illustrates, or the lane index when it spans several. */
   readonly url: string;
+  /** The fragment the registry row answers to: `<package>-<id>`, e.g. `components-switch`. */
+  readonly anchor: string;
   /** True when no single page owns the example. */
   readonly grouped: boolean;
   readonly source: string;
 }
+
+/**
+ * The fragment one example row answers to.
+ *
+ * A package's `examples` directory cannot hold the same id twice, so the pair
+ * names one file and one row. A bare id would repeat (`form` ships in both
+ * packages), and a page's title could be edited without the link moving.
+ */
+export const exampleAnchor = (entry: {
+  readonly packageName: string;
+  readonly id: string;
+}): string => `${entry.packageName}-${entry.id}`;
 
 /** The files the registry reads: one package's `examples` directory. */
 const filePattern = /^packages\/([^/]+)\/examples\/([^/]+)\.example\.tsx$/;
@@ -156,6 +170,7 @@ export const buildExamples = (
         section: collection.section,
         file,
         url: page?.url ?? collection.route,
+        anchor: exampleAnchor({ packageName, id }),
         grouped: page === undefined,
         source,
       },
@@ -176,6 +191,19 @@ export const buildExamples = (
       .toSorted((left, right) => left.title.localeCompare(right.title)),
   );
 };
+
+/**
+ * The rows a page links back to.
+ *
+ * A grouped example owns no single page — it points at its lane index — so it
+ * is not a page's example and is left to the registry. A page with no row
+ * renders nothing rather than a guess, the same rule `StatusStrip` follows.
+ */
+export const examplesForPage = (
+  entries: ReadonlyArray<ExampleEntry>,
+  url: string,
+): ReadonlyArray<ExampleEntry> =>
+  entries.filter((entry) => !entry.grouped && entry.url === url);
 
 /**
  * The rows a reader's query keeps.

@@ -13,6 +13,7 @@ import { Suspense, use } from "react";
 import { mdxComponents } from "@/components/mdx";
 import { CopyPage } from "@/components/docs/copy-page";
 import { NativeRunNote } from "@/components/docs/native-run-note";
+import { PageExample } from "@/components/docs/page-example";
 import {
   PlatformProvider,
   PlatformToggle,
@@ -102,6 +103,7 @@ function PageFrame({
   description,
   toc,
   path,
+  url,
   origin,
   children,
 }: {
@@ -109,6 +111,7 @@ function PageFrame({
   readonly description: ReactNode;
   readonly toc: ComponentProps<typeof DocsPage>["toc"];
   readonly path: string;
+  readonly url: string;
   readonly origin: Origin;
   readonly children: ReactNode;
 }) {
@@ -119,13 +122,16 @@ function PageFrame({
         <CopyPage origin={origin} path={path} />
       </div>
       <DocsDescription>{description}</DocsDescription>
-      <DocsBody>{children}</DocsBody>
+      <DocsBody>
+        <PageExample url={url} />
+        {children}
+      </DocsBody>
     </DocsPage>
   );
 }
 
 /** A page from this site's own collection. */
-function SiteContent({ path }: { path: string }) {
+function SiteContent({ path, url }: { path: string; url: string }) {
   const page = docs.getPage(path);
   if (!page) throw new Error(`unknown page: ${path}`);
 
@@ -139,6 +145,7 @@ function SiteContent({ path }: { path: string }) {
       path={path}
       title={page.title}
       toc={toc}
+      url={url}
     >
       <MDX components={mdxComponents} />
     </PageFrame>
@@ -154,9 +161,11 @@ function SiteContent({ path }: { path: string }) {
 function PackageContent({
   origin,
   path,
+  url,
 }: {
   readonly origin: PackageOrigin;
   readonly path: string;
+  readonly url: string;
 }) {
   const page = docsByOrigin[origin].getPage(path);
   if (!page) throw new Error(`unknown ${origin} page: ${path}`);
@@ -172,6 +181,7 @@ function PackageContent({
       path={path}
       title={page.title}
       toc={toc}
+      url={url}
     >
       <StatusStrip title={page.title} />
       <NativeRunNote
@@ -185,7 +195,7 @@ function PackageContent({
 
 /** Renders one page of either collection inside the shared docs layout. */
 export function DocsView({ data }: { data: DocsPageData }) {
-  const { path, pageTree: tree } = useFumadocsLoader(data);
+  const { path, pageTree: tree, url } = useFumadocsLoader(data);
 
   return (
     <PlatformProvider>
@@ -196,9 +206,9 @@ export function DocsView({ data }: { data: DocsPageData }) {
       >
         <Suspense>
           {data.origin === "site" ? (
-            <SiteContent path={path} />
+            <SiteContent path={path} url={url} />
           ) : (
-            <PackageContent origin={data.origin} path={path} />
+            <PackageContent origin={data.origin} path={path} url={url} />
           )}
         </Suspense>
       </DocsLayout>
