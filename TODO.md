@@ -1343,6 +1343,17 @@ a workaround for two live sessions sharing one worktree; see
       `--only slider-lifecycle` green. Docs in `docs/slider.mdx`,
       `docs/range-slider.mdx` (the stops paragraph and §Verification) and the two
       `COMPONENTS.md` rows. 679 unit / 194 runtime
+`[x]` `packages/primitives`: the **Radio groups inventory record denied a part that
+      shipped** — "Options are data: no compound RadioGroupItem and no rich option
+      content" survived while `RadioGroupItem`, its page and its `COMPONENTS.md`
+      row all documented it, so the record every suite reads told a caller a
+      capability was missing. The record now says the data form is the part that
+      cannot carry rich content, and the Box record's limitation matches its page
+      (a gradient is a `Box` API gap, not a runtime absence).
+      `inventory.test.ts`'s `does not deny a part the package exports` case reads
+      every record's limitations and fails when a denied capitalised name is
+      exported. Both directions measured: restoring the old string fails with
+      `Radio groups: says there is no RadioGroupItem, and the package exports it`
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness

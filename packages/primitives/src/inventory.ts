@@ -138,7 +138,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "yes",
     limitations: [
       "One shadow per element: the runtime paints a single boxShadow",
-      "No gradients, background images or border styles",
+      "No gradient or border-style prop: pass them through style (the runtime paints a linear gradient and a dashed border)",
       "Not focusable: no role, tabIndex or handlers",
     ],
     source: ["src/components/Box.tsx", "src/core/style.ts"],
@@ -322,9 +322,9 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "Options are data: no compound RadioGroupItem and no rich option content",
       "No type-ahead selection",
       "An option description is not associated for assistive technology",
+      "The data form of an option cannot carry rich content; use a RadioGroupItem for that",
     ],
     source: [
       "src/components/RadioGroup.tsx",

@@ -16,8 +16,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
+import * as R from "effect/Record";
 import { describe, expect, it } from "vitest";
+import * as primitiveExports from "./index.js";
 import { inventory, type PrimitiveMeta } from "./inventory.js";
 
 const packageRoot = new URL("../", import.meta.url);
@@ -95,6 +98,21 @@ const claimProblems = (name: string, text: string): ReadonlyArray<string> => [
     ? [`${name}: says the value is not announced`]
     : []),
 ];
+
+/**
+ * Part names a record denies, e.g. "no compound RadioGroupItem".
+ *
+ * Only a capitalised word after "no" can be a part name: a limitation about a
+ * missing role, prop or behaviour is lower-case (`no role`, `no aria-pressed`).
+ */
+const deniedParts = (text: string): ReadonlyArray<string> =>
+  Arr.filter(
+    Arr.map(
+      [...text.matchAll(/\bno (?:compound |built-in )?([A-Z][A-Za-z0-9]+)\b/g)],
+      (match) => match[1] ?? "",
+    ),
+    (name) => name.length > 0,
+  );
 
 const sourceOf = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8");
@@ -212,5 +230,25 @@ describe("Tier 1 inventory", () => {
         (meta) => `${meta.name}: limitations is not an array`,
       ),
     ).toEqual([]);
+  });
+
+  it("does not deny a part the package exports", () => {
+    // The bug guarded: the Radio groups record said "Options are data: no
+    // compound RadioGroupItem and no rich option content" while the part had
+    // shipped, the page documented it and the COMPONENTS.md row described it —
+    // so the record every suite reads told a caller a capability was missing.
+    // A record may name an exported part only as something that exists.
+    const exported = HashSet.fromIterable(R.keys(primitiveExports));
+    const problems = Arr.flatMap(inventory, (meta) =>
+      Arr.map(
+        Arr.filter(deniedParts(Arr.join(meta.limitations, " ")), (name) =>
+          HashSet.has(exported, name),
+        ),
+        (name) =>
+          `${meta.name}: says there is no ${name}, and the package exports it`,
+      ),
+    );
+
+    expect(problems).toEqual([]);
   });
 });
