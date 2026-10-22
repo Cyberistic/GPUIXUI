@@ -1125,7 +1125,7 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 80 pairs cover the text role
+— an empty array means the theme is readable. The 81 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1185,6 +1185,22 @@ instead (1.19:1 on the light page) and reaches `borderStrong` only on hover, in
 (`packages/components/src/field.tsx`); §Limitations records the deviation and
 `TODO.md` → Interlocks the adoption. `field-boundary.test.ts` reads both painters
 so the page cannot describe a field the library does not ship.
+
+A field's own fill carries a third text role beside the value and the
+placeholder: the **muted** line. A time picker paints its separator and its clear
+glyph `mutedForeground` inside a root filled `input` (`TIME_PICKER_SEPARATOR` and
+`TIME_PICKER_CLEAR` over `TIME_PICKER_ROOT`), a number field's stepper chevrons
+take the same role (`NumberField.tsx`), and `nativeTextTheme` hands the runtime
+`textMuted: mutedForeground` over `bg: input`. The role was measured on every
+surface *around* a field and on none a field paints for itself, so a brand that
+tints its field fill could swallow the colon between two time segments with every
+report empty. The pair is measured at the secondary floor (4.5:1, 7:1 in the
+high-contrast pair) and every shipped, high-contrast, platform and authored theme
+clears it, the tightest placement being the muted line in Windows XP (Luna)
+light's field's own fill at 7.64:1, so no palette moved.
+`contrast.test.ts`'s `the muted text inside a field's own fill` suite reads all
+three painters, reports a role equal to its own fill at 1.00:1 and sweeps the 16
+styles.
 
 A **selected row** adds the one selection pair the table used to skip: its
 **title**. `ListItemTitle`'s recipe is `text-foreground`, painted over the

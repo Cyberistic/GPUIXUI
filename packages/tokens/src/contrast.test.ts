@@ -45,6 +45,15 @@ import {
 const printedRatio = (ratio: number | undefined): string =>
   ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1`;
 
+/** A recipe's class string, read from `@gpuixui/tw`'s source. */
+const recipe = (source: string, name: string): string => {
+  const match = new RegExp(`export const ${name} =\\s*"([^"]*)"`).exec(source);
+  if (match?.[1] === undefined) {
+    throw new Error(`recipe ${name} not found`);
+  }
+  return match[1];
+};
+
 describe("contrastRatio", () => {
   it("reports the extremes of the scale", () => {
     expect(contrastRatio("#000000", "#FFFFFF")).toBeCloseTo(21, 5);
@@ -1307,16 +1316,6 @@ describe("contrastFailures", () => {
  * the same surface its placeholder is painted on.
  */
 describe("the text a composite field keeps on its own fill", () => {
-  const recipe = (source: string, name: string): string => {
-    const match = new RegExp(`export const ${name} =\\s*"([^"]*)"`).exec(
-      source,
-    );
-    if (match?.[1] === undefined) {
-      throw new Error(`recipe ${name} not found`);
-    }
-    return match[1];
-  };
-
   const measured = (foreground: string, background: string): boolean =>
     contrastPairs.some(
       (pair) =>
@@ -1427,5 +1426,139 @@ describe("the text a composite field keeps on its own fill", () => {
       );
       expect(failures, theme.name).toEqual([]);
     });
+  });
+});
+
+/**
+ * Guards the **muted** text a field paints inside its own fill.
+ *
+ * The bug this guards: `mutedForeground` was measured on the page, a card, a
+ * popover, a muted toolbar, a selected row and every state wash — and never on
+ * the `input` role, which is the fill a field paints for itself. Three shipped
+ * painters put the role there: a time picker's separator and its clear glyph
+ * (`TIME_PICKER_SEPARATOR` / `TIME_PICKER_CLEAR` over `TIME_PICKER_ROOT`'s
+ * `bg-input`), a number field's stepper chevrons, and `nativeTextTheme`'s
+ * `textMuted` over `bg: input`. A brand with a tinted field fill could therefore
+ * swallow the colon between its time segments while every report stayed empty.
+ */
+describe("the muted text inside a field's own fill", () => {
+  const measured = (foreground: string, background: string): boolean =>
+    contrastPairs.some(
+      (pair) =>
+        pair.foreground === foreground && pair.background === background,
+    );
+
+  it("measures the muted role on the fill a field paints for itself", () => {
+    expect(measured("mutedForeground", "input")).toBe(true);
+    // The same fill's other two text roles keep their pairs.
+    expect(measured("inputForeground", "input")).toBe(true);
+    expect(measured("placeholder", "input")).toBe(true);
+    // A colon between two segments is text, and a chevron beside it is a mark:
+    // the secondary floor covers both, and high contrast raises it to AAA.
+    expect(
+      contrastPairs.find(
+        ({ foreground, background }) =>
+          foreground === "mutedForeground" && background === "input",
+      )?.floor,
+    ).toBe("secondary");
+  });
+
+  it("holds the painters that put muted text inside a field", () => {
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    expect(recipe(recipes, "TIME_PICKER_ROOT")).toContain("bg-input");
+    expect(recipe(recipes, "TIME_PICKER_SEPARATOR")).toContain(
+      "text-muted-foreground",
+    );
+    expect(recipe(recipes, "TIME_PICKER_CLEAR")).toContain(
+      "text-muted-foreground",
+    );
+
+    // A number field's stepper chevrons sit in the field's own fill and take
+    // the same role; the field chrome is the recipe that fills it.
+    const primitives = readFileSync(
+      new URL("../../primitives/src/recipe/index.ts", import.meta.url),
+      "utf8",
+    );
+    const field = /const FIELD_BASE =\s*"([^"]*)"/.exec(primitives);
+    expect(field?.[1]).toContain("bg-input");
+    expect(
+      readFileSync(
+        new URL(
+          "../../primitives/src/components/NumberField.tsx",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ).toContain("part.theme.colors.mutedForeground");
+
+    // The native host's muted slot is the same role over the same fill, in the
+    // package's own seam: `nativeTextTheme(theme)` defaults to a plain field's
+    // `input` fill and hands the host `mutedForeground` as its muted text.
+    const seam = readFileSync(
+      new URL("./native-text.ts", import.meta.url),
+      "utf8",
+    );
+    expect(seam).toContain("bg: theme.colors[fill]");
+    expect(seam).toContain("textMuted: theme.colors.mutedForeground");
+    expect(seam).toContain(`fill: NativeTextFill = "input"`);
+  });
+
+  it("reports the muted line a field's own fill swallows", () => {
+    const failures = contrastFailures({
+      colors: { ...lightColors, mutedForeground: lightColors.input },
+    });
+
+    expect(
+      failures.filter(
+        ({ foreground, background }) =>
+          foreground === "mutedForeground" && background === "input",
+      ),
+    ).toEqual([
+      {
+        foreground: "mutedForeground",
+        background: "input",
+        ratio: 1,
+        floor: contrastFloors.secondary,
+      },
+    ]);
+  });
+
+  it("keeps the muted line readable in every shipped theme", () => {
+    const styles = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const placements = styles.map((theme) => ({
+      name: theme.name,
+      ratio: contrastRatio(theme.colors.mutedForeground, theme.colors.input),
+      floor: contrastFloorsFor(theme).secondary,
+    }));
+    const hidden = placements.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+
+    expect(hidden).toEqual([]);
+    expect(tightest.name).toBe("Light · Windows XP (Luna)");
+    expect(tightest.ratio?.toFixed(2)).toBe("7.64");
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`field's own fill at ${tightest.ratio?.toFixed(2)}:1`);
   });
 });

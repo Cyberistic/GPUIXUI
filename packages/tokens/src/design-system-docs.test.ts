@@ -255,6 +255,28 @@ describe("docs/design-system.md", () => {
     expect(doc).toContain("`contrastFloors.disabled`");
   });
 
+  it("prints the field fill the muted text role is measured on", () => {
+    const line = doc
+      .split("\n")
+      .find((text) => text.startsWith("| secondary text on background"));
+
+    expect(
+      line,
+      "docs/design-system.md no longer states the secondary-text row",
+    ).toBeDefined();
+
+    // The row lists the surfaces the table measures for the muted role inside a
+    // field, so a pair the contract gains on that fill cannot go unprinted: the
+    // row and the pair fail in opposite directions.
+    const fieldFill = contrastPairs.filter(
+      (pair) =>
+        pair.foreground === "mutedForeground" && pair.background === "input",
+    );
+
+    expect(fieldFill).toHaveLength(1);
+    expect(line).toContain("`input`");
+  });
+
   it("prints the indicator-mark floors and why a status mark is not its fill", () => {
     const row = /an indicator mark[^\n|]*\| ([\d.]+):1 \| ([\d.]+):1 \|/.exec(
       doc,

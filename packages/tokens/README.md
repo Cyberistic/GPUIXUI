@@ -661,7 +661,10 @@ plain field, the page role for a composite one (search, tag and mention fields,
 the chat composer, the inline edit) — because the value, the placeholder and the
 caret are measured against it (`nativeTextFills` is the two-value list). A host
 is handed the theme's mode, families, `inputForeground`/`mutedForeground`, the
-`placeholder` role and `primary` as its caret and accent.
+`placeholder` role and `primary` as its caret and accent. The muted role is
+measured on that fill too: the same pair covers the separator and clear glyph a
+time picker paints inside a field's `input` root and a number field's stepper
+chevrons, so a brand with a tinted fill cannot bury either in silence.
 
 ## For documentation sites
 

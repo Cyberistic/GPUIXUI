@@ -157,6 +157,14 @@ export const contrastPairs: readonly ContrastPair[] = [
   // `nativeTextTheme(theme, "background")`.
   { foreground: "inputForeground", background: "background", floor: "body" },
   { foreground: "placeholder", background: "background", floor: "secondary" },
+  // A field's own fill holds a third text role: the **muted** one. A time
+  // picker paints its separator and its clear glyph `mutedForeground` inside a
+  // root filled `input`, a number field's stepper chevrons the same, and
+  // `nativeTextTheme` hands the runtime `mutedForeground` as `textMuted` over
+  // `bg: input`. The role was measured on every surface *around* a field and on
+  // none a field paints for itself, so a brand with a tinted fill could swallow
+  // the colon between its time segments with every report empty.
+  { foreground: "mutedForeground", background: "input", floor: "secondary" },
   {
     foreground: "mutedForeground",
     background: "background",

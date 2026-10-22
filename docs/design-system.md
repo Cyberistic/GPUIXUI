@@ -529,7 +529,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | ---------- | ------- | ------------- |
 | body text on background/card/popover/muted and on the accent and selected washes | 7:1 | 7:1 |
 | text typed into an input, on `input` and on the page role a composite field paints its fill with | 7:1 | 7:1 |
-| secondary text on background/card/muted/popover and on a selected row | 4.5:1 | 7:1 |
+| secondary text on background/card/muted/popover, on a selected row, and inside a field's own fill (`input`) | 4.5:1 | 7:1 |
 | a selected row's title on its own selection, and the `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash it tints | 7:1 / 4.5:1 | 7:1 / 7:1 |
 | on-colour text, placeholder (on `input` and on the page fill) | 4.5:1 | 7:1 |
 | a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
@@ -565,6 +565,16 @@ at 4.49:1 on its, both under the 4.5:1 floor, so those values moved (§7). The
 caret joined the mark contract on the same fill: `indicatorSurfaces` names
 `input` as its seventh strip, because the native text host paints the caret
 there.
+
+A field's own fill holds a **third** text role besides the value and the
+placeholder: the muted line. A time picker paints its separator and its clear
+glyph `mutedForeground` inside a root filled `input`, a number field's stepper
+chevrons take the same role, and the native host's `textMuted` is the same role
+over the same fill. It was measured on every surface around a field and on none
+inside one, so a brand that tints its field fill could swallow the colon between
+two time segments with every report empty; the pair is measured now at the
+secondary floor, and the tightest shipped placement is Windows XP (Luna) light's
+line inside its own fill at 7.64:1.
 
 The surfaces that carry no text are measured too, because "subtle" is not
 "invisible": a divider, a skeleton fill, the modal veil, a status message's soft
