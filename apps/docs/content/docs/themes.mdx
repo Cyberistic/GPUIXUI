@@ -3,7 +3,7 @@ title: Theme
 description: A live editor for the library's semantic tokens — preview, copy and share.
 ---
 
-import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, indicatorSurfaces, selectionPairs, targetSize } from "@gpuixui/tokens";
+import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, indicatorSurfaces, selectionPairs, seriesColors, seriesSurfaces, targetSize, themes } from "@gpuixui/tokens";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
 real time. The editor reads its defaults from `@gpuixui/tokens` — the base is
@@ -101,14 +101,16 @@ call reports ten independent failures:
   strip it sits on: editing `border` towards `background` is how a card loses
   its edge, a `hover` equal to `popover` is a row that never looks hovered, and
   neither is a contrast pair.
-- **Data series**: `seriesFailures` measures the five categorical colours a chart
-  paints against the three surfaces a plot is drawn on (`background`, `card`,
-  `popover`) at the boundary floor, each pair against `seriesDistinctnessFloor`
-  in OKLab — a blue and a violet of one lightness pass contrast and still read as
-  one series — and each pair again through every `colorVisionDeficiencies`
-  simulation (`protanopia`, `deuteranopia`, `tritanopia`) against
-  `seriesDeficiencyFloor`, because contrast and distance both assume full colour
-  vision and two hues can separate for one reader while collapsing for another.
+- **Data series**: `seriesFailures` measures the
+  {seriesColors(themes.dark).length} categorical colours a chart paints against
+  the {seriesSurfaces.length} surfaces a plot is drawn on (`background`, `card`,
+  `popover`) at the {contrastFloors.boundary}:1 boundary floor, each pair against
+  `seriesDistinctnessFloor` in OKLab — a blue and a violet of one lightness pass
+  contrast and still read as one series — and each pair again through every
+  `colorVisionDeficiencies` simulation (`protanopia`, `deuteranopia`,
+  `tritanopia`) against `seriesDeficiencyFloor`, because contrast and distance
+  both assume full colour vision and two hues can separate for one reader while
+  collapsing for another.
   The editor does not edit the scale, so an edit cannot break it; the readout
   reports it because `auditTheme` does, and a line that only appears for some
   themes would make a passing readout mean less than it says.

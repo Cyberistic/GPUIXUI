@@ -3,7 +3,7 @@ title: Theming
 description: Semantic colour roles, typography, spacing, radius and density — one theme shape for light, dark and high contrast.
 ---
 
-import { colorRoles, indicatorSurfaces, seriesColors, themes } from "@gpuixui/tokens";
+import { colorRoles, contrastFloors, indicatorSurfaces, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
 
 A GPUIxUI theme is plain data. Components never carry a colour literal; they read
 a semantic role such as `colors.primary`, `spacing.md` or `radius.md` from the
@@ -83,8 +83,9 @@ A chart series, a legend swatch or a heat-map region needs colour that carries
 warning, and a hex per chart is the scattered literal the system forbids. A theme
 therefore owns one categorical scale of {seriesColors(themes.dark).length}
 colours, `seriesColors(theme)`, designed per mode and contrast variant. Every
-colour is measured against the three surfaces a plot is drawn on
-(`seriesSurfaces`) at the 3:1 non-text floor, and no two are closer than
+colour is measured against the {seriesSurfaces.length} surfaces a plot is drawn
+on (`background`, `card`, `popover`) at the {contrastFloors.boundary}:1 non-text
+floor, and no two are closer than
 `seriesDistinctnessFloor` in OKLab — contrast alone cannot tell a blue from a
 violet of the same lightness. Both of those contracts assume full colour vision,
 so every pair is also simulated for each `colorVisionDeficiencies` entry

@@ -13,6 +13,8 @@ import {
   isThemeMode,
   retroStyles,
   selectionPairs,
+  seriesColors,
+  seriesSurfaces,
   themes,
   type Theme,
 } from "@gpuixui/tokens";
@@ -576,6 +578,61 @@ describe("the theming page's data series", () => {
 
     expect(start).toBeGreaterThan(colours);
     expect(start).toBeLessThan(builtIn);
+  });
+});
+
+describe("the theming pages' series surfaces", () => {
+  // Both bullets printed "the three surfaces a plot is drawn on" while
+  // `seriesSurfaces` was the authority, and `/docs/themes` also printed "the
+  // five categorical colours" while `/docs/theming` derived the length. A
+  // surface or a scale length added to the package would leave one page
+  // describing a contract the library no longer runs.
+  const printed = `(${seriesSurfaces
+    .map((surface) => `\`${surface}\``)
+    .join(", ")})`;
+  /** Prose wraps, so the list's own line breaks are not a defect. */
+  const flat = (text: string): string => text.replace(/\s+/g, " ");
+  const pages = [
+    { name: "themes.mdx", heading: "The theme audit" },
+    { name: "theming.mdx", heading: "Data series" },
+  ] as const;
+
+  it("derives the count and names every surface a plot is drawn on", () => {
+    const wrong = pages.flatMap(({ name, heading }) => {
+      const body = page(name);
+      const marks = section(body, heading);
+      const tokensImport = body
+        .split("\n")
+        .find(
+          (line) =>
+            line.startsWith("import ") && line.includes("@gpuixui/tokens"),
+        );
+
+      return [
+        ...(tokensImport?.includes("seriesSurfaces")
+          ? []
+          : [`${name}: does not import seriesSurfaces`]),
+        ...(marks.includes("{seriesSurfaces.length}")
+          ? []
+          : [`${name}: prints a literal surface count`]),
+        ...(flat(marks).includes(printed)
+          ? []
+          : [`${name}: does not print ${printed}`]),
+        ...(/\b(three|[0-9]+) surfaces\b/.test(flat(marks))
+          ? [`${name}: keeps a stale surface count`]
+          : []),
+      ];
+    });
+
+    expect(wrong).toEqual([]);
+  });
+
+  it("derives the scale's length on both pages", () => {
+    const audit = section(page("themes.mdx"), "The theme audit");
+
+    expect(seriesColors(themes.dark).length).toBeGreaterThan(1);
+    expect(audit).toContain("{seriesColors(themes.dark).length}");
+    expect(audit).not.toMatch(/\b(five|\d+) categorical colours\b/);
   });
 });
 
