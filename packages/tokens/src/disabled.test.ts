@@ -37,6 +37,7 @@ import {
   disabledOpacity,
 } from "./disabled.js";
 import { fadedPair } from "./fade.js";
+import { keyboardDimPairs } from "./focus-dim.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
 import {
@@ -90,7 +91,7 @@ describe("disabledFadePairs", () => {
     // role — and two labels: its value and its hint.
     const missing = (["input", "background"] as const).flatMap((fill) =>
       (["inputForeground", "placeholder"] as const).flatMap((label) =>
-        (["background", "card", "popover"] as const)
+        (["background", "card", "popover", "muted"] as const)
           .filter(
             (over) =>
               !disabledFadePairs.some(
@@ -105,6 +106,44 @@ describe("disabledFadePairs", () => {
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("measures a field's hint on the strips the keyboard dim measures it on", () => {
+    // The two mechanisms composite the same field on the same four strips — the
+    // page, a card, a popover and the `muted` toolbar or sidebar
+    // (`docs/design-system.md` §7). The fade carried three, so a disabled search
+    // field in a sidebar was the one faded control with no placement at all,
+    // while the dim measured it. A strip one table measures and the other does
+    // not is the bug this case holds.
+    const strips = (
+      pairs: ReadonlyArray<{ readonly label: string; readonly over: string }>,
+    ): ReadonlySet<string> =>
+      new Set(
+        pairs
+          .filter(({ label }) => label === "placeholder")
+          .map(({ over }) => over),
+      );
+
+    const faded = strips(disabledFadePairs);
+    expect(faded.has("muted")).toBe(true);
+    expect(faded).toEqual(strips(keyboardDimPairs));
+  });
+
+  it("reports a hint that fades into a sidebar, not only into a page", () => {
+    // A brand with a dark sidebar and a light content area — the desktop layout
+    // this table missed. Its composite search field fades its hint into the
+    // toolbar at 1.30:1 while the same field on the page still reads 2.03:1, so
+    // the strip is what decides the measurement rather than a redundant copy of
+    // the page placement.
+    const darkSidebar = { colors: { ...lightColors, muted: "#2A2A2A" } };
+    const hintOn = (strip: "background" | "muted") =>
+      disabledFadeFailures(darkSidebar).find(
+        ({ fill, label, over }) =>
+          fill === "background" && label === "placeholder" && over === strip,
+      );
+
+    expect(hintOn("muted")?.ratio).toBeCloseTo(1.3, 2);
+    expect(hintOn("background")).toBeUndefined();
   });
 
   it("reads each field's fill from the painter that paints it", () => {
@@ -143,9 +182,10 @@ describe("disabledFadePairs", () => {
   });
 
   it("measures the tightest field placement the shipped styles paint", () => {
-    // The number `docs/tokens.md` prints: the hue of the muted strip pushes a
-    // composite field's hint lowest in the authored Windows 7 light look. A
-    // palette edit that moves it fails here and in the page.
+    // The number `docs/tokens.md` prints: a `muted` toolbar is the darkest strip a
+    // composite field sits on, so the authored Windows 7 light look's hint on it
+    // is the lowest placement in the table. A palette edit that moves it fails
+    // here and in the page.
     const tightest = [...shipped, ...styled, ...looks]
       .flatMap((theme) =>
         disabledFadePairs
@@ -163,9 +203,9 @@ describe("disabledFadePairs", () => {
         (entry.ratio ?? 0) < (low.ratio ?? 0) ? entry : low,
       );
 
-    expect(tightest.theme).toBe("Light · Windows");
-    expect(tightest.pair).toBe("background/placeholder on background");
-    expect(tightest.ratio?.toFixed(2)).toBe("1.99");
+    expect(tightest.theme).toBe("Light · Windows 7 (Aero)");
+    expect(tightest.pair).toBe("background/placeholder on muted");
+    expect(tightest.ratio?.toFixed(2)).toBe("1.96");
 
     // The catalogue prints the same number and names the fills and labels the
     // table measures, so the page cannot teach a placement the report dropped.
@@ -173,7 +213,9 @@ describe("disabledFadePairs", () => {
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
-    expect(page).toContain("composite hint at **1.99:1**");
+    expect(page).toContain(
+      "composite hint on its `muted` toolbar at **1.96:1**",
+    );
     expect(page).toContain("both of its fills and both of its labels");
   });
 });
@@ -371,6 +413,23 @@ describe("the pages that teach the disabled state", () => {
       expect(text, page).toContain("paintsFilledSurface");
       expect(text, page).toContain("`packages/components/src/menu/item.tsx`");
     });
+  });
+
+  it("prints the strips a field's fade is measured on, and the tightest one", () => {
+    // The inventory row printed three strips and a stale 1.95:1 while the
+    // catalogue printed 1.99:1, so the row drifted from the report it describes.
+    // All three surfaces now name the tightest placement the case above derives,
+    // and the row names the fourth strip the table gained.
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, page).toContain(
+        "composite hint on its `muted` toolbar at **1.96:1**",
+      );
+    });
+    const inventory = flat(read("../../../COMPONENTS.md"));
+    expect(inventory).toContain("the four strips a field sits on");
+    expect(inventory).toContain(
+      "composite hint on its muted toolbar at 1.96:1",
+    );
   });
 
   it("names the two painters that still fade", () => {

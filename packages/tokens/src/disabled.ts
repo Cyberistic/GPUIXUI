@@ -58,8 +58,19 @@ const fieldFills = ["input", "background"] as const;
  */
 const fieldLabels = ["inputForeground", "placeholder"] as const;
 
-/** The surfaces a field can sit on. */
-const fieldStrips = ["background", "card", "popover"] as const;
+/**
+ * The surfaces a field can sit on: a page, a card, a popover and the `muted`
+ * toolbar or sidebar a search or filter field lives in.
+ *
+ * The fourth strip is the design system's (`docs/design-system.md` §7 names all
+ * four) and the keyboard dim already measures a field's hint there, so the fade
+ * carried the one composite of a placed field. It is not a redundant placement:
+ * a fade is a share of the strip behind the control, and a brand with a dark
+ * sidebar and a light content area — `muted: "#2A2A2A"` over the base light page
+ * — composes the composite hint down to 1.30:1 while the same field on the page
+ * reads 2.03:1.
+ */
+const fieldStrips = ["background", "card", "popover", "muted"] as const;
 
 /**
  * The controls that fade rather than swap roles: the three filled actions and a
@@ -73,10 +84,10 @@ const fieldStrips = ["background", "card", "popover"] as const;
  * of its labels. The table carried only the plain field's `input` fill and its
  * value, so the fade a composite field paints — the page role, the one a
  * toolbar's search or a command panel's mention field uses — was the one control
- * no report composited. Every placement clears the floor (tightest: the authored
- * Windows 7 look's composite hint, 1.95:1), so this is coverage rather than a
- * palette change: the pair is what stops a brand that tints its page from
- * shipping a hint nobody can read.
+ * no report composited. The strips are the four a field sits on, the `muted`
+ * toolbar included, because that is where a fade is decided: the same composite
+ * hint reads 1.96:1 on the Windows 7 look's toolbar and 1.30:1 on a brand's dark
+ * sidebar while its page placement still clears the floor.
  */
 export const disabledFadePairs: readonly DisabledFadePair[] = [
   { fill: "primary", label: "primaryForeground", over: "background" },

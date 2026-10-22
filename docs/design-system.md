@@ -475,15 +475,20 @@ floor the page clears. So the fade is measured on `background` for a filled
 action, and a disabled action on a card, a popover or a group strip paints the
 neutral pair instead: `disabledAction(theme)` is `disabled` behind
 `disabledForeground`, the pair the contrast table already measures on every
-surface a control sits on. **A field is measured on all three content surfaces**,
+surface a control sits on. **A field is measured on all four strips it sits on**,
 with both fills and both labels: a plain field paints `input`, a composite field
 — a search, tag or mention field, the inline edit, the chat composer, the colour
 picker's hex field — paints the page role as its own fill, and each carries a
-value and a hint. The tightest of those placements is the Windows light platform
-style's composite hint at **1.99:1**, above its floor; the pairs are
-coverage, so a brand that tints its page cannot ship a hint nobody can read. A
-filled action and the menu row already paint the pair; the two recipe sets and
-the components' own `Button` remain the interlock in `TODO.md` → Interlocks.
+value and a hint. The strips are the page, a card, a popover and the `muted`
+toolbar or sidebar a search or filter field lives in — the last one is where a
+fade is decided rather than a copy of the page, so a brand with a dark sidebar and
+a light content area composes its hint down to 1.30:1 while the page placement
+still reads 2.03:1. The tightest of those placements is the Windows 7 (Aero)
+look's composite hint on its `muted` toolbar at **1.96:1**, above its floor; the
+pairs are coverage, so a brand that tints its page cannot ship a hint nobody can
+read. A filled action and the menu row already paint the pair; the two recipe
+sets and the components' own `Button` remain the interlock in `TODO.md` →
+Interlocks.
 
 **The disabled fill must not wear an enabled control's face.** A disabled
 control does not sit on a strip, it replaces the control, so the neutral fill is

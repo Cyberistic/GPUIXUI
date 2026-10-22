@@ -1532,17 +1532,22 @@ make the library's own disabled state disappear), and
 
 Each `DisabledFadePair` names a control the fade is applied to — `fill`, `label`
 and the `over` surface — for the three filled actions on the page and a field on
-`background`, `card` and `popover`; `disabledFadePairs` is that table. A field is
+`background`, `card`, `popover` and a `muted` toolbar or sidebar; the four strips
+are the ones a field sits on (§7 of the design system) and the ones the keyboard
+dim already measures its hint on; `disabledFadePairs` is that table. A field is
 listed with **both of its fills and both of its labels**: a plain field fills
 `input`, while a composite field — a search, tag or mention field, the inline
 edit, the chat composer and the colour picker's hex field — paints the page role
 as its own fill (`bg-background` in `@gpuixui/tw`'s recipes), and each carries a
 value and a hint. The pairing is the coverage: the table held one fill and one
 label, so the fade a composite field paints was the one control no report
-composited, and a hint is the lowest-contrast label a field carries at rest. Every
-placement clears the floor — the tightest is the Windows light platform style's
-composite hint at **1.99:1** — so the pairs close a gap rather than move a
-palette. The three
+composited, and a hint is the lowest-contrast label a field carries at rest. The
+fourth strip is what a fade is decided on rather than a copy of the page: a brand
+with a dark sidebar and a light content area (`muted: "#2A2A2A"` over the base
+light page) composes a composite hint down to **1.30:1** while the same field on
+its page still reads 2.03:1. Every shipped placement clears the floor — the
+tightest is the Windows 7 (Aero) look's composite hint on its `muted` toolbar at
+**1.96:1** — so the pairs close a gap rather than move a palette. The three
 filled actions stay in it although the shipped painter wears the pair: the table
 measures the paint a re-introduced fade would produce, and the gate reports it.
 The measurement composites twice, because the
