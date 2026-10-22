@@ -1816,6 +1816,16 @@ a workaround for two live sessions sharing one worktree; see
       Proof: `Slider.test.tsx`'s `derives the thumb names from the group's
       trimmed name` (both directions measured: the old interpolation reports
       `"  Price   minimum"`). Docs in `docs/range-slider.mdx`. 705 unit
+`[x]` `packages/primitives`: the **switch-slide window test compared an
+      animating pixel exactly** — after `click` + `flush` it asserted the thumb
+      was still at the resting offset, but a frame delivered under load has
+      already advanced the motion a fraction, so the suite failed with
+      `expected 629.5 to be 629` in a run that overlapped other work and passed
+      alone. The guard is now the property the bug is: the paint has not
+      **arrived** (`>= rest`, `< rest + travel`), so an instant jump still fails
+      (`expected 639 to be less than 639` with the transition zeroed) while an
+      early frame does not. `runtime/switch.runtime.test.tsx`, header and case
+      comment moved with it. 203 runtime
 `[x]` `packages/primitives`: the **scroll region's tab stop was invisible to
       assistive technology** — the viewport declared `role="group"` only when a
       caller passed `label`, and GPUix builds an accessibility node only for an

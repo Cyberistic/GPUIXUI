@@ -7,10 +7,10 @@
  * component hands that value to `motion` as the animation target.
  *
  * Only a running frame can show the difference: the declared element tree says
- * "animate to 14", and this measures that the paint is still at the resting
- * offset before the motion clock moves and at the far offset after it. It also
- * pins the geometry the slide depends on — the knob stays inside the pill in
- * both states.
+ * "animate to 14", and this measures that the paint has not reached the far
+ * offset before the motion clock moves (a frame may already have advanced it a
+ * fraction under load) and is exactly there after it. It also pins the geometry
+ * the slide depends on — the knob stays inside the pill in both states.
  */
 
 import { expect, it } from "vitest";
@@ -72,8 +72,13 @@ it("slides the thumb to the far edge when the state changes", async () => {
 
   runtime.click("s");
   runtime.flush();
-  // The click commits the new motion target; the paint is still at rest.
-  expect(thumbOf(runtime).x).toBe(rest.x);
+  // The click commits the new motion target. The animation may already have
+  // advanced a fraction of a pixel by the time the frame is read under load, so
+  // the property is "has not arrived", not "exactly at rest" — an instant jump
+  // (no motion) paints the far edge in this very frame and fails here.
+  const afterClick = thumbOf(runtime).x;
+  expect(afterClick).toBeGreaterThanOrEqual(rest.x);
+  expect(afterClick).toBeLessThan(rest.x + travel);
 
   runtime.renderer.clockFastForward(300);
   runtime.flush();
