@@ -706,7 +706,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 109/109
+`[x]` `[██████████]` 110/110
 
 `[x]` Hold the **headless suite's printed total** to the registry again — the
       data workstream's `6aa8cb15` added `data-table-core` to
@@ -2885,6 +2885,43 @@ a workaround for two live sessions sharing one worktree; see
       `apps/playground/README.md` §`date-picker-lifecycle`,
       `.artifacts/live/date-picker-{open,chosen,cleared}.png`.
 
+`[x]` Measure the **shipped `@gpuixui/data` table in a window** — the headless
+      `data-table-core` mounts the same example, but four of the table's rules
+      ride on a delivery path only a window has: a press is hit-tested, a row's
+      focus has to follow the committed `tabIndex` (`renderer.focusElement`
+      refuses an element still outside the tab order — the rule the example's
+      `useLayoutEffect` documents), the header's column menu is an anchored
+      layer, and the divider drag is eight pointer moves. The
+      `data-table-lifecycle` probe mounts the example from the package's
+      registry and asserts its own readout: the initial `60 rows · 0 selected ·
+      cols=name,status,size · w=260 · content=460 · unsorted`, a press choosing
+      the row it hit with the `selected` wash counted in a capture and the focus
+      on the row, arrows walking `file-3`/`file-2` through the committed tab
+      stop, a cmd press toggling to 2 selected, a header press sorting
+      `name-asc`/`name-desc` with the selection kept and `file-060` at the top,
+      a wheel moving the rows under a header that keeps its `y`, the shipped
+      divider's `+40` drag widening `w=300`/`content=500` in the readout and in
+      the painted header and cell, the column menu hiding Status
+      (`cols=name,size · content=350`, the later column shifted left by exactly
+      110), Reset restoring the three columns, a typed `001` narrowing to
+      `1 rows · 0 selected`, and select-all-then-`file` widening back to
+      `60 rows · 2 selected`. 43 checks, `--only data-table-lifecycle`, green
+      on 0.11.0 (~9 s, three consecutive runs). Fixture
+      `src/live/data-table.ts` (ids, declared widths, content arithmetic,
+      readout spelling) + `data-table.test.ts` (7 cases: the widths and content
+      read from the example's `FILE_COLUMNS`, the readout template and its three
+      moves, the derived sort/menu ids, the row/cell ids, the probe held to the
+      fixture, the README section). Negative control measured:
+      expecting `files-row-file-4` on the down step fails
+      `ArrowDown moves the choice and the focus to the next record` with
+      `expected "files-row-file-4", got "files-row-file-3"`, exit `1`. Two
+      measured facts the rows below carry: a press commits on the next frame (a
+      readout read on the press frame still shows the old count), and the
+      filter's release is **render-time** — a wider query paints the chosen
+      records again, which the data package's README states as permanent. Evidence:
+      `apps/playground/README.md` §`data-table-lifecycle`,
+      `.artifacts/live/data-table-{selected,resized,filtered}.png`.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -4791,6 +4828,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Re-anchor the **pagination page's radius claim** after plan 160's Phase 2 — the uncommitted rewrite of `packages/components/src/internal/button.tsx` onto `@gpuixui/primitives/button` no longer reads `theme.radius.md`, so `src/page-radius-truth.test.ts`'s `reads the theme's radius only where the painter does` fails with `pagination.mdx: internal/button.tsx never reads theme.radius.md` (measured 2026-10-22 on the shared checkout). The primitive compiles `rounded-md` from the fixed shadcn scale (ADR 0006), so the page's claim moves with the paint, not the test | components (the page and the painter's owner; the migration is in flight) | **open — the only red in `nub run --filter @gpuixui/components test` on 2026-10-22** |
 | Page a **sideways scroll region** — `scrollTarget` carried one page number (the scroller's height) and moved only the vertical axis, so `ScrollArea axis="horizontal"` answered `PageUp`/`PageDown` with `None` and a reader could move one line per key; a two-axis region paged by the height, which is the right number only on the axis it was measured on. Measured on 0.11.0 (`layout.runtime.test.tsx`): a 600px card in a 200×60 scroller wheeled to `x=-100`, a Right arrow to `-132`, and `PageDown` — nothing, still `-132`. `ScrollMetrics.page` is the painted box (`{ width, height }`), `pageAxis` picks the vertical axis when the region scrolls it and the horizontal one when that is all it scrolls, and a page key's direction comes from its `y`; the component hands over `box.width`/`box.height`. Proof: `core/scroll.test.ts`'s `pages a sideways region by its width, not by a height it never shows` (the unit case fails as `_tag: "None"` without the fix) and `layout.runtime.test.tsx`'s two window cases — sideways paging by the 200px width and a two-axis page leaving `x` at `-100` (measured with the old `scroll.ts`, `expected -332, got -132`); `nub run --filter @gpuixui/primitives test` 912/912, `test:runtime` 271/271. `docs/scroll-area.mdx` §Keyboard states the rule, `docs.test.ts`'s `teaches the axis a page key moves` holds both directions (the page and the call site), and the `Scrollable containers` row records it | primitives | **resolved 2026-10-22** |
+
+| State the **render-time retention** a filter applies to a selection — `packages/data/README.md` says "A hidden row's selection must be cleared: `narrowTable` releases it in the same commit; `useTable` does the same for a sort/filter change", which a consumer reads as permanent, and `useTable` holds `chosen` and computes `selection = retainSelection(chosen, keys)` during render: `data-table-lifecycle` measured in a window that a typed `001` narrows to `1 rows · 0 selected` (the release paints on the first frame), then a query the whole set matches paints `60 rows · 2 selected` — the same two records chosen again, because nothing committed the release. A grid that needs a permanent clear must call `clear()` (or commit the retained set) on the query change. The Tier 3 **Row selection** / **Filtering controls** rows and the `/docs/data-display` rules should say it, and the README line should stop implying a permanent release | data (the README, the two `COMPONENTS.md` rows and `packages/data/docs`) | **open** |
+| The **Property panels** inventory row is malformed and silences the whole data-display table — its Notes cell prints the union `` `kind: "readonly" \| "editable"` `` with a bare pipe, so the row carries five cells; `apps/docs/src/lib/inventory.test.ts` reports `line 259: expected 4 cells under a tier, found 5`, and the site's parser drops every row on `/docs/data-display` (the lane pages read the same table). Escape the pipe as `\|`. Measured 2026-10-22 on `master`: `nub run --filter @gpuixui/docs test` is 923/930 with this case failing; the other six failures are in-flight component/data page edits | data (owns the Tier 3 rows in `COMPONENTS.md`) | **open** |
 
 ## Phase D — data and workspace components
 
