@@ -2437,10 +2437,11 @@ const controlStyle = (
 });
 ```
 
-The two component packages' ring seams
+Both component packages' ring seams
 (`packages/primitives/src/core/focus.ts`, `packages/components/src/internal/theme.ts`)
-are where that rule was first written; this helper is its one home, and a seam
-that has not delegated to it yet is tracked in `TODO.md`.
+**delegate** to this helper: each one calls `controlFocusRing` and turns the
+absent ring into `{}`, so no component branches on a control's state and the
+rule has a single home.
 
 Both rings were measured in a real window on `@gpuix/native@0.11.0` (the
 playground's `focus-visible` live probe): Tab paints the outline and dims the

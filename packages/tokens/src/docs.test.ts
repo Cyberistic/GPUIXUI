@@ -72,6 +72,13 @@ const importedNames = (document: string): ReadonlyArray<string> =>
 
 const roleRow = (role: string): string => `| \`${role}\` |`;
 
+/** One `## ` section of the catalogue, whitespace flattened so prose can be read as a sentence. */
+const section = (heading: string): string => {
+  const start = catalogue.indexOf(heading);
+  const end = catalogue.indexOf("\n## ", start + 1);
+  return catalogue.slice(start, end).replace(/\s+/g, " ");
+};
+
 /** The runtime exports of the package, excluding nothing: every one is public. */
 const exportedValues = Object.keys(Tokens);
 
@@ -246,11 +253,7 @@ describe("focus adoption claim", () => {
  * helper exists to prevent.
  */
 describe("the control ring's claim", () => {
-  const focus = (() => {
-    const start = catalogue.indexOf("## Focus");
-    const end = catalogue.indexOf("\n## ", start + 1);
-    return catalogue.slice(start, end).replace(/\s+/g, " ");
-  })();
+  const focus = section("## Focus");
 
   it("names the helper and both of its states", () => {
     expect(focus).toContain("controlFocusRing");
@@ -267,6 +270,39 @@ describe("the control ring's claim", () => {
 
     expect(source).toContain("outlineColor: theme.colors.destructive");
     expect(source).toContain("if (state.disabled === true)");
+  });
+});
+
+/**
+ * Guards the catalogue's statement that the two ring seams **delegate** to
+ * `controlFocusRing`. The page said they were "where that rule was first
+ * written" and that "a seam that has not delegated to it yet is tracked in
+ * `TODO.md`" — true while the helper was new, false the moment both packages
+ * adopted it: a reader went looking for a task that no longer existed, and a
+ * seam that regressed to its own copy of the rule would have kept the page
+ * green. Both directions are read here, so the sentence and the sources move
+ * together.
+ */
+describe("the ring seams delegate", () => {
+  const seams = [
+    "../../../packages/primitives/src/core/focus.ts",
+    "../../../packages/components/src/internal/theme.ts",
+  ];
+
+  it("says both seams delegate, not that one is owed", () => {
+    const focus = section("## Focus");
+
+    expect(focus).toContain("delegate");
+    expect(focus).not.toContain("has not delegated");
+    expect(focus).not.toContain("tracked in `TODO.md`");
+  });
+
+  it("holds that sentence to the sources", () => {
+    const own = seams.filter(
+      (path) => !read(path).includes("controlFocusRing("),
+    );
+
+    expect(own).toEqual([]);
   });
 });
 
