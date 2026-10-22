@@ -1,0 +1,88 @@
+---
+title: Log viewers
+description: A virtualized, tail-anchored log list with a level filter, a follow-tail toggle and per-level tints.
+---
+
+`LogViewer` composes `@gpuixui/data`'s `VirtualList` (children mode: the
+runtime's `<virtual-list>` builds and paints only the rows around the viewport)
+with a pure line grammar and a level filter. A toolbar holds the level filter and
+the follow-tail toggle; each row paints its level token in the status tone it
+maps to.
+
+## Usage
+
+```tsx
+import { LogViewer } from "@gpuixui/files";
+
+<LogViewer
+  height={240}
+  lines={lines}
+  enabledLevels={levels}
+  onEnabledLevelsChange={setLevels}
+  followTail={follow}
+  onFollowTailChange={setFollow}
+/>;
+```
+
+The full screen is `packages/files/examples/log-viewer.example.tsx`, which the
+native playground mounts as the `log-viewer` example.
+
+## The line grammar
+
+`parseLogLine` reads a `level message` line: an optional leading level token —
+one of `error`, `warn`, `info`, `debug`, `trace`, case-insensitive, optionally
+bracketed `[error]` or followed by a colon — then the message. A line without a
+level token is the whole message at `info`, so a parse never drops a line, and
+the `warning` alias is read as `warn`. `filterByLevel` narrows entries to the
+enabled set, and `levelTone` answers the status tone a level tints in — `error`
+to `destructive`, `warn` to `warning`, `info` to `info`, and the quiet levels to
+none (`mutedForeground`).
+
+## Behaviour
+
+The list is bottom-anchored (`alignment="bottom"`) and follows appends while
+`followTail` is on; the reader scrolls up to read history, and the toggle is app
+state plus the list's own follow — the same composition `log-viewer` measured in
+a window. The level filter is a `ToggleGroup` over the five levels; a row whose
+level is filtered out is not painted.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `lines` | `string[]` | — | the raw log lines, one per row |
+| `height` | `number` | — | a definite viewport height |
+| `rowHeight` | `number` | the density's `rowHeight` | the painted height of one row |
+| `enabledLevels` | `LogLevel[]` | every level | the enabled levels; omit to let the viewer hold its own |
+| `onEnabledLevelsChange` | `(levels: LogLevel[]) => void` | — | reports the enabled levels after every change |
+| `followTail` | `boolean` | `true` | follow appends; omit to let the viewer hold its own |
+| `onFollowTailChange` | `(follow: boolean) => void` | — | reports the follow state after every change |
+| `testId` | `string` | — | the list's test id |
+
+## Theming
+
+Each level token paints the readable `foreground` of its status tone
+(`statusTone`), and the message paints `foreground`; `debug` and `trace` paint
+`mutedForeground`. Both columns use the monospace `code` text role.
+
+## Limitations
+
+- Children mode keeps every React child and lets the runtime skip the build and
+  paint off screen. A log of millions of rows uses `@gpuixui/data`'s
+  `createWindowCalculator` and `VirtualList` in `itemCount` mode instead, with
+  `followTail` still handled by the runtime.
+- The parser is the documented `level message` grammar; a caller with a richer
+  format (timestamps, JSON) parses to `LogEntry` itself and renders rows.
+- The docs site cannot render this component live — it is a GPUix host tree,
+  not DOM. The code above is the real source.
+
+## Verification
+
+`src/log/logic.test.ts` (7 tests) holds the grammar (a level token and the
+message it leaves, the `warning` alias), a message with no level kept intact, a
+word that only starts with a level name not being chopped, the level filter and
+the tone mapping.
+
+```sh
+nub run --filter @gpuixui/files test
+```
