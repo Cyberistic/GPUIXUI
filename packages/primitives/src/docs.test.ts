@@ -607,6 +607,62 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("cites the window's paste measurement instead of the gap", () => {
+    // Bug guarded: the page, the inventory record and the catalogue row said a
+    // code field's paste was unverified while `otp-paste-lifecycle` had already
+    // measured it in a real window, so a reader was told the library had not
+    // observed the one path the probe drives. The absence of `onPaste` is still
+    // true; the sentence has to name the probe and what it read, not the gap.
+    const page = read("otp-field.mdx");
+    const limitations = Option.getOrElse(bodyOf(page, "Limitations"), () => "");
+    const verification = Option.getOrElse(
+      bodyOf(page, "Verification"),
+      () => "",
+    );
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = Option.getOrElse(
+      Arr.findFirst(catalogue.split("\n"), Str.startsWith("| OTP Field |")),
+      () => "",
+    );
+    const record = Option.getOrElse(
+      Arr.findFirst(inventory, (entry) => entry.name === "OTP Field"),
+      () => expect.fail("the inventory has no OTP Field record"),
+    );
+    const recordSays = (text: string): boolean =>
+      Arr.some(record.limitations, Str.includes(text));
+
+    expect({
+      absence: limitations.includes("There is no `onPaste`"),
+      probe: limitations.includes("`otp-paste-lifecycle`"),
+      distribution: limitations.includes("the field fills\n  it forward"),
+      truncation: limitations.includes("truncates at six"),
+      testRenderer: limitations.includes("`TestRenderer` drives no"),
+      verified: verification.includes("`otp-paste-lifecycle`"),
+      rowMeasured: row.includes("**Paste is measured, not provided**"),
+      rowProbe: row.includes("`otp-paste-lifecycle` window probe"),
+      recordMeasured: recordSays("measured by otp-paste-lifecycle"),
+      retractedPage: limitations.includes("Paste is unverified"),
+      retractedRow: row.includes("Paste is unverified"),
+      retractedRecord: recordSays("Paste is unverified"),
+    }).toEqual({
+      absence: true,
+      probe: true,
+      distribution: true,
+      truncation: true,
+      testRenderer: true,
+      verified: true,
+      rowMeasured: true,
+      rowProbe: true,
+      recordMeasured: true,
+      retractedPage: false,
+      retractedRow: false,
+      retractedRecord: false,
+    });
+  });
+
   it("is indexed by the package's own page table", () => {
     const index = read("README.md");
     const linked = Arr.filterMap(

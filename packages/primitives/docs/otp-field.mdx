@@ -170,11 +170,14 @@ cell fill. The ring still marks where the focus is.
 
 ## Limitations
 
-- **Paste is unverified.** `@gpuix/native` 0.11.0 has no `onPaste` and the
-  `TestRenderer` has no clipboard simulation. A multi-character `onValueChange`
-  fills forward from the receiving cell — proven as a pure rule — but the real
-  clipboard path has not been observed; it is documented as unverified rather
-  than claimed.
+- **There is no `onPaste`.** `@gpuix/native` 0.11.0 exposes no paste event, so a
+  pasted code arrives as one multi-character `onValueChange` and the field fills
+  it forward from the cell that received it. Measured in a window
+  (`otp-paste-lifecycle`): a six-character copy from a shipped `Input` fills all
+  six cells, reports one edit and one completion and leaves focus in the last
+  cell; a nine-character paste truncates at six and does not complete twice; a
+  paste over the third cell keeps the first two. The `TestRenderer` drives no
+  clipboard, so the native suite measures the distribution rule only.
 - **Arrows do not repeat.** They are handled on key up, because the editor
   consumes their key down.
 - **The code is contiguous.** Clearing a middle character shifts the following
@@ -191,7 +194,8 @@ cell fill. The ring still marks where the focus is.
 - `src/core/otp.test.ts` — normalisation and truncation, cell padding, one-char
   replacement and advance, accumulated-text stripping, multi-character fill,
   range clamping, Backspace and navigation rules.
-- `src/components/OTPField.test.tsx` — `length` named inputs, per-cell handlers,
+- `src/components/OTPField.test.tsx` — `length` named inputs, one React key per
+  default cell, per-cell handlers,
   click-to-pick, autoFocus on the first cell, one ring, destructive borders,
   square geometry, disabled guards, one roving tab stop (partial, full and
   focused), a composed cell carrying its index's value, name and handlers, a
@@ -205,6 +209,10 @@ cell fill. The ring still marks where the focus is.
   input, submit and the tab order; Tab enters once at the cell the code reached
   and leaves the group; a caller's cell composition still types, distributes and
   reports the code. Measured in a window 2026-10-17; Enter on 2026-10-22.
+- `apps/playground`'s `otp-paste-lifecycle` — the clipboard half in a real window:
+  a copy from a shipped `Input` pasted with `cmd-v` fills the shipped field
+  forward, a longer paste truncates, a paste over the third cell keeps the first
+  two, and each path reports the completions and edits above.
 
 ```sh
 nub run --filter @gpuixui/primitives test

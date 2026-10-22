@@ -534,7 +534,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "Paste is unverified: the runtime exposes no onPaste",
+      "No onPaste: a pasted code arrives as one multi-character edit and fills forward (measured by otp-paste-lifecycle)",
       "Arrows are handled on key up, so they do not repeat",
       "Clearing a middle character shifts the following ones left",
     ],
