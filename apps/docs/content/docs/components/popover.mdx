@@ -105,13 +105,13 @@ is an ordinary button — `Enter` and `Space` toggle it.
 | Part | Reads |
 | ---- | ----- |
 | surface | `popover` and `popoverForeground` |
-| edge | a `foreground` ring at 5% — 10% in the dark theme |
-| lift | the `lg` elevation step |
-| corners | `radius` |
-| trigger | the button roles, plus `focusRing(theme)` |
+| edge and lift | a 1px `foreground` ring at 5% (`ring-1`); the recipe's `shadow-lg` is superseded by that ring, so the surface has no lift |
+| corners | 24px — the recipe's `rounded-3xl`, a fixed shadcn metric rather than the theme's radius scale |
+| trigger | the button roles, plus `keyboardRing(theme)` — the `focusVisible` outline, so a press paints none |
 
-Shadows are a single theme step rather than a shadcn `shadow-lg` literal, so the
-popover and a dialog lift by the same rule.
+The ring is 5% of `foreground` in both modes: the recipe's
+`dark:ring-foreground/10` is skipped, because the theme owns the mode rather
+than a `dark:` variant.
 
 ## Accessibility and limitations
 

@@ -141,8 +141,9 @@ without owning the highlight.
 
 | Part | Reads |
 | ---- | ----- |
-| surface | `popover` and `popoverForeground`, `radius.md`, `border` |
-| lift | the `md` elevation step |
+| surface | `popover` and `popoverForeground` |
+| edge and lift | a 1px `foreground` ring at 5% (`ring-1`); the recipe's `shadow-lg` is superseded by that ring, so the surface has no lift |
+| corners | 24px — the recipe's `rounded-3xl`, a fixed shadcn metric rather than the theme's radius scale |
 | row height | `controlHeight(theme, "sm")` — **28px** at the comfortable density |
 | highlight | `hover`, plus a 2px left bar in `accent` |
 | destructive row | `statusTone(theme, "destructive").foreground` — the role measured as page text |

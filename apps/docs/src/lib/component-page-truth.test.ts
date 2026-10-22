@@ -200,7 +200,10 @@ describe("the curated component pages", () => {
     expect(source).toContain("backgroundColor: theme.colors.selected");
 
     const level = /useSurfaceTiming\("([a-z]+)"\)/.exec(source)?.[1];
-    expect(level, "tabs.tsx no longer names its surface timing level").toBeDefined();
+    expect(
+      level,
+      "tabs.tsx no longer names its surface timing level",
+    ).toBeDefined();
     const duration = new RegExp(`\\b${level}\\b:\\s*(\\d+)`).exec(
       read("packages/motion/src/timing.ts"),
     )?.[1];
@@ -256,6 +259,61 @@ describe("the curated component pages", () => {
     expect(text).toContain("`brandText(theme)`");
     expect(text).not.toContain("text in the primary role");
     expect(text).not.toContain("| `link` | `primary` |");
+  });
+
+  it("describe the single shadow the overlay recipes paint", () => {
+    // `StyleDesc` carries one `boxShadow` slot (the native API also accepts a
+    // list), and the shadcn recipes list `ring-1` after `shadow-*`, so the last
+    // shadow utility wins: a dialog, popover or menu paints a 1px
+    // `foreground` ring at 5% and no elevation. The four curated overlay pages
+    // claimed a border and an elevation step.
+    const recipes = read("packages/tw/src/recipes.ts");
+    const recipe = (name: string): string =>
+      new RegExp(`export const ${name} =\\s*\\n?\\s*"([^"]+)"`).exec(
+        recipes,
+      )?.[1] ?? "";
+
+    const premises = ["DIALOG_CONTENT", "POPOVER_CONTENT", "MENU_CONTENT"].map(
+      (name) => {
+        const value = recipe(name);
+        return {
+          name,
+          named: value !== "",
+          ringWins: value.lastIndexOf("ring-1") > value.indexOf("shadow-"),
+        };
+      },
+    );
+    expect(
+      premises
+        .filter((premise) => !premise.named)
+        .map((premise) => premise.name),
+      "the recipe table lost an overlay surface",
+    ).toEqual([]);
+    expect(
+      premises.filter((premise) => !premise.ringWins).map((p) => p.name),
+      "the recipe paints its elevation because the ring no longer comes last",
+    ).toEqual([]);
+
+    const overlay = (file: string): string =>
+      read(`apps/docs/content/docs/components/${file}`).replace(/\s+/g, " ");
+    const overlays = [
+      "dialog.mdx",
+      "popover.mdx",
+      "dropdown-menu.mdx",
+      "command-menu.mdx",
+    ];
+
+    expect(
+      overlays.filter((file) => !overlay(file).includes("has no lift")),
+      "these pages do not state where the recipe's ring leaves the elevation",
+    ).toEqual([]);
+    expect(
+      overlays.filter((file) => overlay(file).includes("elevation step")),
+      "these pages still claim an elevation the recipe does not paint",
+    ).toEqual([]);
+
+    expect(overlay("popover.mdx")).not.toContain("10% in the dark theme");
+    expect(overlay("popover.mdx")).toContain("keyboardRing(theme)");
   });
 
   it("agree with the inventory row for the component", () => {
