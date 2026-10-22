@@ -245,6 +245,21 @@ describe("Carousel", () => {
     expect(displays(gallery)).toEqual(["none", "flex", "none"]);
 
     gallery.unmount();
+
+    // A caller's index is usually arithmetic, and `Math.floor(offset / width)`
+    // stamps `NaN` before a width has been measured. The clamp passes it
+    // through, so an unreadable index used to hide every slide — and keep them
+    // hidden, because the step compares against it and never matches.
+    const unreadable = renderComponent(
+      <Gallery value={Number.NaN} onValueChange={onValueChange} />,
+    );
+
+    expect(displays(unreadable)).toEqual(["flex", "none", "none"]);
+
+    clickCentreOf(unreadable, "next");
+    expect(onValueChange).toHaveBeenLastCalledWith(1);
+
+    unreadable.unmount();
   });
 
   it("names the region and both controls", () => {

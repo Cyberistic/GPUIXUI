@@ -208,7 +208,8 @@ theme changes the frame with no code change — see [Theming](/docs/theming).
 
 `src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (17 tests):
 every slide mounted and one displayed, control stepping, edge clamping, loop
-wrapping, arrows and Home/End, a controlled carousel, region naming and disabled
+wrapping, arrows and Home/End, a controlled carousel (including an index the
+caller's arithmetic could not read, which reads as the first slide), region naming and disabled
 edges, a style callback receiving `{ active, index }` in both themes, the
 chevron read back off the renderer against the label role and the mark floor of
 the fill it sits on, and the indicators — one named target per slide with

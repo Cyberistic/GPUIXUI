@@ -129,30 +129,36 @@ export const Carousel = ({
   assertParts(carouselRoot, children);
 
   const active = count === 0 ? 0 : Math.min(Math.max(value, 0), count - 1);
+  // The clamp passes an unreadable index through, and a caller's index is often
+  // arithmetic (`Math.floor(offset / width)`, which is `NaN` when no width has
+  // been measured) — an unreadable index hides every slide and keeps hiding them,
+  // because the step compares against it and never matches. The first slide is
+  // the readable default.
+  const current = Number.isFinite(active) ? active : 0;
 
   const context = useMemo<CarouselContextValue>(
     () => ({
-      active,
+      active: current,
       count,
       loop,
       step: (delta) => {
         if (count === 0) return;
-        const next = active + delta;
+        const next = current + delta;
         const target =
           next < 0 || next >= count
             ? loop
               ? (next + count) % count
               : Math.min(Math.max(next, 0), count - 1)
             : next;
-        if (target !== active) setValue(target);
+        if (target !== current) setValue(target);
       },
       goTo: (index) => {
         if (count === 0) return;
         const target = Math.min(Math.max(index, 0), count - 1);
-        if (target !== active) setValue(target);
+        if (target !== current) setValue(target);
       },
     }),
-    [active, count, loop, setValue],
+    [current, count, loop, setValue],
   );
 
   return (
