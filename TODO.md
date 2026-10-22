@@ -1447,6 +1447,26 @@ a workaround for two live sessions sharing one worktree; see
       unit 429/45, `check-types` green. Measured on the way:
       `renderComponent` paints only the **last** root child (`<><Badge>A</Badge>
       <Badge>B</Badge></>` reads `["B"]`), now recorded in `internal/test-root.tsx`
+    - [x] Make `PreviewCard` open on a press, not on focus — the card's documented
+      keyboard path ("focus opens it immediately") cannot exist: a `Tab`
+      traversal focuses the trigger **without delivering a focus event**
+      (`tabs-lifecycle`, the same gap the shipped `Tooltip` documents), so in a
+      window the card had no keyboard path at all, and a press waited out the
+      300 ms hover delay. The focus-open rule is gone; a press now opens at once
+      (cancelling the hover timers) and a second press closes, with Popover's
+      rule that the press a dismissal belongs to cannot re-open what the same
+      gesture closed (`dismissedByOutsidePress` in the seam context; without it
+      the outside press closed the card and the click reopened it — measured).
+      `src/behaviour/preview-card.test.tsx` gains `opens on a press with no
+      delay, and a second press closes it` and `does not open from a focus event
+      alone` (11 cases); both directions measured — restoring the delayed press
+      fails the first synchronously, and restoring focus-open fails the second
+      and the first (focus opened, the click toggled it shut). Docs:
+      `docs/preview-card.mdx` open-policy table, accessibility, limitations and
+      verification count, and the `COMPONENTS.md` row. Behaviour 559/53, unit
+      429/45, `check-types` green. No live probe re-run: the press path is
+      measured in the `TestRenderer`, and the focus gap it removes is the one
+      `tabs-lifecycle` already measured in a window
     - [x] Inventory test counts and the drifted rows — plan 139
     - [x] Tabs vertical orientation verified: axis keys, layout and manual activation — plan 321
     - [x] Toast actions: one labelled action with a provider-owned handler — plan 322

@@ -1,6 +1,6 @@
 ---
 title: Preview card
-description: A rich, hoverable card shown on hover or keyboard focus.
+description: A rich, hoverable card shown on hover or on a press.
 ---
 
 `PreviewCard` previews what a link or row points at: a title, a sentence, an
@@ -32,13 +32,13 @@ playground mounts.
 | Action | Result |
 | ------ | ------ |
 | Pointer enters the trigger | opens after `openDelay` (default 300 ms) |
-| Keyboard focus reaches the trigger | opens immediately, no delay |
+| A press — `Enter`, `Space` or a click | opens at once, no delay |
+| A second press | closes |
 | Pointer leaves the trigger but enters the card | stays open |
 | Pointer leaves **both** | closes after `closeDelay` (default 150 ms) |
 | `Escape` | closes; focus returns to the trigger |
 | Outside press | closes |
-| Press on the trigger while open | closes |
-| Press on the trigger while closed | opens (the touch path) |
+| `Tab` reaches the trigger | does **not** open it (see Limitations) |
 
 The delays are props, so a test or a dense UI can use `0`. They are component
 timers at the UI boundary — not domain time.
@@ -48,7 +48,7 @@ timers at the UI boundary — not domain time.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `PreviewCard` | a positioning root; owns open state and the timers | `open?`, `defaultOpen?`, `onOpenChange?`, `openDelay?`, `closeDelay?`, children |
-| `PreviewCardTrigger` | button, `aria-expanded`; `disabled` leaves the tab order and opens nothing on hover, focus or press | button props |
+| `PreviewCardTrigger` | button, `aria-expanded`; `disabled` leaves the tab order and opens nothing on hover or press | button props |
 | `PreviewCardContent` | anchored `FloatingLayer`, `role="group"` named by `label` | `label` (required), `side?`, `align?`, `sideOffset?`, `collisionPadding?`, children |
 
 `PreviewCardContent` renders nothing while closed.
@@ -62,8 +62,11 @@ glance. A custom theme changes it with no code change — see
 
 ## Accessibility
 
-- The trigger is a button: keyboard focus opens the card immediately, so a
-  keyboard user does not have to hover.
+- The trigger is a button, and the press path is the keyboard path: reach it
+  with `Tab`, then press `Enter` or `Space`. A `Tab` traversal itself does not
+  open the card — the runtime focuses the trigger without delivering a focus
+  event (measured by the playground's `tabs-lifecycle` for a trigger of this
+  shape), so an open-on-focus rule would be a claim the runtime cannot keep.
 - `Escape` closes and returns focus to the trigger, through the shared dismiss
   stack — a preview inside a dialog closes only itself.
 - The card is a named `group`; it is not auto-focused on hover (that would steal
@@ -77,20 +80,25 @@ glance. A custom theme changes it with no code change — see
   the two delay props, and `0` is supported.
 - **No pointer-type signal**: touch has no hover, so the press-to-toggle path is
   the honest touch interaction.
+- **A `Tab` traversal does not open the card.** GPUix focuses the trigger
+  without running its focus handler, so the card opens on hover or a press and
+  never on focus alone; a reader who wants it without hovering presses it.
 - Not auto-focused on hover; a purely hover-driven user never focuses the card.
 - A `disabled` trigger stays out of the tab order and opens nothing from its
-  hover, focus or press paths.
+  hover or press paths.
 - No anchor arrow, no `aria-haspopup`, no follow-cursor positioning.
 - The card closes on an outside press but does not restore focus (the press gave
   focus to whatever was pressed) — the same rule as Popover.
 
 ## Verification
 
-`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (9 tests):
-closed by default, delayed hover open and immediate focus open, staying open
-while the pointer is inside, closing after leaving both, Escape with focus
-return, outside-press dismissal, surface naming and `aria-expanded`, a disabled
-trigger that opens nothing, and a controlled card that stays closed. Timers are real but sized to 20 ms by the
+`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (11
+tests): closed by default, delayed hover open, opening on a press with no wait
+and closing on the next press, no open from a focus event alone (the measured
+window behaviour), staying open while the pointer is inside, closing after
+leaving both, Escape with focus return, outside-press dismissal, surface naming
+and `aria-expanded`, a disabled trigger that opens nothing, and a controlled
+card that stays closed. Timers are real but sized to 20 ms by the
 props. One measured fact shaped both the tests and the component: the runtime
 delivers the new element's `mouseEnter` **before** the previous element's
 `mouseLeave`, so the close policy tracks whether either surface still holds the

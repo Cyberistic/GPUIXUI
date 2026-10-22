@@ -1,11 +1,12 @@
 /**
  * PreviewCard behaviour, in the real GPUix renderer.
  *
- * The bugs these guard: a hover delay that opens instantly or never; a card that
- * closes while the pointer travels into it; a card that never closes when the
- * pointer leaves; focus that does not open it; Escape or an outside press that
- * closes the wrong layer; an unnamed surface; and a controlled card that opens
- * on its own.
+ * The bugs these guard: a hover delay that opens instantly or never; a press
+ * that waits for the hover delay, or re-opens the card the same gesture just
+ * dismissed; a card that closes while the pointer travels into it; a card that
+ * never closes when the pointer leaves; an open path on focus, which a real
+ * window never delivers; Escape or an outside press that closes the wrong
+ * layer; an unnamed surface; and a controlled card that opens on its own.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -18,6 +19,7 @@ import {
 import { Button } from "../internal/button.js";
 import {
   after,
+  clickCentreOf,
   focusedTestId,
   hoverCentreOf,
   requireBounds,
@@ -80,7 +82,7 @@ describe("PreviewCard", () => {
     card.unmount();
   });
 
-  it("opens on hover after the delay, and on focus immediately", async () => {
+  it("opens on hover after the delay, not before", async () => {
     const card = renderComponent(<Workspace />);
 
     hoverCentreOf(card, "trigger");
@@ -89,13 +91,49 @@ describe("PreviewCard", () => {
       expect(card.renderer.findByTestId("preview")).toBeDefined(),
     );
     card.unmount();
+  });
 
-    const focused = renderComponent(<Workspace />);
-    focused.renderer.focusElement(
-      focused.renderer.findByTestId("trigger")?.id ?? -1,
-    );
-    expect(focused.renderer.findByTestId("preview")).toBeDefined();
-    focused.unmount();
+  it("opens on a press with no delay, and a second press closes it", () => {
+    const card = renderComponent(<Workspace />);
+
+    try {
+      clickCentreOf(card, "trigger");
+
+      // No `await`: a press is explicit, so the card is open in the same frame,
+      // not after `openDelay` (20 ms here, 300 by default).
+      expect(card.renderer.findByTestId("preview")).toBeDefined();
+
+      // eslint-disable-next-line no-console
+      console.error(
+        "AFTER OPEN",
+        JSON.stringify(card.renderer.findByTestId("trigger")?.customProps),
+      );
+      clickCentreOf(card, "trigger");
+      // eslint-disable-next-line no-console
+      console.error(
+        "AFTER SECOND",
+        JSON.stringify(card.renderer.findByTestId("trigger")?.customProps),
+      );
+      expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    } finally {
+      card.unmount();
+    }
+  });
+
+  it("does not open from a focus event alone", () => {
+    const card = renderComponent(<Workspace />);
+
+    try {
+      card.renderer.focusElement(
+        card.renderer.findByTestId("trigger")?.id ?? -1,
+      );
+
+      // A `Tab` traversal never delivers this event in a window; keeping the
+      // open path off it means the headless suite measures what a window does.
+      expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    } finally {
+      card.unmount();
+    }
   });
 
   it("stays closed from a disabled trigger on hover, focus or press", async () => {
@@ -147,7 +185,7 @@ describe("PreviewCard", () => {
 
   it("closes on Escape and returns focus to the trigger", async () => {
     const card = renderComponent(<Workspace />);
-    card.renderer.focusElement(card.renderer.findByTestId("trigger")?.id ?? -1);
+    clickCentreOf(card, "trigger");
     expect(card.renderer.findByTestId("preview")).toBeDefined();
 
     card.renderer.simulateKeystrokes("escape");

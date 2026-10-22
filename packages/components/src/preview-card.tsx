@@ -6,8 +6,11 @@
  *
  * The card is **hoverable**: it may contain a link or a small action, which is
  * what separates it from a tooltip. The pointer may travel from the trigger into
- * the content; leaving both schedules the close. Keyboard focus opens it
- * immediately (no delay). The delays are props so tests need no 300 ms sleep.
+ * the content; leaving both schedules the close. A press opens it at once and a
+ * second press closes it — a `Tab` traversal reaches the trigger but delivers no
+ * focus event in a window (measured by `tabs-lifecycle`), so the press is the
+ * keyboard path a reader has. The delays are props so tests need no 300 ms
+ * sleep.
  */
 
 import type { KeyEvent, PublicInstance } from "@gpuix/react";
@@ -52,6 +55,8 @@ interface PreviewCardContextValue {
   readonly scheduleClose: () => void;
   readonly cancelTimers: () => void;
   readonly setInside: (surface: "trigger" | "content", inside: boolean) => void;
+  /** Set by a dismissing outside press, consumed by the click that follows it. */
+  readonly dismissedByOutsidePress: RefObject<boolean>;
 }
 
 const PreviewCardContext = createContext<PreviewCardContextValue | undefined>(
@@ -95,6 +100,7 @@ export const PreviewCard = ({
     onChange: onOpenChange,
   });
   const trigger = useRef<PublicInstance | null>(null);
+  const dismissedByOutsidePress = useRef(false);
   const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -155,6 +161,7 @@ export const PreviewCard = ({
       scheduleClose,
       cancelTimers,
       setInside,
+      dismissedByOutsidePress,
     }),
     [cancelTimers, open, scheduleClose, scheduleOpen, setInside, setOpen],
   );
@@ -168,7 +175,7 @@ export const PreviewCard = ({
   );
 };
 
-/** Opens the card on hover, focus or press. */
+/** Opens the card on hover, or on a press. */
 export const PreviewCardTrigger = ({
   onClick,
   ref,
@@ -183,6 +190,7 @@ export const PreviewCardTrigger = ({
     scheduleClose,
     cancelTimers,
     setInside,
+    dismissedByOutsidePress,
   } = usePreviewCard();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
@@ -204,16 +212,18 @@ export const PreviewCardTrigger = ({
         setInside("trigger", false);
         scheduleClose();
       }}
-      onFocus={(event) => {
-        rest.onFocus?.(event);
-        if (disabled) return;
-        cancelTimers();
-        setOpen(true);
-      }}
       onClick={(event) => {
         onClick?.(event);
-        if (open) setOpen(false);
-        else scheduleOpen();
+        // The press that dismissed the card owns this click: toggling here
+        // would re-open what the same gesture just closed. Any other press is
+        // explicit, so it opens now rather than after the hover delay — the
+        // keyboard path, since a `Tab` traversal delivers no focus event.
+        if (dismissedByOutsidePress.current) {
+          dismissedByOutsidePress.current = false;
+          return;
+        }
+        cancelTimers();
+        setOpen(!open);
       }}
       onKeyDown={(event: KeyEvent) => {
         rest.onKeyDown?.(event);
@@ -254,8 +264,15 @@ export const PreviewCardContent = ({
   ...rest
 }: PreviewCardContentProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger, scheduleClose, cancelTimers, setInside } =
-    usePreviewCard();
+  const {
+    open,
+    setOpen,
+    trigger,
+    scheduleClose,
+    cancelTimers,
+    setInside,
+    dismissedByOutsidePress,
+  } = usePreviewCard();
   const renderer = useGpuix().renderer;
 
   const close = useRef<() => void>(() => undefined);
@@ -273,9 +290,15 @@ export const PreviewCardContent = ({
       if (event.eventType === "keyDown") {
         const target = trigger.current;
         if (target !== null) renderer?.focusElement?.(target.id);
+        return;
       }
+      // Mark the press so the click it belongs to cannot re-open the card.
+      dismissedByOutsidePress.current = true;
+      queueMicrotask(() => {
+        dismissedByOutsidePress.current = false;
+      });
     }, depth);
-  }, [depth, open, renderer, trigger]);
+  }, [depth, dismissedByOutsidePress, open, renderer, trigger]);
 
   if (!open) return null;
 
