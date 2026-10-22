@@ -1,0 +1,140 @@
+---
+title: Gradient
+description: A two-stop gradient surface that breathes between two ramps, for a hero band, a launch panel or a highlighted section.
+---
+
+`Gradient` paints a colour ramp across its own box and slowly crossfades to a
+second ramp of the same colours, a quarter turn away — a background that moves
+without a `transform`. Content passed as children sits above it and keeps its
+presses.
+
+## Usage
+
+```tsx
+import { Gradient } from "@gpuixui/components/gradient";
+
+<Gradient
+  from="#7C5CFF"
+  to="#101014"
+  angle={120}
+  shift={80}
+  style={{ padding: 32 }}
+>
+  <text>Ship faster with panels</text>
+</Gradient>;
+```
+
+The field paints from the first frame: a gradient fills whatever box the layout
+gives it, so give it a height, padding or content with its own size. Nothing is
+measured and nothing is mounted late.
+
+## How the movement works
+
+The runtime paints exactly one gradient shape — a CSS angle and **two** stops —
+and a gradient is a paint value, not a tween target: the runtime interpolates
+numbers, and a stop is a colour. So a moving gradient is **two ramps of the same
+pair**, and the movement is the one value it animates natively: opacity.
+
+- the field's own `background` is the ramp at `angle`;
+- a second layer paints the same stops at `angle + shift`;
+- that layer's opacity tweened from nothing to full, and back when the tween
+  reports `onMotionComplete` — the runtime tweens a target once, so a breath is a
+  ping-pong rather than a loop.
+
+The arithmetic is `gradient/logic.ts`: an angle wraps into one turn (`380°` is
+`20°`), a shift of a whole turn is no second ramp at all, and a leg below 400 ms
+falls back to the house leg while 60 s is the cap, so a field cannot flicker or
+freeze.
+
+## The radius
+
+The layers are rectangles, and the runtime does not document a rounded overflow
+clip, so a rounded field passes `radius`. It is applied to the field **and** its
+layer, so the breathing ramp has the same corners as the resting one.
+
+```tsx
+import { Gradient } from "@gpuixui/components/gradient";
+import { useTheme } from "@gpuixui/components";
+
+const theme = useTheme();
+
+<Gradient
+  from={theme.colors.accent}
+  to={theme.colors.background}
+  radius={theme.radius.lg}
+  style={{ height: 96 }}
+/>;
+```
+
+## Reduced motion
+
+`MotionProvider preference="reduced"` paints the resting ramp alone: no second
+layer, no motion target, and the entrance fade is zeroed like every other
+surface's. The gradient stays; only the breath is removed.
+
+```tsx
+import { Gradient, MotionProvider } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <Gradient from={theme.colors.success} to={theme.colors.background} />
+</MotionProvider>;
+```
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `from` | `string` | theme `primary` | The ramp's start colour. |
+| `to` | `string` | `from` at zero alpha | The ramp's end colour. The default dissolves into the surface behind the field. |
+| `angle` | `number` | `135` | The base ramp's angle in degrees (0 points up, clockwise). Any value wraps into one turn. |
+| `shift` | `number` | `90` | The second ramp's angle relative to the first. `0`, or a whole turn, paints one still ramp — two identical ramps have nothing to crossfade. |
+| `durationMs` | `number` | `6_000` | One leg of the breath. Below 400 ms it falls back; 60 s is the cap. |
+| `radius` | `number` | `0` | The field's corner radius, applied to the layer too. A negative or unreadable value is square. |
+| `level` | `MotionLevel` | `"slow"` | The entrance fade. `MotionProvider` zeroes it under the reduced preference. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+| `style` | `StateStyle<GradientState>` | — | The field's style, or a function of `{ angle, shift, animated, reducedMotion }`. |
+| `children` | `ReactNode` | — | Content painted above the ramp. It owns the words and the presses. |
+
+The field's `testId` lands on the root; the breathing layer carries
+`gradient-shift` while it exists.
+
+## Limitations
+
+- **Two stops is the whole grammar.** A three-colour or multi-stop ramp is not
+  expressible, and the movement is two ramps of the same pair crossfaded — not a
+  gradient whose stops travel.
+- **No rotate, no scale.** The runtime has no `transform` (upstream issue #102),
+  so the second ramp is re-drawn at another angle rather than rotated.
+- **The layers are rectangles.** Pass `radius` when the field is rounded; the
+  runtime does not document a rounded overflow clip.
+- **A hidden field keeps breathing.** The runtime exposes no visibility query, so
+  unmount it or pass `shift={0}` when it is off screen.
+- **No colour validation.** A value the renderer cannot parse paints nothing;
+  `@gpuixui/tokens`' audit is where a theme's colours are checked.
+- **The field owns no semantics.** It adds no role and no name; the content in
+  front of it must.
+
+## Verification
+
+Nine native behaviour cases in `src/behaviour/gradient.test.tsx` (9 tests)
+measure the real renderer: the ramp handed to the renderer with the caller's
+colours and the default angle, the second ramp shifted by the caller's angle with
+the same stops, the breath turning around when the tween completes, one still
+ramp for a whole-turn shift, the reduced preference painting the resting ramp
+with no second layer, the content painted above the layer with a press reaching
+it through `pointerEvents: "none"`, the house `slow` entrance, the state a style
+callback receives in both preferences, and the radius on the field and the layer
+plus the default end colour. The arithmetic is `src/gradient/logic.test.ts` (10
+tests): the two-stop shape and stop order, the angle wrap, determinism, the house
+fallbacks, a whole turn counting as no shift, the shifted ramp's angle, the leg's
+floor and cap, and a radius the renderer would refuse.
+
+## Related
+
+- [Reveal](/docs/components/reveal) — the house entrance a hero's content can
+  join.
+- [Scroll fade](/docs/components/scroll-fade) — the other two-stop gradient this
+  package paints.
+- [Stars](/docs/components/stars) — a decorative field that also holds still
+  under the reduced preference.
+- [Card](/docs/components/card) — the surface a gradient band usually sits in.

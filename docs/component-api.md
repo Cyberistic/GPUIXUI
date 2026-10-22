@@ -360,6 +360,7 @@ the honest parts.
 | Particles | `Particles` (one part) | — | plan 600 |
 | Bubbles | `Bubbles` (one part) | — | plan 600 |
 | Fireworks | `Fireworks` (one part) | — | plan 600 |
+| Gradient | `Gradient` (one part) | — | plan 600 |
 | Stars | `Stars` (one part) | — | plan 600 |
 | Code block | `CodeBlock` (one part) | — | plan 600 |
 | Copy button | `CopyButton` (one part) | — | plan 600 |

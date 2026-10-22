@@ -41,6 +41,7 @@ import { EmptyStateExample } from "./empty-state.example.js";
 import { FieldExample } from "./field.example.js";
 import { FieldsetExample } from "./fieldset.example.js";
 import { FireworksExample } from "./fireworks.example.js";
+import { GradientExample } from "./gradient.example.js";
 import { HighlightTextExample } from "./highlight-text.example.js";
 import { FormExample } from "./form.example.js";
 import { HotkeyRecorderExample } from "./hotkey-recorder.example.js";
@@ -110,6 +111,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   field: FieldExample,
   fieldset: FieldsetExample,
   fireworks: FireworksExample,
+  gradient: GradientExample,
   "highlight-text": HighlightTextExample,
   form: FormExample,
   "hotkey-recorder": HotkeyRecorderExample,
