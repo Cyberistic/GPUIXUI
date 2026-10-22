@@ -58,6 +58,35 @@ selection, and you draw the header yourself. What is missing is the reusable
 part — a header that sorts, a selection that survives sorting, and column
 configuration.
 
+## A property panel is one object, read four ways
+
+A property inspector is the lane's most common composition, and it is **not** a form.
+The playground's `inspector-lifecycle` mounted the shipped `SplitPane` beside a
+preview and measured one object read by four views at once:
+
+- **One row, not a float.** The preview and the inspector share one row with the
+  **6px** divider as their whole gap and one starting `y`; the group's right edge
+  is the inspector pane's own.
+- **One object, every view.** Typing `ab` reached the readout, the preview
+  caption and the `tag` key-value row in the frame it landed, while the field kept
+  the platform text session — there is no reconciliation step between them.
+- **The table scans down.** Every label cell holds one `x`, and every value
+  starts at its label's right edge. The value column is derived from the label
+  column, so one widened row broke it (measured: the column moved to 649 from
+  641).
+- **A toolbar is a row in the pane.** Its actions paint on one row above the
+  first property row; the runtime provides no toolbar host and needs none.
+- **The inspector is a scroller.** It owns its `overflow`: a **−200** wheel moved
+  the 30-row inspector to −200 while its pane and the preview caption kept their
+  exact `y`, and the preview reported no offset — it is not a scroller. A pane
+  that clips its rows instead reports no scroll handle at all, so the wheel check
+  cannot pass on a box that merely hides its overflow.
+
+The area and the metric follow the object rather than each other: **Wide** took
+the width to 240, the area to 19200 and the preview to 240×80 in that frame, and
+**Reset size** returned the width while the typed tag stayed — a reset is a size
+action, not a new object.
+
 ## The table row comes first
 
 The other twelve rows depend on it, so `Tables` is the row that unblocks the

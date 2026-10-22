@@ -317,6 +317,47 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("<textarea>");
   });
 
+  it("records the property inspector a window composed, with its readouts", () => {
+    // Tier 3's property panels, key-value displays and statistic cards and
+    // Tier 4's inspector panels are composition, and the record read as
+    // "composition, so nothing to say" — a plan had no measured rule for a pane
+    // that scrolls beside what it edits. The numbers are the probe's, so they
+    // are read back out of it.
+    const inspector = rowFor("Property inspector");
+    expect(inspector?.verdict).toBe("supported, with limits");
+    expect(inspector?.evidence).toContain("inspector-lifecycle");
+    expect(inspector?.evidence).toContain("6px");
+    expect(inspector?.evidence).toContain("−200");
+    expect(inspector?.workaround).toContain("owns its `overflow`");
+    expect(inspector?.workaround).toContain("no reconciliation step");
+
+    // The printed sizes and totals are derived from the fixture, so a changed
+    // object cannot leave the record quoting the previous one.
+    const probe = read("apps/playground/src/live/inspector.ts");
+    const width = Number(/width: (\d+),/.exec(probe)?.[1]);
+    const height = Number(/height: (\d+),/.exec(probe)?.[1]);
+    const wide = Number(/WIDE_WIDTH = (\d+)/.exec(probe)?.[1]);
+    expect(Number.isFinite(width * height * wide)).toBe(true);
+    expect(inspector?.evidence).toContain(`${width}×${height}`);
+    expect(inspector?.evidence).toContain(`${wide}×${height}`);
+    expect(inspector?.evidence).toContain(String(width * height));
+    expect(inspector?.evidence).toContain(String(wide * height));
+
+    const readme = read("apps/playground/README.md");
+    expect(readme).toContain("`inspector-lifecycle`");
+
+    const page = measuredRow("Property inspector");
+    expect(
+      page,
+      "the page's measured table has no property-inspector row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("inspector-lifecycle");
+    expect(page?.[1]).toContain(`${width}×${height}`);
+    expect(page?.[1]).toContain(String(width * height));
+    expect(page?.[1]).toContain(String(wide * height));
+    expect(page?.[2]).toContain("owns its `overflow`");
+  });
+
   it("records the focus a `Tab` traversal does not deliver, with the probes behind it", () => {
     // This row has flipped twice. It first said `onFocus` never ran on a
     // traversal; a re-run then read `focuses=1` and it was corrected to "the

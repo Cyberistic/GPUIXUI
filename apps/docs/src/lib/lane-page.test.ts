@@ -348,6 +348,27 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("instead of timing out");
     expect(dataPage).toContain("joined text only");
   });
+
+  it("teaches a property panel as one object read four ways", () => {
+    // Tier 3's property panels, key-value displays and statistic cards are
+    // composition, and the page said only that a key/value panel is a
+    // two-column grid. `inspector-lifecycle` measured the composition: one
+    // object in four views, a table that scans down, a toolbar row and an
+    // inspector that scrolls on its own.
+    const inspector = rowFor(record, "Property inspector");
+
+    expect(inspector).toContain("inspector-lifecycle");
+    expect(inspector).toContain("9600");
+    expect(inspector).toContain("19200");
+    expect(dataPage).toContain("A property panel is one object, read four ways");
+    expect(dataPage).toContain("inspector-lifecycle");
+    expect(dataPage).toContain("6px");
+    expect(dataPage).toContain("649");
+    expect(dataPage).toContain("641");
+    expect(dataPage).toContain("platform text session");
+    expect(dataPage).toContain("owns its `overflow`");
+    expect(dataPage).toContain("**not** a form");
+  });
 });
 
 describe("the layouts page's direction claim", () => {
@@ -405,6 +426,25 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("tabIndex={-1}");
     expect(workspace).toContain("renderer.focusElement");
     expect(workspace).toContain("owns its arrows");
+  });
+
+  it("teaches the property inspector as a pane a window composed", () => {
+    // Tier 4's inspector panels and property editors were "composition" with no
+    // window behind them, so a dock plan had no rule for the pane that scrolls
+    // beside what it edits. `inspector-lifecycle` measured exactly that, and the
+    // page and the record have to print the same numbers.
+    const inspector = rowFor(record, "Property inspector");
+    expect(inspector).toContain("inspector-lifecycle");
+    expect(inspector).toContain("owns its `overflow`");
+
+    expect(workspace).toContain("The inspector is a pane, not a page");
+    expect(workspace).toContain("inspector-lifecycle");
+    expect(workspace).toContain("−200");
+    expect(workspace).toContain("6px");
+    expect(workspace).toContain("platform text session");
+    // The two saves a dock owns: the arrangement and the object.
+    expect(workspace).toContain("persists a **pane**");
+    expect(workspace).not.toContain("composition with no window");
   });
 
   it("separates rendering into a terminal from hosting one", () => {

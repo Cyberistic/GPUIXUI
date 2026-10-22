@@ -86,6 +86,35 @@ A page that genuinely scrolls — a settings form, a dialog body — moves toget
 with a list inside it; that is a layout decision, not something a pane can
 guard against. See [Runtime](/docs/runtime) for the measurement.
 
+## The inspector is a pane, not a page
+
+The property inspector the dock's right side holds is a pane with its own
+`overflow`, measured by `inspector-lifecycle` in a window: a **−200** wheel moved
+its 30 rows to −200 while its own pane and the preview caption beside it kept
+their exact `y`, and the preview reported no scroll offset because it is not a
+scroller. A pane that clips its rows instead reports no scroll handle at all, so
+"it looks contained" is not evidence that it scrolls.
+
+The rest of the measurement is what makes it a composition rather than a form:
+
+- **One row, one gap.** The preview and the inspector share one row with the
+  **6px** divider as their whole gap, both panes start at one `y`, and the
+  group's right edge is the inspector pane's own.
+- **One object, every view.** The preview box, the readout, the key-value rows
+  and the metric all repaint from the same state in the frame an edit lands —
+  typing `ab` reached all four while the field kept the platform text session.
+- **The table scans down.** One label column and one value column derived from
+  it; a per-row label width moved the value column to 649 from 641.
+- **A toolbar is a row in the pane.** Its actions paint above the first property
+  row; the runtime provides no toolbar host.
+- **A size action is not a new object.** **Wide** took the width to 240, the area
+  to 19200 and the preview to 240×80 in that frame; **Reset size** returned the
+  width and kept the typed tag.
+
+A dock that persists the inspector's width therefore persists a **pane**, not a
+form's field state: the object and the arrangement are two different saves. See
+[Data display](/docs/data-display) for the same composition from the data side.
+
 ## One text session, one buffer per pane
 
 A window has a single platform text session, so a split's editor area is a
