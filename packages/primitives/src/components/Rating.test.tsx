@@ -15,7 +15,6 @@ import { targetSize } from "@gpuixui/tokens";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
-  noPreview,
   renderRating,
   type RatingHandlers,
   type RatingProps,
@@ -55,14 +54,7 @@ const render = (
   focused?: number,
   over: Partial<RatingHandlers> = {},
 ): ReactElement =>
-  renderRating(
-    props,
-    testTheme,
-    state(value),
-    focus(focused),
-    noPreview,
-    handlers(over),
-  );
+  renderRating(props, testTheme, state(value), focus(focused), handlers(over));
 
 const starsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(element);
@@ -156,14 +148,11 @@ describe("Rating", () => {
     // the announced state and the tab stop keep reading the value.
     const onHover = vi.fn();
     const onHoverEnd = vi.fn();
-    const element = renderRating(
-      {},
-      testTheme,
-      state(2),
-      focus(),
-      { hoveredIndex: Option.some(4), onHover, onHoverEnd },
-      handlers(),
-    );
+    const element = renderRating({}, testTheme, state(2), focus(), handlers(), {
+      hoveredIndex: Option.some(4),
+      onHover,
+      onHoverEnd,
+    });
     const stars = starsOf(element);
     const iconName = (star: ReactElement): unknown =>
       Option.getOrUndefined(
@@ -206,8 +195,8 @@ describe("Rating", () => {
         testTheme,
         state(2),
         focus(),
-        { hoveredIndex: Option.some(5), onHover: vi.fn(), onHoverEnd: vi.fn() },
         handlers(),
+        { hoveredIndex: Option.some(5), onHover: vi.fn(), onHoverEnd: vi.fn() },
       );
       const stars = starsOf(element);
       const iconName = (star: ReactElement): unknown =>

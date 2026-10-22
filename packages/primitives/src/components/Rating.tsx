@@ -98,13 +98,6 @@ export interface RatingHover {
   readonly onHoverEnd: () => void;
 }
 
-/** A pointer that is nowhere: a rating with no star previewed. */
-export const noPreview: RatingHover = {
-  hoveredIndex: Option.none(),
-  onHover: () => {},
-  onHoverEnd: () => {},
-};
-
 export interface RatingHandlers {
   readonly onSelect: (value: number) => void;
   /** Select, then move native focus to the star the change landed on. */
@@ -118,13 +111,20 @@ export interface RatingHandlers {
 export const ratingMax = (max: number | undefined): number =>
   Math.max(1, Math.trunc(max ?? 5));
 
+/** A pointer that is nowhere: the idle state a render helper starts from. */
+const NO_POINTER: RatingHover = {
+  hoveredIndex: Option.none(),
+  onHover: () => {},
+  onHoverEnd: () => {},
+};
+
 export const renderRating = (
   props: RatingProps,
   theme: PrimitiveTheme,
   state: ValueState<number>,
   focus: RatingFocus,
-  hover: RatingHover,
   handlers: RatingHandlers,
+  hover: RatingHover = NO_POINTER,
 ): ReactElement => {
   const max = ratingMax(props.max);
   const value = clampRating(state.current, max);
@@ -254,11 +254,6 @@ export const Rating = (props: RatingProps): ReactElement => {
         ),
     },
     {
-      hoveredIndex,
-      onHover: (index) => setHoveredIndex(Option.some(index)),
-      onHoverEnd: () => setHoveredIndex(Option.none()),
-    },
-    {
       onSelect: state.set,
       onMove: (value) => {
         state.set(value);
@@ -272,6 +267,11 @@ export const Rating = (props: RatingProps): ReactElement => {
         if (instance === null) itemIds.current.delete(index);
         else itemIds.current.set(index, instance.id);
       },
+    },
+    {
+      hoveredIndex,
+      onHover: (index) => setHoveredIndex(Option.some(index)),
+      onHoverEnd: () => setHoveredIndex(Option.none()),
     },
   );
 };
