@@ -221,9 +221,11 @@ Every part takes the GPUix host props and merges `style` last.
 
 ## Theming
 
-The surface paints `colors.popover` / `colors.popoverForeground`, `radius.md`,
-`borderWidth.thin` in `colors.border`, the `md` elevation and `spacing.xs` padding,
-with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
+The surface compiles shadcn's fixed metrics: `colors.popover` /
+`colors.popoverForeground`, a 24px radius, 6px padding, a 192px minimum width, a
+1px `foreground` ring at 5% and the theme's `lg` elevation beside it — the ring
+and the lift are two declarations the runtime paints as one shadow list.
+Rows are `controlHeight(theme, "sm")` tall, use the
 `label` type role, and highlight with `colors.hover` plus a 2px left bar in
 `colors.accent`. A disabled row paints `colors.disabledForeground` — the role
 `contrastPairs` measures on the popover — and drops its hover and press fills.
@@ -285,7 +287,8 @@ Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboar
 hover and pointer opening, right-edge placement, focus entering the first row,
 arrows and type-ahead staying inside, one submenu at a time, one-level
 Escape/ArrowLeft, a pointer click running the row and closing both levels, and an
-outside press closing both levels.
+outside press closing both levels. `src/behaviour/overlay-elevation.test.tsx`
+reads the composed `lg` elevation beside the ring off the rendered surface.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

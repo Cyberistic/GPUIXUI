@@ -34,6 +34,8 @@ import {
   statusTone,
   targetSize,
   textStyle,
+  type BoxShadow,
+  type ElevationLevel,
   type NativeTextFill,
   type PlatformName,
   type StatusTone,
@@ -61,7 +63,15 @@ export {
   targetSize,
   textStyle,
 };
-export type { NativeTextFill, PlatformName, StatusTone, TextRole, Theme };
+export type {
+  BoxShadow,
+  ElevationLevel,
+  NativeTextFill,
+  PlatformName,
+  StatusTone,
+  TextRole,
+  Theme,
+};
 export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 
 /**

@@ -141,8 +141,9 @@ takes the GPUix host props and merges `style` last.
 
 ## Theming
 
-The surface is the dialog's: `colors.popover`, `radius.xl`, the `lg` elevation.
-The input uses `colors.input` / `colors.inputForeground` with a
+The surface is the dialog's: `colors.popover` / `colors.popoverForeground`, a
+32px radius, a 1px `foreground` ring at 5% and the theme's `lg` elevation beside
+it. The input uses `colors.input` / `colors.inputForeground` with a
 `borderWidth.thin` border in `colors.border` and `radius.md`. Rows are the shared
 menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 
@@ -180,6 +181,8 @@ placeholder/name coming from the part.
 trim, word-start versus mid-word scores, separator boundaries, subsequence and
 non-subsequence queries, over-long queries, repeated letters, declaration
 indices, group order, in-group ranking, stable ties and empty groups.
+`src/behaviour/overlay-elevation.test.tsx` reads the dialog surface's composed
+`lg` elevation beside its ring.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

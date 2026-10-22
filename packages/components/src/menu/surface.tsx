@@ -36,7 +36,7 @@ import { useMenuContext, type MenuContextValue } from "./state.js";
 /** The floating surface every menu paints: the shared `MENU_CONTENT` recipe
  * compiled against the default registry, with the caller's `className` last. */
 export const menuSurfaceStyle = (theme: Theme, className?: string): StyleDesc =>
-  overlaySurfaceStyle(MENU_CONTENT, className, theme);
+  overlaySurfaceStyle(MENU_CONTENT, className, theme, "lg");
 
 /**
  * The two key handlers a menu surface installs. They are hook-free functions so

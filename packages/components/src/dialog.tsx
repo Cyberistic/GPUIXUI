@@ -278,16 +278,19 @@ export const DialogContent = ({
           }}
           onKeyDown={handleKeyDown}
           style={mergeStyles(
-            mergeStyles(overlaySurfaceStyle(DIALOG_CONTENT, className, theme), {
-              display: "flex",
-              flexDirection: "column",
-              position: "relative",
-              width: Math.min(MAX_WIDTH[size], available),
-              maxWidth: available,
-              maxHeight: window.height - 2 * theme.spacing["3xl"],
-              overflow: "scroll",
-              pointerEvents: presence.present ? "auto" : "none",
-            }),
+            mergeStyles(
+              overlaySurfaceStyle(DIALOG_CONTENT, className, theme, "lg"),
+              {
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                width: Math.min(MAX_WIDTH[size], available),
+                maxWidth: available,
+                maxHeight: window.height - 2 * theme.spacing["3xl"],
+                overflow: "scroll",
+                pointerEvents: presence.present ? "auto" : "none",
+              },
+            ),
             style,
           )}
         >

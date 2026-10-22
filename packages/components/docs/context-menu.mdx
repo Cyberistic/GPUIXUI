@@ -139,9 +139,10 @@ merges `style` last.
 
 ## Theming
 
-The surface and rows are the shared menu look: `colors.popover`, `radius.md`,
-`borderWidth.thin` in `colors.border`, the `md` elevation, `spacing.xs` padding;
-rows use `colors.hover` with a 2px `colors.accent` bar. The trigger is a card-like
+The surface and rows are the shared menu look: `colors.popover` /
+`colors.popoverForeground`, a 24px radius, 6px padding, a 1px `foreground` ring
+at 5% and the theme's `lg` elevation beside it; rows use `colors.hover` with a
+2px `colors.accent` bar. The trigger is a card-like
 box in `colors.card` with a border and `spacing.md` padding; pass `style` to
 match the row it represents.
 
@@ -176,7 +177,8 @@ keyboard activation running a row, Escape returning focus to the trigger, a
 disabled trigger ignoring `Shift+F10`, a pointer-opened menu dismissing with the
 focus `none`, type-ahead jumping to a row, and the submenu rules — `ArrowRight`
 opening and focusing the first row, a pointer click running a row and closing
-both levels, and one-level Escape/ArrowLeft.
+both levels, and one-level Escape/ArrowLeft. `src/behaviour/overlay-elevation.test.tsx`
+reads the shared surface's composed `lg` elevation beside its ring.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

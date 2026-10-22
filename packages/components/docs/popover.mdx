@@ -97,9 +97,11 @@ Every part takes the GPUix host props and merges `style` last.
 
 ## Theming
 
-The surface paints `colors.popover` / `colors.popoverForeground`,
-`radius.lg`, `borderWidth.thin` in `colors.border`, the `md` elevation and
-`spacing.lg` padding, with a 200px minimum width.
+The surface compiles shadcn's fixed metrics: `colors.popover` /
+`colors.popoverForeground`, a 24px radius, 16px padding and a 1px `foreground`
+ring at 5%, with a 200px minimum width. The ring and the recipe's lift share the
+one `boxShadow` slot, so the component composes the theme's `lg` elevation beside
+the ring and the runtime paints both.
 
 ## Accessibility and limitations
 
@@ -128,7 +130,8 @@ instead of covering it, Escape closing and restoring focus, an outside press
 closing without the following click re-opening it, a press inside keeping it
 open, Tab closing it, a controlled popover reporting `onOpenChange` while staying
 as the consumer says (including an inline consumer that keeps it closed), both
-themes, and a caller trigger `ref`.
+themes, and a caller trigger `ref`. `src/behaviour/overlay-elevation.test.tsx`
+reads the composed `lg` elevation beside the ring off the rendered surface.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

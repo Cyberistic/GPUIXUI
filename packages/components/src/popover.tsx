@@ -262,10 +262,13 @@ export const PopoverContent = ({
         );
       }}
       style={mergeStyles(
-        mergeStyles(overlaySurfaceStyle(POPOVER_CONTENT, className, theme), {
-          minWidth: 200,
-          pointerEvents: presence.present ? "auto" : "none",
-        }),
+        mergeStyles(
+          overlaySurfaceStyle(POPOVER_CONTENT, className, theme, "lg"),
+          {
+            minWidth: 200,
+            pointerEvents: presence.present ? "auto" : "none",
+          },
+        ),
         style,
       )}
     >

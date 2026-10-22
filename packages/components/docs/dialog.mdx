@@ -95,11 +95,14 @@ depth keep push order: the later one is above.
 
 ## Sizing and theming
 
-The surface paints `colors.popover` / `colors.popoverForeground` with
-`radius.xl`, `borderWidth.thin` in `colors.border` and the `lg` elevation. The veil
-paints `colors.overlay`. The surface caps its height at the window minus two
-`spacing["3xl"]` and scrolls interior overflow, so a long body cannot push the
-actions off screen.
+The surface compiles shadcn's fixed metrics: `colors.popover` /
+`colors.popoverForeground`, a 32px radius, 24px padding and a 1px `foreground`
+ring at 5%. The ring and the recipe's lift share the one `boxShadow` slot, so
+the component composes the theme's `lg` elevation beside the ring and the
+runtime paints the pair — a raised dialog carries the lift **and** its hairline.
+The veil paints `colors.overlay`. The surface caps its height at the window minus
+two `spacing["3xl"]` and scrolls interior overflow, so a long body cannot push
+the actions off screen.
 
 ## Accessibility and limitations
 
@@ -164,7 +167,8 @@ entering and returning, Escape and backdrop dismissal, Tab wrapping at both ends
 `colors.popover`/`colors.overlay`, a non-dismissible dialog ignoring both
 dismissals, a controlled dialog staying closed, the caller's own close control,
 and a caller content `ref`. Plus `src/internal/dismiss-layer.test.ts` for the
-stack's own rules.
+stack's own rules, and `src/behaviour/overlay-elevation.test.tsx`, which reads
+the composed `lg` elevation beside the ring off the rendered surface.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
