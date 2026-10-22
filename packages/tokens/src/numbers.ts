@@ -284,7 +284,7 @@ const inspectType = (
   });
 
 /**
- * The one pair of type roles that differ by weight alone. `bodyStrong` is
+ * The one pair of type roles that is one emphasis at one size. `bodyStrong` is
  * `body` at the same size and leading, so the weight is the whole difference
  * between reading and emphasis — a card title, a lead-in, a line a reader is
  * meant to notice. All three numbers are compared: a brand that forwards one
