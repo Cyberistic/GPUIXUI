@@ -486,7 +486,16 @@ export interface TableEmptyProps extends Omit<Props, "children"> {
   readonly children?: ReactNode;
 }
 
-/** What a table paints when its set is empty: a message, not a blank frame. */
+/**
+ * What a table paints when its set is empty: a message, not a blank frame.
+ *
+ * It is a **row holding one cell**, so the message sits inside the grid the
+ * accessibility tree describes. A `rowgroup` whose only child is a bare `div`
+ * is invalid ARIA, and 0.11.0 drops a role-less node from the tree entirely, so
+ * the empty state used to be a `RowGroup` with the message's text directly
+ * under it. The cell carries the recipe's column layout, so the paint does not
+ * move.
+ */
 export const TableEmpty = ({
   className,
   children,
@@ -497,9 +506,20 @@ export const TableEmpty = ({
   return (
     <div
       {...rest}
+      role="row"
       style={mergeStyles(recipeStyle(cn(TABLE_EMPTY, className), theme), style)}
     >
-      {children}
+      <div
+        role="cell"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: theme.spacing.xs,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 };

@@ -5613,6 +5613,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
     links every page (Advanced filtering, Toolbar, Tree views, Expandable rows,
     Key-value, Property panel, Stat card, Charts); `package-docs.test.ts` holds
     the mount, the frontmatter and the MDX rules for all eight pages.
+  - [x] Give the **empty state its place in the accessibility tree** — `TableEmpty`
+    was one role-less `div` inside `TableBody` (a `rowgroup`), so the rendered
+    tree described a table whose body held a `RowGroup` with the message's text
+    directly under it: invalid ARIA, and measured, the empty table's tree had
+    four nodes (Window, Table, two RowGroups) and no `Row` or `Cell`. It is now
+    a `role="row"` holding one `role="cell"` box that carries the recipe's
+    centred column, so the paint is unchanged and the message sits in the grid.
+    `src/behaviour/table-empty-a11y.test.tsx` (2 cases) decodes the tree through
+    a `Schema.Class` and requires the header's row plus the empty state's row
+    and cell, and the `Label` under that cell. Directions measured: with the
+    role-less box restored both cases fail by name (`the tree has no Cell
+    node`); with it, behaviour 9 files / 57 tests green and still 7 in the table
+    file. `COMPONENTS.md`'s Tables row states it.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
