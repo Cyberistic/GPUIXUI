@@ -36,7 +36,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-twenty-eight probes a real window can prove, of which eight mount shipped
+twenty-nine probes a real window can prove, of which eight mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the popover and the modal focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
@@ -689,6 +689,42 @@ per-element, and an element that draws its own focus look opts out with
 
 A failed probe still writes its report and captures, so a regression is visible,
 not just red.
+
+### `filled-action-dim` — measured on 0.11.0 here
+
+`keyboard-focus-dim` measures the mechanism on plain `div`s; this probe mounts the
+**shipped** actions and reads the rule back off the frame. It renders a filled
+`secondary` action, a `ghost` action, a `destructive` action whose caller forces
+`keyboardFocusDim: true` back on, and a fourth action that takes the focus. Each
+measured action paints one colour nothing else in the view uses, so the count is
+the action's own pixels:
+
+| Sample | Pointer focus on the fourth action | After Tab returns the focus to it |
+| ------ | ---------------------------------- | --------------------------------- |
+| filled `secondary` | 66 008 exact-fill pixels | **66 008** — every pixel kept |
+| `ghost` (label tinted `success` by the caller) | 611 label pixels | **0** — dimmed away |
+| `destructive` forced into the cue | 65 483 | **0** — the dim composites the fill |
+
+So the components' declaration is a painted fact: a filled action opts out
+(`keyboardFocusDim: false` from `paintsFilledSurface`) and a ghost keeps the
+where-can-Tab-go cue, while a caller's `style` merges last and can put the dim
+back. The ghost's label is tinted from the caller because it paints no fill, and
+the label is the only pixel the mechanism can change.
+
+**A text field is not a dim target.** The first version of this probe tabbed into
+a shipped `Input` and measured no dim at all — the ghost's 611 label pixels
+survived every Tab. That is the runtime, not the probe: `renderer.rs`'s
+`keyboard_focus_path` returns no path when the focused element is an
+`input`/`textarea`, "text fields do not count: typing is keyboard input too, and
+dimming the window while someone types is noise". The focus target is therefore a
+fourth action, which is also what the token catalogue's "every other focusable
+dims" claim quietly assumes; the token pages do not say it yet (`TODO.md`).
+
+Negative controls, measured: forcing the filled action into the cue fails
+`a filled action keeps every pixel of its fill — expected 66008, got 0`; giving
+the ghost `keyboardFocusDim: false` fails `a ghost action's label is dimmed
+away — expected 0, got 611` (exit `1` each). Restored, 12 checks green.
+Captures: `.artifacts/live/pointer.png`, `.artifacts/live/keyboard.png`.
 
 ### `floating-sides` — measured on 0.11.0 here
 

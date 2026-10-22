@@ -49,6 +49,12 @@ export const liveRegistry = [
     capability: "focus",
   },
   {
+    id: "filled-action-dim",
+    title:
+      "Focus: a filled action keeps its fill in the dim, a ghost action keeps the cue",
+    capability: "focus",
+  },
+  {
     id: "floating-sides",
     title:
       "Floating: left/right sides and the align=center offset measure the same in a window",

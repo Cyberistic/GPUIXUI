@@ -24,6 +24,7 @@ import {
   keyboardFocusRing,
   textStyle,
   type FontSource,
+  type Theme,
 } from "@gpuixui/tokens";
 import {
   CommandMenu,
@@ -264,6 +265,65 @@ const FocusDimProbe = (): ReactNode => {
         keyboardFocusDim={false}
       />
     </div>
+  );
+};
+
+/**
+ * The shipped actions under the runtime's keyboard dim.
+ *
+ * The token layer measures the dim (`focus-dim.test.ts`) and the components
+ * declare the opt-out their behaviour suites read from the style tree; neither
+ * paints the pair in a window. Here the fourth action takes the keyboard focus,
+ * so the three measured actions are "other focusables", and each is counted in a
+ * colour nothing else in the view paints: the filled action keeps every pixel of
+ * its fill, the action a caller forces back into the cue loses all of them, and
+ * the ghost action's label — a role no other element uses — is dimmed away. The
+ * ghost's label takes its colour from the caller `style`, because a ghost paints
+ * no fill and the label is the only pixel the mechanism can change.
+ *
+ * A text field is **not** the focus target: the runtime skips the dim entirely
+ * while an `<input>`/`<textarea>` holds the focus ("typing is keyboard input too,
+ * and dimming the window while someone types is noise", `renderer.rs`
+ * `keyboard_focus_path`), so tabbing into a field measures no dim at all.
+ */
+const FilledActionDimProbe = (): ReactNode => {
+  const theme = useTheme();
+  return (
+    <PrimitiveThemeProvider theme={palettes.dark}>
+      <div
+        testId="filled-action-dim-probe"
+        style={{
+          width: 560,
+          height: 280,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <Button testId="dim-filled" variant="secondary">
+          Filled action
+        </Button>
+        <Button
+          testId="dim-ghost"
+          variant="ghost"
+          style={{ color: theme.colors.success }}
+        >
+          Ghost action
+        </Button>
+        <Button
+          testId="dim-forced"
+          variant="destructive"
+          style={{ keyboardFocusDim: true }}
+        >
+          Forced into the cue
+        </Button>
+        <Button testId="dim-focus" variant="ghost">
+          Takes the focus
+        </Button>
+      </div>
+    </PrimitiveThemeProvider>
   );
 };
 
@@ -2261,6 +2321,89 @@ const focusDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "only the default sample dims, not the opted-out one",
       dimmed > plain / 2,
       true,
+    );
+  });
+
+/** The dark theme's `role` colour, failing by name when it cannot be painted. */
+const themeColour = (
+  ctx: Smoke.AsyncSmokeContext,
+  role: keyof Theme["colors"],
+): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
+  ctx.expectSome(
+    `the dark theme names its ${role} colour`,
+    Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors[role])),
+  );
+
+const filledActionDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("filled-action-dim-probe");
+    const secondary = yield* themeColour(ctx, "secondary");
+    const success = yield* themeColour(ctx, "success");
+    const destructive = yield* themeColour(ctx, "destructive");
+
+    // A pointer press focuses the fourth action without entering keyboard mode,
+    // and leaves the pointer on it, so no measured action is hovered: the
+    // baseline is every fill at full strength.
+    yield* ctx.host.click("dim-focus");
+    yield* ctx.expectEqual(
+      "a press focuses the action the dim is measured against",
+      yield* focusedAfterPaint(ctx),
+      "dim-focus",
+    );
+    yield* ctx.host.capture("pointer");
+    const filled = yield* paintedPixels(ctx, "pointer", secondary);
+    const ghost = yield* paintedPixels(ctx, "pointer", success);
+    const forced = yield* paintedPixels(ctx, "pointer", destructive);
+    yield* ctx.expectEqual(
+      "a filled action paints its fill at rest",
+      filled > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a ghost action paints its label at rest",
+      ghost > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the action forced into the cue paints its fill at rest",
+      forced > 0,
+      true,
+    );
+
+    // Four tab stops in tree order. The first Tab puts the window in keyboard
+    // mode, and the fourth lands the focus back on the action it started from —
+    // so both captures have the same focus and pointer position, and only the
+    // dim differs.
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab enters the actions at the first one",
+      yield* focusedAfterPaint(ctx),
+      "dim-filled",
+    );
+    yield* ctx.host.key("tab");
+    yield* ctx.host.key("tab");
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab returns to the action the dim is measured against",
+      yield* focusedAfterPaint(ctx),
+      "dim-focus",
+    );
+    yield* ctx.host.capture("keyboard");
+
+    yield* ctx.expectEqual(
+      "a filled action keeps every pixel of its fill",
+      yield* paintedPixels(ctx, "keyboard", secondary),
+      filled,
+    );
+    yield* ctx.expectEqual(
+      "a ghost action's label is dimmed away",
+      yield* paintedPixels(ctx, "keyboard", success),
+      0,
+    );
+    yield* ctx.expectEqual(
+      "forcing a filled action into the cue dims its fill",
+      yield* paintedPixels(ctx, "keyboard", destructive),
+      0,
     );
   });
 
@@ -6491,6 +6634,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "keyboard-focus-dim",
     view: () => <FocusDimProbe />,
     steps: focusDimSteps,
+  },
+  "filled-action-dim": {
+    id: "filled-action-dim",
+    view: () => <FilledActionDimProbe />,
+    steps: filledActionDimSteps,
   },
   "floating-sides": {
     id: "floating-sides",
