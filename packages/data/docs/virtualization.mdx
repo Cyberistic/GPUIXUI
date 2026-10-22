@@ -50,6 +50,8 @@ import { VirtualList } from "@gpuixui/data";
 | `reveal` | `VirtualReveal` | — | `{ index }`; the window moves, then the body scrolls |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report |
 
+`useVirtualRows({ count, rowHeight, viewportHeight, overdraw, initialOffset, reveal })` returns the window state a consumer needs to render it themselves.
+
 ## Limitations
 
 - One row height: the windowed mode positions rows from `estimatedItemHeight`.
