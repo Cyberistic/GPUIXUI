@@ -33,6 +33,7 @@ import {
   controlHeight,
   keepContent,
   keyboardRing,
+  nativeTextTheme,
   selectionWash,
   useTheme,
   type Theme,
@@ -180,6 +181,8 @@ export const ColorPicker = ({
         />
         <input
           aria-label={`${label} hex value`}
+          // The hex field paints the page role as its own fill.
+          theme={nativeTextTheme(theme, "background")}
           {...(valid ? {} : { "aria-description": "Invalid hex colour" })}
           testId={testId === undefined ? undefined : `${testId}-hex`}
           value={draft}

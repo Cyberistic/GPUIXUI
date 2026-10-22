@@ -40,6 +40,7 @@ import {
   controlHeight,
   keepContent,
   keyboardRing,
+  nativeTextTheme,
   selectionWash,
   statusTone,
   useTheme,
@@ -252,6 +253,10 @@ export const FieldInput = ({
   return (
     <input
       {...rest}
+      // The host draws its own value, placeholder and caret, so it is told the
+      // fill they sit on; without it the runtime layers the text on its
+      // built-in dark palette and a light field gets a dark-surface hint.
+      theme={nativeTextTheme(theme, "input")}
       {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
       {...(field === undefined ? {} : { "aria-label": field.label })}
       {...(description === undefined

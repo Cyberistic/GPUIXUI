@@ -151,10 +151,7 @@ describe("Tabs", () => {
   });
 
   it("paints the selected surface in a role a reader can see on the rail", () => {
-    const assertTheme = (
-      mode: TestTheme,
-      active: typeof lightTheme,
-    ): void => {
+    const assertTheme = (mode: TestTheme, active: typeof lightTheme): void => {
       const tabs = renderComponent(<Settings />, mode);
       settleMotion(tabs);
 

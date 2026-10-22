@@ -75,6 +75,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   keepContent,
   keyboardRing,
+  nativeTextTheme,
   selectionWash,
   statusTone,
   useTheme,
@@ -394,6 +395,8 @@ export const ChatComposer = ({
         <textarea
           testId="chat-field"
           aria-label={label}
+          // The composer paints the page role behind its transparent field.
+          theme={nativeTextTheme(theme, "background")}
           value={draft}
           placeholder={placeholder}
           readOnly={disabled}

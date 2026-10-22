@@ -6,8 +6,9 @@
  * field lookup. No other file in this package may import `@gpuixui/tokens`
  * (plan 110 §6).
  *
- * The seam is deliberately thin: `alpha`, `focusRing`, `elevationShadow` and
- * `statusTone` are the token package's own helpers (plans 014, 017 and 018).
+ * The seam is deliberately thin: `alpha`, `focusRing`, `elevationShadow`,
+ * `statusTone` and `nativeTextTheme` are the token package's own helpers
+ * (plans 014, 017, 018 and the native-host mapping in `docs/tokens.md`).
  * The only knowledge kept here is the component-level `danger` name, which the
  * token palette calls `destructive`.
  */
@@ -26,9 +27,11 @@ import {
   focusRing,
   keyboardFocusRing,
   lightTheme,
+  nativeTextTheme,
   statusTone,
   targetSize,
   textStyle,
+  type NativeTextFill,
   type PlatformName,
   type StatusTone,
   type TextRole,
@@ -48,11 +51,12 @@ export {
   focusRing,
   keyboardFocusRing,
   lightTheme,
+  nativeTextTheme,
   statusTone,
   targetSize,
   textStyle,
 };
-export type { PlatformName, StatusTone, TextRole, Theme };
+export type { NativeTextFill, PlatformName, StatusTone, TextRole, Theme };
 export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 
 /**

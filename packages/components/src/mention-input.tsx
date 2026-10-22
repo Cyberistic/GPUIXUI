@@ -54,6 +54,7 @@ import {
   controlHeight,
   keepContent,
   keyboardRing,
+  nativeTextTheme,
   selectionWash,
   useTheme,
 } from "./internal/theme.js";
@@ -196,6 +197,9 @@ export const MentionInput = ({
         >
           <input
             {...rest}
+            // The composite field paints the page role, so its value sits on
+            // `background` rather than a plain field's `input` fill.
+            theme={nativeTextTheme(theme, "background")}
             aria-label={label}
             testId={testId}
             value={text}

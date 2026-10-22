@@ -49,6 +49,7 @@ import {
 import {
   controlHeight,
   keepContent,
+  nativeTextTheme,
   selectionWash,
   useTheme,
 } from "./internal/theme.js";
@@ -315,6 +316,8 @@ export const CommandMenuInput = ({
       ref={registerInput}
       testId="command-input"
       aria-label={label}
+      // The palette's field paints the `input` role as its own fill.
+      theme={nativeTextTheme(theme, "input")}
       placeholder={placeholder}
       value={query}
       onChange={(event) => setQuery(event.value ?? "")}

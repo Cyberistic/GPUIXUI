@@ -33,6 +33,7 @@ import {
   controlHeight,
   keepContent,
   keyboardRing,
+  nativeTextTheme,
   selectionWash,
   targetSize,
   useTheme,
@@ -121,6 +122,9 @@ export const SearchInput = ({
       </div>
       <input
         {...rest}
+        // A composite field paints the page role as its own fill, so the host's
+        // placeholder and caret are measured against `background`.
+        theme={nativeTextTheme(theme, "background")}
         ref={setInput}
         testId={rest.testId ?? "search-input"}
         value={value}

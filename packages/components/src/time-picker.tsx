@@ -69,6 +69,7 @@ import {
   controlHeight,
   keepContent,
   keyboardRing,
+  nativeTextTheme,
   selectionWash,
   targetSize,
   useTheme,
@@ -325,6 +326,8 @@ export const TimePickerSegment = ({
   const props: InputProps = {
     testId: `${testId}-${segment}`,
     "aria-label": `${groupLabel} ${segment}`,
+    // The segments are transparent over the picker's `input` fill.
+    theme: nativeTextTheme(theme, "input"),
     value: text,
     placeholder: segment === "hours" ? "HH" : "MM",
     readOnly: disabled,

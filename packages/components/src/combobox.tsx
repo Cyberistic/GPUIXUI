@@ -86,6 +86,7 @@ import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
   keepContent,
+  nativeTextTheme,
   useTheme,
   type Theme,
 } from "./internal/theme.js";
@@ -491,6 +492,8 @@ export const ComboboxInput = ({
       testId="combobox-input"
       placeholder={placeholder}
       aria-label={label}
+      // The headless field forwards the host theme; its own fill is `input`.
+      theme={nativeTextTheme(theme, "input")}
       onKeyDown={(event) => {
         if (isDismiss(event)) dismissTopLayer(event);
       }}

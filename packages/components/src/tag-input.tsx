@@ -43,6 +43,7 @@ import {
   controlHeight,
   keepContent,
   keyboardRing,
+  nativeTextTheme,
   selectionWash,
   targetSize,
   useTheme,
@@ -187,6 +188,8 @@ export const TagInputField = ({
   return (
     <input
       {...rest}
+      // The group paints the page role behind the tokens and this field.
+      theme={nativeTextTheme(theme, "background")}
       readOnly={disabled}
       value={draft}
       onChange={(event) => editDraft(event.value ?? "")}

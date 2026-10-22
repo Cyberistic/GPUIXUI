@@ -32,6 +32,7 @@ import {
   controlHeight,
   keepContent,
   keyboardRing,
+  nativeTextTheme,
   selectionWash,
   useTheme,
 } from "./internal/theme.js";
@@ -188,6 +189,8 @@ export const InlineEdit = ({
   return (
     <input
       {...rest}
+      // The editor paints the page role as its own fill.
+      theme={nativeTextTheme(theme, "background")}
       aria-label={label}
       ref={attachInput}
       value={draft}
