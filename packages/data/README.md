@@ -132,10 +132,31 @@ const columns = useColumns({ columns: FILE_COLUMNS });
 ```
 
 A resizable column needs a fixed `width`; the divider sits inside its header
-cell therefore, so a body row needs no spacer track. Pinned (frozen) columns are
-not offered: the runtime paints no sticky position, so a frozen column is the
-measured two-pane composition (`data-grid-frozen-column`) rather than an order
-flag — plan 610's frozen-column row owns it.
+cell therefore, so a body row needs no spacer track.
+
+A **pinned column** is `FrozenTable`, not a column attribute: the runtime paints
+no `position: "sticky"`, so the frozen column is its own vertical scroller beside
+the data pane and the two are mirrored through `onScrollChange` →
+`renderer.scrollTo` with a re-entrancy guard (`data-grid-frozen-column`,
+`frozen-column-lifecycle`). The sideways pan is the data pane's alone, and a
+press on a frozen cell chooses the record for the whole grid. `ColumnMenu`
+therefore offers no pin row — a pin is a different layout, not something the
+column list can express. The page is `docs/frozen-columns.mdx`; the shipped
+screen is `examples/frozen-table.example.tsx`.
+
+```tsx
+<FrozenTable
+  height={320}
+  frozenWidth={180}
+  contentWidth={420}
+  rows={table.rows}
+  rowKey={(row) => row.id}
+  frozenHeader={<TableRow><TableHeaderCell width={180}>Name</TableHeaderCell></TableRow>}
+  frozenRow={(row) => <TableRow selected={table.isSelected(row.id)}>…</TableRow>}
+  header={<TableRow><TableHeaderCell width={140}>Status</TableHeaderCell></TableRow>}
+  row={(row) => <TableRow selected={table.isSelected(row.id)}>…</TableRow>}
+/>
+```
 
 A long list uses the runtime's `<virtual-list>` through `VirtualList`. Children
 mode is the default; `itemCount` mode retains only the slice the app renders,
@@ -321,7 +342,7 @@ in the primitives' registry and a column width is data.
 | Trees (`TreeView`, `useExpandedRows`, `tree/logic`) | shipped, window-verified |
 | Expandable rows (`TableExpandableRow`, `TableDetailRow`) | shipped, window-verified |
 | Data surfaces (`KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`, `AdvancedFilter`) | shipped, window-verified |
-| Pinned / frozen columns | composition, not shipped (`data-grid-frozen-column`) |
+| Pinned / frozen columns (`FrozenTable`) | shipped, window-verified (`data-grid-frozen-column`, `frozen-column-lifecycle`) |
 | Charts (`BarChart`, `StackedBar`, `LineChart`, `DonutChart`, `Sparkline`) | shipped, window-verified |
 
 ## Commands
