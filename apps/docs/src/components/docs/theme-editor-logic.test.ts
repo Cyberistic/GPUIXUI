@@ -492,12 +492,14 @@ describe("theme-editor audit readout", () => {
 
   it("words an emphasis whose size drifted from the body's", () => {
     // The same rule holds the pair to one measure, so a brand that raises only
-    // `body`'s size reports `bodyStrong.fontSize` — a 15px paragraph under a
-    // 14px card title. The sentence must name the shared measure the size
-    // missed rather than the weight, which this brand leaves correct.
+    // `body`'s size reports `bodyStrong.fontSize` — a paragraph one step larger
+    // than the title above it. The sentence must name the shared measure the
+    // size missed rather than the weight, which this brand leaves correct.
     const audit = auditTheme(
       extendTheme(themes.light, {
-        typography: { body: { fontSize: 15 } },
+        typography: {
+          body: { fontSize: themes.light.typography.body.fontSize + 1 },
+        },
       }),
     );
     const findings = auditFindings(audit).filter(
