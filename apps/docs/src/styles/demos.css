@@ -5464,7 +5464,7 @@ button.gx-table-row:focus-visible {
   height: var(--control-height-sm);
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: transparent;
   cursor: pointer;
 }
@@ -5497,7 +5497,7 @@ button.gx-table-row:focus-visible {
   width: var(--control-height-md);
   height: var(--control-height-md);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .gx-color-input {
@@ -5506,7 +5506,7 @@ button.gx-table-row:focus-visible {
   height: var(--control-height-md);
   padding: 0 8px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--background);
   color: var(--input-foreground);
   font-family: var(--font-sans);
@@ -5555,7 +5555,7 @@ button.gx-table-row:focus-visible {
   width: 20px;
   height: 20px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .gx-color-chosen-label {

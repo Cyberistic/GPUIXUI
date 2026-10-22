@@ -5907,7 +5907,44 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 181/181
+`[x]` `[██████████]` 182/182
+
+`[x]` Curate the **Color picker** page and hold its hex grammar, commit split
+and per-swatch tab stop to the source — `/docs/components/color-picker` served
+only the package page (strategy 4: no preview), so the picker had nothing a
+reader could press, and the package page's "Tabs or arrows" claim promised
+arrow navigation the component does not ship (each swatch is its own tab stop).
+The curated page shadows `packages/components/docs/color-picker.mdx` and
+teaches the honest picker: six theme-role defaults; `#abc`/`ABC`/`#AABBCC`
+normalise to lowercase `#rrggbb` while 4/8-digit alpha forms are refused; a
+swatch press commits at once, a typed value on `Enter` or blur, and an invalid
+draft paints the `destructive` edge and reverts; `sameHex` marks the chosen
+swatch, so a caller's non-hex swatch commits but cannot be marked; every cell is
+its own tab stop with no arrow grid; the chosen cell carries the strong
+`foreground` edge plus the two-tone pip (the page fill inside the body ink);
+the field paints the page role and hands the host
+`nativeTextTheme(theme, "background")`; and no saturation square is faked
+because 0.11.0 has only two-stop linear gradients. Two browser previews:
+`color-picker-workflow` (a live swatch press / typed commit / invalid draft /
+readout, starting on the theme's primary so a platform switch resets it) and
+`color-picker-states` (rest, a custom palette, an invalid draft, disabled).
+Rules live in `src/components/docs/color-picker-preview.ts`:
+`color-picker-preview.test.ts` (10 cases) compares the preview's normaliser
+with the component's own and reads the default roles and tab stop out of
+`color-picker.tsx`; `color-picker-demo.test.tsx` (7 cases) holds the rendered
+markup and the style sheet to the roles and the density step. Registered in
+`demos.tsx`, the sidebar (Forms), the curated index, `/docs/theming`'s switch
+list and the strategy's "Curated today" line; the page is in
+`component-page-truth.test.ts`'s curated set and `package-docs.test.ts`'s shadow
+set, so the count (9 native), dependencies, displaced props and runtime verdict
+are derived. Directions measured: widening the preview's normal form to
+`{4,6}` fails the grammar and invalid-draft cases by name; unmounting
+`color-picker-states` fails `are mounted by a page, so no demo ships dead`.
+`nub run --filter @gpuixui/docs test` is 1006 passed with only the two
+in-flight `component-page-truth` cases for the drawer/context-menu source
+(the components workstream's uncommitted refactor), `check-types`, `build` and
+`check:tests` green. No native scenario applies — a docs page has no runtime
+path.
 
 `[x]` Stop the **index and the Table page calling a shipped lane
 partial** — `/docs/components` said "the data lane is partial — @gpuixui/data

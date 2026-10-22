@@ -1,0 +1,215 @@
+---
+title: Color picker
+description: A keyboard-reachable swatch grid and a HEX field — honestly not a saturation square.
+---
+
+`ColorPicker` chooses a colour from a swatch grid or by typing a HEX value, with
+a preview of the committed colour. It is deliberately **not** a
+saturation/value square: `@gpuix/native@0.11.0` paints two-stop linear gradients
+only and no radial gradient, so the classic square cannot be drawn honestly and
+is not faked.
+
+The picker reports a colour; the app owns what it paints with it. The six
+default swatches are theme roles, so a custom theme changes them.
+
+<ComponentPreview name="color-picker-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="ColorPicker" />
+
+<ComponentSource
+  name="colorPicker"
+  file="packages/components/src/color-picker.tsx"
+/>
+
+## Usage
+
+```tsx
+import { useState } from "react";
+import { ColorPicker } from "@gpuixui/components";
+
+const [accent, setAccent] = useState("#5f4bdb");
+
+<ColorPicker
+  label="Accent colour"
+  onValueChange={setAccent}
+  swatches={["#5f4bdb", "#2563eb", "#0d9488", "#d97706"]}
+  value={accent}
+/>;
+```
+
+The runnable build is `examples/color-picker.example.tsx`, which the native
+playground mounts.
+
+## The value
+
+The public value is a lowercase `#rrggbb` hex, with one honest exception: a
+caller's own swatch that is not a hex is committed **as given**, because the
+picker does not reject a palette it was handed.
+
+| Typed input | Commits as |
+| ----------- | ---------- |
+| `#abc`, `abc`, `#AABBCC`, `AABBCC` | `#aabbcc` (lowercase, expanded) |
+| surrounding whitespace | trimmed before the rule above |
+| `#abcd`, `#aabbccdd` | refused — there is no alpha control |
+| anything else | refused: the edge turns `destructive` and the draft reverts on commit |
+
+A **swatch press commits at once**. A typed value commits on `Enter` or when the
+field loses focus, and an invalid draft never becomes the value: committing it
+puts the field back to the committed colour. The field's edge reports the
+**draft**, so it turns `destructive` while the text is invalid, before any
+commit.
+
+`sameHex` compares normal forms, which is what marks the chosen swatch. A
+caller's non-hex swatch still commits, but it can never match a hex value, so
+that cell is not marked and the preview cell falls back to `muted`.
+
+<ComponentPreview name="color-picker-states" />
+
+## Composition
+
+`ColorPicker` is one component, not a compound part set. Its internal parts are
+addressable with a `testId`.
+
+| Part | Responsibility |
+| ---- | -------------- |
+| the root | a named `role="group"` and the `{ disabled, valid }` state a `style` callback reads |
+| a swatch cell | one `role="button"` named by its colour, `aria-selected` on the chosen one, its own tab stop |
+| the hex field | a real `<input>` named `<label> hex value`; normalises and commits |
+| the preview cell | the committed colour, with no text |
+
+With `testId="accent"`, the parts are `accent-swatch-${index}`,
+`accent-swatch-${index}-marker` (the chosen cell only), `accent-hex` and
+`accent-preview`.
+
+## Keyboard
+
+| Where | Key | Result |
+| ----- | --- | ------ |
+| a swatch | `Tab` / `Shift+Tab` | reaches each swatch: **every cell is its own tab stop** |
+| a swatch | `Enter` or `Space` | commits that colour |
+| the hex field | typing | edits the draft; validity follows the text |
+| the hex field | `Enter` | commits the draft (or reverts it when invalid) |
+| the hex field | blur | the same commit |
+| anywhere | `Escape` | nothing — there is no dismiss layer to close |
+
+There is **no arrow-key grid navigation**: the component installs no arrow
+handler and no roving tab stop, so six defaults are six stops. That is a real
+cost on a long palette, and it is the policy the component ships rather than a
+drawing bug.
+
+A disabled picker leaves every swatch out of the tab order (`tabIndex={-1}`),
+makes the field read-only and fades the root.
+
+## API reference
+
+### `ColorPicker`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `label` | `string` | — | the group's accessible name; the field is named `<label> hex value` |
+| `value` | `string` | `undefined` | the controlled value; `undefined` means uncontrolled |
+| `defaultValue` | `string` | `"#000000"` | the uncontrolled starting colour |
+| `onValueChange` | `(value: string) => void` | — | a swatch press, or a typed value that normalises |
+| `swatches` | `ReadonlyArray<string>` | six theme roles | the grid, in order; replaces the defaults whole |
+| `disabled` | `boolean` | `false` | swatches leave the tab order, the field is read-only, the root fades |
+| `className` | `string` | — | compiled through `@gpuixui/tw`, joined after the recipe |
+| `style` | `StateStyle<ColorPickerState>` | — | resolved against `{ disabled, valid }`, merged last |
+| `testId` | `string` | — | the stable locators above |
+
+`ColorPickerState` is `{ disabled: boolean; valid: boolean }`. `valid` is the
+**draft's** validity, so a style callback can paint the invalid state before a
+commit.
+
+## Theming
+
+| Element | Role or metric |
+| ------- | -------------- |
+| swatch fills | the caller's colours; by default `primary`, `secondary`, `accent`, `muted`, `destructive` and `foreground` |
+| swatch size | `density.controlHeight.sm` square; the recipe's `rounded-md` resolves to the theme's `radius.md` |
+| chosen edge | `foreground` at `borderWidth.strong` |
+| chosen pip | the page `background` inside the body `foreground` edge |
+| field fill | `background` — the page role, not the `input` fill |
+| field value | `inputForeground`, from the recipe's own `text-input-foreground` |
+| field edge | `border`, or `destructive` while the draft is invalid |
+| focus ring | `ring`, or `destructive` while the draft is invalid; none while disabled |
+| field metrics | `density.controlHeight.md`, 8px inset, 14/20 type, `radius.md` corner |
+| preview cell | the committed colour, or `muted` when the value is not a hex |
+| disabled | the root fades by the component packages' disabled fade; the swatches leave the tab order |
+| gaps | the recipe's fixed 8px root and field, 6px grid |
+
+The six defaults are resolved from the theme, so the platform switch repaints
+them; the cells resize with the platform's density and their corners follow its
+`radius.md`, while the recipe's gaps stay fixed. A custom theme changes both the
+defaults and the shell — see [Theming](/docs/theming).
+
+The field hands the native host `nativeTextTheme(theme, "background")`. An
+`<input>` paints its value from the element's own `style.color` — the recipe's
+`inputForeground` — not from the theme object's `text`; that field of the seam
+belongs to the `<code>`, `<diff>` and `<markdown>` hosts.
+
+## Accessibility and limitations
+
+- The root is a named `group`. Each swatch is a `role="button"` named by its
+  colour string, with `aria-selected` on the current one.
+- **Every swatch is its own tab stop.** There is no roving tab stop and no
+  arrow-key movement, so a long palette is a long Tab walk.
+- The chosen cell carries three marks: the strong `foreground` edge, and the pip
+  (the page fill inside the body ink). `foreground` is one of the six defaults,
+  so a ring alone disappeared into that swatch; at most one of the three can
+  vanish into any colour, and the component's suite measures the best of them on
+  every default swatch in both shipped themes. A caller's palette is the
+  caller's to check.
+- An invalid draft is described with `aria-description="Invalid hex colour"`
+  and paints the `destructive` edge. `0.11.0` has no `aria-invalid`, so the
+  edge and the description are the whole refusal.
+- Disabled is `tabIndex={-1}` plus `readOnly` plus the fade. There is no
+  `aria-disabled` in `0.11.0`.
+- **No saturation/value square**: two-stop linear gradients only, no radial
+  gradient (plan 203 records the measurement). The square is not faked.
+- No alpha, HSL/RGB numeric fields or eyedropper. HEX only: named colours and
+  `rgb()` strings are not parsed.
+- Validation is on commit for the value, while the edge follows the draft; there
+  is no live preview of an invalid draft.
+- The grid is flat: no hue strip, custom-swatch editing or reordering.
+- No `aria-labelledby` in `0.11.0`; pass `label`.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the swatch grid, the hex field, the preview cell and the commit rule |
+| `@gpuix/react` | the host props and key event types |
+| `@gpuix/react/floating` | `mergeStyles`, `resolveStyle` and `StateStyle` |
+| `@gpuixui/tw` | the `COLOR_PICKER_*` recipes and `cn` |
+| `effect` | `Option` for the hex grammar |
+
+## Related
+
+- **Field** — a text field with one message slot and a validation state.
+- **Badge** — show the chosen colour on a real surface.
+- **Themes** — edit the roles the six defaults come from.
+- **Theming** — semantic roles, the platform switch and theme extension.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the picker chooses
+and validates honestly, but `0.11.0` cannot draw a saturation square, has no
+`aria-invalid` or `aria-disabled`, and the grid is six independent tab stops
+rather than a roving arrow grid.
+
+`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer — 9 native
+behaviour tests: the group, the field and the preview; the six theme swatches;
+a swatch press and its selected mark; a typed shorthand; an invalid draft that
+refuses to commit; a valid blur commit and an invalid blur revert; the disabled
+tab order and read-only field; the `{ disabled, valid }` style callback in both
+themes; and the chosen mark measured on every default swatch in both shipped
+themes. The focus sweep is
+`src/behaviour/focus-ring.test.tsx`; `src/color/hex.test.ts` adds 8 pure tests
+for the normal form.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```

@@ -124,6 +124,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/collapsible.tsx",
   },
   {
+    file: "color-picker.mdx",
+    row: "Color picker",
+    suite: "packages/components/src/behaviour/color-picker.test.tsx",
+    shadowed: "packages/components/docs/color-picker.mdx",
+    source: "packages/components/src/color-picker.tsx",
+  },
+  {
     file: "checkbox.mdx",
     row: "Checkboxes",
     source: "packages/primitives/src/components/Checkbox.tsx",

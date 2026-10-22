@@ -156,6 +156,7 @@ describe("the package docs collections", () => {
     "/docs/components/card",
     "/docs/components/carousel",
     "/docs/components/collapsible",
+    "/docs/components/color-picker",
     "/docs/components/combobox",
     "/docs/components/command-menu",
     "/docs/components/confirm-dialog",

@@ -17,6 +17,7 @@
     "---Forms---",
     "checkbox",
     "switch",
+    "color-picker",
     "field",
     "inline-edit",
     "form",

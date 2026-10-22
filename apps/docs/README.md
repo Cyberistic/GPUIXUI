@@ -48,6 +48,7 @@ components/button.mdx        Curated: previews, install, source (the package pag
 components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
 components/carousel.mdx      Curated: discrete stepping, the dot pill and the kept slides
 components/checkbox.mdx      Curated: the three states, the 24px target, the mixed parent
+components/color-picker.mdx  Curated: the hex grammar, the commit split, the swatch's own tab stop
 components/collapsible.mdx   Curated: the measured reveal, the unmount, the disabled gate
 components/combobox.mdx      Curated: the ranked list, the disabled row, the create row
 components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
@@ -114,6 +115,8 @@ src/components/docs/checkbox-preview.ts  The checkbox preview's group arithmetic
 src/components/docs/checkbox-demo.tsx     The checkbox's two browser renderings and their source strings
 src/components/docs/collapsible-preview.ts The collapsible preview's state contract and activation edges
 src/components/docs/collapsible-demo.tsx  The collapsible's two browser renderings and their source strings
+src/components/docs/color-picker-preview.ts The color picker preview's hex grammar and commit model
+src/components/docs/color-picker-demo.tsx The color picker's two browser renderings and their source strings
 src/components/docs/carousel-preview.ts   The carousel preview's clamp, loop rule and dot metrics
 src/components/docs/carousel-demo.tsx     The carousel's two browser renderings and their source strings
 src/components/docs/combobox-preview.ts The combobox preview's ranking, highlight and selection model

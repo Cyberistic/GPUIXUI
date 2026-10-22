@@ -33,6 +33,12 @@ import {
   collapsibleWorkflowSource,
 } from "./collapsible-demo";
 import {
+  ColorPickerStates,
+  ColorPickerWorkflow,
+  colorPickerStatesSource,
+  colorPickerWorkflowSource,
+} from "./color-picker-demo";
+import {
   ComboboxDemo,
   ComboboxMultiple,
   comboboxDemoSource,
@@ -2550,6 +2556,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "collapsible-workflow": {
     render: CollapsibleWorkflow,
     source: collapsibleWorkflowSource,
+  },
+  "color-picker-states": {
+    render: ColorPickerStates,
+    source: colorPickerStatesSource,
+  },
+  "color-picker-workflow": {
+    render: ColorPickerWorkflow,
+    source: colorPickerWorkflowSource,
   },
   "stepper-states": { render: StepperStates, source: stepperStatesSource },
   "stepper-workflow": {

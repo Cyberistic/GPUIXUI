@@ -70,6 +70,14 @@ never animates a height. Its trigger is a real `<button>` where the native one i
 a `div role="button"`, because the browser button carries the same tab stop and
 Enter/Space activation; the page reads the native role from the source.
 
+A **color picker's swatch** is a real `<button>` in the preview where the native
+cell is a `div role="button"` that the component gives a tab stop. Both carry the
+same name (the colour), the same `aria-selected` mark, Enter/Space activation and
+one tab stop per cell — there is no roving arrow grid in either — so the element
+name is the difference, not the interaction. The six defaults are drawn from the
+theme the switch resolved, so a platform switch repaints them and resizes the
+cells from its density; the page prints the roles.
+
 A **time picker's focus** is drawn one level up from the native ring. The
 component declares the runtime's `focusVisible` outline on each segment and on
 the clear control, so the ring hugs the 26px input that took the focus; the
@@ -319,10 +327,11 @@ command that cannot resolve on the section a reader follows first.
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source.
 Curated today: Accordion, Alert, Breadcrumb, Button, Card, Carousel, Checkbox,
-Collapsible, Combobox, Command menu, Confirmation dialog, Context menu,
-Date picker, Dialog, Drawer, Dropdown menu, Field and inline validation, Form,
-Inline edit, List, Pagination, Popover, Search input, Select, Stepper, Switch,
-Table, Tag input, Tabs, Time picker, Timeline, Tooltip, Toast.
+Collapsible, Color picker, Combobox, Command menu, Confirmation dialog,
+Context menu, Date picker, Dialog, Drawer, Dropdown menu,
+Field and inline validation, Form, Inline edit, List, Pagination, Popover,
+Search input, Select, Stepper, Switch, Table, Tag input, Tabs, Time picker,
+Timeline, Tooltip, Toast.
 `src/lib/component-preview.test.ts` holds the preview registry from both sides:
 every `<ComponentPreview name>` on a page names a registered demo, and every demo
 is mounted by a page (a key nobody renders is dead code, and a typo throws in the
