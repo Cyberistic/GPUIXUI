@@ -1148,6 +1148,34 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(unnamed, "the aria row does not name these absences").toEqual([]);
   });
 
+  it("records right-to-left layout as a missing input, held to the typings", () => {
+    // Plan 435c's docs half cannot offer an RTL toggle for a runtime with no
+    // direction: `StyleDesc` has no `direction` field, every edge is physical,
+    // and `AnchoredProps` places a surface by a physical side. The row states
+    // that absence and the one honest workaround instead of implying a mirrored
+    // layout works.
+    const typings = read("apps/docs/node_modules/@gpuix/native/dist/host.d.ts");
+    expect(typings).not.toMatch(/^\s*(?:writing)?direction\?:/m);
+    expect(typings).toContain("paddingLeft?: number;");
+    expect(typings).toContain('side?: "top" | "right" | "bottom" | "left";');
+
+    const rtl = rowFor("Right-to-left layout");
+    expect(rtl?.verdict).toBe("not supported");
+    expect(rtl?.evidence).toContain("`direction`");
+    expect(rtl?.evidence).toContain("AnchoredProps");
+    expect(rtl?.workaround).toContain("direction-aware helper");
+    expect(rtl?.workaround).toContain("mirror");
+
+    const page = typingsRow("Right-to-left layout");
+    expect(page, "the page's typings table has no RTL row").toBeDefined();
+    expect(page?.[1]).toContain("direction");
+    expect(page?.[2]).toContain("helper");
+
+    // The section no longer prints a count it cannot keep.
+    expect(runtimePage).toContain("The rows below are");
+    expect(runtimePage).not.toContain("These seven are");
+  });
+
   it("publishes the typings gaps on /docs/runtime", () => {
     // The durable record is what a plan cites; the page is what a reader of the
     // docs cites. A link that looks like an anchor is the same lie as a chart
@@ -1291,7 +1319,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[1]).toContain("appearance");
     expect(page?.[2]).toContain("MotionValue.sample");
     expect(page?.[2]).toContain("reducedMotion");
-    expect(runtimePage).toContain("These seven are");
+    expect(runtimePage).toContain("The rows below are");
   });
 
   it("records the cross-pane drag the runtime's event protocol shapes", () => {

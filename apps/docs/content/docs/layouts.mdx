@@ -46,6 +46,7 @@ composition, not just the CSS.
 | No `zIndex` | paint order is source order; put a floating surface last, or use the shared dismiss stack |
 | A scroll container with no height grows instead of scrolling | give `ScrollArea` a bounded parent (`height`, `flex: 1` inside a sized column) |
 | Grid tracks are equal and numeric | ragged rows wrap in a `Stack`; a spanning cell is not expressible |
+| No direction input | RTL is the app's helper, not a component branch: every edge is physical (`paddingLeft`, `marginLeft`, `borderLeftWidth`) and `AnchoredProps` places by a physical `side`, so one direction-aware helper maps a logical inset to the app's direction and a component stays physical |
 
 The full capability table, with the evidence for each line, is on
 [Runtime](/docs/runtime).

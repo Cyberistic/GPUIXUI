@@ -313,6 +313,24 @@ describe("the data-display page's drawing claims", () => {
   });
 });
 
+describe("the layouts page's direction claim", () => {
+  const layouts = read("layouts.mdx");
+
+  it("hands an RTL layout to an app-level helper, as the typings require", () => {
+    // Plan 435c's docs half cannot be a toggle for a runtime with no direction.
+    // The page said nothing about it, so a layout plan could mirror a tree by
+    // hand and assume the primitives followed.
+    const rtl = rowFor(record, "Right-to-left layout");
+
+    expect(rtl).toContain("not supported");
+    expect(rtl).toContain("`direction`");
+    expect(rtl).toContain("AnchoredProps");
+    expect(layouts).toContain("No direction input");
+    expect(layouts).toContain("paddingLeft");
+    expect(layouts).toContain("direction-aware helper");
+  });
+});
+
 /**
  * The workspace page denied pointer capture and called every terminal surface
  * unverified. Both were measured since: capture exists for an element that

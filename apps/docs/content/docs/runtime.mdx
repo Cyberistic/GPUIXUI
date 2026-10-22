@@ -95,7 +95,7 @@ can carry, focus and the dim, and proving the tree — is on
 
 ## Not in the typings
 
-The matrix above is built from `@gpuixui/runtime`'s own keys. These seven are
+The matrix above is built from `@gpuixui/runtime`'s own keys. The rows below are
 different: the pinned typings declare neither the host nor the prop — or no
 public method takes one — so there is nothing to pass and no probe to run — a
 component composes the alternative instead. `COMPONENTS.md`'s rows rely on each
@@ -108,6 +108,7 @@ of them.
 | Context-menu event (`onContextMenu`) | `HostProps` declares no `onContextMenu`; a right press arrives as `onAuxClick`, which `isRightClick` distinguishes — the shipped `ContextMenu` uses that path, and `context-menu-lifecycle` measured a right press opening the surface at the press point | handle `onAuxClick` and place your own surface at the pointer |
 | Paste event (`onPaste`) | `HostProps` declares no `onPaste`; a paste runs inside a focused field and reaches `onChange` with the new value (`clipboard-lifecycle`) | read the pasted text from the new value in `onChange`; there is no paste payload, caret or insert-at-selection API |
 | Accessibility attributes | the closed set is `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext` and `aria-level` — no checked or pressed state, no `aria-labelledby`, and no `aria-live` | name the control itself, put a numeric value in `aria-valuetext`, and do not present a toast or a countdown as announced |
+| Right-to-left layout | `StyleDesc` has no `direction`/`writingDirection` field; every edge is physical (`paddingLeft`/`Right`, `marginLeft`/`Right`, `borderLeftWidth`/`RightWidth`, `left`/`right`) and `AnchoredProps` places a surface by a physical `side`/`anchor`. There is nothing to pass that mirrors a tree, and whether the platform shapes an RTL **string** itself is unmeasured | keep one direction-aware helper that turns a logical inset or alignment into the physical value the app's direction needs, place overlays by a physical side, and mirror only directional glyphs (chevrons, arrows, back/forward) — a component stays physical in both directions |
 | Application menu | the typings expose only `WindowOptions.appName`, which names the Hide and Quit items. The macOS bar the runtime installs is **fixed** — Apple (Services, Hide, Hide Others, Show All, Quit) and Window (Minimize, Zoom, Close), with no Edit menu so ⌘C/⌘V reach the window's text handling — and no public method takes a menu (`app_menu::init` is `pub(crate)`) | draw the menu **inside** the window with the dropdown parts; a native item's callback cannot be attached, and a Linux or Windows menu bar is the app's own |
 | Reduced-motion preference | no preference query exists: `@gpuix/native` 0.11.0 publishes no `appearance`, `prefers*` or `reduce*` export, and `WindowOptions` carries no such option — so there is no value to read. `@gpuixui/motion` takes the policy from the caller instead: `MotionValue.sample(elapsedMs, reducedMotion)` and the hooks' `options.reducedMotion` | the app owns the policy — detect it in your own layer and pass it with `MotionValue.sample(elapsedMs, reducedMotion)` or the hooks' `options.reducedMotion` ([Motion](/docs/motion)); keep motion optional and short rather than the carrier of meaning |
 

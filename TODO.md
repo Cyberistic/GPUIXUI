@@ -3173,7 +3173,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 106/106
+`[x]` `[██████████]` 107/107
+
+`[x]` Publish **right-to-left layout** as the missing input it is — plan 435c
+asks for an RTL toggle beside the platform switch and an RTL statement on every
+component page, but the pinned runtime publishes no direction at all, and nothing
+on the site said so: a layout plan could mirror a tree by hand and assume the
+primitives followed, and a docs toggle would have implied a capability the
+library does not have. `docs/gpuix-capabilities.md` §3 gains **Right-to-left
+layout** (`not supported`, held to the installed `host.d.ts`: no
+`direction`/`writingDirection` field, physical edges only — `paddingLeft`/`Right`,
+`marginLeft`/`Right`, `borderLeftWidth`/`RightWidth`, `left`/`right` — and
+`AnchoredProps`' physical `side`/`anchor`) with the one honest workaround (a
+single app-level direction-aware helper, physical overlay placement, mirror only
+directional glyphs) and the scope stated plainly: whether the platform shapes an
+RTL **string** on its own is unmeasured, so the missing capability is *expressing*
+a direction. `/docs/runtime` §Not in the typings publishes the row and its intro
+stops printing a count ("These seven are different" → "The rows below are
+different"), and `/docs/layouts` carries the rule in its runtime-facts table.
+`capability-doc.test.ts` gains the record-and-page case plus a premise read of the
+typings, and `lane-page.test.ts` holds the lane row. Directions measured: flipping
+the record verdict to `supported` fails (`expected 'supported' to be 'not
+supported'`), deleting the page row fails (`the page's typings table has no RTL
+row`), and deleting the lane row fails by name. Suite 72 files / 650 tests,
+`check-types` and `build` green.
 
 `[x]` Read the **licence shape a record actually has** — `LICENSES/lucide.md` (the
 icons' ISC/MIT record, authored beside the geometry it covers) states what it
