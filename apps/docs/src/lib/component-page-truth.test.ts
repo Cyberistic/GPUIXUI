@@ -747,6 +747,14 @@ describe("the curated component pages", () => {
     expect(text).toContain("380px");
     expect(text).toContain("16 native behaviour tests");
     expect(text).toContain("Render the viewport **last**");
+    // The clock a traversal cannot hold: a window focuses the card's control
+    // without running its `onFocus` (`focuses=0`), so keyboard arrival does not
+    // pause it and a reader who must reach the card needs `duration: 0` — the
+    // same rule the package page prints.
+    expect(text).toContain("A traversal does not hold the clock");
+    expect(text).toContain("focuses=0");
+    expect(text).toContain("duration: 0");
+    expect(text).not.toContain("focuses=1");
     // The retracted shapes: an escape path and an announcement the runtime
     // cannot make.
     expect(text).not.toContain("Escape dismisses the toast");

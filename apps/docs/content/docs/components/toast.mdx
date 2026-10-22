@@ -111,10 +111,12 @@ not resume the timer.
 | `Enter` / `Space` | runs the focused action or dismisses the card |
 | `Escape` | no toast behaviour: the card is not a dialog and does not trap focus |
 
-Reaching a card by `Tab` delivers the focus event (`tabs-lifecycle` measured
-`focuses=1` on 0.11.0), so a keyboard reader's arrival holds the clock exactly as
-the pointer does. The hold begins only when focus arrives, so a toast that must
-survive until it is reached carries `duration: 0` or a long duration.
+**A traversal does not hold the clock.** A window focuses a toast's action on a
+`Tab` traversal without running its `onFocus` (`tabs-lifecycle` measures
+`focuses=0` on 0.11.0), so arriving at a card by keyboard does not pause it. The
+hold begins on the pointer, or on a press that moves focus into a control; a toast
+a keyboard reader must be able to reach carries `duration: 0` (persistent, closed
+by its action) or a long enough duration to read.
 
 ## API reference
 

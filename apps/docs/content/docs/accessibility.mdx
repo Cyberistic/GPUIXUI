@@ -112,9 +112,10 @@ paints it, a mouse press does not. A programmatic focus before any keyboard inpu
 does not paint it either, so a mouse-opened overlay keeps `focusRing(theme)` — the
 unconditional shadow — for that path.
 
-- A `Tab` traversal runs React's `onFocus`, so a focus-only surface may open on
-  it. A key **move** reads the key event's own element id: the first arrow after
-  a traversal must move off the tab it reached.
+- A `Tab` traversal runs **no** `onFocus` on this host (`focuses=0`), so a
+  focus-only surface cannot open on it; the ring is declared at rest, so the cue
+  still paints. A key **move** reads the key event's own element id: the first
+  arrow after a traversal must move off the tab it reached.
 - An overlay returns the focus to its trigger when it closes; that is part of the
   [keyboard](/docs/keyboard) contract, not an accessibility add-on.
 - The runtime dims every other focusable element to `keyboardFocusDimOpacity`

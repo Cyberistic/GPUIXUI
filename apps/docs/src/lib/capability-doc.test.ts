@@ -317,31 +317,51 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("<textarea>");
   });
 
-  it("records the focus path a `Tab` traversal delivers, with the probes behind it", () => {
-    // The events row used to say `onFocus` never ran on a traversal, so a plan
-    // that opens a tip or a hint on focus was told to substitute
-    // `aria-description` for a handler that does run. Re-measured 2026-10-22:
-    // the tooltip opens on the traversal and Tabs counts `focuses=1`; the old
-    // run read the frame before the event arrived. Keeping the retracted
-    // sentence — or dropping the measurement that replaced it — fails here.
+  it("records the focus a `Tab` traversal does not deliver, with the probes behind it", () => {
+    // This row has flipped twice. It first said `onFocus` never ran on a
+    // traversal; a re-run then read `focuses=1` and it was corrected to "the
+    // handler runs"; three clean window runs on 2026-10-22 with the probes
+    // asserting the counter read `focuses=0` again, so the authoritative
+    // reading is the window's: a traversal moves the focus and runs no
+    // `onFocus`. The offscreen `TestRenderer` does dispatch it, which is why
+    // the softer claim kept coming back. Keeping either retracted sentence —
+    // "never runs" as a host rule, or "does run" as a promise — fails here.
     const events = rowFor("Pointer, keyboard and focus events");
     expect(events?.verdict).toBe("supported, with limits");
     expect(events?.evidence).toContain("tooltip-lifecycle");
     expect(events?.evidence).toContain("tabs-lifecycle");
-    expect(events?.evidence).toContain("run React's `onFocus`");
-    expect(events?.evidence).toContain("focuses=1");
-    expect(events?.evidence).toContain("before the event arrived");
-    expect(doc).not.toContain("without running React's `onFocus`");
+    expect(events?.evidence).toContain("without running React's `onFocus`");
+    expect(events?.evidence).toContain("focuses=0");
+    expect(events?.evidence).toContain("only a window is authoritative");
+    expect(events?.workaround).toContain("at **rest**");
+    expect(doc).not.toContain("focuses=1");
+    expect(doc).not.toContain("does** run React's `onFocus`");
 
     const page = measuredRow("Keyboard focus events");
     expect(
       page,
       "the page's measured table has no keyboard-focus-event row",
     ).toBeDefined();
-    expect(page?.[1]).toContain("run React's `onFocus`");
-    expect(page?.[1]).toContain("tooltip-lifecycle");
-    expect(page?.[1]).toContain("focuses=1");
-    expect(page?.[2]).toContain("onFocus");
+    expect(page?.[1]).toContain("without running React's `onFocus`");
+    expect(page?.[1]).toContain("tabs-lifecycle");
+    expect(page?.[1]).toContain("focuses=0");
+    expect(page?.[2]).toContain("at **rest**");
+
+    // The probes are the evidence, so the sentences the record rests on have to
+    // be the ones the window asserts.
+    const probe = read("apps/playground/src/live/scenarios.tsx");
+    expect(probe).toContain('"focuses=0"');
+    const readme = read("apps/playground/README.md");
+    expect(readme).toContain("without running React's `onFocus`");
+    expect(readme).toContain("focuses=0");
+
+    // …and every other surface that describes the traversal agrees with it.
+    const keyboard = read("apps/docs/content/docs/keyboard.mdx");
+    expect(keyboard).toContain("A `Tab` traversal runs no `onFocus`");
+    expect(keyboard).not.toContain("traversal runs React's `onFocus`");
+    const a11y = read("apps/docs/content/docs/accessibility.mdx");
+    expect(a11y).toContain("runs **no** `onFocus`");
+    expect(a11y).not.toContain("focus-only surface may open");
   });
 
   it("records what each scroll event reports, with the probe that measured it", () => {
