@@ -100,9 +100,12 @@ arrow or Enter.
 | `Escape` | closes the popup and returns focus to the trigger; inside a dialog it closes only the popup |
 | outside press | closes without stealing focus back |
 
-The search input keeps focus; the highlighted row is visual. **No
-`aria-activedescendant`** exists in 0.11.0, so assistive technology does not get
-the input→row relationship; `aria-selected` on the rows is the supported signal.
+The search input keeps focus; the highlighted row is visual. Both the trigger
+and the search field declare the keyboard-only `focusVisible` outline at rest,
+so a `Tab` to the closed control shows where it is, and a disabled trigger
+declares none. **No `aria-activedescendant`** exists in 0.11.0, so assistive
+technology does not get the input→row relationship; `aria-selected` on the rows
+is the supported signal.
 
 The popup joins the shared dismiss stack, so one `Escape` dismisses one surface,
 outside-in: with the popup open inside a dialog the popup closes and the dialog
@@ -214,7 +217,9 @@ one, closing on an outside press — a caller-supplied empty state, the trigger'
 placeholder/name coming from the part, and the create row: offered for an
 unmatched query, reported once with the trimmed query while the selection stays
 put, suppressed when an option matches, the query is blank, no handler is given,
-or the mode is multiple.
+or the mode is multiple. `src/behaviour/focus-ring.test.tsx` holds the trigger and
+the search field to the keyboard outline, and a disabled trigger to declaring
+none.
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf`,
 `toggledSelection` and the create-row round trip.

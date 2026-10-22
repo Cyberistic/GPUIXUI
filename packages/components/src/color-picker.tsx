@@ -32,7 +32,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
   keepContent,
-  keyboardRing,
+  controlRing,
   nativeTextTheme,
   selectionWash,
   useTheme,
@@ -200,6 +200,7 @@ export const ColorPicker = ({
                 borderColor: selected
                   ? theme.colors.foreground
                   : theme.colors.border,
+                ...controlRing(theme, { disabled }),
               })}
             >
               {selected ? (
@@ -235,7 +236,7 @@ export const ColorPicker = ({
           style={mergeStyles(recipeStyle(COLOR_PICKER_INPUT, theme), {
             height: controlHeight(theme, "md"),
             borderColor: valid ? theme.colors.border : theme.colors.destructive,
-            ...keyboardRing(theme, !valid),
+            ...controlRing(theme, { disabled, invalid: !valid }),
             ...selectionWash(theme),
             ...keepContent,
           })}

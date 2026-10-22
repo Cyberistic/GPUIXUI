@@ -31,7 +31,7 @@ import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
   keepContent,
-  keyboardRing,
+  controlRing,
   nativeTextTheme,
   selectionWash,
   useTheme,
@@ -166,7 +166,7 @@ export const InlineEdit = ({
           mergeStyles(recipeStyle(cn(INLINE_EDIT_DISPLAY, className), theme), {
             minHeight: controlHeight(theme, "sm"),
             opacity: disabled ? 0.5 : 1,
-            ...keyboardRing(theme),
+            ...controlRing(theme, { disabled }),
             hover: { backgroundColor: theme.colors.accent },
           }),
           resolveStyle(style, state),
@@ -202,7 +202,7 @@ export const InlineEdit = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(INLINE_EDIT_INPUT, className), theme), {
           height: controlHeight(theme, "md"),
-          ...keyboardRing(theme),
+          ...controlRing(theme, { disabled }),
           ...selectionWash(theme),
           ...keepContent,
         }),

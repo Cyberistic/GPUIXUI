@@ -85,6 +85,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
+  controlRing,
   keepContent,
   nativeTextTheme,
   useTheme,
@@ -397,6 +398,7 @@ export const ComboboxTrigger = ({
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
         hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
+        ...controlRing(theme, { disabled }),
       })}
     >
       <text
@@ -516,6 +518,7 @@ export const ComboboxInput = ({
       }}
       style={mergeStyles(recipeStyle(COMBOBOX_INPUT, theme), {
         height: controlHeight(theme, "sm"),
+        ...controlRing(theme),
         ...keepContent,
       })}
     />

@@ -73,7 +73,7 @@ import {
   typedChar,
 } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { keyboardRing, useTheme } from "./internal/theme.js";
+import { controlRing, useTheme } from "./internal/theme.js";
 import { keyOrigin } from "./list/origin.js";
 import { useTypeahead } from "./internal/typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
@@ -783,7 +783,7 @@ export const ListItem = ({
             : {}),
           // The ring is the runtime's keyboard-only `focusVisible` outline: a
           // click paints none, a Tab-driven focus paints it at rest.
-          ...keyboardRing(theme),
+          ...controlRing(theme, { disabled }),
         }),
         resolveStyle(style, state),
       )}

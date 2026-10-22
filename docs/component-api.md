@@ -95,6 +95,15 @@ a public state object instead:
   flag — `AccordionTrigger`, `CollapsibleTrigger`, `TabsTrigger`, `SearchInput`,
   `FieldInput`, `TimePickerSegment` — and `api.test.ts` holds each one to the
   ring, so a part cannot ship the flag as its only focus feedback.
+- **Every focusable part declares the cue, and a part that cannot act declares
+  none.** A control that can be disabled uses
+  `controlRing(theme, { disabled, invalid })`: it is `keyboardRing` while the
+  control can act and `{}` once it cannot, because disabling a focused control
+  does not move the runtime's focus — an unconditional ring would stay painted
+  on a part that refuses every key. The sweep in `focus-ring.test.tsx` holds the
+  ring on the parts a state-flag audit misses (a colour swatch, a chip's remove
+  control, the command palette's field, a combobox trigger and its search field)
+  and holds it off the same parts while disabled.
 - Every token lookup goes through the theme seam (`internal/theme.ts`); a
   component never repeats a raw role name or writes a colour/shadow/radius
   literal. The seam is also where a consumer gets the theme: the package root

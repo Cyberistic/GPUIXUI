@@ -155,7 +155,8 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
   between the input and the highlighted row is visual only for assistive
   technology.
 - The `<input>` is the host element until `@gpuixui/primitives` lands; it is the
-  documented stand-in, not a styled wrapper.
+  documented stand-in, not a styled wrapper, and it declares the keyboard-only
+  `focusVisible` outline itself so the palette's field shows the focus it holds.
 - Ranking is **per group**, not global: a group's heading stays where the caller
   declared it even when another group holds the best match. Recents are
   caller-owned data (`recents`), shown only for an empty query with the default
@@ -174,7 +175,8 @@ non-contiguous query matching initials, ranking deciding the default `Enter`
 target, group order surviving ranking, an empty query keeping declaration order,
 recents shown first under one heading with the first one highlighted, unknown and
 repeated recent ids dropped, recents ignored once a query is typed, a recent row
-running once and closing, a caller-supplied empty state, and the input's
+running once and closing, a caller-supplied empty state, the input declaring the
+keyboard outline (`src/behaviour/focus-ring.test.tsx`), and the input's
 placeholder/name coming from the part.
 
 `src/menu/fuzzy.test.ts` (12 tests) covers empty and whitespace queries, case and

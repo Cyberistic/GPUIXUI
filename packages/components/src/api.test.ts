@@ -197,10 +197,15 @@ describe("component API contract", () => {
     // its name to the sentence above and the ring to its source.
     expect(Arr.length(flagged)).toBe(6);
 
-    const missingRing = Arr.filter(
-      flagged,
-      (file) => !Str.includes("keyboardRing(")(sourceOf(file)),
-    );
+    const missingRing = Arr.filter(flagged, (file) => {
+      const source = sourceOf(file);
+      // A part that can be disabled declares `controlRing`, which is the same
+      // ring while it can act and none once it cannot.
+      return (
+        !Str.includes("keyboardRing(")(source) &&
+        !Str.includes("controlRing(")(source)
+      );
+    });
 
     expect(missingRing).toEqual([]);
 

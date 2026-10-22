@@ -96,6 +96,28 @@ export const keyboardRing = (theme: Theme, invalid = false): StyleDesc => {
     : { focusVisible };
 };
 
+/** What a control's focus cue depends on besides the theme. */
+export interface ControlRingState {
+  /** The control cannot act: disabling it does not move the runtime's focus. */
+  readonly disabled?: boolean;
+  /** The control's edge and cue take the destructive role. */
+  readonly invalid?: boolean;
+}
+
+/**
+ * The ring a focusable control declares: none while it cannot act.
+ *
+ * A control disabled while it holds focus keeps that focus — the runtime has no
+ * "blur on disable" — so a ring declared unconditionally would stay painted on
+ * a control that refuses every key. `@gpuixui/primitives` states the same rule
+ * in `controlRing`; this is the components' half of it.
+ */
+export const controlRing = (
+  theme: Theme,
+  state: ControlRingState = {},
+): StyleDesc =>
+  state.disabled === true ? {} : keyboardRing(theme, state.invalid === true);
+
 /**
  * The wash behind text a reader selects.
  *

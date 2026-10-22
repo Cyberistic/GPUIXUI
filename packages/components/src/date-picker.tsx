@@ -90,7 +90,7 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import { controlHeight, controlRing, useTheme } from "./internal/theme.js";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover.js";
 
 /** The rules a date-picker part follows; throws outside a {@link DatePicker}. */
@@ -589,7 +589,7 @@ export const DatePickerCalendar = ({
                           isSelected || !available
                             ? undefined
                             : { backgroundColor: theme.colors.hover },
-                        ...keyboardRing(theme),
+                        ...controlRing(theme, { disabled: !available }),
                       })}
                     >
                       {DateTime.toPartsUtc(day).day}

@@ -71,7 +71,7 @@ import {
 } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import { controlHeight, controlRing, useTheme } from "./internal/theme.js";
 
 /** What an accordion part can rely on, regardless of mode. */
 interface AccordionContextValue {
@@ -495,7 +495,7 @@ export const AccordionTrigger = ({
           cursor: disabled ? "not-allowed" : "pointer",
           opacity: disabled ? 0.5 : 1,
           hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
-          ...keyboardRing(theme),
+          ...controlRing(theme, { disabled }),
         }),
         resolveStyle(style, state),
       )}

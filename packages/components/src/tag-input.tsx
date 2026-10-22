@@ -41,8 +41,8 @@ import { addTokens, removeToken, splitDraft } from "./tag-input/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
+  controlRing,
   keepContent,
-  keyboardRing,
   nativeTextTheme,
   selectionWash,
   targetSize,
@@ -203,7 +203,7 @@ export const TagInputField = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TAG_INPUT_FIELD, className), theme), {
           height: controlHeight(theme, "sm"),
-          ...keyboardRing(theme),
+          ...controlRing(theme, { disabled }),
           ...selectionWash(theme),
           ...keepContent,
         }),
@@ -232,6 +232,7 @@ export const TagInputChip = ({
   value,
   className,
   style,
+  testId,
   ...rest
 }: TagInputChipProps) => {
   const theme = useTheme();
@@ -240,6 +241,7 @@ export const TagInputChip = ({
   return (
     <div
       {...rest}
+      testId={testId}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TAG_INPUT_CHIP, className), theme), {
           opacity: disabled ? 0.6 : 1,
@@ -252,6 +254,7 @@ export const TagInputChip = ({
         <div
           role="button"
           aria-label={`Remove ${value}`}
+          testId={testId === undefined ? undefined : `${testId}-remove`}
           tabIndex={0}
           onClick={() => remove(value)}
           {...activationHandlers(() => remove(value))}
@@ -259,6 +262,7 @@ export const TagInputChip = ({
             width: targetSize.minimum,
             height: targetSize.minimum,
             flexShrink: 0,
+            ...controlRing(theme),
             hover: { backgroundColor: theme.colors.accent },
           })}
         >

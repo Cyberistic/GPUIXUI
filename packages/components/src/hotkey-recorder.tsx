@@ -43,7 +43,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
   currentPlatform,
-  keyboardRing,
+  controlRing,
   targetSize,
   useTheme,
 } from "./internal/theme.js";
@@ -163,7 +163,7 @@ export const HotkeyRecorder = ({
         mergeStyles(recipeStyle(cn(HOTKEY_RECORDER, className), theme), {
           minHeight: controlHeight(theme, "md"),
           opacity: disabled ? 0.5 : 1,
-          ...keyboardRing(theme),
+          ...controlRing(theme, { disabled }),
         }),
         resolveStyle(style, { recording, disabled }),
       )}

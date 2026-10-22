@@ -88,7 +88,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { controlHeight, keyboardRing, useTheme } from "./internal/theme.js";
+import { controlHeight, controlRing, useTheme } from "./internal/theme.js";
 import { indicatorBox, measuredBox, type TabBox } from "./tabs/indicator.js";
 import {
   moveOrigin,
@@ -687,7 +687,7 @@ export const TabsTrigger = ({
                 backgroundColor: isSelected ? undefined : theme.colors.hover,
                 color: theme.colors.foreground,
               },
-          ...keyboardRing(theme),
+          ...controlRing(theme, { disabled }),
         }),
         resolveStyle(style, state),
       )}

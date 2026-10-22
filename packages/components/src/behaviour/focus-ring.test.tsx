@@ -13,7 +13,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   Accordion,
   AccordionContent,
@@ -21,20 +21,36 @@ import {
   AccordionTrigger,
 } from "../accordion.js";
 import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+} from "../combobox.js";
+import { ColorPicker } from "../color-picker.js";
+import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+} from "../command-menu.js";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../collapsible.js";
 import { Carousel, CarouselControl, CarouselTrack } from "../carousel.js";
 import { Field, FieldInput } from "../field.js";
-import { focusedTestId } from "../internal/interaction.js";
+import { HotkeyRecorder } from "../hotkey-recorder.js";
+import { Button, IconButton } from "../internal/button.js";
+import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { darkTheme } from "../internal/theme.js";
 import { InlineEdit } from "../inline-edit.js";
 import { List, ListItem } from "../list.js";
 import { SearchInput } from "../search-input.js";
 import { Tabs, TabsList, TabsTrigger } from "../tabs.js";
-import { TagInput, TagInputField } from "../tag-input.js";
+import { TagInput, TagInputChip, TagInputField } from "../tag-input.js";
 import { TimePicker, TimePickerSegment } from "../time-picker.js";
 
 /** The outline every part declares, read from the dark theme's roles. */
@@ -207,6 +223,187 @@ describe("focus ring", () => {
     expect(
       root.renderer.findByTestId("time-minutes")?.style.focusVisible,
     ).toMatchObject(outline);
+
+    root.unmount();
+  });
+
+  it("declares the outline on a swatch, a chip's remove control and a palette field", () => {
+    const picker = renderComponent(
+      <ColorPicker label="Accent colour" testId="picker" value="#000000" />,
+    );
+    Arr.forEach(["picker-swatch-0", "picker-hex"], (testId) =>
+      expect(
+        picker.renderer.findByTestId(testId)?.style.focusVisible,
+        `${testId} declares the outline`,
+      ).toMatchObject(outline),
+    );
+    picker.unmount();
+
+    const tags = renderComponent(
+      <TagInput label="Tags" value={["design"]} onValueChange={() => undefined}>
+        <TagInputChip testId="chip" value="design" />
+        <TagInputField testId="tag-field" />
+      </TagInput>,
+    );
+    expect(
+      tags.renderer.findByTestId("chip-remove")?.style.focusVisible,
+      "a chip's remove control declares the outline",
+    ).toMatchObject(outline);
+    tags.unmount();
+
+    const menu = renderComponent(
+      <CommandMenu
+        open
+        onOpenChange={() => undefined}
+        actions={[{ id: "save", label: "Save", perform: vi.fn() }]}
+      >
+        <CommandMenuInput />
+        <CommandMenuList />
+        <CommandMenuEmpty />
+      </CommandMenu>,
+    );
+    expect(
+      menu.renderer.findByTestId("command-input")?.style.focusVisible,
+      "the palette's field declares the outline",
+    ).toMatchObject(outline);
+    menu.unmount();
+  });
+
+  it("declares the outline on a combobox trigger and its search field", async () => {
+    const picker = renderComponent(
+      <Combobox options={[{ value: "calendar", label: "Calendar" }]}>
+        <ComboboxTrigger label="Assign reviewer" />
+        <ComboboxContent>
+          <ComboboxInput label="Search reviewers" />
+          <ComboboxList label="Reviewers" />
+        </ComboboxContent>
+      </Combobox>,
+    );
+
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.style.focusVisible,
+      "the trigger declares the outline",
+    ).toMatchObject(outline);
+
+    clickCentreOf(picker, "combobox-trigger");
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    picker.renderer.flush();
+
+    expect(
+      picker.renderer.findByTestId("combobox-input")?.style.focusVisible,
+      "the search field declares the outline",
+    ).toMatchObject(outline);
+
+    picker.unmount();
+  });
+
+  it("declares no outline on a control that cannot act", () => {
+    const root = renderComponent(
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <Button testId="button" disabled>
+          Save
+        </Button>
+        <IconButton testId="icon" label="Close" disabled />
+        <Tabs defaultValue="a">
+          <TabsList testId="list">
+            <TabsTrigger testId="tab" value="a" disabled>
+              A
+            </TabsTrigger>
+            <TabsTrigger testId="tab-b" value="b">
+              B
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <List testId="rows" selectionMode="single">
+          <ListItem testId="row" value="a" disabled>
+            <text>A</text>
+          </ListItem>
+          <ListItem testId="row-b" value="b">
+            <text>B</text>
+          </ListItem>
+        </List>
+        <Accordion type="single" defaultValue="one">
+          <AccordionItem value="one" disabled>
+            <AccordionTrigger testId="header">One</AccordionTrigger>
+            <AccordionContent>
+              <text>Body</text>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="two">
+            <AccordionTrigger testId="header-b">Two</AccordionTrigger>
+            <AccordionContent>
+              <text>Body</text>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+        <Collapsible defaultOpen={false}>
+          <CollapsibleTrigger testId="collapsible" disabled>
+            More
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <text>Hidden</text>
+          </CollapsibleContent>
+        </Collapsible>
+        <InlineEdit
+          label="Name"
+          value="Ada"
+          disabled
+          onCommit={() => undefined}
+          testId="inline"
+        />
+        <HotkeyRecorder
+          label="Shortcut"
+          disabled
+          onChange={() => undefined}
+          testId="recorder"
+        />
+        <ColorPicker label="Accent colour" testId="picker" disabled />
+        <Combobox options={[]} disabled>
+          <ComboboxTrigger testId="combobox-trigger" label="Assign" />
+        </Combobox>
+        <SearchInput testId="search" aria-label="Search" disabled />
+        <TagInput
+          label="Tags"
+          value={["design"]}
+          disabled
+          onValueChange={() => undefined}
+        >
+          <TagInputChip testId="chip" value="design" />
+          <TagInputField testId="tag-field" />
+        </TagInput>
+        <TimePicker testId="time" defaultValue="09:30" disabled>
+          <TimePickerSegment segment="hours" />
+          <TimePickerSegment segment="minutes" />
+        </TimePicker>
+      </div>,
+    );
+
+    Arr.forEach(
+      [
+        "button",
+        "icon",
+        "tab",
+        "row",
+        "header",
+        "collapsible",
+        "inline",
+        "recorder",
+        "picker-swatch-0",
+        "picker-hex",
+        "combobox-trigger",
+        "search",
+        "tag-field",
+        "time-hours",
+        "time-minutes",
+      ],
+      (testId) =>
+        expect(
+          root.renderer.findByTestId(testId)?.style.focusVisible,
+          `${testId} declares no outline while it cannot act`,
+        ).toBeUndefined(),
+    );
 
     root.unmount();
   });

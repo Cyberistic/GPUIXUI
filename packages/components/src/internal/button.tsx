@@ -29,11 +29,11 @@ import { activationHandlers } from "./key.js";
 import {
   controlHeight,
   controlPaddingX,
+  controlRing,
   disabledAction,
   disabledOpacity,
   filledHover,
   filledPressed,
-  keyboardRing,
   textStyle,
   useTheme,
   type Theme,
@@ -249,7 +249,7 @@ export const Button = ({
         {
           ...controlStyle(theme, variant, size),
           ...disabledStyle(theme, variant, disabled),
-          ...keyboardRing(theme),
+          ...controlRing(theme, { disabled }),
         },
         style,
       )}
@@ -304,7 +304,7 @@ export const IconButton = ({
           // An icon action is unfilled, so the measured fade is its disabled
           // mechanism; the pointer fills go with it.
           ...disabledStyle(theme, "ghost", disabled),
-          ...keyboardRing(theme),
+          ...controlRing(theme, { disabled }),
         },
         style,
       )}

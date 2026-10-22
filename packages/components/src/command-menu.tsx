@@ -48,6 +48,7 @@ import {
 } from "./internal/parts.js";
 import {
   controlHeight,
+  controlRing,
   keepContent,
   nativeTextTheme,
   selectionWash,
@@ -333,6 +334,7 @@ export const CommandMenuInput = ({
         borderWidth: theme.borderWidth.thin,
         borderColor: theme.colors.border,
         borderRadius: theme.radius.md,
+        ...controlRing(theme),
         ...selectionWash(theme),
         ...keepContent,
       }}
