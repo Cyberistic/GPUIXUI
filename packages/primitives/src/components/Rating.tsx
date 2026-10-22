@@ -1,5 +1,5 @@
 /**
- * `Rating` — a whole number of stars, or none.
+ * `Rating` — a score in stars, or none.
  *
  * A rating is shaped like a radio group: one tab stop, arrows move the
  * selection and native focus with it, and Space selects the star holding focus
@@ -9,7 +9,10 @@
  *
  * The paint uses two icons of the same geometry — an outline star and a filled
  * one — tinted with the brand and muted roles, because GPUix's `<svg>` is
- * monochrome and cannot be filled by a style.
+ * monochrome and cannot be filled by a style. A **half** star is the same two
+ * icons in a clipped box: the runtime has no transform, but a box with
+ * `overflow: hidden` clips what it holds (`docs/gpuix-capabilities.md`), so the
+ * filled glyph is painted whole and cut at the star's midpoint.
  *
  * The resting appearance is a Tailwind recipe (`recipe/ratingStarClass` and
  * `recipe/ratingGroupClass`), compiled through `@gpuixui/tw`; the caller's
@@ -26,8 +29,20 @@ import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
-import { clampRating, decideRating, ratingTabStop } from "../core/rating.js";
-import { ratingStarColor } from "../core/style.js";
+import {
+  clampRating,
+  decideRating,
+  pointerRating,
+  ratingTabStop,
+  starFill,
+  starState,
+  type StarBox,
+} from "../core/rating.js";
+import {
+  ratingPartialCellStyle,
+  ratingPartialStyle,
+  ratingStarColor,
+} from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { ratingGroupClass, ratingStarClass } from "../recipe/index.js";
@@ -58,6 +73,13 @@ export interface RatingProps
   readonly defaultValue?: number;
   /** Defaults to 5. */
   readonly max?: number;
+  /**
+   * Score in halves as well as whole stars. The left half of a star is the
+   * half below it, so a press can say `3.5`; the arrows step by half and Home
+   * lands on the half star. Off by default: a rating is a whole number of
+   * stars unless the caller says a finer score is wanted.
+   */
+  readonly allowHalf?: boolean;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   readonly disabled?: boolean;
@@ -91,16 +113,17 @@ export interface RatingFocus {
 }
 
 /**
- * Where the pointer is, so a rating can preview the star it would choose.
+ * Where the pointer is, so a rating can preview the score it would choose.
  *
- * A hovered star fills the stars up to it **in the paint only**: the value, the
+ * A hovered half star previews the half, so the paint answers the pointer
+ * exactly as a press would. The preview is **paint only**: the value, the
  * announced state and the tab stop keep reading the rating, because a preview
  * is a hint about the next press, not a change of the answer.
  */
 export interface RatingHover {
-  /** The star under the pointer, or `None` while the pointer is elsewhere. */
-  readonly hoveredIndex: Option.Option<number>;
-  readonly onHover: (index: number) => void;
+  /** The score a press would choose, or `None` while the pointer is elsewhere. */
+  readonly hovered: Option.Option<number>;
+  readonly onHover: (score: number) => void;
   /** The pointer left the group: the paint returns to the value. */
   readonly onHoverEnd: () => void;
 }
@@ -112,6 +135,13 @@ export interface RatingHandlers {
   readonly registerItem: (
     index: number,
   ) => (instance: PublicInstance | null) => void;
+  /**
+   * The score a press or a move on `index` at this event aims at.
+   *
+   * The component owns it because only it can measure the star the event landed
+   * on; the pure renderer falls back to the star's whole score.
+   */
+  readonly scoreAt?: (index: number, event: EventPayload) => number;
 }
 
 /** A usable star count: at least one, whole. */
@@ -120,7 +150,7 @@ export const ratingMax = (max: number | undefined): number =>
 
 /** A pointer that is nowhere: the idle state a render helper starts from. */
 const NO_POINTER: RatingHover = {
-  hoveredIndex: Option.none(),
+  hovered: Option.none(),
   onHover: () => {},
   onHoverEnd: () => {},
 };
@@ -134,14 +164,16 @@ export const renderRating = (
   hover: RatingHover = NO_POINTER,
 ): ReactElement => {
   const max = ratingMax(props.max);
-  const value = clampRating(state.current, max);
-  const tabStop = ratingTabStop(value, max);
+  const half = props.allowHalf === true;
+  const value = clampRating(state.current, max, half);
+  const tabStop = ratingTabStop(value, max, half);
   const interactive = props.disabled !== true && props.readOnly !== true;
-  /** The star the paint reaches: the pointer's while it is inside, else the value. */
+  /** The score the paint reaches: the pointer's while it is inside, else the value. */
   const lit = interactive
     ? clampRating(
-        Option.getOrElse(hover.hoveredIndex, () => value),
+        Option.getOrElse(hover.hovered, () => value),
         max,
+        half,
       )
     : value;
   /** The star an activating key chooses: the one holding focus, else the tab stop. */
@@ -152,6 +184,7 @@ export const renderRating = (
   const selectFocused = (): void => {
     handlers.onSelect(focusedStar);
   };
+  const scoreAt = handlers.scoreAt ?? ((index: number) => index);
   const resolved = recipeTw.classesToStyle(
     ratingStarClass({ disabled: props.disabled, readOnly: props.readOnly }),
     theme,
@@ -165,40 +198,63 @@ export const renderRating = (
       controlRing(theme, { invalid: props.invalid }),
     );
   }
-  const star = (index: number): ReactElement => (
-    <div
-      key={index}
-      ref={
-        index === tabStop
-          ? mergeRefs(handlers.registerItem(index), props.ref)
-          : handlers.registerItem(index)
-      }
-      role="radio"
-      aria-label={`${index} of ${max}`}
-      aria-id={index === tabStop ? props["aria-id"] : undefined}
-      // The state stays the rating's: a previewed star is filled, not chosen.
-      aria-valuetext={index <= value ? "checked" : "unchecked"}
-      tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
-      onLayout={index === tabStop ? props.onLayout : undefined}
-      onClick={composePress(!interactive, props.onClick, () => {
-        handlers.onSelect(index);
-      })}
-      onMouseEnter={interactive ? () => hover.onHover(index) : undefined}
-      onFocus={composeEvent<EventPayload>(props.onFocus, () =>
-        focus.onFocus(index),
-      )}
-      onBlur={composeEvent<EventPayload>(props.onBlur, () =>
-        focus.onBlur(index),
-      )}
-      style={starStyle}
-    >
-      <Icon
-        name={index <= lit ? "star-filled" : "star"}
-        size={props.size ?? "md"}
-        color={ratingStarColor(index <= lit, theme, props.invalid)}
-      />
-    </div>
+  /** One glyph, in the role its fill carries. */
+  const glyph = (filled: boolean): ReactElement => (
+    <Icon
+      name={filled ? "star-filled" : "star"}
+      size={props.size ?? "md"}
+      color={ratingStarColor(filled, theme, props.invalid)}
+    />
   );
+  const star = (index: number): ReactElement => {
+    const fill = starFill(index, lit);
+    return (
+      <div
+        key={index}
+        ref={
+          index === tabStop
+            ? mergeRefs(handlers.registerItem(index), props.ref)
+            : handlers.registerItem(index)
+        }
+        role="radio"
+        aria-label={`${index} of ${max}`}
+        aria-id={index === tabStop ? props["aria-id"] : undefined}
+        // The state stays the rating's: a previewed star is filled, not chosen.
+        aria-valuetext={starState(index, value)}
+        tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
+        onLayout={index === tabStop ? props.onLayout : undefined}
+        onClick={composePress(!interactive, props.onClick, (event) => {
+          handlers.onSelect(scoreAt(index, event));
+        })}
+        onMouseEnter={interactive ? () => hover.onHover(index) : undefined}
+        onMouseMove={
+          interactive && half
+            ? (event: EventPayload) => hover.onHover(scoreAt(index, event))
+            : undefined
+        }
+        onFocus={composeEvent<EventPayload>(props.onFocus, () =>
+          focus.onFocus(index),
+        )}
+        onBlur={composeEvent<EventPayload>(props.onBlur, () =>
+          focus.onBlur(index),
+        )}
+        style={starStyle}
+      >
+        {fill >= 1 ? (
+          glyph(true)
+        ) : (
+          <>
+            {glyph(false)}
+            {fill > 0 ? (
+              <div style={ratingPartialStyle(fill)}>
+                <div style={ratingPartialCellStyle(theme)}>{glyph(true)}</div>
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+    );
+  };
   return (
     <div
       role="radiogroup"
@@ -209,7 +265,7 @@ export const renderRating = (
         if (!interactive) return;
         const key = event.key ?? "";
         if (swallowKeyDefault(key, "down")) event.preventDefault();
-        Option.match(decideRating(value, max, key), {
+        Option.match(decideRating(value, max, key, half), {
           onNone: () => {},
           onSome: handlers.onMove,
         });
@@ -237,24 +293,31 @@ export const renderRating = (
   );
 };
 
-/** A whole number of stars, or none. */
+/** A score in stars, or none. */
 export const Rating = (props: RatingProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
   const itemIds = useRef<Map<number, number>>(new Map());
+  const half = props.allowHalf === true;
+  const max = ratingMax(props.max);
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
     Option.none(),
   );
   // Paint-only: the preview is discarded when the pointer leaves, so it never
   // reaches the value, the name or the tab stop.
-  const [hoveredIndex, setHoveredIndex] = useState<Option.Option<number>>(
-    Option.none(),
-  );
+  const [hovered, setHovered] = useState<Option.Option<number>>(Option.none());
   const state = useControlState(
     props.value,
-    clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
+    clampRating(props.defaultValue ?? 0, max, half),
     valueChange(props),
   );
+  /** The star a press or a move landed on, in window pixels. */
+  const boxOf = (index: number): Option.Option<StarBox> =>
+    Option.flatMap(Option.fromNullishOr(itemIds.current.get(index)), (id) =>
+      Option.fromNullishOr(renderer?.getElementBounds?.(id)),
+    );
+  const scoreAt = (index: number, event: EventPayload): number =>
+    pointerRating(index, Option.fromNullishOr(event.x), boxOf(index), half);
   return renderRating(
     props,
     theme,
@@ -271,21 +334,26 @@ export const Rating = (props: RatingProps): ReactElement => {
       onSelect: state.set,
       onMove: (value) => {
         state.set(value);
-        Option.match(Option.fromNullishOr(itemIds.current.get(value)), {
+        const star = ratingTabStop(value, max, half);
+        Option.match(Option.fromNullishOr(itemIds.current.get(star)), {
           onNone: () => {},
           onSome: (id) => renderer?.focusElement?.(id),
         });
-        setFocusedIndex(Option.some(value === 0 ? 1 : value));
+        setFocusedIndex(Option.some(star));
       },
       registerItem: (index) => (instance) => {
         if (instance === null) itemIds.current.delete(index);
         else itemIds.current.set(index, instance.id);
       },
+      scoreAt,
     },
     {
-      hoveredIndex,
-      onHover: (index) => setHoveredIndex(Option.some(index)),
-      onHoverEnd: () => setHoveredIndex(Option.none()),
+      hovered,
+      onHover: (score) =>
+        setHovered((current) =>
+          Option.contains(current, score) ? current : Option.some(score),
+        ),
+      onHoverEnd: () => setHovered(Option.none()),
     },
   );
 };

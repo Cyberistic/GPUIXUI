@@ -2,8 +2,9 @@
  * Rating example: a review card.
  *
  * Two ratings in the roles they differ in — an interactive one the reader owns,
- * and a read-only one showing an aggregate. The summary is derived from the
- * interaction, so the card demonstrates the controlled API a review form uses.
+ * scored in halves, and a read-only one showing an aggregate. The summary is
+ * derived from the interaction, so the card demonstrates the controlled API a
+ * review form uses.
  */
 
 import { useState, type ReactElement } from "react";
@@ -30,13 +31,14 @@ export const RatingExample = (): ReactElement => {
             <Text role="label">Your rating</Text>
             <Text role="caption" tone="muted">
               {score === 0
-                ? "Click a star, or use the arrow keys."
+                ? "Click a star — or its left half — or use the arrow keys."
                 : `You rated ${score} of 5.`}
             </Text>
           </Stack>
           <Rating
             testId="rating-example-your"
             label="Your rating"
+            allowHalf
             value={score}
             onChange={setScore}
           />
@@ -48,13 +50,14 @@ export const RatingExample = (): ReactElement => {
           <Stack direction="column" gap="2xs" grow>
             <Text role="label">Average of 128 reviews</Text>
             <Text role="caption" tone="muted">
-              4.2 of 5
+              4.5 of 5
             </Text>
           </Stack>
           <Rating
             testId="rating-example-average"
             label="Average rating"
-            value={4}
+            allowHalf
+            value={4.5}
             readOnly
           />
         </Stack>

@@ -404,7 +404,7 @@ export const ratingStarClass = (options: {
   return cn(
     // The glyph is icon-sized, so the hairline padding alone is a 20px target at
     // `md`; `min-target` reserves the pressable floor and centres the glyph.
-    "flex items-center justify-center p-2xs rounded-full min-target",
+    "relative flex items-center justify-center p-2xs rounded-full min-target",
     interactive ? "cursor-pointer" : "cursor-not-allowed",
     options.disabled === true && "disabled:opacity-50",
   );

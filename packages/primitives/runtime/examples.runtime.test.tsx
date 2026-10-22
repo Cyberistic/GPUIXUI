@@ -185,10 +185,12 @@ it("moves the value example's quality slider and repaints its readout", async ()
   expect(runtime.allText()).toContain("50%");
 });
 
-it("rates the rating example and repaints its summary", async () => {
+it("rates the rating example in whole stars and halves", async () => {
   const runtime = await openWindow();
   renderExample(runtime, "rating");
-  expect(runtime.allText()).toContain("Click a star, or use the arrow keys.");
+  expect(runtime.allText()).toContain(
+    "Click a star — or its left half — or use the arrow keys.",
+  );
   const four = Option.getOrElse(
     Arr.findFirst(
       runtime.all(),
@@ -199,6 +201,17 @@ it("rates the rating example and repaints its summary", async () => {
   runtime.clickElement(four);
   expect(
     Arr.some(runtime.allText(), (line) => line.startsWith("You rated 4 of 5.")),
+  ).toBe(true);
+
+  // The example scores halves, so the same star's left quarter is 3.5.
+  const bounds = Option.getOrElse(runtime.boundsOfId(four.id), () =>
+    expect.fail("the fourth star painted no bounds"),
+  );
+  runtime.clickAt(bounds.x + bounds.width / 4, bounds.y + bounds.height / 2);
+  expect(
+    Arr.some(runtime.allText(), (line) =>
+      line.startsWith("You rated 3.5 of 5."),
+    ),
   ).toBe(true);
 });
 

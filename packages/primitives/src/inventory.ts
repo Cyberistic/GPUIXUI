@@ -590,9 +590,9 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "Whole stars only: no half stars without clipping or a transform",
+      "Halves are the finest score: a press names a star's half, not a quarter",
       "The pointer preview is paint-only: a screen reader hears the value, not the previewed star",
-      "Clearing is explicit (Delete/Backspace); an arrow clamps at one star once rated",
+      "Clearing is explicit (Delete/Backspace); an arrow clamps at the lowest rated place once rated",
     ],
     source: ["src/components/Rating.tsx", "src/core/rating.ts"],
     docs: "docs/rating.mdx",

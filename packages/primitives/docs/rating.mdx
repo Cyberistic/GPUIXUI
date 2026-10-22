@@ -1,14 +1,18 @@
 ---
 title: Rating
-description: A whole number of stars, or none.
+description: A score in stars, whole or in halves.
 ---
 
 `Rating` is a radio group shaped input: one tab stop, arrows move the selection
 and native focus with it, and `Space` or `Enter` chooses the star holding focus
 the way a platform radio does. It differs from `RadioGroup` in two ways a rating
 needs — the arrows **clamp** at the ends instead of wrapping, and `Delete`
-clears it back to zero. It is not a slider: the value is a small whole number,
-not a position.
+clears it back to zero. It is not a slider: the value is a small score, not a
+position.
+
+A score is a whole number of stars unless the caller asks for `allowHalf`: then
+a press on a star's left half chooses the half below it, the arrows step by half,
+and a stored `4.4` snaps to `4.5` while `4.2` reads as `4`.
 
 ## Usage
 
@@ -30,6 +34,13 @@ Omit `value` to let the rating own its state; `defaultValue` sets the start
 (`0` is unrated). Clicking the selected star keeps it — clearing is a deliberate
 key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 
+```tsx
+<Rating label="Quality" allowHalf value={score} onValueChange={setScore} />
+```
+
+`allowHalf` makes the left half of a star the half below it, so a press can say
+`3.5` and the arrows step by half.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -39,6 +50,7 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
 | `onValueChange` | `(value: number) => void` | — | the new rating; `0` means cleared |
 | `max` | `number` | `5` | how many stars to paint |
+| `allowHalf` | `boolean` | `false` | score in halves: a press on a star's left half, half steps, a half star painted |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
 | `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |
@@ -51,8 +63,9 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the rating's own: the press and focus on the star it landed on, keys on the group root |
 | `testId` | `string` | — | stable locator on the group |
 
-Values are truncated to whole stars and clamped to `0..max`; a value that is not
-a number reads as unrated.
+Values are snapped to the precision the rating scores at — whole stars, or the
+nearest half with `allowHalf` — and clamped to `0..max`; a value that is not a
+number reads as unrated.
 
 Your host handlers are composed with the rating's, never substituted: the press
 and focus arrive from the star they landed on, the keys from the group root. A
@@ -64,9 +77,9 @@ disabled or read-only rating installs no `onClick`, and its keys stay observable
 | --- | ------ |
 | `Space` | chooses the focused star, on the **release** (the press is swallowed so it cannot scroll a container) |
 | `Enter` | chooses the focused star, on the press |
-| `ArrowRight` / `ArrowUp` | + one star, clamped at `max` |
-| `ArrowLeft` / `ArrowDown` | − one star, clamped at `1` once rated; an unrated rating stays `0` |
-| `Home` / `End` | one star / `max` |
+| `ArrowRight` / `ArrowUp` | + one place (a star, or half a star with `allowHalf`), clamped at `max` |
+| `ArrowLeft` / `ArrowDown` | − one place, clamped at the lowest rated place once rated; an unrated rating stays `0` |
+| `Home` / `End` | the lowest rated place (one star, or half a star) / `max` |
 | `Delete` / `Backspace` | clear to `0` |
 
 The group holds **one tab stop** — on the current rating, or on the first star
@@ -74,23 +87,26 @@ when unrated — and an arrow moves the selection and native focus together, so
 the ring is always on the star the value came from. An activating key chooses
 the star that holds focus (falling back to the tab stop if no star reported
 focus), so `Space` on an unrated rating selects the first star instead of
-nothing.
+nothing. A half score is held by the star it is part of: `3.5` puts the stop on
+the fourth star, the one a press would complete.
 
 ## Pointer
 
 Hovering a star previews the score a press would choose: the stars up to it
-fill, and moving out of the group restores the rating. The preview is
-**paint only** — the value, the announced state and the tab stop keep reading
-the rating — so a reader who leaves without pressing changes nothing. A press
-commits the star it landed on, exactly as before. A `disabled` or `readOnly`
-rating ignores the pointer.
+fill — and with `allowHalf`, the half under the pointer is the half that fills —
+and moving out of the group restores the rating. The preview is **paint only** —
+the value, the announced state and the tab stop keep reading the rating — so a
+reader who leaves without pressing changes nothing. A press commits the place it
+landed on: the star's right half is the star, its left half is the half below.
+A `disabled` or `readOnly` rating ignores the pointer.
 
 ## Accessibility
 
 - Roles: `radiogroup` with the group's `label`, and one `radio` per star
   (AccessKit `RadioGroup` / `RadioButton`).
 - Each star's name is `"N of max"` and its state is announced through
-  **`aria-valuetext`** (`"checked"` / `"unchecked"`), because `@gpuix/native` 0.11.0 has no
+  **`aria-valuetext`** (`"checked"`, `"half"` or `"unchecked"`), because
+  `@gpuix/native` 0.11.0 has no
   `aria-checked`.
 - `readOnly` keeps the group visible to assistive technology but removes it from
   the tab order; `disabled` also paints it muted.
@@ -113,10 +129,21 @@ retints — so a theme change repaints both states. The star size is
 `theme.iconSize[size]`, and the ring is the shared `keyboardRing`
 (`focusVisible`, painted after Tab and not after a click).
 
+A **half** star is those two glyphs in a clipped cell: the outline is painted as
+usual and the filled glyph is painted whole inside a box half the star wide with
+`overflow: hidden`, so the runtime cuts it at the star's midpoint. The runtime
+has no `transform` and no `clip-path`, but it does clip a box's content
+(`docs/gpuix-capabilities.md`, the `motion-geometry` probe), and the cut lands
+on the glyph's own midpoint because the glyph is centred in its cell. The cell
+inside the clip repeats the resting cell's padding and pressable floor, so the
+filled glyph is in the outline's own place — cut, never scaled. The paint is
+`colors.primary` (or `colors.destructive` while invalid) like a whole star's.
+
 Each star's press target reserves `targetSize.minimum` (24px, WCAG 2.2
 SC 2.5.8) in both axes — the glyph is centred inside it, so `sm` draws a 14px
 star in a 24px target rather than an 18px one. The box is the control: it holds
-the role, the focus, the ring and the press.
+the role, the focus, the ring and the press, and it is the positioning context
+the half star's clip is measured against.
 
 `style` takes a `StateStyle<RatingState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, readOnly, focused, invalid }` for the group. It merges
@@ -125,38 +152,47 @@ recipe also sets.
 
 ## Limitations
 
-- **Whole stars only.** Half stars would need clipping or a transform, neither of
-  which exists in `@gpuix/native` 0.11.0; a caller that needs a finer score can keep it in
-  state and paint the label beside the stars.
+- **Halves are the finest score.** A quarter star would need to cut at a
+  fraction of the glyph that a press cannot name — the pointer only says which
+  half of a star it is in — so the paint and the input stay at the same
+  precision. A finer aggregate belongs in the text beside the stars.
 - **Clearing is explicit** (Delete/Backspace or the app), not "click the selected
-  star again" — a rating is not a toggle. An arrow clamps at one star once the
-  rating is set, so a nudge at the end never clears it.
+  star again" — a rating is not a toggle. An arrow clamps at the lowest rated
+  place once the rating is set, so a nudge at the end never clears it.
 
 ## Verification
 
 - `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
   an arrow never clearing a rated value, the tab-stop choice, a zero or
-  fractional `max`.
+  fractional `max`, and the half precision: what a score snaps to, which part of
+  a star is filled, the announced state, the half step, Home's half star, the
+  half score's tab stop, and the score a press position aims at.
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
   single tab stop, filled vs outline icons, the destructive paint and muted
   empty stars while invalid, keys, click, disabled/readOnly, ring, a `style`
-  callback receiving the live state and winning, and the pointer preview
-  (filled stars ahead of the value, the value still announced, disabled and
-  read-only ignoring it).
+  callback receiving the live state and winning, the pointer preview (filled
+  stars ahead of the value, the value still announced, disabled and read-only
+  ignoring it), the half star's clipped cell (its width, overflow, pointer
+  pass-through, repeated padding and the filled glyph inside), the announced
+  `"half"`, the half score's tab stop, and the score seam a press and a move
+  report.
 - `src/components/activation.test.tsx` — the activation contract every control
   shares: `Enter` on the press, `Space` on the release, a held key ignored and
   exactly one activation. `Rating` failed it (a focused star could not be
   chosen with either key); the matrix names the part that regresses.
-- `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; an
-  arrow moves the checked star and native focus; Right at five stays at five and
-  Left at one keeps the star; Delete clears;
-  `Space` chooses the focused star on the release and not on the press; Delete
-  clears; filled stars paint `colors.primary` (destructive while invalid, with
-  the empty stars still muted); a real pointer hover fills up to the star it is
-  over while the announced value stays put, and leaving restores the rating;
-  Tab enters on the rating and the next Tab leaves the group; disabled refuses
-  input; and every star's painted box is at least the 24px pressable floor
-  (measured at `sm`, the smallest glyph).
+- `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; a
+  real click on its left half reports `3.5` and announces `"half"` while a click
+  on its right half reports `4`; the half star's clip paints half the star's
+  width at its left edge with a glyph as tall as a whole star's (cut, not
+  scaled); a pointer move over a star's left half previews the half and leaving
+  restores the rating; an arrow moves the checked star and native focus; Right at
+  five stays at five and Left at one keeps the star; a half score steps by half
+  and Home lands on the half star; Delete clears;
+  `Space` chooses the focused star on the release and not on the press; filled
+  stars paint `colors.primary` (destructive while invalid, with the empty stars
+  still muted); Tab enters on the rating and the next Tab leaves the group;
+  disabled refuses input; and every star's painted box is at least the 24px
+  pressable floor (measured at `sm`, the smallest glyph).
 
 ```sh
 nub run --filter @gpuixui/primitives test

@@ -21,7 +21,6 @@ import {
   type RatingState,
 } from "./Rating.js";
 import type { RatingFocus } from "./Rating.js";
-import { keyEvent } from "./testing/event.js";
 import {
   elementChildren,
   elementProp,
@@ -32,7 +31,9 @@ import {
   hostStyle,
   hostStyleRecord,
   hostStyleString,
+  hostTag,
 } from "./testing/element.js";
+import { clickEvent, keyEvent } from "./testing/event.js";
 
 const state = (value: number) => initValueState(Option.some(value), 0);
 
@@ -143,6 +144,121 @@ describe("Rating", () => {
     expect(iconName(stars[2] ?? expect.fail("no star"))).toBe("star");
   });
 
+  it("cuts a half star from the filled glyph instead of faking the score", () => {
+    // The bug guarded: a half score could only be approximated — the recorded
+    // limitation said clipping did not exist, while the runtime clips an
+    // `overflow: hidden` box. The half star is the outline plus the filled
+    // glyph in a box half the star wide, painted whole and cut at the midpoint.
+    const stars = starsOf(render({ allowHalf: true }, 3.5));
+    const half = stars[3] ?? expect.fail("no fourth star");
+    const children = elementChildren(half);
+    expect(children).toHaveLength(2);
+    expect(
+      Option.getOrUndefined(elementProp(children[0] ?? half, "name")),
+    ).toBe("star");
+    expect(expectSome(hostTag(children[1] ?? half))).toBe("div");
+
+    const clip = elementChildren(half)[1] ?? expect.fail("no clip");
+    const style = expectSome(hostStyleRecord(clip));
+    expect(style["position"]).toBe("absolute");
+    expect(style["left"]).toBe(0);
+    expect(style["width"]).toBe("50%");
+    expect(style["overflow"]).toBe("hidden");
+    expect(style["pointerEvents"]).toBe("none");
+
+    // The clipped cell repeats the resting cell, so the glyph is the outline's
+    // own size in the outline's own place — cut, never scaled.
+    const cell = elementChildren(clip)[0] ?? expect.fail("no cell");
+    expect(expectSome(hostStyle(cell, "minWidth"))).toBe(targetSize.minimum);
+    expect(expectSome(hostStyle(cell, "padding"))).toBe(
+      testTheme.spacing["2xs"],
+    );
+    const glyph = elementChildren(cell)[0] ?? expect.fail("no filled glyph");
+    expect(Option.getOrUndefined(elementProp(glyph, "name"))).toBe(
+      "star-filled",
+    );
+    expect(Option.getOrUndefined(elementProp(glyph, "color"))).toBe(
+      testTheme.colors.primary,
+    );
+
+    // The whole stars around it are untouched: one glyph each.
+    expect(
+      elementChildren(stars[2] ?? expect.fail("no third star")),
+    ).toHaveLength(1);
+    expect(
+      elementChildren(stars[4] ?? expect.fail("no fifth star")),
+    ).toHaveLength(1);
+  });
+
+  it("announces a half star as half", () => {
+    const stars = starsOf(render({ allowHalf: true }, 3.5));
+    expect(
+      stars.map((star) => expectSome(hostProp(star, "aria-valuetext"))),
+    ).toStrictEqual(["checked", "checked", "checked", "half", "unchecked"]);
+  });
+
+  it("holds the half score's tab stop on the star a press would complete", () => {
+    const stars = starsOf(render({ allowHalf: true }, 3.5));
+    expect(
+      stars.map((star) => Option.getOrUndefined(hostProp(star, "tabIndex"))),
+    ).toStrictEqual([-1, -1, -1, 0, -1]);
+  });
+
+  it("asks where on the star a press landed", () => {
+    // The half is the pointer's: the renderer hands the event to the component,
+    // which measures the star, so the pure tree must call the score seam rather
+    // than reporting the star index.
+    const onSelect = vi.fn();
+    const scoreAt = vi.fn(() => 3.5);
+    const stars = starsOf(
+      render({ allowHalf: true }, 0, undefined, { onSelect, scoreAt }),
+    );
+    expectSome(hostHandler(stars[3] ?? expect.fail("no star"), "onClick"))({
+      ...clickEvent,
+      x: 106,
+    });
+    expect(scoreAt).toHaveBeenCalledWith(
+      4,
+      expect.objectContaining({ x: 106 }),
+    );
+    expect(onSelect).toHaveBeenCalledWith(3.5);
+  });
+
+  it("previews the half a pointer moves over", () => {
+    // The preview answers the pointer the way the press will, so hovering the
+    // left half of a star previews the half score, not the whole star.
+    const onHover = vi.fn();
+    const scoreAt = vi.fn(() => 3.5);
+    const element = renderRating(
+      { allowHalf: true },
+      testTheme,
+      state(1),
+      focus(),
+      handlers({ scoreAt }),
+      { hovered: Option.none(), onHover, onHoverEnd: vi.fn() },
+    );
+    const stars = starsOf(element);
+    expectSome(hostHandler(stars[3] ?? expect.fail("no star"), "onMouseMove"))({
+      ...clickEvent,
+      eventType: "mouseMove",
+      x: 106,
+    });
+    expect(onHover).toHaveBeenLastCalledWith(3.5);
+    expectSome(hostHandler(stars[3] ?? expect.fail("no star"), "onMouseEnter"))(
+      clickEvent,
+    );
+    expect(onHover).toHaveBeenLastCalledWith(4);
+  });
+
+  it("installs no move handler when halves are not allowed", () => {
+    const stars = starsOf(render({}, 3.5));
+    expect(
+      hostProp(stars[3] ?? expect.fail("no star"), "onMouseMove"),
+    ).toStrictEqual(Option.none());
+    // A whole-star rating still drops the fraction rather than painting it.
+    expect(elementChildren(stars[3] ?? expect.fail("no star"))).toHaveLength(1);
+  });
+
   it("previews the star under the pointer in the paint only", () => {
     // The bug guarded: a rating had no hover preview, so a pointer gave no hint
     // which score a press would choose. The preview must not become the answer:
@@ -150,7 +266,7 @@ describe("Rating", () => {
     const onHover = vi.fn();
     const onHoverEnd = vi.fn();
     const element = renderRating({}, testTheme, state(2), focus(), handlers(), {
-      hoveredIndex: Option.some(4),
+      hovered: Option.some(4),
       onHover,
       onHoverEnd,
     });
@@ -197,7 +313,7 @@ describe("Rating", () => {
         state(2),
         focus(),
         handlers(),
-        { hoveredIndex: Option.some(5), onHover: vi.fn(), onHoverEnd: vi.fn() },
+        { hovered: Option.some(5), onHover: vi.fn(), onHoverEnd: vi.fn() },
       );
       const stars = starsOf(element);
       const iconName = (star: ReactElement): unknown =>

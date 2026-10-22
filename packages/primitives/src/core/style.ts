@@ -631,6 +631,7 @@ export const ratingStarStyle = (
 ): StyleDesc => {
   const interactive = spec.disabled !== true && spec.readOnly !== true;
   const style: StyleDesc = {
+    position: "relative",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -643,6 +644,44 @@ export const ratingStarStyle = (
   if (spec.disabled === true) style.opacity = 0.5;
   return style;
 };
+
+/**
+ * The clipped box a **half** star is cut in.
+ *
+ * A half star is the filled glyph painted whole inside a box as wide as the
+ * share it holds, with `overflow: hidden` cutting it at the star's midpoint:
+ * the runtime has no transform, but it clips content (measured by the
+ * `motion-geometry` probe), and clipping at the *cell's* midpoint is the
+ * glyph's midpoint because the glyph is centred.
+ */
+export const ratingPartialStyle = (fill: number): StyleDesc => ({
+  position: "absolute",
+  top: 0,
+  bottom: 0,
+  left: 0,
+  width: `${Math.min(1, Math.max(0, fill)) * 100}%`,
+  overflow: "hidden",
+  pointerEvents: "none",
+});
+
+/**
+ * The full star cell inside a clipped half.
+ *
+ * It repeats the resting cell's own padding and floor, so the filled glyph
+ * lands exactly where the outline glyph is and only the clip differs. Its width
+ * is the cell's: `minWidth` plus the icon and its hairline.
+ */
+export const ratingPartialCellStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  position: "absolute",
+  top: 0,
+  bottom: 0,
+  left: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: theme.spacing["2xs"],
+  minWidth: targetSize.minimum,
+});
 
 /**
  * A filled star takes the brand role; an empty one the muted text role.

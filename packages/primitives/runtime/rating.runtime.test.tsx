@@ -15,7 +15,7 @@ import { targetSize } from "@gpuixui/tokens";
 import { Button } from "../src/components/Button.js";
 import { Rating } from "../src/components/Rating.js";
 import { Stack } from "../src/components/Stack.js";
-import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
+import { a11yNode, a11yValueOf, type Bounds, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const byLabel = (runtime: Runtime, label: string) =>
@@ -369,4 +369,160 @@ it("refuses input and leaves the tab order when disabled", async () => {
   runtime.click("b");
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
+});
+
+it("scores a half from where inside the star the press landed", async () => {
+  // The bug guarded: a rating could only score whole stars, and the recorded
+  // reason — that the runtime cannot clip — was false. The press position says
+  // which half of the star was meant, in a real hit-tested click.
+  const runtime = await openWindow();
+  const seen: number[] = [];
+  runtime.render(
+    <Surface>
+      <Rating
+        testId="ra"
+        label="Quality"
+        allowHalf
+        defaultValue={1}
+        onChange={(value) => seen.push(value)}
+      />
+    </Surface>,
+  );
+  const four = byLabel(runtime, "4 of 5");
+  const bounds = Option.getOrElse(runtime.boundsOfId(four.id), () =>
+    expect.fail("the fourth star painted no bounds"),
+  );
+  const y = bounds.y + bounds.height / 2;
+
+  runtime.clickAt(bounds.x + bounds.width / 4, y);
+  expect(seen.at(-1)).toBe(3.5);
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "checked",
+    "checked",
+    "half",
+    "unchecked",
+  ]);
+
+  runtime.clickAt(bounds.x + (bounds.width * 3) / 4, y);
+  expect(seen.at(-1)).toBe(4);
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "checked",
+    "checked",
+    "checked",
+    "unchecked",
+  ]);
+});
+
+it("cuts the half star from the filled glyph instead of scaling it", async () => {
+  // A half is the filled glyph painted whole inside a box half the star wide
+  // with `overflow: hidden`: the glyph keeps the outline's height, so it is cut
+  // at the midpoint rather than shrunk to fit. The runtime reports no pixels
+  // here, so the proof is geometry plus the measured clipping capability.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" allowHalf defaultValue={3.5} />
+    </Surface>,
+  );
+  const star = byLabel(runtime, "4 of 5");
+  const starBox = Option.getOrElse(runtime.boundsOfId(star.id), () =>
+    expect.fail("the fourth star painted no bounds"),
+  );
+  const clipId = star.children[1];
+  expect(clipId).toBeDefined();
+  const clip = Option.getOrElse(
+    Option.flatMap(Option.fromNullishOr(clipId), (id) =>
+      runtime.boundsOfId(id),
+    ),
+    () => expect.fail("the half star painted no clip"),
+  );
+  expect(clip.x).toBe(starBox.x);
+  expect(clip.width).toBe(starBox.width / 2);
+
+  /** The painted box of an element id, or the test's own failure. */
+  const boundsOf = (id: Option.Option<number>, what: string): Bounds =>
+    Option.getOrElse(
+      Option.flatMap(id, (element) => runtime.boundsOfId(element)),
+      () => expect.fail(`${what} painted no bounds`),
+    );
+  /** The id `depth` levels below `id`, following first children. */
+  const descendant = (id: number, depth: number): Option.Option<number> =>
+    depth === 0
+      ? Option.some(id)
+      : Option.flatMap(
+          Option.flatMap(
+            Option.fromNullishOr(runtime.renderer.getElement(id)),
+            (element) => Option.fromNullishOr(element.children[0]),
+          ),
+          (child) => descendant(child, depth - 1),
+        );
+  // A whole filled star paints its glyph directly; the half star's glyph sits
+  // two levels inside the clip (clip → cell → glyph). Same height means the
+  // half was cut at the midpoint, not scaled to fit the half-wide box.
+  const whole = boundsOf(
+    Option.fromNullishOr(byLabel(runtime, "3 of 5").children[0]),
+    "the third star's glyph",
+  );
+  const halfGlyph = boundsOf(
+    Option.flatMap(Option.fromNullishOr(clipId), (clip) => descendant(clip, 2)),
+    "the half star's glyph",
+  );
+  expect(halfGlyph.height).toBe(whole.height);
+
+  // The other stars are untouched: whole stars paint no clip at all.
+  expect(byLabel(runtime, "3 of 5").children).toHaveLength(1);
+  expect(byLabel(runtime, "5 of 5").children).toHaveLength(1);
+});
+
+it("previews the half the pointer is over, then restores the rating", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" allowHalf defaultValue={1} />
+    </Surface>,
+  );
+  const four = byLabel(runtime, "4 of 5");
+  const bounds = Option.getOrElse(runtime.boundsOfId(four.id), () =>
+    expect.fail("the fourth star painted no bounds"),
+  );
+  runtime.mouseMoveAt(
+    bounds.x + bounds.width / 4,
+    bounds.y + bounds.height / 2,
+  );
+  runtime.flush();
+  // The previewed half paints a clip; the announced value stays put.
+  expect(byLabel(runtime, "4 of 5").children).toHaveLength(2);
+  expect(byLabel(runtime, "5 of 5").children).toHaveLength(1);
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "unchecked",
+    "unchecked",
+    "unchecked",
+    "unchecked",
+  ]);
+
+  runtime.mouseMoveAt(
+    bounds.x + (bounds.width * 3) / 4,
+    bounds.y + bounds.height / 2,
+  );
+  runtime.flush();
+  expect(byLabel(runtime, "4 of 5").children).toHaveLength(1);
+});
+
+it("steps a half score by half and lands Home on the half star", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" allowHalf defaultValue={3} />
+    </Surface>,
+  );
+  runtime.keyDown("ra", "right");
+  expect(checkedStars(runtime)[3]).toBe("half");
+  runtime.keyDown("ra", "right");
+  expect(checkedStars(runtime)[3]).toBe("checked");
+  runtime.keyDown("ra", "home");
+  expect(checkedStars(runtime)[0]).toBe("half");
+  expect(checkedStars(runtime)[1]).toBe("unchecked");
 });
