@@ -2120,8 +2120,9 @@ const TooltipProbe = (): ReactNode => {
             color: theme.colors.mutedForeground,
           }}
         >
-          The shipped Tooltip: a hover or a Tab traversal's focus opens it, and
-          leaving or Escape closes it.
+          The shipped Tooltip: a hover opens it above its trigger, and leaving
+          or Escape closes it. A Tab traversal focuses the trigger without
+          running its onFocus, so the tip stays closed.
         </text>
         <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
           <Tooltip
@@ -3651,15 +3652,16 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* focusedId(ctx),
       "tabs-overview",
     );
-    // Re-measured 2026-10-22: a window's `Tab` traversal **does** deliver React's
-    // `onFocus` at HEAD, so the trigger's counter is 1. The earlier probe read
-    // the frame before the event arrived and recorded 0; the component's
-    // key-origin anchor still matters, because it is what makes the first arrow
-    // move off the traversal's tab rather than re-anchor on the selection.
+    // Measured on 0.11.0, three runs 2026-10-22: the traversal focuses the
+    // element but does not run its `onFocus`, so the counter stays 0. The
+    // offscreen host disagrees — `focus-traversal` reads `focusNext` dispatching
+    // the event — which is exactly why this is asserted in a window. The
+    // component's key-origin anchor is what carries the arrow move here; a row
+    // seeded only from `onFocus` would still re-anchor at the first enabled tab.
     yield* ctx.expectEqual(
-      "a traversal delivers onFocus to the trigger",
+      "the traversal focuses the trigger without running its onFocus",
       yield* ctx.host.text("tabs-focus-readout"),
-      "focuses=1",
+      "focuses=0",
     );
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
@@ -5567,26 +5569,31 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "enters=0 leaves=0",
     );
 
-    // The keyboard path: the trigger is the probe's first tab stop. A window
-    // delivers React's `onFocus` for a traversal at HEAD (re-measured
-    // 2026-10-22; the earlier probe read the frame before it arrived), so the
-    // tip opens. Escape then closes it, so the pointer path starts from closed.
+    // The keyboard path, measured on 0.11.0 (three runs 2026-10-22): the
+    // traversal focuses the trigger without running its `onFocus`, so the tip
+    // — which the runtime opens on focus — stays closed. Hover is the only open
+    // path in a window; the text still reaches assistive technology as the
+    // trigger's `aria-description`. The offscreen host disagrees, which is why
+    // this is measured in a window.
     yield* ctx.host.key("tab");
-    yield* settleTip(true);
+    // Wait the whole window the old "it opens" check allowed (~2s), so a
+    // delayed delivery cannot pass as "never delivered": the value the
+    // assertion reports is the one this poll settled on.
+    const afterTraversal = yield* settleUntil(painted, (shown) => shown);
     yield* ctx.expectEqual(
       "Tab lands on the trigger",
       yield* focusedId(ctx),
       "tooltip-trigger",
     );
     yield* ctx.expectEqual(
-      "a keyboard focus opens the tip",
-      yield* painted,
-      true,
+      "the traversal does not open the tip",
+      afterTraversal,
+      false,
     );
     yield* ctx.host.key("escape");
     yield* settleTip(false);
     yield* ctx.expectEqual(
-      "Escape closes the tip the keyboard opened",
+      "Escape leaves a tip the traversal did not open closed",
       yield* painted,
       false,
     );

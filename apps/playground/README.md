@@ -1057,25 +1057,28 @@ the pill covers the selected trigger, not that a screenshot looks right.
 | Step | Check |
 | ---- | ----- |
 | mount | `value=overview changes=0`; the pill is within 2px of the trigger's `x`, `width` and `height`; `tabs-panel-reports` has no bounds |
-| `Tab` | focus is `tabs-overview`; the trigger's `onFocus` counter is **1** (re-measured 2026-10-22 — a traversal does deliver the event at HEAD; the earlier run read the frame before it arrived) |
+| `Tab` | focus is `tabs-overview`; the trigger's `onFocus` counter is **0** — a window's traversal moves the focus without running the handler (three runs on 0.11.0, 2026-10-22) |
 | first `right` | focus is `tabs-reports`, `value=reports changes=1`, the reports panel paints and the overview panel has no bounds; the pill moved to the reports trigger |
 | second `right` | focus is `tabs-archive` — the disabled `settings` is skipped — `value=archive changes=2` |
 | `Home` / `End` | `value=overview changes=3`, then `value=archive changes=4` |
 | press `tabs-reports` | `value=reports changes=5`, the pill follows the pressed trigger |
 | press `tabs-settings` | the readout does not change — a disabled tab ignores a press |
 
-**The bug this probe found, and the fix it measures.** The probe was written
-when a window's `Tab` traversal focused a trigger without running React's
-`onFocus`: a row seeded only from `onFocus` was empty and the first arrow
-re-anchored at the first enabled tab. `@gpuixui/components` fixed it in
-`moveOrigin` (`src/tabs/logic.ts`), which anchors a move on the trigger that
-sent the key (`event.elementId`), then the recorded row, then the selection.
-Re-measured on 2026-10-22 at HEAD, the traversal **does** deliver `onFocus`
-(the counter is `1`), so the anchor is no longer the only thing carrying the
-origin — but it is still what makes the first arrow move off the traversal's
-tab rather than the selection, and the probe asserts that direction. The
-components' page and the capability record still state the old gap; that is an
-interlock row in `TODO.md` (owner: components, docs-site).
+**The bug this probe found, and the fix it measures.** A window's `Tab`
+traversal focuses a trigger **without running React's `onFocus`** (measured at
+`focuses=0`, three runs on 0.11.0 on 2026-10-22), so a row seeded only from
+`onFocus` was empty and the first arrow re-anchored at the first enabled tab.
+`@gpuixui/components` fixed it in `moveOrigin` (`src/tabs/logic.ts`), which
+anchors a move on the trigger that sent the key (`event.elementId`), then the
+recorded row, then the selection. That is why the probe keeps asserting the
+traversal's counter at **0**: the anchor, not the handler, is what makes the
+first arrow move off the traversal's tab. **The two hosts disagree, and only the
+window is authoritative here** — the offscreen `focus-traversal` scenario reads
+`focusNext` dispatching `onFocus` (`traversal dispatched onFocus`), which is a
+`TestRenderer` fact that does not survive into a real window. A component may not
+be held to "it gets an `onFocus`" on the strength of the offscreen suite.
+`src/live/focus-delivery.test.ts` holds this paragraph, the table row and both
+probe assertions to that measurement, and the offscreen scenario to its own.
 
 27 checks, `--only tabs-lifecycle`, green on 0.11.0; the paint guards
 `paintedBox` adds are counted in that number. Negative controls measured:
@@ -1162,8 +1165,8 @@ tip's text is painted.
 | Step | Check |
 | ---- | ----- |
 | mount | the tip's text is not painted; `enters=0 leaves=0` |
-| `Tab` | focus lands on `tooltip-trigger` and the tip **opens** (re-measured 2026-10-22; the earlier run read the frame before `onFocus` arrived) |
-| `Escape` after the traversal | closes the tip and leaves the focus on the trigger |
+| `Tab` | focus lands on `tooltip-trigger` and the tip **stays closed** — a traversal moves the focus without running the trigger's `onFocus` (three runs on 0.11.0, 2026-10-22) |
+| `Escape` after the traversal | no tip to dismiss; it stays closed and the focus stays on the trigger |
 | hover the trigger | `enters=1`, the tip paints its content, and the layout report puts it **above** the trigger on `side="top"`, overlapping it horizontally |
 | hover a sibling | `leaves=1` and the tip stops painting — leaving closes it (80ms close timer) |
 | hover again, `Escape` | the tip paints again, then Escape dismisses it while the focus stays on the trigger |
@@ -1187,19 +1190,24 @@ poll returns at once) fails `the pointer enters the trigger`
 `a second hover reopens the tip` (`expected true, got false`), which is that
 direction measured.
 
-**The on-screen caption now says what the checks measure** — "a hover or a Tab
-traversal's focus opens it, and leaving or Escape closes it". It had kept the
-retracted "a keyboard focus does not" long after the probe measured that it
-does.
+**The on-screen caption now says what the checks measure** — "a hover opens it
+above its trigger, and leaving or Escape closes it. A Tab traversal focuses the
+trigger without running its onFocus, so the tip stays closed."
 
-**Corrected measurement — keyboard focus does open the tip.** The old section
-reported a gap: a `Tab` traversal focused the trigger while React's `onFocus`
-never ran, so the tip stayed closed. Re-measured on 2026-10-22 at HEAD, the
-event **does** arrive, so the documented "hover or keyboard focus" path is real
-in a window; the earlier check read the frame before the event was delivered.
-The `tabs-lifecycle` probe measured the same change (its `focuses` counter is
-now `1`). The component docs and the capability record still describe the old
-gap and are recorded as an interlock in `TODO.md` (owner: primitives, docs-site).
+**Measured gap: a traversal does not open the tip.** An earlier section of this
+file claimed it did, after one run read the counter at 1. Three runs at HEAD on
+2026-10-22 read the opposite: the traversal focuses `tooltip-trigger`
+(`getFocusedElementId` reports it) and React's `onFocus` never runs, so the
+runtime — which opens the tip on focus — leaves it closed for the whole ~2s the
+poll waits. The earlier read was not a frame too early; the two hosts genuinely
+differ. The offscreen `focus-traversal` scenario proves `focusNext` **does**
+dispatch `onFocus` in the `TestRenderer`, so a headless suite cannot stand in
+for this check. A keyboard user therefore has **no open path** for a tip in a
+window; hover is the only one, and the tip's text still reaches assistive
+technology as the trigger's `aria-description`. The primitives' page and the
+capability record carry the same limitation; `src/live/focus-delivery.test.ts`
+holds this file, both probe assertions and the offscreen scenario to that
+measurement.
 
 `AsyncSmokeHost` gained `hover(testId)` for this: the automation protocol's own
 `hover` moves the pointer onto the element's centre without pressing, which is
