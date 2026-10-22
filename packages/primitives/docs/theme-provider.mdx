@@ -189,9 +189,11 @@ re-render with a different `theme` prop — verified natively by
   context directly paints this provider's theme and density, not the token
   package's light fallback.
 - `runtime/theme-axes.runtime.test.tsx` — the high-contrast palettes paint only
-  their own colours in both modes; a density override moves control heights to
-  the preset and leaves colour alone; `platformTheme`'s mono family reaches the
-  paint and a platform switch repaints the same tree (the playground's theme gallery).
+  their own colours in both modes, on a scene that mounts **every Tier 1
+  component** at rest (a link or a mark's derived `brandText` is the one
+  documented exception); a density override moves control heights to the preset
+  and leaves colour alone; `platformTheme`'s mono family reaches the paint and a
+  platform switch repaints the same tree (the playground's theme gallery).
 
 ```sh
 nub run --filter @gpuixui/primitives test

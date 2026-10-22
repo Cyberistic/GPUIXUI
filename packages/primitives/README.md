@@ -196,7 +196,8 @@ example from `examples/index.ts`, so the documentation's compositions are
 runtime-proven too. The suite runs in full — including a theme switch on a
 mounted tree, using the shipped `lightTheme` / `darkTheme` from
 `@gpuixui/tokens`, a check that no painted colour is outside the active palette,
-the high-contrast palettes in both modes, a density override measured against the
+the high-contrast palettes in both modes on a scene that mounts every Tier 1
+component at rest, a density override measured against the
 preset's metrics, and a platform theme's mono family reaching the paint. Its
 runner prints the file and test counts; no count is copied here to drift.
 `runtime/` is deliberately outside `nub run test`, so the default gate still
