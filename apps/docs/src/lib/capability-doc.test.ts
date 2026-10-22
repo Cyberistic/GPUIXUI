@@ -644,6 +644,10 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(frozen?.evidence).toContain("data-grid-frozen-column");
     expect(frozen?.evidence).toContain("onScrollChange");
     expect(frozen?.evidence).toContain("-1440");
+    // The window measured what the renderer's arithmetic could not: the mirror
+    // lands in the same frame, because `scrollTo` paints synchronously.
+    expect(frozen?.evidence).toContain("frozen-column-lifecycle");
+    expect(frozen?.evidence).toContain("same frame");
     expect(frozen?.workaround).toContain("ref");
 
     const page = measuredRow("Frozen column");
@@ -652,8 +656,38 @@ describe("docs/gpuix-capabilities.md", () => {
       "the page's measured table has no frozen-column row",
     ).toBeDefined();
     expect(page?.[1]).toContain("data-grid-frozen-column");
+    expect(page?.[1]).toContain("frozen-column-lifecycle");
+    expect(page?.[1]).toContain("same frame");
     expect(page?.[1]).toContain("onScrollChange");
     expect(page?.[2]).toContain("ref");
+  });
+
+  it("records the table sort and selection a window measured, and the press its centre decides", () => {
+    // MISSION lists table sort/selection among the critical interactions, and
+    // the record had no table row at all: a Tier 3 plan read only the headless
+    // `table-select-sort` and `data-grid-fixed-header` prose, which say nothing
+    // about whether a press is hit-tested, whether a pressed row takes the focus
+    // a following key needs, or what a clipped sortable header does.
+    const table = rowFor("Table sort and selection");
+    expect(table?.verdict).toBe("supported, with limits");
+    expect(table?.evidence).toContain("table-lifecycle");
+    // The recorded selection is the record, and it survives a sort.
+    expect(table?.evidence).toContain("selected=r4");
+    expect(table?.evidence).toContain("survives the sort");
+    // The header is a sibling, and the clipped centre is the measured limit.
+    expect(table?.evidence).toContain("y = -36");
+    expect(table?.evidence).toContain("centre");
+    expect(table?.workaround).toContain("record");
+
+    const page = measuredRow("Table sort and selection");
+    expect(
+      page,
+      "the page's measured table has no table sort/selection row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("table-lifecycle");
+    expect(page?.[1]).toContain("survives the sort");
+    expect(page?.[1]).toContain("centre");
+    expect(page?.[2]).toContain("record");
   });
 
   it("records the floating placement a window measured, including the centre quirk", () => {
@@ -1138,6 +1172,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("loading-row-correction");
     expect(runtimePage).toContain("window-resize-reflow");
     expect(runtimePage).toContain("drag-reorder");
+    expect(runtimePage).toContain("table-lifecycle");
+    expect(runtimePage).toContain("frozen-column-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
