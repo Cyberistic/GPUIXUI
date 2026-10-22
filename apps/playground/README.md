@@ -24,7 +24,8 @@ core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `data-grid-fixed-header`,
 `data-grid-frozen-column`, `virtualized-table`, `virtual-list-windowed`,
-`virtual-list-rows`, `virtual-list-expand`, `tree-view`, `log-viewer`,
+`virtual-list-rows`, `virtual-list-expand`, `virtual-list-prepend`,
+`tree-view`, `log-viewer`,
 `workspace-tab-drag`, `dock-reflow`, `docking-nested`, `drag-autoscroll`,
 `search-highlights`, `tab-overflow`, `editor-surface`, `a11y-tree`), the
 app-level
@@ -84,7 +85,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (38/38 green); -> 2 on a host with no binding
+# -> 0 here (39/39 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -443,6 +444,56 @@ a 56px detail leaves a whole row of viewport free and fails
 `expand-fixture.test.ts` guards the geometry those two checks depend on (3
 cases).
 
+## A prepended page
+
+A feed, a notification centre, a message scroller and a log viewer that loads
+older messages all splice rows in **above** what the reader is looking at. None
+of the other virtual-list probes measures that direction: they append, expand or
+declare the rows up front. `virtual-list-prepend` mounts 12 rows of 20px in a
+160px list — 240px, so it overflows at mount — scrolls it by 60px, then prepends
+a four-row page. A second two-row list stays short throughout and is the control.
+
+| Step | Check |
+| ---- | ----- |
+| mount | the feed paints `100–107` and reports offset `0`; the control list paints both of its rows |
+| one wheel (−60) | the offset is exactly `-60` and row 100 leaves the viewport |
+| `prepend 4 above` | the paint is still `103–110` at the same `y`, rows 96–99 are unpainted **but retained**, and the offset is `-140` — exactly the 80px inserted above |
+| wheel to the top, then `prepend 4 above` | the offset stays `0` and row 92 paints at the top with row 96 one page below it: at the top the page is shown |
+| `prepend 2 above` on the short list | offset `0` and the newest row painted — the same reading a broken anchor would give |
+
+21 checks, `--only virtual-list-prepend`, green on 0.11.0.
+
+What it settles, for a feed or a "load older" pane:
+
+1. **A prepend is anchored on the row, not on the pixel.** The offset moves by
+   the inserted height (`-60` → `-140`), so a feed that splices a page into
+   `children` keeps the reader on the row they were reading with no app-side
+   compensation and no jump.
+2. **A reader already at the top sees the page.** The runtime drops the anchor
+   for a top-aligned list sitting at `0`, so "load older" behaves like a
+   browser: the new content appears at the top instead of being hidden above
+   the viewport.
+3. **A short list cannot prove any of it.** While the content fits the viewport
+   the list re-anchors to the first row on every layout, so a probe written on
+   two rows passes with the anchoring removed. The scenario mounts an
+   overflowing feed before it scrolls for exactly that reason, and its first
+   check is the overflow itself.
+
+Negative controls, measured: starting the feed at 4 rows fails `the feed's
+declared rows overflow the viewport` (and, with that guard relaxed, `the wheel
+moved the feed off the top` — `expected true, got false`, because a list that
+does not overflow has nothing to scroll); jumping to the top in the prepend
+handler, the naive "show the newest page", fails `the new rows stay above the
+viewport` (`expected false, got true`); adding `followTail` to the feed fails
+`the feed starts at its first row` (`expected 100, got 104`) — a follow list
+mounts at its tail and is the wrong component for a history pane.
+
+Not measured here: the **loading-row correction** for infinite scroll, where the
+row standing in for the arriving page is the anchor and the app restores it with
+`getScrollTop` plus a negative `scrollToItem` offset. That path needs a window's
+`scrollToItem`, which the headless host does not expose; it is a TODO row below
+rather than a claim.
+
 ## The accessibility tree
 
 The library tells a reader what assistive technology is told — the tooltip's
@@ -586,10 +637,10 @@ mounting every page from one component fails
 
 ## Evidence on this host
 
-The suite is **38/38 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **39/39 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-38/38 scenarios passed · capabilities: layout=verified text=verified
+39/39 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -609,7 +660,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down and `deltaX` negative to scroll right (the opposite of the DOM); an `overflowX` strip clamps exactly at `contentWidth − viewportWidth` |
 | panel | pointer capture + inclusive clamp |
-| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes. Rows may differ in height: each is measured and stacked (`virtual-list-rows`), and a row that grows while outside the window is not remeasured until it paints. A row that grows **while painted** re-measures on the next frame and the rows below shift by the growth; the list paints whole rows only, so a growth that leaves less than a row of viewport defers the following row's paint until a scroll (`virtual-list-expand`) |
+| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes. Rows may differ in height: each is measured and stacked (`virtual-list-rows`), and a row that grows while outside the window is not remeasured until it paints. A row that grows **while painted** re-measures on the next frame and the rows below shift by the growth; the list paints whole rows only, so a growth that leaves less than a row of viewport defers the following row's paint until a scroll (`virtual-list-expand`). A page prepended above a scrolled reader keeps their rows and their `y` exactly while the offset grows by the page height, and at `0` the anchor is dropped so the new page paints (`virtual-list-prepend`) |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
 | data grid | a frozen first column is its own vertical scroller beside the grid, mirrored in `onScrollChange` with a re-entrancy guard: a wheel over either pane moves both, the same row shares its `y` across the panes, a horizontal wheel pans the cells but not the frozen column, and both clamp at the same `-1440` (`data-grid-frozen-column`). A header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
 | search highlights | a `highlight` spec paints a wash per match, and `SmokeHost.highlights()` (the renderer's `getPaintedHighlights`) reports each wash's run, `[start, end)` and boxes: three for `alpha`, two for `beta`, and none once the query is case-sensitive `ALPHA` or a whole-word `alp` — the insensitive/word-off queries mark them again. One `activeIndex` marks exactly one wash `active`. `ranges: [[0, 5)]` marks the same region `indexOf` would. A wash is a quad, so `text`/`paintedText` never report it |
@@ -1777,6 +1828,7 @@ src/scenarios/expand-fixture.ts the expandable-row geometry the probe asserts
 src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
 src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
+src/scenarios/virtual-list-prepend.tsx a prepended page holds the reader's row, and shows at the top
 src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/docking.tsx   nested splits, a caller-owned sidebar and a tabbed pane
@@ -1786,7 +1838,8 @@ src/scenarios/data-grid.tsx a fixed header over a vertical scroller, one shared 
 src/scenarios/search-highlights.tsx the runtime's find: query, case, word and ranges
 src/scenarios/editor.tsx    a textarea that edits lines, <code> and <diff> read-only
 src/scenarios/examples.tsx  the shipped-example gallery: one page per registry id
-src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
+src/scenarios/index.ts   one implementation per registered id
+src/scenarios/registry.ts the ids, titles and capabilities + the pure integrity check
 src/scenarios/registry.test.ts the README's printed total and capability list against it
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1828,7 +1881,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (38/38), with a written report and screenshots.
+  (39/39), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

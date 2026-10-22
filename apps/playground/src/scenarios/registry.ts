@@ -215,6 +215,12 @@ export const registry = [
     capability: "virtual-list",
   },
   {
+    id: "virtual-list-prepend",
+    title:
+      "Virtual list holds the reader's row when a page is prepended above them",
+    capability: "virtual-list",
+  },
+  {
     id: "virtualized-table",
     title: "Table inside <virtual-list>: window, click, selection",
     capability: "table",

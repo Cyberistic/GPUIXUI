@@ -496,7 +496,38 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 53/53
+`[x]` `[█████████░]` 54/55
+
+`[x]` Land the `virtual-list-prepend` headless scenario and measure **a page
+      prepended above the reader** — a feed, a notification centre, a message
+      scroller and a "load older" log all splice rows in above what the reader
+      is looking at, and no scenario measured that direction (`log-viewer`
+      appends, `virtual-list-rows`/`virtual-list-expand` grow in place). 12 rows
+      of 20px in a 160px list (overflowing at mount), one wheel to `-60`, then a
+      4-row page above: the painted rows stay `103–110` at the same `y` and the
+      offset moves `-60` → `-140`, exactly the page height, so the anchor is the
+      logical row; at the top the anchor is dropped instead — the offset stays
+      `0` and the new page paints, which is the browser behaviour a feed wants —
+      and the prepended rows are retained while unpainted, so "nothing moved"
+      is a real splice. A second 2-row list is the control: short content
+      re-anchors to row 0 on every layout, so it reads the same with the anchor
+      broken. 21 checks, `--only virtual-list-prepend`, green on 0.11.0; full
+      headless suite re-run 39/39. Three negative controls measured (the feed
+      starting at 4 rows: `the feed's declared rows overflow the viewport`, and
+      with that guard relaxed `the wheel moved the feed off the top`; a
+      `scrollTo` to the top inside the prepend handler, the naive "show the
+      newest page": `the new rows stay above the viewport`; `followTail` on the
+      feed: `the feed starts at its first row` — `expected 100, got 104`; exit
+      `1` each, restored green). Evidence: `apps/playground/README.md` §A
+      prepended page
+
+`[ ]` Measure the **loading-row correction** for infinite scroll — when the row
+      standing in for the arriving page is the anchor, a prepend splices the page
+      in *under* it and replaces the screen the reader was reading; the app owns
+      the restore (scroll top, then `scrollToItem` with `offsetInVoid −
+      EDGE_HEIGHT`), and the append twin rests on the at-end sentinel instead.
+      Needs a live window's `scrollToItem` (the headless host has none), so the
+      evidence today is only the upstream note, not a measurement here.
 
 `[x]` Land the `a11y-tree` headless scenario and measure **what assistive
       technology is told** — the library documents `aria-description`, an
