@@ -102,6 +102,22 @@ const statusEdge = (
 const statusTintStrips = ["background", "card", "popover", "muted"] as const;
 
 /**
+ * The row washes a soft badge's edge is measured on: the strips the one status
+ * surface that sits **inside** a row crosses.
+ *
+ * A tone badge is the only message painted in a row rather than on a page — the
+ * List example's status column puts one in a row's `trailing` slot — and its
+ * recipe carries the tone's own 30% edge (`border border-success/30` and its
+ * siblings in `packages/tw/src/recipes.ts`) while the row tints `accent` under
+ * the pointer, `active` while pressed and fills `selected` once chosen
+ * (`packages/components/src/list.tsx`). The edge is what keeps the pill a pill
+ * there: the tint is a pale surface by design and a row's wash is a pale surface
+ * too, so on a wash it is the boundary that carries the badge, not the fill. The
+ * four strips are the same washes `stateWash` measures the row itself on.
+ */
+const statusWashStrips = ["hover", "active", "selected", "accent"] as const;
+
+/**
  * A state wash: the tint a hovered, pressed, selected or accented row paints
  * behind its content. A role that carries the strip's own value is a state the
  * reader never sees — the base dark theme shipped `hover` equal to `popover`, so
@@ -257,7 +273,9 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // dialog's body sits on that dialog's `popover` fill, and a soft badge in a
   // muted sidebar sits on `muted`. The edge was measured on the two page
   // surfaces only, so a message on a floating surface had a measured tint and an
-  // edge nothing checked.
+  // edge nothing checked. A soft **badge** is the message that sits inside a row
+  // instead of on a strip, so the four washes a row tints under itself are
+  // measured too — on a wash the edge is the whole badge.
   ...statusTones.flatMap((tone) => [
     ...statusTintStrips.map(
       (over): DecorativeSurface => ({
@@ -268,6 +286,7 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
     ),
     statusEdge(tone, `${tone}Soft`),
     ...statusTintStrips.map((over) => statusEdge(tone, over)),
+    ...statusWashStrips.map((over) => statusEdge(tone, over)),
   ]),
 ] satisfies ReadonlyArray<DecorativeSurface>;
 

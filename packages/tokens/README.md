@@ -189,7 +189,11 @@ tone.border; // alpha(theme.colors.info, 0.3)
 The soft surface and its 30%-alpha edge are both **decorative** — the message's
 text carries the meaning — so `decorativeFailures` holds the tint to 1.05:1 on
 the four strips a message sits on (page, card, popover, muted toolbar) and the
-edge to the same floor on the tint it bounds. The label is text, so it is in the
+edge to the same floor on the tint it bounds. A soft **badge** is the one status
+message painted inside a row, so that edge is measured on the four washes a row
+tints under it (`hover`, `active`, `selected`, `accent`) as well — on a wash the
+edge is the whole pill, because the tint and the wash are both pale surfaces.
+The label is text, so it is in the
 contrast table instead: `xSoftForeground` on `xSoft` at the body floor, and on
 every strip a message can be written on — the page, a card, a popover and a
 `muted` toolbar, because a `FieldError` paints the role with no fill of its own.
@@ -637,8 +641,9 @@ action owns that edge and a brand could otherwise paint it in the row's colour.
 The decorative surfaces use `decorativeFloor` (1.05:1), and
 `decorativeSurfaces` names the placements measured — dividers, skeleton fills,
 the modal veil on the strips a modal covers, each status tone's soft tint on the four strips a message sits
-on and its edge on those same four (read at the share `statusEdgeAlpha` that
-`statusTone` paints), the scrollbar thumb, `hover`/`active`/`selected`/`accent`
+on and its edge on those same four and on the four washes a row tints under a
+badge (read at the share `statusEdgeAlpha` that `statusTone` paints), the
+scrollbar thumb, `hover`/`active`/`selected`/`accent`
 and the `secondary` fill on the four strips a control can sit on, and the
 deepest elevation level composited over those same four. Nothing escapes the
 contract either:

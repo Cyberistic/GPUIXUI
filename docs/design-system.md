@@ -674,9 +674,11 @@ modal — a card, a popover, a sidebar's `muted` toolbar, a segmented `secondary
 panel and a field's `input` fill; the page's own void is exempt, because a black
 page cannot be darkened and a high-contrast theme separates its dialog with a
 border instead. The status edge is measured at the share
-`statusTone` paints, on the tint it bounds and on the four strips a message sits
-on — so a warning alert in a confirmation dialog's body, or a soft badge in a
-muted sidebar, has its boundary measured where its tint is.
+`statusTone` paints, on the tint it bounds, on the four strips a message sits on
+and on the four washes a row tints under a badge — so a warning alert in a
+confirmation dialog's body, a soft badge in a muted sidebar, and the same badge
+in a hovered or selected row all have their boundary measured where they are
+painted.
 `decorativeFailures(theme, floor?)` runs the check, and `decorative.test.ts` holds
 every shipped and platform theme to it. The status-tint half found the surface a message sits in: the page promised this
 row, and the code measured only the edge, so a tint equal to its strip passed.

@@ -56,6 +56,7 @@ import {
   highContrastLightColors,
   lightColors,
   palette,
+  type ThemeColors,
 } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import {
@@ -206,9 +207,12 @@ describe("decorative surfaces", () => {
     ).toMatchObject({ floor: decorativeFloor });
   });
 
-  it("clears the floor on the floating and quiet strips, with Luna light tightest", () => {
-    // The catalogue prints the tightest placement of the two new strips, so the
-    // sentence and this computation fail in opposite directions.
+  it("clears the floor on the tint and every strip, with Luna light tightest on a wash", () => {
+    // The catalogue prints the tightest **strip** placement of the edge contract
+    // — the tint it bounds is covered by the pass check but not printed, because
+    // the sentence is about the strips a message or a badge crosses. The scope is
+    // the four strips a message sits on and the four washes a soft badge crosses
+    // inside a row.
     const lookThemes = retroNames.flatMap((look) => [
       retroTheme(themes.light, look),
       retroTheme(themes.dark, look),
@@ -219,7 +223,19 @@ describe("decorative surfaces", () => {
       ...lookThemes,
     ].flatMap((theme) =>
       statusTones.flatMap((tone) =>
-        (["popover", "muted"] as const).map((over) => ({
+        (
+          [
+            `${tone}Soft`,
+            "background",
+            "card",
+            "popover",
+            "muted",
+            "hover",
+            "active",
+            "selected",
+            "accent",
+          ] satisfies ReadonlyArray<keyof ThemeColors>
+        ).map((over) => ({
           theme: theme.name,
           tone,
           over,
@@ -237,13 +253,15 @@ describe("decorative surfaces", () => {
       ),
     ).toEqual([]);
 
-    const tightest = placements.reduce((low, placement) =>
-      (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
-    );
+    const tightest = placements
+      .filter(({ over }) => !over.endsWith("Soft"))
+      .reduce((low, placement) =>
+        (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
+      );
     expect(tightest.theme).toBe("Light · Windows XP (Luna)");
     expect(tightest.tone).toBe("warning");
-    expect(tightest.over).toBe("muted");
-    expect(tightest.ratio).toBeCloseTo(1.11, 2);
+    expect(tightest.over).toBe("active");
+    expect(tightest.ratio).toBeCloseTo(1.09, 2);
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -252,6 +270,63 @@ describe("decorative surfaces", () => {
         "utf8",
       ).replace(/\s+/g, " "),
     ).toContain(`at ${tightest.ratio?.toFixed(2)}:1`);
+  });
+
+  it("measures a soft badge's edge on every wash a row tints under it", () => {
+    // A tone badge is the one status surface painted inside a row rather than on
+    // a page: the List example's status column puts one in the row's `trailing`
+    // slot, and the row tints `accent` under the pointer, `active` while pressed
+    // and fills `selected` once chosen. On a wash the 30% edge is the whole
+    // badge, so it is measured wherever the row can be.
+    const missing = statusTones.flatMap((tone) =>
+      ["hover", "active", "selected", "accent"]
+        .filter((over) => !measured("statusEdge", tone, over))
+        .map((over) => `${tone}/${over}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reads the painters that put a badge on a wash", () => {
+    // The placements above are only real while the recipe keeps its tone edge
+    // and the row keeps tinting the four washes: a badge that lost its border, or
+    // a row that stopped washing, would leave the pairs measuring a composition
+    // the library no longer paints.
+    const recipes = readFileSync(
+      new URL("../../../packages/tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const list = readFileSync(
+      new URL("../../../packages/components/src/list.tsx", import.meta.url),
+      "utf8",
+    );
+    const badges = recipes.slice(
+      recipes.indexOf("export const BADGE_VARIANTS"),
+      recipes.indexOf("export const ALERT_BASE"),
+    );
+    const edgeLess = statusTones.filter(
+      (tone) => !badges.includes(`border border-${tone}/30`),
+    );
+    const unwashed = ["accent", "active", "selected"].filter(
+      (role) => !list.includes(`backgroundColor: theme.colors.${role}`),
+    );
+
+    expect({ edgeLess, unwashed }).toEqual({ edgeLess: [], unwashed: [] });
+  });
+
+  it("reports a badge edge painted in the wash it sits on", () => {
+    // A tone whose edge is its own row wash leaves the pill with no boundary at
+    // all — the state a brand reaches by reusing `accent` as a tone.
+    const flatActive = {
+      colors: { ...lightColors, warning: lightColors.active },
+    };
+
+    expect(
+      decorativeFailures(flatActive).find(
+        ({ surface, role, over }) =>
+          surface === "statusEdge" && role === "warning" && over === "active",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
 
   it("measures the edge the component actually paints", () => {

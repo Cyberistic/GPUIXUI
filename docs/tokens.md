@@ -1662,7 +1662,7 @@ how a status edge is measured at the alpha its component actually uses:
 | skeleton | `skeleton` | `background`, `card`, `muted` |
 | scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
-| statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint and the same four strips |
+| statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, the same four strips, and the washes `hover`, `active`, `selected`, `accent` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
 | stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted` |
 | filledAction | `secondary` | `background`, `card`, `popover`, `muted` |
@@ -1691,9 +1691,19 @@ same four strips — a tint the reader can see and a boundary they cannot is a
 message with a soft hole around it. It was measured on the tint and the two page
 surfaces only, so a warning alert in a confirmation dialog's body (the
 `ConfirmDialog` children slot, on the dialog's `popover` fill) and a soft badge
-in a muted sidebar had a measured tint and an unmeasured edge. Every shipped,
-high-contrast, platform and authored style clears the floor on both, the
-tightest being Luna light's `warning` edge on its `muted` toolbar at 1.11:1.
+in a muted sidebar had a measured tint and an unmeasured edge.
+
+A soft **badge** is the one status message painted *inside* a row rather than on
+a page — the List example's status column puts a tone badge in a row's
+`trailing` slot — and its recipe carries the tone's own 30% edge
+(`border border-success/30` and its siblings) while the row tints `accent` under
+the pointer, `active` while pressed and fills `selected` once chosen. On a wash
+that edge is the whole badge: the tint is a pale surface by design and a row's
+wash is a pale surface too, so the boundary is what keeps the pill a pill. The
+edge is therefore measured on the four washes as well, and every shipped,
+high-contrast, platform and authored style clears the floor on the tint it bounds
+and on every strip a message or a badge crosses. The tightest strip is Luna
+light's `warning` edge on the `active` wash at 1.09:1.
 
 A **state wash** is the one entry a component paints *behind* content rather than
 around it, so it has two jobs and two contracts: the text on it keeps the floors
