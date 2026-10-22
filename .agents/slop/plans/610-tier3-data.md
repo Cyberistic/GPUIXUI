@@ -159,7 +159,12 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   composition.
 - **Phase 2 note**: the painted-child press rule now lives in
   `table.tsx`'s row/cell docs and the two Tier 3 rows, guarded by
-  `src/table/press-rule.test.ts` and a blank-cell press case.
+  `src/table/press-rule.test.ts` and a blank-cell press case. The measured
+  **hover** boundary sits beside it: the native hover refinement's set is the
+  press's own hit test (`hover-routing-lifecycle`), so a decorative child in a
+  cell or tree row opts out with `pointerEvents: "none"` while a control that
+  answers the pointer keeps its fill. `src/table/hover-rule.test.ts` holds the
+  source, the README rule, the tree page and the three Tier 3 rows.
 - **Phase 2 revisited — the grid state is `@tanstack/table-core`'s**: the
   sorting, the filtered order and the chosen ids were pure reducers of this
   package's own; they are now row models over one data array.
@@ -223,6 +228,11 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
   and `--only data-tree-core` and `--only data-expandable-rows-core` (1/1 each).
   Frozen columns are the open TODO row.
+- **Type-ahead is the published seam**: the tree imports
+  `typeaheadMatchIndex` from `@gpuixui/components/typeahead` and keeps only the
+  position-to-key step; `TreeView` uses the seam's `typedChar`/`useTypeahead`, so
+  the window, the repeat rule and the character rule are shared with a list and
+  a menu. `src/tree/typeahead.test.ts` refuses a second copy.
 - **Phase 6 (charts) landed**: `packages/data/src/chart/` — the geometry
   (`chart/logic.ts`: `niceCeiling`, `axisTicks`, `barMarks`/`groupedBarMarks`/
   `stackedBarMarks`, `linePath`, `donutSegments`, `chartMarkup`, `seriesColour`)

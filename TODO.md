@@ -914,7 +914,7 @@ palettes (a third rule), `docs/design-system.md` §11, the package README and th
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 119/119
+`[x]` `[██████████]` 120/120
 
 `[x]` Measure **whether a filled child takes its row's hover away** — every
       list, table and tree row paints its pointer feedback through the runtime's
@@ -946,6 +946,33 @@ palettes (a third rule), `docs/design-system.md` §11, the package README and th
       `.artifacts/live/hover-*.png`. The rule's adoption by the rows (a
       decorative child opts out; a control keeps its own hover paint) is the
       Interlocks row below.
+
+`[x]` Measure a **multi-step form a window drives** — Tier 5's *multi-step
+      forms* row was `?` because a wizard is composition over the shipped `Form`,
+      `Stepper`, `Field` and `Checkbox`, and no probe had measured the layers a
+      caller writes between them. `multi-step-form-lifecycle` mounts a
+      three-step workspace setup whose step gate refuses an unusable name or a
+      port outside 1024–65535 (painting the schema's own message, clearing it
+      with the corrected value, and advancing from the field's `Enter` as well
+      as `Next`), keeps `desk`/`3000` across Back and Next, and submits the
+      class instance `Form` decodes (`applied=desk:3000`, one submit). 21
+      checks, `--only multi-step-form-lifecycle`, green on 0.11.0 here (~4–5 s,
+      three captures). Fixture `src/live/multi-step.ts` (the ids, the two
+      schemas, the step gate, the movement and the two readout codecs) +
+      `multi-step.test.ts` (13 cases: both gates, the schemas' own messages, the
+      accepted record, the clamps, the readouts, the ids, the view held to the
+      fixture, the registry entry, the README section and its printed count).
+      Two negative controls measured, exit `1` each, restored green: accepting
+      every name fails `a step with no usable name refuses to advance`
+      (`expected "step=1 …", got "step=2 …"`), and dropping the port range fails
+      `an out-of-range port refuses to advance` (`expected "step=2 … port=70000
+      …", got "step=3 …"`). **The probe found a real defect**: a `Form` whose
+      schema failure is reported on a field path cannot be submitted again
+      (`attempts=3 valid=false fieldsValid=false errors=0` while its values
+      decode), recorded in the Interlocks table for the components owner and
+      asserted as the probe's measured limit. Evidence:
+      `apps/playground/README.md` §`multi-step-form-lifecycle`,
+      `.artifacts/live/multi-step-{review,submitted,retry}.png`.
 
 `[x]` Measure the **gap an outline offset leaves, and the layout it does not
       take** — the tokens contract records that `keyboardFocusRing` paints at
@@ -5540,6 +5567,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Link the **virtualization page** from the data lane — `packages/data/docs/virtualization.mdx` documents the two windowed surfaces (`VirtualList` over the runtime's `<virtual-list>` in both modes, `VirtualTable`/`VirtualTableBody` under the measured fixed header, `useVirtualRows`) with their rules, API, limitations and the eight suites that hold them. The page was mounted but the lane page named only the probes that measured it, so a reader on `/docs/data-display` had no route to the page that explains them | docs-site (`apps/docs/content/docs/data-display/index.mdx`) | **resolved 2026-10-23** — the lane page's **Surface** table gains a `Virtualization` row linking `/docs/data-display/virtualization` (whose column describes the three shipped parts), and the **Virtualization** bullet opens on `VirtualList` as the typed seam, names `VirtualTable`/`VirtualTableBody` and `useVirtualRows`, and links the page; the measured rules it already carried (overdraw against a one-gesture-late `onVisibleRange`, the index-addressed reveal, the same-commit clamp) are unchanged. `lane-page.test.ts` gained `links the page that explains the windowed surfaces it lists`: it reads the package root's three exports (`VirtualList`/`visibleRange`, `VirtualTable`/`VirtualTableBody`, `useVirtualRows`), the package page's title and names, and the lane page's row and link, so a page that drops the row or a link that points elsewhere fails. Direction measured: pointing the link at `/docs/components/table` fails the case by name; restored, `nub run --filter @gpuixui/docs test` is 99 files / 988 tests with `check-types` and `build` green. No native scenario applies — a docs link has no runtime path |
 
+| Repair a **`Form` whose second submit is swallowed** — the shipped `Form` decodes the caller's record only on the submit path form-core allows, and a schema failure reported on a field path leaves that field's meta invalid for good: the first failure writes `accepted` (or any schema-named field) into `fieldMeta`, the next submit's `validateAllFields` runs no field validator for it, so `isFieldsValid` stays false and `_handleSubmit` returns before re-running `validators.onSubmit`. Measured in the playground's `multi-step-form-lifecycle` on 0.11.0: after the first (successful) submit, un-accepting the review and submitting again is refused, and re-accepting and submitting a third time still never reaches the caller — `attempts=3 valid=false submitting=false can=false fieldsValid=false errors=0` while the core's own values decode with the class. Any form built on the documented owned-value pattern (the Form example included) dies after one invalid submit | components (`src/form.tsx`, `src/form/validator.ts`, the Form page and `src/behaviour/form.test.tsx`) | **open — measured 2026-10-23 by the playground.** The probe asserts the limit so the claim cannot go stale (its last check fails when the retry is repaired, and the README section must flip with it). The fix is to keep the form-level messages out of `fieldMeta` (one form-level error beside the per-field summary) or to clear the stale `onSubmit` field errors before `validateAllFields`, then add a behaviour case that submits an invalid value, corrects it, and asserts the second submit reaches `onSubmit`. Evidence: `apps/playground/README.md` §`multi-step-form-lifecycle`, `.artifacts/live/multi-step-retry.png` |
+
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3
@@ -5772,14 +5801,14 @@ Work that this workstream needs but does not own. Another agent owns each row.
     and capped per theme), because that seam is not importable and a data grid
     cannot pay a compile per cell. One shared helper belongs in the compiler
     package. Owner: tw.
-  - [ ] Hoist the **type-ahead seam** — `packages/data/src/tree/logic.ts` repeats
-    the components' private rule (a 500 ms window, the last keystroke wins, a
-    repeated letter keeps the prefix, matching is case-insensitive) because
-    `@gpuixui/components` exports only `src/*.tsx` and `internal/typeahead.ts` is
-    unreachable; the same is true of `typedChar` in `tree-view.tsx`
-    (`internal/key.ts`). A tree and a list must not disagree about what a typed
-    prefix means, so the buffer and the character rule belong in one importable
-    module. Owner: components.
+  - [x] **Adopt** the type-ahead seam in the tree — `packages/data/src/tree/logic.ts`
+    carried a copy of the window, the repeat rule, the matcher and `typedChar`
+    because the components seam was private. `@gpuixui/components/typeahead` now
+    publishes all four; the tree imports `typeaheadMatchIndex` and maps its rows
+    to `{ label, disabled: false }`, and `tree-view.tsx` imports `typedChar` and
+    `useTypeahead`. Only the position-to-key step stays local
+    (`typeAheadRow`). `packages/data/src/tree/typeahead.test.ts` refuses a second
+    copy; see the interlock row for the measured directions. Owner: data.
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[ ]` Verify critical interactions in the real runtime
 
