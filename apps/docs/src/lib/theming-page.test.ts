@@ -930,7 +930,10 @@ describe("the theming page's focus-ring section", () => {
       contrastRatio(themes.dark.colors.ring, themes.dark.colors.primary),
     ).toBe(1);
     const measured = readFileSync(
-      new URL("../../../../packages/tokens/src/ring-fill.test.ts", import.meta.url),
+      new URL(
+        "../../../../packages/tokens/src/ring-fill.test.ts",
+        import.meta.url,
+      ),
       "utf8",
     );
     expect(measured).toContain(
@@ -940,7 +943,10 @@ describe("the theming page's focus-ring section", () => {
       'expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.54")',
     );
 
-    const text = section(page("theming.mdx"), "Focus rings").replace(/\s+/g, " ");
+    const text = section(page("theming.mdx"), "Focus rings").replace(
+      /\s+/g,
+      " ",
+    );
     expect(text).toContain("`keyboardFocusRing(theme)`");
     expect(text).toContain("`focusRing(theme)`");
     expect(text).toContain("`controlFocusRing(theme, { disabled, invalid })`");

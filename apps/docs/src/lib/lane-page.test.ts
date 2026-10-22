@@ -820,7 +820,10 @@ describe("the data-display page's controller rules", () => {
     "utf8",
   );
   const probe = readFileSync(
-    new URL("../../../../apps/playground/src/live/scenarios.tsx", import.meta.url),
+    new URL(
+      "../../../../apps/playground/src/live/scenarios.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
 
