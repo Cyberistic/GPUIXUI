@@ -1040,11 +1040,20 @@ palette's own values, the ink choice to measurement, the watcher to one apply pe
 change, and the deleted file to the base theme.
 
 **Limits.** A partial palette is a mix: the roles it does not name are the base
-theme's, measured by the gate like any other theme. Decoding Omarchy's
-`colors.toml` (or a macOS appearance, or a Windows accent) belongs to the
-consumer's boundary — this package names the semantic shape, not a file format —
-and the live Linux proof, where `omarchy-theme-set` changes a running window's
-colours, is the playground's to record.
+theme's, measured by the gate like any other theme. That is not a formality — the
+two palettes in `src/system-theme.example.ts` are what a desktop actually
+offers, and `auditTheme` reports them: the night palette's single red carries the
+pale ink at **4.39:1**, under the 4.5 floor, and stands on a wash at **2.93:1**,
+under the 3:1 a mark needs, while the paper palette's base surfaces sit at the
+perceptibility floor on its new page. `paletteToTokens` chooses each on-colour
+and never claims the result is shippable; a consumer following a desktop runs the
+gate and then either names the roles a palette cannot answer (the full look
+belongs in the `PlatformStyle` shape, where a style owns its surfaces and its
+chart scale) or accepts the reported mix. Decoding Omarchy's `colors.toml` (or a
+macOS appearance, or a Windows accent) belongs to the consumer's boundary — this
+package names the semantic shape, not a file format — and the live Linux proof,
+where `omarchy-theme-set` changes a running window's colours, is the playground's
+to record.
 
 ## Checking your own theme
 

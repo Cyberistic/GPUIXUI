@@ -11,7 +11,9 @@
  * first read at once and only re-applies a palette that changed.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { auditTheme } from "./audit.js";
 import { contrastRatio } from "./contrast.js";
 import {
   followDesktop,
@@ -34,6 +36,9 @@ import {
   lightTheme,
   type Theme,
 } from "./theme.js";
+
+const read = (path: string): string =>
+  readFileSync(new URL(path, import.meta.url), "utf8");
 
 const isBaseValue = (
   base: Theme,
@@ -231,6 +236,30 @@ describe("following a palette", () => {
 
     expect(applied?.colors.background).toBe(paperPalette.background);
     expect(applied?.colors.primary).toBe(paperPalette.accent);
+  });
+
+  it("reports the mix a partial palette cannot serve", () => {
+    const night = auditTheme(followPalette(nightPalette));
+    const paper = auditTheme(followPalette(paperPalette));
+
+    // The mapper does not promise a shippable theme: the palette's own inks are
+    // chosen, but its single red still misses the ink floor on the base theme's
+    // surface, and the roles the palette does not name belong to that base and
+    // are measured on the palette's page.
+    expect(night.passed).toBe(false);
+    const ink = night.contrast.find(
+      ({ foreground, background }) =>
+        foreground === "destructiveForeground" && background === "destructive",
+    );
+    expect(ink?.ratio).toBeCloseTo(4.39, 1);
+    const mark = night.indicators.find(({ role }) => role === "destructive");
+    expect(mark?.ratio).toBeCloseTo(2.93, 1);
+    expect(paper.decorative.length).toBeGreaterThan(0);
+
+    // The catalogue teaches the measured mix rather than a promise.
+    const catalogue = read("../../../docs/tokens.md");
+    expect(catalogue).toContain("4.39:1");
+    expect(catalogue).toContain("2.93:1");
   });
 
   it("ships an interval timer that can be cancelled", () => {
