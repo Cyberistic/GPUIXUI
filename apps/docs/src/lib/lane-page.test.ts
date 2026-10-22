@@ -765,3 +765,66 @@ describe("the data-display page's shipped rows", () => {
     expect(closed).toEqual([]);
   });
 });
+
+/**
+ * The page taught a filter and a window as two separate contracts, and the
+ * controller holds one rule in each that a grid plan cannot re-derive: a
+ * released selection is retained during **render** (so a widening query paints
+ * the choice again), and a narrowed set's scroll offset is clamped in the same
+ * commit (or the window keeps rows the set no longer has).
+ */
+describe("the data-display page's controller rules", () => {
+  const dataPage = read(dataDisplayPage);
+  const controller = readFileSync(
+    new URL("../../../../packages/data/src/use-table.ts", import.meta.url),
+    "utf8",
+  );
+  const windowing = readFileSync(
+    new URL(
+      "../../../../packages/data/src/virtual/use-virtual-rows.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const probe = readFileSync(
+    new URL("../../../../apps/playground/src/live/scenarios.tsx", import.meta.url),
+    "utf8",
+  );
+
+  it("retains a released selection and names the call that drops it", () => {
+    // The release is a view of `chosen`, computed in render — an effect would
+    // make the hide a write and the widening query would not paint it again.
+    expect(controller).toContain("retainSelection(chosen, keys)");
+    expect(controller).not.toContain("useEffect");
+    expect(controller).toContain("clearSelection(selection)");
+    expect(controller).toContain("clear: () =>");
+    // Both directions the page prints are the probe's own assertions.
+    expect(probe).toContain("clearing the query restores the whole set");
+    expect(probe).toContain(
+      "and the records the controller held are chosen again",
+    );
+
+    expect(dataPage).toContain("data-table-lifecycle");
+    expect(dataPage).toContain("A release is a view, not a write");
+    expect(dataPage).toContain("during **render**");
+    expect(dataPage).toContain("`clear()`");
+    expect(dataPage).toContain("**2 chosen records**");
+  });
+
+  it("clamps a narrowed set before the window is computed", () => {
+    // The order is the fix: the clamp is read first, and the window is computed
+    // from that offset, so the narrowed tail fills the viewport in one commit.
+    const clamp = windowing.indexOf("clampScrollOffset(spec, scrollOffset)");
+    const computed = windowing.indexOf("calculator.at(offset)");
+    expect(clamp).toBeGreaterThan(-1);
+    expect(computed).toBeGreaterThan(clamp);
+    expect(probe).toContain(
+      "the tail fills the viewport from the narrowed set",
+    );
+
+    expect(dataPage).toContain("virtual-table-lifecycle");
+    expect(dataPage).toContain("count × rowHeight − viewport");
+    expect(dataPage).toContain("five rows in a nine-row viewport");
+    expect(dataPage).toMatch(/re-clamps the window in the same\s+commit/);
+  });
+});

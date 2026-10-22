@@ -147,7 +147,13 @@ re-deriving them.
   a row that was never mounted and a programmatic reveal fires no
   `onVisibleRange` — read the painted rows or the list's anchor, and never
   paginate from that event across a row-count change
-  (`virtual-tree-lifecycle`).
+  (`virtual-tree-lifecycle`). A narrowed set **re-clamps the window in the same
+  commit**: a scroll offset belongs to the set it was measured against, so
+  `useVirtualRows` clamps it to `count × rowHeight − viewport` before the window
+  is computed — without that, narrowing a thousand rows to 127 while the reader
+  sat near row 900 mounted five rows in a nine-row viewport and left half the
+  table blank until the next wheel, and a record the set no longer holds stayed
+  in the tree (`virtual-table-lifecycle`).
 - **A find bar offsets by matches, not rows** — a search over a virtualized
   table searches a document the runtime never holds, and `getPaintedHighlights()`
   reports only the mounted window, so a row index cannot place the cursor.
@@ -263,6 +269,13 @@ re-deriving them.
   So keep the selection by **record** and clear it when the record leaves the
   set, leave the text session in the field while rows come and go, reset the
   scroller on a filter change, and walk the filtered array on arrow keys.
+- **A release is a view, not a write** — the controller keeps the chosen records
+  and computes the visible selection during **render**, so a query hides a
+  choice without dropping it: typing `001` narrowed the set to one row and
+  `0 selected`, and typing `file` over the narrowed field brought the whole 60
+  back with the **2 chosen records** painted again (`data-table-lifecycle`).
+  Hide is not release, so a grid that needs a permanent one commits `clear()`
+  on the query change instead of expecting the next widening query to forget.
 - **A column menu is app state, and a window measured what hiding or moving one
   costs** — the runtime has no table element, so the visible columns are one
   ordered list the header and every row read; the runtime still owns the
