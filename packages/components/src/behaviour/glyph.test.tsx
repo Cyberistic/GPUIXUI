@@ -206,9 +206,11 @@ describe("Glyph", () => {
       expect(glyphsOf(page).length).toBeGreaterThan(1);
       // The wall is still painted — the preference removes the journey, not the
       // field — and its entrance is an instant assignment.
-      expect(byTestId(page.renderer, "wall").customProps?.motion).toMatchObject({
-        transition: { duration: 0 },
-      });
+      expect(byTestId(page.renderer, "wall").customProps?.motion).toMatchObject(
+        {
+          transition: { duration: 0 },
+        },
+      );
     } finally {
       page.unmount();
     }
@@ -262,7 +264,9 @@ describe("Glyph", () => {
       expect(glyphsOf(page).length).toBeLessThan(wide);
       Arr.forEach(glyphsOf(page), (glyph) => {
         const bounds = page.renderer.getElementBounds(glyph.id);
-        expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(201);
+        expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(
+          201,
+        );
         expect((bounds?.y ?? 0) + (bounds?.height ?? 0)).toBeLessThanOrEqual(
           121,
         );

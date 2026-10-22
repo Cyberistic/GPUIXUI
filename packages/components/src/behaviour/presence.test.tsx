@@ -655,10 +655,7 @@ const PreferencePage = ({ reduced }: { readonly reduced: boolean }) => (
 );
 
 /** The painted height of `testId`, failing when nothing was painted. */
-const heightOf = (
-  renderer: TestRoot["renderer"],
-  testId: string,
-): number => {
+const heightOf = (renderer: TestRoot["renderer"], testId: string): number => {
   const instance = renderer.findByTestId(testId);
   if (instance === undefined) {
     throw new Error(`behaviour: no element with testId "${testId}"`);
@@ -715,7 +712,8 @@ describe("the preference", () => {
     page.unmount();
   });
 
-  it("paints a section at its measured height on the first frame", async () => {    // The reveal's target is a measurement that arrives after a paint, so under
+  it("paints a section at its measured height on the first frame", async () => {
+    // The reveal's target is a measurement that arrives after a paint, so under
     // the reduced preference the section must already be at its full height in
     // the frame it opens rather than growing from zero.
     const page = renderComponent(

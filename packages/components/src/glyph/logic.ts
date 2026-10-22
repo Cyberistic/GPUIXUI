@@ -88,17 +88,16 @@ export const glyphCellOf = (cell: Option.Option<number>): number =>
 export const glyphDensityOf = (density: Option.Option<number>): number =>
   Option.getOrElse(
     Option.map(
-      Option.filter(
-        density,
-        (value) => Number.isFinite(value) && value >= 0,
-      ),
+      Option.filter(density, (value) => Number.isFinite(value) && value >= 0),
       (value) => Math.min(value, 1),
     ),
     () => glyphDensity,
   );
 
 /** The marks a wall draws from: the caller's code points, or the house set. */
-export const glyphMarksOf = (marks: Option.Option<string>): ReadonlyArray<string> => {
+export const glyphMarksOf = (
+  marks: Option.Option<string>,
+): ReadonlyArray<string> => {
   const given = Option.match(marks, {
     onNone: () => [],
     onSome: (value) => Arr.fromIterable(value),
@@ -183,9 +182,7 @@ export const glyphField = ({
     return Result.succeed({
       ...place,
       text: mark,
-      opacity: tenth(
-        glyphDim + (1 - glyphDim) * seededUnit(value, index, 2),
-      ),
+      opacity: tenth(glyphDim + (1 - glyphDim) * seededUnit(value, index, 2)),
     });
   });
 

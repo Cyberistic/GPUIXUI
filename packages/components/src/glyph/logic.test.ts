@@ -35,9 +35,7 @@ const grid = (field: GlyphField): number => field.columns * field.rows;
 describe("glyphField", () => {
   it("paints the same wall for the same seed and another one for a new seed", () => {
     const wall = glyphField({ ...BOX, seed: 7 });
-    expect(paintings(glyphField({ ...BOX, seed: 7 }))).toEqual(
-      paintings(wall),
-    );
+    expect(paintings(glyphField({ ...BOX, seed: 7 }))).toEqual(paintings(wall));
     expect(paintings(glyphField({ ...BOX, seed: 8 }))).not.toEqual(
       paintings(wall),
     );
@@ -117,9 +115,7 @@ describe("glyphField", () => {
       expect(["0", "1"]).toContain(cell.text);
     });
     expect(glyphMarksOf(Option.some("ab"))).toEqual(["a", "b"]);
-    expect(glyphMarksOf(Option.some(""))).toEqual(
-      Arr.fromIterable(glyphMarks),
-    );
+    expect(glyphMarksOf(Option.some(""))).toEqual(Arr.fromIterable(glyphMarks));
     expect(glyphMarksOf(Option.none())).toEqual(Arr.fromIterable(glyphMarks));
   });
 
@@ -133,6 +129,8 @@ describe("glyphField", () => {
     });
     // Texture, not a block: a wall that paints every cell at one brightness is
     // the same paint as a solid fill.
-    expect(Arr.dedupe(Arr.map(field.cells, (cell) => cell.opacity)).length).toBeGreaterThan(1);
+    expect(
+      Arr.dedupe(Arr.map(field.cells, (cell) => cell.opacity)).length,
+    ).toBeGreaterThan(1);
   });
 });

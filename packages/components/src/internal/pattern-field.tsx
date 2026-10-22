@@ -82,7 +82,10 @@ export interface PatternFieldProps extends Omit<Props, "children" | "style"> {
 }
 
 /** {@link DecorativeField} props: the shared frame plus any field's picture. */
-export interface DecorativeFieldProps extends Omit<Props, "children" | "style"> {
+export interface DecorativeFieldProps extends Omit<
+  Props,
+  "children" | "style"
+> {
   /** The picture for a measured box, and the test id its parts derive from. */
   readonly art: FieldArt;
   /** One breath's length in milliseconds. Default `8_000`, floor 1 s, cap 60 s. */
@@ -223,11 +226,7 @@ export const DecorativeField = ({
  * The markup is generated for the box the field measured and painted as one
  * `<svg source>` path, which the runtime tints in the element's colour.
  */
-export const PatternField = ({
-  markup,
-  color,
-  ...rest
-}: PatternFieldProps) => (
+export const PatternField = ({ markup, color, ...rest }: PatternFieldProps) => (
   <DecorativeField
     {...rest}
     art={(box, id) => (

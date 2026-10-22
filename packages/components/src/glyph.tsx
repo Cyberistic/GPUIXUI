@@ -131,7 +131,7 @@ export const glyphMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the wall is one `<text>` host per painted cell: the runtime has no text pattern and no canvas host, so the cell count is capped at 240 and a wall is a node per glyph rather than one mask",
-    "a glyph publishes no accessibility node because the runtime maps `role=\"presentation\"` to none (measured); the wall therefore says nothing, and the content above it has to carry the name",
+    'a glyph publishes no accessibility node because the runtime maps `role="presentation"` to none (measured); the wall therefore says nothing, and the content above it has to carry the name',
     "the wall cannot drift, zoom or rotate — the runtime has no `transform` (upstream issue #102) — so the only motion is a slow opacity breath",
     "the grid covers whole cells, so a strip narrower than one cell at the right or bottom edge stays empty, and a box that would need more than the cell cap grows the cell instead of painting part of the wall",
     "the field measures its own box, so the caller must bound it; before the first layout it paints nothing",
