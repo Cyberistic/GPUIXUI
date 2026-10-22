@@ -645,8 +645,9 @@ a workaround for two live sessions sharing one worktree; see
       documented contract is "a hex colour, or `null` when malformed", and the
       check was a length switch plus `Number.parseInt`, which stops at the first
       character it cannot read: `#12zz56` decoded as near-transparent black
-      (`Rgba { r: 0, g: 0, b: 0, a: 18 }`) and `ff0000 8` decoded the same way,
-      so a caller's typo produced a colour instead of being refused, and a probe
+      (`Rgba { r: 0, g: 0, b: 0, a: 18 }`) and `ff0000 8` decoded its prefix as
+      transparent green (`Rgba { r: 0, g: 255, b: 0, a: 0 }`), so a caller's typo
+      produced a colour instead of being refused, and a probe
       counting that colour would report paint nothing in the frame painted. The
       grammar now refuses a body that is not hex in full, before the length
       switch, and the `Number.isNaN` branch the validation makes unreachable is
