@@ -22,6 +22,7 @@ import {
   type FilledAction,
 } from "@gpuixui/tokens";
 import type { SpinnerAccent } from "./loading.js";
+import { pressWash } from "./pointer.js";
 import type { PrimitiveTheme } from "./theme.js";
 import type { ControlVariant } from "./style.js";
 
@@ -76,10 +77,18 @@ const secondary: ControlVariant = {
   ...filled("secondary"),
 };
 
-/** Hover and press for a control that paints no fill at rest. */
+/**
+ * Hover and press for a control that paints no fill at rest.
+ *
+ * The hover is the wash on the strip the control rests on. The press is
+ * **derived**: it replaces that hover, so it is measured against the wash the
+ * control is already wearing rather than against the strip — and the raw
+ * `active` role could not be seen against the hover in every shipped style
+ * (`core/pointer.ts`).
+ */
 const washed: Pick<ControlVariant, "hover" | "active"> = {
   hover: (theme) => ({ backgroundColor: theme.colors.hover }),
-  active: (theme) => ({ backgroundColor: theme.colors.active }),
+  active: (theme) => ({ backgroundColor: pressWash(theme) }),
 };
 
 /**
@@ -123,7 +132,7 @@ const link: ControlVariant = {
     backgroundColor: theme.colors.hover,
     textDecoration: "underline",
   }),
-  active: (theme) => ({ backgroundColor: theme.colors.active }),
+  active: (theme) => ({ backgroundColor: pressWash(theme) }),
 };
 
 export const buttonVariants: Record<ButtonVariant, ControlVariant> = {

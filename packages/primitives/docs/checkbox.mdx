@@ -152,7 +152,10 @@ the accent role, and the mark colour from `selectionMarkColor`. An empty box is
 carried by its edge alone, so the edge is never the `input` role — that is a
 field *fill* here, and it is the card's own white in the light theme. Pointer
 feedback is a state wash (`hover`/`active`) under the mark rather than a change
-of edge, so a destructive edge stays destructive while hovered. Hover and press
+of edge, so a destructive edge stays destructive while hovered. The press is
+`pressWash` (`core/pointer.ts`) — derived against the hover it replaces, because
+the raw `active` role sat under the perceptibility floor in Light · macOS. Hover
+and press
 are declared in `style.hover`/`style.active`, not scripted — and they still paint
 on a drawing that takes no press: `pointerEvents: "none"` removes the blocking,
 not the element's hitbox. A filled box's feedback is another **opaque** fill —

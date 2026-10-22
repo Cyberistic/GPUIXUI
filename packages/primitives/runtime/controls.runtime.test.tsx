@@ -19,7 +19,13 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
-import { alpha, filledHover, filledPressed } from "@gpuixui/tokens";
+import {
+  alpha,
+  filledHover,
+  filledPressed,
+  platformTheme,
+  themes,
+} from "@gpuixui/tokens";
 import type { EventPayload } from "@gpuix/react";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
@@ -41,6 +47,7 @@ import {
   type Runtime,
 } from "./harness.js";
 import { TYPE_AHEAD_RESET_MS } from "../src/core/keyboard.js";
+import { pressWash } from "../src/core/pointer.js";
 import { sleep, Surface, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
@@ -216,6 +223,36 @@ it("paints a filled Button's hover as the theme's opaque derived fill", async ()
   expect(bucketFill(style, "hover")).not.toBe(
     alpha(testTheme.colors.primary, 0.9),
   );
+});
+
+it("paints a ghost Button's press on the wash it replaces", async () => {
+  // The bug: a control that paints no fill at rest kept the raw `active` role
+  // as its press. A press replaces the hover wash the control is already
+  // wearing, so it must be seen against *that* wash: in Light · macOS the raw
+  // role sat 1.037:1 from its own hover, under the perceptibility floor, and a
+  // ghost action did not answer the pointer. The style this suite paints is the
+  // one the defect was measured in, and the runtime's style report is where the
+  // derived wash is read back.
+  const macos = platformTheme(themes.light, "darwin");
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface theme={macos}>
+      <Button testId="ghost" variant="ghost">
+        Undo
+      </Button>
+    </Surface>,
+  );
+  const style = Option.getOrElse(
+    Option.flatMap(runtime.element("ghost"), (element) =>
+      Option.fromNullishOr(runtime.renderer.getElement(element.id)?.style),
+    ),
+    () => expect.fail("the runtime retained no ghost button"),
+  );
+  expect(bucketFill(style, "hover")).toBe(macos.colors.hover);
+  expect(bucketFill(style, "active")).toBe(pressWash(macos));
+  // The raw role is the one the defect painted; the wash the window receives is
+  // the derived one.
+  expect(bucketFill(style, "active")).not.toBe(macos.colors.active);
 });
 
 it("paints a checked Checkbox's feedback as the theme's opaque derived fill", async () => {

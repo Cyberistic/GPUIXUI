@@ -18,6 +18,7 @@ import {
   targetSize,
 } from "@gpuixui/tokens";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
+import { pressWash } from "./pointer.js";
 
 export const SELECTION_STATES = [
   "unchecked",
@@ -130,7 +131,7 @@ export const selectionBoxStyle = (
       : { backgroundColor: theme.colors.hover },
     active: filled(spec)
       ? feedbackFill(spec, theme, "press")
-      : { backgroundColor: theme.colors.active },
+      : { backgroundColor: pressWash(theme) },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;
@@ -258,7 +259,7 @@ export const switchTrackStyle = (
       : { backgroundColor: theme.colors.hover },
     active: filled(spec)
       ? feedbackFill(spec, theme, "press")
-      : { backgroundColor: theme.colors.active },
+      : { backgroundColor: pressWash(theme) },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;

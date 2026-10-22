@@ -48,10 +48,10 @@ component and its rules are the ones on this page.
 | --------- | ---- | ------------- |
 | `primary` (default) | `primary` fill, `primaryForeground` text | derived fill — `filledHover` / `filledPressed` |
 | `secondary` | `secondary` fill | derived fill — `filledHover` / `filledPressed` |
-| `outline` | border only — `borderStrong`, the measured control boundary | hover wash |
-| `ghost` | no chrome | hover wash |
+| `outline` | border only — `borderStrong`, the measured control boundary | hover wash; press derived on it |
+| `ghost` | no chrome | hover wash; press derived on it |
 | `destructive` | `destructive` fill | derived fill — `filledHover` / `filledPressed` |
-| `link` | text in `brandText` — the brand derived until it reads as text | underline + hover wash |
+| `link` | text in `brandText` — the brand derived until it reads as text | underline + hover wash; press derived on it |
 
 A filled action's hover and press are **opaque** fills the theme owns: they move
 toward the theme's foreground (`filledHover` / `filledPressed` in
@@ -59,6 +59,16 @@ toward the theme's foreground (`filledHover` / `filledPressed` in
 dialog. The old half-alpha lift let the surface behind the control show through,
 and a translucent fill cannot be measured for label contrast at all. The label
 keeps the text floor on both fills.
+
+An unfilled action's **press is derived against the hover it replaces**: both
+washes are declared in `style.hover`/`style.active`, and the press is painted by
+`pressWash` (`core/pointer.ts` → the tokens' `pointerWash`), the smallest move
+toward `foreground` that clears the perceptibility floor against that hover. The
+raw `active` role cannot always be seen there — measured over the sixteen
+shipped, high-contrast, platform and authored styles, Light · macOS's press sat
+**1.037:1** from its hover — so a control that asks for the role again would not
+answer the pointer in that style. A palette whose own press already clears the
+floor is painted as it is.
 
 ## Sizes and states
 

@@ -22,6 +22,7 @@ import {
   switchTrackStyle,
   type SelectionSpec,
 } from "./selection.js";
+import { pressWash } from "./pointer.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
 /**
@@ -157,7 +158,9 @@ describe("selectionBoxStyle", () => {
     // on press), which also erased an invalid box's destructive edge on hover.
     const style = selectionBoxStyle(spec(), testTheme);
     expect(style.hover).toEqual({ backgroundColor: testTheme.colors.hover });
-    expect(style.active).toEqual({ backgroundColor: testTheme.colors.active });
+    // The press replaces the hover, so it is the derived wash, not the raw
+    // `active` role (`core/pointer.ts`).
+    expect(style.active).toEqual({ backgroundColor: pressWash(testTheme) });
     expect(selectionBoxStyle(spec({ invalid: true }), testTheme).hover).toEqual(
       {
         backgroundColor: testTheme.colors.hover,

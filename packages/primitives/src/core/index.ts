@@ -154,6 +154,8 @@ export type {
 export { controlRing, keyboardRing, keepContent } from "./focus.js";
 export type { RingState } from "./focus.js";
 
+export { pressWash } from "./pointer.js";
+
 export {
   BORDER_STYLES,
   controlFocusStyle,

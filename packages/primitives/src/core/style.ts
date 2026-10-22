@@ -30,6 +30,7 @@ import type {
   TextRole,
 } from "./theme.js";
 import { controlRing } from "./focus.js";
+import { pressWash } from "./pointer.js";
 import { fieldVariant } from "./variants.js";
 
 /**
@@ -742,7 +743,8 @@ export const numberStepperStyle = (
   };
   if (spec.disabled !== true) {
     style.hover = { backgroundColor: theme.colors.hover };
-    style.active = { backgroundColor: theme.colors.active };
+    // The press replaces the hover, so it is derived against it (`core/pointer.ts`).
+    style.active = { backgroundColor: pressWash(theme) };
   }
   return style;
 };

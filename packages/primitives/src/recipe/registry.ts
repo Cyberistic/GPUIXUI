@@ -24,6 +24,7 @@ import { pipe } from "effect";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { switchThumbOffset } from "../core/selection.js";
+import { pressWash } from "../core/pointer.js";
 import { paintableAspectRatio } from "../core/style.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
 
@@ -227,6 +228,20 @@ export const recipeTw = createTw({
     // wash and 3.10:1 in macOS dark. `brandText` moves the brand toward
     // `foreground` until the least readable surface a link sits on clears.
     "text-brand": (theme) => ({ color: brandText(theme) }),
+    // The press a control paints is **derived**, not the raw `active` role.
+    //
+    // A press replaces the hover wash the control is wearing, so it has to be
+    // seen against *that* wash rather than against the strip it rests on — and
+    // the raw role could not: Light · macOS's press sat 1.037:1 from its hover,
+    // under the perceptibility floor, so a ghost action, a toggle at rest, an
+    // empty checkbox and a number field's stepper did not answer the pointer in
+    // that style. `pressWash` is the one seam (`core/pointer.ts`), so this
+    // registry and the variant table cannot drift.
+    //
+    // The class names the **state**, and the state is what the recipe asks for:
+    // `hover:bg-hover` paints the hover wash on the strip, `active:bg-active`
+    // paints the press that replaces it.
+    "bg-active": (theme) => ({ backgroundColor: pressWash(theme) }),
     // A filled action's feedback is derived too: the hover and the press are
     // opaque fills the theme owns, not a half-alpha lift of the resting one.
     "fill-primary": (theme, value) => filledFill(theme, "primary", value),
