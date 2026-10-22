@@ -208,6 +208,18 @@ describe("the tree", () => {
     ).toBe("not (name contains main)");
   });
 
+  it("reads an empty any group as nothing, because that is what it keeps", () => {
+    const emptyAny: FilterTree = { kind: "any", children: [] };
+
+    // An `all` of no clause has nothing to fail, so it keeps every row; an
+    // `any` of no alternative has nothing to satisfy, so it keeps none. The
+    // sentence a builder shows has to agree with the rows it paints.
+    expect(filterByTree(rows, emptyAny, valueOf)).toHaveLength(0);
+    expect(filterByTree(rows, emptyTree, valueOf)).toHaveLength(3);
+    expect(describeTree(emptyAny)).toBe("nothing");
+    expect(describeTree(emptyTree)).toBe("everything");
+  });
+
   it("names its own shape", () => {
     expect(isPredicate(clause("status", "equals", "tracked"))).toBe(true);
     expect(isAll({ kind: "all", children: [] })).toBe(true);
