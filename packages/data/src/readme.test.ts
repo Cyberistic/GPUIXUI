@@ -34,7 +34,9 @@ const exampleRegistry = read("../examples/index.ts");
 const frozenExample = read("../examples/frozen-table.example.tsx");
 const frozenPage = read("../docs/frozen-columns.mdx");
 const liveRegistry = read("../../../apps/playground/src/live/registry.ts");
-const headlessRegistry = read("../../../apps/playground/src/scenarios/registry.ts");
+const headlessRegistry = read(
+  "../../../apps/playground/src/scenarios/registry.ts",
+);
 
 /** The status table's row for one surface, or a named absence. */
 const statusRow = (name: string): Option.Option<string> =>
@@ -137,9 +139,9 @@ describe("the README's citations", () => {
     // A floor: a parse that stopped reading the tables must not pass.
     expect(cited.length).toBeGreaterThanOrEqual(12);
     const registered = `${headlessRegistry}\n${liveRegistry}`;
-    expect(
-      cited.filter((id) => !registered.includes(`id: "${id}"`)),
-    ).toEqual([]);
+    expect(cited.filter((id) => !registered.includes(`id: "${id}"`))).toEqual(
+      [],
+    );
     // The frozen row is one of them, from both halves of the suite.
     expect(cited).toContain("data-grid-frozen-column");
     expect(cited).toContain("frozen-column-lifecycle");

@@ -30,7 +30,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | No canvas drawing | `chart-raster` | A chart is stacked `<svg>` (one tint each) or an `<img>` pixel buffer; see §Charts in plan 610. |
 | Wheel moves every scrollable ancestor | `nested-scroll-lifecycle` | The table's `height` bounds the table; the body owns the vertical wheel. |
 | Chord presses arrive on `click` | `modifier-select-lifecycle` | Selection reads `event.modifiers.{shift,cmd,ctrl}`; the anchor rules are `selection/logic`. |
-| A hidden row's selection is released at render, not erased | `table-filter-lifecycle` | `narrowTable` releases it in the same commit, and `useTable` computes `retainSelection(chosen, keys)` during render, so the first frame after a query change paints the released set. The retention is **not** a write: the chosen records are still held, so a query that widens back to them paints them chosen again (measured: `1 rows · 0 selected` → a whole-set query → `60 rows · 2 selected`). A grid that needs a permanent clear calls `clear()` on the change. |
+| A hidden row's selection is released at render, not erased | `table-filter-lifecycle` | `useTable` computes `retainSelection(chosen, keys)` during render, so the first frame after a query change paints the released set. The retention is **not** a write: the core still holds the chosen ids, so a query that widens back to them paints them chosen again (measured: `1 rows · 0 selected` → a whole-set query → `60 rows · 2 selected`). A grid that needs a permanent clear calls `clear()` on the change. |
 | Column changes are app state | `table-columns-lifecycle` | Hiding a column takes its width out of the content and shifts every later column by exactly that width; a move changes the order and not the width. The header and the cells read one `columns.visible` list. |
 | A resize divider arms the capture | `column-resize-lifecycle` | `TableColumnDivider` listens to `onMouseDown` **and** `onMouseMove`, holds the press in a ref, and reads the width at each press. Its width is clamped to the column's own bounds. |
 | A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. A tree's chevron is an `<svg>` that takes no press, so the row answers; a checkbox in a row paints, so it takes its own. |
@@ -49,9 +49,10 @@ src/
   table/      Table, TableViewport, TableHeader, TableBody, TableRow,
               TableHeaderCell, TableCell, TableCaption, TableEmpty, TableSkeleton,
               FrozenTable (the pinned-column composition)
-  sort/       the reducer, the announced label, TableSortHeader
+  sort/       the press cycle, the announced label, TableSortHeader
   selection/  press modes, range + anchor, retention, neighbour step
-  filter/     the literal query, narrowTable, TableFilterField
+  filter/     TableFilterField (the field above the rows)
+  grid-core   the @tanstack/table-core features and constructGrid
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
   virtual/    VirtualList over the runtime's <virtual-list>, both modes;
               VirtualTable, useVirtualRows, the window calculator
@@ -61,17 +62,23 @@ src/
               and the legend
   surfaces/   KeyValue, StatCard, PropertyPanel, DataToolbar, AdvancedFilter
               and the predicate tree they read
-  use-table   the uncontrolled controller joining sort, selection and filter
+  use-table   the uncontrolled controller over the core's row models
   use-columns the uncontrolled column controller
   internal/   the compile cache and the behaviour suites' test root
 examples/     mountable screens (registered in examples/index.ts)
 ```
 
-The reducers import no React: an application driving a grid from Effect or from
-its own store reads the same functions that `useTable` does. The window
-arithmetic is **`@tanstack/virtual-core`'s** — this package hands it the scroll
-offset and the viewport and reads the range back — so the grid's windowing is
-the same one a browser grid uses, driven without a DOM.
+The grid state is **`@tanstack/table-core`'s**: sorting, the filtered order and
+the chosen ids are row models over one data array (`grid-core.ts` registers the
+features and `constructGrid` builds a table from controlled state — React holds
+each slice, so no store subscription, adapter package or DOM is involved). The
+press cycle, the pointer gesture and the render-time release stay in this
+package: they are the rules a window measured, and the core has no opinion about
+them. The window arithmetic is **`@tanstack/virtual-core`'s** — this package
+hands it the scroll offset and the viewport and reads the range back — so the
+grid's windowing is the same one a browser grid uses, driven without a DOM.
+An application driving a grid from Effect or its own store builds the same table
+with `constructGrid`.
 
 ## Usage
 
@@ -79,7 +86,11 @@ the same one a browser grid uses, driven without a DOM.
 import { Table, TableBody, TableRow, TableCell, TableHeader, TableViewport } from "@gpuixui/data";
 import { useTable } from "@gpuixui/data/use-table";
 
-const table = useTable({ rows, keyOf: (row) => row.id, textOf, valueOf });
+const columns = [
+  { id: "name", label: "Name", width: 260, valueOf: (row) => row.name },
+  { id: "size", label: "Size", width: 90, valueOf: (row) => row.size },
+];
+const table = useTable({ rows, keyOf: (row) => row.id, columns });
 
 <Table height={360} aria-label="Files">
   <TableViewport>

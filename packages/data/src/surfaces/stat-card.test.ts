@@ -51,7 +51,9 @@ describe("trendTone", () => {
     expect(trendTone("down", lightTheme)).not.toBe(
       lightTheme.colors.destructive,
     );
-    expect(trendTone("flat", lightTheme)).toBe(lightTheme.colors.mutedForeground);
+    expect(trendTone("flat", lightTheme)).toBe(
+      lightTheme.colors.mutedForeground,
+    );
   });
 
   it("clears the text floor on both surfaces a card stands on", () => {
@@ -90,7 +92,10 @@ describe("trendTone", () => {
     const under = shippedStyles.flatMap((theme) => {
       const floor = contrastFloorsFor(theme).body;
       return (["success", "destructive"] as const).flatMap((tone) => {
-        const ratio = contrastRatio(theme.colors[tone], theme.colors.background);
+        const ratio = contrastRatio(
+          theme.colors[tone],
+          theme.colors.background,
+        );
         return ratio !== undefined && ratio < floor
           ? [{ theme: theme.name, tone, ratio, floor }]
           : [];

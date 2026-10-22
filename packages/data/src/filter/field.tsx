@@ -6,7 +6,7 @@
  * measured that the reader can keep typing after the set changes. The field
  * owns no query state and clears nothing itself: narrowing, releasing a hidden
  * selection and returning to the top are the grid's rules, and they live in
- * `filter/logic` and `useTable`.
+ * `useTable` (the core's global filter) and `selection/logic`.
  */
 
 import { Input } from "@gpuixui/primitives";

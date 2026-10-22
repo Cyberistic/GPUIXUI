@@ -50,7 +50,7 @@ const rows = Arr.map(Arr.range(1, 1_000), (n) => ({
   size: n * 5,
 }));
 
-/** The text a query is matched against — the example's own `textOf`. */
+/** The text a query is matched against — the example's own column accessors. */
 const textOf = (row: (typeof rows)[number]): string =>
   `${row.name} ${row.status} ${row.size}`;
 
@@ -68,12 +68,13 @@ describe("the virtual-table fixture", () => {
   });
 
   it("derives the filtered count from the example's own row text", () => {
-    // The query matches the whole row text (`name status size`), not the name:
-    // a size of 105 carries `01` too, which is why the count is 127 and not the
-    // 119 the names alone give.
-    expect(example).toContain(
-      "const textOf = (row: VirtualRow): string =>\n  `${row.name} ${row.status} ${row.size}`;",
-    );
+    // The row model filters over the three column accessors, so the query
+    // matches the whole row text (`name status size`), not the name: a size of
+    // 105 carries `01` too, which is why the count is 127 and not the 119 the
+    // names alone give. A column that stopped reading its field would move it.
+    expect(example).toContain("valueOf: (row: VirtualRow) => row.name");
+    expect(example).toContain("valueOf: (row: VirtualRow) => row.status");
+    expect(example).toContain("valueOf: (row: VirtualRow) => row.size");
     const kept = Arr.filter(rows, (row) =>
       textOf(row).toLowerCase().includes("01"),
     );

@@ -1,21 +1,31 @@
 /**
- * The table controller: filter, sort and select over one row array.
+ * The table controller: the grid's state over one row array.
  *
- * This is the state a data grid owns, in one hook, so a page does not
- * reassemble the rules the probes measured. Every rule lives in the pure
- * modules beside it — `sort/logic`, `selection/logic`, `filter/logic` — and this
- * hook only holds the state and recomputes the visible order.
+ * Sorting, the filtered order and the chosen records are **row models**, so
+ * they run on `@tanstack/table-core` (`grid-core.ts`) rather than in a reducer
+ * of this package's own. React still owns the state slices — the core reads
+ * them as controlled state and derives the models — which keeps a GPUix window
+ * out of the store-and-subscription path a browser adapter takes.
  *
- * The order it applies is the one a reader expects: narrow first, then sort
- * the narrowed set, and measure a Shift range over what is painted. A filter
- * that hides a chosen record releases it in the same commit, so no frame shows a
- * selection the table cannot paint — the release is **render-time retention**,
- * not a write: `chosen` still holds the record, so a query that widens back to it
- * paints it chosen again. A grid that needs a permanent clear calls `clear()` on
- * the change.
+ * What stays here is the part a window measured and a headless core cannot
+ * know: the press cycle a header reports, the pointer gesture a chord means
+ * (`selection/logic`), the render-time release a filter owes a selection, and
+ * the arrow walk that moves native focus with the cursor.
+ *
+ * The order a reader expects: narrow first, then sort the narrowed set, and
+ * measure a Shift range over what is painted. A filter that hides a chosen
+ * record releases it in the same commit, so no frame shows a selection the
+ * table cannot paint — the release is **render-time retention**, not a write:
+ * the core still holds the record, so a query that widens back to it paints it
+ * chosen again. A grid that needs a permanent clear calls `clear()` on the
+ * change.
  *
  * ```tsx
- * const table = useTable({ rows, keyOf: (row) => row.id, textOf, valueOf });
+ * const columns = [
+ *   { id: "name", label: "Name", width: 260, valueOf: (row) => row.name },
+ *   { id: "size", label: "Size", width: 90, valueOf: (row) => row.size },
+ * ];
+ * const table = useTable({ rows, keyOf: (row) => row.id, columns });
  *
  * <TableFilterField value={table.query} onValueChange={table.setQuery} />
  * <Table height={360}>
@@ -29,7 +39,7 @@
  *       {table.rows.map((row) => (
  *         <TableRow
  *           key={row.id}
- *           selected={isSelected(table.selection, row.id)}
+ *           selected={table.isSelected(row.id)}
  *           onClick={(event) => table.press(row.id, event.modifiers)}
  *         >
  *           ...
@@ -43,13 +53,15 @@
 
 import type { EventModifiers } from "@gpuix/react";
 import * as Arr from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
-import { useMemo, useState } from "react";
-import { filterRows } from "./filter/logic.js";
+import * as R from "effect/Record";
+import { useCallback, useMemo, useState } from "react";
+import type { RowData, SortingState } from "@tanstack/table-core";
+import { constructGrid, type GridColumn, type GridTable } from "./grid-core.js";
 import {
   clearSelection,
   currentKey,
-  emptySelection,
   isSelected,
   moveSelection,
   pressMode,
@@ -59,28 +71,25 @@ import {
   selectionSize,
   type SelectionState,
 } from "./selection/logic.js";
-import {
-  sortRows,
-  toggleSort as nextSort,
-  type SortState,
-  type SortValue,
-} from "./sort/logic.js";
+import { toggleSort as nextSort, type SortState } from "./sort/logic.js";
 
 /** What the hook needs to know about a row. */
-export interface UseTableOptions<Row> {
+export interface UseTableOptions<Row extends RowData> {
   readonly rows: ReadonlyArray<Row>;
   /** The stable record key a selection is kept by. */
   readonly keyOf: (row: Row) => string;
-  /** The text a filter query is matched against. */
-  readonly textOf: (row: Row) => string;
-  /** The value a named column sorts by. */
-  readonly valueOf: (row: Row, field: string) => SortValue;
+  /**
+   * The columns the core sorts and filters by — the same list the header and
+   * the rows paint. A grid keeps **one** list, so a hidden or moved column
+   * cannot leave the row model on a second copy of the layout.
+   */
+  readonly columns: ReadonlyArray<GridColumn<Row>>;
   /** Start sorted, for a table whose natural order is not the source order. */
   readonly initialSort?: SortState;
 }
 
 /** Everything a table's parts read from {@link useTable}. */
-export interface TableController<Row> {
+export interface TableController<Row extends RowData> {
   /** The painted rows: narrowed, then sorted. */
   readonly rows: ReadonlyArray<Row>;
   /** The visible keys, in paint order — what a Shift range spans. */
@@ -94,6 +103,8 @@ export interface TableController<Row> {
   readonly selectedCount: number;
   /** The record that owns the roving tab stop, when one is chosen. */
   readonly activeKey: Option.Option<string>;
+  /** The core table the controller runs on, for a consumer that needs more. */
+  readonly table: GridTable<Row>;
   readonly setSort: (next: Option.Option<SortState>) => void;
   readonly toggleSort: (field: string) => void;
   readonly setQuery: (query: string) => void;
@@ -105,34 +116,94 @@ export interface TableController<Row> {
   readonly isSelected: (key: string) => boolean;
 }
 
+/** The core's sorting state for the press cycle's single sort. */
+const sortingOf = (sort: Option.Option<SortState>): SortingState =>
+  Option.match(sort, {
+    onNone: () => [],
+    onSome: (state) => [{ id: state.field, desc: state.direction === "desc" }],
+  });
+
+/** The press cycle's sort, read back off the core's state. */
+const sortOf = (sorting: SortingState): Option.Option<SortState> =>
+  Option.map(Option.fromNullishOr(sorting[0]), (column) => ({
+    field: column.id,
+    direction: column.desc ? "desc" : "asc",
+  }));
+
+/** A chosen set in the core's record shape. */
+const rowSelectionOf = (
+  state: SelectionState,
+): Readonly<Record<string, true>> =>
+  R.fromEntries(
+    Arr.map(Arr.fromIterable(state.selected), (key) => [key, true] as const),
+  );
+
 /**
  * Hold a table's query, sort and selection.
  *
- * Controlled consumers that already own one of the three can drive the pure
- * reducers directly instead; this hook is the convenient uncontrolled path.
+ * Controlled consumers that already own one of the three can construct the
+ * core table themselves (`constructGrid`) and keep the parts.
  */
-export const useTable = <Row>({
+export const useTable = <Row extends RowData>({
   rows,
   keyOf,
-  textOf,
-  valueOf,
+  columns,
   initialSort,
 }: UseTableOptions<Row>): TableController<Row> => {
-  const [sort, setSort] = useState<Option.Option<SortState>>(
-    Option.fromNullishOr(initialSort),
+  const [sorting, setSorting] = useState<SortingState>(() =>
+    sortingOf(Option.fromNullishOr(initialSort)),
   );
   const [query, setQuery] = useState("");
-  const [chosen, setChosen] = useState<SelectionState>(emptySelection);
+  const [rowSelection, setRowSelection] = useState<
+    Readonly<Record<string, true>>
+  >({});
+  /**
+   * The record a Shift range extends from.
+   *
+   * The core keeps the chosen ids; the anchor is a gesture cursor, not
+   * selection — a range press extends **from** it and keeps it, and a filter
+   * that hides it drops it.
+   */
+  const [anchor, setAnchor] = useState<Option.Option<string>>(Option.none());
 
-  const kept = useMemo(
-    () => filterRows(rows, query, textOf),
-    [rows, query, textOf],
+  const table = useMemo(
+    () =>
+      constructGrid({
+        rows,
+        keyOf,
+        columns,
+        state: { sorting, globalFilter: query, rowSelection },
+        onSortingChange: setSorting,
+        onGlobalFilterChange: setQuery,
+        onRowSelectionChange: setRowSelection,
+      }),
+    [rows, keyOf, columns, sorting, query, rowSelection],
   );
+
+  const painted = table.getRowModel().rows;
   const visible = useMemo(
-    () => sortRows(kept, sort, valueOf),
-    [kept, sort, valueOf],
+    () => Arr.map(painted, (row) => row.original),
+    [painted],
   );
-  const keys = useMemo(() => Arr.map(visible, keyOf), [visible, keyOf]);
+  const keys = useMemo(() => Arr.map(painted, (row) => row.id), [painted]);
+  const kept = useMemo(
+    () => Arr.map(table.getFilteredRowModel().rows, (row) => row.original),
+    [table],
+  );
+
+  /**
+   * The chosen records, before the visible set releases what it hides.
+   *
+   * Retention is a **view**, not a write: the ids stay in the core's state, so
+   * a query that widens back to a released record paints it chosen again.
+   */
+  const chosen = useMemo<SelectionState>(
+    () => ({
+      selected: HashSet.fromIterable(table.getSelectedRowIds()),
+      anchor,
+    }),
+    [table, anchor],
+  );
 
   // A narrowed set releases the records it no longer shows **during render**,
   // not in an effect: the first frame after a query change already paints the
@@ -142,28 +213,32 @@ export const useTable = <Row>({
     [chosen, keys],
   );
 
+  const write = useCallback((next: SelectionState) => {
+    setRowSelection(rowSelectionOf(next));
+    setAnchor(next.anchor);
+  }, []);
+
   return {
     rows: visible,
     keys,
     kept,
-    sort,
+    table,
+    sort: sortOf(sorting),
     query,
     selection,
     selectedCount: selectionSize(selection),
     activeKey: currentKey(selection),
-    setSort,
+    setSort: (next) => setSorting(sortingOf(next)),
     toggleSort: (field) =>
-      setSort((current) => Option.some(nextSort(current, field))),
+      setSorting(sortingOf(Option.some(nextSort(sortOf(sorting), field)))),
     setQuery,
     press: (key, modifiers) =>
-      setChosen(pressSelection(selection, key, pressMode(modifiers), keys)),
+      write(pressSelection(chosen, key, pressMode(modifiers), keys)),
     pressRow: (row, modifiers) =>
-      setChosen(
-        pressSelection(selection, keyOf(row), pressMode(modifiers), keys),
-      ),
-    selectAllRows: () => setChosen(selectAll(selection, keys)),
-    clear: () => setChosen(clearSelection(selection)),
-    move: (delta) => setChosen(moveSelection(selection, keys, delta)),
+      write(pressSelection(chosen, keyOf(row), pressMode(modifiers), keys)),
+    selectAllRows: () => write(selectAll(chosen, keys)),
+    clear: () => write(clearSelection(chosen)),
+    move: (delta) => write(moveSelection(chosen, keys, delta)),
     isSelected: (key) => isSelected(selection, key),
   };
 };

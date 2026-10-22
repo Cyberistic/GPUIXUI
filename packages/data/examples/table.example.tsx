@@ -35,6 +35,7 @@ import { Button } from "@gpuixui/primitives/button";
 import { ColumnMenu } from "../src/columns/menu.js";
 import { TableColumnDivider } from "../src/columns/divider.js";
 import type { ColumnDef } from "../src/columns/logic.js";
+import type { GridColumn } from "../src/grid-core.js";
 import { useColumns } from "../src/columns/use-columns.js";
 import {
   Table,
@@ -51,7 +52,6 @@ import { TableSortHeader } from "../src/sort/header.js";
 import { TableFilterField } from "../src/filter/field.js";
 import { useTable } from "../src/use-table.js";
 import { neighbourKey, selectionSize } from "../src/selection/logic.js";
-import type { SortValue } from "../src/sort/logic.js";
 import { textStyle, useTheme } from "../src/theme.js";
 
 interface FileRow {
@@ -70,17 +70,32 @@ const files: ReadonlyArray<FileRow> = Arr.map(Arr.range(1, 60), (n) => ({
   size: n * 7,
 }));
 
-const textOf = (row: FileRow): string =>
-  `${row.name} ${row.status} ${row.size}`;
-
-const valueOf = (row: FileRow, field: string): SortValue =>
-  field === "size" ? row.size : row.name;
-
-/** The one column list the header and every row read. */
-const FILE_COLUMNS: ReadonlyArray<ColumnDef> = [
-  { id: "name", label: "Name", width: 260, minWidth: 120, maxWidth: 420 },
-  { id: "status", label: "Status", width: 110, minWidth: 80, maxWidth: 220 },
-  { id: "size", label: "Size", width: 90, minWidth: 70, maxWidth: 200 },
+/** The one column list the header, the rows and the row model read. */
+const FILE_COLUMNS: ReadonlyArray<ColumnDef & GridColumn<FileRow>> = [
+  {
+    id: "name",
+    label: "Name",
+    width: 260,
+    minWidth: 120,
+    maxWidth: 420,
+    valueOf: (row) => row.name,
+  },
+  {
+    id: "status",
+    label: "Status",
+    width: 110,
+    minWidth: 80,
+    maxWidth: 220,
+    valueOf: (row) => row.status,
+  },
+  {
+    id: "size",
+    label: "Size",
+    width: 90,
+    minWidth: 70,
+    maxWidth: 200,
+    valueOf: (row) => row.size,
+  },
 ];
 
 /** The text a column paints for one row. */
@@ -165,8 +180,7 @@ export const TableExample = () => {
   const table = useTable({
     rows: files,
     keyOf: (row) => row.id,
-    textOf,
-    valueOf,
+    columns: FILE_COLUMNS,
   });
   const columns = useColumns({ columns: FILE_COLUMNS });
   const elements = useRef(new Map<string, number>());

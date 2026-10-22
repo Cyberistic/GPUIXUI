@@ -138,6 +138,24 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
 - **Phase 2 note**: the painted-child press rule now lives in
   `table.tsx`'s row/cell docs and the two Tier 3 rows, guarded by
   `src/table/press-rule.test.ts` and a blank-cell press case.
+- **Phase 2 revisited — the grid state is `@tanstack/table-core`'s**: the
+  sorting, the filtered order and the chosen ids were pure reducers of this
+  package's own; they are now row models over one data array.
+  `src/grid-core.ts` registers the five features the controller drives
+  (`columnFilteringFeature`, `globalFilteringFeature`, `rowSortingFeature`,
+  `rowSelectionFeature` and the two row-model slots, with `includesString` and
+  `basic` in their registries) and `constructGrid` builds a table from
+  **controlled** state — React holds `sorting`, `globalFilter` and
+  `rowSelection`, so the core needs no store subscription, no adapter package
+  and no DOM. `useTable` takes the caller's column list (one list for the header,
+  the rows and the row model) and keeps the rules a window measured: the press
+  cycle (`sort/logic`), the chord gesture (`selection/logic`), the render-time
+  release of a hidden selection, and the arrow walk. The old `sortRows`,
+  `filterRows`/`narrowTable` and `matchesQuery` are removed — `src/grid-core.test.ts`
+  holds the order the core derives (numeric, code-unit, stable, trimmed literal
+  filter) and the premise retention rests on (the core keeps the chosen id a
+  filter hides). `nub run --filter @gpuixui/data test` (116) and
+  `test:behaviour` (55) green on 0.11.0.
 - **Phase 4a (virtual list) landed**: `VirtualList` wraps the runtime's
   `<virtual-list>` with both host modes as a discriminated union, a definite
   `height`, a typed `VisibleRange` and a forwarded ref for `scrollToItem`. The

@@ -62,17 +62,32 @@ const rows: ReadonlyArray<VirtualRow> = Arr.map(
   }),
 );
 
-const textOf = (row: VirtualRow): string =>
-  `${row.name} ${row.status} ${row.size}`;
-
-const valueOf = (row: VirtualRow, field: string): string | number =>
-  field === "size" ? row.size : row.name;
-
-/** The one column list the header and every row read. */
+/** The one column list the header, the rows and the row model read. */
 const COLUMNS = [
-  { id: "name", label: "Name", width: 260, minWidth: 120, maxWidth: 420 },
-  { id: "status", label: "Status", width: 140, minWidth: 80, maxWidth: 220 },
-  { id: "size", label: "Size", width: 100, minWidth: 70, maxWidth: 200 },
+  {
+    id: "name",
+    label: "Name",
+    width: 260,
+    minWidth: 120,
+    maxWidth: 420,
+    valueOf: (row: VirtualRow) => row.name,
+  },
+  {
+    id: "status",
+    label: "Status",
+    width: 140,
+    minWidth: 80,
+    maxWidth: 220,
+    valueOf: (row: VirtualRow) => row.status,
+  },
+  {
+    id: "size",
+    label: "Size",
+    width: 100,
+    minWidth: 70,
+    maxWidth: 200,
+    valueOf: (row: VirtualRow) => row.size,
+  },
 ] as const;
 
 /** A table that paints one window of a thousand rows. */
@@ -81,8 +96,7 @@ export const VirtualTableExample = () => {
   const table = useTable({
     rows,
     keyOf: (row) => row.id,
-    textOf,
-    valueOf,
+    columns: COLUMNS,
   });
   const [range, setRange] = useState<Option.Option<VisibleRange>>(
     Option.none(),

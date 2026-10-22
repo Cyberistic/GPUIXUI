@@ -108,7 +108,7 @@ export type {
 
 export { TableSortHeader, sortGlyph } from "./sort/header.js";
 export type { TableSortHeaderProps } from "./sort/header.js";
-export { directionOf, sortLabel, sortRows, toggleSort } from "./sort/logic.js";
+export { directionOf, sortLabel, toggleSort } from "./sort/logic.js";
 export type { SortDirection, SortState, SortValue } from "./sort/logic.js";
 
 export {
@@ -130,16 +130,17 @@ export type {
   SelectionState,
 } from "./selection/logic.js";
 
-export {
-  filterRows,
-  matchesQuery,
-  narrowTable,
-  normalizeQuery,
-} from "./filter/logic.js";
-export type { Narrowed } from "./filter/logic.js";
-
 export { TableFilterField } from "./filter/field.js";
 export type { TableFilterFieldProps } from "./filter/field.js";
+
+export { constructGrid, gridFeatures } from "./grid-core.js";
+export type {
+  ConstructGridOptions,
+  GridChange,
+  GridColumn,
+  GridState,
+  GridTable,
+} from "./grid-core.js";
 
 export { useTable } from "./use-table.js";
 export type { TableController, UseTableOptions } from "./use-table.js";
