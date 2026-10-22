@@ -3303,6 +3303,29 @@ green (43 files / 2 434 tests), `check-types` clean.
       `COMPONENTS.md` rows to the code, so that table cannot drift again;
       their pages now render on the site at `/docs/primitives/<name>` (and the
       icon page at `/docs/icons/icon`), linked from the Primitives section index
+`[x]` `packages/primitives`: `NumberField` gained the **drag-to-scrub** its
+      docs recorded as unbuilt — a press on either stepper that travels scrubs
+      the value one `step` per `SCRUB_PIXELS_PER_STEP` (4px) of vertical travel
+      from the value the press started on, up raising and down lowering, while a
+      press that does not travel still clicks one step. The travel is quantised
+      with a sign-aware round (`+6px` and `−6px` are both two steps, where plain
+      `Math.round` sends them two and one), a non-finite travel leaves the value
+      alone, a broken scale falls back to the house 4px, and a gesture that moved
+      consumes the click the platform delivers at its end so one gesture is one
+      step. The gesture's lifetime is React-local (`useNumberScrub`), the pure
+      renderer carries only the handlers, and the pointer keeps reporting past
+      the small column because the element listens to both `mouseDown` and
+      `mouseMove` (`pointer-capture`). Proof: `core/number.test.ts`'s
+      `scrubNumber` suite (7 cases) holds the arithmetic and both bounds;
+      `NumberField.test.tsx`'s scrub suite (3) holds the wiring, the consumed
+      click and the disabled omission; `runtime/number-field.runtime.test.tsx`
+      drags it in a window — 40px up reports 60 from 50 and the platform's click
+      does not step again, then a fresh press reports 61. Directions measured:
+      without the handlers the window case fails `the field reported no change
+      at all`, and without the click consumption the tree case calls the stepper
+      with `51` after a scrub. Docs: `docs/number-field.mdx` §Pointer, the
+      limitation (an input drag is the host editor's selection), and
+      `COMPONENTS.md`'s Number Field row.
 `[x]` `packages/primitives`: the **core text resolver painted the brand fill as
       text** — `Text` moved its `primary` tone to the derived `text-brand`
       (`brandText`), and the public `core/style.ts` `textStyle` a consumer can
@@ -5044,7 +5067,7 @@ paused on a green, pushed `HEAD`; plan 118 carries the measurement.
 
 ## Interlocks (cross-workstream dependencies)
 
-| Re-anchor the **data-display controller rules** to the table-core migration — the data workstream is moving `useTable` onto `@tanstack/table-core` (`src/grid-core.ts`, and `filter/logic.ts`/`sort/logic.ts` are being replaced in the working tree, measured 2026-10-23). `apps/docs/src/lib/lane-page.test.ts`'s `retains a released selection and names the call that drops it` reads `use-table.ts` for `clearSelection(selection)`, which the migrated controller no longer writes (it writes `clearSelection(chosen)` and derives the visible selection through the core), and `/docs/data-display`'s **A release is a view, not a write** bullet describes the reducer implementation. Both are docs-site's paths, but the honest wording depends on the migration's final shape | data (the migration) + docs-site (`lane-page.test.ts`, `/docs/data-display`) | **data half landed 2026-10-23** (`5372142d`) — the controller's **public** contract is unchanged (`selection`, `selectedCount`, `activeKey`, `clear()`, `isSelected`), so the page's four bullets still describe it; only the internals moved. The shape docs-site must read now: `chosen` is derived from the core's ids (`selected: HashSet.fromIterable(table.getSelectedRowIds())`), the release is `retainSelection(chosen, keys)` computed during render (still a **view**: the ids stay in the core's `rowSelection`, so widening the query paints the released records chosen again), and the write route is `write(clearSelection(chosen))` — `clear: () => write(clearSelection(chosen))`. `filter/logic.ts` and its `narrowTable` are gone; a global query now narrows through the core's `includesString`, so a page that names `narrowTable` is stale. **open (docs-site)** — re-word the bullet from the reducer to the row model, re-anchor `lane-page.test.ts`'s `clearSelection(selection)` to `clearSelection(chosen)`/`retainSelection(chosen, keys)`, and check the virtual-window clamp sentence is untouched (`useVirtualRows` did not move). Measured on the working tree: the docs suite's `lane-page.test.ts` fails only on `clearSelection(selection)` |
+| Re-anchor the **data-display controller rules** to the table-core migration — the data workstream is moving `useTable` onto `@tanstack/table-core` (`src/grid-core.ts`, and `filter/logic.ts`/`sort/logic.ts` are being replaced in the working tree, measured 2026-10-23). `apps/docs/src/lib/lane-page.test.ts`'s `retains a released selection and names the call that drops it` reads `use-table.ts` for `clearSelection(selection)`, which the migrated controller no longer writes (it writes `clearSelection(chosen)` and derives the visible selection through the core), and `/docs/data-display`'s **A release is a view, not a write** bullet describes the reducer implementation. Both are docs-site's paths, but the honest wording depends on the migration's final shape | data (the migration) + docs-site (`lane-page.test.ts`, `/docs/data-display`) | **data half landed 2026-10-23** (`5372142d`) — the controller's **public** contract is unchanged (`selection`, `selectedCount`, `activeKey`, `clear()`, `isSelected`), so the page's four bullets still describe it; only the internals moved. The shape docs-site must read now: `chosen` is derived from the core's ids (`selected: HashSet.fromIterable(table.getSelectedRowIds())`), the release is `retainSelection(chosen, keys)` computed during render (still a **view**: the ids stay in the core's `rowSelection`, so widening the query paints the released records chosen again), and the write route is `write(clearSelection(chosen))` — `clear: () => write(clearSelection(chosen))`. `filter/logic.ts` and its `narrowTable` are gone; a global query now narrows through the core's `includesString`, so a page that names `narrowTable` is stale. **open (docs-site)** — re-word the bullet from the reducer to the row model and re-anchor `lane-page.test.ts`'s `clearSelection(selection)` to `clearSelection(chosen)`/`retainSelection(chosen, keys)`; keep the virtual-window clamp sentence (it did not move). Three more docs paths moved with the migration: `apps/docs/src/components/docs/table-preview.test.ts` reads the deleted `packages/data/src/filter/logic.ts` (`ENOENT`; the filter is now `grid-core.ts`'s `includesString` registration and the trim, so its two assertions move there), `apps/docs/src/components/docs/table-demo.tsx`'s `tableWorkflowSource`, `apps/docs/content/docs/components/table.mdx`'s usage snippet + API row and `apps/docs/content/docs/data-display/index.mdx`'s `sortRows` gap row still show `textOf`/`valueOf`. Measured on the working tree: the docs suite is 978/979 with `lane-page.test.ts` on `clearSelection(selection)` and the `table-preview.test.ts` suite failing to load |
 
 
 Work that this workstream needs but does not own. Another agent owns each row.
@@ -5594,24 +5617,6 @@ Work that this workstream needs but does not own. Another agent owns each row.
     and capped per theme), because that seam is not importable and a data grid
     cannot pay a compile per cell. One shared helper belongs in the compiler
     package. Owner: tw.
-  - [ ] Teach the **core-backed controller** on the docs that still show the old one —
-    `@gpuixui/data`'s `useTable` now takes `{ rows, keyOf, columns }` (the column
-    list carries `valueOf`), the press-cycle/sort/filter behaviour is unchanged, but
-    behaviour but `textOf`/`valueOf`/`sortRows`/`narrowTable` no longer exist.
-    `apps/docs/content/docs/components/table.mdx` (§usage snippet and the API
-    table's `useTable` row), `apps/docs/content/docs/data-display/index.mdx`
-    (the `sortRows` gap table row) and
-    `apps/docs/src/components/docs/table-demo.tsx` (`tableWorkflowSource`) still
-    teach the deleted API. **Two guards now read deleted internals**:
-    `apps/docs/src/components/docs/table-preview.test.ts` reads
-    `packages/data/src/filter/logic.ts` (`ENOENT`; the filter is
-    `grid-core.ts`'s `includesString` registration + the trim, so the two
-    assertions move there); `apps/docs/src/lib/lane-page.test.ts`'s *retains a
-    released selection and names the call that drops it* expects
-    `clearSelection(selection)` in `use-table.ts`, which now reads
-    `clearSelection(chosen)` (the chosen set is the core's ids plus the gesture
-    anchor). Repoint both at `grid-core.ts`/`use-table.ts` rather than restoring
-    the reducers. Owner: docs-site.
   - [ ] Hoist the **type-ahead seam** — `packages/data/src/tree/logic.ts` repeats
     the components' private rule (a 500 ms window, the last keystroke wins, a
     repeated letter keeps the prefix, matching is case-insensitive) because
