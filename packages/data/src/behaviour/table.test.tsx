@@ -22,6 +22,7 @@ import * as Str from "effect/String";
 import { afterEach, describe, expect, it } from "vitest";
 import { darkTheme } from "@gpuixui/tokens";
 import { TableExample } from "../../examples/table.example.js";
+import { TableColumnDivider } from "../columns/divider.js";
 import {
   renderData,
   settle,
@@ -128,6 +129,25 @@ describe("the example table", () => {
     expect(readout(root)).toContain("1 selected");
   });
 
+  it("lets a press on an unfilled part of a cell reach its row", () => {
+    const root = mount();
+    const cell = boundsOf(root, "files-cell-file-2-name");
+
+    // The cell's content is a short label, so the right edge is blank: a cell
+    // that paints a fill would stop the press here (the measured rule), which
+    // is why `TableCell` has no background.
+    root.renderer.nativeSimulateClick(
+      cell.x + cell.width - 4,
+      cell.y + cell.height / 2,
+    );
+    root.renderer.flush();
+
+    expect(
+      root.renderer.findByTestId("files-row-file-2")?.style.backgroundColor,
+    ).toBe(darkTheme.colors.selected);
+    expect(readout(root)).toContain("1 selected");
+  });
+
   it("toggles with the command chord and extends with shift", () => {
     const root = mount();
 
@@ -204,5 +224,181 @@ describe("the example table", () => {
 
     expect(paintedFiles(root)).toEqual([]);
     expect(allText(root)).toContain("No file matches");
+  });
+});
+
+/** The width a divider announces through the only channel 0.11.0 publishes. */
+const announcedWidth = (root: DataTestRoot, testId: string): string =>
+  `${root.renderer.getElement(findId(root, testId))?.customProps?.["aria-valuetext"] ?? ""}`;
+
+/**
+ * Drag `testId` by `deltaX`, delivered as eight moves.
+ *
+ * One jump would prove nothing about the press-arms-the-capture rule; eight
+ * moves is the number every pointer probe in this repository uses.
+ */
+const drag = (root: DataTestRoot, testId: string, deltaX: number): void => {
+  const { x, y, width, height } = boundsOf(root, testId);
+  const startX = x + width / 2;
+  const startY = y + height / 2;
+  root.renderer.nativeSimulateMouseDown(startX, startY);
+  root.renderer.flush();
+  Arr.forEach(Arr.range(1, 8), (step) => {
+    root.renderer.nativeSimulateMouseMove(startX + (deltaX * step) / 8, startY);
+    root.renderer.flush();
+  });
+  root.renderer.nativeSimulateMouseUp(startX + deltaX, startY);
+  root.renderer.flush();
+};
+
+describe("resizable columns", () => {
+  it("clamps every width it hands out, whatever the consumer does", () => {
+    const received: number[] = [];
+    root = renderData(
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "row",
+          width: 400,
+          height: 40,
+        }}
+      >
+        <TableColumnDivider
+          width={100}
+          minWidth={80}
+          maxWidth={120}
+          onResize={(width) => received.push(width)}
+          label="Resize the test column"
+          testId="divider"
+        />
+      </div>,
+    );
+    settle(root);
+
+    drag(root, "divider", 600);
+    expect(received.at(-1)).toBe(120);
+
+    drag(root, "divider", -600);
+    expect(received.at(-1)).toBe(80);
+
+    const divider = findId(root, "divider");
+    root.renderer.nativeSimulateKeyDown(divider, "end");
+    root.renderer.nativeSimulateKeyUp(divider, "end");
+    root.renderer.flush();
+    expect(received.at(-1)).toBe(120);
+    expect(received.every((width) => width >= 80 && width <= 120)).toBe(true);
+  });
+
+  it("widens the column a drag ends, and keeps the cells on the new track", () => {
+    const root = mount();
+    expect(readout(root)).toContain("w=260");
+
+    drag(root, "files-divider-name", 60);
+
+    expect(readout(root)).toContain("w=320");
+    expect(boundsOf(root, "files-name").width).toBe(320);
+    // The header and the body cells share one width: a width the cells do not
+    // read is a grid that drifts row by row.
+    expect(boundsOf(root, "files-cell-file-1-name").width).toBe(320);
+    expect(announcedWidth(root, "files-divider-name")).toBe("320 pixels");
+
+    // A second gesture measures from the width the first one ended at.
+    drag(root, "files-divider-name", 30);
+    expect(readout(root)).toContain("w=350");
+  });
+
+  it("clamps the drag at the column's own minimum and maximum", () => {
+    const root = mount();
+
+    drag(root, "files-divider-name", -600);
+    expect(readout(root)).toContain("w=120");
+    expect(boundsOf(root, "files-cell-file-1-name").width).toBe(120);
+
+    drag(root, "files-divider-name", 1_000);
+    expect(readout(root)).toContain("w=420");
+    expect(boundsOf(root, "files-cell-file-1-name").width).toBe(420);
+  });
+
+  it("steps a focused divider from the keyboard and announces the width", () => {
+    const root = mount();
+    const divider = findId(root, "files-divider-name");
+
+    root.renderer.nativeSimulateKeyDown(divider, "home");
+    root.renderer.nativeSimulateKeyUp(divider, "home");
+    root.renderer.flush();
+    expect(readout(root)).toContain("w=120");
+    expect(announcedWidth(root, "files-divider-name")).toBe("120 pixels");
+
+    root.renderer.nativeSimulateKeyDown(divider, "right");
+    root.renderer.nativeSimulateKeyUp(divider, "right");
+    root.renderer.flush();
+    expect(readout(root)).toContain("w=136");
+
+    root.renderer.nativeSimulateKeyDown(divider, "end");
+    root.renderer.nativeSimulateKeyUp(divider, "end");
+    root.renderer.flush();
+    expect(readout(root)).toContain("w=420");
+  });
+});
+
+describe("the column menu", () => {
+  it("hides a column, taking its width out and shifting every later column", () => {
+    const root = mount();
+    const nameBefore = boundsOf(root, "files-name");
+    const sizeBefore = boundsOf(root, "files-size");
+    expect(readout(root)).toContain("content=460");
+
+    click(root, "files-columns");
+    root.renderer.flush();
+    click(root, "files-columns-toggle-status");
+    root.renderer.flush();
+
+    expect(root.renderer.findByTestId("files-status")).toBeUndefined();
+    expect(allText(root)).not.toContain("modified");
+    expect(readout(root)).toContain("cols=name,size");
+    // 460 - 110: the hidden track's width leaves the content, and the size
+    // column starts exactly 110 points further left.
+    expect(readout(root)).toContain("content=350");
+    expect(boundsOf(root, "files-size").x).toBe(sizeBefore.x - 110);
+    expect(boundsOf(root, "files-name").x).toBe(nameBefore.x);
+
+    // Restoring the column returns it at the width it had, in its place.
+    click(root, "files-columns-toggle-status");
+    root.renderer.flush();
+    expect(readout(root)).toContain("cols=name,status,size");
+    expect(readout(root)).toContain("content=460");
+    expect(boundsOf(root, "files-size").x).toBe(sizeBefore.x);
+  });
+
+  it("moves a column through the order without changing a width", () => {
+    const root = mount();
+    const nameBefore = boundsOf(root, "files-name");
+
+    click(root, "files-columns");
+    root.renderer.flush();
+    click(root, "files-columns-move-size");
+    root.renderer.flush();
+    click(root, "files-columns-move-size-left");
+    root.renderer.flush();
+
+    // One step swaps size with its visible neighbour (status).
+    expect(readout(root)).toContain("cols=name,size,status");
+    expect(readout(root)).toContain("content=460");
+    const nameWidth = boundsOf(root, "files-name").width;
+    expect(boundsOf(root, "files-size").x).toBe(nameBefore.x + nameWidth);
+
+    // A second step reaches the front; the cells follow the header.
+    click(root, "files-columns");
+    root.renderer.flush();
+    click(root, "files-columns-move-size");
+    root.renderer.flush();
+    click(root, "files-columns-move-size-left");
+    root.renderer.flush();
+
+    expect(readout(root)).toContain("cols=size,name,status");
+    expect(readout(root)).toContain("content=460");
+    expect(boundsOf(root, "files-size").x).toBe(nameBefore.x);
+    expect(boundsOf(root, "files-cell-file-1-size").x).toBe(nameBefore.x);
   });
 });

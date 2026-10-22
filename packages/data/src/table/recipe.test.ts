@@ -17,6 +17,7 @@ import {
   TABLE_BODY,
   TABLE_CAPTION,
   TABLE_CELL,
+  TABLE_COLUMN_DIVIDER,
   TABLE_EMPTY,
   TABLE_HEADER,
   TABLE_HEADER_CELL,
@@ -37,6 +38,7 @@ const recipes: ReadonlyArray<readonly [string, string]> = [
   ["selected row", TABLE_ROW_SELECTED],
   ["interactive row", TABLE_ROW_INTERACTIVE],
   ["header cell", TABLE_HEADER_CELL],
+  ["column divider", TABLE_COLUMN_DIVIDER],
   ["cell", TABLE_CELL],
   ["caption", TABLE_CAPTION],
   ["empty", TABLE_EMPTY],
@@ -79,5 +81,28 @@ describe("the table recipes", () => {
     const style = classesToStyle(TABLE_SKELETON_BAR, lightTheme).style;
     expect(style.backgroundColor).toBe(lightTheme.colors.skeleton);
     expect(style.height).toBe(8);
+  });
+
+  it("leaves a body cell unfilled, so a press reaches its row", () => {
+    const cell = classesToStyle(TABLE_CELL, lightTheme).style;
+    // A fill is where GPUI's hit test stops (`press-routing-lifecycle`): a
+    // painted cell swallows the press its row answers.
+    expect(cell.backgroundColor).toBeUndefined();
+  });
+
+  it("places the resize strip on the header cell's own edge", () => {
+    const cell = classesToStyle(TABLE_HEADER_CELL, lightTheme).style;
+    const divider = classesToStyle(TABLE_COLUMN_DIVIDER, lightTheme).style;
+
+    // A divider needs a containing block; without it the strip is placed
+    // against the window rather than its column, and every row drifts.
+    expect(cell.position).toBe("relative");
+    expect(divider.position).toBe("absolute");
+    expect(divider.right).toBe(0);
+    expect(divider.width).toBe(6);
+    // The strip paints a fill at rest, because GPUI's hit test stops at the
+    // first painted child: a transparent strip never receives the press.
+    expect(divider.backgroundColor).toBe(lightTheme.colors.border);
+    expect(divider.hover?.backgroundColor).toBe(lightTheme.colors.primary);
   });
 });

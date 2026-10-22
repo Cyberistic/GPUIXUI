@@ -320,6 +320,13 @@ export interface TableRowProps extends Omit<Props, "children"> {
  * A row with a press handler answers the pointer (a hover wash and a pointer
  * cursor); a chosen row keeps the selection wash under the pointer instead, so
  * a reader can see what is chosen while moving across the grid.
+ *
+ * A press stops at the **first child that paints a fill**, not at the innermost
+ * handler (`press-routing-lifecycle`: filled `text` ran none, an unfilled one
+ * ran `cell-click,row-click`). A cell's content is unfilled by default, so a
+ * press on it reaches this row; a composed control that must hand the press on —
+ * a badge, an icon with a background — declares `pointerEvents: "none"`, the
+ * same rule the shipped `Badge` and `Keycap` follow.
  */
 export const TableRow = ({
   selected,
@@ -398,7 +405,15 @@ export interface TableCellProps
   readonly children?: ReactNode;
 }
 
-/** One body cell: a box with the same inset as its header. */
+/**
+ * One body cell: a box with the same inset as its header.
+ *
+ * It paints no fill of its own, which is load-bearing: a fill is where GPUI's
+ * hit test stops, so a painted cell would swallow the press its row answers
+ * (`press-routing-lifecycle`). A caller that needs a filled cell control inside
+ * it declares `pointerEvents: "none"` on that control when the row must still
+ * hear the press.
+ */
 export const TableCell = ({
   width,
   align = "left",

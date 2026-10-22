@@ -36,9 +36,26 @@ export const TABLE_ROW_SELECTED =
 export const TABLE_ROW_INTERACTIVE =
   "flex flex-row items-center shrink-0 hover:bg-hover cursor-pointer";
 
-/** A header cell is a box: a sort control or a `Text` lives inside it. */
+/**
+ * A header cell is a box: a sort control or a `Text` lives inside it.
+ *
+ * `relative` is the containing block a {@link TableColumnDivider} is placed
+ * against, so the strip sits on the track's right edge without adding a spacer
+ * track to every body row.
+ */
 export const TABLE_HEADER_CELL =
-  "flex flex-row items-center px-3 py-2 text-sm font-medium text-muted-foreground";
+  "relative flex flex-row items-center px-3 py-2 text-sm font-medium text-muted-foreground";
+
+/**
+ * The resize strip at a header cell's right edge.
+ *
+ * It paints a fill at rest because GPUI's hit test stops at the first painted
+ * child: a transparent strip would never receive the press. The strip does
+ * double duty as the column separator, and the pointer cursor and focus ring
+ * stay in `style` (the registry has no `cursor-col-resize`).
+ */
+export const TABLE_COLUMN_DIVIDER =
+  "absolute inset-y-0 right-0 w-1.5 bg-border hover:bg-primary";
 
 /** A body cell is a box with the same inset as its header. */
 export const TABLE_CELL = "px-3 py-2 text-sm";

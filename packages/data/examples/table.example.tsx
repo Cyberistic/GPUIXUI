@@ -1,8 +1,9 @@
 /**
- * A files table: sort, filter, choose a row, and walk it from the keyboard.
+ * A files table: sort, filter, choose a row, configure columns, resize a track
+ * and walk the rows from the keyboard.
  *
  * This is the whole composition a consumer copies — the parts are presentational
- * and the controller holds the state, so the screen is the wiring:
+ * and the controllers hold the state, so the screen is the wiring:
  *
  * - the header is a sibling of the row scroller inside one horizontal scroller,
  *   which is how 0.11.0 gets a fixed header without `position: "sticky"`;
@@ -13,19 +14,28 @@
  *   selection the keyboard moved but focus did not is a row the next key does
  *   not reach;
  * - the filter field narrows the set, and the controller releases a chosen
- *   record the narrower set hides.
+ *   record the narrower set hides;
+ * - the header and every row read **one** column list (`columns.visible`) and
+ *   each column's own width, so hiding, moving or resizing a column cannot
+ *   leave the cells on a second copy of the layout;
+ * - a resize divider sits inside the header cell it ends, so a body row needs
+ *   no spacer track.
  *
  * The example holds 60 rows so the window suite can measure a scrolling body
  * without pretending the table is virtualized: it paints every row it is given.
  */
 
 import { useGpuix } from "@gpuix/react";
-import type { EventPayload } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
+import { Match } from "effect";
 import * as Option from "effect/Option";
 import { useCallback, useLayoutEffect, useRef } from "react";
-import type { PublicInstance } from "@gpuix/react";
 import { Button } from "@gpuixui/primitives/button";
+import { ColumnMenu } from "../src/columns/menu.js";
+import { TableColumnDivider } from "../src/columns/divider.js";
+import type { ColumnDef } from "../src/columns/logic.js";
+import { useColumns } from "../src/columns/use-columns.js";
 import {
   Table,
   TableBody,
@@ -66,9 +76,21 @@ const textOf = (row: FileRow): string =>
 const valueOf = (row: FileRow, field: string): SortValue =>
   field === "size" ? row.size : row.name;
 
-/** The status column's width, so the table has one fixed and two flexible tracks. */
-const STATUS_WIDTH = 110;
-const SIZE_WIDTH = 90;
+/** The one column list the header and every row read. */
+const FILE_COLUMNS: ReadonlyArray<ColumnDef> = [
+  { id: "name", label: "Name", width: 260, minWidth: 120, maxWidth: 420 },
+  { id: "status", label: "Status", width: 110, minWidth: 80, maxWidth: 220 },
+  { id: "size", label: "Size", width: 90, minWidth: 70, maxWidth: 200 },
+];
+
+/** The text a column paints for one row. */
+const cellText = (row: FileRow, id: string): string =>
+  Match.value(id).pipe(
+    Match.when("name", () => row.name),
+    Match.when("status", () => row.status),
+    Match.when("size", () => `${row.size} B`),
+    Match.orElse(() => ""),
+  );
 
 /**
  * One row, with a **stable** ref callback.
@@ -80,6 +102,7 @@ const SIZE_WIDTH = 90;
  */
 const FileRow = ({
   row,
+  columns,
   selected,
   tabbable,
   elements,
@@ -87,6 +110,7 @@ const FileRow = ({
   onKeyDown,
 }: {
   readonly row: FileRow;
+  readonly columns: ReturnType<typeof useColumns>["visible"];
   readonly selected: boolean;
   readonly tabbable: boolean;
   readonly elements: { readonly current: Map<string, number> };
@@ -110,41 +134,31 @@ const FileRow = ({
       onClick={onPress}
       onKeyDown={onKeyDown}
     >
-      <TableCell>
-        <text
-          style={{
-            ...textStyle(theme, "body"),
-            color: theme.colors.foreground,
-          }}
+      {Arr.map(columns, (column) => (
+        <TableCell
+          key={column.id}
+          width={column.width}
+          align={column.id === "size" ? "right" : "left"}
+          testId={`files-cell-${row.id}-${column.id}`}
         >
-          {row.name}
-        </text>
-      </TableCell>
-      <TableCell width={STATUS_WIDTH}>
-        <text
-          style={{
-            ...textStyle(theme, "caption"),
-            color: theme.colors.mutedForeground,
-          }}
-        >
-          {row.status}
-        </text>
-      </TableCell>
-      <TableCell width={SIZE_WIDTH} align="right">
-        <text
-          style={{
-            ...textStyle(theme, "caption"),
-            color: theme.colors.mutedForeground,
-          }}
-        >
-          {`${row.size} B`}
-        </text>
-      </TableCell>
+          <text
+            style={{
+              ...textStyle(theme, column.id === "name" ? "body" : "caption"),
+              color:
+                column.id === "name"
+                  ? theme.colors.foreground
+                  : theme.colors.mutedForeground,
+            }}
+          >
+            {cellText(row, column.id)}
+          </text>
+        </TableCell>
+      ))}
     </TableRow>
   );
 };
 
-/** A files table with a filter, sortable columns and a keyboard-walked selection. */
+/** A files table with a filter, column configuration, sorting and selection. */
 export const TableExample = () => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
@@ -154,6 +168,7 @@ export const TableExample = () => {
     textOf,
     valueOf,
   });
+  const columns = useColumns({ columns: FILE_COLUMNS });
   const elements = useRef(new Map<string, number>());
 
   const focus = (key: string) => {
@@ -184,6 +199,8 @@ export const TableExample = () => {
     });
   }, [table.activeKey]);
 
+  const nameWidth = Option.getOrElse(columns.widthOf("name"), () => 0);
+
   return (
     <div
       style={{
@@ -204,8 +221,14 @@ export const TableExample = () => {
         <TableFilterField
           value={table.query}
           onValueChange={table.setQuery}
-          width={260}
+          width={220}
           testId="files-filter"
+        />
+        <ColumnMenu
+          state={columns.state}
+          onChange={columns.apply}
+          onReset={columns.reset}
+          testId="files-columns"
         />
         <Button
           variant="outline"
@@ -216,48 +239,96 @@ export const TableExample = () => {
         >
           Clear
         </Button>
-        <text
-          testId="files-readout"
-          style={{
-            ...textStyle(theme, "caption"),
-            color: theme.colors.mutedForeground,
-          }}
-        >
-          {`${table.rows.length} rows · ${selectionSize(table.selection)} selected · ${Option.match(table.sort, { onNone: () => "unsorted", onSome: (sort) => `${sort.field}-${sort.direction}` })}`}
-        </text>
       </div>
+      <text
+        testId="files-readout"
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`${table.rows.length} rows · ${selectionSize(table.selection)} selected · cols=${Arr.join(
+          Arr.map(columns.visible, (column) => column.id),
+          ",",
+        )} · w=${nameWidth} · content=${columns.contentWidth} · ${Option.match(
+          table.sort,
+          {
+            onNone: () => "unsorted",
+            onSome: (sort) => `${sort.field}-${sort.direction}`,
+          },
+        )}`}
+      </text>
 
       <Table height={320} aria-label="Files" testId="files-table">
         <TableViewport>
           <TableHeader>
             <TableRow>
-              <TableSortHeader
-                field="name"
-                label="Name"
-                sort={table.sort}
-                onSort={(next) => table.setSort(Option.some(next))}
-                testId="files-name"
-              />
-              <TableHeaderCell width={STATUS_WIDTH}>
-                <text
-                  style={{
-                    ...textStyle(theme, "caption"),
-                    color: theme.colors.mutedForeground,
-                  }}
-                >
-                  Status
-                </text>
-              </TableHeaderCell>
-              <TableSortHeader
-                field="size"
-                label="Size"
-                sort={table.sort}
-                onSort={(next) => table.setSort(Option.some(next))}
-                align="right"
-                width={SIZE_WIDTH}
-                initialDirection="desc"
-                testId="files-size"
-              />
+              {Arr.map(columns.visible, (column) => {
+                const resize = {
+                  minWidth: column.minWidth,
+                  maxWidth: column.maxWidth,
+                  onResize: (width: number) => columns.resize(column.id, width),
+                  label: `Resize the ${column.label.toLowerCase()} column`,
+                  testId: `files-divider-${column.id}`,
+                };
+                return Match.value(column.id).pipe(
+                  Match.when("name", () => (
+                    <TableSortHeader
+                      key={column.id}
+                      field="name"
+                      label={column.label}
+                      sort={table.sort}
+                      onSort={(next) => table.setSort(Option.some(next))}
+                      width={column.width}
+                      resize={resize}
+                      testId="files-name"
+                    />
+                  )),
+                  Match.when("status", () => (
+                    <TableHeaderCell
+                      key={column.id}
+                      width={column.width}
+                      testId="files-status"
+                    >
+                      <text
+                        style={{
+                          ...textStyle(theme, "caption"),
+                          color: theme.colors.mutedForeground,
+                        }}
+                      >
+                        {column.label}
+                      </text>
+                      <TableColumnDivider width={column.width} {...resize} />
+                    </TableHeaderCell>
+                  )),
+                  Match.when("size", () => (
+                    <TableSortHeader
+                      key={column.id}
+                      field="size"
+                      label={column.label}
+                      sort={table.sort}
+                      onSort={(next) => table.setSort(Option.some(next))}
+                      align="right"
+                      width={column.width}
+                      resize={resize}
+                      initialDirection="desc"
+                      testId="files-size"
+                    />
+                  )),
+                  Match.orElse(() => (
+                    <TableHeaderCell key={column.id} width={column.width}>
+                      <text
+                        style={{
+                          ...textStyle(theme, "caption"),
+                          color: theme.colors.mutedForeground,
+                        }}
+                      >
+                        {column.label}
+                      </text>
+                    </TableHeaderCell>
+                  )),
+                );
+              })}
             </TableRow>
           </TableHeader>
           <TableBody testId="files-body">
@@ -285,6 +356,7 @@ export const TableExample = () => {
                 <FileRow
                   key={row.id}
                   row={row}
+                  columns={columns.visible}
                   selected={table.isSelected(row.id)}
                   tabbable={Option.contains(table.activeKey, row.id)}
                   elements={elements}

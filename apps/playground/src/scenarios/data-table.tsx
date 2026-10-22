@@ -122,5 +122,62 @@ export const dataTableScenario: ScenarioBody = {
         ctx.host.bounds("files-row-file-60") === null,
         true,
       );
+
+      // A column divider is a control: a drag widens the track, the cells
+      // follow it, and the clamp is the column's own.
+      ctx.host.drag("files-divider-name", 60, 0, 8);
+      yield* ctx.expectContains(
+        "the drag widened the name column",
+        text(ctx, "files-readout"),
+        "w=320",
+      );
+      const widened = yield* ctx.expectSome(
+        "the widened header painted",
+        Option.fromNullishOr(ctx.host.bounds("files-name")),
+      );
+      yield* ctx.expectNear(
+        "the header paints the width the drag produced",
+        widened.width,
+        320,
+        2,
+      );
+      ctx.host.drag("files-divider-name", -600, 0, 8);
+      yield* ctx.expectContains(
+        "the drag clamps at the column's minimum",
+        text(ctx, "files-readout"),
+        "w=120",
+      );
+
+      // The column menu hides a column: its track leaves the content, and its
+      // header stops painting.
+      ctx.host.click("files-columns");
+      ctx.host.click("files-columns-toggle-status");
+      // The name column was clamped to 120 by the drag above, so the content is
+      // 120 + 110 + 90 before the hide and 120 + 90 after it.
+      yield* ctx.expectContains(
+        "hiding a column takes its width out of the content",
+        text(ctx, "files-readout"),
+        "content=210",
+      );
+      yield* ctx.expectEqual(
+        "the hidden column's header paints nothing",
+        ctx.host.bounds("files-status") === null,
+        true,
+      );
+
+      // A move is an order change, not a resize: the order moves and the
+      // content width does not.
+      ctx.host.click("files-columns-move-size");
+      ctx.host.click("files-columns-move-size-left");
+      yield* ctx.expectContains(
+        "the move changed the painted order",
+        text(ctx, "files-readout"),
+        "cols=size,name",
+      );
+      yield* ctx.expectContains(
+        "the move kept the content width",
+        text(ctx, "files-readout"),
+        "content=210",
+      );
     }),
 };

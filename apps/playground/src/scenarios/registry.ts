@@ -143,7 +143,7 @@ export const registry = [
   {
     id: "data-table-core",
     title:
-      "@gpuixui/data: fixed header, sort, selection, filter and the empty set",
+      "@gpuixui/data: fixed header, sort, selection, filter, column configuration, resize and the empty set",
     capability: "table",
   },
   {

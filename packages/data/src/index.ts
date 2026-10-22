@@ -9,9 +9,10 @@
  * Shape:
  *
  * - `table/` — the parts and the measured fixed-header composition.
- * - `sort/`, `selection/`, `filter/` — pure reducers plus the one control each
- *   needs; they import no React and can drive the grid from Effect.
- * - `use-table` — the uncontrolled controller joining the three.
+ * - `sort/`, `selection/`, `filter/`, `columns/` — pure reducers plus the one
+ *   control each needs; they import no React and can drive the grid from
+ *   Effect.
+ * - `use-table`, `use-columns` — the uncontrolled controllers.
  *
  * Read `packages/data/README.md` for the runtime rules (no sticky, no
  * transform, no canvas) and plan 610 for the remaining phases.
@@ -81,3 +82,47 @@ export type { TableFilterFieldProps } from "./filter/field.js";
 
 export { useTable } from "./use-table.js";
 export type { TableController, UseTableOptions } from "./use-table.js";
+
+export { ColumnMenu } from "./columns/menu.js";
+export type { ColumnMenuProps } from "./columns/menu.js";
+export { TableColumnDivider } from "./columns/divider.js";
+export type {
+  TableColumnDividerProps,
+  TableColumnResizeProps,
+} from "./columns/divider.js";
+export {
+  COLUMN_KEY_STEP,
+  ColumnResizeKey,
+  DEFAULT_MAX_COLUMN_WIDTH,
+  DEFAULT_MIN_COLUMN_WIDTH,
+  clampColumnWidth,
+  clampWidth,
+  columnBounds,
+  columnOffset,
+  columnResizeKeys,
+  columnWidth,
+  contentWidth,
+  findColumn,
+  initialColumns,
+  isColumnResizeKey,
+  isColumnVisible,
+  moveColumn,
+  resetColumns,
+  resizeColumn,
+  resizeWidthByKey,
+  setColumnVisible,
+  toggleColumn,
+  visibleColumns,
+  widthBounds,
+} from "./columns/logic.js";
+export type {
+  Column,
+  ColumnDef,
+  ColumnState,
+  ColumnWidthBounds,
+} from "./columns/logic.js";
+export { useColumns } from "./columns/use-columns.js";
+export type {
+  ColumnController,
+  UseColumnsOptions,
+} from "./columns/use-columns.js";

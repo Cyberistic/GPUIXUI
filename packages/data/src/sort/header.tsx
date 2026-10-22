@@ -15,6 +15,10 @@
 
 import * as Option from "effect/Option";
 import { Button } from "@gpuixui/primitives/button";
+import {
+  TableColumnDivider,
+  type TableColumnResizeProps,
+} from "../columns/divider.js";
 import { textStyle } from "../theme.js";
 import type { CellAlign } from "../table/table.js";
 import { TableHeaderCell } from "../table/table.js";
@@ -42,6 +46,11 @@ export interface TableSortHeaderProps {
   readonly width?: number;
   /** Defaults to `left`. */
   readonly align?: CellAlign;
+  /**
+   * Makes the column resizable. A divider needs a fixed track, so this is
+   * ignored when `width` is omitted.
+   */
+  readonly resize?: TableColumnResizeProps;
   readonly testId?: string;
 }
 
@@ -65,6 +74,7 @@ export const TableSortHeader = ({
   initialDirection = "asc",
   width,
   align = "left",
+  resize,
   testId,
 }: TableSortHeaderProps) => {
   const theme = useTheme();
@@ -93,6 +103,9 @@ export const TableSortHeader = ({
       >
         {label}
       </Button>
+      {width === undefined || resize === undefined ? null : (
+        <TableColumnDivider width={width} {...resize} />
+      )}
     </TableHeaderCell>
   );
 };

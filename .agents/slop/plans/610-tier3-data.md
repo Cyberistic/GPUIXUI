@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress — phases 1–2 landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 34 cases + 7 native behaviour cases) |
+| Status | in progress — phases 1–3 landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 48 cases + 14 native behaviour cases) |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
@@ -117,9 +117,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   and the `useTable` controller. The selection release runs during render, and
   the keyboard walk moves native focus after the `tabIndex` commit (a call from
   the key handler moved nothing — the row was still outside the tab order).
-- Evidence: `nub run --filter @gpuixui/data test` (34) and `test:behaviour` (7)
+- **Phase 3 (columns and resizing) landed**: `columns/logic` (visibility,
+  visible-order moves, per-column resize bounds, keyboard steps), `useColumns`,
+  `ColumnMenu` (the component package's measured DropdownMenu) and
+  `TableColumnDivider` inside the header cell it ends (no spacer track in body
+  rows). The example and every row read one column list. Pinned/frozen columns
+  remain a separate row: sticky is absent, so freezing is the two-pane
+  composition.
+- **Phase 2 note**: the painted-child press rule now lives in
+  `table.tsx`'s row/cell docs and the two Tier 3 rows, guarded by
+  `src/table/press-rule.test.ts` and a blank-cell press case.
+- Evidence: `nub run --filter @gpuixui/data test` (48) and `test:behaviour` (14)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
-  1/1. Phases 3–7 are the open TODO rows.
+  1/1. Phases 4–7 and frozen columns are the open TODO rows.
 
 ## 5. Acceptance
 
