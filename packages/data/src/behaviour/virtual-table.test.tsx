@@ -19,6 +19,7 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { afterEach, describe, expect, it } from "vitest";
@@ -166,6 +167,46 @@ describe("the virtualized table", () => {
     expect(paintedRows(root)).toEqual([]);
     expect(allText(root)).toContain("No file matches that filter.");
     expect(allText(root)).toContain("0 rows");
+  });
+
+  it("re-clamps its window when the set shrinks under it", () => {
+    const root = mount();
+
+    // The reveal leaves the window near row 900 of the thousand; the filter
+    // then narrows the set to thirty-seven rows fewer than that.
+    const reveal = boundsOf(root, "virtual-table-reveal");
+    root.renderer.nativeSimulateClick(reveal.x + 4, reveal.y + 4);
+    settle(root);
+    expect(paintedRows(root)).toContain(REVEAL_VIRTUAL_ROW);
+
+    root.renderer.nativeSimulateKeystrokes(
+      findId(root, "virtual-table-filter"),
+      "01",
+    );
+    root.renderer.flush();
+
+    const painted = Arr.filterMap(root.renderer.getPaintedText(), (line) => {
+      const name = /^file-\d{4}\.ts$/.exec(line)?.[0];
+      return name === undefined ? Result.failVoid : Result.succeed(name);
+    });
+    // The example's own filter rule, over its own row set: the whole row text
+    // is matched, so a size carrying `01` keeps a name that does not.
+    const kept = Arr.filterMap(Arr.range(1, VIRTUAL_TABLE_ROWS), (n) => {
+      const name = `file-${String(n).padStart(4, "0")}.ts`;
+      const status = ["tracked", "modified", "untracked"][n % 3] ?? "tracked";
+      return `${name} ${status} ${n * 5}`.toLowerCase().includes("01")
+        ? Result.succeed(name)
+        : Result.failVoid;
+    });
+    // Every painted name is a record the narrowed set still holds: the window
+    // is a slice of the new set, not of the one it was measured against.
+    expect(Arr.difference(painted, kept)).toEqual([]);
+    // A 320px viewport holds nine rows of 36px. Before the clamp the core
+    // clamped the stale offset to the new content's end and mounted five, so
+    // half the table went blank until the next wheel.
+    expect(painted.length).toBeGreaterThanOrEqual(Math.floor(320 / 36));
+    // The window landed on the narrowed set's own end.
+    expect(painted.at(-1)).toBe(Option.getOrUndefined(Arr.last(kept)));
   });
 
   it("sorts the whole set, not the mounted window", () => {

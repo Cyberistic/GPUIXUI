@@ -8,8 +8,11 @@
  *
  * The order it applies is the one a reader expects: narrow first, then sort
  * the narrowed set, and measure a Shift range over what is painted. A filter
- * that hides a chosen record clears it in the same commit, so no frame shows a
- * selection the table cannot paint.
+ * that hides a chosen record releases it in the same commit, so no frame shows a
+ * selection the table cannot paint — the release is **render-time retention**,
+ * not a write: `chosen` still holds the record, so a query that widens back to it
+ * paints it chosen again. A grid that needs a permanent clear calls `clear()` on
+ * the change.
  *
  * ```tsx
  * const table = useTable({ rows, keyOf: (row) => row.id, textOf, valueOf });

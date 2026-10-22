@@ -80,6 +80,32 @@ const viewportOf = (spec: WindowSpec): number =>
     ? spec.viewportHeight
     : rowHeightOf(spec);
 
+/** The row count as a whole number. */
+const countOf = (spec: WindowSpec): number =>
+  Number.isFinite(spec.count) ? Math.max(0, Math.floor(spec.count)) : 0;
+
+/**
+ * The farthest a window may scroll over the rows it is given.
+ *
+ * A scroll offset belongs to the set it was measured against: when a filter
+ * narrows a thousand rows to a hundred, the offset the reader left is past the
+ * new content and the runtime clamps its own scroll to the end. The app's
+ * window must follow that clamp in the same commit, or it keeps holding rows the
+ * set no longer has (`virtual-table-lifecycle`: a row outside the narrowed set
+ * still reported its box until the next gesture moved the window).
+ */
+export const maxScrollOffset = (spec: WindowSpec): number =>
+  Math.max(0, countOf(spec) * rowHeightOf(spec) - viewportOf(spec));
+
+/** An offset clamped into the rows a spec holds. */
+export const clampScrollOffset = (
+  spec: WindowSpec,
+  scrollOffset: number,
+): number => {
+  const offset = Number.isFinite(scrollOffset) ? Math.max(0, scrollOffset) : 0;
+  return Math.min(offset, maxScrollOffset(spec));
+};
+
 /**
  * A calculator over one row shape.
  *
@@ -89,9 +115,7 @@ const viewportOf = (spec: WindowSpec): number =>
 export const createWindowCalculator = (spec: WindowSpec): WindowCalculator => {
   const rowHeight = rowHeightOf(spec);
   const virtualizer = new Virtualizer<never, never>({
-    count: Number.isFinite(spec.count)
-      ? Math.max(0, Math.floor(spec.count))
-      : 0,
+    count: countOf(spec),
     estimateSize: () => rowHeight,
     getScrollElement: () => null,
     observeElementRect: () => undefined,
@@ -102,10 +126,11 @@ export const createWindowCalculator = (spec: WindowSpec): WindowCalculator => {
 
   const indicesAt = (scrollOffset: number): ReadonlyArray<number> => {
     virtualizer.scrollRect = { width: 0, height: viewportOf(spec) };
-    virtualizer.scrollOffset = Number.isFinite(scrollOffset)
-      ? Math.max(0, scrollOffset)
-      : 0;
-    return virtualizer.getVirtualIndexes();
+    virtualizer.scrollOffset = clampScrollOffset(spec, scrollOffset);
+    return Arr.filter(
+      virtualizer.getVirtualIndexes(),
+      (index) => index >= 0 && index < countOf(spec),
+    );
   };
 
   const at = (scrollOffset: number): VirtualWindow => {

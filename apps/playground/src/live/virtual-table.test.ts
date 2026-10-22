@@ -164,6 +164,11 @@ describe("the virtual-table fixture", () => {
     expect(text).toContain("first=0 last=8");
     expect(text).toContain("first=8 last=16");
     expect(text).toContain(`${VIRTUAL_TABLE_FILTERED_ROWS} rows`);
-    expect(text).toContain("file-0601.ts");
+    expect(text).toContain("file-0901.ts");
+    expect(text).toContain("row-700");
+    // The bug the probe found and the package now guards: the narrowed set's
+    // clamp commits in the same render, not on the next wheel.
+    expect(text).toContain("nine-row viewport");
+    expect(text).toContain("count × rowHeight − viewport");
   });
 });

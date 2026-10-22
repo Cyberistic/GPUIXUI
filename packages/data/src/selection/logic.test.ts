@@ -105,6 +105,19 @@ describe("the visible set's ownership", () => {
     expect(chosen(retainSelection(state, []))).toEqual([]);
   });
 
+  it("paints the record again when a wider set brings it back", () => {
+    // The retention `useTable` applies is a view, not a write: the reader's
+    // record stays chosen through a narrowing query and a widening one paints
+    // it chosen again (`table-filter-lifecycle`: 1 rows · 0 selected, then
+    // 60 rows · 2 selected with the same two records). A permanent clear is
+    // `clearSelection`, not a narrowing filter.
+    const state = pressSelection(emptySelection, "r4", "replace", order);
+    const narrowed = retainSelection(state, ["r1", "r2"]);
+    expect(chosen(narrowed)).toEqual([]);
+    expect(chosen(retainSelection(state, order))).toEqual(["r4"]);
+    expect(chosen(retainSelection(clearSelection(state), order))).toEqual([]);
+  });
+
   it("drops an anchor the set no longer shows", () => {
     const state = pressSelection(emptySelection, "r4", "replace", order);
     expect(retainSelection(state, ["r1"]).anchor).toEqual(Option.none());

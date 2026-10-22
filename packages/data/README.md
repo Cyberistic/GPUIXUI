@@ -29,7 +29,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | No canvas drawing | `chart-raster` | A chart is stacked `<svg>` (one tint each) or an `<img>` pixel buffer; see §Charts in plan 610. |
 | Wheel moves every scrollable ancestor | `nested-scroll-lifecycle` | The table's `height` bounds the table; the body owns the vertical wheel. |
 | Chord presses arrive on `click` | `modifier-select-lifecycle` | Selection reads `event.modifiers.{shift,cmd,ctrl}`; the anchor rules are `selection/logic`. |
-| A hidden row's selection must be cleared | `table-filter-lifecycle` | `narrowTable` releases it in the same commit; `useTable` does the same for a sort/filter change. |
+| A hidden row's selection is released at render, not erased | `table-filter-lifecycle` | `narrowTable` releases it in the same commit, and `useTable` computes `retainSelection(chosen, keys)` during render, so the first frame after a query change paints the released set. The retention is **not** a write: the chosen records are still held, so a query that widens back to them paints them chosen again (measured: `1 rows · 0 selected` → a whole-set query → `60 rows · 2 selected`). A grid that needs a permanent clear calls `clear()` on the change. |
 | Column changes are app state | `table-columns-lifecycle` | Hiding a column takes its width out of the content and shifts every later column by exactly that width; a move changes the order and not the width. The header and the cells read one `columns.visible` list. |
 | A resize divider arms the capture | `column-resize-lifecycle` | `TableColumnDivider` listens to `onMouseDown` **and** `onMouseMove`, holds the press in a ref, and reads the width at each press. Its width is clamped to the column's own bounds. |
 | A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. A tree's chevron is an `<svg>` that takes no press, so the row answers; a checkbox in a row paints, so it takes its own. |
@@ -37,6 +37,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A painted row that grows re-measures | `virtual-list-expand` | An expandable row opens a **sibling** detail row (no row span on 0.11.0): the rows below shift by the growth, and a fixed-estimate `itemCount` window cannot express it — use the plain table or the list's children mode. |
 | `<svg source>` is one tinted mask | `chart-raster`, `content-surfaces` | A chart is **one `<svg>` per series**, each carrying its series in the plot's viewBox and tinted through `style.color`; labels and the legend are text. A translucent mark that must sit over another uses the raster route (`setImagePixels`), not two masks. |
 | A list builds only a window | `virtual-list-lifecycle`, `virtual-list-windowed` | `VirtualList` wraps the host element: children mode retains every React child and skips build/paint off screen; `itemCount` + `estimatedItemHeight` + `windowStart` retains only the app's slice. A list sizes its viewport from a definite height. |
+| A shrinking set re-clamps the window | `virtual-table-lifecycle` | A scroll offset belongs to the set it was measured against. `useVirtualRows` clamps it to `count × rowHeight − viewport` before the window is computed, so a filter that narrows the set under a reader at row 900 lands on the narrowed set's end with the viewport still full — the core alone clamps the stale offset to the content's end and mounts five rows in a nine-row viewport. |
 | `onVisibleRange` lags the paint | `virtual-list-windowed` | The reported range is **not** the window's source: the window follows the runtime's **scroll anchor** (`getListScrollTop`), which is exact even while the row heights are estimates. A window built from the reported range paints blank rows. |
 | A reveal moves the window first | `virtual-list-windowed` | `useVirtualRows` moves the window to the row's own position in the same render, and the body scrolls to it in the layout effect after that commit. |
 
@@ -162,7 +163,10 @@ the reveal needs. `VirtualList` paints no chrome: a row is the caller's `div` or
 A **table** over a long set composes that list with the measured fixed header.
 `VirtualTable` owns the window: it reads the runtime's scroll anchor, hands the
 offset and the measured body height to `@tanstack/virtual-core`, and gives the
-runtime the `windowStart` the range produced.
+runtime the `windowStart` the range produced. The offset is clamped to the rows
+the current `count` holds before the window is computed, so a filter that
+shrinks the set under the reader lands on the narrowed set's end with the
+viewport still full rather than on the old offset's tail.
 
 ```tsx
 <VirtualTable

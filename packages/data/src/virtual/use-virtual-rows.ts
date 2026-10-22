@@ -16,6 +16,7 @@
 import * as Option from "effect/Option";
 import { useCallback, useMemo, useState } from "react";
 import {
+  clampScrollOffset,
   createWindowCalculator,
   type VirtualWindow,
   type WindowSpec,
@@ -95,8 +96,15 @@ export const useVirtualRows = ({
     Option.none(),
   );
 
-  const window = calculator.at(scrollOffset);
-  const mounted = calculator.indicesAt(scrollOffset);
+  const spec = { count, rowHeight, viewportHeight, overdraw };
+  const offset = clampScrollOffset(spec, scrollOffset);
+  // A narrowed set makes the offset the reader left unreachable. The runtime
+  // clamps its own scroll to the new content, so the window commits that clamp
+  // in this render rather than holding rows the set no longer has.
+  if (offset !== scrollOffset) setScrollOffset(offset);
+
+  const window = calculator.at(offset);
+  const mounted = calculator.indicesAt(offset);
 
   const revealTo = useCallback(
     (index: number) => {
@@ -119,7 +127,7 @@ export const useVirtualRows = ({
     window,
     windowStart: window.start,
     mounted,
-    scrollOffset,
+    scrollOffset: offset,
     setScrollOffset,
     reveal: revealTo,
     scrollTarget,
