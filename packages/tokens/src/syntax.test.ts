@@ -377,4 +377,28 @@ describe("the syntax palette", () => {
     expect(houseAudit.syntax).toEqual([]);
     expect(houseAudit.passed).toBe(true);
   });
+
+  it("says the palette the native hosts paint is this package's", () => {
+    // The `Native text hosts` row said the syntax palette "stays the runtime's,
+    // because no token exists for them" — written before this package shipped
+    // one. `nativeTextTheme` hands `host.syntax` and the host paints those
+    // colours, so a reader of the row skipped the palette the seam exists for
+    // and believed a light theme's block was still the runtime's dark default.
+    // What genuinely stays the runtime's is the tokenizer and the numbers around
+    // the code, and the row names those instead.
+    const row =
+      read("../../../COMPONENTS.md")
+        .split("\n")
+        .find((line) => line.startsWith("| Native text hosts |")) ?? "";
+
+    expect(row).toContain("`syntaxColors(theme)`");
+    expect(row).not.toContain("the syntax palette stay the runtime's");
+    expect(row).not.toContain(
+      "the syntax palette, gutters, diff paddings and table column minima stay",
+    );
+    // The hand-off it names is the one the seam makes.
+    expect(nativeTextTheme(lightTheme).syntax).toEqual(
+      syntaxColors(lightTheme),
+    );
+  });
 });
