@@ -3194,7 +3194,9 @@ the export sweep walks, and holds the unit and the reduced-duration line to the
 source. Four directions measured: `normal: 240` fails with `[ [ 'normal', '200' ] ]`,
 `exit: "easeOut"` fails with `[ [ 'exit', 'easeIn' ] ]`, a planted `ghostTiming`
 export fails the export sweep naming it, and rewording the unit to milliseconds
-fails the unit case. Suite 72 files / 646 tests, `check-types` and `build` green.
+fails the unit case. Suite 72 files / 646 tests, `check-types` and `build`
+green. Verified in the dev server: `/docs/motion#house-timing` renders both
+tables and `/api/search?query=House%20timing` returns the heading.
 
 `[x]` Publish the **window selection event** a probe measured — the runtime's only
 route that tells the app a reader picked something is
@@ -3217,7 +3219,9 @@ the record row fails the verdict case and the lane case (`no row named Window
 selection event`), removing the page row fails `the page's measured table has no
 window-selection row`, dropping the id from §5 fails the cited-probe case naming
 it, and removing the lane bullet fails by name. Suite 72 files / 645 tests,
-`check-types` and `build` green.
+`check-types` and `build` green. Verified in the dev server: `/docs/runtime`
+renders the row, `/docs/data-display` the rule, and
+`/api/search?query=onSelectionChange` returns the lane bullet.
 
 `[x]` Curate the **Card** page and correct what a card actually paints — the
 site served `packages/components/docs/card.mdx`, which said the outline edge was
@@ -4079,7 +4083,9 @@ numbers).
   - `[x]` `reveal` — `Reveal` is the house entrance as a component: fade plus a relative `top`/`left` offset, on mount or on an `open` change (the subtree unmounts after its exit), `from` names the edge, `distance`/`delayMs`/`level` shape the arrival, and the reduced preference paints at rest at once; `src/reveal/frames.ts` + its unit suite, `src/behaviour/reveal.test.tsx` (7), `docs/reveal.mdx`, the example and the row. Covers the catalogue's **fade** and **slide**, which are the same primitive with a different edge. Measured: a wrong edge sign fails the direction case, a "none" that moves fails the fade-only case, and an entry that paints at rest fails the arrival case
   - `[-]` `zoom`, `blur` — cancelled with evidence: a zoom is a `transform: scale` and a blur is a `filter`, and `@gpuix/native@0.11.0`'s `StyleDesc` has neither (upstream issue #102), so `Reveal` offers the edges it can paint instead of imitating them
   - `[x]` `scroll-fade` / `scroll-progress` — the two scroll readings, measured from the runtime's clamped `onScrollChange` offset plus the viewport's and content's `onLayout` heights (`src/scroll/metrics.ts` + its unit suite). `ScrollFade` paints a two-stop `linear-gradient` over the overflowed edges (bottom while more is below, top once the reader leaves the start, neither when the content fits), the opaque stop is the caller's surface role and the strips take `pointerEvents: "none"`; `ScrollProgress` is a `progressbar` line on the top or bottom edge whose fill is the rounded travelled fraction, so content that fits reads `0%` and a growing list moves the reading by itself. Both components share `src/internal/scroll-surface.tsx`; `src/behaviour/scroll-fade.test.tsx` (5) and `src/behaviour/scroll-progress.test.tsx` (6) drive the real renderer through `scrollTo`, and the entry graph moves 106 → 110 modules. Limitations recorded: not keyboard scroll regions (`ScrollArea` is), vertical only, and the edges follow the offset rather than tweening (a scroll position is a direct reading, so there is nothing for `MotionProvider` to reduce). Docs pages, examples, inventory records and `COMPONENTS.md` rows landed
-`[ ]` Interaction effects: magnetic, tilt, click, ripple-button, icon-button, flip-button, liquid-button, shine
+`[~]` Interaction effects: magnetic, tilt, click, ripple-button, icon-button, flip-button, liquid-button, shine
+  - `[x]` `ripple-button` — `RippleButton` is the local action plus one layer: a press paints a disc born at the press point whose `width`, `height`, `left`, `top` and `borderRadius` tween together until it covers the control, fading from 28% to nothing, then unmounting — inset geometry rather than a scale, because the runtime has no `transform`. The wash is the action's own **label ink** (`actionOnColor`), the layer takes `pointerEvents: "none"` so the press it marks still reaches the action, a keyboard activation ripples from the centre, and the reduced preference paints no disc at all; `src/ripple-button/logic.ts` + its unit suite (9), `src/behaviour/ripple-button.test.tsx` (7), `docs/ripple-button.mdx`, the example and the row. Measured: the disc off-centre fails the centre case, a disc that outlives its tween fails the removal case, and a fill-coloured wash fails the ink case
+  - `[ ]` magnetic, tilt, click, icon-button, flip-button, liquid-button, shine — magnetic/tilt/flip need `transform` (issue #102); the rest are unclaimed
 `[ ]` Media and collections: image-zoom, avatar-group, pinned-list, motion-grid, particles
 `[ ]` Backgrounds: bubble, fireworks, glyph, gradient, gravity-stars, hexagon, hole, stars, topography
 `[ ]` Blocks: code-block, copy-button, page-transition, theme-toggler (github-stars declined)
