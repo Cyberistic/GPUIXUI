@@ -47,9 +47,11 @@ sets both sides of the square from `density.controlHeight`.
 - `disabled` — refuses a press and both keys, and leaves the tab order. A filled
   `variant` wears the same neutral pair a `Button` does; the default `ghost`
   keeps the fade, since it has no fill to collapse into.
-- `loading` — paints a spinner, announces `Loading`, refuses activation, and
-  **stays focusable** so a keyboard user is not dropped mid-action. The spinner's
-  motion is the caller's: `reducedMotion` holds it still, exactly as on `Button`.
+- `loading` — paints a spinner, announces the busy word (default `Loading`),
+  refuses activation, and **stays focusable** so a keyboard user is not dropped
+  mid-action. `loadingLabel` is that word, reaching the description and the
+  spinner's name. The spinner's motion is the caller's: `reducedMotion` holds it
+  still, exactly as on `Button`.
 
 ## API
 
@@ -60,7 +62,8 @@ sets both sides of the square from `density.controlHeight`.
 | `variant` | `ButtonVariant` | `"ghost"` | the paint from `core/variants.ts` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | square side from `density.controlHeight` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
-| `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
+| `loading` | `boolean` | `false` | spinner, busy description, blocks activation |
+| `loadingLabel` | `string` | `"Loading"` | the busy word, announced as the description and the spinner's name |
 | `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
 | `onActivate` | `(event: EventPayload) => void` | none | click or activating key, with the event that caused it; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
@@ -97,7 +100,8 @@ action: the runtime's `click` payload (with the press point) for a pointer, the
 - Role: `button`, named by `label`. The glyph is passed through `icon` rather
   than as a child, so it is never mistaken for the name — and an unlabelled
   `Icon` stays `role="presentation"`.
-- `loading` sets `aria-description="Loading"`; this runtime has no `aria-busy`.
+- `loading` sets `aria-description` to `loadingLabel` (default `Loading`); this
+  runtime has no `aria-busy`.
 - There is no `aria-disabled`: a disabled action leaves the tab order instead.
 - Focus is the keyboard-only outline `Button` declares at rest
   (`keyboardRing` → `focusVisible`), so a Tab paints it and a mouse press does
@@ -143,7 +147,8 @@ after the recipe, so a callback is the last word:
 
 - `src/components/IconButton.test.tsx` — the label is the name, the box is
   square at the density height, ghost is the default, the activation contract
-  and busy/disabled refusals hold, the activation event reaches `onActivate` as
+  and busy/disabled refusals hold, the caller's busy word reaches both channels,
+  the activation event reaches `onActivate` as
   it does on `Button`, an attached group squares its corners, the busy spinner
   receives the caller's `reducedMotion`, the tooltip trigger pair reaches its
   `Button`, and the caller's `style` wins; a trigger's `ref` and `aria-expanded`

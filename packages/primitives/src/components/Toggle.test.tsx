@@ -286,6 +286,29 @@ describe("Toggle", () => {
     ).toBe(true);
   });
 
+  it("says the busy state in the caller's words, in both channels", () => {
+    // Bug guarded: a busy toggle announced the English "Loading" in its
+    // description and its spinner's name, with no way to localise either.
+    const element = renderToggle(
+      { loading: true, label: "Sync", loadingLabel: "Wird geladen" },
+      testTheme,
+      state(false),
+      idle,
+      () => {},
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Wird geladen",
+    );
+    expect(
+      expectSome(
+        elementProp(
+          elementChildren(element)[0] ?? expect.fail("no busy spinner"),
+          "label",
+        ),
+      ),
+    ).toBe("Wird geladen");
+  });
+
   it("gives a pressed toggle's spinner the accent's on-colour", () => {
     // A pressed toggle paints the accent role; the default brand spinner on it
     // would be the same 1.00:1-class defect the filled button had. A disabled

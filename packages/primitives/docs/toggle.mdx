@@ -34,7 +34,8 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | from the density scale |
 | `square` | `boolean` | `false` | equal width and height, for an icon-only toggle |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
-| `loading` | `boolean` | `false` | a spinner in the leading slot, announced as "Loading", activation refused; stays focusable |
+| `loading` | `boolean` | `false` | a spinner in the leading slot, the busy word announced, activation refused; stays focusable |
+| `loadingLabel` | `string` | `"Loading"` | the busy word, announced as the description and the spinner's name; a blank one announces nothing |
 | `reducedMotion` | `boolean` | — | holds the busy spinner's lit dot (the runtime exposes no preference) |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label (replaced by the spinner while busy) |
 | `label` | `string` | none | accessible name; required when icon-only |
@@ -107,8 +108,9 @@ A **busy** toggle renders a `Spinner` where its leading icon would be, in the
 accent's own on-colour while pressed (a brand dot on the pressed face is 1.00:1),
 and in the neutral pair while it is both pressed and disabled. The spinner is
 `Sm` on the icon scale and takes the caller's `reducedMotion`; the toggle's
-`aria-description` becomes `"Loading"` so the state is announced, and the control
-stays focusable while refusing every press and key.
+`aria-description` becomes `loadingLabel` (`"Loading"` unless the caller names
+it) so the state is announced, and the control stays focusable while refusing
+every press and key.
 
 `style` takes a `StateStyle<ToggleState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, selected }` and returns one. `selected` is the
@@ -129,7 +131,8 @@ last word on a property the recipe also sets.
 
 - `src/components/Toggle.test.tsx` — role and value text, no `aria-pressed`,
   the busy spinner and its accent (pressed, unpressed and disabled pressed), the
-  announced `"Loading"` and refused activation while busy, the reduced-motion
+  announced busy word and refused activation while busy, a caller's word
+  replacing the default, the reduced-motion
   forwarding,
   the pressed paint from the accent role, the derived opaque hover/press fills
   and the label floors on them, the disabled pressed neutral pair, the outline

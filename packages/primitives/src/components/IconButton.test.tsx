@@ -175,6 +175,28 @@ describe("IconButton", () => {
     expect(expectSome(hostProp(loading, "aria-description"))).toBe("Loading");
   });
 
+  it("forwards the caller's busy words to its button", () => {
+    // Bug guarded: `IconButton` narrows `Button`'s props, so a prop it does not
+    // name is dropped — a localised icon action would still say "Loading".
+    const loading = resting({
+      label: "Saving",
+      icon: glyph,
+      loading: true,
+      loadingLabel: "Enregistrement",
+    });
+    expect(expectSome(hostProp(loading, "aria-description"))).toBe(
+      "Enregistrement",
+    );
+    expect(
+      expectSome(
+        elementProp(
+          elementChildren(loading)[0] ?? expect.fail("no busy spinner"),
+          "label",
+        ),
+      ),
+    ).toBe("Enregistrement");
+  });
+
   it("hands the busy spinner the caller's reduced-motion preference", () => {
     // The bug guarded: `Button` forwarded `reducedMotion` to its spinner while
     // `IconButton` — the same `Button` with an icon slot — dropped it, so a

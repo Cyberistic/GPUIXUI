@@ -54,6 +54,11 @@ export interface IconButtonProps
   readonly disabled?: boolean;
   /** Busy: shows a spinner and blocks activation, but stays focusable. */
   readonly loading?: boolean;
+  /**
+   * The words a busy icon button announces — its `aria-description` and the
+   * spinner's name. Defaults to `Loading`; a blank label announces nothing.
+   */
+  readonly loadingLabel?: string;
   /** Holds the busy spinner's lit dot, for a reader who asked for no motion. */
   readonly reducedMotion?: boolean;
   /**
@@ -81,6 +86,7 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
     size,
     disabled,
     loading,
+    loadingLabel,
     reducedMotion,
     label,
     icon,
@@ -106,6 +112,7 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
     square: true,
     disabled,
     loading,
+    loadingLabel,
     reducedMotion,
     label,
     leading: icon,

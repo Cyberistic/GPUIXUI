@@ -78,9 +78,11 @@ keeps the text floor on both fills.
   `ghost` or `link` action has no fill to collapse into and keeps the fade.
 - `loading` — shows a spinner in the variant's own on-colour (a busy primary
   button paints `primaryForeground`, not a brand dot on a brand fill), announces
-  `Loading`, refuses activation, and **stays focusable** — unless it is also
-  `disabled`, which wins the tab stop because a disabled control declares no
-  ring. A disabled busy button
+  the busy word (default `Loading`), refuses activation, and **stays focusable** —
+  unless it is also `disabled`, which wins the tab stop because a disabled control
+  declares no ring. `loadingLabel` is that word: it reaches both the description
+  and the spinner's name, and a blank one announces nothing, for an interface
+  that says the state elsewhere. A disabled busy button
   paints the neutral pair, so its spinner moves to `on-disabled`
   (`disabledForeground`). `reducedMotion` reaches that spinner, because the busy
   state is the only part of a button that moves; the runtime exposes no
@@ -95,14 +97,15 @@ keeps the text floor on both fills.
 | `square` | `boolean` | `false` | icon-only geometry |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
-| `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
+| `loading` | `boolean` | `false` | spinner, busy description, blocks activation |
+| `loadingLabel` | `string` | `"Loading"` | the busy word, announced as the description and the spinner's name; a blank one announces nothing |
 | `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `(event: EventPayload) => void` | none | click or activating key, with the event that caused it; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
 | `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
-| `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here, and a busy button announces `Loading` instead |
+| `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here, and a busy button announces `loadingLabel` (`Loading`) instead |
 | `ref` | `Ref<PublicInstance>` | — | the element itself: a trigger anchors the surface it opens to it |
 | `aria-expanded` / `aria-selected` | `boolean` | — | announced state — an open menu or popover, and the current page |
 | other host props | `ActionHostProps` | — | forwarded unchanged (`onMouseDown`/`onMouseMove`/`onMouseUp`, `onLayout`, `autoFocus`, …) |
@@ -179,7 +182,10 @@ container) does not run while activation waits for the release.
 - Role: `button`; the name comes from `label`, or from a plain text child when
   `label` is absent or blank — a blank label is omitted rather than published as
   an empty name.
-- `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
+- `loading` sets `aria-description` to `loadingLabel` (default `Loading`) —
+  this runtime has no `aria-busy`. The same word names the spinner, and a blank
+  one announces neither, so an interface that reports the state in its own live
+  region is not told it twice in English.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.
 - Focus is a **keyboard-only outline**: the button declares `focusVisible`
@@ -282,7 +288,8 @@ the dim back with `style`, which merges last.
   five component modules rather than reaching the barrel.
 - `src/core/keyboard.test.ts` — the Enter/Space/held rules as pure decisions.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
-  loading description, a busy filled button handing its spinner the fill's
+  loading description and its caller-supplied word in both channels (with a
+  blank one announcing nothing), a busy filled button handing its spinner the fill's
   on-colour, a `style` callback receiving the live state and winning over the
   recipe, the filled actions opting out of the keyboard dim (the collapsed
   pair is named per mode; `outline`/`ghost`/`link` keep it), a `link`'s

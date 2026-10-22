@@ -491,6 +491,19 @@ it("refuses to activate a loading Button, and still announces itself busy", asyn
   ).toBe(true);
 });
 
+it("announces a busy Button in the caller's words", async () => {
+  // Bug guarded: the runtime's accessibility dump carried the hardcoded English
+  // "Loading" as the button's description, so a localised action was announced
+  // in a language its interface never uses.
+  const { runtime } = await renderButton({
+    loading: true,
+    label: "Save",
+    loadingLabel: "Chargement",
+  });
+  expect(descriptions(runtime)).toContain("Chargement");
+  expect(descriptions(runtime)).not.toContain("Loading");
+});
+
 it("names a Button by its text child", async () => {
   const runtime = await openWindow();
   runtime.render(

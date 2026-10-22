@@ -71,6 +71,11 @@ export interface ToggleProps
    */
   readonly loading?: boolean;
   /**
+   * The words a busy toggle announces — its `aria-description` and the
+   * spinner's name. Defaults to `Loading`; a blank label announces nothing.
+   */
+  readonly loadingLabel?: string;
+  /**
    * Hold the busy spinner's lit dot. The runtime exposes no reduced-motion
    * preference, so the caller passes its own.
    */
@@ -108,6 +113,7 @@ export const renderToggle = (
 ): ReactElement => {
   const { size = "md", variant = "default" } = props;
   const busy = props.disabled === true || props.loading === true;
+  const loadingWord = props.loadingLabel ?? "Loading";
   const toggle = (): void => {
     if (busy) return;
     onPressedChange(!state.current);
@@ -150,7 +156,7 @@ export const renderToggle = (
       // explicit `description` is the field-style help and wins.
       aria-description={
         props.loading === true
-          ? "Loading"
+          ? accessibleName(loadingWord)
           : (accessibleName(props.description) ??
             accessibleName(props["aria-description"]))
       }
@@ -172,7 +178,7 @@ export const renderToggle = (
         <Spinner
           size={theme.iconSize.sm}
           accent={toggleSpinnerAccent(state.current, props.disabled === true)}
-          label="Loading"
+          label={loadingWord}
           reducedMotion={props.reducedMotion}
         />
       ) : (

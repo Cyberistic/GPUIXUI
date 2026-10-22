@@ -314,6 +314,36 @@ describe("Button", () => {
     expect(expectSome(hostProp(busy, "aria-description"))).toBe("Loading");
   });
 
+  it("says the busy state in the caller's words, in both channels", () => {
+    // Bug guarded: `loading` replaced the caller's help with the English word
+    // "Loading" in the description and the spinner's name, so a localised
+    // interface could not say what was happening to the action.
+    const localised = resting({ loading: true, loadingLabel: "Chargement" });
+    expect(expectSome(hostProp(localised, "aria-description"))).toBe(
+      "Chargement",
+    );
+    expect(
+      expectSome(
+        elementProp(
+          elementChildren(localised)[0] ?? expect.fail("no busy spinner"),
+          "label",
+        ),
+      ),
+    ).toBe("Chargement");
+    // A blank word is no word: the caller says the state somewhere else, and
+    // `Spinner` publishes no name for a blank label (its own suite holds that).
+    const silent = resting({ loading: true, loadingLabel: "" });
+    expect(Option.isNone(hostProp(silent, "aria-description"))).toBe(true);
+    expect(
+      expectSome(
+        elementProp(
+          elementChildren(silent)[0] ?? expect.fail("no busy spinner"),
+          "label",
+        ),
+      ),
+    ).toBe("");
+  });
+
   it("gives a busy button a spinner that reads on its fill", () => {
     // The bug: a filled button rendered the default brand spinner on its own
     // brand fill (1.00:1), so the busy indicator disappeared.

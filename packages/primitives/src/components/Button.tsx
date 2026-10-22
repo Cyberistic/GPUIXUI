@@ -78,6 +78,13 @@ export interface ButtonProps
    */
   readonly loading?: boolean;
   /**
+   * The words a busy button announces — its `aria-description` and the
+   * spinner's name. Defaults to `Loading`; a blank label announces nothing, for
+   * an interface that says the state somewhere else. This runtime has no
+   * `aria-busy`, so this description is the busy channel.
+   */
+  readonly loadingLabel?: string;
+  /**
    * Hold the busy spinner's lit dot. The runtime exposes no reduced-motion
    * preference, so the caller passes its own; it reaches the spinner and
    * nothing else, because a button paints no other motion.
@@ -143,6 +150,7 @@ export const renderButton = (
     fullWidth,
     disabled,
     loading,
+    loadingLabel,
     reducedMotion,
     leading,
     trailing,
@@ -165,6 +173,9 @@ export const renderButton = (
     ...host
   } = props;
   const busy = isBusy({ disabled, loading });
+  // The busy words are the caller's: a localised interface must not announce an
+  // English state word. A blank label silences the announcement.
+  const loadingWord = loadingLabel ?? "Loading";
   const activate = (event: EventPayload): void => {
     if (busy) return;
     onActivate?.(event);
@@ -214,7 +225,9 @@ export const renderButton = (
       role="button"
       aria-label={accessibleName(label) ?? childrenName(children)}
       aria-description={
-        loading === true ? "Loading" : accessibleName(description)
+        loading === true
+          ? accessibleName(loadingWord)
+          : accessibleName(description)
       }
       tabIndex={
         // A busy button stays focusable so a keyboard reader is not dropped
@@ -238,7 +251,7 @@ export const renderButton = (
         <Spinner
           size={theme.iconSize.sm}
           accent={variantSpinnerAccent(variant, disabled)}
-          label="Loading"
+          label={loadingWord}
           reducedMotion={reducedMotion}
         />
       ) : (
