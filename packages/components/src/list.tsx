@@ -83,7 +83,7 @@ import {
   typedChar,
 } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlRing, useTheme } from "./internal/theme.js";
+import { controlRing, pressWash, useTheme } from "./internal/theme.js";
 import { keyOrigin } from "./list/origin.js";
 import { useTypeahead } from "./internal/typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
@@ -795,7 +795,7 @@ export const ListItem = ({
                   ? {}
                   : {
                       hover: { backgroundColor: theme.colors.accent },
-                      active: { backgroundColor: theme.colors.active },
+                      active: { backgroundColor: pressWash(theme, "accent") },
                     }),
               }
             : {}),

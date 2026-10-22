@@ -33,6 +33,7 @@ import {
 import {
   ThemeProvider,
   messageLink,
+  pressWash,
   tone,
   toneSurface,
   useTheme,
@@ -47,6 +48,22 @@ const read = (relative: string): string =>
 const themes: ReadonlyArray<readonly [string, Theme]> = [
   ["light", lightTheme],
   ["dark", darkTheme],
+];
+
+/** The sixteen styles the token package ships: base, high contrast, platform, look. */
+const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
+  ["light", lightTheme],
+  ["dark", darkTheme],
+  ["high-contrast light", Tokens.highContrastLightTheme],
+  ["high-contrast dark", Tokens.highContrastDarkTheme],
+  ...Arr.flatMap(Tokens.platformNames, (name) => [
+    [`${name} light`, Tokens.platformTheme(lightTheme, name)] as const,
+    [`${name} dark`, Tokens.platformTheme(darkTheme, name)] as const,
+  ]),
+  ...Arr.flatMap(Tokens.retroNames, (look) => [
+    [`${look} light`, Tokens.retroTheme(lightTheme, look)] as const,
+    [`${look} dark`, Tokens.retroTheme(darkTheme, look)] as const,
+  ]),
 ];
 
 describe("tone", () => {
@@ -119,22 +136,6 @@ describe("messageLink", () => {
     danger: "destructiveSoft",
   } as const;
 
-  /** The sixteen styles the token package ships: base, high contrast, platform, look. */
-  const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
-    ["light", lightTheme],
-    ["dark", darkTheme],
-    ["high-contrast light", Tokens.highContrastLightTheme],
-    ["high-contrast dark", Tokens.highContrastDarkTheme],
-    ...Arr.flatMap(Tokens.platformNames, (name) => [
-      [`${name} light`, Tokens.platformTheme(lightTheme, name)] as const,
-      [`${name} dark`, Tokens.platformTheme(darkTheme, name)] as const,
-    ]),
-    ...Arr.flatMap(Tokens.retroNames, (look) => [
-      [`${look} light`, Tokens.retroTheme(lightTheme, look)] as const,
-      [`${look} dark`, Tokens.retroTheme(darkTheme, look)] as const,
-    ]),
-  ];
-
   it("derives against the tone's own soft role", () => {
     Arr.forEach(everyStyle, ([name, theme]) => {
       Arr.forEach(tones, (value) => {
@@ -176,6 +177,72 @@ describe("messageLink", () => {
     );
 
     expect(problems).toEqual([]);
+  });
+});
+
+describe("pressWash", () => {
+  const replacements = ["accent", "hover"] as const;
+
+  it("derives each press against the wash it replaces", () => {
+    Arr.forEach(everyStyle, ([name, theme]) => {
+      Arr.forEach(replacements, (replaced) => {
+        const pressed = pressWash(theme, replaced);
+        expect(pressed, `${name} ${replaced}`).toBe(
+          Tokens.pointerWash(theme, "active", replaced),
+        );
+        expect(
+          Tokens.contrastRatio(pressed, theme.colors[replaced]) ?? 0,
+          `${name} ${replaced}`,
+        ).toBeGreaterThanOrEqual(Tokens.decorativeFloor);
+      });
+    });
+  });
+
+  it("paints the authored role where the palette already answers the pointer", () => {
+    // Zero is a step: the derivation only moves a palette that cannot answer.
+    Arr.forEach(themes, ([name, theme]) => {
+      Arr.forEach(replacements, (replaced) => {
+        expect(pressWash(theme, replaced), `${name} ${replaced}`).toBe(
+          theme.colors.active,
+        );
+      });
+    });
+  });
+
+  it("repairs the shipped styles whose press was the wash it replaced", () => {
+    // Measured over the sixteen styles: six painted the press in the wash the
+    // row already wore (Light · macOS's `active` sat 1.026:1 from the `accent`
+    // a hovered list row wears), and Light · macOS's press in its `hover` made
+    // seven. Each is repaired by the derivation and not by the role.
+    const repaired = [
+      ["Light · macOS", Tokens.platformTheme(lightTheme, "darwin"), "accent"],
+      ["Dark · macOS", Tokens.platformTheme(darkTheme, "darwin"), "accent"],
+      ["Dark · Linux", Tokens.platformTheme(darkTheme, "linux"), "accent"],
+      ["Dark · Windows", Tokens.platformTheme(darkTheme, "win32"), "accent"],
+      [
+        "Windows XP (Luna) light",
+        Tokens.retroTheme(lightTheme, "luna"),
+        "accent",
+      ],
+      [
+        "Windows 7 (Aero) light",
+        Tokens.retroTheme(lightTheme, "aero"),
+        "accent",
+      ],
+      ["Light · macOS hover", Tokens.platformTheme(lightTheme, "darwin"), "hover"],
+    ] as const;
+
+    Arr.forEach(repaired, ([name, theme, replaced]) => {
+      const strip = theme.colors[replaced];
+      expect(
+        Tokens.contrastRatio(theme.colors.active, strip) ?? 0,
+        name,
+      ).toBeLessThan(Tokens.decorativeFloor);
+      expect(
+        Tokens.contrastRatio(pressWash(theme, replaced), strip) ?? 0,
+        name,
+      ).toBeGreaterThanOrEqual(Tokens.decorativeFloor);
+    });
   });
 });
 

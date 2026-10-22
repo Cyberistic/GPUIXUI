@@ -229,7 +229,9 @@ The surface compiles shadcn's fixed metrics: `colors.popover` /
 and the lift are two declarations the runtime paints as one shadow list.
 Rows are `controlHeight(theme, "sm")` tall, paint the fixed 14/20 `text-sm` step
 at weight 500, and highlight with `colors.hover` plus a 2px left bar in
-`colors.accent`. A disabled row paints `colors.disabledForeground` — the role
+`colors.accent`; a press paints **`pointerWash(theme, "active", "hover")`**,
+derived against the highlight it replaces (Light · macOS's raw `active` sat
+1.037:1 from its `hover`). A disabled row paints `colors.disabledForeground` — the role
 `contrastPairs` measures on the popover — and drops its hover and press fills.
 It is **not** faded: a 50% fade composites the label into the row's own fill,
 which a high-contrast theme can no longer read at the 3:1 it asks of the pair.
@@ -273,7 +275,7 @@ above — needs no override.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (40
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (41
 tests): the `menu` role, a leaving surface no longer taking presses, keyboard opening on the first/last enabled row, a
 disabled trigger that stays out of the tab order and refuses ArrowDown, Enter and
 a press, a

@@ -33,6 +33,7 @@ import {
   keyboardFocusRing,
   lightTheme,
   nativeTextTheme,
+  pointerWash,
   statusTone,
   syntaxColors,
   targetSize,
@@ -41,6 +42,7 @@ import {
   type ElevationLevel,
   type NativeTextFill,
   type PlatformName,
+  type PointerWashSurface,
   type StatusTone,
   type SyntaxColors,
   type SyntaxRole,
@@ -118,6 +120,29 @@ export const controlRing = (
   theme: Theme,
   state: ControlRingState = {},
 ): StyleDesc => controlFocusRing(theme, state) ?? {};
+
+/**
+ * The fill a row paints while the pointer holds it down.
+ *
+ * A press **replaces** the wash the row is already wearing — a list row's
+ * `accent` under the pointer, a menu or collapsible row's `hover` — so the two
+ * roles have to differ from each other, not merely from the strip. Measured over
+ * the sixteen shipped, high-contrast, platform and authored styles, six painted
+ * a press in the wash it replaced (macOS light's `active` sat 1.026:1 from the
+ * `accent` a hovered list row wears, macOS dark 1.011:1), so the press was
+ * invisible exactly where a reader had already pointed.
+ *
+ * `pointerWash` takes the smallest move toward the theme's `foreground` that
+ * clears `decorativeFloor` against `replaced`, and never one that costs a label
+ * the floor it holds; a palette whose own wash already answers the pointer is
+ * painted as authored. A theme restored from storage can lack a role the
+ * derivation needs — `pointerWash` answers `undefined` there and the press falls
+ * back to the theme's own `active` role, the absence rule every contract follows.
+ */
+export const pressWash = (
+  theme: Theme,
+  replaced: PointerWashSurface,
+): string => pointerWash(theme, "active", replaced) ?? theme.colors.active;
 
 /**
  * The wash behind text a reader selects.

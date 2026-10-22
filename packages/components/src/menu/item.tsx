@@ -28,7 +28,12 @@ import {
   type ReactNode,
 } from "react";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
-import { controlHeight, statusTone, useTheme } from "../internal/theme.js";
+import {
+  controlHeight,
+  pressWash,
+  statusTone,
+  useTheme,
+} from "../internal/theme.js";
 import {
   assertParts,
   type PartChildren,
@@ -112,7 +117,9 @@ export const menuRowStyle = (
     ...(color === undefined ? {} : { color }),
     cursor: disabled ? "not-allowed" : "pointer",
     hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
-    active: disabled ? undefined : { backgroundColor: theme.colors.active },
+    active: disabled
+      ? undefined
+      : { backgroundColor: pressWash(theme, "hover") },
   };
 };
 

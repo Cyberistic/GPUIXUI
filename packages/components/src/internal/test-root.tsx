@@ -10,12 +10,24 @@
 
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
 import type { ReactNode } from "react";
-import { darkTheme, lightTheme, ThemeProvider } from "./theme.js";
+import {
+  darkTheme,
+  lightTheme,
+  ThemeProvider,
+  type Theme,
+} from "./theme.js";
 
 const testThemes = { light: lightTheme, dark: darkTheme } as const;
 
 /** A theme a behaviour suite can render under. */
 export type TestTheme = keyof typeof testThemes;
+
+/**
+ * What a behaviour suite may pass as the theme: a base theme's name, or a
+ * resolved `Theme` a case derives (`platformTheme(lightTheme, "darwin")`) when
+ * the paint under test only differs in a style the two base themes do not carry.
+ */
+export type RenderTheme = TestTheme | Theme;
 
 /** A native test root, rerenderable under the theme it was created with. */
 export interface ComponentTestRoot {
@@ -51,7 +63,7 @@ let mounted = false;
  */
 export const renderComponent = (
   node: ReactNode,
-  theme: TestTheme = "dark",
+  theme: RenderTheme = "dark",
 ): ComponentTestRoot => {
   if (mounted) {
     throw new Error(
@@ -59,11 +71,10 @@ export const renderComponent = (
     );
   }
 
+  const resolved = typeof theme === "string" ? testThemes[theme] : theme;
   const root = createTestRoot({ width: 1280, height: 800 });
   const render = (next: ReactNode): void => {
-    root.render(
-      <ThemeProvider theme={testThemes[theme]}>{next}</ThemeProvider>,
-    );
+    root.render(<ThemeProvider theme={resolved}>{next}</ThemeProvider>);
   };
 
   render(node);

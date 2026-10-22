@@ -35,12 +35,17 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
-import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
+import {
+  contrastFloors,
+  contrastRatio,
+  decorativeFloor,
+  platformTheme,
+} from "@gpuixui/tokens";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
-import { darkTheme, lightTheme } from "../internal/theme.js";
+import { darkTheme, lightTheme, pressWash } from "../internal/theme.js";
 import {
   clickCentreOf,
   waitFor,
@@ -594,6 +599,43 @@ describe("DropdownMenu", () => {
     ).toBeLessThan(contrastFloors.boundary);
 
     menu.unmount();
+  });
+
+  it("paints a row press the highlight it replaces can show", () => {
+    // The bug: a row's press repainted the raw `active` role, which in
+    // Light · macOS sits 1.037:1 from the `hover` wash the highlighted row is
+    // already wearing — under the 1.05:1 perceptibility floor — so the row a
+    // reader pressed did not answer. The wash is derived against the one it
+    // replaces, the way a list row's press is derived against `accent`.
+    const macOSLight = platformTheme(lightTheme, "darwin");
+    const menu = renderComponent(
+      <FileActions onSelect={vi.fn()} />,
+      macOSLight,
+    );
+    clickCentreOf(menu, "trigger");
+    hoverCentreOf(menu, "rename");
+
+    const style = menu.renderer.findByTestId("rename")?.style;
+
+    menu.unmount();
+
+    expect(style?.hover).toMatchObject({
+      backgroundColor: macOSLight.colors.hover,
+    });
+    expect(style?.active).toMatchObject({
+      backgroundColor: pressWash(macOSLight, "hover"),
+    });
+    expect(style?.active).not.toMatchObject({
+      backgroundColor: macOSLight.colors.active,
+    });
+    expect(
+      contrastRatio(pressWash(macOSLight, "hover"), macOSLight.colors.hover) ??
+        0,
+    ).toBeGreaterThanOrEqual(decorativeFloor);
+    // The premise: the role the row used to paint cannot be seen on its hover.
+    expect(
+      contrastRatio(macOSLight.colors.active, macOSLight.colors.hover) ?? 0,
+    ).toBeLessThan(decorativeFloor);
   });
 
   it("toggles a checkbox row once while Enter is held", () => {

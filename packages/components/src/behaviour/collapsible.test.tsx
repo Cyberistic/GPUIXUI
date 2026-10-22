@@ -10,12 +10,15 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
+import { decorativeFloor, contrastRatio, platformTheme } from "@gpuixui/tokens";
 import {
   clickCentreOf,
   focusedTestId,
+  hoverCentreOf,
   pressKey,
   waitFor,
 } from "../internal/interaction.js";
+import { lightTheme, pressWash } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
   Collapsible,
@@ -128,6 +131,37 @@ describe("Collapsible", () => {
     );
 
     section.unmount();
+  });
+
+  it("paints a trigger press the hover it replaces can show", () => {
+    // The bug: the press repainted the raw `active` role, 1.037:1 from the
+    // `hover` wash the trigger is already wearing in Light · macOS — under the
+    // 1.05:1 floor — so pressing a section header looked like hovering it.
+    const macOSLight = platformTheme(lightTheme, "darwin");
+    const section = renderComponent(<Advanced />, macOSLight);
+
+    hoverCentreOf(section, "trigger");
+
+    const style = section.renderer.findByTestId("trigger")?.style;
+
+    section.unmount();
+
+    expect(style?.hover).toMatchObject({
+      backgroundColor: macOSLight.colors.hover,
+    });
+    expect(style?.active).toMatchObject({
+      backgroundColor: pressWash(macOSLight, "hover"),
+    });
+    expect(style?.active).not.toMatchObject({
+      backgroundColor: macOSLight.colors.active,
+    });
+    expect(
+      contrastRatio(pressWash(macOSLight, "hover"), macOSLight.colors.hover) ??
+        0,
+    ).toBeGreaterThanOrEqual(decorativeFloor);
+    expect(
+      contrastRatio(macOSLight.colors.active, macOSLight.colors.hover) ?? 0,
+    ).toBeLessThan(decorativeFloor);
   });
 
   it("opens from the controlled prop when the consumer agrees", () => {

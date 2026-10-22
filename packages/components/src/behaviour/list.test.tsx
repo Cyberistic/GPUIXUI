@@ -33,7 +33,12 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
-import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
+import {
+  contrastFloors,
+  contrastRatio,
+  decorativeFloor,
+  platformTheme,
+} from "@gpuixui/tokens";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -44,7 +49,7 @@ import {
   requireBounds,
 } from "../internal/interaction.js";
 import { List, ListItem, ListItemDescription, ListItemTitle } from "../list.js";
-import { darkTheme } from "../internal/theme.js";
+import { darkTheme, lightTheme, pressWash } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -543,6 +548,40 @@ describe("List", () => {
     });
 
     list.unmount();
+  });
+
+  it("paints a press the wash it replaces can show", () => {
+    // The bug: the press repainted the raw `active` role. Light · macOS's
+    // `active` sits 1.026:1 from the `accent` a hovered row wears — under the
+    // 1.05:1 perceptibility floor — so the row answered the pointer and then
+    // went still under the press. `@gpuixui/tokens`' `pointerWash` derives the
+    // step toward `foreground` from the wash being replaced.
+    const macOSLight = platformTheme(lightTheme, "darwin");
+    const list = renderComponent(catalog, macOSLight);
+
+    hoverCentreOf(list, "row-a");
+
+    const style = list.renderer.findByTestId("row-a")?.style;
+
+    list.unmount();
+
+    expect(style?.hover).toMatchObject({
+      backgroundColor: macOSLight.colors.accent,
+    });
+    expect(style?.active).toMatchObject({
+      backgroundColor: pressWash(macOSLight, "accent"),
+    });
+    expect(style?.active).not.toMatchObject({
+      backgroundColor: macOSLight.colors.active,
+    });
+    expect(
+      contrastRatio(pressWash(macOSLight, "accent"), macOSLight.colors.accent) ??
+        0,
+    ).toBeGreaterThanOrEqual(decorativeFloor);
+    // The premise: the role the row used to paint cannot be seen on its hover.
+    expect(
+      contrastRatio(macOSLight.colors.active, macOSLight.colors.accent) ?? 0,
+    ).toBeLessThan(decorativeFloor);
   });
 
   it("reports a multiple selection as a listbox of options with one tab stop", () => {

@@ -31,7 +31,12 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlRing, disabledFade, useTheme } from "./internal/theme.js";
+import {
+  controlRing,
+  disabledFade,
+  pressWash,
+  useTheme,
+} from "./internal/theme.js";
 
 /** The rules a collapsible part follows; throws outside a root. */
 interface CollapsibleContextValue {
@@ -154,7 +159,7 @@ export const CollapsibleTrigger = ({
           hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
           active: disabled
             ? undefined
-            : { backgroundColor: theme.colors.active },
+            : { backgroundColor: pressWash(theme, "hover") },
           ...controlRing(theme, { disabled }),
         }),
         resolveStyle(style, state),

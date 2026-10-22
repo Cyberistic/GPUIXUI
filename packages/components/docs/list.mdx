@@ -249,7 +249,12 @@ density) and `density.rowHeight` when `dense` (32px). Selection paints
 the title included, because a selected fill is saturated and the page's body role
 is not its on-colour. `ListItemDescription` keeps `colors.mutedForeground`, the
 pair the token contract measures on that fill at the secondary floor; hover paints
-`colors.accent`. **A disabled row keeps every fill it would paint and carries the
+`colors.accent` and a press paints **`pointerWash(theme, "active", "accent")`** —
+the smallest move toward `foreground` that clears the 1.05:1 floor against the
+hover wash it replaces, because six shipped styles painted the raw `active` in
+the wash it replaced (Light · macOS 1.026:1, Dark · macOS 1.011:1). A palette
+whose own wash answers the pointer is painted as authored. **A disabled row keeps
+every fill it would paint and carries the
 state in its text**: the title takes `colors.disabledForeground` on its strip (or
 `colors.mutedForeground` when the row is also selected, the pair measured on that
 wash), the description follows, the pointer gets `not-allowed`, and no `opacity`
@@ -308,7 +313,7 @@ is on.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (42 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (43 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/origin.test.ts` for the three-step origin rule (a sending row, a

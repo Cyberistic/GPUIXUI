@@ -253,15 +253,19 @@ describe("the wash a pointer state paints", () => {
     // The placements exist because three painters wear them: the components'
     // list row tints `accent` and presses `active`, the components' menu row
     // tints `hover` and presses `active`, and the primitives' recipe hands the
-    // same two washes to a ghost action.
+    // same two washes to a ghost action. The two component painters ask the
+    // derivation for the press rather than the raw role, so the wash they
+    // replace is named at the call site.
     const list = read("../../components/src/list.tsx");
     const menu = read("../../components/src/menu/item.tsx");
     const recipe = read("../../primitives/src/recipe/index.ts");
 
     expect(list).toContain("backgroundColor: theme.colors.accent");
-    expect(list).toContain("backgroundColor: theme.colors.active");
+    expect(list).toContain('pressWash(theme, "accent")');
+    expect(list).not.toContain("backgroundColor: theme.colors.active");
     expect(menu).toContain("theme.colors.hover");
-    expect(menu).toContain("backgroundColor: theme.colors.active");
+    expect(menu).toContain('pressWash(theme, "hover")');
+    expect(menu).not.toContain("backgroundColor: theme.colors.active");
     expect(recipe).toContain("hover:bg-hover active:bg-active");
   });
 });
