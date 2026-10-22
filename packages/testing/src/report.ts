@@ -65,7 +65,16 @@ const summary = (report: SmokeReport): string => {
     ),
     " ",
   );
-  return `${ok}/${total} scenarios passed · capabilities: ${capabilities}`;
+  // A scoped run (`--only`) says so in words: `unverified` beside a green probe
+  // reads as a failure otherwise, while it means the selection did not cover
+  // every probe the capability has.
+  const scoped = Arr.some(
+    report.capabilities,
+    (entry) => entry.status === "unverified",
+  )
+    ? " (unverified: the run did not cover every probe of that capability)"
+    : "";
+  return `${ok}/${total} scenarios passed · capabilities: ${capabilities}${scoped}`;
 };
 
 /** Renders `report` as a human-readable table plus failure detail. */

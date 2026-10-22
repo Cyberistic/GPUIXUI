@@ -74,7 +74,9 @@ suite the registry it selected out of, so a capability is `verified` only when
 **every** probe covering it ran and passed, `failed` when one did, and
 `unverified` when the selection only sampled it. `--only examples-mount` prints
 `layout=unverified` with its own checks green — that report is evidence for the
-probe, not for the capability.
+probe, not for the capability, and the summary says so in words
+(`(unverified: the run did not cover every probe of that capability)`) so a
+green scoped line is not read as a red one.
 
 `dev` and `smoke` both **preflight first**: they import the native binding only
 after asking whether it loads, so a host without one gets a one-line remedy and

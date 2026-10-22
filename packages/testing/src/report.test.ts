@@ -11,7 +11,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { exitCode, formatReport, passed, reportJson } from "./report.js";
 import { CheckOutcome, SmokeReport } from "./smoke.js";
-import { checkOf, run, scenario, statusOf } from "./test-support.js";
+import { checkOf, run, runScoped, scenario, statusOf } from "./test-support.js";
 
 const decodeReport = Schema.decodeUnknownSync(
   Schema.fromJsonString(SmokeReport),
@@ -81,6 +81,35 @@ describe("formatReport", () => {
       expect(text).toContain("left width");
       expect(text).toContain("expected 400 ± 1");
       expect(text).toContain("got 320");
+    }),
+  );
+
+  it.effect("explains an unverified capability a scoped run sampled", () =>
+    // `workspace=unverified` beside `1/1 scenarios passed` reads as a failure
+    // unless the summary says why: the selection did not cover the capability.
+    Effect.gen(function* () {
+      const one = scenario("one", "workspace", (ctx) =>
+        ctx.expectEqual("a", 1, 1),
+      );
+      const two = scenario("two", "workspace", (ctx) =>
+        ctx.expectEqual("b", 2, 2),
+      );
+      const scoped = formatReport(yield* runScoped([one], [one, two]));
+      expect(scoped).toContain("workspace=unverified");
+      expect(scoped).toContain(
+        "(unverified: the run did not cover every probe of that capability)",
+      );
+    }),
+  );
+
+  it.effect("leaves a full pass's summary line unqualified", () =>
+    Effect.gen(function* () {
+      const report = yield* run([
+        scenario("solo", "layout", (ctx) => ctx.expectEqual("a", 1, 1)),
+      ]);
+      const text = formatReport(report);
+      expect(text).toContain("1/1 scenarios passed");
+      expect(text).not.toContain("unverified");
     }),
   );
 });
