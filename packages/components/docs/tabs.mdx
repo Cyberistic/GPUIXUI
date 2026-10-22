@@ -3,9 +3,15 @@ title: Tabs
 description: A roving-focus tab list and the panels it switches.
 ---
 
-`Tabs` switches between panels that share one region. Selection lives in the tab
-set, focus lives on a trigger, and the two move together unless `activation` says
-otherwise.
+<ComponentPreview name="tabs-demo" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
 
 ```tsx
 import {
@@ -25,196 +31,31 @@ import {
 </Tabs>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Tabs` | the selected value, the trigger registry, the tab stop |
-| `TabsList` | `role="tablist"`, the arrow/Home/End keys, the rail |
-| `TabsTrigger` | one `role="tab"`, `aria-selected`, its own focus |
-| `TabsContent` | one `role="tabpanel"`, mounted only while selected |
-
-Only the selected trigger is in the tab order; every other trigger is `-1`.
-Arrow keys move focus *and* the selection in `automatic` mode; in `manual` mode
-they only move focus, and Enter/Space selects. Disabled triggers are skipped by
-every key and cannot be clicked.
-
-An arrow move starts from the trigger that sent the key, then the row `onFocus`
-recorded, then the **selected** tab. A `Tab` traversal focuses the trigger
-without running its `onFocus` on 0.11.0 (`tabs-lifecycle` reads `focuses=0`), but
-the key's own element is the precise origin: it is right even for a key that
-reaches the rail, and the first arrow never depends on a focus event having
-arrived.
-
-## Orientation
-
-`orientation` defaults to `"horizontal"`. A vertical set puts the rail in a
-column beside the panel and maps the arrow keys to the axis — `Down`/`Up`
-instead of `Right`/`Left`. Home/End, wrapping, disabled skipping, manual
-activation and the controlled rule are identical on both axes.
-
-```tsx
-<Tabs defaultValue="general" orientation="vertical">
-  <TabsList label="Workspace sections">
-    <TabsTrigger value="general">General</TabsTrigger>
-    <TabsTrigger value="members" disabled>
-      Members
-    </TabsTrigger>
-    <TabsTrigger value="billing">Billing</TabsTrigger>
-  </TabsList>
-  <TabsContent value="general">…</TabsContent>
-  <TabsContent value="billing">…</TabsContent>
-</Tabs>
+```text
+Tabs
+├── TabsList
+│   └── TabsTrigger
+└── TabsContent
 ```
-
-`examples/tabs.example.tsx` exports both shapes: the horizontal account settings
-and the vertical workspace settings.
-
-## Keyboard
-
-| Key | Result |
-| ---- | ------ |
-| `ArrowRight` / `ArrowLeft` (horizontal) | next/previous enabled tab, wrapping |
-| `ArrowDown` / `ArrowUp` (vertical) | next/previous enabled tab, wrapping |
-| `Home` / `End` | first/last enabled tab |
-| `Enter` / `Space` | select the focused tab (the only way in `manual`) |
-
-## Controlled and uncontrolled
-
-```tsx
-<Tabs defaultValue="profile">…</Tabs>;                     // remembers
-<Tabs value={tab} onValueChange={setTab}>…</Tabs>;         // app remembers
-```
-
-A controlled tab set reports a click or key but does not switch its panel until
-the consumer re-renders with the new `value` — the classic contract, tested.
 
 ## API
 
-Every part takes the GPUix host props and merges `style` last. The root is
-controlled or uncontrolled in the usual way: `undefined` for `value` means the
-component remembers the selection.
-
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
-| `Tabs` | `value` / `defaultValue` | `string` | — / `""` (nothing selected) |
+| `Tabs` | `value` / `defaultValue` | `string` | — / `""` |
 | `Tabs` | `onValueChange` | `(value: string) => void` | — |
 | `Tabs` | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` |
 | `Tabs` | `activation` | `"automatic" \| "manual"` | `"automatic"` |
-| `TabsList` | `label` | `string` — the tab list's accessible name | — |
-| `TabsTrigger` | `value` | `string` (required) — must match a `TabsContent` | — |
+| `TabsList` | `label` | `string` | — |
+| `TabsTrigger` | `value` | `string` (required) | — |
 | `TabsTrigger` | `disabled` | `boolean` | `false` |
-| `TabsTrigger` | `style` | `StateStyle<TabsTriggerState>` — `{ selected, disabled, focused }` | recipe |
-| `TabsContent` | `value` | `string` (required) — mounted only while selected | — |
+| `TabsTrigger` | `style` | `StateStyle<TabsTriggerState>` | recipe |
+| `TabsContent` | `value` | `string` (required) | — |
 
-## Theming
+## Limitations
 
-The rail paints `colors.background`, a `borderWidth.thin` border in `colors.border`
-and the registry's fixed 6px corner (`rounded-md`, ADR 0006). One element —
-`tabs-indicator` — paints the selected surface in
-`colors.selected` behind the selected trigger; unselected triggers are
-transparent with `colors.mutedForeground` and hover with `colors.hover`, and the
-selected label takes `colors.foreground`. Trigger height is
-`controlHeight(theme, "md")`.
-
-The pill is the `selected` **state wash**, not `card`: the selected surface has
-to be visible on the `background` rail, and the decorative contract holds
-`selected` to that floor, while `foreground` on `selected` is a body pair. A
-`card` pill is invisible in the high-contrast light theme, where `card` and
-`background` are the same value (1.00:1).
-
-The selected surface is **measured, not styled per trigger**. Every trigger
-reports its painted box through `onLayout`, and a `tabs-origin` probe **fills the
-rail's padding box** — the box its absolutely positioned children resolve
-against, borders and padding included — and reports it again on every paint
-where that box changes. It fills the box rather than sitting in one corner
-because the runtime only reports a layout it can see change: a rail the window
-moved after a resize must report its origin again, or a trigger that re-measures
-in the same round is subtracted from a box the rail no longer starts at. The pill
-is the trigger's box re-expressed against that origin, which means a trigger that
-grows (a longer label, another font) carries the pill with it and a caller's rail
-`className` padding cannot leave it short.
-
-Both boxes are **window coordinates**, so they have to come from the same paint.
-The behaviour suite's `follows the rail when the window moves it, not the origin
-it first reported` holds that: the pill stays on its tab after the rail travels,
-and the suite also asserts the pill's painted box is exactly the selected
-trigger's box, in both orientations.
-
-The pill **slides** between triggers: its `left`/`top`/`width`/`height` are a
-motion target (`normal`, 200 ms), retargeted from the box on screen, so a move
-across three tabs sweeps once rather than jumping. Not a transform — the runtime
-animates the box's own inset and size. There is no `zIndex`, so the pill stays
-behind the triggers by being their earlier sibling.
-
-## Style by state
-
-`style` takes a `StyleDesc` or a function of `TabsTriggerState`
-(`{ active, disabled, focused, highlighted, orientation }`); the result merges
-after the trigger's own rules.
-
-`focused` reaches a press, a click and a programmatic focus — but not a `Tab`
-traversal: the runtime focuses the element without running its `onFocus` on
-0.11.0 (`tabs-lifecycle` reads `focuses=0`; `tooltip-lifecycle` does not open its
-tip, re-measured 2026-10-22). The ring declared at rest is still the keyboard
-cue: the flag is presentational, and nothing here depends on the event
-(`docs/component-api.md` §3).
-
-```tsx
-<TabsTrigger
-  value="profile"
-  style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
-/>
-```
-
-## Accessibility and limitations
-
-- `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
-  exposed; the roving tab index is the single-stop pattern. Give the list a
-  `label` so the tab set has a name.
-- **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in
-  `@gpuix/native@0.11.0`: `HostProps` exposes only `aria-label`,
-  `aria-description`, `aria-expanded`, `aria-selected`, `aria-valuetext` and
-  `aria-level`. The panel is named by its value (`aria-label={value}`), and the
-  trigger→panel relationship is positional.
-- The list owns the keys because a key event on a focused trigger bubbles to the
-  list — measured in the real renderer, the same behaviour `List` relies on.
-- Vertical tab sets put the rail in a column beside the panel; the axis is a
-  layout and keyboard choice, not an ARIA attribute (unavailable, below).
-
-## Verification
-
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer: click switching,
-the shared selected surface's theme role and its contrast on the rail in both
-themes (with the high-contrast premise the fix was measured against), its
-painted box against the selected trigger's, its move with the selection, its
-placement on a vertical
-rail, arrow wrap with a disabled tab, a move that starts from the selection when
-no trigger reported focus, manual activation waiting for Enter,
-Home/End, the controlled contract, a panel whose value matches nothing, a caller
-`ref`, a caller `onBlur` composed with the focus ring, and four vertical-axis
-cases — Down/Up movement with wrap, Left/Right ignored, the row/column layout,
-and manual activation. The vertical guard is proven in both directions:
-inverting the axis mapping fails the movement and axis-isolation tests, inverting
-the layout fails the layout test, and forcing `selectsOnFocus` to `true` fails
-the manual test.
-
-The surface's geometry has its own pure suite (`src/tabs/indicator.test.ts`) and
-two behaviour guards that can fail: subtracting the rail's box instead of the
-absolute origin puts the pill off its trigger, and dropping the pill's
-`pointerEvents: "none"` makes the trigger unclickable. The behaviour suite reads
-the measurement through the `settle` helper, which delivers the `onLayout` events
-a render queued.
-
-A trigger forwards `onBlur` after clearing its focus ring, so the caller's handler
-runs exactly once.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
-
-## Related
-
-- **Accordion** — stacked sections with more than one open.
-- **List** — the same collection arithmetic for selectable rows.
-- **Breadcrumb** — orientation through a hierarchy rather than across peers.
+- No `aria-orientation`, `aria-controls` or `aria-labelledby`.
+- `focused` misses a `Tab` traversal — focus without running its `onFocus`.
+- The selected surface is measured, not styled per trigger.

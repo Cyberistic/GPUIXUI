@@ -152,7 +152,6 @@ describe("the package docs collections", () => {
   const curated = new Set([
     "/docs/components/accordion",
     "/docs/components/alert",
-    "/docs/components/avatar",
     "/docs/components/breadcrumb",
     "/docs/components/card",
     "/docs/components/carousel",
@@ -222,11 +221,12 @@ describe("the package docs collections", () => {
             : [];
         });
 
-        // A capitalised tag is a registered MDX component (`<ComponentPreview>`);
-        // a lowercase one (`<div>`, `<span>`) is a raw tag MDX would misread.
         const jsx = prose(source)
           .split("\n")
-          .filter((line) => /<[a-z/]/.test(line))
+          .filter(
+            (line) =>
+              /<[A-Za-z/]/.test(line) && !line.includes("<ComponentPreview"),
+          )
           .map((line) => `${name}: ${line.trim()}`);
 
         return [...missing, ...unquoted, ...jsx];

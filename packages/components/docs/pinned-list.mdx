@@ -1,11 +1,13 @@
 ---
 title: Pinned list
-description: A sectioned scroll region whose section headers stay on screen while the rows scroll under them.
+description: A scroll box whose section headers stay pinned while rows scroll under them.
 ---
 
-`PinnedList` is the long-settings-page pattern: titled sections in one bounded
-scroll box, with the current section's header **pinned** to the top and the next
-header pushing it out as that section ends.
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
@@ -24,105 +26,21 @@ import { PinnedList } from "@gpuixui/components/pinned-list";
 />;
 ```
 
-Give the box a height (or a flex parent that bounds it), because a scroller with
-nothing to clip has nothing to report. The section `children` are yours — a
-[List](/docs/components/list), a form, a table; the component only owns the
-headers and the scroll box.
-
-## Why the header is a layer, not `position: sticky`
-
-The runtime paints **no `position: "sticky"`**: a sticky child scrolls with its
-scroller. So a pinned header here is not a layout mode — the list measures each
-section once and **repositions** the header from the scroll offset every frame:
-
-```
-top = min(max(sectionTop + offset, 0), sectionBottom + offset − headerHeight)
-```
-
-Read in three parts: the header travels with its section while the section's top
-is below the viewport; it holds at the viewport top once the section reaches it;
-and it is pushed up by the section's last row, so the header of the next section
-takes its place.
-
-The header is painted **once**, in a layer over the scroller. The scrolled
-content carries an empty spacer of the same height, so nothing is duplicated and
-the reading order is the list's own. The layer clips and takes
-`pointerEvents: "none"`, so a press on the first row under a held header still
-reaches the row.
-
-A held header paints the surface opaquely — otherwise the rows would show through
-it — and gains a bottom edge. It is just a title while it travels.
-
-```tsx
-import { PinnedList } from "@gpuixui/components/pinned-list";
-import { useTheme } from "@gpuixui/components";
-
-const theme = useTheme();
-
-<PinnedList
-  sections={sections}
-  headerHeight={36}
-  // A list on a card paints the card's own role behind a held header.
-  surfaceColor={theme.colors.card}
-/>;
-```
-
-## Header height
-
-A header is **one line**: `headerHeight` (default 32) reserves its row and the
-layer clips anything taller. A caller with a larger type step or a two-line title
-passes a taller `headerHeight`.
-
-## Accessibility
-
-Each section is a `role="group"` named by its title, in scroll order, so a reader
-meets "Account, group" before that section's rows. The painted header is a
-**presentation** node: `0.11.0` has no `aria-hidden`, so a heading beside a
-painted copy would publish the title twice — once in the wrong place. The section
-label is the title a reader hears.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `sections` | `ReadonlyArray<PinnedListSection>` | — | `{ title, children }` in scroll order. The title is the section's key and its accessible name. |
-| `headerHeight` | `number` | `32` | The height reserved for every header. A non-positive or unreadable value falls back to 32. |
-| `surfaceColor` | `string` | theme `background` | The fill a held header paints over the rows; pass the role the list sits on. |
-| `className` | `string` | — | A Tailwind class string for the component's box, merged last. |
-| `style` | `StyleDesc` | — | The box's style. Give it a height, or bound it with a flex parent. |
-| `aria-label` | `string` | — | Names the scroll region in the accessibility tree. |
-| `onScrollChange` | `(event) => void` | — | Composed after the component reads the offset. |
-
-The `testId` you pass lands on the **scroller** — the element a reader actually
-moves. The headers carry internal ids (`pinned-header-0`, …) and the layer is
-`pinned-layer`.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `sections` | `ReadonlyArray<PinnedListSection>` | — |
+| `headerHeight` | `number` | `32` |
+| `surfaceColor` | `string` | theme `background` |
+| `className` | `string` | — |
+| `style` | `StyleDesc` | — |
+| `aria-label` | `string` | — |
+| `onScrollChange` | `(event) => void` | — |
 
 ## Limitations
 
-- **No sticky.** The header is a layer repositioned from the offset, not a
-  sticky child; it is one element painted over the scroller.
-- **A wheel and the scrollbar move it; arrow keys do not.** The box is the
-  package's own viewport so it can measure itself; a keyboard scroll region is
-  [Scroll area](/docs/primitives/scroll-area) from `@gpuixui/primitives`.
-- **One line per header.** A title taller than `headerHeight` is clipped, not
-  wrapped into a taller row.
-- **A section inserted mid-list keeps stale heights for one frame**, until its
-  own layout reports. Sections are keyed by title, so two sections cannot share
-  one.
-- **A header holds at the top of the viewport, not under a toolbar.** A caller
-  with chrome above the list offsets the box, not the header.
-
-## Verification
-
-Seven native behaviour cases in `src/behaviour/pinned-list.test.tsx` drive the
-real renderer through `scrollTo`: the reserved header row, the held position, the
-opaque fill and its edge (plus the layer's `pointerEvents`), the caller's surface
-role, the push-out and handover, a title painted once, and the section labels with
-no second heading. The arithmetic is `src/pinned-list/logic.test.ts` (8 tests).
-
-## Related
-
-- [List](/docs/components/list) — the rows a section usually holds.
-- [Scroll fade](/docs/components/scroll-fade) — the edge hint for the same box.
-- [Scroll progress](/docs/components/scroll-progress) — the reading line for the
-  same box.
+- No `position: sticky`; the header is a repositioned layer.
+- Wheel and scrollbar move it; arrow keys do not.
+- One line per header.
+- A header holds at the viewport top only.

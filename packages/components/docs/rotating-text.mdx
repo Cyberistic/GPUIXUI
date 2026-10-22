@@ -3,9 +3,11 @@ title: Rotating text
 description: One line whose phrase changes on an interval, with a short fade between steps.
 ---
 
-`RotatingText` cycles through a list of phrases on a timer. It is a content
-component, not a decoration: the phrases are information, so the rotation keeps
-running under the reduced preference and only the fade is shortened.
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
@@ -18,70 +20,23 @@ import { RotatingText } from "@gpuixui/components/rotating-text";
 />;
 ```
 
-## Controlled and uncontrolled
-
-```tsx
-<RotatingText phrases={phrases} defaultIndex={0} />;            // remembers
-<RotatingText phrases={phrases} index={index} onIndexChange={setIndex} />;
-```
-
-The component reports every step through `onIndexChange` in both modes. An index
-past the end of a list that shrank is clamped, not thrown: the phrase is looked
-up through the same rule the timer advances with.
-
-## Motion and reduced motion
-
-Each step remounts one `<text>` host, which is how the runtime starts a new
-`opacity` run — there is no `transform`, and no per-word layout to slide or mask.
-The fade is the house `fast` level (160 ms); under
-`MotionProvider preference="reduced"` its duration is zero and the phrase swaps
-without a fade. The interval is unchanged under either preference.
-
-A single phrase — or an empty list — schedules no timer.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `phrases` | `ReadonlyArray<string>` | — | Required. The phrases, in order. |
-| `intervalMs` | `number` | `3000` | Each phrase's dwell; below 50 ms falls back to the default. |
-| `index` | `number` | — | The controlled index; `undefined` means uncontrolled. |
-| `defaultIndex` | `number` | `0` | The uncontrolled start. |
-| `onIndexChange` | `(index: number) => void` | — | Reports every step in both modes. |
-| `label` | `string` | the phrase on screen | The accessible name. |
-| `role` | `TextRole` | `"body"` | Any theme type role (`h1`, `display`, `bodyStrong`, …). |
-| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
-| `style` | `StateStyle<RotatingTextState>` | — | `RotatingTextState` is `{ phrase, index }`. |
-
-`RotatingText` renders one `<text>` host and takes the GPUix host props
-(`testId`, `role`, `aria-*`); `style` merges last and sees the current phrase.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `phrases` | `ReadonlyArray<string>` | — |
+| `intervalMs` | `number` | `3000` |
+| `index` | `number` | — |
+| `defaultIndex` | `number` | `0` |
+| `onIndexChange` | `(index: number) => void` | — |
+| `label` | `string` | the phrase on screen |
+| `role` | `TextRole` | `"body"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<RotatingTextState>` | — |
 
 ## Limitations
 
-- The phrase changes by remounting the host, so any state a caller attached to
-  that exact node is recreated per step.
-- No width animation: the line reserves the space of the phrase on screen, so a
-  longer phrase moves what follows it. Wrap the line in a box with a fixed
-  height (or `AutoHeight`) when the layout must not move.
-- The accessible name changes with the phrase, but there is no live region in
-  `0.11.0` (no `aria-live`), so a screen reader is not pushed a new phrase.
-- Rotation order is linear; there is no shuffle, pause-on-hover or manual step
-  control.
-
-## Related
-
-- [Typing text](/docs/components/typing-text) — a single phrase arriving a
-  character at a time.
-- [Counting number](/docs/components/counting-number) — a value that changes on
-  the physics clock.
-- [Auto height](/docs/components/auto-height) — a box that grows to fit a
-  changing line.
-
-## Verification
-
-`src/behaviour/rotating-text.test.tsx` renders the component in the real GPUix
-renderer (5 tests): advancing and wrapping, the reported steps with a starting
-index, a single phrase staying still with no scheduled step, the reduced
-preference still rotating with a zero-duration fade, and the accessible name.
-The wrap and clamp rules are the unit suite beside the logic
-(`src/rotating-text/logic.test.ts`).
+- The phrase changes by remounting the host.
+- No width animation.
+- No `aria-live`; a screen reader is not pushed a phrase.
+- Linear order only; no shuffle or pause.

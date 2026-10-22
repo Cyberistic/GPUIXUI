@@ -1,12 +1,13 @@
 ---
 title: Splitting text
-description: A headline that arrives one word or one character at a time, with a staggered fade and rise.
+description: A headline that arrives word by word with a staggered fade and rise.
 ---
 
-`SplittingText` splits a phrase into units — words by default, code points when
-asked — and reveals them one after another. Each unit is its own text host with
-its own tween, because the runtime cannot animate the glyphs inside one text
-node.
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
@@ -16,112 +17,22 @@ import { SplittingText } from "@gpuixui/components/splitting-text";
 <SplittingText text="Build native interfaces" role="h1" />;
 ```
 
-Words are separated by the container's column gap rather than a painted space,
-so the line wraps as a row of words. An explicit `\n` starts a new row, and the
-stagger keeps counting across the break so the second line arrives second.
-
-```tsx
-<SplittingText text={"Native by default\nFast by design"} split="characters" />;
-```
-
-A character split keeps the emoji whole (the unit is a code point) and paints a
-word gap as a non-breaking space, because a run that is only a space is trimmed
-by the text layout.
-
-## Motion
-
-Each unit fades in and **rises** the offset into place: `top: offset` to
-`top: 0` on a relatively positioned box. The runtime has no `transform` style
-key, so a slide, a scale or a mask is not expressible — the offset is a layout
-inset that moves the unit without reflowing its row. The house timing is the
-`normal` level (200 ms, ease-out), and `stepMs` is the delay between units.
-
-`offset` may be negative to start a unit above its resting place. A non-finite
-offset falls back to the house 8 px rather than reaching the runtime as `null`,
-which would drop the property and leave the unit still.
-
-Under `MotionProvider preference="reduced"` the duration is zero **and the
-stagger is dropped**: a zero-duration tween that still waited would hold the
-resting frame back, which is the journey reduced motion removes. Every unit
-paints at rest in the first frame.
-
-The queue is not a runtime feature: the delays are
-`@gpuixui/motion`'s `stagger` rule applied once per mount, so the order is a
-property of the frame the units mount in.
-
-## Replaying
-
-A unit's key is its position and its text. A parent re-render therefore replays
-nothing, and a changed word replays only that word — the rest of the headline
-stays where it is. To replay the whole phrase, change the component's identity:
-
-```tsx
-<SplittingText key={step} text={phrase} />
-```
-
-## Accessibility
-
-Each unit is a text host and therefore its own label in the accessibility tree,
-read in order. `@gpuix/native@0.11.0` has no `aria-hidden`, so a character split
-is heard one letter at a time, and an emoji is its own unit. Prefer the default
-word split for a phrase a reader needs to understand, and keep the character
-split for a decorative title whose meaning is carried elsewhere.
-
-There is no live region in `0.11.0`, so a phrase that changes after mount is not
-pushed to a screen reader; the new units are simply in the tree on the next
-read.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `text` | `string` | — | Required. The phrase to reveal. |
-| `split` | `"words" \| "characters"` | `"words"` | Units of the reveal. |
-| `stepMs` | `number` | `40` | Delay between units; a negative or non-finite value falls back. `0` reveals in one frame. |
-| `from` | `"start" \| "end" \| "center"` | `"start"` | Where the stagger begins, from `@gpuixui/motion`'s stagger rule. |
-| `offset` | `number` | `8` | Pixels a unit rises from; negative starts it above. |
-| `role` | `TextRole` | `"body"` | Any theme type role (`h1`, `display`, `bodyStrong`, …). |
-| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
-| `style` | `StateStyle<SplittingTextState>` | — | `SplittingTextState` is `{ text, units, reducedMotion }`. |
-
-`SplittingText` renders a container `div` with one row per explicit line and
-takes the GPUix host props (`testId`, `aria-*`) on that container. The container
-is a column; each row is a wrapping flex row of units.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `text` | `string` | — |
+| `split` | `"words" \| "characters"` | `"words"` |
+| `stepMs` | `number` | `40` |
+| `from` | `"start" \| "end" \| "center"` | `"start"` |
+| `offset` | `number` | `8` |
+| `role` | `TextRole` | `"body"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<SplittingTextState>` | — |
 
 ## Limitations
 
-- Every unit is a separate host, so a character split of a long paragraph is a
-  lot of nodes. Split words for anything longer than a headline.
-- No slide, scale or mask: the runtime has no `transform`, and no per-glyph
-  paint, so the reveal is a fade plus a vertical offset.
-- A unit that changes mid-reveal keeps its sibling unit's element but takes a new
-  key, so its own run starts again from the offset.
-- The type role owns the font metrics; there is no per-unit weight or colour
-  variation.
-
-## Related
-
-- [Typing text](/docs/components/typing-text) — one string arriving a character
-  at a time on a timer.
-- [Rotating text](/docs/components/rotating-text) — one phrase replaced by
-  another on an interval.
-- [Counting number](/docs/components/counting-number) — a value animated on the
-  physics clock.
-- [Auto height](/docs/components/auto-height) — a box that grows to fit a
-  changing line.
-
-## Verification
-
-`src/behaviour/splitting-text.test.tsx` renders the component in the real GPUix
-renderer (7 tests): the words painted in reading order on one line, a paused
-motion clock showing each unit start 12 px below its resting place and rise to
-0, the per-unit delays handed to the runtime in seconds, a re-render replaying
-only the unit whose text changed, the reduced preference painting at rest with
-the stagger dropped, two explicit lines landing in two rows, and a character
-split keeping an emoji whole with a non-breaking word gap.
-
-`src/splitting-text/logic.test.ts` holds the rules without a renderer
-(8 tests): whitespace collapsing and blank lines, the unit keys, code points and
-the word gap, the stagger counted across lines and from the end and centre, the
-`stepMs` fallbacks, and the offset fallback. The delay's seconds and its removal
-under reduced motion are the seam's `delayedTiming` (`src/internal/presence.test.ts`).
+- Every unit is a host; split words for long text.
+- No slide, scale or mask — no `transform`.
+- A unit that changes replays its own run.
+- The type role owns the font metrics.

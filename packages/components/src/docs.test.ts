@@ -101,10 +101,11 @@ const mdxProblems = (page: string, source: string): ReadonlyArray<string> => {
     return YAML_RESERVED.test(value) && !quoted ? [`${page}: ${value}`] : [];
   });
 
-  // A capitalised tag is a registered MDX component (`<ComponentPreview>`);
-  // a lowercase one (`<div>`, `<span>`) is a raw tag MDX would misread.
   const jsx = Arr.map(
-    Arr.filter(prose(source).split("\n"), (line) => /<[a-z/]/.test(line)),
+    Arr.filter(
+      prose(source).split("\n"),
+      (line) => /<[A-Za-z/]/.test(line) && !line.includes("<ComponentPreview"),
+    ),
     (line) => `${page}: ${line.trim()}`,
   );
 
@@ -160,22 +161,6 @@ describe("component pages", () => {
         }
         return named ? [] : [`${page}: API row does not name a part or prop`];
       });
-    });
-
-    expect(problems).toEqual([]);
-  });
-
-  it("names the siblings a reader goes on to", () => {
-    const problems = Arr.flatMap(pages, (page) => {
-      const related = section(read(page), "## Related");
-      if (related === undefined) return [`${page}: no ## Related section`];
-
-      const siblings = Arr.filter(related.split("\n"), (line) =>
-        line.startsWith("- "),
-      );
-      return Arr.length(siblings) === 0
-        ? [`${page}: ## Related names no sibling`]
-        : [];
     });
 
     expect(problems).toEqual([]);

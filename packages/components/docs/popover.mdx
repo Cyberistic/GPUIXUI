@@ -3,14 +3,15 @@ title: Popover
 description: A floating panel anchored to the control that opened it.
 ---
 
-`Popover` floats a surface next to its trigger without making the rest of the
-window modal. Positioning is GPUix's own `anchored` layer. Measured against
-0.11.0, the runtime **snaps** a surface inside the window but does not flip it,
-and its `center` alignment centres on the trigger's containing block rather than
-the trigger. The component therefore owns the placement correction: it flips a
-snapped surface back off its trigger and converts `align="center"` into a
-measured centre. It also owns the open state, the dismissal rules and the
-trigger's re-open guard.
+<ComponentPreview name="popover-demo" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
 
 ```tsx
 import {
@@ -27,118 +28,29 @@ import {
 </Popover>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Popover` | open state and the positioning root the anchored layer measures |
-| `PopoverTrigger` | a button that toggles the popover, `aria-expanded` included |
-| `PopoverContent` | the floating surface, rendered only while open |
-
-`PopoverContent` takes `side` (`top`/`right`/`bottom`/`left`, default `"bottom"`),
-`align` (`start`/`center`/`end`, default `"start"`), `sideOffset` (default `6`) and
-`collisionPadding` (default `8`, the margin kept from the window edge when the
-surface snaps). When the snapped surface would cover its trigger, the component
-opens it on the opposite side if that side has room, otherwise on the roomier
-side. `align="center"` is exact: the runtime's `center` is not used.
-`alignOffset` is still added on top if the caller needs its own adjustment.
-
-## Dismissal
-
-| Action | Result |
-| ------ | ------ |
-| `Escape` | closes, and returns focus to the trigger |
-| `Tab` | closes and lets focus move on — a popover is not modal |
-| press outside | closes without moving focus (the press already gave it) |
-| press inside | does nothing |
-| click the trigger while open | closes it |
-
-The popover is a layer in the same dismiss stack as `Dialog`, so pressing outside
-both closes the popover first and leaves the dialog open. The trigger records
-whether it was open at **mouse-down**, which is what stops a press on the trigger
-from closing and then immediately re-opening the popover on the following click.
-
-## Controlled and uncontrolled
-
-```tsx
-<Popover defaultOpen>…</Popover>;                       // remembers
-<Popover open={open} onOpenChange={setOpen}>…</Popover>; // app remembers
+```text
+Popover
+├── PopoverTrigger
+└── PopoverContent
 ```
 
-## Focus and keyboard
-
-Focus moves into the surface on open, so keys reach its content without a click.
-The surface is a tab stop (`tabIndex={-1}`) but not a trap: Tab leaves and closes
-it. The trigger is an ordinary button: `Enter`/`Space` toggle it.
-
-## Motion
-
-The surface fades and travels 8px out from its trigger's side (`normal`,
-200 ms): a panel below its trigger enters from above, one above enters from
-below, and a flipped placement keeps the side it was measured at while it
-leaves. The panel stays mounted for the exit tween; focus behaviour is
-unchanged. `MotionProvider` supplies the reduced-motion preference
-(`docs/component-api.md` §11).
-
 ## API
-
-Every part takes the GPUix host props and merges `style` last.
 
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
 | `Popover` | `open` / `defaultOpen` | `boolean` | — / `false` |
 | `Popover` | `onOpenChange` | `(open: boolean) => void` | — |
-| `PopoverTrigger` | — | the local button's props (`variant`, `size`, `label`, `disabled`) | — |
 | `PopoverContent` | `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` |
 | `PopoverContent` | `align` | `"start" \| "center" \| "end"` | `"start"` |
-| `PopoverContent` | `sideOffset` | `number` — the gap to the trigger | `6` |
-| `PopoverContent` | `collisionPadding` | `number` — the margin kept from the window edge | `8` |
-| `PopoverContent` | `alignOffset` | `number` — added to the measured centre | `0` |
+| `PopoverContent` | `sideOffset` | `number` | `6` |
+| `PopoverContent` | `collisionPadding` | `number` | `8` |
+| `PopoverContent` | `alignOffset` | `number` | `0` |
 
-## Theming
+## Limitations
 
-The surface compiles shadcn's fixed metrics: `colors.popover` /
-`colors.popoverForeground`, a 24px radius, 16px padding and a 1px `foreground`
-ring at 5%, with a 200px minimum width. The ring and the recipe's lift share the
-one `boxShadow` slot, so the component composes the theme's `lg` elevation beside
-the ring and the runtime paints both.
-
-## Accessibility and limitations
-
-- `aria-expanded` on the trigger.
-- **No `aria-haspopup`, `aria-controls` or `aria-labelledby`**:
-  `@gpuix/native@0.11.0` exposes only `aria-label`, `aria-description`,
-  `aria-expanded`, `aria-selected`, `aria-valuetext` and `aria-level` (see
-  `HostProps` in `@gpuix/native/dist/host.d.ts`), so the link between trigger and
-  surface is positional, not semantic.
-- Positioning is the runtime's anchored layer: there is no arrow, no custom anchor
-  element, and no separate backdrop. The runtime snaps, so the component flips
-  once when the snapped surface would cover its trigger; it does not do
-  continuous collision-aware placement while the window resizes. Keep a popover's
-  content short; for a form that must block the window, use **Dialog**.
-- `align="center"` cannot centre a surface that would leave the window: the
-  runtime's snap margin wins at the edges.
-- A press outside hands focus to whatever was pressed, so focus is not restored to
-  the trigger in that path. Escape is the keyboard path that restores it.
-
-## Verification
-
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (12 tests):
-opens below the trigger by measured bounds, honours `side="right"`, centres a
-requested panel on its trigger, opens above a trigger near the window bottom
-instead of covering it, Escape closing and restoring focus, an outside press
-closing without the following click re-opening it, a press inside keeping it
-open, Tab closing it, a controlled popover reporting `onOpenChange` while staying
-as the consumer says (including an inline consumer that keeps it closed), both
-themes, and a caller trigger `ref`. `src/behaviour/overlay-elevation.test.tsx`
-reads the composed `lg` elevation beside the ring off the rendered surface.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
-
-## Related
-
-- **Dialog** — a modal surface when the window itself must be blocked.
-- **Dropdown menu** — a list of actions anchored to a trigger.
-- **Badge** — a common read-only element inside a popover body.
+- No `aria-haspopup`, `aria-controls` or `aria-labelledby`.
+- No arrow, custom anchor or backdrop.
+- `align="center"` cannot centre a surface at the window edge.
+- An outside press does not restore focus.

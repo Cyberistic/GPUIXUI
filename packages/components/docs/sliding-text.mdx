@@ -1,147 +1,38 @@
 ---
 title: Sliding text
-description: A value that slides horizontally into place when it changes, across the box it is given.
+description: A value that slides horizontally into place when it changes.
 ---
 
-`SlidingText` is the horizontal sibling of
-[Rolling text](/docs/components/rolling-text): a status, a title or a phrase
-leaves towards one edge and the next one arrives from the other. It is a
-**controlled** value — the component owns the slide, the application owns when
-the value changes.
+## Installation
 
-Use it where a value changes in place and a jump would be easy to miss: the name
-of the view a toolbar is showing, the state of a job, the page a pager is on.
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
 ```tsx
 import { SlidingText } from "@gpuixui/components/sliding-text";
 
-// The box decides the travel, so give it the width the layout should keep.
 <div style={{ width: 220 }}>
   <SlidingText text={status} role="bodyStrong" />
 </div>;
 ```
 
-Change `text` and the value slides; pass the same string again and nothing
-happens. A clock that ticks faster than the slide lands on the newest value
-rather than replaying every step.
-
-## How the slide is made
-
-A slide is two halves, not one tween. The runtime can animate a mounted host from
-where it is, but it cannot swap a string mid-run and continue from the far edge,
-so the component runs the exit, swaps the value while the clip is empty, and runs
-the entry:
-
-1. the outgoing value fades and travels out of the clip — `left` `0 → -width`
-   when reading forward;
-2. the value is replaced;
-3. the incoming value starts beyond the far edge (`left: width`) and travels
-   home.
-
-The travel is a relative `left` inside a box with `overflow: "hidden"` and a
-height of the role's line height. The runtime has no `transform` style key
-(upstream issue #102) and keeps every inset a **number**, never a percentage of
-the parent, so the distance is a number the box has to report: the component
-reads its own width from `onLayout`.
-
-**Before that first layout the width is unknown**, and a change in that window
-fades in place instead of travelling a guessed distance. In practice the value
-changed before the first paint is already the first value, so this is a fallback
-rather than a visible state — and the unit suite holds it, because a `NaN` inset
-would reach the runtime as `null` and paint nothing.
-
-Only **one** value is mounted at a time. Keeping both halves in the tree would
-put the outgoing value in the accessibility tree beside the incoming one, and
-`0.11.0` has no `aria-hidden` to take it back out, so the swap happens where
-nothing is visible.
-
-## Direction and timing
-
-`direction="forward"` (the default) reads left to right: the next value arrives
-from the right. `direction="back"` mirrors both halves, for a value that reads as
-going back — a previous step, a dismissed view.
-
-```tsx
-<SlidingText text={step} direction="back" />;
-```
-
-`level` picks one of the house durations — `step` 120 ms, `fast` 160, `normal`
-200 (the default), `slow` 320, `notice` 500 — split across the two halves, so a
-`normal` slide is 100 ms out and 100 ms in, with the exit easing out of the clip
-and the entry easing into place.
-
-## Reduced motion
-
-Under `MotionProvider preference="reduced"` both halves are zero-duration, so the
-new value paints in the frame it arrives, with no travel and no wait. The
-preference is the application's to supply: the runtime exposes no reduced-motion
-query (`docs/gpuix-capabilities.md`).
-
-```tsx
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <SlidingText text={status} />
-</MotionProvider>;
-```
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `text` | `string` | — | Required. The value on screen; a change slides. |
-| `direction` | `"forward" \| "back"` | `"forward"` | Which edge the value leaves through. |
-| `level` | `MotionLevel` | `"normal"` | The whole slide's budget, split across both halves. |
-| `role` | `TextRole` | `"body"` | Any theme type role; its line height is the clip's height. |
-| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
-| `style` | `StateStyle<SlidingTextState>` | — | `SlidingTextState` is `{ text, phase, direction, width, reducedMotion }`. |
-
-`SlidingText` renders one clipped `<div>` that fills its parent's width and one
-`<text>` host inside it, and takes the GPUix host props (`testId`, `role`,
-`aria-*`). `style` merges last and sees the current phase and the measured width,
-so a caller can give the box its width, or colour the value differently while it
-leaves.
-
-## Accessibility
-
-The value painted now is the only value in the tree, so the accessible text is
-the value on screen — not both halves. There is no live region in `0.11.0` (no
-`aria-live`), so a screen reader is not pushed a new value; give the host a
-`label` that names the metric when the value changes on its own, exactly as the
-[Counting number](/docs/components/counting-number) page recommends.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `text` | `string` | — |
+| `direction` | `"forward" \| "back"` | `"forward"` |
+| `level` | `MotionLevel` | `"normal"` |
+| `role` | `TextRole` | `"body"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<SlidingTextState>` | — |
 
 ## Limitations
 
-- **The box decides the travel.** The width is measured after the first paint, so
-  a change in the frame before it fades in place. Give the box a width (or a
-  fixed-width parent) when the surrounding layout must stay still; the box fills
-  whatever width it is given.
-- **One line only.** The value does not wrap: a string wider than the box is
-  clipped at the edge it slides past. Keep values short, or widen the box.
-- **The outgoing value can remain partly inside the clip** if it is wider than
-  the box — which is why its half fades to zero as it leaves, and why it is
-  unmounted before the incoming value mounts.
-- **The swap is a timer between two tweens**, not one continuous animation, so a
-  backgrounded window may complete the halves a frame or two apart.
-- No per-character slide: the runtime cannot animate the characters of a text
-  node.
-
-## Related
-
-- [Rolling text](/docs/components/rolling-text) — the same swap on the vertical
-  axis, for a counter.
-- [Reveal](/docs/components/reveal) — an entrance for content rather than a value
-  change.
-- [Auto height](/docs/components/auto-height) — the other measured clip.
-
-## Verification
-
-`src/behaviour/sliding-text.test.tsx` renders the component in the real GPUix
-renderer (8 tests): the one-line clip at the width it is given, the outgoing
-value staying painted for the exit half, the declared exit frame at the measured
-width, the incoming value starting beyond the far edge and reaching rest, the
-reversed direction, the fade-in-place fallback before the box reports a width,
-the reduced preference painting at once, and a value changed mid-exit landing on
-the newest one with a single name in the accessibility tree. The direction, the
-two-phase rules and the split timing are the unit suites beside the logic
-(`src/sliding-text/logic.test.ts`, `src/internal/text-swap.test.ts`).
+- The box decides the travel; width is measured after paint.
+- One line only; a wide value is clipped.
+- The outgoing value fades out of the clip.
+- No per-character slide.

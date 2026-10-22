@@ -3,10 +3,11 @@ title: Rolling text
 description: A value that rolls vertically into place when it changes, inside one clipped line.
 ---
 
-`RollingText` is the slot-counter primitive: a number, a status or any short
-value leaves the clip upwards, and the next one arrives from below. It is a
-**controlled** value — the component owns the roll, the application owns when the
-value changes.
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
@@ -16,119 +17,20 @@ import { RollingText } from "@gpuixui/components/rolling-text";
 <RollingText text={String(deploys)} role="display" />;
 ```
 
-Change `text` and the value rolls; pass the same string again and nothing
-happens. A clock that ticks faster than the roll lands on the newest value rather
-than replaying every step:
-
-```tsx
-const [status, setStatus] = useState("Running");
-
-<RollingText text={status} role="bodyStrong" />;
-```
-
-## How the roll is made
-
-A roll is two halves, not one tween. The runtime can animate a mounted host from
-where it is, but it cannot swap a string mid-run and continue from the far edge,
-so the component runs the exit, swaps the value while the clip is empty, and
-runs the entry:
-
-1. the outgoing value fades and travels a line height out of the clip (`top`
-   `0 → -lineHeight` for the default `up` direction);
-2. the value is replaced;
-3. the incoming value starts a line height beyond the far edge and travels
-   home.
-
-The travel is a relative `top` inside a box with `overflow: "hidden"` and a
-height of the role's line height — the runtime has no `transform` style key
-(upstream issue #102), so this is an inset movement rather than a scaled layer.
-The same measured seam reveals an `AutoHeight` panel.
-
-Only **one** value is mounted at a time. Keeping both halves in the tree would
-put the outgoing value in the accessibility tree beside the incoming one, and
-`0.11.0` has no `aria-hidden` to take it back out, so the swap happens where
-nothing is visible.
-
-## Direction and timing
-
-`direction="up"` (the default) is a counter: values rise. `direction="down"`
-drops them, for a value that reads as falling into place. `level` picks one of
-the house durations — `step` 120 ms, `fast` 160, `normal` 200 (the default),
-`slow` 320, `notice` 500 — split across the two halves, so a `normal` roll is
-100 ms out and 100 ms in, with the exit easing out of the clip and the entry
-easing into place.
-
-```tsx
-<RollingText text={status} direction="down" level="fast" />;
-```
-
-## Reduced motion
-
-Under `MotionProvider preference="reduced"` both halves are zero-duration, so the
-new value paints in the frame it arrives, with no clip travel and no wait. The
-preference is the application's to supply: the runtime exposes no reduced-motion
-query (`docs/gpuix-capabilities.md`).
-
-```tsx
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <RollingText text={String(deploys)} />
-</MotionProvider>;
-```
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `text` | `string` | — | Required. The value on screen; a change rolls. |
-| `direction` | `"up" \| "down"` | `"up"` | Which edge the value leaves through. |
-| `level` | `MotionLevel` | `"normal"` | The whole roll's budget, split across both halves. |
-| `role` | `TextRole` | `"body"` | Any theme type role; its line height is the clip's height. |
-| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
-| `style` | `StateStyle<RollingTextState>` | — | `RollingTextState` is `{ text, phase, direction, reducedMotion }`. |
-
-`RollingText` renders one clipped `<div>` with one `<text>` host inside it and
-takes the GPUix host props (`testId`, `role`, `aria-*`). `style` merges last and
-sees the current phase, so a caller can, for example, colour the value
-differently while it leaves.
-
-## Accessibility
-
-The value painted now is the only value in the tree, so the accessible text is
-the value on screen — not both halves. There is no live region in `0.11.0` (no
-`aria-live`), so a screen reader is not pushed a new value; give the host a
-`label` that names the metric when the value changes on its own, exactly as the
-`CountingNumber` page recommends.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `text` | `string` | — |
+| `direction` | `"up" \| "down"` | `"up"` |
+| `level` | `MotionLevel` | `"normal"` |
+| `role` | `TextRole` | `"body"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<RollingTextState>` | — |
 
 ## Limitations
 
-- **Width follows the value.** The runtime cannot measure a string before it lays
-  it out, so the clip box is as wide as the value on screen and what follows it
-  moves when the width changes. Give the box a width through `style` (or wrap it
-  in a fixed-width box) when the surrounding layout must stay still.
-- **No horizontal direction.** A full-width slide needs the same measurement; a
-  fade and an 8 px offset would be a different effect, not this one, so it is not
-  offered under this name.
-- **One line only.** A value wider than its box is not wrapped and not
-  ellipsised: the clip cuts it. Keep values short, or widen the box.
-- **The swap is a timer between two tweens**, not one continuous animation, so a
-  backgrounded window may complete the halves a frame or two apart.
-- No per-character roll: the runtime cannot animate the characters of a text
-  node, so a digit-level odometer would need one clipped column per digit.
-
-## Related
-
-- [Counting number](/docs/components/counting-number) — a value that counts on the
-  physics clock rather than rolling between two values.
-- [Rotating text](/docs/components/rotating-text) — a phrase list on an interval,
-  with a fade rather than a roll.
-- [Auto height](/docs/components/auto-height) — the measured clip the travel uses.
-
-## Verification
-
-`src/behaviour/rolling-text.test.tsx` renders the component in the real GPUix
-renderer (7 tests): the one-line clip, the outgoing value staying painted for the
-exit half, the declared exit frame, the incoming value starting beyond the far
-edge and reaching rest, the reversed direction, the reduced preference painting
-at once, and a value changed mid-exit landing on the newest one with a single
-name in the accessibility tree. The two-phase rules are the unit suite beside the
-logic (`src/rolling-text/logic.test.ts`).
+- Width follows the value; the clip is the value on screen.
+- No horizontal direction.
+- One line only; a wide value is clipped.
+- No per-character roll.

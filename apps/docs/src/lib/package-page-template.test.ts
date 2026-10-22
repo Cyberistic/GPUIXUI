@@ -17,13 +17,12 @@ import { packageCollections } from "./collection-routes";
  * kept rendering it as the component's documentation.
  *
  * Only the sections every page can carry are required. A page without sizes,
- * a keyboard path, a theming decision or a test ledger omits that section by
- * design (`docs/preview-strategy.md`), so the guard holds the three that no
- * component page may hide:
+ * a keyboard path or a theming decision omits that section by design
+ * (`docs/preview-strategy.md`), so the guard holds the two that no component
+ * page may hide:
  *
  *   - `## API` — what the props are;
- *   - an accessibility or limitations section — the runtime's budget;
- *   - `## Related` — the sibling, parent or alternative.
+ *   - an accessibility or limitations section — the runtime's budget.
  *
  * The known gaps are listed with the workstream that owns the page, and a gap
  * that is fixed fails the staleness case, so the list cannot outlive it.
@@ -64,7 +63,6 @@ const sections: ReadonlyArray<Section> = [
     accepts: (heading) =>
       heading.startsWith("Accessibility") || heading === "Limitations",
   },
-  { name: "Related", accepts: (heading) => heading === "Related" },
 ];
 
 interface KnownGap {
@@ -101,7 +99,7 @@ describe("the package page template", () => {
     expect(pages.every((page) => page.headings.length > 0)).toBe(true);
   });
 
-  it("gives every page its API, its accessibility budget, its evidence and its siblings", () => {
+  it("gives every page its API and its accessibility budget", () => {
     const unrecorded = missing.filter((gap) => !isKnown(gap.page, gap.section));
 
     expect(
@@ -133,11 +131,8 @@ describe("the package page template", () => {
   });
 
   it("keeps the policy's description of the ledger true", () => {
-    // The policy said the one page without `## Related` "is recorded in
-    // TODO.md and in the guard's own list" after the page had been fixed and
-    // the entry deleted, so a reader was sent to two empty ledgers. The policy
-    // has to describe the ledger it has, and the page it names has to keep the
-    // section it was fixed for.
+    // The policy has to describe the ledger it has: empty today, and never
+    // pointing a reader at a `TODO.md` entry that no longer exists.
     const policy = readFileSync(
       new URL("docs/preview-strategy.md", root),
       "utf8",
@@ -145,10 +140,5 @@ describe("the package page template", () => {
 
     expect(policy.includes("it is empty today")).toBe(knownGaps.length === 0);
     expect(policy).not.toContain("that gap is recorded in `TODO.md`");
-
-    const messageScroller = pages.find((page) =>
-      page.path.endsWith("message-scroller.mdx"),
-    );
-    expect(messageScroller?.headings).toContain("Related");
   });
 });

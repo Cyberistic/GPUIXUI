@@ -3,10 +3,13 @@ title: Motion grid
 description: A grid whose cells travel to their new slots when the order changes.
 ---
 
-`MotionGrid` arranges cards in a fixed grid and, when the order changes, tweens
-each cell from the slot it was in to the slot it now belongs in. A reorder is
-the grid's whole job: the component owns the placement and the movement, and the
-caller owns what a cell contains.
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
 
 ```tsx
 import { MotionGrid } from "@gpuixui/components/motion-grid";
@@ -21,149 +24,23 @@ import { MotionGrid } from "@gpuixui/components/motion-grid";
 />;
 ```
 
-The array's order **is** the arrangement: rotating it, sorting it or filtering
-it is the reorder. There is no `onReorder` and no drag handle — a drag is an
-input gesture the application owns, and all this component needs is the order
-the drag produced.
-
-## How a reorder moves
-
-Every cell is an absolutely positioned box, and its `left`/`top` are a motion
-target. When the array changes, React moves the keyed cell in the tree, and the
-runtime retargets the box from the position on screen to the new slot — so a
-cell that moved travels, and a cell whose slot did not change stays still.
-
-`@gpuix/native@0.11.0` has no `transform` style key (upstream issue `#102`), so
-the movement is **inset geometry**, not a translated layer: no scale, no rotate
-and no shared-layout animation. That is the honest mapping of a layout
-transition in this runtime, and it is why the component asks for a fixed cell
-size instead of measuring its content.
-
-## Sizing
-
-Because every cell is placed absolutely, no cell sizes its row. The grid's cell
-size is the caller's, and the frame is arithmetic over it:
-
-```
-width  = columns × cellWidth + (columns − 1) × gap
-height = rows × rowHeight + (rows − 1) × gap      rows = ceil(cells / columns)
-```
-
-The defaults are `columns={3}`, `cellWidth={160}`, `rowHeight={120}` and
-`gap={12}`. Each measure is a whole number of pixels — the runtime lays the
-cells out on a pixel grid — and one that cannot be laid out (`NaN`, an infinity)
-falls back to the house value rather than reaching the runtime as `null`.
-`columns` is a count, so it is floored and never falls below one.
-
-The frame reserves the width of **every declared column**, even when the last
-row is short: filtering a cell out of the grid moves the survivors into their
-slots without shrinking the frame under them. The frame's own height is a motion
-target, so a grid that gains a row grows with the cells rather than jumping a row
-ahead of them.
-
-A slot sizes the cell but does not clip it. The wrapper paints nothing, so a
-card's own radius, border and shadow are the content's to draw — and a cell
-travelling between rows can pass over its neighbours while it moves, which is
-what a reorder looks like.
-
-## Keys and arrivals
-
-A cell's key is its `id`. Appending a cell therefore mounts only the new box,
-which fades in at the slot it is arriving into, while the boxes around it
-travel. Removing a cell does not remount the survivors, so nothing replays an
-entrance the reader has already seen.
-
-Two cells sharing an `id` cannot both animate; give every cell a stable, unique
-id. The id is also the cell's internal `testId` (`motion-grid-cell-<id>`), so it
-should be readable.
-
-## Motion
-
-The reorder uses the named levels from `@gpuixui/motion`:
-
-- `normal` (200 ms, the default) is the house movement;
-- `fast` (160 ms) fits a dense toolbar of small cells;
-- `slow` (320 ms) suits a board that is the page.
-
-```tsx
-import { MotionProvider } from "@gpuixui/components";
-
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <MotionGrid items={items} />
-</MotionProvider>;
-```
-
-Under the reduced preference the reorder is an **assignment**: every cell paints
-its new slot in the frame the order changes and a newly mounted cell is already
-opaque. The preference is the application's to supply — the runtime exposes no
-reduced-motion query (`/docs/runtime`).
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `items` | `ReadonlyArray<MotionGridItem>` | — | `{ id, content }`, in reading order. A cell's key is its `id`. |
-| `columns` | `number` | `3` | Columns across the frame; floored, at least `1`. |
-| `cellWidth` | `number` | `160` | Painted cell width, in whole pixels; a value that cannot be laid out falls back. |
-| `rowHeight` | `number` | `120` | Painted row height, in whole pixels. |
-| `gap` | `number` | `12` | Space between two columns and between two rows; held at zero or above. |
-| `level` | `MotionLevel` | `"normal"` | The reorder's duration (200 ms at `normal`). |
-| `label` | `string` | — | The frame's accessible name. Omit it and the frame publishes no node. |
-| `className` | `string` | — | A Tailwind class string for the frame, joined after the resting style. |
-| `style` | `StateStyle<MotionGridState>` | — | The frame's style, or a function of `{ count, columns, rows, reducedMotion }`. |
-
-The frame carries the `testId`; every cell carries `motion-grid-cell-<id>`.
-`MotionGridItem` and `MotionGridState` are exported for a typed item list and a
-state-aware `style`.
-
-## Accessibility
-
-The grid is a layout, not a control, so by default it publishes no node: the
-cells' own content keeps its names, roles and tab order exactly as it would
-outside a grid. Pass `label` when the grouping itself is worth naming (a board, a
-gallery, a set of pinned tools); the frame then becomes a `role="group"` with
-that name.
-
-The reading order is the array's order, whether or not the cells are mid-travel,
-and the cells' absolute boxes keep receiving presses where they are painted. A
-reorder is not announced — `0.11.0` has no live region — so an action that
-reorders the board should report what it did in its own label or in nearby text.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `items` | `ReadonlyArray<MotionGridItem>` | — |
+| `columns` | `number` | `3` |
+| `cellWidth` | `number` | `160` |
+| `rowHeight` | `number` | `120` |
+| `gap` | `number` | `12` |
+| `level` | `MotionLevel` | `"normal"` |
+| `label` | `string` | — |
+| `className` | `string` | — |
+| `style` | `StateStyle<MotionGridState>` | — |
 
 ## Limitations
 
-- **No cell sizes its row.** Absolute placement is what makes the movement
-  possible, so the caller names `cellWidth` and `rowHeight` rather than letting
-  content measure itself; a cell whose content is taller than its row is not
-  clipped, it spills.
-- **Inset movement, no transform.** The runtime has no `transform` (issue
-  `#102`), so there is no scale, rotate or shared-layout transition.
-- **A fixed number of columns.** The grid cannot read its container's width and
-  choose a column count; the caller passes one (and may pass a different one on
-  a resize — the cells retarget).
-- **Ids are identities.** Two cells with the same id share a key, so one of them
-  cannot animate.
-- **The wrapper paints nothing.** A cell has no surface, radius or clip of its
-  own; the content does.
-
-## Verification
-
-`src/behaviour/motion-grid.test.tsx` renders the grid in the real GPUix renderer
-(9 tests): the slots and the frame's size for five cells, a reordered cell
-measured mid-travel on a paused clock and at rest afterwards, a removal that
-keeps the surviving cells' own elements while they close the gap, an appended
-cell that declares its entrance while its neighbours do not replay, the frame
-growing with a row instead of jumping ahead of it, the frame's box and the cells'
-sizes held while two cells cross, the reduced preference painting the new slots
-in the frame the order changes, a press reaching content inside a cell at the box
-it is painted in, and the frame's name being published only when the caller
-names it. The arithmetic is `src/motion-grid/logic.test.ts` (11 tests).
-
-## Related
-
-- [Reveal](/docs/components/reveal) — a fade and an offset for a single element.
-- [Magnetic](/docs/components/magnetic) — another movement built from an inset
-  offset rather than a transform.
-- [Tabs](/docs/components/tabs) — the same retarget-a-box movement for one
-  indicator.
-- [Motion](/docs/motion) — the levels, easings and reduced-motion
-  policy.
+- No cell sizes its row; the caller names both.
+- Inset movement, no `transform`.
+- A fixed number of columns.
+- The wrapper paints nothing.
