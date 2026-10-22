@@ -663,6 +663,47 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("records the headless button decision as made, not pending", () => {
+    // Bug guarded: the package README and `Button`'s header both promised the
+    // headless `./button` adoption was "tracked in TODO.md" / "yet", while the
+    // decision had been evaluated and declined (the runtime's `buttonProps`
+    // would regress four measured behaviours) and the page already said so. A
+    // reader was sent looking for work that does not exist.
+    const readme = readFileSync(
+      fileURLToPath(new URL("../README.md", import.meta.url)),
+      "utf8",
+    );
+    const source = readFileSync(
+      fileURLToPath(new URL("./components/Button.tsx", import.meta.url)),
+      "utf8",
+    );
+    const page = read("button.mdx");
+
+    expect({
+      readmeDecision: readme.includes("evaluated and declined"),
+      readmeReason: readme.includes("held-key guard"),
+      readmePointer: readme.includes("docs/button.mdx"),
+      sourceDecision: source.includes("**evaluated and"),
+      sourceDeclined: source.includes("declined**"),
+      pageDecision: page.includes("Adoption was evaluated"),
+      pageDeclined: page.includes("and declined"),
+      pagePointer: page.includes("TODO.md"),
+      readmePending: readme.includes("headless one yet"),
+      sourcePending: source.includes("tracked decision"),
+    }).toEqual({
+      readmeDecision: true,
+      readmeReason: true,
+      readmePointer: true,
+      sourceDecision: true,
+      sourceDeclined: true,
+      pageDecision: true,
+      pageDeclined: true,
+      pagePointer: true,
+      readmePending: false,
+      sourcePending: false,
+    });
+  });
+
   it("is indexed by the package's own page table", () => {
     const index = read("README.md");
     const linked = Arr.filterMap(

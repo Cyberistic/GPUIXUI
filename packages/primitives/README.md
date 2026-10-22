@@ -92,7 +92,7 @@ none paints a literal and none scripts hover or press
 | a list revealing its own highlight | absent (`scrollIntoView` scrolls to a scroller's **direct child**, and `Select` never scrolls for its highlight) | a `Select` row brings itself into view after commit from the row's and the list's painted boxes (`core/scroll.ts`'s `revealScroll`), so a row past the 320px cap and a row inside a group are both revealed |
 | fade mask | absent | no edge fade: the scroller paints a hard edge |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
-| `./button` | published (headless) | `Button` keeps this package's contract — the recipe, `loading`, `StateStyle<ButtonState>` — and does not wrap the headless one yet (tracked in `TODO.md`) |
+| `./button` | published (headless) | `Button` keeps this package's contract — the recipe, `loading`, `StateStyle<ButtonState>` — because `buttonProps` would regress four measured behaviours (no `loading`/`Spinner` or `"Loading"` description, no `focused` in its `style` callback, a disabled button kept in the tab order, no held-key guard on the Space release), so adoption was **evaluated and declined**; the comparison is on `docs/button.mdx` and in `TODO.md` §Salvage |
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 

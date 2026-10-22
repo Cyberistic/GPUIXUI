@@ -6,8 +6,10 @@
  * and the decision is wired here exactly the way the platform behaves: Enter on
  * key down, Space on key up, a held key ignored), because the recipe, `loading`,
  * the `StateStyle<ButtonState>` parts contract and the runtime probes all sit on
- * this one implementation. Adopting the headless primitive is a tracked decision
- * in `TODO.md`, not a claim that the runtime lacks one.
+ * this one implementation. Adopting the headless primitive was **evaluated and
+ * declined** — it would regress the Loading state and description, the `focused`
+ * style state, the removed tab stop while disabled and the held-key guard; the
+ * comparison is on `docs/button.mdx`, and the runtime does publish one.
  *
  * Focus is a keyboard-only outline: the button declares `keyboardRing`
  * (tokens' `focusVisible`) at rest and the runtime paints it after Tab, never
