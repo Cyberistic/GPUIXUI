@@ -738,7 +738,9 @@ dialog's skeleton is measured on the dialog's own `popover` fill, not only on
 the page, a card and a muted list. The veil is composited over its surface rather than rejected as
 translucent, and it is measured on every content strip a window holds behind a
 modal — a card, a popover, a sidebar's `muted` toolbar, a segmented `secondary`
-panel, a field's `input` fill and the `selected` wash a chosen row wears; the
+panel, a field's `input` fill, the `selected` wash a chosen row wears and the
+four soft status tints (a confirmation opened from an alert's retry covers the
+message that asked for it); the
 page's own void is exempt, because a black
 page cannot be darkened and a high-contrast theme separates its dialog with a
 border instead. The status edge is measured at the share

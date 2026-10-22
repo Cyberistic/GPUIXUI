@@ -1848,7 +1848,7 @@ how a status edge is measured at the alpha its component actually uses:
 | ------- | ---- | ------------- |
 | divider | `border` | `background`, `card`, `popover`, `muted` |
 | skeleton | `skeleton` | `background`, `card`, `popover`, `muted` |
-| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`, `accent` |
+| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`, `accent`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, the same four strips, and the washes `hover`, `active`, `selected`, `accent` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
@@ -1969,7 +1969,12 @@ a veil painted in that row's fill leaves the thing the dialog is asking about at
 full brightness. The row **under the pointer** is the third state: a context
 menu, a confirmation dialog or a command palette is opened from a row, and that
 row is wearing a wash at that moment — `accent` on a list row, `active` while the
-press is down — so those two washes are measured alongside the chosen one. A surface that cannot be measured at all — a
+press is down — so those two washes are measured alongside the chosen one. The
+four **soft status tints** (`infoSoft`, `successSoft`, `warningSoft`,
+`destructiveSoft`) are the fourth, and they are the same composition as the
+shadow's: a confirmation dialog opened from an `Alert`'s retry covers the
+message that asked for it, so the veil has to recede the tint the message is
+painted on. A surface that cannot be measured at all — a
 translucent page — is reported with `ratio: undefined`, exactly as a text pair
 is.
 
@@ -2579,11 +2584,12 @@ Two differently named tokens are easy to mix up here:
 
 - `overlay` is the **modal scrim colour** (`#00000073` light, `#000000A6` dark),
   painted behind a modal's content and measured as a decorative surface over
-  `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active` and
-  `accent` (`decorative.ts`) — the strips a window actually holds behind a modal,
-  including the row the reader has chosen and the row the pointer or a press has
-  tinted when the surface opens over it, not the page's void. It is what
-  makes a modal recede.
+  `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`,
+  `accent`, `infoSoft`, `successSoft`, `warningSoft` and `destructiveSoft`
+  (`decorative.ts`) — the strips a window actually holds behind a modal,
+  including the row the reader has chosen, the row the pointer or a press has
+  tinted when the surface opens over it, and the message a confirmation was
+  opened from — not the page's void. It is what makes a modal recede.
 - `elevation.overlay` is a **reserved, empty elevation level**. It lifts nothing:
   `elevationShadow(theme, "overlay")` returns `undefined`, and a surface that
   names it paints flat. Floating surfaces take `elevation.lg` — the dialog (and

@@ -177,8 +177,9 @@ describe("decorative surfaces", () => {
 
   it("measures a veil over the content surfaces a modal covers", () => {
     // A modal veils the whole window, not only the page under its own surface:
-    // the sidebar's toolbar, a segmented panel, the field behind it and the row
-    // the reader has chosen are all receded by the same role.
+    // the sidebar's toolbar, a segmented panel, the field behind it, the row the
+    // reader has chosen and the message its own action opened the modal from are
+    // all receded by the same role.
     const missing = [
       "card",
       "popover",
@@ -186,6 +187,7 @@ describe("decorative surfaces", () => {
       "secondary",
       "input",
       "selected",
+      ...statusTones.map((tone) => `${tone}Soft`),
     ].filter((over) => !measured("scrim", "overlay", over));
 
     expect(missing).toEqual([]);
@@ -657,14 +659,19 @@ describe("decorative surfaces", () => {
     ).toEqual([]);
   });
 
-  it("measures a shadow on the tint a message's own action opens over", () => {
+  it("measures a message's own action opening over its tint", () => {
     // An `Alert`'s description is a container and its documented action is a
-    // plain `Button`, so a menu or a popover opened from one casts its shadow
-    // over the tint the message is painted on — the same composition the row
-    // washes are measured for, one surface over.
-    const missing = statusTones
-      .map((tone) => `${tone}Soft`)
-      .filter((over) => !measured("elevation", "shadow", over));
+    // plain `Button`: a menu or a popover opened from one casts its shadow over
+    // the tint the message is painted on, and a confirmation dialog opened from
+    // it veils the message that asked for the confirmation. Both contracts cover
+    // the same strips the row washes are measured for, one surface over.
+    const missing = statusTones.flatMap((tone) => {
+      const over = `${tone}Soft`;
+      return [
+        ...(measured("elevation", "shadow", over) ? [] : [`elevation/${over}`]),
+        ...(measured("scrim", "overlay", over) ? [] : [`scrim/${over}`]),
+      ];
+    });
 
     expect(missing).toEqual([]);
   });

@@ -321,12 +321,14 @@ const elevationRole = "shadow" as const;
 const elevationLevel = "lg" as const;
 
 /**
- * The soft status tints a surface opened from a message lands on. An `Alert`'s
- * description is a container and its documented action is a plain `Button`, so a
- * menu or a popover opened from one casts its shadow over the tint the message
- * is painted on — the same composition the row washes are measured for.
+ * The soft status tints a message's own action opens a surface over. An
+ * `Alert`'s description is a container and its documented action is a plain
+ * `Button`, so a menu opened from one casts its shadow over the tint the message
+ * is painted on, and a confirmation dialog opened from it veils the message that
+ * asked for the confirmation — the same composition the row washes are measured
+ * for, one surface over.
  */
-const elevationTints = statusTones.map((tone) => `${tone}Soft` as const);
+const messageTintStrips = statusTones.map((tone) => `${tone}Soft` as const);
 
 const elevationStrips = [
   "background",
@@ -338,7 +340,7 @@ const elevationStrips = [
   "selected",
   "active",
   "accent",
-  ...elevationTints,
+  ...messageTintStrips,
 ] as const;
 
 /**
@@ -390,6 +392,16 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // the same defect the chosen row closed one state over.
   { surface: "scrim", role: "overlay", over: "active" },
   { surface: "scrim", role: "overlay", over: "accent" },
+  // A message is part of the window too, and its own action can open the modal:
+  // a confirmation dialog opened from an alert's retry covers the alert that
+  // asked for it, so the veil has to recede the tint the message sits in.
+  ...messageTintStrips.map(
+    (over): DecorativeSurface => ({
+      surface: "scrim",
+      role: "overlay",
+      over,
+    }),
+  ),
   // A scrollbar thumb is chrome: the platform paints and sizes it, and the role
   // only tints it. A thumb that matches the strip it moves along is a scroller a
   // reader cannot find, so it is measured wherever a scroller can sit.
