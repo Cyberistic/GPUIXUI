@@ -351,12 +351,13 @@ shadows are stronger because contrast between surfaces is lower — but stronger
 not the same as visible. The deepest level is held to the perceptibility floor
 against the strips a raised surface falls on — the page, card, popover and
 toolbar, the segmented `secondary` panel and a field's `input` fill the veil
-already names, every wash a row can be wearing when the surface opens (the
-`selected` a chosen row holds, the `accent` a list row tints under the pointer and
-the `active` a row keeps while the press is down) and the four soft tints a
-message is painted on, because an alert's documented action can open a menu over
-its own surface — the same `decorativeFailures` call a divider and a wash answer
-to (§9). A shadow is a blurred geometry, so the composite is a ceiling rather
+already names, every wash a surface can open over (the
+`selected` a chosen row holds, the `accent` a list row tints under the pointer,
+the `active` a row keeps while the press is down and the `hover` a click leaves
+on the trigger it was opened from) and the four soft tints a message is painted
+on, because an alert's documented action can open a menu over its own surface —
+the same `decorativeFailures` call a divider and a wash answer to (§9). A shadow
+is a blurred geometry, so the composite is a ceiling rather
 than what the eye receives: a shadow that passes may still read faint at its
 edge, and the contract reports only one that cannot be seen at all. It found
 exactly that twice: the high-contrast dark theme tinted its shadows with black on
@@ -364,7 +365,7 @@ a pure-black page, so every level was 1.00:1 there and a dialog or a full-width
 card had no shadow, and the grey that replaced it matched the same theme's
 `secondary` face, so a dialog over a segmented panel still painted 1.00:1. Its
 tint is lighter than the faces it can fall on now, and the deepest level reads
-1.17–1.87:1 across all thirteen strips.
+1.17–1.87:1 across all fourteen strips.
 
 A level is a rung on the same kind of ladder as a radius: the surface a reader
 raises must cast a shadow that reaches further below its box than the level
@@ -747,7 +748,8 @@ dialogs. The tightest rail is Windows 7 (Aero) dark's on its dialog fill at
 1.052:1. The veil is composited over its surface rather than rejected as
 translucent, and it is measured on every content strip a window holds behind a
 modal — a card, a popover, a sidebar's `muted` toolbar, a segmented `secondary`
-panel, a field's `input` fill, the `selected` wash a chosen row wears and the
+panel, a field's `input` fill, the `selected` wash a chosen row wears, the
+`hover` wash a click leaves on the control the surface opened from and the
 four soft status tints (a confirmation opened from an alert's retry covers the
 message that asked for it); the
 page's own void is exempt, because a black
@@ -791,8 +793,9 @@ message-tint pairs moved the neutral edge again.
 The elevation tint is measured on the same floor, as a **ceiling**: the deepest
 level is composited over the strips a raised surface can fall on — the page,
 card, popover and toolbar, the `secondary` panel and `input` fill the veil names,
-every wash a row can be wearing when a context menu or a dialog opens over it
-(`selected`, `accent`, `active`) and the four soft tints a message's own action
+every wash a surface can open over when a context menu or a dialog opens
+(`selected`, `accent`, `active`, and the `hover` a click leaves on its trigger)
+and the four soft tints a message's own action
 can open a surface over — so a shadow that passes may still read faint at its
 blurred edge and one a reader cannot see is reported. That is how the
 high-contrast dark page's black-on-black scale was found, and how the grey that

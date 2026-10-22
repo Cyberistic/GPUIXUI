@@ -1852,7 +1852,7 @@ how a status edge is measured at the alpha its component actually uses:
 | ------- | ---- | ------------- |
 | divider | `border` | `background`, `card`, `popover`, `muted` |
 | skeleton | `skeleton` | `background`, `card`, `popover`, `muted` |
-| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`, `accent`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` |
+| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`, `accent`, `hover`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, the same four strips, and the washes `hover`, `active`, `selected`, `accent` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
@@ -1989,7 +1989,10 @@ full brightness. The row **under the pointer** is the third state: a context
 menu, a confirmation dialog or a command palette is opened from a row, and that
 row is wearing a wash at that moment — `accent` on a list row, `active` while the
 press is down — so those two washes are measured alongside the chosen one. The
-four **soft status tints** (`infoSoft`, `successSoft`, `warningSoft`,
+`hover` wash is the state a **click** leaves behind: the surface paints after the
+button is released, so the ghost trigger it was opened from is hovered under the
+veil, and a submenu opens from the menu row the reader points at. The four **soft
+status tints** (`infoSoft`, `successSoft`, `warningSoft`,
 `destructiveSoft`) are the fourth, and they are the same composition as the
 shadow's: a confirmation dialog opened from an `Alert`'s retry covers the
 message that asked for it, so the veil has to recede the tint the message is
@@ -2008,13 +2011,15 @@ share in its alpha byte and a brand can supply a level whole; the strips are the
 four a raised surface floats over (`background`, `card`, `popover`, `muted`), the
 two window fills the veil already names — a segmented `secondary` panel, which is
 also a tonal action's face, and a field's own `input` fill, which a picker's panel
-overlaps — every wash a row can be wearing when the surface opens, and the four
+overlaps — every wash a surface can open over, and the four
 soft status tints a message is painted on. A context menu opens over the row the
-reader right-clicked, so its shadow lands on that row's own fill; an `Alert`'s
-description is a container whose documented action is a plain `Button`, so a menu
-opened from one casts its shadow over the tint the message sits in. A menu row's
-`hover` is not one of them: no surface opens over a menu row, and the row a
-surface is opened *from* is a list row, which tints `accent`.
+reader right-clicked, so its shadow lands on that row's own fill; a submenu opens
+from the menu row whose submenu was chosen, so the shadow lands on that row's
+`hover` wash (`menu/item.tsx`), and a dialog or popover opened by a click falls
+on the ghost trigger the pointer still rests on (`internal/button.tsx`); an
+`Alert`'s description is a container whose documented action is a plain
+`Button`, so a menu opened from one casts its shadow over the tint the message
+sits in.
 
 The veil and the shadow cover the same window, so a strip the veil names and the
 shadow does not is a hole — and the high-contrast dark theme had one. The black
@@ -2024,7 +2029,7 @@ matched the same theme's `secondary` face, so a dialog opened over a segmented
 panel painted a shadow the panel could not show (**1.00:1**) while the page, card,
 popover, toolbar and wash placements all passed. The tint is now a grey lighter
 than the faces it can fall on (`#4A4A4AB3`), and the deepest level clears the
-floor on all thirteen strips at 1.17–1.87:1, the tightest being the pressed
+floor on all fourteen strips at 1.17–1.87:1, the tightest being the pressed
 `active` wash a row keeps while the press that opened the surface is down at
 1.17:1. The one-shadow-per-level rule and the role-owned tint remain
 `elevation.test.ts`'s.
@@ -2604,11 +2609,12 @@ Two differently named tokens are easy to mix up here:
 - `overlay` is the **modal scrim colour** (`#00000073` light, `#000000A6` dark),
   painted behind a modal's content and measured as a decorative surface over
   `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`,
-  `accent`, `infoSoft`, `successSoft`, `warningSoft` and `destructiveSoft`
-  (`decorative.ts`) — the strips a window actually holds behind a modal,
-  including the row the reader has chosen, the row the pointer or a press has
-  tinted when the surface opens over it, and the message a confirmation was
-  opened from — not the page's void. It is what makes a modal recede.
+  `accent`, `hover`, `infoSoft`, `successSoft`, `warningSoft` and
+  `destructiveSoft` (`decorative.ts`) — the strips a window actually holds
+  behind a modal, including the row the reader has chosen, the row the pointer
+  or a press has tinted when the surface opens over it, the control the click
+  left hovered, and the message a confirmation was opened from — not the page's
+  void. It is what makes a modal recede.
 - `elevation.overlay` is a **reserved, empty elevation level**. It lifts nothing:
   `elevationShadow(theme, "overlay")` returns `undefined`, and a surface that
   names it paints flat. Floating surfaces take `elevation.lg` — the dialog (and

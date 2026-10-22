@@ -339,9 +339,11 @@ const skeletonStrips = ["background", "card", "popover", "muted"] as const;
  * The washes: a context menu opens over the row the reader right-clicked, so the
  * shadow falls on that row's own fill — the `selected` a chosen row holds, the
  * `accent` a list row tints under the pointer, and the `active` a row keeps
- * while the press that opened the surface is down. A menu row's `hover` is
- * deliberately not one of them: no surface opens over a menu row, and the row a
- * menu is opened *from* is a list row, which tints `accent`.
+ * while the press that opened the surface is down. The `hover` wash is the one
+ * the pointer leaves behind when the press ends: a submenu opens from the
+ * **menu row** whose submenu was chosen, and that row is hovered
+ * (`menu/item.tsx`), while a dialog or popover opened by a click is still under
+ * a pointer that hovers its ghost trigger (`internal/button.tsx`).
  */
 const elevationRole = "shadow" as const;
 const elevationLevel = "lg" as const;
@@ -366,6 +368,7 @@ const elevationStrips = [
   "selected",
   "active",
   "accent",
+  "hover",
   ...messageTintStrips,
 ] as const;
 
@@ -418,6 +421,12 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // the same defect the chosen row closed one state over.
   { surface: "scrim", role: "overlay", over: "active" },
   { surface: "scrim", role: "overlay", over: "accent" },
+  // A surface opened by a click paints after the press has cleared, so the
+  // control it was opened from is wearing `hover` by then: a dialog opened from
+  // a ghost toolbar action, or a popover from an outlined trigger. The veil
+  // covers that control too, so the wash a reader actually leaves behind is
+  // measured beside the pressed one.
+  { surface: "scrim", role: "overlay", over: "hover" },
   // A message is part of the window too, and its own action can open the modal:
   // a confirmation dialog opened from an alert's retry covers the alert that
   // asked for it, so the veil has to recede the tint the message sits in.

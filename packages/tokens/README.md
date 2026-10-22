@@ -81,8 +81,11 @@ The deepest level must also be **visible** on the strips a raised surface falls
 on, which `decorativeFailures` measures as a ceiling — a blurred shadow passes
 below the floor only when a reader cannot see it at all. Those strips are the
 window's content surfaces (page, card, popover, toolbar, the segmented
-`secondary` panel and a field's `input` fill), every wash a row can be wearing
-when a surface opens over it, and the four soft tints a message is painted on. It
+`secondary` panel and a field's `input` fill), every wash a surface can open
+over — the `selected` a chosen row holds, the `accent` a list row tints under the
+pointer, the `active` a row keeps while the press is down and the `hover` a click
+leaves on the trigger it came from — and the four soft tints a message is painted
+on. It
 found the high-contrast dark theme twice: its black tint on a pure-black page read
 1.00:1 at every level, and the grey that replaced it was the same theme's
 `secondary` face, so a dialog over a segmented panel read 1.00:1 too. Its tint is
@@ -641,8 +644,9 @@ Each report is also a function of its own:
   skeleton fill (on the page, a card, a muted list and the fill a loading dialog
   paints), the modal veil (on the content strips a window holds behind it:
   a card, a popover, a `muted` toolbar, a `secondary` panel, a field's `input`
-  fill, and the washes a row can be wearing when a surface opens over it —
-  `selected`, `accent` and `active` — with the page's void exempt because
+  fill, and the washes a surface can open over —
+  `selected`, `accent`, `active` and the `hover` a click leaves on its trigger —
+  with the page's void exempt because
   nothing can darken a black page), a
   status tone's soft tint and its edge, a
   scrollbar thumb, the wash a hovered or selected row is tinted with, the fill a

@@ -179,8 +179,9 @@ describe("decorative surfaces", () => {
   it("measures a veil over the content surfaces a modal covers", () => {
     // A modal veils the whole window, not only the page under its own surface:
     // the sidebar's toolbar, a segmented panel, the field behind it, the row the
-    // reader has chosen and the message its own action opened the modal from are
-    // all receded by the same role.
+    // reader has chosen, the message its own action opened the modal from, and
+    // the control the pointer is still resting on when the surface opens are all
+    // receded by the same role.
     const missing = [
       "card",
       "popover",
@@ -188,6 +189,7 @@ describe("decorative surfaces", () => {
       "secondary",
       "input",
       "selected",
+      "hover",
       ...statusTones.map((tone) => `${tone}Soft`),
     ].filter((over) => !measured("scrim", "overlay", over));
 
@@ -701,14 +703,21 @@ describe("decorative surfaces", () => {
     ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
 
-  /** Whether a row wash has a painter that tints it. */
-  const surfaceOrigin = (wash: "active" | "accent"): boolean => {
+  /** Whether a wash a surface opens over has a painter that tints it. */
+  const surfaceOrigin = (wash: "active" | "accent" | "hover"): boolean => {
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
     const list = read("../../components/src/list.tsx");
+    const button = read("../../components/src/internal/button.tsx");
+    const row = read("../../components/src/menu/item.tsx");
     return wash === "accent"
       ? list.includes("hover: { backgroundColor: theme.colors.accent }")
-      : list.includes("active: { backgroundColor: theme.colors.active }");
+      : wash === "active"
+        ? list.includes("active: { backgroundColor: theme.colors.active }")
+        : button.includes("hover: { backgroundColor: theme.colors.hover }") &&
+          row.includes(
+            "hover: disabled ? undefined : { backgroundColor: theme.colors.hover }",
+          );
   };
 
   it("measures the deepest elevation level on the strips the veil already names", () => {
@@ -759,15 +768,21 @@ describe("decorative surfaces", () => {
     expect(missing).toEqual([]);
   });
 
-  it("measures a surface opened from the row the pointer is on", () => {
+  it("measures a surface opened from the pointer's own wash", () => {
     // A context menu, a confirmation dialog or a command palette is opened from
     // a list row, and that row is wearing a wash at the moment the surface
     // paints: `accent` under the pointer and `active` while the press that
     // opened it is down (`list.tsx`). The veil has to recede those washes and
     // the shadow has to fall on them, which is the same claim the chosen row
-    // states one state on. A menu row's `hover` is not one of them — no surface
-    // opens over a menu row.
-    const washes = ["active", "accent"] as const;
+    // states one state on.
+    //
+    // `hover` is the state the press leaves behind: a dialog opened by a click
+    // paints after the button is released, so its ghost trigger
+    // (`internal/button.tsx`) is hovered under the veil; and a submenu is
+    // opened from the menu row the reader points at (`menu/item.tsx`), whose
+    // hover the shadow falls on. The row a *list* opens a surface from tints
+    // `accent`; the row a *submenu* opens from is the menu's own `hover`.
+    const washes = ["active", "accent", "hover"] as const;
     const missing = washes.flatMap((over) => [
       ...["scrim", "elevation"].flatMap((surface) =>
         measured(
@@ -782,6 +797,30 @@ describe("decorative surfaces", () => {
     ]);
 
     expect(missing).toEqual([]);
+  });
+
+  it("reports a veil and a shadow painted in the hovered control's wash", () => {
+    // The wash is the fill the control is wearing when the surface opens, so a
+    // veil or a tint that carries it recedes nothing there: a dialog over a
+    // hovered ghost action, or a submenu over the row it came from, paints with
+    // no layer and no shadow while every page placement still passes.
+    const stillPage = extendTheme(lightTheme, {
+      colors: { overlay: lightTheme.colors.hover },
+    });
+    const stillRow = extendTheme(lightTheme, {
+      colors: { shadow: lightTheme.colors.hover },
+    });
+
+    expect(
+      decorativeFailures(stillPage).find(
+        ({ surface, over }) => surface === "scrim" && over === "hover",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+    expect(
+      decorativeFailures(stillRow).find(
+        ({ surface, over }) => surface === "elevation" && over === "hover",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
 
   it("reports a shadow painted in the wash the row is wearing", () => {
@@ -883,8 +922,9 @@ describe("decorative surfaces", () => {
     // segmented panel painted a shadow the panel could not show — 1.00:1, while
     // the page, card, popover and toolbar placements all passed — and the same
     // tint was 1.047:1 on the deep red message surface, under the floor at its
-    // edge. The tint is lighter than the faces it can fall on now, and every
-    // strip clears.
+    // edge. `hover` is that grey as well, so the hovered control a surface was
+    // opened from was erased by the same tint. The tint is lighter than the faces
+    // it can fall on now, and every strip clears.
     const before = extendTheme(highContrastDarkTheme, {
       colors: { shadow: "#2E2E2EB3" },
     });
@@ -898,6 +938,13 @@ describe("decorative surfaces", () => {
         surface: "elevation",
         role: "shadow",
         over: "secondary",
+        ratio: 1,
+        floor: decorativeFloor,
+      },
+      {
+        surface: "elevation",
+        role: "shadow",
+        over: "hover",
         ratio: 1,
         floor: decorativeFloor,
       },
