@@ -30,12 +30,14 @@ const relativeLuminance = (color: string | undefined): number | undefined => {
  *
  * The measured dialect is hex in every length the runtime paints, with or
  * without the `#` — shorthand `#fff` is widened, because a hand-written brand
- * reaches for it. Returns `undefined` when either value is not that dialect: a
- * translucent colour's contrast depends on the surface painted behind it, so a
- * single ratio would be a guess (composite it first if it needs measuring), and
- * a named colour or `hsl()` value paints without resolving to channels here. An
- * absent role — a theme restored from storage that predates it — is the same
- * unmeasurable answer rather than a crash.
+ * reaches for it, and an eight-digit value whose alpha byte is `FF` is the
+ * opaque colour it is, because `alpha(color, 1)` produces that form. Returns
+ * `undefined` when either value is not that dialect: a translucent colour's
+ * contrast depends on the surface painted behind it, so a single ratio would be
+ * a guess (composite it first if it needs measuring), and a named colour or
+ * `hsl()` value paints without resolving to channels here. An absent role — a
+ * theme restored from storage that predates it — is the same unmeasurable
+ * answer rather than a crash.
  *
  * @example
  * ```ts

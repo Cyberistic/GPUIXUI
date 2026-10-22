@@ -482,7 +482,8 @@ Each report is also a function of its own:
   `Partial<ThemeColors>` and `isPaintableColor` takes `unknown`, so absence is a
   line in the report rather than a `TypeError`. The measurement dialect is hex:
   the contrast and decorative contracts read every length the renderer paints —
-  shorthand `#fff` widens, with or without the `#` — so a hand-written brand is
+  shorthand `#fff` widens, with or without the `#`, and a fully opaque `FF` alpha
+  byte is the opaque colour it is rather than a share — so a hand-written brand is
   measured, and a brand in a named colour or a colour function has its pairs
   reported unmeasurable rather than guessed.
 - `invalidShadowColors(theme)` applies the same grammar to every shadow in the

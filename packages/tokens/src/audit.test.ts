@@ -12,7 +12,9 @@
 import { describe, expect, it } from "vitest";
 import {
   alpha,
+  alphaOf,
   auditTheme,
+  colorRoles,
   contrastFailures,
   contrastFloors,
   contrastFloorsFor,
@@ -31,6 +33,8 @@ import {
   retroTheme,
   selectionPairs,
   themes,
+  type Theme,
+  type ThemeColors,
 } from "./index.js";
 
 /** A high-contrast theme whose placeholder is 5:1 on white: AA, not AAA. */
@@ -373,5 +377,44 @@ describe("a brand written in the shorthand the renderer paints", () => {
     expect(highContrastLightTheme.colors.foreground).toBe("#000000");
     expect(auditTheme(highContrastLightTheme).passed).toBe(true);
     expect(auditTheme(shorthand).passed).toBe(true);
+  });
+});
+
+/**
+ * The bug this holds: `alpha(color, 1)` — the package's own helper — returns an
+ * eight-digit hex whose alpha byte is `FF`. The renderer paints that form, the
+ * paint check accepts it, and the measurement dialect read the byte as
+ * translucent, so every pair a role written that way touched was reported
+ * unmeasurable and the gate failed the same palette it passes in six digits.
+ * A fully opaque byte is no share, so it measures as the colour it is.
+ */
+describe("a brand whose colours carry a fully opaque alpha byte", () => {
+  // Only the roles that are opaque already: `selection`, `overlay` and `shadow`
+  // are designed as shares, and making one opaque would change the design
+  // rather than the dialect.
+  const opaque = (theme: Theme): Partial<ThemeColors> =>
+    Object.fromEntries(
+      colorRoles
+        .filter((role) => alphaOf(theme.colors[role]) === 1)
+        .map((role) => [role, alpha(theme.colors[role], 1)] as const),
+    );
+  const field = createTheme({
+    mode: "light",
+    contrast: "high",
+    colors: opaque(highContrastLightTheme),
+  });
+
+  it("writes every role in the form the helper produces", () => {
+    expect(field.colors.background).toBe("#FFFFFFFF");
+    expect(field.colors.foreground).toBe("#000000FF");
+  });
+
+  it("measures every pair the opaque roles carry", () => {
+    expect(auditTheme(field).contrast).toEqual([]);
+  });
+
+  it("passes the gate the six-digit theme with the same palette passes", () => {
+    expect(auditTheme(highContrastLightTheme).passed).toBe(true);
+    expect(auditTheme(field).passed).toBe(true);
   });
 });

@@ -15,7 +15,10 @@
 export interface MeasuredHex {
   /** The channels, as `#RRGGBB` in upper case. */
   readonly rgb: string;
-  /** The alpha byte, when the value carried one. */
+  /**
+   * The alpha byte, when the value carries a share below full opacity. A byte of
+   * `FF` is no share — `#FFFFFFff` is `#FFFFFF` — so it is not reported here.
+   */
   readonly alpha?: string;
 }
 
@@ -33,10 +36,15 @@ const widen = (digits: string): string =>
 /**
  * A colour's channels and share, or `undefined` when the value is not hex.
  *
+ * An alpha byte of `FF` is full opacity rather than a share, so it is read as
+ * the six-digit colour it is: `alpha(color, 1)` produces that form, and a theme
+ * built through the helper must measure like its long-form twin.
+ *
  * @example
  * ```ts
  * measuredHex("#fff"); // { rgb: "#FFFFFF" }
  * measuredHex("ffffff80"); // { rgb: "#FFFFFF", alpha: "80" }
+ * measuredHex("#ffffffff"); // { rgb: "#FFFFFF" } — an opaque byte is no share
  * measuredHex("rebeccapurple"); // undefined — a name has no channels here
  * ```
  */
@@ -46,20 +54,21 @@ export const measuredHex = (value: string): MeasuredHex | undefined => {
     return undefined;
   }
   const channels = widen(digits).toUpperCase();
-  return {
-    rgb: `#${channels.slice(0, 6)}`,
-    alpha: channels.length === 8 ? channels.slice(6) : undefined,
-  };
+  const alpha = channels.length === 8 ? channels.slice(6) : undefined;
+  return alpha === undefined || alpha === "FF"
+    ? { rgb: `#${channels.slice(0, 6)}` }
+    : { rgb: `#${channels.slice(0, 6)}`, alpha };
 };
 
 /**
  * The channels of an opaque hex colour, or `undefined` for a translucent one —
  * whose contrast depends on the surface behind it, so a single ratio would be a
- * guess.
+ * guess. A fully opaque alpha byte is opaque.
  *
  * @example
  * ```ts
  * opaqueRgb("#fff"); // "#FFFFFF"
+ * opaqueRgb("#ffffffff"); // "#FFFFFF"
  * opaqueRgb("#ffffff80"); // undefined
  * ```
  */

@@ -631,10 +631,11 @@ export function alpha(color: string, amount: number): string {
  *
  * The inverse of {@link alpha}: it reads the byte a translucent colour carries
  * so a rule can restate that colour at the same strength in another tint. An
- * opaque six- or three-digit colour reads as `1`, and so does a value outside
- * the measured hex dialect — the CSS colour families carry their alpha in a
- * form this reads as opaque, which is one reason the contracts measure the hex
- * dialect.
+ * opaque colour reads as `1` in every length the renderer paints — the six- and
+ * three-digit forms, and an eight-digit one whose byte is `FF` — and so does a
+ * value outside the measured hex dialect: the CSS colour families carry their
+ * alpha in a form this reads as opaque, which is one reason the contracts
+ * measure the hex dialect.
  *
  * @example
  * ```ts
@@ -652,8 +653,9 @@ export function alphaOf(color: string): number {
  * Blend `amount` of `toward` into `color`, channel by channel.
  *
  * `amount` is clamped to `0…1`. The result keeps `color`'s alpha byte when it
- * has one and is opaque when it does not, so a blend of two opaque colours is
- * an opaque colour — the point of the rule: a fill that changes with the
+ * carries a share below full opacity and is opaque when it does not — an `FF`
+ * byte is no share — so a blend of two opaque colours is an opaque colour in the
+ * measurable dialect: the point of the rule is that a fill that changes with the
  * pointer does not let the surface behind it through. Shorthand hex is widened
  * first, on either side. A colour outside the measured hex dialect — or a
  * non-finite `amount`, as in {@link alpha} — is returned unchanged.

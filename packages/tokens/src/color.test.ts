@@ -343,6 +343,22 @@ describe("the hex dialect the contracts measure", () => {
     expect(contrastRatio("ffffff", "000000")).toBeCloseTo(21, 10);
   });
 
+  it("measures a fully opaque alpha byte", () => {
+    // `alpha(color, 1)` produces this form, and the renderer paints it: an
+    // alpha byte of `FF` is no share, so the colour measures exactly as its
+    // six-digit twin. Reading it as translucent reported every pair the role
+    // touched unmeasurable and failed the gate on a palette the runtime draws.
+    expect(alpha("#FFFFFF", 1)).toBe("#FFFFFFFF");
+    expect(contrastRatio("#FFFFFFFF", "#000000")).toBeCloseTo(21, 10);
+    expect(contrastRatio("ffffffff", "000000")).toBeCloseTo(21, 10);
+    expect(contrastRatio("#FFFF", "#000")).toBeCloseTo(21, 10);
+    expect(contrastRatio(alpha("#FFFFFF", 1), "#000000")).toBeCloseTo(21, 10);
+    expect(alphaOf("#FFFFFFff")).toBe(1);
+    // A derived fill keeps the measurable dialect rather than carrying an
+    // opaque byte every contract after it would refuse.
+    expect(blend("#5F4BDBFF", "#FFFFFF", 0.5)).toBe("#AFA5ED");
+  });
+
   it("still refuses a value that carries no channels here", () => {
     // A named colour and a colour function paint; resolving them is the
     // renderer's parser, not this package's.

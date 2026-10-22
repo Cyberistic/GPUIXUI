@@ -212,14 +212,16 @@ alpha("transparent", 0.3); // "transparent"
 
 `alphaOf(color)` reads a colour's alpha share as a number in `0…1` — the inverse
 of `alpha`. A rule that restates a colour at the same strength in another tint
-reads it here; a 6-digit colour, or one the parser does not recognise, reads as
-`1` (opaque). The elevation scale uses it, so a level's strength has one source.
+reads it here; an opaque colour — the 6- and 3-digit forms, or an 8-digit one
+whose byte is `FF` — reads as `1`, as does one the parser does not recognise. The
+elevation scale uses it, so a level's strength has one source.
 
 ```ts
 import { alphaOf } from "@gpuixui/tokens";
 
 alphaOf("#191D2514"); // 0.078
 alphaOf("#191D25"); // 1
+alphaOf("#191D25FF"); // 1 — a full byte is no share
 ```
 
 ### `blend`
@@ -894,16 +896,20 @@ theme carries.
 `selectionFailures` and the decorative contracts read hex in every length the
 renderer paints, with or without the `#` — shorthand `#fff`/`#fff8` widens to
 the long form, so a brand written the way a hand-written theme usually is is
-measured rather than reported unmeasurable. What they cannot read is a value
-that carries no channels here: a CSS named colour and an `hsl()`-family function
-paint and pass the paint check, and their contrast pairs are reported
-**unmeasurable** rather than guessed. That is why every shipped palette is
-written in the long hex form and the docs' examples stay in hex.
+measured rather than reported unmeasurable. An alpha byte of `FF` is full
+opacity rather than a share, so `#FFFFFFff` measures exactly as `#FFFFFF` —
+which matters because `alpha(color, 1)`, this package's own helper, produces that
+form; any byte below `FF` still marks a translucent value. What they cannot read
+is a value that carries no channels here: a CSS named colour and an
+`hsl()`-family function paint and pass the paint check, and their contrast pairs
+are reported **unmeasurable** rather than guessed. That is why every shipped
+palette is written in the long hex form and the docs' examples stay in hex.
 
 ```ts
-import { contrastRatio } from "@gpuixui/tokens";
+import { alpha, contrastRatio } from "@gpuixui/tokens";
 
 contrastRatio("#fff", "#000"); // 21 — shorthand is measured
+contrastRatio(alpha("#FFFFFF", 1), "#000000"); // 21 — an opaque byte is no share
 contrastRatio("hsl(0 0% 100%)", "#000"); // undefined — no channels here
 ```
 
@@ -2330,10 +2336,11 @@ or dropped is named rather than passing silently.
   colour function paints and passes the paint check, but its contrast, selection
   and decorative pairs are reported unmeasurable rather than guessed. Hex is
   measured in every length the renderer paints — shorthand `#fff` widens, with or
-  without the `#` — and the shipped palettes are written in the long form the
-  catalogue prints. `alphaOf` / `blend` derive from the same dialect, so a shadow
-  colour written as a name or function is treated as opaque when an elevation
-  level is retinted.
+  without the `#`, and an `FF` alpha byte is the opaque colour it is rather than
+  a share — and the shipped palettes are written in the long form the catalogue
+  prints. `alphaOf` / `blend` derive from the same dialect, so a shadow colour
+  written as a name or function is treated as opaque when an elevation level is
+  retinted.
 - No `zIndex` in the published API, so there is no numeric stacking token: paint
   order is tree order and the mounting rules are §Layering. The repo's
   source-built binding carries a local `zIndex` patch for a probe; library code
