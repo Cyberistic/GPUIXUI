@@ -1,0 +1,95 @@
+---
+title: Docking layouts
+description: A named tree of split and tab groups, rendered from a schema.
+---
+
+`DockLayout` renders a named tree of groups. A `split` is two dock nodes sharing
+an axis; a `tabs` group is an ordered tab list and its active tab. The tree is
+one `DockNode`, round-tripped through a JSON string, so a workspace is restored
+by decoding one string and re-mounting the tree.
+
+## Usage
+
+```tsx
+import { DockLayout, DockTab, type DockNode } from "@gpuixui/dock";
+import { useState } from "react";
+
+const initial: DockNode = {
+  kind: "split",
+  id: "root",
+  orientation: "horizontal",
+  size: 0.6,
+  first: {
+    kind: "tabs",
+    id: "editor",
+    activeTab: "code",
+    tabs: [new DockTab({ id: "code", label: "Code" })],
+  },
+  second: {
+    kind: "tabs",
+    id: "preview",
+    activeTab: "outline",
+    tabs: [new DockTab({ id: "outline", label: "Outline" })],
+  },
+};
+
+const [layout, setLayout] = useState(initial);
+
+<DockLayout
+  layout={layout}
+  onLayoutChange={setLayout}
+  renderTab={(id) => <Pane id={id} />}
+/>;
+```
+
+The full screen is `packages/dock/examples/dock-layout.example.tsx`.
+
+## Behaviour
+
+- State is the tree's: a tab press rewrites that group's `activeTab`, a divider
+  drag rewrites its split's `size`, and both report a new tree through
+  `onLayoutChange`. A group whose id does not match, or a tab that is already
+  active, reports no change.
+- A split renders its two children recursively and sizes the first by `size`
+  (a fraction, `[0, 1]`); the second fills the rest.
+- The divider is the same one a `SplitPane` uses, so the resize interaction is
+  one control across the whole package.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `layout` | `DockNode` | — | the tree; controlled |
+| `onLayoutChange` | `(layout: DockNode) => void` | — | the next tree |
+| `renderTab` | `(id: string) => ReactNode` | — | one tab's content |
+| `className` | `string` | — | joined after the recipe |
+
+## Persistence
+
+```ts
+import { DockNodeJson } from "@gpuixui/dock";
+import * as Schema from "effect/Schema";
+
+const saved = Schema.encodeUnknownSync(DockNodeJson)(layout);
+const restored = Schema.decodeUnknownSync(DockNodeJson)(saved);
+```
+
+The tree round-trips `activeTab` included, so a restored workspace reopens the
+tab it held. A string that is not a tree is a decode failure — open the default.
+
+## Measured rules
+
+- **The dock itself must not scroll** (`nested-scroll-lifecycle`): a pane owns
+  its own `overflow`; the dock sizes to the window and reads each pane's offset.
+- **A split's `max` is the caller's** (`dock-reflow`): the dock passes its own
+  bounds and re-clamps idempotently from the width the layout payload carries.
+
+## Verification
+
+- `packages/dock/src/dock-layout.test.ts` holds the tree round-trip and the
+  `activeTab` rewrite, plus the rule guards.
+
+## Related
+
+- [Split pane](./split-pane.mdx) — the divider a split nests.
+- [Panel groups](./panel-group.mdx) — the flat-fraction form of the same idea.
