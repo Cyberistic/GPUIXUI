@@ -32,6 +32,7 @@
     "---Navigation---",
     "accordion",
     "tabs",
+    "breadcrumb",
     "pagination"
   ]
 }

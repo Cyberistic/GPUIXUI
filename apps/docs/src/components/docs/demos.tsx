@@ -15,6 +15,12 @@ import {
   carouselWorkflowSource,
 } from "./carousel-demo";
 import {
+  BreadcrumbStates,
+  BreadcrumbWorkflow,
+  breadcrumbStatesSource,
+  breadcrumbWorkflowSource,
+} from "./breadcrumb-demo";
+import {
   CheckboxStates,
   CheckboxWorkflow,
   checkboxStatesSource,
@@ -2477,6 +2483,14 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: AlertComposition,
     source: alertCompositionSource,
     composition: true,
+  },
+  "breadcrumb-states": {
+    render: BreadcrumbStates,
+    source: breadcrumbStatesSource,
+  },
+  "breadcrumb-workflow": {
+    render: BreadcrumbWorkflow,
+    source: breadcrumbWorkflowSource,
   },
   "button-variants": { render: ButtonRow, source: buttonSource },
   "button-sizes": { render: ButtonSizes, source: sizeSource },

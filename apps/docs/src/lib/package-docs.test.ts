@@ -105,6 +105,7 @@ describe("the package docs collections", () => {
   const curated = new Set([
     "/docs/components/accordion",
     "/docs/components/alert",
+    "/docs/components/breadcrumb",
     "/docs/components/card",
     "/docs/components/carousel",
     "/docs/components/combobox",

@@ -1,5 +1,6 @@
 import accordion from "../../../../../packages/components/src/accordion.tsx?raw";
 import alert from "../../../../../packages/components/src/alert.tsx?raw";
+import breadcrumb from "../../../../../packages/components/src/breadcrumb.tsx?raw";
 import button from "../../../../../packages/primitives/src/components/Button.tsx?raw";
 import card from "../../../../../packages/components/src/card.tsx?raw";
 import carousel from "../../../../../packages/components/src/carousel.tsx?raw";
@@ -33,6 +34,7 @@ import tooltip from "../../../../../packages/primitives/src/components/Tooltip.t
 export const componentSources = {
   accordion,
   alert,
+  breadcrumb,
   button,
   card,
   carousel,

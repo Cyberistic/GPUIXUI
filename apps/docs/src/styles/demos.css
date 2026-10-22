@@ -3983,3 +3983,186 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---- breadcrumb: mirrors components/src/breadcrumb.tsx ----
+   A wrap-able caption-size trail: a link is `mutedForeground` and hovers to
+   `foreground`, the current page is plain `foreground` text marked
+   `aria-selected`, and `maxItems` hides an entry together with its separator.
+   The ellipsis is the muted mark the component paints. */
+.gx-demo-breadcrumb {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(620px, 100%);
+}
+
+.gx-breadcrumb-scene {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-breadcrumb-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-breadcrumb-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gx-breadcrumb-subtitle {
+  margin: 2px 0 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-breadcrumb-budget {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gx-breadcrumb-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 16px;
+}
+
+.gx-breadcrumb {
+  min-width: 0;
+}
+
+.gx-breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-breadcrumb-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-breadcrumb-link {
+  padding: 0 2px;
+  border: none;
+  border-radius: 2px;
+  background: none;
+  color: var(--muted-foreground);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-breadcrumb-link:hover {
+  color: var(--foreground);
+}
+
+.gx-breadcrumb-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-breadcrumb-page {
+  color: var(--foreground);
+  font-size: 12px;
+}
+
+.gx-breadcrumb-sep {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  user-select: none;
+}
+
+.gx-breadcrumb-ellipsis {
+  padding: 0 2px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-breadcrumb-count {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.gx-breadcrumb-readout {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.gx-breadcrumb-hint {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.gx-breadcrumb-hint code {
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.gx-breadcrumb-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gx-breadcrumb-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-breadcrumb-tile-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.gx-breadcrumb-tile-rail {
+  display: flex;
+  align-items: center;
+  min-height: calc(var(--control-height-sm) + 2px);
+}
+
+.gx-breadcrumb-tile-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .gx-breadcrumb-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

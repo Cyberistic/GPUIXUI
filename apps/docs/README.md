@@ -43,6 +43,7 @@ blocks/dashboard.mdx         An activity dashboard composed from the library
 components/index.mdx         The filterable component index
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
+components/breadcrumb.mdx    Curated: the collapse budget, the separator that leaves with its item
 components/button.mdx        Curated: previews, install, source (the package page keeps the API)
 components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
 components/carousel.mdx      Curated: discrete stepping, the dot pill and the kept slides
@@ -100,6 +101,8 @@ src/components/not-found.tsx        The 404 inside the docs chrome
 src/components/docs/component-preview.tsx The Preview/Code component preview
 src/components/docs/preview-surface.tsx   A preview carrying the resolved theme's variables
 src/components/docs/demos.tsx             The browser renderings and their source strings
+src/components/docs/breadcrumb-preview.ts The breadcrumb preview's collapse rule and separator count
+src/components/docs/breadcrumb-demo.tsx  The breadcrumb's two browser renderings and their source strings
 src/components/docs/checkbox-preview.ts  The checkbox preview's group arithmetic and keyboard edges
 src/components/docs/checkbox-demo.tsx     The checkbox's two browser renderings and their source strings
 src/components/docs/carousel-preview.ts   The carousel preview's clamp, loop rule and dot metrics

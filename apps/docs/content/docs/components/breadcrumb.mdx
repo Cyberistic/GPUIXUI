@@ -1,0 +1,200 @@
+---
+title: Breadcrumb
+description: The trail to the current page, with an optional collapsed middle.
+---
+
+`Breadcrumb` shows where the current page sits in a hierarchy. The trail is
+declarative — `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage` — and one
+number, `maxItems`, collapses the middle while always keeping the first entry and
+the current page.
+
+<ComponentPreview name="breadcrumb-workflow" />
+
+The budget above is the component's: **4** renders first, gap and tail, **All**
+renders the trail whole, and every budget below three is clamped to three. The
+count beside the trail is the rendered one, so a hidden entry visibly takes its
+separator with it.
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Breadcrumb" />
+
+<ComponentSource
+  name="breadcrumb"
+  file="packages/components/src/breadcrumb.tsx"
+/>
+
+## Usage
+
+```tsx
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@gpuixui/components/breadcrumb";
+
+<Breadcrumb maxItems={4}>
+  <BreadcrumbList>
+    <BreadcrumbItem>
+      <BreadcrumbLink onSelect={() => go("Projects")}>Projects</BreadcrumbLink>
+    </BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem>
+      <BreadcrumbLink onSelect={() => go("GPUIXUI")}>GPUIXUI</BreadcrumbLink>
+    </BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem>
+      <BreadcrumbPage>breadcrumb.tsx</BreadcrumbPage>
+    </BreadcrumbItem>
+  </BreadcrumbList>
+</Breadcrumb>;
+```
+
+Only the root and the list are required; the parts you compose are the trail.
+`BreadcrumbPage` is the current page (`BreadcrumbLink current` renders the same
+thing), and it is text rather than a link: there is nothing to navigate to.
+
+## The collapse rule
+
+The budget is a number of **rendered entries**, not characters. A trail that
+fits renders whole; a longer one keeps its first entry, an ellipsis, and the
+last `maxItems - 2` entries, so the current page is always visible. Below three
+the budget is clamped, because a trail needs its start, a gap and its end.
+
+| Trail (six entries) | `maxItems` | Renders |
+| ------------------- | ---------- | ------- |
+| `Projects / GPUIXUI / packages / components / src / breadcrumb.tsx` | — | all six |
+| … | `5` | `Projects / … / components / src / breadcrumb.tsx` |
+| … | `4` | `Projects / … / src / breadcrumb.tsx` |
+| … | `3` | `Projects / … / breadcrumb.tsx` |
+| … | `1` | clamped to `3`, the same as above |
+
+<ComponentPreview name="breadcrumb-states" />
+
+A hidden entry takes **its own separator** with it. `BreadcrumbList` pairs each
+authored separator with the item that follows it and drops the pair together, so
+a collapsed trail has no orphan slash — the count under the workflow trail is
+that rule, measured.
+
+## Composition
+
+| Part | Renders | Responsibility |
+| ---- | ------- | -------------- |
+| `Breadcrumb` | `div`, `role="navigation"`, `aria-label="Breadcrumb"` | the `maxItems` budget and the default separator |
+| `BreadcrumbList` | `div`, `role="list"` | reads its direct children, pairs separators, and collapses |
+| `BreadcrumbItem` | `div`, `role="listitem"` | one entry |
+| `BreadcrumbLink` | `div`, `role="link"` | a link back up the trail; Enter/Space run `onSelect` |
+| `BreadcrumbPage` | `text` | the current page: no tab stop, no link role, marked `aria-selected` |
+| `BreadcrumbSeparator` | `text`, `role="presentation"` | the glyph between entries; not announced as content |
+
+The gap mark is not a part a caller composes: `BreadcrumbList` draws it itself
+when the budget hides entries, names it "More", and keeps it out of the tab
+order.
+
+A part outside its parent throws rather than rendering a trail with no list
+around it, and `BreadcrumbList` counts **direct** children — a custom component
+wrapping an item is one entry, not the items inside it.
+
+## Keyboard
+
+| Key | Where | Contract |
+| --- | ----- | -------- |
+| `Tab` / `Shift+Tab` | the trail | reaches each link in order; the current page and the ellipsis are skipped |
+| `Enter` | a link | runs `onSelect` once, on the key **down** |
+| `Space` | a link | runs `onSelect` once, on the key **up**, and does not scroll the page |
+| — | the current page | not focusable, no link role, and no press |
+| — | an ellipsis | not focusable; it is a mark, not a "show the rest" control |
+
+There are no arrow keys and no roving tab stop: a trail is a short row of links,
+not a composite widget.
+
+## API reference
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Prop | Type | Default | Consequence |
+| ---- | ---- | ---- | ------- | ----------- |
+| `Breadcrumb` | `maxItems` | `number` | — | rendered entries to keep; below `3` is clamped to `3`, absent means no collapse |
+| `Breadcrumb` | `separator` | `ReactNode` | `/` | the glyph between entries; a node, so a chevron works |
+| `Breadcrumb` | `children` | parts | — | `BreadcrumbList` |
+| `BreadcrumbList` | `children` | parts | — | the items and any authored separators |
+| `BreadcrumbItem` | `children` | parts | — | `BreadcrumbLink` or `BreadcrumbPage` |
+| `BreadcrumbLink` | `onSelect` | `() => void` | — | runs on click, `Enter` or `Space` |
+| `BreadcrumbLink` | `current` | `boolean` | `false` | renders the current page instead of a link |
+| `BreadcrumbPage` | `children` | text | — | the current page; not focusable |
+| `BreadcrumbSeparator` | `children` | text | `/` | the default glyph when none is authored |
+| all parts | `className` | `string` | — | an extra recipe class, joined last |
+
+`maxItems` counts entries, and an ellipsis is not one: a six-entry trail at `4`
+renders three items plus the gap.
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| root and list | no surface of their own; `spacing` between entries |
+| a link | `mutedForeground`, hovering to `foreground`; the caption type role |
+| the current page | `foreground`; the caption type role |
+| a separator | `mutedForeground`; not selectable |
+| the ellipsis | `mutedForeground` |
+| the focus ring | `ring`, on the keyboard path |
+
+The trail paints no fill, so a theme change repaints the type and the link
+colours only. The list is `flex-wrap`: a long trail wraps rather than clipping,
+because collapse is a budget and not an overflow strategy.
+
+## Accessibility and limitations
+
+- `role="navigation"` with `aria-label="Breadcrumb"`, `role="list"`, and
+  `role="listitem"` on every entry.
+- **No `aria-current`** in `@gpuix/native@0.11.0`. The current page publishes
+  `aria-selected` instead — the substitution Pagination, Stepper and Timeline
+  use — and it stays plain text with no tab stop and no link role, so the trail
+  is not colour-only.
+- The collapse ellipsis is a mark named "More", not a button: it does not expand
+  the trail and is not in the tab order. If a reader must reach the hidden
+  entries, raise `maxItems` or give the trail a "show all" control of your own.
+- Separators are `role="presentation"`, so a screen reader hears the labels in
+  order and not a run of slashes.
+- `maxItems` reads **direct** children: a custom wrapper element around an item
+  is counted as one entry and collapses as a unit.
+- A link is a `div` with `role="link"` activated by click, `Enter` or `Space`;
+  it is not an anchor, and there is no `href` in the runtime.
+- The preview is a browser rendering of this recipe. Its crumbs are buttons — a
+  drawing has to be pressable — while the shipped trail is a GPUix host tree; the
+  Code tab and source accordion are the real usage.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | the host props every part takes |
+| `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
+| `@gpuixui/icons` | the ellipsis mark |
+| `@gpuixui/tw` | the `BREADCRUMB_*` recipes and `cn` |
+| `effect` | the collapse's array folds |
+
+The collapse rule is a pure function in this package (`breadcrumb/logic.ts`), so
+it is table-tested without a renderer.
+
+## Related
+
+- **Pagination** — moving through a linear result set.
+- **Tabs** — switching between peers rather than walking up a hierarchy.
+- **Navigation menu** — a horizontal menu of destinations, not a trail.
+
+## Status
+
+`done` in `COMPONENTS.md` with a **`partial`** runtime verdict: a compound of
+host `div`s and a `<text>`, with no runtime feature to miss beyond the absent
+`aria-current`. 6 native behaviour tests in
+`packages/components/src/behaviour/breadcrumb.test.tsx` hold the separator
+count, selecting a link but not the current page, `Enter` activation, collapsing
+the middle while keeping both ends, the ellipsis staying out of the tab order,
+and exactly one entry announced as selected. 7 window tests in
+`packages/components/src/breadcrumb/logic.test.ts` hold the collapse arithmetic
+for lengths 0–8 and budgets 3–6. `breadcrumb-preview.test.ts` holds this page's
+drawing to the component's own `collapse` over every trail length and budget.

@@ -88,6 +88,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/alert.tsx",
   },
   {
+    file: "breadcrumb.mdx",
+    row: "Breadcrumbs",
+    suite: "packages/components/src/behaviour/breadcrumb.test.tsx",
+    shadowed: "packages/components/docs/breadcrumb.mdx",
+    source: "packages/components/src/breadcrumb.tsx",
+  },
+  {
     file: "button.mdx",
     row: "Buttons",
     source: "packages/primitives/src/components/Button.tsx",
@@ -704,6 +711,58 @@ describe("the curated component pages", () => {
     expect(button).toContain(
       'Match.when("ghost", () => theme.colors.foreground)',
     );
+  });
+
+  it("holds the breadcrumb's budget, its separator pairing and its current crumb to the source", () => {
+    // A collapsed trail looks the same whether the rule kept the current page or
+    // dropped it, and a separator that outlives its hidden item still reads as a
+    // path. The page prints the budget table, the pairing and the substitution,
+    // so the pure rule and the painter are read here rather than trusted.
+    const breadcrumb = pages.find((page) => page.file === "breadcrumb.mdx");
+    expect(
+      breadcrumb,
+      "the breadcrumb page is not in the curated set",
+    ).toBeDefined();
+    if (breadcrumb === undefined) return;
+
+    const source = read(breadcrumb.source);
+    const logic = read("packages/components/src/breadcrumb/logic.ts");
+    const recipes = read("packages/tw/src/recipes.ts");
+
+    // The budget is clamped at three and the tail is `budget - 2`, which is what
+    // keeps the current page on screen at every budget.
+    expect(logic).toContain("const minimum = 3;");
+    expect(logic).toContain(
+      "const budget = Math.max(minimum, Math.trunc(maxItems));",
+    );
+    expect(logic).toContain("Arr.takeRight(items, budget - 2)");
+    // A separator is paired with the item that follows it, so hiding one hides
+    // the other.
+    expect(source).toContain("const parsed = entries(children, fallback);");
+    expect(source).toContain("pending = child;");
+    // The roles, the absent `aria-current` and its substitution, and the named
+    // non-focusable marks.
+    expect(source).toContain('role="navigation"');
+    expect(source).toContain('aria-label="Breadcrumb"');
+    expect(source).toContain("aria-selected");
+    expect(source).toContain('label="More"');
+    expect(source).toContain('role="presentation"');
+    expect(source).toContain(
+      "activationHandlers(() => onSelect?.(), { onKeyDown, onKeyUp })",
+    );
+    // The list wraps rather than clipping; collapse is a budget, not overflow.
+    expect(recipes).toContain(
+      'export const BREADCRUMB_LIST = "flex flex-row items-center flex-wrap gap-1";',
+    );
+
+    const text = body(breadcrumb).replace(/\s+/g, " ");
+    // The crops the page prints, and the clamp below three.
+    expect(text).toContain("Projects / … / breadcrumb.tsx");
+    expect(text).toContain("Projects / … / src / breadcrumb.tsx");
+    expect(text).toContain("Projects / … / components / src / breadcrumb.tsx");
+    expect(text).toContain("clamped");
+    expect(text).toContain("direct** children");
+    expect(text).toContain("No `aria-current`");
   });
 
   it("hold the select's list cap and its reveal to the source", () => {
