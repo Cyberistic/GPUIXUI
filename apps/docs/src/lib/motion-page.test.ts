@@ -28,6 +28,7 @@ const todo = readRepo("TODO.md");
 const spring = readRepo("packages/motion/src/spring.ts");
 const motion = readRepo("packages/motion/src/motion.ts");
 const inertia = readRepo("packages/motion/src/inertia.ts");
+const timeline = readRepo("packages/motion/src/timeline.ts");
 const react = readRepo("packages/motion/src/react.ts");
 const timing = readRepo("packages/motion/src/timing.ts");
 
@@ -183,6 +184,69 @@ describe("the motion page", () => {
     expect(tauMs).toBeDefined();
     expect(page).toContain(`\`DEFAULT_TWEEN_MS\` of ${tweenMs} ms`);
     expect(page).toContain(`defaults to ${tauMs} ms`);
+  });
+
+  it("places the repair in the samplers a hand-built value reaches", () => {
+    // `Inertia` is structural, so `{ tau: NaN, min: null, max: 10 }` type-checks
+    // and `inertia()` never runs. The page taught the repair as a property of
+    // the constructor, which leaves a caller who builds one by hand expecting
+    // the `NaN` both samplers used to answer.
+    const declaration = (source: string, name: string): string => {
+      const start = source.indexOf(`export const ${name} = (`);
+      const end = source.indexOf("\nexport ", start + 1);
+      return start === -1 ? "" : source.slice(start, end === -1 ? undefined : end);
+    };
+
+    expect(inertia).toContain("const tauOf = (tau: number): number =>");
+    expect(inertia).toContain(
+      "const boundsOf = (min: number | null, max: number | null): Bounds =>",
+    );
+    expect(inertia).toContain(
+      "const finiteOr = (value: number, fallback: number): number =>",
+    );
+
+    // Both samplers repair the value they are handed, so neither can rely on
+    // `inertia()` having done it.
+    ["project", "sampleInertia"].forEach((name) => {
+      const body = declaration(inertia, name);
+      expect(body, `${name} no longer reads its own time constant`).toContain(
+        "tauOf(inertia.tau)",
+      );
+      expect(body, `${name} no longer reads its own bounds`).toContain(
+        "boundsOf(inertia.min, inertia.max)",
+      );
+    });
+
+    expect(timeline).toContain(
+      "const stopsOf = (frames: readonly Keyframe[]): ReadonlyArray<Keyframe> =>",
+    );
+    expect(timeline).toContain(
+      "const finiteOr = (value: number, fallback: number): number =>",
+    );
+    // The drop happens in the sample, so a list built without `keyframe()` is
+    // repaired the same way, and a `Sequence` step is repaired on insertion.
+    expect(timeline).toContain("const stops = stopsOf(frames);");
+    expect(timeline).toContain("startMs: finiteOr(startMs, 0)");
+    expect(timeline).toContain("durationMs: finiteOr(durationMs, 0)");
+    expect(timeline).toContain(
+      "Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0",
+    );
+
+    expect(pageText).toContain(
+      "The repair belongs to the sample, not the constructor",
+    );
+    expect(pageText).toContain("`{ tau: NaN, min: null, max: 10 }`");
+    expect(pageText).toContain("repair what they are handed");
+    expect(pageText).toContain("takes the house constant (`DEFAULT_TAU_MS`)");
+    expect(pageText).toContain("an unreadable bound is dropped on its own");
+    expect(pageText).toContain(
+      "`project({ tau: NaN, min: null, max: 10 }, 0, 100)` is `10`",
+    );
+
+    expect(pageText).toContain("**is not a stop**");
+    expect(pageText).toContain("a list with no readable frame samples `0`");
+    expect(pageText).toContain("**completed on the first sample**");
+    expect(pageText).toContain("is no wait rather than a `NaN` delay");
   });
 
   it("documents the initial option the hooks read once at mount", () => {

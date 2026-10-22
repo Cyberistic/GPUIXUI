@@ -178,11 +178,23 @@ and `t >= last.at` the last, so the ends do not extrapolate; between two frames
 the **upper** frame's easing shapes the segment that ends at it. `stagger(stepMs,
 index, count, from?)` returns a delay from `start`, `end` or `center`.
 
+A frame whose `at` or `value` cannot be read **is not a stop**: `sampleKeyframes`
+drops it before sampling, so the segment spans its readable neighbours instead
+of interpolating to `NaN`, and a list with no readable frame samples `0`. That
+repair sits in the sample rather than in `keyframe()`, so a hand-built list is
+treated the same as one built with the helper — a `NaN` value from a measurement
+removes a stop instead of erasing the animation.
+
 `Sequence` positions keyed steps in absolute elapsed time and samples all of
 them at once — `at`, `append`, `stagger`, `duration`, `sample` and `complete`.
 Each sample is `{ key, state, value }` with `state` one of `pending`, `active`
 or `completed`. It is a driver, not a scheduler: nothing advances without a
 sample, so a sequence can be scrubbed, frozen in a test, or driven by a gesture.
+It repairs a hand-built step too: a start or duration that cannot be read is
+placed at `0`, so a step with no readable duration is **completed on the first
+sample** and `duration()` stays a number; a stagger step that cannot be read —
+non-finite or negative — is no wait rather than a `NaN` delay, so the group
+still ends when its own durations say it does.
 
 ## Inertia
 
@@ -202,6 +214,18 @@ plus velocity times the time constant, clamped — and `sampleInertia` decays
 toward it exponentially, clamps at a bound with **zero** velocity, and reports
 `settled` once the remaining speed is at or below the rest threshold. There is
 no boundary spring: a bounce at the edge is not modelled.
+
+**The repair belongs to the sample, not the constructor.** `Inertia` is an
+exported **structural** interface, so a caller may write one by hand and skip
+`inertia()` entirely — `{ tau: NaN, min: null, max: 10 }` type-checks. Both
+samplers therefore repair what they are handed: an unreadable time constant
+takes the house constant (`DEFAULT_TAU_MS`), an unreadable bound is dropped on
+its own while the bound beside it still clamps, an inverted pair is read as the
+range it describes, and a position or velocity that is not a number reads as a
+standstill. `project({ tau: NaN, min: null, max: 10 }, 0, 100)` is `10`, and
+`sampleInertia` on the same value settles. Before that, a hand-built inertia
+answered `NaN` from both, so a `MotionValue` coasting on one painted `NaN` into
+its target and never reported `complete`.
 
 ## In React
 
