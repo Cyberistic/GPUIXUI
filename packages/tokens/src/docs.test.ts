@@ -236,6 +236,40 @@ describe("focus adoption claim", () => {
   });
 });
 
+/**
+ * Guards the catalogue's statement of a **control's** ring. `controlFocusRing`
+ * has two states a consumer chooses between, and the page is how they learn
+ * them: a failed validation recolours the outline to `destructive`, and a
+ * disabled control declares no ring at all. A page that dropped either would
+ * send a reader to a ring their invalid field paints in the wrong colour, or to
+ * one that stays on a control that refuses every key — the two defects the
+ * helper exists to prevent.
+ */
+describe("the control ring's claim", () => {
+  const focus = (() => {
+    const start = catalogue.indexOf("## Focus");
+    const end = catalogue.indexOf("\n## ", start + 1);
+    return catalogue.slice(start, end).replace(/\s+/g, " ");
+  })();
+
+  it("names the helper and both of its states", () => {
+    expect(focus).toContain("controlFocusRing");
+    expect(focus).toContain("destructive");
+    expect(focus).toContain("disabled");
+    expect(focus).toContain("no ring at all");
+  });
+
+  it("holds the page to the paint the helper resolves", () => {
+    // The sentence above is a claim about two branches in `styles.ts`: the
+    // outline takes the `destructive` role, and a disabled state returns before
+    // a ring is built. A page cannot outlive either.
+    const source = read("../src/styles.ts");
+
+    expect(source).toContain("outlineColor: theme.colors.destructive");
+    expect(source).toContain("if (state.disabled === true)");
+  });
+});
+
 describe("filled action adoption claim", () => {
   /**
    * The catalogue said the derived fills were "shipped and documented" while
