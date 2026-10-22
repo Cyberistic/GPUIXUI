@@ -50,6 +50,12 @@ export const liveRegistry = [
     capability: "focus",
   },
   {
+    id: "action-ring",
+    title:
+      "Focus: a filled action paints its ring on the page, one strong-border gap clear of its own fill",
+    capability: "focus",
+  },
+  {
     id: "keyboard-focus-dim",
     title: "Focus: the runtime dims other focusables, and one element opts out",
     capability: "focus",

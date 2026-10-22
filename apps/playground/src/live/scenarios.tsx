@@ -26,6 +26,7 @@ import * as Str from "effect/String";
 import {
   extendTheme,
   elevationShadow,
+  filledHover,
   keyboardFocusRing,
   nativeTextTheme,
   statusTone,
@@ -780,6 +781,13 @@ import {
 } from "./box-paint.js";
 import { bandPoint, leftOf, RING_OFFSET } from "./ring-offset.js";
 import {
+  ACTION_RING_DANGER,
+  ACTION_RING_NEIGHBOUR,
+  ACTION_RING_PRIMARY,
+  ACTION_RING_PROBE,
+  insidePoint,
+} from "./action-ring.js";
+import {
   aroundBox,
   ELEVATION_BLUR,
   ELEVATION_DEPTH,
@@ -967,6 +975,60 @@ const FocusRingOffsetProbe = (): ReactNode => {
         }}
       />
     </div>
+  );
+};
+
+/**
+ * Two shipped filled actions plus a non-focusable sibling, to read the ring a
+ * real control paints against its own fill.
+ *
+ * The actions are the primitives' `Button`, which declares `controlRing` — the
+ * one component seam both packages route through — so this measures the
+ * library rather than a sample style. `primary` and `destructive` are the two
+ * faces whose fill is a role the ring shares: a flush line is drawn in the
+ * fill's own colour, and the gap is the whole point of the offset.
+ */
+const ActionRingProbe = (): ReactNode => {
+  const theme = palettes.dark;
+  return (
+    <PrimitiveThemeProvider theme={theme}>
+      <div
+        testId={ACTION_RING_PROBE}
+        style={{
+          width: 560,
+          height: 360,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          A filled action's ring sits on the page, one line clear of its fill.
+        </text>
+        <Button testId={ACTION_RING_PRIMARY} variant="primary">
+          Primary action
+        </Button>
+        <Button testId={ACTION_RING_DANGER} variant="destructive">
+          Danger action
+        </Button>
+        <div
+          testId={ACTION_RING_NEIGHBOUR}
+          style={{
+            width: 160,
+            height: theme.spacing.xl,
+            borderRadius: theme.radius.sm,
+            backgroundColor: theme.colors.card,
+          }}
+        />
+      </div>
+    </PrimitiveThemeProvider>
   );
 };
 
@@ -3681,6 +3743,227 @@ const focusRingOffsetSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the flush ring does not move its own control",
       boxText(yield* paintedBox(ctx, "ring-flush")),
       boxText(flushBefore),
+    );
+  });
+
+const actionRingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(ACTION_RING_PROBE);
+    const theme = palettes.dark;
+    const line = theme.borderWidth.strong;
+    const offset = keyboardFocusRing(theme).focusVisible.outlineOffset;
+    const ring = yield* ctx.expectSome(
+      "the theme names a ring colour",
+      Option.fromNullishOr(Pixels.hexToRgba(theme.colors.ring)),
+    );
+    const page = yield* ctx.expectSome(
+      "the theme names the page fill",
+      Option.fromNullishOr(Pixels.hexToRgba(theme.colors.background)),
+    );
+    const primaryFill = yield* ctx.expectSome(
+      "the theme names the primary fill",
+      Option.fromNullishOr(Pixels.hexToRgba(theme.colors.primary)),
+    );
+    const dangerFill = yield* ctx.expectSome(
+      "the theme names the destructive fill",
+      Option.fromNullishOr(Pixels.hexToRgba(theme.colors.destructive)),
+    );
+
+    const primaryBefore = yield* paintedBox(ctx, ACTION_RING_PRIMARY);
+    const dangerBefore = yield* paintedBox(ctx, ACTION_RING_DANGER);
+    const neighbourBefore = yield* paintedBox(ctx, ACTION_RING_NEIGHBOUR);
+
+    const window = yield* ctx.host.windowSize();
+    yield* ctx.host.capture("action-ring-rest");
+    const rest = yield* ctx.host.pixels("action-ring-rest");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(rest, window),
+    );
+
+    // At rest nothing declares the ring's paint; the band is the page.
+    yield* expectPaint(
+      ctx,
+      "a filled action at rest paints no ring outside its box",
+      yield* colourAtPoint(
+        ctx,
+        rest,
+        bandPoint(primaryBefore, offset, line),
+        scale,
+        "the rest frame holds the band the ring will paint",
+      ),
+      page,
+    );
+    yield* ctx.expectEqual(
+      "the fill is the role a flush ring would be drawn in",
+      differs(primaryFill, ring),
+      false,
+    );
+
+    // The pointer path: a press focuses the action and `focusVisible` stays off,
+    // so the band is still the page and the fill is untouched.
+    yield* ctx.host.click(ACTION_RING_PRIMARY);
+    yield* ctx.expectEqual(
+      "a press focuses the filled action",
+      yield* focusedAfterPaint(ctx),
+      ACTION_RING_PRIMARY,
+    );
+    yield* ctx.host.capture("action-ring-press");
+    yield* ctx.expectEqual(
+      "a press paints no ring on a filled action",
+      yield* paintedPixels(ctx, "action-ring-press", ring),
+      0,
+    );
+    yield* expectPaint(
+      ctx,
+      "a pressed filled action answers the pointer with its derived hover fill",
+      yield* colourAtPoint(
+        ctx,
+        yield* ctx.host.pixels("action-ring-press"),
+        insidePoint(primaryBefore, 2),
+        scale,
+        "the press frame holds the action's fill",
+      ),
+      yield* ctx.expectSome(
+        "the theme derives a hover fill for the primary action",
+        Option.fromNullishOr(Pixels.hexToRgba(filledHover(theme, "primary"))),
+      ),
+    );
+
+    // Move the pointer off the actions so the keyboard path reads their resting
+    // fills: a hovered action paints its derived hover, not the role its ring
+    // shares.
+    yield* ctx.host.hover(ACTION_RING_NEIGHBOUR);
+    yield* Effect.sleep(SETTLE);
+
+    // Tab is the keyboard path the ring exists for. It walks to the danger
+    // action: its ring is on the page, one strong-border gap out, and the fill
+    // inside the box is still the fill.
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab carries focus to the second filled action",
+      yield* focusedAfterPaint(ctx),
+      ACTION_RING_DANGER,
+    );
+    yield* ctx.host.capture("action-ring-danger");
+    const dangerFrame = yield* ctx.host.pixels("action-ring-danger");
+    yield* ctx.expectEqual(
+      "the focused filled action paints a ring",
+      (yield* paintedPixels(ctx, "action-ring-danger", ring)) > 0,
+      true,
+    );
+    yield* expectPaint(
+      ctx,
+      "the ring is painted in the middle of the band the offset names",
+      yield* colourAtPoint(
+        ctx,
+        dangerFrame,
+        bandPoint(dangerBefore, offset, line),
+        scale,
+        "the danger frame holds the ring's band",
+      ),
+      ring,
+    );
+    yield* expectPaint(
+      ctx,
+      "the page shows through the gap between the fill and the ring",
+      yield* colourAtPoint(
+        ctx,
+        dangerFrame,
+        leftOf(dangerBefore, offset / 2),
+        scale,
+        "the danger frame holds the gap",
+      ),
+      page,
+    );
+    yield* expectPaint(
+      ctx,
+      "the ring is outside the action's own fill, not on its edge",
+      yield* colourAtPoint(
+        ctx,
+        dangerFrame,
+        insidePoint(dangerBefore, 2),
+        scale,
+        "the danger frame holds the fill inside the box",
+      ),
+      dangerFill,
+    );
+    yield* expectPaint(
+      ctx,
+      "the ring paints nothing beyond the band it names",
+      yield* colourAtPoint(
+        ctx,
+        dangerFrame,
+        leftOf(dangerBefore, offset + line + 2),
+        scale,
+        "the danger frame holds the point beyond the band",
+      ),
+      page,
+    );
+
+    // Back on the primary action — the case the gap exists for, because its fill
+    // *is* the ring role. The separation is the page showing between them.
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab returns to the primary action",
+      yield* focusedAfterPaint(ctx),
+      ACTION_RING_PRIMARY,
+    );
+    yield* ctx.host.capture("action-ring-primary");
+    const primaryFrame = yield* ctx.host.pixels("action-ring-primary");
+    yield* expectPaint(
+      ctx,
+      "a brand-filled action paints the ring and its own fill as the same role",
+      yield* colourAtPoint(
+        ctx,
+        primaryFrame,
+        bandPoint(primaryBefore, offset, line),
+        scale,
+        "the primary frame holds the ring's band",
+      ),
+      ring,
+    );
+    yield* expectPaint(
+      ctx,
+      "the page gap is the only separation between the ring and that fill",
+      yield* colourAtPoint(
+        ctx,
+        primaryFrame,
+        leftOf(primaryBefore, offset / 2),
+        scale,
+        "the primary frame holds the gap",
+      ),
+      page,
+    );
+    yield* expectPaint(
+      ctx,
+      "the brand fill is painted unchanged inside the ring",
+      yield* colourAtPoint(
+        ctx,
+        primaryFrame,
+        insidePoint(primaryBefore, 2),
+        scale,
+        "the primary frame holds its fill",
+      ),
+      primaryFill,
+    );
+
+    // The outline is a paint, not layout: both actions and the sibling keep the
+    // boxes they had before the rings appeared.
+    yield* ctx.expectEqual(
+      "the ring does not move the action it surrounds",
+      boxText(yield* paintedBox(ctx, ACTION_RING_PRIMARY)),
+      boxText(primaryBefore),
+    );
+    yield* ctx.expectEqual(
+      "the ring does not move the other action",
+      boxText(yield* paintedBox(ctx, ACTION_RING_DANGER)),
+      boxText(dangerBefore),
+    );
+    yield* ctx.expectEqual(
+      "the ring takes no space in the layout beside the action",
+      boxText(yield* paintedBox(ctx, ACTION_RING_NEIGHBOUR)),
+      boxText(neighbourBefore),
     );
   });
 
@@ -23284,6 +23567,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "focus-ring-offset",
     view: () => <FocusRingOffsetProbe />,
     steps: focusRingOffsetSteps,
+  },
+  "action-ring": {
+    id: "action-ring",
+    view: () => <ActionRingProbe />,
+    steps: actionRingSteps,
   },
   "keyboard-focus-dim": {
     id: "keyboard-focus-dim",

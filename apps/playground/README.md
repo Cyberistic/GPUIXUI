@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-80 probes a real window can prove, of which eighteen mount shipped
+81 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -902,6 +902,47 @@ non-focusable sibling, drives the ring with `Tab` and reads the frame.
 
 Captures: `.artifacts/live/ring-offset-rest.png`, `ring-offset.png` and
 `ring-flush.png`.
+
+### `action-ring` — measured on 0.11.0 here
+
+`focus-ring-offset` measured the runtime's `outlineOffset` on two plain samples;
+this mounts the case the offset exists for — the **shipped** filled action. The
+primitives' `Button` is the one control both packages route their ring through
+(`controlRing`), so the probe paints a `primary` action, a `destructive` one and
+a non-focusable sibling, drives the ring with a press and with `Tab`, and reads
+three points on the frame: the ring's band, the middle of the gap, and the fill
+inside the border box.
+
+- **The fill and the ring are one role.** In the shipped dark palette `primary`
+  and `ring` are both `#A7A9FF`, so a flush ring on a brand-filled action is
+  drawn in the colour it is meant to stand out from. The probe asserts the pair
+  is equal before it measures the gap, so a palette that separates them changes
+  the premise rather than leaving a stale story.
+- **A press paints no ring.** The press focuses the action and `focusVisible`
+  stays off; the band is the page, and the action answers the pointer with the
+  derived `filledHover` fill rather than its resting role.
+- **`Tab` paints the ring outside the fill.** On the `destructive` action the
+  band — offset 2 plus the 2 pt `borderWidth.strong` line, three points out — is
+  the `ring` role, the point one point out is the page, the point two points
+  inside the box is the action's fill, and the point beyond the band is the page
+  again.
+- **The gap is the whole separation.** Back on the `primary` action the band and
+  the fill are the same hex, and the page between them is what makes the ring a
+  ring: the frame reads ring, page, fill across the five points.
+- **The outline is a paint, not layout.** Both actions and the sibling report
+  identical `x,y,width,height` before and after the rings appear.
+- **It can fail.** Handing the primary action a caller `style` whose
+  `focusVisible.outlineOffset` is `0` (the caller's style merges last) makes the
+  band read the page, and the probe fails
+  `a brand-filled action paints the ring and its own fill as the same role`
+  (`expected false, got true`, exit `1`).
+
+39 checks, `--only action-ring`, green on 0.11.0 (3.5 s). Fixture:
+`src/live/action-ring.ts` (the three sample ids and the point inside the box) +
+`action-ring.test.ts` (9 cases: the band, gap and fill arithmetic, the palette
+premise, the shipped ring's positive offset, the probe's mounted variants and
+sampled points, and this section). Captures:
+`.artifacts/live/action-ring-{rest,press,danger,primary}.png`.
 
 ### `keyboard-focus-dim` — measured on 0.11.0 here
 
@@ -4709,8 +4750,9 @@ narrower. Each deviation is deliberate and measured:
   `syntax-palette`, `press-routing-lifecycle`, `list-row-press`,
   `column-resize-lifecycle`, `button-activation-lifecycle` and
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
-  `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`
-  (twenty-two probes, each run alone).
+  `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
+  `action-ring`
+  (twenty-three probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
