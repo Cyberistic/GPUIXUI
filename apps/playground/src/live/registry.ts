@@ -487,6 +487,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "virtual-table-lifecycle",
+    title:
+      "Table: the shipped virtualized table retains one window of a thousand rows, reveals a far row that was never mounted, and holds its header while the rows move",
+    capability: "table",
+  },
+  {
     id: "data-table-lifecycle",
     title:
       "Table: the shipped data table selects and focuses the row a press hit, walks records by arrow, keeps a selection through a sort and a hidden column, and resizes its track",

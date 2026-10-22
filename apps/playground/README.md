@@ -42,12 +42,12 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-76 probes a real window can prove, of which seventeen mount shipped
+77 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
-combobox, the date picker, the shipped data table, the nested overlay stack
+combobox, the date picker, the shipped data tables, the nested overlay stack
 and the modal focus rule), seven mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip and
 the Button), one more
@@ -109,7 +109,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (41/41 green); -> 2 on a host with no binding
+# -> 0 here (44/44 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -710,10 +710,10 @@ locate rule and replace-all, so a green probe cannot stand on wrong numbers.
 
 ## Evidence on this host
 
-The suite is **41/41 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **44/44 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-41/41 scenarios passed · capabilities: layout=verified text=verified
+44/44 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -4279,6 +4279,44 @@ is opened (**`expected "ArrowRight moves one day forward: 2026-03-13", got
 day fails with **`expected "date-day-2026-03-11", got "date-next"`** — the
 measured limit is reported, not assumed away.
 
+### `virtual-table-lifecycle` — measured on 0.11.0 here
+
+**What does the shipped virtualized table actually retain, and what does it
+report?** Tier 3's *Virtualized tables* row says the window is app state and the
+runtime's `<virtual-list>` in `itemCount` mode is the mechanism, but only the
+runtime's list had been driven directly. The shipped `VirtualTable` adds the
+composition a consumer copies: a header as the scroller's sibling, a window the
+app moves from the runtime's scroll anchor, and a reveal that must commit the
+window **before** it scrolls. The probe mounts the example from the package's
+registry and asserts its readout plus the rows that exist in the tree.
+
+| Gesture | Readout | What it proves |
+| ------- | ------- | -------------- |
+| open | `1000 rows · 0 selected · first=- last=-` | a thousand rows exist logically; no range is reported until the list moves, and row 100 is not in the tree |
+| wheel `-300` | `first=0 last=8` | the range names the window the reader **left** while the paint is already at row 9 — one gesture of lag |
+| wheel `-3000` | `first=8 last=16` | the same lag on a large gesture; the paint has landed on rows 92–100 |
+| press Reveal row 900 | unchanged | the reveal paints rows 901–908, one of which was never mounted, and a programmatic reveal fires **no** range event |
+| press row 905 | `1 selected` | a press chooses the record it hit, through the virtual window |
+| wheel `-300` | `1 selected` | the window leaves the chosen row and the choice is kept by **record** |
+| Reveal row 900 again | `1 selected` | the reveal brings the chosen row back and it is still chosen |
+| type `01` | `127 rows · 0 selected` | the query matches the row's whole text (`name status size`), so 127 records survive; the choice is released, and row 701 — outside the narrowed set — still reports its box |
+| wheel `-300` | `last=127` | the next scroll re-clamps the window to the narrowed set, and the paint holds `file-0601.ts` and its neighbours |
+
+The header keeps its painted `y` through every wheel, and the last two rows are
+the measured limit this probe found: narrowing the set while the window sits past
+its end leaves a row the app no longer holds still reporting its box, and only a
+scroll re-clamps the window. The data package's interlock row in `TODO.md`
+carries the investigation; the probe reports the behaviour rather than claiming a
+clean cut.
+
+26 checks, `--only virtual-table-lifecycle`, green on 0.11.0 (~0.7 s, three
+consecutive runs). Fixture: `src/live/virtual-table.ts` (the ids, the readout's
+spelling and its two window states) + `virtual-table.test.ts` (6 cases: the
+example's row count, height and reveal index, the 127-row count **derived** from
+the example's `textOf` — 119 of the names alone — the readout template, the
+derived ids, the probe held to the fixture, and this section). Evidence:
+`.artifacts/live/virtual-table-revealed.png`.
+
 ### `data-table-lifecycle` — measured on 0.11.0 here
 
 **Does the shipped `@gpuixui/data` table survive a window, or only the
@@ -4550,8 +4588,8 @@ narrower. Each deviation is deliberate and measured:
   `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text`,
   `syntax-palette`, `press-routing-lifecycle`, `list-row-press`,
   `column-resize-lifecycle`, `button-activation-lifecycle` and
-  `date-picker-lifecycle` and `data-table-lifecycle` (eighteen probes, each run
-  alone).
+  `date-picker-lifecycle`, `data-table-lifecycle` and `virtual-table-lifecycle`
+  (nineteen probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

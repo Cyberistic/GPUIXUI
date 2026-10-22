@@ -182,6 +182,18 @@ import {
 } from "./otp-keys.js";
 
 import {
+  VIRTUAL_TABLE,
+  VIRTUAL_TABLE_FILTER,
+  VIRTUAL_TABLE_FILTERED_ROWS,
+  VIRTUAL_TABLE_INITIAL,
+  VIRTUAL_TABLE_NAME_SORT,
+  VIRTUAL_TABLE_READOUT,
+  VIRTUAL_TABLE_REVEAL,
+  virtualTableReadout,
+  virtualTableRow,
+} from "./virtual-table.js";
+
+import {
   DATA_TABLE_BODY,
   DATA_TABLE_COLUMNS,
   DATA_TABLE_COLUMN_RESET,
@@ -21567,6 +21579,257 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The shipped `@gpuixui/data` virtualized table, driven in a real window.
+ *
+ * Tier 3's *Virtualized tables* row says the window is app state, and the
+ * runtime's `<virtual-list>` in `itemCount` mode is the mechanism. The offscreen
+ * `data-table-core` scenario mounts the plain table and the `virtual-list-*`
+ * probes drive the runtime's list itself; nothing had mounted `VirtualTable`,
+ * where a reveal moves the app's window **before** it scrolls, a programmatic
+ * reveal reports no range event, and the reported range lags the paint by one
+ * gesture. The probe mounts the example from the package's registry and asserts
+ * its own readout, so the row, window and reveal arithmetic are the shipped
+ * screen's.
+ */
+const VirtualTableProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const Example = dataExamples["virtual-table"];
+  return (
+    <div
+      testId="virtual-table-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The shipped virtualized table: one window of a thousand rows exists, a
+        reveal jumps to a row that was never mounted, and the header holds its
+        place while the rows move under it.
+      </text>
+      {Example === undefined ? null : <Example />}
+    </div>
+  );
+};
+
+const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(VIRTUAL_TABLE_READOUT);
+    const readout = () => ctx.host.text(VIRTUAL_TABLE_READOUT);
+    const present = (id: string) =>
+      Effect.map(ctx.host.bounds(id), Option.fromNullishOr);
+    const mounted = (n: number) =>
+      Effect.map(present(virtualTableRow(n)), Option.isSome);
+
+    yield* ctx.expectEqual(
+      "the table opens on the example's own readout, no range reported yet",
+      yield* readout(),
+      VIRTUAL_TABLE_INITIAL,
+    );
+    const header = yield* ctx.expectSome(
+      "the header painted",
+      yield* present(VIRTUAL_TABLE_NAME_SORT),
+    );
+    yield* ctx.expectEqual("the first row is mounted", yield* mounted(1), true);
+    yield* ctx.expectEqual(
+      "a row far outside the window is not in the tree",
+      yield* mounted(100),
+      false,
+    );
+
+    // One gesture moves the paint one window: the range event names the window
+    // the reader left, not the one now painted — the lag the component's header
+    // documents.
+    yield* ctx.host.wheel(virtualTableRow(1), 0, -300);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the reported range still names the window the reader left",
+      yield* readout(),
+      virtualTableReadout({
+        rows: 1_000,
+        selected: 0,
+        first: Option.some(0),
+        last: Option.some(8),
+      }),
+    );
+    yield* ctx.expectEqual(
+      "while the paint has already moved past it",
+      yield* mounted(9),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "and the first row is gone",
+      yield* mounted(1),
+      false,
+    );
+    const headerAfter = yield* ctx.expectSome(
+      "the header still painted",
+      yield* present(VIRTUAL_TABLE_NAME_SORT),
+    );
+    yield* ctx.expectNear(
+      "the header keeps its painted position",
+      headerAfter.y,
+      header.y,
+      1,
+    );
+
+    // A gesture larger than the mounted window still travels: the list clamps
+    // its scroll to the content it was given, and the app's window follows the
+    // anchor the runtime reports.
+    yield* ctx.host.wheel(virtualTableRow(9), 0, -3000);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the range keeps lagging one gesture",
+      yield* readout(),
+      virtualTableReadout({
+        rows: 1_000,
+        selected: 0,
+        first: Option.some(8),
+        last: Option.some(16),
+      }),
+    );
+    yield* ctx.expectEqual(
+      "the window landed near the row a three-thousand-point wheel names",
+      yield* mounted(92),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "and its last painted row is the ninth of the window",
+      yield* mounted(100),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the row after it is not mounted",
+      yield* mounted(101),
+      false,
+    );
+
+    // The reveal is the only way to a row the scroll has never mounted: the app
+    // moves its window in the same render and then scrolls, and a programmatic
+    // reveal reports no range event at all.
+    yield* ctx.host.click(VIRTUAL_TABLE_REVEAL);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the reveal paints a row that was never mounted",
+      yield* mounted(901),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the revealed row is the window's first, one above the paint",
+      yield* mounted(900),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "a programmatic reveal reports no range event",
+      yield* readout(),
+      virtualTableReadout({
+        rows: 1_000,
+        selected: 0,
+        first: Option.some(8),
+        last: Option.some(16),
+      }),
+    );
+
+    // A press chooses the record it hit. The window then moves away and the
+    // reveal brings it back: the choice is kept by record, not by position.
+    yield* ctx.host.click(virtualTableRow(905));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press chooses the row it hit",
+      yield* readout(),
+      virtualTableReadout({
+        rows: 1_000,
+        selected: 1,
+        first: Option.some(8),
+        last: Option.some(16),
+      }),
+    );
+    yield* ctx.host.wheel(virtualTableRow(905), 0, -300);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the window leaves the chosen row",
+      yield* mounted(905),
+      false,
+    );
+    yield* ctx.expectContains(
+      "and the choice is kept",
+      yield* readout(),
+      "1 selected",
+    );
+    yield* ctx.host.click(VIRTUAL_TABLE_REVEAL);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the reveal brings the chosen row back into the window",
+      yield* mounted(905),
+      true,
+    );
+    yield* ctx.expectContains(
+      "with its record still chosen",
+      yield* readout(),
+      "1 selected",
+    );
+    yield* ctx.host.capture("virtual-table-revealed");
+
+    // The filter narrows the set while the window sits past its end. The row the
+    // window still holds is not in the narrowed set, and the paint does not
+    // re-clamp until the next scroll — the measured limit the interlock row in
+    // `TODO.md` carries for the data package.
+    yield* ctx.host.click(VIRTUAL_TABLE_FILTER);
+    yield* ctx.host.key("0");
+    yield* ctx.host.key("1");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the query narrows the set and releases the choice",
+      yield* readout(),
+      `${VIRTUAL_TABLE_FILTERED_ROWS} rows · 0 selected`,
+    );
+    yield* ctx.expectEqual(
+      "a row the narrowed set no longer holds is still painted",
+      yield* mounted(701),
+      true,
+    );
+    yield* ctx.host.wheel(VIRTUAL_TABLE, 0, -300);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the next scroll re-clamps the window to the narrowed set",
+      yield* readout(),
+      `last=${VIRTUAL_TABLE_FILTERED_ROWS}`,
+    );
+    // The removed row keeps reporting its box even after the scroll: the
+    // runtime's virtual list still resolves an item it was handed before the
+    // count shrank, so a probe (or a screen reader) can find a row the app no
+    // longer lists. The data package's interlock row carries the investigation.
+    yield* ctx.expectEqual(
+      "a row outside the narrowed set still reports its box",
+      yield* mounted(701),
+      true,
+    );
+    const painted = yield* ctx.host.paintedText();
+    yield* ctx.expectEqual(
+      "the paint holds a name from the filtered set",
+      Arr.join(
+        Arr.take(
+          Arr.filter(painted, (line) => line.includes("file-")),
+          3,
+        ),
+        " / ",
+      ),
+      "file-0601.ts / file-0602.ts / file-0603.ts",
+    );
+  });
+
+/**
  * A grid whose first column is drag-resized in a real window.
  *
  * Tier 3's **Resizable columns** row cites only the headless
@@ -22405,5 +22668,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "data-table-lifecycle",
     view: () => <DataTableProbe />,
     steps: dataTableSteps,
+  },
+  "virtual-table-lifecycle": {
+    id: "virtual-table-lifecycle",
+    view: () => <VirtualTableProbe />,
+    steps: virtualTableSteps,
   },
 };
