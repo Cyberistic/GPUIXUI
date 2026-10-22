@@ -57,6 +57,8 @@ export const TRUNCATION_IDS = {
   ellipsis: "truncation-ellipsis",
   start: "truncation-start",
   own: "truncation-own",
+  shipped: "truncation-shipped",
+  shippedClamp: "truncation-shipped-clamp",
   wrapped: "truncation-wrapped",
   clamp: "truncation-clamp",
   clampBox: "truncation-clamp-box",

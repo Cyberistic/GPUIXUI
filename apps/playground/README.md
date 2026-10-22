@@ -3455,16 +3455,18 @@ runtime offers, and reads the frame.
 | the same cell with `textOverflow: "ellipsis"` | one line; the ink ends at **186**, 14 points inside the cell, and the last 12 points carry **7** upper pixels where the same window carries **82** in the unmarked cell — the ellipsis stands where the glyphs stopped |
 | the same with `textOverflow: "ellipsis-start"` | one line; the head carries **14** upper pixels where a whole glyph carries **72**, and the ink ends at **197.5** on a whole glyph — the tail survives |
 | a `<text>` carrying `width: 200`, `overflow: hidden` and the ellipsis | one line, the tail marked (**7**), the ink ending at **186** — a text node can be its own cell |
+| the shipped `Text` with `truncate` in the same cell | one line with the tail marked — the library's prop paints the ellipsis |
 | a paragraph in a 200-point cell | **five** lines, and the cell is 108 points tall |
 | the same paragraph with `lineClamp: 2` on the `<text>` | **five** lines — the clamp paints nothing, and the box stays 108 |
 | the same with `lineClamp: 2` on the cell that holds the text | **five** lines — the clamp paints nothing there either |
+| the shipped `Text` with `clamp={2}` | **five** lines — the library's `clamp` prop is the same no-op |
 | the same with a definite two-line height and `overflow: hidden` | **two** lines in a 48-point box — the only cut that painted |
 | a 200-point cell with no `overflow` declared | the run paints to **303**, 103 points past the cell and over its neighbour, while `bounds()` still reports the cell's **200** |
 
-26 checks, `--only text-truncation`, green on 0.11.0 (~0.4 s). Fixture:
+29 checks, `--only text-truncation`, green on 0.11.0 (~0.4 s). Fixture:
 `src/live/truncation.ts` — the ids, the run and the paragraph, and
 `readTruncation`, which counts the painted lines, the ink's right edge, and the
-upper-half ink at each end of the lowest line; `truncation.test.ts` (10 cases)
+upper-half ink at each end of the lowest line; `truncation.test.ts` (11 cases)
 holds the reader to a drawn frame where a stem and a row of dots are known, at
 both device scales, refuses a blank or unreadable region, and holds this
 section's heading, count and `lineClamp` sentence to the steps that assert them.
@@ -3484,10 +3486,11 @@ What it settles, for the data and workspace components:
    width, `position: "relative"` and `overflow: "hidden"`, and the run needs
    `whiteSpace: "nowrap"`; `textOverflow` then replaces the sliced glyph with
    an ellipsis. `ellipsis-start` is real and keeps the tail.
-2. **`lineClamp` does not paint in 0.11.0.** It is accepted on the text and on
-   the box and every line still paints, so a `maxLines` label cannot be built
-   from it: the component has to own a definite height equal to
-   `lines × lineHeight` and declare `overflow: "hidden"`.
+2. **`lineClamp` does not paint in 0.11.0.** It is accepted on the text, on the
+   box, and by the shipped `Text`'s own `clamp` prop, and every line still
+   paints — so a `maxLines` label cannot be built from it: the component has to
+   own a definite height equal to `lines × lineHeight` and declare
+   `overflow: "hidden"`.
 3. **Do not trust `bounds()` for an overflow.** The layout report keeps an
    escaping run inside its cell's width; only the captured paint shows the
    103-point escape. A probe that asks "did it overflow" must read the frame.

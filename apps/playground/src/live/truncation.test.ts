@@ -175,6 +175,14 @@ describe("the truncation probe's record", () => {
     expect(printed).toBe(asserted);
   });
 
+  it("mounts the clamp it measures as a no-op", () => {
+    // "The clamp paints nothing" is only a measurement if the fixture asked for
+    // one: a probe that dropped the property would paint five lines and pass.
+    expect(scenarios).toContain("lineClamp: TRUNCATION_CLAMP_LINES");
+    expect(scenarios).toContain("lineClamp={TRUNCATION_CLAMP_LINES}");
+    expect(scenarios).toContain("<Text clamp={TRUNCATION_CLAMP_LINES}>");
+  });
+
   it("states the clamp limitation the frame measured", () => {
     // The page and the probe have to agree that `lineClamp` paints every line
     // and that a definite height is the cut; a runtime bump that fixes the
@@ -183,6 +191,9 @@ describe("the truncation probe's record", () => {
       "a clamp on the text paints every line of the paragraph",
     );
     expect(steps).toContain("a clamp on the box paints every line too");
+    expect(steps).toContain(
+      "the shipped Text's clamp prop paints every line as well",
+    );
     expect(steps).toContain(
       "a definite height with a hidden overflow paints the two lines",
     );

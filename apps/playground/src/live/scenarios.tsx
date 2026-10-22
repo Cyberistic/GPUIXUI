@@ -17024,6 +17024,11 @@ const TruncationProbe = (): ReactNode => {
       >
         {TRUNCATION_LABEL}
       </text>
+      <PrimitiveThemeProvider theme={palettes.dark}>
+        <TruncationBox testId={TRUNCATION_IDS.shipped}>
+          <Text truncate>{TRUNCATION_LABEL}</Text>
+        </TruncationBox>
+      </PrimitiveThemeProvider>
       <TruncationRow>
         <TruncationBox testId={TRUNCATION_IDS.wrapped} clip={false}>
           <text style={prose}>{TRUNCATION_PROSE}</text>
@@ -17053,6 +17058,11 @@ const TruncationProbe = (): ReactNode => {
             {TRUNCATION_PROSE}
           </text>
         </TruncationBox>
+        <PrimitiveThemeProvider theme={palettes.dark}>
+          <TruncationBox testId={TRUNCATION_IDS.shippedClamp} clip={false}>
+            <Text clamp={TRUNCATION_CLAMP_LINES}>{TRUNCATION_PROSE}</Text>
+          </TruncationBox>
+        </PrimitiveThemeProvider>
       </TruncationRow>
       <TruncationBox testId={TRUNCATION_IDS.bleed} clip={false}>
         <text testId={TRUNCATION_IDS.bleedText} style={line}>
@@ -17188,11 +17198,25 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
+    // 4b. The shipped `Text`: the props the library publishes, not raw styles.
+    const shipped = yield* read(TRUNCATION_IDS.shipped, TRUNCATION_BLEED);
+    yield* ctx.expectEqual(
+      "the shipped Text's truncate prop keeps one line",
+      shipped.measured.lines,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the shipped Text's truncate prop marks the tail",
+      marked(shipped.measured.tailUpper, shipped.measured.headUpper),
+      true,
+    );
+
     // 5. The clamp: where a paragraph is asked for two lines, and what paints.
     const wrapped = yield* read(TRUNCATION_IDS.wrapped);
     const clamp = yield* read(TRUNCATION_IDS.clamp);
     const clampBox = yield* read(TRUNCATION_IDS.clampBox);
     const clampSized = yield* read(TRUNCATION_IDS.clampSized);
+    const shippedClamp = yield* read(TRUNCATION_IDS.shippedClamp);
     yield* ctx.expectEqual(
       "the control paragraph wraps to the five lines this section quotes",
       wrapped.measured.lines,
@@ -17224,6 +17248,11 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       clampSized.box.height,
       48,
       2,
+    );
+    yield* ctx.expectEqual(
+      "the shipped Text's clamp prop paints every line as well",
+      shippedClamp.measured.lines,
+      wrapped.measured.lines,
     );
     yield* ctx.expectEqual(
       "the cut box is shorter than the uncut one",
