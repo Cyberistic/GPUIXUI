@@ -92,3 +92,18 @@ edit those files:
 So the resume condition still applies to those five files, and the next docs-site
 turn should decide whether to finish or discard that change before adding to
 `component-index.ts` or `content/docs/components/index.mdx`.
+
+## Resolved at 2026-10-22 05:0x — the half-landed change, not the root cause
+
+The five uncommitted files were the generated built-in-theme specimen: a
+`theme-matrix.tsx`, its test, the two pages it replaces and the MDX registry. The
+next docs-site turn finished them rather than discarding them — both pages mount
+`<ThemeMatrix />`, the two planted page defects (`lightThemeX`, a retracted
+high-contrast claim) are fixed, and the guards are green (59 files / 489 tests).
+Committed `3078b3c7` and `c10e081a`.
+
+Measured at the same time: `ps aux` lists exactly one `swarm:docs-site` session,
+`git status --short apps/docs` was clean between each of that turn's commits, and
+no other process had an `apps/docs` file open for writing. The supervisor's
+overlap — the root cause on `TODO.md`'s blocker row — is unchanged, so the row
+stays open; only the half-landed change it left behind is resolved.

@@ -1460,7 +1460,11 @@ plus the docs IA ticks. This turn stopped writing under `apps/docs` at the
 measurement and left the tree clean of its own edits (its work is pushed at
 `53977a27`). Evidence, the rule crossed and the resume condition:
 `.agents/slop/blockers/2026-10-21-concurrent-docs-writers.md`; permanent fix is
-plan `022-swarm-single-writer.md` (coordinator, `scripts/`).
+plan `022-swarm-single-writer.md` (coordinator, `scripts/`). **The half-landed
+change it left behind is finished** — the five files were the generated
+built-in-theme specimen, landed in `3078b3c7` and `c10e081a` with its guards
+green, and `apps/docs` was clean between that turn's commits. The overlap itself
+stays open: the supervisor still starts a fresh session per tick.
 
 `[x]` **The GPUix native runtime now loads on this machine, so the Tier 2 behaviour
 suites run here.** Resolved 2026-10-17 08:57 by plan `140` (playground workstream):
