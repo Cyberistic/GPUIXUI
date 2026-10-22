@@ -596,6 +596,19 @@ carries the 24% its siblings use (7.49:1), and the tightest bubble in the
 library is Windows XP (Luna) dark at 7.12:1. The bubble paints no secondary
 line of its own, so it is measured for the body role alone.
 
+A **saturated state tone** is not a selection surface. A box also paints
+`accent` and `selected`, and a selectable run inside either is washed over that
+fill — but both tones are drawn from the same accent family as the wash, so the
+selection moves the fill toward the text instead of away from it. Measured, the
+wash costs contrast in every one of the 80 placements on those two tones and
+leaves 26 of them under the floor the unwashed pair already met, the tightest
+being Windows XP (Luna) dark's secondary line on a selected row at 3.78:1 (its
+body text on the same fill: 5.54:1). One translucent role cannot be strong
+enough for the page and weak enough for a saturated fill, so a selectable run
+belongs on a content tone and a state row that needs selectable text paints it
+on one. The exclusion is measured: `selection.test.ts` reads the tones the box
+resolves and fails when one is neither measured nor recorded.
+
 The **second field fill** was the last surface a field's text had no pair on:
 a composite field paints the page role, so its value and placeholder sit on
 `background` while the table measured only `input`. Measuring it found Aero

@@ -2326,6 +2326,24 @@ step lighter (`#C1C7D1`), the two authored looks follow with their own tint
 share instead of 30% so its 7:1 secondary text clears the composite. No other
 wash strength changed.
 
+**The two saturated tones are not selection surfaces.** A `Box` paints `accent`
+and `selected` as well, and a selectable run inside either one is washed over
+that fill — but both tones are drawn from the same accent family as the wash, so
+a selection moves the fill *toward* the text instead of away from it. Measured
+across the sixteen shipped, high-contrast, platform and authored styles, the
+wash costs contrast in **every one of the 80 placements** on those two tones (it
+never once helps) and leaves **26 of the 80 under the floor the unwashed pair
+already met**. The tightest is Windows XP (Luna) dark's secondary line on a
+selected row at **3.78:1** against 4.5, with its body text on the same fill at
+**5.54:1** against 7. No share can serve both jobs: one strong enough to be seen
+on the page is exactly what erases text on a saturated fill, and one weak enough
+to keep that text readable is invisible on the page. So a selectable run belongs
+on a content tone, a state row that needs selectable text paints it on one, and
+`selectionPairs` stays the content tones. The exclusion is measured, not assumed
+— `selection.test.ts` reads the tones the primitives resolve, so a tone added to
+the box's list fails until the wash is measured on it or it is recorded on this
+page with its reason.
+
 **Adoption.** The role reaches a window through the runtime's `selectionColor`
 property, which inherits down a subtree. Setting it on selectable text and
 fields is the component packages' work, recorded in `TODO.md` → Interlocks; the
@@ -2805,6 +2823,11 @@ or dropped is named rather than passing silently.
 - `avatarSize` is a fixed scale, not a theme group. Adding a group to `Theme` is a
   breaking change for a hand-built theme literal, so a brand-specific diameter
   stays a component decision for now.
+- The selection wash is measured on the content tones; a run marked `selectable`
+  inside an `accent` or `selected` box is outside the contract, because one
+  translucent role cannot be both strong enough for the page and weak enough for
+  a saturated fill (measured: 26 of the 80 placements there miss their floor).
+  A selectable run belongs on a content tone.
 - No font family is bundled: `registerFonts` is consumer-only, so there is no
   redistribution licence to review yet. Shipping one needs the same review
   `LICENSES/` gives every other asset.

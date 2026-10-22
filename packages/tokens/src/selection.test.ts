@@ -21,7 +21,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { alphaOf, blend, lightColors, palette } from "./color.js";
-import { contrastFloors, contrastRatio } from "./contrast.js";
+import {
+  contrastFloors,
+  contrastRatio,
+  highContrastFloors,
+} from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
@@ -339,6 +343,150 @@ describe("the documents describe the contract they are held to", () => {
     expect(design).toContain("secondary text inside the selection wash");
     expect(readme).toContain("mutedForeground");
     expect(readme).toContain(lightColors.mutedForeground);
+  });
+});
+
+/**
+ * The tones the wash is painted on, and the two it is not.
+ *
+ * `surfaceStyle` paints a fill for eight tones; the wash is measured on four of
+ * them. The two it leaves out are the *saturated state* tones (`accent`,
+ * `selected`), and the reason is structural rather than a gap: the wash is a
+ * share of the accent family, so on a fill drawn from the same family it moves
+ * the fill toward the text. Measured, that costs contrast in every placement and
+ * 26 of the 80 fall under the floor the unwashed pair already met. The suite
+ * below holds that reasoning in both directions — a new tone fails until it is
+ * measured, and a palette that made the wash help on a saturated tone fails
+ * until the decision is re-read.
+ */
+describe("the tones the wash is painted on", () => {
+  const style = read("../../primitives/src/core/style.ts");
+  const declared = [
+    ...(
+      /\bSURFACE_TONES = \[([\s\S]*?)\] as const/.exec(style)?.[1] ?? ""
+    ).matchAll(/"([a-z]+)"/g),
+  ].flatMap(([, tone]) => (tone === undefined ? [] : [tone]));
+
+  /** A container's content tones: `none` paints nothing and `skeleton` is a placeholder. */
+  const contentTones = [
+    "background",
+    "card",
+    "popover",
+    "muted",
+    "accent",
+    "selected",
+  ] as const;
+
+  /** The neutral content tones, where a wash moves a fill away from the text. */
+  const washedTones = ["background", "card", "popover", "muted"] as const;
+
+  /** The saturated state tones, where the wash is a tint of the fill's own family. */
+  const saturatedTones = ["accent", "selected"] as const;
+
+  /** A placement the wash is not measured on: the role the tone hands its text. */
+  const excludedPairs = [
+    { foreground: "foreground", over: "accent", floor: "body" },
+    { foreground: "foreground", over: "selected", floor: "body" },
+    { foreground: "mutedForeground", over: "accent", floor: "secondary" },
+    { foreground: "mutedForeground", over: "selected", floor: "secondary" },
+    { foreground: "selectedForeground", over: "selected", floor: "secondary" },
+  ] as const;
+
+  const tones = (all: ReadonlyArray<string>, measured: ReadonlyArray<string>) =>
+    all.filter((tone) => !measured.includes(tone));
+
+  const measuredOn = [...washedTones] as ReadonlyArray<string>;
+
+  const placements = [
+    ...shippedThemes,
+    ...platformThemes,
+    ...retroThemes,
+  ].flatMap((theme) =>
+    excludedPairs.map(({ foreground, over, floor }) => {
+      const wash = blend(
+        theme.colors[over],
+        theme.colors.selection,
+        alphaOf(theme.colors.selection),
+      );
+      const floors =
+        theme.contrast === "high" ? highContrastFloors : contrastFloors;
+      return {
+        theme: theme.name,
+        pair: `${foreground} on ${over}`,
+        resting:
+          contrastRatio(theme.colors[foreground], theme.colors[over]) ?? 0,
+        washed: contrastRatio(theme.colors[foreground], wash) ?? 0,
+        floor: floors[floor],
+      };
+    }),
+  );
+
+  it("reads the tones the container resolves from", () => {
+    expect(declared).toEqual(["none", ...contentTones, "skeleton"]);
+  });
+
+  it("measures the wash on every neutral content tone", () => {
+    expect(measuredOn).toEqual([...washedTones]);
+    // A tone the container gains is unmeasured until this suite is told about
+    // it — so the split is a partition of the tones the component paints, not a
+    // list that happens to match today.
+    expect(tones(contentTones, measuredOn)).toEqual([...saturatedTones]);
+    expect(tones([...contentTones, "secondary"], measuredOn)).toEqual([
+      ...saturatedTones,
+      "secondary",
+    ]);
+  });
+
+  it("loses contrast on a saturated tone in every style", () => {
+    const improved = placements.filter(
+      ({ resting, washed }) => washed >= resting,
+    );
+
+    expect(placements.length).toBe(
+      [...shippedThemes, ...platformThemes, ...retroThemes].length *
+        excludedPairs.length,
+    );
+    // The wash never helps on a fill drawn from its own family. A palette edit
+    // that broke that would mean the exclusion's reason had to be re-read — not
+    // that the pair could be added quietly.
+    expect(improved).toEqual([]);
+  });
+
+  it("leaves a quarter of those placements under their own floor", () => {
+    const under = placements.filter(({ washed, floor }) => washed < floor);
+    const tightest = placements.reduce((a, b) => (a.washed < b.washed ? a : b));
+    const tightestBody = placements
+      .filter(({ floor }) => floor === 7)
+      .reduce((a, b) => (a.washed < b.washed ? a : b));
+
+    // The measured reason the two tones stay out of `selectionPairs`: a single
+    // translucent role cannot be strong enough for the page and weak enough for
+    // a saturated fill.
+    expect(under.length).toBe(26);
+    expect(tightest.pair).toBe("mutedForeground on selected");
+    expect(tightest.theme).toBe("Dark · Windows XP (Luna)");
+    expect(tightest.washed).toBeCloseTo(3.78, 2);
+    expect(tightestBody.theme).toBe("Dark · Windows XP (Luna)");
+    expect(tightestBody.washed).toBeCloseTo(5.54, 2);
+  });
+
+  it("states the scope and the numbers on every surface", () => {
+    const catalogue = read("../../../docs/tokens.md");
+    const design = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const inventory = read("../../../COMPONENTS.md");
+
+    const under = placements.filter(({ washed, floor }) => washed < floor);
+    const printed = `${under.length} of the ${placements.length} placements`;
+
+    expect(catalogue).toContain(printed);
+    expect(catalogue).toContain("3.78");
+    expect(catalogue).toContain("5.54");
+    expect(catalogue).toContain("saturated");
+    expect(design).toContain("saturated");
+    expect(design).toContain("content tone");
+    expect(readme).toContain("saturated");
+    expect(inventory).toContain("saturated");
   });
 });
 

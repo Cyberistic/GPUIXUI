@@ -33,6 +33,26 @@
  * 7:1 floor, so the look carries the same 24% share its siblings use. The
  * bubble paints body copy only — its author line sits outside it — so the muted
  * surface is measured for the body role alone.
+ *
+ * **Where the wash is painted — and where it is not.** `surfaceStyle` also
+ * paints two *saturated* tones, `accent` and `selected`, and a selectable run
+ * inside either one is washed too. They are deliberately **not** pairs: a wash
+ * is a share of the accent family, and so are those two fills, so the wash moves
+ * the fill *toward* the text instead of away from it. Measured over the sixteen
+ * shipped, high-contrast, platform and authored styles, that costs contrast in
+ * **every one of the eighty placements** — the wash never helps — and leaves
+ * **26 under the floor the unwashed pair already met**, the tightest being
+ * Windows XP (Luna) dark's secondary line on a selected row at 3.78:1 and its
+ * body text on the same fill at 5.54:1. No share can serve both jobs: one strong
+ * enough to be seen on the page is exactly what erases text on a saturated fill,
+ * and one weak enough to keep that text readable is invisible on the page. So a
+ * selectable run belongs on a content tone, a state row that needs selectable
+ * text paints it on one, and the two saturated tones stay outside the contract.
+ * The exclusion is measured rather than assumed: `selection.test.ts` reads the
+ * tones the primitives resolve, so a tone added to `SURFACE_TONES` fails until
+ * the wash is measured on it or it is recorded here with its reason, and it
+ * holds the eighty placements and their floors, so a palette that made the wash
+ * help there would fail until the decision was re-read.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -56,6 +76,11 @@ import type { ThemeContrast } from "./theme.js";
  * second line, a log row — at the secondary floor, so a wash readable for a
  * heading but not for the line under it is reported rather than passing on the
  * heading alone.
+ *
+ * The two saturated state tones (`accent`, `selected`) are deliberately absent:
+ * the wash is drawn from the same accent family as those fills, so it moves them
+ * toward the text and costs contrast in all eighty placements (see the module
+ * note). A selectable run belongs on one of the content tones.
  */
 export const selectionPairs: readonly ContrastPair[] = [
   { foreground: "inputForeground", background: "input", floor: "body" },

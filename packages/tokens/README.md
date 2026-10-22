@@ -343,6 +343,15 @@ carries the 24% its siblings use, and the tightest bubble in the library is Luna
 dark at 7.12:1. A runnable example lives in
 [`src/selection.example.ts`](./src/selection.example.ts).
 
+The two **saturated state tones** are deliberately not surfaces: a box paints
+`accent` and `selected`, and both are drawn from the same accent family as the
+wash, so a selection moves them toward the text rather than away from it. The
+wash costs contrast in all 80 placements on those tones and leaves 26 under the
+floor the unwashed pair met (tightest: Luna dark's secondary line on a selected
+row, 3.78:1). A selectable run belongs on a content tone; the suite reads the
+tones the box resolves so one cannot be added without a measurement or a
+recorded reason.
+
 ## Platform styles
 
 `platformStyles` decides each platform once — its families, corner radii, control
