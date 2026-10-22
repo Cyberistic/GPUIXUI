@@ -275,8 +275,15 @@ describe("hexToRgba", () => {
   });
 
   it("refuses a malformed value instead of decoding nonsense", () => {
+    // `parseInt` stops at the first character it cannot read, so a palette
+    // value with a typo in its tail used to decode the valid prefix as a
+    // different colour — `#12zz56` became near-transparent black instead of
+    // being refused, which is the silent-wrong-value class this check exists
+    // for. The whole value has to be hex, not only its start.
     expect(hexToRgba("#ff00")).toBeNull();
     expect(hexToRgba("#gggggg")).toBeNull();
+    expect(hexToRgba("#12zz56")).toBeNull();
+    expect(hexToRgba("ff0000 8")).toBeNull();
   });
 });
 

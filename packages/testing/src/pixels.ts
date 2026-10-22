@@ -332,9 +332,17 @@ export const pixelAt = (frame: Pixels, x: number, y: number): Rgba | null => {
   });
 };
 
+/**
+ * A whole hex body, not a prefix of one: `Number.parseInt` stops at the first
+ * character it cannot read, so validating only the length would turn a typo in
+ * a value's tail into a different colour.
+ */
+const HEX_DIGITS = /^[0-9a-fA-F]+$/;
+
 /** A hex colour (`#RGB`, `#RRGGBB` or `#RRGGBBAA`), or `null` when malformed. */
 export const hexToRgba = (hex: string): Rgba | null => {
   const digits = hex.startsWith("#") ? hex.slice(1) : hex;
+  if (!HEX_DIGITS.test(digits)) return null;
   const expanded = Match.value(digits.length).pipe(
     Match.when(
       3,
@@ -350,14 +358,12 @@ export const hexToRgba = (hex: string): Rgba | null => {
   );
   if (expanded.length !== 8) return null;
   const value = Number.parseInt(expanded, 16);
-  return Number.isNaN(value)
-    ? null
-    : new Rgba({
-        r: (value >>> 24) & 0xff,
-        g: (value >>> 16) & 0xff,
-        b: (value >>> 8) & 0xff,
-        a: value & 0xff,
-      });
+  return new Rgba({
+    r: (value >>> 24) & 0xff,
+    g: (value >>> 16) & 0xff,
+    b: (value >>> 8) & 0xff,
+    a: value & 0xff,
+  });
 };
 
 /**
