@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-88 probes a real window can prove, of which eighteen mount shipped
+89 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -787,7 +787,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
 | input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
-| theme switching | `theme-switch-lifecycle` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density |
+| theme switching | `theme-switch-lifecycle`, `system-theme-follow` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density; a desktop palette change repaints a running window without a remount and a deleted palette returns its own theme |
 | table sort/selection | `table-lifecycle`, `modifier-select-lifecycle`, `data-table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
 | panel resizing | `split-pane-lifecycle` | a divider drag resizes the pane and clamps at the caller's bounds |
 | workspace restore | `workspace-restore` | a saved arrangement paints again after a re-mount, a corrupt string opens the default, and an out-of-bounds width is clamped |
@@ -4886,6 +4886,65 @@ cells` (`expected "grid-focus-after", got "gridfocus-r1c0"`), and wrapping
 `Right` at a row's end fails `Right clamps at the row's end`
 (`expected "gridfocus-r0c2", got "gridfocus-r0c0"`).
 
+### `system-theme-follow` — measured on 0.11.0 here
+
+**Does a running window follow the desktop's theme?** `@gpuixui/tokens` ships
+the two halves a native application needs — `paletteToTokens` maps a desktop
+palette onto the semantic roles, and `watchSystemTheme` re-applies it on a poll
+because the pinned runtime has no file watcher — and `system-theme.test.ts`
+proves both without a clock or a window. The missing half was the one a consumer
+relies on: **the paint**. A re-apply that only changed a context value nobody
+painted, or that remounted the tree and lost every control's state, would pass
+the unit suite and fail in the application. The probe mounts a page and one
+accent box under the theme the watcher applies, changes the palette under the
+window, deletes it, and reads each state out of the readout **and** the captured
+frame.
+
+| Step | Measured |
+| ---- | -------- |
+| the first read, before any press | the window's page is the desktop's own `#1B1B1F` and the accent box its `#B49CFF` |
+| the desktop switches to a paper theme | the poll re-applies **without a restart**; the page paints `#F4F1EA` and the accent `#6A45F0`, and the two page samples differ |
+| the mount count across the change | `mounts=1` before and after: the follow **re-renders** the provider's subtree, it does not remount it |
+| the desktop theme is deleted | the window returns to **the application's own theme** — page `#11141A`, accent `#A7A9FF` — rather than to a guessed palette |
+
+What it settles for a consumer:
+
+1. **Following the system is one call plus one provider.** `watchSystemTheme`'s
+   `onChange` is the value the `ThemeProvider` wears; nothing else needs to
+   change when the desktop theme does.
+2. **The repaint is real paint, not a readout.** Both palettes are asserted on
+   the frame, so a provider that receives a new theme and does not re-lay its
+   subtree fails.
+3. **State survives the follow.** The mount counter is a child of the provider,
+   so a wiring that keys the subtree per theme reads `2` and fails — measured
+   as `expected "mounts=2", got "mounts=3"` with a `key={theme}` on the surface.
+4. **A deleted theme is not a stale theme.** The seam answers `undefined` for a
+   file that is gone and the window returns to the base it started with.
+
+**The limit, stated plainly:** this host is macOS, so the platform's file is not
+read here and `omarchy-theme-set` is not run. The consumer owns the platform's
+decoder and the probe stands in for it at the seam — the palette is the same
+shape its reader must produce. What the window proves is the follow's paint,
+interval and lifetime; the Linux half is the decoder plus the same poll, and no
+claim about Hyprland is made from this run.
+
+12 checks, `--only system-theme-follow`, green on 0.11.0 here (~3–6 s; three
+captures). Fixture: `src/live/system-theme.ts` (the two palettes, the decoder
+stand-in, the derived pages and accents, the mount counter, the sample points,
+`SYSTEM_THEME_CHECKS`) + `system-theme-follow.test.ts` (13 cases: the mapping
+through `paletteToTokens`, the two themes apart, the deleted palette, the
+desktop state, the poll interval, the mount counter, the sample geometry, the
+registry entry and this section with its printed count). The view and steps live
+in `src/live/scenarios.tsx`. Evidence: `.artifacts/live/system-theme-night.png`,
+`.artifacts/live/system-theme-paper.png`,
+`.artifacts/live/system-theme-base.png`.
+
+Two negative controls measured, exit `1` each, restored green: a poll that
+never fires again (`every: 600_000`) fails `a changed palette re-applies
+without a restart` (`expected "#F4F1EA", got "#1B1B1F"`), and keying the surface
+per theme fails `the tree is not remounted by the follow` (`expected
+"mounts=2", got "mounts=3"`).
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5108,7 +5167,7 @@ narrower. Each deviation is deliberate and measured:
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
-  `image-fit` and `grid-focus-lifecycle` (thirty probes, each run alone).
+  `image-fit`, `grid-focus-lifecycle` and `system-theme-follow` (thirty-one probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

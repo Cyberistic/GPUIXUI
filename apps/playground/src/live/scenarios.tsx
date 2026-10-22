@@ -11,6 +11,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useReducer,
   useRef,
@@ -31,6 +32,7 @@ import {
   nativeTextTheme,
   statusTone,
   textStyle,
+  watchSystemTheme,
   type FontSource,
   type NativeTextTheme,
   type PlatformName,
@@ -456,6 +458,27 @@ import {
   luminanceOf,
   peakInk,
 } from "./field-ink.js";
+import {
+  BASE_PAGE,
+  BASE_SWATCH,
+  NIGHT_PAGE,
+  NIGHT_SWATCH,
+  PAPER_PAGE,
+  PAPER_SWATCH,
+  PROBE_BOX,
+  SWATCH_BOX,
+  SYSTEM_THEME_IDS,
+  SYSTEM_THEME_POLL_MS,
+  baseTheme,
+  readSystemPalette,
+  recordMount,
+  resetSystemPalette,
+  setSystemPalette,
+  clearSystemPalette,
+  pagePoint,
+  swatchPoint,
+  paperPalette,
+} from "./system-theme.js";
 import {
   THEME_CARD,
   THEME_CARD_PADDING,
@@ -25041,6 +25064,182 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("grid-focus");
   });
 
+/**
+ * One window following the desktop's palette.
+ *
+ * The view is the consumer's whole wiring: `watchSystemTheme` polls the decoder
+ * (module state here; a platform file in a real app), its `onChange` is the
+ * state the `ThemeProvider` wears, and the surface below paints the palette's
+ * page and accent so a capture can read the repaint. The mount count is taken
+ * once, lazily, so a re-apply that remounted the tree would show up as `2`.
+ */
+const SystemThemeSurface = (): ReactNode => {
+  const theme = useTheme();
+  const [mounts] = useState(recordMount);
+  return (
+    <div
+      testId={SYSTEM_THEME_IDS.probe}
+      style={{
+        width: PROBE_BOX.width,
+        height: PROBE_BOX.height,
+        padding: 24,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        testId={SYSTEM_THEME_IDS.swatch}
+        style={{
+          width: SWATCH_BOX.width,
+          height: SWATCH_BOX.height,
+          borderRadius: 8,
+          backgroundColor: theme.colors.primary,
+        }}
+      />
+      <Readout testId={SYSTEM_THEME_IDS.page}>
+        {theme.colors.background}
+      </Readout>
+      <Readout testId={SYSTEM_THEME_IDS.mounts}>{`mounts=${mounts}`}</Readout>
+    </div>
+  );
+};
+
+const SystemThemeProbe = (): ReactNode => {
+  const [applied, setApplied] = useState<Theme>(baseTheme);
+  useEffect(
+    () =>
+      watchSystemTheme({
+        read: readSystemPalette,
+        base: baseTheme,
+        onChange: setApplied,
+        every: SYSTEM_THEME_POLL_MS,
+      }),
+    [],
+  );
+  return (
+    <TokensThemeProvider theme={applied}>
+      <SystemThemeSurface />
+    </TokensThemeProvider>
+  );
+};
+
+const systemThemeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    const page = () => ctx.host.text(SYSTEM_THEME_IDS.page);
+    const settled = (expected: string) =>
+      settleUntil(page(), (value) => value === expected);
+    const paint = (
+      frame: Pixels.Pixels,
+      scale: number,
+      point: { readonly x: number; readonly y: number },
+    ) =>
+      Option.match(colourAt(frame, point, scale), {
+        onNone: () => "outside the capture",
+        onSome: describeColour,
+      });
+    const expected = (hex: string) =>
+      Option.match(Option.fromNullishOr(Pixels.hexToRgba(hex)), {
+        onNone: () => "unpaintable",
+        onSome: describeColour,
+      });
+
+    yield* ctx.host.waitFor(SYSTEM_THEME_IDS.probe);
+
+    // 1. The first read applies before anything else: the desktop's page is on
+    //    screen with no press and no restart.
+    yield* ctx.expectEqual(
+      "the first read applies the desktop's page",
+      yield* settled(NIGHT_PAGE),
+      NIGHT_PAGE,
+    );
+    const mounts = yield* ctx.host.text(SYSTEM_THEME_IDS.mounts);
+
+    // 2. The paint, not only the readout: the page and the accent box carry the
+    //    palette's own colours. One capture sets the device scale for the rest.
+    yield* ctx.host.capture("system-theme-night");
+    const night = yield* ctx.host.pixels("system-theme-night");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(night, size),
+    );
+    yield* ctx.expectEqual(
+      "the window paints the desktop's page",
+      paint(night, scale, pagePoint),
+      expected(NIGHT_PAGE),
+    );
+    yield* ctx.expectEqual(
+      "the window paints the desktop's accent",
+      paint(night, scale, swatchPoint),
+      expected(NIGHT_SWATCH),
+    );
+
+    // 3. The desktop changes its theme — `omarchy-theme-set` writes the file,
+    //    the poll reads it and the window follows, with the tree already there.
+    yield* Effect.sync(() => setSystemPalette(paperPalette));
+    yield* ctx.expectEqual(
+      "a changed palette re-applies without a restart",
+      yield* settled(PAPER_PAGE),
+      PAPER_PAGE,
+    );
+    yield* ctx.expectEqual(
+      "the tree is not remounted by the follow",
+      yield* ctx.host.text(SYSTEM_THEME_IDS.mounts),
+      mounts,
+    );
+    yield* ctx.host.capture("system-theme-paper");
+    const paper = yield* ctx.host.pixels("system-theme-paper");
+    yield* ctx.expectEqual(
+      "the repaint reaches the page",
+      paint(paper, scale, pagePoint),
+      expected(PAPER_PAGE),
+    );
+    yield* ctx.expectEqual(
+      "the repaint reaches the accent",
+      paint(paper, scale, swatchPoint),
+      expected(PAPER_SWATCH),
+    );
+    yield* ctx.expectEqual(
+      "the desktop's two themes paint differently",
+      Option.match(
+        Option.all([
+          colourAt(night, pagePoint, scale),
+          colourAt(paper, pagePoint, scale),
+        ]),
+        {
+          onNone: () => "outside the capture",
+          onSome: ([before, after]) =>
+            differs(before, after) ? "differ" : "same",
+        },
+      ),
+      "differ",
+    );
+
+    // 4. The file goes away: the window returns to the application's own theme.
+    yield* Effect.sync(clearSystemPalette);
+    yield* ctx.expectEqual(
+      "a deleted desktop theme returns the window to the application's theme",
+      yield* settled(BASE_PAGE),
+      BASE_PAGE,
+    );
+    yield* ctx.host.capture("system-theme-base");
+    const base = yield* ctx.host.pixels("system-theme-base");
+    yield* ctx.expectEqual(
+      "the base theme's page is painted after the deletion",
+      paint(base, scale, pagePoint),
+      expected(BASE_PAGE),
+    );
+    yield* ctx.expectEqual(
+      "the base theme's accent is painted after the deletion",
+      paint(base, scale, swatchPoint),
+      expected(BASE_SWATCH),
+    );
+
+    yield* Effect.sync(resetSystemPalette);
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -25483,5 +25682,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "grid-focus-lifecycle",
     view: () => <GridFocusProbe />,
     steps: gridFocusSteps,
+  },
+  "system-theme-follow": {
+    id: "system-theme-follow",
+    view: () => <SystemThemeProbe />,
+    steps: systemThemeSteps,
   },
 };

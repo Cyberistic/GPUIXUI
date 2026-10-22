@@ -1032,7 +1032,7 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 124/124
+`[x]` `[██████████]` 125/125
 
 `[x]` Measure **where a bitmap's pixels land under `objectFit`** — the prop is
       a host prop rather than a style, so a window's style report cannot see it
@@ -5578,6 +5578,7 @@ this time.
 
 ## Interlocks (cross-workstream dependencies)
 
+| Cite the **system-theme follow's paint** where the catalogue teaches it — `docs/tokens.md` §System palettes still ends "the live Linux proof, where `omarchy-theme-set` changes a running window's colours, is the playground's to record", and the playground has now recorded what this host can measure: the `system-theme-follow` probe (12 checks, 0.11.0) re-applies a changed palette in a running window without a remount, asserts both palettes' page and accent on the frame, and returns the window to its own theme when the palette is deleted. The page should cite the probe and keep the honest half — this host is macOS, so the platform file's decoder stays the consumer's and `omarchy-theme-set` itself is not measured. Same sentence in `COMPONENTS.md`'s `System palettes` row (this workstream updated that row's clause; the page is tokens-theme's) | tokens-theme (`docs/tokens.md` §System palettes) | **open** — measured 2026-10-23; the probe, the fixture and the README section are landed, the two negative controls are in the section, and no code change is needed on the page beyond the citation |
 | Re-anchor the **data-display controller rules** to the table-core migration — the data workstream moved `useTable` onto `@tanstack/table-core` (`src/grid-core.ts`), and the docs still read the pre-migration shape in four places: `lane-page.test.ts` required `clearSelection(selection)` (the controller writes `clearSelection(chosen)`), `table-preview.test.ts` read the deleted `packages/data/src/filter/logic.ts` at module scope (so the whole file died at import with `ENOENT` instead of guarding anything), and both copyable snippets — `table-demo.tsx`'s `tableWorkflowSource` and the curated Table page's usage block — still called `useTable({ rows, keyOf, textOf, valueOf })`, options the shipped hook no longer takes; the lane page's Sort bullet also described `sortRows(rows, key, direction)`, a helper the package does not export | data (the migration) + docs-site (`lane-page.test.ts`, `table-preview.test.ts`, `/docs/data-display`, `/docs/components/table`) | **resolved 2026-10-23 — all four suites green and the pages describe the row model.** The public contract did not move (`selection`, `selectedCount`, `activeKey`, `clear()`, `isSelected`), so the page's four bullets stand; what changed is **where the ids live**. `/docs/data-display`'s *A release is a view, not a write* now names the grid's **row model** (`rowSelection`, read back through `getSelectedRowIds()`) instead of "the controller keeps the chosen records", and its **Sort** rule is the core's sorted row model (`sortFn: "basic"`, the column's `valueOf` owning the comparison) instead of a `sortRows` helper. The clamp sentence is untouched (`useVirtualRows` did not move). `lane-page.test.ts` derives `chosen` from the core's ids (`HashSet.fromIterable(table.getSelectedRowIds())`), requires `retainSelection(chosen, keys)` and `clearSelection(chosen)`, and **refuses** `clearSelection(selection)` plus a page that stops naming the row model. `table-preview.test.ts` reads `grid-core.ts` for the rule the core owns (`globalFilterFn: "includesString"`, the trim in `constructGrid`, `accessorFn: column.valueOf`), and its `read` helper fails **naming the path** that vanished instead of throwing `ENOENT` from the import. **The migration exposed a real preview bug**: the browser preview joined a row's four cells into one string, so `api production` matched `billing-api` + `production` — a query that spans two cells, which the core's per-column filter never matches; `cellsOf` searches each cell on its own and a case holds it. Both copyable snippets now pass the one `columns` list, and the demo's renders `TableFilterField` against `table.query`/`table.setQuery` and imports `Option` for `table.setSort`. Directions measured: joining the cells again fails `expected [ { id: 'billing' … } ] to deeply equal []`; restoring the old demo snippet fails `expected 'import * as Option …' to contain 'columns: ['`; restoring the `textOf` usage block fails `expected '---\ntitle: Table …' to contain 'columns: ['`; restoring `sortRows` fails `expected '---\ntitle: Data display …' to contain 'sortFn: "basic"'`; and the stale `clearSelection(selection)` is the failure the suite reported on `master` before the fix. `nub run --filter @gpuixui/docs test`: 99 files / 987 tests green (was 2 failed / 978 passed); `check-types` and `check:tests` clean. No native scenario applies — a docs page and its guards have no runtime path |
 
 
@@ -6371,6 +6372,37 @@ Work that this workstream needs but does not own. Another agent owns each row.
    - [x] The **Workspace** lane denied pointer capture ("no pointer capture, so a drag ends when the pointer leaves the divider") and called every terminal surface unverified, both of which a window has measured since. The page now states the rule — capture is armed on a left press only for an element that listens to both `onMouseDown` and `onMouseMove`, so a divider declaring both keeps the drag and its release outside its own box while a move-only one loses it to its sibling — and separates **rendering the app into a terminal** (`render(<App />, { terminal: true })` with `isTerminal()`, supported) from **hosting a PTY inside a window** (no host element, unverified). `lane-page.test.ts` holds both claims to the record's `Pointer capture` and `Terminal rendering` rows and fails the old wording by name. Directions measured: restoring "no pointer capture"/"No terminal host element" fails both cases, and dropping the two-listener rule fails the capture case (`expected … to contain` the `onMouseDown` token)
 
    - [x] `packages/primitives/docs` said the **opposite of its own API table**: `input.mdx`'s Keyboard section ended "There is no `onKeyDown` prop", while the table above listed `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` and `FieldProps` extends `InteractionProps`, whose handlers the field composes with its own. The section now states the composition and keeps the true half — a *global* shortcut belongs to the window key handler. `src/docs.test.ts` gains `does not deny a prop its own API table lists`: it reads every page's API table (splitting a row's backticked prop list), collects the sentences "There is no `x` prop", and fails when `x` is listed. Deliberately not the host phrasing — "GPUix has no `disabled` prop" is true and `disabled` is still the component's prop. Both directions measured: restoring the retracted sentence fails by name (`input.mdx: says there is no onKeyDown prop, and its API table lists it`), and the fixed page passes 9/9
+
+`[x]` Follow a **desktop palette in a running window** — the tokens half of the
+      system-theme recipe (`paletteToTokens`/`watchSystemTheme`) was proven on a
+      hand-driven clock, while the claim a consumer relies on — that a running
+      window repaints when the desktop theme changes and keeps its tree — was
+      unmeasured (plan 433's acceptance named the playground probe as the
+      missing half). The `system-theme-follow` live probe mounts a page and one
+      accent box under the theme the watcher applies, changes the palette under
+      the window, deletes it, and reads each state from the readout **and** the
+      captured frame: the first read paints the desktop's own page/accent
+      (`#1B1B1F`/`#B49CFF`), the paper theme re-applies without a restart
+      (`#F4F1EA`/`#6A45F0`, the two samples differing), the mount counter is
+      unchanged across the change (the follow re-renders, it does not remount),
+      and a deleted palette returns the window to the application's theme
+      (`#11141A`/`#A7A9FF`). 12 checks, `--only system-theme-follow`, green on
+      0.11.0 here (~3–6 s), three captures. Fixture `src/live/system-theme.ts`
+      (palettes, decoder stand-in, derived pages/accents, mount counter, sample
+      points) + `system-theme-follow.test.ts` (13 cases: the mapping,
+      the two themes apart, the deletion, the state, the interval, the counter,
+      the geometry, the registry entry, the interaction row and this section's
+      printed count). Two negative controls measured, exit `1` each, restored
+      green: a poll that never fires again (`every: 600_000`) fails `a changed
+      palette re-applies without a restart` (`expected "#F4F1EA", got
+      "#1B1B1F"`), and keying the surface per theme fails `the tree is not
+      remounted by the follow` (`expected "mounts=2", got "mounts=3"`).
+      Evidence: `apps/playground/README.md` §`system-theme-follow`,
+      `.artifacts/live/system-theme-{night,paper,base}.png`. The limit is
+      recorded there: this host is macOS, the platform file's decoder stays the
+      consumer's, and no claim about `omarchy-theme-set` is made. The tokens
+      page still says the live proof "is the playground's to record" (Interlock
+      below).
 
 ### Docs information architecture (`docs-site`)
 

@@ -564,6 +564,12 @@ export const liveRegistry = [
       "Focus: a grid is one tab stop, arrows move real focus with a clamped roving cell, and Tab re-enters at the cell the reader pressed",
     capability: "focus",
   },
+  {
+    id: "system-theme-follow",
+    title:
+      "Theme: a running window follows a desktop palette without a restart or a remount, and returns to its own theme when the palette is deleted",
+    capability: "theme",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
