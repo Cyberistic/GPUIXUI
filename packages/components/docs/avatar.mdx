@@ -67,6 +67,11 @@ The dot sits on the avatar's outer box — which is deliberately **not** clipped
 while an inner disc clips the picture into a circle. A clipped root would cut the
 dot in half.
 
+A dot is colour-only information, so `status` is also the avatar's announced
+description: a reader hears `Ada Lovelace, image, busy`. Pass your own
+`aria-description` to say something else — it replaces the presence text, because
+GPUix 0.11.0 has one description field per node and no `aria-describedby`.
+
 ## API
 
 `Avatar` takes the GPUix host props (`style`, `testId`, `role`, `aria-*`, pointer
@@ -82,12 +87,12 @@ without forking the component.
 
 ## Accessibility
 
-- The root is a single `role="img"` node whose accessible name is `name`, so the
-  picture and the fallback are announced identically — a screen reader never
-  reads "AL" as a word.
-- The image also carries `alt={name}`.
-- The presence dot is **purely visual**: it is not announced. A status that
-  matters should also be text (see the example, which prints the status).
+- The root is the avatar's **one** accessible node: a `role="img"` named `name`.
+  The initials and the picture are presentational, so a reader never hears "AL"
+  as a word beside the name and a picture does not publish a second image node.
+  `src/behaviour/avatar.test.tsx` measures both halves in the renderer.
+- The presence dot is published as the avatar's description (see Presence), so
+  a status is never conveyed by colour alone.
 - An avatar is not interactive and takes no tab stop.
 
 ## Theming
@@ -108,7 +113,7 @@ tone's foreground), and the dot's rim `colors.card` (the surface it sits on) at
 
 ## Verification
 
-`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (8 tests) plus
+`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (10 tests) plus
 `src/avatar/logic.test.ts` (8 tests) for the initials rules.
 
 ```sh

@@ -1,10 +1,16 @@
 /**
- * Avatar: a person or entity, as a picture with an initials fallback.
+ * `Avatar`: a person or entity, as a picture with an initials fallback.
  *
  * The fallback is deterministic (see `avatar/logic.ts`), so an avatar is never
  * blank and never shifts when an image is missing. The component owns no state:
  * there is no image-loading or image-error state in this version, and the
  * initials are what a consumer sees until the image paints.
+ *
+ * **One accessible node**: the root carries the name, so the initials and the
+ * picture are `role="presentation"` — otherwise a reader heard "AL" as its own
+ * label beside the name, and a picture published a second image node
+ * (`src/behaviour/avatar.test.tsx` measures both). A presence state is published
+ * as the root's description, because a dot is colour-only information.
  *
  * The static structure is a Tailwind recipe (`AVATAR_*`) compiled against
  * shadcn's fixed metrics; the diameter and presence dot are the dynamic values
@@ -82,6 +88,9 @@ export const Avatar = ({
     <div
       role="img"
       aria-label={name}
+      // A presence dot is colour-only, so the state it paints is announced
+      // here; a caller's own help is used when there is no status.
+      aria-description={status ?? rest["aria-description"]}
       {...rest}
       style={mergeStyles(
         // The root is not clipped so the presence dot can sit on the rim; the
@@ -96,6 +105,7 @@ export const Avatar = ({
       <div style={recipeStyle(AVATAR_DISC, theme)}>
         {src === undefined ? (
           <text
+            role="presentation"
             style={mergeStyles(recipeStyle(AVATAR_FALLBACK, theme), {
               fontSize: Math.round(diameter * 0.4),
             })}
@@ -105,7 +115,8 @@ export const Avatar = ({
         ) : (
           <img
             src={src}
-            alt={name}
+            alt=""
+            role="presentation"
             objectFit="cover"
             style={{ width: "100%", height: "100%" }}
           />

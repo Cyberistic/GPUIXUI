@@ -81,6 +81,59 @@ describe("Avatar", () => {
     avatar.unmount();
   });
 
+  it("names the avatar once, whatever paints inside it", () => {
+    // The root carries the name, so neither the initials nor the picture may
+    // publish a second node: a reader heard "AL" as its own label beside the
+    // name, and a picture doubled the image node.
+    Arr.forEach(
+      [
+        <Avatar testId="avatar" name="Ada Lovelace" />,
+        <Avatar testId="avatar" name="Ada Lovelace" src="/photos/ada.png" />,
+      ],
+      (element) => {
+        const avatar = renderComponent(element);
+        const images = nodesWithRole(avatar.renderer, "image").map(
+          (node) => node.name,
+        );
+        const labels = nodesWithRole(avatar.renderer, "label").map(
+          (node) => node.name,
+        );
+        avatar.unmount();
+
+        expect({ images, labels }).toEqual({
+          images: ["Ada Lovelace"],
+          labels: [],
+        });
+      },
+    );
+  });
+
+  it("announces the presence state beside the name", () => {
+    // A dot is colour-only information, so the state it paints is published as
+    // the avatar's description; without one it says nothing extra.
+    const descriptions = Arr.map(
+      [
+        <Avatar testId="avatar" name="Ada" status="busy" />,
+        <Avatar testId="avatar" name="Ada" />,
+        <Avatar testId="avatar" name="Ada" aria-description="Team lead" />,
+        <Avatar
+          testId="avatar"
+          name="Ada"
+          status="busy"
+          aria-description="Team lead"
+        />,
+      ],
+      (element) => {
+        const avatar = renderComponent(element);
+        const node = nodesWithRole(avatar.renderer, "image")[0];
+        avatar.unmount();
+        return Option.getOrUndefined(node?.description ?? Option.none());
+      },
+    );
+
+    expect(descriptions).toEqual(["busy", undefined, "Team lead", "Team lead"]);
+  });
+
   it("paints the presence dot from the theme's status roles", () => {
     Arr.forEach(statusFills, ([status, expected]) => {
       const avatar = renderComponent(

@@ -27,6 +27,8 @@ import * as Str from "effect/String";
 export interface A11yNode {
   readonly role: string;
   readonly name: string;
+  /** `aria-description`, the help or state a node publishes beside its name. */
+  readonly description: Option.Option<string>;
   readonly level: Option.Option<number>;
   /** `aria-selected`, present only where the dump reports a selection. */
   readonly selected: Option.Option<boolean>;
@@ -50,6 +52,7 @@ export const a11yNodes = (renderer: TestRenderer): ReadonlyArray<A11yNode> => {
               ]),
               () => "",
             ),
+            description: Option.fromNullishOr(node.aria.description),
             level: Option.fromNullishOr(node.aria.level),
             selected: Option.fromNullishOr(node.aria.selected),
             expanded: Option.fromNullishOr(node.aria.expanded),
