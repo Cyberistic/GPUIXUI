@@ -307,6 +307,10 @@ const CITATIONS: ReadonlyArray<readonly [string, string]> = [
   ["Persistent panel state", "workspace-restore"],
   ["Toolbars", "window-chrome"],
   ["Status bars", "window-chrome"],
+  ["Column configuration", "table-columns-lifecycle"],
+  ["Filtering controls", "table-filter-lifecycle"],
+  ["Multi-pane editing layouts", "multi-pane-editor"],
+  ["Code editor integration", "editor-overlay"],
 ];
 
 /** The live probe ids the playground registers, read from its own registry. */
