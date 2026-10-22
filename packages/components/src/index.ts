@@ -41,6 +41,7 @@ export * from "./gravity-stars.js";
 export * from "./hexagon.js";
 export * from "./highlight-text.js";
 export * from "./hotkey-recorder.js";
+export * from "./image-zoom.js";
 export * from "./inline-edit.js";
 export * from "./keyboard-shortcuts.js";
 export * from "./liquid-button.js";

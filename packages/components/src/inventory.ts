@@ -42,6 +42,7 @@ import { gravityStarsMeta } from "./gravity-stars.js";
 import { hexagonMeta } from "./hexagon.js";
 import { highlightTextMeta } from "./highlight-text.js";
 import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
+import { imageZoomMeta } from "./image-zoom.js";
 import { inlineEditMeta } from "./inline-edit.js";
 import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { liquidButtonMeta } from "./liquid-button.js";
@@ -132,6 +133,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   hexagonMeta,
   highlightTextMeta,
   hotkeyRecorderMeta,
+  imageZoomMeta,
   inlineEditMeta,
   keyboardShortcutsMeta,
   liquidButtonMeta,

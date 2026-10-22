@@ -64,8 +64,9 @@ export const surfaceBudget = {
   // generated line-art fields (`hexagon.tsx`/`hexagon/logic.ts`,
   // `topography.tsx`/`topography/logic.ts`, and the two modules they share:
   // `internal/pattern-field.tsx` and `internal/svg-pattern.ts`), whose view boxes
-  // are generated from their measured boxes.
-  modules: 153,
+  // are generated from their measured boxes. 153 → 155 for ImageZoom
+  // (`image-zoom.tsx` and the frame/pan rule beside it).
+  modules: 155,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -78,7 +79,7 @@ export const surfaceBudget = {
   // two), 860 → 875 KiB with Bubbles, 875 → 890 KiB with Fireworks, 890 → 900 KiB
   // with Gradient and 900 → 940 KiB with GravityStars. 940 → 990 KiB with the
   // generated Hexagon and Topography fields (962 KiB measured, the shared
-  // pattern frame included).
+  // pattern frame included); 976 KiB measured with ImageZoom, under the ceiling.
   bytes: 990 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
